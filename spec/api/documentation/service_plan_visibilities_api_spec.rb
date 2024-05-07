@@ -18,7 +18,7 @@ RSpec.resource 'Service Plan Visibilities', type: %i[api legacy_api] do
     example 'Creating a Service Plan Visibility' do
       org_guid = VCAP::CloudController::Organization.make.guid
       service_plan_guid = VCAP::CloudController::ServicePlan.make(public: false).guid
-      request_json = MultiJson.dump({ service_plan_guid: service_plan_guid, organization_guid: org_guid }, pretty: true)
+      request_json = Oj.dump({ service_plan_guid: service_plan_guid, organization_guid: org_guid })
 
       client.post '/v2/service_plan_visibilities', request_json, headers
       expect(status).to eq(201)
@@ -33,7 +33,7 @@ RSpec.resource 'Service Plan Visibilities', type: %i[api legacy_api] do
       service_plan_visibility_guid = VCAP::CloudController::ServicePlanVisibility.make.guid
       org_guid = VCAP::CloudController::Organization.make.guid
       service_plan_guid = VCAP::CloudController::ServicePlan.make(public: false).guid
-      request_json = MultiJson.dump({ service_plan_guid: service_plan_guid, organization_guid: org_guid }, pretty: true)
+      request_json = Oj.dump({ service_plan_guid: service_plan_guid, organization_guid: org_guid })
 
       client.put "/v2/service_plan_visibilities/#{service_plan_visibility_guid}", request_json, headers
       expect(status).to eq(201)

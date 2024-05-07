@@ -16,7 +16,7 @@ RSpec.describe 'App visibility between API versions' do
         name: 'v2-app',
         space_guid: space.guid
       }
-      post '/v2/apps', MultiJson.encode(request_body), user_header
+      post '/v2/apps', Oj.dump(request_body), user_header
 
       expect(last_response.status).to be 201
       app_guid = parsed_response['metadata']['guid']
@@ -33,7 +33,7 @@ RSpec.describe 'App visibility between API versions' do
         name: 'v3-app',
         relationships: { space: { data: { guid: space.guid } } }
       }
-      post '/v3/apps', MultiJson.encode(request_body), user_header
+      post '/v3/apps', Oj.dump(request_body), user_header
 
       expect(last_response.status).to be 201
       app_guid = parsed_response['guid']

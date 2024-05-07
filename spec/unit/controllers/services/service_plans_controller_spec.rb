@@ -569,7 +569,7 @@ module VCAP::CloudController
       context 'when fields other than public are requested' do
         it 'only updates the public field' do
           service_plan = ServicePlan.make(name: 'old-name', public: true)
-          payload = MultiJson.dump({ 'name' => 'new-name', 'public' => false })
+          payload = Oj.dump({ 'name' => 'new-name', 'public' => false })
 
           set_current_user_as_admin
           put "/v2/service_plans/#{service_plan.guid}", payload

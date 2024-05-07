@@ -170,13 +170,13 @@ module VCAP::CloudController
     def get_instance_usage(guid)
       org = find_guid_and_validate_access(:read, guid)
       response = { instance_usage: OrganizationInstanceUsageCalculator.get_instance_usage(org) }
-      [HTTP::OK, MultiJson.dump(response)]
+      [HTTP::OK, Oj.dump(response, mode: :compat)]
     end
 
     get '/v2/organizations/:guid/memory_usage', :get_memory_usage
     def get_memory_usage(guid)
       org = find_guid_and_validate_access(:read, guid)
-      [HTTP::OK, MultiJson.dump({ memory_usage_in_mb: org.memory_used })]
+      [HTTP::OK, Oj.dump({ memory_usage_in_mb: org.memory_used }, mode: :compat)]
     end
 
     VCAP::CloudController::Roles::ORG_ROLE_NAMES.each do |role|

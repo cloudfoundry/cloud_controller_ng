@@ -49,7 +49,7 @@ module VCAP::CloudController
         def ports
           return @ports unless @ports.empty?
 
-          execution_metadata = MultiJson.load(@execution_metadata)
+          execution_metadata = Oj.load(@execution_metadata)
           return [DEFAULT_APP_PORT] if execution_metadata['ports'].blank?
 
           tcp_ports = execution_metadata['ports'].select { |port| port['protocol'] == 'tcp' }
@@ -69,7 +69,7 @@ module VCAP::CloudController
         end
 
         def action_user
-          execution_metadata = MultiJson.load(@execution_metadata)
+          execution_metadata = Oj.load(@execution_metadata)
           user = execution_metadata['user']
           if user.nil? || user.empty?
             'root'

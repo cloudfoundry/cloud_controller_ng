@@ -8,7 +8,12 @@ module VCAP::CloudController
 
       patch '/internal/v4/packages/:guid', :update
       def update(guid)
-        payload = MultiJson.load(body)
+        begin
+          payload = Oj.load(body)
+        rescue StandardError => e
+          raise CloudController::Errors::ApiError.new_from_details('MessageParseError', e.message)
+        end
+
         message = ::VCAP::CloudController::InternalPackageUpdateMessage.new(payload)
         unprocessable!(message.errors.full_messages) unless message.valid?
 
@@ -20,8 +25,6 @@ module VCAP::CloudController
         HTTP::NO_CONTENT
       rescue InternalPackageUpdate::InvalidPackage => e
         unprocessable!(e.message)
-      rescue MultiJson::ParseError => e
-        raise CloudController::Errors::ApiError.new_from_details('MessageParseError', e.message)
       end
 
       private

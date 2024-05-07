@@ -1,7 +1,7 @@
 require 'sinatra'
 require 'sequel'
 require 'thin'
-require 'multi_json'
+require 'oj'
 require 'delayed_job'
 
 require 'allowy'

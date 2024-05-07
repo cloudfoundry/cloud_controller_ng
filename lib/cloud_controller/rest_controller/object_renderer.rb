@@ -22,9 +22,6 @@ module VCAP::CloudController::RestController
     #
     # @param [Sequel::Model] obj Object to encode.
     #
-    # @option opts [Boolean] :pretty Controls pretty formatting of the encoded
-    # json.  Defaults to true.
-    #
     # @option opts [Integer] :inline_relations_depth Depth to recursively
     # expand relationships in addition to providing the URLs.
     #
@@ -65,7 +62,7 @@ module VCAP::CloudController::RestController
         opts.merge(export_attrs: export_attributes)
       )
 
-      MultiJson.dump(hash, pretty: opts.fetch(:pretty, true))
+      Oj.dump(hash, mode: :compat)
     end
 
     def render_json_with_read_privileges(controller, obj, opts)

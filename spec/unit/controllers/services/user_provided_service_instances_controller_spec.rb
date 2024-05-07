@@ -603,7 +603,7 @@ module VCAP::CloudController
 
         it 'fails and returns service instance name is taken' do
           put "/v2/user_provided_service_instances/#{service_instance_foo.guid}",
-              MultiJson.dump(name: service_instance_bar.name)
+              Oj.dump(name: service_instance_bar.name)
 
           expect(last_response).to have_status_code(400)
           expect(decoded_response['code']).to eq(60_002)
@@ -633,7 +633,7 @@ module VCAP::CloudController
           space2 = Space.make(organization: org)
           space2.add_developer(developer)
 
-          move_req = MultiJson.dump(
+          move_req = Oj.dump(
             space_guid: space2.guid
           )
 
@@ -644,7 +644,7 @@ module VCAP::CloudController
         end
 
         it 'succeeds when the space_guid does not change' do
-          req = MultiJson.dump(space_guid: instance.space.guid)
+          req = Oj.dump(space_guid: instance.space.guid)
           put "/v2/user_provided_service_instances/#{instance.guid}", req
           expect(last_response.status).to eq 201
         end

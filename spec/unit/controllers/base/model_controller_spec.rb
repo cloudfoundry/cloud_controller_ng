@@ -118,7 +118,7 @@ module VCAP::CloudController
         end
 
         set_current_user_as_admin
-        post '/v2/test_models', MultiJson.dump({ required_attr: true, unique_value: 'foobar' })
+        post '/v2/test_models', Oj.dump({ required_attr: true, unique_value: 'foobar' })
 
         expect(calls).to eq(%i[before_create create_from_hash after_create])
       end
@@ -126,7 +126,7 @@ module VCAP::CloudController
       context "when the user's token is missing the required scope" do
         it 'responds with a 403 Insufficient Scope' do
           set_current_user(user, scopes: ['bogus.scope'])
-          post '/v2/test_models', MultiJson.dump({ required_attr: true, unique_value: 'foobar' })
+          post '/v2/test_models', Oj.dump({ required_attr: true, unique_value: 'foobar' })
           expect(decoded_response['code']).to eq(10_007)
           expect(decoded_response['description']).to match(/lacks the necessary scopes/)
         end
@@ -135,7 +135,7 @@ module VCAP::CloudController
       it 'does not persist the model when validate access fails' do
         set_current_user(user)
         expect do
-          post '/v2/test_models', MultiJson.dump({ required_attr: true, unique_value: 'foobar' })
+          post '/v2/test_models', Oj.dump({ required_attr: true, unique_value: 'foobar' })
         end.not_to(change(TestModel, :count))
 
         expect(decoded_response['code']).to eq(10_003)
@@ -144,7 +144,7 @@ module VCAP::CloudController
 
       it 'returns the right values on a successful create' do
         set_current_user_as_admin
-        post '/v2/test_models', MultiJson.dump({ required_attr: true, unique_value: 'foobar' })
+        post '/v2/test_models', Oj.dump({ required_attr: true, unique_value: 'foobar' })
         model_instance = TestModel.first
         url = "/v2/test_models/#{model_instance.guid}"
 
@@ -156,7 +156,7 @@ module VCAP::CloudController
 
       it 'allows extra fields to be included' do
         set_current_user_as_admin
-        post '/v2/test_models', MultiJson.dump({ extra_field: true, required_attr: true, unique_value: 'foobar' })
+        post '/v2/test_models', Oj.dump({ extra_field: true, required_attr: true, unique_value: 'foobar' })
 
         expect(last_response.status).to eq(201)
       end
@@ -169,7 +169,7 @@ module VCAP::CloudController
           set_current_user_as_admin
           expect_any_instance_of(TestModelRedactController).to receive(:redact_attributes).with(:create, redact_request_attributes)
 
-          post '/v2/test_model_redact', MultiJson.dump(request_attributes)
+          post '/v2/test_model_redact', Oj.dump(request_attributes)
           expect(last_response.status).to eq(201)
         end
       end
@@ -183,7 +183,7 @@ module VCAP::CloudController
           expect_any_instance_of(TestModelRedactController).to receive(:redact_attributes).with(:create, redact_request_attributes)
 
           set_current_user_as_admin
-          post '/v2/test_model_redact', MultiJson.dump(request_attributes)
+          post '/v2/test_model_redact', Oj.dump(request_attributes)
 
           expect(last_response.status).to eq(201)
         end
@@ -223,7 +223,7 @@ module VCAP::CloudController
       before { set_current_user_as_admin }
 
       it 'updates the data' do
-        put "/v2/test_models/#{model.guid}", MultiJson.dump({ unique_value: 'new value' })
+        put "/v2/test_models/#{model.guid}", Oj.dump({ unique_value: 'new value' })
 
         expect(last_response.status).to eq(201)
         model.reload
@@ -237,14 +237,14 @@ module VCAP::CloudController
           with(TestModelsController, instance_of(TestModel), {}).
           and_return('serialized json')
 
-        put "/v2/test_models/#{model.guid}", MultiJson.dump({})
+        put "/v2/test_models/#{model.guid}", Oj.dump({})
 
         expect(last_response.body).to eq('serialized json')
       end
 
       it 'returns not authorized if the user does not have access' do
         set_current_user(user)
-        put "/v2/test_models/#{model.guid}", MultiJson.dump(fields)
+        put "/v2/test_models/#{model.guid}", Oj.dump(fields)
 
         expect(model.reload.unique_value).not_to eq('something')
         expect(decoded_response['code']).to eq(10_003)
@@ -256,7 +256,7 @@ module VCAP::CloudController
         expect(model).to receive(:lock!).ordered
         expect(model).to receive(:update_from_hash).ordered.and_call_original
 
-        put "/v2/test_models/#{model.guid}", MultiJson.dump(fields)
+        put "/v2/test_models/#{model.guid}", Oj.dump(fields)
       end
 
       it 'calls the hooks in the right order' do
@@ -283,7 +283,7 @@ module VCAP::CloudController
           calls << :after_update
         end
 
-        put "/v2/test_models/#{model.guid}", MultiJson.dump(fields)
+        put "/v2/test_models/#{model.guid}", Oj.dump(fields)
         expect(calls).to eq(%i[before_update read_for_update update_from_hash update after_update])
       end
 
@@ -295,7 +295,7 @@ module VCAP::CloudController
         it 'attempts to redact the attributes' do
           expect_any_instance_of(TestModelRedactController).to receive(:redact_attributes).with(:update, redact_request_attributes)
 
-          put "/v2/test_model_redact/#{model.guid}", MultiJson.dump(request_attributes)
+          put "/v2/test_model_redact/#{model.guid}", Oj.dump(request_attributes)
           expect(last_response.status).to eq(201)
         end
       end
@@ -578,7 +578,7 @@ module VCAP::CloudController
 
         it 'returns 400 error when validation fails on create' do
           TestModel.make(unique_value: 'unique')
-          post '/v2/test_models', MultiJson.dump({ required_attr: true, unique_value: 'unique' })
+          post '/v2/test_models', Oj.dump({ required_attr: true, unique_value: 'unique' })
           expect(last_response.status).to eq(400)
           expect(decoded_response['code']).to eq 999_999_998
           expect(decoded_response['description']).to match(/Validation Error/)
@@ -587,7 +587,7 @@ module VCAP::CloudController
         it 'returns 400 error when validation fails on update' do
           TestModel.make(unique_value: 'unique')
           test_model = TestModel.make(unique_value: 'not-unique')
-          put "/v2/test_models/#{test_model.guid}", MultiJson.dump({ unique_value: 'unique' })
+          put "/v2/test_models/#{test_model.guid}", Oj.dump({ unique_value: 'unique' })
           expect(last_response.status).to eq(400)
           expect(decoded_response['code']).to eq 999_999_998
           expect(decoded_response['description']).to match(/Validation Error/)
@@ -655,7 +655,7 @@ module VCAP::CloudController
 
         describe 'update' do
           it 'allows associating nested models' do
-            put "/v2/test_models/#{model.guid}", MultiJson.dump({ test_model_many_to_many_guids: [associated_model1.guid, associated_model2.guid] })
+            put "/v2/test_models/#{model.guid}", Oj.dump({ test_model_many_to_many_guids: [associated_model1.guid, associated_model2.guid] })
             expect(last_response.status).to eq(201)
             model.reload
             expect(model.test_model_many_to_manies).to include(associated_model1)
@@ -666,7 +666,7 @@ module VCAP::CloudController
             before { model.add_test_model_many_to_many(associated_model1) }
 
             it 'replaces existing associated models' do
-              put "/v2/test_models/#{model.guid}", MultiJson.dump({ test_model_many_to_many_guids: [associated_model2.guid] })
+              put "/v2/test_models/#{model.guid}", Oj.dump({ test_model_many_to_many_guids: [associated_model2.guid] })
               expect(last_response.status).to eq(201)
               model.reload
               expect(model.test_model_many_to_manies).not_to include(associated_model1)
@@ -674,14 +674,14 @@ module VCAP::CloudController
             end
 
             it 'removes associated models when empty array is provided' do
-              put "/v2/test_models/#{model.guid}", MultiJson.dump({ test_model_many_to_many_guids: [] })
+              put "/v2/test_models/#{model.guid}", Oj.dump({ test_model_many_to_many_guids: [] })
               expect(last_response.status).to eq(201)
               model.reload
               expect(model.test_model_many_to_manies).not_to include(associated_model1)
             end
 
             it 'fails invalid guids' do
-              put "/v2/test_models/#{model.guid}", MultiJson.dump({ test_model_many_to_many_guids: [associated_model2.guid, 'abcd'] })
+              put "/v2/test_models/#{model.guid}", Oj.dump({ test_model_many_to_many_guids: [associated_model2.guid, 'abcd'] })
               expect(last_response.status).to eq(400)
               model.reload
               expect(model.test_model_many_to_manies.length).to eq(1)

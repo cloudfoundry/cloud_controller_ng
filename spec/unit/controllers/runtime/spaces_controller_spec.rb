@@ -1137,7 +1137,7 @@ module VCAP::CloudController
               it 'deletes the first and third instances and returns an error' do
                 delete "/v2/spaces/#{space_guid}?recursive=true&async=true"
                 expect(last_response).to have_status_code 202
-                job_url = MultiJson.load(last_response.body)['metadata']['url']
+                job_url = Oj.load(last_response.body)['metadata']['url']
 
                 Delayed::Worker.new.work_off
 
@@ -1148,11 +1148,11 @@ module VCAP::CloudController
                 get job_url
                 expect(last_response).to have_status_code 200
 
-                expect(MultiJson.load(last_response.body)['entity']['error_details']).to eq({
-                                                                                              'error_code' => 'CF-SpaceDeletionFailed',
-                                                                                              'description' => @expected_description,
-                                                                                              'code' => 290_008
-                                                                                            })
+                expect(Oj.load(last_response.body)['entity']['error_details']).to eq({
+                                                                                       'error_code' => 'CF-SpaceDeletionFailed',
+                                                                                       'description' => @expected_description,
+                                                                                       'code' => 290_008
+                                                                                     })
 
                 expect { service_instance_1.refresh }.to raise_error Sequel::Error, 'Record not found'
                 expect { service_instance_2.refresh }.not_to raise_error
@@ -1624,7 +1624,7 @@ module VCAP::CloudController
             end
 
             it 'returns a 200' do
-              put "/v2/spaces/#{space.guid}", MultiJson.dump({ isolation_segment_guid: isolation_segment_model.guid })
+              put "/v2/spaces/#{space.guid}", Oj.dump({ isolation_segment_guid: isolation_segment_model.guid })
 
               expect(last_response.status).to eq 201
             end
@@ -1636,7 +1636,7 @@ module VCAP::CloudController
             end
 
             it 'returns a 201' do
-              put "/v2/spaces/#{space.guid}", MultiJson.dump({ isolation_segment_guid: isolation_segment_model.guid })
+              put "/v2/spaces/#{space.guid}", Oj.dump({ isolation_segment_guid: isolation_segment_model.guid })
 
               expect(last_response.status).to eq 201
               space.reload
@@ -1652,7 +1652,7 @@ module VCAP::CloudController
             end
 
             it 'returns a 404 ResourceNotFound error' do
-              put "/v2/spaces/#{space.guid}", MultiJson.dump({ isolation_segment_guid: 'bad-guid' })
+              put "/v2/spaces/#{space.guid}", Oj.dump({ isolation_segment_guid: 'bad-guid' })
 
               expect(last_response.status).to eq 404
               expect(decoded_response['error_code']).to eq 'CF-ResourceNotFound'
@@ -1665,7 +1665,7 @@ module VCAP::CloudController
             end
 
             it 'returns a 404 ResourceNotFound error' do
-              put "/v2/spaces/#{space.guid}", MultiJson.dump({ isolation_segment_guid: 'bad-guid' })
+              put "/v2/spaces/#{space.guid}", Oj.dump({ isolation_segment_guid: 'bad-guid' })
 
               expect(last_response.status).to eq 404
               expect(decoded_response['error_code']).to eq 'CF-ResourceNotFound'
@@ -1680,7 +1680,7 @@ module VCAP::CloudController
           end
 
           it 'returns a 403' do
-            put "/v2/spaces/#{space.guid}", MultiJson.dump({ isolation_segment_guid: 'bad-guid' })
+            put "/v2/spaces/#{space.guid}", Oj.dump({ isolation_segment_guid: 'bad-guid' })
 
             expect(last_response.status).to eq 403
           end
@@ -1693,7 +1693,7 @@ module VCAP::CloudController
           end
 
           it 'returns a 403' do
-            put "/v2/spaces/#{space.guid}", MultiJson.dump({ isolation_segment_guid: 'bad-guid' })
+            put "/v2/spaces/#{space.guid}", Oj.dump({ isolation_segment_guid: 'bad-guid' })
 
             expect(last_response.status).to eq 403
           end
@@ -1706,7 +1706,7 @@ module VCAP::CloudController
           end
 
           it 'returns a 403' do
-            put "/v2/spaces/#{space.guid}", MultiJson.dump({ isolation_segment_guid: 'bad-guid' })
+            put "/v2/spaces/#{space.guid}", Oj.dump({ isolation_segment_guid: 'bad-guid' })
 
             expect(last_response.status).to eq 403
           end
@@ -2255,7 +2255,7 @@ module VCAP::CloudController
               end
 
               it 'returns a 404 when the user does not exist in UAA' do
-                put "/v2/spaces/#{space_one.guid}/#{plural_role}", MultiJson.dump({ username: 'fake@example.com', origin: origin1 })
+                put "/v2/spaces/#{space_one.guid}/#{plural_role}", Oj.dump({ username: 'fake@example.com', origin: origin1 })
 
                 expect(last_response.status).to eq(404), last_response.body
                 expect(decoded_response['code']).to eq(20_007)
@@ -2272,7 +2272,7 @@ module VCAP::CloudController
                 expect(uaa_client).to receive(:id_for_username).with(user.username, origin: origin1).
                   and_return(user.guid)
 
-                put "/v2/spaces/#{space_one.guid}/#{plural_role}", MultiJson.dump({ username: user.username, origin: origin1 })
+                put "/v2/spaces/#{space_one.guid}/#{plural_role}", Oj.dump({ username: user.username, origin: origin1 })
 
                 expect(last_response.status).to eq(201)
                 expect(space_one.send(plural_role)).to include(user)
@@ -2290,7 +2290,7 @@ module VCAP::CloudController
               expect(uaa_client).to receive(:origins_for_username).with(user.username).
                 and_return([origin1, origin2])
 
-              put "/v2/spaces/#{space_one.guid}/#{plural_role}", MultiJson.dump({ username: 'larry_the_user' })
+              put "/v2/spaces/#{space_one.guid}/#{plural_role}", Oj.dump({ username: 'larry_the_user' })
 
               expect(last_response.status).to eq(400), " Expected 400, got #{last_response.status}: body: #{last_response.body}"
               expect(decoded_response['code']).to eq(20_006)
@@ -2299,7 +2299,7 @@ module VCAP::CloudController
             end
 
             it "makes the user a space #{role}" do
-              put "/v2/spaces/#{space_one.guid}/#{plural_role}", MultiJson.dump({ username: user.username })
+              put "/v2/spaces/#{space_one.guid}/#{plural_role}", Oj.dump({ username: user.username })
 
               expect(last_response.status).to eq(201)
               expect(space_one.send(plural_role)).to include(user)
@@ -2308,13 +2308,13 @@ module VCAP::CloudController
 
             it 'verifies the user has update access to the space' do
               expect_any_instance_of(SpacesController).to receive(:find_guid_and_validate_access).with(:update, space_one.guid).and_call_original
-              put "/v2/spaces/#{space_one.guid}/#{plural_role}", MultiJson.dump({ username: user.username })
+              put "/v2/spaces/#{space_one.guid}/#{plural_role}", Oj.dump({ username: user.username })
             end
 
             it 'returns a 404 when the user does not exist in UAA' do
               expect(uaa_client).to receive(:id_for_username).with('fake@example.com', origin: nil).and_return(nil)
 
-              put "/v2/spaces/#{space_one.guid}/#{plural_role}", MultiJson.dump({ username: 'fake@example.com' })
+              put "/v2/spaces/#{space_one.guid}/#{plural_role}", Oj.dump({ username: 'fake@example.com' })
 
               expect(last_response.status).to eq(404), last_response.body
               expect(decoded_response['code']).to eq(20_003)
@@ -2323,7 +2323,7 @@ module VCAP::CloudController
             it 'returns an error when UAA is not available' do
               expect(uaa_client).to receive(:id_for_username).and_raise(UaaUnavailable)
 
-              put "/v2/spaces/#{space_one.guid}/#{plural_role}", MultiJson.dump({ username: user.username })
+              put "/v2/spaces/#{space_one.guid}/#{plural_role}", Oj.dump({ username: user.username })
 
               expect(last_response.status).to eq(503)
               expect(decoded_response['code']).to eq(20_004)
@@ -2332,14 +2332,14 @@ module VCAP::CloudController
             it 'returns an error when UAA is unavailable' do
               expect(uaa_client).to receive(:id_for_username).and_raise(UaaUnavailable)
 
-              put "/v2/spaces/#{space_one.guid}/#{plural_role}", MultiJson.dump({ username: user.username })
+              put "/v2/spaces/#{space_one.guid}/#{plural_role}", Oj.dump({ username: user.username })
 
               expect(last_response.status).to eq(503)
               expect(decoded_response['code']).to eq(20_004)
             end
 
             it 'logs audit.space.role.add when a role is associated to a space' do
-              put "/v2/spaces/#{space_one.guid}/#{plural_role}", MultiJson.dump({ username: user.username })
+              put "/v2/spaces/#{space_one.guid}/#{plural_role}", Oj.dump({ username: user.username })
 
               event = Event.find(type: event_type, actee: user.guid)
               expect(event).not_to be_nil
@@ -2355,14 +2355,14 @@ module VCAP::CloudController
 
               it 'raises a feature flag error for non-admins' do
                 set_current_user(user)
-                put "/v2/spaces/#{space_one.guid}/#{plural_role}", MultiJson.dump({ username: user.username })
+                put "/v2/spaces/#{space_one.guid}/#{plural_role}", Oj.dump({ username: user.username })
 
                 expect(last_response.status).to eq(403)
                 expect(decoded_response['code']).to eq(330_002)
               end
 
               it 'succeeds for admins' do
-                put "/v2/spaces/#{space_one.guid}/#{plural_role}", MultiJson.dump({ username: user.username })
+                put "/v2/spaces/#{space_one.guid}/#{plural_role}", Oj.dump({ username: user.username })
 
                 expect(last_response.status).to eq(201)
                 expect(space_one.send(plural_role)).to include(user)
@@ -2401,7 +2401,7 @@ module VCAP::CloudController
                 end
 
                 it 'returns a 404 when the user does not exist in UAA for the specified origin' do
-                  post "/v2/spaces/#{space_one.guid}/#{plural_role}/remove", MultiJson.dump({ username: user.username, origin: origin1 })
+                  post "/v2/spaces/#{space_one.guid}/#{plural_role}/remove", Oj.dump({ username: user.username, origin: origin1 })
 
                   expect(last_response.status).to eq(404), last_response.body
                   expect(decoded_response['code']).to eq(20_007)
@@ -2420,7 +2420,7 @@ module VCAP::CloudController
                   expect(space_one.send(plural_role)).to include(user)
 
                   post "/v2/spaces/#{space_one.guid}/#{plural_role}/remove",
-                       MultiJson.dump(username: user.username, origin: origin1)
+                       Oj.dump(username: user.username, origin: origin1)
 
                   expect(last_response.status).to eq(200)
                   expect(space_one.reload.send(plural_role)).not_to include(user)
@@ -2441,7 +2441,7 @@ module VCAP::CloudController
                   expect(space_one.send(plural_role)).to include(user)
 
                   post "/v2/spaces/#{space_one.guid}/#{plural_role}/remove",
-                       MultiJson.dump(username: user.username)
+                       Oj.dump(username: user.username)
 
                   expect(last_response.status).to eq(200)
                   expect(space_one.reload.send(plural_role)).not_to include(user)
@@ -2454,7 +2454,7 @@ module VCAP::CloudController
                   expect(uaa_client).to receive(:origins_for_username).and_return(%w[origin1 origin2])
 
                   post "/v2/spaces/#{space_one.guid}/#{plural_role}/remove",
-                       MultiJson.dump({ username: user.username })
+                       Oj.dump({ username: user.username })
 
                   expect(last_response.status).to eq(400)
                   expect(decoded_response['code']).to eq(20_006)
@@ -2484,7 +2484,7 @@ module VCAP::CloudController
             it "unsets the user as a space #{role}" do
               expect(space_one.send(plural_role)).to include(user)
 
-              delete "/v2/spaces/#{space_one.guid}/#{plural_role}", MultiJson.dump({ username: user.username })
+              delete "/v2/spaces/#{space_one.guid}/#{plural_role}", Oj.dump({ username: user.username })
 
               expect(last_response.status).to eq(200)
               expect(space_one.reload.send(plural_role)).not_to include(user)
@@ -2493,13 +2493,13 @@ module VCAP::CloudController
 
             it 'verifies the user has update access to the space' do
               expect_any_instance_of(SpacesController).to receive(:find_guid_and_validate_access).with(:update, space_one.guid).and_call_original
-              delete "/v2/spaces/#{space_one.guid}/#{plural_role}", MultiJson.dump({ username: user.username })
+              delete "/v2/spaces/#{space_one.guid}/#{plural_role}", Oj.dump({ username: user.username })
             end
 
             it 'returns a 404 when the user does not exist in CC' do
               expect(uaa_client).to receive(:id_for_username).with('fake@example.com', origin: nil).and_return('not-a-real-guid')
 
-              delete "/v2/spaces/#{space_one.guid}/#{plural_role}", MultiJson.dump({ username: 'fake@example.com' })
+              delete "/v2/spaces/#{space_one.guid}/#{plural_role}", Oj.dump({ username: 'fake@example.com' })
 
               expect(last_response.status).to eq(404)
               expect(decoded_response['code']).to eq(20_003)
@@ -2508,7 +2508,7 @@ module VCAP::CloudController
             it 'returns an error when UAA is not available' do
               expect(uaa_client).to receive(:id_for_username).and_raise(UaaUnavailable)
 
-              delete "/v2/spaces/#{space_one.guid}/#{plural_role}", MultiJson.dump({ username: user.username })
+              delete "/v2/spaces/#{space_one.guid}/#{plural_role}", Oj.dump({ username: user.username })
 
               expect(last_response.status).to eq(503)
               expect(decoded_response['code']).to eq(20_004)
@@ -2517,14 +2517,14 @@ module VCAP::CloudController
             it 'returns an error when UAA is unavailable' do
               expect(uaa_client).to receive(:id_for_username).and_raise(UaaUnavailable)
 
-              delete "/v2/spaces/#{space_one.guid}/#{plural_role}", MultiJson.dump({ username: user.username })
+              delete "/v2/spaces/#{space_one.guid}/#{plural_role}", Oj.dump({ username: user.username })
 
               expect(last_response.status).to eq(503)
               expect(decoded_response['code']).to eq(20_004)
             end
 
             it 'logs audit.space.role.remove when a user-role association is removed from a space' do
-              delete "/v2/spaces/#{space_one.guid}/#{plural_role}", MultiJson.dump({ username: user.username })
+              delete "/v2/spaces/#{space_one.guid}/#{plural_role}", Oj.dump({ username: user.username })
 
               event = Event.find(type: event_type, actee: user.guid)
               expect(event).not_to be_nil
@@ -2537,7 +2537,7 @@ module VCAP::CloudController
               it 'returns a 400 error' do
                 expect(uaa_client).to receive(:origins_for_username).and_return(%w[origin1 origin2])
 
-                delete "/v2/spaces/#{space_one.guid}/#{plural_role}", MultiJson.dump({ username: user.username })
+                delete "/v2/spaces/#{space_one.guid}/#{plural_role}", Oj.dump({ username: user.username })
 
                 expect(last_response.status).to eq(400)
                 expect(decoded_response['code']).to eq(20_006)
@@ -2551,7 +2551,7 @@ module VCAP::CloudController
 
               it 'raises a feature flag error for non-admins' do
                 set_current_user(user)
-                delete "/v2/spaces/#{space_one.guid}/#{plural_role}", MultiJson.dump({ username: user.username })
+                delete "/v2/spaces/#{space_one.guid}/#{plural_role}", Oj.dump({ username: user.username })
 
                 expect(last_response.status).to eq(403)
                 expect(decoded_response['code']).to eq(330_002)
@@ -2560,7 +2560,7 @@ module VCAP::CloudController
               it 'succeeds for admins' do
                 expect(space_one.send(plural_role)).to include(user)
 
-                delete "/v2/spaces/#{space_one.guid}/#{plural_role}", MultiJson.dump({ username: user.username })
+                delete "/v2/spaces/#{space_one.guid}/#{plural_role}", Oj.dump({ username: user.username })
 
                 expect(last_response.status).to eq(200)
                 expect(space_one.reload.send(plural_role)).not_to include(user)

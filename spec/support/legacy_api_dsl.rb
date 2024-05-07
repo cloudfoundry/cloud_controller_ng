@@ -76,7 +76,7 @@ module LegacyApiDsl
   end
 
   def fields_json(overrides={})
-    MultiJson.dump(required_fields.merge(overrides), pretty: true)
+    Oj.dump(required_fields.merge(overrides))
   end
 
   def required_fields

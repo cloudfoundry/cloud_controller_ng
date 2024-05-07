@@ -22,7 +22,7 @@ RSpec.describe 'Routes' do
 
       expect(last_response.status).to eq(200)
 
-      parsed_response = MultiJson.load(last_response.body)
+      parsed_response = Oj.load(last_response.body)
       expect(parsed_response).to be_a_response_like(
         {
           'total_results' => 1,
@@ -62,7 +62,7 @@ RSpec.describe 'Routes' do
 
         expect(last_response.status).to eq(200)
 
-        parsed_response = MultiJson.load(last_response.body)
+        parsed_response = Oj.load(last_response.body)
         expect(parsed_response).to be_a_response_like(
           {
             'total_results' => 1,
@@ -198,7 +198,7 @@ RSpec.describe 'Routes' do
         get "/v2/routes/#{route.guid}", nil, headers_for(user)
         expect(last_response.status).to eq(200)
 
-        parsed_response = MultiJson.load(last_response.body)
+        parsed_response = Oj.load(last_response.body)
         expect(parsed_response).to be_a_response_like(
           {
             'metadata' => {
@@ -231,7 +231,7 @@ RSpec.describe 'Routes' do
         get "/v2/routes/#{route.guid}", nil, headers_for(user)
         expect(last_response.status).to eq(200)
 
-        parsed_response = MultiJson.load(last_response.body)
+        parsed_response = Oj.load(last_response.body)
         expect(parsed_response['entity']['domain_url']).to eq("/v2/private_domains/#{domain.guid}")
       end
     end
@@ -240,18 +240,18 @@ RSpec.describe 'Routes' do
   describe 'POST /v2/routes' do
     it 'creates a route' do
       domain = VCAP::CloudController::Domain.make
-      post_params = MultiJson.dump({
-                                     domain_guid: domain.guid,
-                                     space_guid: space.guid,
-                                     host: 'some-host',
-                                     path: '/some-path'
-                                   })
+      post_params = Oj.dump({
+                              domain_guid: domain.guid,
+                              space_guid: space.guid,
+                              host: 'some-host',
+                              path: '/some-path'
+                            })
 
       post '/v2/routes', post_params, headers_for(user)
 
       route = VCAP::CloudController::Route.last
       expect(last_response.status).to eq(201), last_response.body
-      expect(MultiJson.load(last_response.body)).to be_a_response_like(
+      expect(Oj.load(last_response.body)).to be_a_response_like(
         {
           'metadata' => {
             'guid' => route.guid,
@@ -285,7 +285,7 @@ RSpec.describe 'Routes' do
       get "/v2/routes/#{route.guid}/route_mappings", nil, headers_for(user)
       expect(last_response.status).to eq(200)
 
-      parsed_response = MultiJson.load(last_response.body)
+      parsed_response = Oj.load(last_response.body)
       expect(parsed_response).to be_a_response_like(
         {
           'total_results' => 1,
@@ -323,7 +323,7 @@ RSpec.describe 'Routes' do
       get "/v2/routes/#{route.guid}/apps", nil, headers_for(user)
       expect(last_response.status).to eq(200)
 
-      parsed_response = MultiJson.load(last_response.body)
+      parsed_response = Oj.load(last_response.body)
       expect(parsed_response).to be_a_response_like(
         {
           'total_results' => 1,

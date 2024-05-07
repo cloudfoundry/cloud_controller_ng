@@ -7,7 +7,7 @@ module VCAP::CloudController
     end
 
     def to_json(*_args)
-      MultiJson.dump(url)
+      Oj.dump(url)
     end
 
     def staging_message

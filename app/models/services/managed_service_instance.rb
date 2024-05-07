@@ -85,13 +85,13 @@ module VCAP::CloudController
     end
 
     def gateway_data=(val)
-      str = MultiJson.dump(val)
+      str = Oj.dump(val)
       super(str)
     end
 
     def gateway_data
       val = super
-      val = MultiJson.load(val) if val
+      val = Oj.load(val) if val
       val
     end
 

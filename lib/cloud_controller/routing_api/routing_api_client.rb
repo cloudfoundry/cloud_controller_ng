@@ -53,10 +53,10 @@ module VCAP::CloudController::RoutingApi
     private
 
     def to_router_group_objects(body)
-      MultiJson.load(body).map do |hash|
+      Oj.load(body).map do |hash|
         RouterGroup.new(hash)
       end
-    rescue MultiJson::ParseError
+    rescue StandardError
       logger.error("routing api response parse failure: #{body}")
       raise RoutingApiUnavailable
     end

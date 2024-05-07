@@ -62,7 +62,7 @@ module VCAP::CloudController
           expect(decoded_response['guid']).to eq(@process.app.guid)
           expect(decoded_response['environment_json']).to eq({ 'HELLO' => 'WORLD' })
 
-          parse(MultiJson.dump(@process.to_hash)).each do |k, v|
+          parse(Oj.dump(@process.to_hash, mode: :compat)).each do |k, v|
             expect(v).to eql(decoded_response[k.to_s]), "value of field #{k} expected to eql #{v}"
           end
         end

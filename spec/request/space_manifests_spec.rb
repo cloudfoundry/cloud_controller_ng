@@ -234,7 +234,7 @@ RSpec.describe 'Space Manifests' do
           it 'returns an appropriate error' do
             post "/v3/spaces/#{space.guid}/actions/apply_manifest", yml_manifest_with_binary_invalid_buildpacks, yml_headers(user_header)
             expect(last_response.status).to eq(400)
-            parsed_response = MultiJson.load(last_response.body)
+            parsed_response = Oj.load(last_response.body)
             expect(parsed_response['errors'].first['detail']).to eq('Request invalid due to parse error: Invalid UTF-8 encoding in YAML data')
           end
         end
@@ -252,7 +252,7 @@ RSpec.describe 'Space Manifests' do
           it 'returns an appropriate error' do
             post "/v3/spaces/#{space.guid}/actions/apply_manifest", yml_manifest_with_binary_invalid_buildpack, yml_headers(user_header)
             expect(last_response.status).to eq(400)
-            parsed_response = MultiJson.load(last_response.body)
+            parsed_response = Oj.load(last_response.body)
             expect(parsed_response['errors'].first['detail']).to eq('Request invalid due to parse error: Invalid UTF-8 encoding in YAML data')
           end
         end
@@ -273,7 +273,7 @@ RSpec.describe 'Space Manifests' do
           it 'returns an appropriate error' do
             post "/v3/spaces/#{space.guid}/actions/apply_manifest", yml_manifest_with_binary_buildpacks, yml_headers(user_header)
             expect(last_response.status).to eq(400)
-            parsed_response = MultiJson.load(last_response.body)
+            parsed_response = Oj.load(last_response.body)
             expect(parsed_response['errors'].first['detail']).to eq('Request invalid due to parse error: Invalid UTF-8 encoding in YAML data')
           end
         end
@@ -349,7 +349,7 @@ RSpec.describe 'Space Manifests' do
 
         job_location = last_response.headers['Location']
         get job_location, nil, user_header
-        parsed_response = MultiJson.load(last_response.body)
+        parsed_response = Oj.load(last_response.body)
 
         expect(parsed_response['errors'].first['detail']).to eq("For application '#{app1_model.name}': For service '#{service_instance_1.name}': Failed")
       end
@@ -698,7 +698,7 @@ RSpec.describe 'Space Manifests' do
         post "/v3/spaces/#{space.guid}/actions/apply_manifest", yml_manifest, yml_headers(user_header)
 
         expect(last_response.status).to eq(400)
-        parsed_response = MultiJson.load(last_response.body)
+        parsed_response = Oj.load(last_response.body)
         expect(parsed_response['errors'].first['detail']).to eq('Bad request: Manifest does not support Anchors and Aliases')
       end
     end
@@ -724,7 +724,7 @@ RSpec.describe 'Space Manifests' do
           post "/v3/spaces/#{space.guid}/actions/apply_manifest", yml_manifest_tempfile, yml_headers(user_header)
 
           expect(last_response.status).to eq(400)
-          parsed_response = MultiJson.load(last_response.body)
+          parsed_response = Oj.load(last_response.body)
           expect(parsed_response['errors'].first['detail']).to eq('Bad request: Manifest size is too large. The maximum supported size is 1MB.')
         end
       end
@@ -793,7 +793,7 @@ RSpec.describe 'Space Manifests' do
 
       it 'does not include memory and disk changes in the diff' do
         post "/v3/spaces/#{space.guid}/manifest_diff", yml_manifest, yml_headers(user_header)
-        parsed_response = MultiJson.load(last_response.body)
+        parsed_response = Oj.load(last_response.body)
 
         expect(last_response).to have_status_code(201)
         expect(parsed_response).to eq({ 'diff' => [
@@ -811,7 +811,7 @@ RSpec.describe 'Space Manifests' do
 
       it 'returns an empty array' do
         post "/v3/spaces/#{space.guid}/manifest_diff", yml_manifest, yml_headers(user_header)
-        parsed_response = MultiJson.load(last_response.body)
+        parsed_response = Oj.load(last_response.body)
 
         expect(last_response).to have_status_code(201)
         expect(parsed_response).to eq({ 'diff' => [] })
@@ -916,7 +916,7 @@ RSpec.describe 'Space Manifests' do
 
       it 'acts as if a new app is being pushed and returns all fields of the app as additions' do
         post "/v3/spaces/#{space.guid}/manifest_diff", yml_manifest, yml_headers(user_header)
-        parsed_response = MultiJson.load(last_response.body)
+        parsed_response = Oj.load(last_response.body)
 
         expect(last_response).to have_status_code(201)
         expect(parsed_response).to eq({ 'diff' => [
@@ -974,7 +974,7 @@ RSpec.describe 'Space Manifests' do
 
       it 'returns a diff with the process changes as replace ops' do
         post "/v3/spaces/#{space.guid}/manifest_diff", manifest_with_changes, yml_headers(user_header)
-        parsed_response = MultiJson.load(last_response.body)
+        parsed_response = Oj.load(last_response.body)
 
         expect(last_response).to have_status_code(201)
         expect(parsed_response['diff']).to include(*expected_changes)
@@ -1027,7 +1027,7 @@ RSpec.describe 'Space Manifests' do
         }]
         sidecar_manifest['applications'][0]['sidecars'] = new_sidecars
         post "/v3/spaces/#{space.guid}/manifest_diff", sidecar_manifest.to_yaml, yml_headers(user_header)
-        parsed_response = MultiJson.load(last_response.body)
+        parsed_response = Oj.load(last_response.body)
 
         expect(last_response).to have_status_code(201)
         expect(parsed_response['diff']).to include(*expected_changes)
@@ -1073,7 +1073,7 @@ RSpec.describe 'Space Manifests' do
         }]
         sidecar_manifest['applications'][0]['sidecars'] = new_sidecars
         post "/v3/spaces/#{space.guid}/manifest_diff", sidecar_manifest.to_yaml, yml_headers(user_header)
-        parsed_response = MultiJson.load(last_response.body)
+        parsed_response = Oj.load(last_response.body)
 
         expect(last_response).to have_status_code(201)
         expect(parsed_response).to eq({ 'diff' => [] })
@@ -1118,7 +1118,7 @@ RSpec.describe 'Space Manifests' do
 
       it 'returns a diff that only contains ordering information without any removals' do
         post "/v3/spaces/#{space.guid}/manifest_diff", yml_manifest, yml_headers(user_header)
-        parsed_response = MultiJson.load(last_response.body)
+        parsed_response = Oj.load(last_response.body)
 
         expect(last_response).to have_status_code(201)
         expect(parsed_response).to eq('diff' => [{ 'from' => '/0', 'op' => 'move', 'path' => '/applications/0/processes/1' }])
@@ -1145,7 +1145,7 @@ RSpec.describe 'Space Manifests' do
 
       it 'returns a diff that reflects the change at the app level' do
         post "/v3/spaces/#{space.guid}/manifest_diff", yml_manifest, yml_headers(user_header)
-        parsed_response = MultiJson.load(last_response.body)
+        parsed_response = Oj.load(last_response.body)
 
         expect(last_response).to have_status_code(201)
         expect(parsed_response).to eq('diff' => [])
@@ -1171,7 +1171,7 @@ RSpec.describe 'Space Manifests' do
 
         it 'returns an appropriate error' do
           post "/v3/spaces/#{space.guid}/manifest_diff", yml_manifest, yml_headers(user_header)
-          parsed_response = MultiJson.load(last_response.body)
+          parsed_response = Oj.load(last_response.body)
 
           expect(last_response).to have_status_code(422)
           expect(parsed_response['errors'].first['detail']).to eq("Cannot parse manifest with no 'applications' field.")
@@ -1187,7 +1187,7 @@ RSpec.describe 'Space Manifests' do
 
         it 'returns an appropriate error' do
           post "/v3/spaces/#{space.guid}/manifest_diff", yml_manifest, yml_headers(user_header)
-          parsed_response = MultiJson.load(last_response.body)
+          parsed_response = Oj.load(last_response.body)
 
           expect(last_response).to have_status_code(400)
           expect(parsed_response['errors'].first['detail']).to eq('Request invalid due to parse error: invalid request body')
@@ -1208,7 +1208,7 @@ RSpec.describe 'Space Manifests' do
 
         it 'returns an appropriate error' do
           post "/v3/spaces/#{space.guid}/manifest_diff", yml_manifest, yml_headers(user_header)
-          parsed_response = MultiJson.load(last_response.body)
+          parsed_response = Oj.load(last_response.body)
 
           expect(last_response).to have_status_code(422)
           expect(parsed_response['errors'].first['detail']).to eq('Unsupported manifest schema version. Currently supported versions: [1].')
@@ -1230,7 +1230,7 @@ RSpec.describe 'Space Manifests' do
           headers = yml_headers(user_header)
           headers.delete('CONTENT_TYPE')
           post "/v3/spaces/#{space.guid}/manifest_diff", yml_manifest, headers
-          parsed_response = MultiJson.load(last_response.body)
+          parsed_response = Oj.load(last_response.body)
 
           expect(last_response).to have_status_code(400)
           expect(parsed_response['errors'].first['detail']).to eq('Bad request: Content-Type must be yaml')
@@ -1254,7 +1254,7 @@ RSpec.describe 'Space Manifests' do
 
           post "/v3/spaces/#{space.guid}/manifest_diff", yml_manifest, headers
 
-          parsed_response = MultiJson.load(last_response.body)
+          parsed_response = Oj.load(last_response.body)
 
           expect(last_response).to have_status_code(400)
           expect(parsed_response['errors'].first['detail']).to eq('Bad request: Content-Type must be yaml')
@@ -1275,7 +1275,7 @@ RSpec.describe 'Space Manifests' do
 
         it 'returns an appropriate error' do
           post "/v3/spaces/#{space.guid}/manifest_diff", yml_manifest, yml_headers(user_header)
-          parsed_response = MultiJson.load(last_response.body)
+          parsed_response = Oj.load(last_response.body)
 
           expect(last_response).to have_status_code(422)
           expect(parsed_response['errors'].first['detail']).to eq("For application 'new-app': Stack must be a string")
@@ -1323,7 +1323,7 @@ RSpec.describe 'Space Manifests' do
         post "/v3/spaces/#{space.guid}/manifest_diff", yml_manifest, yml_headers(user_header)
 
         expect(last_response.status).to eq(400)
-        parsed_response = MultiJson.load(last_response.body)
+        parsed_response = Oj.load(last_response.body)
         expect(parsed_response['errors'].first['detail']).to eq('Bad request: Manifest does not support Anchors and Aliases')
       end
     end

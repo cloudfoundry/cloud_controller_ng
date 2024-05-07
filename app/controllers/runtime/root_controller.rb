@@ -71,7 +71,7 @@ module VCAP::CloudController
         }
       }
 
-      [200, MultiJson.dump(response, pretty: true)]
+      [200, Oj.dump(response, mode: :compat)]
     end
 
     private

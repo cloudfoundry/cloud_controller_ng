@@ -136,7 +136,7 @@ module VCAP::Services
                   # this is tested above
                 end
 
-                expect_log(logger, :warn, "MultiJson parse error `\"invalid\"'")
+                expect_log(logger, :warn, "Json parse error `\"invalid\"'")
               end
             end
           end
@@ -313,7 +313,7 @@ module VCAP::Services
                 expect_log_with_data(logger, :error, error, description ? { description: } : {})
 
                 # Some parsing errors are logged as 'warning'.
-                expect_warning ? expect_log(logger, :warn, /MultiJson parse error/) : expect_no_log(logger, :warn)
+                expect_warning ? expect_log(logger, :warn, /Json parse error/) : expect_no_log(logger, :warn)
 
                 # Validators are logged as 'information'.
                 expect_log_with_data(logger, :info, 'validators', validators ? { validators: } : {})

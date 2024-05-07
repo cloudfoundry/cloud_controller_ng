@@ -7,7 +7,7 @@ module VCAP::CloudController
         hash.map do |k, v|
           v = case v
               when Array, Hash
-                MultiJson.dump(v)
+                Oj.dump(v)
               else
                 v.to_s
               end

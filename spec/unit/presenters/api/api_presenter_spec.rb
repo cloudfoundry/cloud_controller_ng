@@ -30,7 +30,7 @@ RSpec.describe ApiPresenter do
 
   describe '#to_json' do
     it 'returns the hash as serialized JSON' do
-      expect(presenter.to_json).to eq(MultiJson.dump(presenter.to_hash, pretty: true))
+      expect(presenter.to_json).to eq(Oj.dump(presenter.to_hash))
     end
   end
 end

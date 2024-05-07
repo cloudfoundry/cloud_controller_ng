@@ -32,7 +32,7 @@ module VCAP::CloudController
       end
 
       instances = instances_reporters.all_instances_for_app(process)
-      MultiJson.dump(instances)
+      Oj.dump(instances, mode: :compat)
     end
 
     delete "#{path_guid}/instances/:index", :kill_instance

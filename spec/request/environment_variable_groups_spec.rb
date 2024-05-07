@@ -16,7 +16,7 @@ RSpec.describe 'Environment group variables' do
       get '/v3/environment_variable_groups/running', nil, user_header
       expect(last_response.status).to eq(200)
 
-      parsed_response = MultiJson.load(last_response.body)
+      parsed_response = Oj.load(last_response.body)
       expect(parsed_response).to match_json_response(
         {
           'updated_at' => iso8601,
@@ -38,7 +38,7 @@ RSpec.describe 'Environment group variables' do
       get '/v3/environment_variable_groups/staging', nil, user_header
       expect(last_response.status).to eq(200)
 
-      parsed_response = MultiJson.load(last_response.body)
+      parsed_response = Oj.load(last_response.body)
       expect(parsed_response).to match_json_response(
         {
           'updated_at' => iso8601,
@@ -61,7 +61,7 @@ RSpec.describe 'Environment group variables' do
         get '/v3/environment_variable_groups/purple', nil, user_header
 
         expect(last_response.status).to eq(404)
-        parsed_response = MultiJson.load(last_response.body)
+        parsed_response = Oj.load(last_response.body)
         expect(parsed_response['errors'][0]['detail']).to include('Environment variable group not found')
       end
     end
@@ -103,7 +103,7 @@ RSpec.describe 'Environment group variables' do
         patch '/v3/environment_variable_groups/running', params.to_json, admin_header
         expect(last_response.status).to eq(200)
 
-        parsed_response = MultiJson.load(last_response.body)
+        parsed_response = Oj.load(last_response.body)
         expect(parsed_response).to match_json_response(
           {
             'updated_at' => iso8601,
@@ -127,7 +127,7 @@ RSpec.describe 'Environment group variables' do
         patch '/v3/environment_variable_groups/staging', params.to_json, admin_header
         expect(last_response.status).to eq(200)
 
-        parsed_response = MultiJson.load(last_response.body)
+        parsed_response = Oj.load(last_response.body)
         expect(parsed_response).to match_json_response(
           {
             'updated_at' => iso8601,
@@ -152,7 +152,7 @@ RSpec.describe 'Environment group variables' do
         it 'does not error' do
           patch '/v3/environment_variable_groups/staging', params.to_json, admin_header
 
-          parsed_response = MultiJson.load(last_response.body)
+          parsed_response = Oj.load(last_response.body)
           expect(parsed_response).to match_json_response(
             {
               'updated_at' => iso8601,
@@ -220,7 +220,7 @@ RSpec.describe 'Environment group variables' do
         patch '/v3/environment_variable_groups/purple', params.to_json, admin_header
 
         expect(last_response.status).to eq(404)
-        parsed_response = MultiJson.load(last_response.body)
+        parsed_response = Oj.load(last_response.body)
         expect(parsed_response['errors'][0]['detail']).to include('Environment variable group not found')
       end
     end
@@ -241,7 +241,7 @@ RSpec.describe 'Environment group variables' do
           patch '/v3/environment_variable_groups/staging', big_params.to_json, admin_header
 
           expect(last_response.status).to eq(422)
-          parsed_response = MultiJson.load(last_response.body)
+          parsed_response = Oj.load(last_response.body)
           expect(parsed_response['errors'][0]['detail']).to include(
             'Environment variable group is too large. Specify fewer variables or reduce key/value lengths.'
           )

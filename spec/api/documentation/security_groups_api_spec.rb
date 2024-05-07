@@ -44,7 +44,7 @@ RSpec.resource 'Security Groups', type: %i[api legacy_api] do
     post '/v2/security_groups/' do
       include_context 'updatable_fields', required: true
       example 'Creating a Security Group' do
-        client.post '/v2/security_groups', fields_json({ rules: MultiJson.load(field_data('rules')[:example_values].first) }), headers
+        client.post '/v2/security_groups', fields_json({ rules: Oj.load(field_data('rules')[:example_values].first) }), headers
         expect(status).to eq(201)
 
         standard_entity_response parsed_response, :security_group
@@ -58,7 +58,7 @@ RSpec.resource 'Security Groups', type: %i[api legacy_api] do
       example 'Updating a Security Group' do
         new_security_group = { name: 'new_name', rules: [] }
 
-        client.put "/v2/security_groups/#{guid}", MultiJson.dump(new_security_group, pretty: true), headers
+        client.put "/v2/security_groups/#{guid}", Oj.dump(new_security_group), headers
         expect(status).to eq(201)
         standard_entity_response parsed_response, :security_group, expected_values: { name: 'new_name', rules: [] }
       end

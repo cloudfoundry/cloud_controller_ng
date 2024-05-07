@@ -9,7 +9,7 @@ module VCAP::CloudController
     def summary(guid)
       # Admins can see all users, non admins can only see themselves, see UserAccess.read?
       user = find_guid_and_validate_access(:read, guid)
-      MultiJson.dump UserSummaryPresenter.new(user).to_hash
+      Oj.dump(UserSummaryPresenter.new(user).to_hash, mode: :compat)
     end
   end
 end

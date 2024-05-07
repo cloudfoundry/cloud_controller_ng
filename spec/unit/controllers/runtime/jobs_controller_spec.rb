@@ -43,10 +43,10 @@ module VCAP::CloudController
           set_current_user(user)
           subject
           expect(last_response.status).to eq 200
-          expect(decoded_response(symbolize_keys: true)).to eq(
+          expect(decoded_response(symbol_keys: true)).to eq(
             ::JobPresenter.new(job).to_hash
           )
-          expect(decoded_response(symbolize_keys: true)[:metadata][:guid]).not_to be_nil
+          expect(decoded_response(symbol_keys: true)[:metadata][:guid]).not_to be_nil
         end
       end
 
@@ -58,7 +58,7 @@ module VCAP::CloudController
           set_current_user(user)
           subject
           expect(last_response.status).to eq 200
-          expect(decoded_response(symbolize_keys: true)).to eq(
+          expect(decoded_response(symbol_keys: true)).to eq(
             ::JobPresenter.new(job).to_hash
           )
         end

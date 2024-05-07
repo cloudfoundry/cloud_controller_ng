@@ -1108,7 +1108,7 @@ order_by=-created_at&created_ats[lt]=2028-05-26T18:47:01Z&guids=#{organization_a
         get('/v3/roles', nil, admin_header)
         expect(last_response).to have_status_code(200)
 
-        parsed_response = MultiJson.load(last_response.body)
+        parsed_response = Oj.load(last_response.body)
         expect(parsed_response['resources'][0]['guid']).to match('1')
         expect(parsed_response['resources'][1]['guid']).to match('2')
         expect(parsed_response['resources'][2]['guid']).to match('3')
@@ -1196,7 +1196,7 @@ order_by=-created_at&created_ats[lt]=2028-05-26T18:47:01Z&guids=#{organization_a
         get('/v3/roles?include=user,organization,space', nil, admin_header)
         expect(last_response).to have_status_code(200)
 
-        parsed_response = MultiJson.load(last_response.body)
+        parsed_response = Oj.load(last_response.body)
         expect(parsed_response['included']['users'][0]).to match_json_response(other_user_response)
         expect(parsed_response['included']['organizations'][0]).to match_json_response(org_response_object)
         expect(parsed_response['included']['spaces'][0]).to match_json_response(space_response_object)
@@ -1333,7 +1333,7 @@ order_by=-created_at&created_ats[lt]=2028-05-26T18:47:01Z&guids=#{organization_a
           get('/v3/roles?include=user,space,organization', nil, admin_header)
           expect(last_response).to have_status_code(200)
 
-          parsed_response = MultiJson.load(last_response.body)
+          parsed_response = Oj.load(last_response.body)
           expect(parsed_response['included']['users']).to contain_exactly(
             match_json_response(other_user_response),
             match_json_response(another_user_response)
@@ -1537,7 +1537,7 @@ order_by=-created_at&created_ats[lt]=2028-05-26T18:47:01Z&guids=#{organization_a
           get("/v3/roles/#{org_role.guid}?include=user,space,organization", nil, admin_header)
           expect(last_response).to have_status_code(200)
 
-          parsed_response = MultiJson.load(last_response.body)
+          parsed_response = Oj.load(last_response.body)
           expect(parsed_response['included']['users'][0]).to match_json_response(user_with_role_response)
           expect(parsed_response['included']['organizations'][0]).to match_json_response(org_response_object)
           expect(parsed_response['included']['spaces']).to eq([])
@@ -1549,7 +1549,7 @@ order_by=-created_at&created_ats[lt]=2028-05-26T18:47:01Z&guids=#{organization_a
           get("/v3/roles/#{space_role.guid}?include=user,space,organization", nil, admin_header)
           expect(last_response).to have_status_code(200)
 
-          parsed_response = MultiJson.load(last_response.body)
+          parsed_response = Oj.load(last_response.body)
           expect(parsed_response['included']['users'][0]).to match_json_response(user_with_role_response)
           expect(parsed_response['included']['organizations']).to eq([])
           expect(parsed_response['included']['spaces'][0]).to match_json_response(space_response_object)

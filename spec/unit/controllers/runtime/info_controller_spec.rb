@@ -9,19 +9,19 @@ module VCAP::CloudController
         set_current_user(User.make)
 
         get '/v2/info'
-        hash = MultiJson.load(last_response.body)
+        hash = Oj.load(last_response.body)
         expect(hash).to have_key('user')
       end
 
       it "excludes the 'user' entry when not authenticated" do
         get '/v2/info'
-        hash = MultiJson.load(last_response.body)
+        hash = Oj.load(last_response.body)
         expect(hash).not_to have_key('user')
       end
 
       it 'includes data from the config' do
         get '/v2/info'
-        hash = MultiJson.load(last_response.body)
+        hash = Oj.load(last_response.body)
         expect(hash['name']).to eq(TestConfig.config[:info][:name])
         expect(hash['build']).to eq(TestConfig.config[:info][:build])
         expect(hash['support']).to eq(TestConfig.config[:info][:support_address])
@@ -39,14 +39,14 @@ module VCAP::CloudController
       it 'includes the routing api endpoint when configured' do
         TestConfig.override(routing_api: { url: 'some_routing_api' })
         get '/v2/info'
-        hash = MultiJson.load(last_response.body)
+        hash = Oj.load(last_response.body)
         expect(hash['routing_endpoint']).to eq('some_routing_api')
       end
 
       it 'includes the doppler_logging_endpoint' do
         TestConfig.override(doppler: { url: 'doppler_url' })
         get '/v2/info'
-        hash = MultiJson.load(last_response.body)
+        hash = Oj.load(last_response.body)
         expect(hash['doppler_logging_endpoint']).to eq('doppler_url')
       end
 
@@ -56,7 +56,7 @@ module VCAP::CloudController
                               min_recommended_cli_version: 'min_recommended_cli_version'
                             })
         get '/v2/info'
-        hash = MultiJson.load(last_response.body)
+        hash = Oj.load(last_response.body)
         expect(hash['min_cli_version']).to eq('min_cli_version')
         expect(hash['min_recommended_cli_version']).to eq('min_recommended_cli_version')
       end
@@ -67,7 +67,7 @@ module VCAP::CloudController
 
           it 'does not have custom fields in the hash' do
             get '/v2/info'
-            hash = MultiJson.load(last_response.body)
+            hash = Oj.load(last_response.body)
             expect(hash).not_to have_key('custom')
           end
         end
@@ -78,7 +78,7 @@ module VCAP::CloudController
           it 'contains the custom fields' do
             get '/v2/info'
 
-            hash = MultiJson.load(last_response.body)
+            hash = Oj.load(last_response.body)
             expect(hash).to have_key('custom')
             expect(hash['custom']).to eq({ 'foo' => 'bar', 'baz' => 'foobar' })
           end

@@ -16,7 +16,7 @@ module VCAP::Services
             exception = AsyncRequired.new(uri, method, response)
             expect(exception.message).to eq(CloudController::Errors::ApiError.new_from_details('ServiceBrokerAsyncRequired').message)
             expect(exception.method).to eq(method)
-            expect(exception.source).to eq(MultiJson.load(response.body))
+            expect(exception.source).to eq(Oj.load(response.body))
           end
 
           it 'has a response_code of 400' do

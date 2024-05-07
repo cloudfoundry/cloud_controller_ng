@@ -13,12 +13,12 @@ RSpec.describe 'Broker API Versions' do
       'broker_api_v2.7_spec.rb' => '2160e3d4985039f8fd2881106c7226ae',
       'broker_api_v2.8_spec.rb' => '2b1b662b4874f5bac4481de7cf15b363',
       'broker_api_v2.9_spec.rb' => '002089c49e4c2db32689be56d48d4a45',
-      'broker_api_v2.10_spec.rb' => '87cef9fc24aba486b5ca7240cf270398',
+      'broker_api_v2.10_spec.rb' => '2668e6821e9b45ab6d7c7e9eca9deb68',
       'broker_api_v2.11_spec.rb' => '99e61dc50ceb635b09b3bd16901a4fa6',
       'broker_api_v2.12_spec.rb' => '1b6b1e41b72430362fcd74a0dff91b41',
-      'broker_api_v2.13_spec.rb' => 'fd84ad8a1bafce1c8c01bb0f6a277196',
-      'broker_api_v2.14_spec.rb' => '4bb0d2857e4859e88a6e193419a63768',
-      'broker_api_v2.15_spec.rb' => '8493f09e1b2894bc32d944786b973175'
+      'broker_api_v2.13_spec.rb' => '45bdcc63126a3a0d322a5bb853548201',
+      'broker_api_v2.14_spec.rb' => 'b0ea9e164981e6a1da32eb54aeb9c62d',
+      'broker_api_v2.15_spec.rb' => 'b868a2450959843e256012d8d6ce4142'
     }
   end
   let(:digester) { Digester.new(algorithm: OpenSSL::Digest::MD5) }

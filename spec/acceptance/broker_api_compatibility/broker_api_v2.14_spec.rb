@@ -23,7 +23,7 @@ RSpec.describe 'Service Broker API integration' do
           get("/v2/services/#{@service_guid}",
               {}.to_json,
               json_headers(admin_headers))
-          parsed_body = MultiJson.load(last_response.body)
+          parsed_body = Oj.load(last_response.body)
 
           expect(parsed_body['entity']['bindings_retrievable']).to be true
         end
@@ -42,7 +42,7 @@ RSpec.describe 'Service Broker API integration' do
             get("/v2/service_bindings/#{@binding_guid}/parameters",
                 {}.to_json,
                 json_headers(admin_headers))
-            parsed_body = MultiJson.load(last_response.body)
+            parsed_body = Oj.load(last_response.body)
             expect(parsed_body['foo']).to eq 'bar'
           end
 
@@ -56,7 +56,7 @@ RSpec.describe 'Service Broker API integration' do
             expect(
               a_request(:get, %r{/v2/service_instances/#{@service_instance_guid}/service_bindings/[[:alnum:]-]+}).with do |req|
                 m = req.headers['X-Broker-Api-Originating-Identity'].match(/(?<platform>\S+) (?<value>\S+)/)
-                value = MultiJson.load(Base64.strict_decode64(m[:value]))
+                value = Oj.load(Base64.strict_decode64(m[:value]))
                 m[:platform] == 'cloudfoundry' && value['user_id'] == user.guid
               end
             ).to have_been_made
@@ -75,7 +75,7 @@ RSpec.describe 'Service Broker API integration' do
           get("/v2/services/#{@service_guid}",
               {}.to_json,
               json_headers(admin_headers))
-          parsed_body = MultiJson.load(last_response.body)
+          parsed_body = Oj.load(last_response.body)
 
           expect(parsed_body['entity']['bindings_retrievable']).to be false
         end
@@ -86,7 +86,7 @@ RSpec.describe 'Service Broker API integration' do
           get("/v2/services/#{@service_guid}",
               {}.to_json,
               json_headers(admin_headers))
-          parsed_body = MultiJson.load(last_response.body)
+          parsed_body = Oj.load(last_response.body)
 
           expect(parsed_body['entity']['bindings_retrievable']).to be false
         end
@@ -105,7 +105,7 @@ RSpec.describe 'Service Broker API integration' do
           get("/v2/services/#{@service_guid}",
               {}.to_json,
               json_headers(admin_headers))
-          parsed_body = MultiJson.load(last_response.body)
+          parsed_body = Oj.load(last_response.body)
 
           expect(parsed_body['entity']['instances_retrievable']).to be true
         end
@@ -122,7 +122,7 @@ RSpec.describe 'Service Broker API integration' do
           get("/v2/services/#{@service_guid}",
               {}.to_json,
               json_headers(admin_headers))
-          parsed_body = MultiJson.load(last_response.body)
+          parsed_body = Oj.load(last_response.body)
 
           expect(parsed_body['entity']['instances_retrievable']).to be false
         end
@@ -133,7 +133,7 @@ RSpec.describe 'Service Broker API integration' do
           get("/v2/services/#{@service_guid}",
               {}.to_json,
               json_headers(admin_headers))
-          parsed_body = MultiJson.load(last_response.body)
+          parsed_body = Oj.load(last_response.body)
 
           expect(parsed_body['entity']['instances_retrievable']).to be false
         end

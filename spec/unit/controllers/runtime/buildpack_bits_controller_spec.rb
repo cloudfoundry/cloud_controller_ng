@@ -164,7 +164,7 @@ module VCAP::CloudController
           put "/v2/buildpacks/#{test_buildpack.guid}/bits", { buildpack: valid_zip_manifest, buildpack_name: valid_zip_manifest.path }
           expect(last_response.status).to be 422
 
-          json = MultiJson.load(last_response.body)
+          json = Oj.load(last_response.body)
           expect(json['code']).to eq(390_011)
           expect(json['description']).to eql 'Uploaded buildpack stack (stack-from-manifest) does not match not-from-manifest'
 
@@ -175,7 +175,7 @@ module VCAP::CloudController
         it 'requires a filename as part of the upload' do
           put "/v2/buildpacks/#{test_buildpack.guid}/bits", { buildpack: 'abc' }
           expect(last_response.status).to be 400
-          json = MultiJson.load(last_response.body)
+          json = Oj.load(last_response.body)
           expect(json['code']).to eq(290_002)
           expect(json['description']).to match(/a filename must be specified/)
         end
@@ -184,7 +184,7 @@ module VCAP::CloudController
           expect(FileUtils).not_to receive(:rm_f)
           put "/v2/buildpacks/#{test_buildpack.guid}/bits", { buildpack: nil, buildpack_name: 'abc.zip' }
           expect(last_response.status).to eq(400)
-          json = MultiJson.load(last_response.body)
+          json = Oj.load(last_response.body)
           expect(json['code']).to eq(290_002)
           expect(json['description']).to match(/a file must be provided/)
         end
@@ -195,7 +195,7 @@ module VCAP::CloudController
 
           put "/v2/buildpacks/#{test_buildpack.guid}/bits", { buildpack: valid_tar_gz }
           expect(last_response.status).to be 400
-          json = MultiJson.load(last_response.body)
+          json = Oj.load(last_response.body)
           expect(json['code']).to eq(290_002)
           expect(json['description']).to match(/only zip files allowed/)
         end
@@ -210,7 +210,7 @@ module VCAP::CloudController
           expect(buildpack_blobstore.exists?(expected_sha)).to be true
 
           put "/v2/buildpacks/#{test_buildpack.guid}/bits", upload_body
-          response = MultiJson.load(last_response.body)
+          response = Oj.load(last_response.body)
           expect(response['entity']['name']).to eq('upload_binary_buildpack')
           expect(response['entity']['filename']).to eq(filename)
           expect(buildpack_blobstore.exists?(expected_sha)).to be false

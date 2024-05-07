@@ -23,7 +23,7 @@ module ApiDsl
       set_param(hash, param)
     end
     body_parameters.merge!(extra_params)
-    MultiJson.dump(body_parameters, pretty: true)
+    Oj.dump(body_parameters)
   end
 
   module ClassMethods

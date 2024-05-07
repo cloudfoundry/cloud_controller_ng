@@ -140,7 +140,7 @@ RSpec.resource 'Apps', type: %i[api legacy_api] do
       example 'Creating an App' do
         space_guid = VCAP::CloudController::Space.make.guid
         ports      = [1024, 2000]
-        client.post '/v2/apps', MultiJson.dump(required_fields.merge(space_guid: space_guid, diego: true, ports: ports), pretty: true), headers
+        client.post '/v2/apps', Oj.dump(required_fields.merge(space_guid: space_guid, diego: true, ports: ports)), headers
         expect(status).to eq(201)
 
         standard_entity_response parsed_response, 'ProcessModel'
@@ -153,7 +153,7 @@ RSpec.resource 'Apps', type: %i[api legacy_api] do
         space_guid = VCAP::CloudController::Space.make.guid
 
         data = required_fields.merge(space_guid: space_guid, name: 'docker_app', docker_image: 'cloudfoundry/diego-docker-app', diego: true)
-        client.post '/v2/apps', MultiJson.dump(data, pretty: true), headers
+        client.post '/v2/apps', Oj.dump(data), headers
         expect(status).to eq(201)
 
         standard_entity_response parsed_response, 'ProcessModel'
@@ -171,7 +171,7 @@ RSpec.resource 'Apps', type: %i[api legacy_api] do
       example 'Updating an App' do
         new_attributes = { name: 'new_name' }
 
-        client.put "/v2/apps/#{guid}", MultiJson.dump(new_attributes, pretty: true), headers
+        client.put "/v2/apps/#{guid}", Oj.dump(new_attributes), headers
         expect(status).to eq(201)
         standard_entity_response parsed_response, 'ProcessModel', expected_values: { name: 'new_name' }
       end

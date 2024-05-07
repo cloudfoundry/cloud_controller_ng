@@ -72,7 +72,7 @@ RSpec.describe 'Packages' do
           }
         }.to_json
 
-        parsed_response = MultiJson.load(last_response.body)
+        parsed_response = Oj.load(last_response.body)
         expect(last_response.status).to eq(201)
         expect(parsed_response).to be_a_response_like(expected_response)
 
@@ -170,7 +170,7 @@ RSpec.describe 'Packages' do
         }
 
         expect(last_response.status).to eq(201)
-        parsed_response = MultiJson.load(last_response.body)
+        parsed_response = Oj.load(last_response.body)
         expect(parsed_response).to be_a_response_like(expected_response)
 
         expected_event_metadata = {
@@ -368,7 +368,7 @@ RSpec.describe 'Packages' do
 
         get "/v3/apps/#{guid}/packages?page=#{page}&per_page=#{per_page}&order_by=#{order_by}", {}, user_header
 
-        parsed_response = MultiJson.load(last_response.body)
+        parsed_response = Oj.load(last_response.body)
 
         expect(last_response.status).to eq(200)
         expect(parsed_response).to be_a_response_like(expected_response)
@@ -407,7 +407,7 @@ RSpec.describe 'Packages' do
           'previous' => nil
         }
 
-        parsed_response = MultiJson.load(last_response.body)
+        parsed_response = Oj.load(last_response.body)
 
         expect(last_response.status).to eq(200)
         expect(parsed_response['resources'].count).to eq(3)
@@ -432,7 +432,7 @@ RSpec.describe 'Packages' do
           'previous' => nil
         }
 
-        parsed_response = MultiJson.load(last_response.body)
+        parsed_response = Oj.load(last_response.body)
 
         expect(last_response.status).to eq(200)
         expect(parsed_response['resources'].count).to eq(2)
@@ -456,7 +456,7 @@ RSpec.describe 'Packages' do
           'previous' => nil
         }
 
-        parsed_response = MultiJson.load(last_response.body)
+        parsed_response = Oj.load(last_response.body)
 
         expect(last_response.status).to eq(200)
         expect(parsed_response['resources'].pluck('guid')).to contain_exactly(package1.guid, package2.guid)
@@ -602,7 +602,7 @@ RSpec.describe 'Packages' do
             'previous' => nil
           }
 
-          parsed_response = MultiJson.load(last_response.body)
+          parsed_response = Oj.load(last_response.body)
 
           expect(last_response.status).to eq(200)
           expect(parsed_response['resources'].count).to eq(3)
@@ -629,7 +629,7 @@ RSpec.describe 'Packages' do
             'previous' => nil
           }
 
-          parsed_response = MultiJson.load(last_response.body)
+          parsed_response = Oj.load(last_response.body)
 
           expect(last_response.status).to eq(200)
           expect(parsed_response['resources'].count).to eq(3)
@@ -654,7 +654,7 @@ RSpec.describe 'Packages' do
             'previous' => nil
           }
 
-          parsed_response = MultiJson.load(last_response.body)
+          parsed_response = Oj.load(last_response.body)
 
           expect(last_response.status).to eq(200)
           expect(parsed_response['resources'].pluck('guid')).to contain_exactly(package1.guid, package2.guid)
@@ -678,7 +678,7 @@ RSpec.describe 'Packages' do
             'previous' => nil
           }
 
-          parsed_response = MultiJson.load(last_response.body)
+          parsed_response = Oj.load(last_response.body)
 
           expect(last_response.status).to eq(200)
           expect(parsed_response['resources'].pluck('guid')).to contain_exactly(package1.guid, package2.guid)
@@ -709,7 +709,7 @@ RSpec.describe 'Packages' do
             'previous' => nil
           }
 
-          parsed_response = MultiJson.load(last_response.body)
+          parsed_response = Oj.load(last_response.body)
 
           expect(last_response.status).to eq(200)
           expect(parsed_response['resources'].pluck('guid')).to contain_exactly(package_on_space2.guid, package_on_space1.guid)
@@ -747,7 +747,7 @@ RSpec.describe 'Packages' do
             'previous' => nil
           }
 
-          parsed_response = MultiJson.load(last_response.body)
+          parsed_response = Oj.load(last_response.body)
 
           expect(last_response.status).to eq(200)
           expect(parsed_response['resources'].pluck('guid')).to contain_exactly(package_in_org1.guid, package_in_org2.guid)
@@ -771,7 +771,7 @@ RSpec.describe 'Packages' do
             'previous' => nil
           }
 
-          parsed_response = MultiJson.load(last_response.body)
+          parsed_response = Oj.load(last_response.body)
 
           expect(last_response.status).to eq(200)
           expect(parsed_response['resources'].count).to eq(1)
@@ -879,7 +879,7 @@ RSpec.describe 'Packages' do
             'app' => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}" }
           }
         }
-        parsed_response = MultiJson.load(last_response.body)
+        parsed_response = Oj.load(last_response.body)
         expect(last_response.status).to eq(200)
         expect(parsed_response).to be_a_response_like(expected_response)
 
@@ -1129,7 +1129,7 @@ RSpec.describe 'Packages' do
         'annotations' => { 'checksum' => 'SHA' }
       }
 
-      parsed_response = MultiJson.load(last_response.body)
+      parsed_response = Oj.load(last_response.body)
       expect(last_response.status).to eq(200)
       expect(parsed_response['metadata']).to eq(expected_metadata)
     end

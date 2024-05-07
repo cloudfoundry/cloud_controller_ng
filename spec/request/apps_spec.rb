@@ -136,7 +136,7 @@ RSpec.describe 'Apps' do
         post '/v3/apps', create_request.to_json, user_header
         expect(last_response.status).to eq(201)
 
-        parsed_response = MultiJson.load(last_response.body)
+        parsed_response = Oj.load(last_response.body)
         app_guid = parsed_response['guid']
 
         expect(VCAP::CloudController::AppModel.find(guid: app_guid)).to be
@@ -208,7 +208,7 @@ RSpec.describe 'Apps' do
         post '/v3/apps', create_request.to_json, user_header
         expect(last_response.status).to eq(201)
 
-        parsed_response = MultiJson.load(last_response.body)
+        parsed_response = Oj.load(last_response.body)
         app_guid = parsed_response['guid']
         expect(VCAP::CloudController::AppModel.find(guid: app_guid)).not_to be_nil
         expect(VCAP::CloudController::ProcessModel.find(guid: app_guid)).not_to be_nil
@@ -225,7 +225,7 @@ RSpec.describe 'Apps' do
           Timecop.freeze do
             post '/v3/apps', create_request.to_json, user_header
 
-            parsed_response = MultiJson.load(last_response.body)
+            parsed_response = Oj.load(last_response.body)
             app_guid = parsed_response['guid']
 
             expected_json = {
@@ -300,7 +300,7 @@ RSpec.describe 'Apps' do
             }
           }
 
-          parsed_response = MultiJson.load(last_response.body)
+          parsed_response = Oj.load(last_response.body)
           expect(parsed_response).to be_a_response_like(expected_response)
 
           event = VCAP::CloudController::Event.last
@@ -342,7 +342,7 @@ RSpec.describe 'Apps' do
             post '/v3/apps', create_request.to_json, user_header
 
             expect(last_response.status).to eq(201)
-            parsed_response = MultiJson.load(last_response.body)
+            parsed_response = Oj.load(last_response.body)
             expect(parsed_response['lifecycle']['type']).to eq('buildpack')
           end
         end
@@ -537,7 +537,7 @@ RSpec.describe 'Apps' do
         get '/v3/apps?per_page=2&include=space', nil, user_header
         expect(last_response.status).to eq(200)
 
-        parsed_response = MultiJson.load(last_response.body)
+        parsed_response = Oj.load(last_response.body)
         expect(parsed_response).to be_a_response_like(
           {
             'pagination' => {
@@ -711,7 +711,7 @@ RSpec.describe 'Apps' do
           'previous' => nil
         }
 
-        parsed_response = MultiJson.load(last_response.body)
+        parsed_response = Oj.load(last_response.body)
 
         expect(last_response.status).to eq(200)
         expect(parsed_response['resources'].pluck('name')).to eq(%w[name1 name3])
@@ -734,7 +734,7 @@ RSpec.describe 'Apps' do
           'previous' => nil
         }
 
-        parsed_response = MultiJson.load(last_response.body)
+        parsed_response = Oj.load(last_response.body)
 
         expect(last_response.status).to eq(200)
         expect(parsed_response['resources'].pluck('name')).to eq(%w[name1 name2])
@@ -757,7 +757,7 @@ RSpec.describe 'Apps' do
           'previous' => nil
         }
 
-        parsed_response = MultiJson.load(last_response.body)
+        parsed_response = Oj.load(last_response.body)
 
         expect(last_response.status).to eq(200)
         expect(parsed_response['resources'].pluck('name')).to eq(%w[name1 name3])
@@ -780,7 +780,7 @@ RSpec.describe 'Apps' do
           'previous' => nil
         }
 
-        parsed_response = MultiJson.load(last_response.body)
+        parsed_response = Oj.load(last_response.body)
 
         expect(last_response.status).to eq(200)
         expect(parsed_response['resources'].pluck('name')).to eq(%w[name1 name3])
@@ -815,7 +815,7 @@ RSpec.describe 'Apps' do
           'previous' => nil
         }
 
-        parsed_response = MultiJson.load(last_response.body)
+        parsed_response = Oj.load(last_response.body)
 
         expect(last_response.status).to eq(200)
         expect(parsed_response['resources'].pluck('name')).to eq(%w[name1 name2])
@@ -850,7 +850,7 @@ RSpec.describe 'Apps' do
           'previous' => nil
         }
 
-        parsed_response = MultiJson.load(last_response.body)
+        parsed_response = Oj.load(last_response.body)
 
         expect(last_response.status).to eq(200)
         expect(parsed_response['resources'].pluck('name')).to eq(['name1'])
@@ -876,7 +876,7 @@ RSpec.describe 'Apps' do
           'previous' => nil
         }
 
-        parsed_response = MultiJson.load(last_response.body)
+        parsed_response = Oj.load(last_response.body)
 
         expect(last_response.status).to eq(200)
         expect(parsed_response['resources'].pluck('name')).to eq(%w[name1 name3])
@@ -902,7 +902,7 @@ RSpec.describe 'Apps' do
         # ASCENDING
         get '/v3/apps?order_by=name', nil, user_header
         expect(last_response.status).to eq(200)
-        parsed_response = MultiJson.load(last_response.body)
+        parsed_response = Oj.load(last_response.body)
         app_names = parsed_response['resources'].pluck('name')
         expect(app_names).to eq(ascending)
         expect(parsed_response['pagination']['first']['href']).to include("order_by=#{CGI.escape('+')}name")
@@ -910,7 +910,7 @@ RSpec.describe 'Apps' do
         # DESCENDING
         get '/v3/apps?order_by=-name', nil, user_header
         expect(last_response.status).to eq(200)
-        parsed_response = MultiJson.load(last_response.body)
+        parsed_response = Oj.load(last_response.body)
         app_names = parsed_response['resources'].pluck('name')
         expect(app_names).to eq(descending)
         expect(parsed_response['pagination']['first']['href']).to include('order_by=-name')
@@ -927,7 +927,7 @@ RSpec.describe 'Apps' do
         # ASCENDING
         get '/v3/apps?order_by=state', nil, user_header
         expect(last_response.status).to eq(200)
-        parsed_response = MultiJson.load(last_response.body)
+        parsed_response = Oj.load(last_response.body)
         app_states = parsed_response['resources'].pluck('state')
         expect(app_states).to eq(ascending)
         expect(parsed_response['pagination']['first']['href']).to include("order_by=#{CGI.escape('+')}state")
@@ -935,7 +935,7 @@ RSpec.describe 'Apps' do
         # DESCENDING
         get '/v3/apps?order_by=-state', nil, user_header
         expect(last_response.status).to eq(200)
-        parsed_response = MultiJson.load(last_response.body)
+        parsed_response = Oj.load(last_response.body)
         app_states = parsed_response['resources'].pluck('state')
         expect(app_states).to eq(descending)
         expect(parsed_response['pagination']['first']['href']).to include('order_by=-state')
@@ -955,7 +955,7 @@ RSpec.describe 'Apps' do
       it 'returns a 200 and the filtered apps for "in" label selector' do
         get '/v3/apps?label_selector=foo in (bar)', nil, admin_header
 
-        parsed_response = MultiJson.load(last_response.body)
+        parsed_response = Oj.load(last_response.body)
 
         expected_pagination = {
           'total_results' => 1,
@@ -974,7 +974,7 @@ RSpec.describe 'Apps' do
       it 'returns a 200 and the filtered apps for "notin" label selector' do
         get '/v3/apps?label_selector=foo notin (bar)', nil, admin_header
 
-        parsed_response = MultiJson.load(last_response.body)
+        parsed_response = Oj.load(last_response.body)
 
         expected_pagination = {
           'total_results' => 1,
@@ -993,7 +993,7 @@ RSpec.describe 'Apps' do
       it 'returns a 200 and the filtered apps for "=" label selector' do
         get '/v3/apps?label_selector=foo=bar', nil, admin_header
 
-        parsed_response = MultiJson.load(last_response.body)
+        parsed_response = Oj.load(last_response.body)
 
         expected_pagination = {
           'total_results' => 1,
@@ -1012,7 +1012,7 @@ RSpec.describe 'Apps' do
       it 'returns a 200 and the filtered apps for "==" label selector' do
         get '/v3/apps?label_selector=foo==bar', nil, admin_header
 
-        parsed_response = MultiJson.load(last_response.body)
+        parsed_response = Oj.load(last_response.body)
 
         expected_pagination = {
           'total_results' => 1,
@@ -1031,7 +1031,7 @@ RSpec.describe 'Apps' do
       it 'returns a 200 and the filtered apps for "!=" label selector' do
         get '/v3/apps?label_selector=foo!=bar', nil, admin_header
 
-        parsed_response = MultiJson.load(last_response.body)
+        parsed_response = Oj.load(last_response.body)
 
         expected_pagination = {
           'total_results' => 1,
@@ -1050,7 +1050,7 @@ RSpec.describe 'Apps' do
       it 'returns a 200 and the filtered apps for "==" label selector' do
         get '/v3/apps?label_selector=foo=funky,santa=claus', nil, admin_header
 
-        parsed_response = MultiJson.load(last_response.body)
+        parsed_response = Oj.load(last_response.body)
 
         expected_pagination = {
           'total_results' => 1,
@@ -1069,7 +1069,7 @@ RSpec.describe 'Apps' do
       it 'returns a 200 and the filtered apps for existence label selector' do
         get '/v3/apps?label_selector=santa', nil, admin_header
 
-        parsed_response = MultiJson.load(last_response.body)
+        parsed_response = Oj.load(last_response.body)
 
         expected_pagination = {
           'total_results' => 1,
@@ -1088,7 +1088,7 @@ RSpec.describe 'Apps' do
       it 'returns a 200 and the filtered apps for non-existence label selector' do
         get '/v3/apps?label_selector=!santa', nil, admin_header
 
-        parsed_response = MultiJson.load(last_response.body)
+        parsed_response = Oj.load(last_response.body)
 
         expected_pagination = {
           'total_results' => 1,
@@ -1121,7 +1121,7 @@ RSpec.describe 'Apps' do
       it 'returns a 200 and the correct app when querying with space guid' do
         get "/v3/apps?space_guids=#{space2.guid}&label_selector=foo==funky", nil, admin_header
 
-        parsed_response = MultiJson.load(last_response.body)
+        parsed_response = Oj.load(last_response.body)
 
         expected_pagination = {
           'total_results' => 1,
@@ -1140,7 +1140,7 @@ RSpec.describe 'Apps' do
       it 'returns a 200 and the correct app when querying with space guid' do
         get "/v3/apps?space_guids=#{space2.guid}&label_selector=fruit==strawberry&names=name2", nil, admin_header
 
-        parsed_response = MultiJson.load(last_response.body)
+        parsed_response = Oj.load(last_response.body)
 
         expected_pagination = {
           'total_results' => 1,
@@ -1179,7 +1179,7 @@ RSpec.describe 'Apps' do
         get '/v3/apps?per_page=2&include=space,space.organization', nil, admin_header
         expect(last_response.status).to eq(200)
 
-        parsed_response = MultiJson.load(last_response.body)
+        parsed_response = Oj.load(last_response.body)
 
         expect(parsed_response['included']['organizations'][0]).to be_a_response_like({
                                                                                         'guid' => org1.guid,
@@ -1242,7 +1242,7 @@ RSpec.describe 'Apps' do
 
       it 'does not include spaces if no one asks for them' do
         get '/v3/apps', nil, admin_header
-        parsed_response = MultiJson.load(last_response.body)
+        parsed_response = Oj.load(last_response.body)
         expect(parsed_response).not_to have_key('included')
       end
     end
@@ -1347,7 +1347,7 @@ RSpec.describe 'Apps' do
         get "/v3/apps/#{app_model.guid}", nil, user_header
         expect(last_response.status).to eq(200)
 
-        parsed_response = MultiJson.load(last_response.body)
+        parsed_response = Oj.load(last_response.body)
         expect(parsed_response).to be_a_response_like(
           {
             'name' => 'my_app',
@@ -1393,7 +1393,7 @@ RSpec.describe 'Apps' do
         get "/v3/apps/#{app_model.guid}?include=space", nil, user_header
         expect(last_response.status).to eq(200)
 
-        parsed_response = MultiJson.load(last_response.body)
+        parsed_response = Oj.load(last_response.body)
         expect(parsed_response).to be_a_response_like(
           {
             'name' => 'my_app',
@@ -1474,7 +1474,7 @@ RSpec.describe 'Apps' do
         get "/v3/apps/#{app_model.guid}?include=space.organization", nil, user_header
         expect(last_response.status).to eq(200)
 
-        parsed_response = MultiJson.load(last_response.body)
+        parsed_response = Oj.load(last_response.body)
         spaces = parsed_response['included']['spaces']
         orgs = parsed_response['included']['organizations']
 
@@ -1794,7 +1794,7 @@ RSpec.describe 'Apps' do
       it 'lists the builds for app' do
         get "v3/apps/#{app_model.guid}/builds?order_by=#{order_by}&per_page=#{per_page}", nil, user_header
 
-        parsed_response = MultiJson.load(last_response.body)
+        parsed_response = Oj.load(last_response.body)
 
         expect(last_response.status).to eq(200)
         expect(parsed_response['resources']).to include(hash_including('guid' => build.guid))
@@ -2120,7 +2120,7 @@ RSpec.describe 'Apps' do
 
       app_model.reload
 
-      parsed_response = MultiJson.load(last_response.body)
+      parsed_response = Oj.load(last_response.body)
       expect(parsed_response).to be_a_response_like(expected_response_object)
 
       event = VCAP::CloudController::Event.last

@@ -466,11 +466,11 @@ module VCAP::CloudController
               end
 
               def sekret_with_serialization
-                MultiJson.load(sekret_without_serialization)
+                Oj.load(sekret_without_serialization)
               end
 
               def sekret_with_serialization=(sekret)
-                self.sekret_without_serialization = MultiJson.dump(sekret)
+                self.sekret_without_serialization = Oj.dump(sekret)
               end
 
               alias_method 'sekret_without_serialization', 'sekret'

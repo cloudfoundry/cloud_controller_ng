@@ -88,7 +88,7 @@ module VCAP::Services
       end
 
       def redact_credentials(response)
-        body = MultiJson.load(response.body)
+        body = Oj.load(response.body)
         body['credentials'] = VCAP::CloudController::Presenters::Censorship::REDACTED if body['credentials']
         body.inspect
       rescue StandardError

@@ -22,7 +22,7 @@ RSpec.describe 'ServicePlans' do
       get '/v2/service_plans', nil, headers_for(user)
       expect(last_response).to have_status_code(200)
 
-      parsed_response = MultiJson.load(last_response.body)
+      parsed_response = Oj.load(last_response.body)
       expect(parsed_response).to be_a_response_like(
         {
           'total_results' => 1,
@@ -83,7 +83,7 @@ RSpec.describe 'ServicePlans' do
       get "/v2/service_plans/#{service_plan.guid}", nil, headers_for(user)
       expect(last_response).to have_status_code(200)
 
-      parsed_response = MultiJson.load(last_response.body)
+      parsed_response = Oj.load(last_response.body)
       expect(parsed_response).to be_a_response_like(
         {
           'metadata' => {

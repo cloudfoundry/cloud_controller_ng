@@ -769,7 +769,7 @@ RSpec.describe TasksController, type: :controller do
             }
           }
 
-          parsed_response = MultiJson.load(response.body)
+          parsed_response = Oj.load(response.body)
           expect(parsed_response['metadata']).to be_a_response_like(expected_metadata_response)
         end
 
@@ -829,7 +829,7 @@ RSpec.describe TasksController, type: :controller do
               }
             }
 
-            parsed_response = MultiJson.load(response.body)
+            parsed_response = Oj.load(response.body)
             expect(parsed_response['metadata']).to be_a_response_like(expected_metadata_response)
           end
         end

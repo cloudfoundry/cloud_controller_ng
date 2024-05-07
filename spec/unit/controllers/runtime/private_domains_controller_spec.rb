@@ -30,7 +30,7 @@ module VCAP::CloudController
         let(:organization) { Organization.make }
 
         let(:request_body) do
-          MultiJson.dump({ name: 'blah.com', owning_organization_guid: organization.guid })
+          Oj.dump({ name: 'blah.com', owning_organization_guid: organization.guid })
         end
 
         before do
@@ -128,7 +128,7 @@ module VCAP::CloudController
         quota_definition.save
 
         set_current_user_as_admin
-        post '/v2/private_domains', MultiJson.dump(name: 'foo.com', owning_organization_guid: organization.guid)
+        post '/v2/private_domains', Oj.dump(name: 'foo.com', owning_organization_guid: organization.guid)
 
         expect(last_response.status).to eq(400)
         expect(decoded_response['code']).to eq(130_005)

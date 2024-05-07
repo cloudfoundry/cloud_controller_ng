@@ -8,11 +8,11 @@ RSpec.describe 'Spaces' do
 
   describe 'POST /v2/spaces' do
     let(:opts) do
-      MultiJson.dump({
-                       'name' => 'space_name',
-                       'organization_guid' => org.guid,
-                       'isolation_segment_guid' => isolation_segment.guid
-                     })
+      Oj.dump({
+                'name' => 'space_name',
+                'organization_guid' => org.guid,
+                'isolation_segment_guid' => isolation_segment.guid
+              })
     end
 
     context 'as admin' do
@@ -25,7 +25,7 @@ RSpec.describe 'Spaces' do
           post '/v2/spaces', opts, admin_headers_for(user)
 
           expect(last_response.status).to eq(201)
-          parsed_response = MultiJson.load(last_response.body)
+          parsed_response = Oj.load(last_response.body)
 
           space = VCAP::CloudController::Space.last
 
@@ -79,7 +79,7 @@ RSpec.describe 'Spaces' do
         get '/v2/spaces', {}, headers_for(user)
 
         expect(last_response.status).to eq(200)
-        parsed_response = MultiJson.load(last_response.body)
+        parsed_response = Oj.load(last_response.body)
 
         expect(parsed_response).to be_a_response_like({
                                                         'total_results' => 1,
@@ -136,7 +136,7 @@ RSpec.describe 'Spaces' do
         get "/v2/spaces/#{space.guid}", {}, headers_for(user)
 
         expect(last_response.status).to eq(200)
-        parsed_response = MultiJson.load(last_response.body)
+        parsed_response = Oj.load(last_response.body)
 
         expect(parsed_response).to be_a_response_like({
                                                         'metadata' => {
@@ -188,7 +188,7 @@ RSpec.describe 'Spaces' do
       get "/v2/spaces/#{space.guid}/service_instances", {}, headers_for(user)
 
       expect(last_response.status).to eq(200)
-      parsed_response = MultiJson.load(last_response.body)
+      parsed_response = Oj.load(last_response.body)
 
       expect(parsed_response).to be_a_response_like({
                                                       'total_results' => 1,
@@ -245,7 +245,7 @@ RSpec.describe 'Spaces' do
       get "/v2/spaces/#{space.guid}/services", nil, headers_for(user)
       expect(last_response).to have_status_code(200)
 
-      parsed_response = MultiJson.load(last_response.body)
+      parsed_response = Oj.load(last_response.body)
       expect(parsed_response['resources'].first['entity']['service_broker_name']).to eq(service_1.service_broker.name)
       expect(parsed_response['resources'].second['entity']['service_broker_name']).to eq(service_2.service_broker.name)
     end
@@ -270,7 +270,7 @@ RSpec.describe 'Spaces' do
       get "/v2/spaces/#{space.guid}/summary", nil, headers_for(user)
       expect(last_response).to have_status_code(200)
 
-      parsed_response = MultiJson.load(last_response.body)
+      parsed_response = Oj.load(last_response.body)
       expect(parsed_response).to be_a_response_like({
                                                       'guid' => space.guid,
                                                       'name' => space.name,

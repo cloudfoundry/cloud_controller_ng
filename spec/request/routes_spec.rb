@@ -676,7 +676,7 @@ RSpec.describe 'Routes Request' do
           get '/v3/routes?label_selector=animal in (dog)', nil, admin_header
 
           expect(last_response).to have_status_code(200), last_response.body
-          parsed_response = MultiJson.load(last_response.body)
+          parsed_response = Oj.load(last_response.body)
 
           expected_pagination = {
             'total_results' => 1,
@@ -695,7 +695,7 @@ RSpec.describe 'Routes Request' do
           get "/v3/routes?label_selector=animal in (dog)&space_guids=#{space.guid}", nil, admin_header
 
           expect(last_response).to have_status_code(200)
-          parsed_response = MultiJson.load(last_response.body)
+          parsed_response = Oj.load(last_response.body)
 
           expected_pagination = {
             'total_results' => 1,
@@ -714,7 +714,7 @@ RSpec.describe 'Routes Request' do
           get "/v3/routes?label_selector=animal in (dog)&organization_guids=#{org.guid}", nil, admin_header
 
           expect(last_response).to have_status_code(200), last_response.body
-          parsed_response = MultiJson.load(last_response.body)
+          parsed_response = Oj.load(last_response.body)
 
           expected_pagination = {
             'total_results' => 1,
@@ -733,7 +733,7 @@ RSpec.describe 'Routes Request' do
           get "/v3/routes?label_selector=animal in (dog)&domain_guids=#{domain1.guid}", nil, admin_header
 
           expect(last_response).to have_status_code(200), last_response.body
-          parsed_response = MultiJson.load(last_response.body)
+          parsed_response = Oj.load(last_response.body)
 
           expected_pagination = {
             'total_results' => 1,
@@ -752,7 +752,7 @@ RSpec.describe 'Routes Request' do
           get '/v3/routes?label_selector=animal in (dog)&hosts=hall', nil, admin_header
 
           expect(last_response).to have_status_code(200), last_response.body
-          parsed_response = MultiJson.load(last_response.body)
+          parsed_response = Oj.load(last_response.body)
 
           expected_pagination = {
             'total_results' => 1,
@@ -771,7 +771,7 @@ RSpec.describe 'Routes Request' do
           get '/v3/routes?label_selector=animal in (dog)&paths=/oates', nil, admin_header
 
           expect(last_response).to have_status_code(200)
-          parsed_response = MultiJson.load(last_response.body)
+          parsed_response = Oj.load(last_response.body)
 
           expected_pagination = {
             'total_results' => 1,
@@ -791,7 +791,7 @@ RSpec.describe 'Routes Request' do
       it 'returns a 200 and the filtered routes for "notin" label selector' do
         get '/v3/routes?label_selector=animal notin (dog)', nil, admin_header
 
-        parsed_response = MultiJson.load(last_response.body)
+        parsed_response = Oj.load(last_response.body)
 
         expected_pagination = {
           'total_results' => 3,
@@ -810,7 +810,7 @@ RSpec.describe 'Routes Request' do
       it 'returns a 200 and the filtered routes for "=" label selector' do
         get '/v3/routes?label_selector=animal=dog', nil, admin_header
 
-        parsed_response = MultiJson.load(last_response.body)
+        parsed_response = Oj.load(last_response.body)
 
         expected_pagination = {
           'total_results' => 1,
@@ -829,7 +829,7 @@ RSpec.describe 'Routes Request' do
       it 'returns a 200 and the filtered domains for "==" label selector' do
         get '/v3/routes?label_selector=animal==dog', nil, admin_header
 
-        parsed_response = MultiJson.load(last_response.body)
+        parsed_response = Oj.load(last_response.body)
 
         expected_pagination = {
           'total_results' => 1,
@@ -848,7 +848,7 @@ RSpec.describe 'Routes Request' do
       it 'returns a 200 and the filtered routes for "!=" label selector' do
         get '/v3/routes?label_selector=animal!=dog', nil, admin_header
 
-        parsed_response = MultiJson.load(last_response.body)
+        parsed_response = Oj.load(last_response.body)
 
         expected_pagination = {
           'total_results' => 3,
@@ -867,7 +867,7 @@ RSpec.describe 'Routes Request' do
       it 'returns a 200 and the filtered routes for "=" label selector' do
         get '/v3/routes?label_selector=animal=cow,santa=claus', nil, admin_header
 
-        parsed_response = MultiJson.load(last_response.body)
+        parsed_response = Oj.load(last_response.body)
 
         expected_pagination = {
           'total_results' => 1,
@@ -886,7 +886,7 @@ RSpec.describe 'Routes Request' do
       it 'returns a 200 and the filtered routes for existence label selector' do
         get '/v3/routes?label_selector=santa', nil, admin_header
 
-        parsed_response = MultiJson.load(last_response.body)
+        parsed_response = Oj.load(last_response.body)
 
         expected_pagination = {
           'total_results' => 1,
@@ -905,7 +905,7 @@ RSpec.describe 'Routes Request' do
       it 'returns a 200 and the filtered routes for non-existence label selector' do
         get '/v3/routes?label_selector=!santa', nil, admin_header
 
-        parsed_response = MultiJson.load(last_response.body)
+        parsed_response = Oj.load(last_response.body)
 
         expected_pagination = {
           'total_results' => 3,

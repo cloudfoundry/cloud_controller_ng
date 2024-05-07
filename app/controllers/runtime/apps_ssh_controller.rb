@@ -33,7 +33,7 @@ module VCAP::CloudController
       record_ssh_authorized_event(process, index)
 
       response_body = { 'process_guid' => VCAP::CloudController::Diego::ProcessGuid.from_process(process) }
-      [HTTP::OK, MultiJson.dump(response_body)]
+      [HTTP::OK, Oj.dump(response_body, mode: :compat)]
     rescue StandardError => e
       process = ProcessModel.find(guid:)
       record_ssh_unauthorized_event(process, index) unless process.nil?

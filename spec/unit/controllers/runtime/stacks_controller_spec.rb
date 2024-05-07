@@ -36,7 +36,7 @@ module VCAP::CloudController
         end
 
         it 'creates a stack' do
-          post '/v2/stacks', MultiJson.dump(params)
+          post '/v2/stacks', Oj.dump(params)
           expect(last_response.status).to eq(201)
         end
 
@@ -44,14 +44,14 @@ module VCAP::CloudController
           let(:params) { { name: 'zakstack' } }
 
           it 'creates a stack' do
-            post '/v2/stacks', MultiJson.dump(params)
+            post '/v2/stacks', Oj.dump(params)
             expect(last_response.status).to eq(201)
           end
         end
       end
 
       it 'returns unauthorized' do
-        post '/v2/stacks', MultiJson.dump(params)
+        post '/v2/stacks', Oj.dump(params)
         expect(last_response.status).to eq(403)
       end
     end

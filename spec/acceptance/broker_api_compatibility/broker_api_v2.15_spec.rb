@@ -507,7 +507,7 @@ RSpec.describe 'Service Broker API integration' do
             {}.to_json,
             json_headers(admin_headers))
 
-        parsed_body = MultiJson.load(last_response.body)
+        parsed_body = Oj.load(last_response.body)
         maintenance_info = parsed_body['entity']['maintenance_info']
         expect(maintenance_info).to eq({ 'version' => '2.0.0', 'description' => 'Test description' })
       end

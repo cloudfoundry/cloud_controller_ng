@@ -19,19 +19,19 @@ RSpec.describe 'ServiceInstances' do
     end
 
     it 'creates a service instance' do
-      post_params = MultiJson.dump({
-                                     name: 'awesome-service-instance',
-                                     space_guid: space.guid,
-                                     service_plan_guid: service_plan.guid,
-                                     parameters: { 'KEY' => 'val' },
-                                     tags: %w[no-sql georeplicated]
-                                   })
+      post_params = Oj.dump({
+                              name: 'awesome-service-instance',
+                              space_guid: space.guid,
+                              service_plan_guid: service_plan.guid,
+                              parameters: { 'KEY' => 'val' },
+                              tags: %w[no-sql georeplicated]
+                            })
 
       post '/v2/service_instances', post_params, admin_headers
 
       service_instance = VCAP::CloudController::ManagedServiceInstance.last
       expect(last_response).to have_status_code(201)
-      parsed_response = MultiJson.load(last_response.body)
+      parsed_response = Oj.load(last_response.body)
       expect(parsed_response).to be_a_response_like(
         {
           'metadata' => {
@@ -86,19 +86,19 @@ RSpec.describe 'ServiceInstances' do
     end
 
     it 'updates a service instance' do
-      put_params = MultiJson.dump({
-                                    name: 'awesome-service-instance',
-                                    space_guid: space.guid,
-                                    service_plan_guid: new_service_plan.guid,
-                                    parameters: { 'KEY' => 'val' },
-                                    tags: %w[no-sql georeplicated]
-                                  })
+      put_params = Oj.dump({
+                             name: 'awesome-service-instance',
+                             space_guid: space.guid,
+                             service_plan_guid: new_service_plan.guid,
+                             parameters: { 'KEY' => 'val' },
+                             tags: %w[no-sql georeplicated]
+                           })
 
       put "/v2/service_instances/#{service_instance.guid}", put_params, admin_headers
 
       service_instance = VCAP::CloudController::ManagedServiceInstance.last
       expect(last_response).to have_status_code(201)
-      parsed_response = MultiJson.load(last_response.body)
+      parsed_response = Oj.load(last_response.body)
       expect(parsed_response).to be_a_response_like(
         {
           'metadata' => {
@@ -162,7 +162,7 @@ RSpec.describe 'ServiceInstances' do
 
           expect(last_response.status).to eq(200)
 
-          parsed_response = MultiJson.load(last_response.body)
+          parsed_response = Oj.load(last_response.body)
           expect(parsed_response).to be_a_response_like(
             {
               'metadata' => {
@@ -210,7 +210,7 @@ RSpec.describe 'ServiceInstances' do
 
           expect(last_response.status).to eq(200)
 
-          parsed_response = MultiJson.load(last_response.body)
+          parsed_response = Oj.load(last_response.body)
           expect(parsed_response).to be_a_response_like(
             {
               'metadata' => {
@@ -257,7 +257,7 @@ RSpec.describe 'ServiceInstances' do
 
           expect(last_response.status).to eq(200)
 
-          parsed_response = MultiJson.load(last_response.body)
+          parsed_response = Oj.load(last_response.body)
           expect(parsed_response).to be_a_response_like(
             {
               'metadata' => {
@@ -323,7 +323,7 @@ RSpec.describe 'ServiceInstances' do
         expect(last_response.status).to eq(200)
 
         parsed_response = last_response.body
-        expect(MultiJson.load(parsed_response)).to be_a_response_like(
+        expect(Oj.load(parsed_response)).to be_a_response_like(
           {
             'top_level_param' => {
               'nested_param' => true
@@ -363,7 +363,7 @@ RSpec.describe 'ServiceInstances' do
       expect(last_response).to have_status_code(200)
 
       parsed_response = last_response.body
-      expect(MultiJson.load(parsed_response)).to be_a_response_like(
+      expect(Oj.load(parsed_response)).to be_a_response_like(
         {
           'top_level_param' => {
             'nested_param' => true
@@ -386,7 +386,7 @@ RSpec.describe 'ServiceInstances' do
 
       expect(last_response.status).to eq(200), last_response.body
 
-      parsed_response = MultiJson.load(last_response.body)
+      parsed_response = Oj.load(last_response.body)
       expect(parsed_response).to be_a_response_like({
                                                       'space_guid' => space.guid,
                                                       'space_name' => space.name,
@@ -420,7 +420,7 @@ RSpec.describe 'ServiceInstances' do
 
         expect(last_response.status).to eq(200)
 
-        parsed_response = MultiJson.load(last_response.body)
+        parsed_response = Oj.load(last_response.body)
         expect(parsed_response).to be_a_response_like({
                                                         'space_guid' => space.guid,
                                                         'space_name' => space.name,
@@ -445,7 +445,7 @@ RSpec.describe 'ServiceInstances' do
 
       expect(last_response.status).to eq(200)
 
-      parsed_response = MultiJson.load(last_response.body)
+      parsed_response = Oj.load(last_response.body)
       expect(parsed_response).to be_a_response_like(
         {
           'total_results' => 2,
@@ -490,7 +490,7 @@ RSpec.describe 'ServiceInstances' do
 
         expect(last_response.status).to eq(422)
 
-        parsed_response = MultiJson.load(last_response.body)
+        parsed_response = Oj.load(last_response.body)
         expect(parsed_response['description']).to eq 'Service instances must be unshared before they can be deleted. ' \
                                                      "Unsharing #{service_instance.name} will automatically delete any bindings " \
                                                      'that have been made to applications in other spaces.'
@@ -560,20 +560,20 @@ RSpec.describe 'ServiceInstances' do
 
   describe 'POST /v2/user_provided_service_instances' do
     it 'creates a user-provided service instance' do
-      post_params = MultiJson.dump({
-                                     name: 'awesome-service-instance',
-                                     space_guid: space.guid,
-                                     tags: %w[no-sql georeplicated],
-                                     syslog_drain_url: 'syslog://example.com',
-                                     credentials: { somekey: 'somevalue' },
-                                     route_service_url: 'https://logger.example.com'
-                                   })
+      post_params = Oj.dump({
+                              name: 'awesome-service-instance',
+                              space_guid: space.guid,
+                              tags: %w[no-sql georeplicated],
+                              syslog_drain_url: 'syslog://example.com',
+                              credentials: { somekey: 'somevalue' },
+                              route_service_url: 'https://logger.example.com'
+                            })
 
       post '/v2/user_provided_service_instances', post_params, admin_headers
 
       service_instance = VCAP::CloudController::UserProvidedServiceInstance.last
       expect(last_response).to have_status_code(201)
-      parsed_response = MultiJson.load(last_response.body)
+      parsed_response = Oj.load(last_response.body)
       expect(parsed_response).to be_a_response_like(
         {
           'metadata' => {
@@ -603,19 +603,19 @@ RSpec.describe 'ServiceInstances' do
     let(:service_instance) { VCAP::CloudController::UserProvidedServiceInstance.make(space:) }
 
     it 'updates the user-provided service instance' do
-      put_params = MultiJson.dump({
-                                    name: 'awesome-service-instance',
-                                    space_guid: space.guid,
-                                    tags: %w[no-sql georeplicated],
-                                    syslog_drain_url: 'syslog://example.com',
-                                    credentials: { somekey: 'somevalue' },
-                                    route_service_url: 'https://logger.example.com'
-                                  })
+      put_params = Oj.dump({
+                             name: 'awesome-service-instance',
+                             space_guid: space.guid,
+                             tags: %w[no-sql georeplicated],
+                             syslog_drain_url: 'syslog://example.com',
+                             credentials: { somekey: 'somevalue' },
+                             route_service_url: 'https://logger.example.com'
+                           })
 
       put "/v2/user_provided_service_instances/#{service_instance.guid}", put_params, admin_headers
 
       expect(last_response).to have_status_code(201)
-      parsed_response = MultiJson.load(last_response.body)
+      parsed_response = Oj.load(last_response.body)
       expect(parsed_response).to be_a_response_like(
         {
           'metadata' => {

@@ -12,12 +12,12 @@ module VCAP::CloudController
 
     def resource_match_request(verb, path, matches, non_matches)
       user = User.make(admin: false, active: true)
-      req = MultiJson.dump(matches + non_matches)
+      req = Oj.dump(matches + non_matches)
 
       set_current_user(user)
       send(verb, path, req, headers_for(user))
 
-      resp = MultiJson.load(last_response.body)
+      resp = Oj.load(last_response.body)
       expect(resp).to eq(matches)
 
       expect(last_response.status).to eq(200)

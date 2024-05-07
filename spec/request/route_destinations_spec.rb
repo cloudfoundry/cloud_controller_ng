@@ -1237,7 +1237,7 @@ RSpec.describe 'Route Destinations Request' do
       let(:db_check) do
         lambda do
           get "/v3/routes/#{route.guid}/destinations", {}, admin_headers
-          parsed_response = MultiJson.load(last_response.body)
+          parsed_response = Oj.load(last_response.body)
           expect(parsed_response['destinations'].length).to eq(1)
           expect(parsed_response['destinations'][0]['guid']).to eq(destination_to_preserve.guid)
         end
@@ -1360,7 +1360,7 @@ RSpec.describe 'Route Destinations Request' do
       let(:db_check) do
         lambda do
           get "/v3/routes/#{route.guid}/destinations", {}, admin_headers
-          parsed_response = MultiJson.load(last_response.body)
+          parsed_response = Oj.load(last_response.body)
           expect(parsed_response['destinations'].length).to eq(1)
           expect(parsed_response['destinations'][0]['guid']).to eq(destination_to_preserve.guid)
         end

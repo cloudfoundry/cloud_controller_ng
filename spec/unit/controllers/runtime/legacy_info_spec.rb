@@ -14,19 +14,19 @@ module VCAP::CloudController
     it "returns a 'user' entry when authenticated" do
       set_current_user_as_admin
       get '/info'
-      hash = MultiJson.load(last_response.body)
+      hash = Oj.load(last_response.body)
       expect(hash).to have_key('user')
     end
 
     it "excludes the 'user' entry when not authenticated" do
       get '/info'
-      hash = MultiJson.load(last_response.body)
+      hash = Oj.load(last_response.body)
       expect(hash).not_to have_key('user')
     end
 
     it 'includes data from the config' do
       get '/info'
-      hash = MultiJson.load(last_response.body)
+      hash = Oj.load(last_response.body)
       expect(hash['name']).to eq(TestConfig.config_instance.get(:info, :name))
       expect(hash['build']).to eq(TestConfig.config_instance.get(:info, :build))
       expect(hash['support']).to eq(TestConfig.config_instance.get(:info, :support_address))
@@ -46,7 +46,7 @@ module VCAP::CloudController
         it 'returns admin limits for an admin' do
           get '/info'
           expect(last_response.status).to eq(200)
-          hash = MultiJson.load(last_response.body)
+          hash = Oj.load(last_response.body)
           expect(hash).to have_key('limits')
           expect(hash['limits']).to eq({
                                          'memory' => AccountCapacity::ADMIN_MEM,
@@ -63,7 +63,7 @@ module VCAP::CloudController
         it 'does not return service usage' do
           get '/info'
           expect(last_response.status).to eq(200)
-          hash = MultiJson.load(last_response.body)
+          hash = Oj.load(last_response.body)
           expect(hash).not_to have_key('usage')
         end
       end
@@ -74,7 +74,7 @@ module VCAP::CloudController
         it 'returns default limits for a user' do
           get '/info'
           expect(last_response.status).to eq(200)
-          hash = MultiJson.load(last_response.body)
+          hash = Oj.load(last_response.body)
           expect(hash).to have_key('limits')
           expect(hash['limits']).to eq({
                                          'memory' => AccountCapacity::DEFAULT_MEM,
@@ -88,7 +88,7 @@ module VCAP::CloudController
           it 'returns 0 apps and service usage' do
             get '/info'
             expect(last_response.status).to eq(200)
-            hash = MultiJson.load(last_response.body)
+            hash = Oj.load(last_response.body)
             expect(hash).to have_key('usage')
 
             expect(hash['usage']).to eq({
@@ -127,7 +127,7 @@ module VCAP::CloudController
           it 'returns 2 apps and 3 services' do
             get '/info'
             expect(last_response.status).to eq(200)
-            hash = MultiJson.load(last_response.body)
+            hash = Oj.load(last_response.body)
             expect(hash).to have_key('usage')
 
             expect(hash['usage']).to eq({

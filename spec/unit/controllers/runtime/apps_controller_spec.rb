@@ -154,7 +154,7 @@ module VCAP::CloudController
         }
       end
 
-      let(:decoded_response) { MultiJson.load(last_response.body) }
+      let(:decoded_response) { Oj.load(last_response.body) }
       let(:user_audit_info) { UserAuditInfo.from_context(SecurityContext) }
 
       describe 'events' do
@@ -168,7 +168,7 @@ module VCAP::CloudController
           expected_attrs = AppsController::CreateMessage.decode(initial_hash.to_json).extract(stringify_keys: true)
           allow(app_event_repository).to receive(:record_app_create).and_call_original
 
-          post '/v2/apps', MultiJson.dump(initial_hash)
+          post '/v2/apps', Oj.dump(initial_hash)
 
           process = ProcessModel.last
           expect(app_event_repository).to have_received(:record_app_create).with(process, process.space, user_audit_info, expected_attrs)
@@ -181,7 +181,7 @@ module VCAP::CloudController
         end
 
         it 'does not allow user to create new app (spot check)' do
-          post '/v2/apps', MultiJson.dump(initial_hash)
+          post '/v2/apps', Oj.dump(initial_hash)
           expect(last_response.status).to eq(403)
         end
       end
@@ -199,13 +199,13 @@ module VCAP::CloudController
 
           it 'allows enable_ssh to be set to true' do
             set_current_user_as_admin
-            post '/v2/apps', MultiJson.dump(initial_hash.merge(enable_ssh: true))
+            post '/v2/apps', Oj.dump(initial_hash.merge(enable_ssh: true))
             expect(last_response.status).to eq(201)
           end
 
           it 'allows enable_ssh to be set to false' do
             set_current_user_as_admin
-            post '/v2/apps', MultiJson.dump(initial_hash.merge(enable_ssh: false))
+            post '/v2/apps', Oj.dump(initial_hash.merge(enable_ssh: false))
             expect(last_response.status).to eq(201)
           end
         end
@@ -218,14 +218,14 @@ module VCAP::CloudController
 
           it 'allows enable_ssh to be set to false' do
             set_current_user_as_admin
-            post '/v2/apps', MultiJson.dump(initial_hash.merge(enable_ssh: false))
+            post '/v2/apps', Oj.dump(initial_hash.merge(enable_ssh: false))
             expect(last_response.status).to eq(201)
           end
 
           context 'and the user is an admin' do
             it 'allows enable_ssh to be set to true' do
               set_current_user_as_admin
-              post '/v2/apps', MultiJson.dump(initial_hash.merge(enable_ssh: true))
+              post '/v2/apps', Oj.dump(initial_hash.merge(enable_ssh: true))
               expect(last_response.status).to eq(201)
             end
           end
@@ -233,7 +233,7 @@ module VCAP::CloudController
           context 'and the user is not an admin' do
             it 'errors when attempting to set enable_ssh to true' do
               set_current_user(non_admin_user)
-              post '/v2/apps', MultiJson.dump(initial_hash.merge(enable_ssh: true))
+              post '/v2/apps', Oj.dump(initial_hash.merge(enable_ssh: true))
               expect(last_response.status).to eq(400)
             end
           end
@@ -253,12 +253,12 @@ module VCAP::CloudController
           end
 
           it 'errors when attempting to set enable_ssh to true' do
-            post '/v2/apps', MultiJson.dump(initial_hash.merge(enable_ssh: true))
+            post '/v2/apps', Oj.dump(initial_hash.merge(enable_ssh: true))
             expect(last_response.status).to eq(400)
           end
 
           it 'allows enable_ssh to be set to false' do
-            post '/v2/apps', MultiJson.dump(initial_hash.merge(enable_ssh: false))
+            post '/v2/apps', Oj.dump(initial_hash.merge(enable_ssh: false))
             expect(last_response.status).to eq(201)
           end
         end
@@ -270,12 +270,12 @@ module VCAP::CloudController
           end
 
           it 'errors when attempting to set enable_ssh to true' do
-            post '/v2/apps', MultiJson.dump(initial_hash.merge(enable_ssh: true))
+            post '/v2/apps', Oj.dump(initial_hash.merge(enable_ssh: true))
             expect(last_response.status).to eq(400)
           end
 
           it 'allows enable_ssh to be set to false' do
-            post '/v2/apps', MultiJson.dump(initial_hash.merge(enable_ssh: false))
+            post '/v2/apps', Oj.dump(initial_hash.merge(enable_ssh: false))
             expect(last_response.status).to eq(201)
           end
         end
@@ -283,7 +283,7 @@ module VCAP::CloudController
         context 'when diego is set to true' do
           context 'when no custom ports are specified' do
             it 'sets the ports to 8080' do
-              post '/v2/apps', MultiJson.dump(initial_hash.merge(diego: true))
+              post '/v2/apps', Oj.dump(initial_hash.merge(diego: true))
               expect(last_response.status).to eq(201)
               expect(decoded_response['entity']['ports']).to match([8080])
               expect(decoded_response['entity']['diego']).to be true
@@ -292,7 +292,7 @@ module VCAP::CloudController
 
           context 'when custom ports are specified' do
             it 'sets the ports to as specified in the request' do
-              post '/v2/apps', MultiJson.dump(initial_hash.merge(diego: true, ports: [9090, 5222]))
+              post '/v2/apps', Oj.dump(initial_hash.merge(diego: true, ports: [9090, 5222]))
               expect(last_response.status).to eq(201)
               expect(decoded_response['entity']['ports']).to match([9090, 5222])
               expect(decoded_response['entity']['diego']).to be true
@@ -301,7 +301,7 @@ module VCAP::CloudController
 
           context 'when the custom port is not in the valid range 1024-65535' do
             it 'return an error' do
-              post '/v2/apps', MultiJson.dump(initial_hash.merge(diego: true, ports: [9090, 500]))
+              post '/v2/apps', Oj.dump(initial_hash.merge(diego: true, ports: [9090, 500]))
               expect(last_response.status).to eq(400)
               expect(decoded_response['description']).to include('Ports must be in the 1024-65535 range.')
             end
@@ -321,7 +321,7 @@ module VCAP::CloudController
 
         set_current_user(admin_user, admin: true)
 
-        post '/v2/apps', MultiJson.dump(request)
+        post '/v2/apps', Oj.dump(request)
 
         v2_app = ProcessModel.last
         expect(v2_app.health_check_type).to eq('http')
@@ -338,7 +338,7 @@ module VCAP::CloudController
 
         set_current_user(admin_user, admin: true)
 
-        post '/v2/apps', MultiJson.dump(request)
+        post '/v2/apps', Oj.dump(request)
 
         v2_app = ProcessModel.last
         expect(v2_app.name).to eq('maria')
@@ -371,7 +371,7 @@ module VCAP::CloudController
 
           set_current_user(admin_user, admin: true)
 
-          post '/v2/apps', MultiJson.dump(request)
+          post '/v2/apps', Oj.dump(request)
 
           v2_app = ProcessModel.last
           expect(v2_app.stack).to eq(stack)
@@ -392,14 +392,14 @@ module VCAP::CloudController
           end
 
           it 'does NOT allow a public git url' do
-            post '/v2/apps', MultiJson.dump(request.merge(buildpack: 'http://example.com/buildpack'))
+            post '/v2/apps', Oj.dump(request.merge(buildpack: 'http://example.com/buildpack'))
 
             expect(last_response.status).to eq(400)
             expect(last_response.body).to include('Custom buildpacks are disabled')
           end
 
           it 'does NOT allow a public http url' do
-            post '/v2/apps', MultiJson.dump(request.merge(buildpack: 'http://example.com/foo'))
+            post '/v2/apps', Oj.dump(request.merge(buildpack: 'http://example.com/foo'))
 
             expect(last_response.status).to eq(400)
             expect(last_response.body).to include('Custom buildpacks are disabled')
@@ -407,20 +407,20 @@ module VCAP::CloudController
 
           it 'does allow a buildpack name' do
             admin_buildpack = Buildpack.make
-            post '/v2/apps', MultiJson.dump(request.merge(buildpack: admin_buildpack.name))
+            post '/v2/apps', Oj.dump(request.merge(buildpack: admin_buildpack.name))
 
             expect(last_response.status).to eq(201)
           end
 
           it 'does not allow a private git url' do
-            post '/v2/apps', MultiJson.dump(request.merge(buildpack: 'https://username:password@github.com/johndoe/my-buildpack.git'))
+            post '/v2/apps', Oj.dump(request.merge(buildpack: 'https://username:password@github.com/johndoe/my-buildpack.git'))
 
             expect(last_response.status).to eq(400)
             expect(last_response.body).to include('Custom buildpacks are disabled')
           end
 
           it 'does not allow a private git url with ssh schema' do
-            post '/v2/apps', MultiJson.dump(request.merge(buildpack: 'ssh://git@example.com:foo.git'))
+            post '/v2/apps', Oj.dump(request.merge(buildpack: 'ssh://git@example.com:foo.git'))
 
             expect(last_response.status).to eq(400)
             expect(last_response.body).to include('Custom buildpacks are disabled')
@@ -438,7 +438,7 @@ module VCAP::CloudController
 
           set_current_user(admin_user, admin: true)
 
-          post '/v2/apps', MultiJson.dump(request)
+          post '/v2/apps', Oj.dump(request)
 
           v2_app = ProcessModel.last
           expect(v2_app.docker_image).to eq('some-image:latest')
@@ -463,7 +463,7 @@ module VCAP::CloudController
 
             set_current_user(admin_user, admin: true)
 
-            post '/v2/apps', MultiJson.dump(request)
+            post '/v2/apps', Oj.dump(request)
 
             expect(last_response.status).to eq(422)
             expect(last_response.body).to match(/UnprocessableEntity/)
@@ -482,7 +482,7 @@ module VCAP::CloudController
 
           set_current_user(admin_user, admin: true)
 
-          post '/v2/apps', MultiJson.dump(request)
+          post '/v2/apps', Oj.dump(request)
           expect(last_response.status).to eq(400)
           expect(last_response.body).to include('bits have not been uploaded')
         end
@@ -492,7 +492,7 @@ module VCAP::CloudController
         it 'returns 404' do
           set_current_user(admin_user, admin: true)
 
-          post '/v2/apps', MultiJson.dump({ name: 'maria', space_guid: 'no-existy' })
+          post '/v2/apps', Oj.dump({ name: 'maria', space_guid: 'no-existy' })
 
           expect(last_response.status).to eq(404)
         end
@@ -508,7 +508,7 @@ module VCAP::CloudController
           space_guid: space_guid
         }
       end
-      let(:decoded_response) { MultiJson.load(last_response.body) }
+      let(:decoded_response) { Oj.load(last_response.body) }
 
       let(:user) { 'user' }
       let(:password) { 'password' }
@@ -519,7 +519,7 @@ module VCAP::CloudController
         }
       end
       let(:body) do
-        MultiJson.dump(initial_hash.merge(docker_image: 'someimage', docker_credentials: docker_credentials))
+        Oj.dump(initial_hash.merge(docker_image: 'someimage', docker_credentials: docker_credentials))
       end
       let(:redacted_message) { '***' }
 
@@ -826,7 +826,7 @@ module VCAP::CloudController
               expect(attributes).to eq({ 'instances' => 2 })
             end
 
-            put "/v2/apps/#{process.app.guid}", MultiJson.dump(update_hash)
+            put "/v2/apps/#{process.app.guid}", Oj.dump(update_hash)
           end
         end
 
@@ -838,7 +838,7 @@ module VCAP::CloudController
 
           it 'does not record app update' do
             expect do
-              put "/v2/apps/#{process.app.guid}", MultiJson.dump(update_hash)
+              put "/v2/apps/#{process.app.guid}", Oj.dump(update_hash)
             end.to raise_error RuntimeError, /Error saving/
 
             expect(app_event_repository).not_to have_received(:record_app_update)
@@ -860,7 +860,7 @@ module VCAP::CloudController
 
         set_current_user(admin_user, admin: true)
 
-        put "/v2/apps/#{v2_app.app.guid}", MultiJson.dump(request)
+        put "/v2/apps/#{v2_app.app.guid}", Oj.dump(request)
         expect(last_response.status).to eq(201)
 
         v2_app.reload
@@ -888,14 +888,14 @@ module VCAP::CloudController
         let(:process) { ProcessModel.make }
 
         it 'does NOT allow a public git url' do
-          put "/v2/apps/#{process.app.guid}", MultiJson.dump({ buildpack: 'http://example.com/buildpack' })
+          put "/v2/apps/#{process.app.guid}", Oj.dump({ buildpack: 'http://example.com/buildpack' })
 
           expect(last_response.status).to eq(400)
           expect(last_response.body).to include('Custom buildpacks are disabled')
         end
 
         it 'does NOT allow a public http url' do
-          put "/v2/apps/#{process.app.guid}", MultiJson.dump({ buildpack: 'http://example.com/foo' })
+          put "/v2/apps/#{process.app.guid}", Oj.dump({ buildpack: 'http://example.com/foo' })
 
           expect(last_response.status).to eq(400)
           expect(last_response.body).to include('Custom buildpacks are disabled')
@@ -903,20 +903,20 @@ module VCAP::CloudController
 
         it 'does allow a buildpack name' do
           admin_buildpack = Buildpack.make
-          put "/v2/apps/#{process.app.guid}", MultiJson.dump({ buildpack: admin_buildpack.name })
+          put "/v2/apps/#{process.app.guid}", Oj.dump({ buildpack: admin_buildpack.name })
 
           expect(last_response.status).to eq(201)
         end
 
         it 'does not allow a private git url' do
-          put "/v2/apps/#{process.app.guid}", MultiJson.dump({ buildpack: 'git@example.com:foo.git' })
+          put "/v2/apps/#{process.app.guid}", Oj.dump({ buildpack: 'git@example.com:foo.git' })
 
           expect(last_response.status).to eq(400)
           expect(last_response.body).to include('Custom buildpacks are disabled')
         end
 
         it 'does not allow a private git url with ssh schema' do
-          put "/v2/apps/#{process.app.guid}", MultiJson.dump({ buildpack: 'ssh://git@example.com:foo.git' })
+          put "/v2/apps/#{process.app.guid}", Oj.dump({ buildpack: 'ssh://git@example.com:foo.git' })
 
           expect(last_response.status).to eq(400)
           expect(last_response.body).to include('Custom buildpacks are disabled')
@@ -933,7 +933,7 @@ module VCAP::CloudController
 
           expect(process.stack).not_to eq(new_stack)
 
-          put "/v2/apps/#{process.app.guid}", MultiJson.dump({ stack_guid: new_stack.guid })
+          put "/v2/apps/#{process.app.guid}", Oj.dump({ stack_guid: new_stack.guid })
 
           expect(last_response.status).to eq(201)
           expect(process.reload.stack).to eq(new_stack)
@@ -950,7 +950,7 @@ module VCAP::CloudController
           it 'marks the app for re-staging' do
             expect(process.needs_staging?).to be(false)
 
-            put "/v2/apps/#{process.app.guid}", MultiJson.dump({ stack_guid: new_stack.guid })
+            put "/v2/apps/#{process.app.guid}", Oj.dump({ stack_guid: new_stack.guid })
             expect(last_response.status).to eq(201)
             process.reload
 
@@ -971,7 +971,7 @@ module VCAP::CloudController
             expect(process.staged?).to be false
             expect(process.needs_staging?).to be true
 
-            put "/v2/apps/#{process.app.guid}", MultiJson.dump({ stack_guid: new_stack.guid })
+            put "/v2/apps/#{process.app.guid}", Oj.dump({ stack_guid: new_stack.guid })
             expect(last_response.status).to eq(201)
             process.reload
 
@@ -987,7 +987,7 @@ module VCAP::CloudController
             expect(process).not_to be_staged
             expect(process.needs_staging?).to be false
 
-            put "/v2/apps/#{process.app.guid}", MultiJson.dump({ stack_guid: new_stack.guid })
+            put "/v2/apps/#{process.app.guid}", Oj.dump({ stack_guid: new_stack.guid })
             expect(last_response.status).to eq(201)
             process.reload
 
@@ -1002,13 +1002,13 @@ module VCAP::CloudController
           let(:process) { ProcessModel.make(app: AppModel.make(:docker)) }
 
           it 'raises an error setting buildpack' do
-            put "/v2/apps/#{process.app.guid}", MultiJson.dump({ buildpack: 'https://buildpack.example.com' })
+            put "/v2/apps/#{process.app.guid}", Oj.dump({ buildpack: 'https://buildpack.example.com' })
             expect(last_response.status).to eq(400)
             expect(last_response.body).to include('Lifecycle type cannot be changed')
           end
 
           it 'raises an error setting stack' do
-            put "/v2/apps/#{process.app.guid}", MultiJson.dump({ stack_guid: 'phat-stackz' })
+            put "/v2/apps/#{process.app.guid}", Oj.dump({ stack_guid: 'phat-stackz' })
             expect(last_response.status).to eq(400)
             expect(last_response.body).to include('Lifecycle type cannot be changed')
           end
@@ -1018,7 +1018,7 @@ module VCAP::CloudController
           let(:process) { ProcessModel.make(app: AppModel.make(:buildpack)) }
 
           it 'raises an error' do
-            put "/v2/apps/#{process.app.guid}", MultiJson.dump({ docker_image: 'repo/great-image' })
+            put "/v2/apps/#{process.app.guid}", Oj.dump({ docker_image: 'repo/great-image' })
             expect(last_response.status).to eq(400)
             expect(last_response.body).to include('Lifecycle type cannot be changed')
           end
@@ -1036,10 +1036,10 @@ module VCAP::CloudController
 
           expect(process.docker_image).not_to eq('repo/new-image')
 
-          put "/v2/apps/#{process.app.guid}", MultiJson.dump({ docker_image: 'repo/new-image' })
+          put "/v2/apps/#{process.app.guid}", Oj.dump({ docker_image: 'repo/new-image' })
           expect(last_response.status).to eq(201)
 
-          parsed_response = MultiJson.load(last_response.body)
+          parsed_response = Oj.load(last_response.body)
           expect(parsed_response['entity']['docker_image']).to eq('repo/new-image')
           expect(parsed_response['entity']['docker_credentials']).to eq({
                                                                           'username' => nil,
@@ -1060,10 +1060,10 @@ module VCAP::CloudController
 
             expect(process.docker_image).not_to eq('repo/new-image')
 
-            put "/v2/apps/#{process.app.guid}", MultiJson.dump({ docker_image: 'repo/new-image', docker_credentials: docker_credentials })
+            put "/v2/apps/#{process.app.guid}", Oj.dump({ docker_image: 'repo/new-image', docker_credentials: docker_credentials })
             expect(last_response.status).to eq(201)
 
-            parsed_response = MultiJson.load(last_response.body)
+            parsed_response = Oj.load(last_response.body)
             expect(parsed_response['entity']['docker_image']).to eq('repo/new-image')
             expect(parsed_response['entity']['docker_credentials']).to eq({
                                                                             'username' => 'fred',
@@ -1084,7 +1084,7 @@ module VCAP::CloudController
             set_current_user(admin_user, admin: true)
             process = ProcessModelFactory.make(app: AppModel.make(:docker), docker_image: 'repo/original-image')
 
-            put "/v2/apps/#{process.app.guid}", MultiJson.dump({ docker_credentials: { username: 'username', password: 'foo' } })
+            put "/v2/apps/#{process.app.guid}", Oj.dump({ docker_credentials: { username: 'username', password: 'foo' } })
 
             expect(last_response.status).to eq(422)
             expect(last_response.body).to match(/UnprocessableEntity/)
@@ -1161,7 +1161,7 @@ module VCAP::CloudController
         let(:process) { ProcessModel.make(instances: 1) }
 
         it 'raises an error' do
-          put "/v2/apps/#{process.app.guid}", MultiJson.dump({ state: 'STARTED' })
+          put "/v2/apps/#{process.app.guid}", Oj.dump({ state: 'STARTED' })
           expect(last_response.status).to eq(400)
           expect(last_response.body).to include('bits have not been uploaded')
         end
@@ -1221,7 +1221,7 @@ module VCAP::CloudController
     describe 'delete an app' do
       let(:process) { ProcessModelFactory.make }
       let(:developer) { make_developer_for_space(process.space) }
-      let(:decoded_response) { MultiJson.load(last_response.body) }
+      let(:decoded_response) { Oj.load(last_response.body) }
       let(:parent_app) { process.app }
 
       before do
@@ -1410,7 +1410,7 @@ module VCAP::CloudController
       let(:developer) { make_developer_for_space(space) }
       let(:auditor) { make_auditor_for_space(space) }
       let(:process) { ProcessModelFactory.make(detected_buildpack: 'buildpack-name') }
-      let(:decoded_response) { MultiJson.load(last_response.body) }
+      let(:decoded_response) { Oj.load(last_response.body) }
 
       before do
         set_current_user(developer)
@@ -1786,7 +1786,7 @@ module VCAP::CloudController
         end
 
         it 'returns X-App-Staging-Log header with staging log url' do
-          put "/v2/apps/#{process.app.guid}", MultiJson.dump(state: 'STARTED')
+          put "/v2/apps/#{process.app.guid}", Oj.dump(state: 'STARTED')
           expect(last_response.status).to eq(201), last_response.body
           expect(last_response.headers['X-App-Staging-Log']).to eq('streaming-log-url')
         end
@@ -1796,7 +1796,7 @@ module VCAP::CloudController
         let(:process) { ProcessModelFactory.make(state: 'STOPPED') }
 
         it 'does not add X-App-Staging-Log' do
-          put "/v2/apps/#{process.app.guid}", MultiJson.dump({})
+          put "/v2/apps/#{process.app.guid}", Oj.dump({})
           expect(last_response.status).to eq(201)
           expect(last_response.headers).not_to have_key('X-App-Staging-Log')
         end
@@ -1815,20 +1815,20 @@ module VCAP::CloudController
       end
 
       it 'lets the user download the droplet' do
-        get "/v2/apps/#{process.app.guid}/droplet/download", MultiJson.dump({})
+        get "/v2/apps/#{process.app.guid}/droplet/download", Oj.dump({})
         expect(last_response).to be_redirect
         expect(last_response.header['Location']).to eq('http://example.com/somewhere/else')
       end
 
       it 'returns an error for non-existent apps' do
-        get '/v2/apps/bad/droplet/download', MultiJson.dump({})
+        get '/v2/apps/bad/droplet/download', Oj.dump({})
         expect(last_response.status).to eq(404)
       end
 
       it 'returns an error for an app without a droplet' do
         process.desired_droplet.destroy
 
-        get "/v2/apps/#{process.app.guid}/droplet/download", MultiJson.dump({})
+        get "/v2/apps/#{process.app.guid}/droplet/download", Oj.dump({})
         expect(last_response.status).to eq(404)
       end
     end
@@ -1977,7 +1977,7 @@ module VCAP::CloudController
         end
 
         it 'does not return docker disabled message' do
-          put "/v2/apps/#{started_process.app.guid}", MultiJson.dump(instances: 2)
+          put "/v2/apps/#{started_process.app.guid}", Oj.dump(instances: 2)
 
           expect(last_response.status).to eq(201)
         end
@@ -2004,7 +2004,7 @@ module VCAP::CloudController
         it 'returns docker disabled message on start' do
           set_current_user(make_developer_for_space(stopped_process.space))
 
-          put "/v2/apps/#{stopped_process.app.guid}", MultiJson.dump(state: 'STARTED')
+          put "/v2/apps/#{stopped_process.app.guid}", Oj.dump(state: 'STARTED')
 
           expect(last_response.status).to eq(400)
           expect(last_response.body).to match(/Docker support has not been enabled/)
@@ -2014,7 +2014,7 @@ module VCAP::CloudController
         it 'does not return docker disabled message on stop' do
           set_current_user(make_developer_for_space(started_process.space))
 
-          put "/v2/apps/#{started_process.app.guid}", MultiJson.dump(state: 'STOPPED')
+          put "/v2/apps/#{started_process.app.guid}", Oj.dump(state: 'STOPPED')
 
           expect(last_response.status).to eq(201)
         end
@@ -2114,7 +2114,7 @@ module VCAP::CloudController
 
       it 'returns duplicate app name message correctly' do
         existing_process = ProcessModel.make(app: AppModel.make(space:))
-        put "/v2/apps/#{process.app.guid}", MultiJson.dump(name: existing_process.name)
+        put "/v2/apps/#{process.app.guid}", Oj.dump(name: existing_process.name)
 
         expect(last_response.status).to eq(400)
         expect(decoded_response['code']).to eq(100_002)
@@ -2124,7 +2124,7 @@ module VCAP::CloudController
         space.organization.quota_definition = QuotaDefinition.make(memory_limit: 0)
         space.organization.save(validate: false)
 
-        put "/v2/apps/#{process.app.guid}", MultiJson.dump(memory: 128)
+        put "/v2/apps/#{process.app.guid}", Oj.dump(memory: 128)
 
         expect(last_response.status).to eq(400)
         expect(decoded_response['code']).to eq(100_005)
@@ -2134,7 +2134,7 @@ module VCAP::CloudController
         space.space_quota_definition = SpaceQuotaDefinition.make(memory_limit: 0)
         space.save(validate: false)
 
-        put "/v2/apps/#{process.app.guid}", MultiJson.dump(memory: 128)
+        put "/v2/apps/#{process.app.guid}", Oj.dump(memory: 128)
 
         expect(last_response.status).to eq(400)
         expect(decoded_response['code']).to eq(310_003)
@@ -2146,14 +2146,14 @@ module VCAP::CloudController
         space.space_quota_definition = SpaceQuotaDefinition.make(memory_limit: 0)
         space.save(validate: false)
 
-        put "/v2/apps/#{process.app.guid}", MultiJson.dump(memory: 128)
+        put "/v2/apps/#{process.app.guid}", Oj.dump(memory: 128)
 
         expect(last_response.status).to eq(400)
         expect(decoded_response['code']).to eq(310_003)
       end
 
       it 'returns memory invalid message correctly' do
-        put "/v2/apps/#{process.app.guid}", MultiJson.dump(memory: 0)
+        put "/v2/apps/#{process.app.guid}", Oj.dump(memory: 0)
 
         expect(last_response.status).to eq(400)
         expect(decoded_response['code']).to eq(100_006)
@@ -2163,7 +2163,7 @@ module VCAP::CloudController
         space.organization.quota_definition = QuotaDefinition.make(instance_memory_limit: 100)
         space.organization.save(validate: false)
 
-        put "/v2/apps/#{process.app.guid}", MultiJson.dump(memory: 128)
+        put "/v2/apps/#{process.app.guid}", Oj.dump(memory: 128)
 
         expect(last_response.status).to eq(400)
         expect(decoded_response['code']).to eq(100_007)
@@ -2173,7 +2173,7 @@ module VCAP::CloudController
         space.space_quota_definition = SpaceQuotaDefinition.make(instance_memory_limit: 100)
         space.save(validate: false)
 
-        put "/v2/apps/#{process.app.guid}", MultiJson.dump(memory: 128)
+        put "/v2/apps/#{process.app.guid}", Oj.dump(memory: 128)
 
         expect(last_response.status).to eq(400)
         expect(decoded_response['code']).to eq(310_004)
@@ -2183,7 +2183,7 @@ module VCAP::CloudController
         space.organization.quota_definition = QuotaDefinition.make(app_instance_limit: 4)
         space.organization.save(validate: false)
 
-        put "/v2/apps/#{process.app.guid}", MultiJson.dump(instances: 5)
+        put "/v2/apps/#{process.app.guid}", Oj.dump(instances: 5)
 
         expect(last_response.status).to eq(400)
         expect(decoded_response['code']).to eq(100_008)
@@ -2195,14 +2195,14 @@ module VCAP::CloudController
         space.space_quota_definition = SpaceQuotaDefinition.make(instance_memory_limit: 100)
         space.save(validate: false)
 
-        put "/v2/apps/#{process.app.guid}", MultiJson.dump(memory: 128)
+        put "/v2/apps/#{process.app.guid}", Oj.dump(memory: 128)
 
         expect(last_response.status).to eq(400)
         expect(decoded_response['code']).to eq(310_004)
       end
 
       it 'returns instances invalid message correctly' do
-        put "/v2/apps/#{process.app.guid}", MultiJson.dump(instances: -1)
+        put "/v2/apps/#{process.app.guid}", Oj.dump(instances: -1)
 
         expect(last_response.status).to eq(400)
         expect(last_response.body).to match(/instances less than 0/)
@@ -2210,7 +2210,7 @@ module VCAP::CloudController
       end
 
       it 'returns state invalid message correctly' do
-        put "/v2/apps/#{process.app.guid}", MultiJson.dump(state: 'mississippi')
+        put "/v2/apps/#{process.app.guid}", Oj.dump(state: 'mississippi')
 
         expect(last_response.status).to eq(400)
         expect(last_response.body).to match(/Invalid app state provided/)
@@ -2221,7 +2221,7 @@ module VCAP::CloudController
         space.space_quota_definition = SpaceQuotaDefinition.make(app_instance_limit: 2)
         space.save(validate: false)
 
-        put "/v2/apps/#{process.app.guid}", MultiJson.dump(instances: 3)
+        put "/v2/apps/#{process.app.guid}", Oj.dump(instances: 3)
 
         expect(last_response.status).to eq(400)
         expect(decoded_response['code']).to eq(310_008)

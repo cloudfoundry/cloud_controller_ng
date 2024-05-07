@@ -607,7 +607,7 @@ RSpec.describe BuildpacksController, type: :controller do
         job = VCAP::CloudController::PollableJobModel.last
         expect(job.operation).to eq('buildpack.upload')
         expect(response.status).to eq(202), response.body
-        expect(MultiJson.load(response.body)['guid']).to eq(test_buildpack.guid)
+        expect(Oj.load(response.body)['guid']).to eq(test_buildpack.guid)
         expect(response.headers['Location']).to include "#{link_prefix}/v3/jobs/#{job.guid}"
         expect(test_buildpack.reload.state).to eq(VCAP::CloudController::Buildpack::CREATED_STATE)
       end

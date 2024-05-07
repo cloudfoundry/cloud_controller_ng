@@ -201,7 +201,7 @@ RSpec.describe SpaceManifestsController, type: :controller do
         it 'returns a 422' do
           post :apply_manifest, params: { guid: space.guid }, body: request_body.to_yaml, as: :yaml
           expect(response).to have_http_status(:unprocessable_entity)
-          parsed_response = MultiJson.load(response.body)
+          parsed_response = Oj.load(response.body)
           expect(parsed_response['errors'][0]['detail']).to match(/For application at index 0:/)
         end
       end

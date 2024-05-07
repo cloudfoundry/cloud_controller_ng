@@ -25,16 +25,11 @@ module VCAP::CloudController
     private
 
     def readiness_request
-      readiness = {}
-      begin
-        payload = body.read
-        readiness = MultiJson.load(payload)
-      rescue MultiJson::ParseError => e
-        logger.error('diego.app_readiness_changed.parse-error', payload: payload, error: e.to_s)
-        raise CloudController::Errors::ApiError.new_from_details('MessageParseError', payload)
-      end
-
-      readiness
+      payload = body.read
+      Oj.load(payload)
+    rescue StandardError => e
+      logger.error('diego.app_readiness_changed.parse-error', payload: payload, error: e.to_s)
+      raise CloudController::Errors::ApiError.new_from_details('MessageParseError', payload)
     end
   end
 end

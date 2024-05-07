@@ -189,7 +189,7 @@ RSpec.describe 'Processes' do
         ]
       }
 
-      parsed_response = MultiJson.load(last_response.body)
+      parsed_response = Oj.load(last_response.body)
 
       expect(last_response.status).to eq(200)
       expect(parsed_response).to be_a_response_like(expected_response)
@@ -209,7 +209,7 @@ RSpec.describe 'Processes' do
         'previous' => nil
       }
 
-      parsed_response = MultiJson.load(last_response.body)
+      parsed_response = Oj.load(last_response.body)
 
       expect(last_response.status).to eq(200)
       expect(parsed_response['resources'].count).to eq(1)
@@ -233,7 +233,7 @@ RSpec.describe 'Processes' do
 
           expect(last_response.status).to eq(200)
 
-          parsed_response = MultiJson.load(last_response.body)
+          parsed_response = Oj.load(last_response.body)
 
           returned_guids = parsed_response['resources'].pluck('guid')
           expect(returned_guids).to contain_exactly(worker_process.guid)
@@ -275,7 +275,7 @@ RSpec.describe 'Processes' do
 
           expect(last_response.status).to eq(200)
 
-          parsed_response = MultiJson.load(last_response.body)
+          parsed_response = Oj.load(last_response.body)
 
           returned_guids = parsed_response['resources'].pluck('guid')
           expect(returned_guids).to contain_exactly(other_space_process.guid)
@@ -315,7 +315,7 @@ RSpec.describe 'Processes' do
 
           expect(last_response.status).to eq(200)
 
-          parsed_response = MultiJson.load(last_response.body)
+          parsed_response = Oj.load(last_response.body)
 
           returned_guids = parsed_response['resources'].pluck('guid')
           expect(returned_guids).to contain_exactly(other_space_process.guid)
@@ -350,7 +350,7 @@ RSpec.describe 'Processes' do
 
           expect(last_response.status).to eq(200)
 
-          parsed_response = MultiJson.load(last_response.body)
+          parsed_response = Oj.load(last_response.body)
 
           returned_guids = parsed_response['resources'].pluck('guid')
           expect(returned_guids).to contain_exactly(desired_process.guid)
@@ -373,7 +373,7 @@ RSpec.describe 'Processes' do
 
           expect(last_response.status).to eq(200)
 
-          parsed_response = MultiJson.load(last_response.body)
+          parsed_response = Oj.load(last_response.body)
 
           returned_guids = parsed_response['resources'].pluck('guid')
           expect(returned_guids).to contain_exactly(web_process.guid, worker_process.guid)
@@ -457,7 +457,7 @@ RSpec.describe 'Processes' do
     it 'retrieves the process' do
       get "/v3/processes/#{process.guid}", nil, developer_headers
 
-      parsed_response = MultiJson.load(last_response.body)
+      parsed_response = Oj.load(last_response.body)
 
       expect(last_response.status).to eq(200)
       expect(parsed_response).to be_a_response_like(expected_response)
@@ -470,7 +470,7 @@ RSpec.describe 'Processes' do
 
       get "/v3/processes/#{process.guid}", nil, headers_for(auditor)
 
-      parsed_response = MultiJson.load(last_response.body)
+      parsed_response = Oj.load(last_response.body)
 
       expect(last_response.status).to eq(200)
       expect(parsed_response['command']).to eq('[PRIVATE DATA HIDDEN]')
@@ -602,7 +602,7 @@ RSpec.describe 'Processes' do
         it 'retrieves the stats for a process' do
           get "/v3/processes/#{process.guid}/stats", nil, developer_headers
 
-          parsed_response = MultiJson.load(last_response.body)
+          parsed_response = Oj.load(last_response.body)
 
           expect(last_response.status).to eq(200)
           expect(parsed_response).to be_a_response_like(expected_response)
@@ -617,7 +617,7 @@ RSpec.describe 'Processes' do
         it 'returns cpu entitlement as null' do
           get "/v3/processes/#{process.guid}/stats", nil, developer_headers
 
-          parsed_response = MultiJson.load(last_response.body)
+          parsed_response = Oj.load(last_response.body)
 
           expect(last_response.status).to eq(200)
           expect(parsed_response['resources'][0]['usage']['cpu_entitlement']).to be_nil
@@ -629,7 +629,7 @@ RSpec.describe 'Processes' do
       it 'retrieves the stats for a process belonging to an app' do
         get "/v3/apps/#{app_model.guid}/processes/worker/stats", nil, developer_headers
 
-        parsed_response = MultiJson.load(last_response.body)
+        parsed_response = Oj.load(last_response.body)
 
         expect(last_response.status).to eq(200)
         expect(parsed_response).to be_a_response_like(expected_response)
@@ -775,7 +775,7 @@ RSpec.describe 'Processes' do
     it 'updates the process' do
       patch "/v3/processes/#{process.guid}", update_request, developer_headers.merge('CONTENT_TYPE' => 'application/json')
 
-      parsed_response = MultiJson.load(last_response.body)
+      parsed_response = Oj.load(last_response.body)
 
       expect(last_response.status).to eq(200)
       expect(parsed_response).to be_a_response_like(expected_response)
@@ -899,7 +899,7 @@ RSpec.describe 'Processes' do
     it 'scales the process' do
       post "/v3/processes/#{process.guid}/actions/scale", scale_request.to_json, developer_headers
 
-      parsed_response = MultiJson.load(last_response.body)
+      parsed_response = Oj.load(last_response.body)
 
       expect(last_response.status).to eq(202)
       expect(parsed_response).to be_a_response_like(expected_response)
@@ -1305,7 +1305,7 @@ RSpec.describe 'Processes' do
         ]
       }
 
-      parsed_response = MultiJson.load(last_response.body)
+      parsed_response = Oj.load(last_response.body)
 
       expect(last_response.status).to eq(200)
       expect(parsed_response).to be_a_response_like(expected_response)
@@ -1327,7 +1327,7 @@ RSpec.describe 'Processes' do
 
           expect(last_response.status).to eq(200)
 
-          parsed_response = MultiJson.load(last_response.body)
+          parsed_response = Oj.load(last_response.body)
 
           returned_guids = parsed_response['resources'].pluck('guid')
           expect(returned_guids).to contain_exactly(process2.guid)
@@ -1350,7 +1350,7 @@ RSpec.describe 'Processes' do
 
           expect(last_response.status).to eq(200)
 
-          parsed_response = MultiJson.load(last_response.body)
+          parsed_response = Oj.load(last_response.body)
 
           returned_guids = parsed_response['resources'].pluck('guid')
           expect(returned_guids).to contain_exactly(process1.guid, process2.guid)
@@ -1435,7 +1435,7 @@ RSpec.describe 'Processes' do
     it 'retrieves the process for an app with the requested type' do
       get "/v3/apps/#{app_model.guid}/processes/web", nil, developer_headers
 
-      parsed_response = MultiJson.load(last_response.body)
+      parsed_response = Oj.load(last_response.body)
 
       expect(last_response.status).to eq(200)
       expect(parsed_response).to be_a_response_like(expected_response)
@@ -1450,7 +1450,7 @@ RSpec.describe 'Processes' do
 
       get "/v3/apps/#{app_model.guid}/processes/web", nil, headers_for(auditor)
 
-      parsed_response = MultiJson.load(last_response.body)
+      parsed_response = Oj.load(last_response.body)
 
       expect(last_response.status).to eq(200)
       expect(parsed_response['command']).to eq('[PRIVATE DATA HIDDEN]')
@@ -1561,7 +1561,7 @@ RSpec.describe 'Processes' do
         }
       }
 
-      parsed_response = MultiJson.load(last_response.body)
+      parsed_response = Oj.load(last_response.body)
 
       expect(last_response.status).to eq(200)
       expect(parsed_response).to be_a_response_like(expected_response)
@@ -1685,7 +1685,7 @@ RSpec.describe 'Processes' do
 
     it 'scales the process belonging to an app' do
       post "/v3/apps/#{app_model.guid}/processes/web/actions/scale", scale_request.to_json, developer_headers
-      parsed_response = MultiJson.load(last_response.body)
+      parsed_response = Oj.load(last_response.body)
 
       expect(last_response.status).to eq(202)
       expect(parsed_response).to be_a_response_like(expected_response)

@@ -16,7 +16,7 @@ module VCAP::Services
             exception = AppRequired.new(uri, method, response)
             expect(exception.message).to eq('This service supports generation of credentials through binding an application only.')
             expect(exception.method).to eq(method)
-            expect(exception.source).to eq(MultiJson.load(response.body))
+            expect(exception.source).to eq(Oj.load(response.body))
           end
 
           it 'has a response_code of 400' do

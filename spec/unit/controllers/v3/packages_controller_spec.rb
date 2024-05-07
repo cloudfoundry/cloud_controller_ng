@@ -23,7 +23,7 @@ RSpec.describe PackagesController, type: :controller do
       post :upload, params: params.merge(guid: package.guid)
 
       expect(response).to have_http_status(:ok)
-      expect(MultiJson.load(response.body)['guid']).to eq(package.guid)
+      expect(Oj.load(response.body)['guid']).to eq(package.guid)
       expect(package.reload.state).to eq(VCAP::CloudController::PackageModel::PENDING_STATE)
     end
 
@@ -75,7 +75,7 @@ RSpec.describe PackagesController, type: :controller do
             post :upload, params: params.merge(new_options), as: :json
 
             expect(response.status).to eq(200), response.body
-            expect(MultiJson.load(response.body)['guid']).to eq(package.guid)
+            expect(Oj.load(response.body)['guid']).to eq(package.guid)
             expect(package.reload.state).to eq(VCAP::CloudController::PackageModel::CREATED_STATE)
             expect(uploader).to have_received(:upload_async) do |args|
               expect(args[:message].resources).to contain_exactly({ fn: 'lol', sha1: 'abc', size: 2048, mode: '645' })
@@ -127,7 +127,7 @@ RSpec.describe PackagesController, type: :controller do
           post :upload, params: params.merge(guid: package.guid), as: :json
 
           expect(response).to have_http_status(:ok)
-          expect(MultiJson.load(response.body)['guid']).to eq(package.guid)
+          expect(Oj.load(response.body)['guid']).to eq(package.guid)
           expect(package.reload.state).to eq(VCAP::CloudController::PackageModel::PENDING_STATE)
         end
       end
@@ -365,7 +365,7 @@ RSpec.describe PackagesController, type: :controller do
       get :show, params: { guid: package.guid }
 
       expect(response).to have_http_status(:ok)
-      expect(MultiJson.load(response.body)['guid']).to eq(package.guid)
+      expect(Oj.load(response.body)['guid']).to eq(package.guid)
     end
 
     context 'when the package does not exist' do

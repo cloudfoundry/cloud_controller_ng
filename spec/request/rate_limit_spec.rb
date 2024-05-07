@@ -30,7 +30,7 @@ RSpec.describe 'Rate Limiting' do
 
       get '/v3/spaces', nil, user_headers
       expect(last_response.status).to eq(429)
-      parsed_response = MultiJson.load(last_response.body)
+      parsed_response = Oj.load(last_response.body)
       expect(parsed_response['errors'].first['detail']).to eq('Rate Limit Exceeded')
     end
   end
@@ -55,7 +55,7 @@ RSpec.describe 'Rate Limiting' do
 
       get '/v3/spaces', nil, client_headers
       expect(last_response.status).to eq(429)
-      parsed_response = MultiJson.load(last_response.body)
+      parsed_response = Oj.load(last_response.body)
       expect(parsed_response['errors'].first['detail']).to eq('Rate Limit Exceeded')
     end
   end
@@ -69,7 +69,7 @@ RSpec.describe 'Rate Limiting' do
 
       get '/v3/spaces', nil, {}
       expect(last_response.status).to eq(429)
-      parsed_response = MultiJson.load(last_response.body)
+      parsed_response = Oj.load(last_response.body)
       expect(parsed_response['errors'].first['detail']).to include('Rate Limit Exceeded: Unauthenticated requests from this IP address have exceeded the limit')
     end
   end

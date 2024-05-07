@@ -17,7 +17,7 @@ module VCAP::Services
             exception = ServiceBrokerConflict.new(uri, method, response)
             expect(exception.message).to eq("Service broker error: #{error_message}")
             expect(exception.method).to eq(method)
-            expect(exception.source).to eq(MultiJson.load(response.body))
+            expect(exception.source).to eq(Oj.load(response.body))
           end
 
           it 'has a response_code of 409' do
@@ -46,7 +46,7 @@ module VCAP::Services
               exception = ServiceBrokerConflict.new(uri, method, response)
               expect(exception.message).to eq('Resource conflict')
               expect(exception.method).to eq(method)
-              expect(exception.source).to eq(MultiJson.load(response.body))
+              expect(exception.source).to eq(Oj.load(response.body))
             end
           end
 

@@ -47,10 +47,10 @@ RSpec.resource 'Space Quota Definitions', type: %i[api legacy_api] do
     include_context 'updatable_fields', required: true
     example 'Creating a Space Quota Definition' do
       organization_guid = VCAP::CloudController::Organization.make.guid
-      client.post '/v2/space_quota_definitions', MultiJson.dump(
+      client.post '/v2/space_quota_definitions', Oj.dump(
         required_fields.merge(organization_guid: organization_guid,
                               total_reserved_route_ports: 5,
-                              total_routes: 10), pretty: true
+                              total_routes: 10)
       ), headers
 
       expect(status).to eq(201)
@@ -65,7 +65,7 @@ RSpec.resource 'Space Quota Definitions', type: %i[api legacy_api] do
     include_context 'updatable_fields', required: false
     example 'Updating a Space Quota Definition' do
       new_attributes = { name: 'new_name' }
-      client.put "/v2/space_quota_definitions/#{guid}", MultiJson.dump(new_attributes, pretty: true, total_reserved_route_ports: 5, total_routes: 10), headers
+      client.put "/v2/space_quota_definitions/#{guid}", Oj.dump(new_attributes, total_reserved_route_ports: 5, total_routes: 10), headers
 
       expect(status).to eq(201)
       expect(parsed_response['entity']).to include('total_reserved_route_ports')

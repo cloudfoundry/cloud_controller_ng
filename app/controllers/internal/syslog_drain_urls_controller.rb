@@ -1,5 +1,3 @@
-require 'oj'
-
 module VCAP::CloudController
   class SyslogDrainUrlsInternalController < RestController::BaseController
     # Endpoint uses mutual tls for auth, handled by nginx
@@ -45,7 +43,7 @@ module VCAP::CloudController
 
       next_page_token = last_id + batch_size unless guid_to_drain_maps.empty?
 
-      [HTTP::OK, MultiJson.dump({ results: drain_urls, next_id: next_page_token, v5_available: true }, pretty: true)]
+      [HTTP::OK, Oj.dump({ results: drain_urls, next_id: next_page_token, v5_available: true }, mode: :compat)]
     end
 
     get '/internal/v5/syslog_drain_urls', :listv5
@@ -104,7 +102,7 @@ module VCAP::CloudController
 
       next_page_token = nil
       next_page_token = last_id + batch_size unless bindings.empty?
-      [HTTP::OK, Oj.dump({ results: bindings, next_id: next_page_token })]
+      [HTTP::OK, Oj.dump({ results: bindings, next_id: next_page_token }, mode: :compat)]
     end
 
     private

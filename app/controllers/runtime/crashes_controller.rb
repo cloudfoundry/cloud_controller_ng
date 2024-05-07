@@ -17,7 +17,7 @@ module VCAP::CloudController
     def crashes(guid)
       process           = find_guid_and_validate_access(:read, guid)
       crashed_instances = instances_reporters.crashed_instances_for_app(process)
-      MultiJson.dump(crashed_instances)
+      Oj.dump(crashed_instances, mode: :compat)
     end
 
     protected

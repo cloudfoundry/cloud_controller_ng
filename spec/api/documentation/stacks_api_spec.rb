@@ -20,7 +20,7 @@ RSpec.resource 'Stacks', type: %i[api legacy_api] do
 
     post '/v2/stacks' do
       context 'Creating a stack' do
-        let(:fields_json) { MultiJson.dump({ name: 'example_stack', description: 'Description for the example stack' }) }
+        let(:fields_json) { Oj.dump({ name: 'example_stack', description: 'Description for the example stack' }) }
 
         example 'Create a Stack' do
           client.post '/v2/stacks', fields_json, headers
@@ -33,7 +33,7 @@ RSpec.resource 'Stacks', type: %i[api legacy_api] do
         end
 
         context 'without a description' do
-          let(:fields_json) { MultiJson.dump({ name: 'example_stack' }) }
+          let(:fields_json) { Oj.dump({ name: 'example_stack' }) }
 
           example 'Create a Stack', document: false do
             client.post '/v2/stacks', fields_json, headers

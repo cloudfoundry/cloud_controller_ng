@@ -5,8 +5,9 @@ module VCAP::Services
         class MaintenanceInfoConflict < HttpResponseError
           def initialize(_uri, method, response)
             begin
-              body = MultiJson.load(response.body)
-            rescue MultiJson::ParseError
+              body = Oj.load(response.body)
+            rescue StandardError
+              # ignore
             end
 
             message = if body.is_a?(Hash) && valid_description?(body['description'])

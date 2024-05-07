@@ -367,7 +367,7 @@ RSpec.describe 'Users Request' do
         it 'returns a 200 and the filtered routes for "in" label selector' do
           get '/v3/users?label_selector=animal in (dog)', nil, admin_header
 
-          parsed_response = MultiJson.load(last_response.body)
+          parsed_response = Oj.load(last_response.body)
 
           expected_pagination = {
             'total_results' => 1,

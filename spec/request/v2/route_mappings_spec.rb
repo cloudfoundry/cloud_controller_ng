@@ -19,7 +19,7 @@ RSpec.describe 'RouteMappings' do
       get "/v2/route_mappings/#{route_mapping.guid}", nil, headers_for(user)
       expect(last_response.status).to eq(200), last_response.body
 
-      parsed_response = MultiJson.load(last_response.body)
+      parsed_response = Oj.load(last_response.body)
       expect(parsed_response).to be_a_response_like({
                                                       'metadata' => {
                                                         'guid' => route_mapping.guid,
@@ -54,7 +54,7 @@ RSpec.describe 'RouteMappings' do
         get "/v2/route_mappings/#{route_mapping.guid}", nil, headers_for(user)
         expect(last_response.status).to eq(200)
 
-        parsed_response = MultiJson.load(last_response.body)
+        parsed_response = Oj.load(last_response.body)
         expect(parsed_response['entity']['app_port']).to eq(9090)
       end
     end
@@ -75,7 +75,7 @@ RSpec.describe 'RouteMappings' do
       get '/v2/route_mappings', nil, headers_for(user)
       expect(last_response.status).to eq(200)
 
-      parsed_response = MultiJson.load(last_response.body)
+      parsed_response = Oj.load(last_response.body)
       expect(parsed_response).to be_a_response_like(
         {
           'total_results' => 2,
@@ -125,7 +125,7 @@ RSpec.describe 'RouteMappings' do
       get '/v2/route_mappings', nil, headers_for(user)
       expect(last_response.status).to eq(200)
 
-      parsed_response = MultiJson.load(last_response.body)
+      parsed_response = Oj.load(last_response.body)
       expect(parsed_response['resources'].map { |r| r['metadata']['guid'] }).not_to include(non_web_route_mapping.guid)
     end
   end
@@ -135,7 +135,7 @@ RSpec.describe 'RouteMappings' do
     let(:route) { VCAP::CloudController::Route.make(space:) }
 
     it 'creates a route mapping' do
-      request = MultiJson.dump(
+      request = Oj.dump(
         {
           route_guid: route.guid,
           app_guid: process.guid,
@@ -146,7 +146,7 @@ RSpec.describe 'RouteMappings' do
       post '/v2/route_mappings', request, headers_for(user)
       expect(last_response.status).to eq(201)
 
-      parsed_response = MultiJson.load(last_response.body)
+      parsed_response = Oj.load(last_response.body)
       route_mapping   = VCAP::CloudController::RouteMappingModel.last
 
       expect(parsed_response).to be_a_response_like({

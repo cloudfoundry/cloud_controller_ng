@@ -15,7 +15,7 @@ RSpec.describe 'Droplets' do
   let(:package_model) { VCAP::CloudController::PackageModel.make(app_guid: app_model.guid) }
   let(:app_guid) { droplet_model.app_guid }
 
-  let(:parsed_response) { MultiJson.load(last_response.body) }
+  let(:parsed_response) { Oj.load(last_response.body) }
 
   describe 'POST /v3/droplets' do
     let(:user) { VCAP::CloudController::User.make }
@@ -954,7 +954,7 @@ RSpec.describe 'Droplets' do
         get '/v3/droplets?label_selector=!fruit,animal in (dog,horse),env=prod', nil, developer_headers
         expect(last_response.status).to eq(200), last_response.body
 
-        parsed_response = MultiJson.load(last_response.body)
+        parsed_response = Oj.load(last_response.body)
         expect(parsed_response['resources'].pluck('guid')).to contain_exactly(dropletB.guid, dropletC.guid)
       end
     end
@@ -1917,7 +1917,7 @@ RSpec.describe 'Droplets' do
           expect(last_response.status).to eq(200), last_response.body
 
           og_docker_droplet.reload
-          parsed_response = MultiJson.load(last_response.body)
+          parsed_response = Oj.load(last_response.body)
           expect(parsed_response['image']).to eq(
             rebased_image_reference
           )
@@ -1929,7 +1929,7 @@ RSpec.describe 'Droplets' do
             expect(last_response.status).to eq(200)
 
             og_docker_droplet.reload
-            parsed_response = MultiJson.load(last_response.body)
+            parsed_response = Oj.load(last_response.body)
             expect(parsed_response['image']).to eq(
               rebased_image_reference
             )

@@ -7,8 +7,9 @@ module VCAP::Services
         class ServiceBrokerBadResponse < HttpResponseError
           def initialize(_uri, method, response, ignore_description_key: false)
             begin
-              hash = MultiJson.load(response.body)
-            rescue MultiJson::ParseError
+              hash = Oj.load(response.body)
+            rescue StandardError
+              # ignore
             end
 
             message = if hash.is_a?(Hash) && hash.key?('description') && !ignore_description_key

@@ -37,7 +37,7 @@ RSpec.resource 'Service Bindings', type: %i[api legacy_api] do
       space = VCAP::CloudController::Space.make
       service_instance_guid = VCAP::CloudController::ServiceInstance.make(space:).guid
       process_guid = VCAP::CloudController::ProcessModelFactory.make(space:).guid
-      request_json = MultiJson.dump({ service_instance_guid: service_instance_guid, app_guid: process_guid, parameters: { the_service_broker: 'wants this object' } }, pretty: true)
+      request_json = Oj.dump({ service_instance_guid: service_instance_guid, app_guid: process_guid, parameters: { the_service_broker: 'wants this object' } })
 
       client.post '/v2/service_bindings', request_json, headers
       expect(status).to eq 201

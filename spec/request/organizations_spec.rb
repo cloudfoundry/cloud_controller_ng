@@ -215,7 +215,7 @@ module VCAP::CloudController
         get '/v3/organizations?per_page=2', nil, user_header
         expect(last_response.status).to eq(200)
 
-        parsed_response = MultiJson.load(last_response.body)
+        parsed_response = Oj.load(last_response.body)
         expect(parsed_response).to be_a_response_like(
           {
             'pagination' => {
@@ -302,7 +302,7 @@ module VCAP::CloudController
           get '/v3/organizations?label_selector=!fruit,env=prod,animal in (dog,horse)', nil, admin_header
           expect(last_response.status).to eq(200), last_response.body
 
-          parsed_response = MultiJson.load(last_response.body)
+          parsed_response = Oj.load(last_response.body)
           expect(parsed_response['resources'].pluck('guid')).to contain_exactly(orgB.guid, orgC.guid)
         end
       end
@@ -342,7 +342,7 @@ module VCAP::CloudController
         get "/v3/isolation_segments/#{isolation_segment1.guid}/organizations?per_page=2", nil, user_header
         expect(last_response.status).to eq(200)
 
-        parsed_response = MultiJson.load(last_response.body)
+        parsed_response = Oj.load(last_response.body)
         expect(parsed_response).to be_a_response_like(
           {
             'pagination' => {
@@ -428,7 +428,7 @@ module VCAP::CloudController
           }
         }
 
-        parsed_response = MultiJson.load(last_response.body)
+        parsed_response = Oj.load(last_response.body)
 
         expect(last_response.status).to eq(200)
         expect(parsed_response).to be_a_response_like(expected_response)
@@ -653,7 +653,7 @@ module VCAP::CloudController
         it 'returns a 200 and the filtered apps for "in" label selector' do
           get "#{base_link}?label_selector=animal in (dog)", nil, admin_header
 
-          parsed_response = MultiJson.load(last_response.body)
+          parsed_response = Oj.load(last_response.body)
 
           expected_pagination = {
             'total_results' => 1,
@@ -672,7 +672,7 @@ module VCAP::CloudController
         it 'returns a 200 and the filtered domains for "notin" label selector' do
           get "#{base_link}?label_selector=animal notin (dog)", nil, admin_header
 
-          parsed_response = MultiJson.load(last_response.body)
+          parsed_response = Oj.load(last_response.body)
 
           expected_pagination = {
             'total_results' => 1,
@@ -691,7 +691,7 @@ module VCAP::CloudController
         it 'returns a 200 and the filtered domains for "=" label selector' do
           get "#{base_link}?label_selector=animal=dog", nil, admin_header
 
-          parsed_response = MultiJson.load(last_response.body)
+          parsed_response = Oj.load(last_response.body)
 
           expected_pagination = {
             'total_results' => 1,
@@ -710,7 +710,7 @@ module VCAP::CloudController
         it 'returns a 200 and the filtered domains for "==" label selector' do
           get "#{base_link}?label_selector=animal==dog", nil, admin_header
 
-          parsed_response = MultiJson.load(last_response.body)
+          parsed_response = Oj.load(last_response.body)
 
           expected_pagination = {
             'total_results' => 1,
@@ -729,7 +729,7 @@ module VCAP::CloudController
         it 'returns a 200 and the filtered domains for "!=" label selector' do
           get "#{base_link}?label_selector=animal!=dog", nil, admin_header
 
-          parsed_response = MultiJson.load(last_response.body)
+          parsed_response = Oj.load(last_response.body)
 
           expected_pagination = {
             'total_results' => 1,
@@ -748,7 +748,7 @@ module VCAP::CloudController
         it 'returns a 200 and the filtered domains for "=" label selector' do
           get "#{base_link}?label_selector=animal=cow,santa=claus", nil, admin_header
 
-          parsed_response = MultiJson.load(last_response.body)
+          parsed_response = Oj.load(last_response.body)
 
           expected_pagination = {
             'total_results' => 1,
@@ -767,7 +767,7 @@ module VCAP::CloudController
         it 'returns a 200 and the filtered domains for existence label selector' do
           get "#{base_link}?label_selector=santa", nil, admin_header
 
-          parsed_response = MultiJson.load(last_response.body)
+          parsed_response = Oj.load(last_response.body)
 
           expected_pagination = {
             'total_results' => 1,
@@ -786,7 +786,7 @@ module VCAP::CloudController
         it 'returns a 200 and the filtered domains for non-existence label selector' do
           get "#{base_link}?label_selector=!santa", nil, admin_header
 
-          parsed_response = MultiJson.load(last_response.body)
+          parsed_response = Oj.load(last_response.body)
 
           expected_pagination = {
             'total_results' => 1,
@@ -1073,7 +1073,7 @@ module VCAP::CloudController
             }
           }
 
-          parsed_response = MultiJson.load(last_response.body)
+          parsed_response = Oj.load(last_response.body)
 
           expect(last_response.status).to eq(200)
           expect(parsed_response).to be_a_response_like(expected_response)
@@ -1186,7 +1186,7 @@ module VCAP::CloudController
             'suspended' => false
           }
 
-          parsed_response = MultiJson.load(last_response.body)
+          parsed_response = Oj.load(last_response.body)
 
           expect(last_response.status).to eq(200)
           expect(parsed_response).to be_a_response_like(expected_response)
@@ -1236,7 +1236,7 @@ module VCAP::CloudController
             'suspended' => true
           }
 
-          parsed_response = MultiJson.load(last_response.body)
+          parsed_response = Oj.load(last_response.body)
 
           expect(last_response.status).to eq(200)
           expect(parsed_response).to be_a_response_like(expected_response)
@@ -1281,7 +1281,7 @@ module VCAP::CloudController
               'suspended' => false
             }
 
-            parsed_response = MultiJson.load(last_response.body)
+            parsed_response = Oj.load(last_response.body)
 
             expect(last_response.status).to eq(200)
             expect(parsed_response).to be_a_response_like(expected_response)
@@ -1500,7 +1500,7 @@ module VCAP::CloudController
           it 'returns 200 and the filtered users' do
             get "/v3/organizations/#{organization1.guid}/users?guids=#{user.guid}", nil, admin_header
 
-            parsed_response = MultiJson.load(last_response.body)
+            parsed_response = Oj.load(last_response.body)
             expected_pagination = {
               'total_results' => 1,
               'total_pages' => 1,
@@ -1527,7 +1527,7 @@ module VCAP::CloudController
           it 'returns 200 and the filtered users' do
             get "/v3/organizations/#{organization1.guid}/users?usernames=rob-mcjames&origins=Okta", nil, admin_header
 
-            parsed_response = MultiJson.load(last_response.body)
+            parsed_response = Oj.load(last_response.body)
             expected_pagination = {
               'total_results' => 1,
               'total_pages' => 1,
@@ -1554,7 +1554,7 @@ module VCAP::CloudController
           it 'returns 200 and the filtered users' do
             get "/v3/organizations/#{organization1.guid}/users?partial_usernames=b-mcjam&origins=Okta", nil, admin_header
 
-            parsed_response = MultiJson.load(last_response.body)
+            parsed_response = Oj.load(last_response.body)
             expected_pagination = {
               'total_results' => 1,
               'total_pages' => 1,
@@ -1577,7 +1577,7 @@ module VCAP::CloudController
             get "/v3/organizations/#{organization1.guid}/users?label_selector=animal in (dog)", nil, admin_header
             expect(last_response).to have_status_code(200)
 
-            parsed_response = MultiJson.load(last_response.body)
+            parsed_response = Oj.load(last_response.body)
             expected_pagination = {
               'total_results' => 1,
               'total_pages' => 1,

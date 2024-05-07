@@ -31,7 +31,7 @@ module VCAP::CloudController
       end
 
       it 'audits the app crashed event' do
-        post url, MultiJson.dump(crashed_request)
+        post url, Oj.dump(crashed_request)
         expect(last_response.status).to eq(200)
         expect(last_response.body).to eq '{}'
 
@@ -50,7 +50,7 @@ module VCAP::CloudController
       end
 
       it 'audits the process crashed event' do
-        post url, MultiJson.dump(crashed_request)
+        post url, Oj.dump(crashed_request)
         expect(last_response.status).to eq(200)
         expect(last_response.body).to eq '{}'
 
@@ -74,7 +74,7 @@ module VCAP::CloudController
         before { diego_process.delete }
 
         it 'fails with a 404' do
-          post url, MultiJson.dump(crashed_request)
+          post url, Oj.dump(crashed_request)
 
           expect(last_response.status).to eq(404)
           expect(last_response.body).to match(/ProcessNotFound/)

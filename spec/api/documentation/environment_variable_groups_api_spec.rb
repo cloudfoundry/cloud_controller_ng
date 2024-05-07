@@ -51,7 +51,7 @@ RSpec.resource 'Environment Variable Groups', type: %i[api legacy_api] do
 
         req = { 'abc' => 123, 'do-re-me' => 'far-so-la-tee' }
 
-        client.put '/v2/config/environment_variable_groups/running', MultiJson.dump(req, pretty: true), headers
+        client.put '/v2/config/environment_variable_groups/running', Oj.dump(req), headers
         expect(status).to eq(200)
         expect(parsed_response).to eq({
                                         'abc' => 123,
@@ -66,7 +66,7 @@ RSpec.resource 'Environment Variable Groups', type: %i[api legacy_api] do
 
         req = { 'abc' => 123, 'do-re-me' => 'far-so-la-tee' }
 
-        client.put '/v2/config/environment_variable_groups/staging', MultiJson.dump(req, pretty: true), headers
+        client.put '/v2/config/environment_variable_groups/staging', Oj.dump(req), headers
         expect(status).to eq(200)
         expect(parsed_response).to eq({
                                         'abc' => 123,

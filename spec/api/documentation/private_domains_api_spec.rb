@@ -26,11 +26,11 @@ RSpec.resource 'Private Domains', type: %i[api legacy_api] do
       include_context 'updatable_fields'
       example 'Create a Private Domain owned by the given Organization' do
         org_guid = VCAP::CloudController::Organization.make.guid
-        payload  = MultiJson.dump(
+        payload  = Oj.dump(
           {
             name: 'exmaple.com',
             owning_organization_guid: org_guid
-          }, pretty: true
+          }
         )
 
         client.post '/v2/private_domains', payload, headers

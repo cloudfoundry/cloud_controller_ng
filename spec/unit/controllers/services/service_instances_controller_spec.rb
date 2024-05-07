@@ -106,7 +106,7 @@ module VCAP::CloudController
           end
 
           it 'allows a user to create a service instance for a private broker in the same space as the broker' do
-            payload = MultiJson.dump(
+            payload = Oj.dump(
               'space_guid' => space.guid,
               'name' => Sham.name,
               'service_plan_guid' => plan_from_a_private_broker.guid
@@ -120,7 +120,7 @@ module VCAP::CloudController
             other_space = Space.make(organization:)
             other_space.add_developer developer
 
-            payload = MultiJson.dump(
+            payload = Oj.dump(
               'space_guid' => other_space.guid,
               'name' => Sham.name,
               'service_plan_guid' => plan_from_a_private_broker.guid
@@ -152,7 +152,7 @@ module VCAP::CloudController
 
           describe 'a user who does not belong to a privileged organization' do
             it 'does not allow a user to create a service instance' do
-              payload = MultiJson.dump(
+              payload = Oj.dump(
                 'space_guid' => unprivileged_space.guid,
                 'name' => Sham.name,
                 'service_plan_guid' => private_plan.guid
@@ -161,7 +161,7 @@ module VCAP::CloudController
               post 'v2/service_instances', payload
 
               expect(last_response.status).to eq(403)
-              expect(MultiJson.load(last_response.body)['description']).to eq('You are not authorized to perform the requested action')
+              expect(Oj.load(last_response.body)['description']).to eq('You are not authorized to perform the requested action')
             end
           end
 
@@ -190,7 +190,7 @@ module VCAP::CloudController
             end
 
             it 'allows user to create a service instance in a privileged organization' do
-              payload = MultiJson.dump(
+              payload = Oj.dump(
                 'space_guid' => privileged_space.guid,
                 'name' => Sham.name,
                 'service_plan_guid' => private_plan.guid
@@ -201,7 +201,7 @@ module VCAP::CloudController
             end
 
             it 'does not allow a user to create a service instance in an unprivileged organization' do
-              payload = MultiJson.dump(
+              payload = Oj.dump(
                 'space_guid' => unprivileged_space.guid,
                 'name' => Sham.name,
                 'service_plan_guid' => private_plan.guid
@@ -210,7 +210,7 @@ module VCAP::CloudController
               post 'v2/service_instances', payload
 
               expect(last_response.status).to eq(403)
-              expect(MultiJson.load(last_response.body)['description']).to match('A service instance for the selected plan cannot be created in this organization.')
+              expect(Oj.load(last_response.body)['description']).to match('A service instance for the selected plan cannot be created in this organization.')
             end
           end
         end
@@ -227,7 +227,7 @@ module VCAP::CloudController
           it 'prevents a developer from creating a service instance in an unauthorized space' do
             plan = ServicePlan.make(:v2)
 
-            req = MultiJson.dump(
+            req = Oj.dump(
               name: 'foo',
               space_guid: @space_b.guid,
               service_plan_guid: plan.guid
@@ -237,7 +237,7 @@ module VCAP::CloudController
             post '/v2/service_instances', req
 
             expect(last_response.status).to eq(403)
-            expect(MultiJson.load(last_response.body)['description']).to eq('You are not authorized to perform the requested action')
+            expect(Oj.load(last_response.body)['description']).to eq('You are not authorized to perform the requested action')
           end
         end
 
@@ -813,7 +813,7 @@ module VCAP::CloudController
 
         context 'the service broker says there is a conflict' do
           let(:response_body) do
-            MultiJson.dump(
+            Oj.dump(
               description: 'some-error'
             )
           end
@@ -837,7 +837,7 @@ module VCAP::CloudController
 
         context 'when name is blank' do
           let(:body) do
-            MultiJson.dump(
+            Oj.dump(
               name: '',
               space_guid: space.guid,
               service_plan_guid: plan.guid
@@ -875,7 +875,7 @@ module VCAP::CloudController
           end
 
           it 'raises the save error' do
-            req = MultiJson.dump(
+            req = Oj.dump(
               name: 'foo',
               space_guid: space.guid,
               service_plan_guid: plan.guid
@@ -892,7 +892,7 @@ module VCAP::CloudController
           let(:very_long_name) { 's' * 256 }
 
           it 'returns an error if the service instance name is over 255 characters' do
-            req = MultiJson.dump(
+            req = Oj.dump(
               name: very_long_name,
               space_guid: space.guid,
               service_plan_guid: plan.guid
@@ -994,7 +994,7 @@ module VCAP::CloudController
 
         context 'when the service_plan does not exist' do
           before do
-            req = MultiJson.dump(
+            req = Oj.dump(
               name: 'foo',
               space_guid: space.guid,
               service_plan_guid: 'bad-guid'
@@ -1020,7 +1020,7 @@ module VCAP::CloudController
           context 'when the broker returns an error' do
             let(:response_code) { 500 }
             let(:req) do
-              MultiJson.dump(
+              Oj.dump(
                 name: 'foo',
                 space_guid: space.guid,
                 service_plan_guid: plan.guid
@@ -1074,7 +1074,7 @@ module VCAP::CloudController
 
           context 'when the instance fails to save to the DB' do
             it 'deprovisions the service instance' do
-              req = MultiJson.dump(
+              req = Oj.dump(
                 name: 'foo',
                 space_guid: space.guid,
                 service_plan_guid: plan.guid
@@ -1631,7 +1631,7 @@ module VCAP::CloudController
       end
 
       let(:body) do
-        MultiJson.dump(
+        Oj.dump(
           service_plan_guid: new_service_plan.guid
         )
       end
@@ -1777,7 +1777,7 @@ module VCAP::CloudController
         context 'when the request is a service instance rename' do
           let(:status) { 200 }
           let(:body) do
-            MultiJson.dump(
+            Oj.dump(
               name: 'new-name'
             )
           end
@@ -1816,7 +1816,7 @@ module VCAP::CloudController
             it 'fails and returns service instance name too long message correctly' do
               new_long_instance_name = 'a' * 256
               put "/v2/service_instances/#{service_instance.guid}",
-                  MultiJson.dump({ name: new_long_instance_name })
+                  Oj.dump({ name: new_long_instance_name })
 
               expect(last_response).to have_status_code(400)
               expect(decoded_response['code']).to eq(60_009)
@@ -1827,7 +1827,7 @@ module VCAP::CloudController
 
         context 'when the request is to update the instance to the plan it already has' do
           let(:body) do
-            MultiJson.dump(
+            Oj.dump(
               service_plan_guid: old_service_plan.guid
             )
           end
@@ -2175,7 +2175,7 @@ module VCAP::CloudController
 
           context 'when the requested plan does not exist' do
             let(:body) do
-              MultiJson.dump(
+              Oj.dump(
                 service_plan_guid: 'some-non-existing-plan'
               )
             end
@@ -2194,7 +2194,7 @@ module VCAP::CloudController
             let(:other_plan) { ServicePlan.make(service: other_service) }
 
             let(:body) do
-              MultiJson.dump(
+              Oj.dump(
                 service_plan_guid: other_plan.guid
               )
             end
@@ -2242,7 +2242,7 @@ module VCAP::CloudController
             space2 = Space.make(organization: org)
             space2.add_developer(developer)
 
-            move_req = MultiJson.dump(
+            move_req = Oj.dump(
               space_guid: space2.guid
             )
 
@@ -2253,7 +2253,7 @@ module VCAP::CloudController
           end
 
           it 'succeeds when the space_guid does not change' do
-            req = MultiJson.dump(space_guid: instance.space.guid)
+            req = Oj.dump(space_guid: instance.space.guid)
             put "/v2/service_instances/#{instance.guid}", req
             expect(last_response).to have_status_code 201
             expect(instance.last_operation.state).to eq 'succeeded'
@@ -2436,7 +2436,7 @@ module VCAP::CloudController
 
           context 'when the request is to update the instance to the plan it already has' do
             let(:body) do
-              MultiJson.dump(
+              Oj.dump(
                 service_plan_guid: old_service_plan.guid
               )
             end
@@ -2459,7 +2459,7 @@ module VCAP::CloudController
         context 'when the request is a service instance rename' do
           let(:status) { 200 }
           let(:body) do
-            MultiJson.dump(
+            Oj.dump(
               name: 'new-name'
             )
           end
@@ -2486,7 +2486,7 @@ module VCAP::CloudController
 
         context 'when the request is to update the instance to the plan it already has' do
           let(:body) do
-            MultiJson.dump(
+            Oj.dump(
               service_plan_guid: old_service_plan.guid
             )
           end
@@ -2584,7 +2584,7 @@ module VCAP::CloudController
 
           context 'when the requested plan does not exist' do
             let(:body) do
-              MultiJson.dump(
+              Oj.dump(
                 service_plan_guid: 'some-non-existing-plan'
               )
             end
@@ -2632,7 +2632,7 @@ module VCAP::CloudController
             space2 = Space.make(organization: org)
             space2.add_developer(developer)
 
-            move_req = MultiJson.dump(
+            move_req = Oj.dump(
               space_guid: space2.guid
             )
 
@@ -2643,7 +2643,7 @@ module VCAP::CloudController
           end
 
           it 'succeeds when the space_guid does not change' do
-            req = MultiJson.dump(space_guid: instance.space.guid)
+            req = Oj.dump(space_guid: instance.space.guid)
             put "/v2/service_instances/#{instance.guid}?accepts_incomplete=true", req
             expect(last_response).to have_status_code 201
             expect(instance.last_operation.state).to eq 'succeeded'
@@ -3395,7 +3395,7 @@ module VCAP::CloudController
               delete "/v2/service_instances/#{service_instance.guid}?accepts_incomplete=true"
 
               expect(last_response).to have_status_code 502
-              expect(decoded_response['description']).to eq("Service instance #{service_instance.name}: Service broker error: #{MultiJson.load(body)['description']}")
+              expect(decoded_response['description']).to eq("Service instance #{service_instance.name}: Service broker error: #{Oj.load(body)['description']}")
             end
           end
 
@@ -3411,7 +3411,7 @@ module VCAP::CloudController
               delete "/v2/service_instances/#{service_instance.guid}?accepts_incomplete=true"
 
               expect(last_response).to have_status_code 502
-              expect(decoded_response['description']).to eq("Service instance #{service_instance.name}: Service broker error: #{MultiJson.load(body)['description']}")
+              expect(decoded_response['description']).to eq("Service instance #{service_instance.name}: Service broker error: #{Oj.load(body)['description']}")
             end
           end
 
@@ -3883,7 +3883,7 @@ module VCAP::CloudController
 
       context 'when the client provides arbitrary parameters' do
         before do
-          body = MultiJson.dump(parameters:)
+          body = Oj.dump(parameters:)
           put "/v2/service_instances/#{service_instance.guid}/routes/#{route.guid}", body
         end
 
@@ -4645,7 +4645,7 @@ module VCAP::CloudController
                 it 'has a 403 http status code' do
                   get "/v2/service_instances/#{instance.guid}/shared_to"
                   expect(last_response.status).to eq(403)
-                  expect(MultiJson.load(last_response.body)['description']).to eq('You are not authorized to perform the requested action')
+                  expect(Oj.load(last_response.body)['description']).to eq('You are not authorized to perform the requested action')
                 end
               end
             end
@@ -4666,7 +4666,7 @@ module VCAP::CloudController
                 it 'returns a 404 http status code' do
                   get "/v2/service_instances/#{instance.guid}/shared_to"
                   expect(last_response.status).to eq(404)
-                  expect(MultiJson.load(last_response.body)['description']).to eq("The service instance could not be found: #{instance.guid}")
+                  expect(Oj.load(last_response.body)['description']).to eq("The service instance could not be found: #{instance.guid}")
                 end
               end
             end
@@ -4764,14 +4764,14 @@ module VCAP::CloudController
             set_current_user(manager)
             get "/v2/service_instances/#{instance_a.guid}/service_keys"
             expect(last_response.status).to be(403)
-            expect(MultiJson.load(last_response.body)['description']).to eq('You are not authorized to perform the requested action')
+            expect(Oj.load(last_response.body)['description']).to eq('You are not authorized to perform the requested action')
           end
 
           it 'return an empty service key list if the user is of space auditor role' do
             set_current_user(auditor)
             get "/v2/service_instances/#{instance_a.guid}/service_keys"
             expect(last_response.status).to be(403)
-            expect(MultiJson.load(last_response.body)['description']).to eq('You are not authorized to perform the requested action')
+            expect(Oj.load(last_response.body)['description']).to eq('You are not authorized to perform the requested action')
           end
         end
 
@@ -5246,7 +5246,7 @@ module VCAP::CloudController
           space_guid: space.guid,
           service_plan_guid: free_plan.guid
         }
-        post '/v2/service_instances', MultiJson.dump(service_instance_params)
+        post '/v2/service_instances', Oj.dump(service_instance_params)
 
         expect(last_response.status).to eq(400)
         expect(decoded_response['code']).to eq(60_002)
@@ -5260,7 +5260,7 @@ module VCAP::CloudController
           space_guid: space.guid,
           service_plan_guid: free_plan.guid
         }
-        post '/v2/service_instances', MultiJson.dump(service_instance_params)
+        post '/v2/service_instances', Oj.dump(service_instance_params)
 
         expect(last_response.status).to eq(400)
         expect(decoded_response['code']).to eq(60_012)
@@ -5274,7 +5274,7 @@ module VCAP::CloudController
           space_guid: space.guid,
           service_plan_guid: paid_plan.guid
         }
-        post '/v2/service_instances', MultiJson.dump(service_instance_params)
+        post '/v2/service_instances', Oj.dump(service_instance_params)
 
         expect(last_response.status).to eq(400)
         expect(decoded_response['code']).to eq(60_013)
@@ -5288,7 +5288,7 @@ module VCAP::CloudController
           space_guid: space.guid,
           service_plan_guid: free_plan.guid
         }
-        post '/v2/service_instances', MultiJson.dump(service_instance_params)
+        post '/v2/service_instances', Oj.dump(service_instance_params)
 
         expect(last_response.status).to eq(400)
         expect(decoded_response['code']).to eq(60_005)
@@ -5302,7 +5302,7 @@ module VCAP::CloudController
           space_guid: space.guid,
           service_plan_guid: paid_plan.guid
         }
-        post '/v2/service_instances', MultiJson.dump(service_instance_params)
+        post '/v2/service_instances', Oj.dump(service_instance_params)
 
         expect(last_response.status).to eq(400)
         expect(decoded_response['code']).to eq(60_007)
@@ -5314,7 +5314,7 @@ module VCAP::CloudController
           space_guid: space.guid,
           service_plan_guid: free_plan.guid
         }
-        post '/v2/service_instances', MultiJson.dump(service_instance_params)
+        post '/v2/service_instances', Oj.dump(service_instance_params)
 
         expect(last_response.status).to eq(400)
         expect(decoded_response['code']).to eq(60_009)
@@ -5328,7 +5328,7 @@ module VCAP::CloudController
           space_guid: space.guid,
           service_plan_guid: free_plan.guid
         }
-        post '/v2/service_instances', MultiJson.dump(service_instance_params)
+        post '/v2/service_instances', Oj.dump(service_instance_params)
 
         expect(last_response.status).to eq(400)
         expect(decoded_response['code']).to eq(60_015)
@@ -5349,7 +5349,7 @@ module VCAP::CloudController
 
           set_current_user(make_developer_for_space(space))
 
-          post '/v2/service_instances', MultiJson.dump(body)
+          post '/v2/service_instances', Oj.dump(body)
           expect(last_response).to have_status_code 400
           expect(decoded_response['description']).to match(/invalid.*space.*/)
         end
@@ -5488,7 +5488,7 @@ module VCAP::CloudController
       }
       body[:parameters] = arbitrary_params if arbitrary_params
       body[:tags] = tags if tags
-      req = MultiJson.dump(body)
+      req = Oj.dump(body)
 
       if accepts_incomplete
         post "/v2/service_instances?accepts_incomplete=#{accepts_incomplete}", req
@@ -5499,7 +5499,7 @@ module VCAP::CloudController
     end
 
     def create_user_provided_service_instance
-      req = MultiJson.dump(
+      req = Oj.dump(
         name: 'foo',
         space_guid: space.guid
       )

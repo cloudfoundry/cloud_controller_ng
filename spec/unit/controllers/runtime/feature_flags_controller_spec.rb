@@ -11,7 +11,7 @@ module VCAP::CloudController
         context 'and the flag is in the default feature flags' do
           context 'and the flag was NOT previously set' do
             it 'sets the feature flag to the specified value' do
-              put '/v2/config/feature_flags/user_org_creation', MultiJson.dump({ enabled: true, error_message: 'foobar' })
+              put '/v2/config/feature_flags/user_org_creation', Oj.dump({ enabled: true, error_message: 'foobar' })
 
               expect(last_response.status).to eq(200)
               expect(decoded_response['name']).to eq('user_org_creation')
@@ -25,7 +25,7 @@ module VCAP::CloudController
             before { FeatureFlag.make(name: 'user_org_creation', enabled: false, error_message: 'foobar') }
 
             it 'sets the feature flag to the specified value' do
-              put '/v2/config/feature_flags/user_org_creation', MultiJson.dump({ enabled: true, error_message: 'baz' })
+              put '/v2/config/feature_flags/user_org_creation', Oj.dump({ enabled: true, error_message: 'baz' })
 
               expect(last_response.status).to eq(200)
               expect(decoded_response['name']).to eq('user_org_creation')
@@ -48,7 +48,7 @@ module VCAP::CloudController
 
         context 'and the feature flag is invalid' do
           it 'responds to user with FeatureFlagInvalid' do
-            put '/v2/config/feature_flags/user_org_creation', MultiJson.dump({ enabled: nil })
+            put '/v2/config/feature_flags/user_org_creation', Oj.dump({ enabled: nil })
 
             expect(last_response.status).to eq(400)
             expect(decoded_response['description']).to match(/feature flag is invalid/)
@@ -60,7 +60,7 @@ module VCAP::CloudController
       context 'when the user is not an admin' do
         it 'returns a 403' do
           set_current_user(User.make)
-          put '/v2/config/feature_flags/user_org_creation', MultiJson.dump({ enabled: true })
+          put '/v2/config/feature_flags/user_org_creation', Oj.dump({ enabled: true })
 
           expect(last_response.status).to eq(403)
           expect(decoded_response['description']).to match(/not authorized/)
