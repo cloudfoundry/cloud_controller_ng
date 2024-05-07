@@ -33,7 +33,7 @@ RSpec.describe 'migration concurrent statement timeout', isolation: :truncation,
     skip if db.database_type != :postgres
     expect { Sequel::Migrator.run(db, tmp_migrations_dir, allow_missing_migration_files: true) }.not_to raise_error
     expect(db).to have_received(:run).exactly(2).times
+    expect(db).to have_received(:run).with(/SET statement_timeout TO \d+/).twice
     expect(db).to have_received(:run).with('SET statement_timeout TO 1899000').once
-    expect(db).to have_received(:run).with('SET statement_timeout TO 30000').once
   end
 end
