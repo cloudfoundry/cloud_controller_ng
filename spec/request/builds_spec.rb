@@ -194,7 +194,7 @@ RSpec.describe 'Builds' do
               'user-id' => OpenSSL::Digest::SHA256.hexdigest(developer.guid)
             }
           }
-          expect(logger_spy).to have_received(:info).with(JSON.generate(expected_json))
+          expect(logger_spy).to have_received(:info).with(Oj.dump(expected_json))
           expect(last_response.status).to eq(201), last_response.body
         end
       end

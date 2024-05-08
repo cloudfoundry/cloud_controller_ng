@@ -370,7 +370,7 @@ RSpec.describe VCAP::CloudController::Presenters::V3::ServicePlanPresenter do
           }'
       end
 
-      let(:parsed_schema) { JSON.parse(schema).deep_symbolize_keys }
+      let(:parsed_schema) { Oj.load(schema).deep_symbolize_keys }
 
       context 'when plan has create service_instance schema' do
         let(:service_plan) do

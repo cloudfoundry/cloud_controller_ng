@@ -52,9 +52,9 @@ module VCAP::CloudController
     private
 
     def extract_documentation_url(extra)
-      metadata = JSON.parse(extra)
+      metadata = Oj.load(extra)
       metadata['documentationUrl']
-    rescue JSON::ParserError
+    rescue StandardError
       nil
     end
   end

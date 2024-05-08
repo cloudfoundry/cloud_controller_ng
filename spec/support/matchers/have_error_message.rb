@@ -13,6 +13,6 @@ RSpec::Matchers.define :have_error_message do |expected_code|
   end
 
   def error_message(response)
-    JSON.parse(response.body)['errors'][0]['detail']
+    Oj.load(response.body)['errors'][0]['detail']
   end
 end

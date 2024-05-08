@@ -1084,7 +1084,7 @@ RSpec.describe 'Processes' do
               'user-id' => OpenSSL::Digest::SHA256.hexdigest(developer.guid)
             }
           }
-          expect_any_instance_of(ActiveSupport::Logger).to receive(:info).with(JSON.generate(expected_json))
+          expect_any_instance_of(ActiveSupport::Logger).to receive(:info).with(Oj.dump(expected_json))
           post "/v3/processes/#{process.guid}/actions/scale", scale_request.to_json, developer_headers
 
           expect(last_response.status).to eq(202), last_response.body
@@ -1783,7 +1783,7 @@ RSpec.describe 'Processes' do
               'user-id' => OpenSSL::Digest::SHA256.hexdigest(developer.guid)
             }
           }
-          expect_any_instance_of(ActiveSupport::Logger).to receive(:info).with(JSON.generate(expected_json))
+          expect_any_instance_of(ActiveSupport::Logger).to receive(:info).with(Oj.dump(expected_json))
 
           post "/v3/apps/#{app_model.guid}/processes/web/actions/scale", scale_request.to_json, developer_headers
 

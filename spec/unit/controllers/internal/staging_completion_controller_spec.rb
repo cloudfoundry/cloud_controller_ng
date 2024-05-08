@@ -304,7 +304,7 @@ module VCAP::CloudController
                 'build-id' => OpenSSL::Digest::SHA256.hexdigest(build.guid)
               }
             }
-            expect_any_instance_of(ActiveSupport::Logger).to receive(:info).with(JSON.generate(expected_json))
+            expect_any_instance_of(ActiveSupport::Logger).to receive(:info).with(Oj.dump(expected_json))
 
             allow_any_instance_of(BuildModel).to receive(:in_final_state?).and_return(false)
             post url, Oj.dump(staging_response)

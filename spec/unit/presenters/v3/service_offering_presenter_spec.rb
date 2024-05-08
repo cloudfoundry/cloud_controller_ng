@@ -11,7 +11,7 @@ RSpec.describe VCAP::CloudController::Presenters::V3::ServiceOfferingPresenter d
   let(:documentation_url) { 'https://some.documentation.url/' }
   let(:available) { false }
   let(:bindable) { false }
-  let(:extra) { '{"foo": "bar", "baz": {"answer": 42}' }
+  let(:extra) { '{"foo": "bar", "baz": {"answer": 42}}' }
   let(:id) { 'broker-id' }
   let(:tags) { %w[foo bar] }
   let(:requires) { %w[syslog_drain route_forwarding volume_mount] }

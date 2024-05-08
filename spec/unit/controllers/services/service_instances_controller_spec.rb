@@ -1484,7 +1484,7 @@ module VCAP::CloudController
             services = decoded_response['resources'].map { |resource| resource.fetch('metadata').fetch('guid') }
             expect(services.length).to eq(1)
             expect(services).to include(instances[0].guid)
-            result = JSON.parse(last_response.body)
+            result = Oj.load(last_response.body)
             expect(result['next_url']).to include("q=organization_guid:#{org1.guid}"), result['next_url']
             expect(result['prev_url']).to be_nil
           end
@@ -1499,7 +1499,7 @@ module VCAP::CloudController
             services = decoded_response['resources'].map { |resource| resource.fetch('metadata').fetch('guid') }
             expect(services.length).to eq(1)
             expect(services).to include(instances[1].guid)
-            result = JSON.parse(last_response.body)
+            result = Oj.load(last_response.body)
             expect(result['next_url']).to include("q=organization_guid:#{org1.guid}"), result['next_url']
             expect(result['prev_url']).to include("q=organization_guid:#{org1.guid}"), result['prev_url']
           end
@@ -1514,7 +1514,7 @@ module VCAP::CloudController
             services = decoded_response['resources'].map { |resource| resource.fetch('metadata').fetch('guid') }
             expect(services.length).to eq(1)
             expect(services).to include(instances[2].guid)
-            result = JSON.parse(last_response.body)
+            result = Oj.load(last_response.body)
             expect(result['next_url']).to be_nil
             expect(result['prev_url']).to include("q=organization_guid:#{org1.guid}"), result['prev_url']
           end
@@ -1528,7 +1528,7 @@ module VCAP::CloudController
             expect(last_response.status).to eq(200), last_response.body
             services = decoded_response['resources'].map { |resource| resource.fetch('metadata').fetch('guid') }
             expect(services.length).to eq(0)
-            result = JSON.parse(last_response.body)
+            result = Oj.load(last_response.body)
             expect(result['next_url']).to be_nil
             expect(result['prev_url']).to include("q=organization_guid:#{org1.guid}"), result['prev_url']
           end
@@ -2749,7 +2749,7 @@ module VCAP::CloudController
 
             it 'forwards the maintanance info to the broker' do
               expect(a_request(:patch, /#{service_broker_url}/).with do |req|
-                expect(JSON.parse(req.body)).to include(body)
+                expect(Oj.load(req.body)).to include(body)
               end).to have_been_made
             end
 
@@ -3539,7 +3539,7 @@ module VCAP::CloudController
             delete "/v2/service_instances/#{service_instance.guid}"
 
             expect(decoded_response['error_code']).to eq 'CF-ServiceBrokerBadResponse'
-            expect(JSON.parse(last_response.body)['description']).to include 'service broker error'
+            expect(Oj.load(last_response.body)['description']).to include 'service broker error'
           end
         end
 
@@ -3823,7 +3823,7 @@ module VCAP::CloudController
         set_current_user(developer, email: 'developer@example.com')
         get "/v2/service_instances/#{service_instance.guid}/routes"
         expect(last_response).to have_status_code(200)
-        expect(JSON.parse(last_response.body)['total_results']).to be(0)
+        expect(Oj.load(last_response.body)['total_results']).to be(0)
 
         put "/v2/service_instances/#{service_instance.guid}/routes/#{route.guid}"
         expect(last_response).to have_status_code(201)
@@ -3844,7 +3844,7 @@ module VCAP::CloudController
 
         get "/v2/service_instances/#{service_instance.guid}/routes"
         expect(last_response).to have_status_code(200)
-        expect(JSON.parse(last_response.body)['total_results']).to be(1)
+        expect(Oj.load(last_response.body)['total_results']).to be(1)
       end
 
       it 'sends a bind request to the service broker' do
@@ -3866,7 +3866,7 @@ module VCAP::CloudController
         it 'raises RouteServiceCannotBeBoundToInternalRoute' do
           put "/v2/service_instances/#{service_instance.guid}/routes/#{route.guid}"
           expect(last_response.status).to eq(400), last_response.body
-          expect(JSON.parse(last_response.body)['description']).
+          expect(Oj.load(last_response.body)['description']).
             to match('Route services cannot be bound to internal routes')
         end
       end
@@ -3943,7 +3943,7 @@ module VCAP::CloudController
         it 'raises a 400 error' do
           put "/v2/service_instances/#{service_instance.guid}/routes/#{route.guid}"
           expect(last_response.status).to eq(400)
-          expect(JSON.parse(last_response.body)['description']).
+          expect(Oj.load(last_response.body)['description']).
             to include('does not support route binding')
         end
       end
@@ -3965,7 +3965,7 @@ module VCAP::CloudController
         it 'raises an error' do
           put "/v2/service_instances/#{service_instance.guid}/routes/random-guid"
           expect(last_response.status).to eq(404)
-          expect(JSON.parse(last_response.body)['description']).
+          expect(Oj.load(last_response.body)['description']).
             to include('route could not be found')
         end
       end
@@ -3979,11 +3979,11 @@ module VCAP::CloudController
           new_service_instance = ManagedServiceInstance.make(:routing, space:)
           get "/v2/service_instances/#{new_service_instance.guid}/routes"
           expect(last_response.status).to eq(200)
-          expect(JSON.parse(last_response.body)['total_results']).to be(0)
+          expect(Oj.load(last_response.body)['total_results']).to be(0)
 
           put "/v2/service_instances/#{new_service_instance.guid}/routes/#{route.guid}"
           expect(last_response.status).to eq(400)
-          expect(JSON.parse(last_response.body)['description']).
+          expect(Oj.load(last_response.body)['description']).
             to eq('A route may only be bound to a single service instance')
 
           event = VCAP::CloudController::Event.first(type: 'audit.service_instance.bind_route')
@@ -3991,18 +3991,18 @@ module VCAP::CloudController
 
           get "/v2/service_instances/#{new_service_instance.guid}/routes"
           expect(last_response.status).to eq(200)
-          expect(JSON.parse(last_response.body)['total_results']).to be(0)
+          expect(Oj.load(last_response.body)['total_results']).to be(0)
         end
 
         context 'and the associated is the same as the requested instance' do
           it 'raises ServiceInstanceAlreadyBoundToSameRoute' do
             get "/v2/service_instances/#{service_instance.guid}/routes"
             expect(last_response).to have_status_code(200)
-            expect(JSON.parse(last_response.body)['total_results']).to be(1)
+            expect(Oj.load(last_response.body)['total_results']).to be(1)
 
             put "/v2/service_instances/#{service_instance.guid}/routes/#{route.guid}"
             expect(last_response).to have_status_code(400)
-            expect(JSON.parse(last_response.body)['description']).
+            expect(Oj.load(last_response.body)['description']).
               to eq('The route and service instance are already bound.')
 
             event = VCAP::CloudController::Event.first(type: 'audit.service_instance.bind_route')
@@ -4010,7 +4010,7 @@ module VCAP::CloudController
 
             get "/v2/service_instances/#{service_instance.guid}/routes"
             expect(last_response).to have_status_code(200)
-            expect(JSON.parse(last_response.body)['total_results']).to be(1)
+            expect(Oj.load(last_response.body)['total_results']).to be(1)
           end
         end
       end
@@ -4048,7 +4048,7 @@ module VCAP::CloudController
         end
 
         it 'raises UnbindableService error' do
-          hash_body = JSON.parse(last_response.body)
+          hash_body = Oj.load(last_response.body)
           expect(hash_body['error_code']).to eq('CF-UnbindableService')
           expect(last_response).to have_status_code(400)
         end
@@ -4063,7 +4063,7 @@ module VCAP::CloudController
         end
 
         it 'raises UnbindableService error' do
-          hash_body = JSON.parse(last_response.body)
+          hash_body = Oj.load(last_response.body)
           expect(hash_body['error_code']).to eq('CF-UnbindableService')
           expect(last_response).to have_status_code(400)
         end
@@ -4108,7 +4108,7 @@ module VCAP::CloudController
         it 'raises an error' do
           put "/v2/service_instances/#{service_instance.guid}/routes/#{route.guid}"
           expect(last_response.status).to eq(400)
-          expect(JSON.parse(last_response.body)['description']).
+          expect(Oj.load(last_response.body)['description']).
             to include('The service instance and the route are in different spaces.')
         end
 
@@ -4211,7 +4211,7 @@ module VCAP::CloudController
           set_current_user(developer, email: 'developer@example.com')
           get "/v2/service_instances/#{service_instance.guid}/routes"
           expect(last_response.status).to eq(200)
-          expect(JSON.parse(last_response.body)['total_results']).to be(1)
+          expect(Oj.load(last_response.body)['total_results']).to be(1)
 
           delete "/v2/service_instances/#{service_instance.guid}/routes/#{route.guid}"
           expect(last_response.status).to eq(204)
@@ -4233,7 +4233,7 @@ module VCAP::CloudController
 
           get "/v2/service_instances/#{service_instance.guid}/routes"
           expect(last_response.status).to eq(200)
-          expect(JSON.parse(last_response.body)['total_results']).to be(0)
+          expect(Oj.load(last_response.body)['total_results']).to be(0)
         end
 
         it 'sends an unbind request to the broker' do
@@ -4278,7 +4278,7 @@ module VCAP::CloudController
         it 'returns a 400 InvalidRelation error' do
           delete "/v2/service_instances/#{service_instance.guid}/routes/#{route.guid}"
           expect(last_response.status).to eq(400)
-          expect(JSON.parse(last_response.body)['description']).to include('is not bound to service instance')
+          expect(Oj.load(last_response.body)['description']).to include('is not bound to service instance')
         end
       end
     end
@@ -4316,8 +4316,8 @@ module VCAP::CloudController
               it "returns #{expected_return_values}" do
                 get "/v2/service_instances/#{instance.guid}/permissions"
                 expect(last_response.status).to eq(200), "Expected 200, got: #{last_response.status}, role: #{role}"
-                manage_response = JSON.parse(last_response.body)['manage']
-                read_response = JSON.parse(last_response.body)['read']
+                manage_response = Oj.load(last_response.body)['manage']
+                read_response = Oj.load(last_response.body)['read']
                 expect(manage_response).to eq(expected_return_values[:manage]), "Expected #{expected_return_values[:manage]}, got: #{read_response}, role: #{role}"
                 expect(read_response).to eq(expected_return_values[:read]), "Expected #{expected_return_values[:read]}, got: #{read_response}, role: #{role}"
               end
@@ -4333,8 +4333,8 @@ module VCAP::CloudController
               set_current_user(developer, { scopes: ['cloud_controller.read'] })
               get "/v2/service_instances/#{instance.guid}/permissions"
               expect(last_response.status).to be(200)
-              expect(JSON.parse(last_response.body)['manage']).to be true
-              expect(JSON.parse(last_response.body)['read']).to be true
+              expect(Oj.load(last_response.body)['manage']).to be true
+              expect(Oj.load(last_response.body)['read']).to be true
             end
           end
 
@@ -4343,8 +4343,8 @@ module VCAP::CloudController
               set_current_user(developer, { scopes: ['cloud_controller_service_permissions.read'] })
               get "/v2/service_instances/#{instance.guid}/permissions"
               expect(last_response.status).to be(200)
-              expect(JSON.parse(last_response.body)['manage']).to be true
-              expect(JSON.parse(last_response.body)['read']).to be true
+              expect(Oj.load(last_response.body)['manage']).to be true
+              expect(Oj.load(last_response.body)['read']).to be true
             end
           end
 
@@ -4353,7 +4353,7 @@ module VCAP::CloudController
               set_current_user(developer, { scopes: ['cloud_controller.write'] })
               get "/v2/service_instances/#{instance.guid}/permissions"
               expect(last_response.status).to be(403)
-              expect(JSON.parse(last_response.body)['description']).to eql('Your token lacks the necessary scopes to access this resource.')
+              expect(Oj.load(last_response.body)['description']).to eql('Your token lacks the necessary scopes to access this resource.')
             end
           end
         end
@@ -4366,8 +4366,8 @@ module VCAP::CloudController
           set_current_user(user)
           get "/v2/service_instances/#{instance.guid}/permissions"
           expect(last_response.status).to be(200)
-          expect(JSON.parse(last_response.body)['manage']).to be false
-          expect(JSON.parse(last_response.body)['read']).to be false
+          expect(Oj.load(last_response.body)['manage']).to be false
+          expect(Oj.load(last_response.body)['read']).to be false
         end
       end
 
@@ -4410,7 +4410,7 @@ module VCAP::CloudController
           set_current_user_as_admin
           get "/v2/service_instances/#{instance.guid}/shared_from"
           expect(last_response.status).to be(204)
-          expect(JSON.parse(last_response.body)).to be_nil
+          expect(last_response.body).to be_empty
         end
       end
 
@@ -4426,7 +4426,7 @@ module VCAP::CloudController
           set_current_user_as_admin
           get "/v2/service_instances/#{instance.guid}/shared_from"
           expect(last_response.status).to eql(200), last_response.body
-          parsed_response = JSON.parse(last_response.body)
+          parsed_response = Oj.load(last_response.body)
 
           expect(parsed_response.keys).to match_array(%w[space_name space_guid organization_name])
           expect(parsed_response['space_name']).to eq(space.name)
@@ -4518,7 +4518,7 @@ module VCAP::CloudController
         set_current_user_as_admin
         get "/v2/service_instances/#{instance.guid}/shared_to"
         expect(last_response.status).to be(200)
-        expect(JSON.parse(last_response.body)['resources']).to eq([])
+        expect(Oj.load(last_response.body)['resources']).to eq([])
       end
 
       context 'when the service instance does not exist' do
@@ -4541,7 +4541,7 @@ module VCAP::CloudController
         it 'returns the correct body' do
           set_current_user_as_admin
           get "/v2/service_instances/#{instance.guid}/shared_to"
-          decoded_response = JSON.parse(last_response.body)
+          decoded_response = Oj.load(last_response.body)
           expect(last_response.status).to eql(200), last_response.body
           expect(decoded_response.fetch('total_results')).to eq(2)
           resources = decoded_response.fetch('resources')
@@ -4577,7 +4577,7 @@ module VCAP::CloudController
           it 'returns the correct bound_app_count' do
             set_current_user_as_admin
             get "/v2/service_instances/#{instance.guid}/shared_to"
-            decoded_response = JSON.parse(last_response.body)
+            decoded_response = Oj.load(last_response.body)
             expect(last_response.status).to eql(200), last_response.body
             resources = decoded_response.fetch('resources')
 
@@ -4832,8 +4832,8 @@ module VCAP::CloudController
         it 'returns a 400 with error message' do
           get "/v2/service_instances/#{instance.guid}/parameters"
           expect(last_response.status).to be(400)
-          expect(JSON.parse(last_response.body)['error_code']).to eql('CF-ServiceFetchInstanceParametersNotSupported')
-          expect(JSON.parse(last_response.body)['description']).to eql('This service does not support fetching service instance parameters.')
+          expect(Oj.load(last_response.body)['error_code']).to eql('CF-ServiceFetchInstanceParametersNotSupported')
+          expect(Oj.load(last_response.body)['description']).to eql('This service does not support fetching service instance parameters.')
         end
       end
 
@@ -4855,8 +4855,8 @@ module VCAP::CloudController
             get "/v2/service_instances/#{instance.guid}/parameters"
 
             expect(last_response.status).to be(200)
-            expect(JSON.parse(last_response.body)['foo']['bar']).to be(true)
-            expect(JSON.parse(last_response.body).length).to be(1)
+            expect(Oj.load(last_response.body)['foo']['bar']).to be(true)
+            expect(Oj.load(last_response.body).length).to be(1)
           end
 
           context 'when there are no parameters' do
@@ -4877,7 +4877,7 @@ module VCAP::CloudController
               get "/v2/service_instances/#{instance.guid}/parameters"
 
               expect(last_response.status).to be(502)
-              hash_body = JSON.parse(last_response.body)
+              hash_body = Oj.load(last_response.body)
               expect(hash_body['error_code']).to eq('CF-ServiceBrokerResponseMalformed')
             end
           end
@@ -4889,7 +4889,7 @@ module VCAP::CloudController
               get "/v2/service_instances/#{instance.guid}/parameters"
 
               expect(last_response.status).to be(502)
-              hash_body = JSON.parse(last_response.body)
+              hash_body = Oj.load(last_response.body)
               expect(hash_body['error_code']).to eq('CF-ServiceBrokerResponseMalformed')
             end
           end
@@ -4901,7 +4901,7 @@ module VCAP::CloudController
               get "/v2/service_instances/#{instance.guid}/parameters"
 
               expect(last_response.status).to be(502)
-              hash_body = JSON.parse(last_response.body)
+              hash_body = Oj.load(last_response.body)
               expect(hash_body['error_code']).to eq('CF-ServiceBrokerBadResponse')
             end
           end
@@ -4929,8 +4929,8 @@ module VCAP::CloudController
         it 'returns a 400 with error message' do
           get "/v2/service_instances/#{instance.guid}/parameters"
           expect(last_response.status).to be(400)
-          expect(JSON.parse(last_response.body)['error_code']).to eql('CF-ServiceFetchInstanceParametersNotSupported')
-          expect(JSON.parse(last_response.body)['description']).to eql('This service does not support fetching service instance parameters.')
+          expect(Oj.load(last_response.body)['error_code']).to eql('CF-ServiceFetchInstanceParametersNotSupported')
+          expect(Oj.load(last_response.body)['description']).to eql('This service does not support fetching service instance parameters.')
         end
 
         context 'when the service instance has an operation in progress' do
@@ -4944,8 +4944,8 @@ module VCAP::CloudController
           it 'returns a 400 with error rather than a 409' do
             get "/v2/service_instances/#{instance.guid}/parameters"
             expect(last_response.status).to be(400)
-            expect(JSON.parse(last_response.body)['error_code']).to eql('CF-ServiceFetchInstanceParametersNotSupported')
-            expect(JSON.parse(last_response.body)['description']).to eql('This service does not support fetching service instance parameters.')
+            expect(Oj.load(last_response.body)['error_code']).to eql('CF-ServiceFetchInstanceParametersNotSupported')
+            expect(Oj.load(last_response.body)['description']).to eql('This service does not support fetching service instance parameters.')
           end
         end
       end
@@ -4956,8 +4956,8 @@ module VCAP::CloudController
         it 'returns a 400 with error message' do
           get "/v2/service_instances/#{instance.guid}/parameters"
           expect(last_response.status).to be(400)
-          expect(JSON.parse(last_response.body)['error_code']).to eql('CF-ServiceFetchInstanceParametersNotSupported')
-          expect(JSON.parse(last_response.body)['description']).to eql('This service does not support fetching service instance parameters.')
+          expect(Oj.load(last_response.body)['error_code']).to eql('CF-ServiceFetchInstanceParametersNotSupported')
+          expect(Oj.load(last_response.body)['description']).to eql('This service does not support fetching service instance parameters.')
         end
       end
 
@@ -4965,8 +4965,8 @@ module VCAP::CloudController
         it 'returns a 404' do
           get '/v2/service_instances/unknown-guid/parameters'
           expect(last_response.status).to be(404)
-          expect(JSON.parse(last_response.body)['error_code']).to eql('CF-ServiceInstanceNotFound')
-          expect(JSON.parse(last_response.body)['description']).to eql('The service instance could not be found: unknown-guid')
+          expect(Oj.load(last_response.body)['error_code']).to eql('CF-ServiceInstanceNotFound')
+          expect(Oj.load(last_response.body)['description']).to eql('The service instance could not be found: unknown-guid')
         end
       end
 
@@ -5050,8 +5050,8 @@ module VCAP::CloudController
           get "/v2/service_instances/invalid-guid/routes/#{route.guid}/parameters"
 
           expect(last_response).to have_status_code(404)
-          expect(JSON.parse(last_response.body)['error_code']).to eql('CF-ServiceInstanceNotFound')
-          expect(JSON.parse(last_response.body)['description']).to eql('The service instance could not be found: invalid-guid')
+          expect(Oj.load(last_response.body)['error_code']).to eql('CF-ServiceInstanceNotFound')
+          expect(Oj.load(last_response.body)['description']).to eql('The service instance could not be found: invalid-guid')
         end
       end
 
@@ -5060,8 +5060,8 @@ module VCAP::CloudController
           get "/v2/service_instances/#{instance.guid}/routes/invalid-guid/parameters"
 
           expect(last_response).to have_status_code(404)
-          expect(JSON.parse(last_response.body)['error_code']).to eql('CF-RouteNotFound')
-          expect(JSON.parse(last_response.body)['description']).to eql('The route could not be found: invalid-guid')
+          expect(Oj.load(last_response.body)['error_code']).to eql('CF-RouteNotFound')
+          expect(Oj.load(last_response.body)['description']).to eql('The route could not be found: invalid-guid')
         end
       end
 
@@ -5070,8 +5070,8 @@ module VCAP::CloudController
           get "/v2/service_instances/#{instance.guid}/routes/#{route.guid}/parameters"
 
           expect(last_response).to have_status_code(400)
-          expect(JSON.parse(last_response.body)['error_code']).to eql('CF-InvalidRelation')
-          expect(JSON.parse(last_response.body)['description']).to eql("Route #{route.guid} is not bound to service instance #{instance.guid}.")
+          expect(Oj.load(last_response.body)['error_code']).to eql('CF-InvalidRelation')
+          expect(Oj.load(last_response.body)['description']).to eql("Route #{route.guid} is not bound to service instance #{instance.guid}.")
         end
       end
 
@@ -5085,8 +5085,8 @@ module VCAP::CloudController
             get "/v2/service_instances/#{instance.guid}/routes/#{route.guid}/parameters"
 
             expect(last_response).to have_status_code(400)
-            expect(JSON.parse(last_response.body)['error_code']).to eql('CF-ServiceFetchBindingParametersNotSupported')
-            expect(JSON.parse(last_response.body)['description']).to eql('This service does not support fetching service binding parameters.')
+            expect(Oj.load(last_response.body)['error_code']).to eql('CF-ServiceFetchBindingParametersNotSupported')
+            expect(Oj.load(last_response.body)['description']).to eql('This service does not support fetching service binding parameters.')
           end
         end
 
@@ -5107,8 +5107,8 @@ module VCAP::CloudController
               get "/v2/service_instances/#{instance.guid}/routes/#{route.guid}/parameters"
 
               expect(last_response).to have_status_code(200)
-              expect(JSON.parse(last_response.body)['foo']['bar']).to be(true)
-              expect(JSON.parse(last_response.body).length).to be(1)
+              expect(Oj.load(last_response.body)['foo']['bar']).to be(true)
+              expect(Oj.load(last_response.body).length).to be(1)
             end
           end
 
@@ -5130,7 +5130,7 @@ module VCAP::CloudController
               get "/v2/service_instances/#{instance.guid}/routes/#{route.guid}/parameters"
 
               expect(last_response).to have_status_code(502)
-              expect(JSON.parse(last_response.body)['error_code']).to eql('CF-ServiceBrokerResponseMalformed')
+              expect(Oj.load(last_response.body)['error_code']).to eql('CF-ServiceBrokerResponseMalformed')
             end
           end
 

@@ -210,17 +210,17 @@ module VCAP::CloudController
       manage_permissions = @access_context.can?(:manage_permissions, service_instance)
       read_permissions = @access_context.can?(:read_permissions, service_instance)
 
-      [HTTP::OK, JSON.generate({
-                                 manage: manage_permissions,
-                                 read: read_permissions
-                               })]
+      [HTTP::OK, Oj.dump({
+                           manage: manage_permissions,
+                           read: read_permissions
+                         }, mode: :compat)]
     rescue CloudController::Errors::ApiError => e
       raise e unless e.name == 'NotAuthorized'
 
-      [HTTP::OK, JSON.generate({
-                                 manage: false,
-                                 read: false
-                               })]
+      [HTTP::OK, Oj.dump({
+                           manage: false,
+                           read: false
+                         }, mode: :compat)]
     end
 
     get '/v2/service_instances/:guid/shared_from', :shared_from_information
@@ -229,7 +229,7 @@ module VCAP::CloudController
 
       return HTTP::NO_CONTENT unless service_instance.shared?
 
-      [HTTP::OK, JSON.generate(CloudController::Presenters::V2::ServiceInstanceSharedFromPresenter.new.to_hash(service_instance.space))]
+      [HTTP::OK, Oj.dump(CloudController::Presenters::V2::ServiceInstanceSharedFromPresenter.new.to_hash(service_instance.space), mode: :compat)]
     rescue CloudController::Errors::ApiError => e
       return HTTP::NOT_FOUND if e.name == 'NotAuthorized'
 

@@ -71,8 +71,8 @@ module VCAP::CloudController
         def broker_metadata
           return {} unless service_offering.extra
 
-          JSON.parse(service_offering.extra)
-        rescue JSON::ParserError
+          Oj.load(service_offering.extra)
+        rescue StandardError
           {}
         end
 

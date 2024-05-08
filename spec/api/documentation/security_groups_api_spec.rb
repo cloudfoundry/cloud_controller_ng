@@ -27,7 +27,7 @@ RSpec.resource 'Security Groups', type: %i[api legacy_api] do
     field :rules, rules_description,
           default: [],
           render_example_pre_tag: true,
-          example_values: [JSON.pretty_generate([
+          example_values: [Oj.dump([
             { protocol: 'icmp', destination: '0.0.0.0/0', type: 0, code: 1 },
             { protocol: 'tcp', destination: '0.0.0.0/0', ports: '2048-3000', log: true },
             { protocol: 'udp', destination: '0.0.0.0/0', ports: '53, 5353' },

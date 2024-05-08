@@ -39,7 +39,7 @@ module VCAP
             JSON::Validator.schema_reader = JSON::Schema::Reader.new(accept_uri: false, accept_file: false)
             file = File.read(JSON::Validator.validator_for_name('draft4').metaschema)
 
-            metaschema = JSON.parse(file)
+            metaschema = Oj.load(file)
 
             begin
               errors = JSON::Validator.fully_validate(metaschema, @schema, errors_as_objects: true)

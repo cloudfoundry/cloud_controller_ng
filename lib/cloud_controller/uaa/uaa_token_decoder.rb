@@ -122,7 +122,7 @@ module VCAP::CloudController
       response = http_client.get('.well-known/openid-configuration')
       raise "Could not retrieve issuer information from UAA: #{response.status}" unless response.status == 200
 
-      JSON.parse(response.body).fetch('issuer')
+      Oj.load(response.body).fetch('issuer')
     end
 
     def http_client

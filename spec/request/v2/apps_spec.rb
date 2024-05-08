@@ -616,7 +616,7 @@ RSpec.describe 'Apps' do
             }
           }
           expect(last_response.status).to eq(201), last_response.body
-          expect(logger_spy).to have_received(:info).with(JSON.generate(expected_json))
+          expect(logger_spy).to have_received(:info).with(Oj.dump(expected_json))
         end
       end
     end
@@ -784,7 +784,7 @@ RSpec.describe 'Apps' do
               }
             }
             # start-app telemetry will be logged because of the 'state:STARTED' update param. skip checking this.
-            expect_any_instance_of(ActiveSupport::Logger).to receive(:info).with(JSON.generate(expected_json))
+            expect_any_instance_of(ActiveSupport::Logger).to receive(:info).with(Oj.dump(expected_json))
             expect_any_instance_of(ActiveSupport::Logger).to receive(:info).with(anything).once
 
             put "/v2/apps/#{process.app.guid}", update_params, headers_for(user)
@@ -823,7 +823,7 @@ RSpec.describe 'Apps' do
           it 'logs the required fields' do
             Timecop.freeze do
               expect_any_instance_of(ActiveSupport::Logger).to receive(:info).with(anything).once
-              expect_any_instance_of(ActiveSupport::Logger).to receive(:info).with(JSON.generate(expected_scale_json))
+              expect_any_instance_of(ActiveSupport::Logger).to receive(:info).with(Oj.dump(expected_scale_json))
 
               put "/v2/apps/#{process.app.guid}", update_params, headers_for(user)
 
@@ -841,7 +841,7 @@ RSpec.describe 'Apps' do
           it 'logs the required fields' do
             Timecop.freeze do
               expect_any_instance_of(ActiveSupport::Logger).to receive(:info).with(anything).once
-              expect_any_instance_of(ActiveSupport::Logger).to receive(:info).with(JSON.generate(expected_scale_json))
+              expect_any_instance_of(ActiveSupport::Logger).to receive(:info).with(Oj.dump(expected_scale_json))
 
               put "/v2/apps/#{process.app.guid}", update_params, headers_for(user)
 
@@ -859,7 +859,7 @@ RSpec.describe 'Apps' do
           it 'logs the required fields' do
             Timecop.freeze do
               expect_any_instance_of(ActiveSupport::Logger).to receive(:info).with(anything).once
-              expect_any_instance_of(ActiveSupport::Logger).to receive(:info).with(JSON.generate(expected_scale_json))
+              expect_any_instance_of(ActiveSupport::Logger).to receive(:info).with(Oj.dump(expected_scale_json))
 
               put "/v2/apps/#{process.app.guid}", update_params, headers_for(user)
 
@@ -888,7 +888,7 @@ RSpec.describe 'Apps' do
         it 'logs the required fields' do
           Timecop.freeze do
             expect_any_instance_of(ActiveSupport::Logger).to receive(:info).with(anything).once
-            expect_any_instance_of(ActiveSupport::Logger).to receive(:info).with(JSON.generate(expected_start_json))
+            expect_any_instance_of(ActiveSupport::Logger).to receive(:info).with(Oj.dump(expected_start_json))
 
             put "/v2/apps/#{process.app.guid}", update_params, headers_for(user)
 
@@ -916,7 +916,7 @@ RSpec.describe 'Apps' do
         it 'logs the required fields' do
           Timecop.freeze do
             expect_any_instance_of(ActiveSupport::Logger).to receive(:info).with(anything).once
-            expect_any_instance_of(ActiveSupport::Logger).to receive(:info).with(JSON.generate(expected_stop_json))
+            expect_any_instance_of(ActiveSupport::Logger).to receive(:info).with(Oj.dump(expected_stop_json))
 
             put "/v2/apps/#{process.app.guid}", update_params, headers_for(user)
 
@@ -1144,7 +1144,7 @@ RSpec.describe 'Apps' do
               'user-id' => OpenSSL::Digest::SHA256.hexdigest(user.guid)
             }
           }
-          expect_any_instance_of(ActiveSupport::Logger).to receive(:info).with(JSON.generate(expected_json))
+          expect_any_instance_of(ActiveSupport::Logger).to receive(:info).with(Oj.dump(expected_json))
 
           delete "/v2/apps/#{process.app.guid}", nil, headers_for(user)
 
@@ -1528,7 +1528,7 @@ RSpec.describe 'Apps' do
             }
           }
           expect_any_instance_of(ActiveSupport::Logger).to receive(:info).with(anything).once
-          expect_any_instance_of(ActiveSupport::Logger).to receive(:info).with(JSON.generate(expected_json))
+          expect_any_instance_of(ActiveSupport::Logger).to receive(:info).with(Oj.dump(expected_json))
           post "/v2/apps/#{process.app.guid}/restage", nil, headers_for(user)
           expect(last_response.status).to eq(201), last_response.body
         end
@@ -1556,7 +1556,7 @@ RSpec.describe 'Apps' do
               }
             }
             expect_any_instance_of(ActiveSupport::Logger).to receive(:info).with(anything).once
-            expect_any_instance_of(ActiveSupport::Logger).to receive(:info).with(JSON.generate(expected_json))
+            expect_any_instance_of(ActiveSupport::Logger).to receive(:info).with(Oj.dump(expected_json))
             post "/v2/apps/#{process.app.guid}/restage", nil, headers_for(user)
             expect(last_response.status).to eq(201), last_response.body
           end
@@ -1613,7 +1613,7 @@ RSpec.describe 'Apps' do
 
       it 'logs the required fields' do
         Timecop.freeze do
-          expect_any_instance_of(ActiveSupport::Logger).to receive(:info).with(JSON.generate(expected_json))
+          expect_any_instance_of(ActiveSupport::Logger).to receive(:info).with(Oj.dump(expected_json))
           put "/v2/apps/#{process.guid}/bits?async=true", upload_params, headers_for(user)
 
           expect(last_response.status).to eq(201), last_response.body

@@ -482,7 +482,7 @@ RSpec.describe 'Tasks' do
       put "/v3/tasks/#{task.guid}/cancel", nil, developer_headers
 
       expect(last_response.status).to eq(202)
-      parsed_body = JSON.parse(last_response.body)
+      parsed_body = Oj.load(last_response.body)
       expect(parsed_body['guid']).to eq(task.guid)
       expect(parsed_body['name']).to eq('task')
       expect(parsed_body['command']).to eq('echo task')
@@ -1278,7 +1278,7 @@ RSpec.describe 'Tasks' do
             }
           }
 
-          expect_any_instance_of(ActiveSupport::Logger).to receive(:info).with(JSON.generate(expected_json))
+          expect_any_instance_of(ActiveSupport::Logger).to receive(:info).with(Oj.dump(expected_json))
           post "/v3/apps/#{app_model.guid}/tasks", body.to_json, developer_headers
 
           expect(last_response.status).to eq(202)

@@ -1,4 +1,3 @@
-require 'json'
 require 'json-schema'
 require 'presenters/v3/base_presenter'
 require 'presenters/mixins/metadata_presentation_helpers'
@@ -99,16 +98,16 @@ module VCAP::CloudController
         def parse_schema(schema)
           return {} unless schema
 
-          JSON.parse(schema)
-        rescue JSON::ParserError
+          Oj.load(schema)
+        rescue StandardError
           {}
         end
 
         def parse(json)
           return {} unless json
 
-          JSON.parse(json).deep_symbolize_keys
-        rescue JSON::ParserError
+          Oj.load(json).deep_symbolize_keys
+        rescue StandardError
           {}
         end
 

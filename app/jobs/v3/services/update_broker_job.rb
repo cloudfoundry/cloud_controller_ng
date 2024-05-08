@@ -82,7 +82,7 @@ module VCAP::CloudController
           params[:name] = update_request.name unless update_request.name.nil?
           params[:broker_url] = update_request.broker_url unless update_request.broker_url.nil?
           unless update_request.authentication.nil?
-            auth = JSON.parse(update_request.authentication)
+            auth = Oj.load(update_request.authentication)
             params[:auth_username] = auth.dig('credentials', 'username')
             params[:auth_password] = auth.dig('credentials', 'password')
           end

@@ -19,7 +19,7 @@ RSpec.describe 'User Provided Service Instance' do
       syslog_drain_url: syslog_drain_url
     }.to_json, admin_headers)
     expect(last_response.status).to eq(201)
-    json_body             = JSON.parse(last_response.body)
+    json_body             = Oj.load(last_response.body)
     service_instance_guid = json_body.fetch('metadata').fetch('guid')
 
     # bind
@@ -28,7 +28,7 @@ RSpec.describe 'User Provided Service Instance' do
       app_guid: @app_guid
     }.to_json, admin_headers)
     expect(last_response.status).to eq(201)
-    json_body    = JSON.parse(last_response.body)
+    json_body    = Oj.load(last_response.body)
     binding_guid = json_body.fetch('metadata').fetch('guid')
     expect(json_body.fetch('entity').fetch('syslog_drain_url')).to eq(syslog_drain_url)
 
@@ -50,7 +50,7 @@ RSpec.describe 'User Provided Service Instance' do
       app_guid: @app_guid
     }.to_json, admin_headers)
     expect(last_response.status).to eq(201)
-    json_body = JSON.parse(last_response.body)
+    json_body = Oj.load(last_response.body)
     expect(json_body.fetch('entity').fetch('syslog_drain_url')).to eq(syslog_drain_url2)
   end
 end

@@ -182,7 +182,7 @@ RSpec.describe 'Service Broker API integration' do
               Delayed::Worker.new.work_off
 
               get("/v2/service_bindings/#{@binding_guid}", '', admin_headers)
-              response = JSON.parse(last_response.body)
+              response = Oj.load(last_response.body)
 
               expect(response['entity']['last_operation']['state']).to eql('succeeded')
               expect(response['entity']['credentials']).to eql('foo' => true)

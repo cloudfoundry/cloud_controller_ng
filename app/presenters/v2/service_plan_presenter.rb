@@ -52,8 +52,8 @@ module CloudController
           return {} unless schema
 
           begin
-            JSON.parse(schema)
-          rescue JSON::ParserError
+            Oj.load(schema)
+          rescue StandardError
             {}
           end
         end

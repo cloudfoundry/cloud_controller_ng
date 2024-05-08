@@ -162,19 +162,19 @@ module VCAP::CloudController
 
         it 're-encrypts all encrypted fields with the new key for all rows' do
           expect(Encryptor).to receive(:encrypt).
-            with(JSON.dump(nil), historical_app_with_no_environment.salt).exactly(:twice)
+            with(Oj.dump(nil), historical_app_with_no_environment.salt).exactly(:twice)
 
           expect(Encryptor).to receive(:encrypt).
-            with(JSON.dump(env_vars), historical_app.salt).exactly(:twice)
+            with(Oj.dump(env_vars), historical_app.salt).exactly(:twice)
 
           expect(Encryptor).to receive(:encrypt).
-            with(JSON.dump(env_vars), app.salt).exactly(:twice)
+            with(Oj.dump(env_vars), app.salt).exactly(:twice)
 
           expect(Encryptor).to receive(:encrypt).
-            with(JSON.dump(credentials), service_binding.salt).exactly(:twice)
+            with(Oj.dump(credentials), service_binding.salt).exactly(:twice)
 
           expect(Encryptor).to receive(:encrypt).
-            with(JSON.dump(instance_credentials), service_instance.salt).exactly(:twice)
+            with(Oj.dump(instance_credentials), service_instance.salt).exactly(:twice)
 
           RotateDatabaseKey.perform(batch_size: 1)
         end
@@ -200,10 +200,10 @@ module VCAP::CloudController
 
         it 'does not re-encrypt values that are already encrypted with the new label' do
           expect(Encryptor).not_to receive(:encrypt).
-            with(JSON.dump(env_vars_2), app_new_key_label.salt)
+            with(Oj.dump(env_vars_2), app_new_key_label.salt)
 
           expect(Encryptor).not_to receive(:encrypt).
-            with(JSON.dump(credentials_2), service_binding_new_key_label.salt)
+            with(Oj.dump(credentials_2), service_binding_new_key_label.salt)
 
           RotateDatabaseKey.perform(batch_size: 1)
         end

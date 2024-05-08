@@ -50,7 +50,7 @@ RSpec::Matchers.define :match_json_response do |expected|
 
     result = []
     unless summary.empty?
-      result << "Expected:\n#{JSON.pretty_generate(expected)}\nto equal:\n#{JSON.pretty_generate(actual)}\n"
+      result << "Expected:\n#{Oj.dump(expected)}\nto equal:\n#{Oj.dump(actual)}\n"
       result << "Summary:\n#{summary.map { |s| '      ' + s }.join("\n")}\n"
     end
     if exception

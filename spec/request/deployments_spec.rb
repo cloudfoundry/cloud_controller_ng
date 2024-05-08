@@ -591,7 +591,7 @@ RSpec.describe 'Deployments' do
               'user-id' => OpenSSL::Digest::SHA256.hexdigest(user.guid)
             }
           }
-          expect_any_instance_of(ActiveSupport::Logger).to receive(:info).with(JSON.generate(expected_json))
+          expect_any_instance_of(ActiveSupport::Logger).to receive(:info).with(Oj.dump(expected_json))
 
           post '/v3/deployments', create_request.to_json, user_header
           expect(last_response.status).to eq(201), last_response.body
@@ -613,7 +613,7 @@ RSpec.describe 'Deployments' do
             }
           }
           expect_any_instance_of(ActiveSupport::Logger).to receive(:info).twice
-          expect_any_instance_of(ActiveSupport::Logger).to receive(:info).with(JSON.generate(expected_json)).at_most(:once)
+          expect_any_instance_of(ActiveSupport::Logger).to receive(:info).with(Oj.dump(expected_json)).at_most(:once)
 
           post '/v3/deployments', revision_create_request.to_json, user_header
           expect(last_response.status).to eq(201), last_response.body

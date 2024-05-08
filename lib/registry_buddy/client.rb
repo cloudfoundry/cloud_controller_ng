@@ -15,13 +15,13 @@ module RegistryBuddy
                       'registry_base_path' => registry
                     })
       end
-      JSON.parse(response.body)
+      Oj.load(response.body)
     end
 
     def delete_image(image_reference)
       with_request_error_handling 202 do
         client.delete('/images',
-                      body: JSON.dump(image_reference:))
+                      body: Oj.dump(image_reference:))
       end
 
       nil

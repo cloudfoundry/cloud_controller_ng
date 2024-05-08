@@ -1298,7 +1298,7 @@ module VCAP::CloudController
               delete "/v2/apps/#{process.app.guid}?recursive=true"
 
               expect(last_response).to have_status_code(502)
-              body = JSON.parse(last_response.body)
+              body = Oj.load(last_response.body)
               expect(body['error_code']).to include 'CF-AppRecursiveDeleteFailed'
 
               err_msg = body['description']
@@ -1317,7 +1317,7 @@ module VCAP::CloudController
 
               expect(last_response).to have_status_code(502)
 
-              body = JSON.parse(last_response.body)
+              body = Oj.load(last_response.body)
 
               err_msg = body['description']
               expect(err_msg).to match 'oops-1'
@@ -1425,7 +1425,7 @@ module VCAP::CloudController
           it 'returns a JSON payload indicating they do not have permission to read this endpoint' do
             get "/v2/apps/#{process.app.guid}/env"
             expect(last_response.status).to be(403)
-            expect(JSON.parse(last_response.body)['description']).to eql('You are not authorized to perform the requested action')
+            expect(Oj.load(last_response.body)['description']).to eql('You are not authorized to perform the requested action')
           end
         end
 
@@ -1548,7 +1548,7 @@ module VCAP::CloudController
           it 'returns InsufficientScope' do
             get "/v2/apps/#{process.app.guid}/env"
             expect(last_response.status).to be(403)
-            expect(JSON.parse(last_response.body)['description']).to eql('Your token lacks the necessary scopes to access this resource.')
+            expect(Oj.load(last_response.body)['description']).to eql('Your token lacks the necessary scopes to access this resource.')
           end
         end
       end
@@ -1561,7 +1561,7 @@ module VCAP::CloudController
         it 'is not able to read environment variables' do
           get "/v2/apps/#{process.app.guid}/env"
           expect(last_response.status).to be(403)
-          expect(JSON.parse(last_response.body)['description']).to eql('You are not authorized to perform the requested action')
+          expect(Oj.load(last_response.body)['description']).to eql('You are not authorized to perform the requested action')
         end
       end
 
@@ -1666,7 +1666,7 @@ module VCAP::CloudController
           it 'indicates they do not have permission rather than that the feature flag is disabled' do
             get "/v2/apps/#{process.app.guid}/env"
             expect(last_response.status).to be(403)
-            expect(JSON.parse(last_response.body)['description']).to eql('You are not authorized to perform the requested action')
+            expect(Oj.load(last_response.body)['description']).to eql('You are not authorized to perform the requested action')
           end
         end
       end
@@ -1870,7 +1870,7 @@ module VCAP::CloudController
             put "/v2/apps/#{process.app.guid}/droplet/upload", {}
 
             expect(last_response.status).to eq(400)
-            expect(JSON.parse(last_response.body)['description']).to include('missing :droplet_path')
+            expect(Oj.load(last_response.body)['description']).to include('missing :droplet_path')
           end
         end
 

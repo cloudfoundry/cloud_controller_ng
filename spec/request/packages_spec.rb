@@ -942,7 +942,7 @@ RSpec.describe 'Packages' do
               'user-id' => OpenSSL::Digest::SHA256.hexdigest(user.guid)
             }
           }
-          expect_any_instance_of(ActiveSupport::Logger).to receive(:info).with(JSON.generate(expected_json))
+          expect_any_instance_of(ActiveSupport::Logger).to receive(:info).with(Oj.dump(expected_json))
           post "/v3/packages/#{guid}/upload", packages_params.to_json, user_header
           expect(last_response.status).to eq(200)
         end

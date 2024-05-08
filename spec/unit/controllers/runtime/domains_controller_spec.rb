@@ -267,7 +267,7 @@ module VCAP::CloudController
 
           get '/v2/domains'
           expect(last_response.status).to eq(200), last_response.body
-          domains = JSON.parse(last_response.body)['resources']
+          domains = Oj.load(last_response.body)['resources']
           expect(domains.size).to be(3)
           expect(domains.map { |x| x['entity']['name'] }).to eq([domain1.name, domain_internal.name, domain3.name])
         end

@@ -2224,7 +2224,7 @@ RSpec.describe 'Apps' do
               'user-id' => OpenSSL::Digest::SHA256.hexdigest(user.guid)
             }
           }
-          expect_any_instance_of(ActiveSupport::Logger).to receive(:info).with(JSON.generate(expected_json))
+          expect_any_instance_of(ActiveSupport::Logger).to receive(:info).with(Oj.dump(expected_json))
 
           patch "/v3/apps/#{app_model.guid}", update_request.to_json, user_header
           expect(last_response.status).to eq(200), last_response.body
@@ -2532,7 +2532,7 @@ RSpec.describe 'Apps' do
                 'user-id' => OpenSSL::Digest::SHA256.hexdigest(user.guid)
               }
             }
-            expect_any_instance_of(ActiveSupport::Logger).to receive(:info).with(JSON.generate(expected_json))
+            expect_any_instance_of(ActiveSupport::Logger).to receive(:info).with(Oj.dump(expected_json))
             post "/v3/apps/#{app_model.guid}/actions/start", nil, user_header
 
             expect(last_response.status).to eq(200), last_response.body
@@ -2720,7 +2720,7 @@ RSpec.describe 'Apps' do
               'user-id' => OpenSSL::Digest::SHA256.hexdigest(user.guid)
             }
           }
-          expect_any_instance_of(ActiveSupport::Logger).to receive(:info).with(JSON.generate(expected_json))
+          expect_any_instance_of(ActiveSupport::Logger).to receive(:info).with(Oj.dump(expected_json))
 
           post "/v3/apps/#{app_model.guid}/actions/stop", nil, user_header
 
@@ -2858,7 +2858,7 @@ RSpec.describe 'Apps' do
                 'user-id' => OpenSSL::Digest::SHA256.hexdigest(user.guid)
               }
             }
-            expect_any_instance_of(ActiveSupport::Logger).to receive(:info).with(JSON.generate(expected_json))
+            expect_any_instance_of(ActiveSupport::Logger).to receive(:info).with(Oj.dump(expected_json))
 
             post "/v3/apps/#{app_model.guid}/actions/restart", nil, user_header
 
@@ -3178,7 +3178,7 @@ RSpec.describe 'Apps' do
               'app-id' => OpenSSL::Digest::SHA256.hexdigest(app_model.guid)
             }
           }
-          expect_any_instance_of(ActiveSupport::Logger).to receive(:info).with(JSON.generate(expected_json))
+          expect_any_instance_of(ActiveSupport::Logger).to receive(:info).with(Oj.dump(expected_json))
 
           patch "/v3/apps/#{app_model.guid}/relationships/current_droplet", request_body.to_json, user_header
 

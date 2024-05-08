@@ -93,13 +93,14 @@ module VCAP::CloudController
       exposed_ports = []
       if execution_metadata.present?
         begin
-          metadata = JSON.parse(execution_metadata)
+          metadata = Oj.load(execution_metadata)
           unless metadata['ports'].nil?
             metadata['ports'].each do |port|
               exposed_ports << port['Port'] if port['Protocol'] == 'tcp'
             end
           end
-        rescue JSON::ParserError
+        rescue StandardError
+          # ignore
         end
       end
       exposed_ports

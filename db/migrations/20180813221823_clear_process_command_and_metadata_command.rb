@@ -8,8 +8,9 @@ Sequel.migration do
       self[:processes].where(guid: process_record[:guid]).for_update.first
 
       begin
-        process_metadata = JSON.parse(process_record[:metadata])
-      rescue JSON::ParserError
+        process_metadata = Oj.load(process_record[:metadata])
+      rescue StandardError
+        # ignore
       end
       process_metadata_command = process_metadata && process_metadata['command']
 
@@ -32,8 +33,9 @@ Sequel.migration do
       next unless droplet_record
 
       begin
-        droplet_commands_by_type = JSON.parse(droplet_record[:process_types])
-      rescue JSON::ParserError
+        droplet_commands_by_type = Oj.load(droplet_record[:process_types])
+      rescue StandardError
+        # ignore
       end
       droplet_command = droplet_commands_by_type && droplet_commands_by_type[process_record[:type]]
 

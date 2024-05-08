@@ -35,7 +35,7 @@ RSpec.describe PackagesController, type: :controller do
       context 'with unsupported options' do
         let(:new_options) do
           {
-            cached_resources: JSON.dump([{ 'fn' => 'lol', 'sha1' => 'abc', 'size' => 2048 }])
+            cached_resources: Oj.dump([{ 'fn' => 'lol', 'sha1' => 'abc', 'size' => 2048 }])
           }
         end
 
@@ -86,7 +86,7 @@ RSpec.describe PackagesController, type: :controller do
         context 'v2 resource format' do
           let(:new_options) do
             {
-              resources: JSON.dump([{ 'fn' => 'lol', 'sha1' => 'abc', 'size' => 2048, 'mode' => '645' }])
+              resources: Oj.dump([{ 'fn' => 'lol', 'sha1' => 'abc', 'size' => 2048, 'mode' => '645' }])
             }
           end
 
@@ -96,7 +96,7 @@ RSpec.describe PackagesController, type: :controller do
         context 'v3 resource format' do
           let(:new_options) do
             {
-              resources: JSON.dump([{ 'path' => 'lol', 'checksum' => { 'value' => 'abc' }, 'size_in_bytes' => 2048, 'mode' => '645' }])
+              resources: Oj.dump([{ 'path' => 'lol', 'checksum' => { 'value' => 'abc' }, 'size_in_bytes' => 2048, 'mode' => '645' }])
             }
           end
 

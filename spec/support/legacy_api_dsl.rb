@@ -59,7 +59,7 @@ module LegacyApiDsl
   def audited_event(event)
     attributes = event.columns.map do |column|
       if column == :metadata
-        { attribute_name: column.to_s, value: JSON.pretty_generate(JSON.parse(event[column])), is_json: true }
+        { attribute_name: column.to_s, value: Oj.dump(Oj.load(event[column])), is_json: true }
       else
         { attribute_name: column.to_s, value: event[column], is_json: false }
       end

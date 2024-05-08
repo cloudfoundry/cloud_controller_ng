@@ -11,7 +11,7 @@ class ApiPresenter
   end
 
   def to_json(*_args)
-    Oj.dump(to_hash)
+    Oj.dump(to_hash, mode: :compat)
   end
 
   protected

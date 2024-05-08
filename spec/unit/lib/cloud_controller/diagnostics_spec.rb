@@ -125,12 +125,12 @@ module VCAP::CloudController
           filename = diagnostics.collect(output_dir)
           contents = IO.read(filename)
           expect do
-            JSON.parse(contents)
+            Oj.load(contents)
           end.not_to raise_exception
         end
 
         def data
-          JSON.parse(IO.read(diagnostics.collect(output_dir)), symbolize_names: true)
+          Oj.load(IO.read(diagnostics.collect(output_dir)), symbolize_names: true)
         end
 
         it 'captures thread information' do

@@ -65,7 +65,7 @@ RSpec.describe 'Sidecars' do
             'user-id' => OpenSSL::Digest::SHA256.hexdigest(user.guid)
           }
         }
-        expect_any_instance_of(ActiveSupport::Logger).to receive(:info).with(JSON.generate(expected_json))
+        expect_any_instance_of(ActiveSupport::Logger).to receive(:info).with(Oj.dump(expected_json))
         post "/v3/apps/#{app_model.guid}/sidecars", sidecar_params.to_json, user_header
         expect(last_response.status).to eq(201), last_response.body
       end

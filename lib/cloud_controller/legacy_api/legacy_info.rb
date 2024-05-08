@@ -24,7 +24,7 @@ module VCAP::CloudController
         info[:usage]  = account_usage if has_default_space?
       end
 
-      Oj.dump(info)
+      Oj.dump(info, mode: :compat)
     end
 
     private

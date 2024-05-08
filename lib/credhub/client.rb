@@ -9,7 +9,7 @@ module Credhub
       response = with_request_error_handling do
         client.get("/api/v1/data?name=#{reference_name}&current=true", nil, { 'Authorization' => auth_header, 'Content-Type' => 'application/json' })
       end
-      response_body = JSON.parse(response.body)
+      response_body = Oj.load(response.body)
       response_body['data'][0]['value']
     end
 
@@ -65,7 +65,7 @@ module Credhub
 
   class Error < StandardError
     def self.from_response(response)
-      response_body = JSON.parse(response.body)
+      response_body = Oj.load(response.body)
       error_message = response_body['error']
       error_message += ": #{response_body['error_description']}" if response_body['error_description']
       new(error_message)

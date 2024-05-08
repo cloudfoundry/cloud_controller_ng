@@ -130,7 +130,7 @@ module VCAP::Services::ServiceBrokers
         expect(service.description).to eq(service_description)
         expect(service.bindable).to be true
         expect(service.tags).to match_array(%w[mysql relational])
-        expect(JSON.parse(service.extra)).to eq({ 'foo' => 'bar' })
+        expect(Oj.load(service.extra)).to eq({ 'foo' => 'bar' })
         expect(service.requires).to eq(%w[ultimate power])
         expect(service.plan_updateable).to be true
         expect(service.bindings_retrievable).to be true
@@ -239,7 +239,7 @@ module VCAP::Services::ServiceBrokers
           expect(plan.plan_updateable).to be(true)
           expect(plan.maximum_polling_duration).to eq(3600)
           expect(plan.maintenance_info).to eq(plan_maintenance_info)
-          expect(JSON.parse(plan.extra)).to eq({ 'cost' => '0.0' })
+          expect(Oj.load(plan.extra)).to eq({ 'cost' => '0.0' })
           expect(plan.create_instance_schema).to eq('{"$schema":"http://json-schema.org/draft-04/schema","type":"object"}')
           expect(plan.update_instance_schema).to eq('{"$schema":"http://json-schema.org/draft-04/schema","type":"object"}')
           expect(plan.create_binding_schema).to eq('{"$schema":"http://json-schema.org/draft-04/schema","type":"object"}')

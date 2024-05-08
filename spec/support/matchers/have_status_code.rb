@@ -4,9 +4,9 @@ RSpec::Matchers.define :have_status_code do |expected_code|
   end
 
   failure_message do |response|
-    body = JSON.pretty_generate(JSON.parse(response.body))
+    body = Oj.dump(Oj.load(response.body))
     "Expected #{expected_code} response, got:\n code: #{status_code_for(response)}\n body: \"#{body}\""
-  rescue JSON::ParserError
+  rescue StandardError
     "Expected #{expected_code} response, got:\n code: #{status_code_for(response)}\n unparsed body: \"#{response.body}\""
   end
 

@@ -1105,7 +1105,7 @@ module VCAP::CloudController
                 routes = decoded_response['resources'].map { |resource| resource.fetch('metadata').fetch('guid') }
                 expect(routes.length).to eq(1)
                 expect(routes).to include(first_route.guid)
-                result = JSON.parse(last_response.body)
+                result = Oj.load(last_response.body)
                 expect(result['next_url']).to include("q=organization_guid:#{org1.guid}"), result['next_url']
                 expect(result['prev_url']).to be_nil
               end
@@ -1120,7 +1120,7 @@ module VCAP::CloudController
                 routes = decoded_response['resources'].map { |resource| resource.fetch('metadata').fetch('guid') }
                 expect(routes.length).to eq(1)
                 expect(routes).to include(second_route.guid)
-                result = JSON.parse(last_response.body)
+                result = Oj.load(last_response.body)
                 expect(result['next_url']).to be_nil
                 expect(result['prev_url']).to include("q=organization_guid:#{org1.guid}"), result['prev_url']
               end
@@ -1134,7 +1134,7 @@ module VCAP::CloudController
                 expect(last_response.status).to eq(200), last_response.body
                 routes = decoded_response['resources'].map { |resource| resource.fetch('metadata').fetch('guid') }
                 expect(routes.length).to eq(0)
-                result = JSON.parse(last_response.body)
+                result = Oj.load(last_response.body)
                 expect(result['next_url']).to be_nil
                 expect(result['prev_url']).to include("q=organization_guid:#{org1.guid}"), result['prev_url']
               end
