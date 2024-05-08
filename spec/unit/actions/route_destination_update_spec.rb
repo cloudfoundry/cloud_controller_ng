@@ -6,18 +6,31 @@ module VCAP::CloudController
     subject(:destination_update) { RouteDestinationUpdate }
 
     describe '#update' do
-      let!(:destination) { RouteMappingModel.make({ protocol: 'http1' }) }
+      let(:process) { ProcessModelFactory.make(state: 'STARTED') }
+      let!(:destination) { RouteMappingModel.make({ protocol: 'http1', app_guid: process.app.guid, process_type: process.type }) }
+      let(:process_route_handler) { instance_double(ProcessRouteHandler, notify_backend_of_route_update: nil) }
 
       let(:message) do
-        VCAP::CloudController::RouteDestinationUpdateMessage.new({
-                                                                   protocol: 'http2'
-                                                                 })
+        VCAP::CloudController::RouteDestinationUpdateMessage.new(
+          {
+            protocol: 'http2'
+          }
+        )
+      end
+
+      before do
+        allow(ProcessRouteHandler).to receive(:new).with(process).and_return(process_route_handler)
       end
 
       it 'updates the destination record' do
         updated_destination = RouteDestinationUpdate.update(destination, message)
 
         expect(updated_destination.protocol).to eq 'http2'
+      end
+
+      it 'notifies the backend of route updates' do
+        RouteDestinationUpdate.update(destination, message)
+        expect(process_route_handler).to have_received(:notify_backend_of_route_update)
       end
 
       context 'when the given protocol is incompatible' do
