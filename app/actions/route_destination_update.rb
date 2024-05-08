@@ -14,9 +14,22 @@ module VCAP::CloudController
 
           destination.save
         end
+
+        runners = CloudController::DependencyLocator.instance.runners
+        destination.processes.each do |process|
+          notify_backend_of_route_update(process, runners)
+        end
+
+        destination
       end
 
       private
+
+      def notify_backend_of_route_update(process, runners)
+        runners.runner_for_process(process).update_routes if process.staged? && process.started?
+      rescue Diego::Runner::CannotCommunicateWithDiegoError => e
+        logger.error("failed communicating with diego backend: #{e.message}")
+      end
 
       def validate_protocol_matches_route!(destination, message)
         if destination.route&.protocol == 'tcp'
@@ -24,6 +37,10 @@ module VCAP::CloudController
         elsif message.protocol == 'tcp'
           raise Error.new("Destination protocol must be 'http1' or 'http2' if the parent route's protocol is 'http'")
         end
+      end
+
+      def logger
+        @logger ||= Steno.logger('cc.route_destination_update')
       end
     end
   end
