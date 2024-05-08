@@ -91,8 +91,7 @@ each_run_block = proc do
 
   # each-run here?
   RSpec.configure do |rspec_config|
-    rspec_config.filter_run focus: true
-    rspec_config.run_all_when_everything_filtered = true
+    rspec_config.filter_run_when_matching :focus
 
     rspec_config.mock_with :rspec do |mocks|
       mocks.verify_partial_doubles = true
