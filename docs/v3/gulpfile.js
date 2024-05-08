@@ -3,7 +3,7 @@ const gulp = require('gulp');
 const {exec} = require('child_process');
 const express = require('express');
 const checkPages = require('check-pages');
-const globber = require('glob');
+const { glob } = require('glob');
 const cheerio = require('cheerio');
 
 function displayErrors(err, stdout, stderr) {
@@ -129,24 +129,19 @@ gulp.task('checkV3docs', gulp.series('build', done => {
   }, done);
 }));
 
-gulp.task('checkV2docs', done => {
-  globber.glob('../v2/**/*.html', (err, htmlFiles) => {
-    if (err) {
-      return displayErrors(err, 'npm glob failed', '');
-    }
-
-    const fixedFiles = htmlFiles.map(fname => {
-      return 'http://localhost:8001' + fname.substr('../v2'.length);
-    });
-
-    checkPathAndExit('../v2', {
-      checkLinks: true,
-      summary: true,
-      terse: true,
-      onlySameDomain: true,
-      pageUrls: ['http://localhost:8001/'].concat(fixedFiles)
-    }, done);
+gulp.task('checkV2docs', async(done) => {
+  const htmlFiles = await glob('../v2/**/*.html')
+  const fixedFiles = htmlFiles.map(fname => {
+    return 'http://localhost:8001' + fname.substr('../v2'.length);
   });
+
+  checkPathAndExit('../v2', {
+    checkLinks: true,
+    summary: true,
+    terse: true,
+    onlySameDomain: true,
+    pageUrls: ['http://localhost:8001/'].concat(fixedFiles)
+  }, done);
 });
 
 gulp.task('checkdocs', gulp.parallel('checkV2docs', 'checkV3docs'));
