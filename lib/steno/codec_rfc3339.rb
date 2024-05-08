@@ -1,5 +1,3 @@
-require 'yajl'
-
 require 'steno/codec/base'
 
 module Steno
@@ -28,7 +26,7 @@ module Steno
           'method' => record.method
         }
 
-        Yajl::Encoder.encode(h) + "\n"
+        Oj.dump(h) + "\n"
       end
     end
   end

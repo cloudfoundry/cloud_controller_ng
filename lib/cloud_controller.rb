@@ -13,9 +13,6 @@ module VCAP; end
 require 'sinatra/vcap'
 require File.expand_path('../config/environment', __dir__)
 
-require 'yajl'
-require 'yajl/json_gem'
-
 Sequel.default_timezone = :utc
 ActiveSupport::JSON::Encoding.time_precision = 0
 

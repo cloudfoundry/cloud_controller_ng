@@ -78,7 +78,7 @@ RSpec.describe 'PrivateDomains' do
 
   describe 'POST /v2/private_domains' do
     it 'makes a private domain' do
-      post '/v2/private_domains', "{\"name\": \"meow.mc.meowerson.com\", \"owning_organization_guid\": \"#{organization.guid}\"", admin_headers_for(user)
+      post '/v2/private_domains', "{\"name\": \"meow.mc.meowerson.com\", \"owning_organization_guid\": \"#{organization.guid}\"}", admin_headers_for(user)
 
       expect(last_response.status).to be(201)
 

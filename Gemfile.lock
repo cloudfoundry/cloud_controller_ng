@@ -678,7 +678,6 @@ DEPENDENCIES
   vcap-concurrency!
   vmstat (~> 2.3)
   webmock (> 2.3.1)
-  yajl-ruby
 
 BUNDLED WITH
    2.4.10
