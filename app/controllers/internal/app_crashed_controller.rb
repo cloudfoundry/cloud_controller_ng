@@ -7,18 +7,18 @@ module VCAP::CloudController
     allow_unauthenticated_access
 
     post '/internal/v4/apps/:process_guid/crashed', :crashed
-    def crashed(process_guid)
+    def crashed(lrp_process_guid)
       crash_payload = crashed_request
 
-      app_guid = Diego::ProcessGuid.cc_process_guid(process_guid)
+      cc_process_guid = Diego::ProcessGuid.cc_process_guid(lrp_process_guid)
 
-      process = ProcessModel.find(guid: app_guid)
-      raise CloudController::Errors::NotFound.new_from_details('ProcessNotFound', app_guid) unless process
+      process = ProcessModel.find(guid: cc_process_guid)
+      raise CloudController::Errors::NotFound.new_from_details('ProcessNotFound', cc_process_guid) unless process
 
-      crash_payload['version'] = Diego::ProcessGuid.cc_process_version(process_guid)
+      crash_payload['version'] = Diego::ProcessGuid.cc_process_version(lrp_process_guid)
 
       Repositories::ProcessEventRepository.record_crash(process, crash_payload)
-      Repositories::AppEventRepository.new.create_app_crash_event(process, crash_payload)
+      Repositories::AppEventRepository.new.create_app_crash_event(process.app, crash_payload)
 
       [200, '{}']
     end
