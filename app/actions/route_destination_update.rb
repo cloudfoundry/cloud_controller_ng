@@ -14,6 +14,12 @@ module VCAP::CloudController
 
           destination.save
         end
+
+        destination.processes.each do |process|
+          ProcessRouteHandler.new(process).notify_backend_of_route_update
+        end
+
+        destination
       end
 
       private

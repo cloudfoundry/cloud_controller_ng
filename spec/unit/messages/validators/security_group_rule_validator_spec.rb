@@ -389,6 +389,22 @@ module VCAP::CloudController::Validators
           end
         end
 
+        context 'more than 6000 destinations per rule' do
+          let(:rules) do
+            [
+              {
+                protocol: 'all',
+                destination: (['192.168.1.3'] * 7000).join(',')
+              }
+            ]
+          end
+
+          it 'throws an error' do
+            expect(subject).not_to be_valid
+            expect(subject.errors.full_messages).to include 'Rules[0]: maximum destinations per rule exceeded - must be under 6000'
+          end
+        end
+
         context 'empty destinations in the front are invalid' do
           let(:rules) do
             [

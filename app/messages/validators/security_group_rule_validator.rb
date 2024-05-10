@@ -11,6 +11,8 @@ class RulesValidator < ActiveModel::Validator
     type
   ].freeze
 
+  MAX_DESTINATIONS_PER_RULE = 6000
+
   def validate(record)
     unless record.rules.is_a?(Array)
       record.errors.add :rules, 'must be an array'
@@ -28,7 +30,10 @@ class RulesValidator < ActiveModel::Validator
       add_rule_error("protocol must be 'tcp', 'udp', 'icmp', or 'all'", record, index) unless valid_protocol(rule[:protocol])
 
       if valid_destination_type(rule[:destination], record, index)
-        rule[:destination].split(',', -1).each do |d|
+        rules = rule[:destination].split(',', -1)
+        add_rule_error("maximum destinations per rule exceeded - must be under #{MAX_DESTINATIONS_PER_RULE}", record, index) unless rules.length <= MAX_DESTINATIONS_PER_RULE
+
+        rules.each do |d|
           validate_destination(d, record, index)
         end
       end
