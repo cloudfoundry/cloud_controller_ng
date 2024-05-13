@@ -354,7 +354,7 @@ security_event_logging:
 
 staging:
   timeout_in_seconds: 42
-  expiration_in_secons: 42
+  expiration_in_seconds: 42
   minimum_staging_memory_mb: 42
   minimum_staging_disk_mb: 42
   minimum_staging_file_descriptor_limit: 42
