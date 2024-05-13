@@ -154,16 +154,6 @@ route_services_enabled: true
 volume_services_enabled: true
 disable_private_domain_cross_space_context_path_route_sharing: false
 
-# App staging parameters
-staging:
-  # Max duration for staging process
-  timeout_in_seconds: 120 # secs
-  minimum_staging_memory_mb: 1024
-  minimum_staging_disk_mb: 4096
-  auth:
-    user: zxsfhgjg
-    password: ZNVfdase9
-
 quota_definitions:
   default:
     memory_limit: 10240
@@ -338,9 +328,6 @@ db:
   log_db_queries: true
   read_timeout: 3600
   connection_validation_timeout: 3600
-
-staging:
-  minimum_staging_file_descriptor_limit: 4200
 
 index: 0
 name: api
