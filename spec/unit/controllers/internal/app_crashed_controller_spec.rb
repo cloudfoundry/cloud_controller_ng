@@ -5,7 +5,8 @@ require 'spec_helper'
 module VCAP::CloudController
   RSpec.describe AppCrashedController do
     describe 'POST /internal/v4/apps/:process_guid/crashed' do
-      let(:diego_process) { ProcessModelFactory.make(state: 'STARTED', diego: true) }
+      let(:diego_process) { ProcessModelFactory.make(state: 'STARTED', diego: true, type: 'rolled-web') }
+      let(:app_model) { diego_process.app }
       let(:process_guid) { Diego::ProcessGuid.from(diego_process.guid, 'some-version-guid') }
       let(:url) { "/internal/v4/apps/#{process_guid}/crashed" }
 
@@ -35,13 +36,13 @@ module VCAP::CloudController
         expect(last_response.status).to eq(200)
         expect(last_response.body).to eq '{}'
 
-        app_event = Event.find(actee: diego_process.guid, actor_type: 'app')
+        app_event = Event.find(actee: app_model.guid, actor_type: 'app')
 
         expect(app_event).to be
-        expect(app_event.space).to eq(diego_process.space)
+        expect(app_event.space).to eq(app_model.space)
         expect(app_event.type).to eq('app.crash')
         expect(app_event.actor_type).to eq('app')
-        expect(app_event.actor).to eq(diego_process.guid)
+        expect(app_event.actor).to eq(app_model.guid)
         expect(app_event.metadata['instance']).to eq(crashed_request['instance'])
         expect(app_event.metadata['index']).to eq(crashed_request['index'])
         expect(app_event.metadata['exit_status']).to eq(crashed_request['exit_status'])
@@ -54,15 +55,15 @@ module VCAP::CloudController
         expect(last_response.status).to eq(200)
         expect(last_response.body).to eq '{}'
 
-        app_event = Event.find(actee: diego_process.guid, actor_type: 'process')
+        app_event = Event.find(actee: app_model.guid, actor_type: 'process')
 
         expect(app_event).to be
-        expect(app_event.space).to eq(diego_process.space)
+        expect(app_event.space).to eq(app_model.space)
         expect(app_event.type).to eq('audit.app.process.crash')
         expect(app_event.actor_type).to eq('process')
         expect(app_event.actor).to eq(diego_process.guid)
         expect(app_event.actee_type).to eq('app')
-        expect(app_event.actee).to eq(diego_process.app.guid)
+        expect(app_event.actee).to eq(app_model.guid)
         expect(app_event.metadata['instance']).to eq(crashed_request['instance'])
         expect(app_event.metadata['index']).to eq(crashed_request['index'])
         expect(app_event.metadata['exit_status']).to eq(crashed_request['exit_status'])
