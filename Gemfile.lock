@@ -140,7 +140,7 @@ GEM
     delayed_job (4.1.11)
       activesupport (>= 3.0, < 8.0)
     diff-lcs (1.5.1)
-    digest-xxhash (0.2.7)
+    digest-xxhash (0.2.8)
     docile (1.1.5)
     domain_name (0.6.20240107)
     drb (2.2.1)
