@@ -427,7 +427,8 @@ GEM
     retryable (3.0.5)
     reverse_markdown (2.1.1)
       nokogiri
-    rexml (3.2.6)
+    rexml (3.2.8)
+      strscan (>= 3.0.9)
     rfc822 (0.1.5)
     roodi (5.0.0)
       ruby_parser (~> 3.2, >= 3.2.2)
@@ -550,6 +551,7 @@ GEM
       fluent-logger
       yajl-ruby (~> 1.0)
     stringio (3.1.0)
+    strscan (3.1.0)
     talentbox-delayed_job_sequel (4.3.0)
       delayed_job (~> 4.1.0)
       sequel (>= 3.38, < 6.0)
