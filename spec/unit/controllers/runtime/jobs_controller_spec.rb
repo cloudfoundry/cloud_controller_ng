@@ -14,7 +14,7 @@ module VCAP::CloudController
           it 'returns a 403 unauthorized error' do
             set_current_user(user, scopes: ['cloud_controller.write'])
             get "/v2/jobs/#{job_request_id}"
-            expect(last_response.status).to eq(403)
+            expect(last_response).to have_http_status(:forbidden)
             expect(last_response.body).to match(/InsufficientScope/)
           end
         end
@@ -23,7 +23,7 @@ module VCAP::CloudController
           it 'allows the user to access the job' do
             set_current_user(user, scopes: ['cloud_controller.read'])
             get "/v2/jobs/#{job_request_id}"
-            expect(last_response.status).to eq(200)
+            expect(last_response).to have_http_status(:ok)
           end
         end
 
@@ -31,7 +31,7 @@ module VCAP::CloudController
           it 'allows the user to access the job' do
             set_current_user(user, scopes: ['cloud_controller.admin'])
             get "/v2/jobs/#{job_request_id}"
-            expect(last_response.status).to eq(200)
+            expect(last_response).to have_http_status(:ok)
           end
         end
       end
@@ -42,7 +42,7 @@ module VCAP::CloudController
         it 'returns job' do
           set_current_user(user)
           subject
-          expect(last_response.status).to eq 200
+          expect(last_response).to have_http_status :ok
           expect(decoded_response(symbolize_keys: true)).to eq(
             ::JobPresenter.new(job).to_hash
           )
@@ -57,7 +57,7 @@ module VCAP::CloudController
         it 'returns that job was finished' do
           set_current_user(user)
           subject
-          expect(last_response.status).to eq 200
+          expect(last_response).to have_http_status :ok
           expect(decoded_response(symbolize_keys: true)).to eq(
             ::JobPresenter.new(job).to_hash
           )

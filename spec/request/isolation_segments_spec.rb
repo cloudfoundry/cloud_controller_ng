@@ -22,7 +22,7 @@ RSpec.describe 'IsolationSegmentModels' do
       post '/v3/isolation_segments', create_request.to_json, user_header
 
       parsed_response = MultiJson.load(last_response.body)
-      expect(last_response.status).to eq(201)
+      expect(last_response).to have_http_status(:created)
 
       created_isolation_segment = VCAP::CloudController::IsolationSegmentModel.last
       expected_response = {
@@ -57,7 +57,7 @@ RSpec.describe 'IsolationSegmentModels' do
       get "/v3/isolation_segments/#{isolation_segment_model.guid}/relationships/organizations", nil, user_header
 
       parsed_response = MultiJson.load(last_response.body)
-      expect(last_response.status).to eq(200)
+      expect(last_response).to have_http_status(:ok)
 
       expected_response = {
         'data' => [
@@ -118,7 +118,7 @@ RSpec.describe 'IsolationSegmentModels' do
       get "/v3/isolation_segments/#{isolation_segment_model.guid}/relationships/spaces", nil, user_header
 
       parsed_response = MultiJson.load(last_response.body)
-      expect(last_response.status).to eq(200)
+      expect(last_response).to have_http_status(:ok)
 
       expect(parsed_response['data'].length).to eq 2
       expect(parsed_response['data']).to include({ 'guid' => space1.guid })
@@ -166,7 +166,7 @@ RSpec.describe 'IsolationSegmentModels' do
       post "/v3/isolation_segments/#{isolation_segment.guid}/relationships/organizations", assign_request.to_json, user_header
 
       parsed_response = MultiJson.load(last_response.body)
-      expect(last_response.status).to eq(200)
+      expect(last_response).to have_http_status(:ok)
 
       expected_response = {
         'data' => [
@@ -194,7 +194,7 @@ RSpec.describe 'IsolationSegmentModels' do
     it 'removes the organization from the isolation segment' do
       delete "/v3/isolation_segments/#{isolation_segment.guid}/relationships/organizations/#{org1.guid}", nil, user_header
 
-      expect(last_response.status).to eq(204)
+      expect(last_response).to have_http_status(:no_content)
       isolation_segment.reload
       expect(isolation_segment.organizations).to include(org2)
       expect(isolation_segment.organizations).not_to include(org1)
@@ -279,7 +279,7 @@ RSpec.describe 'IsolationSegmentModels' do
     it 'returns the seeded isolation segment' do
       get '/v3/isolation_segments', nil, user_header
 
-      expect(last_response.status).to eq 200
+      expect(last_response).to have_http_status :ok
       parsed_response = MultiJson.load(last_response.body)
 
       shared_guid = VCAP::CloudController::IsolationSegmentModel::SHARED_ISOLATION_SEGMENT_GUID
@@ -331,7 +331,7 @@ RSpec.describe 'IsolationSegmentModels' do
         get '/v3/isolation_segments?per_page=2&page=2', nil, user_header
 
         parsed_response = MultiJson.load(last_response.body)
-        expect(last_response.status).to eq(200)
+        expect(last_response).to have_http_status(:ok)
 
         expected_response = {
           'pagination' => {
@@ -391,7 +391,7 @@ RSpec.describe 'IsolationSegmentModels' do
 
         parsed_response = MultiJson.load(last_response.body)
 
-        expect(last_response.status).to eq(200)
+        expect(last_response).to have_http_status(:ok)
         expect(parsed_response['resources'].pluck('name')).to eq([models[2].name, models[4].name])
         expect(parsed_response['pagination']).to eq(expected_pagination)
       end
@@ -410,7 +410,7 @@ RSpec.describe 'IsolationSegmentModels' do
 
         parsed_response = MultiJson.load(last_response.body)
 
-        expect(last_response.status).to eq(200)
+        expect(last_response).to have_http_status(:ok)
         expect(parsed_response['resources'].pluck('name')).to eq([models[3].name, models[5].name])
         expect(parsed_response['pagination']).to eq(expected_pagination)
       end
@@ -435,7 +435,7 @@ RSpec.describe 'IsolationSegmentModels' do
 
           parsed_response = MultiJson.load(last_response.body)
 
-          expect(last_response.status).to eq(200)
+          expect(last_response).to have_http_status(:ok)
           expect(parsed_response['resources'].pluck('name')).to eq([models[1].name, models[2].name])
           expect(parsed_response['pagination']).to eq(expected_pagination)
         end
@@ -466,7 +466,7 @@ RSpec.describe 'IsolationSegmentModels' do
 
       it 'returns the matching iso segs' do
         get '/v3/isolation_segments?label_selector=!fruit,env=prod,animal in (dog,horse)', nil, admin_headers
-        expect(last_response.status).to eq(200)
+        expect(last_response).to have_http_status(:ok)
 
         parsed_response = MultiJson.load(last_response.body)
         expect(parsed_response['resources'].pluck('guid')).to contain_exactly(iso_segB.guid, iso_segC.guid)
@@ -530,7 +530,7 @@ RSpec.describe 'IsolationSegmentModels' do
       patch "/v3/isolation_segments/#{isolation_segment_model.guid}", update_request.to_json, user_header
 
       parsed_response = MultiJson.load(last_response.body)
-      expect(last_response.status).to eq(200)
+      expect(last_response).to have_http_status(:ok)
       expect(parsed_response).to be_a_response_like(expected_response)
     end
   end
@@ -540,7 +540,7 @@ RSpec.describe 'IsolationSegmentModels' do
 
     it 'deletes the specified isolation segment' do
       delete "/v3/isolation_segments/#{isolation_segment_model.guid}", nil, user_header
-      expect(last_response.status).to eq(204)
+      expect(last_response).to have_http_status(:no_content)
     end
 
     context 'deleting metadata' do

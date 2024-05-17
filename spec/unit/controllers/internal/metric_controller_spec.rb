@@ -25,7 +25,7 @@ module VCAP::CloudController
         it 'returns a 200' do
           get '/internal/v4/metrics'
 
-          expect(last_response.status).to eq 200
+          expect(last_response).to have_http_status :ok
           expect(last_response.body).to match(/cc_vitals_num_cores [1-9][0-9]*.\d+/)
         end
       end

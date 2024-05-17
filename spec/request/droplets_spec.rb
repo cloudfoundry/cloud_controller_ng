@@ -123,7 +123,7 @@ RSpec.describe 'Droplets' do
     describe 'when the user is not logged in' do
       it 'returns 401 for Unauthenticated requests' do
         post '/v3/droplets', params.to_json, base_json_headers
-        expect(last_response.status).to eq(401)
+        expect(last_response).to have_http_status(:unauthorized)
       end
     end
 
@@ -132,7 +132,7 @@ RSpec.describe 'Droplets' do
 
       it 'returns a 403' do
         post '/v3/droplets', params.to_json, user_header
-        expect(last_response.status).to eq(403)
+        expect(last_response).to have_http_status(:forbidden)
       end
     end
 
@@ -150,7 +150,7 @@ RSpec.describe 'Droplets' do
 
       it 'returns a 422 with an appropriate error message' do
         post '/v3/droplets', invalid_params.to_json, developer_headers
-        expect(last_response.status).to eq(422)
+        expect(last_response).to have_http_status(:unprocessable_entity)
         expect(last_response).to have_error_message(/must be an object/)
       end
     end
@@ -168,7 +168,7 @@ RSpec.describe 'Droplets' do
 
       it 'returns a 422 with an appropriate error message' do
         post '/v3/droplets', nonexistent_app_params.to_json, developer_headers
-        expect(last_response.status).to eq(422)
+        expect(last_response).to have_http_status(:unprocessable_entity)
         expect(last_response).to have_error_message(/App with guid "not-app-guid" does not exist, or you do not have access to it./)
       end
     end
@@ -180,7 +180,7 @@ RSpec.describe 'Droplets' do
 
       it 'returns a 422 with an appropriate error message' do
         post '/v3/droplets', params.to_json, headers_for(other_user)
-        expect(last_response.status).to eq(422)
+        expect(last_response).to have_http_status(:unprocessable_entity)
         expect(last_response).to have_error_message("App with guid \"#{app_model.guid}\" does not exist, or you do not have access to it.")
       end
     end
@@ -200,7 +200,7 @@ RSpec.describe 'Droplets' do
 
       it 'returns a 422 with an appropriate error message' do
         post '/v3/droplets', docker_app_params.to_json, developer_headers
-        expect(last_response.status).to eq(422)
+        expect(last_response).to have_http_status(:unprocessable_entity)
         expect(last_response).to have_error_message('Droplet creation is not available for apps with docker lifecycles.')
       end
     end
@@ -411,7 +411,7 @@ RSpec.describe 'Droplets' do
           bits_download_url
         end
 
-        expect(last_response.status).to eq(302)
+        expect(last_response).to have_http_status(:found)
         expect(last_response.headers['Location']).to eq(bits_download_url)
 
         expected_metadata = { droplet_guid: droplet_model.guid }.to_json
@@ -459,7 +459,7 @@ RSpec.describe 'Droplets' do
     context 'when the droplet cannot be found' do
       it 'returns 404 for the droplet' do
         get '/v3/droplets/some-bogus-guid/download', nil, developer_headers
-        expect(last_response.status).to eq(404)
+        expect(last_response).to have_http_status(:not_found)
         expect(last_response.body).to include('Droplet not found')
       end
     end
@@ -467,7 +467,7 @@ RSpec.describe 'Droplets' do
     context "when the droplet hasn't finished uploading/processing" do
       it 'returns a 422 with a helpful error message' do
         get "/v3/droplets/#{guid}/download", nil, developer_headers
-        expect(last_response.status).to eq(422)
+        expect(last_response).to have_http_status(:unprocessable_entity)
         expect(last_response.body).to include('Only staged droplets can be downloaded.')
       end
     end
@@ -479,7 +479,7 @@ RSpec.describe 'Droplets' do
 
       it 'returns a 422 with a helpful error message' do
         get "/v3/droplets/#{guid}/download", nil, admin_headers
-        expect(last_response.status).to eq(422)
+        expect(last_response).to have_http_status(:unprocessable_entity)
         expect(last_response.body).to include("Cannot download droplets with 'docker' lifecycle.")
       end
     end
@@ -737,7 +737,7 @@ RSpec.describe 'Droplets' do
 
     it 'list all droplets with a buildpack lifecycle' do
       get "/v3/droplets?order_by=#{order_by}&per_page=#{per_page}", nil, developer_headers
-      expect(last_response.status).to eq(200)
+      expect(last_response).to have_http_status(:ok)
       expect(parsed_response['resources']).to include(hash_including('guid' => droplet1.guid))
       expect(parsed_response['resources']).to include(hash_including('guid' => droplet2.guid))
       expect(parsed_response).to be_a_response_like({
@@ -836,7 +836,7 @@ RSpec.describe 'Droplets' do
       it 'filters by states' do
         get '/v3/droplets?states=STAGED,FAILED', nil, developer_headers
 
-        expect(last_response.status).to eq(200)
+        expect(last_response).to have_http_status(:ok)
         expect(parsed_response['pagination']).to be_a_response_like(
           {
             'total_results' => 3,
@@ -856,7 +856,7 @@ RSpec.describe 'Droplets' do
       it 'filters by app_guids' do
         get "/v3/droplets?app_guids=#{app_model.guid}", nil, developer_headers
 
-        expect(last_response.status).to eq(200)
+        expect(last_response).to have_http_status(:ok)
         expect(parsed_response['pagination']).to be_a_response_like(
           {
             'total_results' => 2,
@@ -875,7 +875,7 @@ RSpec.describe 'Droplets' do
       it 'filters by guids' do
         get "/v3/droplets?guids=#{droplet1.guid}%2C#{droplet3.guid}", nil, developer_headers
 
-        expect(last_response.status).to eq(200)
+        expect(last_response).to have_http_status(:ok)
         expect(parsed_response['pagination']).to be_a_response_like(
           {
             'total_results' => 2,
@@ -894,7 +894,7 @@ RSpec.describe 'Droplets' do
       it 'filters by organization guids' do
         get "/v3/droplets?organization_guids=#{organization1.guid}", nil, developer_headers
 
-        expect(last_response.status).to eq(200)
+        expect(last_response).to have_http_status(:ok)
         expect(parsed_response['pagination']).to be_a_response_like(
           {
             'total_results' => 3,
@@ -913,7 +913,7 @@ RSpec.describe 'Droplets' do
       it 'filters by space guids that the developer has access to' do
         get "/v3/droplets?space_guids=#{space.guid}%2C#{space2.guid}", nil, developer_headers
 
-        expect(last_response.status).to eq(200)
+        expect(last_response).to have_http_status(:ok)
         expect(parsed_response['pagination']).to be_a_response_like(
           {
             'total_results' => 3,
@@ -1032,7 +1032,7 @@ RSpec.describe 'Droplets' do
 
         execute_all_jobs(expected_successes: 2, expected_failures: 0)
         get "/v3/droplets/#{droplet.guid}", {}, developer_headers
-        expect(last_response.status).to eq(404)
+        expect(last_response).to have_http_status(:not_found)
       end
     end
     let(:expected_codes_and_responses) do
@@ -1150,7 +1150,7 @@ RSpec.describe 'Droplets' do
         it 'returns only the droplets for the app' do
           get "/v3/apps/#{app_model.guid}/droplets", nil, developer_headers
 
-          expect(last_response.status).to eq(200)
+          expect(last_response).to have_http_status(:ok)
 
           returned_guids = parsed_response['resources'].pluck('guid')
           expect(returned_guids).to contain_exactly(droplet1.guid, droplet2.guid)
@@ -1159,7 +1159,7 @@ RSpec.describe 'Droplets' do
         it 'returns only the droplets for the app with specified labels' do
           get "/v3/apps/#{app_model.guid}/droplets?label_selector=fruit", nil, developer_headers
 
-          expect(last_response.status).to eq(200)
+          expect(last_response).to have_http_status(:ok)
 
           returned_guids = parsed_response['resources'].pluck('guid')
           expect(returned_guids).to contain_exactly(droplet1.guid)
@@ -1168,7 +1168,7 @@ RSpec.describe 'Droplets' do
         it 'returns only the current droplet' do
           get "/v3/apps/#{app_model.guid}/droplets?current=true", nil, developer_headers
 
-          expect(last_response.status).to eq(200)
+          expect(last_response).to have_http_status(:ok)
           expect(parsed_response['pagination']).to be_a_response_like(
             {
               'total_results' => 1,
@@ -1193,7 +1193,7 @@ RSpec.describe 'Droplets' do
         it 'returns an empty list' do
           get "/v3/apps/#{app_model.guid}/droplets?current=true", nil, developer_headers
 
-          expect(last_response.status).to eq(200)
+          expect(last_response).to have_http_status(:ok)
           expect(parsed_response['pagination']).to be_a_response_like(
             {
               'total_results' => 0,
@@ -1213,7 +1213,7 @@ RSpec.describe 'Droplets' do
     it 'filters by states' do
       get "/v3/apps/#{app_model.guid}/droplets?states=STAGED", nil, developer_headers
 
-      expect(last_response.status).to eq(200)
+      expect(last_response).to have_http_status(:ok)
       expect(parsed_response['pagination']).to be_a_response_like(
         {
           'total_results' => 1,
@@ -1391,7 +1391,7 @@ RSpec.describe 'Droplets' do
     it 'returns only the droplets for the package' do
       get "/v3/packages/#{package_model.guid}/droplets", nil, developer_headers
 
-      expect(last_response.status).to eq(200)
+      expect(last_response).to have_http_status(:ok)
 
       returned_guids = parsed_response['resources'].pluck('guid')
       expect(returned_guids).to contain_exactly(droplet1.guid, droplet2.guid)
@@ -1400,7 +1400,7 @@ RSpec.describe 'Droplets' do
     it 'returns only the packages for the app with specified labels' do
       get "/v3/packages/#{package_model.guid}/droplets?label_selector=fruit", nil, developer_headers
 
-      expect(last_response.status).to eq(200)
+      expect(last_response).to have_http_status(:ok)
 
       returned_guids = parsed_response['resources'].pluck('guid')
       expect(returned_guids).to contain_exactly(droplet1.guid)
@@ -1409,7 +1409,7 @@ RSpec.describe 'Droplets' do
     it 'filters by states' do
       get "/v3/packages/#{package_model.guid}/droplets?states=STAGED", nil, developer_headers
 
-      expect(last_response.status).to eq(200)
+      expect(last_response).to have_http_status(:ok)
       expect(parsed_response['pagination']).to be_a_response_like(
         {
           'total_results' => 1,
@@ -1707,18 +1707,18 @@ RSpec.describe 'Droplets' do
     it 'enqueues a processing job' do
       post "/v3/droplets/#{droplet.guid}/upload", params.to_json, developer_headers
 
-      expect(last_response.status).to eq(202)
+      expect(last_response).to have_http_status(:accepted)
 
       get last_response.headers['Location'], nil, admin_headers
 
-      expect(last_response.status).to eq(200)
+      expect(last_response).to have_http_status(:ok)
     end
 
     context 'when the droplet is not found' do
       it 'returns 404 with a helpful error message' do
         post '/v3/droplets/bad-droplet-guid/upload', params.to_json, developer_headers
 
-        expect(last_response.status).to eq(404)
+        expect(last_response).to have_http_status(:not_found)
         expect(last_response.body).to include('Droplet not found')
       end
     end
@@ -1734,7 +1734,7 @@ RSpec.describe 'Droplets' do
       it 'returns 422 with a helpful error message' do
         post "/v3/droplets/#{staged_droplet.guid}/upload", params.to_json, developer_headers
 
-        expect(last_response.status).to eq(422)
+        expect(last_response).to have_http_status(:unprocessable_entity)
         expect(last_response).to have_error_message('Droplet may be uploaded only once. Create a new droplet to upload bits.')
       end
     end
@@ -1747,7 +1747,7 @@ RSpec.describe 'Droplets' do
       it 'returns 422 with a helpful error message' do
         post "/v3/droplets/#{droplet.guid}/upload", invalid_params.to_json, developer_headers
 
-        expect(last_response.status).to eq(422)
+        expect(last_response).to have_http_status(:unprocessable_entity)
         expect(last_response).to have_error_message(/Uploaded droplet file is invalid:.* A droplet tgz file must be uploaded as 'bits'/)
       end
     end
@@ -1926,7 +1926,7 @@ RSpec.describe 'Droplets' do
         context 'when the cloud_controller.update_build_state scope is present' do
           it 'updates the image' do
             api_call.call(build_state_updater_headers)
-            expect(last_response.status).to eq(200)
+            expect(last_response).to have_http_status(:ok)
 
             og_docker_droplet.reload
             parsed_response = MultiJson.load(last_response.body)

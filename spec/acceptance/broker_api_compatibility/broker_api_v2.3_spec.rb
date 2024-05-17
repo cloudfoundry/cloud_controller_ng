@@ -60,7 +60,7 @@ RSpec.describe 'Service Broker API integration' do
           end
 
           it 'handles the dashboard_client in the broker catalog' do
-            expect(last_response.status).to eq(201)
+            expect(last_response).to have_http_status(:created)
           end
         end
 
@@ -103,7 +103,7 @@ RSpec.describe 'Service Broker API integration' do
           end
 
           it 'handles the dashboard_client in the broker catalog' do
-            expect(last_response.status).to eq(200)
+            expect(last_response).to have_http_status(:ok)
           end
         end
       end

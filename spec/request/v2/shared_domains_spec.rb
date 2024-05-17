@@ -20,7 +20,7 @@ RSpec.describe 'SharedDomains' do
     it 'lists all shared domains' do
       get '/v2/shared_domains', nil, headers_for(user)
 
-      expect(last_response.status).to eq(200)
+      expect(last_response).to have_http_status(:ok)
 
       parsed_response = MultiJson.load(last_response.body)
       expect(parsed_response).to be_a_response_like(
@@ -83,7 +83,7 @@ RSpec.describe 'SharedDomains' do
 
     it 'shows the shared domain' do
       get "/v2/shared_domains/#{domain.guid}", nil, headers_for(user)
-      expect(last_response.status).to eq(200)
+      expect(last_response).to have_http_status(:ok)
 
       parsed_response = MultiJson.load(last_response.body)
       expect(parsed_response).to be_a_response_like(
@@ -109,7 +109,7 @@ RSpec.describe 'SharedDomains' do
     it 'makes a shared domain' do
       post '/v2/shared_domains', '{"name": "meow.mc.meowerson.com"}', admin_headers_for(user)
 
-      expect(last_response.status).to be(201)
+      expect(last_response).to have_http_status(:created)
 
       domain = VCAP::CloudController::SharedDomain.last
 
@@ -150,7 +150,7 @@ RSpec.describe 'SharedDomains' do
       it 'makes a shared domain with HTTP router group' do
         post '/v2/shared_domains', '{"name": "meow.mc.meowerson.com", "router_group_guid": "abc123"}', admin_headers_for(user)
 
-        expect(last_response.status).to be(201)
+        expect(last_response).to have_http_status(:created)
 
         domain = VCAP::CloudController::SharedDomain.last
 
@@ -174,7 +174,7 @@ RSpec.describe 'SharedDomains' do
       it 'makes a TCP shared domain with TCP router group' do
         post '/v2/shared_domains', '{"name": "meow.mc.meowerson.com", "router_group_guid": "9876"}', admin_headers_for(user)
 
-        expect(last_response.status).to be(201)
+        expect(last_response).to have_http_status(:created)
 
         domain = VCAP::CloudController::SharedDomain.last
 
@@ -203,7 +203,7 @@ RSpec.describe 'SharedDomains' do
     it 'ignores everything and returns the original object, suckers!' do
       put "/v2/shared_domains/#{domain.guid}", '{"name": "meow.com", "route_group_guid": "a-guid"}', admin_headers_for(user)
 
-      expect(last_response.status).to eq(201)
+      expect(last_response).to have_http_status(:created)
       parsed_response = MultiJson.load(last_response.body)
 
       expect(parsed_response).to be_a_response_like({
@@ -228,7 +228,7 @@ RSpec.describe 'SharedDomains' do
 
     it 'deletes the shared_domain' do
       delete "/v2/shared_domains/#{domain.guid}", nil, admin_headers_for(user)
-      expect(last_response.status).to be(204)
+      expect(last_response).to have_http_status(:no_content)
       expect(last_response.body).to eq('')
     end
   end

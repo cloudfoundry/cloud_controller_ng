@@ -8,7 +8,7 @@ RSpec.describe 'GET', '/internal/v4/log_access/:guid', type: [:api] do
 
     it 'queries the proper v3 app' do
       get "/internal/v4/log_access/#{app_model.guid}", {}, admin_headers
-      expect(last_response.status).to eq(200)
+      expect(last_response).to have_http_status(:ok)
     end
   end
 
@@ -17,7 +17,7 @@ RSpec.describe 'GET', '/internal/v4/log_access/:guid', type: [:api] do
 
     it 'queries the proper v2 app' do
       get "/internal/v4/log_access/#{process_model.guid}", {}, admin_headers
-      expect(last_response.status).to eq(200)
+      expect(last_response).to have_http_status(:ok)
     end
   end
 end

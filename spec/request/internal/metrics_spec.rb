@@ -24,13 +24,13 @@ RSpec.describe 'Metrics' do
   it 'can be called several times' do
     get '/internal/v4/metrics', nil
 
-    expect(last_response.status).to eq 200
+    expect(last_response).to have_http_status :ok
     get '/internal/v4/metrics', nil
 
-    expect(last_response.status).to eq 200
+    expect(last_response).to have_http_status :ok
     get '/internal/v4/metrics', nil
 
-    expect(last_response.status).to eq 200
+    expect(last_response).to have_http_status :ok
   end
 
   context 'cc_total_users' do
@@ -46,7 +46,7 @@ RSpec.describe 'Metrics' do
     it 'reports the total number of users' do
       get '/internal/v4/metrics', nil
 
-      expect(last_response.status).to eq 200
+      expect(last_response).to have_http_status :ok
 
       expect(last_response.body).to include('cc_users_total 10.0')
     end

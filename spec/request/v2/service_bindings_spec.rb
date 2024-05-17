@@ -23,7 +23,7 @@ RSpec.describe 'ServiceBindings' do
 
     it 'lists service bindings' do
       get '/v2/service_bindings', nil, headers_for(user)
-      expect(last_response.status).to eq(200)
+      expect(last_response).to have_http_status(:ok)
 
       parsed_response = MultiJson.load(last_response.body)
       expect(parsed_response).to be_a_response_like(
@@ -101,7 +101,7 @@ RSpec.describe 'ServiceBindings' do
       non_displayed_binding = VCAP::CloudController::ServiceBinding.make(app: non_web_process.app, service_instance: service_instance)
 
       get '/v2/service_bindings', nil, headers_for(user)
-      expect(last_response.status).to eq(200)
+      expect(last_response).to have_http_status(:ok)
 
       parsed_response = MultiJson.load(last_response.body)
       expect(parsed_response['resources'].map { |r| r['metadata']['guid'] }).not_to include(non_displayed_binding.guid)
@@ -112,7 +112,7 @@ RSpec.describe 'ServiceBindings' do
 
       it 'lists service bindings and their relations' do
         get '/v2/service_bindings?inline-relations-depth=1', nil, headers_for(user)
-        expect(last_response.status).to eq(200)
+        expect(last_response).to have_http_status(:ok)
 
         parsed_response = MultiJson.load(last_response.body)
         expect(parsed_response).to be_a_response_like(
@@ -240,7 +240,7 @@ RSpec.describe 'ServiceBindings' do
     describe 'filtering' do
       it 'filters by app_guid' do
         get "/v2/service_bindings?q=app_guid:#{process2.guid}", nil, headers_for(user)
-        expect(last_response.status).to eq(200)
+        expect(last_response).to have_http_status(:ok)
         parsed_response = MultiJson.load(last_response.body)
         expect(parsed_response['total_results']).to eq(1)
         expect(parsed_response['resources'][0]['metadata']['guid']).to eq(service_binding2.guid)
@@ -251,7 +251,7 @@ RSpec.describe 'ServiceBindings' do
         filtered_service_binding = VCAP::CloudController::ServiceBinding.make(service_instance: filtered_service_instance, app: process1.app)
 
         get "/v2/service_bindings?q=service_instance_guid:#{filtered_service_instance.guid}", nil, headers_for(user)
-        expect(last_response.status).to eq(200)
+        expect(last_response).to have_http_status(:ok)
         parsed_response = MultiJson.load(last_response.body)
         expect(parsed_response['total_results']).to eq(1)
         expect(parsed_response['resources'][0]['metadata']['guid']).to eq(filtered_service_binding.guid)
@@ -268,7 +268,7 @@ RSpec.describe 'ServiceBindings' do
 
     it 'displays the service binding' do
       get "/v2/service_bindings/#{service_binding1.guid}", nil, headers_for(user)
-      expect(last_response.status).to eq(200)
+      expect(last_response).to have_http_status(:ok)
 
       parsed_response = MultiJson.load(last_response.body)
       expect(parsed_response).to be_a_response_like(
@@ -309,7 +309,7 @@ RSpec.describe 'ServiceBindings' do
       non_displayed_binding = VCAP::CloudController::ServiceBinding.make(app: non_web_process.app, service_instance: service_instance)
 
       get "/v2/service_bindings/#{non_displayed_binding.guid}", nil, headers_for(user)
-      expect(last_response.status).to eq(404)
+      expect(last_response).to have_http_status(:not_found)
     end
 
     it 'creates an audit event' do
@@ -423,7 +423,7 @@ RSpec.describe 'ServiceBindings' do
 
     it 'deletes the service binding' do
       delete "/v2/service_bindings/#{service_binding.guid}", nil, headers_for(user)
-      expect(last_response.status).to eq(204)
+      expect(last_response).to have_http_status(:no_content)
       expect(service_binding).not_to exist
 
       event = VCAP::CloudController::Event.last
@@ -467,7 +467,7 @@ RSpec.describe 'ServiceBindings' do
 
     it 'displays the service binding parameters' do
       get "/v2/service_bindings/#{service_binding1.guid}/parameters", nil, headers_for(user)
-      expect(last_response.status).to eq(200)
+      expect(last_response).to have_http_status(:ok)
 
       parsed_response = last_response.body
       expect(MultiJson.load(parsed_response)).to be_a_response_like(
@@ -485,7 +485,7 @@ RSpec.describe 'ServiceBindings' do
       non_displayed_binding = VCAP::CloudController::ServiceBinding.make(app: non_web_process.app, service_instance: service_instance)
 
       get "/v2/service_bindings/#{non_displayed_binding.guid}/parameters", nil, headers_for(user)
-      expect(last_response.status).to eq(404)
+      expect(last_response).to have_http_status(:not_found)
     end
   end
 end

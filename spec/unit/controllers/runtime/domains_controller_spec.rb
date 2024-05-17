@@ -134,7 +134,7 @@ module VCAP::CloudController
             set_current_user(@org_a_manager)
 
             put "/v2/domains/#{@shared_domain.guid}", MultiJson.dump(name: Sham.domain)
-            expect(last_response.status).to eq(403)
+            expect(last_response).to have_http_status(:forbidden)
           end
         end
       end
@@ -162,7 +162,7 @@ module VCAP::CloudController
 
         it 'can see the domain' do
           get "/v2/domains/#{domain.guid}"
-          expect(last_response.status).to eq 200
+          expect(last_response).to have_http_status :ok
           expect(decoded_response['metadata']['guid']).to eq domain.guid
         end
       end
@@ -181,7 +181,7 @@ module VCAP::CloudController
           it 'has its GUID and URL in the response body' do
             get "/v2/domains/#{domain.guid}"
 
-            expect(last_response.status).to eq 200
+            expect(last_response).to have_http_status :ok
             expect(decoded_response['entity']['owning_organization_guid']).to eq organization.guid
             expect(decoded_response['entity']['owning_organization_url']).to eq "/v2/organizations/#{organization.guid}"
             expect(last_response).to be_a_deprecated_response
@@ -194,7 +194,7 @@ module VCAP::CloudController
           it 'has its GUID as null, and no url key in the response body' do
             get "/v2/domains/#{domain.guid}"
 
-            expect(last_response.status).to eq(200)
+            expect(last_response).to have_http_status(:ok)
 
             json = MultiJson.load(last_response.body)
             expect(json['entity']['owning_organization_guid']).to be_nil
@@ -298,7 +298,7 @@ module VCAP::CloudController
           it 'returns FeatureDisabled' do
             post '/v2/domains', request_body
 
-            expect(last_response.status).to eq(403)
+            expect(last_response).to have_http_status(:forbidden)
             expect(decoded_response['error_code']).to match(/FeatureDisabled/)
             expect(decoded_response['description']).to match(/private_domain_creation/)
           end
@@ -322,7 +322,7 @@ module VCAP::CloudController
 
         it 'returns an error' do
           delete "/v2/domains/#{shared_domain.guid}"
-          expect(last_response.status).to eq(400)
+          expect(last_response).to have_http_status(:bad_request)
           expect(decoded_response['code']).to equal(10_006)
           expect(decoded_response['description']).to match(/delete the routes associations for your domains/i)
         end
@@ -337,7 +337,7 @@ module VCAP::CloudController
 
       it 'returns the spaces associated with the owning organization' do
         get "/v2/domains/#{private_domain.guid}/spaces"
-        expect(last_response.status).to eq(200)
+        expect(last_response).to have_http_status(:ok)
         expect(decoded_response['resources']).to have(1).item
         expect(decoded_response['resources'][0]['entity']['name']).to eq(space.name)
         expect(last_response).to be_a_deprecated_response

@@ -49,7 +49,7 @@ module VCAP::CloudController
 
         created_org = Organization.last
 
-        expect(last_response.status).to eq(201)
+        expect(last_response).to have_http_status(:created)
 
         expect(parsed_response).to be_a_response_like(
           {
@@ -80,7 +80,7 @@ module VCAP::CloudController
         }.to_json
 
         post '/v3/organizations', suspended_request_body, admin_header
-        expect(last_response.status).to eq(201)
+        expect(last_response).to have_http_status(:created)
 
         created_org = Organization.last
 
@@ -115,7 +115,7 @@ module VCAP::CloudController
 
           created_org = Organization.last
 
-          expect(last_response.status).to eq(201)
+          expect(last_response).to have_http_status(:created)
           expect(parsed_response).to be_a_response_like(
             {
               'guid' => created_org.guid,
@@ -151,7 +151,7 @@ module VCAP::CloudController
           expect(created_org.managers.count).to be(1)
           expect(created_org.billing_managers.count).to be(0)
           expect(created_org.auditors.count).to be(0)
-          expect(last_response.status).to eq(201)
+          expect(last_response).to have_http_status(:created)
         end
       end
 
@@ -166,7 +166,7 @@ module VCAP::CloudController
           expect(created_org.managers.count).to be(0)
           expect(created_org.billing_managers.count).to be(0)
           expect(created_org.auditors.count).to be(0)
-          expect(last_response.status).to eq(201)
+          expect(last_response).to have_http_status(:created)
         end
       end
     end
@@ -213,7 +213,7 @@ module VCAP::CloudController
 
       it 'returns a paginated list of orgs the user has access to' do
         get '/v3/organizations?per_page=2', nil, user_header
-        expect(last_response.status).to eq(200)
+        expect(last_response).to have_http_status(:ok)
 
         parsed_response = MultiJson.load(last_response.body)
         expect(parsed_response).to be_a_response_like(
@@ -340,7 +340,7 @@ module VCAP::CloudController
 
       it 'returns a paginated list of orgs entitled to the isolation segment' do
         get "/v3/isolation_segments/#{isolation_segment1.guid}/organizations?per_page=2", nil, user_header
-        expect(last_response.status).to eq(200)
+        expect(last_response).to have_http_status(:ok)
 
         parsed_response = MultiJson.load(last_response.body)
         expect(parsed_response).to be_a_response_like(
@@ -430,7 +430,7 @@ module VCAP::CloudController
 
         parsed_response = MultiJson.load(last_response.body)
 
-        expect(last_response.status).to eq(200)
+        expect(last_response).to have_http_status(:ok)
         expect(parsed_response).to be_a_response_like(expected_response)
       end
     end
@@ -442,7 +442,7 @@ module VCAP::CloudController
       describe 'when the user is not logged in' do
         it 'returns 401 for Unauthenticated requests' do
           get "/v3/organizations/#{organization1.guid}/domains"
-          expect(last_response.status).to eq(401)
+          expect(last_response).to have_http_status(:unauthorized)
         end
       end
 
@@ -544,7 +544,7 @@ module VCAP::CloudController
         describe "when the org doesn't exist" do
           it 'returns 404 for Unauthenticated requests' do
             get '/v3/organizations/esdgth/domains', nil, user_header
-            expect(last_response.status).to eq(404)
+            expect(last_response).to have_http_status(:not_found)
           end
         end
 
@@ -664,7 +664,7 @@ module VCAP::CloudController
             'previous' => nil
           }
 
-          expect(last_response.status).to eq(200)
+          expect(last_response).to have_http_status(:ok)
           expect(parsed_response['resources'].pluck('guid')).to contain_exactly(domain1.guid)
           expect(parsed_response['pagination']).to eq(expected_pagination)
         end
@@ -683,7 +683,7 @@ module VCAP::CloudController
             'previous' => nil
           }
 
-          expect(last_response.status).to eq(200)
+          expect(last_response).to have_http_status(:ok)
           expect(parsed_response['resources'].pluck('guid')).to contain_exactly(domain2.guid)
           expect(parsed_response['pagination']).to eq(expected_pagination)
         end
@@ -702,7 +702,7 @@ module VCAP::CloudController
             'previous' => nil
           }
 
-          expect(last_response.status).to eq(200)
+          expect(last_response).to have_http_status(:ok)
           expect(parsed_response['resources'].pluck('guid')).to contain_exactly(domain1.guid)
           expect(parsed_response['pagination']).to eq(expected_pagination)
         end
@@ -721,7 +721,7 @@ module VCAP::CloudController
             'previous' => nil
           }
 
-          expect(last_response.status).to eq(200)
+          expect(last_response).to have_http_status(:ok)
           expect(parsed_response['resources'].pluck('guid')).to contain_exactly(domain1.guid)
           expect(parsed_response['pagination']).to eq(expected_pagination)
         end
@@ -740,7 +740,7 @@ module VCAP::CloudController
             'previous' => nil
           }
 
-          expect(last_response.status).to eq(200)
+          expect(last_response).to have_http_status(:ok)
           expect(parsed_response['resources'].pluck('guid')).to contain_exactly(domain2.guid)
           expect(parsed_response['pagination']).to eq(expected_pagination)
         end
@@ -759,7 +759,7 @@ module VCAP::CloudController
             'previous' => nil
           }
 
-          expect(last_response.status).to eq(200)
+          expect(last_response).to have_http_status(:ok)
           expect(parsed_response['resources'].pluck('guid')).to contain_exactly(domain2.guid)
           expect(parsed_response['pagination']).to eq(expected_pagination)
         end
@@ -778,7 +778,7 @@ module VCAP::CloudController
             'previous' => nil
           }
 
-          expect(last_response.status).to eq(200)
+          expect(last_response).to have_http_status(:ok)
           expect(parsed_response['resources'].pluck('guid')).to contain_exactly(domain2.guid)
           expect(parsed_response['pagination']).to eq(expected_pagination)
         end
@@ -797,20 +797,20 @@ module VCAP::CloudController
             'previous' => nil
           }
 
-          expect(last_response.status).to eq(200)
+          expect(last_response).to have_http_status(:ok)
           expect(parsed_response['resources'].pluck('guid')).to contain_exactly(domain1.guid)
           expect(parsed_response['pagination']).to eq(expected_pagination)
         end
 
         it 'returns a 400 when the label selector is missing a value' do
           get "#{base_link}?label_selector", nil, admin_header
-          expect(last_response.status).to eq(400)
+          expect(last_response).to have_http_status(:bad_request)
           expect(parsed_response['errors'].first['detail']).to match(/Missing label_selector value/)
         end
 
         it "returns a 400 when the label selector's value is invalid" do
           get "#{base_link}?label_selector=!", nil, admin_header
-          expect(last_response.status).to eq(400)
+          expect(last_response).to have_http_status(:bad_request)
           expect(parsed_response['errors'].first['detail']).to match(/Invalid label_selector value/)
         end
       end
@@ -824,7 +824,7 @@ module VCAP::CloudController
       context 'when the user is not logged in' do
         it 'returns 401 for Unauthenticated requests' do
           get "/v3/organizations/#{org.guid}/domains/default", nil, base_json_headers
-          expect(last_response.status).to eq(401)
+          expect(last_response).to have_http_status(:unauthorized)
         end
       end
 
@@ -833,7 +833,7 @@ module VCAP::CloudController
 
         it 'returns a 403' do
           get "/v3/organizations/#{org.guid}/domains/default", nil, user_header
-          expect(last_response.status).to eq(403)
+          expect(last_response).to have_http_status(:forbidden)
         end
       end
 
@@ -1075,7 +1075,7 @@ module VCAP::CloudController
 
           parsed_response = MultiJson.load(last_response.body)
 
-          expect(last_response.status).to eq(200)
+          expect(last_response).to have_http_status(:ok)
           expect(parsed_response).to be_a_response_like(expected_response)
 
           organization1.reload
@@ -1188,7 +1188,7 @@ module VCAP::CloudController
 
           parsed_response = MultiJson.load(last_response.body)
 
-          expect(last_response.status).to eq(200)
+          expect(last_response).to have_http_status(:ok)
           expect(parsed_response).to be_a_response_like(expected_response)
 
           organization1.reload
@@ -1207,7 +1207,7 @@ module VCAP::CloudController
               patch "/v3/organizations/#{organization1.guid}", update_request, admin_headers_for(user).merge('CONTENT_TYPE' => 'application/json')
             end.not_to(change { organization1.reload.name })
 
-            expect(last_response.status).to eq(422)
+            expect(last_response).to have_http_status(:unprocessable_entity)
             expect(last_response).to have_error_message("Organization name 'new-name' is already taken.")
           end
         end
@@ -1238,7 +1238,7 @@ module VCAP::CloudController
 
           parsed_response = MultiJson.load(last_response.body)
 
-          expect(last_response.status).to eq(200)
+          expect(last_response).to have_http_status(:ok)
           expect(parsed_response).to be_a_response_like(expected_response)
 
           organization1.reload
@@ -1283,7 +1283,7 @@ module VCAP::CloudController
 
             parsed_response = MultiJson.load(last_response.body)
 
-            expect(last_response.status).to eq(200)
+            expect(last_response).to have_http_status(:ok)
             expect(parsed_response).to be_a_response_like(expected_response)
           end
         end
@@ -1338,7 +1338,7 @@ module VCAP::CloudController
           expect(last_job.resource_type).to eq('organization')
 
           get "/v3/organizations/#{org.guid}", {}, admin_headers
-          expect(last_response.status).to eq(404)
+          expect(last_response).to have_http_status(:not_found)
         end
       end
       let(:api_call) { ->(user_headers) { delete "/v3/organizations/#{org.guid}", nil, user_headers } }
@@ -1346,14 +1346,14 @@ module VCAP::CloudController
       it 'destroys the requested organization and sub resources (spaces)' do
         expect do
           delete "/v3/organizations/#{org.guid}", nil, admin_header
-          expect(last_response.status).to eq(202)
+          expect(last_response).to have_http_status(:accepted)
           expect(last_response.headers['Location']).to match(%r{http.+/v3/jobs/[a-fA-F0-9-]+})
 
           execute_all_jobs(expected_successes: 2, expected_failures: 0)
           get "/v3/organizations/#{org.guid}", {}, admin_headers
-          expect(last_response.status).to eq(404)
+          expect(last_response).to have_http_status(:not_found)
           get "/v3/spaces/#{space.guid}", {}, admin_headers
-          expect(last_response.status).to eq(404)
+          expect(last_response).to have_http_status(:not_found)
         end.to change(Organization, :count).by(-1).
           and change(Space, :count).by(-1).
           and change(AppModel, :count).by(-1).
@@ -1388,7 +1388,7 @@ module VCAP::CloudController
       describe 'when the user is not logged in' do
         it 'returns 401 for Unauthenticated requests' do
           delete "/v3/organizations/#{org.guid}", nil, base_json_headers
-          expect(last_response.status).to eq(401)
+          expect(last_response).to have_http_status(:unauthorized)
         end
       end
 
@@ -1397,7 +1397,7 @@ module VCAP::CloudController
 
         it 'returns a 202' do
           delete "/v3/organizations/#{org.guid}", nil, admin_headers
-          expect(last_response.status).to eq(202)
+          expect(last_response).to have_http_status(:accepted)
           expect(last_response.headers['Location']).to match(%r{http.+/v3/jobs/[a-fA-F0-9-]+})
 
           # ::OrganizationDelete should fail and ::V3::BuildpackCacheDelete should succeed
@@ -1405,7 +1405,7 @@ module VCAP::CloudController
 
           job_url = last_response.headers['Location']
           get job_url, {}, admin_headers
-          expect(last_response.status).to eq(200)
+          expect(last_response).to have_http_status(:ok)
 
           expect(parsed_response['state']).to eq('FAILED')
           expect(parsed_response['errors'].size).to eq(1)

@@ -588,14 +588,14 @@ RSpec.describe 'Stacks Request' do
       it 'returns 401 when user not logged in' do
         get "/v3/stacks/#{stack.guid}/apps", {}, {} # empty headers indicates logged out
 
-        expect(last_response.status).to eq 401
+        expect(last_response).to have_http_status :unauthorized
       end
     end
 
     context 'when seeking apps for a stack that does not exist' do
       it '404s' do
         get '/v3/stacks/hot_garbage/apps', {}, headers
-        expect(last_response.status).to eq 404
+        expect(last_response).to have_http_status :not_found
         expect(last_response.body).to include('ResourceNotFound')
       end
     end
@@ -634,7 +634,7 @@ RSpec.describe 'Stacks Request' do
 
       created_stack = VCAP::CloudController::Stack.last
 
-      expect(last_response.status).to eq(201)
+      expect(last_response).to have_http_status(:created)
 
       expect(parsed_response).to be_a_response_like(
         {
@@ -672,7 +672,7 @@ RSpec.describe 'Stacks Request' do
 
       it 'responds with 422' do
         post '/v3/stacks', request_body, headers
-        expect(last_response.status).to eq(422)
+        expect(last_response).to have_http_status(:unprocessable_entity)
         expect(last_response).to have_error_message('Name must be unique')
       end
     end
@@ -698,7 +698,7 @@ RSpec.describe 'Stacks Request' do
     it 'updates the metadata of a new stack' do
       patch "/v3/stacks/#{stack.guid}", request_body, headers
 
-      expect(last_response.status).to eq(200)
+      expect(last_response).to have_http_status(:ok)
 
       expect(parsed_response).to be_a_response_like(
         {
@@ -736,7 +736,7 @@ RSpec.describe 'Stacks Request' do
     it 'destroys the stack' do
       delete "/v3/stacks/#{stack.guid}", {}, headers
 
-      expect(last_response.status).to eq(204)
+      expect(last_response).to have_http_status(:no_content)
       expect(stack).not_to exist
     end
 

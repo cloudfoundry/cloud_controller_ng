@@ -16,7 +16,7 @@ RSpec.describe 'ServiceKeys' do
 
     it 'lists service keys' do
       get '/v2/service_keys', nil, headers_for(user)
-      expect(last_response.status).to eq(200)
+      expect(last_response).to have_http_status(:ok)
 
       parsed_response = MultiJson.load(last_response.body)
       expect(parsed_response).to be_a_response_like(
@@ -68,7 +68,7 @@ RSpec.describe 'ServiceKeys' do
 
     it 'displays the service key' do
       get "/v2/service_keys/#{service_key1.guid}", nil, headers_for(user)
-      expect(last_response.status).to eq(200)
+      expect(last_response).to have_http_status(:ok)
 
       parsed_response = MultiJson.load(last_response.body)
       expect(parsed_response).to be_a_response_like(
@@ -135,7 +135,7 @@ RSpec.describe 'ServiceKeys' do
 
     it 'displays the service key parameters' do
       get "/v2/service_keys/#{service_key.guid}/parameters", nil, headers_for(user)
-      expect(last_response.status).to eq(200)
+      expect(last_response).to have_http_status(:ok)
 
       parsed_response = last_response.body
       expect(MultiJson.load(parsed_response)).to be_a_response_like(

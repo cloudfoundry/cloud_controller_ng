@@ -32,7 +32,7 @@ RSpec.describe 'Jobs' do
 
       parsed_response = MultiJson.load(last_response.body)
 
-      expect(last_response.status).to eq(200)
+      expect(last_response).to have_http_status(:ok)
       expect(parsed_response).to be_a_response_like(expected_response)
     end
 
@@ -62,7 +62,7 @@ RSpec.describe 'Jobs' do
 
       parsed_response = MultiJson.load(last_response.body)
 
-      expect(last_response.status).to eq(200)
+      expect(last_response).to have_http_status(:ok)
       expect(parsed_response).to be_a_response_like(expected_response)
     end
   end
@@ -97,7 +97,7 @@ RSpec.describe 'Jobs' do
 
       parsed_response = MultiJson.load(last_response.body)
 
-      expect(last_response.status).to eq(200)
+      expect(last_response).to have_http_status(:ok)
       expect(parsed_response).to be_a_response_like(expected_response)
     end
 
@@ -152,7 +152,7 @@ RSpec.describe 'Jobs' do
     context 'when the user is not logged in' do
       it 'returns 401' do
         get "/v3/jobs/#{job.guid}"
-        expect(last_response.status).to eq(401)
+        expect(last_response).to have_http_status(:unauthorized)
       end
     end
 
@@ -161,7 +161,7 @@ RSpec.describe 'Jobs' do
 
       it 'returns 403' do
         get "/v3/jobs/#{job.guid}", nil, user_header
-        expect(last_response.status).to eq(403)
+        expect(last_response).to have_http_status(:forbidden)
       end
     end
 

@@ -21,7 +21,7 @@ RSpec.describe 'ServiceBrokers' do
         }
 
         put "/v2/service_brokers/#{service_broker.guid}", req_body.to_json, admin_headers
-        expect(last_response.status).to eq(502)
+        expect(last_response).to have_http_status(:bad_gateway)
         expect(parsed_response['description']).
           to eq('The service broker returned an invalid response: expected valid JSON object in body. Please check that the URL points to a valid service broker.')
       end
@@ -46,7 +46,7 @@ RSpec.describe 'ServiceBrokers' do
         }
 
         put "/v2/service_brokers/#{service_broker.guid}", req_body.to_json, admin_headers
-        expect(last_response.status).to eq(502)
+        expect(last_response).to have_http_status(:bad_gateway)
         expect(parsed_response['description']).
           to eq('The service broker rejected the request. Status Code: 403 Forbidden. Please check that the URL points to a valid service broker.')
       end
@@ -77,7 +77,7 @@ RSpec.describe 'ServiceBrokers' do
         }
 
         post '/v2/service_brokers', req_body.to_json, admin_headers
-        expect(last_response.status).to eq(502)
+        expect(last_response).to have_http_status(:bad_gateway)
         expect(parsed_response['description']).
           to eq('The service broker returned an invalid response: expected valid JSON object in body. Please check that the URL points to a valid service broker.')
       end
@@ -103,7 +103,7 @@ RSpec.describe 'ServiceBrokers' do
         }
 
         post '/v2/service_brokers', req_body.to_json, admin_headers
-        expect(last_response.status).to eq(502)
+        expect(last_response).to have_http_status(:bad_gateway)
         expect(parsed_response['description']).
           to eq('The service broker rejected the request. Status Code: 403 Forbidden. Please check that the URL points to a valid service broker.')
       end
@@ -128,7 +128,7 @@ RSpec.describe 'ServiceBrokers' do
         }
 
         post '/v2/service_brokers', req_body.to_json, admin_headers
-        expect(last_response.status).to eq(201)
+        expect(last_response).to have_http_status(:created)
 
         broker = VCAP::CloudController::ServiceBroker.last
         expect(broker.name).to eq(req_body[:name])
@@ -174,7 +174,7 @@ RSpec.describe 'ServiceBrokers' do
           }
 
           post '/v2/service_brokers', req_body.to_json, admin_headers
-          expect(last_response.status).to eq(502)
+          expect(last_response).to have_http_status(:bad_gateway)
         end
       end
     end

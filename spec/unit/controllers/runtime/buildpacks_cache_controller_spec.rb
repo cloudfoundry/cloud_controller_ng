@@ -14,7 +14,7 @@ module VCAP::CloudController
 
         job = Delayed::Job.last
 
-        expect(last_response.status).to eq(202)
+        expect(last_response).to have_http_status(:accepted)
         expect(decoded_response(symbolize_keys: true)).to eq(JobPresenter.new(job).to_hash)
       end
 
@@ -24,7 +24,7 @@ module VCAP::CloudController
         it 'returns a 403 NotAuthorized' do
           delete '/v2/blobstores/buildpack_cache'
 
-          expect(last_response.status).to eq(403)
+          expect(last_response).to have_http_status(:forbidden)
           expect(last_response.body).to match('CF-NotAuthorized')
         end
       end

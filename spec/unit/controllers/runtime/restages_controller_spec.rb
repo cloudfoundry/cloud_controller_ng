@@ -23,7 +23,7 @@ module VCAP::CloudController
 
         it 'returns 403' do
           restage_request
-          expect(last_response.status).to eq(403)
+          expect(last_response).to have_http_status(:forbidden)
         end
       end
 
@@ -32,7 +32,7 @@ module VCAP::CloudController
 
         it 'returns 403' do
           restage_request
-          expect(last_response.status).to eq(403)
+          expect(last_response).to have_http_status(:forbidden)
         end
       end
 
@@ -43,14 +43,14 @@ module VCAP::CloudController
           expect(process.desired_droplet).not_to be_nil
 
           restage_request
-          expect(last_response.status).to eq(201)
+          expect(last_response).to have_http_status(:created)
 
           expect(process.reload.desired_droplet).to be_nil
         end
 
         it 'restages the app' do
           restage_request
-          expect(last_response.status).to eq(201)
+          expect(last_response).to have_http_status(:created)
           expect(app_stage).to have_received(:stage).with(process)
         end
 
@@ -69,7 +69,7 @@ module VCAP::CloudController
           it "returns '170002 NotStaged'" do
             restage_request
 
-            expect(last_response.status).to eq(400)
+            expect(last_response).to have_http_status(:bad_request)
             parsed_response = MultiJson.load(last_response.body)
             expect(parsed_response['code']).to eq(170_002)
           end
@@ -81,7 +81,7 @@ module VCAP::CloudController
           it '404s' do
             restage_request
 
-            expect(last_response.status).to eq(404)
+            expect(last_response).to have_http_status(:not_found)
             parsed_response = MultiJson.load(last_response.body)
             expect(parsed_response['code']).to eq(100_004)
             expect(parsed_response['description']).to eq('The app could not be found: blub-blub-blub')
@@ -98,7 +98,7 @@ module VCAP::CloudController
           it 'errors because web must have > 0 instances' do
             restage_request
 
-            expect(last_response.status).to eq(400)
+            expect(last_response).to have_http_status(:bad_request)
             parsed_response = MultiJson.load(last_response.body)
             expect(parsed_response['code']).to eq(170_001)
             expect(parsed_response['description']).to eq('Staging error: App must have at least 1 instance to stage.')
@@ -116,7 +116,7 @@ module VCAP::CloudController
           it '404s because restage only works for web processes' do
             restage_request
 
-            expect(last_response.status).to eq(404)
+            expect(last_response).to have_http_status(:not_found)
             parsed_response = MultiJson.load(last_response.body)
             expect(parsed_response['code']).to eq(100_004)
             expect(parsed_response['description']).to match(/The app could not be found:/)
@@ -138,7 +138,7 @@ module VCAP::CloudController
 
               it 'correctly propagates the error' do
                 restage_request
-                expect(last_response.status).to eq(400)
+                expect(last_response).to have_http_status(:bad_request)
                 expect(decoded_response['code']).to eq(320_003)
                 expect(decoded_response['description']).to match(/Docker support has not been enabled./)
               end
@@ -163,7 +163,7 @@ module VCAP::CloudController
                 restage_request
               end.to change(Event, :count).by(1)
 
-              expect(last_response.status).to eq(201)
+              expect(last_response).to have_http_status(:created)
               expect(app_event_repository).to have_received(:record_app_restage).with(process,
                                                                                       user_audit_info)
             end
@@ -192,7 +192,7 @@ module VCAP::CloudController
           it 'raises error' do
             restage_request
 
-            expect(last_response.status).to eq(400)
+            expect(last_response).to have_http_status(:bad_request)
             expect(last_response.body).to include('bits have not been uploaded')
           end
         end
@@ -204,7 +204,7 @@ module VCAP::CloudController
 
           it 'does not create a revision (this happens later during the staging completion callback)' do
             restage_request
-            expect(last_response.status).to eq(201)
+            expect(last_response).to have_http_status(:created)
             expect(process.app.revisions.length).to eq(0)
           end
         end

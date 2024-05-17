@@ -24,7 +24,7 @@ RSpec.describe 'Spaces' do
         it 'creates a space and associates the isolation segment' do
           post '/v2/spaces', opts, admin_headers_for(user)
 
-          expect(last_response.status).to eq(201)
+          expect(last_response).to have_http_status(:created)
           parsed_response = MultiJson.load(last_response.body)
 
           space = VCAP::CloudController::Space.last
@@ -78,7 +78,7 @@ RSpec.describe 'Spaces' do
       it 'lists the isolation segment for SpaceDevelopers' do
         get '/v2/spaces', {}, headers_for(user)
 
-        expect(last_response.status).to eq(200)
+        expect(last_response).to have_http_status(:ok)
         parsed_response = MultiJson.load(last_response.body)
 
         expect(parsed_response).to be_a_response_like({
@@ -135,7 +135,7 @@ RSpec.describe 'Spaces' do
       it 'lists the isolation segment for SpaceDevelopers' do
         get "/v2/spaces/#{space.guid}", {}, headers_for(user)
 
-        expect(last_response.status).to eq(200)
+        expect(last_response).to have_http_status(:ok)
         parsed_response = MultiJson.load(last_response.body)
 
         expect(parsed_response).to be_a_response_like({
@@ -187,7 +187,7 @@ RSpec.describe 'Spaces' do
     it 'shows the shared service instances associated with the space' do
       get "/v2/spaces/#{space.guid}/service_instances", {}, headers_for(user)
 
-      expect(last_response.status).to eq(200)
+      expect(last_response).to have_http_status(:ok)
       parsed_response = MultiJson.load(last_response.body)
 
       expect(parsed_response).to be_a_response_like({
@@ -364,7 +364,7 @@ RSpec.describe 'Spaces' do
 
       delete "/v2/spaces/#{space.guid}/unmapped_routes", {}, headers_for(user)
 
-      expect(last_response.status).to eq(204)
+      expect(last_response).to have_http_status(:no_content)
       expect(unmapped_route.exists?).to be(false), "Expected route '#{unmapped_route.guid}' to not exist"
       expect(mapped_route.exists?).to be(true), "Expected route '#{mapped_route.guid}' to exist"
       expect(bound_route.exists?).to be(true), "Expected route '#{bound_route.guid}' to exist"

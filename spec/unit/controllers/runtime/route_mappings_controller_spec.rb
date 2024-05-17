@@ -422,7 +422,7 @@ module VCAP::CloudController
             expect(RouteMappingModel.count).to eq(0)
 
             post '/v2/route_mappings', body
-            expect(last_response.status).to eq(400)
+            expect(last_response).to have_http_status(:bad_request)
             expect(last_response.body).to include('InvalidRelation')
             expect(last_response.body).to include('must belong to the same space')
 

@@ -102,12 +102,12 @@ module VCAP::CloudController
           set_current_user(user)
 
           put "/v2/buildpacks/#{test_buildpack.guid}/bits", upload_body
-          expect(last_response.status).to eq(403)
+          expect(last_response).to have_http_status(:forbidden)
         end
 
         it 'returns a CREATED (201) if an admin uploads a zipped build pack' do
           put "/v2/buildpacks/#{test_buildpack.guid}/bits", upload_body
-          expect(last_response.status).to eq(201)
+          expect(last_response).to have_http_status(:created)
         end
 
         it 'takes a buildpack file and adds it to the custom buildpacks blobstore with the correct key' do
@@ -118,7 +118,7 @@ module VCAP::CloudController
           expected_key = "#{test_buildpack.guid}_#{sha_valid_zip}"
 
           put "/v2/buildpacks/#{test_buildpack.guid}/bits", upload_body
-          expect(last_response.status).to eq(201)
+          expect(last_response).to have_http_status(:created)
 
           buildpack = Buildpack.find(name: 'upload_binary_buildpack')
           expect(buildpack.key).to eq(expected_key)
@@ -135,7 +135,7 @@ module VCAP::CloudController
 
         it 'sets the buildpack stack if it is unset and in buildpack manifest' do
           put "/v2/buildpacks/#{test_buildpack.guid}/bits", { buildpack: valid_zip_manifest, buildpack_name: valid_zip_manifest.path }
-          expect(last_response.status).to be 201
+          expect(last_response).to have_http_status :created
 
           buildpack = Buildpack.find(name: 'upload_binary_buildpack')
           expect(buildpack.stack).to eq('stack-from-manifest')
@@ -143,7 +143,7 @@ module VCAP::CloudController
 
         it 'returns ERROR (422) if provided stack does not exist' do
           put "/v2/buildpacks/#{test_buildpack.guid}/bits", { buildpack: valid_zip_unknown_stack, buildpack_name: valid_zip_unknown_stack.path }
-          expect(last_response.status).to be 422
+          expect(last_response).to have_http_status :unprocessable_entity
 
           buildpack = Buildpack.find(name: 'upload_binary_buildpack')
           expect(buildpack.stack).to be_nil
@@ -151,7 +151,7 @@ module VCAP::CloudController
 
         it 'sets the buildpack stack to nil if it is unset and NOT in buildpack manifest' do
           put "/v2/buildpacks/#{test_buildpack.guid}/bits", { buildpack: valid_zip, buildpack_name: valid_zip.path }
-          expect(last_response.status).to be 201
+          expect(last_response).to have_http_status :created
 
           buildpack = Buildpack.find(name: 'upload_binary_buildpack')
           expect(buildpack.stack).to be_nil
@@ -162,7 +162,7 @@ module VCAP::CloudController
           test_buildpack.update(stack: 'not-from-manifest')
 
           put "/v2/buildpacks/#{test_buildpack.guid}/bits", { buildpack: valid_zip_manifest, buildpack_name: valid_zip_manifest.path }
-          expect(last_response.status).to be 422
+          expect(last_response).to have_http_status :unprocessable_entity
 
           json = MultiJson.load(last_response.body)
           expect(json['code']).to eq(390_011)
@@ -174,7 +174,7 @@ module VCAP::CloudController
 
         it 'requires a filename as part of the upload' do
           put "/v2/buildpacks/#{test_buildpack.guid}/bits", { buildpack: 'abc' }
-          expect(last_response.status).to be 400
+          expect(last_response).to have_http_status :bad_request
           json = MultiJson.load(last_response.body)
           expect(json['code']).to eq(290_002)
           expect(json['description']).to match(/a filename must be specified/)
@@ -183,7 +183,7 @@ module VCAP::CloudController
         it 'requires a file to be uploaded' do
           expect(FileUtils).not_to receive(:rm_f)
           put "/v2/buildpacks/#{test_buildpack.guid}/bits", { buildpack: nil, buildpack_name: 'abc.zip' }
-          expect(last_response.status).to eq(400)
+          expect(last_response).to have_http_status(:bad_request)
           json = MultiJson.load(last_response.body)
           expect(json['code']).to eq(290_002)
           expect(json['description']).to match(/a file must be provided/)
@@ -194,7 +194,7 @@ module VCAP::CloudController
           expect(buildpack_blobstore).not_to receive(:cp_to_blobstore)
 
           put "/v2/buildpacks/#{test_buildpack.guid}/bits", { buildpack: valid_tar_gz }
-          expect(last_response.status).to be 400
+          expect(last_response).to have_http_status :bad_request
           json = MultiJson.load(last_response.body)
           expect(json['code']).to eq(290_002)
           expect(json['description']).to match(/only zip files allowed/)
@@ -235,7 +235,7 @@ module VCAP::CloudController
           new_buildpack = VCAP::CloudController::Buildpack.create_from_hash({ name: first_buildpack.name, stack: nil, position: 0 })
           put "/v2/buildpacks/#{new_buildpack.guid}/bits", { buildpack: valid_zip_manifest }
 
-          expect(last_response.status).to eq(422)
+          expect(last_response).to have_http_status(:unprocessable_entity)
         end
 
         it 'allowed when same bits but different filename are uploaded again' do
@@ -245,7 +245,7 @@ module VCAP::CloudController
           newfile = Rack::Test::UploadedFile.new(File.new(new_name))
           put "/v2/buildpacks/#{test_buildpack.guid}/bits", { buildpack: newfile }
 
-          expect(last_response.status).to eq(201)
+          expect(last_response).to have_http_status(:created)
         end
 
         it 'removes the uploaded buildpack file' do
@@ -256,7 +256,7 @@ module VCAP::CloudController
         it 'does not allow upload if the buildpack is locked' do
           locked_buildpack = VCAP::CloudController::Buildpack.create_from_hash({ name: 'locked_buildpack', stack: 'stack', locked: true, position: 0 })
           put "/v2/buildpacks/#{locked_buildpack.guid}/bits", { buildpack: valid_zip2 }
-          expect(last_response.status).to eq(409)
+          expect(last_response).to have_http_status(:conflict)
         end
 
         it 'does allow upload if the buildpack has been unlocked' do
@@ -264,14 +264,14 @@ module VCAP::CloudController
           put "/v2/buildpacks/#{locked_buildpack.guid}", '{"locked": false}'
 
           put "/v2/buildpacks/#{locked_buildpack.guid}/bits", { buildpack: valid_zip2 }
-          expect(last_response.status).to eq(201)
+          expect(last_response).to have_http_status(:created)
         end
 
         context 'when the upload file is nil' do
           it 'is a bad request' do
             expect(FileUtils).not_to receive(:rm_f)
             put "/v2/buildpacks/#{test_buildpack.guid}/bits", { buildpack: nil }
-            expect(last_response.status).to eq(400)
+            expect(last_response).to have_http_status(:bad_request)
           end
         end
 
@@ -308,21 +308,21 @@ module VCAP::CloudController
 
         it 'returns NOT AUTHENTICATED (401) users without correct basic auth' do
           get "/v2/buildpacks/#{test_buildpack.guid}/download", '{}'
-          expect(last_response.status).to eq(401)
+          expect(last_response).to have_http_status(:unauthorized)
         end
 
         it 'lets users with correct basic auth retrieve the bits for a specific buildpack' do
           put "/v2/buildpacks/#{test_buildpack.guid}/bits", { buildpack: valid_zip }
           authorize(staging_user, staging_password)
           get "/v2/buildpacks/#{test_buildpack.guid}/download"
-          expect(last_response.status).to eq(302)
+          expect(last_response).to have_http_status(:found)
           expect(last_response.header['Location']).to match(/cc-buildpacks/)
         end
 
         it 'returns 404 for missing bits' do
           authorize(staging_user, staging_password)
           get "/v2/buildpacks/#{test_buildpack.guid}/download"
-          expect(last_response.status).to eq(404)
+          expect(last_response).to have_http_status(:not_found)
         end
       end
     end

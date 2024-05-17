@@ -39,7 +39,7 @@ RSpec.describe 'App Usage Events' do
     context 'when the usage event does not exist' do
       it 'returns a 404' do
         get '/v3/app_usage_events/does-not-exist', nil, admin_header
-        expect(last_response.status).to eq 404
+        expect(last_response).to have_http_status :not_found
         expect(last_response).to have_error_message('App usage event not found')
       end
     end
@@ -47,7 +47,7 @@ RSpec.describe 'App Usage Events' do
     context 'when the user is not logged in' do
       it 'returns 401 for Unauthenticated requests' do
         get "/v3/app_usage_events/#{usage_event.guid}", nil, base_json_headers
-        expect(last_response.status).to eq(401)
+        expect(last_response).to have_http_status(:unauthorized)
       end
     end
   end
@@ -86,7 +86,7 @@ RSpec.describe 'App Usage Events' do
     context 'when the user is not logged in' do
       it 'returns 401 for Unauthenticated requests' do
         get '/v3/app_usage_events', nil, base_json_headers
-        expect(last_response.status).to eq(401)
+        expect(last_response).to have_http_status(:unauthorized)
       end
     end
 

@@ -188,7 +188,7 @@ module VCAP::CloudController
 
             it 'returns an invalid token error to the user' do
               get '/test_endpoint'
-              expect(last_response.status).to eq 401
+              expect(last_response).to have_http_status :unauthorized
               expect(last_response.body).to match(/InvalidAuthToken/)
             end
           end
@@ -204,7 +204,7 @@ module VCAP::CloudController
 
           it 'returns NotAuthenticated if username and password are not provided' do
             get '/test_basic_auth'
-            expect(last_response.status).to eq 401
+            expect(last_response).to have_http_status :unauthorized
             expect(decoded_response['code']).to eq 10_002
           end
 
@@ -212,7 +212,7 @@ module VCAP::CloudController
             authorize 'username', 'letmein'
 
             get '/test_basic_auth'
-            expect(last_response.status).to eq 401
+            expect(last_response).to have_http_status :unauthorized
             expect(decoded_response['code']).to eq 10_002
           end
 
@@ -221,7 +221,7 @@ module VCAP::CloudController
               authorize 'username', unencoded_password
 
               get '/test_basic_auth'
-              expect(last_response.status).to eq 200
+              expect(last_response).to have_http_status :ok
               expect(last_response.body).to eq 'basic_auth_response'
             end
           end

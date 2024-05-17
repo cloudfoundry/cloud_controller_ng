@@ -18,12 +18,12 @@ RSpec.describe 'App visibility between API versions' do
       }
       post '/v2/apps', MultiJson.encode(request_body), user_header
 
-      expect(last_response.status).to be 201
+      expect(last_response).to have_http_status :created
       app_guid = parsed_response['metadata']['guid']
 
       get "/v3/apps/#{app_guid}", nil, user_header
 
-      expect(last_response.status).to eq 200
+      expect(last_response).to have_http_status :ok
     end
   end
 
@@ -35,7 +35,7 @@ RSpec.describe 'App visibility between API versions' do
       }
       post '/v3/apps', MultiJson.encode(request_body), user_header
 
-      expect(last_response.status).to be 201
+      expect(last_response).to have_http_status :created
       app_guid = parsed_response['guid']
 
       get "/v2/apps/#{app_guid}", nil, user_header

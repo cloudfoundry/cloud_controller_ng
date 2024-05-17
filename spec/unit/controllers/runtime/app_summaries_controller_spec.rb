@@ -58,7 +58,7 @@ module VCAP::CloudController
         end
 
         it 'contains the basic app attributes' do
-          expect(last_response.status).to eq(200)
+          expect(last_response).to have_http_status(:ok)
           expect(decoded_response['guid']).to eq(@process.app.guid)
           expect(decoded_response['environment_json']).to eq({ 'HELLO' => 'WORLD' })
 

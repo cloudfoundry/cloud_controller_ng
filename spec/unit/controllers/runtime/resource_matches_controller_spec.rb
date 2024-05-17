@@ -20,7 +20,7 @@ module VCAP::CloudController
       resp = MultiJson.load(last_response.body)
       expect(resp).to eq(matches)
 
-      expect(last_response.status).to eq(200)
+      expect(last_response).to have_http_status(:ok)
     end
 
     describe 'when the app_bits_upload feature flag is enabled' do
@@ -47,7 +47,7 @@ module VCAP::CloudController
 
             put '/v2/resource_match', 'invalid json'
 
-            expect(last_response.status).to eq(400)
+            expect(last_response).to have_http_status(:bad_request)
             expect(last_response.body).to match(/MessageParseError/)
           end
         end
@@ -58,7 +58,7 @@ module VCAP::CloudController
 
             put '/v2/resource_match', 'null'
 
-            expect(last_response.status).to eq(422)
+            expect(last_response).to have_http_status(:unprocessable_entity)
             expect(last_response.body).to match(/UnprocessableEntity/)
             expect(last_response.body).to match(/must be an array./)
           end
@@ -75,7 +75,7 @@ module VCAP::CloudController
         set_current_user_as_admin
 
         put '/v2/resource_match', '[]'
-        expect(last_response.status).to eq(200)
+        expect(last_response).to have_http_status(:ok)
       end
 
       it 'returns FeatureDisabled unless the user is an admin' do
@@ -83,7 +83,7 @@ module VCAP::CloudController
 
         put '/v2/resource_match', '[]'
 
-        expect(last_response.status).to eq(403)
+        expect(last_response).to have_http_status(:forbidden)
         expect(decoded_response['error_code']).to match(/FeatureDisabled/)
         expect(decoded_response['description']).to match(/Feature Disabled/)
       end

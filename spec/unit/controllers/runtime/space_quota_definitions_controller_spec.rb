@@ -157,7 +157,7 @@ module VCAP::CloudController
         sqd_json = { name: '', non_basic_services_allowed: true, total_services: 1, total_service_keys: 1, total_routes: 1, memory_limit: 2, organization_guid: org.guid }
         post '/v2/space_quota_definitions', MultiJson.dump(sqd_json)
 
-        expect(last_response.status).to eq(400)
+        expect(last_response).to have_http_status(:bad_request)
         expect(decoded_response['description']).to match(/Space Quota Definition is invalid/)
         expect(decoded_response['error_code']).to match(/SpaceQuotaDefinitionInvalid/)
       end
@@ -167,7 +167,7 @@ module VCAP::CloudController
         sqd_json = { name: 'foo', non_basic_services_allowed: true, total_services: 1, total_service_keys: 1, total_routes: 1, memory_limit: 2, organization_guid: org.guid }
         post '/v2/space_quota_definitions', MultiJson.dump(sqd_json)
 
-        expect(last_response.status).to eq(400)
+        expect(last_response).to have_http_status(:bad_request)
         expect(decoded_response['description']).to match(/name is taken/)
         expect(decoded_response['error_code']).to match(/SpaceQuotaDefinitionNameTaken/)
       end
@@ -177,7 +177,7 @@ module VCAP::CloudController
       it 'succeeds when no spaces are associated' do
         quota = SpaceQuotaDefinition.make
         delete "/v2/space_quota_definitions/#{quota.guid}"
-        expect(last_response.status).to eq(204)
+        expect(last_response).to have_http_status(:no_content)
       end
     end
   end

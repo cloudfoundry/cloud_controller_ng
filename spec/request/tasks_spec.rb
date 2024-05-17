@@ -127,7 +127,7 @@ RSpec.describe 'Tasks' do
 
         parsed_response = MultiJson.load(last_response.body)
 
-        expect(last_response.status).to eq(200)
+        expect(last_response).to have_http_status(:ok)
         expect(parsed_response).to be_a_response_like({
                                                         'pagination' => {
                                                           'total_results' => 3,
@@ -352,7 +352,7 @@ RSpec.describe 'Tasks' do
 
         parsed_response = MultiJson.load(last_response.body)
 
-        expect(last_response.status).to eq(200)
+        expect(last_response).to have_http_status(:ok)
         expect(parsed_response['resources'].pluck('guid')).to eq([task1.guid])
         expect(parsed_response['pagination']).to be_a_response_like(
           {
@@ -481,7 +481,7 @@ RSpec.describe 'Tasks' do
 
       put "/v3/tasks/#{task.guid}/cancel", nil, developer_headers
 
-      expect(last_response.status).to eq(202)
+      expect(last_response).to have_http_status(:accepted)
       parsed_body = JSON.parse(last_response.body)
       expect(parsed_body['guid']).to eq(task.guid)
       expect(parsed_body['name']).to eq('task')
@@ -537,7 +537,7 @@ RSpec.describe 'Tasks' do
     it "updates the task's metadata" do
       patch "/v3/tasks/#{task_guid}", request_body, headers
 
-      expect(last_response.status).to eq(200)
+      expect(last_response).to have_http_status(:ok)
       expected_response = {
         'guid' => task.guid,
         'sequence_id' => task.sequence_id,
@@ -803,7 +803,7 @@ RSpec.describe 'Tasks' do
 
         parsed_response = MultiJson.load(last_response.body)
 
-        expect(last_response.status).to eq(200)
+        expect(last_response).to have_http_status(:ok)
         expect(parsed_response).to be_a_response_like(expected_response)
       end
     end
@@ -940,7 +940,7 @@ RSpec.describe 'Tasks' do
 
         parsed_response = MultiJson.load(last_response.body)
 
-        expect(last_response.status).to eq(200)
+        expect(last_response).to have_http_status(:ok)
         expect(parsed_response['resources'].pluck('guid')).to eq([expected_task.guid])
         expect(parsed_response['pagination']).to be_a_response_like(
           {
@@ -966,7 +966,7 @@ RSpec.describe 'Tasks' do
 
         parsed_response = MultiJson.load(last_response.body)
 
-        expect(last_response.status).to eq(200)
+        expect(last_response).to have_http_status(:ok)
         expect(parsed_response['resources'].pluck('guid')).to eq([expected_task.guid])
         expect(parsed_response['pagination']).to be_a_response_like(
           {
@@ -992,7 +992,7 @@ RSpec.describe 'Tasks' do
 
         parsed_response = MultiJson.load(last_response.body)
 
-        expect(last_response.status).to eq(200)
+        expect(last_response).to have_http_status(:ok)
         expect(parsed_response['resources'].pluck('guid')).to eq([expected_task.guid])
         expect(parsed_response['pagination']).to be_a_response_like(
           {
@@ -1121,7 +1121,7 @@ RSpec.describe 'Tasks' do
 
         it 'the default is applied' do
           post "/v3/apps/#{app_model.guid}/tasks", body.except(:log_rate_limit_in_bytes_per_second).to_json, developer_headers
-          expect(last_response.status).to eq(202)
+          expect(last_response).to have_http_status(:accepted)
           expect(VCAP::CloudController::TaskModel.last.log_rate_limit).to eq(9876)
         end
       end
@@ -1135,7 +1135,7 @@ RSpec.describe 'Tasks' do
 
           it 'succeeds' do
             post "/v3/apps/#{app_model.guid}/tasks", body.to_json, developer_headers
-            expect(last_response.status).to eq(202)
+            expect(last_response).to have_http_status(:accepted)
           end
         end
 
@@ -1144,7 +1144,7 @@ RSpec.describe 'Tasks' do
 
           it 'returns an error' do
             post "/v3/apps/#{app_model.guid}/tasks", body.to_json, developer_headers
-            expect(last_response.status).to eq(422)
+            expect(last_response).to have_http_status(:unprocessable_entity)
             expect(last_response).to have_error_message("log_rate_limit cannot be unlimited in organization '#{org.name}'.")
             expect(last_response).to have_error_message("log_rate_limit cannot be unlimited in space '#{space.name}'.")
           end
@@ -1159,7 +1159,7 @@ RSpec.describe 'Tasks' do
 
             it 'returns an error' do
               post "/v3/apps/#{app_model.guid}/tasks", body.to_json, developer_headers
-              expect(last_response.status).to eq(422)
+              expect(last_response).to have_http_status(:unprocessable_entity)
               expect(last_response).to have_error_message('log_rate_limit exceeds space log rate quota')
             end
           end
@@ -1170,7 +1170,7 @@ RSpec.describe 'Tasks' do
 
             it 'returns an error' do
               post "/v3/apps/#{app_model.guid}/tasks", body.to_json, developer_headers
-              expect(last_response.status).to eq(422)
+              expect(last_response).to have_http_status(:unprocessable_entity)
               expect(last_response).to have_error_message('log_rate_limit exceeds organization log rate quota')
             end
           end
@@ -1199,7 +1199,7 @@ RSpec.describe 'Tasks' do
         parsed_response = MultiJson.load(last_response.body)
         guid            = parsed_response['guid']
 
-        expect(last_response.status).to eq(202)
+        expect(last_response).to have_http_status(:accepted)
         expect(parsed_response['droplet_guid']).to eq(non_assigned_droplet.guid)
         expect(parsed_response['links']['droplet']['href']).to eq("#{link_prefix}/v3/droplets/#{non_assigned_droplet.guid}")
         expect(VCAP::CloudController::TaskModel.find(guid:)).to be_present
@@ -1260,7 +1260,7 @@ RSpec.describe 'Tasks' do
           }
         }
 
-        expect(last_response.status).to eq(202)
+        expect(last_response).to have_http_status(:accepted)
         expect(parsed_response).to be_a_response_like(expected_response)
       end
     end
@@ -1281,7 +1281,7 @@ RSpec.describe 'Tasks' do
           expect_any_instance_of(ActiveSupport::Logger).to receive(:info).with(JSON.generate(expected_json))
           post "/v3/apps/#{app_model.guid}/tasks", body.to_json, developer_headers
 
-          expect(last_response.status).to eq(202)
+          expect(last_response).to have_http_status(:accepted)
         end
       end
     end

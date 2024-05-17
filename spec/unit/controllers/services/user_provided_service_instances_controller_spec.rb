@@ -136,7 +136,7 @@ module VCAP::CloudController
         it 'allows filtering by service name' do
           get "v2/user_provided_service_instances?q=name:#{service_instance.name}"
 
-          expect(last_response.status).to eq(200)
+          expect(last_response).to have_http_status(:ok)
           expect(decoded_response['resources'].length).to eq(1)
           expect(first_found_instance.fetch('entity').fetch('name')).to eq(service_instance.name)
         end
@@ -145,7 +145,7 @@ module VCAP::CloudController
           space_guid = service_instance.space.guid
           get "v2/user_provided_service_instances?q=space_guid:#{space_guid}"
 
-          expect(last_response.status).to eq(200)
+          expect(last_response).to have_http_status(:ok)
           expect(decoded_response['resources'].length).to eq(1)
           expect(first_found_instance.fetch('entity').fetch('name')).to eq(service_instance.name)
         end
@@ -154,7 +154,7 @@ module VCAP::CloudController
           org_guid = service_instance.space.organization.guid
           get "v2/user_provided_service_instances?q=organization_guid:#{org_guid}"
 
-          expect(last_response.status).to eq(200)
+          expect(last_response).to have_http_status(:ok)
           expect(decoded_response['resources'].length).to eq(1)
           expect(first_found_instance.fetch('entity').fetch('name')).to eq(service_instance.name)
         end
@@ -164,7 +164,7 @@ module VCAP::CloudController
           space_guid = service_instance.space.guid
           get "v2/user_provided_service_instances?q=space_guid:#{space_guid}&q=organization_guid%20IN%20#{org_guid}"
 
-          expect(last_response.status).to eq(200)
+          expect(last_response).to have_http_status(:ok)
           expect(decoded_response['resources'].length).to eq(1)
           expect(first_found_instance.fetch('entity').fetch('name')).to eq(service_instance.name)
         end
@@ -187,7 +187,7 @@ module VCAP::CloudController
 
                 get "v2/user_provided_service_instances?q=organization_guid:#{org1.guid}"
 
-                expect(last_response.status).to eq(200)
+                expect(last_response).to have_http_status(:ok)
                 expect(decoded_response['resources'].length).to eq(1)
                 expect(decoded_response['resources'][0].fetch('metadata').fetch('guid')).to eq(instance1.guid)
               end
@@ -270,7 +270,7 @@ module VCAP::CloudController
 
                 get "v2/user_provided_service_instances?q=organization_guid:#{org1.guid}&q=name:#{instance1.name}"
 
-                expect(last_response.status).to eq(200)
+                expect(last_response).to have_http_status(:ok)
                 resources = decoded_response['resources']
                 expect(resources.length).to eq(1)
                 expect(resources[0].fetch('metadata').fetch('guid')).to eq(instance1.guid)
@@ -286,7 +286,7 @@ module VCAP::CloudController
 
               get "v2/user_provided_service_instances?q=organization_guid%20IN%20#{org1.guid},#{org2.guid}"
 
-              expect(last_response.status).to eq(200)
+              expect(last_response).to have_http_status(:ok)
               services = decoded_response['resources'].map { |resource| resource.fetch('metadata').fetch('guid') }
               expect(services.length).to eq(2)
               expect(services).to include(instance1.guid)
@@ -301,7 +301,7 @@ module VCAP::CloudController
 
               get 'v2/user_provided_service_instances?q=organization_guid'
 
-              expect(last_response.status).to eq(200)
+              expect(last_response).to have_http_status(:ok)
               services = decoded_response['resources'].map { |resource| resource.fetch('metadata').fetch('guid') }
               expect(services.length).to eq(0)
             end
@@ -329,7 +329,7 @@ module VCAP::CloudController
       it 'creates a user provided service instance' do
         post '/v2/user_provided_service_instances', req.to_json
 
-        expect(last_response.status).to eq 201
+        expect(last_response).to have_http_status :created
 
         service_instance = UserProvidedServiceInstance.first
         expect(service_instance.name).to eq 'my-upsi'
@@ -368,7 +368,7 @@ module VCAP::CloudController
             space_guid: space.guid
           }.to_json
 
-          expect(last_response.status).to eq(400)
+          expect(last_response).to have_http_status(:bad_request)
           expect(decoded_response['error_code']).to eq('CF-ServiceInstanceNameTooLong')
           expect(decoded_response['code']).to eq 60_009
         end
@@ -382,7 +382,7 @@ module VCAP::CloudController
         it 'fails with a 400 error' do
           post '/v2/user_provided_service_instances', req.to_json
 
-          expect(last_response.status).to eq 201
+          expect(last_response).to have_http_status :created
 
           service_instance = UserProvidedServiceInstance.first
           expect(service_instance.name).to eq 'my-upsi'
@@ -523,7 +523,7 @@ module VCAP::CloudController
           it 'succeeds without warnings' do
             post '/v2/user_provided_service_instances', req.to_json
 
-            expect(last_response.status).to eq 201
+            expect(last_response).to have_http_status :created
 
             warning = last_response.headers['X-Cf-Warnings']
             expect(warning).to be_nil
@@ -537,7 +537,7 @@ module VCAP::CloudController
 
           post '/v2/user_provided_service_instances', req.to_json
 
-          expect(last_response.status).to eq(400)
+          expect(last_response).to have_http_status(:bad_request)
           expect(decoded_response['code']).to eq(60_015)
           expect(decoded_response['error_code']).to eq('CF-ServiceInstanceTagsTooLong')
         end
@@ -563,7 +563,7 @@ module VCAP::CloudController
       it 'updates the user provided service instance' do
         put "/v2/user_provided_service_instances/#{service_instance.guid}", req.to_json
 
-        expect(last_response.status).to eq 201
+        expect(last_response).to have_http_status :created
 
         service_instance = UserProvidedServiceInstance.first
         expect(service_instance.name).to eq 'my-upsi'
@@ -617,7 +617,7 @@ module VCAP::CloudController
 
           put "/v2/user_provided_service_instances/#{service_instance.guid}", req.to_json
 
-          expect(last_response.status).to eq(400)
+          expect(last_response).to have_http_status(:bad_request)
           expect(decoded_response['code']).to eq(60_015)
           expect(decoded_response['error_code']).to eq('CF-ServiceInstanceTagsTooLong')
         end
@@ -639,19 +639,19 @@ module VCAP::CloudController
 
           put "/v2/user_provided_service_instances/#{instance.guid}", move_req
 
-          expect(last_response.status).to eq(400)
+          expect(last_response).to have_http_status(:bad_request)
           expect(decoded_response['description']).to match(/cannot change space for service instance/)
         end
 
         it 'succeeds when the space_guid does not change' do
           req = MultiJson.dump(space_guid: instance.space.guid)
           put "/v2/user_provided_service_instances/#{instance.guid}", req
-          expect(last_response.status).to eq 201
+          expect(last_response).to have_http_status :created
         end
 
         it 'succeeds when the space_guid is not provided' do
           put "/v2/user_provided_service_instances/#{instance.guid}", {}.to_json
-          expect(last_response.status).to eq 201
+          expect(last_response).to have_http_status :created
         end
       end
 
@@ -714,7 +714,7 @@ module VCAP::CloudController
       it 'associates the route and the service instance' do
         set_current_user(developer, email: 'developer@example.com')
         get "/v2/user_provided_service_instances/#{service_instance.guid}/routes"
-        expect(last_response.status).to eq(200)
+        expect(last_response).to have_http_status(:ok)
         expect(JSON.parse(last_response.body)['total_results']).to be(0)
 
         put "/v2/user_provided_service_instances/#{service_instance.guid}/routes/#{route.guid}"
@@ -735,7 +735,7 @@ module VCAP::CloudController
         expect(event.metadata['request']).to include({ 'route_guid' => route.guid })
 
         get "/v2/user_provided_service_instances/#{service_instance.guid}/routes"
-        expect(last_response.status).to eq(200)
+        expect(last_response).to have_http_status(:ok)
         expect(JSON.parse(last_response.body)['total_results']).to be(1)
       end
 
@@ -757,14 +757,14 @@ module VCAP::CloudController
           it 'allows an admin to bind a space' do
             set_current_user_as_admin
             put "/v2/user_provided_service_instances/#{service_instance.guid}/routes/#{route.guid}"
-            expect(last_response.status).to eq(201)
+            expect(last_response).to have_http_status(:created)
           end
         end
 
         context 'space developer' do
           it 'allows a developer to bind a space' do
             put "/v2/user_provided_service_instances/#{service_instance.guid}/routes/#{route.guid}"
-            expect(last_response.status).to eq(201)
+            expect(last_response).to have_http_status(:created)
           end
         end
 
@@ -774,7 +774,7 @@ module VCAP::CloudController
           it 'raises an error' do
             set_current_user(manager)
             put "/v2/user_provided_service_instances/#{service_instance.guid}/routes/#{route.guid}"
-            expect(last_response.status).to eq(403)
+            expect(last_response).to have_http_status(:forbidden)
             expect(last_response.body).to include('You are not authorized to perform the requested action')
           end
         end
@@ -783,7 +783,7 @@ module VCAP::CloudController
       context 'when the route does not exist' do
         it 'raises an error' do
           put "/v2/user_provided_service_instances/#{service_instance.guid}/routes/random-guid"
-          expect(last_response.status).to eq(404)
+          expect(last_response).to have_http_status(:not_found)
           expect(JSON.parse(last_response.body)['description']).
             to include('route could not be found')
         end
@@ -797,16 +797,16 @@ module VCAP::CloudController
         it 'raises RouteAlreadyBoundToServiceInstance' do
           new_service_instance = UserProvidedServiceInstance.make(:routing, space:)
           get "/v2/user_provided_service_instances/#{new_service_instance.guid}/routes"
-          expect(last_response.status).to eq(200)
+          expect(last_response).to have_http_status(:ok)
           expect(JSON.parse(last_response.body)['total_results']).to be(0)
 
           put "/v2/user_provided_service_instances/#{new_service_instance.guid}/routes/#{route.guid}"
-          expect(last_response.status).to eq(400)
+          expect(last_response).to have_http_status(:bad_request)
           expect(JSON.parse(last_response.body)['description']).
             to eq('A route may only be bound to a single service instance')
 
           get "/v2/user_provided_service_instances/#{new_service_instance.guid}/routes"
-          expect(last_response.status).to eq(200)
+          expect(last_response).to have_http_status(:ok)
           expect(JSON.parse(last_response.body)['total_results']).to be(0)
         end
 
@@ -876,7 +876,7 @@ module VCAP::CloudController
 
         it 'raises an error' do
           put "/v2/user_provided_service_instances/#{service_instance.guid}/routes/#{route.guid}"
-          expect(last_response.status).to eq(400)
+          expect(last_response).to have_http_status(:bad_request)
           expect(JSON.parse(last_response.body)['description']).
             to include('The service instance and the route are in different spaces.')
         end

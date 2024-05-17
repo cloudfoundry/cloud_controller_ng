@@ -7,7 +7,7 @@ module VCAP::CloudController
         it 'returns a 200' do
           get '/healthz'
 
-          expect(last_response.status).to eq(200)
+          expect(last_response).to have_http_status(:ok)
         end
       end
     end

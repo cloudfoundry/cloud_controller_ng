@@ -530,17 +530,17 @@ RSpec/SubjectDeclaration:
   Enabled: true
 RSpec/VerifiedDoubleReference:
   Enabled: true
-RSpec/Rails/AvoidSetupHook:
+RSpecRails/AvoidSetupHook:
   Enabled: true
-RSpec/Rails/HaveHttpStatus:
+RSpecRails/HaveHttpStatus:
   Enabled: true
-RSpec/Rails/InferredSpecType:
+RSpecRails/InferredSpecType:
   Enabled: true
-RSpec/Rails/MinitestAssertions:
+RSpecRails/MinitestAssertions:
   Enabled: true
-RSpec/Rails/NegationBeValid:
+RSpecRails/NegationBeValid:
   Enabled: true
-RSpec/Rails/TravelAround:
+RSpecRails/TravelAround:
   Enabled: true
 Style/SingleLineDoEndBlock:
   Enabled: true

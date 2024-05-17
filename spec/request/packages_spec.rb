@@ -73,7 +73,7 @@ RSpec.describe 'Packages' do
         }.to_json
 
         parsed_response = MultiJson.load(last_response.body)
-        expect(last_response.status).to eq(201)
+        expect(last_response).to have_http_status(:created)
         expect(parsed_response).to be_a_response_like(expected_response)
 
         event = VCAP::CloudController::Event.last
@@ -169,7 +169,7 @@ RSpec.describe 'Packages' do
           }
         }
 
-        expect(last_response.status).to eq(201)
+        expect(last_response).to have_http_status(:created)
         parsed_response = MultiJson.load(last_response.body)
         expect(parsed_response).to be_a_response_like(expected_response)
 
@@ -370,7 +370,7 @@ RSpec.describe 'Packages' do
 
         parsed_response = MultiJson.load(last_response.body)
 
-        expect(last_response.status).to eq(200)
+        expect(last_response).to have_http_status(:ok)
         expect(parsed_response).to be_a_response_like(expected_response)
       end
 
@@ -409,7 +409,7 @@ RSpec.describe 'Packages' do
 
         parsed_response = MultiJson.load(last_response.body)
 
-        expect(last_response.status).to eq(200)
+        expect(last_response).to have_http_status(:ok)
         expect(parsed_response['resources'].count).to eq(3)
         expect(parsed_response['resources'].pluck('type').uniq).to eq(['bits'])
         expect(parsed_response['pagination']).to eq(expected_pagination)
@@ -434,7 +434,7 @@ RSpec.describe 'Packages' do
 
         parsed_response = MultiJson.load(last_response.body)
 
-        expect(last_response.status).to eq(200)
+        expect(last_response).to have_http_status(:ok)
         expect(parsed_response['resources'].count).to eq(2)
         expect(parsed_response['resources'].pluck('state').uniq).to eq(['PROCESSING_UPLOAD'])
         expect(parsed_response['pagination']).to eq(expected_pagination)
@@ -458,7 +458,7 @@ RSpec.describe 'Packages' do
 
         parsed_response = MultiJson.load(last_response.body)
 
-        expect(last_response.status).to eq(200)
+        expect(last_response).to have_http_status(:ok)
         expect(parsed_response['resources'].pluck('guid')).to contain_exactly(package1.guid, package2.guid)
         expect(parsed_response['pagination']).to eq(expected_pagination)
       end
@@ -604,7 +604,7 @@ RSpec.describe 'Packages' do
 
           parsed_response = MultiJson.load(last_response.body)
 
-          expect(last_response.status).to eq(200)
+          expect(last_response).to have_http_status(:ok)
           expect(parsed_response['resources'].count).to eq(3)
           expect(parsed_response['resources'].pluck('type').uniq).to eq(['bits'])
           expect(parsed_response['pagination']).to eq(expected_pagination)
@@ -631,7 +631,7 @@ RSpec.describe 'Packages' do
 
           parsed_response = MultiJson.load(last_response.body)
 
-          expect(last_response.status).to eq(200)
+          expect(last_response).to have_http_status(:ok)
           expect(parsed_response['resources'].count).to eq(3)
           expect(parsed_response['resources'].pluck('state').uniq).to eq(['PROCESSING_UPLOAD'])
           expect(parsed_response['pagination']).to eq(expected_pagination)
@@ -656,7 +656,7 @@ RSpec.describe 'Packages' do
 
           parsed_response = MultiJson.load(last_response.body)
 
-          expect(last_response.status).to eq(200)
+          expect(last_response).to have_http_status(:ok)
           expect(parsed_response['resources'].pluck('guid')).to contain_exactly(package1.guid, package2.guid)
           expect(parsed_response['pagination']).to eq(expected_pagination)
         end
@@ -680,7 +680,7 @@ RSpec.describe 'Packages' do
 
           parsed_response = MultiJson.load(last_response.body)
 
-          expect(last_response.status).to eq(200)
+          expect(last_response).to have_http_status(:ok)
           expect(parsed_response['resources'].pluck('guid')).to contain_exactly(package1.guid, package2.guid)
           expect(parsed_response['pagination']).to eq(expected_pagination)
         end
@@ -711,7 +711,7 @@ RSpec.describe 'Packages' do
 
           parsed_response = MultiJson.load(last_response.body)
 
-          expect(last_response.status).to eq(200)
+          expect(last_response).to have_http_status(:ok)
           expect(parsed_response['resources'].pluck('guid')).to contain_exactly(package_on_space2.guid, package_on_space1.guid)
           expect(parsed_response['pagination']).to eq(expected_pagination)
         end
@@ -749,7 +749,7 @@ RSpec.describe 'Packages' do
 
           parsed_response = MultiJson.load(last_response.body)
 
-          expect(last_response.status).to eq(200)
+          expect(last_response).to have_http_status(:ok)
           expect(parsed_response['resources'].pluck('guid')).to contain_exactly(package_in_org1.guid, package_in_org2.guid)
           expect(parsed_response['pagination']).to eq(expected_pagination)
         end
@@ -773,7 +773,7 @@ RSpec.describe 'Packages' do
 
           parsed_response = MultiJson.load(last_response.body)
 
-          expect(last_response.status).to eq(200)
+          expect(last_response).to have_http_status(:ok)
           expect(parsed_response['resources'].count).to eq(1)
           expect(parsed_response['resources'][0]['guid']).to eq(target.guid)
           expect(parsed_response['pagination']).to eq(expected_pagination)
@@ -880,7 +880,7 @@ RSpec.describe 'Packages' do
           }
         }
         parsed_response = MultiJson.load(last_response.body)
-        expect(last_response.status).to eq(200)
+        expect(last_response).to have_http_status(:ok)
         expect(parsed_response).to be_a_response_like(expected_response)
 
         expected_metadata = { package_guid: package_model.guid }.to_json
@@ -944,7 +944,7 @@ RSpec.describe 'Packages' do
           }
           expect_any_instance_of(ActiveSupport::Logger).to receive(:info).with(JSON.generate(expected_json))
           post "/v3/packages/#{guid}/upload", packages_params.to_json, user_header
-          expect(last_response.status).to eq(200)
+          expect(last_response).to have_http_status(:ok)
         end
       end
     end
@@ -1044,7 +1044,7 @@ RSpec.describe 'Packages' do
       Timecop.freeze do
         get "/v3/packages/#{guid}/download", {}, user_header
 
-        expect(last_response.status).to eq(302)
+        expect(last_response).to have_http_status(:found)
         expect(last_response.headers['Location']).to eq(bits_download_url)
 
         expected_metadata = { package_guid: package_model.guid }.to_json
@@ -1130,7 +1130,7 @@ RSpec.describe 'Packages' do
       }
 
       parsed_response = MultiJson.load(last_response.body)
-      expect(last_response.status).to eq(200)
+      expect(last_response).to have_http_status(:ok)
       expect(parsed_response['metadata']).to eq(expected_metadata)
     end
 
@@ -1192,12 +1192,12 @@ RSpec.describe 'Packages' do
     it 'deletes a package asynchronously' do
       delete "/v3/packages/#{guid}", {}, user_header
 
-      expect(last_response.status).to eq(202)
+      expect(last_response).to have_http_status(:accepted)
       expect(last_response.body).to eq('')
       expect(last_response.header['Location']).to match(%r{jobs/[a-fA-F0-9-]+})
       execute_all_jobs(expected_successes: 2, expected_failures: 0)
       get "/v3/packages/#{guid}", {}, user_header
-      expect(last_response.status).to eq(404)
+      expect(last_response).to have_http_status(:not_found)
 
       expected_metadata = { package_guid: guid }.to_json
 
@@ -1286,7 +1286,7 @@ RSpec.describe 'Packages' do
     it 'updates a package' do
       patch "/internal/v4/packages/#{guid}", body
 
-      expect(last_response.status).to eq(204)
+      expect(last_response).to have_http_status(:no_content)
       expect(last_response.body).to eq('')
     end
   end

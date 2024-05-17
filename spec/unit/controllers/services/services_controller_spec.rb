@@ -240,7 +240,7 @@ module VCAP::CloudController
 
       it 'returns the service broker name in the response' do
         get '/v2/services'
-        expect(last_response.status).to eq 200
+        expect(last_response).to have_http_status :ok
         expect(decoded_response['resources'].first['entity'].fetch('service_broker_name')).to eq broker_name
       end
 

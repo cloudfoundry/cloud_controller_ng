@@ -17,7 +17,7 @@ RSpec.describe 'Errors' do
         patch '/v3/apps/some-guid/features/ssh', '}}-invalid', user_header
       end.to output(/Error occurred while parsing request parameters.\nContents:\n\n}}-invalid\n/).to_stderr
 
-      expect(last_response.status).to eq(400)
+      expect(last_response).to have_http_status(:bad_request)
       expect(last_response.body).to include('Request invalid due to parse error: invalid request body')
     end
   end

@@ -191,7 +191,7 @@ RSpec.describe 'Processes' do
 
       parsed_response = MultiJson.load(last_response.body)
 
-      expect(last_response.status).to eq(200)
+      expect(last_response).to have_http_status(:ok)
       expect(parsed_response).to be_a_response_like(expected_response)
     end
 
@@ -211,7 +211,7 @@ RSpec.describe 'Processes' do
 
       parsed_response = MultiJson.load(last_response.body)
 
-      expect(last_response.status).to eq(200)
+      expect(last_response).to have_http_status(:ok)
       expect(parsed_response['resources'].count).to eq(1)
       expect(parsed_response['resources'][0]['guid']).to eq(worker_process.guid)
       expect(parsed_response['pagination']).to eq(expected_pagination)
@@ -231,7 +231,7 @@ RSpec.describe 'Processes' do
             'previous' => nil
           }
 
-          expect(last_response.status).to eq(200)
+          expect(last_response).to have_http_status(:ok)
 
           parsed_response = MultiJson.load(last_response.body)
 
@@ -273,7 +273,7 @@ RSpec.describe 'Processes' do
             'previous' => nil
           }
 
-          expect(last_response.status).to eq(200)
+          expect(last_response).to have_http_status(:ok)
 
           parsed_response = MultiJson.load(last_response.body)
 
@@ -313,7 +313,7 @@ RSpec.describe 'Processes' do
             'previous' => nil
           }
 
-          expect(last_response.status).to eq(200)
+          expect(last_response).to have_http_status(:ok)
 
           parsed_response = MultiJson.load(last_response.body)
 
@@ -348,7 +348,7 @@ RSpec.describe 'Processes' do
             'previous' => nil
           }
 
-          expect(last_response.status).to eq(200)
+          expect(last_response).to have_http_status(:ok)
 
           parsed_response = MultiJson.load(last_response.body)
 
@@ -371,7 +371,7 @@ RSpec.describe 'Processes' do
             'previous' => nil
           }
 
-          expect(last_response.status).to eq(200)
+          expect(last_response).to have_http_status(:ok)
 
           parsed_response = MultiJson.load(last_response.body)
 
@@ -459,7 +459,7 @@ RSpec.describe 'Processes' do
 
       parsed_response = MultiJson.load(last_response.body)
 
-      expect(last_response.status).to eq(200)
+      expect(last_response).to have_http_status(:ok)
       expect(parsed_response).to be_a_response_like(expected_response)
     end
 
@@ -472,7 +472,7 @@ RSpec.describe 'Processes' do
 
       parsed_response = MultiJson.load(last_response.body)
 
-      expect(last_response.status).to eq(200)
+      expect(last_response).to have_http_status(:ok)
       expect(parsed_response['command']).to eq('[PRIVATE DATA HIDDEN]')
     end
 
@@ -604,7 +604,7 @@ RSpec.describe 'Processes' do
 
           parsed_response = MultiJson.load(last_response.body)
 
-          expect(last_response.status).to eq(200)
+          expect(last_response).to have_http_status(:ok)
           expect(parsed_response).to be_a_response_like(expected_response)
         end
       end
@@ -619,7 +619,7 @@ RSpec.describe 'Processes' do
 
           parsed_response = MultiJson.load(last_response.body)
 
-          expect(last_response.status).to eq(200)
+          expect(last_response).to have_http_status(:ok)
           expect(parsed_response['resources'][0]['usage']['cpu_entitlement']).to be_nil
         end
       end
@@ -631,7 +631,7 @@ RSpec.describe 'Processes' do
 
         parsed_response = MultiJson.load(last_response.body)
 
-        expect(last_response.status).to eq(200)
+        expect(last_response).to have_http_status(:ok)
         expect(parsed_response).to be_a_response_like(expected_response)
       end
     end
@@ -777,7 +777,7 @@ RSpec.describe 'Processes' do
 
       parsed_response = MultiJson.load(last_response.body)
 
-      expect(last_response.status).to eq(200)
+      expect(last_response).to have_http_status(:ok)
       expect(parsed_response).to be_a_response_like(expected_response)
 
       process.reload
@@ -901,7 +901,7 @@ RSpec.describe 'Processes' do
 
       parsed_response = MultiJson.load(last_response.body)
 
-      expect(last_response.status).to eq(202)
+      expect(last_response).to have_http_status(:accepted)
       expect(parsed_response).to be_a_response_like(expected_response)
 
       process.reload
@@ -985,7 +985,7 @@ RSpec.describe 'Processes' do
 
         post "/v3/processes/#{process.guid}/actions/scale", scale_request.to_json, headers_for(space_supporter)
 
-        expect(last_response.status).to eq(202)
+        expect(last_response).to have_http_status(:accepted)
         expect(parsed_response).to be_a_response_like(expected_response)
 
         process.reload
@@ -1003,7 +1003,7 @@ RSpec.describe 'Processes' do
 
       post "/v3/processes/#{process.guid}/actions/scale", scale_request.to_json, developer_headers
 
-      expect(last_response.status).to eq(422)
+      expect(last_response).to have_http_status(:unprocessable_entity)
       expect(parsed_response['errors'][0]['detail']).to eq 'Memory in mb must be less than or equal to 2147483647'
 
       process.reload
@@ -1024,7 +1024,7 @@ RSpec.describe 'Processes' do
 
       post "/v3/processes/#{process.guid}/actions/scale", scale_request.to_json, developer_headers
 
-      expect(last_response.status).to eq(422)
+      expect(last_response).to have_http_status(:unprocessable_entity)
       expect(parsed_response['errors'][0]['detail']).to eq 'The requested memory allocation is not large enough to run all of your sidecar processes'
 
       process.reload
@@ -1038,7 +1038,7 @@ RSpec.describe 'Processes' do
 
       post "/v3/processes/#{process.guid}/actions/scale", scale_request.to_json, developer_headers
 
-      expect(last_response.status).to eq(422)
+      expect(last_response).to have_http_status(:unprocessable_entity)
       expect(parsed_response['errors'][0]['detail']).to eq 'Log rate limit in bytes per second must be greater than or equal to -1'
 
       process.reload
@@ -1103,7 +1103,7 @@ RSpec.describe 'Processes' do
 
       delete "/v3/processes/#{process.guid}/instances/0", nil, developer_headers
 
-      expect(last_response.status).to eq(204)
+      expect(last_response).to have_http_status(:no_content)
 
       events        = VCAP::CloudController::Event.where(actor: developer.guid).all
       process_event = events.find { |e| e.type == 'audit.app.process.terminate_instance' }
@@ -1307,7 +1307,7 @@ RSpec.describe 'Processes' do
 
       parsed_response = MultiJson.load(last_response.body)
 
-      expect(last_response.status).to eq(200)
+      expect(last_response).to have_http_status(:ok)
       expect(parsed_response).to be_a_response_like(expected_response)
     end
 
@@ -1325,7 +1325,7 @@ RSpec.describe 'Processes' do
             'previous' => nil
           }
 
-          expect(last_response.status).to eq(200)
+          expect(last_response).to have_http_status(:ok)
 
           parsed_response = MultiJson.load(last_response.body)
 
@@ -1348,7 +1348,7 @@ RSpec.describe 'Processes' do
             'previous' => nil
           }
 
-          expect(last_response.status).to eq(200)
+          expect(last_response).to have_http_status(:ok)
 
           parsed_response = MultiJson.load(last_response.body)
 
@@ -1437,7 +1437,7 @@ RSpec.describe 'Processes' do
 
       parsed_response = MultiJson.load(last_response.body)
 
-      expect(last_response.status).to eq(200)
+      expect(last_response).to have_http_status(:ok)
       expect(parsed_response).to be_a_response_like(expected_response)
     end
 
@@ -1452,7 +1452,7 @@ RSpec.describe 'Processes' do
 
       parsed_response = MultiJson.load(last_response.body)
 
-      expect(last_response.status).to eq(200)
+      expect(last_response).to have_http_status(:ok)
       expect(parsed_response['command']).to eq('[PRIVATE DATA HIDDEN]')
     end
 
@@ -1563,7 +1563,7 @@ RSpec.describe 'Processes' do
 
       parsed_response = MultiJson.load(last_response.body)
 
-      expect(last_response.status).to eq(200)
+      expect(last_response).to have_http_status(:ok)
       expect(parsed_response).to be_a_response_like(expected_response)
 
       process.reload
@@ -1687,7 +1687,7 @@ RSpec.describe 'Processes' do
       post "/v3/apps/#{app_model.guid}/processes/web/actions/scale", scale_request.to_json, developer_headers
       parsed_response = MultiJson.load(last_response.body)
 
-      expect(last_response.status).to eq(202)
+      expect(last_response).to have_http_status(:accepted)
       expect(parsed_response).to be_a_response_like(expected_response)
 
       process.reload
@@ -1736,7 +1736,7 @@ RSpec.describe 'Processes' do
       it 'fails to scale the process' do
         post "/v3/apps/#{app_model.guid}/processes/web/actions/scale", scale_request.to_json, developer_headers
 
-        expect(last_response.status).to eq(422)
+        expect(last_response).to have_http_status(:unprocessable_entity)
         expect(parsed_response['errors'][0]['detail']).to eq 'log_rate_limit exceeds organization log rate quota'
 
         process.reload
@@ -1755,7 +1755,7 @@ RSpec.describe 'Processes' do
       it 'can scale a process' do
         post "/v3/apps/#{app_model.guid}/processes/web/actions/scale", scale_request.to_json, headers_for(space_supporter)
 
-        expect(last_response.status).to eq(202)
+        expect(last_response).to have_http_status(:accepted)
         expect(parsed_response).to be_a_response_like(expected_response)
 
         process.reload
@@ -1803,7 +1803,7 @@ RSpec.describe 'Processes' do
     it 'terminates a single instance of a process belonging to an app' do
       delete "/v3/apps/#{app_model.guid}/processes/web/instances/0", nil, developer_headers
 
-      expect(last_response.status).to eq(204)
+      expect(last_response).to have_http_status(:no_content)
 
       events        = VCAP::CloudController::Event.where(actor: developer.guid).all
       process_event = events.find { |e| e.type == 'audit.app.process.terminate_instance' }

@@ -14,7 +14,7 @@ RSpec.describe 'Environment group variables' do
   describe 'GET /v3/environment_variable_groups/:name' do
     it 'gets the environment variables for the running group' do
       get '/v3/environment_variable_groups/running', nil, user_header
-      expect(last_response.status).to eq(200)
+      expect(last_response).to have_http_status(:ok)
 
       parsed_response = MultiJson.load(last_response.body)
       expect(parsed_response).to match_json_response(
@@ -36,7 +36,7 @@ RSpec.describe 'Environment group variables' do
 
     it 'gets the environment variables for the staging group' do
       get '/v3/environment_variable_groups/staging', nil, user_header
-      expect(last_response.status).to eq(200)
+      expect(last_response).to have_http_status(:ok)
 
       parsed_response = MultiJson.load(last_response.body)
       expect(parsed_response).to match_json_response(
@@ -60,7 +60,7 @@ RSpec.describe 'Environment group variables' do
       it 'gets the environment variables for the running group' do
         get '/v3/environment_variable_groups/purple', nil, user_header
 
-        expect(last_response.status).to eq(404)
+        expect(last_response).to have_http_status(:not_found)
         parsed_response = MultiJson.load(last_response.body)
         expect(parsed_response['errors'][0]['detail']).to include('Environment variable group not found')
       end
@@ -69,7 +69,7 @@ RSpec.describe 'Environment group variables' do
     context 'when the user is not logged in' do
       it 'returns 401 for Unauthenticated requests' do
         get '/v3/environment_variable_groups/staging', nil, base_json_headers
-        expect(last_response.status).to eq(401)
+        expect(last_response).to have_http_status(:unauthorized)
       end
     end
 
@@ -101,7 +101,7 @@ RSpec.describe 'Environment group variables' do
     context 'running' do
       it 'updates the environment variables for the running group' do
         patch '/v3/environment_variable_groups/running', params.to_json, admin_header
-        expect(last_response.status).to eq(200)
+        expect(last_response).to have_http_status(:ok)
 
         parsed_response = MultiJson.load(last_response.body)
         expect(parsed_response).to match_json_response(
@@ -125,7 +125,7 @@ RSpec.describe 'Environment group variables' do
     context 'staging' do
       it 'updates the environment variables for the staging group' do
         patch '/v3/environment_variable_groups/staging', params.to_json, admin_header
-        expect(last_response.status).to eq(200)
+        expect(last_response).to have_http_status(:ok)
 
         parsed_response = MultiJson.load(last_response.body)
         expect(parsed_response).to match_json_response(
@@ -165,7 +165,7 @@ RSpec.describe 'Environment group variables' do
               }
             }
           )
-          expect(last_response.status).to eq(200)
+          expect(last_response).to have_http_status(:ok)
         end
       end
     end
@@ -211,7 +211,7 @@ RSpec.describe 'Environment group variables' do
       it 'returns a 422' do
         patch '/v3/environment_variable_groups/running', request_with_invalid_input.to_json, admin_header
 
-        expect(last_response.status).to eq(422)
+        expect(last_response).to have_http_status(:unprocessable_entity)
       end
     end
 
@@ -219,7 +219,7 @@ RSpec.describe 'Environment group variables' do
       it 'returns a 404' do
         patch '/v3/environment_variable_groups/purple', params.to_json, admin_header
 
-        expect(last_response.status).to eq(404)
+        expect(last_response).to have_http_status(:not_found)
         parsed_response = MultiJson.load(last_response.body)
         expect(parsed_response['errors'][0]['detail']).to include('Environment variable group not found')
       end
@@ -240,7 +240,7 @@ RSpec.describe 'Environment group variables' do
         it 'returns a 422' do
           patch '/v3/environment_variable_groups/staging', big_params.to_json, admin_header
 
-          expect(last_response.status).to eq(422)
+          expect(last_response).to have_http_status(:unprocessable_entity)
           parsed_response = MultiJson.load(last_response.body)
           expect(parsed_response['errors'][0]['detail']).to include(
             'Environment variable group is too large. Specify fewer variables or reduce key/value lengths.'
@@ -253,7 +253,7 @@ RSpec.describe 'Environment group variables' do
       it 'returns 401 for Unauthenticated requests' do
         patch '/v3/environment_variable_groups/running', params.to_json, base_json_headers
 
-        expect(last_response.status).to eq(401)
+        expect(last_response).to have_http_status(:unauthorized)
       end
     end
   end

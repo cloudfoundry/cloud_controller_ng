@@ -205,7 +205,7 @@ RSpec.describe 'Revisions' do
           revision3 = VCAP::CloudController::RevisionModel.make(app: app_model, version: 44, description: 'Rollback to revision 42')
 
           get "/v3/apps/#{app_model.guid}/revisions?per_page=2&versions=42,44", nil, user_header
-          expect(last_response.status).to eq(200)
+          expect(last_response).to have_http_status(:ok)
 
           parsed_response = MultiJson.load(last_response.body)
           expect(parsed_response).to be_a_response_like(
@@ -316,7 +316,7 @@ RSpec.describe 'Revisions' do
 
           it 'returns the matching revisions' do
             get "/v3/apps/#{app_model.guid}/revisions?label_selector=!fruit,env=prod,animal in (dog,horse)", nil, user_header
-            expect(last_response.status).to eq(200)
+            expect(last_response).to have_http_status(:ok)
 
             parsed_response = MultiJson.load(last_response.body)
             expect(parsed_response['resources'].pluck('guid')).to contain_exactly(revisionB.guid, revisionC.guid)
@@ -459,7 +459,7 @@ RSpec.describe 'Revisions' do
 
     it 'updates the revision with metadata' do
       patch "/v3/revisions/#{revision.guid}", update_request, user_header
-      expect(last_response.status).to eq(200)
+      expect(last_response).to have_http_status(:ok)
 
       parsed_response = MultiJson.load(last_response.body)
       expect(parsed_response).to be_a_response_like(

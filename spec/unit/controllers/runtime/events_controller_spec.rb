@@ -127,15 +127,15 @@ module VCAP::CloudController
 
         it 'can retrieve events for deleted spaces' do
           get "/v2/events?q=space_guid:#{@space_b.guid}"
-          expect(last_response.status).to(eq(200))
+          expect(last_response).to(have_http_status(:ok))
           parsed_body = MultiJson.load(last_response.body)
           before_size = parsed_body['total_results']
 
           delete "/v2/spaces/#{@space_b.guid}"
-          expect(last_response.status).to eq(204)
+          expect(last_response).to have_http_status(:no_content)
 
           get "/v2/events?q=space_guid:#{@space_b.guid}"
-          expect(last_response.status).to eq(200)
+          expect(last_response).to have_http_status(:ok)
           parsed_body = MultiJson.load(last_response.body)
           after_size = parsed_body['total_results']
           # 1 more event for the deletion.
@@ -148,16 +148,16 @@ module VCAP::CloudController
 
         it 'can retrieve events for deleted organizations' do
           get "/v2/events?q=organization_guid:#{@org_a.guid}"
-          expect(last_response.status).to(eq(200))
+          expect(last_response).to(have_http_status(:ok))
           parsed_body = MultiJson.load(last_response.body)
           before_size = parsed_body['total_results']
 
           # Have to delete the space as well -- but this adds only one event.
           delete "/v2/organizations/#{@org_a.guid}?recursive=true&async=false"
-          expect(last_response.status).to eq(204)
+          expect(last_response).to have_http_status(:no_content)
 
           get "/v2/events?q=organization_guid:#{@org_a.guid}"
-          expect(last_response.status).to eq(200)
+          expect(last_response).to have_http_status(:ok)
           parsed_body = MultiJson.load(last_response.body)
           after_size = parsed_body['total_results']
           # 2 more events for the org and space deletion due to recursive deletes.

@@ -25,7 +25,7 @@ module VCAP::CloudController
           it 'fails with a 400' do
             post url, 'this is not json'
 
-            expect(last_response.status).to eq(400)
+            expect(last_response).to have_http_status(:bad_request)
             expect(last_response.body).to match(/MessageParseError/)
           end
         end
@@ -33,7 +33,7 @@ module VCAP::CloudController
 
       it 'audits the app crashed event' do
         post url, MultiJson.dump(crashed_request)
-        expect(last_response.status).to eq(200)
+        expect(last_response).to have_http_status(:ok)
         expect(last_response.body).to eq '{}'
 
         app_event = Event.find(actee: app_model.guid, actor_type: 'app')
@@ -52,7 +52,7 @@ module VCAP::CloudController
 
       it 'audits the process crashed event' do
         post url, MultiJson.dump(crashed_request)
-        expect(last_response.status).to eq(200)
+        expect(last_response).to have_http_status(:ok)
         expect(last_response.body).to eq '{}'
 
         app_event = Event.find(actee: app_model.guid, actor_type: 'process')
@@ -77,7 +77,7 @@ module VCAP::CloudController
         it 'fails with a 404' do
           post url, MultiJson.dump(crashed_request)
 
-          expect(last_response.status).to eq(404)
+          expect(last_response).to have_http_status(:not_found)
           expect(last_response.body).to match(/ProcessNotFound/)
         end
       end

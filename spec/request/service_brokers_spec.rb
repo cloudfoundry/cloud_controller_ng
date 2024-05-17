@@ -1410,17 +1410,17 @@ RSpec.describe 'V3 service brokers' do
     def assert_broker_state(broker_json)
       job_location = last_response.headers['Location']
       get job_location, {}, admin_headers
-      expect(last_response.status).to eq(200)
+      expect(last_response).to have_http_status(:ok)
       broker_url = parsed_response.dig('links', 'service_brokers', 'href')
 
       get broker_url, {}, admin_headers
-      expect(last_response.status).to eq(200)
+      expect(last_response).to have_http_status(:ok)
       expect(parsed_response).to match_json_response(broker_json)
 
       execute_all_jobs(expected_successes: 1, expected_failures: 0)
 
       get broker_url, {}, admin_headers
-      expect(last_response.status).to eq(200)
+      expect(last_response).to have_http_status(:ok)
 
       expect(parsed_response).to match_json_response(broker_json)
 
@@ -1453,7 +1453,7 @@ RSpec.describe 'V3 service brokers' do
           execute_all_jobs(expected_successes: 1, expected_failures: 0)
 
           get "/v3/service_brokers/#{broker.guid}", {}, admin_headers
-          expect(last_response.status).to eq(404)
+          expect(last_response).to have_http_status(:not_found)
 
           expect(VCAP::CloudController::ServiceBrokerLabelModel.where(service_broker: broker).all).to be_empty
           expect(VCAP::CloudController::ServiceBrokerAnnotationModel.where(service_broker: broker).all).to be_empty
@@ -1506,7 +1506,7 @@ RSpec.describe 'V3 service brokers' do
 
           it 'does not delete the broker' do
             get "/v3/service_brokers/#{global_broker.guid}", {}, admin_headers
-            expect(last_response.status).to eq(200)
+            expect(last_response).to have_http_status(:ok)
           end
 
           it 'marks the broker as deleting' do
@@ -1595,7 +1595,7 @@ RSpec.describe 'V3 service brokers' do
 
         it 'does not delete the broker' do
           get "/v3/service_brokers/#{global_broker.guid}", {}, admin_headers
-          expect(last_response.status).to eq(200)
+          expect(last_response).to have_http_status(:ok)
         end
 
         it 'updates the broker state' do

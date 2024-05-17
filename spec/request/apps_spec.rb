@@ -134,7 +134,7 @@ RSpec.describe 'Apps' do
 
       it 'creates an app' do
         post '/v3/apps', create_request.to_json, user_header
-        expect(last_response.status).to eq(201)
+        expect(last_response).to have_http_status(:created)
 
         parsed_response = MultiJson.load(last_response.body)
         app_guid = parsed_response['guid']
@@ -206,7 +206,7 @@ RSpec.describe 'Apps' do
 
       it 'creates an empty web process with the same guid as the app (so it is visible on the v2 apps api)' do
         post '/v3/apps', create_request.to_json, user_header
-        expect(last_response.status).to eq(201)
+        expect(last_response).to have_http_status(:created)
 
         parsed_response = MultiJson.load(last_response.body)
         app_guid = parsed_response['guid']
@@ -341,7 +341,7 @@ RSpec.describe 'Apps' do
           it 'creates an app with the buildpack lifecycle when none is specified in the request' do
             post '/v3/apps', create_request.to_json, user_header
 
-            expect(last_response.status).to eq(201)
+            expect(last_response).to have_http_status(:created)
             parsed_response = MultiJson.load(last_response.body)
             expect(parsed_response['lifecycle']['type']).to eq('buildpack')
           end
@@ -535,7 +535,7 @@ RSpec.describe 'Apps' do
         VCAP::CloudController::AppModel.make
 
         get '/v3/apps?per_page=2&include=space', nil, user_header
-        expect(last_response.status).to eq(200)
+        expect(last_response).to have_http_status(:ok)
 
         parsed_response = MultiJson.load(last_response.body)
         expect(parsed_response).to be_a_response_like(
@@ -713,7 +713,7 @@ RSpec.describe 'Apps' do
 
         parsed_response = MultiJson.load(last_response.body)
 
-        expect(last_response.status).to eq(200)
+        expect(last_response).to have_http_status(:ok)
         expect(parsed_response['resources'].pluck('name')).to eq(%w[name1 name3])
         expect(parsed_response['pagination']).to eq(expected_pagination)
       end
@@ -736,7 +736,7 @@ RSpec.describe 'Apps' do
 
         parsed_response = MultiJson.load(last_response.body)
 
-        expect(last_response.status).to eq(200)
+        expect(last_response).to have_http_status(:ok)
         expect(parsed_response['resources'].pluck('name')).to eq(%w[name1 name2])
         expect(parsed_response['pagination']).to eq(expected_pagination)
       end
@@ -759,7 +759,7 @@ RSpec.describe 'Apps' do
 
         parsed_response = MultiJson.load(last_response.body)
 
-        expect(last_response.status).to eq(200)
+        expect(last_response).to have_http_status(:ok)
         expect(parsed_response['resources'].pluck('name')).to eq(%w[name1 name3])
         expect(parsed_response['pagination']).to eq(expected_pagination)
       end
@@ -782,7 +782,7 @@ RSpec.describe 'Apps' do
 
         parsed_response = MultiJson.load(last_response.body)
 
-        expect(last_response.status).to eq(200)
+        expect(last_response).to have_http_status(:ok)
         expect(parsed_response['resources'].pluck('name')).to eq(%w[name1 name3])
         expect(parsed_response['pagination']).to eq(expected_pagination)
       end
@@ -817,7 +817,7 @@ RSpec.describe 'Apps' do
 
         parsed_response = MultiJson.load(last_response.body)
 
-        expect(last_response.status).to eq(200)
+        expect(last_response).to have_http_status(:ok)
         expect(parsed_response['resources'].pluck('name')).to eq(%w[name1 name2])
         expect(parsed_response['pagination']).to eq(expected_pagination)
       end
@@ -852,7 +852,7 @@ RSpec.describe 'Apps' do
 
         parsed_response = MultiJson.load(last_response.body)
 
-        expect(last_response.status).to eq(200)
+        expect(last_response).to have_http_status(:ok)
         expect(parsed_response['resources'].pluck('name')).to eq(['name1'])
         expect(parsed_response['pagination']).to eq(expected_pagination)
       end
@@ -878,7 +878,7 @@ RSpec.describe 'Apps' do
 
         parsed_response = MultiJson.load(last_response.body)
 
-        expect(last_response.status).to eq(200)
+        expect(last_response).to have_http_status(:ok)
         expect(parsed_response['resources'].pluck('name')).to eq(%w[name1 name3])
         expect(parsed_response['pagination']).to eq(expected_pagination)
       end
@@ -901,7 +901,7 @@ RSpec.describe 'Apps' do
 
         # ASCENDING
         get '/v3/apps?order_by=name', nil, user_header
-        expect(last_response.status).to eq(200)
+        expect(last_response).to have_http_status(:ok)
         parsed_response = MultiJson.load(last_response.body)
         app_names = parsed_response['resources'].pluck('name')
         expect(app_names).to eq(ascending)
@@ -909,7 +909,7 @@ RSpec.describe 'Apps' do
 
         # DESCENDING
         get '/v3/apps?order_by=-name', nil, user_header
-        expect(last_response.status).to eq(200)
+        expect(last_response).to have_http_status(:ok)
         parsed_response = MultiJson.load(last_response.body)
         app_names = parsed_response['resources'].pluck('name')
         expect(app_names).to eq(descending)
@@ -926,7 +926,7 @@ RSpec.describe 'Apps' do
 
         # ASCENDING
         get '/v3/apps?order_by=state', nil, user_header
-        expect(last_response.status).to eq(200)
+        expect(last_response).to have_http_status(:ok)
         parsed_response = MultiJson.load(last_response.body)
         app_states = parsed_response['resources'].pluck('state')
         expect(app_states).to eq(ascending)
@@ -934,7 +934,7 @@ RSpec.describe 'Apps' do
 
         # DESCENDING
         get '/v3/apps?order_by=-state', nil, user_header
-        expect(last_response.status).to eq(200)
+        expect(last_response).to have_http_status(:ok)
         parsed_response = MultiJson.load(last_response.body)
         app_states = parsed_response['resources'].pluck('state')
         expect(app_states).to eq(descending)
@@ -966,7 +966,7 @@ RSpec.describe 'Apps' do
           'previous' => nil
         }
 
-        expect(last_response.status).to eq(200)
+        expect(last_response).to have_http_status(:ok)
         expect(parsed_response['resources'].pluck('guid')).to contain_exactly(app1.guid)
         expect(parsed_response['pagination']).to eq(expected_pagination)
       end
@@ -985,7 +985,7 @@ RSpec.describe 'Apps' do
           'previous' => nil
         }
 
-        expect(last_response.status).to eq(200)
+        expect(last_response).to have_http_status(:ok)
         expect(parsed_response['resources'].pluck('guid')).to contain_exactly(app2.guid)
         expect(parsed_response['pagination']).to eq(expected_pagination)
       end
@@ -1004,7 +1004,7 @@ RSpec.describe 'Apps' do
           'previous' => nil
         }
 
-        expect(last_response.status).to eq(200)
+        expect(last_response).to have_http_status(:ok)
         expect(parsed_response['resources'].pluck('guid')).to contain_exactly(app1.guid)
         expect(parsed_response['pagination']).to eq(expected_pagination)
       end
@@ -1023,7 +1023,7 @@ RSpec.describe 'Apps' do
           'previous' => nil
         }
 
-        expect(last_response.status).to eq(200)
+        expect(last_response).to have_http_status(:ok)
         expect(parsed_response['resources'].pluck('guid')).to contain_exactly(app1.guid)
         expect(parsed_response['pagination']).to eq(expected_pagination)
       end
@@ -1042,7 +1042,7 @@ RSpec.describe 'Apps' do
           'previous' => nil
         }
 
-        expect(last_response.status).to eq(200)
+        expect(last_response).to have_http_status(:ok)
         expect(parsed_response['resources'].pluck('guid')).to contain_exactly(app2.guid)
         expect(parsed_response['pagination']).to eq(expected_pagination)
       end
@@ -1061,7 +1061,7 @@ RSpec.describe 'Apps' do
           'previous' => nil
         }
 
-        expect(last_response.status).to eq(200)
+        expect(last_response).to have_http_status(:ok)
         expect(parsed_response['resources'].pluck('guid')).to contain_exactly(app2.guid)
         expect(parsed_response['pagination']).to eq(expected_pagination)
       end
@@ -1080,7 +1080,7 @@ RSpec.describe 'Apps' do
           'previous' => nil
         }
 
-        expect(last_response.status).to eq(200)
+        expect(last_response).to have_http_status(:ok)
         expect(parsed_response['resources'].pluck('guid')).to contain_exactly(app2.guid)
         expect(parsed_response['pagination']).to eq(expected_pagination)
       end
@@ -1099,7 +1099,7 @@ RSpec.describe 'Apps' do
           'previous' => nil
         }
 
-        expect(last_response.status).to eq(200)
+        expect(last_response).to have_http_status(:ok)
         expect(parsed_response['resources'].pluck('guid')).to contain_exactly(app1.guid)
         expect(parsed_response['pagination']).to eq(expected_pagination)
       end
@@ -1132,7 +1132,7 @@ RSpec.describe 'Apps' do
           'previous' => nil
         }
 
-        expect(last_response.status).to eq(200)
+        expect(last_response).to have_http_status(:ok)
         expect(parsed_response['resources'].pluck('guid')).to contain_exactly(app2.guid)
         expect(parsed_response['pagination']).to eq(expected_pagination)
       end
@@ -1151,7 +1151,7 @@ RSpec.describe 'Apps' do
           'previous' => nil
         }
 
-        expect(last_response.status).to eq(200)
+        expect(last_response).to have_http_status(:ok)
         expect(parsed_response['resources'].pluck('guid')).to contain_exactly(app2.guid)
         expect(parsed_response['pagination']).to eq(expected_pagination)
       end
@@ -1177,7 +1177,7 @@ RSpec.describe 'Apps' do
         )
 
         get '/v3/apps?per_page=2&include=space,space.organization', nil, admin_header
-        expect(last_response.status).to eq(200)
+        expect(last_response).to have_http_status(:ok)
 
         parsed_response = MultiJson.load(last_response.body)
 
@@ -1237,7 +1237,7 @@ RSpec.describe 'Apps' do
 
       it 'flags unsupported includes that contain supported ones' do
         get '/v3/apps?per_page=2&include=space.organization,spaceship,borgs,space', nil, admin_header
-        expect(last_response.status).to eq(400)
+        expect(last_response).to have_http_status(:bad_request)
       end
 
       it 'does not include spaces if no one asks for them' do
@@ -1345,7 +1345,7 @@ RSpec.describe 'Apps' do
 
       it 'gets a specific app' do
         get "/v3/apps/#{app_model.guid}", nil, user_header
-        expect(last_response.status).to eq(200)
+        expect(last_response).to have_http_status(:ok)
 
         parsed_response = MultiJson.load(last_response.body)
         expect(parsed_response).to be_a_response_like(
@@ -1391,7 +1391,7 @@ RSpec.describe 'Apps' do
 
       it 'gets a specific app including space' do
         get "/v3/apps/#{app_model.guid}?include=space", nil, user_header
-        expect(last_response.status).to eq(200)
+        expect(last_response).to have_http_status(:ok)
 
         parsed_response = MultiJson.load(last_response.body)
         expect(parsed_response).to be_a_response_like(
@@ -1472,7 +1472,7 @@ RSpec.describe 'Apps' do
 
       it 'gets a specific app including space and org' do
         get "/v3/apps/#{app_model.guid}?include=space.organization", nil, user_header
-        expect(last_response.status).to eq(200)
+        expect(last_response).to have_http_status(:ok)
 
         parsed_response = MultiJson.load(last_response.body)
         spaces = parsed_response['included']['spaces']
@@ -1796,7 +1796,7 @@ RSpec.describe 'Apps' do
 
         parsed_response = MultiJson.load(last_response.body)
 
-        expect(last_response.status).to eq(200)
+        expect(last_response).to have_http_status(:ok)
         expect(parsed_response['resources']).to include(hash_including('guid' => build.guid))
         expect(parsed_response['resources']).to include(hash_including('guid' => second_build.guid))
         expect(parsed_response).to be_a_response_like({
@@ -1885,7 +1885,7 @@ RSpec.describe 'Apps' do
 
         get "/v3/apps/#{app_model.guid}/builds?label_selector=fruit=strawberry", {}, user_header
 
-        expect(last_response.status).to eq(200)
+        expect(last_response).to have_http_status(:ok)
         expect(parsed_response['resources'].count).to eq(1)
         expect(parsed_response['resources'][0]['guid']).to eq(build.guid)
       end
@@ -1933,7 +1933,7 @@ RSpec.describe 'Apps' do
       space.add_developer(user)
       delete "/v3/apps/#{app_model.guid}", nil, user_header
 
-      expect(last_response.status).to eq(202)
+      expect(last_response).to have_http_status(:accepted)
       expect(last_response.headers['Location']).to match(%r{/v3/jobs/#{VCAP::CloudController::PollableJobModel.last.guid}})
 
       Delayed::Worker.new.work_off
@@ -2116,7 +2116,7 @@ RSpec.describe 'Apps' do
       space.add_developer(user)
       expect_any_instance_of(VCAP::CloudController::Diego::Runner).not_to receive(:update_metric_tags)
       patch "/v3/apps/#{app_model.guid}", update_request.to_json, user_header
-      expect(last_response.status).to eq(200)
+      expect(last_response).to have_http_status(:ok)
 
       app_model.reload
 
@@ -2173,7 +2173,7 @@ RSpec.describe 'Apps' do
         space.add_developer(user)
         expect_any_instance_of(VCAP::CloudController::Diego::Runner).to receive(:update_metric_tags)
         patch "/v3/apps/#{app_model.guid}", update_request.to_json, user_header
-        expect(last_response.status).to eq(200)
+        expect(last_response).to have_http_status(:ok)
       end
     end
 
@@ -2374,7 +2374,7 @@ RSpec.describe 'Apps' do
               it 'starts the app successfully' do
                 post "/v3/apps/#{app_model.guid}/actions/start", nil, admin_header
 
-                expect(last_response.status).to eq(200)
+                expect(last_response).to have_http_status(:ok)
               end
             end
 
@@ -2385,7 +2385,7 @@ RSpec.describe 'Apps' do
               it 'starts the app successfully' do
                 post "/v3/apps/#{app_model.guid}/actions/start", nil, admin_header
 
-                expect(last_response.status).to eq(200)
+                expect(last_response).to have_http_status(:ok)
               end
             end
 
@@ -2396,7 +2396,7 @@ RSpec.describe 'Apps' do
               it 'fails to start the app' do
                 post "/v3/apps/#{app_model.guid}/actions/start", nil, admin_header
 
-                expect(last_response.status).to eq(422)
+                expect(last_response).to have_http_status(:unprocessable_entity)
                 expect(last_response).to have_error_message("log_rate_limit cannot be unlimited in space '#{space.name}'.")
               end
             end
@@ -2408,7 +2408,7 @@ RSpec.describe 'Apps' do
               it 'fails to start the app' do
                 post "/v3/apps/#{app_model.guid}/actions/start", nil, admin_header
 
-                expect(last_response.status).to eq(422)
+                expect(last_response).to have_http_status(:unprocessable_entity)
                 expect(last_response).to have_error_message('log_rate_limit exceeds space log rate quota')
               end
             end
@@ -2421,7 +2421,7 @@ RSpec.describe 'Apps' do
               it 'fails to start the app' do
                 post "/v3/apps/#{app_model.guid}/actions/start", nil, admin_header
 
-                expect(last_response.status).to eq(422)
+                expect(last_response).to have_http_status(:unprocessable_entity)
                 expect(last_response).to have_error_message('log_rate_limit exceeds space log rate quota')
               end
             end
@@ -2435,7 +2435,7 @@ RSpec.describe 'Apps' do
               it 'starts the app successfully' do
                 post "/v3/apps/#{app_model.guid}/actions/start", nil, admin_header
 
-                expect(last_response.status).to eq(200)
+                expect(last_response).to have_http_status(:ok)
               end
             end
 
@@ -2446,7 +2446,7 @@ RSpec.describe 'Apps' do
               it 'starts the app successfully' do
                 post "/v3/apps/#{app_model.guid}/actions/start", nil, admin_header
 
-                expect(last_response.status).to eq(200)
+                expect(last_response).to have_http_status(:ok)
               end
             end
 
@@ -2457,7 +2457,7 @@ RSpec.describe 'Apps' do
               it 'fails to start the app' do
                 post "/v3/apps/#{app_model.guid}/actions/start", nil, admin_header
 
-                expect(last_response.status).to eq(422)
+                expect(last_response).to have_http_status(:unprocessable_entity)
                 expect(last_response).to have_error_message("log_rate_limit cannot be unlimited in organization '#{org.name}'.")
               end
             end
@@ -2469,7 +2469,7 @@ RSpec.describe 'Apps' do
               it 'fails to start the app' do
                 post "/v3/apps/#{app_model.guid}/actions/start", nil, admin_header
 
-                expect(last_response.status).to eq(422)
+                expect(last_response).to have_http_status(:unprocessable_entity)
                 expect(last_response).to have_error_message('log_rate_limit exceeds organization log rate quota')
               end
             end
@@ -2482,7 +2482,7 @@ RSpec.describe 'Apps' do
               it 'fails to start the app' do
                 post "/v3/apps/#{app_model.guid}/actions/start", nil, admin_header
 
-                expect(last_response.status).to eq(422)
+                expect(last_response).to have_http_status(:unprocessable_entity)
                 expect(last_response).to have_error_message('log_rate_limit exceeds organization log rate quota')
               end
             end
@@ -2560,7 +2560,7 @@ RSpec.describe 'Apps' do
       it 'creates a new revision' do
         expect do
           patch "/v3/apps/#{app_model.guid}/relationships/current_droplet", { data: { guid: droplet.guid } }.to_json, user_header
-          expect(last_response.status).to eq(200)
+          expect(last_response).to have_http_status(:ok)
         end.not_to(change(VCAP::CloudController::RevisionModel, :count))
 
         expect do
@@ -3088,7 +3088,7 @@ RSpec.describe 'Apps' do
         it 'creates audit.app.process.create events for each process' do
           patch "/v3/apps/#{app_model.guid}/relationships/current_droplet", request_body.to_json, user_header
 
-          expect(last_response.status).to eq(200)
+          expect(last_response).to have_http_status(:ok)
 
           events = VCAP::CloudController::Event.where(actor: user.guid).all
 
@@ -3159,7 +3159,7 @@ RSpec.describe 'Apps' do
       it 'creates sidecars that were saved on the droplet' do
         patch "/v3/apps/#{app_model.guid}/relationships/current_droplet", request_body.to_json, user_header
 
-        expect(last_response.status).to eq(200)
+        expect(last_response).to have_http_status(:ok)
 
         expect(app_model.reload.processes.count).to eq(1)
         expect(app_model.reload.sidecars.count).to eq(1)

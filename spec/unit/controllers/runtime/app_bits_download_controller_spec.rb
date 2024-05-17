@@ -16,7 +16,7 @@ module VCAP::CloudController
 
         it 'returns 404 for an app without a package' do
           get "/v2/apps/#{process.app.guid}/download"
-          expect(last_response.status).to eq(404)
+          expect(last_response).to have_http_status(:not_found)
         end
 
         context 'when the package is valid' do
@@ -29,13 +29,13 @@ module VCAP::CloudController
 
           it 'returns 302' do
             get "/v2/apps/#{process.app.guid}/download"
-            expect(last_response.status).to eq(302)
+            expect(last_response).to have_http_status(:found)
           end
         end
 
         it 'returns 404 for non-existent apps' do
           get '/v2/apps/abcd/download'
-          expect(last_response.status).to eq(404)
+          expect(last_response).to have_http_status(:not_found)
         end
       end
 
@@ -46,7 +46,7 @@ module VCAP::CloudController
 
         it 'returns 403' do
           get "/v2/apps/#{process.app.guid}/download"
-          expect(last_response.status).to eq(403)
+          expect(last_response).to have_http_status(:forbidden)
         end
       end
     end

@@ -149,7 +149,7 @@ module VCAP::CloudController
 
       it 'disallows a different user' do
         get "/v2/users/#{mgr.guid}/organizations"
-        expect(last_response.status).to eq(403)
+        expect(last_response).to have_http_status(:forbidden)
       end
     end
 
@@ -201,7 +201,7 @@ module VCAP::CloudController
 
           it 'succeeds and creates an appropriate audit event and creates the generated org role a guid' do
             put "/v2/users/#{other_user.guid}/audited_organizations/#{org.guid}"
-            expect(last_response.status).to eq(201)
+            expect(last_response).to have_http_status(:created)
 
             event = Event.find(type: event_type, actee: other_user.guid)
             expect(event).not_to be_nil
@@ -215,7 +215,7 @@ module VCAP::CloudController
             it 'behaves idempotently by succeeding' do
               put "/v2/users/#{other_user.guid}/audited_organizations/#{org.guid}"
               put "/v2/users/#{other_user.guid}/audited_organizations/#{org.guid}"
-              expect(last_response.status).to eq(201)
+              expect(last_response).to have_http_status(:created)
               expect(org.auditors).to include(other_user)
               expect(decoded_response).to be_a_response_like(expected_response)
             end
@@ -229,7 +229,7 @@ module VCAP::CloudController
 
           it 'fails and does not create an audit event' do
             put "/v2/users/#{other_user.guid}/audited_organizations/#{org.guid}"
-            expect(last_response.status).to eq(403)
+            expect(last_response).to have_http_status(:forbidden)
 
             event = Event.find(type: event_type, actee: other_user.guid)
             expect(event).to be_nil
@@ -252,7 +252,7 @@ module VCAP::CloudController
 
           it 'succeeds and creates an appropriate audit event creates the org role guid' do
             put "/v2/users/#{other_user.guid}/managed_organizations/#{org.guid}"
-            expect(last_response.status).to eq(201)
+            expect(last_response).to have_http_status(:created)
 
             event = Event.find(type: event_type, actee: other_user.guid)
             expect(event).not_to be_nil
@@ -266,7 +266,7 @@ module VCAP::CloudController
             it 'behaves idempotently by succeeding' do
               put "/v2/users/#{other_user.guid}/managed_organizations/#{org.guid}"
               put "/v2/users/#{other_user.guid}/managed_organizations/#{org.guid}"
-              expect(last_response.status).to eq(201)
+              expect(last_response).to have_http_status(:created)
               expect(org.managers).to include(other_user)
               expect(decoded_response).to be_a_response_like(expected_response)
             end
@@ -280,7 +280,7 @@ module VCAP::CloudController
 
           it 'fails and does not create an audit event' do
             put "/v2/users/#{other_user.guid}/managed_organizations/#{org.guid}"
-            expect(last_response.status).to eq(403)
+            expect(last_response).to have_http_status(:forbidden)
 
             event = Event.find(type: event_type, actee: other_user.guid)
             expect(event).to be_nil
@@ -303,7 +303,7 @@ module VCAP::CloudController
 
           it 'succeeds and creates an appropriate audit event and creates the org role guid' do
             put "/v2/users/#{other_user.guid}/billing_managed_organizations/#{org.guid}"
-            expect(last_response.status).to eq(201)
+            expect(last_response).to have_http_status(:created)
 
             event = Event.find(type: event_type, actee: other_user.guid)
             expect(event).not_to be_nil
@@ -317,7 +317,7 @@ module VCAP::CloudController
             it 'behaves idempotently by succeeding' do
               put "/v2/users/#{other_user.guid}/billing_managed_organizations/#{org.guid}"
               put "/v2/users/#{other_user.guid}/billing_managed_organizations/#{org.guid}"
-              expect(last_response.status).to eq(201)
+              expect(last_response).to have_http_status(:created)
               expect(org.billing_managers).to include(other_user)
               expect(decoded_response).to be_a_response_like(expected_response)
             end
@@ -331,7 +331,7 @@ module VCAP::CloudController
 
           it 'fails and does not create an audit event' do
             put "/v2/users/#{other_user.guid}/billing_managed_organizations/#{org.guid}"
-            expect(last_response.status).to eq(403)
+            expect(last_response).to have_http_status(:forbidden)
 
             event = Event.find(type: event_type, actee: other_user.guid)
             expect(event).to be_nil
@@ -353,7 +353,7 @@ module VCAP::CloudController
 
           it 'succeeds and creates an appropriate audit event and creates the org role guid' do
             put "/v2/users/#{other_user.guid}/organizations/#{org.guid}"
-            expect(last_response.status).to eq(201)
+            expect(last_response).to have_http_status(:created)
 
             event = Event.find(type: event_type, actee: other_user.guid)
             expect(event).not_to be_nil
@@ -367,7 +367,7 @@ module VCAP::CloudController
             it 'behaves idempotently by succeeding' do
               put "/v2/users/#{other_user.guid}/organizations/#{org.guid}"
               put "/v2/users/#{other_user.guid}/organizations/#{org.guid}"
-              expect(last_response.status).to eq(201)
+              expect(last_response).to have_http_status(:created)
               expect(org.users).to include(other_user)
               expect(decoded_response).to be_a_response_like(expected_response)
             end
@@ -381,7 +381,7 @@ module VCAP::CloudController
 
           it 'fails and does not create an audit event' do
             put "/v2/users/#{other_user.guid}/organizations/#{org.guid}"
-            expect(last_response.status).to eq(403)
+            expect(last_response).to have_http_status(:forbidden)
 
             event = Event.find(type: event_type, actee: other_user.guid)
             expect(event).to be_nil
@@ -405,7 +405,7 @@ module VCAP::CloudController
       context 'when acting on behalf of the current user' do
         it 'succeeds' do
           delete "/v2/users/#{user.guid}/audited_organizations/#{org.guid}"
-          expect(last_response.status).to eq(204)
+          expect(last_response).to have_http_status(:no_content)
         end
 
         it 'creates an appropriate event' do
@@ -424,7 +424,7 @@ module VCAP::CloudController
 
         it 'fails with 403' do
           delete "/v2/users/#{other_user.guid}/audited_organizations/#{org.guid}"
-          expect(last_response.status).to eq(403)
+          expect(last_response).to have_http_status(:forbidden)
           expect(decoded_response['code']).to eq(10_003)
         end
       end
@@ -441,7 +441,7 @@ module VCAP::CloudController
 
           it 'succeeds' do
             delete "/v2/users/#{other_user.guid}/audited_organizations/#{org.guid}"
-            expect(last_response.status).to eq(204)
+            expect(last_response).to have_http_status(:no_content)
           end
 
           it 'creates an appropriate event' do
@@ -474,7 +474,7 @@ module VCAP::CloudController
       context 'when acting on behalf of the current user' do
         it 'succeeds' do
           delete "/v2/users/#{user.guid}/audited_spaces/#{space.guid}"
-          expect(last_response.status).to eq(204)
+          expect(last_response).to have_http_status(:no_content)
         end
 
         it 'creates an appropriate event' do
@@ -493,7 +493,7 @@ module VCAP::CloudController
 
         it 'fails with 403' do
           delete "/v2/users/#{other_user.guid}/audited_spaces/#{space.guid}"
-          expect(last_response.status).to eq(403)
+          expect(last_response).to have_http_status(:forbidden)
           expect(decoded_response['code']).to eq(10_003)
         end
       end
@@ -510,7 +510,7 @@ module VCAP::CloudController
 
           it 'succeeds' do
             delete "/v2/users/#{other_user.guid}/audited_spaces/#{space.guid}"
-            expect(last_response.status).to eq(204)
+            expect(last_response).to have_http_status(:no_content)
           end
 
           it 'creates an appropriate event' do
@@ -545,7 +545,7 @@ module VCAP::CloudController
 
           it 'is allowed' do
             delete "/v2/users/#{billing_manager.guid}/billing_managed_organizations/#{org.guid}"
-            expect(last_response.status).to eq(204)
+            expect(last_response).to have_http_status(:no_content)
           end
 
           it 'creates an appropriate event' do
@@ -560,7 +560,7 @@ module VCAP::CloudController
 
           it 'removing yourself is not allowed' do
             delete "/v2/users/#{billing_manager.guid}/billing_managed_organizations/#{org.guid}"
-            expect(last_response.status).to be(403)
+            expect(last_response).to have_http_status(:forbidden)
             expect(decoded_response['code']).to eq(30_005)
           end
         end
@@ -578,7 +578,7 @@ module VCAP::CloudController
           it 'is allowed' do
             set_current_user(billing_manager)
             delete "/v2/users/#{billing_manager.guid}/billing_managed_organizations/#{org.guid}"
-            expect(last_response.status).to eq(204)
+            expect(last_response).to have_http_status(:no_content)
           end
 
           it 'creates an appropriate event' do
@@ -592,7 +592,7 @@ module VCAP::CloudController
           it 'is not allowed' do
             set_current_user(billing_manager)
             delete "/v2/users/#{other_billing_manager.guid}/billing_managed_organizations/#{org.guid}"
-            expect(last_response.status).to be(403)
+            expect(last_response).to have_http_status(:forbidden)
             expect(decoded_response['code']).to eq(10_003)
           end
         end
@@ -627,7 +627,7 @@ module VCAP::CloudController
 
           it 'is allowed' do
             delete "/v2/users/#{org_manager.guid}/managed_organizations/#{org.guid}"
-            expect(last_response.status).to eq(204)
+            expect(last_response).to have_http_status(:no_content)
           end
 
           it 'creates an appropriate event' do
@@ -643,7 +643,7 @@ module VCAP::CloudController
             set_current_user(org_manager)
 
             delete "/v2/users/#{org_manager.guid}/managed_organizations/#{org.guid}"
-            expect(last_response.status).to be(403)
+            expect(last_response).to have_http_status(:forbidden)
             expect(decoded_response['code']).to eq(30_004)
           end
         end
@@ -657,7 +657,7 @@ module VCAP::CloudController
 
           it 'is allowed' do
             delete "/v2/users/#{org_manager.guid}/managed_organizations/#{org.guid}"
-            expect(last_response.status).to eq(204)
+            expect(last_response).to have_http_status(:no_content)
           end
 
           it 'creates an appropriate event' do
@@ -677,7 +677,7 @@ module VCAP::CloudController
 
           it 'is not allowed' do
             delete "/v2/users/#{org_manager.guid}/managed_organizations/#{org.guid}"
-            expect(last_response.status).to be(403)
+            expect(last_response).to have_http_status(:forbidden)
             expect(decoded_response['code']).to eq(10_003)
           end
         end
@@ -699,7 +699,7 @@ module VCAP::CloudController
       context 'as an org user' do
         it 'can not remove itself' do
           delete "/v2/users/#{user.guid}/organizations/#{org.guid}"
-          expect(last_response.status).to eq(403)
+          expect(last_response).to have_http_status(:forbidden)
           expect(decoded_response['code']).to eq(30_006)
         end
 
@@ -712,7 +712,7 @@ module VCAP::CloudController
 
           it 'fails with 403' do
             delete "/v2/users/#{other_user.guid}/organizations/#{org.guid}"
-            expect(last_response.status).to eq(403)
+            expect(last_response).to have_http_status(:forbidden)
             expect(decoded_response['code']).to eq(10_003)
           end
         end
@@ -730,7 +730,7 @@ module VCAP::CloudController
 
           it 'can remove itself' do
             delete "/v2/users/#{user.guid}/organizations/#{org.guid}"
-            expect(last_response.status).to eq(204)
+            expect(last_response).to have_http_status(:no_content)
           end
 
           it 'creates an appropriate event' do
@@ -742,7 +742,7 @@ module VCAP::CloudController
 
         it 'cannot remove itself if it is the only manager' do
           delete "/v2/users/#{user.guid}/organizations/#{org.guid}"
-          expect(last_response.status).to eq(403)
+          expect(last_response).to have_http_status(:forbidden)
         end
       end
 
@@ -758,7 +758,7 @@ module VCAP::CloudController
 
           it 'can remove itself' do
             delete "/v2/users/#{user.guid}/organizations/#{org.guid}"
-            expect(last_response.status).to eq(204)
+            expect(last_response).to have_http_status(:no_content)
           end
 
           it 'creates an appropriate event' do
@@ -770,7 +770,7 @@ module VCAP::CloudController
 
         it 'cannot remove itself if it is the only billing manager' do
           delete "/v2/users/#{user.guid}/organizations/#{org.guid}"
-          expect(last_response.status).to eq(403)
+          expect(last_response).to have_http_status(:forbidden)
         end
       end
 
@@ -786,7 +786,7 @@ module VCAP::CloudController
 
           it 'succeeds' do
             delete "/v2/users/#{other_user.guid}/organizations/#{org.guid}"
-            expect(last_response.status).to eq(204)
+            expect(last_response).to have_http_status(:no_content)
           end
 
           it 'creates an appropriate event' do
@@ -824,7 +824,7 @@ module VCAP::CloudController
 
           it 'succeeds' do
             delete "/v2/users/#{other_user.guid}/managed_spaces/#{space.guid}"
-            expect(last_response.status).to eq(204)
+            expect(last_response).to have_http_status(:no_content)
           end
 
           it 'creates an appropriate event' do
@@ -837,7 +837,7 @@ module VCAP::CloudController
         context 'when acting on oneself' do
           it 'succeeds' do
             delete "/v2/users/#{user.guid}/managed_spaces/#{space.guid}"
-            expect(last_response.status).to eq(204)
+            expect(last_response).to have_http_status(:no_content)
           end
 
           it 'creates an appropriate event' do
@@ -852,7 +852,7 @@ module VCAP::CloudController
         context 'when acting on another user' do
           it 'fails with a 403' do
             delete "/v2/users/#{other_user.guid}/managed_spaces/#{space.guid}"
-            expect(last_response.status).to eq(403)
+            expect(last_response).to have_http_status(:forbidden)
           end
         end
       end
@@ -877,7 +877,7 @@ module VCAP::CloudController
       context 'when acting on behalf of the current user' do
         it 'succeeds' do
           delete "/v2/users/#{user.guid}/spaces/#{space.guid}"
-          expect(last_response.status).to eq(204)
+          expect(last_response).to have_http_status(:no_content)
           expect(Space.all).to include(space)
         end
 
@@ -896,7 +896,7 @@ module VCAP::CloudController
 
         it 'fails with 403' do
           delete "/v2/users/#{other_user.guid}/spaces/#{space.guid}"
-          expect(last_response.status).to eq(403)
+          expect(last_response).to have_http_status(:forbidden)
           expect(decoded_response['code']).to eq(10_003)
         end
       end
@@ -912,7 +912,7 @@ module VCAP::CloudController
 
           it 'succeeds' do
             delete "/v2/users/#{other_user.guid}/spaces/#{space.guid}"
-            expect(last_response.status).to eq(204)
+            expect(last_response).to have_http_status(:no_content)
           end
 
           it 'creates an appropriate event' do
@@ -972,7 +972,7 @@ module VCAP::CloudController
 
         it 'fails with 403' do
           put "/v2/users/#{other_user.guid}/audited_spaces/#{space.guid}"
-          expect(last_response.status).to eq(403)
+          expect(last_response).to have_http_status(:forbidden)
           expect(decoded_response['code']).to eq(10_003)
         end
 
@@ -983,7 +983,7 @@ module VCAP::CloudController
 
           it 'succeeds' do
             put "/v2/users/#{other_user.guid}/audited_spaces/#{space.guid}"
-            expect(last_response.status).to eq(201)
+            expect(last_response).to have_http_status(:created)
             auditors = space.auditors
             expect(auditors).to include(other_user)
             expect(decoded_response).to be_a_response_like(expected_response)
@@ -992,7 +992,7 @@ module VCAP::CloudController
           context 'when the role already exists' do
             it 'behaves idempotently by succeeding' do
               put "/v2/users/#{other_user.guid}/audited_spaces/#{space.guid}"
-              expect(last_response.status).to eq(201)
+              expect(last_response).to have_http_status(:created)
               expect(space.auditors).to include(other_user)
               expect(decoded_response).to be_a_response_like(expected_response)
             end
@@ -1051,7 +1051,7 @@ module VCAP::CloudController
 
         it 'fails with 403' do
           put "/v2/users/#{other_user.guid}/managed_spaces/#{space.guid}"
-          expect(last_response.status).to eq(403)
+          expect(last_response).to have_http_status(:forbidden)
           expect(decoded_response['code']).to eq(10_003)
         end
 
@@ -1062,7 +1062,7 @@ module VCAP::CloudController
 
           it 'succeeds' do
             put "/v2/users/#{other_user.guid}/managed_spaces/#{space.guid}"
-            expect(last_response.status).to eq(201)
+            expect(last_response).to have_http_status(:created)
             space.reload
             expect(space.managers).to include(other_user)
             expect(decoded_response).to be_a_response_like(expected_response)
@@ -1086,7 +1086,7 @@ module VCAP::CloudController
             it 'behaves idempotently by succeeding' do
               put "/v2/users/#{other_user.guid}/managed_spaces/#{space.guid}"
               put "/v2/users/#{other_user.guid}/managed_spaces/#{space.guid}"
-              expect(last_response.status).to eq(201)
+              expect(last_response).to have_http_status(:created)
               space.reload
               expect(space.managers).to include(other_user)
               expect(decoded_response).to be_a_response_like(expected_response)
@@ -1132,7 +1132,7 @@ module VCAP::CloudController
 
         it 'fails with 403' do
           put "/v2/users/#{other_user.guid}/spaces/#{space.guid}"
-          expect(last_response.status).to eq(403)
+          expect(last_response).to have_http_status(:forbidden)
           expect(decoded_response['code']).to eq(10_003)
         end
 
@@ -1143,7 +1143,7 @@ module VCAP::CloudController
 
           it 'succeeds' do
             put "/v2/users/#{other_user.guid}/spaces/#{space.guid}"
-            expect(last_response.status).to eq(201)
+            expect(last_response).to have_http_status(:created)
             space.reload
             expect(space.developers).to include(other_user)
             expect(decoded_response).to be_a_response_like(expected_response)
@@ -1167,7 +1167,7 @@ module VCAP::CloudController
             it 'behaves idempotently by succeeding' do
               put "/v2/users/#{other_user.guid}/managed_spaces/#{space.guid}"
               put "/v2/users/#{other_user.guid}/managed_spaces/#{space.guid}"
-              expect(last_response.status).to eq(201)
+              expect(last_response).to have_http_status(:created)
               space.reload
               expect(space.managers).to include(other_user)
               expect(decoded_response).to be_a_response_like(expected_response)

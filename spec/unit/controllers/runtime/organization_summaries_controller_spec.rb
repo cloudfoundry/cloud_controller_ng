@@ -53,7 +53,7 @@ module VCAP::CloudController
         end
 
         it 'return organization data' do
-          expect(last_response.status).to eq(200)
+          expect(last_response).to have_http_status(:ok)
           expect(decoded_response['guid']).to eq(org.guid)
           expect(decoded_response['name']).to eq(org.name)
           expect(decoded_response['status']).to eq('active')
@@ -79,7 +79,7 @@ module VCAP::CloudController
         end
 
         it 'return organization data' do
-          expect(last_response.status).to eq(200)
+          expect(last_response).to have_http_status(:ok)
           expect(decoded_response['guid']).to eq(org.guid)
           expect(decoded_response['name']).to eq(org.name)
           expect(decoded_response['status']).to eq('active')

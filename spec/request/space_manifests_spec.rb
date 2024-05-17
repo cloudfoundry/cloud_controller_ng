@@ -161,7 +161,7 @@ RSpec.describe 'Space Manifests' do
       expect(web_process.instances).to eq(1)
       post "/v3/spaces/#{space.guid}/actions/apply_manifest", yml_manifest, yml_headers(user_header)
 
-      expect(last_response.status).to eq(202)
+      expect(last_response).to have_http_status(:accepted)
       job_guid = VCAP::CloudController::PollableJobModel.last.guid
       expect(last_response.headers['Location']).to match(%r{/v3/jobs/#{job_guid}})
 
@@ -552,7 +552,7 @@ RSpec.describe 'Space Manifests' do
         it 'applies the manifest' do
           post "/v3/spaces/#{space.guid}/actions/apply_manifest", yml_manifest, yml_headers(user_header)
 
-          expect(last_response.status).to eq(202)
+          expect(last_response).to have_http_status(:accepted)
         end
       end
 
@@ -589,7 +589,7 @@ RSpec.describe 'Space Manifests' do
       it 'interprets the log rate limit as unlimited' do
         post "/v3/spaces/#{space.guid}/actions/apply_manifest", yml_manifest, yml_headers(user_header)
 
-        expect(last_response.status).to eq(202)
+        expect(last_response).to have_http_status(:accepted)
         job_guid = VCAP::CloudController::PollableJobModel.last.guid
         expect(last_response.headers['Location']).to match(%r{/v3/jobs/#{job_guid}})
 
@@ -612,7 +612,7 @@ RSpec.describe 'Space Manifests' do
       it 'successfully applies the manifest' do
         post "/v3/spaces/#{space.guid}/actions/apply_manifest", yml_manifest, yml_headers(user_header)
 
-        expect(last_response.status).to eq(202)
+        expect(last_response).to have_http_status(:accepted)
 
         job_guid = VCAP::CloudController::PollableJobModel.last.guid
         expect(last_response.headers['Location']).to match(%r{/v3/jobs/#{job_guid}})
@@ -697,7 +697,7 @@ RSpec.describe 'Space Manifests' do
       it 'does NOT accept yaml with anchors' do
         post "/v3/spaces/#{space.guid}/actions/apply_manifest", yml_manifest, yml_headers(user_header)
 
-        expect(last_response.status).to eq(400)
+        expect(last_response).to have_http_status(:bad_request)
         parsed_response = MultiJson.load(last_response.body)
         expect(parsed_response['errors'].first['detail']).to eq('Bad request: Manifest does not support Anchors and Aliases')
       end
@@ -714,7 +714,7 @@ RSpec.describe 'Space Manifests' do
       it 'loads the manifest' do
         post "/v3/spaces/#{space.guid}/actions/apply_manifest", yml_manifest_tempfile, yml_headers(user_header)
 
-        expect(last_response.status).to eq(202)
+        expect(last_response).to have_http_status(:accepted)
       end
 
       context 'manifest too large' do
@@ -723,7 +723,7 @@ RSpec.describe 'Space Manifests' do
         it 'does NOT accept files > 1MB' do
           post "/v3/spaces/#{space.guid}/actions/apply_manifest", yml_manifest_tempfile, yml_headers(user_header)
 
-          expect(last_response.status).to eq(400)
+          expect(last_response).to have_http_status(:bad_request)
           parsed_response = MultiJson.load(last_response.body)
           expect(parsed_response['errors'].first['detail']).to eq('Bad request: Manifest size is too large. The maximum supported size is 1MB.')
         end
@@ -1322,7 +1322,7 @@ RSpec.describe 'Space Manifests' do
       it 'does NOT accept yaml with anchors' do
         post "/v3/spaces/#{space.guid}/manifest_diff", yml_manifest, yml_headers(user_header)
 
-        expect(last_response.status).to eq(400)
+        expect(last_response).to have_http_status(:bad_request)
         parsed_response = MultiJson.load(last_response.body)
         expect(parsed_response['errors'].first['detail']).to eq('Bad request: Manifest does not support Anchors and Aliases')
       end
