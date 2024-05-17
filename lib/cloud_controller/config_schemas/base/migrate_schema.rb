@@ -19,7 +19,8 @@ module VCAP::CloudController
               :connection_validation_timeout => Integer,
               optional(:log_db_queries) => bool,
               optional(:ssl_verify_hostname) => bool,
-              optional(:ca_cert_path) => String
+              optional(:ca_cert_path) => String,
+              optional(:enable_paginate_window) => bool
             },
 
             db_encryption_key: enum(String, NilClass),

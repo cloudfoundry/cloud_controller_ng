@@ -100,7 +100,8 @@ module VCAP::CloudController
               optional(:connection_expiration_timeout) => Integer,
               optional(:connection_expiration_random_delay) => Integer,
               optional(:ssl_verify_hostname) => bool,
-              optional(:ca_cert_path) => String
+              optional(:ca_cert_path) => String,
+              optional(:enable_paginate_window) => bool
             },
 
             optional(:redis) => {
