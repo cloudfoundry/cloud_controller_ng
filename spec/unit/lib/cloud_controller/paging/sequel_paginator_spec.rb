@@ -205,7 +205,7 @@ module VCAP::CloudController
         end
       end
 
-      context 'window controll config flag' do
+      context 'enable_paginate_window config flag' do
         let(:dataset) { AppModel.dataset }
         let!(:app_1) { AppModel.make(guid: '1', created_at: '2024-05-15T17:23:01Z') }
         let!(:app_2) { AppModel.make(guid: '2', created_at: '2024-05-15T17:23:02Z') }
@@ -213,14 +213,14 @@ module VCAP::CloudController
         let!(:app_4) { AppModel.make(guid: '4', created_at: '2024-05-15T17:23:04Z') }
 
         context 'not defined' do
-          it 'uses window function' do
+          it 'uses window function if supported' do
             options = { page:, per_page: }
             pagination_options = PaginationOptions.new(options)
 
             paginated_result = nil
             expect do
               paginated_result = paginator.get_page(dataset, pagination_options)
-            end.to have_queried_db_times(/select/i, 1)
+            end.to have_queried_db_times(/select/i, dataset.supports_window_functions? ? 1 : 2)
             expect(paginated_result.total).to be > 1
           end
         end
@@ -238,14 +238,14 @@ module VCAP::CloudController
             TestConfig.override(**my_config)
           end
 
-          it 'uses window function' do
+          it 'uses window function if supported' do
             options = { page:, per_page: }
             pagination_options = PaginationOptions.new(options)
 
             paginated_result = nil
             expect do
               paginated_result = paginator.get_page(dataset, pagination_options)
-            end.to have_queried_db_times(/select/i, 1)
+            end.to have_queried_db_times(/select/i, dataset.supports_window_functions? ? 1 : 2)
             expect(paginated_result.total).to be > 1
           end
         end
@@ -263,7 +263,7 @@ module VCAP::CloudController
             TestConfig.override(**my_config)
           end
 
-          it 'uses window function' do
+          it 'does not use window function' do
             options = { page:, per_page: }
             pagination_options = PaginationOptions.new(options)
 
