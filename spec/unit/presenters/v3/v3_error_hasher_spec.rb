@@ -28,7 +28,7 @@ RSpec.describe V3ErrorHasher do
   let(:to_h_error) do
     error = RuntimeError.new('fake message')
     error.set_backtrace('fake backtrace')
-    allow(error).to receive(:to_h).and_return('arbritratry key' => 'arbritratry value', 'code' => 67_890, 'source' => 'fake source')
+    allow(error).to receive(:to_h).and_return('arbitrary key' => 'arbitrary value', 'code' => 67_890, 'source' => 'fake source')
     error
   end
 
@@ -41,7 +41,7 @@ RSpec.describe V3ErrorHasher do
   let(:to_provided_h_error) do
     error = RuntimeErrorWithToH.new('fake message')
     error.set_backtrace('fake backtrace')
-    allow(error).to receive(:to_h).and_return('arbritratry key' => 'arbritratry value', 'code' => 67_890, 'source' => 'fake source')
+    allow(error).to receive(:to_h).and_return('arbitrary key' => 'arbitrary value', 'code' => 67_890, 'source' => 'fake source')
     allow(error.class).to receive(:name).and_return('RuntimeError')
     error
   end
@@ -64,7 +64,7 @@ RSpec.describe V3ErrorHasher do
                                            'code' => 67_890,
                                            'title' => 'CF-RuntimeError',
                                            'source' => 'fake source',
-                                           'arbritratry key' => 'arbritratry value',
+                                           'arbitrary key' => 'arbitrary value',
                                            'backtrace' => ['fake backtrace']
                                          }
                                        }])
