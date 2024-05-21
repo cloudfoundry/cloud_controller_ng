@@ -58,9 +58,9 @@ module VCAP::CloudController
                     # A single sub-query does not need to be UNIONed (i.e. unauthenticated user retrieving public plans)
                     datasets[0]
                   else
-                    datasets.reduce do |ds1, ds2|
+                    distinct_union(datasets.reduce do |ds1, ds2|
                       ds1.union(ds2, all: true, from_self: false)
-                    end.from_self(alias: klass.table_name)
+                    end.from_self(alias: klass.table_name))
                   end
 
         dataset.eager(eager_loaded_associations)
@@ -146,12 +146,16 @@ module VCAP::CloudController
         super(message, dataset, klass)
       end
 
-      def join_service_plans(dataset)
-        dataset
+      def join_service_plans(_dataset)
+        raise 'method must be implemented in subclass'
       end
 
-      def join_services(dataset)
-        dataset
+      def join_services(_dataset)
+        raise 'method must be implemented in subclass'
+      end
+
+      def distinct_union(_dataset)
+        raise 'method must be implemented in subclass'
       end
 
       def join_plan_org_visibilities(dataset)

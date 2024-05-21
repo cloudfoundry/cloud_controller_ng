@@ -48,8 +48,18 @@ module VCAP::CloudController
         super(message, dataset, klass)
       end
 
+      def join_service_plans(dataset)
+        dataset # The ServicePlanListFetcher operates on the :service_plans table, so there is no need for an additional JOIN.
+      end
+
       def join_services(dataset)
         join(dataset, :inner, :services, id: Sequel[:service_plans][:service_id])
+      end
+
+      def distinct_union(dataset)
+        # The UNIONed :service_plans datasets (permissions granted on org level for plans / permissions
+        # granted on space level for brokers / public plans) are already distinct.
+        dataset
       end
     end
   end

@@ -4,14 +4,12 @@ module VCAP::CloudController
   class ServiceOfferingListFetcher < BaseServiceListFetcher
     class << self
       def fetch(message, omniscient: false, readable_orgs_query: nil, readable_spaces_query: nil, eager_loaded_associations: [])
-        dataset = super(Service,
-                        message,
-                        omniscient:,
-                        readable_orgs_query:,
-                        readable_spaces_query:,
-                        eager_loaded_associations:)
-        # for service offerings there might be an overlap between the UNIONed subqueries (i.e. one plan is public and another one is org restricted)
-        dataset.distinct
+        super(Service,
+              message,
+              omniscient:,
+              readable_orgs_query:,
+              readable_spaces_query:,
+              eager_loaded_associations:)
       end
 
       private
@@ -36,6 +34,16 @@ module VCAP::CloudController
       def join_service_plans(dataset)
         dataset = join(dataset, :inner, :service_plans, service_id: Sequel[:services][:id])
         dataset.distinct # services can have multiple plans
+      end
+
+      def join_services(dataset)
+        dataset # The ServiceOfferingListFetcher operates on the :services table, so there is no need for an additional JOIN.
+      end
+
+      def distinct_union(dataset)
+        # The UNIONed :services datasets (permissions granted on org level for plans / permissions
+        # granted on space level for brokers / public plans) might contain duplicate entries.
+        dataset.distinct
       end
     end
   end
