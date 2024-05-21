@@ -4,12 +4,14 @@ module VCAP::CloudController
   class ServiceOfferingListFetcher < BaseServiceListFetcher
     class << self
       def fetch(message, omniscient: false, readable_orgs_query: nil, readable_spaces_query: nil, eager_loaded_associations: [])
-        super(Service,
-              message,
-              omniscient:,
-              readable_orgs_query:,
-              readable_spaces_query:,
-              eager_loaded_associations:)
+        dataset = super(Service,
+                        message,
+                        omniscient:,
+                        readable_orgs_query:,
+                        readable_spaces_query:,
+                        eager_loaded_associations:)
+        # for service offerings there might be an overlap between the UNIONed subqueries (i.e. one plan is public and another one is org restricted)
+        dataset.distinct
       end
 
       private

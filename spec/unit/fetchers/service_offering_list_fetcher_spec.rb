@@ -18,6 +18,21 @@ module VCAP::CloudController
         end
       end
 
+      context 'service offering with both public and org restricted plans' do
+        let(:org) { Organization.make }
+        let(:readable_orgs) { [org] }
+
+        it 'shows unique results' do
+          service_offering = Service.make(label: "with-public-and-org-restricted-plans-#{Sham.name}")
+          ServicePlan.make(public: true, active: true, service: service_offering)
+          service_plan = ServicePlan.make(public: false, service: service_offering)
+          ServicePlanVisibility.make(organization: org, service_plan: service_plan)
+
+          service_offerings = fetcher.fetch(message, readable_orgs_query:).all
+          expect(service_offerings).to contain_exactly(service_offering)
+        end
+      end
+
       describe 'visibility of offerings' do
         let!(:public_offering_1) { make_public_offering }
         let!(:public_offering_2) { make_public_offering(number_of_plans: 2) }
