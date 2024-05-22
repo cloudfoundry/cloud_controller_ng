@@ -204,6 +204,77 @@ module VCAP::CloudController
           expect(paginated_result.total).to be > 1
         end
       end
+
+      context 'enable_paginate_window config flag' do
+        let(:dataset) { AppModel.dataset }
+        let!(:app_1) { AppModel.make(guid: '1', created_at: '2024-05-15T17:23:01Z') }
+        let!(:app_2) { AppModel.make(guid: '2', created_at: '2024-05-15T17:23:02Z') }
+        let!(:app_3) { AppModel.make(guid: '3', created_at: '2024-05-15T17:23:03Z') }
+        let!(:app_4) { AppModel.make(guid: '4', created_at: '2024-05-15T17:23:04Z') }
+
+        context 'not defined' do
+          it 'uses window function if supported' do
+            options = { page:, per_page: }
+            pagination_options = PaginationOptions.new(options)
+
+            paginated_result = nil
+            expect do
+              paginated_result = paginator.get_page(dataset, pagination_options)
+            end.to have_queried_db_times(/select/i, dataset.supports_window_functions? ? 1 : 2)
+            expect(paginated_result.total).to be > 1
+          end
+        end
+
+        context 'set to true' do
+          let(:my_config) do
+            {
+              db: {
+                enable_paginate_window: true
+              }
+            }
+          end
+
+          before do
+            TestConfig.override(**my_config)
+          end
+
+          it 'uses window function if supported' do
+            options = { page:, per_page: }
+            pagination_options = PaginationOptions.new(options)
+
+            paginated_result = nil
+            expect do
+              paginated_result = paginator.get_page(dataset, pagination_options)
+            end.to have_queried_db_times(/select/i, dataset.supports_window_functions? ? 1 : 2)
+            expect(paginated_result.total).to be > 1
+          end
+        end
+
+        context 'set to false' do
+          let(:my_config) do
+            {
+              db: {
+                enable_paginate_window: false
+              }
+            }
+          end
+
+          before do
+            TestConfig.override(**my_config)
+          end
+
+          it 'does not use window function' do
+            options = { page:, per_page: }
+            pagination_options = PaginationOptions.new(options)
+
+            paginated_result = nil
+            expect do
+              paginated_result = paginator.get_page(dataset, pagination_options)
+            end.to have_queried_db_times(/select/i, 2)
+            expect(paginated_result.total).to be > 1
+          end
+        end
+      end
     end
   end
 end
