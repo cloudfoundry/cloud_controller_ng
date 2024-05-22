@@ -99,10 +99,11 @@ module VCAP::CloudController
       end
     end
 
-    attr_reader :config_hash
+    attr_reader :config_hash, :context
 
     def initialize(config_hash, context: :api)
       @config_hash = config_hash
+      @context = context
       @schema_class = self.class.schema_class_for_context(context, config_hash)
     end
 
@@ -181,7 +182,7 @@ module VCAP::CloudController
       Dir.glob(File.expand_path(path, __FILE__)).each do |file|
         require file
         method = File.basename(file).sub('.rb', '').tr('-', '_')
-        CCInitializers.send(method, @config_hash)
+        CCInitializers.send(method, @config_hash, @context)
       end
     end
   end

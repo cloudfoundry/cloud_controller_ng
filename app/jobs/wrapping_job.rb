@@ -1,9 +1,11 @@
 require 'jobs/cc_job'
+require 'opentelemetry-sdk'
 
 module VCAP::CloudController
   module Jobs
     class WrappingJob < VCAP::CloudController::Jobs::CCJob
       attr_reader :handler
+      attr_accessor :otel_api_trace_carrier, :otel_job_trace_carrier
 
       def initialize(handler)
         @handler = handler

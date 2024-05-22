@@ -1,5 +1,6 @@
 require 'jobs/wrapping_job'
 require 'presenters/error_presenter'
+require 'opentelemetry/sdk'
 
 module VCAP::CloudController
   module Jobs

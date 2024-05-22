@@ -5,6 +5,7 @@ require 'jobs/pollable_job_wrapper'
 require 'jobs/logging_context_job'
 require 'jobs/timeout_job'
 require 'securerandom'
+require 'opentelemetry/sdk'
 
 module VCAP::CloudController
   module Jobs
@@ -26,8 +27,12 @@ module VCAP::CloudController
 
         wrapped_job = yield wrapped_job if block_given?
 
-        delayed_job = enqueue_job(wrapped_job)
-        PollableJobModel.find_by_delayed_job(delayed_job)
+        tracer = OpenTelemetry.tracer_provider.tracer(self.class.name, '1.0.0')
+        job_handler = wrapped_job.handler.class.name.respond_to?(:split) ? wrapped_job.handler.class.name.split('::').last : wrapped_job.handler.class.name
+        tracer.in_span("enqueue-job: #{job_handler}", kind: :producer) do
+          delayed_job = enqueue_job(wrapped_job)
+          PollableJobModel.find_by_delayed_job(delayed_job)
+        end
       end
 
       def run_inline
@@ -42,7 +47,10 @@ module VCAP::CloudController
         @opts['guid'] = SecureRandom.uuid
         request_id = ::VCAP::Request.current_id
         timeout_job = TimeoutJob.new(job, job_timeout)
-        logging_context_job = LoggingContextJob.new(timeout_job, request_id)
+        logging_context_job = LoggingContextJob.new(
+          timeout_job,
+          request_id
+        )
         @opts[:priority] = job_priority unless @opts[:priority] || job_priority.nil?
         Delayed::Job.enqueue(logging_context_job, @opts)
       end

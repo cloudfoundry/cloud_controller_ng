@@ -376,7 +376,24 @@ module VCAP::CloudController
               dataset: String
             },
 
-            update_metric_tags_on_rename: bool
+            update_metric_tags_on_rename: bool,
+
+            otel: {
+              tracing: {
+                enabled: bool,
+                api_url: String,
+                api_token: String,
+                sampling_ratio: Float,
+                redact: {
+                  db_statements: bool
+                },
+                propagation: {
+                  accept_sampling_instruction: bool,
+                  extractors: Array,
+                  injectors: Array
+                }
+              }
+            }
           }
         end
         # rubocop:enable Metrics/BlockLength

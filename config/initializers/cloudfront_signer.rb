@@ -1,7 +1,7 @@
 require 'cloudfront-signer'
 
 module CCInitializers
-  def self.cloudfront_signer(cc_config)
+  def self.cloudfront_signer(cc_config, _)
     return if cc_config[:droplets].blank?
 
     cdn_config = cc_config[:droplets][:cdn]
