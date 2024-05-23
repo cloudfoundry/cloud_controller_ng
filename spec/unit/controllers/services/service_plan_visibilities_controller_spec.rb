@@ -64,7 +64,7 @@ module VCAP::CloudController
 
       it 'creates the service plan visibility' do
         params = { organization_guid: organization.guid, service_plan_guid: service_plan.guid }
-        post '/v2/service_plan_visibilities', MultiJson.dump(params)
+        post '/v2/service_plan_visibilities', Oj.dump(params)
 
         expect(last_response.status).to eq 201
 
@@ -76,7 +76,7 @@ module VCAP::CloudController
 
       it "creates an 'audit.service_plan_visibility.create' event" do
         params = { 'organization_guid' => organization.guid, 'service_plan_guid' => service_plan.guid }
-        post '/v2/service_plan_visibilities', MultiJson.dump(params)
+        post '/v2/service_plan_visibilities', Oj.dump(params)
 
         event = Event.first(type: 'audit.service_plan_visibility.create')
         visibility = ServicePlanVisibility.first
@@ -101,7 +101,7 @@ module VCAP::CloudController
       let!(:visibility) { ServicePlanVisibility.make(organization_guid: organization.guid, service_plan_guid: service_plan.guid) }
 
       it 'updates the service plan visibility' do
-        put "/v2/service_plan_visibilities/#{visibility.guid}", MultiJson.dump({ organization_guid: new_organization.guid })
+        put "/v2/service_plan_visibilities/#{visibility.guid}", Oj.dump({ organization_guid: new_organization.guid })
 
         expect(last_response.status).to eq(201)
         service_plan_visibility = ServicePlanVisibility.find(guid: visibility.guid)
@@ -110,7 +110,7 @@ module VCAP::CloudController
 
       it 'creates a service plan visibility update event' do
         params = { 'organization_guid' => new_organization.guid }
-        put "/v2/service_plan_visibilities/#{visibility.guid}", MultiJson.dump(params)
+        put "/v2/service_plan_visibilities/#{visibility.guid}", Oj.dump(params)
 
         event = Event.first(type: 'audit.service_plan_visibility.update')
         expect(event.actor_type).to eq('user')

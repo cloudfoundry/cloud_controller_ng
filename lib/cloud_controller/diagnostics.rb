@@ -9,7 +9,7 @@ module VCAP::CloudController
       FileUtils.mkdir_p(output_directory)
 
       output_file = File.join(output_directory, output_file_name)
-      File.write(output_file, MultiJson.dump(data, pretty: true))
+      File.write(output_file, Oj.dump(data))
 
       output_file
     end

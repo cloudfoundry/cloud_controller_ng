@@ -65,7 +65,7 @@ module VCAP::CloudController
         it 'calls the stager with a build created from the droplet and the response' do
           expect_any_instance_of(Diego::Stager).to receive(:staging_complete).with(instance_of(BuildModel), staging_response, false)
 
-          post url, MultiJson.dump(staging_response)
+          post url, Oj.dump(staging_response)
 
           build = BuildModel.last
           expect(build).not_to be_nil
@@ -79,7 +79,7 @@ module VCAP::CloudController
         it 'calls the stager with a build created from the droplet and the response' do
           expect_any_instance_of(Diego::Stager).to receive(:staging_complete).with(instance_of(BuildModel), staging_response, false)
 
-          post url, MultiJson.dump(staging_response)
+          post url, Oj.dump(staging_response)
 
           build = BuildModel.last
           expect(build).not_to be_nil
@@ -92,7 +92,7 @@ module VCAP::CloudController
       it 'propagates api errors from staging_response' do
         expect_any_instance_of(Diego::Stager).to receive(:staging_complete).and_raise(CloudController::Errors::ApiError.new_from_details('JobTimeout'))
 
-        post url, MultiJson.dump(staging_response)
+        post url, Oj.dump(staging_response)
         expect(last_response.status).to eq(524)
         expect(last_response.body).to match(/JobTimeout/)
       end
@@ -111,7 +111,7 @@ module VCAP::CloudController
         end
         let(:failure_reason) { '' }
         let(:sanitized_failure_reason) { double(:sanitized_failure_reason) }
-        let(:staging_result_json) { MultiJson.dump(staging_result) }
+        let(:staging_result_json) { Oj.dump(staging_result) }
         let(:staging_response) do
           {
             failed: failure_reason.present?,
@@ -128,14 +128,14 @@ module VCAP::CloudController
         it 'calls the stager with a build for the droplet and response' do
           expect_any_instance_of(Diego::Stager).to receive(:staging_complete).with(instance_of(BuildModel), { result: staging_result }, false)
 
-          post url, MultiJson.dump(staging_response)
+          post url, Oj.dump(staging_response)
           expect(last_response.status).to eq(200)
         end
 
         it 'propagates api errors from staging_response' do
           expect_any_instance_of(Diego::Stager).to receive(:staging_complete).and_raise(CloudController::Errors::ApiError.new_from_details('JobTimeout'))
 
-          post url, MultiJson.dump(staging_response)
+          post url, Oj.dump(staging_response)
           expect(last_response.status).to eq(524)
           expect(last_response.body).to match(/JobTimeout/)
         end
@@ -145,7 +145,7 @@ module VCAP::CloudController
           expect(statsd_updater).to receive(:report_staging_success_metrics).with(one_hour_in_nanoseconds)
           expect(prometheus_updater).to receive(:report_staging_success_metrics).with(one_hour_in_nanoseconds)
           Timecop.freeze(Time.now) do
-            post url, MultiJson.dump(staging_response)
+            post url, Oj.dump(staging_response)
           end
         end
 
@@ -156,7 +156,7 @@ module VCAP::CloudController
           it 'passes down the sanitized version of the error to the diego stager' do
             expect_any_instance_of(Diego::Stager).to receive(:staging_complete).with(instance_of(BuildModel), { error: sanitized_failure_reason }, false)
 
-            post url, MultiJson.dump(staging_response)
+            post url, Oj.dump(staging_response)
           end
 
           it 'emits metrics for staging failure' do
@@ -164,7 +164,7 @@ module VCAP::CloudController
             expect(statsd_updater).to receive(:report_staging_failure_metrics).with(one_hour_in_nanoseconds)
             expect(prometheus_updater).to receive(:report_staging_failure_metrics).with(one_hour_in_nanoseconds)
             Timecop.freeze(Time.now) do
-              post url, MultiJson.dump(staging_response)
+              post url, Oj.dump(staging_response)
             end
           end
         end
@@ -174,7 +174,7 @@ module VCAP::CloudController
         let(:staging_guid) { 'asdf' }
 
         it 'returns 404' do
-          post url, MultiJson.dump(staging_response)
+          post url, Oj.dump(staging_response)
           expect(last_response.status).to eq(404)
           expect(last_response.body).to match(/Droplet not found/)
         end
@@ -184,7 +184,7 @@ module VCAP::CloudController
         it 'requests staging_complete with start' do
           expect_any_instance_of(Diego::Stager).to receive(:staging_complete).with(instance_of(BuildModel), staging_response, true)
 
-          post "#{url}?start=true", MultiJson.dump(staging_response)
+          post "#{url}?start=true", Oj.dump(staging_response)
           expect(last_response.status).to eq(200)
         end
       end
@@ -231,14 +231,14 @@ module VCAP::CloudController
       it 'calls the stager with the build and response' do
         expect_any_instance_of(Diego::Stager).to receive(:staging_complete).with(instance_of(BuildModel), staging_response, false)
 
-        post url, MultiJson.dump(staging_response)
+        post url, Oj.dump(staging_response)
         expect(last_response.status).to eq(200)
       end
 
       it 'propagates api errors from staging_response' do
         expect_any_instance_of(Diego::Stager).to receive(:staging_complete).and_raise(CloudController::Errors::ApiError.new_from_details('JobTimeout'))
 
-        post url, MultiJson.dump(staging_response)
+        post url, Oj.dump(staging_response)
         expect(last_response.status).to eq(524)
         expect(last_response.body).to match(/JobTimeout/)
       end
@@ -258,7 +258,7 @@ module VCAP::CloudController
         end
         let(:failure_reason) { '' }
         let(:sanitized_failure_reason) { double(:sanitized_failure_reason) }
-        let(:staging_result_json) { MultiJson.dump(staging_result) }
+        let(:staging_result_json) { Oj.dump(staging_result) }
         let(:staging_response) do
           {
             failed: failure_reason.present?,
@@ -275,13 +275,13 @@ module VCAP::CloudController
         it 'calls the stager with the droplet and response' do
           expect_any_instance_of(Diego::Stager).to receive(:staging_complete).with(instance_of(BuildModel), { result: staging_result }, false)
 
-          post url, MultiJson.dump(staging_response)
+          post url, Oj.dump(staging_response)
           expect(last_response.status).to eq(200)
         end
 
         it 'adds the buildpack info to the droplet' do
           allow_any_instance_of(BuildModel).to receive(:in_final_state?).and_return(false)
-          post url, MultiJson.dump(staging_response)
+          post url, Oj.dump(staging_response)
           expect(last_response.status).to eq(200)
           droplet_buildpacks = droplet.buildpack_lifecycle_data&.buildpack_lifecycle_buildpacks
           expect(droplet_buildpacks&.size).to eq(2)
@@ -304,10 +304,10 @@ module VCAP::CloudController
                 'build-id' => OpenSSL::Digest::SHA256.hexdigest(build.guid)
               }
             }
-            expect_any_instance_of(ActiveSupport::Logger).to receive(:info).with(JSON.generate(expected_json))
+            expect_any_instance_of(ActiveSupport::Logger).to receive(:info).with(Oj.dump(expected_json))
 
             allow_any_instance_of(BuildModel).to receive(:in_final_state?).and_return(false)
-            post url, MultiJson.dump(staging_response)
+            post url, Oj.dump(staging_response)
 
             expect(last_response.status).to eq(200), last_response.body
           end
@@ -318,14 +318,14 @@ module VCAP::CloudController
           expect(statsd_updater).to receive(:report_staging_success_metrics).with(one_hour_in_nanoseconds)
           expect(prometheus_updater).to receive(:report_staging_success_metrics).with(one_hour_in_nanoseconds)
           Timecop.freeze(Time.now) do
-            post url, MultiJson.dump(staging_response)
+            post url, Oj.dump(staging_response)
           end
         end
 
         it 'propagates api errors from staging_response' do
           expect_any_instance_of(Diego::Stager).to receive(:staging_complete).and_raise(CloudController::Errors::ApiError.new_from_details('JobTimeout'))
 
-          post url, MultiJson.dump(staging_response)
+          post url, Oj.dump(staging_response)
           expect(last_response.status).to eq(524)
           expect(last_response.body).to match(/JobTimeout/)
         end
@@ -334,7 +334,7 @@ module VCAP::CloudController
           expect_any_instance_of(Diego::Stager).to receive(:staging_complete).and_raise(StandardError)
 
           expect do
-            post url, MultiJson.dump(staging_response)
+            post url, Oj.dump(staging_response)
           end.to raise_error(StandardError)
         end
 
@@ -345,7 +345,7 @@ module VCAP::CloudController
           it 'passes down the sanitized version of the error to the diego stager' do
             expect_any_instance_of(Diego::Stager).to receive(:staging_complete).with(instance_of(BuildModel), { error: sanitized_failure_reason }, false)
 
-            post url, MultiJson.dump(staging_response)
+            post url, Oj.dump(staging_response)
             expect(last_response.status).to eq(200)
           end
 
@@ -354,7 +354,7 @@ module VCAP::CloudController
             expect(statsd_updater).to receive(:report_staging_failure_metrics).with(one_hour_in_nanoseconds)
             expect(prometheus_updater).to receive(:report_staging_failure_metrics).with(one_hour_in_nanoseconds)
             Timecop.freeze(Time.now) do
-              post url, MultiJson.dump(staging_response)
+              post url, Oj.dump(staging_response)
             end
           end
         end
@@ -364,7 +364,7 @@ module VCAP::CloudController
         let(:staging_guid) { 'asdf' }
 
         it 'returns 404' do
-          post url, MultiJson.dump(staging_response)
+          post url, Oj.dump(staging_response)
           expect(last_response.status).to eq(404)
           expect(last_response.body).to match(/Build not found/)
         end
@@ -374,7 +374,7 @@ module VCAP::CloudController
         it 'requests staging_complete with start' do
           expect_any_instance_of(Diego::Stager).to receive(:staging_complete).with(instance_of(BuildModel), staging_response, true)
 
-          post "#{url}?start=true", MultiJson.dump(staging_response)
+          post "#{url}?start=true", Oj.dump(staging_response)
           expect(last_response.status).to eq(200)
         end
       end

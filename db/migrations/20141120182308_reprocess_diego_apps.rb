@@ -7,7 +7,7 @@ Sequel.migration do
 
   def diego?(row)
     decrypted = VCAP::CloudController::Encryptor.decrypt(row[:encrypted_environment_json], row[:salt])
-    environment_json = JSON.parse(decrypted)
+    environment_json = Oj.load(decrypted)
     !environment_json['DIEGO_RUN_BETA'] != 'true'
   end
 end

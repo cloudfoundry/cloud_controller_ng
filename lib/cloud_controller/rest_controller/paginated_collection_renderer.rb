@@ -32,9 +32,6 @@ module VCAP::CloudController::RestController
     # @option opts [Integer] :results_per_page Number of results to include
     # per page.  Defaults to 50.
     #
-    # @option opts [Boolean] :pretty Controls pretty formatting of the encoded
-    # json.  Defaults to true.
-    #
     # @option opts [Integer] :inline_relations_depth Depth to recursively
     # expand relationships in addition to providing the URLs.
     #
@@ -71,7 +68,7 @@ module VCAP::CloudController::RestController
 
       result[:orphans] = orphans if orphans
 
-      MultiJson.dump(result, pretty: true)
+      Oj.dump(result, mode: :compat)
     end
 
     private

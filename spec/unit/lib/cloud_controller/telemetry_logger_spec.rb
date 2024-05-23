@@ -29,14 +29,14 @@ module VCAP::CloudController
         { 'bogus_key' => 'bogus_value' }
       )
 
-      expect(JSON.parse(file.read)).to match({
-                                               'telemetry-source' => 'cloud_controller_ng',
-                                               'telemetry-time' => rfc3339,
-                                               'some-event' => {
-                                                 'api-version' => 'v3',
-                                                 'bogus_key' => OpenSSL::Digest.hexdigest('SHA256', 'bogus_value')
-                                               }
-                                             })
+      expect(Oj.load(file.read)).to match({
+                                            'telemetry-source' => 'cloud_controller_ng',
+                                            'telemetry-time' => rfc3339,
+                                            'some-event' => {
+                                              'api-version' => 'v3',
+                                              'bogus_key' => OpenSSL::Digest.hexdigest('SHA256', 'bogus_value')
+                                            }
+                                          })
     end
 
     it 'does not anonymize raw keys' do
@@ -46,15 +46,15 @@ module VCAP::CloudController
         { 'safe_key' => 'safe-value' }
       )
 
-      expect(JSON.parse(file.read)).to match({
-                                               'telemetry-source' => 'cloud_controller_ng',
-                                               'telemetry-time' => rfc3339,
-                                               'some-event' => {
-                                                 'api-version' => 'v3',
-                                                 'anonymize_key' => OpenSSL::Digest.hexdigest('SHA256', 'anonymize_value'),
-                                                 'safe_key' => 'safe-value'
-                                               }
-                                             })
+      expect(Oj.load(file.read)).to match({
+                                            'telemetry-source' => 'cloud_controller_ng',
+                                            'telemetry-time' => rfc3339,
+                                            'some-event' => {
+                                              'api-version' => 'v3',
+                                              'anonymize_key' => OpenSSL::Digest.hexdigest('SHA256', 'anonymize_value'),
+                                              'safe_key' => 'safe-value'
+                                            }
+                                          })
     end
 
     it 'converts specified raw fields to int' do
@@ -64,14 +64,14 @@ module VCAP::CloudController
         { 'memory-in-mb' => '1234' }
       )
 
-      expect(JSON.parse(file.read)).to match({
-                                               'telemetry-source' => 'cloud_controller_ng',
-                                               'telemetry-time' => rfc3339,
-                                               'some-event' => {
-                                                 'api-version' => 'v3',
-                                                 'memory-in-mb' => 1234
-                                               }
-                                             })
+      expect(Oj.load(file.read)).to match({
+                                            'telemetry-source' => 'cloud_controller_ng',
+                                            'telemetry-time' => rfc3339,
+                                            'some-event' => {
+                                              'api-version' => 'v3',
+                                              'memory-in-mb' => 1234
+                                            }
+                                          })
     end
 
     describe 'v2 emit' do
@@ -81,14 +81,14 @@ module VCAP::CloudController
           { 'key' => 'value' }
         )
 
-        expect(JSON.parse(file.read)).to match({
-                                                 'telemetry-source' => 'cloud_controller_ng',
-                                                 'telemetry-time' => rfc3339,
-                                                 'some-event' => {
-                                                   'key' => OpenSSL::Digest.hexdigest('SHA256', 'value'),
-                                                   'api-version' => 'v2'
-                                                 }
-                                               })
+        expect(Oj.load(file.read)).to match({
+                                              'telemetry-source' => 'cloud_controller_ng',
+                                              'telemetry-time' => rfc3339,
+                                              'some-event' => {
+                                                'key' => OpenSSL::Digest.hexdigest('SHA256', 'value'),
+                                                'api-version' => 'v2'
+                                              }
+                                            })
       end
     end
 
@@ -99,14 +99,14 @@ module VCAP::CloudController
           { 'key' => 'value' }
         )
 
-        expect(JSON.parse(file.read)).to match({
-                                                 'telemetry-source' => 'cloud_controller_ng',
-                                                 'telemetry-time' => rfc3339,
-                                                 'some-event' => {
-                                                   'key' => OpenSSL::Digest.hexdigest('SHA256', 'value'),
-                                                   'api-version' => 'v3'
-                                                 }
-                                               })
+        expect(Oj.load(file.read)).to match({
+                                              'telemetry-source' => 'cloud_controller_ng',
+                                              'telemetry-time' => rfc3339,
+                                              'some-event' => {
+                                                'key' => OpenSSL::Digest.hexdigest('SHA256', 'value'),
+                                                'api-version' => 'v3'
+                                              }
+                                            })
       end
     end
 
@@ -117,14 +117,14 @@ module VCAP::CloudController
           { 'key' => 'value' }
         )
 
-        expect(JSON.parse(file.read)).to match({
-                                                 'telemetry-source' => 'cloud_controller_ng',
-                                                 'telemetry-time' => rfc3339,
-                                                 'some-event' => {
-                                                   'key' => OpenSSL::Digest.hexdigest('SHA256', 'value'),
-                                                   'api-version' => 'internal'
-                                                 }
-                                               })
+        expect(Oj.load(file.read)).to match({
+                                              'telemetry-source' => 'cloud_controller_ng',
+                                              'telemetry-time' => rfc3339,
+                                              'some-event' => {
+                                                'key' => OpenSSL::Digest.hexdigest('SHA256', 'value'),
+                                                'api-version' => 'internal'
+                                              }
+                                            })
       end
     end
   end

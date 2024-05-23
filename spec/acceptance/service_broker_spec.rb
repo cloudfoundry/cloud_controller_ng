@@ -330,7 +330,7 @@ RSpec.describe 'Service Broker' do
       it 'sets the cc plan free field' do
         get('/v2/service_plans', {}.to_json, admin_headers)
 
-        resources = JSON.parse(last_response.body)['resources']
+        resources = Oj.load(last_response.body)['resources']
         not_free_plan = resources.find { |plan| plan['entity']['name'] == 'not-free-plan' }
         free_plan = resources.find { |plan| plan['entity']['name'] == 'free-plan' }
 
@@ -732,7 +732,7 @@ RSpec.describe 'Service Broker' do
       it 'registers all schemas successfully' do
         expect(last_response.status).to eq(201)
         get('/v2/service_plans', {}.to_json, admin_headers)
-        resources = JSON.parse(last_response.body)['resources']
+        resources = Oj.load(last_response.body)['resources']
 
         expect(resources.length).to eq(4)
 
@@ -1013,7 +1013,7 @@ RSpec.describe 'Service Broker' do
         ]
 
         expect(a_request(:post, 'https://uaa.service.cf.internal/oauth/clients/tx/modify').with do |req|
-          client_modifications = JSON.parse(req.body)
+          client_modifications = Oj.load(req.body)
           expect(client_modifications).to match_array(expected_client_modifications)
         end).to have_been_made
       end
@@ -1024,7 +1024,7 @@ RSpec.describe 'Service Broker' do
 
         expect(last_response).to have_status_code(200)
 
-        parsed_body = JSON.parse(last_response.body)
+        parsed_body = Oj.load(last_response.body)
         expect(parsed_body['entity']['name']).to eq('new_broker_name')
       end
     end
@@ -1099,7 +1099,7 @@ RSpec.describe 'Service Broker' do
       it 'sets the cc plan free field' do
         get('/v2/service_plans', {}.to_json, admin_headers)
 
-        resources = JSON.parse(last_response.body)['resources']
+        resources = Oj.load(last_response.body)['resources']
         no_longer_not_free_plan = resources.find { |plan| plan['entity']['name'] == 'not-free-plan' }
         no_longer_free_plan = resources.find { |plan| plan['entity']['name'] == 'free-plan' }
 
@@ -1226,7 +1226,7 @@ RSpec.describe 'Service Broker' do
         get('/v2/services', {}.to_json, admin_headers)
         expect(last_response).to have_status_code(200)
 
-        resources = JSON.parse(last_response.body)['resources']
+        resources = Oj.load(last_response.body)['resources']
 
         no_longer_allow_context_updates_service = resources.find { |service| service['entity']['label'] == 'allow-context-updates-service' }
         now_allow_context_updates_service = resources.find { |service| service['entity']['label'] == 'not-allow-context-updates-service' }
@@ -1350,7 +1350,7 @@ RSpec.describe 'Service Broker' do
       it 'sets the cc service bindings_retrievable field' do
         get('/v2/services', {}.to_json, admin_headers)
 
-        resources = JSON.parse(last_response.body)['resources']
+        resources = Oj.load(last_response.body)['resources']
 
         no_longer_bindings_retrievable_service = resources.find { |service| service['entity']['label'] == 'bindings-retrievable-service' }
         now_bindings_retrievable_service = resources.find { |service| service['entity']['label'] == 'bindings-not-retrievable-service' }
@@ -1474,7 +1474,7 @@ RSpec.describe 'Service Broker' do
       it 'sets the cc service instances_retrievable field' do
         get('/v2/services', {}.to_json, admin_headers)
 
-        resources = JSON.parse(last_response.body)['resources']
+        resources = Oj.load(last_response.body)['resources']
 
         no_longer_instances_retrievable_service = resources.find { |service| service['entity']['label'] == 'instances-retrievable-service' }
         now_instances_retrievable_service = resources.find { |service| service['entity']['label'] == 'instances-not-retrievable-service' }
@@ -1645,7 +1645,7 @@ RSpec.describe 'Service Broker' do
           get('/v2/services?inline-relations-depth=1', '{}', admin_headers)
           expect(last_response).to have_status_code(200)
 
-          parsed_body = JSON.parse(last_response.body)
+          parsed_body = Oj.load(last_response.body)
           expect(parsed_body['resources'].first['entity']['service_plans'].length).to eq(1)
         end
       end
@@ -1658,7 +1658,7 @@ RSpec.describe 'Service Broker' do
           get('/v2/services?inline-relations-depth=1', '{}', admin_headers)
           expect(last_response).to have_status_code(200)
 
-          parsed_body = JSON.parse(last_response.body)
+          parsed_body = Oj.load(last_response.body)
           expect(parsed_body['resources'].first['entity']['service_plans'].length).to eq(2)
         end
       end
@@ -1761,7 +1761,7 @@ RSpec.describe 'Service Broker' do
         get('/v2/services?inline-relations-depth=1', '{}', admin_headers)
         expect(last_response).to have_status_code(200)
 
-        parsed_body = JSON.parse(last_response.body)
+        parsed_body = Oj.load(last_response.body)
         expect(parsed_body['resources'].first['entity']['label']).to eq(service_name)
         expect(parsed_body['resources'].first['entity']['service_plans'].length).to eq(1)
       end

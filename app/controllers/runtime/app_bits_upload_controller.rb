@@ -76,7 +76,7 @@ module VCAP::CloudController
     post "#{path_guid}/copy_bits", :copy_app_bits
 
     def copy_app_bits(dest_app_guid)
-      json_request        = MultiJson.load(body)
+      json_request        = Oj.load(body)
       source_process_guid = json_request['source_app_guid']
 
       raise CloudController::Errors::ApiError.new_from_details('AppBitsCopyInvalid', 'missing source_app_guid') unless source_process_guid
@@ -104,8 +104,8 @@ module VCAP::CloudController
 
     def json_param(name)
       raw = params[name]
-      MultiJson.load(raw)
-    rescue MultiJson::ParseError
+      Oj.load(raw)
+    rescue StandardError
       raise CloudController::Errors::ApiError.new_from_details('AppBitsUploadInvalid', "invalid :#{name}")
     end
   end

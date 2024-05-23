@@ -30,7 +30,7 @@ RSpec.resource 'User Provided Service Instances', type: %i[api legacy_api] do
           route_service_url: 'https://logger.example.com'
         }
 
-        client.post '/v2/user_provided_service_instances', MultiJson.dump(request_hash, pretty: true), headers
+        client.post '/v2/user_provided_service_instances', Oj.dump(request_hash), headers
         expect(status).to eq(201)
       end
     end
@@ -46,7 +46,7 @@ RSpec.resource 'User Provided Service Instances', type: %i[api legacy_api] do
           credentials: { somekey: 'somenewvalue' }
         }
 
-        client.put "/v2/user_provided_service_instances/#{guid}", MultiJson.dump(request_hash, pretty: true), headers
+        client.put "/v2/user_provided_service_instances/#{guid}", Oj.dump(request_hash), headers
         expect(status).to eq(201)
         standard_entity_response parsed_response, :user_provided_service_instance, expected_values: { credentials: { 'somekey' => 'somenewvalue' } }
       end

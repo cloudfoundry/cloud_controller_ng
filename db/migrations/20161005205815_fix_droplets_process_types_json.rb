@@ -39,10 +39,10 @@ Sequel.migration do
       batcher = droplet_process_type_batcher.new(self)
 
       self[:droplets].each do |droplet|
-        MultiJson.load(droplet[:process_types])
+        Oj.load(droplet[:process_types])
       rescue StandardError
         command      = droplet[:process_types].nil? ? '' : droplet[:process_types][8..-3]
-        json_command = MultiJson.dump({ web: command })
+        json_command = Oj.dump({ web: command })
         batcher.add_command(json_command, droplet[:id])
       end
 

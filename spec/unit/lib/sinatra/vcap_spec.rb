@@ -122,7 +122,7 @@ RSpec.describe 'Sinatra::VCAP', type: :v2_controller do
     end
 
     it 'returns structure' do
-      decoded_response = MultiJson.load(last_response.body)
+      decoded_response = Oj.load(last_response.body)
       expect(decoded_response['code']).to eq(1001)
       expect(decoded_response['description']).to eq('Request invalid due to parse error: some message')
 
@@ -141,7 +141,7 @@ RSpec.describe 'Sinatra::VCAP', type: :v2_controller do
     end
 
     it 'returns structure' do
-      decoded_response = MultiJson.load(last_response.body)
+      decoded_response = Oj.load(last_response.body)
       expect(decoded_response['code']).to eq(10_001)
       expect(decoded_response['description']).to eq('boring message')
 
@@ -155,7 +155,7 @@ RSpec.describe 'Sinatra::VCAP', type: :v2_controller do
     end
 
     def request_info
-      MultiJson.load(last_response.body)
+      Oj.load(last_response.body)
     end
 
     it 'populates the request uri and method' do

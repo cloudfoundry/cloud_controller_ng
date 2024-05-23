@@ -16,7 +16,7 @@ module VCAP::CloudController
           it 'lists all the organizations the user belongs to' do
             get "/v2/users/#{user.guid}/summary"
             expect(last_response.status).to eq 200
-            expect(decoded_response(symbolize_keys: true)).to eq(::UserSummaryPresenter.new(user).to_hash)
+            expect(decoded_response(symbol_keys: true)).to eq(::UserSummaryPresenter.new(user).to_hash)
           end
         end
 
@@ -38,7 +38,7 @@ module VCAP::CloudController
           it 'lists all the organizations the user belongs to' do
             get "/v2/users/#{user.guid}/summary"
             expect(last_response.status).to eq 200
-            expect(decoded_response(symbolize_keys: true)).to eq(::UserSummaryPresenter.new(user).to_hash)
+            expect(decoded_response(symbol_keys: true)).to eq(::UserSummaryPresenter.new(user).to_hash)
           end
         end
       end

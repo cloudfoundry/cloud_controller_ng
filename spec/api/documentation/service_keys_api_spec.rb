@@ -24,7 +24,7 @@ RSpec.resource 'Service Keys', type: %i[api legacy_api] do
     field :parameters, 'Arbitrary parameters to pass along to the service broker. Must be a JSON object', required: false
 
     example 'Create a Service Key' do
-      request_json = MultiJson.dump({ service_instance_guid: service_instance.guid, name: service_key.name }, pretty: true)
+      request_json = Oj.dump({ service_instance_guid: service_instance.guid, name: service_key.name })
       client.post('/v2/service_keys', request_json, headers).inspect
       expect(status).to eq 201
     end

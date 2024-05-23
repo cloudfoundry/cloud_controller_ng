@@ -25,7 +25,7 @@ module VCAP::CloudController
 
       [
         HTTP::OK,
-        MultiJson.dump(feature_flags, pretty: true)
+        Oj.dump(feature_flags, mode: :compat)
       ]
     end
 
@@ -49,7 +49,7 @@ module VCAP::CloudController
 
       raise CloudController::Errors::ApiError.new_from_details('FeatureFlagNotFound', name) unless FeatureFlag::DEFAULT_FLAGS.key?(name.to_sym)
 
-      feature_flag_attributes = MultiJson.load(body)
+      feature_flag_attributes = Oj.load(body)
 
       feature_flag = FeatureFlag.find(name:)
       feature_flag ||= FeatureFlag.new(name:)

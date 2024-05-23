@@ -23,7 +23,7 @@ RSpec.describe 'Info Request' do
 
     it 'includes data from the config' do
       get '/v3/info'
-      expect(MultiJson.load(last_response.body)).to match_json_response(return_info_json)
+      expect(Oj.load(last_response.body)).to match_json_response(return_info_json)
     end
 
     context 'when no info values are set' do
@@ -51,7 +51,7 @@ RSpec.describe 'Info Request' do
 
       it 'includes has proper empty values' do
         get '/v3/info'
-        expect(MultiJson.load(last_response.body)).to match_json_response(return_info_json)
+        expect(Oj.load(last_response.body)).to match_json_response(return_info_json)
       end
     end
   end

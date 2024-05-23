@@ -890,11 +890,11 @@ module VCAP::CloudController
 
             it 'includes the lrp route' do
               lrp = builder.build_app_lrp
-              expect(lrp.routes.routes['diego-ssh']).to eq(MultiJson.dump({
-                                                                            container_port: 2222,
-                                                                            private_key: ssh_key.private_key,
-                                                                            host_fingerprint: ssh_key.fingerprint
-                                                                          }))
+              expect(lrp.routes.routes['diego-ssh']).to eq(Oj.dump({
+                                                                     container_port: 2222,
+                                                                     private_key: ssh_key.private_key,
+                                                                     host_fingerprint: ssh_key.fingerprint
+                                                                   }))
             end
           end
 
@@ -1276,11 +1276,11 @@ module VCAP::CloudController
 
             it 'includes the lrp route' do
               lrp = builder.build_app_lrp
-              expect(lrp.routes.routes['diego-ssh']).to eq(MultiJson.dump({
-                                                                            container_port: 2222,
-                                                                            private_key: ssh_key.private_key,
-                                                                            host_fingerprint: ssh_key.fingerprint
-                                                                          }))
+              expect(lrp.routes.routes['diego-ssh']).to eq(Oj.dump({
+                                                                     container_port: 2222,
+                                                                     private_key: ssh_key.private_key,
+                                                                     host_fingerprint: ssh_key.fingerprint
+                                                                   }))
             end
           end
         end

@@ -46,10 +46,10 @@ class PackagesController < ApplicationController
     opts = hashed_params[:body].dup.symbolize_keys
     begin
       if opts[:resources].present?
-        opts[:resources] = MultiJson.load(opts[:resources])
+        opts[:resources] = Oj.load(opts[:resources])
         opts[:resources] = V2V3ResourceTranslator.new(opts[:resources]).v2_fingerprints_body
       end
-    rescue MultiJson::ParseError
+    rescue StandardError
       unprocessable!('Resources must be valid JSON.')
     end
 
@@ -151,7 +151,7 @@ class PackagesController < ApplicationController
   private
 
   def create_fresh
-    message = PackageCreateMessage.new(JSON.parse(request.body))
+    message = PackageCreateMessage.new(Oj.load(request.body))
     unprocessable!(message.errors.full_messages) unless message.valid?
 
     app = AppModel.where(guid: message.app_guid).first
@@ -172,7 +172,7 @@ class PackagesController < ApplicationController
   def create_copy
     unprocessable!('Unable to copy package when an image registry is used to store packages') if VCAP::CloudController::Config.config.package_image_registry_configured?
 
-    app_guid = JSON.parse(request.body).deep_symbolize_keys.dig(:relationships, :app, :data, :guid)
+    app_guid = Oj.load(request.body).deep_symbolize_keys.dig(:relationships, :app, :data, :guid)
     destination_app = AppModel.where(guid: app_guid).first
 
     unprocessable_app! unless destination_app && permission_queryer.can_read_from_space?(destination_app.space.id, destination_app.space.organization_id)

@@ -460,7 +460,7 @@ RSpec.describe 'Domains Request' do
       it 'returns a 200 and the filtered domains for "in" label selector' do
         get '/v3/domains?label_selector=animal in (dog)', nil, admin_header
 
-        parsed_response = MultiJson.load(last_response.body)
+        parsed_response = Oj.load(last_response.body)
 
         expected_pagination = {
           'total_results' => 1,
@@ -479,7 +479,7 @@ RSpec.describe 'Domains Request' do
       it 'returns a 200 and the filtered domains for "notin" label selector' do
         get '/v3/domains?label_selector=animal notin (dog)', nil, admin_header
 
-        parsed_response = MultiJson.load(last_response.body)
+        parsed_response = Oj.load(last_response.body)
 
         expected_pagination = {
           'total_results' => 1,
@@ -498,7 +498,7 @@ RSpec.describe 'Domains Request' do
       it 'returns a 200 and the filtered domains for "=" label selector' do
         get '/v3/domains?label_selector=animal=dog', nil, admin_header
 
-        parsed_response = MultiJson.load(last_response.body)
+        parsed_response = Oj.load(last_response.body)
 
         expected_pagination = {
           'total_results' => 1,
@@ -517,7 +517,7 @@ RSpec.describe 'Domains Request' do
       it 'returns a 200 and the filtered domains for "==" label selector' do
         get '/v3/domains?label_selector=animal==dog', nil, admin_header
 
-        parsed_response = MultiJson.load(last_response.body)
+        parsed_response = Oj.load(last_response.body)
 
         expected_pagination = {
           'total_results' => 1,
@@ -536,7 +536,7 @@ RSpec.describe 'Domains Request' do
       it 'returns a 200 and the filtered domains for "!=" label selector' do
         get '/v3/domains?label_selector=animal!=dog', nil, admin_header
 
-        parsed_response = MultiJson.load(last_response.body)
+        parsed_response = Oj.load(last_response.body)
 
         expected_pagination = {
           'total_results' => 1,
@@ -555,7 +555,7 @@ RSpec.describe 'Domains Request' do
       it 'returns a 200 and the filtered domains for "=" label selector' do
         get '/v3/domains?label_selector=animal=cow,santa=claus', nil, admin_header
 
-        parsed_response = MultiJson.load(last_response.body)
+        parsed_response = Oj.load(last_response.body)
 
         expected_pagination = {
           'total_results' => 1,
@@ -574,7 +574,7 @@ RSpec.describe 'Domains Request' do
       it 'returns a 200 and the filtered domains for existence label selector' do
         get '/v3/domains?label_selector=santa', nil, admin_header
 
-        parsed_response = MultiJson.load(last_response.body)
+        parsed_response = Oj.load(last_response.body)
 
         expected_pagination = {
           'total_results' => 1,
@@ -593,7 +593,7 @@ RSpec.describe 'Domains Request' do
       it 'returns a 200 and the filtered domains for non-existence label selector' do
         get '/v3/domains?label_selector=!santa', nil, admin_header
 
-        parsed_response = MultiJson.load(last_response.body)
+        parsed_response = Oj.load(last_response.body)
 
         expected_pagination = {
           'total_results' => 1,

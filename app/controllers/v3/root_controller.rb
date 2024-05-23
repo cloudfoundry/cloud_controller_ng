@@ -39,7 +39,7 @@ class RootController < ActionController::Base # rubocop:disable Rails/Applicatio
     links.merge!(create_link(:tasks))
     links.merge!(create_link(:users))
 
-    render :ok, json: MultiJson.dump({ links: }, pretty: true)
+    render :ok, json: Oj.dump({ links: })
   end
 
   private

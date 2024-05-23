@@ -52,7 +52,7 @@ RSpec.resource 'Buildpacks', type: %i[api legacy_api] do
         DOC
 
         expect do
-          client.put "/v2/buildpacks/#{guid}", MultiJson.dump({ position: 3 }, pretty: true), headers
+          client.put "/v2/buildpacks/#{guid}", Oj.dump({ position: 3 }), headers
           expect(status).to eq(201)
           standard_entity_response parsed_response, :buildpack, expected_values: { position: 3 }
         end.to change {
@@ -66,7 +66,7 @@ RSpec.resource 'Buildpacks', type: %i[api legacy_api] do
 
       example 'Enable or disable a Buildpack' do
         expect do
-          client.put "/v2/buildpacks/#{guid}", MultiJson.dump({ enabled: false }, pretty: true), headers
+          client.put "/v2/buildpacks/#{guid}", Oj.dump({ enabled: false }), headers
           expect(status).to eq 201
           standard_entity_response parsed_response, :buildpack, expected_values: { enabled: false }
         end.to change {
@@ -74,7 +74,7 @@ RSpec.resource 'Buildpacks', type: %i[api legacy_api] do
         }.from(true).to(false)
 
         expect do
-          client.put "/v2/buildpacks/#{guid}", MultiJson.dump({ enabled: true }, pretty: true), headers
+          client.put "/v2/buildpacks/#{guid}", Oj.dump({ enabled: true }), headers
           expect(status).to eq 201
           standard_entity_response parsed_response, :buildpack, expected_values: { enabled: true }
         end.to change {
@@ -84,7 +84,7 @@ RSpec.resource 'Buildpacks', type: %i[api legacy_api] do
 
       example 'Lock or unlock a Buildpack' do
         expect do
-          client.put "/v2/buildpacks/#{guid}", MultiJson.dump({ locked: true }, pretty: true), headers
+          client.put "/v2/buildpacks/#{guid}", Oj.dump({ locked: true }), headers
           expect(status).to eq 201
           standard_entity_response parsed_response, :buildpack, expected_values: { locked: true }
         end.to change {
@@ -92,7 +92,7 @@ RSpec.resource 'Buildpacks', type: %i[api legacy_api] do
         }.from(false).to(true)
 
         expect do
-          client.put "/v2/buildpacks/#{guid}", MultiJson.dump({ locked: false }, pretty: true), headers
+          client.put "/v2/buildpacks/#{guid}", Oj.dump({ locked: false }), headers
           expect(status).to eq 201
           standard_entity_response parsed_response, :buildpack, expected_values: { locked: false }
         end.to change {

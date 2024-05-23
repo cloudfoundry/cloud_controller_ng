@@ -16,12 +16,12 @@ RSpec.describe 'Resource Matches' do
 
       allow(resource_pool_wrapper).
         to receive(:call).
-        and_return(MultiJson.dump([{
-                                    'sha1' => '002d760bea1be268e27077412e11a320d0f164d3',
-                                    'size' => 36,
-                                    'fn' => '/path/to/filename',
-                                    'mode' => '0755'
-                                  }]))
+        and_return(Oj.dump([{
+                             'sha1' => '002d760bea1be268e27077412e11a320d0f164d3',
+                             'size' => 36,
+                             'fn' => '/path/to/filename',
+                             'mode' => '0755'
+                           }]))
     end
 
     let(:body) do
@@ -57,7 +57,7 @@ RSpec.describe 'Resource Matches' do
         ]
       }
 
-      parsed_response = MultiJson.load(last_response.body)
+      parsed_response = Oj.load(last_response.body)
 
       expect(last_response.status).to eq(201)
       expect(parsed_response).to be_a_response_like(expected_response)
@@ -73,7 +73,7 @@ RSpec.describe 'Resource Matches' do
           'resources' => []
         }
 
-        parsed_response = MultiJson.load(last_response.body)
+        parsed_response = Oj.load(last_response.body)
 
         expect(last_response.status).to eq(201)
         expect(parsed_response).to be_a_response_like(expected_response)

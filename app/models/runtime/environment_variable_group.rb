@@ -23,7 +23,7 @@ module VCAP::CloudController
     end
 
     def environment_json_with_serialization=(env)
-      self.environment_json_without_serialization = MultiJson.dump(env)
+      self.environment_json_without_serialization = Oj.dump(env)
     end
     alias_method 'environment_json_without_serialization=', 'environment_json='
     alias_method 'environment_json=', 'environment_json_with_serialization='
@@ -32,7 +32,7 @@ module VCAP::CloudController
       string = environment_json_without_serialization
       return {} if string.blank?
 
-      MultiJson.load string
+      Oj.load(string)
     end
     alias_method 'environment_json_without_serialization', 'environment_json'
     alias_method 'environment_json', 'environment_json_with_serialization'

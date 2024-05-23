@@ -628,7 +628,6 @@ DEPENDENCIES
   membrane (~> 1.0)
   mime-types (~> 3.5)
   mock_redis
-  multi_json
   multipart-parser
   mysql2 (~> 0.5.6)
   net-ssh
@@ -681,7 +680,6 @@ DEPENDENCIES
   vcap-concurrency!
   vmstat (~> 2.3)
   webmock (> 2.3.1)
-  yajl-ruby
 
 BUNDLED WITH
    2.4.10

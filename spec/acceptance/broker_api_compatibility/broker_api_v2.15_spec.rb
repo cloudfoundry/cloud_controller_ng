@@ -283,7 +283,7 @@ RSpec.describe 'Service Broker API integration' do
 
           expect(
             a_request(:put, %r{/v2/service_instances/#{@service_instance_guid}}).with do |req|
-              context = JSON.parse(req.body)['context']
+              context = Oj.load(req.body)['context']
               context >= expected_context_attributes
             end
           ).to have_been_made
@@ -307,7 +307,7 @@ RSpec.describe 'Service Broker API integration' do
 
           expect(
             a_request(:patch, %r{/v2/service_instances/#{@service_instance_guid}}).with do |req|
-              context = JSON.parse(req.body)['context']
+              context = Oj.load(req.body)['context']
               context >= expected_context_attributes
             end
           ).to have_been_made
@@ -334,7 +334,7 @@ RSpec.describe 'Service Broker API integration' do
 
             expect(
               a_request(:patch, %r{/v2/service_instances/#{@service_instance_guid}}).with do |req|
-                context = JSON.parse(req.body)['context']
+                context = Oj.load(req.body)['context']
                 context >= expected_context_attributes
               end
             ).to have_been_made
@@ -380,7 +380,7 @@ RSpec.describe 'Service Broker API integration' do
         it 'receives the correct attributes in the context' do
           expect(
             a_request(:put, %r{/v2/service_instances/#{@service_instance_guid}/service_bindings/#{@binding_guid}}).with do |req|
-              context = JSON.parse(req.body)['context']
+              context = Oj.load(req.body)['context']
               context >= expected_context_attributes
             end
           ).to have_been_made
@@ -395,7 +395,7 @@ RSpec.describe 'Service Broker API integration' do
         it 'receives the correct attributes in the context' do
           expect(
             a_request(:put, %r{/v2/service_instances/#{@service_instance_guid}/service_bindings/#{@binding_guid}}).with do |req|
-              context = JSON.parse(req.body)['context']
+              context = Oj.load(req.body)['context']
               context >= expected_context_attributes
             end
           ).to have_been_made
@@ -412,7 +412,7 @@ RSpec.describe 'Service Broker API integration' do
         it 'receives the correct attributes in the context' do
           expect(
             a_request(:put, %r{/v2/service_instances/#{@service_instance_guid}/service_bindings/#{@binding_guid}}).with do |req|
-              context = JSON.parse(req.body)['context']
+              context = Oj.load(req.body)['context']
               context >= expected_context_attributes
             end
           ).to have_been_made
@@ -507,7 +507,7 @@ RSpec.describe 'Service Broker API integration' do
             {}.to_json,
             json_headers(admin_headers))
 
-        parsed_body = MultiJson.load(last_response.body)
+        parsed_body = Oj.load(last_response.body)
         maintenance_info = parsed_body['entity']['maintenance_info']
         expect(maintenance_info).to eq({ 'version' => '2.0.0', 'description' => 'Test description' })
       end
@@ -530,7 +530,7 @@ RSpec.describe 'Service Broker API integration' do
           expect(response).to have_status_code(202)
           expect(
             a_request(:patch, update_url_for_broker(@broker, accepts_incomplete: true)).with do |req|
-              expect(JSON.parse(req.body)).to include('maintenance_info' => { 'version' => '2.0.0' })
+              expect(Oj.load(req.body)).to include('maintenance_info' => { 'version' => '2.0.0' })
             end
           ).to have_been_made
         end

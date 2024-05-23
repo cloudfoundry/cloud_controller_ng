@@ -78,7 +78,7 @@ module RegistryBuddy
         client.delete_image(image_reference)
 
         expect(WebMock).to have_requested(:delete,
-                                          "http://#{registry_buddy_host}:#{registry_buddy_port}/images").with(body: JSON.dump('image_reference' => image_reference))
+                                          "http://#{registry_buddy_host}:#{registry_buddy_port}/images").with(body: Oj.dump('image_reference' => image_reference))
       end
 
       context 'when the request succeeds' do

@@ -34,12 +34,12 @@ RSpec.resource 'Domains (deprecated)', type: %i[api legacy_api] do
       context 'Creating a domain owned by an organization' do
         example 'Create a Domain owned by the given Organization' do
           org_guid = VCAP::CloudController::Organization.make.guid
-          payload = MultiJson.dump(
+          payload = Oj.dump(
             {
               name: 'exmaple.com',
               wildcard: true,
               owning_organization_guid: org_guid
-            }, pretty: true
+            }
           )
 
           client.post '/v2/domains', payload, headers

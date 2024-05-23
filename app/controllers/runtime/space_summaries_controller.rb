@@ -12,7 +12,7 @@ module VCAP::CloudController
     def summary(guid)
       space = find_guid_and_validate_access(:read, guid)
 
-      MultiJson.dump(space_summary(space), pretty: true)
+      Oj.dump(space_summary(space), mode: :compat)
     end
 
     protected

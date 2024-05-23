@@ -148,7 +148,7 @@ module VCAP::CloudController
     end
 
     def credentials_with_serialization=(val)
-      self.credentials_without_serialization = MultiJson.dump(val)
+      self.credentials_without_serialization = Oj.dump(val)
     end
     alias_method 'credentials_without_serialization=', 'credentials='
     alias_method 'credentials=', 'credentials_with_serialization='
@@ -157,7 +157,7 @@ module VCAP::CloudController
       string = credentials_without_serialization
       return if string.blank?
 
-      MultiJson.load string
+      Oj.load(string)
     end
     alias_method 'credentials_without_serialization', 'credentials'
     alias_method 'credentials', 'credentials_with_serialization'

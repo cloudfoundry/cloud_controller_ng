@@ -222,7 +222,7 @@ module VCAP::CloudController
         post '/v2/service_brokers', body
 
         service_broker = ServiceBroker.last
-        expect(MultiJson.load(last_response.body)).to eq(
+        expect(Oj.load(last_response.body)).to eq(
           'metadata' => {
             'guid' => service_broker.guid,
             'created_at' => service_broker.created_at.iso8601,
@@ -263,7 +263,7 @@ module VCAP::CloudController
           post '/v2/service_brokers', body
 
           expect(last_response).to have_status_code(201)
-          parsed_body = JSON.parse(last_response.body)
+          parsed_body = Oj.load(last_response.body)
           expect(parsed_body['entity']).to include({ 'space_guid' => space.guid })
           expect(a_request(:get, broker_catalog_url)).to have_been_made
 
@@ -302,7 +302,7 @@ module VCAP::CloudController
           post '/v2/service_brokers', body
 
           expect(last_response).to have_status_code(404)
-          parsed_body = JSON.parse(last_response.body)
+          parsed_body = Oj.load(last_response.body)
           expect(parsed_body['description']).to include('Space not found')
         end
       end
@@ -735,7 +735,7 @@ module VCAP::CloudController
           put "/v2/service_brokers/#{broker.guid}", body
 
           expect(last_response).to have_status_code(200)
-          json_response = MultiJson.load(last_response.body)
+          json_response = Oj.load(last_response.body)
           expect(json_response).to include({
                                              'entity' => {
                                                'name' => 'My Updated Service',

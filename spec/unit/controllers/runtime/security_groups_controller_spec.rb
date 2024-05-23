@@ -80,7 +80,7 @@ module VCAP::CloudController
         end
 
         it 'returns SecurityGroupInvalid' do
-          post '/v2/security_groups', MultiJson.dump(security_group)
+          post '/v2/security_groups', Oj.dump(security_group)
 
           expect(last_response.status).to eq(400)
           expect(decoded_response['description']).to match(/must not exceed #{SecurityGroup::MAX_RULES_CHAR_LENGTH} characters/)

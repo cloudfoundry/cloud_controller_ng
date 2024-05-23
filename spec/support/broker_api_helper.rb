@@ -98,11 +98,11 @@ module VCAP::CloudController::BrokerApiHelper
     post('/v2/service_brokers',
          { name: 'broker-name', broker_url: 'http://broker-url', auth_username: 'username', auth_password: 'password' }.to_json,
          admin_headers)
-    response = JSON.parse(last_response.body)
+    response = Oj.load(last_response.body)
     @broker_guid = response['metadata']['guid']
 
     get('/v2/services?inline-relations-depth=1', '{}', admin_headers)
-    response = JSON.parse(last_response.body)
+    response = Oj.load(last_response.body)
     @service_guid = response['resources'].first['metadata']['guid']
 
     service_plans = response['resources'].first['entity']['service_plans']
@@ -124,7 +124,7 @@ module VCAP::CloudController::BrokerApiHelper
     post('/v2/service_brokers',
          { name: 'other-broker-name', broker_url: 'http://other-broker-url', auth_username: 'username', auth_password: 'password' }.to_json,
          headers)
-    response = JSON.parse(last_response.body)
+    response = Oj.load(last_response.body)
     @broker_guid = response['metadata']['guid']
   end
 
@@ -136,9 +136,9 @@ module VCAP::CloudController::BrokerApiHelper
 
   def make_all_plans_public
     response = get('/v2/service_plans', '{}', admin_headers)
-    service_plan_guids = JSON.parse(response.body).fetch('resources').map { |plan| plan.fetch('metadata').fetch('guid') }
+    service_plan_guids = Oj.load(response.body).fetch('resources').map { |plan| plan.fetch('metadata').fetch('guid') }
     service_plan_guids.each do |service_plan_guid|
-      put("/v2/service_plans/#{service_plan_guid}", JSON.dump(public: true), admin_headers)
+      put("/v2/service_plans/#{service_plan_guid}", Oj.dump(public: true), admin_headers)
     end
   end
 
@@ -175,7 +175,7 @@ module VCAP::CloudController::BrokerApiHelper
          body.to_json,
          admin_headers)
 
-    response = JSON.parse(last_response.body)
+    response = Oj.load(last_response.body)
     @service_instance_guid = response['metadata']['guid']
     last_response
   end
@@ -211,7 +211,7 @@ module VCAP::CloudController::BrokerApiHelper
          body.to_json,
          headers)
 
-    response = JSON.parse(last_response.body)
+    response = Oj.load(last_response.body)
     @service_instance_guid = response['metadata']['guid']
   end
 
@@ -284,7 +284,7 @@ module VCAP::CloudController::BrokerApiHelper
          body.to_json,
          headers)
 
-    metadata = JSON.parse(last_response.body).fetch('metadata', {})
+    metadata = Oj.load(last_response.body).fetch('metadata', {})
     @binding_guid = metadata.fetch('guid', nil)
 
     last_response
@@ -326,7 +326,7 @@ module VCAP::CloudController::BrokerApiHelper
          body.to_json,
          headers)
 
-    @service_key_id = JSON.parse(last_response.body)['metadata']['guid']
+    @service_key_id = Oj.load(last_response.body)['metadata']['guid']
   end
 
   def delete_key(opts={})

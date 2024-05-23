@@ -88,7 +88,7 @@ module VCAP::CloudController
               make_request
 
               expect(last_response.status).to eq(400)
-              expect(JSON.parse(last_response.body)['description']).to include('missing :resources')
+              expect(Oj.load(last_response.body)['description']).to include('missing :resources')
 
               process.refresh
               expect(process.package_hash).to be_nil
@@ -108,7 +108,7 @@ module VCAP::CloudController
               make_request
 
               expect(last_response.status).to eq(400)
-              expect(JSON.parse(last_response.body)['description']).to include('Invalid zip')
+              expect(Oj.load(last_response.body)['description']).to include('Invalid zip')
 
               process.refresh
               expect(process.package_hash).to be_nil
@@ -117,7 +117,7 @@ module VCAP::CloudController
           end
 
           context 'with at least one resource and no application' do
-            let(:req_body) { { resources: JSON.dump([{ 'fn' => 'lol', 'sha1' => 'abc', 'size' => 2048 }]) } }
+            let(:req_body) { { resources: Oj.dump([{ 'fn' => 'lol', 'sha1' => 'abc', 'size' => 2048 }]) } }
 
             before do
               # rack_test overrides 'CONTENT_TYPE' header with 'boundary' which causes errors when the request does not contain an application
@@ -132,7 +132,7 @@ module VCAP::CloudController
           end
 
           context 'with at least one resource and an application' do
-            let(:req_body) { { resources: JSON.dump([{ 'fn' => 'lol', 'sha1' => 'abc', 'size' => 2048 }]), application: valid_zip } }
+            let(:req_body) { { resources: Oj.dump([{ 'fn' => 'lol', 'sha1' => 'abc', 'size' => 2048 }]), application: valid_zip } }
 
             it 'succeeds to upload' do
               make_request
@@ -148,7 +148,7 @@ module VCAP::CloudController
               make_request
 
               expect(last_response.status).to eq(400)
-              expect(JSON.parse(last_response.body)['description']).to include('missing :resources')
+              expect(Oj.load(last_response.body)['description']).to include('missing :resources')
 
               process.refresh
               expect(process.package_hash).to be_nil
@@ -191,7 +191,7 @@ module VCAP::CloudController
               make_request
 
               expect(last_response.status).to eq(400)
-              expect(JSON.parse(last_response.body)['description']).to include('Invalid zip')
+              expect(Oj.load(last_response.body)['description']).to include('Invalid zip')
 
               process.refresh
               expect(process.package_hash).to be_nil
@@ -247,13 +247,13 @@ module VCAP::CloudController
 
           describe 'resources' do
             context 'with a bad file path' do
-              let(:req_body) { { resources: JSON.dump([{ 'fn' => '../../lol', 'sha1' => 'abc', 'size' => 2048 }]), application: valid_zip } }
+              let(:req_body) { { resources: Oj.dump([{ 'fn' => '../../lol', 'sha1' => 'abc', 'size' => 2048 }]), application: valid_zip } }
 
               it 'fails to upload' do
                 make_request
 
                 expect(last_response.status).to eq(400)
-                expect(JSON.parse(last_response.body)['description']).to include("'../../lol' is not safe")
+                expect(Oj.load(last_response.body)['description']).to include("'../../lol' is not safe")
 
                 process.refresh
                 expect(process.package_hash).to be_nil
@@ -263,12 +263,12 @@ module VCAP::CloudController
 
             context 'with a bad file mode' do
               context 'when the file is not readable by owner' do
-                let(:req_body) { { resources: JSON.dump([{ 'fn' => 'lol', 'sha1' => 'abc', 'size' => 2048, 'mode' => '377' }]), application: valid_zip } }
+                let(:req_body) { { resources: Oj.dump([{ 'fn' => 'lol', 'sha1' => 'abc', 'size' => 2048, 'mode' => '377' }]), application: valid_zip } }
 
                 it 'fails to upload' do
                   make_request
                   expect(last_response.status).to eq(400)
-                  expect(JSON.parse(last_response.body)['description']).to include("'377' with path 'lol' is invalid")
+                  expect(Oj.load(last_response.body)['description']).to include("'377' with path 'lol' is invalid")
 
                   process.refresh
                   expect(process.package_hash).to be_nil
@@ -277,12 +277,12 @@ module VCAP::CloudController
               end
 
               context 'when the file is not writable by owner' do
-                let(:req_body) { { resources: JSON.dump([{ 'fn' => 'lol', 'sha1' => 'abc', 'size' => 2048, 'mode' => '577' }]), application: valid_zip } }
+                let(:req_body) { { resources: Oj.dump([{ 'fn' => 'lol', 'sha1' => 'abc', 'size' => 2048, 'mode' => '577' }]), application: valid_zip } }
 
                 it 'fails to upload' do
                   make_request
                   expect(last_response.status).to eq(400)
-                  expect(JSON.parse(last_response.body)['description']).to include("'577' with path 'lol' is invalid")
+                  expect(Oj.load(last_response.body)['description']).to include("'577' with path 'lol' is invalid")
 
                   process.refresh
                   expect(process.package_hash).to be_nil
@@ -320,7 +320,7 @@ module VCAP::CloudController
             put "/v2/apps/#{process.app.guid}/bits?async=true", req_body, headers_for(user)
           end.to change(Delayed::Job, :count).by(1)
 
-          response_body = JSON.parse(last_response.body, symbolize_names: true)
+          response_body = Oj.load(last_response.body, symbolize_names: true)
           job = Delayed::Job.last
           expect(job.handler).to include(process.reload.latest_package.guid)
           expect(job.queue).to eq('cc-api_z1-99')
@@ -341,7 +341,7 @@ module VCAP::CloudController
 
         describe 'resources' do
           context 'with a bad file path' do
-            let(:req_body) { { resources: JSON.dump([{ 'fn' => '../../lol', 'sha1' => 'abc', 'size' => 2048 }]), application: valid_zip } }
+            let(:req_body) { { resources: Oj.dump([{ 'fn' => '../../lol', 'sha1' => 'abc', 'size' => 2048 }]), application: valid_zip } }
 
             it 'fails to upload' do
               expect do
@@ -358,7 +358,7 @@ module VCAP::CloudController
 
           context 'with a bad file mode' do
             context 'when the file is not readable by owner' do
-              let(:req_body) { { resources: JSON.dump([{ 'fn' => 'lol', 'sha1' => 'abc', 'size' => 2048, 'mode' => '300' }]), application: valid_zip } }
+              let(:req_body) { { resources: Oj.dump([{ 'fn' => 'lol', 'sha1' => 'abc', 'size' => 2048, 'mode' => '300' }]), application: valid_zip } }
 
               before do
                 FeatureFlag.make(name: 'app_bits_upload', enabled: true)
@@ -378,7 +378,7 @@ module VCAP::CloudController
             end
 
             context 'when the file is not writable by owner' do
-              let(:req_body) { { resources: JSON.dump([{ 'fn' => 'lol', 'sha1' => 'abc', 'size' => 2048, 'mode' => '577' }]), application: valid_zip } }
+              let(:req_body) { { resources: Oj.dump([{ 'fn' => 'lol', 'sha1' => 'abc', 'size' => 2048, 'mode' => '577' }]), application: valid_zip } }
 
               it 'fails to upload' do
                 expect do

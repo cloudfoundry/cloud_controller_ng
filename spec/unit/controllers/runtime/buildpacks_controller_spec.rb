@@ -10,7 +10,7 @@ module VCAP::CloudController
 
     let(:user) { make_user }
     let(:stack) { Stack.make }
-    let(:req_body) { MultiJson.dump({ name: 'dynamic_test_buildpack', stack: stack.name, position: 1 }) }
+    let(:req_body) { Oj.dump({ name: 'dynamic_test_buildpack', stack: stack.name, position: 1 }) }
 
     before { set_current_user_as_admin }
 
@@ -66,7 +66,7 @@ module VCAP::CloudController
 
       it 'defaults stack to nil' do
         expect do
-          post '/v2/buildpacks', MultiJson.dump({ name: 'a_buildpack', position: 1 })
+          post '/v2/buildpacks', Oj.dump({ name: 'a_buildpack', position: 1 })
           expect(last_response.status).to eq(201)
         end.to change(Buildpack, :count).from(0).to(1)
         buildpack = Buildpack.first
@@ -75,7 +75,7 @@ module VCAP::CloudController
 
       it 'uses specified stack' do
         expect do
-          post '/v2/buildpacks', MultiJson.dump({ name: 'a_buildpack', stack: stack.name, position: 1 })
+          post '/v2/buildpacks', Oj.dump({ name: 'a_buildpack', stack: stack.name, position: 1 })
           expect(last_response.status).to eq(201)
         end.to change(Buildpack, :count).from(0).to(1)
         buildpack = Buildpack.first
@@ -87,7 +87,7 @@ module VCAP::CloudController
         Buildpack.create(name: 'pre-existing-buildpack-2', stack: stack.name, position: 2)
 
         expect do
-          post '/v2/buildpacks', MultiJson.dump({ name: 'new-buildpack', stack: stack.name, position: 2 })
+          post '/v2/buildpacks', Oj.dump({ name: 'new-buildpack', stack: stack.name, position: 2 })
         end.to change { ordered_buildpacks }.from(
           [['pre-existing-buildpack', 1], ['pre-existing-buildpack-2', 2]]
         ).to(
@@ -104,7 +104,7 @@ module VCAP::CloudController
       end
 
       it 'returns buildpack invalid message correctly' do
-        post '/v2/buildpacks', MultiJson.dump({ name: 'invalid_name!', stack: stack.name })
+        post '/v2/buildpacks', Oj.dump({ name: 'invalid_name!', stack: stack.name })
         expect(last_response.status).to eq(400)
         expect(decoded_response['code']).to eq(290_003)
         expect(Buildpack.count).to eq(0)

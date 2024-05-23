@@ -28,7 +28,7 @@ module VCAP::CloudController
 
       info[:user] = user.guid if user
 
-      MultiJson.dump(info)
+      Oj.dump(info, mode: :compat)
     end
   end
 end

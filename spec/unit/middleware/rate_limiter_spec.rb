@@ -284,7 +284,7 @@ module CloudFoundry
 
           it 'formats the response error in v2 format' do
             _, _, body = middleware.call(user_1_env)
-            json_body = JSON.parse(body.first)
+            json_body = Oj.load(body.first)
             expect(json_body).to include(
               'code' => 10_013,
               'description' => 'Rate Limit Exceeded',
@@ -296,7 +296,7 @@ module CloudFoundry
         context 'when the path is /v3/*' do
           it 'formats the response error in v3 format' do
             _, _, body = middleware.call(user_1_env)
-            json_body = JSON.parse(body.first)
+            json_body = Oj.load(body.first)
             expect(json_body['errors'].first).to include(
               'code' => 10_013,
               'detail' => 'Rate Limit Exceeded',
@@ -311,7 +311,7 @@ module CloudFoundry
           it 'suggests they log in' do
             _, response_headers, body = middleware.call(unauthenticated_env)
             expect(response_headers['X-RateLimit-Remaining']).to eq('0')
-            json_body = JSON.parse(body.first)
+            json_body = Oj.load(body.first)
             expect(json_body['errors'].first).to include(
               'code' => 10_014,
               'detail' => 'Rate Limit Exceeded: Unauthenticated requests from this IP address have exceeded the limit. Please log in.',

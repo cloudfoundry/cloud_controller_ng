@@ -31,7 +31,7 @@ module VCAP::CloudController
 
       context 'when the app is ready' do
         it 'audits the app readiness changed event' do
-          post url, MultiJson.dump(readiness_changed_request)
+          post url, Oj.dump(readiness_changed_request)
           expect(last_response.status).to eq(200)
           expect(last_response.body).to eq '{}'
 
@@ -51,7 +51,7 @@ module VCAP::CloudController
         let(:ready) { false }
 
         it 'audits the app readiness changed event' do
-          post url, MultiJson.dump(readiness_changed_request)
+          post url, Oj.dump(readiness_changed_request)
           expect(last_response.status).to eq(200)
           expect(last_response.body).to eq '{}'
 
@@ -71,7 +71,7 @@ module VCAP::CloudController
         before { diego_process.delete }
 
         it 'fails with a 404' do
-          post url, MultiJson.dump(readiness_changed_request)
+          post url, Oj.dump(readiness_changed_request)
 
           expect(last_response.status).to eq(404)
           expect(last_response.body).to match(/ProcessNotFound/)

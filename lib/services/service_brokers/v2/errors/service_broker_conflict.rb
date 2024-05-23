@@ -28,8 +28,8 @@ module VCAP::Services
           private
 
           def parsed_json(str)
-            MultiJson.load(str)
-          rescue MultiJson::ParseError
+            Oj.load(str)
+          rescue StandardError
             {}
           end
         end

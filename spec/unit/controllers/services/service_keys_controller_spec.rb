@@ -255,7 +255,7 @@ module VCAP::CloudController
           end
 
           it 'raises ServiceKeyNotSupported error' do
-            hash_body = JSON.parse(last_response.body)
+            hash_body = Oj.load(last_response.body)
             expect(hash_body['error_code']).to eq('CF-ServiceKeyNotSupported')
             expect(last_response).to have_status_code(400)
           end
@@ -272,7 +272,7 @@ module VCAP::CloudController
             it 'returns CF-ServiceInstanceNotFound error' do
               post '/v2/service_keys', req
 
-              hash_body = JSON.parse(last_response.body)
+              hash_body = Oj.load(last_response.body)
               expect(hash_body['error_code']).to eq('CF-ServiceInstanceNotFound')
               expect(last_response.status).to eq(404)
             end
@@ -749,7 +749,7 @@ module VCAP::CloudController
             it 'returns 502' do
               get "/v2/service_keys/#{service_key.guid}/parameters"
               expect(last_response.status).to be(502)
-              hash_body = JSON.parse(last_response.body)
+              hash_body = Oj.load(last_response.body)
               expect(hash_body['error_code']).to eq('CF-ServiceBrokerResponseMalformed')
             end
           end
@@ -760,7 +760,7 @@ module VCAP::CloudController
             it 'returns 502' do
               get "/v2/service_keys/#{service_key.guid}/parameters"
               expect(last_response.status).to be(502)
-              hash_body = JSON.parse(last_response.body)
+              hash_body = Oj.load(last_response.body)
               expect(hash_body['error_code']).to eq('CF-ServiceBrokerResponseMalformed')
             end
           end
@@ -772,7 +772,7 @@ module VCAP::CloudController
               get "/v2/service_keys/#{service_key.guid}/parameters"
 
               expect(last_response.status).to be(502)
-              hash_body = JSON.parse(last_response.body)
+              hash_body = Oj.load(last_response.body)
               expect(hash_body['error_code']).to eq('CF-ServiceBrokerBadResponse')
             end
           end
@@ -784,7 +784,7 @@ module VCAP::CloudController
               get "/v2/service_keys/#{service_key.guid}/parameters"
 
               expect(last_response.status).to be(502)
-              hash_body = JSON.parse(last_response.body)
+              hash_body = Oj.load(last_response.body)
               expect(hash_body['error_code']).to eq('CF-ServiceBrokerRequestRejected')
             end
           end

@@ -73,12 +73,12 @@ RSpec.resource 'Routes', type: %i[api legacy_api] do
       parameter :generate_port, param_description, valid_values: [true, false]
 
       example 'Creating a Route' do
-        body = MultiJson.dump(
+        body = Oj.dump(
           required_fields.merge(
             domain_guid: domain.guid,
             space_guid: space.guid,
             port: 10_000
-          ), pretty: true
+          )
         )
         client.post '/v2/routes', body, headers
         expect(status).to eq(201)
@@ -95,10 +95,10 @@ RSpec.resource 'Routes', type: %i[api legacy_api] do
       include_context 'updatable_fields', required: false
 
       example 'Update a Route' do
-        body = MultiJson.dump(
+        body = Oj.dump(
           {
             port: 10_000
-          }, pretty: true
+          }
         )
         client.put "/v2/routes/#{guid}", body, headers
 

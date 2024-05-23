@@ -21,7 +21,7 @@ RSpec.describe 'PrivateDomains' do
 
       expect(last_response.status).to eq(200)
 
-      parsed_response = MultiJson.load(last_response.body)
+      parsed_response = Oj.load(last_response.body)
       expect(parsed_response).to be_a_response_like(
         {
           'total_results' => 1,
@@ -56,7 +56,7 @@ RSpec.describe 'PrivateDomains' do
       get "/v2/private_domains/#{domain.guid}", nil, admin_headers_for(user)
       expect(last_response.status).to eq(200)
 
-      parsed_response = MultiJson.load(last_response.body)
+      parsed_response = Oj.load(last_response.body)
       expect(parsed_response).to be_a_response_like(
         {
           'metadata' => {
@@ -78,13 +78,13 @@ RSpec.describe 'PrivateDomains' do
 
   describe 'POST /v2/private_domains' do
     it 'makes a private domain' do
-      post '/v2/private_domains', "{\"name\": \"meow.mc.meowerson.com\", \"owning_organization_guid\": \"#{organization.guid}\"", admin_headers_for(user)
+      post '/v2/private_domains', "{\"name\": \"meow.mc.meowerson.com\", \"owning_organization_guid\": \"#{organization.guid}\"}", admin_headers_for(user)
 
       expect(last_response.status).to be(201)
 
       domain = VCAP::CloudController::PrivateDomain.last
 
-      parsed_response = MultiJson.load(last_response.body)
+      parsed_response = Oj.load(last_response.body)
       expect(parsed_response).to be_a_response_like({
                                                       'metadata' => {
                                                         'guid' => domain.guid,
@@ -109,7 +109,7 @@ RSpec.describe 'PrivateDomains' do
       put "/v2/private_domains/#{domain.guid}", '{"name": "meow.com"}', admin_headers_for(user)
 
       expect(last_response.status).to eq(201)
-      parsed_response = MultiJson.load(last_response.body)
+      parsed_response = Oj.load(last_response.body)
 
       expect(parsed_response).to be_a_response_like({
                                                       'metadata' => {

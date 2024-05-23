@@ -25,16 +25,11 @@ module VCAP::CloudController
     private
 
     def rescheduling_request
-      rescheduling = {}
-      begin
-        payload = body.read
-        rescheduling = MultiJson.load(payload)
-      rescue MultiJson::ParseError => e
-        logger.error('diego.app_rescheduling.parse-error', payload: payload, error: e.to_s)
-        raise CloudController::Errors::ApiError.new_from_details('MessageParseError', payload)
-      end
-
-      rescheduling
+      payload = body.read
+      Oj.load(payload)
+    rescue StandardError => e
+      logger.error('diego.app_rescheduling.parse-error', payload: payload, error: e.to_s)
+      raise CloudController::Errors::ApiError.new_from_details('MessageParseError', payload)
     end
   end
 end

@@ -118,7 +118,7 @@ RSpec.describe 'Spaces' do
       get "/v3/spaces/#{space1.guid}", nil, user_header
       expect(last_response.status).to eq(200)
 
-      parsed_response = MultiJson.load(last_response.body)
+      parsed_response = Oj.load(last_response.body)
       expect(parsed_response).to be_a_response_like(
         {
           'guid' => space1.guid,
@@ -148,7 +148,7 @@ RSpec.describe 'Spaces' do
       get "/v3/spaces/#{space1.guid}?include=organization", nil, user_header
       expect(last_response.status).to eq(200)
 
-      parsed_response = MultiJson.load(last_response.body)
+      parsed_response = Oj.load(last_response.body)
       orgs = parsed_response['included']['organizations']
 
       expect(orgs).to be_present
@@ -194,7 +194,7 @@ RSpec.describe 'Spaces' do
         get "/v3/spaces/#{space1.guid}", nil, user_header
         expect(last_response.status).to eq(200)
 
-        parsed_response = MultiJson.load(last_response.body)
+        parsed_response = Oj.load(last_response.body)
         expect(parsed_response).to be_a_response_like(
           {
             'guid' => space1.guid,
@@ -284,7 +284,7 @@ RSpec.describe 'Spaces' do
         get '/v3/spaces?per_page=2', nil, user_header
         expect(last_response.status).to eq(200)
 
-        parsed_response = MultiJson.load(last_response.body)
+        parsed_response = Oj.load(last_response.body)
         expect(parsed_response).to be_a_response_like(
           {
             'pagination' => {
@@ -375,7 +375,7 @@ RSpec.describe 'Spaces' do
         get '/v3/spaces?label_selector=!fruit,env=prod,animal in (dog,horse)', nil, admin_header
         expect(last_response.status).to eq(200)
 
-        parsed_response = MultiJson.load(last_response.body)
+        parsed_response = Oj.load(last_response.body)
         expect(parsed_response['resources'].pluck('guid')).to contain_exactly(spaceB.guid, spaceC.guid)
       end
 
@@ -383,7 +383,7 @@ RSpec.describe 'Spaces' do
         get "/v3/spaces?label_selector=!fruit,env=prod,animal in (cat,horse)&organization_guids=#{orgF.guid}", nil, admin_header
         expect(last_response.status).to eq(200)
 
-        parsed_response = MultiJson.load(last_response.body)
+        parsed_response = Oj.load(last_response.body)
         expect(parsed_response['resources'].pluck('guid')).to contain_exactly(spaceF.guid)
       end
     end
@@ -396,7 +396,7 @@ RSpec.describe 'Spaces' do
       it 'can includes all orgs for spaces' do
         get '/v3/spaces?include=organization', nil, admin_header
         expect(last_response.status).to eq(200)
-        parsed_response = MultiJson.load(last_response.body)
+        parsed_response = Oj.load(last_response.body)
 
         orgs = parsed_response['included']['organizations']
         expect(orgs).to be_present
@@ -465,7 +465,7 @@ RSpec.describe 'Spaces' do
 
       it 'does not include spaces if no one asks for them' do
         get '/v3/spaces', nil, admin_header
-        parsed_response = MultiJson.load(last_response.body)
+        parsed_response = Oj.load(last_response.body)
         expect(parsed_response).not_to have_key('included')
       end
     end
@@ -933,7 +933,7 @@ RSpec.describe 'Spaces' do
         patch "/v3/spaces/#{space1.guid}", { metadata: { labels: { fruit: nil } } }.to_json, admin_header
         expect(last_response.status).to eq(200)
 
-        parsed_response = MultiJson.load(last_response.body)
+        parsed_response = Oj.load(last_response.body)
         expect(parsed_response).to be_a_response_like(
           {
             'guid' => space1.guid,
@@ -967,7 +967,7 @@ RSpec.describe 'Spaces' do
         patch "/v3/spaces/#{space1.guid}", { metadata: { labels: { fruit: 'strawberry' } } }.to_json, admin_header
         expect(last_response.status).to eq(200)
 
-        parsed_response = MultiJson.load(last_response.body)
+        parsed_response = Oj.load(last_response.body)
         expect(parsed_response).to be_a_response_like(
           {
             'guid' => space1.guid,
@@ -1198,7 +1198,7 @@ RSpec.describe 'Spaces' do
         get "v3/spaces/#{space.guid}/relationships/isolation_segment", nil, admin_headers
 
         expect(last_response.status).to eq(200)
-        parsed_response = MultiJson.load(last_response.body)
+        parsed_response = Oj.load(last_response.body)
         expect(parsed_response['data']).to be_nil
       end
     end
@@ -1342,7 +1342,7 @@ RSpec.describe 'Spaces' do
         it 'returns 200 and the filtered users' do
           get "/v3/spaces/#{space1.guid}/users?guids=#{user.guid}", nil, admin_header
 
-          parsed_response = MultiJson.load(last_response.body)
+          parsed_response = Oj.load(last_response.body)
           expected_pagination = {
             'total_results' => 1,
             'total_pages' => 1,
@@ -1379,7 +1379,7 @@ RSpec.describe 'Spaces' do
         it 'returns 200 and the filtered users' do
           get "/v3/spaces/#{space1.guid}/users?usernames=bob-mcjames&origins=Okta", nil, admin_header
 
-          parsed_response = MultiJson.load(last_response.body)
+          parsed_response = Oj.load(last_response.body)
           expected_pagination = {
             'total_results' => 1,
             'total_pages' => 1,
@@ -1402,7 +1402,7 @@ RSpec.describe 'Spaces' do
           get "/v3/spaces/#{space1.guid}/users?label_selector=animal in (dog)", nil, admin_header
           expect(last_response).to have_status_code(200)
 
-          parsed_response = MultiJson.load(last_response.body)
+          parsed_response = Oj.load(last_response.body)
           expected_pagination = {
             'total_results' => 1,
             'total_pages' => 1,

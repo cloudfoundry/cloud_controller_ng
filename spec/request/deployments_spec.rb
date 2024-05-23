@@ -126,7 +126,7 @@ RSpec.describe 'Deployments' do
       it 'creates a deployment object with that droplet' do
         post '/v3/deployments', create_request.to_json, user_header
         expect(last_response.status).to eq(201)
-        parsed_response = MultiJson.load(last_response.body)
+        parsed_response = Oj.load(last_response.body)
 
         deployment = VCAP::CloudController::DeploymentModel.last
 
@@ -207,7 +207,7 @@ RSpec.describe 'Deployments' do
         expect(last_response.status).to eq(201), last_response.body
         expect(VCAP::CloudController::RevisionModel.count).to eq(revision_count + 1)
 
-        parsed_response = MultiJson.load(last_response.body)
+        parsed_response = Oj.load(last_response.body)
 
         deployment = VCAP::CloudController::DeploymentModel.last
         revision = VCAP::CloudController::RevisionModel.last
@@ -285,7 +285,7 @@ RSpec.describe 'Deployments' do
         post '/v3/deployments', create_request.to_json, user_header
         expect(last_response.status).to eq(422)
 
-        parsed_response = MultiJson.load(last_response.body)
+        parsed_response = Oj.load(last_response.body)
         expect(parsed_response['errors'][0]['detail']).to match('Cannot set both fields')
       end
     end
@@ -407,7 +407,7 @@ RSpec.describe 'Deployments' do
 
         deployment = VCAP::CloudController::DeploymentModel.last
         revision = VCAP::CloudController::RevisionModel.last
-        parsed_response = MultiJson.load(last_response.body)
+        parsed_response = Oj.load(last_response.body)
         expect(parsed_response).to be_a_response_like({
                                                         'guid' => deployment.guid,
                                                         'status' => {
@@ -484,7 +484,7 @@ RSpec.describe 'Deployments' do
       it 'creates a deployment object in state DEPLOYED' do
         post '/v3/deployments', create_request.to_json, user_header
         expect(last_response.status).to eq(201)
-        parsed_response = MultiJson.load(last_response.body)
+        parsed_response = Oj.load(last_response.body)
 
         deployment = VCAP::CloudController::DeploymentModel.last
 
@@ -591,7 +591,7 @@ RSpec.describe 'Deployments' do
               'user-id' => OpenSSL::Digest::SHA256.hexdigest(user.guid)
             }
           }
-          expect_any_instance_of(ActiveSupport::Logger).to receive(:info).with(JSON.generate(expected_json))
+          expect_any_instance_of(ActiveSupport::Logger).to receive(:info).with(Oj.dump(expected_json))
 
           post '/v3/deployments', create_request.to_json, user_header
           expect(last_response.status).to eq(201), last_response.body
@@ -613,7 +613,7 @@ RSpec.describe 'Deployments' do
             }
           }
           expect_any_instance_of(ActiveSupport::Logger).to receive(:info).twice
-          expect_any_instance_of(ActiveSupport::Logger).to receive(:info).with(JSON.generate(expected_json)).at_most(:once)
+          expect_any_instance_of(ActiveSupport::Logger).to receive(:info).with(Oj.dump(expected_json)).at_most(:once)
 
           post '/v3/deployments', revision_create_request.to_json, user_header
           expect(last_response.status).to eq(201), last_response.body
@@ -772,7 +772,7 @@ RSpec.describe 'Deployments' do
           post '/v3/deployments', create_request.to_json, user_header
           expect(last_response.status).to eq(422)
 
-          parsed_response = MultiJson.load(last_response.body)
+          parsed_response = Oj.load(last_response.body)
           expect(parsed_response['errors'][0]['detail']).to match("Strategy 'potato' is not a supported deployment strategy")
         end
       end
@@ -832,7 +832,7 @@ RSpec.describe 'Deployments' do
       patch "/v3/deployments/#{deployment.guid}", update_request, user_header
       expect(last_response.status).to eq(200)
 
-      parsed_response = MultiJson.load(last_response.body)
+      parsed_response = Oj.load(last_response.body)
       expect(parsed_response).to be_a_response_like({
                                                       'guid' => deployment.guid,
                                                       'status' => {
@@ -1102,7 +1102,7 @@ RSpec.describe 'Deployments' do
         get '/v3/deployments?per_page=2', nil, admin_user_header
         expect(last_response.status).to eq(200)
 
-        parsed_response = MultiJson.load(last_response.body)
+        parsed_response = Oj.load(last_response.body)
         expect(parsed_response).to match_json_response({
                                                          pagination: {
                                                            total_results: 5,
@@ -1324,7 +1324,7 @@ RSpec.describe 'Deployments' do
         get '/v3/deployments', nil, user_header
         expect(last_response.status).to eq(200)
 
-        parsed_response = MultiJson.load(last_response.body)
+        parsed_response = Oj.load(last_response.body)
         expect(parsed_response).to be_a_response_like({
                                                         'pagination' => {
                                                           'total_results' => 1,

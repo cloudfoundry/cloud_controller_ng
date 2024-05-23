@@ -27,7 +27,7 @@ module VCAP::CloudController
 
       app_info['environment_json'] = process.app.environment_variables
 
-      MultiJson.dump(app_info)
+      Oj.dump(app_info, mode: :compat)
     end
 
     protected

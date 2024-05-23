@@ -84,7 +84,7 @@ module VCAP::CloudController
 
             expect(routing_api_client).to have_received(:router_group).exactly(1).times
 
-            domain_hash = JSON.parse(last_response.body)['entity']
+            domain_hash = Oj.load(last_response.body)['entity']
             expect(domain_hash['name']).to eq('shareddomain.com')
             expect(domain_hash['internal']).to be(false)
             expect(domain_hash['router_group_guid']).to eq('router-group-guid1')
@@ -166,7 +166,7 @@ module VCAP::CloudController
 
           expect(last_response).to have_status_code(200)
 
-          domain_hash = JSON.parse(last_response.body)['resources'].last['entity']
+          domain_hash = Oj.load(last_response.body)['resources'].last['entity']
           expect(domain_hash['name']).to eq('shareddomain.com')
           expect(domain_hash['internal']).to be(false)
           expect(domain_hash['router_group_guid']).to eq('router-group-guid1')
@@ -180,7 +180,7 @@ module VCAP::CloudController
 
           expect(last_response).to have_status_code(200)
 
-          domain_hash = JSON.parse(last_response.body)['resources'].last['entity']
+          domain_hash = Oj.load(last_response.body)['resources'].last['entity']
 
           expect(domain_hash['name']).to eq('shareddomain2.com')
           expect(domain_hash['router_group_type']).to be_nil
@@ -192,7 +192,7 @@ module VCAP::CloudController
 
           expect(last_response).to have_status_code(200)
 
-          domain_hash = JSON.parse(last_response.body)['entity']
+          domain_hash = Oj.load(last_response.body)['entity']
           expect(domain_hash['name']).to eq('shareddomain.com')
           expect(domain_hash['internal']).to be(false)
           expect(domain_hash['router_group_guid']).to eq('router-group-guid1')
@@ -267,7 +267,7 @@ module VCAP::CloudController
 
             expect(last_response).to have_status_code(200)
 
-            domain_hash = JSON.parse(last_response.body)['resources'].last['entity']
+            domain_hash = Oj.load(last_response.body)['resources'].last['entity']
 
             expect(domain_hash['name']).to eq('shareddomain.com')
             expect(domain_hash['internal']).to be(false)

@@ -24,7 +24,7 @@ RSpec.describe 'Organizations' do
       get "/v2/organizations/#{org.guid}/services", nil, headers_for(user)
       expect(last_response).to have_status_code(200)
 
-      parsed_response = MultiJson.load(last_response.body)
+      parsed_response = Oj.load(last_response.body)
       expect(parsed_response).to be_a_response_like(
         {
           'total_results' => 2,

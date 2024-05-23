@@ -17,7 +17,7 @@ RSpec.resource 'Resource Match', type: %i[api legacy_api] do
         If the file size provided is outside this range, it will not be matched against.'
       @resource_pool.add_directory(@tmpdir)
       resources = [@descriptors.first] + [@nonexisting_descriptor]
-      encoded_resources = MultiJson.dump(resources, pretty: true)
+      encoded_resources = Oj.dump(resources)
       client.put '/v2/resource_match', encoded_resources, headers
       expect(status).to eq(200)
     end

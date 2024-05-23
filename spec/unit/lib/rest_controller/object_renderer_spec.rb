@@ -64,7 +64,7 @@ module VCAP::CloudController::RestController
             object.unique_value = 'bar'
           end
 
-          result = MultiJson.load(subject.render_json(controller, instance, opts))
+          result = Oj.load(subject.render_json(controller, instance, opts))
           expect(result['entity']['unique_value']).to eq('bar')
         end
       end
@@ -88,7 +88,7 @@ module VCAP::CloudController::RestController
         it 'renders a service plan accessible via user\'s service instance only' do
           VCAP::CloudController::ManagedServiceInstance.make(space:, service_plan:)
           set_current_user(user)
-          result = MultiJson.load(subject.render_json_with_read_privileges(controller, service_plan, opts))
+          result = Oj.load(subject.render_json_with_read_privileges(controller, service_plan, opts))
           expect(result['entity']['service_guid']).to eq(service.guid)
         end
       end

@@ -21,7 +21,7 @@ RSpec.describe 'IsolationSegmentModels' do
 
       post '/v3/isolation_segments', create_request.to_json, user_header
 
-      parsed_response = MultiJson.load(last_response.body)
+      parsed_response = Oj.load(last_response.body)
       expect(last_response.status).to eq(201)
 
       created_isolation_segment = VCAP::CloudController::IsolationSegmentModel.last
@@ -56,7 +56,7 @@ RSpec.describe 'IsolationSegmentModels' do
     it 'returns the organization guids assigned' do
       get "/v3/isolation_segments/#{isolation_segment_model.guid}/relationships/organizations", nil, user_header
 
-      parsed_response = MultiJson.load(last_response.body)
+      parsed_response = Oj.load(last_response.body)
       expect(last_response.status).to eq(200)
 
       expected_response = {
@@ -117,7 +117,7 @@ RSpec.describe 'IsolationSegmentModels' do
     it 'returns the guids of the associated spaces' do
       get "/v3/isolation_segments/#{isolation_segment_model.guid}/relationships/spaces", nil, user_header
 
-      parsed_response = MultiJson.load(last_response.body)
+      parsed_response = Oj.load(last_response.body)
       expect(last_response.status).to eq(200)
 
       expect(parsed_response['data'].length).to eq 2
@@ -165,7 +165,7 @@ RSpec.describe 'IsolationSegmentModels' do
 
       post "/v3/isolation_segments/#{isolation_segment.guid}/relationships/organizations", assign_request.to_json, user_header
 
-      parsed_response = MultiJson.load(last_response.body)
+      parsed_response = Oj.load(last_response.body)
       expect(last_response.status).to eq(200)
 
       expected_response = {
@@ -280,7 +280,7 @@ RSpec.describe 'IsolationSegmentModels' do
       get '/v3/isolation_segments', nil, user_header
 
       expect(last_response.status).to eq 200
-      parsed_response = MultiJson.load(last_response.body)
+      parsed_response = Oj.load(last_response.body)
 
       shared_guid = VCAP::CloudController::IsolationSegmentModel::SHARED_ISOLATION_SEGMENT_GUID
 
@@ -330,7 +330,7 @@ RSpec.describe 'IsolationSegmentModels' do
       it 'returns a paginated list of the isolation segments' do
         get '/v3/isolation_segments?per_page=2&page=2', nil, user_header
 
-        parsed_response = MultiJson.load(last_response.body)
+        parsed_response = Oj.load(last_response.body)
         expect(last_response.status).to eq(200)
 
         expected_response = {
@@ -389,7 +389,7 @@ RSpec.describe 'IsolationSegmentModels' do
           'previous' => nil
         }
 
-        parsed_response = MultiJson.load(last_response.body)
+        parsed_response = Oj.load(last_response.body)
 
         expect(last_response.status).to eq(200)
         expect(parsed_response['resources'].pluck('name')).to eq([models[2].name, models[4].name])
@@ -408,7 +408,7 @@ RSpec.describe 'IsolationSegmentModels' do
           'previous' => nil
         }
 
-        parsed_response = MultiJson.load(last_response.body)
+        parsed_response = Oj.load(last_response.body)
 
         expect(last_response.status).to eq(200)
         expect(parsed_response['resources'].pluck('name')).to eq([models[3].name, models[5].name])
@@ -433,7 +433,7 @@ RSpec.describe 'IsolationSegmentModels' do
             'previous' => nil
           }
 
-          parsed_response = MultiJson.load(last_response.body)
+          parsed_response = Oj.load(last_response.body)
 
           expect(last_response.status).to eq(200)
           expect(parsed_response['resources'].pluck('name')).to eq([models[1].name, models[2].name])
@@ -468,7 +468,7 @@ RSpec.describe 'IsolationSegmentModels' do
         get '/v3/isolation_segments?label_selector=!fruit,env=prod,animal in (dog,horse)', nil, admin_headers
         expect(last_response.status).to eq(200)
 
-        parsed_response = MultiJson.load(last_response.body)
+        parsed_response = Oj.load(last_response.body)
         expect(parsed_response['resources'].pluck('guid')).to contain_exactly(iso_segB.guid, iso_segC.guid)
       end
     end
@@ -529,7 +529,7 @@ RSpec.describe 'IsolationSegmentModels' do
 
       patch "/v3/isolation_segments/#{isolation_segment_model.guid}", update_request.to_json, user_header
 
-      parsed_response = MultiJson.load(last_response.body)
+      parsed_response = Oj.load(last_response.body)
       expect(last_response.status).to eq(200)
       expect(parsed_response).to be_a_response_like(expected_response)
     end

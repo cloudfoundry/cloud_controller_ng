@@ -5,5 +5,5 @@ Rails.env = 'test'
 require 'rspec/rails'
 
 def parsed_body
-  JSON.parse(response.body)
+  Oj.load(response.body)
 end

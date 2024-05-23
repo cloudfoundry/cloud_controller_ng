@@ -303,7 +303,7 @@ module CloudFoundry
 
         it 'formats the response error in v2 format' do
           _, _, body = middleware.call(user_1_env)
-          json_body = JSON.parse(body.first)
+          json_body = Oj.load(body.first)
           expect(json_body).to include(
             'code' => 10_018,
             'description' => 'Rate Limit of V2 API Exceeded. Please consider using the V3 API',

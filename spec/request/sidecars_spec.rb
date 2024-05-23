@@ -47,7 +47,7 @@ RSpec.describe 'Sidecars' do
         }
       }
 
-      parsed_response = MultiJson.load(last_response.body)
+      parsed_response = Oj.load(last_response.body)
       expect(parsed_response).to be_a_response_like(expected_response)
     end
 
@@ -65,7 +65,7 @@ RSpec.describe 'Sidecars' do
             'user-id' => OpenSSL::Digest::SHA256.hexdigest(user.guid)
           }
         }
-        expect_any_instance_of(ActiveSupport::Logger).to receive(:info).with(JSON.generate(expected_json))
+        expect_any_instance_of(ActiveSupport::Logger).to receive(:info).with(Oj.dump(expected_json))
         post "/v3/apps/#{app_model.guid}/sidecars", sidecar_params.to_json, user_header
         expect(last_response.status).to eq(201), last_response.body
       end
@@ -205,7 +205,7 @@ RSpec.describe 'Sidecars' do
       patch "/v3/sidecars/#{sidecar.guid}", sidecar_params.to_json, user_header
 
       expect(last_response.status).to eq(200)
-      parsed_response = MultiJson.load(last_response.body)
+      parsed_response = Oj.load(last_response.body)
       expect(parsed_response).to be_a_response_like(expected_response)
     end
 
@@ -236,7 +236,7 @@ RSpec.describe 'Sidecars' do
         patch "/v3/sidecars/#{sidecar.guid}", sidecar_params.to_json, user_header
 
         expect(last_response.status).to eq(200)
-        parsed_response = MultiJson.load(last_response.body)
+        parsed_response = Oj.load(last_response.body)
         expect(parsed_response).to be_a_response_like(expected_response)
       end
     end
@@ -396,7 +396,7 @@ RSpec.describe 'Sidecars' do
         }
 
         expect(last_response.status).to eq(200), last_response.body
-        parsed_response = MultiJson.load(last_response.body)
+        parsed_response = Oj.load(last_response.body)
         expect(parsed_response).to be_a_response_like(expected_response)
       end
     end
@@ -536,7 +536,7 @@ RSpec.describe 'Sidecars' do
         }
 
         expect(last_response.status).to eq(200), last_response.body
-        parsed_response = MultiJson.load(last_response.body)
+        parsed_response = Oj.load(last_response.body)
         expect(parsed_response).to be_a_response_like(expected_response)
       end
 

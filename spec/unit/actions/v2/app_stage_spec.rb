@@ -211,7 +211,7 @@ module VCAP::CloudController
                   'user-id' => OpenSSL::Digest.hexdigest('SHA256', 'userguid')
                 }
               }
-              expect(logger_spy).to have_received(:info).with(JSON.generate(expected_json))
+              expect(logger_spy).to have_received(:info).with(Oj.dump(expected_json))
             end
           end
         end

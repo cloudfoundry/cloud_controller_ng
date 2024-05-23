@@ -371,7 +371,7 @@ RSpec.describe 'Stacks Request' do
         get "/v3/stacks/#{stack.guid}/apps", { per_page: 2 }, headers
 
         expect(last_response.status).to eq(200), last_response.body
-        parsed_response = MultiJson.load(last_response.body)
+        parsed_response = Oj.load(last_response.body)
         expect(parsed_response).to be_a_response_like(
           {
             'pagination' => {
@@ -434,7 +434,7 @@ RSpec.describe 'Stacks Request' do
         get "/v3/stacks/#{stack.guid}/apps", { per_page: 2 }, headers
 
         expect(last_response.status).to eq(200), last_response.body
-        parsed_response = MultiJson.load(last_response.body)
+        parsed_response = Oj.load(last_response.body)
         expect(parsed_response).to be_a_response_like(
           {
             'pagination' => {

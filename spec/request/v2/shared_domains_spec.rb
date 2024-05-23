@@ -22,7 +22,7 @@ RSpec.describe 'SharedDomains' do
 
       expect(last_response.status).to eq(200)
 
-      parsed_response = MultiJson.load(last_response.body)
+      parsed_response = Oj.load(last_response.body)
       expect(parsed_response).to be_a_response_like(
         {
           'total_results' => 3,
@@ -85,7 +85,7 @@ RSpec.describe 'SharedDomains' do
       get "/v2/shared_domains/#{domain.guid}", nil, headers_for(user)
       expect(last_response.status).to eq(200)
 
-      parsed_response = MultiJson.load(last_response.body)
+      parsed_response = Oj.load(last_response.body)
       expect(parsed_response).to be_a_response_like(
         {
           'metadata' => {
@@ -113,7 +113,7 @@ RSpec.describe 'SharedDomains' do
 
       domain = VCAP::CloudController::SharedDomain.last
 
-      parsed_response = MultiJson.load(last_response.body)
+      parsed_response = Oj.load(last_response.body)
       expect(parsed_response).to be_a_response_like({
                                                       'metadata' => {
                                                         'guid' => domain.guid,
@@ -154,7 +154,7 @@ RSpec.describe 'SharedDomains' do
 
         domain = VCAP::CloudController::SharedDomain.last
 
-        parsed_response = MultiJson.load(last_response.body)
+        parsed_response = Oj.load(last_response.body)
         expect(parsed_response).to be_a_response_like({
                                                         'metadata' => {
                                                           'guid' => domain.guid,
@@ -178,7 +178,7 @@ RSpec.describe 'SharedDomains' do
 
         domain = VCAP::CloudController::SharedDomain.last
 
-        parsed_response = MultiJson.load(last_response.body)
+        parsed_response = Oj.load(last_response.body)
         expect(parsed_response).to be_a_response_like({
                                                         'metadata' => {
                                                           'guid' => domain.guid,
@@ -204,7 +204,7 @@ RSpec.describe 'SharedDomains' do
       put "/v2/shared_domains/#{domain.guid}", '{"name": "meow.com", "route_group_guid": "a-guid"}', admin_headers_for(user)
 
       expect(last_response.status).to eq(201)
-      parsed_response = MultiJson.load(last_response.body)
+      parsed_response = Oj.load(last_response.body)
 
       expect(parsed_response).to be_a_response_like({
                                                       'metadata' => {

@@ -155,7 +155,7 @@ module VCAP::CloudController
 
       it 'returns SpaceQuotaDefinitionInvalid' do
         sqd_json = { name: '', non_basic_services_allowed: true, total_services: 1, total_service_keys: 1, total_routes: 1, memory_limit: 2, organization_guid: org.guid }
-        post '/v2/space_quota_definitions', MultiJson.dump(sqd_json)
+        post '/v2/space_quota_definitions', Oj.dump(sqd_json)
 
         expect(last_response.status).to eq(400)
         expect(decoded_response['description']).to match(/Space Quota Definition is invalid/)
@@ -165,7 +165,7 @@ module VCAP::CloudController
       it 'returns SpaceQuotaDefinitionNameTaken errors on unique name errors' do
         SpaceQuotaDefinition.make(name: 'foo', organization: org)
         sqd_json = { name: 'foo', non_basic_services_allowed: true, total_services: 1, total_service_keys: 1, total_routes: 1, memory_limit: 2, organization_guid: org.guid }
-        post '/v2/space_quota_definitions', MultiJson.dump(sqd_json)
+        post '/v2/space_quota_definitions', Oj.dump(sqd_json)
 
         expect(last_response.status).to eq(400)
         expect(decoded_response['description']).to match(/name is taken/)

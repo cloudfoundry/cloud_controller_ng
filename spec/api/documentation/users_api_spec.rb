@@ -45,7 +45,7 @@ RSpec.resource 'Users', type: %i[api legacy_api] do
 
       example 'Updating a User' do
         new_space = VCAP::CloudController::Space.make
-        client.put "/v2/users/#{guid}", MultiJson.dump({ default_space_guid: new_space.guid }, pretty: true), headers
+        client.put "/v2/users/#{guid}", Oj.dump({ default_space_guid: new_space.guid }), headers
 
         expect(status).to eq 201
         standard_entity_response parsed_response, :user, expected_values: { default_space_guid: new_space.guid }

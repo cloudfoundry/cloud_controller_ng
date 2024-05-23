@@ -990,7 +990,7 @@ RSpec.describe 'V3 service offerings' do
       'documentation_url' => 'https://some.url.for.docs/',
       'broker_catalog' => {
         'id' => service_offering.unique_id,
-        'metadata' => JSON.parse(service_offering.extra),
+        'metadata' => Oj.load(service_offering.extra),
         'features' => {
           'plan_updateable' => false,
           'bindable' => true,

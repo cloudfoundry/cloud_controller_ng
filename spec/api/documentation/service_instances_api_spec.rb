@@ -104,7 +104,7 @@ RSpec.resource 'Service Instances', type: %i[api legacy_api] do
           tags: tags
         }
 
-        client.post '/v2/service_instances?accepts_incomplete=true', MultiJson.dump(request_hash, pretty: true), headers
+        client.post '/v2/service_instances?accepts_incomplete=true', Oj.dump(request_hash), headers
         expect(status).to eq(202)
       end
     end
@@ -202,7 +202,7 @@ RSpec.resource 'Service Instances', type: %i[api legacy_api] do
             }
           }
 
-          client.put "/v2/service_instances/#{service_instance.guid}/routes/#{route.guid}", MultiJson.dump(request_hash, pretty: true), headers
+          client.put "/v2/service_instances/#{service_instance.guid}/routes/#{route.guid}", Oj.dump(request_hash), headers
 
           expect(status).to eq(201)
           expect(parsed_response['metadata']['guid']).to eq(service_instance.guid)

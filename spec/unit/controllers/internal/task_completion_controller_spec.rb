@@ -19,7 +19,7 @@ module VCAP::CloudController
       end
 
       it 'returns a 200 and marks the task as succeeded' do
-        post url, MultiJson.dump(task_response)
+        post url, Oj.dump(task_response)
 
         expect(last_response.status).to eq(200)
         expect(last_response.body).to eq '{}'
@@ -40,7 +40,7 @@ module VCAP::CloudController
         end
 
         it 'marks the task as failed and sets the result message' do
-          post url, MultiJson.dump(task_response)
+          post url, Oj.dump(task_response)
 
           expect(last_response.status).to eq(200)
           expect(task.reload.state).to eq 'FAILED'
@@ -52,7 +52,7 @@ module VCAP::CloudController
         let(:url) { '/internal/v4/tasks/bogus/completed' }
 
         it 'response with a 404' do
-          post url, MultiJson.dump(task_response)
+          post url, Oj.dump(task_response)
 
           expect(last_response.status).to eq(404)
           expect(last_response.body).to match(/NotFound/)
@@ -64,7 +64,7 @@ module VCAP::CloudController
           let(:task) { TaskModel.make(state: 'SUCCEEDED') }
 
           it 'responds with a 400 status code' do
-            post url, MultiJson.dump(task_response)
+            post url, Oj.dump(task_response)
 
             expect(last_response.status).to eq(400)
             expect(last_response.body).to match(/InvalidRequest/)
@@ -75,7 +75,7 @@ module VCAP::CloudController
           let(:task) { TaskModel.make(state: 'FAILED') }
 
           it 'responds with a 400 status code' do
-            post url, MultiJson.dump(task_response)
+            post url, Oj.dump(task_response)
 
             expect(last_response.status).to eq(400)
             expect(last_response.body).to match(/InvalidRequest/)
@@ -98,7 +98,7 @@ module VCAP::CloudController
           let(:url) { "/internal/v4/tasks/#{other_task.guid}/completed" }
 
           it 'fails with a 400' do
-            post url, MultiJson.dump(task_response)
+            post url, Oj.dump(task_response)
 
             expect(last_response.status).to eq(400)
             expect(last_response.body).to match(/InvalidRequest/)

@@ -68,7 +68,7 @@ RSpec.describe 'buildpacks' do
         get '/v3/buildpacks?label_selector=!fruit,env=prod,animal in (dog,horse)', nil, admin_headers
         expect(last_response.status).to eq(200), last_response.body
 
-        parsed_response = MultiJson.load(last_response.body)
+        parsed_response = Oj.load(last_response.body)
         expect(parsed_response['resources'].pluck('guid')).to contain_exactly(buildpackB.guid, buildpackC.guid)
       end
     end
@@ -82,7 +82,7 @@ RSpec.describe 'buildpacks' do
         get '/v3/buildpacks?stacks=', nil, admin_headers
         expect(last_response.status).to eq(200), last_response.body
 
-        parsed_response = MultiJson.load(last_response.body)
+        parsed_response = Oj.load(last_response.body)
         expect(parsed_response['resources'].pluck('guid')).to contain_exactly(buildpack_without_stack.guid)
       end
     end

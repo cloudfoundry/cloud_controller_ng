@@ -203,12 +203,15 @@ module VCAP::CloudController::RestController
     end
 
     def parse_and_validate_json(body)
-      parsed = body && MultiJson.load(body)
-      raise MultiJson::ParseError.new('invalid request body') unless parsed.is_a?(Hash)
+      begin
+        parsed = Oj.load(body) unless body.nil?
+      rescue StandardError => e
+        bad_request!(e.message)
+      end
+
+      bad_request!('invalid request body') unless parsed.is_a?(Hash)
 
       parsed
-    rescue MultiJson::ParseError => e
-      bad_request!(e.message)
     end
 
     def bad_request!(message)

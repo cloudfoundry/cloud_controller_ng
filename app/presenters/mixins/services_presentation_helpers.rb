@@ -3,10 +3,11 @@ module VCAP::CloudController::Presenters::Mixins
     private
 
     def parse_maintenance_info(maintenance_info)
+      return {} unless maintenance_info
       return maintenance_info if maintenance_info.is_a?(Hash)
 
-      JSON.parse(maintenance_info)
-    rescue JSON::ParserError
+      Oj.load(maintenance_info)
+    rescue StandardError
       {}
     end
   end

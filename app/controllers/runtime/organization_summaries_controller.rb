@@ -31,11 +31,12 @@ module VCAP::CloudController
         }.merge(space_summary)
       end
 
-      MultiJson.dump(
+      Oj.dump(
         guid: org.guid,
         name: org.name,
         status: org.status,
-        spaces: spaces
+        spaces: spaces,
+        mode: :compat
       )
     end
 

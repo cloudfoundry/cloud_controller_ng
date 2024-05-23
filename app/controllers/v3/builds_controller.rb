@@ -35,7 +35,7 @@ class BuildsController < ApplicationController
   end
 
   def create
-    message = BuildCreateMessage.new(JSON.parse(request.body))
+    message = BuildCreateMessage.new(Oj.load(request.body))
     unprocessable!(message.errors.full_messages) unless message.valid?
 
     package = PackageModel.where(guid: message.package_guid).

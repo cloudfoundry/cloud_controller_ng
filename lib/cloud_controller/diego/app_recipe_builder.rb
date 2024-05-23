@@ -56,11 +56,11 @@ module VCAP::CloudController
         if allow_ssh?
           ports << DEFAULT_SSH_PORT
 
-          routes[SSH_ROUTES_KEY] = MultiJson.dump({
-                                                    container_port: DEFAULT_SSH_PORT,
-                                                    private_key: ssh_key.private_key,
-                                                    host_fingerprint: ssh_key.fingerprint
-                                                  })
+          routes[SSH_ROUTES_KEY] = Oj.dump({
+                                             container_port: DEFAULT_SSH_PORT,
+                                             private_key: ssh_key.private_key,
+                                             host_fingerprint: ssh_key.fingerprint
+                                           })
         end
 
         {
@@ -160,9 +160,9 @@ module VCAP::CloudController
         end
 
         {
-          CF_ROUTES_KEY => MultiJson.dump(http_routes),
-          TCP_ROUTES_KEY => MultiJson.dump((info['tcp_routes'] || [])),
-          INTERNAL_ROUTES_KEY => MultiJson.dump((info['internal_routes'] || []))
+          CF_ROUTES_KEY => Oj.dump(http_routes),
+          TCP_ROUTES_KEY => Oj.dump((info['tcp_routes'] || [])),
+          INTERNAL_ROUTES_KEY => Oj.dump((info['internal_routes'] || []))
         }
       end
 

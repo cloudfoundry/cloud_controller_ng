@@ -30,7 +30,7 @@ module IntegrationHttp
 
   module JsonBody
     def json_body
-      @json_body ||= JSON.parse(body)
+      @json_body ||= Oj.load(body)
     end
   end
 

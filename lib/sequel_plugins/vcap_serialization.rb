@@ -1,5 +1,3 @@
-require 'multi_json'
-
 module Sequel::Plugins::VcapSerialization
   # This plugin implements serialization and deserialization of
   # Sequel::Models to/from hashes and json.
@@ -51,7 +49,7 @@ module Sequel::Plugins::VcapSerialization
     # @option opts [Array<String>] :only Only import an attribute if it is both
     # included in import_attributes and in the :only option.
     def update_from_json(json, opts={})
-      parsed = MultiJson.load(json)
+      parsed = Oj.load(json)
       update_from_hash(parsed, opts)
     end
 
@@ -84,7 +82,7 @@ module Sequel::Plugins::VcapSerialization
     #
     # @return [Sequel::Model] The created model.
     def create_from_json(json, opts={})
-      hash = MultiJson.load(json)
+      hash = Oj.load(json)
       create_from_hash(hash, opts)
     end
 

@@ -257,7 +257,7 @@ module VCAP::CloudController
         get "/internal/v4/staging_jobs/#{job_guid}"
 
         expect(last_response.status).to eq(200)
-        expect(decoded_response(symbolize_keys: true)).to eq(StagingJobPresenter.new(job, 'https').to_hash)
+        expect(decoded_response(symbol_keys: true)).to eq(StagingJobPresenter.new(job, 'https').to_hash)
         expect(decoded_response['metadata']['guid']).to eq(job_guid)
       end
     end

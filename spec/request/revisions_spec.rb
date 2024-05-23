@@ -207,7 +207,7 @@ RSpec.describe 'Revisions' do
           get "/v3/apps/#{app_model.guid}/revisions?per_page=2&versions=42,44", nil, user_header
           expect(last_response.status).to eq(200)
 
-          parsed_response = MultiJson.load(last_response.body)
+          parsed_response = Oj.load(last_response.body)
           expect(parsed_response).to be_a_response_like(
             {
               'pagination' => {
@@ -318,7 +318,7 @@ RSpec.describe 'Revisions' do
             get "/v3/apps/#{app_model.guid}/revisions?label_selector=!fruit,env=prod,animal in (dog,horse)", nil, user_header
             expect(last_response.status).to eq(200)
 
-            parsed_response = MultiJson.load(last_response.body)
+            parsed_response = Oj.load(last_response.body)
             expect(parsed_response['resources'].pluck('guid')).to contain_exactly(revisionB.guid, revisionC.guid)
           end
         end
@@ -461,7 +461,7 @@ RSpec.describe 'Revisions' do
       patch "/v3/revisions/#{revision.guid}", update_request, user_header
       expect(last_response.status).to eq(200)
 
-      parsed_response = MultiJson.load(last_response.body)
+      parsed_response = Oj.load(last_response.body)
       expect(parsed_response).to be_a_response_like(
         {
           'guid' => revision.guid,
@@ -555,7 +555,7 @@ RSpec.describe 'Revisions' do
       get "/v3/revisions/#{revision2.guid}/environment_variables", nil, user_header
       expect(last_response.status).to eq(200), last_response.body
 
-      parsed_response = MultiJson.load(last_response.body)
+      parsed_response = Oj.load(last_response.body)
       expect(parsed_response).to be_a_response_like(
         {
           'var' => {

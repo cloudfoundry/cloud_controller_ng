@@ -1,6 +1,5 @@
 # Copyright (c) 2009-2011 VMware, Inc
 require 'rubygems'
-require 'yajl'
 require 'membrane'
 
 class JsonMessage
@@ -61,7 +60,7 @@ class JsonMessage
 
     def decode(json)
       begin
-        dec_json = Yajl::Parser.parse(json)
+        dec_json = Oj.load(json)
       rescue StandardError => e
         raise ParseError.new(e.to_s)
       end
@@ -142,7 +141,7 @@ class JsonMessage
 
     raise ValidationError.new(missing_fields) unless missing_fields.empty?
 
-    Yajl::Encoder.encode(@msg)
+    Oj.dump(@msg)
   end
 
   def extract(opts={})

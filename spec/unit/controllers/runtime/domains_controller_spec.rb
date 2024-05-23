@@ -133,7 +133,7 @@ module VCAP::CloudController
           it 'does not allow modification of the shared domain by an org manager' do
             set_current_user(@org_a_manager)
 
-            put "/v2/domains/#{@shared_domain.guid}", MultiJson.dump(name: Sham.domain)
+            put "/v2/domains/#{@shared_domain.guid}", Oj.dump(name: Sham.domain)
             expect(last_response.status).to eq(403)
           end
         end
@@ -196,7 +196,7 @@ module VCAP::CloudController
 
             expect(last_response.status).to eq(200)
 
-            json = MultiJson.load(last_response.body)
+            json = Oj.load(last_response.body)
             expect(json['entity']['owning_organization_guid']).to be_nil
 
             expect(json['entity']).not_to include('owning_organization_url')
@@ -267,7 +267,7 @@ module VCAP::CloudController
 
           get '/v2/domains'
           expect(last_response.status).to eq(200), last_response.body
-          domains = JSON.parse(last_response.body)['resources']
+          domains = Oj.load(last_response.body)['resources']
           expect(domains.size).to be(3)
           expect(domains.map { |x| x['entity']['name'] }).to eq([domain1.name, domain_internal.name, domain3.name])
         end
@@ -280,7 +280,7 @@ module VCAP::CloudController
         let(:organization) { Organization.make }
 
         let(:request_body) do
-          MultiJson.dump({ name: 'blah.com', owning_organization_guid: organization.guid })
+          Oj.dump({ name: 'blah.com', owning_organization_guid: organization.guid })
         end
 
         before do

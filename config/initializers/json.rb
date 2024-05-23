@@ -2,7 +2,6 @@ require 'active_support/json/encoding'
 
 module CCInitializers
   def self.json(_cc_config)
-    MultiJson.use(:oj)
     Oj::Rails.optimize # Use optimized encoders instead of as_json() methods for available classes.
     Oj.default_options = {
       bigdecimal_load: :bigdecimal,
@@ -17,7 +16,7 @@ module CCInitializers
       end
 
       def encode(value)
-        v = if MultiJson.default_adapter == :oj && value.is_a?(VCAP::CloudController::Presenters::V3::BasePresenter)
+        v = if value.is_a?(VCAP::CloudController::Presenters::V3::BasePresenter)
               value.to_hash
             else
               value.as_json(options.dup)

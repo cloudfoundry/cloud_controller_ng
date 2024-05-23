@@ -50,7 +50,7 @@ module VCAP::CloudController
           running_instances: 5
         }.merge(process.to_hash)
 
-        expect(decoded_response['apps'][0]).to include(MultiJson.load(MultiJson.dump(expected_app_hash)))
+        expect(decoded_response['apps'][0]).to include(Oj.load(Oj.dump(expected_app_hash, mode: :compat)))
         expect(decoded_response['apps'][0]['service_names']).to contain_exactly(first_service.name, second_service.name)
       end
 
@@ -60,7 +60,7 @@ module VCAP::CloudController
           space.service_instances[0].as_summary_json,
           space.service_instances[1].as_summary_json
         ]
-        expect(decoded_response['services']).to eq(MultiJson.load(MultiJson.dump(expected_services)))
+        expect(decoded_response['services']).to eq(Oj.load(Oj.dump(expected_services)))
       end
 
       it 'returns service summary for the space, including private service instances' do
@@ -84,7 +84,7 @@ module VCAP::CloudController
 
         get "/v2/spaces/#{space.guid}/summary"
 
-        parsed_response = MultiJson.load(last_response.body)
+        parsed_response = Oj.load(last_response.body)
         expect(parsed_response['services'].pluck('guid')).not_to include service_instance2.guid
       end
 
@@ -100,7 +100,7 @@ module VCAP::CloudController
       it 'includes the type of all service instances' do
         get "/v2/spaces/#{space.guid}/summary"
 
-        parsed_response = MultiJson.load(last_response.body)
+        parsed_response = Oj.load(last_response.body)
         parsed_response['services'].each do |service_json|
           expect(service_json.fetch('type')).to eq('managed_service_instance')
         end

@@ -50,7 +50,7 @@ RSpec.describe 'Service Broker API integration' do
                { app_guid:, service_instance_guid: }.to_json,
                admin_headers)
 
-          parsed_body = MultiJson.load(last_response.body)
+          parsed_body = Oj.load(last_response.body)
 
           expect(parsed_body['entity']['volume_mounts']).to contain_exactly({ 'device_type' => 'shared', 'mode' => 'rw', 'container_dir' => '/var/vcap/data/foo' })
         end

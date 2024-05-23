@@ -68,13 +68,13 @@ module VCAP::CloudController
 
       [
         HTTP::OK,
-        MultiJson.dump({
-                         staging_env_json: EnvironmentVariableGroup.staging.environment_json,
-                         running_env_json: EnvironmentVariableGroup.running.environment_json,
-                         environment_json: process.app.environment_variables,
-                         system_env_json: SystemEnvPresenter.new(process.service_bindings).system_env,
-                         application_env_json: { 'VCAP_APPLICATION' => vcap_application }
-                       }, pretty: true)
+        Oj.dump({
+                  staging_env_json: EnvironmentVariableGroup.staging.environment_json,
+                  running_env_json: EnvironmentVariableGroup.running.environment_json,
+                  environment_json: process.app.environment_variables,
+                  system_env_json: SystemEnvPresenter.new(process.service_bindings).system_env,
+                  application_env_json: { 'VCAP_APPLICATION' => vcap_application }
+                }, mode: :compat)
       ]
     end
 
@@ -461,10 +461,10 @@ module VCAP::CloudController
     def permissions(guid)
       find_guid_and_validate_access(:read_permissions, guid, ProcessModel)
 
-      [HTTP::OK, JSON.generate({
-                                 read_sensitive_data: true,
-                                 read_basic_data: true
-                               })]
+      [HTTP::OK, Oj.dump({
+                           read_sensitive_data: true,
+                           read_basic_data: true
+                         }, mode: :compat)]
     rescue CloudController::Errors::ApiError => e
       raise e unless e.name == 'NotAuthorized'
 
@@ -480,10 +480,10 @@ module VCAP::CloudController
       raise e unless SecurityContext.global_auditor? ||
                      membership.role_applies?(basic_access, process.space.id, process.organization.id)
 
-      [HTTP::OK, JSON.generate({
-                                 read_sensitive_data: false,
-                                 read_basic_data: true
-                               })]
+      [HTTP::OK, Oj.dump({
+                           read_sensitive_data: false,
+                           read_basic_data: true
+                         }, mode: :compat)]
     end
 
     def get_filtered_dataset_for_enumeration(model, dataset, query_params, opts)

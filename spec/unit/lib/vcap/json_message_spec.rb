@@ -104,7 +104,7 @@ RSpec.describe JsonMessage do
     it expected do
       @klass.optional :optional, String
       msg = @klass.new
-      expect(msg.encode).to eq(Yajl::Encoder.encode({}))
+      expect(msg.encode).to eq(Oj.dump({}))
     end
 
     it 'assumes wildcard when schema is not defined' do
@@ -172,7 +172,7 @@ RSpec.describe JsonMessage do
     it 'encodes uninitialized optional attribute with default value' do
       msg = @klass.new
       @klass.optional :optional, String, 'default'
-      expect(msg.encode).to eq(Yajl::Encoder.encode({ 'optional' => 'default' }))
+      expect(msg.encode).to eq(Oj.dump({ 'optional' => 'default' }))
     end
 
     it 'raises validation errors when required fields are missing' do
@@ -201,7 +201,7 @@ RSpec.describe JsonMessage do
         'with_default' => 'default',
         'no_default' => 'defined'
       }
-      received = Yajl::Parser.parse(msg.encode)
+      received = Oj.load(msg.encode)
       expect(received).to eq(expected)
     end
   end
@@ -230,7 +230,7 @@ RSpec.describe JsonMessage do
       @klass.required :required_two, String
 
       expect do
-        @klass.decode(Yajl::Encoder.encode({}))
+        @klass.decode(Oj.dump({}))
       end.to(raise_error do |error|
         expect(error).to be_a(JsonMessage::ValidationError)
         expect(error.message.size).to be > 0
@@ -241,10 +241,10 @@ RSpec.describe JsonMessage do
       @klass.required :required, String
       @klass.optional :with_default, String, 'default'
       @klass.optional :no_default, String
-      encoded = Yajl::Encoder.encode({
-                                       'required' => 'required',
-                                       'no_default' => 'defined'
-                                     })
+      encoded = Oj.dump({
+                          'required' => 'required',
+                          'no_default' => 'defined'
+                        })
       decoded = @klass.decode(encoded)
       expect(decoded.required).to eq('required')
       expect(decoded.with_default).to eq('default')

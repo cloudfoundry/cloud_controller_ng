@@ -45,7 +45,7 @@ module VCAP::CloudController
 
           set_current_user_as_admin
           get '/v2/events'
-          parsed_body = MultiJson.load(last_response.body)
+          parsed_body = Oj.load(last_response.body)
           events = parsed_body['resources'].select { |r| r['entity']['type'] == type }.map { |r| r['entity']['actor'] }
           expect(events).to eq(%w[earlier middle later])
         end
@@ -57,7 +57,7 @@ module VCAP::CloudController
         it 'includes all events' do
           get '/v2/events'
 
-          parsed_body = MultiJson.load(last_response.body)
+          parsed_body = Oj.load(last_response.body)
           expect(parsed_body['total_results']).to eq(3)
         end
       end
@@ -72,7 +72,7 @@ module VCAP::CloudController
         it 'includes only events from organizations in which the user is an auditor' do
           get '/v2/events'
 
-          parsed_body = MultiJson.load(last_response.body)
+          parsed_body = Oj.load(last_response.body)
           expect(parsed_body['total_results']).to eq(1)
         end
       end
@@ -87,7 +87,7 @@ module VCAP::CloudController
         it 'includes only events from space visible to the user' do
           get '/v2/events'
 
-          parsed_body = MultiJson.load(last_response.body)
+          parsed_body = Oj.load(last_response.body)
           expect(parsed_body['total_results']).to eq(1)
         end
       end
@@ -102,7 +102,7 @@ module VCAP::CloudController
         it 'includes only events from space visible to the user' do
           get '/v2/events'
 
-          parsed_body = MultiJson.load(last_response.body)
+          parsed_body = Oj.load(last_response.body)
           expect(parsed_body['total_results']).to eq(1)
         end
       end
@@ -117,7 +117,7 @@ module VCAP::CloudController
         it 'includes no events' do
           get '/v2/events'
 
-          parsed_body = MultiJson.load(last_response.body)
+          parsed_body = Oj.load(last_response.body)
           expect(parsed_body['total_results']).to eq(0)
         end
       end
@@ -128,7 +128,7 @@ module VCAP::CloudController
         it 'can retrieve events for deleted spaces' do
           get "/v2/events?q=space_guid:#{@space_b.guid}"
           expect(last_response.status).to(eq(200))
-          parsed_body = MultiJson.load(last_response.body)
+          parsed_body = Oj.load(last_response.body)
           before_size = parsed_body['total_results']
 
           delete "/v2/spaces/#{@space_b.guid}"
@@ -136,7 +136,7 @@ module VCAP::CloudController
 
           get "/v2/events?q=space_guid:#{@space_b.guid}"
           expect(last_response.status).to eq(200)
-          parsed_body = MultiJson.load(last_response.body)
+          parsed_body = Oj.load(last_response.body)
           after_size = parsed_body['total_results']
           # 1 more event for the deletion.
           expect(after_size).to eq(before_size + 1)
@@ -149,7 +149,7 @@ module VCAP::CloudController
         it 'can retrieve events for deleted organizations' do
           get "/v2/events?q=organization_guid:#{@org_a.guid}"
           expect(last_response.status).to(eq(200))
-          parsed_body = MultiJson.load(last_response.body)
+          parsed_body = Oj.load(last_response.body)
           before_size = parsed_body['total_results']
 
           # Have to delete the space as well -- but this adds only one event.
@@ -158,7 +158,7 @@ module VCAP::CloudController
 
           get "/v2/events?q=organization_guid:#{@org_a.guid}"
           expect(last_response.status).to eq(200)
-          parsed_body = MultiJson.load(last_response.body)
+          parsed_body = Oj.load(last_response.body)
           after_size = parsed_body['total_results']
           # 2 more events for the org and space deletion due to recursive deletes.
           expect(after_size).to eq(before_size + 2)

@@ -84,7 +84,7 @@ module ControllerHelpers
   alias_method :parsed_response, :decoded_response
 
   def parse(json, options={})
-    MultiJson.load(json, options)
+    Oj.load(json, options)
   end
 
   def metadata

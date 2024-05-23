@@ -1469,7 +1469,7 @@ RSpec.describe 'v3 service credential bindings' do
                 'user-id' => OpenSSL::Digest::SHA256.hexdigest(user.guid)
               }
             }
-            expect_any_instance_of(ActiveSupport::Logger).to receive(:info).with(JSON.generate(expected_json))
+            expect_any_instance_of(ActiveSupport::Logger).to receive(:info).with(Oj.dump(expected_json))
 
             api_call.call(space_dev_headers)
           end
@@ -1592,7 +1592,7 @@ RSpec.describe 'v3 service credential bindings' do
                 'user-id' => OpenSSL::Digest::SHA256.hexdigest(user.guid)
               }
             }
-            expect_any_instance_of(ActiveSupport::Logger).to receive(:info).with(JSON.generate(expected_json))
+            expect_any_instance_of(ActiveSupport::Logger).to receive(:info).with(Oj.dump(expected_json))
 
             api_call.call(space_dev_headers)
           end

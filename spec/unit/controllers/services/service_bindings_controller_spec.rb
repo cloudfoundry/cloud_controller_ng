@@ -244,7 +244,7 @@ module VCAP::CloudController
           it 'returns CF-AppNotFound' do
             post '/v2/service_bindings', { app_guid: 'not-found', service_instance_guid: service_instance.guid }.to_json
 
-            hash_body = JSON.parse(last_response.body)
+            hash_body = Oj.load(last_response.body)
             expect(hash_body['error_code']).to eq('CF-AppNotFound')
             expect(last_response.status).to eq(404)
           end
@@ -255,7 +255,7 @@ module VCAP::CloudController
             it 'returns CF-AppNotFound' do
               post '/v2/service_bindings', { app_guid: process.guid, service_instance_guid: service_instance.guid }.to_json
 
-              hash_body = JSON.parse(last_response.body)
+              hash_body = Oj.load(last_response.body)
               expect(hash_body['error_code']).to eq('CF-AppNotFound')
               expect(last_response.status).to eq(404)
             end
@@ -273,7 +273,7 @@ module VCAP::CloudController
           it 'returns CF-ServiceInstanceNotFound error' do
             post '/v2/service_bindings', req
 
-            hash_body = JSON.parse(last_response.body)
+            hash_body = Oj.load(last_response.body)
             expect(hash_body['error_code']).to eq('CF-ServiceInstanceNotFound')
             expect(last_response.status).to eq(404)
           end
@@ -588,7 +588,7 @@ module VCAP::CloudController
           it 'raises UnbindableService error' do
             post '/v2/service_bindings', req.to_json
 
-            hash_body = JSON.parse(last_response.body)
+            hash_body = Oj.load(last_response.body)
             expect(hash_body['error_code']).to eq('CF-UnbindableService')
             expect(last_response).to have_status_code(400)
           end
@@ -663,7 +663,7 @@ module VCAP::CloudController
           it 'returns CF-VolumeMountServiceDisabled' do
             post '/v2/service_bindings', req.to_json
 
-            hash_body = JSON.parse(last_response.body)
+            hash_body = Oj.load(last_response.body)
             expect(hash_body['error_code']).to eq('CF-VolumeMountServiceDisabled')
             expect(last_response.status).to eq(403)
           end
@@ -886,7 +886,7 @@ module VCAP::CloudController
             delete "/v2/service_bindings/#{service_binding.guid}"
 
             expect(last_response).to have_status_code(400)
-            hash_body = JSON.parse(last_response.body)
+            hash_body = Oj.load(last_response.body)
             expect(hash_body['description']).to eq('This service plan requires client support for asynchronous service operations.')
           end
         end
@@ -1494,7 +1494,7 @@ module VCAP::CloudController
             it 'returns 502' do
               get "/v2/service_bindings/#{binding.guid}/parameters"
               expect(last_response.status).to be(502)
-              hash_body = JSON.parse(last_response.body)
+              hash_body = Oj.load(last_response.body)
               expect(hash_body['error_code']).to eq('CF-ServiceBrokerResponseMalformed')
             end
           end
@@ -1506,7 +1506,7 @@ module VCAP::CloudController
               get "/v2/service_bindings/#{binding.guid}/parameters"
 
               expect(last_response.status).to be(502)
-              hash_body = JSON.parse(last_response.body)
+              hash_body = Oj.load(last_response.body)
               expect(hash_body['error_code']).to eq('CF-ServiceBrokerBadResponse')
             end
           end
@@ -1517,7 +1517,7 @@ module VCAP::CloudController
             it 'returns 502' do
               get "/v2/service_bindings/#{binding.guid}/parameters"
               expect(last_response.status).to be(502)
-              hash_body = JSON.parse(last_response.body)
+              hash_body = Oj.load(last_response.body)
               expect(hash_body['error_code']).to eq('CF-ServiceBrokerResponseMalformed')
             end
           end

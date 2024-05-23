@@ -1,4 +1,3 @@
-require 'json'
 require 'openssl'
 
 module VCAP::CloudController
@@ -37,7 +36,7 @@ module VCAP::CloudController
           'telemetry-time' => Time.now.to_datetime.rfc3339,
           event_name => converted_entries.merge(anonymize(entries))
         }
-        logger.info(JSON.generate(resp))
+        logger.info(Oj.dump(resp))
       end
 
       def anonymize(entries)

@@ -25,7 +25,7 @@ RSpec.describe 'ServiceBindings' do
       get '/v2/service_bindings', nil, headers_for(user)
       expect(last_response.status).to eq(200)
 
-      parsed_response = MultiJson.load(last_response.body)
+      parsed_response = Oj.load(last_response.body)
       expect(parsed_response).to be_a_response_like(
         {
           'total_results' => 2,
@@ -103,7 +103,7 @@ RSpec.describe 'ServiceBindings' do
       get '/v2/service_bindings', nil, headers_for(user)
       expect(last_response.status).to eq(200)
 
-      parsed_response = MultiJson.load(last_response.body)
+      parsed_response = Oj.load(last_response.body)
       expect(parsed_response['resources'].map { |r| r['metadata']['guid'] }).not_to include(non_displayed_binding.guid)
     end
 
@@ -114,7 +114,7 @@ RSpec.describe 'ServiceBindings' do
         get '/v2/service_bindings?inline-relations-depth=1', nil, headers_for(user)
         expect(last_response.status).to eq(200)
 
-        parsed_response = MultiJson.load(last_response.body)
+        parsed_response = Oj.load(last_response.body)
         expect(parsed_response).to be_a_response_like(
           {
             'total_results' => 1,
@@ -241,7 +241,7 @@ RSpec.describe 'ServiceBindings' do
       it 'filters by app_guid' do
         get "/v2/service_bindings?q=app_guid:#{process2.guid}", nil, headers_for(user)
         expect(last_response.status).to eq(200)
-        parsed_response = MultiJson.load(last_response.body)
+        parsed_response = Oj.load(last_response.body)
         expect(parsed_response['total_results']).to eq(1)
         expect(parsed_response['resources'][0]['metadata']['guid']).to eq(service_binding2.guid)
       end
@@ -252,7 +252,7 @@ RSpec.describe 'ServiceBindings' do
 
         get "/v2/service_bindings?q=service_instance_guid:#{filtered_service_instance.guid}", nil, headers_for(user)
         expect(last_response.status).to eq(200)
-        parsed_response = MultiJson.load(last_response.body)
+        parsed_response = Oj.load(last_response.body)
         expect(parsed_response['total_results']).to eq(1)
         expect(parsed_response['resources'][0]['metadata']['guid']).to eq(filtered_service_binding.guid)
       end
@@ -270,7 +270,7 @@ RSpec.describe 'ServiceBindings' do
       get "/v2/service_bindings/#{service_binding1.guid}", nil, headers_for(user)
       expect(last_response.status).to eq(200)
 
-      parsed_response = MultiJson.load(last_response.body)
+      parsed_response = Oj.load(last_response.body)
       expect(parsed_response).to be_a_response_like(
         {
           'metadata' => {
@@ -356,7 +356,7 @@ RSpec.describe 'ServiceBindings' do
 
       service_binding = VCAP::CloudController::ServiceBinding.last
 
-      parsed_response = MultiJson.load(last_response.body)
+      parsed_response = Oj.load(last_response.body)
       expect(parsed_response).to be_a_response_like(
         {
           'metadata' => {
@@ -470,7 +470,7 @@ RSpec.describe 'ServiceBindings' do
       expect(last_response.status).to eq(200)
 
       parsed_response = last_response.body
-      expect(MultiJson.load(parsed_response)).to be_a_response_like(
+      expect(Oj.load(parsed_response)).to be_a_response_like(
         {
           'top_level_param' => {
             'nested_param' => true

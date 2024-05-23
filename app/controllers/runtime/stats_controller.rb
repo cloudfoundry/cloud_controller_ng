@@ -29,7 +29,7 @@ module VCAP::CloudController
         stats.each_value do |stats_hash|
           stats_hash[:stats].delete_if { |key, _| key == :net_info } if stats_hash[:stats]
         end
-        [HTTP::OK, MultiJson.dump(stats)]
+        [HTTP::OK, Oj.dump(stats, mode: :compat)]
       rescue CloudController::Errors::ApiError => e
         raise e
       rescue StandardError => e

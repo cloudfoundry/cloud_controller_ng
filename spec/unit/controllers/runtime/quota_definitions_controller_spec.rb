@@ -64,7 +64,7 @@ module VCAP::CloudController
         before { set_current_user_as_admin }
 
         it 'does allow creation of a quota def' do
-          post '/v2/quota_definitions', MultiJson.dump(quota_attributes)
+          post '/v2/quota_definitions', Oj.dump(quota_attributes)
           expect(last_response.status).to eq(201)
         end
 
@@ -74,7 +74,7 @@ module VCAP::CloudController
         end
 
         it 'does allow update of a quota def' do
-          put "/v2/quota_definitions/#{existing_quota.guid}", MultiJson.dump({ total_services: 2 })
+          put "/v2/quota_definitions/#{existing_quota.guid}", Oj.dump({ total_services: 2 })
           expect(last_response.status).to eq(201)
         end
 
@@ -90,7 +90,7 @@ module VCAP::CloudController
         before { set_current_user(User.make) }
 
         it 'does not allow creation of a quota def' do
-          post '/v2/quota_definitions', MultiJson.dump(quota_attributes)
+          post '/v2/quota_definitions', Oj.dump(quota_attributes)
           expect(last_response.status).to eq(403)
         end
 
@@ -100,7 +100,7 @@ module VCAP::CloudController
         end
 
         it 'does not allow update of a quota def' do
-          put "/v2/quota_definitions/#{existing_quota.guid}", MultiJson.dump(quota_attributes)
+          put "/v2/quota_definitions/#{existing_quota.guid}", Oj.dump(quota_attributes)
           expect(last_response.status).to eq(403)
         end
 
@@ -119,7 +119,7 @@ module VCAP::CloudController
       it 'allows a memory_limit of -1 (unlimited)' do
         set_current_user_as_admin
 
-        put "/v2/quota_definitions/#{quota_definition.guid}", MultiJson.dump({ memory_limit: -1 })
+        put "/v2/quota_definitions/#{quota_definition.guid}", Oj.dump({ memory_limit: -1 })
 
         expect(last_response.status).to eq(201)
       end
@@ -127,7 +127,7 @@ module VCAP::CloudController
       it 'returns QuotaDefinitionMemoryLimitInvalid error correctly' do
         set_current_user_as_admin
 
-        put "/v2/quota_definitions/#{quota_definition.guid}", MultiJson.dump({ memory_limit: -2 })
+        put "/v2/quota_definitions/#{quota_definition.guid}", Oj.dump({ memory_limit: -2 })
 
         expect(last_response.status).to eq(400)
         expect(decoded_response['code']).to eq(240_004)

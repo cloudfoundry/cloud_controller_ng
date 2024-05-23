@@ -108,7 +108,7 @@ module CloudFoundry
               status, headers, body = middleware.call(env)
               expect(status).to eq(401)
               expect(headers).to eq({ 'Content-Length' => '189', 'Content-Type' => 'application/json', 'X-RateLimit-Remaining' => '0' })
-              json_body = JSON.parse(body.first)
+              json_body = Oj.load(body.first)
               expect(json_body).to include(
                 'code' => 1000,
                 'description' => 'Invalid Auth Token',
@@ -144,7 +144,7 @@ module CloudFoundry
           context 'when the path is /v2/*' do
             it 'throws an error' do
               _, _, body = middleware.call(env)
-              json_body = JSON.parse(body.first)
+              json_body = Oj.load(body.first)
               expect(json_body).to include(
                 'code' => 20_004,
                 'description' => 'The UAA service is currently unavailable',
@@ -158,7 +158,7 @@ module CloudFoundry
 
             it 'throws an error' do
               _, _, body = middleware.call(env)
-              json_body = JSON.parse(body.first)
+              json_body = Oj.load(body.first)
               expect(json_body['errors'].first).to include(
                 'code' => 20_004,
                 'detail' => 'The UAA service is currently unavailable',

@@ -31,11 +31,11 @@ module VCAP::CloudController
 
             expect(last_response).to have_status_code(201)
             expect(a_request(:patch, update_url(service_instance)).with do |req|
-              request_body = JSON.parse(req.body)
+              request_body = Oj.load(req.body)
               expect(request_body['parameters']).to eq(body[:parameters])
             end).to have_been_made
 
-            parsed_response = JSON.parse(last_response.body)
+            parsed_response = Oj.load(last_response.body)
             expect(parsed_response['entity']).to include(
               'name' => body[:name],
               'tags' => body[:tags]
@@ -64,7 +64,7 @@ module VCAP::CloudController
               expect(last_response).to have_status_code(403)
               expect(a_request(:update, update_url(service_instance))).not_to have_been_made
 
-              parsed_response = JSON.parse(last_response.body)
+              parsed_response = Oj.load(last_response.body)
               expect(parsed_response).to include(
                 'error_code' => 'CF-ServiceInstanceWithInaccessiblePlanNotUpdateable',
                 'description' => match(/Cannot update parameters of a service instance that belongs to inaccessible plan/)
@@ -86,7 +86,7 @@ module VCAP::CloudController
               expect(last_response).to have_status_code(201)
               expect(a_request(:any, update_url(service_instance))).not_to have_been_made
 
-              parsed_response = JSON.parse(last_response.body)
+              parsed_response = Oj.load(last_response.body)
               expect(parsed_response['entity']).to include(
                 'name' => body[:name],
                 'tags' => body[:tags]
@@ -108,7 +108,7 @@ module VCAP::CloudController
               expect(last_response).to have_status_code(403)
               expect(a_request(:update, update_url(service_instance))).not_to have_been_made
 
-              parsed_response = JSON.parse(last_response.body)
+              parsed_response = Oj.load(last_response.body)
               expect(parsed_response).to include(
                 'error_code' => 'CF-NotAuthorized',
                 'description' => match(/You are not authorized to perform the requested action/)

@@ -230,7 +230,7 @@ RSpec.shared_examples 'list query endpoint' do
     expect(missing_params.length).to eq(0), "Parameters #{missing_params.join(' ,')} are not provided."
 
     get request, params.to_query, user_header
-    expect(last_response.status).to eq(200), JSON.parse(last_response.body)['errors'].try(:first).try(:[], 'detail')
+    expect(last_response.status).to eq(200), Oj.load(last_response.body)['errors'].try(:first).try(:[], 'detail')
   end
 end
 

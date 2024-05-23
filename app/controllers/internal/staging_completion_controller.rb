@@ -94,7 +94,7 @@ module VCAP::CloudController
         logger.error('diego.staging.completion-controller.staging-failed', staging_response)
         result[:error] = Diego::FailureReasonSanitizer.sanitize(staging_response[:failure_reason])
       else
-        result[:result] = MultiJson.load(staging_response[:result], symbolize_keys: true)
+        result[:result] = Oj.load(staging_response[:result], symbol_keys: true)
       end
       result
     end
@@ -121,16 +121,11 @@ module VCAP::CloudController
     attr_reader :stagers
 
     def read_body
-      staging_response = {}
-      begin
-        payload          = body.read
-        staging_response = MultiJson.load(payload, symbolize_keys: true)
-      rescue MultiJson::ParseError => e
-        logger.error('diego.staging.parse-error', payload: payload, error: e.to_s)
-        raise CloudController::Errors::ApiError.new_from_details('MessageParseError', payload)
-      end
-
-      staging_response
+      payload          = body.read
+      Oj.load(payload, symbol_keys: true)
+    rescue StandardError => e
+      logger.error('diego.staging.parse-error', payload: payload, error: e.to_s)
+      raise CloudController::Errors::ApiError.new_from_details('MessageParseError', payload)
     end
   end
 end

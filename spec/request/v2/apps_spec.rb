@@ -34,7 +34,7 @@ RSpec.describe 'Apps' do
 
       expect(last_response.status).to eq(200)
 
-      parsed_response = MultiJson.load(last_response.body)
+      parsed_response = Oj.load(last_response.body)
       expect(parsed_response).to be_a_response_like(
         {
           'total_results' => 1,
@@ -101,13 +101,13 @@ RSpec.describe 'Apps' do
       get '/v2/apps', nil, headers_for(user)
       expect(last_response.status).to eq(200)
 
-      parsed_response = MultiJson.load(last_response.body)
+      parsed_response = Oj.load(last_response.body)
       expect(parsed_response['resources'].map { |r| r['metadata']['guid'] }).not_to include(non_web_process.guid)
     end
 
     context 'when there are multiple web processes for a single app' do
       let(:parsed_response) do
-        MultiJson.load(last_response.body)
+        Oj.load(last_response.body)
       end
 
       let(:one_day_from_now) { 1.day.from_now }
@@ -200,7 +200,7 @@ RSpec.describe 'Apps' do
         get '/v2/apps?inline-relations-depth=1', nil, headers_for(user)
         expect(last_response.status).to eq(200)
 
-        parsed_response = MultiJson.load(last_response.body)
+        parsed_response = Oj.load(last_response.body)
         expect(parsed_response).to be_a_response_like(
           {
             'total_results' => 1,
@@ -362,7 +362,7 @@ RSpec.describe 'Apps' do
         process.app.update(name: 'filter-name')
 
         get '/v2/apps?q=name:filter-name', nil, admin_headers
-        parsed_response = MultiJson.load(last_response.body)
+        parsed_response = Oj.load(last_response.body)
 
         expect(last_response.status).to eq(200)
         expect(parsed_response['total_results']).to eq(1)
@@ -373,7 +373,7 @@ RSpec.describe 'Apps' do
         VCAP::CloudController::ProcessModelFactory.make
 
         get "/v2/apps?q=space_guid:#{space.guid}", nil, admin_headers
-        parsed_response = MultiJson.load(last_response.body)
+        parsed_response = Oj.load(last_response.body)
 
         expect(last_response.status).to eq(200)
         expect(parsed_response['total_results']).to eq(1)
@@ -384,7 +384,7 @@ RSpec.describe 'Apps' do
         VCAP::CloudController::ProcessModelFactory.make
 
         get "/v2/apps?q=organization_guid:#{space.organization.guid}", nil, admin_headers
-        parsed_response = MultiJson.load(last_response.body)
+        parsed_response = Oj.load(last_response.body)
 
         expect(last_response.status).to eq(200)
         expect(parsed_response['total_results']).to eq(1)
@@ -395,7 +395,7 @@ RSpec.describe 'Apps' do
         VCAP::CloudController::ProcessModelFactory.make(diego: true)
 
         get '/v2/apps?q=diego:true', nil, admin_headers
-        parsed_response = MultiJson.load(last_response.body)
+        parsed_response = Oj.load(last_response.body)
 
         expect(last_response.status).to eq(200)
         expect(parsed_response['total_results']).to eq(2)
@@ -405,7 +405,7 @@ RSpec.describe 'Apps' do
         search_process = VCAP::CloudController::ProcessModelFactory.make
 
         get "/v2/apps?q=stack_guid:#{search_process.stack.guid}", nil, admin_headers
-        parsed_response = MultiJson.load(last_response.body)
+        parsed_response = Oj.load(last_response.body)
 
         expect(last_response.status).to eq(200)
         expect(parsed_response['total_results']).to eq(1)
@@ -427,7 +427,7 @@ RSpec.describe 'Apps' do
       get "/v2/apps/#{process.guid}", nil, headers_for(user)
       expect(last_response.status).to eq(200)
 
-      parsed_response = MultiJson.load(last_response.body)
+      parsed_response = Oj.load(last_response.body)
       expect(parsed_response).to be_a_response_like(
         {
           'metadata' => {
@@ -493,18 +493,18 @@ RSpec.describe 'Apps' do
   describe 'POST /v2/apps' do
     it 'creates an app' do
       stack       = VCAP::CloudController::Stack.make
-      post_params = MultiJson.dump({
-                                     name: 'maria',
-                                     space_guid: space.guid,
-                                     stack_guid: stack.guid,
-                                     environment_json: { 'KEY' => 'val' }
-                                   })
+      post_params = Oj.dump({
+                              name: 'maria',
+                              space_guid: space.guid,
+                              stack_guid: stack.guid,
+                              environment_json: { 'KEY' => 'val' }
+                            })
 
       post '/v2/apps', post_params, headers_for(user)
 
       process = VCAP::CloudController::ProcessModel.last
       expect(last_response.status).to eq(201), last_response.body
-      expect(MultiJson.load(last_response.body)).to be_a_response_like(
+      expect(Oj.load(last_response.body)).to be_a_response_like(
         {
           'metadata' => {
             'guid' => process.guid,
@@ -575,7 +575,7 @@ RSpec.describe 'Apps' do
           post '/v2/apps', create_request.to_json, headers_for(user)
 
           expect(last_response.status).to eq(201)
-          parsed_response = MultiJson.load(last_response.body)
+          parsed_response = Oj.load(last_response.body)
           app_model = VCAP::CloudController::AppModel.first(guid: parsed_response['metadata']['guid'])
           expect(app_model.lifecycle_type).to eq('buildpack')
         end
@@ -603,7 +603,7 @@ RSpec.describe 'Apps' do
         Timecop.freeze do
           post '/v2/apps', post_params.to_json, headers_for(user)
 
-          parsed_response = MultiJson.load(last_response.body)
+          parsed_response = Oj.load(last_response.body)
           app_guid = parsed_response['metadata']['guid']
 
           expected_json = {
@@ -616,26 +616,26 @@ RSpec.describe 'Apps' do
             }
           }
           expect(last_response.status).to eq(201), last_response.body
-          expect(logger_spy).to have_received(:info).with(JSON.generate(expected_json))
+          expect(logger_spy).to have_received(:info).with(Oj.dump(expected_json))
         end
       end
     end
 
     describe 'docker apps' do
       it 'creates the app' do
-        post_params = MultiJson.dump({
-                                       name: 'maria',
-                                       space_guid: space.guid,
-                                       docker_image: 'cloudfoundry/diego-docker-app:latest',
-                                       docker_credentials: { 'username' => 'bob', 'password' => 'password' },
-                                       environment_json: { 'KEY' => 'val' }
-                                     })
+        post_params = Oj.dump({
+                                name: 'maria',
+                                space_guid: space.guid,
+                                docker_image: 'cloudfoundry/diego-docker-app:latest',
+                                docker_credentials: { 'username' => 'bob', 'password' => 'password' },
+                                environment_json: { 'KEY' => 'val' }
+                              })
 
         post '/v2/apps', post_params, headers_for(user)
 
         process = VCAP::CloudController::ProcessModel.last
         expect(last_response.status).to eq(201)
-        expect(MultiJson.load(last_response.body)).to be_a_response_like(
+        expect(Oj.load(last_response.body)).to be_a_response_like(
           {
             'metadata' => {
               'guid' => process.guid,
@@ -701,12 +701,12 @@ RSpec.describe 'Apps' do
       )
     end
     let(:update_params) do
-      MultiJson.dump({
-                       name: 'maria',
-                       environment_json: { 'RAILS_ENV' => 'production' },
-                       state: 'STARTED',
-                       detected_start_command: 'argh'
-                     })
+      Oj.dump({
+                name: 'maria',
+                environment_json: { 'RAILS_ENV' => 'production' },
+                state: 'STARTED',
+                detected_start_command: 'argh'
+              })
     end
 
     it 'updates an app' do
@@ -714,7 +714,7 @@ RSpec.describe 'Apps' do
 
       process.reload
       expect(last_response.status).to eq(201)
-      expect(MultiJson.load(last_response.body)).to be_a_response_like(
+      expect(Oj.load(last_response.body)).to be_a_response_like(
         {
           'metadata' => {
             'guid' => process.guid,
@@ -784,7 +784,7 @@ RSpec.describe 'Apps' do
               }
             }
             # start-app telemetry will be logged because of the 'state:STARTED' update param. skip checking this.
-            expect_any_instance_of(ActiveSupport::Logger).to receive(:info).with(JSON.generate(expected_json))
+            expect_any_instance_of(ActiveSupport::Logger).to receive(:info).with(Oj.dump(expected_json))
             expect_any_instance_of(ActiveSupport::Logger).to receive(:info).with(anything).once
 
             put "/v2/apps/#{process.app.guid}", update_params, headers_for(user)
@@ -817,13 +817,13 @@ RSpec.describe 'Apps' do
         context 'scaling instances' do
           let(:instances) { 5 }
           let(:update_params) do
-            MultiJson.dump({ instances: })
+            Oj.dump({ instances: })
           end
 
           it 'logs the required fields' do
             Timecop.freeze do
               expect_any_instance_of(ActiveSupport::Logger).to receive(:info).with(anything).once
-              expect_any_instance_of(ActiveSupport::Logger).to receive(:info).with(JSON.generate(expected_scale_json))
+              expect_any_instance_of(ActiveSupport::Logger).to receive(:info).with(Oj.dump(expected_scale_json))
 
               put "/v2/apps/#{process.app.guid}", update_params, headers_for(user)
 
@@ -835,13 +835,13 @@ RSpec.describe 'Apps' do
         context 'scaling memory' do
           let(:memory) { 532 }
           let(:update_params) do
-            MultiJson.dump({ memory: })
+            Oj.dump({ memory: })
           end
 
           it 'logs the required fields' do
             Timecop.freeze do
               expect_any_instance_of(ActiveSupport::Logger).to receive(:info).with(anything).once
-              expect_any_instance_of(ActiveSupport::Logger).to receive(:info).with(JSON.generate(expected_scale_json))
+              expect_any_instance_of(ActiveSupport::Logger).to receive(:info).with(Oj.dump(expected_scale_json))
 
               put "/v2/apps/#{process.app.guid}", update_params, headers_for(user)
 
@@ -853,13 +853,13 @@ RSpec.describe 'Apps' do
         context 'scaling disk' do
           let(:disk_quota) { 1010 }
           let(:update_params) do
-            MultiJson.dump({ disk_quota: })
+            Oj.dump({ disk_quota: })
           end
 
           it 'logs the required fields' do
             Timecop.freeze do
               expect_any_instance_of(ActiveSupport::Logger).to receive(:info).with(anything).once
-              expect_any_instance_of(ActiveSupport::Logger).to receive(:info).with(JSON.generate(expected_scale_json))
+              expect_any_instance_of(ActiveSupport::Logger).to receive(:info).with(Oj.dump(expected_scale_json))
 
               put "/v2/apps/#{process.app.guid}", update_params, headers_for(user)
 
@@ -882,13 +882,13 @@ RSpec.describe 'Apps' do
           }
         end
         let(:update_params) do
-          MultiJson.dump({ state: 'STARTED' })
+          Oj.dump({ state: 'STARTED' })
         end
 
         it 'logs the required fields' do
           Timecop.freeze do
             expect_any_instance_of(ActiveSupport::Logger).to receive(:info).with(anything).once
-            expect_any_instance_of(ActiveSupport::Logger).to receive(:info).with(JSON.generate(expected_start_json))
+            expect_any_instance_of(ActiveSupport::Logger).to receive(:info).with(Oj.dump(expected_start_json))
 
             put "/v2/apps/#{process.app.guid}", update_params, headers_for(user)
 
@@ -910,13 +910,13 @@ RSpec.describe 'Apps' do
           }
         end
         let(:update_params) do
-          MultiJson.dump({ state: 'STOPPED' })
+          Oj.dump({ state: 'STOPPED' })
         end
 
         it 'logs the required fields' do
           Timecop.freeze do
             expect_any_instance_of(ActiveSupport::Logger).to receive(:info).with(anything).once
-            expect_any_instance_of(ActiveSupport::Logger).to receive(:info).with(JSON.generate(expected_stop_json))
+            expect_any_instance_of(ActiveSupport::Logger).to receive(:info).with(Oj.dump(expected_stop_json))
 
             put "/v2/apps/#{process.app.guid}", update_params, headers_for(user)
 
@@ -943,14 +943,14 @@ RSpec.describe 'Apps' do
       end
 
       it 'throws an error' do
-        update_params = MultiJson.dump({
-                                         memory: 10
-                                       })
+        update_params = Oj.dump({
+                                  memory: 10
+                                })
 
         put "/v2/apps/#{process.guid}", update_params, headers_for(user)
 
         expect(last_response.status).to eq(400)
-        parsed_response = MultiJson.load(last_response.body)
+        parsed_response = Oj.load(last_response.body)
         expect(parsed_response['error_code']).to eq 'CF-AppMemoryInsufficientForSidecars'
       end
     end
@@ -971,17 +971,17 @@ RSpec.describe 'Apps' do
       end
 
       it 'updates an app' do
-        update_params = MultiJson.dump({
-                                         name: 'maria',
-                                         environment_json: { 'RAILS_ENV' => 'production' },
-                                         state: 'STARTED'
-                                       })
+        update_params = Oj.dump({
+                                  name: 'maria',
+                                  environment_json: { 'RAILS_ENV' => 'production' },
+                                  state: 'STARTED'
+                                })
 
         put "/v2/apps/#{process.guid}", update_params, headers_for(user)
 
         process.reload
         expect(last_response.status).to eq(201)
-        expect(MultiJson.load(last_response.body)).to be_a_response_like(
+        expect(Oj.load(last_response.body)).to be_a_response_like(
           {
             'metadata' => {
               'guid' => process.guid,
@@ -1039,16 +1039,16 @@ RSpec.describe 'Apps' do
 
       context 'when updating docker data' do
         let(:update_params) do
-          MultiJson.dump({
-                           name: 'maria',
-                           environment_json: { 'RAILS_ENV' => 'production' },
-                           state: 'STARTED',
-                           docker_image: 'cloudfoundry/diego-docker-app:even-more-latest',
-                           docker_credentials: {
-                             'username' => 'somedude',
-                             'password' => 'secretfromdude'
-                           }
-                         })
+          Oj.dump({
+                    name: 'maria',
+                    environment_json: { 'RAILS_ENV' => 'production' },
+                    state: 'STARTED',
+                    docker_image: 'cloudfoundry/diego-docker-app:even-more-latest',
+                    docker_credentials: {
+                      'username' => 'somedude',
+                      'password' => 'secretfromdude'
+                    }
+                  })
         end
 
         it 'updates the app with docker data' do
@@ -1059,7 +1059,7 @@ RSpec.describe 'Apps' do
 
           process.reload
           expect(last_response.status).to eq(201)
-          expect(MultiJson.load(last_response.body)).to be_a_response_like(
+          expect(Oj.load(last_response.body)).to be_a_response_like(
             {
               'metadata' => {
                 'guid' => process.guid,
@@ -1127,7 +1127,7 @@ RSpec.describe 'Apps' do
       expect(last_response.status).to eq(204)
 
       get "/v2/apps/#{process.guid}", nil, headers_for(user)
-      parsed_response = MultiJson.load(last_response.body)
+      parsed_response = Oj.load(last_response.body)
 
       expect(parsed_response['error_code']).to eq 'CF-AppNotFound'
     end
@@ -1144,7 +1144,7 @@ RSpec.describe 'Apps' do
               'user-id' => OpenSSL::Digest::SHA256.hexdigest(user.guid)
             }
           }
-          expect_any_instance_of(ActiveSupport::Logger).to receive(:info).with(JSON.generate(expected_json))
+          expect_any_instance_of(ActiveSupport::Logger).to receive(:info).with(Oj.dump(expected_json))
 
           delete "/v2/apps/#{process.app.guid}", nil, headers_for(user)
 
@@ -1163,7 +1163,7 @@ RSpec.describe 'Apps' do
         expect(last_response.status).to eq(204)
 
         get "/v2/apps/#{process.guid}", nil, headers_for(user)
-        parsed_response = MultiJson.load(last_response.body)
+        parsed_response = Oj.load(last_response.body)
 
         expect(parsed_response['error_code']).to eq 'CF-AppNotFound'
       end
@@ -1187,7 +1187,7 @@ RSpec.describe 'Apps' do
       get "/v2/apps/#{process.guid}/summary", nil, headers_for(user)
 
       expect(last_response.status).to eq(200), last_response.body
-      expect(MultiJson.load(last_response.body)).to be_a_response_like(
+      expect(Oj.load(last_response.body)).to be_a_response_like(
         {
           'guid' => process.guid,
           'name' => 'woo',
@@ -1271,7 +1271,7 @@ RSpec.describe 'Apps' do
       get "/v2/apps/#{process.guid}/env", nil, headers_for(user)
       expect(last_response.status).to eq(200)
 
-      expect(MultiJson.load(last_response.body)).to be_a_response_like(
+      expect(Oj.load(last_response.body)).to be_a_response_like(
         {
           'staging_env_json' => { 'STAGING_ENV' => 'staging_value' },
           'running_env_json' => { 'RUNNING_ENV' => 'running_value' },
@@ -1359,7 +1359,7 @@ RSpec.describe 'Apps' do
       get "/v2/apps/#{process.guid}/stats", nil, headers_for(user)
 
       expect(last_response.status).to eq(200)
-      parsed_response = MultiJson.load(last_response.body)
+      parsed_response = Oj.load(last_response.body)
       expect(parsed_response).to be_a_response_like(
         {
           '0' => {
@@ -1414,7 +1414,7 @@ RSpec.describe 'Apps' do
         allow_any_instance_of(VCAP::CloudController::Diego::BbsInstancesClient).to receive(:lrp_instances).and_return(bbs_instances_response)
 
         get "/v2/apps/#{process.guid}/instances", nil, headers_for(user)
-        parsed_response = MultiJson.load(last_response.body)
+        parsed_response = Oj.load(last_response.body)
 
         expect(last_response.status).to eq(200)
         expect(parsed_response).to be_a_response_like(
@@ -1460,7 +1460,7 @@ RSpec.describe 'Apps' do
     it 'restages the app' do
       post "/v2/apps/#{process.guid}/restage", nil, headers_for(user)
 
-      parsed_response = MultiJson.load(last_response.body)
+      parsed_response = Oj.load(last_response.body)
 
       process.reload
       expect(last_response.status).to eq(201)
@@ -1528,7 +1528,7 @@ RSpec.describe 'Apps' do
             }
           }
           expect_any_instance_of(ActiveSupport::Logger).to receive(:info).with(anything).once
-          expect_any_instance_of(ActiveSupport::Logger).to receive(:info).with(JSON.generate(expected_json))
+          expect_any_instance_of(ActiveSupport::Logger).to receive(:info).with(Oj.dump(expected_json))
           post "/v2/apps/#{process.app.guid}/restage", nil, headers_for(user)
           expect(last_response.status).to eq(201), last_response.body
         end
@@ -1556,7 +1556,7 @@ RSpec.describe 'Apps' do
               }
             }
             expect_any_instance_of(ActiveSupport::Logger).to receive(:info).with(anything).once
-            expect_any_instance_of(ActiveSupport::Logger).to receive(:info).with(JSON.generate(expected_json))
+            expect_any_instance_of(ActiveSupport::Logger).to receive(:info).with(Oj.dump(expected_json))
             post "/v2/apps/#{process.app.guid}/restage", nil, headers_for(user)
             expect(last_response.status).to eq(201), last_response.body
           end
@@ -1592,7 +1592,7 @@ RSpec.describe 'Apps' do
     it 'uploads the application bits' do
       put "/v2/apps/#{process.guid}/bits?async=true", upload_params, headers_for(user)
 
-      parsed_response = MultiJson.load(last_response.body)
+      parsed_response = Oj.load(last_response.body)
 
       expect(last_response.status).to eq 201
       expect(parsed_response['entity']['status']).to eq 'queued'
@@ -1613,7 +1613,7 @@ RSpec.describe 'Apps' do
 
       it 'logs the required fields' do
         Timecop.freeze do
-          expect_any_instance_of(ActiveSupport::Logger).to receive(:info).with(JSON.generate(expected_json))
+          expect_any_instance_of(ActiveSupport::Logger).to receive(:info).with(Oj.dump(expected_json))
           put "/v2/apps/#{process.guid}/bits?async=true", upload_params, headers_for(user)
 
           expect(last_response.status).to eq(201), last_response.body
@@ -1627,10 +1627,10 @@ RSpec.describe 'Apps' do
     let!(:destination_process) { VCAP::CloudController::ProcessModelFactory.make(space:) }
 
     it 'queues a job to copy the bits' do
-      post "/v2/apps/#{destination_process.guid}/copy_bits", MultiJson.dump({ source_app_guid: source_process.guid }), headers_for(user)
+      post "/v2/apps/#{destination_process.guid}/copy_bits", Oj.dump({ source_app_guid: source_process.guid }), headers_for(user)
 
       expect(last_response.status).to eq(201)
-      parsed_response = MultiJson.load(last_response.body)
+      parsed_response = Oj.load(last_response.body)
       expect(parsed_response['entity']['status']).to eq 'queued'
     end
   end
@@ -1698,7 +1698,7 @@ RSpec.describe 'Apps' do
     it 'lists the service bindings associated with the app' do
       get "/v2/apps/#{process.guid}/service_bindings", nil, headers_for(user)
 
-      parsed_response = MultiJson.load(last_response.body)
+      parsed_response = Oj.load(last_response.body)
 
       expect(last_response.status).to eq 200
       expect(parsed_response).to be_a_response_like(
@@ -1780,7 +1780,7 @@ RSpec.describe 'Apps' do
       get "/v2/apps/#{process.guid}/routes", nil, headers_for(user)
 
       expect(last_response.status).to eq(200)
-      expect(MultiJson.load(last_response.body)).to be_a_response_like(
+      expect(Oj.load(last_response.body)).to be_a_response_like(
         {
           'total_results' => 1,
           'total_pages' => 1,
@@ -1822,7 +1822,7 @@ RSpec.describe 'Apps' do
       process.reload
 
       expect(last_response.status).to eq(201)
-      parsed_response = MultiJson.load(last_response.body)
+      parsed_response = Oj.load(last_response.body)
       expect(parsed_response).to be_a_response_like(
         {
           'metadata' =>
@@ -1907,7 +1907,7 @@ RSpec.describe 'Apps' do
 
     it 'lists associated route_mappings' do
       get "/v2/apps/#{process.guid}/route_mappings", nil, headers_for(user)
-      parsed_response = MultiJson.load(last_response.body)
+      parsed_response = Oj.load(last_response.body)
 
       expect(last_response.status).to eq(200)
       expect(parsed_response).to be_a_response_like(
@@ -1957,7 +1957,7 @@ RSpec.describe 'Apps' do
       put "/v2/apps/#{process.guid}/droplet/upload", { droplet: valid_zip }, headers_for(user)
 
       job             = Delayed::Job.last
-      parsed_response = MultiJson.load(last_response.body)
+      parsed_response = Oj.load(last_response.body)
 
       expect(last_response.status).to eq 201
       expect(parsed_response).to be_a_response_like(

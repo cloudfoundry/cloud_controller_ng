@@ -55,7 +55,7 @@ RSpec.resource 'Spaces', type: %i[api legacy_api] do
       include_context 'createable_fields', required: true
       example 'Creating a Space' do
         organization_guid = VCAP::CloudController::Organization.make.guid
-        client.post '/v2/spaces', MultiJson.dump(required_fields.merge(organization_guid:), pretty: true), headers
+        client.post '/v2/spaces', Oj.dump(required_fields.merge(organization_guid:)), headers
         expect(status).to eq(201)
 
         standard_entity_response parsed_response, :space
@@ -73,7 +73,7 @@ RSpec.resource 'Spaces', type: %i[api legacy_api] do
 
       example 'Update a Space' do
         client.put "/v2/spaces/#{guid}",
-                   MultiJson.dump({ name: new_name }, pretty: true),
+                   Oj.dump({ name: new_name }),
                    headers
 
         expect(status).to eq 201
@@ -139,7 +139,7 @@ RSpec.resource 'Spaces', type: %i[api legacy_api] do
             allow(CloudController::DependencyLocator.instance).to receive(:uaa_username_lookup_client).and_return(uaa_client)
             allow(uaa_client).to receive_messages(id_for_username: developer.guid, origins_for_username: ['uaa'])
 
-            client.put "v2/spaces/#{space.guid}/developers", MultiJson.dump({ username: 'user@example.com' }, pretty: true), headers
+            client.put "v2/spaces/#{space.guid}/developers", Oj.dump({ username: 'user@example.com' }), headers
             expect(status).to eq(201)
 
             standard_entity_response parsed_response, :space
@@ -152,7 +152,7 @@ RSpec.resource 'Spaces', type: %i[api legacy_api] do
             allow(CloudController::DependencyLocator.instance).to receive(:uaa_username_lookup_client).and_return(uaa_client)
             allow(uaa_client).to receive_messages(id_for_username: associated_developer.guid, origins_for_username: ['uaa'])
 
-            client.delete "v2/spaces/#{space.guid}/developers", MultiJson.dump({ username: 'developer@example.com' }, pretty: true), headers
+            client.delete "v2/spaces/#{space.guid}/developers", Oj.dump({ username: 'developer@example.com' }), headers
             expect(status).to eq(200)
 
             standard_entity_response parsed_response, :space
@@ -195,7 +195,7 @@ RSpec.resource 'Spaces', type: %i[api legacy_api] do
             allow(CloudController::DependencyLocator.instance).to receive(:uaa_username_lookup_client).and_return(uaa_client)
             allow(uaa_client).to receive_messages(id_for_username: manager.guid, origins_for_username: ['uaa'])
 
-            client.put "v2/spaces/#{space.guid}/managers", MultiJson.dump({ username: 'user@example.com' }, pretty: true), headers
+            client.put "v2/spaces/#{space.guid}/managers", Oj.dump({ username: 'user@example.com' }), headers
             expect(status).to eq(201)
 
             standard_entity_response parsed_response, :space
@@ -208,7 +208,7 @@ RSpec.resource 'Spaces', type: %i[api legacy_api] do
             allow(CloudController::DependencyLocator.instance).to receive(:uaa_username_lookup_client).and_return(uaa_client)
             allow(uaa_client).to receive_messages(id_for_username: associated_manager.guid, origins_for_username: ['uaa'])
 
-            client.delete "v2/spaces/#{space.guid}/managers", MultiJson.dump({ username: 'manager@example.com' }, pretty: true), headers
+            client.delete "v2/spaces/#{space.guid}/managers", Oj.dump({ username: 'manager@example.com' }), headers
             expect(status).to eq(200)
 
             standard_entity_response parsed_response, :space
@@ -251,7 +251,7 @@ RSpec.resource 'Spaces', type: %i[api legacy_api] do
             allow(CloudController::DependencyLocator.instance).to receive(:uaa_username_lookup_client).and_return(uaa_client)
             allow(uaa_client).to receive_messages(id_for_username: auditor.guid, origins_for_username: ['uaa'])
 
-            client.put "v2/spaces/#{space.guid}/auditors", MultiJson.dump({ username: 'user@example.com' }, pretty: true), headers
+            client.put "v2/spaces/#{space.guid}/auditors", Oj.dump({ username: 'user@example.com' }), headers
             expect(status).to eq(201)
 
             standard_entity_response parsed_response, :space
@@ -264,7 +264,7 @@ RSpec.resource 'Spaces', type: %i[api legacy_api] do
             allow(CloudController::DependencyLocator.instance).to receive(:uaa_username_lookup_client).and_return(uaa_client)
             allow(uaa_client).to receive_messages(id_for_username: associated_auditor.guid, origins_for_username: ['uaa'])
 
-            client.delete "v2/spaces/#{space.guid}/auditors", MultiJson.dump({ username: 'auditor@example.com' }, pretty: true), headers
+            client.delete "v2/spaces/#{space.guid}/auditors", Oj.dump({ username: 'auditor@example.com' }), headers
             expect(status).to eq(200)
 
             standard_entity_response parsed_response, :space
@@ -373,7 +373,7 @@ RSpec.resource 'Spaces', type: %i[api legacy_api] do
 
       put '/v2/spaces/:guid' do
         example 'Set the Isolation Segment for a Space (experimental)' do
-          client.put "/v2/spaces/#{space.guid}", MultiJson.dump({ isolation_segment_guid: isolation_segment_model2.guid }), headers
+          client.put "/v2/spaces/#{space.guid}", Oj.dump({ isolation_segment_guid: isolation_segment_model2.guid }), headers
           expect(status).to eq(201)
 
           standard_entity_response parsed_response, :space
