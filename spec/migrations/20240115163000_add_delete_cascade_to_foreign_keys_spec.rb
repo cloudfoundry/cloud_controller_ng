@@ -28,12 +28,16 @@ RSpec.describe 'migration to add delete cascade to foreign keys', isolation: :tr
       it 'deleted orphaned buildpack_lifecycle_data entries but kept valid ones' do
         db[:builds].insert(guid: 'build_guid')
         db[:buildpack_lifecycle_data].insert(guid: 'bld_guid', build_guid: 'build_guid')
+        db[:buildpack_lifecycle_buildpacks].insert(guid: 'blb_guid', buildpack_lifecycle_data_guid: 'bld_guid')
         db[:buildpack_lifecycle_data].insert(guid: 'another_bld_guid', build_guid: 'not_exists')
+        db[:buildpack_lifecycle_buildpacks].insert(guid: 'another_blb_guid', buildpack_lifecycle_data_guid: 'another_bld_guid')
 
         Sequel::Migrator.run(db, migrations_path, target: current_migration_index, allow_missing_migration_files: true)
 
         expect(db[:buildpack_lifecycle_data].where(guid: 'bld_guid').count).to eq(1)
+        expect(db[:buildpack_lifecycle_buildpacks].where(guid: 'blb_guid').count).to eq(1)
         expect(db[:buildpack_lifecycle_data].where(guid: 'another_bld_guid').count).to eq(0)
+        expect(db[:buildpack_lifecycle_buildpacks].where(guid: 'another_blb_guid').count).to eq(0)
       end
     end
   end
