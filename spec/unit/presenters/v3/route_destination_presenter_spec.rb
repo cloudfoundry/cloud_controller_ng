@@ -31,7 +31,7 @@ module VCAP::CloudController::Presenters::V3
           port: route_mapping.presented_port,
           protocol: route_mapping.protocol,
           links: {
-            destintions: {
+            destinations: {
               href: "http://api2.vcap.me/v3/routes/#{route.guid}/destinations"
             },
             route: {
