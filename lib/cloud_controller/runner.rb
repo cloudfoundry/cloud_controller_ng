@@ -33,7 +33,7 @@ module VCAP::CloudController
 
       request_logs = VCAP::CloudController::Logs::RequestLogs.new(Steno.logger('cc.api'))
 
-      request_metrics = VCAP::CloudController::Metrics::RequestMetrics.new(CloudController::DependencyLocator.instance.statsd_client,
+      request_metrics = VCAP::CloudController::Metrics::RequestMetrics.new(CloudController::DependencyLocator.instance.statsd_updater,
                                                                            CloudController::DependencyLocator.instance.prometheus_updater)
       builder = RackAppBuilder.new
       app     = builder.build(@config, request_metrics, request_logs)
