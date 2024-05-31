@@ -3,55 +3,37 @@ require 'cloud_controller/metrics/request_metrics'
 
 module VCAP::CloudController::Metrics
   RSpec.describe RequestMetrics do
-    let(:statsd_client) { double(:statsd_client) }
+    let(:statsd_updater) { double(:statsd_updater) }
     let(:prometheus_client) { double(:prometheus_client) }
-    let(:request_metrics) { RequestMetrics.new(statsd_client, prometheus_client) }
+    let(:request_metrics) { RequestMetrics.new(statsd_updater, prometheus_client) }
 
     before do
       allow(prometheus_client).to receive(:update_gauge_metric)
       allow(prometheus_client).to receive(:decrement_gauge_metric)
       allow(prometheus_client).to receive(:increment_gauge_metric)
       allow(prometheus_client).to receive(:increment_counter_metric)
+      allow(statsd_updater).to receive(:start_request)
+      allow(statsd_updater).to receive(:complete_request)
     end
 
     describe '#start_request' do
-      before do
-        allow(statsd_client).to receive(:increment)
-        allow(statsd_client).to receive(:gauge)
-      end
-
       it 'increments outstanding requests for statsd' do
         request_metrics.start_request
-
-        expect(statsd_client).to have_received(:gauge).with('cc.requests.outstanding.gauge', 1)
-        expect(statsd_client).to have_received(:increment).with('cc.requests.outstanding')
+        expect(statsd_updater).to have_received(:start_request)
       end
 
       it 'increments outstanding requests for prometheus' do
         request_metrics.start_request
-
         expect(prometheus_client).to have_received(:increment_gauge_metric).with(:cc_requests_outstanding_total)
       end
     end
 
     describe '#complete_request' do
-      let(:batch) { double(:batch) }
       let(:status) { 204 }
-
-      before do
-        allow(statsd_client).to receive(:batch).and_yield(batch)
-        allow(statsd_client).to receive(:gauge)
-        allow(batch).to receive(:increment)
-        allow(batch).to receive(:decrement)
-      end
 
       it 'increments completed, decrements outstanding, increments status for statsd' do
         request_metrics.complete_request(status)
-
-        expect(statsd_client).to have_received(:gauge).with('cc.requests.outstanding.gauge', -1)
-        expect(batch).to have_received(:decrement).with('cc.requests.outstanding')
-        expect(batch).to have_received(:increment).with('cc.requests.completed')
-        expect(batch).to have_received(:increment).with('cc.http_status.2XX')
+        expect(statsd_updater).to have_received(:complete_request).with(status)
       end
 
       it 'increments completed and decrements outstanding for prometheus' do
@@ -59,17 +41,6 @@ module VCAP::CloudController::Metrics
 
         expect(prometheus_client).to have_received(:decrement_gauge_metric).with(:cc_requests_outstanding_total)
         expect(prometheus_client).to have_received(:increment_counter_metric).with(:cc_requests_completed_total)
-      end
-
-      it 'normalizes http status codes in statsd' do
-        request_metrics.complete_request(200)
-        expect(batch).to have_received(:increment).with('cc.http_status.2XX')
-
-        request_metrics.complete_request(300)
-        expect(batch).to have_received(:increment).with('cc.http_status.3XX')
-
-        request_metrics.complete_request(400)
-        expect(batch).to have_received(:increment).with('cc.http_status.4XX')
       end
     end
   end

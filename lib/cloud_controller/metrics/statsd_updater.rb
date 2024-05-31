@@ -2,8 +2,9 @@ require 'statsd'
 
 module VCAP::CloudController::Metrics
   class StatsdUpdater
-    def initialize(statsd=CloudController::DependencyLocator.instance.statsd_client)
+    def initialize(statsd=CloudController::DependencyLocator.instance.statsd_client, redis_connection_pool_size: nil)
       @statsd = statsd
+      @redis_connection_pool_size = redis_connection_pool_size
     end
 
     def update_deploying_count(deploying_count)
@@ -93,10 +94,72 @@ module VCAP::CloudController::Metrics
       @statsd.timing('cc.staging.failed_duration', nanoseconds_to_milliseconds(duration_ns))
     end
 
+    def start_request
+      @statsd.increment('cc.requests.outstanding')
+      @statsd.gauge('cc.requests.outstanding.gauge', store.increment_request_outstanding_gauge)
+    end
+
+    def complete_request(status)
+      http_status_code = "#{status.to_s[0]}XX"
+      http_status_metric = "cc.http_status.#{http_status_code}"
+      @statsd.gauge('cc.requests.outstanding.gauge', store.decrement_request_outstanding_gauge)
+      @statsd.batch do |batch|
+        batch.decrement 'cc.requests.outstanding'
+        batch.increment 'cc.requests.completed'
+        batch.increment http_status_metric
+      end
+    end
+
     private
 
     def nanoseconds_to_milliseconds(time_ns)
       (time_ns / 1e6).to_i
+    end
+
+    def store
+      return @store if defined?(@store)
+
+      redis_socket = VCAP::CloudController::Config.config.get(:redis, :socket)
+      @store = redis_socket.nil? ? InMemoryStore.new : RedisStore.new(redis_socket, @redis_connection_pool_size)
+    end
+
+    class InMemoryStore
+      def initialize
+        @mutex = Mutex.new
+        @counter = 0
+      end
+
+      def increment_request_outstanding_gauge
+        @mutex.synchronize do
+          @counter += 1
+        end
+      end
+
+      def decrement_request_outstanding_gauge
+        @mutex.synchronize do
+          @counter -= 1
+        end
+      end
+    end
+
+    class RedisStore
+      def initialize(socket, connection_pool_size)
+        connection_pool_size ||= VCAP::CloudController::Config.config.get(:puma, :max_threads) || 1
+        @redis = ConnectionPool::Wrapper.new(size: connection_pool_size) do
+          Redis.new(timeout: 1, path: socket)
+        end
+        @prefix = 'metrics'
+        @request_outstanding_gauge_key = "#{@prefix}:cc.requests.outstanding.gauge"
+        @redis.set(@request_outstanding_gauge_key, 0)
+      end
+
+      def increment_request_outstanding_gauge
+        @redis.incr(@request_outstanding_gauge_key)
+      end
+
+      def decrement_request_outstanding_gauge
+        @redis.decr(@request_outstanding_gauge_key)
+      end
     end
   end
 end
