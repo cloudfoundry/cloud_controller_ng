@@ -1,6 +1,6 @@
 require 'spec_helper'
 
-RSpec.describe DBMigrator do
+RSpec.describe DBMigrator, isolation: :truncation, type: :migration do
   let(:db) { Sequel::Model.db }
 
   describe '#wait_for_migrations!' do
