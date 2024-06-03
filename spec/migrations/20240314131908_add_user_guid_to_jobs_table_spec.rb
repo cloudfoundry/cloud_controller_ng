@@ -1,7 +1,7 @@
 require 'spec_helper'
 require 'migrations/helpers/migration_shared_context'
 
-RSpec.describe 'migration to add user_guid column to jobs table and add an index for that column', isolation: :truncation do
+RSpec.describe 'migration to add user_guid column to jobs table and add an index for that column', isolation: :truncation, type: :migration do
   include_context 'migration' do
     let(:migration_filename) { '20240314131908_add_user_guid_to_jobs_table.rb' }
   end

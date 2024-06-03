@@ -1,7 +1,7 @@
 require 'spec_helper'
 require 'migrations/helpers/migration_shared_context'
 
-RSpec.describe 'migration to add an index for task_guid on app_usage_events table', isolation: :truncation do
+RSpec.describe 'migration to add an index for task_guid on app_usage_events table', isolation: :truncation, type: :migration do
   include_context 'migration' do
     let(:migration_filename) { '20240529195136_add_task_guid_index_to_app_usage_events.rb' }
   end
