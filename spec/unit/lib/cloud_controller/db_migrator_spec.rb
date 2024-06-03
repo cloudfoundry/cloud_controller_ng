@@ -1,6 +1,6 @@
 require 'spec_helper'
 
-RSpec.describe DBMigrator, isolation: :truncation, type: :migration do
+RSpec.describe DBMigrator do
   let(:db) { Sequel::Model.db }
 
   describe '#wait_for_migrations!' do
@@ -78,6 +78,10 @@ RSpec.describe DBMigrator, isolation: :truncation, type: :migration do
   end
 
   describe 'benchmark' do
+    before do
+      allow(Sequel::Migrator).to receive(:run).with(any_args)
+    end
+
     let(:migrator) { DBMigrator.new(db) }
 
     it 'runs migrations without benchmark' do
