@@ -1,5 +1,5 @@
 Sequel.migration do
-  TABLE_NAMES = %w[
+  table_names = %w[
     app_events
     app_usage_events
     apps
@@ -33,7 +33,7 @@ Sequel.migration do
 
   up do
     if self.class.name.match?(/mysql/i)
-      TABLE_NAMES.each do |table|
+      table_names.each do |table|
         run <<-SQL.squish
         ALTER TABLE #{table} MODIFY created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP;
         SQL
@@ -43,7 +43,7 @@ Sequel.migration do
 
   down do
     if self.class.name.match?(/mysql/i)
-      TABLE_NAMES.each do |table|
+      table_names.each do |table|
         run <<-SQL.squish
         ALTER TABLE #{table} MODIFY created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP;
         SQL
