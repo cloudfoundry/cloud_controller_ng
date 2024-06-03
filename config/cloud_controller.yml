@@ -107,7 +107,7 @@ logging:
   anonymize_ips: false
   format:
     timestamp: 'rfc3339'
-  stdout_sink_enabled: true
+  stdout_sink_enabled: false
 
 log_audit_events: false
 
