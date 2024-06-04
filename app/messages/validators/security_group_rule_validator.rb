@@ -135,6 +135,9 @@ class RulesValidator < ActiveModel::Validator
 
     address_list = destination.split('-')
 
+    zeros_error_message = 'destination octets cannot contain leading zeros'
+    add_rule_error(zeros_error_message, record, index) unless CloudController::RuleValidator.no_leading_zeros(address_list)
+
     if address_list.length == 1
       add_rule_error(error_message, record, index) unless CloudController::RuleValidator.parse_ip(address_list.first)
 

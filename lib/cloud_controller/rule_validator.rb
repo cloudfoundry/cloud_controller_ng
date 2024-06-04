@@ -66,7 +66,9 @@ module CloudController
 
     def self.parse_ip(val)
       if val.is_a?(Array)
-        val.map { |ip| NetAddr::IPv4.parse(ip) }
+        val.map do |ip|
+          NetAddr::IPv4.parse(ip)
+        end
       else
         NetAddr::IPv4Net.parse(val)
       end
@@ -77,6 +79,30 @@ module CloudController
     def self.comma_delimited_destinations_enabled?
       config = VCAP::CloudController::Config.config
       config.get(:security_groups, :enable_comma_delimited_destinations)
+    end
+
+    def self.no_leading_zeros(destination)
+      return no_leading_zeros_in_address(destination) unless destination.is_a?(Array)
+
+      no_zeros = true
+      destination.each do |address|
+        no_zeros &&= no_leading_zeros_in_address(address)
+      end
+
+      no_zeros
+    end
+
+    private_class_method def self.no_leading_zeros_in_address(address)
+      address.split('.') do |octet|
+        if octet.start_with?('0') && octet.length > 1
+          octet_parts = octet.split('/')
+          return false if octet_parts.length < 2
+
+          return false if octet_parts[0].length > 1 && octet_parts[0].start_with?('0')
+        end
+      end
+
+      true
     end
   end
 end
