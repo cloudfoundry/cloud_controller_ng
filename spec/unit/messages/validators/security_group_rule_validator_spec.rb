@@ -179,6 +179,90 @@ module VCAP::CloudController::Validators
         end
       end
 
+      context 'when there is a leading zero in an octet' do
+        context 'in a CIDR' do
+          let(:rules) do
+            [
+              {
+                protocol: 'tcp',
+                destination: '10.000.0.0/24',
+                ports: '443'
+              },
+              {
+                protocol: 'tcp',
+                destination: '10.0.0.000/24',
+                ports: '443'
+              }
+            ]
+          end
+
+          it 'is not valid' do
+            expect(subject).not_to be_valid
+            expect(subject.errors.full_messages).to include 'Rules[0]: destination octets cannot contain leading zeros'
+            expect(subject.errors.full_messages).to include 'Rules[1]: destination octets cannot contain leading zeros'
+          end
+        end
+
+        context 'in an IP range' do
+          let(:rules) do
+            [
+              {
+                protocol: 'tcp',
+                destination: '1.0.0.000-1.0.0.200',
+                ports: '443'
+              }
+            ]
+          end
+
+          it 'is not valid' do
+            expect(subject).not_to be_valid
+            expect(subject.errors.full_messages).to include 'Rules[0]: destination octets cannot contain leading zeros'
+          end
+        end
+
+        context 'in an IP' do
+          let(:rules) do
+            [
+              {
+                protocol: 'tcp',
+                destination: '010.0.0.53',
+                ports: '443'
+              },
+              {
+                protocol: 'tcp',
+                destination: '10.000.0.53',
+                ports: '443'
+              },
+              {
+                protocol: 'tcp',
+                destination: '10.0.000.53',
+                ports: '443'
+              },
+              {
+                protocol: 'tcp',
+                destination: '10.0.0.053',
+                ports: '443'
+              },
+              {
+                protocol: 'tcp',
+                destination: '010.000.000.053',
+                ports: '443'
+              }
+            ]
+          end
+
+          it 'is not valid' do
+            expect(subject).not_to be_valid
+            expect(subject.errors.full_messages.length).to eq(5)
+            expect(subject.errors.full_messages).to include 'Rules[0]: destination octets cannot contain leading zeros'
+            expect(subject.errors.full_messages).to include 'Rules[1]: destination octets cannot contain leading zeros'
+            expect(subject.errors.full_messages).to include 'Rules[2]: destination octets cannot contain leading zeros'
+            expect(subject.errors.full_messages).to include 'Rules[3]: destination octets cannot contain leading zeros'
+            expect(subject.errors.full_messages).to include 'Rules[4]: destination octets cannot contain leading zeros'
+          end
+        end
+      end
+
       context 'when the destination field is not a valid CIDR or IP range' do
         let(:rules) do
           [

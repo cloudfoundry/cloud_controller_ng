@@ -189,6 +189,56 @@ module VCAP::CloudController
             expect(subject).not_to be_valid
           end
         end
+
+        context 'when the rule contains leading zeros' do
+          context 'in a CIDR' do
+            let(:rules) do
+              [
+                {
+                  protocol: 'tcp',
+                  destination: '010.000.0.0/24',
+                  ports: '443,80,8080'
+                }
+              ]
+            end
+
+            it 'is invalid' do
+              expect(subject).not_to be_valid
+            end
+          end
+
+          context 'in a range' do
+            let(:rules) do
+              [
+                {
+                  protocol: 'tcp',
+                  destination: '1.0.0.000-1.0.0.200',
+                  ports: '443,80,8080'
+                }
+              ]
+            end
+
+            it 'is invalid' do
+              expect(subject).not_to be_valid
+            end
+          end
+
+          context 'in an IP' do
+            let(:rules) do
+              [
+                {
+                  protocol: 'tcp',
+                  destination: '010.000.000.053',
+                  ports: '443,80,8080'
+                }
+              ]
+            end
+
+            it 'is invalid' do
+              expect(subject).not_to be_valid
+            end
+          end
+        end
       end
 
       describe 'globally_enabled' do
