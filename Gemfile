@@ -57,7 +57,7 @@ gem 'azure-storage-blob', git: 'https://github.com/sethboyles/azure-storage-ruby
 gem 'fog-aliyun'
 gem 'fog-aws'
 gem 'fog-azure-rm', git: 'https://github.com/fog/fog-azure-rm.git', branch: 'fog-arm-cf'
-gem 'fog-core', '~> 2.1.2'
+gem 'fog-core', '~> 2.4.0'
 gem 'fog-google', '~> 1.24.1'
 gem 'fog-local'
 gem 'fog-openstack'
