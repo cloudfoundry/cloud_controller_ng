@@ -4,6 +4,16 @@ concurrency:
   cancel-in-progress: true
 on:
   workflow_dispatch:
+  pull_request:
+    branches: [ main ]
+    paths:
+      - 'docs/**'
+      - '.github/workflows/docs_test.yml'
+  push:
+    branches: [ main ]
+    paths:
+      - 'docs/**'
+      - '.github/workflows/docs_test.yml'
 
 permissions:
   contents: read # to fetch code (actions/checkout)
