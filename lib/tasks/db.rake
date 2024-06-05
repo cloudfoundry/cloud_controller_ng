@@ -1,5 +1,4 @@
 require 'httpclient'
-require 'retryable'
 
 namespace :db do
   desc 'Create a Sequel migration in ./db/migrate'
@@ -230,12 +229,16 @@ namespace :db do
   def connect
     logging_output
     logger = Steno.logger('cc.db.connect')
-    log_method = lambda do |retries, exception|
-      logger.info("[Attempt ##{retries}] Retrying because [#{exception.class} - #{exception.message}]: #{exception.backtrace.first(5).join(' | ')}")
-    end
 
-    Retryable.retryable(sleep: 1, tries: 60, log_method: log_method) do
+    tries = 0
+    begin
       VCAP::CloudController::DB.connect(RakeConfig.config.get(:db), logger)
+    rescue StandardError => e
+      tries += 1
+      logger.info("[Attempt ##{tries}] Retrying because [#{e.class} - #{e.message}]: #{e.backtrace.first(5).join(' | ')}")
+      sleep 1
+      retry if tries < 60
+      raise
     end
 
     logger.info('Successfully connected to database')

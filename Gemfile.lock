@@ -424,7 +424,6 @@ GEM
       mime-types (>= 1.16, < 4.0)
       netrc (~> 0.8)
     retriable (3.1.2)
-    retryable (3.0.5)
     reverse_markdown (2.1.1)
       nokogiri
     rexml (3.2.8)
@@ -644,7 +643,6 @@ DEPENDENCIES
   railties (~> 7.1.0)
   rake
   redis
-  retryable
   rfc822
   roodi
   rspec (~> 3.13.0)
