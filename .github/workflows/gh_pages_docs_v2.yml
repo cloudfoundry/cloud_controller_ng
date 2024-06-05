@@ -39,7 +39,7 @@ jobs:
   # Deployment job
   deploy:
     runs-on: ubuntu-latest
-    needs: build
+    needs: push-v2
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
