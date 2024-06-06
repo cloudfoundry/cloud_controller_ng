@@ -19033,7 +19033,7 @@ and unweighted destinations for a route is not allowed.</p>
 </code></pre></div><div class="highlight"><pre class="highlight shell"><code>curl <span class="s2">"https://api.example.org/v3/routes/[guid]/destinations/[guid]"</span> <span class="se">\</span>
   <span class="nt">-X</span> PATCH <span class="se">\</span>
   <span class="nt">-H</span> <span class="s2">"Authorization: bearer [token]"</span>
-  <span class="nt">-d</span> <span class="s1">'{"protocol: "http2"}'</span>
+  <span class="nt">-d</span> <span class="s1">'{"protocol": "http2"}'</span>
 </code></pre></div><div class="highlight"><pre class="highlight plaintext"><code>Example Response
 </code></pre></div><div class="highlight"><pre class="highlight http"><code><span class="k">HTTP</span><span class="o">/</span><span class="m">1.1</span> <span class="m">200</span> <span class="ne">OK</span>
 <span class="na">Content-Type</span><span class="p">:</span> <span class="s">application/json</span>
@@ -19050,7 +19050,7 @@ and unweighted destinations for a route is not allowed.</p>
   </span><span class="nl">"port"</span><span class="p">:</span><span class="w"> </span><span class="mi">8080</span><span class="p">,</span><span class="w">
   </span><span class="nl">"protocol"</span><span class="p">:</span><span class="w"> </span><span class="s2">"http2"</span><span class="p">,</span><span class="w">
   </span><span class="nl">"links"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
-    </span><span class="nl">"self"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+    </span><span class="nl">"destinations"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
       </span><span class="nl">"href"</span><span class="p">:</span><span class="w"> </span><span class="s2">"https://api.example.org/v3/routes/cbad697f-cac1-48f4-9017-ac08f39dfb31/destinations"</span><span class="w">
     </span><span class="p">},</span><span class="w">
     </span><span class="nl">"route"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
