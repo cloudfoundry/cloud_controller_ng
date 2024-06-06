@@ -117,12 +117,14 @@ module VCAP::CloudController
         shared_examples 'unencrypted fields' do
           it 'do not change their values' do
             entity = encrypted_models[klass]
-            vals = entity.reload.values.except(*encrypted_columns(entity.class))
+            string_columns_with_nil_value = entity.values.select { |_k, v| v.is_a?(String) && v.nil? }.keys
+            vals = entity.reload.values.except(*encrypted_columns(entity.class), *string_columns_with_nil_value)
             expect(vals.values.all?(&:present?)).to be_truthy, "all fields of #{entity.class} need to have values"
 
             RotateDatabaseKey.perform(batch_size: 1)
 
-            expect(entity.reload.values.except(*encrypted_columns(entity.class))).to eq(vals)
+            expect(entity.reload.values.except(*encrypted_columns(entity.class), *string_columns_with_nil_value)).to eq(vals)
+            expect(entity.values.select { |k, _v| string_columns_with_nil_value.include?(k) }).to be_all(&:nil?)
           end
         end
 
