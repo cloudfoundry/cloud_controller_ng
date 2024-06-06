@@ -45,6 +45,8 @@ RSpec.describe Locket::LockRunner do
     allow(Models::Locket::Stub).to receive(:new).
       with("#{host}:#{port}", credentials).
       and_return(locket_service)
+
+    allow(client).to receive(:sleep)
   end
 
   after do
@@ -53,12 +55,14 @@ RSpec.describe Locket::LockRunner do
 
   describe '#start' do
     it 'continuously attempts to re-acquire the lock' do
-      allow(locket_service).to receive(:lock)
-      allow(client).to receive(:sleep)
+      call_count = 0
+      allow(locket_service).to receive(:lock) { call_count += 1 }
 
       client.start
 
-      wait_for(locket_service).to have_received(:lock).with(lock_request).at_least(3).times
+      wait_for { call_count }.to be >= 3
+
+      expect(locket_service).to have_received(:lock).with(lock_request).at_least(3).times
     end
 
     it 'raises an error when restarted after it has already been started' do
@@ -88,27 +92,32 @@ RSpec.describe Locket::LockRunner do
 
       context 'when it does not acquire a lock' do
         it 'reports it does not have the lock exactly once' do
-          error = GRPC::BadStatus.new(GRPC::AlreadyExists)
-          client.instance_variable_set(:@lock_acquired, true)
-          allow(locket_service).to receive(:lock).and_raise(error)
+          error = GRPC::Unknown.new
+          call_count = 0
+          allow(locket_service).to receive(:lock) { call_count += 1 }.and_raise(error)
 
           client.start
 
-          wait_for(locket_service).to have_received(:lock).with(lock_request).at_least(3).times
-          wait_for(-> { client.lock_acquired? }).to be(false)
-          wait_for(fake_logger).to have_received(:info).with("Failed to acquire lock '#{key}' for owner '#{owner}': #{error.message}").exactly(:once)
+          wait_for { call_count }.to be >= 3
+
+          expect(locket_service).to have_received(:lock).with(lock_request).at_least(3).times
+          expect(client.lock_acquired?).to be(false)
+          expect(fake_logger).to have_received(:info).with("Failed to acquire lock '#{key}' for owner '#{owner}': #{error.message}").exactly(:once)
         end
       end
 
       context 'when it does acquire a lock' do
         it 'reports that it has a lock exactly once' do
-          allow(locket_service).to receive(:lock).and_return(Models::LockResponse)
+          call_count = 0
+          allow(locket_service).to receive(:lock) { call_count += 1 }
 
           client.start
 
-          wait_for(locket_service).to have_received(:lock).with(lock_request).at_least(3).times
-          wait_for(-> { client.lock_acquired? }).to be(true)
-          wait_for(fake_logger).to have_received(:info).with("Acquired lock '#{key}' for owner '#{owner}'").exactly(:once)
+          wait_for { call_count }.to be >= 3
+
+          expect(locket_service).to have_received(:lock).with(lock_request).at_least(3).times
+          expect(client.lock_acquired?).to be(true)
+          expect(fake_logger).to have_received(:info).with("Acquired lock '#{key}' for owner '#{owner}'").exactly(:once)
         end
       end
     end
