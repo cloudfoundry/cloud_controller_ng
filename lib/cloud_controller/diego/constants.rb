@@ -34,6 +34,7 @@ module VCAP::CloudController
 
     LRP_STARTING = 'STARTING'.freeze
     LRP_RUNNING  = 'RUNNING'.freeze
+    LRP_STOPPING = 'STOPPING'.freeze
     LRP_CRASHED  = 'CRASHED'.freeze
     LRP_DOWN     = 'DOWN'.freeze
     LRP_UNKNOWN  = 'UNKNOWN'.freeze
