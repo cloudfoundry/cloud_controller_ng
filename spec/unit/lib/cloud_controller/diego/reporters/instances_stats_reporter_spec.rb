@@ -120,6 +120,81 @@ module VCAP::CloudController
           expect(instances_reporter.stats_for_app(process)).to eq([expected_stats_response, []])
         end
 
+        context 'when a NoRunningInstances error is thrown for desired_lrp and it exists an actual_lrp' do
+          let(:error) { CloudController::Errors::NoRunningInstances.new('No running instances ruh roh') }
+          let(:expected_stopping_response) do
+            {
+              0 => {
+                state: 'STOPPING',
+                routable: is_routable,
+                stats: {
+                  name: process.name,
+                  uris: process.uris,
+                  host: 'lrp-host',
+                  port: 2222,
+                  net_info: lrp_1_net_info.to_h,
+                  uptime: two_days_in_seconds,
+                  mem_quota: nil,
+                  disk_quota: nil,
+                  log_rate_limit: nil,
+                  fds_quota: process.file_descriptors,
+                  usage: {}
+                },
+                details: 'some-details'
+              }
+            }
+          end
+          let(:bbs_actual_lrps_response) { [actual_lrp_1] }
+          let(:lrp_1_net_info) do
+            ::Diego::Bbs::Models::ActualLRPNetInfo.new(
+              address: 'lrp-host',
+              ports: [
+                ::Diego::Bbs::Models::PortMapping.new(container_port: DEFAULT_APP_PORT, host_port: 2222),
+                ::Diego::Bbs::Models::PortMapping.new(container_port: 1111)
+              ]
+            )
+          end
+          let(:actual_lrp_1) do
+            make_actual_lrp(
+              instance_guid: 'instance-a', index: 0, state: ::Diego::ActualLRPState::RUNNING, error: 'some-details', since: two_days_ago_since_epoch_ns
+            ).tap do |actual_lrp|
+              actual_lrp.actual_lrp_net_info = lrp_1_net_info
+            end
+          end
+
+          before do
+            allow(bbs_instances_client).to receive_messages(lrp_instances: bbs_actual_lrps_response)
+            allow(bbs_instances_client).to receive(:desired_lrp_instance).with(process).and_raise(error)
+          end
+
+          it 'shows all instances as "STOPPING" state' do
+            expect(instances_reporter.stats_for_app(process)).to eq([expected_stopping_response, []])
+          end
+        end
+
+        context 'when a NoRunningInstances error is thrown for desired_lrp and it does not exist an actual_lrp' do
+          let(:error) { CloudController::Errors::NoRunningInstances.new('No running instances ruh roh') }
+          let(:expected_stats_response) do
+            {
+              0 => {
+                state: 'DOWN',
+                stats: {
+                  uptime: 0
+                }
+              }
+            }
+          end
+
+          before do
+            allow(bbs_instances_client).to receive(:lrp_instances).with(process).and_raise(error)
+            allow(bbs_instances_client).to receive(:desired_lrp_instance).with(process).and_raise(error)
+          end
+
+          it 'shows all instances as "DOWN" state' do
+            expect(instances_reporter.stats_for_app(process)).to eq([expected_stats_response, []])
+          end
+        end
+
         context 'when process is not routable' do
           let(:is_routable) { false }
 
@@ -281,7 +356,7 @@ module VCAP::CloudController
           end
         end
 
-        context 'when a NoRunningInstances error is thrown' do
+        context 'when a NoRunningInstances error is thrown for actual_lrp and it exists a desired_lrp' do
           let(:error) { CloudController::Errors::NoRunningInstances.new('No running instances ruh roh') }
           let(:expected_stats_response) do
             {
@@ -293,9 +368,16 @@ module VCAP::CloudController
               }
             }
           end
+          let(:bbs_desired_lrp_response) do
+            ::Diego::Bbs::Models::DesiredLRP.new(
+              PlacementTags: placement_tags,
+              metric_tags: metrics_tags
+            )
+          end
 
           before do
             allow(bbs_instances_client).to receive(:lrp_instances).with(process).and_raise(error)
+            allow(bbs_instances_client).to receive_messages(desired_lrp_instance: bbs_desired_lrp_response)
           end
 
           it 'shows all instances as "DOWN"' do

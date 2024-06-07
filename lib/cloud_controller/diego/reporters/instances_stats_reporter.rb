@@ -12,47 +12,14 @@ module VCAP::CloudController
       end
 
       def stats_for_app(process)
-        result       = {}
-        current_time = Time.now.to_f
-        formatted_current_time = Time.now.to_datetime.rfc3339
-
         logger.debug('stats_for_app.fetching_container_metrics', process_guid: process.guid)
         desired_lrp = bbs_instances_client.desired_lrp_instance(process)
 
-        log_cache_data, log_cache_errors = envelopes(desired_lrp, process)
-        stats = formatted_process_stats(log_cache_data, formatted_current_time)
-        quota_stats = formatted_quota_stats(log_cache_data)
+        log_cache_errors, stats, quota_stats, isolation_segment = get_stats(desired_lrp, process)
 
-        bbs_instances_client.lrp_instances(process).each do |actual_lrp|
-          index = actual_lrp.actual_lrp_key.index
-          next unless index < process.instances
-
-          info = {
-            state: LrpStateTranslator.translate_lrp_state(actual_lrp),
-            isolation_segment: desired_lrp.PlacementTags.first,
-            stats: {
-              name: process.name,
-              uris: process.uris,
-              host: actual_lrp.actual_lrp_net_info.address,
-              port: get_default_port(actual_lrp.actual_lrp_net_info),
-              net_info: actual_lrp.actual_lrp_net_info.to_h,
-              uptime: nanoseconds_to_seconds((current_time * 1e9) - actual_lrp.since),
-              fds_quota: process.file_descriptors
-            }.merge(metrics_data_for_instance(stats, quota_stats, log_cache_errors, formatted_current_time, index))
-          }
-          info[:details] = actual_lrp.placement_error if actual_lrp.placement_error.present?
-
-          info[:routable] = (actual_lrp.routable if actual_lrp.optional_routable)
-          result[actual_lrp.actual_lrp_key.index] = info
-        end
-
-        fill_unreported_instances_with_down_instances(result, process, flat: false)
-
-        warnings = [log_cache_errors].compact
-        [result, warnings]
-      rescue CloudController::Errors::NoRunningInstances => e
-        logger.info('stats_for_app.error', error: e.to_s)
-        [fill_unreported_instances_with_down_instances({}, process, flat: false), []]
+        actual_lrp_info(process, stats, quota_stats, log_cache_errors, isolation_segment)
+      rescue CloudController::Errors::NoRunningInstances
+        handle_no_running_instances(process)
       rescue StandardError => e
         logger.error('stats_for_app.error', error: e.to_s)
         raise e if e.is_a?(CloudController::Errors::ApiError) && e.name == 'ServiceUnavailable'
@@ -66,8 +33,69 @@ module VCAP::CloudController
 
       attr_reader :bbs_instances_client
 
+      def get_stats(desired_lrp, process)
+        log_cache_data, log_cache_errors = envelopes(desired_lrp, process)
+        stats = formatted_process_stats(log_cache_data, Time.now.to_datetime.rfc3339)
+        quota_stats = formatted_quota_stats(log_cache_data)
+        isolation_segment = desired_lrp.PlacementTags.first
+        [log_cache_errors, stats, quota_stats, isolation_segment]
+      end
+
+      # rubocop:disable Metrics/ParameterLists
+      def actual_lrp_info(process, stats=nil, quota_stats=nil, log_cache_errors=nil, isolation_segment=nil, state=nil)
+        # rubocop:enable Metrics/ParameterLists
+        result = {}
+        bbs_instances_client.lrp_instances(process).each do |actual_lrp|
+          next unless actual_lrp.actual_lrp_key.index < process.instances
+
+          state ||= LrpStateTranslator.translate_lrp_state(actual_lrp)
+
+          info = build_info(state, actual_lrp, process, stats, quota_stats, log_cache_errors)
+          info[:isolation_segment] = isolation_segment unless isolation_segment.nil?
+          result[actual_lrp.actual_lrp_key.index] = info
+        end
+
+        fill_unreported_instances_with_down_instances(result, process, flat: false)
+
+        warnings = [log_cache_errors].compact
+        [result, warnings]
+      end
+
+      def build_info(state, actual_lrp, process, stats, quota_stats, log_cache_errors)
+        info = {
+          state: state,
+          stats: {
+            name: process.name,
+            uris: process.uris,
+            host: actual_lrp.actual_lrp_net_info.address,
+            port: get_default_port(actual_lrp.actual_lrp_net_info),
+            net_info: actual_lrp.actual_lrp_net_info.to_h,
+            uptime: nanoseconds_to_seconds((Time.now.to_f * 1e9) - actual_lrp.since),
+            fds_quota: process.file_descriptors
+          }.merge(metrics_data_for_instance(stats, quota_stats, log_cache_errors, Time.now.to_datetime.rfc3339, actual_lrp.actual_lrp_key.index))
+        }
+        info[:details] = actual_lrp.placement_error if actual_lrp.placement_error.present?
+
+        info[:routable] = (actual_lrp.routable if actual_lrp.optional_routable)
+        info
+      end
+
+      def handle_no_running_instances(process)
+        # case when no actual_lrp exists
+        if bbs_instances_client.lrp_instances(process).empty?
+          [fill_unreported_instances_with_down_instances({}, process, flat: false), []]
+        else
+          # case when no desired_lrp exists but an actual_lrp
+          logger.debug('Actual LRP found, setting state to STOPPING', process_guid: process.guid)
+          actual_lrp_info(process, nil, nil, nil, nil, VCAP::CloudController::Diego::LRP_STOPPING)
+        end
+      rescue CloudController::Errors::NoRunningInstances => e
+        logger.info('stats_for_app.error', error: e.to_s)
+        [fill_unreported_instances_with_down_instances({}, process, flat: false), []]
+      end
+
       def metrics_data_for_instance(stats, quota_stats, log_cache_errors, formatted_current_time, index)
-        if log_cache_errors.blank?
+        if !stats.nil? && log_cache_errors.blank?
           {
             mem_quota: quota_stats[index]&.memory_bytes_quota,
             disk_quota: quota_stats[index]&.disk_bytes_quota,
