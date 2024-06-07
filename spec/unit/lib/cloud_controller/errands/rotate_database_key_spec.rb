@@ -114,17 +114,21 @@ module VCAP::CloudController
           [:encryption_key_label] + model_klass.all_encrypted_fields.map(&:values).flatten
         end
 
+        def nilable_columns(entity)
+          entity.values.except(*encrypted_columns(entity.class)).select { |k, v| entity.db_schema[k][:type] == :string && v.nil? }.keys
+        end
+
         shared_examples 'unencrypted fields' do
           it 'do not change their values' do
             entity = encrypted_models[klass]
-            string_columns_with_nil_value = entity.values.select { |_k, v| v.is_a?(String) && v.nil? }.keys
-            vals = entity.reload.values.except(*encrypted_columns(entity.class), *string_columns_with_nil_value)
+            nilable_string_columns = nilable_columns(entity)
+            vals = entity.reload.values.except(*encrypted_columns(entity.class), *nilable_string_columns)
             expect(vals.values.all?(&:present?)).to be_truthy, "all fields of #{entity.class} need to have values"
 
             RotateDatabaseKey.perform(batch_size: 1)
 
-            expect(entity.reload.values.except(*encrypted_columns(entity.class), *string_columns_with_nil_value)).to eq(vals)
-            expect(entity.values.select { |k, _v| string_columns_with_nil_value.include?(k) }).to be_all(&:nil?)
+            expect(entity.reload.values.except(*encrypted_columns(entity.class), *nilable_string_columns)).to eq(vals)
+            expect(entity.values.select { |k, _v| nilable_string_columns.include?(k) }.values).to be_all(&:nil?)
           end
         end
 
