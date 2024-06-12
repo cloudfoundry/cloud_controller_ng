@@ -19305,7 +19305,7 @@ and unweighted destinations for a route is not allowed.</p>
 <tr>
 <td><strong>destination</strong></td>
 <td><em>string</em></td>
-<td>The destination where the rule applies. Must be a singular Valid CIDR, IP address, or IP address range unless <code class="prettyprint">cc.security_groups.enable_comma_delimited_destinations</code> is enabled. Then, the destination can be a comma-delimited string of CIDRs, IP addresses, or IP address ranges.</td>
+<td>The destination where the rule applies. Must be a singular Valid CIDR, IP address, or IP address range unless <code class="prettyprint">cc.security_groups.enable_comma_delimited_destinations</code> is enabled. Then, the destination can be a comma-delimited string of CIDRs, IP addresses, or IP address ranges. Octets within destinations cannot contain leading zeros; eg. <code class="prettyprint">10.0.0.0/24</code> is valid, but <code class="prettyprint">010.00.000.0/24</code> is <em>not</em>.</td>
 <td>yes</td>
 <td>N/A</td>
 </tr>
