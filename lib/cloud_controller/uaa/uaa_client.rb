@@ -44,27 +44,27 @@ module VCAP::CloudController
     def usernames_for_ids(user_ids)
       fetch_users(user_ids).transform_values { |user| user['username'] }
     rescue UaaUnavailable, CF::UAA::UAAError => e
-      logger.error("Failed to retrieve usernames from UAA: #{e.inspect}")
+      logger.error("Failed to retrieve usernames from UAA: #{e.inspect}#{error_info_from_target_error(e)}")
       {}
     end
 
     def id_for_username(username, origin: nil)
-      filter_string = %(username eq "#{username}")
-      filter_string = %(origin eq "#{origin}" and #{filter_string}) if origin.present?
+      filter_string = %(username eq #{Oj.dump(username)})
+      filter_string = %(origin eq #{Oj.dump(origin)} and #{filter_string}) if origin.present?
       results = query(:user_id, includeInactive: true, filter: filter_string)
 
       user = results['resources'].first
       user && user['id']
     rescue CF::UAA::UAAError => e
-      logger.error("Failed to retrieve user id from UAA: #{e.inspect}")
+      logger.error("Failed to retrieve user id from UAA: #{e.inspect}#{error_info_from_target_error(e)}")
       raise UaaUnavailable
     end
 
     def ids_for_usernames_and_origins(usernames, origins, precise_username_match=true)
       with_request_error_handling do
         operator = precise_username_match ? 'eq' : 'co'
-        username_filter_string = usernames&.map { |u| "username #{operator} \"#{u}\"" }&.join(' or ')
-        origin_filter_string = origins&.map { |o| "origin eq \"#{o}\"" }&.join(' or ')
+        username_filter_string = usernames&.map { |u| "username #{operator} #{Oj.dump(u)}" }&.join(' or ')
+        origin_filter_string = origins&.map { |o| "origin eq #{Oj.dump(o)}" }&.join(' or ')
 
         filter_string = construct_filter_string(username_filter_string, origin_filter_string)
 
@@ -87,12 +87,12 @@ module VCAP::CloudController
     end
 
     def origins_for_username(username)
-      filter_string = %(username eq "#{username}")
+      filter_string = %(username eq #{Oj.dump(username)})
       results = query(:user_id, includeInactive: true, filter: filter_string)
 
       results['resources'].pluck('origin')
     rescue UaaUnavailable, CF::UAA::UAAError => e
-      logger.error("Failed to retrieve origins from UAA: #{e.inspect}")
+      logger.error("Failed to retrieve origins from UAA: #{e.inspect}#{error_info_from_target_error(e)}")
       raise UaaUnavailable
     end
 
@@ -117,7 +117,7 @@ module VCAP::CloudController
           raise UaaUnavailable
         else
           sleep_time = [delay, max_delay].min
-          logger.error("Failed to retrieve details from UAA: #{e.inspect}")
+          logger.error("Failed to retrieve details from UAA: #{e.inspect}#{error_info_from_target_error(e)}")
           logger.info("Attempting to connect to the UAA. Total #{(retry_until - Time.now.utc).round(2)} seconds remaining. Next retry after #{sleep_time} seconds.")
           sleep(sleep_time)
           delay *= factor
@@ -153,7 +153,7 @@ module VCAP::CloudController
       results_hash = {}
 
       user_ids.each_slice(200) do |batch|
-        filter_string = batch.map { |user_id| %(id eq "#{user_id}") }.join(' or ')
+        filter_string = batch.map { |user_id| %(id eq #{Oj.dump(user_id.to_s)}) }.join(' or ')
         results = query(:user_id, filter: filter_string, count: batch.length)
         results['resources'].each do |user|
           results_hash[user['id']] = user
@@ -177,6 +177,10 @@ module VCAP::CloudController
 
     def logger
       @logger ||= Steno.logger('cc.uaa_client')
+    end
+
+    def error_info_from_target_error(e)
+      e.is_a?(CF::UAA::TargetError) ? ", error_info: #{e.info}" : ''
     end
   end
 end

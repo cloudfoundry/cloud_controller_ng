@@ -199,6 +199,12 @@ module VCAP::CloudController
         expect(uaa_client.usernames_for_ids([])).to eq({})
       end
 
+      it 'JSON-encodes filter values' do
+        WebMock::API.stub_request(:get, "#{url}/ids/Users").with(query: { 'filter' => 'id eq "1\"2\\\\3"', 'count' => 1 })
+
+        uaa_client.usernames_for_ids(['1"2\3'])
+      end
+
       context 'when UAA is unavailable' do
         before do
           allow(uaa_client).to receive(:token_info).and_raise(UaaUnavailable)
@@ -212,9 +218,9 @@ module VCAP::CloudController
       context 'when the endpoint returns an error' do
         let(:uaa_error) { CF::UAA::UAAError.new('some error') }
         let(:mock_logger) { double(:steno_logger, error: nil) }
+        let(:scim) { instance_double(CF::UAA::Scim) }
 
         before do
-          scim = instance_double(CF::UAA::Scim)
           allow(scim).to receive(:query).and_raise(uaa_error)
           allow(uaa_client).to receive_messages(scim: scim, logger: mock_logger)
         end
@@ -226,6 +232,19 @@ module VCAP::CloudController
         it 'logs the error' do
           uaa_client.usernames_for_ids([userid_1])
           expect(mock_logger).to have_received(:error).with("Failed to retrieve usernames from UAA: #{uaa_error.inspect}")
+        end
+
+        context 'TargetError with details' do
+          let(:error_info) { { 'error' => 'scim', 'message' => 'Invalid filter ...' } }
+
+          before do
+            allow(scim).to receive(:query).and_raise(CF::UAA::TargetError.new(error_info), 'error response')
+          end
+
+          it 'logs the error details' do
+            uaa_client.usernames_for_ids([userid_1])
+            expect(mock_logger).to have_received(:error).with("Failed to retrieve usernames from UAA: #<CF::UAA::TargetError: error response>, error_info: #{error_info}")
+          end
         end
       end
 
