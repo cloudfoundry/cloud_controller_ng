@@ -1,7 +1,7 @@
 require 'spec_helper'
 require 'tasks/rake_config'
 
-RSpec.describe 'db.rake' do
+RSpec.describe 'db.rake', type: :migration do
   let(:db_migrator) { instance_double(DBMigrator) }
 
   describe ':migrate' do
