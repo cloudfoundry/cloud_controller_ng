@@ -32123,9 +32123,10 @@ UAA database, though this is not required.</p>
   <span class="nt">-H</span> <span class="s2">"Authorization: bearer [token]"</span> <span class="se">\</span>
   <span class="nt">-H</span> <span class="s2">"Content-type: application/json"</span> <span class="se">\</span>
   <span class="nt">-d</span> <span class="s1">'{
-  "metadata": {
-    "labels": { "enviroment": "production" },
-    "annotations": { "note": "detailed information" }
+    "metadata": {
+      "labels": { "environment": "production" },
+      "annotations": { "note": "detailed information" }
+    }
   }'</span>
 </code></pre></div><div class="highlight"><pre class="highlight plaintext"><code>Example Response
 </code></pre></div><div class="highlight"><pre class="highlight http"><code><span class="k">HTTP</span><span class="o">/</span><span class="m">1.1</span> <span class="m">201</span> <span class="ne">Created</span>
