@@ -455,6 +455,69 @@ module VCAP::CloudController
       end
     end
 
+    describe '#can_delete_buildpack_cache?' do
+      context 'user has no membership' do
+        context 'and user is an admin' do
+          it 'returns true' do
+            set_current_user(user, { admin: true })
+            expect(permissions.can_delete_buildpack_cache?(space.id)).to be true
+          end
+        end
+
+        context 'and the user is a read only admin' do
+          it 'returns false' do
+            set_current_user(user, { admin_read_only: true })
+            expect(permissions.can_delete_buildpack_cache?(space.id)).to be false
+          end
+        end
+
+        context 'and user is a global auditor' do
+          it 'returns false' do
+            set_current_user_as_global_auditor
+            expect(permissions.can_delete_buildpack_cache?(space.id)).to be false
+          end
+        end
+
+        context 'and user is not an admin' do
+          it 'returns false' do
+            set_current_user(user)
+            expect(permissions.can_delete_buildpack_cache?(space.id)).to be false
+          end
+        end
+      end
+
+      context 'user has valid membership' do
+        it 'returns true for space supporter' do
+          org.add_user(user)
+          space.add_supporter(user)
+          expect(permissions.can_delete_buildpack_cache?(space.id)).to be true
+        end
+
+        it 'returns true for space developer' do
+          org.add_user(user)
+          space.add_developer(user)
+          expect(permissions.can_delete_buildpack_cache?(space.id)).to be true
+        end
+
+        it 'returns false for space manager' do
+          org.add_user(user)
+          space.add_manager(user)
+          expect(permissions.can_delete_buildpack_cache?(space.id)).to be false
+        end
+
+        it 'returns false for space auditor' do
+          org.add_user(user)
+          space.add_auditor(user)
+          expect(permissions.can_delete_buildpack_cache?(space.id)).to be false
+        end
+
+        it 'returns false for org manager' do
+          org.add_manager(user)
+          expect(permissions.can_delete_buildpack_cache?(space.id)).to be false
+        end
+      end
+    end
+
     describe '#can_read_secrets_in_space?' do
       context 'user has no membership' do
         context 'and user is an admin' do
