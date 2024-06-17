@@ -107,6 +107,10 @@ class VCAP::CloudController::Permissions
     membership.authorized_org_guids_subquery(ROLES_FOR_ORG_READING)
   end
 
+  def can_delete_buildpack_cache?(space_id)
+    roles.admin? || membership.role_applies?(ROLES_FOR_APP_MANAGING, space_id)
+  end
+
   def readable_orgs_query
     if can_read_globally?
       VCAP::CloudController::Organization.select(:id, :guid)

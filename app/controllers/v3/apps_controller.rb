@@ -227,6 +227,20 @@ class AppsV3Controller < ApplicationController
     raise CloudController::Errors::ApiError.new_from_details('RunnerUnavailable', 'Unable to communicate with Diego')
   end
 
+  def clear_buildpack_cache
+    app, space = AppFetcher.new.fetch(hashed_params[:guid])
+    app_not_found! unless app && permission_queryer.can_read_from_space?(space.id, space.organization_id)
+    unauthorized! unless permission_queryer.can_delete_buildpack_cache?(space.id)
+    suspended! unless permission_queryer.is_space_active?(space.id)
+
+    delete_job = Jobs::V3::BuildpackCacheDelete.new(app.guid)
+    job = Jobs::Enqueuer.new(delete_job, queue: Jobs::Queues.generic).enqueue_pollable
+
+    VCAP::AppLogEmitter.emit(app.guid, "Enqueued job to delete app buildpack cache with app guid #{app.guid}")
+
+    head HTTP::ACCEPTED, 'Location' => url_builder.build_url(path: "/v3/jobs/#{job.guid}")
+  end
+
   def builds
     message = AppBuildsListMessage.from_params(query_params)
     invalid_param!(message.errors.full_messages) unless message.valid?
