@@ -1,0 +1,36 @@
+### Clear buildpack cache for application
+
+```
+Example Request
+```
+
+```shell
+curl "https://api.example.org/v3/apps/[guid]/actions/clear_buildpack_cache" \
+  -X POST \
+  -H "Authorization: bearer [token]"
+```
+
+```
+Example Response
+```
+
+```http
+HTTP/1.1 202 Accepted
+Location: https://api.example.org/v3/jobs/[guid]
+```
+
+This endpoint will delete the buildpack cache for a specified app.
+The buildpack cache is used during staging by buildpacks as a way to
+cache certain resources, e.g. downloaded Ruby gems. A user may want to use this
+endpoint when an app doesn't stage anymore due to out-of-disk caused
+by a large buildpack cache content.
+
+#### Definition
+`POST /v3/apps/:guid/actions/clear_buildpack_cache`
+
+#### Permitted roles
+|
+--- |
+Admin |
+Space Developer |
+Space Supporter |
