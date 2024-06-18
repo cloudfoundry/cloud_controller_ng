@@ -9,13 +9,13 @@ Sequel.migration do
 
         String :build_guid, size: 255
         foreign_key [:build_guid], :builds, key: :guid, name: :fk_cnb_lifecycle_build_guid, on_delete: :cascade
-        add_index [:build_guid], name: :fk_cnb_lifecycle_build_guid_index, if_not_exists: true
+        add_index [:build_guid], name: :fk_cnb_lifecycle_build_guid_index, if_not_exists: true, concurrently: true if database_type == :postgres
 
         String :app_guid, size: 255
-        add_index [:app_guid], name: :fk_cnb_lifecycle_app_guid_index, if_not_exists: true
+        add_index [:app_guid], name: :fk_cnb_lifecycle_app_guid_index, if_not_exists: true, concurrently: true if database_type == :postgres
 
         String :droplet_guid, size: 255
-        add_index [:droplet_guid], name: :fk_cnb_lifecycle_droplet_guid_index, if_not_exists: true
+        add_index [:droplet_guid], name: :fk_cnb_lifecycle_droplet_guid_index, if_not_exists: true, concurrently: true if database_type == :postgres
 
         String :stack, size: 255
       end
@@ -27,13 +27,13 @@ Sequel.migration do
     end
 
     VCAP::Migration.with_concurrent_timeout(self) do
-      add_index :buildpack_lifecycle_buildpacks, :cnb_lifecycle_data_guid, name: :bl_cnb_bldata_guid_index, concurrently: true, if_not_exists: true if database_type == :postgres
+      add_index :buildpack_lifecycle_buildpacks, :cnb_lifecycle_data_guid, name: :bl_cnb_bldata_guid_index, if_not_exists: true, concurrently: true if database_type == :postgres
     end
   end
 
   down do
     VCAP::Migration.with_concurrent_timeout(self) do
-      drop_index :buildpack_lifecycle_buildpacks, :cnb_lifecycle_data_guid, name: :bl_cnb_bldata_guid_index, concurrently: true, if_exists: true if database_type == :postgres
+      drop_index :buildpack_lifecycle_buildpacks, :cnb_lifecycle_data_guid, name: :bl_cnb_bldata_guid_index, if_exists: true, concurrently: true if database_type == :postgres
     end
 
     transaction do
