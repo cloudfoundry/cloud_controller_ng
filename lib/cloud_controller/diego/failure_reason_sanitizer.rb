@@ -32,6 +32,7 @@ module VCAP::CloudController
     end
 
     class FailureReasonSanitizer
+      # rubocop:disable Metrics/CyclomaticComplexity
       def self.sanitize(message)
         staging_failed = 'staging failed'
         id = CCMessages::STAGING_ERROR
@@ -84,6 +85,7 @@ module VCAP::CloudController
           message:
         }
       end
+      # rubocop:enable Metrics/CyclomaticComplexity
     end
   end
 end

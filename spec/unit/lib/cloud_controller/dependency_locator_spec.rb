@@ -155,7 +155,7 @@ RSpec.describe CloudController::DependencyLocator do
     end
 
     it 'creates droplet_url_generator with the internal_service_hostname, ports, and diego flag' do
-      expect(VCAP::CloudController::Diego::Buildpack::DropletUrlGenerator).to receive(:new).with(
+      expect(VCAP::CloudController::Diego::DropletUrlGenerator).to receive(:new).with(
         internal_service_hostname: 'internal.service.hostname',
         external_port: nil,
         tls_port: 8283,

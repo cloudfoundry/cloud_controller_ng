@@ -104,6 +104,11 @@ module VCAP::CloudController
             expect(process.memory).to eq 393
           end
 
+          it 'enables revisions' do
+            app = app_create.create(message, lifecycle)
+            expect(app.reload.revisions_enabled).to be true
+          end
+
           it 'has default disk' do
             app = app_create.create(message, lifecycle)
             process = ProcessModel.find(guid: app.guid)
@@ -136,6 +141,19 @@ module VCAP::CloudController
           expect do
             app_create.create(message, lifecycle)
           end.to raise_error(AppCreate::InvalidApp)
+        end
+      end
+
+      describe 'cnb' do
+        let(:lifecycle_request) { { type: 'cnb', data: { stack: 'cflinuxfs4' } } }
+        let(:lifecycle) { AppCNBLifecycle.new(message) }
+
+        it 'creates app with lifecycle type cnb' do
+          expect do
+            app = app_create.create(message, lifecycle)
+            expect(app.lifecycle_type).to eq 'cnb'
+            expect(app.reload.revisions_enabled).to be false
+          end.to change(AppModel, :count).by(1)
         end
       end
 

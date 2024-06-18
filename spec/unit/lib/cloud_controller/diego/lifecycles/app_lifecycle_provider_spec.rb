@@ -55,6 +55,14 @@ module VCAP::CloudController
           end
         end
 
+        context 'cnb type' do
+          let(:type) { 'cnb' }
+
+          it 'returns a CNBDockerLifecycle' do
+            expect(AppLifecycleProvider.provide_for_update(message, app)).to be_a(AppCNBLifecycle)
+          end
+        end
+
         context 'buildpack type' do
           let(:type) { 'buildpack' }
 

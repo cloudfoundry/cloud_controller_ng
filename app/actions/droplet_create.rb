@@ -54,8 +54,11 @@ module VCAP::CloudController
 
       DropletModel.db.transaction do
         droplet.save
-        droplet.buildpack_lifecycle_data = build.buildpack_lifecycle_data if build.buildpack_lifecycle?
-        droplet.cnb_lifecycle_data = build.cnb_lifecycle_data if build.cnb_lifecycle?
+        if build.cnb_lifecycle?
+          droplet.cnb_lifecycle_data = build.cnb_lifecycle_data
+        else
+          droplet.buildpack_lifecycle_data = build.buildpack_lifecycle_data
+        end
       end
 
       droplet.reload

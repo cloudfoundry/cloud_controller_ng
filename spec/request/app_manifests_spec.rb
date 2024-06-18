@@ -90,6 +90,7 @@ RSpec.describe 'App Manifests' do
                 'one' => 'tomato',
                 'two' => 'potato'
               },
+              'lifecycle' => 'buildpack',
               'buildpacks' => [buildpack.name, buildpack2.name],
               'stack' => buildpack.stack,
               'services' => [service_binding.service_instance_name, service_binding2.service_instance_name],
@@ -191,6 +192,7 @@ RSpec.describe 'App Manifests' do
                 'one' => 'tomato',
                 'two' => 'potato'
               },
+              'lifecycle' => 'docker',
               'docker' => {
                 'image' => docker_package.image,
                 'username' => 'xXxMyL1ttlePwnyxXx'
@@ -266,6 +268,7 @@ RSpec.describe 'App Manifests' do
           'applications' => [
             {
               'name' => simple_app.name,
+              'lifecycle' => 'buildpack',
               'stack' => 'itaewon_class_best_kdrama',
               'routes' => [
                 {

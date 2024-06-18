@@ -54,6 +54,35 @@ module VCAP::CloudController
         end
       end
 
+      context 'with a cnb app' do
+        let(:app_model) { AppModel.make(:cnb) }
+        let(:app) { ProcessModelFactory.make(app: app_model, cnb: true) }
+
+        before { app_model.update(buildpack_lifecycle_data: nil) }
+
+        context 'and CNB disabled' do
+          before do
+            FeatureFlag.create(name: 'diego_cnb', enabled: false)
+          end
+
+          it 'raises' do
+            expect do
+              subject.validate_process(process_model)
+            end.to raise_error(CloudController::Errors::ApiError, /Cloud Native Buildpacks support has not been enabled/)
+          end
+        end
+
+        context 'and CNB enabled' do
+          before do
+            FeatureFlag.create(name: 'diego_cnb', enabled: true)
+          end
+
+          it 'does not raise' do
+            expect { subject.validate_process(process_model) }.not_to raise_error
+          end
+        end
+      end
+
       context 'when there are no buildpacks installed on the system' do
         before { Buildpack.dataset.delete }
 

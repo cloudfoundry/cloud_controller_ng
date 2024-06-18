@@ -208,7 +208,7 @@ module CloudController
     end
 
     def droplet_url_generator
-      VCAP::CloudController::Diego::Buildpack::DropletUrlGenerator.new(
+      VCAP::CloudController::Diego::DropletUrlGenerator.new(
         internal_service_hostname: config.get(:internal_service_hostname),
         external_port: config.get(:external_port),
         tls_port: config.get(:tls_port),

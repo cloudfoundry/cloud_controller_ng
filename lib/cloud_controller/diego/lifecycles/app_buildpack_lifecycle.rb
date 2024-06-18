@@ -1,9 +1,10 @@
 require 'cloud_controller/diego/lifecycles/buildpack_info'
 require 'cloud_controller/diego/lifecycles/buildpack_lifecycle_data_validator'
+require 'cloud_controller/diego/lifecycles/app_base_lifecycle'
 require 'fetchers/buildpack_lifecycle_fetcher'
 
 module VCAP::CloudController
-  class AppBuildpackLifecycle
+  class AppBuildpackLifecycle < AppBaseLifecycle
     def initialize(message)
       @message = message
 
@@ -24,43 +25,12 @@ module VCAP::CloudController
       )
     end
 
-    def update_lifecycle_data_model(app)
-      if [update_lifecycle_data_buildpacks(app),
-          update_lifecycle_data_stack(app)].any?
-        app.lifecycle_data.save
-      end
-    end
-
-    def update_lifecycle_data_buildpacks(app)
-      return unless message.buildpack_data.requested?(:buildpacks)
-
-      app.lifecycle_data.buildpacks = buildpacks
-    end
-
-    def update_lifecycle_data_stack(app)
-      return unless message.buildpack_data.requested?(:stack)
-
-      app.lifecycle_data.stack = message.buildpack_data.stack
-    end
-
     def type
       Lifecycles::BUILDPACK
     end
 
     private
 
-    attr_reader :message, :validator
-
-    def buildpacks
-      message.buildpack_data.requested?(:buildpacks) ? (message.buildpack_data.buildpacks || []) : []
-    end
-
-    def stack
-      if message.buildpack_data.requested?(:stack) && !message.buildpack_data.stack.nil?
-        message.buildpack_data.stack
-      else
-        Stack.default.name
-      end
-    end
+    attr_reader :validator
   end
 end

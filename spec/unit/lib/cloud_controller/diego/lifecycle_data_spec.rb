@@ -1,5 +1,5 @@
 require 'spec_helper'
-require 'cloud_controller/diego/buildpack/lifecycle_data'
+require 'cloud_controller/diego/lifecycle_data'
 
 module VCAP::CloudController
   module Diego

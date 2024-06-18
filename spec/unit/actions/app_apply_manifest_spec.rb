@@ -117,6 +117,17 @@ module VCAP::CloudController
               expect(app_update).to have_received(:update).
                 with(app, app_update_message, instance_of(AppBuildpackLifecycle))
             end
+
+            describe 'using cnb type' do
+              let(:app) { AppModel.make(:cnb) }
+
+              it 'calls AppUpdate with the correct arguments' do
+                app_apply_manifest.apply(app.guid, message)
+                expect(AppUpdate).to have_received(:new).with(user_audit_info, manifest_triggered: true)
+                expect(app_update).to have_received(:update).
+                  with(app, app_update_message, instance_of(AppCNBLifecycle))
+              end
+            end
           end
 
           context 'when the request is invalid due to failure to update the app' do

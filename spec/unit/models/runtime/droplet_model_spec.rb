@@ -70,11 +70,27 @@ module VCAP::CloudController
 
         before do
           droplet_model.buildpack_lifecycle_data = lifecycle_data
+          droplet_model.cnb_lifecycle_data = nil
           droplet_model.save
         end
 
         it 'returns the string "buildpack"' do
           expect(droplet_model.lifecycle_type).to eq('buildpack')
+        end
+      end
+
+      context 'when there is cnb_lifecycle_data associated to the droplet' do
+        let(:droplet_model) { DropletModel.make(:buildpack) }
+        let!(:lifecycle_data) { CNBLifecycleDataModel.make(droplet: droplet_model) }
+
+        before do
+          droplet_model.cnb_lifecycle_data = lifecycle_data
+          droplet_model.buildpack_lifecycle_data = nil
+          droplet_model.save
+        end
+
+        it 'returns the string "cnb"' do
+          expect(droplet_model.lifecycle_type).to eq('cnb')
         end
       end
 
@@ -139,6 +155,37 @@ module VCAP::CloudController
           expect do
             droplet_model.destroy
           end.to change(KpackLifecycleDataModel, :count).by(-1)
+        end
+      end
+
+      context 'when there is cnb_lifecycle_data associated to the droplet' do
+        let(:droplet_model) { DropletModel.make(:kpack) }
+        let!(:lifecycle_data) do
+          CNBLifecycleDataModel.make(
+            droplet: droplet_model,
+            buildpacks: ['http://some-buildpack.com', 'http://another-buildpack.net']
+          )
+        end
+
+        before do
+          droplet_model.cnb_lifecycle_data = lifecycle_data
+          droplet_model.save
+        end
+
+        it 'returns cnb_lifecycle_data if it is on the model' do
+          expect(droplet_model.lifecycle_data).to eq(lifecycle_data)
+        end
+
+        it 'is a persistable hash' do
+          expect(droplet_model.reload.cnb_lifecycle_data.buildpacks).to eq(lifecycle_data.buildpacks)
+          expect(droplet_model.reload.cnb_lifecycle_data.stack).to eq(lifecycle_data.stack)
+        end
+
+        it 'deletes the dependent cnb_lifecycle_data_models when a droplet is deleted' do
+          expect do
+            droplet_model.destroy
+          end.to change(CNBLifecycleDataModel, :count).by(-1).
+            and change(BuildpackLifecycleBuildpackModel, :count).by(-2)
         end
       end
 

@@ -18,12 +18,15 @@ module VCAP::CloudController
 
       let(:buildpack_completion_handler) { instance_double(Diego::Buildpack::StagingCompletionHandler) }
       let(:docker_completion_handler) { instance_double(Diego::Docker::StagingCompletionHandler) }
+      let(:cnb_completion_handler) { instance_double(Diego::CNB::StagingCompletionHandler) }
 
       before do
         allow(Diego::Buildpack::StagingCompletionHandler).to receive(:new).with(build).and_return(buildpack_completion_handler)
         allow(Diego::Docker::StagingCompletionHandler).to receive(:new).with(build).and_return(docker_completion_handler)
+        allow(Diego::CNB::StagingCompletionHandler).to receive(:new).with(build).and_return(cnb_completion_handler)
         allow(buildpack_completion_handler).to receive(:staging_complete)
         allow(docker_completion_handler).to receive(:staging_complete)
+        allow(cnb_completion_handler).to receive(:staging_complete)
         allow(Diego::Messenger).to receive(:new).and_return(messenger)
       end
 
@@ -101,6 +104,18 @@ module VCAP::CloudController
             stager.staging_complete(build, staging_response)
             expect(buildpack_completion_handler).not_to have_received(:staging_complete)
             expect(docker_completion_handler).to have_received(:staging_complete).with(staging_response, boolean)
+          end
+        end
+
+        context 'cnb' do
+          let(:build) { BuildModel.make }
+          let!(:lifecycle_data_model) { CNBLifecycleDataModel.make(build:) }
+
+          it 'delegates to a cnb staging completion handler' do
+            stager.staging_complete(build, staging_response)
+            expect(buildpack_completion_handler).not_to have_received(:staging_complete)
+            expect(docker_completion_handler).not_to have_received(:staging_complete)
+            expect(cnb_completion_handler).to have_received(:staging_complete).with(staging_response, boolean)
           end
         end
       end

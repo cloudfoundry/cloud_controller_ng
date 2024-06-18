@@ -508,6 +508,43 @@ RSpec.describe AppsV3Controller, type: :controller do
         end
       end
     end
+
+    context 'when requesting cnb lifecycle and diego_cnb feature flag is disabled' do
+      let(:request_body) do
+        {
+          name: 'some-name',
+          relationships: { space: { data: { guid: space.guid } } },
+          lifecycle: { type: 'cnb', data: {} }
+        }
+      end
+
+      before do
+        VCAP::CloudController::FeatureFlag.make(name: 'diego_cnb', enabled: false, error_message: nil)
+      end
+
+      context 'admin' do
+        before do
+          set_current_user_as_admin(user:)
+        end
+
+        it 'raises 403' do
+          post :create, params: request_body, as: :json
+          expect(response).to have_http_status(:forbidden)
+          expect(response.body).to include('FeatureDisabled')
+          expect(response.body).to include('diego_cnb')
+        end
+      end
+
+      context 'non-admin' do
+        it 'raises 403' do
+          post :create, params: request_body, as: :json
+
+          expect(response).to have_http_status(:forbidden)
+          expect(response.body).to include('FeatureDisabled')
+          expect(response.body).to include('diego_cnb')
+        end
+      end
+    end
   end
 
   describe '#update' do
