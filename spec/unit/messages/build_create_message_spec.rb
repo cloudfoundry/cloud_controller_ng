@@ -175,6 +175,20 @@ module VCAP::CloudController
               end
             end
           end
+
+          describe 'cnb lifecycle' do
+            let(:params) do
+              {
+                package: { guid: 'some-guid' },
+                lifecycle: { type: 'cnb', data: {} }
+              }
+            end
+
+            it 'is valid' do
+              message = BuildCreateMessage.new(params)
+              expect(message).to be_valid
+            end
+          end
         end
       end
     end

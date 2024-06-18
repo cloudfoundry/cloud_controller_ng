@@ -171,6 +171,99 @@ module VCAP::CloudController
         end
       end
 
+      context 'creating a build for type cnb' do
+        let(:request_lifecycle) do
+          {
+            type: 'cnb',
+            data: lifecycle_data
+          }
+        end
+        let(:lifecycle) { CNBLifecycle.new(package, staging_message) }
+
+        it 'creates a build' do
+          build = nil
+
+          expect do
+            build = action.create_and_stage(package:, lifecycle:, metadata:)
+          end.to change(BuildModel, :count).by(1)
+
+          expect(build.state).to eq(BuildModel::STAGING_STATE)
+          expect(build.app_guid).to eq(app.guid)
+          expect(build.package_guid).to eq(package.guid)
+          expect(build.staging_memory_in_mb).to eq(calculated_mem_limit)
+          expect(build.staging_disk_in_mb).to eq(calculated_staging_disk_in_mb)
+          expect(build.staging_log_rate_limit).to eq(calculated_staging_log_rate_limit)
+          expect(build.lifecycle_data.to_hash).to eq(lifecycle_data)
+          expect(build.created_by_user_guid).to eq('1234')
+          expect(build.created_by_user_name).to eq('charles')
+          expect(build.created_by_user_email).to eq('charles@las.gym')
+          expect(build).to have_labels(
+            { prefix: nil, key_name: 'release', value: 'stable' },
+            { prefix: 'seriouseats.com', key_name: 'potato', value: 'mashed' }
+          )
+          expect(build).to have_annotations(
+            { key_name: 'anno', value: 'tations' }
+          )
+        end
+
+        it 'creates an app usage event for STAGING_STARTED' do
+          build = nil
+          expect do
+            build = action.create_and_stage(package:, lifecycle:, metadata:)
+          end.to change(AppUsageEvent, :count).by(1)
+
+          event = AppUsageEvent.last
+          expect(event).not_to be_nil
+          expect(event.state).to eq('STAGING_STARTED')
+          expect(event.previous_state).to eq('STAGING')
+          expect(event.instance_count).to eq(1)
+          expect(event.previous_instance_count).to eq(1)
+          expect(event.memory_in_mb_per_instance).to eq(BuildModel::STAGING_MEMORY)
+          expect(event.previous_memory_in_mb_per_instance).to eq(BuildModel::STAGING_MEMORY)
+
+          expect(event.org_guid).to eq(build.app.space.organization.guid)
+          expect(event.space_guid).to eq(build.app.space.guid)
+          expect(event.parent_app_guid).to eq(build.app.guid)
+          expect(event.parent_app_name).to eq(build.app.name)
+          expect(event.package_guid).to eq(build.package_guid)
+          expect(event.app_name).to eq('')
+          expect(event.app_guid).to eq('')
+          expect(event.package_state).to eq('READY')
+          expect(event.previous_package_state).to eq('READY')
+
+          expect(event.buildpack_guid).to be_nil
+          expect(event.buildpack_name).to eq(buildpack_git_url)
+        end
+
+        it 'creates a build audit event' do
+          build = action.create_and_stage(package:, lifecycle:, metadata:)
+          event = Event.last
+          expect(event.type).to eq('audit.app.build.create')
+          expect(event.actor).to eq('1234')
+          expect(event.actor_type).to eq('user')
+          expect(event.actor_name).to eq('charles@las.gym')
+          expect(event.actor_username).to eq('charles')
+          expect(event.actee).to eq(app.guid)
+          expect(event.actee_type).to eq('app')
+          expect(event.actee_name).to eq(app.name)
+          expect(event.timestamp).to be
+          expect(event.space_guid).to eq(app.space_guid)
+          expect(event.organization_guid).to eq(app.space.organization.guid)
+          expect(event.metadata).to eq({
+                                         'build_guid' => build.guid,
+                                         'package_guid' => package.guid
+                                       })
+        end
+
+        it 'does not create a droplet audit event' do
+          expect do
+            action.create_and_stage(package:, lifecycle:)
+          end.not_to(change do
+            Event.where(type: 'audit.app.droplet.create').count
+          end)
+        end
+      end
+
       describe 'creating a stage request' do
         it 'initiates a staging request' do
           build = action.create_and_stage(package:, lifecycle:)

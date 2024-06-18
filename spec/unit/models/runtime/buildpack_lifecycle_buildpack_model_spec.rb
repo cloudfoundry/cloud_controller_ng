@@ -3,9 +3,11 @@ require 'spec_helper'
 module VCAP::CloudController
   RSpec.describe BuildpackLifecycleBuildpackModel do
     subject(:buildpack) { BuildpackLifecycleBuildpackModel.new }
+    let(:buildpack_lifecycle_data) { BuildpackLifecycleDataModel.make(buildpacks: ['ruby']) }
 
     before do
       Buildpack.make(name: 'ruby')
+      buildpack.buildpack_lifecycle_data = buildpack_lifecycle_data
     end
 
     it_behaves_like 'a model with an encrypted attribute' do
@@ -44,6 +46,28 @@ module VCAP::CloudController
         buildpack.buildpack_url = 'not a valid URL'
         expect(buildpack).not_to be_valid
         expect(buildpack.errors.full_messages.first).to include('Specified invalid buildpack URL: "not a valid URL"')
+      end
+
+      context 'when a cnb buildpack is used' do
+        let(:cnb_lifecycle_data) { CNBLifecycleDataModel.make(buildpacks: ['docker://nginx:latest']) }
+
+        before do
+          buildpack.buildpack_lifecycle_data = nil
+          buildpack.cnb_lifecycle_data = cnb_lifecycle_data
+        end
+
+        it 'expects an URI without scheme to be invalid' do
+          buildpack.admin_buildpack_name = nil
+          buildpack.buildpack_url = 'nginx:latest'
+          expect(buildpack).not_to be_valid
+          expect(buildpack.errors.full_messages.first).to include('Specified invalid buildpack URL: "nginx:latest"')
+        end
+
+        it 'expects an URI with docker scheme to be valid' do
+          buildpack.admin_buildpack_name = nil
+          buildpack.buildpack_url = 'docker://nginx:latest'
+          expect(buildpack).to be_valid
+        end
       end
     end
 

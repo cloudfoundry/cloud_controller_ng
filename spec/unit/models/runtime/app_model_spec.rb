@@ -157,6 +157,20 @@ module VCAP::CloudController
             and change(BuildpackLifecycleBuildpackModel, :count).by(-2)
         end
       end
+
+      context 'when the app has cnb_lifecycle_data' do
+        subject(:lifecycle_data) do
+          CNBLifecycleDataModel.create(buildpacks: ['http://some-buildpack.com', 'http://another-buildpack.net'])
+        end
+
+        it 'destroys the buildpack_lifecycle_data' do
+          app_model.update(cnb_lifecycle_data: lifecycle_data)
+          expect do
+            app_model.destroy
+          end.to change(CNBLifecycleDataModel, :count).by(-1).
+            and change(BuildpackLifecycleBuildpackModel, :count).by(-2)
+        end
+      end
     end
 
     describe 'validations' do
@@ -276,7 +290,16 @@ module VCAP::CloudController
         end
       end
 
-      context 'the model does not contain buildpack_lifecycle_data' do
+      context 'the model contains cnb_lifecycle_data' do
+        before { CNBLifecycleDataModel.make(app: app_model) }
+
+        it 'returns the string "cnb" if cnb_lifecycle_data is on the model' do
+          app_model.reload
+          expect(app_model.lifecycle_type).to eq('cnb')
+        end
+      end
+
+      context 'the model does not contain any lifecycle_data' do
         before do
           app_model.buildpack_lifecycle_data = nil
           app_model.save
@@ -302,7 +325,20 @@ module VCAP::CloudController
         end
       end
 
-      context 'buildpack_lifecycle_data is nil' do
+      context 'cnb_lifecycle_data' do
+        let!(:cnb_lifecycle_data) { CNBLifecycleDataModel.make(app: app_model) }
+
+        it 'returns cnb_lifecycle_data if it is on the model' do
+          expect(app_model.reload.lifecycle_data).to eq(cnb_lifecycle_data)
+        end
+
+        it 'is a persistable hash' do
+          expect(app_model.reload.cnb_lifecycle_data.buildpacks).to eq(cnb_lifecycle_data.buildpacks)
+          expect(app_model.reload.cnb_lifecycle_data.stack).to eq(cnb_lifecycle_data.stack)
+        end
+      end
+
+      context 'lifecycle_data is nil' do
         let(:non_buildpack_app_model) { AppModel.create(name: 'non-buildpack', space: space) }
 
         it 'returns a docker data model' do

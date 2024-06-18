@@ -1114,6 +1114,22 @@ module VCAP::CloudController
           expect(message.errors.full_messages).to match_array(error_messages)
         end
       end
+
+      context 'when cnb: true and no buildpacks provided' do
+        before do
+          FeatureFlag.make(name: 'diego_cnb', enabled: true, error_message: nil)
+        end
+
+        let(:params_from_yaml) { { name: 'eugene', lifecycle: 'cnb' } }
+
+        it 'is not valid' do
+          message = AppManifestMessage.create_from_yml(params_from_yaml)
+
+          expect(message).not_to be_valid
+          expect(message.errors).to have(1).items
+          expect(message.errors.full_messages).to include('Buildpack(s) must be specified when using Cloud Native Buildpacks')
+        end
+      end
     end
 
     describe '.create_from_yml' do
@@ -2062,6 +2078,39 @@ module VCAP::CloudController
           message = AppManifestMessage.create_from_yml(parsed_yaml)
 
           expect(message.app_update_message.lifecycle_type).to eq(Lifecycles::DOCKER)
+        end
+      end
+
+      context 'when cnb is specified' do
+        let(:parsed_yaml) { { name: 'cnb', lifecycle: 'cnb', buildpacks: %w[nodejs java], stack: stack.name } }
+
+        context 'when cnb is enabled' do
+          before do
+            FeatureFlag.make(name: 'diego_cnb', enabled: true, error_message: nil)
+          end
+
+          it 'is valid' do
+            message = AppManifestMessage.create_from_yml(parsed_yaml)
+
+            expect(message).to be_valid
+            expect(message.app_update_message.lifecycle_type).to eq(Lifecycles::CNB)
+            expect(message.app_update_message.buildpack_data.buildpacks).to eq(%w[nodejs java])
+            expect(message.app_update_message.buildpack_data.stack).to eq(stack.name)
+          end
+        end
+
+        context 'when cnb is disabled' do
+          before do
+            FeatureFlag.make(name: 'diego_cnb', enabled: false, error_message: 'I am a banana')
+          end
+
+          it 'is not valid' do
+            message = AppManifestMessage.create_from_yml(parsed_yaml)
+
+            expect(message).not_to be_valid
+            expect(message.errors).to have(1).items
+            expect(message.errors.full_messages).to include('Feature Disabled: I am a banana')
+          end
         end
       end
     end

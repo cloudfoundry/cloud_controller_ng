@@ -23,6 +23,14 @@ module VCAP::CloudController
           expect(LifecycleProvider.provide(package, message)).to be_a(BuildpackLifecycle)
         end
       end
+
+      context 'cnb type' do
+        let(:type) { 'cnb' }
+
+        it 'returns a BuildpackLifecycle' do
+          expect(LifecycleProvider.provide(package, message)).to be_a(CNBLifecycle)
+        end
+      end
     end
 
     context 'when lifecycle type is not requested on the message' do
@@ -42,6 +50,14 @@ module VCAP::CloudController
 
         it 'returns a DockerLifecycle' do
           expect(LifecycleProvider.provide(package, message)).to be_a(DockerLifecycle)
+        end
+      end
+
+      context 'when the app defaults to cnb' do
+        let(:app) { AppModel.make(:cnb) }
+
+        it 'returns a CNBLifecycle' do
+          expect(LifecycleProvider.provide(package, message)).to be_a(CNBLifecycle)
         end
       end
     end

@@ -20,7 +20,8 @@ module VCAP::CloudController
         app = AppModel.create(
           name: message.name,
           space_guid: message.space_guid,
-          environment_variables: message.environment_variables
+          environment_variables: message.environment_variables,
+          revisions_enabled: lifecycle.type != VCAP::CloudController::Lifecycles::CNB
         )
 
         lifecycle.create_lifecycle_data_model(app)

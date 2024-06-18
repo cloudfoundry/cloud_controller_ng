@@ -460,6 +460,75 @@ RSpec.describe BuildsController, type: :controller do
       end
     end
 
+    describe 'cnb lifecycle' do
+      let(:cnb_app_model) { VCAP::CloudController::AppModel.make(:cnb, space:) }
+      let(:package) do
+        VCAP::CloudController::PackageModel.make(:cnb,
+                                                 app_guid: cnb_app_model.guid,
+                                                 type: VCAP::CloudController::PackageModel::BITS_TYPE,
+                                                 state: VCAP::CloudController::PackageModel::READY_STATE)
+      end
+
+      let(:cnb_lifecycle) do
+        { type: 'cnb', data: {} }
+      end
+
+      let(:req_body) do
+        {
+          package: {
+            guid: package.guid
+          },
+          lifecycle: cnb_lifecycle
+        }
+      end
+
+      before do
+        expect(cnb_app_model.lifecycle_type).to eq('cnb')
+      end
+
+      context 'when diego_cnb is enabled' do
+        before do
+          VCAP::CloudController::FeatureFlag.make(name: 'diego_cnb', enabled: true, error_message: nil)
+        end
+
+        it 'returns a 201 Created response and creates a build model with an associated package' do
+          expect { post :create, params: req_body, as: :json }.
+            to change(VCAP::CloudController::BuildModel, :count).from(0).to(1)
+          build = VCAP::CloudController::BuildModel.last
+          expect(build.package.guid).to eq(package.guid)
+
+          expect(response).to have_http_status :created
+        end
+
+        context 'when the user adds additional body parameters' do
+          let(:cnb_lifecycle) do
+            { type: 'cnb', data: 'foobar' }
+          end
+
+          it 'raises a 422' do
+            post :create, params: req_body, as: :json
+
+            expect(response).to have_http_status(:unprocessable_entity)
+            expect(response.body).to include('UnprocessableEntity')
+          end
+        end
+      end
+
+      context 'when diego_cnb feature flag is disabled' do
+        before do
+          VCAP::CloudController::FeatureFlag.make(name: 'diego_cnb', enabled: false, error_message: nil)
+        end
+
+        it 'raises 403' do
+          post :create, params: req_body, as: :json
+
+          expect(response).to have_http_status(:forbidden)
+          expect(response.body).to include('FeatureDisabled')
+          expect(response.body).to include('diego_cnb')
+        end
+      end
+    end
+
     describe 'staging_details' do
       let(:memory_in_mb) { TestConfig.config[:staging][:minimum_staging_memory_mb] + 1 }
       let(:disk_in_mb) { TestConfig.config[:staging][:minimum_staging_disk_mb] + 1 }

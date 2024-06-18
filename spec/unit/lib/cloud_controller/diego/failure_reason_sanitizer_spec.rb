@@ -74,6 +74,20 @@ module VCAP::CloudController
             expect(staging_error[:message]).to eq('staging failed')
           end
         end
+
+        context 'Handles specific return codes' do
+          it 'returns specific message for buildpack lifecycle rc' do
+            staging_error = FailureReasonSanitizer.sanitize('exit status 222')
+            expect(staging_error[:id]).to eq(CCMessages::BUILDPACK_DETECT_FAILED)
+            expect(staging_error[:message]).to eq('staging failed')
+          end
+
+          it 'returns specific message for cnb lifecycle rc' do
+            staging_error = FailureReasonSanitizer.sanitize('exit status 233')
+            expect(staging_error[:id]).to eq(CCMessages::CNB_DETECTING_FAILED)
+            expect(staging_error[:message]).to eq('staging failed')
+          end
+        end
       end
     end
   end

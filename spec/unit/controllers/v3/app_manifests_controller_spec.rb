@@ -15,6 +15,7 @@ RSpec.describe AppManifestsController, type: :controller do
         'applications' => [
           {
             'name' => app_model.name,
+            'lifecycle' => 'buildpack',
             'stack' => app_model.lifecycle_data.stack
           }
         ]

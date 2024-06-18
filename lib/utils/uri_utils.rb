@@ -66,7 +66,7 @@ module UriUtils
     path, tag = parse_docker_repository_tag(path)
 
     raise InvalidDockerURI.new "Invalid image name [#{path}]" unless %r{\A[a-z0-9_\-\.\/]{2,255}\Z} =~ path
-    raise InvalidDockerURI.new "Invalid image tag [#{tag}]" if tag && !(/\A[a-zA-Z0-9_\-\.]{1,128}(@sha256:[a-z0-9]{64})?\Z/ =~ tag)
+    raise InvalidDockerURI.new "Invalid image tag [#{tag}]" if tag && !(/\A(([a-zA-Z0-9_\-\.]{1,128})|(([a-zA-Z0-9_\-\.]{0,128})(@sha256:[a-z0-9]{64})))\Z/ =~ tag)
 
     [host, path, tag]
   end
@@ -82,7 +82,7 @@ module UriUtils
   end
 
   private_class_method def self.parse_docker_repository_tag(path)
-    path, tag = path.split(':', 2)
+    path, tag = path.split(/(?=@)|:/, 2)
 
     return [path, tag] unless tag && tag.include?('/')
 

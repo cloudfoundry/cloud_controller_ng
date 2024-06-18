@@ -221,6 +221,38 @@ module VCAP::CloudController::Presenters::V3
         end
       end
 
+      context 'cnb lifecycle' do
+        let(:droplet) do
+          VCAP::CloudController::DropletModel.make(
+            :cnb,
+            state: VCAP::CloudController::DropletModel::STAGED_STATE
+          )
+        end
+        let(:first_buildpack) { 'docker://first-buildpack:latest' }
+        let(:second_buildpack) { 'https://second-buildpack.io' }
+
+        let(:lifecycle_buildpacks) do
+          [
+            first_buildpack,
+            second_buildpack
+          ]
+        end
+
+        before do
+          droplet.lifecycle_data.buildpacks = lifecycle_buildpacks
+          droplet.lifecycle_data.stack = 'the-happiest-stack'
+          droplet.save
+        end
+
+        it 'presents cnb lifecycle data' do
+          expect(result[:lifecycle][:type]).to eq('cnb')
+          expect(result[:buildpacks]).to contain_exactly(
+            { buildpack_name: nil, detect_output: nil, name: 'docker://first-buildpack:latest', version: nil },
+            { buildpack_name: nil, detect_output: nil, name: 'https://second-buildpack.io', version: nil }
+          )
+        end
+      end
+
       context 'when there are labels and annotations for the droplet' do
         let!(:release_label) do
           VCAP::CloudController::DropletLabelModel.make(

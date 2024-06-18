@@ -1,12 +1,12 @@
 require 'spec_helper'
 require 'cloud_controller/blobstore/url_generator'
-require 'cloud_controller/diego/buildpack/lifecycle_protocol'
+require 'cloud_controller/diego/cnb/lifecycle_protocol'
 require_relative '../lifecycle_protocol_shared'
 
 module VCAP
   module CloudController
     module Diego
-      module Buildpack
+      module CNB
         RSpec.describe LifecycleProtocol do
           subject(:lifecycle_protocol) { LifecycleProtocol.new(blobstore_url_generator, droplet_url_generator) }
           let(:droplet_url_generator) { instance_double(DropletUrlGenerator, perma_droplet_download_url: 'www.droplet.com') }
@@ -21,15 +21,15 @@ module VCAP
           let(:droplet_download_url) { 'droplet-download-url' }
 
           it_behaves_like 'a lifecycle protocol' do
-            let(:app) { AppModel.make }
-            let(:package) { PackageModel.make(app_guid: app.guid) }
-            let(:droplet) { DropletModel.make(package_guid: package.guid, app_guid: app.guid) }
+            let(:app) { AppModel.make(:cnb) }
+            let(:package) { PackageModel.make(:cnb, app_guid: app.guid) }
+            let(:droplet) { DropletModel.make(:cnb, package_guid: package.guid, app_guid: app.guid) }
             let(:process) { ProcessModel.make(app:) }
             let(:staging_details) do
               Diego::StagingDetails.new.tap do |details|
                 details.staging_guid = droplet.guid
                 details.package      = package
-                details.lifecycle    = instance_double(BuildpackLifecycle, staging_stack: 'potato-stack', buildpack_infos: buildpack_infos)
+                details.lifecycle    = instance_double(CNBLifecycle, staging_stack: 'potato-stack', buildpack_infos: buildpack_infos)
               end
             end
             let(:buildpack_infos) { [BuildpackInfo.new('http://some-buildpack.url', nil)] }
@@ -46,9 +46,9 @@ module VCAP
           end
 
           describe '#lifecycle_data' do
-            let(:app) { AppModel.make }
+            let(:app) { AppModel.make(:cnb) }
             let(:package) { PackageModel.make(app:) }
-            let(:droplet) { DropletModel.make(package:, app:) }
+            let(:droplet) { DropletModel.make(:cnb, package:, app:) }
             let(:buildpack) { nil }
             let(:buildpack_infos) { [BuildpackInfo.new(buildpack, VCAP::CloudController::Buildpack.find(name: buildpack))] }
 
@@ -59,32 +59,7 @@ module VCAP
                 details.environment_variables = { 'nightshade_fruit' => 'potato' }
                 details.staging_memory_in_mb  = 42
                 details.staging_disk_in_mb    = 51
-                details.lifecycle             = instance_double(BuildpackLifecycle, staging_stack: 'potato-stack', buildpack_infos: buildpack_infos)
-              end
-            end
-
-            context 'when auto-detecting' do
-              let(:buildpack_infos) { [] }
-
-              it 'sends buildpacks setting skip_detect to false' do
-                lifecycle_data = lifecycle_protocol.lifecycle_data(staging_details)
-
-                expect(lifecycle_data[:buildpacks]).to have(1).items
-                bp = lifecycle_data[:buildpacks][0]
-                expect(bp).to include(name: 'ruby')
-                expect(bp).to include(skip_detect: false)
-              end
-            end
-
-            context 'when a buildpack is requested' do
-              let(:buildpack) { 'ruby' }
-
-              it 'sends buildpacks with skip detect' do
-                lifecycle_data = lifecycle_protocol.lifecycle_data(staging_details)
-
-                expect(lifecycle_data[:buildpacks]).to have(1).items
-                bp = lifecycle_data[:buildpacks][0]
-                expect(bp).to include(name: 'ruby', skip_detect: true)
+                details.lifecycle             = instance_double(CNBLifecycle, staging_stack: 'potato-stack', buildpack_infos: buildpack_infos)
               end
             end
 
@@ -131,11 +106,11 @@ module VCAP
 
           describe '#staging_action_builder' do
             let(:config) { Config.new({ some: 'config' }) }
-            let(:package) { PackageModel.make }
-            let(:droplet) { DropletModel.make }
+            let(:package) { PackageModel.make(:cnb) }
+            let(:droplet) { DropletModel.make(:cnb) }
             let(:staging_details) do
               StagingDetails.new.tap do |details|
-                details.lifecycle    = instance_double(BuildpackLifecycle, staging_stack: 'potato-stack', buildpack_infos: 'some buildpack info')
+                details.lifecycle    = instance_double(CNBLifecycle, staging_stack: 'potato-stack', buildpack_infos: 'some buildpack info')
                 details.package      = package
                 details.staging_guid = droplet.guid
               end
@@ -166,24 +141,24 @@ module VCAP
           end
 
           describe '#task_action_builder' do
-            let(:task) { TaskModel.make }
+            let(:task) { TaskModel.make(:cnb) }
             let(:config) { Config.new({ some: 'config' }) }
 
             it 'returns a TaskActionBuilder' do
-              task.app.update(buildpack_lifecycle_data: BuildpackLifecycleDataModel.make(stack: 'potato-stack'))
+              task.app.update(cnb_lifecycle_data: CNBLifecycleDataModel.make(stack: 'potato-stack'))
 
-              task_action_builder = instance_double(TaskActionBuilder)
-              allow(TaskActionBuilder).to receive(:new).and_return task_action_builder
+              task_action_builder = instance_double(Buildpack::TaskActionBuilder)
+              allow(Buildpack::TaskActionBuilder).to receive(:new).and_return task_action_builder
 
               expect(lifecycle_protocol.task_action_builder(config, task)).to be task_action_builder
 
-              expect(TaskActionBuilder).to have_received(:new).with(config, task, {
-                                                                      droplet_uri: 'droplet-download-url',
-                                                                      stack: 'potato-stack'
-                                                                    },
-                                                                    'vcap',
-                                                                    ['app', task.command, ''],
-                                                                    'buildpack')
+              expect(Buildpack::TaskActionBuilder).to have_received(:new).with(config, task, {
+                                                                                 droplet_uri: 'droplet-download-url',
+                                                                                 stack: 'potato-stack'
+                                                                               },
+                                                                               'root',
+                                                                               ['--', task.command],
+                                                                               'cnb')
             end
 
             context 'when the blobstore_url_generator returns nil' do
@@ -193,7 +168,7 @@ module VCAP
                 expect do
                   lifecycle_protocol.task_action_builder(config, task)
                 end.to raise_error(
-                  VCAP::CloudController::Diego::Buildpack::LifecycleProtocol::InvalidDownloadUri,
+                  VCAP::CloudController::Diego::CNB::LifecycleProtocol::InvalidDownloadUri,
                   /Failed to get blobstore download url for droplet #{task.droplet.guid}/
                 )
               end
@@ -202,10 +177,11 @@ module VCAP
 
           describe '#desired_lrp_builder' do
             let(:config) { Config.new({}) }
-            let(:app) { AppModel.make(droplet:) }
-            let(:droplet) { DropletModel.make }
+            let(:app) { AppModel.make(:cnb, droplet:) }
+            let(:droplet) { DropletModel.make(:cnb) }
             let(:process) do
               ProcessModel.make(
+                :cnb,
                 type: 'worker',
                 app: app,
                 diego: true,
@@ -217,7 +193,7 @@ module VCAP
             let(:builder_opts) do
               {
                 ports: [1234, 5678],
-                stack: process.stack.name,
+                stack: process.app.lifecycle_data.stack,
                 droplet_uri: 'www.droplet.com',
                 droplet_hash: droplet.droplet_hash,
                 process_guid: ProcessGuid.from_process(process),
@@ -228,7 +204,10 @@ module VCAP
             end
 
             it 'creates a diego DesiredLrpBuilder' do
-              expect(VCAP::CloudController::Diego::Buildpack::DesiredLrpBuilder).to receive(:new).with(
+              puts 'hello'
+              puts 'world!'
+
+              expect(VCAP::CloudController::Diego::CNB::DesiredLrpBuilder).to receive(:new).with(
                 config,
                 builder_opts
               )
@@ -242,7 +221,7 @@ module VCAP
 
               it 'uses it' do
                 builder_opts.merge!(checksum_algorithm: 'sha256', checksum_value: 'droplet-sha256-checksum')
-                expect(VCAP::CloudController::Diego::Buildpack::DesiredLrpBuilder).to receive(:new).with(
+                expect(VCAP::CloudController::Diego::CNB::DesiredLrpBuilder).to receive(:new).with(
                   config,
                   builder_opts
                 )
@@ -258,7 +237,7 @@ module VCAP
 
               it 'uses the detected start command' do
                 builder_opts[:start_command] = '/usr/bin/nc'
-                expect(VCAP::CloudController::Diego::Buildpack::DesiredLrpBuilder).to receive(:new).with(
+                expect(VCAP::CloudController::Diego::CNB::DesiredLrpBuilder).to receive(:new).with(
                   config,
                   builder_opts
                 )
@@ -274,6 +253,7 @@ module VCAP
               context 'and theres a revision on the process' do
                 let(:new_droplet) do
                   DropletModel.make(
+                    :cnb,
                     app: app,
                     process_types: {
                       'worker' => 'something else',
@@ -289,7 +269,7 @@ module VCAP
 
                 it 'uses the droplet from the revision and the command in the droplet' do
                   builder_opts.merge!(start_command: 'something else', droplet_hash: new_droplet.droplet_hash, checksum_value: new_droplet.sha256_checksum)
-                  expect(VCAP::CloudController::Diego::Buildpack::DesiredLrpBuilder).to receive(:new).with(
+                  expect(VCAP::CloudController::Diego::CNB::DesiredLrpBuilder).to receive(:new).with(
                     config,
                     builder_opts
                   )
@@ -303,7 +283,7 @@ module VCAP
 
                   it 'uses the command from the revision' do
                     builder_opts.merge!(start_command: 'stop stop stop', droplet_hash: new_droplet.droplet_hash, checksum_value: new_droplet.sha256_checksum)
-                    expect(VCAP::CloudController::Diego::Buildpack::DesiredLrpBuilder).to receive(:new).with(
+                    expect(VCAP::CloudController::Diego::CNB::DesiredLrpBuilder).to receive(:new).with(
                       config,
                       builder_opts
                     )
@@ -315,7 +295,7 @@ module VCAP
               context 'but there is not a revision on the process' do
                 it 'uses the droplet from the process' do
                   builder_opts.merge!(droplet_hash: droplet.droplet_hash, checksum_value: droplet.sha256_checksum)
-                  expect(VCAP::CloudController::Diego::Buildpack::DesiredLrpBuilder).to receive(:new).with(
+                  expect(VCAP::CloudController::Diego::CNB::DesiredLrpBuilder).to receive(:new).with(
                     config,
                     builder_opts
                   )
@@ -324,7 +304,7 @@ module VCAP
 
                 it 'uses the command from the process' do
                   builder_opts[:start_command] = 'go go go'
-                  expect(VCAP::CloudController::Diego::Buildpack::DesiredLrpBuilder).to receive(:new).with(
+                  expect(VCAP::CloudController::Diego::CNB::DesiredLrpBuilder).to receive(:new).with(
                     config,
                     builder_opts
                   )

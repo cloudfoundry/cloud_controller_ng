@@ -4,7 +4,7 @@ module VCAP::CloudController
   module Diego
     module Buildpack
       RSpec.describe TaskActionBuilder do
-        subject(:builder) { TaskActionBuilder.new(config, task, lifecycle_data) }
+        subject(:builder) { TaskActionBuilder.new(config, task, lifecycle_data, 'vcap', ['app', task.command, ''], 'buildpack') }
 
         let(:enable_declarative_asset_downloads) { false }
         let(:config) do

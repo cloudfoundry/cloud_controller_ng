@@ -9,10 +9,13 @@ module VCAP::CloudController
         include ::Diego::ActionBuilder
         class InvalidStack < StandardError; end
 
-        def initialize(config, task, lifecycle_data)
+        def initialize(config, task, lifecycle_data, run_user, launcher_args, prefix)
           @config = config
           @task = task
           @lifecycle_data = lifecycle_data
+          @run_user = run_user
+          @launcher_args = launcher_args
+          @prefix = prefix
         end
 
         def action
@@ -30,12 +33,12 @@ module VCAP::CloudController
             download_droplet_action.checksum_value = task.droplet.droplet_hash
           end
 
-          launcher_args = ['app', task.command, '']
+          # launcher_args = ['app', task.command, '']
 
           run_action = ::Diego::Bbs::Models::RunAction.new(
-            user: 'vcap',
+            user: @run_user,
             path: '/tmp/lifecycle/launcher',
-            args: launcher_args,
+            args: @launcher_args,
             log_source: "APP/TASK/#{task.name}",
             resource_limits: ::Diego::Bbs::Models::ResourceLimits.new,
             env: task_environment_variables
@@ -99,12 +102,12 @@ module VCAP::CloudController
           [::Diego::Bbs::Models::CachedDependency.new(
             from: LifecycleBundleUriGenerator.uri(config.get(:diego, :lifecycle_bundles)[lifecycle_bundle_key]),
             to: '/tmp/lifecycle',
-            cache_key: "buildpack-#{lifecycle_stack}-lifecycle"
+            cache_key: "#{@prefix}-#{lifecycle_stack}-lifecycle"
           )]
         end
 
         def lifecycle_bundle_key
-          :"buildpack/#{lifecycle_stack}"
+          :"#{@prefix}/#{lifecycle_stack}"
         end
 
         private

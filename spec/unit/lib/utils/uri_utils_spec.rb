@@ -150,4 +150,28 @@ RSpec.describe UriUtils do
       expect(UriUtils.uri_escape('https://test.com/test?name=/?')).to eq 'https://test.com/test?name=%2F%3F'
     end
   end
+
+  describe '.parse_docker_uri' do
+    it 'returns valid docker uri' do
+      expect(UriUtils.parse_docker_uri('buildpack')).to eq ['', 'library/buildpack', nil]
+      expect(UriUtils.parse_docker_uri('docker.io/buildpack')).to eq ['docker.io', 'library/buildpack', nil]
+      expect(UriUtils.parse_docker_uri('publish/buildpack')).to eq ['', 'publish/buildpack', nil]
+      expect(UriUtils.parse_docker_uri('publish/buildpack:tag')).to eq ['', 'publish/buildpack', 'tag']
+
+      actual_result = UriUtils.parse_docker_uri('publish/buildpack@sha256:e118d023acaee5cf13471ead39f68416ad6172ff0899f3257ce1481cd2b28a6a')
+      expected_result = ['', 'publish/buildpack', '@sha256:e118d023acaee5cf13471ead39f68416ad6172ff0899f3257ce1481cd2b28a6a']
+      expect(actual_result).to eq expected_result
+
+      actual_result = UriUtils.parse_docker_uri('publish/buildpack:tag@sha256:e118d023acaee5cf13471ead39f68416ad6172ff0899f3257ce1481cd2b28a6a')
+      expected_result = ['', 'publish/buildpack', 'tag@sha256:e118d023acaee5cf13471ead39f68416ad6172ff0899f3257ce1481cd2b28a6a']
+      expect(actual_result).to eq expected_result
+    end
+
+    it 'returns invalid docker uri' do
+      expect { UriUtils.parse_docker_uri('?') }.to raise_error(UriUtils::InvalidDockerURI)
+      expect { UriUtils.parse_docker_uri('publish/buildpack:') }.to raise_error(UriUtils::InvalidDockerURI)
+      expect { UriUtils.parse_docker_uri('publish/buildpack:?@sha256:e118d023acaee5cf13471ead39f68416ad6172ff0899f3257ce1481cd2b28a6a') }.to raise_error(UriUtils::InvalidDockerURI)
+      expect { UriUtils.parse_docker_uri('publish/buildpack@sha256:e118d0') }.to raise_error(UriUtils::InvalidDockerURI)
+    end
+  end
 end
