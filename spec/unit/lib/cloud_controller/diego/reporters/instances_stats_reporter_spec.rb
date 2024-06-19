@@ -241,12 +241,12 @@ module VCAP::CloudController
             [container_metric_batch]
           end
 
-          it 'sets all the stats to their nullish value' do
+          it 'sets all the stats to zero' do
             result, = instances_reporter.stats_for_app(process)
             expect(result[0][:stats][:usage]).to eq({
                                                       time: formatted_current_time,
                                                       cpu: 0,
-                                                      cpu_entitlement: nil,
+                                                      cpu_entitlement: 0,
                                                       mem: 0,
                                                       disk: 0,
                                                       log_rate: 0
@@ -378,7 +378,7 @@ module VCAP::CloudController
               expect(result[0][:stats][:usage]).to eq({
                                                         time: formatted_current_time,
                                                         cpu: 0,
-                                                        cpu_entitlement: nil,
+                                                        cpu_entitlement: 0,
                                                         mem: 0,
                                                         disk: 0,
                                                         log_rate: 0
