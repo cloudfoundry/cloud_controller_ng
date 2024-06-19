@@ -25,7 +25,7 @@ module VCAP::CloudController
 
       def lifecycle_data(staging_details)
         stack                                             = staging_details.lifecycle.staging_stack
-        lifecycle_data                                    = Diego::LifecycleData.new
+        lifecycle_data                                    = new_lifecycle_data(staging_details)
         lifecycle_data.app_bits_download_uri              = @blobstore_url_generator.package_download_url(staging_details.package)
         lifecycle_data.app_bits_checksum                  = staging_details.package.checksum_info
         lifecycle_data.buildpack_cache_checksum           = staging_details.package.app.buildpack_cache_sha256_checksum

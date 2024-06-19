@@ -24,12 +24,14 @@ module VCAP::CloudController
         end
 
         def task_environment_variables
-          [
+          env = [
             ::Diego::Bbs::Models::EnvironmentVariable.new(name: 'CNB_USER_ID', value: '2000'),
             ::Diego::Bbs::Models::EnvironmentVariable.new(name: 'CNB_GROUP_ID', value: '2000'),
             ::Diego::Bbs::Models::EnvironmentVariable.new(name: 'CNB_STACK_ID', value: lifecycle_stack),
             ::Diego::Bbs::Models::EnvironmentVariable.new(name: 'LANG', value: STAGING_DEFAULT_LANG)
           ]
+          env.push(::Diego::Bbs::Models::EnvironmentVariable.new(name: 'CNB_REGISTRY_CREDS', value: lifecycle_data[:credentials])) if lifecycle_data[:credentials]
+          env
         end
 
         private

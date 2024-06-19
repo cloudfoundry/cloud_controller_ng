@@ -1,6 +1,6 @@
-require 'cloud_controller/diego/lifecycle_data'
 require 'cloud_controller/diego/droplet_url_generator'
 require 'cloud_controller/diego/lifecycle_protocol'
+require 'cloud_controller/diego/buildpack/lifecycle_data'
 require 'cloud_controller/diego/buildpack/staging_action_builder'
 
 module VCAP
@@ -18,6 +18,10 @@ module VCAP
 
           def desired_lrp_builder(config, process)
             DesiredLrpBuilder.new(config, builder_opts(process))
+          end
+
+          def new_lifecycle_data(_)
+            LifecycleData.new
           end
         end
       end

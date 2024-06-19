@@ -42,6 +42,7 @@ module VCAP::CloudController
       sidecars
       stack
       timeout
+      cnb_credentials
     ]
 
     HEALTH_CHECK_TYPE_MAPPING = { HealthCheckTypes::NONE => HealthCheckTypes::PROCESS }.freeze
@@ -296,7 +297,8 @@ module VCAP::CloudController
         type: Lifecycles::CNB,
         data: {
           buildpacks: requested_buildpacks,
-          stack: @stack
+          stack: @stack,
+          credentials: @cnb_credentials
         }.compact
       }
     end

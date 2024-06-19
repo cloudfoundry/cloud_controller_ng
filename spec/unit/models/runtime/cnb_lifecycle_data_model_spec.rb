@@ -149,7 +149,7 @@ module VCAP::CloudController
 
     describe '#to_hash' do
       let(:expected_lifecycle_data) do
-        { buildpacks: buildpacks || [], stack: 'cflinuxfs4' }
+        { buildpacks: buildpacks || [], stack: 'cflinuxfs4', credentials: nil }
       end
       let(:buildpacks) { [buildpack] }
       let(:buildpack) { 'http://gcr.io/paketo-buildpacks/nodejs' }
