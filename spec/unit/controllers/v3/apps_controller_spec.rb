@@ -458,6 +458,32 @@ RSpec.describe AppsV3Controller, type: :controller do
       end
     end
 
+    context 'cnb' do
+      before do
+        VCAP::CloudController::FeatureFlag.make(name: 'diego_cnb', enabled: true, error_message: nil)
+      end
+
+      context 'when lifecycle data contains credentials' do
+        let(:request_body) do
+          {
+            name: 'some-name',
+            relationships: { space: { data: { guid: space.guid } } },
+            lifecycle: { type: 'cnb', data: { buildpacks: ['http://buildpack.com'], credentials: { registry: { user: 'password' } } } }
+          }
+        end
+
+        it 'returns a 201 and the app' do
+          post :create, params: request_body, as: :json
+
+          response_body = parsed_body
+          lifecycle_data = response_body['lifecycle']['data']
+
+          expect(response).to have_http_status :created
+          expect(lifecycle_data).to eq({ 'buildpacks' => ['http://buildpack.com'], 'stack' => 'default-stack-name', 'credentials' => '***' })
+        end
+      end
+    end
+
     context 'when the space does not exist' do
       before do
         request_body[:relationships][:space][:data][:guid] = 'made-up'

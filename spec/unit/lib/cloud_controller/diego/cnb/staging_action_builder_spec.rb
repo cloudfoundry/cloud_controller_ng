@@ -34,7 +34,18 @@ module VCAP::CloudController
             details.environment_variables = env
           end
         end
-        let(:env) { double(:env) }
+        let(:env) do
+          {
+            FOO: 'bar',
+            BAR: 'baz'
+          }
+        end
+        let(:bbs_env) do
+          [
+            ::Diego::Bbs::Models::EnvironmentVariable.new(name: 'FOO', value: 'bar'),
+            ::Diego::Bbs::Models::EnvironmentVariable.new(name: 'BAR', value: 'baz')
+          ]
+        end
         let(:stack) { 'buildpack-stack' }
         let(:lifecycle_data) do
           {
@@ -49,11 +60,17 @@ module VCAP::CloudController
           }
         end
         let(:buildpacks) { [] }
-        let(:generated_environment) { [::Diego::Bbs::Models::EnvironmentVariable.new(name: 'generated-environment', value: 'generated-value')] }
+        let(:generated_environment) do
+          [
+            ::Diego::Bbs::Models::EnvironmentVariable.new(name: 'CNB_USER_ID', value: '2000'),
+            ::Diego::Bbs::Models::EnvironmentVariable.new(name: 'CNB_GROUP_ID', value: '2000'),
+            ::Diego::Bbs::Models::EnvironmentVariable.new(name: 'CNB_REGISTRY_CREDS', value: '{"auth": {}}')
+          ]
+        end
 
         before do
           allow(LifecycleBundleUriGenerator).to receive(:uri).with('the-buildpack-bundle').and_return('generated-uri')
-          allow(BbsEnvironmentBuilder).to receive(:build).with(env).and_return(generated_environment)
+          allow(BbsEnvironmentBuilder).to receive(:build).with(env).and_return(bbs_env)
           TestConfig.override(credhub_api: nil)
 
           Stack.create(name: 'buildpack-stack')
@@ -107,8 +124,8 @@ module VCAP::CloudController
               path: '/tmp/lifecycle/builder',
               user: 'vcap',
               args: ['--cache-dir', '/tmp/cache', '--cache-output', '/tmp/cache-output.tgz', '--buildpack', 'gcr.io/paketo-buildpacks/node-start', '--buildpack',
-                     'gcr.io/paketo-buildpacks/node-engine', '--pass-env-var', 'generated-environment'],
-              env: generated_environment
+                     'gcr.io/paketo-buildpacks/node-engine', '--pass-env-var', 'FOO', '--pass-env-var', 'BAR'],
+              env: bbs_env
             )
           end
 
@@ -275,6 +292,25 @@ module VCAP::CloudController
           it 'contains CNB_GROUP_ID' do
             group_env = ::Diego::Bbs::Models::EnvironmentVariable.new(name: 'CNB_GROUP_ID', value: '2000')
             expect(builder.task_environment_variables).to include(group_env)
+          end
+
+          it 'does not contain CNB_REGISTRY_CREDS' do
+            builder.task_environment_variables.each do |env|
+              expect(env.name).not_to eql('CNB_REGISTRY_CREDS')
+            end
+          end
+
+          context 'when the lifecycle contains credentials' do
+            let(:lifecycle_data) do
+              {
+                credentials: '{"registry":{"username":"password"}}'
+              }
+            end
+
+            it 'contains CNB_REGISTRY_CREDS' do
+              group_env = ::Diego::Bbs::Models::EnvironmentVariable.new(name: 'CNB_REGISTRY_CREDS', value: '{"registry":{"username":"password"}}')
+              expect(builder.task_environment_variables).to include(group_env)
+            end
           end
         end
       end

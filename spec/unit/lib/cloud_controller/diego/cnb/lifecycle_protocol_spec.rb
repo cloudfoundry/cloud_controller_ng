@@ -29,7 +29,8 @@ module VCAP
               Diego::StagingDetails.new.tap do |details|
                 details.staging_guid = droplet.guid
                 details.package      = package
-                details.lifecycle    = instance_double(CNBLifecycle, staging_stack: 'potato-stack', buildpack_infos: buildpack_infos)
+                details.lifecycle    = instance_double(CNBLifecycle, staging_stack: 'potato-stack', buildpack_infos: buildpack_infos,
+                                                                     credentials: '{"registry":{"username":"password"}}')
               end
             end
             let(:buildpack_infos) { [BuildpackInfo.new('http://some-buildpack.url', nil)] }
@@ -59,7 +60,8 @@ module VCAP
                 details.environment_variables = { 'nightshade_fruit' => 'potato' }
                 details.staging_memory_in_mb  = 42
                 details.staging_disk_in_mb    = 51
-                details.lifecycle             = instance_double(CNBLifecycle, staging_stack: 'potato-stack', buildpack_infos: buildpack_infos)
+                details.lifecycle             = instance_double(CNBLifecycle, staging_stack: 'potato-stack', buildpack_infos: buildpack_infos,
+                                                                              credentials: '{"registry":{"username":"password"}}')
               end
             end
 
@@ -110,7 +112,8 @@ module VCAP
             let(:droplet) { DropletModel.make(:cnb) }
             let(:staging_details) do
               StagingDetails.new.tap do |details|
-                details.lifecycle    = instance_double(CNBLifecycle, staging_stack: 'potato-stack', buildpack_infos: 'some buildpack info')
+                details.lifecycle    = instance_double(CNBLifecycle, staging_stack: 'potato-stack', buildpack_infos: 'some buildpack info',
+                                                                     credentials: '{"registry":{"username":"password"}}')
                 details.package      = package
                 details.staging_guid = droplet.guid
               end
@@ -135,7 +138,8 @@ module VCAP
                                                                                                                  build_artifacts_cache_upload_uri: 'cache-upload-url',
                                                                                                                  droplet_upload_uri: 'droplet-upload-url',
                                                                                                                  buildpack_cache_checksum: 'bp-cache-checksum',
-                                                                                                                 app_bits_checksum: package.checksum_info
+                                                                                                                 app_bits_checksum: package.checksum_info,
+                                                                                                                 credentials: '{"registry":{"username":"password"}}'
                                                                                                                }))
             end
           end

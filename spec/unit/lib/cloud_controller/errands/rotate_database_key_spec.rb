@@ -35,6 +35,7 @@ module VCAP::CloudController
             'VCAP::CloudController::AppModel' => app,
             'VCAP::CloudController::PackageModel' => PackageModel.make(:docker, package_hash: Sham.guid, error: 'a-error', docker_image: 'image', docker_username: 'user'),
             'VCAP::CloudController::DropletModel' => DropletModel.make(:all_fields),
+            'VCAP::CloudController::CNBLifecycleDataModel' => CNBLifecycleDataModel.make(:all_fields),
             'VCAP::CloudController::BuildpackLifecycleDataModel' => BuildpackLifecycleDataModel.make(:all_fields),
             'VCAP::CloudController::BuildpackLifecycleBuildpackModel' => BuildpackLifecycleBuildpackModel.make(:all_fields),
             'VCAP::CloudController::TaskModel' => task,

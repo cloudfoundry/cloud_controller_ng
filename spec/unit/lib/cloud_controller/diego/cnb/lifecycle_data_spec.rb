@@ -3,7 +3,7 @@ require 'cloud_controller/diego/buildpack/lifecycle_data'
 
 module VCAP::CloudController
   module Diego
-    module Buildpack
+    module CNB
       RSpec.describe LifecycleData do
         let(:lifecycle_data) do
           data                                    = LifecycleData.new
@@ -11,10 +11,11 @@ module VCAP::CloudController
           data.build_artifacts_cache_download_uri = 'build_artifact_download'
           data.build_artifacts_cache_upload_uri   = 'build_artifact_upload'
           data.droplet_upload_uri                 = 'droplet_upload'
-          data.buildpacks                         = []
+          data.buildpacks                         = ['docker://gcr.io/paketo-buildpacks/nodejs']
           data.stack                              = 'stack'
           data.buildpack_cache_checksum           = 'bp-cache-checksum'
           data.app_bits_checksum                  = { type: 'sha256', value: 'package-checksum' }
+          data.credentials                        = '{"registry":{"username":"password"}}'
           data
         end
 
@@ -24,10 +25,11 @@ module VCAP::CloudController
             build_artifacts_cache_download_uri: 'build_artifact_download',
             build_artifacts_cache_upload_uri: 'build_artifact_upload',
             droplet_upload_uri: 'droplet_upload',
-            buildpacks: [],
+            buildpacks: ['docker://gcr.io/paketo-buildpacks/nodejs'],
             stack: 'stack',
             buildpack_cache_checksum: 'bp-cache-checksum',
-            app_bits_checksum: { type: 'sha256', value: 'package-checksum' }
+            app_bits_checksum: { type: 'sha256', value: 'package-checksum' },
+            credentials: '{"registry":{"username":"password"}}'
           }
         end
 
@@ -36,7 +38,7 @@ module VCAP::CloudController
         end
 
         describe 'validation' do
-          let(:optional_keys) { %i[build_artifacts_cache_download_uri buildpack_cache_checksum] }
+          let(:optional_keys) { %i[build_artifacts_cache_download_uri buildpack_cache_checksum credentials] }
 
           context 'when build artifacts cache download uri is missing' do
             before do
@@ -67,6 +69,22 @@ module VCAP::CloudController
 
             it 'omits buildpack_cache_checksum from the message' do
               expect(lifecycle_data.message.keys).not_to include(:buildpack_cache_checksum)
+            end
+          end
+
+          context 'when credentials are missing' do
+            before do
+              lifecycle_data.credentials = nil
+            end
+
+            it 'does not raise an error' do
+              expect do
+                lifecycle_data.message
+              end.not_to raise_error
+            end
+
+            it 'omits credentials from the message' do
+              expect(lifecycle_data.message.keys).not_to include(:credentials)
             end
           end
 

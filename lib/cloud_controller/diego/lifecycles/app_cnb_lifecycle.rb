@@ -10,6 +10,7 @@ module VCAP::CloudController
       CNBLifecycleDataModel.create(
         buildpacks:,
         stack:,
+        credentials:,
         app:
       )
     end
@@ -22,8 +23,18 @@ module VCAP::CloudController
       []
     end
 
+    def update_lifecycle_data_credentials(app)
+      return unless message.buildpack_data.requested?(:credentials)
+
+      app.lifecycle_data.credentials = message.buildpack_data.credentials
+    end
+
     def type
       Lifecycles::CNB
+    end
+
+    def credentials
+      message.buildpack_data.credentials
     end
   end
 end

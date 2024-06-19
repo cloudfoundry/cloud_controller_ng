@@ -2096,6 +2096,21 @@ module VCAP::CloudController
             expect(message.app_update_message.lifecycle_type).to eq(Lifecycles::CNB)
             expect(message.app_update_message.buildpack_data.buildpacks).to eq(%w[nodejs java])
             expect(message.app_update_message.buildpack_data.stack).to eq(stack.name)
+            expect(message.app_update_message.buildpack_data.credentials).to be_nil
+          end
+
+          context 'when cnb_credentials key is specified' do
+            let(:parsed_yaml) { { name: 'cnb', lifecycle: 'cnb', buildpacks: %w[nodejs java], stack: stack.name, cnb_credentials: { registry: { username: 'password' } } } }
+
+            it 'adds credentials to the lifecycle_data' do
+              message = AppManifestMessage.create_from_yml(parsed_yaml)
+
+              expect(message).to be_valid
+              expect(message.app_update_message.lifecycle_type).to eq(Lifecycles::CNB)
+              expect(message.app_update_message.buildpack_data.buildpacks).to eq(%w[nodejs java])
+              expect(message.app_update_message.buildpack_data.stack).to eq(stack.name)
+              expect(message.app_update_message.buildpack_data.credentials).to eq({ registry: { username: 'password' } })
+            end
           end
         end
 

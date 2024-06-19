@@ -1,8 +1,10 @@
 require 'cloud_controller/diego/lifecycles/lifecycles'
+require 'presenters/helpers/censorship'
 
 module VCAP::CloudController
   class CNBLifecycleDataModel < Sequel::Model(:cnb_lifecycle_data)
     LIFECYCLE_TYPE = Lifecycles::CNB
+    set_field_as_encrypted :registry_credentials_json, salt: :credentials_salt, column: :encrypted_registry_credentials_json
 
     many_to_one :droplet,
                 class: '::VCAP::CloudController::DropletModel',
@@ -72,7 +74,8 @@ module VCAP::CloudController
     def to_hash
       {
         buildpacks: buildpacks.map { |buildpack| CloudController::UrlSecretObfuscator.obfuscate(buildpack) },
-        stack: stack
+        stack: stack,
+        credentials: credentials && Presenters::Censorship::REDACTED_CREDENTIAL
       }
     end
 
@@ -80,6 +83,16 @@ module VCAP::CloudController
       return unless app && (build || droplet)
 
       errors.add(:lifecycle_data, 'Must be associated with an app OR a build+droplet, but not both')
+    end
+
+    def credentials
+      return unless registry_credentials_json
+
+      Oj.load(registry_credentials_json)
+    end
+
+    def credentials=(creds)
+      self.registry_credentials_json = Oj.dump(creds)
     end
   end
 end
