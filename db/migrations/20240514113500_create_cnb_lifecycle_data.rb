@@ -38,7 +38,7 @@ Sequel.migration do
 
     transaction do
       alter_table(:buildpack_lifecycle_buildpacks) do
-        drop_foreign_key [:cnb_lifecycle_data_guid], if_exists: true
+        drop_foreign_key [:cnb_lifecycle_data_guid]
       end
       drop_column :buildpack_lifecycle_buildpacks, :cnb_lifecycle_data_guid, if_exists: true
       drop_table :cnb_lifecycle_data
