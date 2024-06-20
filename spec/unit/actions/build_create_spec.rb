@@ -179,6 +179,8 @@ module VCAP::CloudController
           }
         end
         let(:lifecycle) { CNBLifecycle.new(package, staging_message) }
+        let(:app) { AppModel.make(:cnb, space:) }
+        let(:package) { PackageModel.make(app: app, state: PackageModel::READY_STATE) }
 
         it 'creates a build' do
           build = nil
