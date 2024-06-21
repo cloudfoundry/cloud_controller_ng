@@ -43,7 +43,7 @@ module VCAP::CloudController
 
         context 'when the lifecycle already contains a list of buildpacks' do
           subject(:lifecycle_data) do
-            BuildpackLifecycleDataModel.create(buildpacks: ['http://original-buildpack-1.example.com', 'http://original-buildpack-2.example.com'])
+            CNBLifecycleDataModel.create(buildpacks: ['http://original-buildpack-1.example.com', 'http://original-buildpack-2.example.com'])
           end
 
           it 'overrides the list of buildpacks and reads it back' do
@@ -57,10 +57,10 @@ module VCAP::CloudController
           it 'deletes the buildpacks when the lifecycle is deleted' do
             lifecycle_data_guid = lifecycle_data.guid
             expect(lifecycle_data_guid).not_to be_nil
-            expect(BuildpackLifecycleBuildpackModel.where(buildpack_lifecycle_data_guid: lifecycle_data_guid)).not_to be_empty
+            expect(BuildpackLifecycleBuildpackModel.where(cnb_lifecycle_data_guid: lifecycle_data_guid)).not_to be_empty
 
             lifecycle_data.destroy
-            expect(BuildpackLifecycleBuildpackModel.where(buildpack_lifecycle_data_guid: lifecycle_data_guid)).to be_empty
+            expect(BuildpackLifecycleBuildpackModel.where(cnb_lifecycle_data_guid: lifecycle_data_guid)).to be_empty
           end
         end
 
@@ -96,7 +96,7 @@ module VCAP::CloudController
       context 'when using a custom buildpack' do
         context 'when using multiple buildpacks' do
           subject(:lifecycle_data) do
-            BuildpackLifecycleDataModel.new(buildpacks: ['https://github.com/buildpacks/the-best', 'gcr.io/paketo-buildpacks/nodejs'])
+            CNBLifecycleDataModel.new(buildpacks: ['https://github.com/buildpacks/the-best', 'gcr.io/paketo-buildpacks/nodejs'])
           end
 
           it 'returns true' do
@@ -104,44 +104,17 @@ module VCAP::CloudController
           end
         end
       end
-
-      context 'when not using a custom buildpack' do
-        subject(:lifecycle_data) { BuildpackLifecycleDataModel.new(buildpacks: nil) }
-
-        it 'returns false' do
-          expect(lifecycle_data.using_custom_buildpack?).to be false
-        end
-      end
     end
 
     describe '#first_custom_buildpack_url' do
-      context 'when using a single-instance legacy buildpack' do
-        subject(:lifecycle_data) { BuildpackLifecycleDataModel.new }
-
-        it 'returns the first url' do
-          lifecycle_data.legacy_buildpack_url = 'https://someurl.com'
-          expect(lifecycle_data.first_custom_buildpack_url).to eq 'https://someurl.com'
-        end
-      end
-
       context 'when using multiple buildpacks' do
         context 'and there are custom buildpacks' do
           subject(:lifecycle_data) do
-            BuildpackLifecycleDataModel.new(buildpacks: ['ruby', 'https://github.com/buildpacks/the-best'])
+            CNBLifecycleDataModel.new(buildpacks: ['https://gcr.io/ruby', 'https://github.com/buildpacks/the-best'])
           end
 
           it 'returns the first url' do
-            expect(lifecycle_data.first_custom_buildpack_url).to eq 'https://github.com/buildpacks/the-best'
-          end
-        end
-
-        context 'and there are not any custom buildpacks' do
-          subject(:lifecycle_data) do
-            BuildpackLifecycleDataModel.new(buildpacks: %w[ruby java])
-          end
-
-          it 'returns nil' do
-            expect(lifecycle_data.first_custom_buildpack_url).to be_nil
+            expect(lifecycle_data.first_custom_buildpack_url).to eq 'https://gcr.io/ruby'
           end
         end
       end
@@ -149,7 +122,7 @@ module VCAP::CloudController
 
     describe '#to_hash' do
       let(:expected_lifecycle_data) do
-        { buildpacks: buildpacks || [], stack: 'cflinuxfs4', credentials: nil }
+        { buildpacks: buildpacks || [], stack: 'cflinuxfs4' }
       end
       let(:buildpacks) { [buildpack] }
       let(:buildpack) { 'http://gcr.io/paketo-buildpacks/nodejs' }
