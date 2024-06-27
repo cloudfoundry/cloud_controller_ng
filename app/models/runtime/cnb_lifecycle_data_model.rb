@@ -4,7 +4,7 @@ require 'presenters/helpers/censorship'
 module VCAP::CloudController
   class CNBLifecycleDataModel < Sequel::Model(:cnb_lifecycle_data)
     LIFECYCLE_TYPE = Lifecycles::CNB
-    set_field_as_encrypted :registry_credentials_json, salt: :credentials_salt, column: :encrypted_registry_credentials_json
+    set_field_as_encrypted :registry_credentials_json, salt: :encrypted_registry_credentials_json_salt, column: :encrypted_registry_credentials_json
 
     many_to_one :droplet,
                 class: '::VCAP::CloudController::DropletModel',
