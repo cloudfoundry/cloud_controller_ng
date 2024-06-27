@@ -11,6 +11,7 @@ RSpec.describe 'Apps' do
   let(:stack) { VCAP::CloudController::Stack.make }
   let(:user_email) { Sham.email }
   let(:user_name) { 'some-username' }
+  let(:droplet_guid_regex) { /^[a-f0-9]{8}(-[a-f0-9]{4}){4}[a-f0-9]{8}$/ }
 
   describe 'POST /v3/apps' do
     let(:buildpack) { VCAP::CloudController::Buildpack.make(stack: stack.name) }
@@ -59,7 +60,8 @@ RSpec.describe 'Apps' do
             data: { buildpacks: [buildpack.name], stack: stack.name }
           },
           relationships: {
-            space: { data: { guid: space.guid } }
+            space: { data: { guid: space.guid } },
+            current_droplet: { data: { guid: nil } }
           },
           metadata: {
             labels: {
@@ -156,6 +158,11 @@ RSpec.describe 'Apps' do
               'space' => {
                 'data' => {
                   'guid' => space.guid
+                }
+              },
+              'current_droplet' => {
+                'data' => {
+                  'guid' => nil
                 }
               }
             },
@@ -278,6 +285,11 @@ RSpec.describe 'Apps' do
                 'data' => {
                   'guid' => space.guid
                 }
+              },
+              'current_droplet' => {
+                'data' => {
+                  'guid' => nil
+                }
               }
             },
             'created_at' => iso8601,
@@ -374,7 +386,8 @@ RSpec.describe 'Apps' do
             data: { buildpacks: [], stack: app_model1.lifecycle_data.stack }
           },
           relationships: {
-            space: { data: { guid: space.guid } }
+            space: { data: { guid: space.guid } },
+            current_droplet: { data: { guid: nil } }
           },
           metadata: {
             labels: {},
@@ -410,7 +423,8 @@ RSpec.describe 'Apps' do
             data: { buildpacks: [], stack: app_model2.lifecycle_data.stack }
           },
           relationships: {
-            space: { data: { guid: space2.guid } }
+            space: { data: { guid: space2.guid } },
+            current_droplet: { data: { guid: nil } }
           },
           metadata: {
             labels: {},
@@ -565,6 +579,11 @@ RSpec.describe 'Apps' do
                     'data' => {
                       'guid' => space.guid
                     }
+                  },
+                  'current_droplet' => {
+                    'data' => {
+                      'guid' => nil
+                    }
                   }
                 },
                 'created_at' => iso8601,
@@ -598,6 +617,11 @@ RSpec.describe 'Apps' do
                   'space' => {
                     'data' => {
                       'guid' => space.guid
+                    }
+                  },
+                  'current_droplet' => {
+                    'data' => {
+                      'guid' => nil
                     }
                   }
                 },
@@ -1284,6 +1308,7 @@ RSpec.describe 'Apps' do
       app_model.lifecycle_data.buildpacks = [buildpack.name]
       app_model.lifecycle_data.stack = stack.name
       app_model.lifecycle_data.save
+      app_model.droplet_guid = 'a-droplet-guid'
       app_model.add_process(VCAP::CloudController::ProcessModel.make(instances: 1))
       app_model.add_process(VCAP::CloudController::ProcessModel.make(instances: 2))
     end
@@ -1303,7 +1328,8 @@ RSpec.describe 'Apps' do
             data: { buildpacks: [buildpack.name], stack: app_model.lifecycle_data.stack }
           },
           relationships: {
-            space: { data: { guid: space.guid } }
+            space: { data: { guid: space.guid } },
+            current_droplet: { data: { guid: app_model.droplet_guid } }
           },
           metadata: {
             labels: {},
@@ -1368,6 +1394,11 @@ RSpec.describe 'Apps' do
                 'data' => {
                   'guid' => space.guid
                 }
+              },
+              'current_droplet' => {
+                'data' => {
+                  'guid' => app_model.droplet_guid
+                }
               }
             },
             'links' => {
@@ -1413,6 +1444,11 @@ RSpec.describe 'Apps' do
               'space' => {
                 'data' => {
                   'guid' => space.guid
+                }
+              },
+              'current_droplet' => {
+                'data' => {
+                  'guid' => app_model.droplet_guid
                 }
               }
             },
@@ -2059,6 +2095,11 @@ RSpec.describe 'Apps' do
             'data' => {
               'guid' => space.guid
             }
+          },
+          'current_droplet' => {
+            'data' => {
+              'guid' => nil
+            }
           }
         },
         'created_at' => iso8601,
@@ -2243,6 +2284,7 @@ RSpec.describe 'Apps' do
         desired_state: 'STOPPED'
       )
     end
+    let(:droplet_guid_regex) { /^[a-f0-9]{8}(-[a-f0-9]{4}){4}[a-f0-9]{8}$/ }
 
     context 'app lifecycle is buildpack' do
       let!(:droplet) do
@@ -2282,6 +2324,11 @@ RSpec.describe 'Apps' do
               'space' => {
                 'data' => {
                   'guid' => space.guid
+                }
+              },
+              'current_droplet' => {
+                'data' => {
+                  'guid' => app_model.droplet.guid
                 }
               }
             },
@@ -2617,6 +2664,11 @@ RSpec.describe 'Apps' do
               'data' => {
                 'guid' => space.guid
               }
+            },
+            'current_droplet' => {
+              'data' => {
+                'guid' => droplet_guid_regex
+              }
             }
           },
           'links' => {
@@ -2779,6 +2831,11 @@ RSpec.describe 'Apps' do
               'space' => {
                 'data' => {
                   'guid' => space.guid
+                }
+              },
+              'current_droplet' => {
+                'data' => {
+                  'guid' => droplet.guid
                 }
               }
             },
