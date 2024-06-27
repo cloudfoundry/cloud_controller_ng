@@ -1503,12 +1503,14 @@ RSpec.describe AppsV3Controller, type: :controller do
       VCAP::CloudController::BuildpackLifecycleDataModel.make(app: app_model, buildpacks: nil, stack: VCAP::CloudController::Stack.default.name)
     end
 
-    it 'returns a 202 and the app' do
+    it 'returns a 202 and a job' do
       set_current_user_as_role(role: 'space_developer', org: org, space: space, user: user)
       post :clear_buildpack_cache, params: { guid: app_model.guid }, as: :json
 
+      job = Delayed::Job.last
+
       expect(response).to have_http_status :accepted
-      expect(response['Location']).to eq("http://api2.vcap.me/v3/jobs/#{app_model.guid}")
+      expect(response['Location']).to eq("http://api2.vcap.me/v3/jobs/#{job.guid}")
 
       execute_all_jobs(expected_successes: 1, expected_failures: 0)
     end

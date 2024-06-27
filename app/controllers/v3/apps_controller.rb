@@ -232,10 +232,11 @@ class AppsV3Controller < ApplicationController
     suspended! unless permission_queryer.is_space_active?(space.id)
 
     delete_job = Jobs::V3::BuildpackCacheDelete.new(app.guid)
-    Jobs::Enqueuer.new(delete_job, queue: Jobs::Queues.generic).enqueue
-    VCAP::AppLogEmitter.emit(app.guid, "Enqueued job to delete app buildpack cache with guid #{app.guid}")
+    job = Jobs::Enqueuer.new(delete_job, queue: Jobs::Queues.generic).enqueue
 
-    head HTTP::ACCEPTED, 'Location' => url_builder.build_url(path: "/v3/jobs/#{app.guid}")
+    VCAP::AppLogEmitter.emit(app.guid, "Enqueued job to delete app buildpack cache with app guid #{app.guid}")
+
+    head HTTP::ACCEPTED, 'Location' => url_builder.build_url(path: "/v3/jobs/#{job.guid}")
   end
 
   def builds
