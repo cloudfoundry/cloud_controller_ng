@@ -468,7 +468,7 @@ RSpec.describe AppsV3Controller, type: :controller do
           {
             name: 'some-name',
             relationships: { space: { data: { guid: space.guid } } },
-            lifecycle: { type: 'cnb', data: { buildpacks: ['http://buildpack.com'], credentials: { registry: { user: 'password' } } } }
+            lifecycle: { type: 'cnb', data: { buildpacks: ['http://example.com'], credentials: { registry: { user: 'password' } } } }
           }
         end
 
@@ -479,7 +479,7 @@ RSpec.describe AppsV3Controller, type: :controller do
           lifecycle_data = response_body['lifecycle']['data']
 
           expect(response).to have_http_status :created
-          expect(lifecycle_data).to eq({ 'buildpacks' => ['http://buildpack.com'], 'stack' => 'default-stack-name', 'credentials' => '***' })
+          expect(lifecycle_data).to eq({ 'buildpacks' => ['http://example.com'], 'stack' => 'default-stack-name', 'credentials' => '***' })
         end
       end
     end
@@ -627,7 +627,7 @@ RSpec.describe AppsV3Controller, type: :controller do
         context 'for a buildpack app' do
           before do
             app_model.lifecycle_data.stack = 'some-stack-name'
-            app_model.lifecycle_data.buildpacks = ['some-buildpack-name', 'http://buildpack.com']
+            app_model.lifecycle_data.buildpacks = ['some-buildpack-name', 'http://example.com']
             app_model.lifecycle_data.save
           end
 
@@ -640,7 +640,7 @@ RSpec.describe AppsV3Controller, type: :controller do
 
             expect(app_model.name).to eq(new_name)
             expect(app_model.lifecycle_data.stack).to eq('some-stack-name')
-            expect(app_model.lifecycle_data.buildpacks).to eq(['some-buildpack-name', 'http://buildpack.com'])
+            expect(app_model.lifecycle_data.buildpacks).to eq(['some-buildpack-name', 'http://example.com'])
           end
 
           context 'when updating metadata' do
