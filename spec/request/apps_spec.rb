@@ -11,7 +11,6 @@ RSpec.describe 'Apps' do
   let(:stack) { VCAP::CloudController::Stack.make }
   let(:user_email) { Sham.email }
   let(:user_name) { 'some-username' }
-  let(:droplet_guid_regex) { /^[a-f0-9]{8}(-[a-f0-9]{4}){4}[a-f0-9]{8}$/ }
 
   describe 'POST /v3/apps' do
     let(:buildpack) { VCAP::CloudController::Buildpack.make(stack: stack.name) }
@@ -1308,7 +1307,6 @@ RSpec.describe 'Apps' do
       app_model.lifecycle_data.buildpacks = [buildpack.name]
       app_model.lifecycle_data.stack = stack.name
       app_model.lifecycle_data.save
-      app_model.droplet_guid = 'a-droplet-guid'
       app_model.add_process(VCAP::CloudController::ProcessModel.make(instances: 1))
       app_model.add_process(VCAP::CloudController::ProcessModel.make(instances: 2))
     end
@@ -2284,7 +2282,6 @@ RSpec.describe 'Apps' do
         desired_state: 'STOPPED'
       )
     end
-    let(:droplet_guid_regex) { /^[a-f0-9]{8}(-[a-f0-9]{4}){4}[a-f0-9]{8}$/ }
 
     context 'app lifecycle is buildpack' do
       let!(:droplet) do
@@ -2328,7 +2325,7 @@ RSpec.describe 'Apps' do
               },
               'current_droplet' => {
                 'data' => {
-                  'guid' => app_model.droplet.guid
+                  'guid' => droplet.guid
                 }
               }
             },
@@ -2667,7 +2664,7 @@ RSpec.describe 'Apps' do
             },
             'current_droplet' => {
               'data' => {
-                'guid' => droplet_guid_regex
+                'guid' => droplet.guid
               }
             }
           },
