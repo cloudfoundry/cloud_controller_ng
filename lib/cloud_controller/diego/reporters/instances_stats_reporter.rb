@@ -116,7 +116,7 @@ module VCAP::CloudController
         {
           time: formatted_current_time,
           cpu: 0,
-          cpu_entitlement: nil,
+          cpu_entitlement: 0,
           mem: 0,
           disk: 0,
           log_rate: 0
