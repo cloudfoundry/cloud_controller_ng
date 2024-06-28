@@ -52,8 +52,20 @@ Example Cloud Native Buildpacks lifecycle
 {
   "type": "cnb",
   "data": {
-    "buildpacks": ["docker://example.org/java-buildpack:latest"],
-    "stack": "cflinuxfs4"
+        "buildpacks": [
+            "docker://example.org/java-buildpack:latest"
+            "docker://second-example.org/logging-buildpack:latest"
+        ],
+        "stack": "cflinuxfs4",
+        "credentials": {
+            "example.org": {
+                "username": "user",
+                "password": "****"
+            },
+            "second-example.org": {
+                "token": "****"
+            },
+        }
   }
 }
 ```
@@ -68,6 +80,7 @@ Name | Type | Description
 ---- | ---- | -----------
 **type** | _string_ | `cnb`
 **data.buildpacks** | _list of strings_ | A list of URLs with either `docker://` or `http(s)://` scheme, pointing to the Cloud Native Buildpack OCI image. <br/>When the scheme is `http(s)://`, an OCI tarball is expected to be present at the specified location.
+**data.credentials** | _object_ | Credentials used to download the configured buildpacks. This can either contain username/password  or a token.
 **data.stack** | _string_ | The root filesystem to use with the buildpack, for example `cflinuxfs4`
 
 ### Docker lifecycle
