@@ -276,7 +276,7 @@ namespace :db do
 
   def logging_output
     VCAP::CloudController::StenoConfigurer.new(RakeConfig.config.get(:logging)).configure do |steno_config_hash|
-      steno_config_hash[:sinks] << Steno::Sink::IO.new($stdout)
+      steno_config_hash[:sinks] << Steno::Sink::IO.new($stdout) unless Rails.env.test?
     end
   end
 
