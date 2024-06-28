@@ -29,7 +29,7 @@ module VCAP::CloudController
         Fog.mock!
       end
 
-      subject(:job) { BuildpackCacheDelete.new(app_guid) }
+      subject(:job) { BuildpackCacheDelete.new(AppModel, app_guid) }
 
       it { is_expected.to be_a_valid_job }
 
