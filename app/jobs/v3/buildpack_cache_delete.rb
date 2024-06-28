@@ -2,10 +2,12 @@ module VCAP::CloudController
   module Jobs
     module V3
       class BuildpackCacheDelete < VCAP::CloudController::Jobs::CCJob
-        attr_accessor :app_guid
+        attr_accessor :app_guid, :resource_guid, :resource_type, :model_class
 
-        def initialize(app_guid)
+        def initialize(model_class, app_guid, resource_type=nil)
+          @model_class = model_class
           @app_guid = app_guid
+          @resource_type = resource_type || model_class.name.demodulize.gsub('Model', '').underscore
         end
 
         def perform
@@ -22,6 +24,10 @@ module VCAP::CloudController
 
         def max_attempts
           3
+        end
+
+        def display_name
+          "#{resource_type}.clear_buildpack_cache"
         end
       end
     end

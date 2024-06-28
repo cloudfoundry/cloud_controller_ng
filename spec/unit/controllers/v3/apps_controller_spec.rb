@@ -1507,7 +1507,9 @@ RSpec.describe AppsV3Controller, type: :controller do
       set_current_user_as_role(role: 'space_developer', org: org, space: space, user: user)
       post :clear_buildpack_cache, params: { guid: app_model.guid }, as: :json
 
-      job = Delayed::Job.last
+      job = VCAP::CloudController::PollableJobModel.last
+      enqueued_job = Delayed::Job.last
+      expect(job.delayed_job_guid).to eq(enqueued_job.guid)
 
       expect(response).to have_http_status :accepted
       expect(response['Location']).to eq("http://api2.vcap.me/v3/jobs/#{job.guid}")

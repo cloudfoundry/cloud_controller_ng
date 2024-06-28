@@ -231,8 +231,8 @@ class AppsV3Controller < ApplicationController
     unauthorized! unless permission_queryer.can_delete_buildpack_cache?(space.id)
     suspended! unless permission_queryer.is_space_active?(space.id)
 
-    delete_job = Jobs::V3::BuildpackCacheDelete.new(app.guid)
-    job = Jobs::Enqueuer.new(delete_job, queue: Jobs::Queues.generic).enqueue
+    delete_job = Jobs::V3::BuildpackCacheDelete.new(AppModel, app.guid)
+    job = Jobs::Enqueuer.new(delete_job, queue: Jobs::Queues.generic).enqueue_pollable
 
     VCAP::AppLogEmitter.emit(app.guid, "Enqueued job to delete app buildpack cache with app guid #{app.guid}")
 
