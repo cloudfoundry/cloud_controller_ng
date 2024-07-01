@@ -8,7 +8,7 @@ module VCAP::CloudController
       def decorate(hash, resources)
         hash[:included] ||= {}
         space_guids = resources.map(&:space_guid).uniq
-        spaces_query = Space.where(guid: space_guids).order(:created_at).
+        spaces_query = Space.where(guid: space_guids).order(:created_at, :guid).
                        eager(Presenters::V3::SpacePresenter.associated_resources)
         spaces_query = with_readable_space_guids(spaces_query)
 

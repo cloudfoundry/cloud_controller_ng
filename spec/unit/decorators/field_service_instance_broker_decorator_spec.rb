@@ -5,15 +5,16 @@ require 'field_decorator_spec_shared_examples'
 module VCAP::CloudController
   RSpec.describe FieldServiceInstanceBrokerDecorator do
     describe '.decorate' do
-      let(:broker) { ServiceBroker.make }
-      let(:offering1) { Service.make(service_broker: broker) }
+      let(:broker1) { ServiceBroker.make(created_at: Time.now.utc - 1.second) }
+
+      let(:offering1) { Service.make(service_broker: broker1) }
       let(:offering2) { Service.make }
 
       let(:plan1) { ServicePlan.make(service: offering1) }
       let(:plan2) { ServicePlan.make(service: offering2) }
 
-      let!(:service_instance_1) { ManagedServiceInstance.make(service_plan: plan1) }
-      let!(:service_instance_2) { ManagedServiceInstance.make(service_plan: plan2) }
+      let(:service_instance_1) { ManagedServiceInstance.make(service_plan: plan1) }
+      let(:service_instance_2) { ManagedServiceInstance.make(service_plan: plan2) }
 
       it 'decorated the given hash with broker name from service instances' do
         undecorated_hash = { foo: 'bar', included: { monkeys: %w[zach greg] } }
@@ -60,9 +61,9 @@ module VCAP::CloudController
       end
 
       context 'when instances are from the same broker' do
-        let(:offering3) { Service.make(service_broker: broker) }
+        let(:offering3) { Service.make(service_broker: broker1) }
         let(:plan3) { ServicePlan.make(service: offering3) }
-        let!(:service_instance_3) { ManagedServiceInstance.make(service_plan: plan3) }
+        let(:service_instance_3) { ManagedServiceInstance.make(service_plan: plan3) }
 
         it 'does not duplicate the broker' do
           decorator = described_class.new({ 'service_plan.service_offering.service_broker': ['name'] })
@@ -72,7 +73,7 @@ module VCAP::CloudController
       end
 
       context 'for user provided service instances' do
-        let!(:service_instance_3) { UserProvidedServiceInstance.make }
+        let(:service_instance_3) { UserProvidedServiceInstance.make }
 
         it 'returns the unchanged hash' do
           undecorated_hash = { foo: 'bar' }

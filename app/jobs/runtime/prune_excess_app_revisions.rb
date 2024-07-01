@@ -16,7 +16,7 @@ module VCAP::CloudController
             revision_dataset = RevisionModel.where(app_guid:)
             next if revision_dataset.count <= max_retained_revisions_per_app
 
-            revisions_to_keep = revision_dataset.order(Sequel.desc(:created_at)).
+            revisions_to_keep = revision_dataset.order(Sequel.desc(:created_at), Sequel.desc(:id)).
                                 limit(max_retained_revisions_per_app).
                                 select(:id)
 

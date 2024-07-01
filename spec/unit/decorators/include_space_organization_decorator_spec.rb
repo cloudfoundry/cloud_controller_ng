@@ -3,18 +3,18 @@ require 'spec_helper'
 module VCAP::CloudController
   RSpec.describe IncludeSpaceOrganizationDecorator do
     subject(:decorator) { IncludeSpaceOrganizationDecorator }
-    let(:organization1) { Organization.make(name: 'first-organization') }
+    let(:organization1) { Organization.make(name: 'first-organization', created_at: Time.now.utc - 1.second) }
     let(:organization2) { Organization.make(name: 'second-organization') }
     let(:space1) { Space.make(name: 'first-space', organization: organization1) }
     let(:space2) { Space.make(name: 'second-space', organization: organization2) }
     let(:spaces) { [space1, space2] }
 
-    it 'decorates the given hash with organizations from spaces' do
+    it 'decorates the given hash with organizations from spaces in the correct order' do
       undecorated_hash = { foo: 'bar' }
       hash = subject.decorate(undecorated_hash, spaces)
       expect(hash[:foo]).to eq('bar')
-      expect(hash[:included][:organizations]).to contain_exactly(Presenters::V3::OrganizationPresenter.new(organization1).to_hash,
-                                                                 Presenters::V3::OrganizationPresenter.new(organization2).to_hash)
+      expect(hash[:included][:organizations]).to eq([Presenters::V3::OrganizationPresenter.new(organization1).to_hash,
+                                                     Presenters::V3::OrganizationPresenter.new(organization2).to_hash])
     end
 
     it 'does not overwrite other included fields' do

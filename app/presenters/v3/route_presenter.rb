@@ -1,5 +1,5 @@
 require 'presenters/v3/base_presenter'
-require 'presenters/v3/route_destination_presenter'
+require 'presenters/v3/route_destinations_presenter'
 require 'presenters/mixins/metadata_presentation_helpers'
 require 'presenters/helpers/censorship'
 
