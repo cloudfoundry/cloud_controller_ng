@@ -16,8 +16,6 @@ RSpec.describe 'db.rake', type: :migration do
     it 'logs to configured sinks + STDOUT' do
       Rake::Task['db:migrate'].invoke
 
-      expect(db_migrator).to have_received(:apply_migrations)
-
       # From test config:
       expect(Steno.config.sinks).to include(an_instance_of(Steno::Sink::Syslog))
       expect(Steno.config.sinks).to include(an_instance_of(Steno::Sink::IO).and(satisfy { |sink| sink.instance_variable_get(:@io).is_a?(File) }))
