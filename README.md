@@ -110,19 +110,19 @@ cf login -u ccadmin -p secret
 
 When the Docker containers have been set up as described above, you can start the cloud controller locally. Start the main process with:
 ```
-./bin/cloud_controller -c ./tmp/cloud_controller.yml
+DB_CONNECTION_STRING=mysql2://root:supersecret@127.0.0.1:3306/ccdb ./bin/cloud_controller -c ./tmp/cloud_controller.yml
 ```
 Then start a local worker:
 ```
-CLOUD_CONTROLLER_NG_CONFIG=./tmp/cloud_controller.yml bundle exec rake jobs:local
+DB_CONNECTION_STRING=mysql2://root:supersecret@127.0.0.1:3306/ccdb CLOUD_CONTROLLER_NG_CONFIG=./tmp/cloud_controller.yml bundle exec rake jobs:local
 ```
 Start a delayed_job worker:
 ```
-CLOUD_CONTROLLER_NG_CONFIG=./tmp/cloud_controller.yml bundle exec rake jobs:generic
+DB_CONNECTION_STRING=mysql2://root:supersecret@127.0.0.1:3306/ccdb CLOUD_CONTROLLER_NG_CONFIG=./tmp/cloud_controller.yml bundle exec rake jobs:generic
 ```
 And finally start the scheduler:
 ```
-CLOUD_CONTROLLER_NG_CONFIG=./tmp/cloud_controller.yml bundle exec rake clock:start
+DB_CONNECTION_STRING=mysql2://root:supersecret@127.0.0.1:3306/ccdb CLOUD_CONTROLLER_NG_CONFIG=./tmp/cloud_controller.yml bundle exec rake clock:start
 ```
 
 Known limitations:
