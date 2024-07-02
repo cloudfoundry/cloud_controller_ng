@@ -9,6 +9,7 @@
     <envs>
       <env name="DB" value="mysql" />
       <env name="DB_CONNECTION_STRING" value="mysql2://root:supersecret@127.0.0.1:3306/ccdb" />
+      <env name="CLOUD_CONTROLLER_NG_CONFIG" value="tmp/cloud_controller.yml" />
       <env name="DISABLE_SPRING" value="true" />
     </envs>
     <EXTENSION ID="BundlerRunConfigurationExtension" BUNDLE_MODE="AUTO" bundleExecEnabled="true" />
