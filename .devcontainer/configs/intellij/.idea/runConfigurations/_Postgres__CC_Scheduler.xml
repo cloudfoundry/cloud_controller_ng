@@ -1,5 +1,5 @@
 <component name="ProjectRunConfigurationManager">
-  <configuration default="false" name="[Mariadb] CC Local Worker" type="RakeRunConfigurationType" factoryName="Rake">
+  <configuration default="false" name="[Postgres] CC Scheduler" type="RakeRunConfigurationType" factoryName="Rake">
     <module name="cloud_controller_ng" />
     <RAKE_RUN_CONFIG_SETTINGS_ID NAME="RUBY_ARGS" VALUE="" />
     <RAKE_RUN_CONFIG_SETTINGS_ID NAME="WORK DIR" VALUE="$PROJECT_DIR$" />
@@ -7,8 +7,8 @@
     <RAKE_RUN_CONFIG_SETTINGS_ID NAME="ALTERN_SDK_NAME" VALUE="" />
     <RAKE_RUN_CONFIG_SETTINGS_ID NAME="myPassParentEnvs" VALUE="true" />
     <envs>
-      <env name="DB" value="mysql" />
-      <env name="DB_CONNECTION_STRING" value="mysql2://root:supersecret@127.0.0.1:3306/ccdb" />
+      <env name="DB" value="postgres" />
+      <env name="DB_CONNECTION_STRING" value="postgres://postgres:supersecret@localhost:5432/ccdb" />
       <env name="CLOUD_CONTROLLER_NG_CONFIG" value="tmp/cloud_controller.yml" />
       <env name="DISABLE_SPRING" value="true" />
     </envs>
@@ -23,7 +23,7 @@
       <option name="DIRENV_TRUSTED" value="false" />
     </EXTENSION>
     <EXTENSION ID="org.jetbrains.plugins.ruby.rails.run.RailsRunConfigurationExtension" SCRATCH_USE_RAILS_RUNNER="false" />
-    <RAKE_RUN_CONFIG_SETTINGS_ID NAME="RAKE_TASK_NAME" VALUE="jobs:local" />
+    <RAKE_RUN_CONFIG_SETTINGS_ID NAME="RAKE_TASK_NAME" VALUE="clock:start" />
     <RAKE_RUN_CONFIG_SETTINGS_ID NAME="RAKE_TASK_ARGS" VALUE="" />
     <RAKE_RUN_CONFIG_SETTINGS_ID NAME="RAKE_TASK_ATTACHED_TEST_FRAMEWORKS" VALUE="" />
     <RAKE_RUN_CONFIG_SETTINGS_ID NAME="RAKE_TASK_OPTION_TRACE" VALUE="false" />

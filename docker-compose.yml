@@ -56,6 +56,39 @@ services:
       - cc-net
     restart: unless-stopped
 
+  diego-api:
+    container_name: diego-api
+    build:
+      context: .devcontainer/images/bbs
+      dockerfile: Dockerfile
+    volumes:
+      - .devcontainer/images/bbs/bbs.json:/bbs/bbs.json:ro
+      - .devcontainer/images/bbs/locket.json:/bbs/locket.json:ro
+      - ./spec/fixtures/certs:/bbs/certs:ro
+    ports:
+      - "8889:8889"
+    networks:
+      - cc-net
+    restart: unless-stopped
+
+  mockserver:
+    container_name: mockserver
+    build:
+      context: .devcontainer/images/mockserver
+      dockerfile: Dockerfile
+    ports:
+      - "1234:1234"
+    environment:
+      DIEGO_URL: https://diego-api:8889/
+      DIEGO_CA: /mock/certs/bbs_ca.crt
+      DIEGO_CLIENT_CERT: /mock/certs/bbs_client.crt
+      DIEGO_CLIENT_KEY: /mock/certs/bbs_client.key
+    volumes:
+      - ./spec/fixtures/certs:/mock/certs:ro
+    networks:
+      - cc-net
+    restart: unless-stopped
+
   # Minio S3 Blobstore
   minio:
     container_name: minio
