@@ -59,7 +59,8 @@ RSpec.describe 'Apps' do
             data: { buildpacks: [buildpack.name], stack: stack.name }
           },
           relationships: {
-            space: { data: { guid: space.guid } }
+            space: { data: { guid: space.guid } },
+            current_droplet: { data: { guid: nil } }
           },
           metadata: {
             labels: {
@@ -156,6 +157,11 @@ RSpec.describe 'Apps' do
               'space' => {
                 'data' => {
                   'guid' => space.guid
+                }
+              },
+              'current_droplet' => {
+                'data' => {
+                  'guid' => nil
                 }
               }
             },
@@ -278,6 +284,11 @@ RSpec.describe 'Apps' do
                 'data' => {
                   'guid' => space.guid
                 }
+              },
+              'current_droplet' => {
+                'data' => {
+                  'guid' => nil
+                }
               }
             },
             'created_at' => iso8601,
@@ -374,7 +385,8 @@ RSpec.describe 'Apps' do
             data: { buildpacks: [], stack: app_model1.lifecycle_data.stack }
           },
           relationships: {
-            space: { data: { guid: space.guid } }
+            space: { data: { guid: space.guid } },
+            current_droplet: { data: { guid: nil } }
           },
           metadata: {
             labels: {},
@@ -410,7 +422,8 @@ RSpec.describe 'Apps' do
             data: { buildpacks: [], stack: app_model2.lifecycle_data.stack }
           },
           relationships: {
-            space: { data: { guid: space2.guid } }
+            space: { data: { guid: space2.guid } },
+            current_droplet: { data: { guid: nil } }
           },
           metadata: {
             labels: {},
@@ -565,6 +578,11 @@ RSpec.describe 'Apps' do
                     'data' => {
                       'guid' => space.guid
                     }
+                  },
+                  'current_droplet' => {
+                    'data' => {
+                      'guid' => nil
+                    }
                   }
                 },
                 'created_at' => iso8601,
@@ -598,6 +616,11 @@ RSpec.describe 'Apps' do
                   'space' => {
                     'data' => {
                       'guid' => space.guid
+                    }
+                  },
+                  'current_droplet' => {
+                    'data' => {
+                      'guid' => nil
                     }
                   }
                 },
@@ -1303,7 +1326,8 @@ RSpec.describe 'Apps' do
             data: { buildpacks: [buildpack.name], stack: app_model.lifecycle_data.stack }
           },
           relationships: {
-            space: { data: { guid: space.guid } }
+            space: { data: { guid: space.guid } },
+            current_droplet: { data: { guid: app_model.droplet_guid } }
           },
           metadata: {
             labels: {},
@@ -1368,6 +1392,11 @@ RSpec.describe 'Apps' do
                 'data' => {
                   'guid' => space.guid
                 }
+              },
+              'current_droplet' => {
+                'data' => {
+                  'guid' => app_model.droplet_guid
+                }
               }
             },
             'links' => {
@@ -1413,6 +1442,11 @@ RSpec.describe 'Apps' do
               'space' => {
                 'data' => {
                   'guid' => space.guid
+                }
+              },
+              'current_droplet' => {
+                'data' => {
+                  'guid' => app_model.droplet_guid
                 }
               }
             },
@@ -2059,6 +2093,11 @@ RSpec.describe 'Apps' do
             'data' => {
               'guid' => space.guid
             }
+          },
+          'current_droplet' => {
+            'data' => {
+              'guid' => nil
+            }
           }
         },
         'created_at' => iso8601,
@@ -2282,6 +2321,11 @@ RSpec.describe 'Apps' do
               'space' => {
                 'data' => {
                   'guid' => space.guid
+                }
+              },
+              'current_droplet' => {
+                'data' => {
+                  'guid' => droplet.guid
                 }
               }
             },
@@ -2617,6 +2661,11 @@ RSpec.describe 'Apps' do
               'data' => {
                 'guid' => space.guid
               }
+            },
+            'current_droplet' => {
+              'data' => {
+                'guid' => droplet.guid
+              }
             }
           },
           'links' => {
@@ -2779,6 +2828,11 @@ RSpec.describe 'Apps' do
               'space' => {
                 'data' => {
                   'guid' => space.guid
+                }
+              },
+              'current_droplet' => {
+                'data' => {
+                  'guid' => droplet.guid
                 }
               }
             },

@@ -31,6 +31,11 @@ module VCAP::CloudController
                 data: {
                   guid: app.space_guid
                 }
+              },
+              current_droplet: {
+                data: {
+                  guid: app.droplet_guid
+                }
               }
             },
             metadata: {
