@@ -82,6 +82,7 @@ RSpec.describe 'Apps' do
             tasks: { href: %r{#{link_prefix}/v3/apps/#{UUID_REGEX}/tasks} },
             start: { href: %r{#{link_prefix}/v3/apps/#{UUID_REGEX}/actions/start}, method: 'POST' },
             stop: { href: %r{#{link_prefix}/v3/apps/#{UUID_REGEX}/actions/stop}, method: 'POST' },
+            clear_buildpack_cache: { href: %r{#{link_prefix}/v3/apps/#{UUID_REGEX}/actions/clear_buildpack_cache}, method: 'POST' },
             revisions: { href: %r{#{link_prefix}/v3/apps/#{UUID_REGEX}/revisions} },
             deployed_revisions: { href: %r{#{link_prefix}/v3/apps/#{UUID_REGEX}/revisions/deployed} },
             features: { href: %r{#{link_prefix}/v3/apps/#{UUID_REGEX}/features} }
@@ -182,6 +183,7 @@ RSpec.describe 'Apps' do
               'tasks' => { 'href' => "#{link_prefix}/v3/apps/#{app_guid}/tasks" },
               'start' => { 'href' => "#{link_prefix}/v3/apps/#{app_guid}/actions/start", 'method' => 'POST' },
               'stop' => { 'href' => "#{link_prefix}/v3/apps/#{app_guid}/actions/stop", 'method' => 'POST' },
+              'clear_buildpack_cache' => { 'href' => "#{link_prefix}/v3/apps/#{app_guid}/actions/clear_buildpack_cache", 'method' => 'POST' },
               'revisions' => { 'href' => "#{link_prefix}/v3/apps/#{app_guid}/revisions" },
               'deployed_revisions' => { 'href' => "#{link_prefix}/v3/apps/#{app_guid}/revisions/deployed" },
               'features' => { 'href' => "#{link_prefix}/v3/apps/#{app_guid}/features" }
@@ -294,6 +296,7 @@ RSpec.describe 'Apps' do
               'tasks' => { 'href' => "#{link_prefix}/v3/apps/#{created_app.guid}/tasks" },
               'start' => { 'href' => "#{link_prefix}/v3/apps/#{created_app.guid}/actions/start", 'method' => 'POST' },
               'stop' => { 'href' => "#{link_prefix}/v3/apps/#{created_app.guid}/actions/stop", 'method' => 'POST' },
+              'clear_buildpack_cache' => { 'href' => "#{link_prefix}/v3/apps/#{created_app.guid}/actions/clear_buildpack_cache", 'method' => 'POST' },
               'revisions' => { 'href' => "#{link_prefix}/v3/apps/#{created_app.guid}/revisions" },
               'deployed_revisions' => { 'href' => "#{link_prefix}/v3/apps/#{created_app.guid}/revisions/deployed" },
               'features' => { 'href' => "#{link_prefix}/v3/apps/#{created_app.guid}/features" }
@@ -391,6 +394,7 @@ RSpec.describe 'Apps' do
             tasks: { href: "#{link_prefix}/v3/apps/app1_guid/tasks" },
             start: { href: "#{link_prefix}/v3/apps/app1_guid/actions/start", method: 'POST' },
             stop: { href: "#{link_prefix}/v3/apps/app1_guid/actions/stop", method: 'POST' },
+            clear_buildpack_cache: { href: "#{link_prefix}/v3/apps/app1_guid/actions/clear_buildpack_cache", method: 'POST' },
             revisions: { href: "#{link_prefix}/v3/apps/app1_guid/revisions" },
             deployed_revisions: { href: "#{link_prefix}/v3/apps/app1_guid/revisions/deployed" },
             features: { href: "#{link_prefix}/v3/apps/app1_guid/features" }
@@ -427,6 +431,7 @@ RSpec.describe 'Apps' do
             tasks: { href: "#{link_prefix}/v3/apps/app2_guid/tasks" },
             start: { href: "#{link_prefix}/v3/apps/app2_guid/actions/start", method: 'POST' },
             stop: { href: "#{link_prefix}/v3/apps/app2_guid/actions/stop", method: 'POST' },
+            clear_buildpack_cache: { href: "#{link_prefix}/v3/apps/app2_guid/actions/clear_buildpack_cache", method: 'POST' },
             revisions: { href: "#{link_prefix}/v3/apps/app2_guid/revisions" },
             deployed_revisions: { href: "#{link_prefix}/v3/apps/app2_guid/revisions/deployed" },
             features: { href: "#{link_prefix}/v3/apps/app2_guid/features" }
@@ -581,6 +586,7 @@ RSpec.describe 'Apps' do
                   'tasks' => { 'href' => "#{link_prefix}/v3/apps/#{app_model1.guid}/tasks" },
                   'start' => { 'href' => "#{link_prefix}/v3/apps/#{app_model1.guid}/actions/start", 'method' => 'POST' },
                   'stop' => { 'href' => "#{link_prefix}/v3/apps/#{app_model1.guid}/actions/stop", 'method' => 'POST' },
+                  'clear_buildpack_cache' => { 'href' => "#{link_prefix}/v3/apps/#{app_model1.guid}/actions/clear_buildpack_cache", 'method' => 'POST' },
                   'revisions' => { 'href' => "#{link_prefix}/v3/apps/#{app_model1.guid}/revisions" },
                   'deployed_revisions' => { 'href' => "#{link_prefix}/v3/apps/#{app_model1.guid}/revisions/deployed" },
                   'features' => { 'href' => "#{link_prefix}/v3/apps/#{app_model1.guid}/features" }
@@ -615,6 +621,7 @@ RSpec.describe 'Apps' do
                   'tasks' => { 'href' => "#{link_prefix}/v3/apps/#{app_model2.guid}/tasks" },
                   'start' => { 'href' => "#{link_prefix}/v3/apps/#{app_model2.guid}/actions/start", 'method' => 'POST' },
                   'stop' => { 'href' => "#{link_prefix}/v3/apps/#{app_model2.guid}/actions/stop", 'method' => 'POST' },
+                  'clear_buildpack_cache' => { 'href' => "#{link_prefix}/v3/apps/#{app_model2.guid}/actions/clear_buildpack_cache", 'method' => 'POST' },
                   'revisions' => { 'href' => "#{link_prefix}/v3/apps/#{app_model2.guid}/revisions" },
                   'deployed_revisions' => { 'href' => "#{link_prefix}/v3/apps/#{app_model2.guid}/revisions/deployed" },
                   'features' => { 'href' => "#{link_prefix}/v3/apps/#{app_model2.guid}/features" }
@@ -1320,6 +1327,7 @@ RSpec.describe 'Apps' do
             tasks: { href: "#{link_prefix}/v3/apps/app1_guid/tasks" },
             start: { href: "#{link_prefix}/v3/apps/app1_guid/actions/start", method: 'POST' },
             stop: { href: "#{link_prefix}/v3/apps/app1_guid/actions/stop", method: 'POST' },
+            clear_buildpack_cache: { href: "#{link_prefix}/v3/apps/app1_guid/actions/clear_buildpack_cache", method: 'POST' },
             revisions: { href: "#{link_prefix}/v3/apps/app1_guid/revisions" },
             deployed_revisions: { href: "#{link_prefix}/v3/apps/app1_guid/revisions/deployed" },
             features: { href: "#{link_prefix}/v3/apps/app1_guid/features" }
@@ -1381,6 +1389,7 @@ RSpec.describe 'Apps' do
               'tasks' => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}/tasks" },
               'start' => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}/actions/start", 'method' => 'POST' },
               'stop' => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}/actions/stop", 'method' => 'POST' },
+              'clear_buildpack_cache' => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}/actions/clear_buildpack_cache", 'method' => 'POST' },
               'revisions' => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}/revisions" },
               'deployed_revisions' => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}/revisions/deployed" },
               'features' => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}/features" }
@@ -1427,6 +1436,7 @@ RSpec.describe 'Apps' do
               'tasks' => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}/tasks" },
               'start' => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}/actions/start", 'method' => 'POST' },
               'stop' => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}/actions/stop", 'method' => 'POST' },
+              'clear_buildpack_cache' => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}/actions/clear_buildpack_cache", 'method' => 'POST' },
               'revisions' => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}/revisions" },
               'deployed_revisions' => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}/revisions/deployed" },
               'features' => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}/features" }
@@ -2084,6 +2094,7 @@ RSpec.describe 'Apps' do
           'tasks' => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}/tasks" },
           'start' => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}/actions/start", 'method' => 'POST' },
           'stop' => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}/actions/stop", 'method' => 'POST' },
+          'clear_buildpack_cache' => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}/actions/clear_buildpack_cache", 'method' => 'POST' },
           'revisions' => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}/revisions" },
           'deployed_revisions' => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}/revisions/deployed" },
           'features' => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}/features" }
@@ -2296,6 +2307,7 @@ RSpec.describe 'Apps' do
               'tasks' => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}/tasks" },
               'start' => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}/actions/start", 'method' => 'POST' },
               'stop' => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}/actions/stop", 'method' => 'POST' },
+              'clear_buildpack_cache' => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}/actions/clear_buildpack_cache", 'method' => 'POST' },
               'revisions' => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}/revisions" },
               'deployed_revisions' => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}/revisions/deployed" },
               'features' => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}/features" }
@@ -2630,6 +2642,7 @@ RSpec.describe 'Apps' do
             'tasks' => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}/tasks" },
             'start' => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}/actions/start", 'method' => 'POST' },
             'stop' => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}/actions/stop", 'method' => 'POST' },
+            'clear_buildpack_cache' => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}/actions/clear_buildpack_cache", 'method' => 'POST' },
             'revisions' => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}/revisions" },
             'deployed_revisions' => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}/revisions/deployed" },
             'features' => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}/features" }
@@ -2793,6 +2806,7 @@ RSpec.describe 'Apps' do
               'tasks' => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}/tasks" },
               'start' => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}/actions/start", 'method' => 'POST' },
               'stop' => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}/actions/stop", 'method' => 'POST' },
+              'clear_buildpack_cache' => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}/actions/clear_buildpack_cache", 'method' => 'POST' },
               'revisions' => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}/revisions" },
               'deployed_revisions' => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}/revisions/deployed" },
               'features' => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}/features" }

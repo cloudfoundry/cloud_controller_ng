@@ -95,7 +95,7 @@ module VCAP::CloudController
     end
 
     def delete_buildpack_cache(app)
-      delete_job = Jobs::V3::BuildpackCacheDelete.new(app.guid)
+      delete_job = Jobs::V3::BuildpackCacheDelete.new(AppModel, app.guid)
       Jobs::Enqueuer.new(delete_job, queue: Jobs::Queues.generic).enqueue
     end
 

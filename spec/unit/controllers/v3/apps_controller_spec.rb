@@ -1552,6 +1552,113 @@ RSpec.describe AppsV3Controller, type: :controller do
     end
   end
 
+  describe '#clear_buildpack_cache' do
+    let(:app_model) { VCAP::CloudController::AppModel.make(droplet_guid: droplet.guid, desired_state: 'STARTED') }
+    let(:droplet) { VCAP::CloudController::DropletModel.make(state: VCAP::CloudController::DropletModel::STAGED_STATE) }
+    let(:space) { app_model.space }
+    let(:org) { space.organization }
+    let(:user) { VCAP::CloudController::User.make }
+
+    before do
+      set_current_user(user)
+      allow_user_read_access_for(user, spaces: [space])
+      allow_user_write_access(user, space:)
+      VCAP::CloudController::BuildpackLifecycleDataModel.make(app: app_model, buildpacks: nil, stack: VCAP::CloudController::Stack.default.name)
+    end
+
+    it 'returns a 202 and a job' do
+      set_current_user_as_role(role: 'space_developer', org: org, space: space, user: user)
+      post :clear_buildpack_cache, params: { guid: app_model.guid }, as: :json
+
+      job = VCAP::CloudController::PollableJobModel.last
+      enqueued_job = Delayed::Job.last
+      expect(job.delayed_job_guid).to eq(enqueued_job.guid)
+
+      expect(response).to have_http_status :accepted
+      expect(response['Location']).to eq("http://api2.vcap.me/v3/jobs/#{job.guid}")
+
+      execute_all_jobs(expected_successes: 1, expected_failures: 0)
+    end
+
+    context 'when the app does not exist' do
+      it 'raises an API 404 error' do
+        post :clear_buildpack_cache, params: { guid: 'blah' }, as: :json
+
+        expect(response).to have_http_status :not_found
+        expect(response.body).to include 'ResourceNotFound'
+      end
+    end
+
+    context 'permissions' do
+      describe 'authorization' do
+        role_to_expected_http_response = {
+          'admin' => 202,
+          'admin_read_only' => 403,
+          'global_auditor' => 403,
+          'space_developer' => 202,
+          'space_supporter' => 202,
+          'space_manager' => 403,
+          'space_auditor' => 403,
+          'org_manager' => 403,
+          'org_auditor' => 403,
+          'org_billing_manager' => 403
+        }.freeze
+
+        role_to_expected_http_response.each do |role, expected_return_value|
+          context "as an #{role}" do
+            it "returns #{expected_return_value}" do
+              set_current_user_as_role(role:, org:, space:, user:)
+
+              post :clear_buildpack_cache, params: { guid: app_model.guid }, as: :json
+
+              expect(response.status).to eq(expected_return_value), "role #{role}: expected  #{expected_return_value}, got: #{response.status}"
+            end
+          end
+        end
+      end
+
+      context 'when the user does not have the write scope' do
+        before do
+          set_current_user(VCAP::CloudController::User.make, scopes: ['cloud_controller.read'])
+        end
+
+        it 'raises an ApiError with a 403 code' do
+          post :clear_buildpack_cache, params: { guid: app_model.guid }, as: :json
+
+          expect(response).to have_http_status :forbidden
+          expect(response.body).to include 'NotAuthorized'
+        end
+      end
+
+      context 'when the user cannot read the app' do
+        before do
+          disallow_user_read_access(user, space:)
+        end
+
+        it 'returns a 404 ResourceNotFound error' do
+          post :clear_buildpack_cache, params: { guid: app_model.guid }, as: :json
+
+          expect(response).to have_http_status :not_found
+          expect(response.body).to include 'ResourceNotFound'
+        end
+      end
+
+      context 'when the user can read but cannot write to the app' do
+        before do
+          allow_user_read_access_for(user, spaces: [space])
+          disallow_user_write_access(user, space:)
+        end
+
+        it 'raises ApiError NotAuthorized' do
+          post :clear_buildpack_cache, params: { guid: app_model.guid }, as: :json
+
+          expect(response).to have_http_status :forbidden
+          expect(response.body).to include 'NotAuthorized'
+        end
+      end
+    end
+  end
+
   describe '#show_env' do
     let(:app_model) { VCAP::CloudController::AppModel.make(environment_variables: { meep: 'moop', beep: 'boop' }) }
     let(:space) { app_model.space }

@@ -81,6 +81,7 @@ includes:
   - resources/apps/start
   - resources/apps/stop
   - resources/apps/restart
+  - resources/apps/clear_buildpack_cache
   - resources/apps/update_environment_variables
   - resources/app_features/header
   - resources/app_features/object

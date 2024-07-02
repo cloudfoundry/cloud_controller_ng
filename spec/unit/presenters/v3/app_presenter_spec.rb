@@ -35,6 +35,7 @@ module VCAP::CloudController::Presenters::V3
           tasks: { href: "#{link_prefix}/v3/apps/#{app.guid}/tasks" },
           start: { href: "#{link_prefix}/v3/apps/#{app.guid}/actions/start", method: 'POST' },
           stop: { href: "#{link_prefix}/v3/apps/#{app.guid}/actions/stop", method: 'POST' },
+          clear_buildpack_cache: { href: "#{link_prefix}/v3/apps/#{app.guid}/actions/clear_buildpack_cache", method: 'POST' },
           environment_variables: { href: "#{link_prefix}/v3/apps/#{app.guid}/environment_variables" },
           revisions: { href: "#{link_prefix}/v3/apps/#{app.guid}/revisions" },
           deployed_revisions: { href: "#{link_prefix}/v3/apps/#{app.guid}/revisions/deployed" },
