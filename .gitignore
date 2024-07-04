@@ -28,6 +28,7 @@ test.out
 !/.devcontainer/**/*
 
 #DOCS
+docs/v2/index.html
 
 docs/v3/*.gem
 docs/v3/*.rbc
