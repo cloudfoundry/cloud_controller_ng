@@ -30,6 +30,9 @@ jobs:
       - uses: ./.github/workflows/composite/setup
         with:
           WORKING_DIRECTORY: docs/v3
+      - name: Render V2 docs
+        working-directory: docs/v2
+        run: ./render.sh
       - name: Run docs tests
         run: |
           bundle config set --local without 'development'
