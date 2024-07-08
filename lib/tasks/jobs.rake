@@ -1,4 +1,5 @@
 require 'delayed_job/quit_trap'
+require 'delayed_job/threaded_worker'
 
 namespace :jobs do
   desc 'Clear the delayed_job queue.'
@@ -60,7 +61,7 @@ namespace :jobs do
         max_priority: ENV.fetch('MAX_PRIORITY', nil),
         queues: options.fetch(:queues),
         worker_name: options[:name],
-        quiet: true
+        quiet: false
       }
     end
 
@@ -76,7 +77,11 @@ namespace :jobs do
       Delayed::Worker.max_attempts = 3
       Delayed::Worker.max_run_time = config.get(:jobs, :global, :timeout_in_seconds) + 1
       Delayed::Worker.logger = logger
-      worker = Delayed::Worker.new(@queue_options)
+      worker = if config.get(:jobs, :threads).nil?
+                 Delayed::Worker.new(@queue_options)
+               else
+                 ThreadedWorker.new(@queue_options)
+               end
       worker.name = @queue_options[:worker_name]
       worker.start
     end

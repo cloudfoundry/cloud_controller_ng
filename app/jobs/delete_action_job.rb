@@ -5,16 +5,18 @@ module VCAP::CloudController
 
       attr_reader :resource_guid, :resource_type
 
-      def initialize(model_class, resource_guid, delete_action, resource_type=nil)
+      def initialize(model_class, resource_guid, delete_action, resource_type=nil,  delay=0)
         @model_class    = model_class
         @resource_guid  = resource_guid
         @delete_action  = delete_action
         @resource_type = resource_type || model_class.name.demodulize.gsub('Model', '').underscore
+        @delay = delay
       end
 
       def perform
         logger = Steno.logger('cc.background')
         logger.info("Deleting model class '#{model_class}' with guid '#{resource_guid}'")
+        sleep(@delay.to_i) if @delay.to_i > 0
 
         dataset = model_class.where(guid: resource_guid)
         if delete_action_can_return_warnings?
