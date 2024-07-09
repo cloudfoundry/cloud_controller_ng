@@ -122,6 +122,44 @@ RSpec.describe DeploymentsController, type: :controller do
           end
         end
 
+        context 'when the max-in-flight option is provided' do
+          let(:request_body) do
+            {
+              droplet: {
+                guid: other_droplet.guid
+              },
+              strategy: 'rolling',
+              options: {
+                max_in_flight: 10
+              },
+              relationships: {
+                app: {
+                  data: {
+                    guid: app_guid
+                  }
+                }
+              }
+            }
+          end
+
+          it 'creates a deployment' do
+            expect(VCAP::CloudController::DeploymentCreateMessage).to receive(:new).with(request_body).and_call_original
+            expect(VCAP::CloudController::DeploymentCreate).
+              to receive(:create).
+              with(
+                app: app,
+                user_audit_info: instance_of(VCAP::CloudController::UserAuditInfo),
+                message: instance_of(VCAP::CloudController::DeploymentCreateMessage)
+              ).and_call_original
+
+            expect do
+              post :create, params: request_body, as: :json
+            end.to change(VCAP::CloudController::RevisionModel, :count).by(1)
+
+            expect(response).to have_http_status :success
+          end
+        end
+
         it 'creates a revision' do
           expect(VCAP::CloudController::DeploymentCreate).
             to receive(:create).

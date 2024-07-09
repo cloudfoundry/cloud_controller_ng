@@ -19,6 +19,9 @@ module VCAP::CloudController::Presenters::V3
           }
         },
         strategy: deployment.strategy,
+        options: {
+          max_in_flight: deployment.max_in_flight
+        },
         droplet: {
           guid: deployment.droplet_guid
         },

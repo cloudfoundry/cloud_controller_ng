@@ -572,6 +572,28 @@ module VCAP::CloudController
               end
             end
 
+            context 'when the message specifies max_in_flight' do
+              let(:message) do
+                DeploymentCreateMessage.new(options: { max_in_flight: 10 })
+              end
+
+              it 'saves the max_in_flight' do
+                deployment = DeploymentCreate.create(app:, message:, user_audit_info:)
+                expect(deployment.max_in_flight).to eq(10)
+              end
+            end
+
+            context 'when the message does not specify max_in_flight' do
+              let(:message) do
+                DeploymentCreateMessage.new({})
+              end
+
+              it 'sets the default' do
+                deployment = DeploymentCreate.create(app:, message:, user_audit_info:)
+                expect(deployment.max_in_flight).to eq(1)
+              end
+            end
+
             context 'when the app fails to start' do
               before do
                 allow(VCAP::CloudController::AppStart).to receive(:start).and_raise(VCAP::CloudController::AppStart::InvalidApp.new('memory quota_exceeded'))
@@ -658,6 +680,28 @@ module VCAP::CloudController
               end.to change(RevisionModel, :count).by(2)
 
               expect(app.reload.newest_web_process.command).to eq 'something else'
+            end
+          end
+
+          context 'when the message specifies max_in_flight' do
+            let(:message) do
+              DeploymentCreateMessage.new(options: { max_in_flight: 10 })
+            end
+
+            it 'saves the max_in_flight' do
+              deployment = DeploymentCreate.create(app:, message:, user_audit_info:)
+              expect(deployment.max_in_flight).to eq(10)
+            end
+          end
+
+          context 'when the message does not specify max_in_flight' do
+            let(:message) do
+              DeploymentCreateMessage.new({})
+            end
+
+            it 'sets the default' do
+              deployment = DeploymentCreate.create(app:, message:, user_audit_info:)
+              expect(deployment.max_in_flight).to eq(1)
             end
           end
 
