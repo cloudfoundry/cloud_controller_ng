@@ -41,7 +41,8 @@ module VCAP::CloudController
         app: web_process.app,
         deploying_web_process: deploying_web_process,
         state: state,
-        original_web_process_instance_count: original_web_process_instance_count
+        original_web_process_instance_count: original_web_process_instance_count,
+        max_in_flight: 1
       )
     end
 
@@ -69,6 +70,7 @@ module VCAP::CloudController
       end
 
       it 'scales the old web process down by one after the first iteration' do
+        expect(original_web_process_instance_count).to be > current_deploying_instances
         expect do
           subject.scale
         end.to change {
@@ -82,6 +84,34 @@ module VCAP::CloudController
         end.to change {
           deploying_web_process.reload.instances
         }.by(1)
+      end
+
+      context 'when the max_in_flight is set to 2' do
+        let(:deployment) do
+          DeploymentModel.make(
+            app: web_process.app,
+            deploying_web_process: deploying_web_process,
+            state: 'DEPLOYING',
+            original_web_process_instance_count: original_web_process_instance_count,
+            max_in_flight: 2
+          )
+        end
+
+        it 'scales the old web process down by two after the first iteration' do
+          expect do
+            subject.scale
+          end.to change {
+            web_process.reload.instances
+          }.by(-2)
+        end
+
+        it 'scales up the new web process by two' do
+          expect do
+            subject.scale
+          end.to change {
+            deploying_web_process.reload.instances
+          }.by(2)
+        end
       end
 
       context 'when the deployment process has reached original_web_process_instance_count' do
@@ -217,6 +247,23 @@ module VCAP::CloudController
           expect do
             subject.scale
           end.not_to(change(RouteMappingModel, :count))
+        end
+
+        context 'when the max_in_flight is set to 10' do
+          let(:deployment) do
+            DeploymentModel.make(
+              app: web_process.app,
+              deploying_web_process: deploying_web_process,
+              state: 'DEPLOYING',
+              original_web_process_instance_count: original_web_process_instance_count,
+              max_in_flight: 10
+            )
+          end
+
+          it 'does not destroy the web process, but scales it to 0' do
+            subject.scale
+            expect(ProcessModel.find(guid: web_process.guid).instances).to eq 0
+          end
         end
       end
 
@@ -467,6 +514,26 @@ module VCAP::CloudController
           end.to change {
             deploying_web_process.reload.instances
           }.by(1)
+        end
+
+        context 'when the max_in_flight is set to 10' do
+          let(:deployment) do
+            DeploymentModel.make(
+              app: web_process.app,
+              deploying_web_process: deploying_web_process,
+              state: 'DEPLOYING',
+              original_web_process_instance_count: original_web_process_instance_count,
+              max_in_flight: 10
+            )
+          end
+
+          it 'scales up the coerced web process by 10' do
+            expect do
+              subject.scale
+            end.to change {
+              deploying_web_process.reload.instances
+            }.by(10)
+          end
         end
       end
 

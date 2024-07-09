@@ -7,6 +7,7 @@ module VCAP::CloudController
       droplet
       revision
       strategy
+      options
     ]
 
     validates_with NoAdditionalKeysValidator

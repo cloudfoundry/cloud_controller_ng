@@ -44,6 +44,9 @@ RSpec.describe 'Deployments' do
             }
           },
           'strategy' => 'rolling',
+          'options' => {
+            'max_in_flight' => 1
+          },
           'droplet' => {
             'guid' => droplet.guid
           },
@@ -142,6 +145,9 @@ RSpec.describe 'Deployments' do
                                                           }
                                                         },
                                                         'strategy' => 'rolling',
+                                                        'options' => {
+                                                          'max_in_flight' => 1
+                                                        },
                                                         'droplet' => {
                                                           'guid' => other_droplet.guid
                                                         },
@@ -225,6 +231,9 @@ RSpec.describe 'Deployments' do
                                                           }
                                                         },
                                                         'strategy' => 'rolling',
+                                                        'options' => {
+                                                          'max_in_flight' => 1
+                                                        },
                                                         'droplet' => {
                                                           'guid' => other_droplet.guid
                                                         },
@@ -344,6 +353,9 @@ RSpec.describe 'Deployments' do
                                                           }
                                                         },
                                                         'strategy' => 'rolling',
+                                                        'options' => {
+                                                          'max_in_flight' => 1
+                                                        },
                                                         'droplet' => {
                                                           'guid' => droplet.guid
                                                         },
@@ -423,6 +435,9 @@ RSpec.describe 'Deployments' do
                                                           }
                                                         },
                                                         'strategy' => 'rolling',
+                                                        'options' => {
+                                                          'max_in_flight' => 1
+                                                        },
                                                         'droplet' => {
                                                           'guid' => other_droplet.guid
                                                         },
@@ -504,6 +519,9 @@ RSpec.describe 'Deployments' do
                                                           }
                                                         },
                                                         'strategy' => 'rolling',
+                                                        'options' => {
+                                                          'max_in_flight' => 1
+                                                        },
                                                         'droplet' => {
                                                           'guid' => other_droplet.guid
                                                         },
@@ -673,6 +691,9 @@ RSpec.describe 'Deployments' do
                                                             }
                                                           },
                                                           'strategy' => 'rolling',
+                                                          'options' => {
+                                                            'max_in_flight' => 1
+                                                          },
                                                           'droplet' => {
                                                             'guid' => droplet.guid
                                                           },
@@ -734,6 +755,9 @@ RSpec.describe 'Deployments' do
                                                             }
                                                           },
                                                           'strategy' => 'rolling',
+                                                          'options' => {
+                                                            'max_in_flight' => 1
+                                                          },
                                                           'droplet' => {
                                                             'guid' => droplet.guid
                                                           },
@@ -914,6 +938,9 @@ RSpec.describe 'Deployments' do
                                                         }
                                                       },
                                                       'strategy' => 'rolling',
+                                                      'options' => {
+                                                        'max_in_flight' => 1
+                                                      },
                                                       'droplet' => {
                                                         'guid' => droplet.guid
                                                       },
@@ -1019,6 +1046,9 @@ RSpec.describe 'Deployments' do
         'updated_at' => iso8601,
         'metadata' => metadata,
         'strategy' => 'rolling',
+        'options' => {
+          'max_in_flight' => 1
+        },
         'relationships' => {
           'app' => {
             'data' => {
@@ -1170,6 +1200,9 @@ RSpec.describe 'Deployments' do
             }
           },
           strategy: deployment.strategy,
+          options: {
+            max_in_flight: 1
+          },
           droplet: {
             guid: droplet.guid
           },
@@ -1468,6 +1501,9 @@ RSpec.describe 'Deployments' do
                                                               }
                                                             },
                                                             'strategy' => 'rolling',
+                                                            'options' => {
+                                                              'max_in_flight' => 1
+                                                            },
                                                             'droplet' => {
                                                               'guid' => droplet.guid
                                                             },

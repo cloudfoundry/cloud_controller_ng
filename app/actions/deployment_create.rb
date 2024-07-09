@@ -51,7 +51,8 @@ module VCAP::CloudController
             original_web_process_instance_count: desired_instances(app.oldest_web_process, previous_deployment),
             revision_guid: revision&.guid,
             revision_version: revision&.version,
-            strategy: message.strategy
+            strategy: message.strategy,
+            max_in_flight: message.options ? message.options[:max_in_flight] : 1
           )
           MetadataUpdate.update(deployment, message)
 
@@ -170,7 +171,8 @@ module VCAP::CloudController
           original_web_process_instance_count: desired_instances(app.oldest_web_process, previous_deployment),
           revision_guid: revision&.guid,
           revision_version: revision&.version,
-          strategy: DeploymentModel::ROLLING_STRATEGY
+          strategy: DeploymentModel::ROLLING_STRATEGY,
+          max_in_flight: message.options ? message.options[:max_in_flight] : 1
         )
 
         MetadataUpdate.update(deployment, message)
