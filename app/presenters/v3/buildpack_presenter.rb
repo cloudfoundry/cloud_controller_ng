@@ -13,6 +13,7 @@ module VCAP::CloudController::Presenters::V3
         name: buildpack.name,
         stack: buildpack.stack,
         state: buildpack.state,
+        lifecycle: buildpack.lifecycle,
         filename: buildpack.filename,
         position: buildpack.position,
         enabled: buildpack.enabled,
