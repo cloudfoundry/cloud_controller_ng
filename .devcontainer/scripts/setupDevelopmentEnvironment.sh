@@ -17,6 +17,8 @@ setupPostgres () {
     # Sequential Test DBs
     export PGPASSWORD=supersecret
     psql -U postgres -h localhost -tc "SELECT 1 FROM pg_database WHERE datname = 'cc_test'" | grep -q 1 || psql -U postgres -h localhost -c "CREATE DATABASE cc_test"
+    psql -U postgres -h localhost -tc "SELECT 1 FROM pg_database WHERE datname = 'diego'" | grep -q 1 || psql -U postgres -h localhost -c "CREATE DATABASE diego"
+    psql -U postgres -h localhost -tc "SELECT 1 FROM pg_database WHERE datname = 'locket'" | grep -q 1 || psql -U postgres -h localhost -c "CREATE DATABASE locket"
     # Main DB
     export DB_CONNECTION_STRING="${POSTGRES_CONNECTION_PREFIX}/ccdb"
     bundle exec rake db:recreate db:migrate db:seed
@@ -28,7 +30,7 @@ setupMariadb () {
     export MYSQL_CONNECTION_PREFIX
     bundle exec rake db:pick db:parallel:recreate
     # Sequential Test DBs
-    mysql -h 127.0.0.1 -u root -psupersecret -e "CREATE DATABASE IF NOT EXISTS cc_test;"
+    mysql -h 127.0.0.1 -u root -psupersecret -e "CREATE DATABASE IF NOT EXISTS cc_test; CREATE DATABASE IF NOT EXISTS diego; CREATE DATABASE IF NOT EXISTS locket;"
     # Main DB
     export DB_CONNECTION_STRING="${MYSQL_CONNECTION_PREFIX}/ccdb"
     bundle exec rake db:recreate db:migrate db:seed
@@ -97,6 +99,13 @@ yq -i e '.buildpacks.fog_connection.path_style=true' tmp/cloud_controller.yml
 
 yq -i e '.cloud_controller_username_lookup_client_name="login"' tmp/cloud_controller.yml
 yq -i e '.cloud_controller_username_lookup_client_secret="loginsecret"' tmp/cloud_controller.yml
+
+yq -i e '.diego.bbs.url="http://127.0.0.1:1234"' tmp/cloud_controller.yml
+yq -i e '.diego.bbs.key_file="spec/fixtures/certs/bbs_client.key"' tmp/cloud_controller.yml
+yq -i e '.diego.bbs.cert_file="spec/fixtures/certs/bbs_client.crt"' tmp/cloud_controller.yml
+yq -i e '.diego.bbs.ca_file="spec/fixtures/certs/bbs_ca.crt"' tmp/cloud_controller.yml
+
+yq -i e '.packages.max_package_size=2147483648' tmp/cloud_controller.yml
 
 # Wait for background jobs and exit 1 if any error happened
 # shellcheck disable=SC2046
