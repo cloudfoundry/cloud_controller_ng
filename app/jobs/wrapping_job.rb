@@ -39,6 +39,10 @@ module VCAP::CloudController
         handler.respond_to?(:max_attempts) ? handler.max_attempts : 1
       end
 
+      def max_run_time
+        handler.max_run_time if handler.respond_to?(:max_run_time)
+      end
+
       def reschedule_at(time, attempts)
         handler.reschedule_at(time, attempts) if handler.respond_to?(:reschedule_at)
       end

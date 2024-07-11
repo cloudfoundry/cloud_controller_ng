@@ -74,6 +74,7 @@ namespace :jobs do
       setup_app_log_emitter(config, logger)
       Delayed::Worker.destroy_failed_jobs = false
       Delayed::Worker.max_attempts = 3
+      Delayed::Worker.max_run_time = config.get(:jobs, :global, :timeout_in_seconds) + 1
       Delayed::Worker.logger = logger
       worker = Delayed::Worker.new(@queue_options)
       worker.name = @queue_options[:worker_name]
