@@ -14,7 +14,8 @@ module VCAP::CloudController::Presenters::V3
           value: deployment.status_value,
           reason: deployment.status_reason,
           details: {
-            last_successful_healthcheck: deployment.last_healthy_at
+            last_successful_healthcheck: deployment.last_healthy_at,
+            last_status_change: deployment.status_updated_at
           }
         },
         strategy: deployment.strategy,

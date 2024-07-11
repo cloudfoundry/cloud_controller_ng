@@ -67,6 +67,11 @@ module VCAP::CloudController
       end
     end
 
+    def before_update
+      super
+      set_status_updated_at
+    end
+
     def deploying?
       state == DEPLOYING_STATE
     end
@@ -75,6 +80,14 @@ module VCAP::CloudController
       valid_states_for_cancel = [DeploymentModel::DEPLOYING_STATE,
                                  DeploymentModel::CANCELING_STATE]
       valid_states_for_cancel.include?(state)
+    end
+
+    private
+
+    def set_status_updated_at
+      return unless column_changed?(:status_reason) || column_changed?(:status_value)
+
+      self.status_updated_at = updated_at
     end
   end
 end
