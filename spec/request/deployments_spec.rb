@@ -39,7 +39,8 @@ RSpec.describe 'Deployments' do
             'value' => VCAP::CloudController::DeploymentModel::ACTIVE_STATUS_VALUE,
             'reason' => VCAP::CloudController::DeploymentModel::DEPLOYING_STATUS_REASON,
             'details' => {
-              'last_successful_healthcheck' => iso8601
+              'last_successful_healthcheck' => iso8601,
+              'last_status_change' => iso8601
             }
           },
           'strategy' => 'rolling',
@@ -136,7 +137,8 @@ RSpec.describe 'Deployments' do
                                                           'value' => VCAP::CloudController::DeploymentModel::ACTIVE_STATUS_VALUE,
                                                           'reason' => VCAP::CloudController::DeploymentModel::DEPLOYING_STATUS_REASON,
                                                           'details' => {
-                                                            'last_successful_healthcheck' => iso8601
+                                                            'last_successful_healthcheck' => iso8601,
+                                                            'last_status_change' => iso8601
                                                           }
                                                         },
                                                         'strategy' => 'rolling',
@@ -218,7 +220,8 @@ RSpec.describe 'Deployments' do
                                                           'value' => VCAP::CloudController::DeploymentModel::ACTIVE_STATUS_VALUE,
                                                           'reason' => VCAP::CloudController::DeploymentModel::DEPLOYING_STATUS_REASON,
                                                           'details' => {
-                                                            'last_successful_healthcheck' => iso8601
+                                                            'last_successful_healthcheck' => iso8601,
+                                                            'last_status_change' => iso8601
                                                           }
                                                         },
                                                         'strategy' => 'rolling',
@@ -336,7 +339,8 @@ RSpec.describe 'Deployments' do
                                                           'value' => VCAP::CloudController::DeploymentModel::ACTIVE_STATUS_VALUE,
                                                           'reason' => VCAP::CloudController::DeploymentModel::DEPLOYING_STATUS_REASON,
                                                           'details' => {
-                                                            'last_successful_healthcheck' => iso8601
+                                                            'last_successful_healthcheck' => iso8601,
+                                                            'last_status_change' => iso8601
                                                           }
                                                         },
                                                         'strategy' => 'rolling',
@@ -414,7 +418,8 @@ RSpec.describe 'Deployments' do
                                                           'value' => VCAP::CloudController::DeploymentModel::ACTIVE_STATUS_VALUE,
                                                           'reason' => VCAP::CloudController::DeploymentModel::DEPLOYING_STATUS_REASON,
                                                           'details' => {
-                                                            'last_successful_healthcheck' => iso8601
+                                                            'last_successful_healthcheck' => iso8601,
+                                                            'last_status_change' => iso8601
                                                           }
                                                         },
                                                         'strategy' => 'rolling',
@@ -494,7 +499,8 @@ RSpec.describe 'Deployments' do
                                                           'value' => VCAP::CloudController::DeploymentModel::FINALIZED_STATUS_VALUE,
                                                           'reason' => VCAP::CloudController::DeploymentModel::DEPLOYED_STATUS_REASON,
                                                           'details' => {
-                                                            'last_successful_healthcheck' => iso8601
+                                                            'last_successful_healthcheck' => iso8601,
+                                                            'last_status_change' => iso8601
                                                           }
                                                         },
                                                         'strategy' => 'rolling',
@@ -661,7 +667,8 @@ RSpec.describe 'Deployments' do
                                                             'value' => VCAP::CloudController::DeploymentModel::ACTIVE_STATUS_VALUE,
                                                             'reason' => VCAP::CloudController::DeploymentModel::DEPLOYING_STATUS_REASON,
                                                             'details' => {
-                                                              'last_successful_healthcheck' => iso8601
+                                                              'last_successful_healthcheck' => iso8601,
+                                                              'last_status_change' => iso8601
                                                             }
                                                           },
                                                           'strategy' => 'rolling',
@@ -721,7 +728,8 @@ RSpec.describe 'Deployments' do
                                                             'value' => VCAP::CloudController::DeploymentModel::ACTIVE_STATUS_VALUE,
                                                             'reason' => VCAP::CloudController::DeploymentModel::DEPLOYING_STATUS_REASON,
                                                             'details' => {
-                                                              'last_successful_healthcheck' => iso8601
+                                                              'last_successful_healthcheck' => iso8601,
+                                                              'last_status_change' => iso8601
                                                             }
                                                           },
                                                           'strategy' => 'rolling',
@@ -839,7 +847,8 @@ RSpec.describe 'Deployments' do
                                                         'value' => VCAP::CloudController::DeploymentModel::ACTIVE_STATUS_VALUE,
                                                         'reason' => VCAP::CloudController::DeploymentModel::DEPLOYING_STATUS_REASON,
                                                         'details' => {
-                                                          'last_successful_healthcheck' => iso8601
+                                                          'last_successful_healthcheck' => iso8601,
+                                                          'last_status_change' => iso8601
                                                         }
                                                       },
                                                       'strategy' => 'rolling',
@@ -929,7 +938,8 @@ RSpec.describe 'Deployments' do
           'value' => VCAP::CloudController::DeploymentModel::ACTIVE_STATUS_VALUE,
           'reason' => VCAP::CloudController::DeploymentModel::DEPLOYING_STATUS_REASON,
           'details' => {
-            'last_successful_healthcheck' => iso8601
+            'last_successful_healthcheck' => iso8601,
+            'last_status_change' => iso8601
           }
         },
         'droplet' => {
@@ -1051,7 +1061,8 @@ RSpec.describe 'Deployments' do
             value: status_value,
             reason: status_reason,
             details: {
-              last_successful_healthcheck: iso8601
+              last_successful_healthcheck: iso8601,
+              last_status_change: iso8601
             }
           },
           strategy: 'rolling',
@@ -1345,7 +1356,8 @@ RSpec.describe 'Deployments' do
                                                               'value' => VCAP::CloudController::DeploymentModel::ACTIVE_STATUS_VALUE,
                                                               'reason' => VCAP::CloudController::DeploymentModel::DEPLOYING_STATUS_REASON,
                                                               'details' => {
-                                                                'last_successful_healthcheck' => iso8601
+                                                                'last_successful_healthcheck' => iso8601,
+                                                                'last_status_change' => iso8601
                                                               }
                                                             },
                                                             'strategy' => 'rolling',

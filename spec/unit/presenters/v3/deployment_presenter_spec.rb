@@ -15,6 +15,7 @@ module VCAP::CloudController::Presenters::V3
         previous_droplet: previous_droplet,
         deploying_web_process: process,
         last_healthy_at: '2019-07-12 19:01:54',
+        status_updated_at: '2019-07-11 19:01:54',
         state: deployment_state,
         status_value: VCAP::CloudController::DeploymentModel::ACTIVE_STATUS_VALUE,
         status_reason: VCAP::CloudController::DeploymentModel::DEPLOYING_STATUS_REASON
@@ -29,6 +30,7 @@ module VCAP::CloudController::Presenters::V3
         expect(result[:status][:value]).to eq(VCAP::CloudController::DeploymentModel::ACTIVE_STATUS_VALUE)
         expect(result[:status][:reason]).to eq(VCAP::CloudController::DeploymentModel::DEPLOYING_STATUS_REASON)
         expect(result[:status][:details][:last_successful_healthcheck]).to eq('2019-07-12 19:01:54')
+        expect(result[:status][:details][:last_status_change]).to eq('2019-07-11 19:01:54')
 
         expect(result[:strategy]).to eq('rolling')
 
