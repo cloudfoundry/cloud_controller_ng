@@ -35,6 +35,20 @@
 </head>
 <body>
 <div class="container">
+  <div class="panel panel-info">
+    <div class="panel-heading">
+      <h3 class="panel-title">Version Note:</h3>
+    </div>
+    <div class="panel-body">
+      These docs were last changed with
+      <a href="https://github.com/cloudfoundry/cloud_controller_ng/commit/<%= ENV['DOC_CHANGE_COMMIT'] %>" class="alert-link"><%= ENV['DOC_CHANGE_COMMIT'] %></a>
+      , and therefore they are up-to-date for CAPI version <%= ENV['DOC_CHANGE_VERSION'] %>.
+      The V2 API is considered stable, and further changes are not expected.
+      For previous versions, see the <code>docs/v2</code> directory at
+      <a href="https://github.com/cloudfoundry/cloud_controller_ng/commits/main/config/version_v2" class="alert-link">the desired version</a>
+    </div>
+  </div>
+
   <h1>Cloud Foundry API</h1>
 
   <div class="article">
