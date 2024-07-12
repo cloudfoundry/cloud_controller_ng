@@ -103,6 +103,25 @@ module VCAP::CloudController
         end
       end
 
+      describe '#max_run_time' do
+        let(:handler_with_method) { double('Job', max_run_time: 12) }
+        let(:handler_without_method) { Object.new }
+
+        context 'when the handler implements max_run_time' do
+          it 'returns the max_run_time from the handler' do
+            job = WrappingJob.new(handler_with_method)
+            expect(job.max_run_time).to eq(12)
+          end
+        end
+
+        context 'when the handler does not implement max_run_time' do
+          it 'returns nil' do
+            job = WrappingJob.new(handler_without_method)
+            expect(job.max_run_time).to be_nil
+          end
+        end
+      end
+
       describe '#display_name' do
         subject(:wrapping_job) { WrappingJob.new(handler) }
 
