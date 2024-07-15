@@ -1,11 +1,6 @@
 module VCAP::CloudController
   class Buildpack < Sequel::Model
-    plugin :list
-    plugin :single_table_inheritance, :lifecycle,
-      model_map: {
-        VCAP::CloudController::Lifecycles::BUILDPACK => "VCAP::CloudController::ClassicBuildpack",
-        VCAP::CloudController::Lifecycles::CNB => "VCAP::CloudController::CNBBuildpack"
-      }
+    plugin :list, scope: :lifecycle
 
     export_attributes :name, :stack, :position, :enabled, :locked, :filename
     import_attributes :name, :stack, :position, :enabled, :locked, :filename, :key
@@ -23,6 +18,22 @@ module VCAP::CloudController
 
     def self.user_visibility_filter(_user)
       full_dataset_filter
+    end
+
+    def self.list_admin_buildpacks(stack_name=nil, lifecycle='buildpack')
+      scoped = exclude(key: nil).exclude(key: '')
+      scoped = scoped.filter(:lifecycle => lifecycle)
+      if stack_name.present?
+        scoped = scoped.filter(Sequel.or([
+          [:stack, stack_name],
+          [:stack, nil]
+        ]))
+      end
+      scoped.order(:position).all
+    end
+
+    def self.at_last_position
+      where(position: max(:position)).first
     end
 
     def validate
