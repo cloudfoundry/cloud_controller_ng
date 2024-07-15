@@ -103,6 +103,58 @@ module VCAP::CloudController
             each { |env_vars| expect(env_vars).not_to include(an_object_satisfying { |var| var.name == 'VCAP_PLATFORM_OPTIONS' }) }
         end
 
+        context 'revisions' do
+          let(:revision) { RevisionModel.make(app: app_model, version: 99) }
+
+          before do
+            process.revision = revision
+          end
+
+          context 'when the app_log_revision config is enabled' do
+            before do
+              TestConfig.config[:app_log_revision] = true
+            end
+
+            it 'shows the revision id in the log source' do
+              action = MainLRPActionBuilder.build(process, lrp_builder, ssh_key)
+              expect(action.codependent_action.actions.first.run_action.log_source).to eq('APP/REV/99/PROC/WEB')
+            end
+
+            context 'and the revision is not present' do
+              before do
+                process.update(revision: nil)
+              end
+
+              it 'does not show revision in the log source' do
+                action = MainLRPActionBuilder.build(process, lrp_builder, ssh_key)
+                expect(action.codependent_action.actions.first.run_action.log_source).to eq('APP/PROC/WEB')
+              end
+            end
+
+            context 'and when the app feature revisions is disabled' do
+              before do
+                app_model.update(revisions_enabled: false)
+              end
+
+              it 'still shows existing revisions in the log source' do
+                action = MainLRPActionBuilder.build(process, lrp_builder, ssh_key)
+                expect(action.codependent_action.actions.first.run_action.log_source).to eq('APP/REV/99/PROC/WEB')
+              end
+            end
+          end
+
+          context 'when the app_log_revision config is disabled' do
+            before do
+              TestConfig.config[:app_log_revision] = false
+            end
+
+            it 'does not show the revision in the log source' do
+              action = MainLRPActionBuilder.build(process, lrp_builder, ssh_key)
+              expect(action.codependent_action.actions.first.run_action.log_source).to eq('APP/PROC/WEB')
+            end
+          end
+        end
+
         context 'sidecars' do
           let(:sidecar_action_environment_variables) do
             [::Diego::Bbs::Models::EnvironmentVariable.new(name: 'PORT', value: '4444'),
