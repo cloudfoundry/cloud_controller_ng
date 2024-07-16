@@ -6309,9 +6309,14 @@ applications without incurring downtime. This is different from the traditional 
 <td>The reason for the status of the deployment;<br>following list represents valid values:<br>1. If <strong>status.value</strong> is <code class="prettyprint">ACTIVE</code><br>- <code class="prettyprint">DEPLOYING</code><br>- <code class="prettyprint">CANCELING</code><br>2. If <strong>status.value</strong> is <code class="prettyprint">FINALIZED</code><br>- <code class="prettyprint">DEPLOYED</code><br>- <code class="prettyprint">CANCELED</code><br>- <code class="prettyprint">SUPERSEDED</code> (another deployment created for app before completion)<br></td>
 </tr>
 <tr>
-<td><strong>status.details</strong></td>
-<td><em>object</em></td>
-<td>The details for the status of the deployment shows a timestamp of the last successful healthcheck</td>
+<td><strong>status.details.last_successful_healthcheck</strong></td>
+<td><em><a href="#timestamps">timestamp</a></em></td>
+<td>Timestamp of the last successful healthcheck</td>
+</tr>
+<tr>
+<td><strong>status.details.last_status_change</strong></td>
+<td><em><a href="#timestamps">timestamp</a></em></td>
+<td>Timestamp of last change to status.value or status.reason</td>
 </tr>
 <tr>
 <td><strong>strategy</strong></td>
