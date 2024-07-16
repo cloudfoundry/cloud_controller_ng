@@ -6,6 +6,7 @@ require 'presenters/v3/deployment_presenter'
 require 'actions/deployment_create'
 require 'actions/deployment_update'
 require 'actions/deployment_cancel'
+require 'actions/deployment_continue'
 require 'cloud_controller/telemetry_logger'
 
 class DeploymentsController < ApplicationController
@@ -57,7 +58,7 @@ class DeploymentsController < ApplicationController
           'app-id' => app.guid,
           'user-id' => current_user.guid
         },
-        { 'strategy' => 'rolling' }
+        { 'strategy' => deployment.strategy }
       )
     rescue DeploymentCreate::Error => e
       unprocessable!(e.message)
@@ -91,6 +92,22 @@ class DeploymentsController < ApplicationController
       DeploymentCancel.cancel(deployment:, user_audit_info:)
       logger.info("Canceled deployment #{deployment.guid} for app #{deployment.app_guid}")
     rescue DeploymentCancel::Error => e
+      unprocessable!(e.message)
+    end
+
+    head :ok
+  end
+
+  def continue
+    deployment = DeploymentModel.find(guid: hashed_params[:guid])
+
+    resource_not_found!(:deployment) unless deployment && permission_queryer.can_manage_apps_in_active_space?(deployment.app.space.id) &&
+                                            permission_queryer.is_space_active?(deployment.app.space.id)
+
+    begin
+      DeploymentContinue.continue(deployment:, user_audit_info:)
+      logger.info("Continued deployment #{deployment.guid} for app #{deployment.app_guid}")
+    rescue DeploymentContinue::Error => e
       unprocessable!(e.message)
     end
 

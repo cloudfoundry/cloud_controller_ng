@@ -2,6 +2,8 @@ module VCAP::CloudController
   class DeploymentModel < Sequel::Model(:deployments)
     DEPLOYMENT_STATES = [
       DEPLOYING_STATE = 'DEPLOYING'.freeze,
+      PREPAUSED_STATE = 'PREPAUSED'.freeze,
+      PAUSED_STATE = 'PAUSED'.freeze,
       DEPLOYED_STATE = 'DEPLOYED'.freeze,
       CANCELING_STATE = 'CANCELING'.freeze,
       CANCELED_STATE = 'CANCELED'.freeze
@@ -13,15 +15,17 @@ module VCAP::CloudController
     ].freeze
 
     STATUS_REASONS = [
-      DEPLOYED_STATUS_REASON = 'DEPLOYED'.freeze,
       DEPLOYING_STATUS_REASON = 'DEPLOYING'.freeze,
+      PAUSED_STATUS_REASON = 'PAUSED'.freeze,
+      DEPLOYED_STATUS_REASON = 'DEPLOYED'.freeze,
       CANCELED_STATUS_REASON = 'CANCELED'.freeze,
       CANCELING_STATUS_REASON = 'CANCELING'.freeze,
       SUPERSEDED_STATUS_REASON = 'SUPERSEDED'.freeze
     ].freeze
 
     DEPLOYMENT_STRATEGIES = [
-      ROLLING_STRATEGY = 'rolling'.freeze
+      ROLLING_STRATEGY = 'rolling'.freeze,
+      CANARY_STRATEGY = 'canary'.freeze
     ].freeze
 
     many_to_one :app,
@@ -80,6 +84,10 @@ module VCAP::CloudController
       valid_states_for_cancel = [DeploymentModel::DEPLOYING_STATE,
                                  DeploymentModel::CANCELING_STATE]
       valid_states_for_cancel.include?(state)
+    end
+
+    def continuable?
+      state == DeploymentModel::PAUSED_STATE
     end
 
     private

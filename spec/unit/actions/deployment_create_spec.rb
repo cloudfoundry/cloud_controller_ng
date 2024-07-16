@@ -15,10 +15,13 @@ module VCAP::CloudController
     let(:user_audit_info) { UserAuditInfo.new(user_guid: '123', user_email: 'connor@example.com', user_name: 'braa') }
     let(:runner) { instance_double(Diego::Runner) }
 
+    let(:strategy) { 'rolling' }
+
     let(:message) do
       DeploymentCreateMessage.new({
                                     relationships: { app: { data: { guid: app.guid } } },
-                                    droplet: { guid: next_droplet.guid }
+                                    droplet: { guid: next_droplet.guid },
+                                    strategy: strategy
                                   })
     end
 
@@ -1001,6 +1004,67 @@ module VCAP::CloudController
           end
         end
       end
+
+      context 'strategy' do
+        context 'when the strategy is rolling' do
+          let(:strategy) { 'rolling' }
+
+          it 'creates the deployment with the rolling strategy' do
+            deployment = nil
+
+            expect do
+              deployment = DeploymentCreate.create(app:, message:, user_audit_info:)
+            end.to change(DeploymentModel, :count).by(1)
+  
+            expect(deployment.strategy).to eq(DeploymentModel::ROLLING_STRATEGY)
+          end
+        end
+
+        context 'when the strategy is canary' do
+          let(:strategy) { 'canary' }
+
+          it 'creates the deployment with the canary strategy' do
+            deployment = nil
+
+            expect do
+              deployment = DeploymentCreate.create(app:, message:, user_audit_info:)
+            end.to change(DeploymentModel, :count).by(1)
+  
+            expect(deployment.strategy).to eq(DeploymentModel::CANARY_STRATEGY)
+          end
+
+          it 'creates a process with a single canary instance' do
+            DeploymentCreate.create(app:, message:, user_audit_info:)
+
+            deploying_web_process = app.reload.newest_web_process
+            expect(deploying_web_process.instances).to eq(1)
+          end
+
+          it 'sets the deployment state to PREPAUSED' do
+            deployment = nil
+
+            expect do
+              deployment = DeploymentCreate.create(app:, message:, user_audit_info:)
+            end.to change(DeploymentModel, :count).by(1)
+  
+            expect(deployment.state).to eq(DeploymentModel::PREPAUSED_STATE)
+          end
+        end
+
+        context 'when the strategy is nil' do
+          let(:strategy) { nil }
+
+          it 'defaults to the rolling strategy' do
+            deployment = nil
+            
+            expect do
+              deployment = DeploymentCreate.create(app:, message:, user_audit_info:)
+            end.to change(DeploymentModel, :count).by(1)
+  
+            expect(deployment.strategy).to eq(DeploymentModel::ROLLING_STRATEGY)
+          end
+        end
+      end 
     end
   end
 end

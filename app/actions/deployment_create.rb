@@ -39,9 +39,11 @@ module VCAP::CloudController
             )
           end
 
+          message.strategy ||= DeploymentModel::ROLLING_STRATEGY
+
           deployment = DeploymentModel.create(
             app: app,
-            state: DeploymentModel::DEPLOYING_STATE,
+            state: starting_state(message),
             status_value: DeploymentModel::ACTIVE_STATUS_VALUE,
             status_reason: DeploymentModel::DEPLOYING_STATUS_REASON,
             droplet: target_state.droplet,
@@ -49,7 +51,7 @@ module VCAP::CloudController
             original_web_process_instance_count: desired_instances(app.oldest_web_process, previous_deployment),
             revision_guid: revision&.guid,
             revision_version: revision&.version,
-            strategy: DeploymentModel::ROLLING_STRATEGY
+            strategy: message.strategy
           )
           MetadataUpdate.update(deployment, message)
 
@@ -199,6 +201,14 @@ module VCAP::CloudController
           status_value: DeploymentModel::FINALIZED_STATUS_VALUE,
           status_reason: DeploymentModel::SUPERSEDED_STATUS_REASON
         )
+      end
+
+      def starting_state(message)
+        if message.strategy == DeploymentModel::CANARY_STRATEGY
+          DeploymentModel::PREPAUSED_STATE
+        else
+          DeploymentModel::DEPLOYING_STATE
+        end
       end
 
       def log_rollback_event(app_guid, user_id, revision_id)
