@@ -1,16 +1,18 @@
 require 'messages/base_message'
 
 module VCAP::CloudController
+  GZIP_MIME = Regexp.new("\x1F\x8B\x08".force_encoding("binary"))
+  ZIP_MIME = Regexp.new("PK\x03\x04".force_encoding("binary"))
+
   class BuildpackUploadMessage < BaseMessage
     class MissingFilePathError < StandardError; end
-
     register_allowed_keys %i[bits_path bits_name upload_start_time]
 
     validates_with NoAdditionalKeysValidator
 
     validate :nginx_fields
     validate :bits_path_in_tmpdir
-    validate :is_zip
+    validate :is_archive
     validate :is_not_empty
     validate :missing_file_path
 
@@ -43,10 +45,16 @@ module VCAP::CloudController
       VCAP::CloudController::Config.config.get(:directories, :tmpdir)
     end
 
-    def is_zip
+    def is_archive
       return unless bits_name
+      return unless bits_path
 
-      errors.add(:base, "#{bits_name} is not a zip") unless File.extname(bits_name) == '.zip'
+      case IO.read(bits_path, 4)
+      when /^#{VCAP::CloudController::GZIP_MIME}/, /^#{VCAP::CloudController::ZIP_MIME}/
+      else
+        errors.add(:base, "#{bits_name} is not a zip or gzip archive")
+      end
+
     end
 
     def missing_file_path
