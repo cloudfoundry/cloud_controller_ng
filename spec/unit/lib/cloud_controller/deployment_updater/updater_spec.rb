@@ -34,11 +34,13 @@ module VCAP::CloudController
     let(:current_web_instances) { 2 }
     let(:current_deploying_instances) { 0 }
 
+    let(:state) { DeploymentModel::DEPLOYING_STATE }
+
     let(:deployment) do
       DeploymentModel.make(
         app: web_process.app,
         deploying_web_process: deploying_web_process,
-        state: 'DEPLOYING',
+        state: state,
         original_web_process_instance_count: original_web_process_instance_count
       )
     end
@@ -501,6 +503,183 @@ module VCAP::CloudController
 
         it 'skips execution' do
           subject.scale
+          expect(deployment).not_to have_received(:update)
+        end
+      end
+    end
+
+    describe '#canary' do
+      let(:state) { DeploymentModel::PREPAUSED_STATE}
+      let(:current_deploying_instances) { 1}
+
+      it 'locks the deployment' do
+        allow(deployment).to receive(:lock!).and_call_original
+        subject.canary
+        expect(deployment).to have_received(:lock!)
+      end
+
+      context 'when the canary instance starts succesfully' do
+        let(:all_instances_results) do
+          {
+            0 => { state: 'RUNNING', uptime: 50, since: 2, routable: true },
+          }
+        end
+
+        it 'pauses the deployment' do
+          subject.canary
+          expect(deployment.state).to eq(DeploymentModel::PAUSED_STATE)
+          expect(deployment.status_value).to eq(DeploymentModel::ACTIVE_STATUS_VALUE)
+          expect(deployment.status_reason).to eq(DeploymentModel::PAUSED_STATUS_REASON)
+        end
+
+        it 'updates last_healthy_at' do
+          previous_last_healthy_at = deployment.last_healthy_at
+          Timecop.travel(deployment.last_healthy_at + 10.seconds) do
+            subject.canary
+            expect(deployment.reload.last_healthy_at).to be > previous_last_healthy_at
+          end
+        end
+
+        it 'does not alter the existing web processes' do
+          # todo verify this actually fails
+          expect do
+            subject.canary
+          end.not_to change {
+              web_process.reload.instances
+          }
+        end
+
+        it 'logs the canary run' do
+          subject.canary
+          expect(logger).to have_received(:info).with(
+            "ran-canarying-deployment-for-#{deployment.guid}",
+          )
+        end
+      end
+
+      context 'while the canary instance is still starting' do
+        let(:all_instances_results) do
+          {
+            0 => { state: 'STARTING', uptime: 50, since: 2, routable: true },
+          }
+        end
+
+        it 'skips the deployment update' do
+            subject.canary
+            expect(deployment.state).to eq(DeploymentModel::PREPAUSED_STATE)
+            expect(deployment.status_value).to eq(DeploymentModel::ACTIVE_STATUS_VALUE)
+            expect(deployment.status_reason).to eq(DeploymentModel::DEPLOYING_STATUS_REASON)
+        end
+      end
+
+      context 'when the canary is not routable routable' do
+        let(:all_instances_results) do
+          {
+            0 => { state: 'RUNNING', uptime: 50, since: 2, routable: false },
+          }
+        end
+
+        it 'skips the deployment update' do
+          subject.canary
+          expect(deployment.state).to eq(DeploymentModel::PREPAUSED_STATE)
+          expect(deployment.status_value).to eq(DeploymentModel::ACTIVE_STATUS_VALUE)
+          expect(deployment.status_reason).to eq(DeploymentModel::DEPLOYING_STATUS_REASON)
+        end
+      end
+
+      context 'when the canary instance is failing' do
+        let(:all_instances_results) do
+          {
+            0 => { state: 'FAILING', uptime: 50, since: 2, routable: true },
+          }
+        end
+
+        it 'does not update the deployments last_healthy_at' do
+          Timecop.travel(Time.now + 1.minute) do
+            expect do
+              subject.canary
+            end.not_to(change { deployment.reload.last_healthy_at })
+          end
+        end
+
+        it 'changes nothing' do
+          previous_last_healthy_at = deployment.last_healthy_at
+          subject.canary
+          expect(deployment.reload.last_healthy_at).to eq previous_last_healthy_at
+          expect(deployment.state).to eq(DeploymentModel::PREPAUSED_STATE)
+          expect(deployment.status_value).to eq(DeploymentModel::ACTIVE_STATUS_VALUE)
+          expect(deployment.status_reason).to eq(DeploymentModel::DEPLOYING_STATUS_REASON)
+        end
+      end
+
+      context 'when an error occurs while canarying a deployment' do
+        before do
+          allow(deployment).to receive(:lock!).and_raise(StandardError.new('Something real bad happened'))
+        end
+
+        it 'logs the error' do
+          subject.canary
+          
+          expect(logger).to have_received(:error).with(
+            'error-canarying-deployment',
+            deployment_guid: deployment.guid,
+            error: 'StandardError',
+            error_message: 'Something real bad happened',
+            backtrace: anything
+          )
+        end
+
+        it 'does not throw an error (so that other deployments can still proceed)' do
+          expect do
+            subject.scale
+          end.not_to raise_error
+        end
+
+        # prepaused canary -> canary = OK 
+        # paused canary -> canary = OK
+        # rolling -> canary = Potentially 3 version of the app running at once
+        # post pause canary -> canary = Potentially 3 version of the app running at once
+        # prepaused canary -> rolling = OK 
+        # paused canary -> rolling = OK
+
+        # handle superseed case from paused canary to canary deployment
+        # handle superseed case from rolling deployment to canary deployment
+        # handle supersede case from canceling deployment to canary deployment
+      end
+
+      context 'when there is an interim deployment that has been SUPERSEDED (CANCELED)' do
+        let!(:interim_canceling_web_process) do
+          ProcessModel.make(
+            app: app,
+            created_at: an_hour_ago,
+            type: ProcessTypes::WEB,
+            instances: 1,
+            guid: 'guid-canceling'
+          )
+        end
+        let!(:interim_canceled_superseded_deployment) do
+          DeploymentModel.make(
+            deploying_web_process: interim_canceling_web_process,
+            state: 'CANCELED',
+            status_reason: 'SUPERSEDED'
+          )
+        end
+
+        it 'scales the canceled web process to zero' do
+          subject.canary
+          expect(interim_canceling_web_process.reload.instances).to eq(0)
+        end
+      end
+
+      context 'when this deployment got superseded' do
+        before do
+          deployment.update(state: 'DEPLOYED', status_reason: 'SUPERSEDED')
+
+          allow(deployment).to receive(:update).and_call_original
+        end
+
+        it 'skips the deployment update' do
+          subject.canary
           expect(deployment).not_to have_received(:update)
         end
       end
