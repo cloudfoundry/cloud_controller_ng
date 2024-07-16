@@ -72,7 +72,6 @@ module VCAP::CloudController
     validate :validate_buildpack_and_buildpacks_combination!
     validate :validate_docker_enabled!
     validate :validate_cnb_enabled!
-    validate :validate_cnb_buildpacks!
     validate :validate_docker_buildpacks_combination!
     validate :validate_service_bindings_message!, if: ->(record) { record.requested?(:services) }
     validate :validate_env_update_message!,       if: ->(record) { record.requested?(:env) }
@@ -291,7 +290,7 @@ module VCAP::CloudController
         requested_buildpacks = @buildpacks
       elsif requested?(:buildpack)
         requested_buildpacks = []
-        requested_buildpacks.push(@buildpack)
+        requested_buildpacks.push(@buildpack) unless should_autodetect?(@buildpack)
       end
 
       {
@@ -483,13 +482,6 @@ module VCAP::CloudController
       FeatureFlag.raise_unless_enabled!(:diego_cnb) if requested?(:lifecycle) && @lifecycle == 'cnb'
     rescue StandardError => e
       errors.add(:base, e.message)
-    end
-
-    def validate_cnb_buildpacks!
-      return unless @lifecycle == 'cnb'
-      return if requested?(:lifecycle) && (requested?(:buildpack) || requested?(:buildpacks))
-
-      errors.add(:base, 'Buildpack(s) must be specified when using Cloud Native Buildpacks')
     end
 
     def validate_docker_buildpacks_combination!

@@ -1,3 +1,5 @@
+require 'cloud_controller/diego/lifecycles/lifecycles'
+
 module VCAP::CloudController
   class Buildpack < Sequel::Model
     plugin :list, scope: :lifecycle
@@ -20,7 +22,7 @@ module VCAP::CloudController
       full_dataset_filter
     end
 
-    def self.list_admin_buildpacks(stack_name=nil, lifecycle='buildpack')
+    def self.list_admin_buildpacks(stack_name=nil, lifecycle=VCAP::CloudController::Lifecycles::BUILDPACK)
       scoped = exclude(key: nil).exclude(key: '')
       scoped = scoped.filter(:lifecycle => lifecycle)
       if stack_name.present?
