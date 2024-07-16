@@ -8,7 +8,7 @@ module VCAP::CloudController
     module CNB
       class StagingActionBuilder < VCAP::CloudController::Diego::StagingActionBuilder
         def initialize(config, staging_details, lifecycle_data)
-          super(config, staging_details, lifecycle_data, 'cnb', '/home/vcap/workspace', '/tmp/cache-output.tgz')
+          super(config, staging_details, lifecycle_data, 'cnb', '/home/vcap/workspace', '/tmp/cache-output.tgz', ::Diego::Bbs::Models::ImageLayer::MediaType::TGZ)
         end
 
         def cached_dependencies
