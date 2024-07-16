@@ -33,7 +33,7 @@ module VCAP::Services::ServiceBrokers
     end
 
     def get_messages(errors)
-      [] unless errors
+      return [] unless errors
 
       msgs = errors.messages || []
 
