@@ -60,9 +60,17 @@ module VCAP::CloudController
                  path: '/tmp/lifecycle/launcher',
                  args: launcher_args,
                  env: environment_variables,
-                 log_source: "APP/PROC/#{process.type.upcase}",
+                 log_source: app_log_source,
                  resource_limits: ::Diego::Bbs::Models::ResourceLimits.new(nofile: process.file_descriptors)
                ))
+      end
+
+      def app_log_source
+        if VCAP::CloudController::Config.config.get(:app_log_revision) && process.revision
+          "APP/REV/#{process.revision.version}/PROC/#{process.type.upcase}"
+        else
+          "APP/PROC/#{process.type.upcase}"
+        end
       end
 
       def allow_ssh?
