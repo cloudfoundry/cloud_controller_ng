@@ -1323,6 +1323,12 @@ module VCAP::CloudController
             { 'route' => 'existing.example.com' },
             { 'route' => 'another.example.com' }
           ],
+          'cnb-credentials' => {
+            'example.org' => {
+              'username' => 'foo',
+              'password' => 'bar'
+            }
+          },
           'processes' => [{
             'type' => 'type',
             'command' => 'command',
@@ -1349,6 +1355,7 @@ module VCAP::CloudController
             { 'route' => 'existing.example.com' },
             { 'route' => 'another.example.com' }
           ],
+          'cnb-credentials' => '[PRIVATE DATA HIDDEN]',
           'processes' => [{
             'type' => 'type',
             'command' => 'command',

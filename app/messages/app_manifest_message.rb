@@ -118,8 +118,9 @@ module VCAP::CloudController
     end
 
     def audit_hash
-      overrides = original_yaml['env'] ? { 'env' => Presenters::Censorship::PRIVATE_DATA_HIDDEN } : {}
-      original_yaml.merge(overrides)
+      override_env = original_yaml['env'] ? { 'env' => Presenters::Censorship::PRIVATE_DATA_HIDDEN } : {}
+      override_cnb = original_yaml['cnb-credentials'] ? { 'cnb-credentials' => Presenters::Censorship::PRIVATE_DATA_HIDDEN } : {}
+      original_yaml.merge(override_env).merge(override_cnb)
     end
 
     def app_lifecycle_hash
