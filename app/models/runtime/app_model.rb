@@ -132,7 +132,7 @@ module VCAP::CloudController
     end
 
     def deploying?
-      deployments_dataset.where(state: DeploymentModel::DEPLOYING_STATE).any?
+      deployments_dataset.where(state: DeploymentModel::PROGRESSING_STATES).any?
     end
 
     def self.user_visibility_filter(user)
