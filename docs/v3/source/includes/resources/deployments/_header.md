@@ -15,4 +15,4 @@ Deployment strategies supported:
 * [Rolling deployments](https://docs.cloudfoundry.org/devguide/deploy-apps/rolling-deploy.html) allows for
 applications to be deployed without incurring downtime by gradually rolling out instances.
 
-* Canary deployments deploys a single instance to be evaluated, if deemed successful the deployment can be resumed via the [continue action](#continue-a-deployment). The deployment then continues like a rolling deployment.
+* Canary deployments deploys a single instance to be evaluated, if deemed successful the deployment can be resumed via the [continue action](#continue-a-deployment). The deployment then continues like a rolling deployment. This feature is experimental and is subject to change.
