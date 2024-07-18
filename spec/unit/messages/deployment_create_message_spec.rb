@@ -5,13 +5,13 @@ module VCAP::CloudController
     let(:body) do
       {
         'strategy' => 'rolling',
-          'relationships' => {
-            'app' => {
-              'data' => {
-                'guid' => '123' 
-              }
+        'relationships' => {
+          'app' => {
+            'data' => {
+              'guid' => '123'
             }
           }
+        }
       }
     end
 

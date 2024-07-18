@@ -70,6 +70,7 @@ module VCAP::CloudController
 
         expect(deployment.deploying?).to be(true)
       end
+
       it 'returns false if the deployment has been deployed' do
         deployment.state = 'DEPLOYED'
 
@@ -140,13 +141,13 @@ module VCAP::CloudController
         expect(deployment.continuable?).to be(false)
       end
 
-      it 'returns false if the deployment is any other state' do
+      it 'returns false if the deployment is DEPLOYING state' do
         deployment.state = DeploymentModel::DEPLOYING_STATE
 
         expect(deployment.continuable?).to be(false)
       end
 
-      it 'returns false if the deployment is any other state' do
+      it 'returns false if the deployment is DEPLOYED state' do
         deployment.state = DeploymentModel::DEPLOYED_STATE
 
         expect(deployment.continuable?).to be(false)
@@ -164,7 +165,6 @@ module VCAP::CloudController
         expect(deployment.continuable?).to be(false)
       end
     end
-
 
     describe '#status_updated_at' do
       let(:deployment) do

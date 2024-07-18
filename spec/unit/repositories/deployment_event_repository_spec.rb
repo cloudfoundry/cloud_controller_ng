@@ -103,7 +103,7 @@ module VCAP::CloudController
 
         it 'creates a new audit.app.deployment.continue event' do
           event = DeploymentEventRepository.record_continue(deployment, droplet, user_audit_info, app.name,
-                                                          app.space.guid, app.space.organization.guid)
+                                                            app.space.guid, app.space.organization.guid)
           event.reload
 
           expect(event.type).to eq('audit.app.deployment.continue')

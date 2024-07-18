@@ -509,8 +509,8 @@ module VCAP::CloudController
     end
 
     describe '#canary' do
-      let(:state) { DeploymentModel::PREPAUSED_STATE}
-      let(:current_deploying_instances) { 1}
+      let(:state) { DeploymentModel::PREPAUSED_STATE }
+      let(:current_deploying_instances) { 1 }
 
       it 'locks the deployment' do
         allow(deployment).to receive(:lock!).and_call_original
@@ -521,7 +521,7 @@ module VCAP::CloudController
       context 'when the canary instance starts succesfully' do
         let(:all_instances_results) do
           {
-            0 => { state: 'RUNNING', uptime: 50, since: 2, routable: true },
+            0 => { state: 'RUNNING', uptime: 50, since: 2, routable: true }
           }
         end
 
@@ -541,18 +541,18 @@ module VCAP::CloudController
         end
 
         it 'does not alter the existing web processes' do
-          # todo verify this actually fails
+          # TODO: verify this actually fails
           expect do
             subject.canary
-          end.not_to change {
-              web_process.reload.instances
-          }
+          end.not_to(change do
+            web_process.reload.instances
+          end)
         end
 
         it 'logs the canary run' do
           subject.canary
           expect(logger).to have_received(:info).with(
-            "ran-canarying-deployment-for-#{deployment.guid}",
+            "ran-canarying-deployment-for-#{deployment.guid}"
           )
         end
       end
@@ -560,22 +560,22 @@ module VCAP::CloudController
       context 'while the canary instance is still starting' do
         let(:all_instances_results) do
           {
-            0 => { state: 'STARTING', uptime: 50, since: 2, routable: true },
+            0 => { state: 'STARTING', uptime: 50, since: 2, routable: true }
           }
         end
 
         it 'skips the deployment update' do
-            subject.canary
-            expect(deployment.state).to eq(DeploymentModel::PREPAUSED_STATE)
-            expect(deployment.status_value).to eq(DeploymentModel::ACTIVE_STATUS_VALUE)
-            expect(deployment.status_reason).to eq(DeploymentModel::DEPLOYING_STATUS_REASON)
+          subject.canary
+          expect(deployment.state).to eq(DeploymentModel::PREPAUSED_STATE)
+          expect(deployment.status_value).to eq(DeploymentModel::ACTIVE_STATUS_VALUE)
+          expect(deployment.status_reason).to eq(DeploymentModel::DEPLOYING_STATUS_REASON)
         end
       end
 
       context 'when the canary is not routable routable' do
         let(:all_instances_results) do
           {
-            0 => { state: 'RUNNING', uptime: 50, since: 2, routable: false },
+            0 => { state: 'RUNNING', uptime: 50, since: 2, routable: false }
           }
         end
 
@@ -590,7 +590,7 @@ module VCAP::CloudController
       context 'when the canary instance is failing' do
         let(:all_instances_results) do
           {
-            0 => { state: 'FAILING', uptime: 50, since: 2, routable: true },
+            0 => { state: 'FAILING', uptime: 50, since: 2, routable: true }
           }
         end
 
@@ -619,7 +619,7 @@ module VCAP::CloudController
 
         it 'logs the error' do
           subject.canary
-          
+
           expect(logger).to have_received(:error).with(
             'error-canarying-deployment',
             deployment_guid: deployment.guid,
@@ -635,11 +635,11 @@ module VCAP::CloudController
           end.not_to raise_error
         end
 
-        # prepaused canary -> canary = OK 
+        # prepaused canary -> canary = OK
         # paused canary -> canary = OK
         # rolling -> canary = Potentially 3 version of the app running at once
         # post pause canary -> canary = Potentially 3 version of the app running at once
-        # prepaused canary -> rolling = OK 
+        # prepaused canary -> rolling = OK
         # paused canary -> rolling = OK
 
         # handle superseed case from paused canary to canary deployment

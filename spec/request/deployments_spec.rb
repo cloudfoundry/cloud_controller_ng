@@ -1064,18 +1064,18 @@ RSpec.describe 'Deployments' do
         get "/v3/deployments/#{deployment.guid}", nil, user_header
         parsed_response = Oj.load(last_response.body)
         expect(parsed_response['links']['continue']).to eq({
-          'href' => "#{link_prefix}/v3/deployments/#{deployment.guid}/actions/continue",
-          'method' => 'POST'
-        })
+                                                             'href' => "#{link_prefix}/v3/deployments/#{deployment.guid}/actions/continue",
+                                                             'method' => 'POST'
+                                                           })
       end
 
       it 'includes the cancel action in the links' do
         get "/v3/deployments/#{deployment.guid}", nil, user_header
         parsed_response = Oj.load(last_response.body)
         expect(parsed_response['links']['cancel']).to eq({
-          'href' => "#{link_prefix}/v3/deployments/#{deployment.guid}/actions/cancel",
-          'method' => 'POST'
-        })
+                                                           'href' => "#{link_prefix}/v3/deployments/#{deployment.guid}/actions/cancel",
+                                                           'method' => 'POST'
+                                                         })
       end
     end
 
@@ -1149,7 +1149,6 @@ RSpec.describe 'Deployments' do
                                                                status_reason: VCAP::CloudController::DeploymentModel::SUPERSEDED_STATUS_REASON)
       end
 
-
       let!(:deployment6) do
         VCAP::CloudController::DeploymentModelTestFactory.make(app: app5, droplet: droplet5,
                                                                previous_droplet: droplet5,
@@ -1159,7 +1158,7 @@ RSpec.describe 'Deployments' do
                                                                status_reason: VCAP::CloudController::DeploymentModel::DEPLOYING_STATUS_REASON)
       end
 
-      # TODO add pause states and any other canary related states
+      # TODO: add pause states and any other canary related states
 
       def json_for_deployment(deployment, app_model, droplet, status_value, status_reason, cancel_link=true)
         {
@@ -1577,14 +1576,13 @@ RSpec.describe 'Deployments' do
     end
   end
 
-
   describe 'POST /v3/deployments/:guid/actions/continue' do
-    let(:state) {  }
+    let(:state) {}
     let(:deployment) do
       VCAP::CloudController::DeploymentModelTestFactory.make(
         app: app_model,
         droplet: droplet,
-        state: state,
+        state: state
       )
     end
 
@@ -1652,7 +1650,7 @@ RSpec.describe 'Deployments' do
         expect(last_response.status).to eq(422), last_response.body
       end
     end
-    # TODO how much do we want to test here ?
+    # TODO: how much do we want to test here ?
     #
     # context 'when the deployment is not a canary' do
     # note from Seth: I don't think we need this case, what if we add the `pause` action :)
@@ -1663,7 +1661,7 @@ RSpec.describe 'Deployments' do
     # context 'when the deployment is superseeded' do
     # end
 
-    # todo: understand this
+    # TODO: understand this
     context 'with a running deployment' do
       let(:state) { VCAP::CloudController::DeploymentModel::PAUSED_STATE }
       let(:api_call) { ->(user_headers) { post "/v3/deployments/#{deployment.guid}/actions/continue", {}.to_json, user_headers } }
