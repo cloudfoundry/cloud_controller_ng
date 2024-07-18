@@ -549,6 +549,13 @@ module VCAP::CloudController
           end)
         end
 
+        it 'logs the canary is paused' do
+          subject.canary
+          expect(logger).to have_received(:info).with(
+            "paused-canary-deployment-for-#{deployment.guid}"
+          )
+        end
+
         it 'logs the canary run' do
           subject.canary
           expect(logger).to have_received(:info).with(
