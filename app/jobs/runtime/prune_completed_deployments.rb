@@ -25,7 +25,7 @@ module VCAP::CloudController
                                   select(:id)
 
             deployments_to_delete = deployments_dataset.
-                                    exclude(state: [DeploymentModel::DEPLOYING_STATE, DeploymentModel::CANCELING_STATE]).
+                                    exclude(state: DeploymentModel::ACTIVE_STATES).
                                     exclude(id: deployments_to_keep)
 
             delete_count = DeploymentDelete.delete(deployments_to_delete)

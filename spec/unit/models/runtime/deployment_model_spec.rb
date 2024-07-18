@@ -166,6 +166,27 @@ module VCAP::CloudController
       end
     end
 
+    describe 'PROGRESSING_STATES' do
+      it 'contains progressing forward states' do
+        expect(DeploymentModel::PROGRESSING_STATES).to include(
+          DeploymentModel::DEPLOYING_STATE,
+          DeploymentModel::PAUSED_STATE,
+          DeploymentModel::PREPAUSED_STATE
+        )
+      end
+    end
+
+    describe 'ACTIVE_STATES' do
+      it 'contains active states' do
+        expect(DeploymentModel::PROGRESSING_STATES).to include(
+          DeploymentModel::DEPLOYING_STATE,
+          DeploymentModel::PAUSED_STATE,
+          DeploymentModel::PREPAUSED_STATE,
+          DeploymentModel::CANCELING_STATE
+        )
+      end
+    end
+
     describe '#status_updated_at' do
       let(:deployment) do
         DeploymentModel.make(

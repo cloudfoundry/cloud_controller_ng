@@ -28,6 +28,17 @@ module VCAP::CloudController
       CANARY_STRATEGY = 'canary'.freeze
     ].freeze
 
+    PROGRESSING_STATES = [
+      DEPLOYING_STATE,
+      PREPAUSED_STATE,
+      PAUSED_STATE
+    ].freeze
+
+    ACTIVE_STATES = [
+      *DeploymentModel::PROGRESSING_STATES,
+      DeploymentModel::CANCELING_STATE
+    ].freeze
+
     many_to_one :app,
                 class: 'VCAP::CloudController::AppModel',
                 primary_key: :guid,
@@ -67,7 +78,7 @@ module VCAP::CloudController
 
     dataset_module do
       def deploying_count
-        where(state: DeploymentModel::DEPLOYING_STATE).count
+        where(state: DeploymentModel::PROGRESSING_STATES).count
       end
     end
 
@@ -77,11 +88,7 @@ module VCAP::CloudController
     end
 
     def deploying?
-      # represents states that are still progressing forward
-      deploying_states = [DeploymentModel::DEPLOYING_STATE,
-                          DeploymentModel::PAUSED_STATE,
-                          DeploymentModel::PREPAUSED_STATE]
-      deploying_states.include?(state)
+      DeploymentModel::PROGRESSING_STATES.include?(state)
     end
 
     def cancelable?
