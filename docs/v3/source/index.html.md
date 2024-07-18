@@ -120,6 +120,7 @@ includes:
   - resources/deployments/list
   - resources/deployments/update
   - resources/deployments/cancel
+  - resources/deployments/continue
   - resources/domains/header
   - resources/domains/object
   - resources/domains/create
