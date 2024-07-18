@@ -75,7 +75,6 @@ module VCAP::CloudController
         end
       end
 
-      # #Q: Do we want this to be idempotent on continuing deploying deploys? If we do, we need to distinguish from the test above..
       context 'when the deployment is in the DEPLOYING state' do
         let(:state) { DeploymentModel::DEPLOYING_STATE }
         let(:status_value) { DeploymentModel::ACTIVE_STATUS_VALUE }
