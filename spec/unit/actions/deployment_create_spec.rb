@@ -151,7 +151,8 @@ module VCAP::CloudController
                                            'deployment_guid' => deployment.guid,
                                            'type' => nil,
                                            'revision_guid' => RevisionModel.last.guid,
-                                           'request' => message.audit_hash
+                                           'request' => message.audit_hash,
+                                           'strategy' => 'rolling'
                                          })
           end
 
@@ -318,7 +319,8 @@ module VCAP::CloudController
                                            'deployment_guid' => deployment.guid,
                                            'type' => nil,
                                            'revision_guid' => app.latest_revision.guid,
-                                           'request' => message.audit_hash
+                                           'request' => message.audit_hash,
+                                           'strategy' => 'rolling'
                                          })
           end
 
@@ -375,7 +377,8 @@ module VCAP::CloudController
                                              'deployment_guid' => deployment.guid,
                                              'type' => nil,
                                              'revision_guid' => app_without_current_droplet.latest_revision.guid,
-                                             'request' => message.audit_hash
+                                             'request' => message.audit_hash,
+                                             'strategy' => 'rolling'
                                            })
             end
           end
@@ -541,7 +544,8 @@ module VCAP::CloudController
                                              'deployment_guid' => deployment.guid,
                                              'type' => nil,
                                              'revision_guid' => app.latest_revision.guid,
-                                             'request' => message.audit_hash
+                                             'request' => message.audit_hash,
+                                             'strategy' => 'rolling'
                                            })
             end
 
@@ -711,7 +715,8 @@ module VCAP::CloudController
                                              'deployment_guid' => deployment.guid,
                                              'type' => nil,
                                              'revision_guid' => app.latest_revision.guid,
-                                             'request' => message.audit_hash
+                                             'request' => message.audit_hash,
+                                             'strategy' => 'rolling'
                                            })
             end
 
@@ -870,7 +875,8 @@ module VCAP::CloudController
                                          'deployment_guid' => deployment.guid,
                                          'type' => 'rollback',
                                          'revision_guid' => RevisionModel.last.guid,
-                                         'request' => message.audit_hash
+                                         'request' => message.audit_hash,
+                                         'strategy' => 'rolling'
                                        })
         end
 
@@ -970,7 +976,8 @@ module VCAP::CloudController
                                            'deployment_guid' => deployment.guid,
                                            'type' => 'rollback',
                                            'revision_guid' => revision.guid,
-                                           'request' => message.audit_hash
+                                           'request' => message.audit_hash,
+                                           'strategy' => 'rolling'
                                          })
           end
 
