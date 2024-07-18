@@ -1046,6 +1046,39 @@ RSpec.describe 'Deployments' do
       h
     end
 
+    context 'PAUSED deployment' do
+      let(:user) { make_developer_for_space(space) }
+      let(:deployment) do
+        VCAP::CloudController::DeploymentModelTestFactory.make(
+          app: app_model,
+          droplet: droplet,
+          previous_droplet: old_droplet,
+          strategy: 'canary',
+          state: VCAP::CloudController::DeploymentModel::PAUSED_STATE,
+          status_value: VCAP::CloudController::DeploymentModel::ACTIVE_STATUS_VALUE,
+          status_reason: VCAP::CloudController::DeploymentModel::PAUSED_STATUS_REASON
+        )
+      end
+
+      it 'includes the continue action in the links' do
+        get "/v3/deployments/#{deployment.guid}", nil, user_header
+        parsed_response = Oj.load(last_response.body)
+        expect(parsed_response['links']['continue']).to eq({
+          'href' => "#{link_prefix}/v3/deployments/#{deployment.guid}/actions/continue",
+          'method' => 'POST'
+        })
+      end
+
+      it 'includes the cancel action in the links' do
+        get "/v3/deployments/#{deployment.guid}", nil, user_header
+        parsed_response = Oj.load(last_response.body)
+        expect(parsed_response['links']['cancel']).to eq({
+          'href' => "#{link_prefix}/v3/deployments/#{deployment.guid}/actions/cancel",
+          'method' => 'POST'
+        })
+      end
+    end
+
     it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS
   end
 
@@ -1580,14 +1613,51 @@ RSpec.describe 'Deployments' do
       end
     end
 
+    context 'when the deployment is in a deploying state' do
+      let(:user) { make_developer_for_space(space) }
+      let(:state) { VCAP::CloudController::DeploymentModel::DEPLOYING_STATE }
+
+      it 'returns 422 with an error' do
+        post "/v3/deployments/#{deployment.guid}/actions/continue", {}.to_json, user_header
+        expect(last_response.status).to eq(422), last_response.body
+      end
+    end
+
+    context 'when the deployment is in a canceling state' do
+      let(:user) { make_developer_for_space(space) }
+      let(:state) { VCAP::CloudController::DeploymentModel::CANCELING_STATE }
+
+      it 'returns 422 with an error' do
+        post "/v3/deployments/#{deployment.guid}/actions/continue", {}.to_json, user_header
+        expect(last_response.status).to eq(422), last_response.body
+      end
+    end
+
+    context 'when the deployment is in a deployed state' do
+      let(:user) { make_developer_for_space(space) }
+      let(:state) { VCAP::CloudController::DeploymentModel::DEPLOYED_STATE }
+
+      it 'returns 422 with an error' do
+        post "/v3/deployments/#{deployment.guid}/actions/continue", {}.to_json, user_header
+        expect(last_response.status).to eq(422), last_response.body
+      end
+    end
+
+    context 'when the deployment is in a canceled state' do
+      let(:user) { make_developer_for_space(space) }
+      let(:state) { VCAP::CloudController::DeploymentModel::CANCELED_STATE }
+
+      it 'returns 422 with an error' do
+        post "/v3/deployments/#{deployment.guid}/actions/continue", {}.to_json, user_header
+        expect(last_response.status).to eq(422), last_response.body
+      end
+    end
     # TODO how much do we want to test here ?
     #
     # context 'when the deployment is not a canary' do
+    # note from Seth: I don't think we need this case, what if we add the `pause` action :)
     #   let(:state) { VCAP::CloudController::DeploymentModel::PREPAUSED_STATE }
 
-    # end
-    # context 'when the deployment is not in a state where it will never pause' do
-    #   let(:state) { VCAP::CloudController::DeploymentModel::DEPLOYING_STATE }
     # end
 
     # context 'when the deployment is superseeded' do

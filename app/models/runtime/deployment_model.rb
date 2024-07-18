@@ -77,12 +77,18 @@ module VCAP::CloudController
     end
 
     def deploying?
-      state == DEPLOYING_STATE
+      # represents states that are still progressing forward
+      deploying_states = [DeploymentModel::DEPLOYING_STATE,
+                          DeploymentModel::PAUSED_STATE,
+                          DeploymentModel::PREPAUSED_STATE]
+      deploying_states.include?(state)
     end
 
     def cancelable?
       valid_states_for_cancel = [DeploymentModel::DEPLOYING_STATE,
-                                 DeploymentModel::CANCELING_STATE]
+                                 DeploymentModel::CANCELING_STATE,
+                                 DeploymentModel::PAUSED_STATE,
+                                 DeploymentModel::PREPAUSED_STATE]
       valid_states_for_cancel.include?(state)
     end
 
