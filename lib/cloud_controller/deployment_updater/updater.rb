@@ -80,6 +80,7 @@ module VCAP::CloudController
               status_value: DeploymentModel::ACTIVE_STATUS_VALUE,
               status_reason: DeploymentModel::PAUSED_STATUS_REASON
             )
+            logger.info("paused-canary-deployment-for-#{deployment.guid}")
           end
         end
       end
