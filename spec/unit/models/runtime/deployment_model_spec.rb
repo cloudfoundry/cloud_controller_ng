@@ -59,6 +59,17 @@ module VCAP::CloudController
         expect(deployment.deploying?).to be(true)
       end
 
+      it 'returns true if the deployment is PAUSED' do
+        deployment.state = DeploymentModel::PAUSED_STATE
+
+        expect(deployment.deploying?).to be(true)
+      end
+
+      it 'returns true if the deployment is PREPAUSED' do
+        deployment.state = DeploymentModel::PREPAUSED_STATE
+
+        expect(deployment.deploying?).to be(true)
+      end
       it 'returns false if the deployment has been deployed' do
         deployment.state = 'DEPLOYED'
 
@@ -81,6 +92,18 @@ module VCAP::CloudController
     describe '#cancelable?' do
       it 'returns true if the deployment is DEPLOYING' do
         deployment.state = DeploymentModel::DEPLOYING_STATE
+
+        expect(deployment.cancelable?).to be(true)
+      end
+
+      it 'returns true if the deployment is PAUSED' do
+        deployment.state = DeploymentModel::PAUSED_STATE
+
+        expect(deployment.cancelable?).to be(true)
+      end
+
+      it 'returns true if the deployment is PREPAUSED' do
+        deployment.state = DeploymentModel::PREPAUSED_STATE
 
         expect(deployment.cancelable?).to be(true)
       end

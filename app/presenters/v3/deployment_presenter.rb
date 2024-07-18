@@ -76,6 +76,13 @@ module VCAP::CloudController::Presenters::V3
             method: 'POST'
           }
         end
+      end.tap do |links|
+        if deployment.continuable?
+          links[:continue] = {
+            href: url_builder.build_url(path: "/v3/deployments/#{deployment.guid}/actions/continue"),
+            method: 'POST'
+          }
+        end
       end
     end
   end
