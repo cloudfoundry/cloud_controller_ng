@@ -23,7 +23,7 @@ module VCAP::CloudController
       private
 
       def reject_invalid_state!(deployment)
-        # TODO do we want better api errors? e.g. 
+        # TODO: do we want better api errors? e.g.
         # - this deployment will eventually be continuable
         # - this deployment is not continuable
         raise InvalidStatus.new("Cannot continue a deployment with status: #{deployment.status_value} and reason: #{deployment.status_reason}")

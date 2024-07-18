@@ -1015,7 +1015,7 @@ module VCAP::CloudController
             expect do
               deployment = DeploymentCreate.create(app:, message:, user_audit_info:)
             end.to change(DeploymentModel, :count).by(1)
-  
+
             expect(deployment.strategy).to eq(DeploymentModel::ROLLING_STRATEGY)
           end
         end
@@ -1029,7 +1029,7 @@ module VCAP::CloudController
             expect do
               deployment = DeploymentCreate.create(app:, message:, user_audit_info:)
             end.to change(DeploymentModel, :count).by(1)
-  
+
             expect(deployment.strategy).to eq(DeploymentModel::CANARY_STRATEGY)
           end
 
@@ -1046,7 +1046,7 @@ module VCAP::CloudController
             expect do
               deployment = DeploymentCreate.create(app:, message:, user_audit_info:)
             end.to change(DeploymentModel, :count).by(1)
-  
+
             expect(deployment.state).to eq(DeploymentModel::PREPAUSED_STATE)
           end
         end
@@ -1056,15 +1056,15 @@ module VCAP::CloudController
 
           it 'defaults to the rolling strategy' do
             deployment = nil
-            
+
             expect do
               deployment = DeploymentCreate.create(app:, message:, user_audit_info:)
             end.to change(DeploymentModel, :count).by(1)
-  
+
             expect(deployment.strategy).to eq(DeploymentModel::ROLLING_STRATEGY)
           end
         end
-      end 
+      end
     end
   end
 end
