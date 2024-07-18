@@ -35,8 +35,8 @@ module VCAP::CloudController
     ].freeze
 
     ACTIVE_STATES = [
-      *DeploymentModel::PROGRESSING_STATES,
-      DeploymentModel::CANCELING_STATE
+      *PROGRESSING_STATES,
+      CANCELING_STATE
     ].freeze
 
     many_to_one :app,
@@ -92,11 +92,7 @@ module VCAP::CloudController
     end
 
     def cancelable?
-      valid_states_for_cancel = [DeploymentModel::DEPLOYING_STATE,
-                                 DeploymentModel::CANCELING_STATE,
-                                 DeploymentModel::PAUSED_STATE,
-                                 DeploymentModel::PREPAUSED_STATE]
-      valid_states_for_cancel.include?(state)
+      DeploymentModel::ACTIVE_STATES.include?(state)
     end
 
     def continuable?

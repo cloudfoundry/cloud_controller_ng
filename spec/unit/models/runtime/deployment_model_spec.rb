@@ -178,7 +178,7 @@ module VCAP::CloudController
 
     describe 'ACTIVE_STATES' do
       it 'contains active states' do
-        expect(DeploymentModel::PROGRESSING_STATES).to include(
+        expect(DeploymentModel::ACTIVE_STATES).to include(
           DeploymentModel::DEPLOYING_STATE,
           DeploymentModel::PAUSED_STATE,
           DeploymentModel::PREPAUSED_STATE,
