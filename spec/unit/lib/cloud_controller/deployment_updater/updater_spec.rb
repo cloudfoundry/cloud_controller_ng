@@ -541,7 +541,6 @@ module VCAP::CloudController
         end
 
         it 'does not alter the existing web processes' do
-          # TODO: verify this actually fails
           expect do
             subject.canary
           end.not_to(change do
@@ -641,17 +640,6 @@ module VCAP::CloudController
             subject.scale
           end.not_to raise_error
         end
-
-        # prepaused canary -> canary = OK
-        # paused canary -> canary = OK
-        # rolling -> canary = Potentially 3 version of the app running at once
-        # post pause canary -> canary = Potentially 3 version of the app running at once
-        # prepaused canary -> rolling = OK
-        # paused canary -> rolling = OK
-
-        # handle superseed case from paused canary to canary deployment
-        # handle superseed case from rolling deployment to canary deployment
-        # handle supersede case from canceling deployment to canary deployment
       end
 
       context 'when there is an interim deployment that has been SUPERSEDED (CANCELED)' do

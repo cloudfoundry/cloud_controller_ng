@@ -213,7 +213,7 @@ module VCAP::CloudController
       end
 
       def canary_ready?
-        ready_to_scale? # todo
+        ready_to_scale?
       end
 
       def ready_to_scale?
