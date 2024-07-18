@@ -1158,8 +1158,6 @@ RSpec.describe 'Deployments' do
                                                                status_reason: VCAP::CloudController::DeploymentModel::DEPLOYING_STATUS_REASON)
       end
 
-      # TODO: add pause states and any other canary related states
-
       def json_for_deployment(deployment, app_model, droplet, status_value, status_reason, cancel_link=true)
         {
           guid: deployment.guid,
@@ -1650,18 +1648,7 @@ RSpec.describe 'Deployments' do
         expect(last_response.status).to eq(422), last_response.body
       end
     end
-    # TODO: how much do we want to test here ?
-    #
-    # context 'when the deployment is not a canary' do
-    # note from Seth: I don't think we need this case, what if we add the `pause` action :)
-    #   let(:state) { VCAP::CloudController::DeploymentModel::PREPAUSED_STATE }
 
-    # end
-
-    # context 'when the deployment is superseeded' do
-    # end
-
-    # TODO: understand this
     context 'with a running deployment' do
       let(:state) { VCAP::CloudController::DeploymentModel::PAUSED_STATE }
       let(:api_call) { ->(user_headers) { post "/v3/deployments/#{deployment.guid}/actions/continue", {}.to_json, user_headers } }
