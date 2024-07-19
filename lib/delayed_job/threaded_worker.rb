@@ -14,7 +14,7 @@ class ThreadedWorker < Delayed::Worker
   def start
     trap_signals
 
-    say 'Starting multi-threaded job worker'
+    say "Starting multi-threaded job worker with #{@thread_count} threads"
 
     @thread_count.times do |i|
       thread_name = generate_thread_name(i + 1)
