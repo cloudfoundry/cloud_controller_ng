@@ -1,4 +1,4 @@
-namespace :buildpacks do
+namespace :stacks do
   desc 'Check Installed Stacks'
   task stack_check: :environment do
     VCAP::CloudController::Encryptor.db_encryption_key = RakeConfig.config.get(:db_encryption_key)
@@ -7,12 +7,8 @@ namespace :buildpacks do
 
     deprecated_stack = 'cflinuxfs3'
     stack_config = VCAP::CloudController::Stack::ConfigFile.new(RakeConfig.config.get(:stacks_file))
-    p stack_config.stacks
     configured_stacks = stack_config.stacks
     deprecated_stack_in_config = (configured_stacks.find { |stack| stack['name'] == deprecated_stack }).nil?
-    p(configured_stacks.find { |stack| stack['name'] == deprecated_stack })
-    p deprecated_stack_in_config
-    p deprecated_stack_in_config.nil?
 
     exit(0) if deprecated_stack_in_config
 
