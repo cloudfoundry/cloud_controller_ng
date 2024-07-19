@@ -7,6 +7,7 @@ module VCAP::CloudController
 
     def initialize(config)
       @config = config
+      @stack_config = VCAP::CloudController::Stack::ConfigFile.new(config.get(:stacks_file))
     end
 
     def logger
@@ -14,6 +15,25 @@ module VCAP::CloudController
     end
 
     def validate_stacks
+      deprecated_stacks = @stack_config.deprecated_stacks
+      deprecated_stacks.each { |stack| validate_stack(stack) }
+    end
+
+    private
+
+    def validate_stack(deprecated_stack)
+      configured_stacks = @stack_config.stacks
+      deprecated_stack_in_config = (configured_stacks.find { |stack| stack['name'] == deprecated_stack }).present?
+
+      return if deprecated_stack_in_config
+
+      logger = Steno.logger('cc.stack')
+      VCAP::CloudController::DB.connect(RakeConfig.config.get(:db), logger)
+      deprecated_stack_in_db = VCAP::CloudController::Stack.first(name: deprecated_stack).present?
+      if deprecated_stack_in_db
+        raise ("rake task 'stack_check' failed, stack '#{deprecated_stack}' not supported")
+      end
+
     end
   end
 end

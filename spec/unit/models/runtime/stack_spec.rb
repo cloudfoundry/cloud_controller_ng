@@ -45,7 +45,8 @@ module VCAP::CloudController
 
         {
           default: 'default => Missing key',
-          stacks: 'name => Missing key'
+          stacks: 'name => Missing key',
+          deprecated_stacks: 'deprecated_stacks => Expected instance of Array, given instance of Hash }'
         }.each do |key, expected_error|
           it "requires #{key} (validates via '#{expected_error}')" do
             expect do

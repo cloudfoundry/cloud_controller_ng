@@ -100,6 +100,10 @@ module VCAP::CloudController
         @hash['stacks']
       end
 
+      def deprecated_stacks
+        @hash['deprecated_stacks']
+      end
+
       def default
         @hash['default']
       end
@@ -112,7 +116,10 @@ module VCAP::CloudController
             'description' => String,
             optional('build_rootfs_image') => String,
             optional('run_rootfs_image') => String
-          }]
+          }],
+          optional('deprecated_stacks') => [
+            String
+          ]
         }
       end
     end

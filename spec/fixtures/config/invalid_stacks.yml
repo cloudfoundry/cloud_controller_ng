@@ -1,2 +1,4 @@
 stacks:
   - unknown_key: true
+
+deprecated_stacks: {} 
