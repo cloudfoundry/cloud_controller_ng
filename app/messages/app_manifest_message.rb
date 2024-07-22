@@ -284,15 +284,6 @@ module VCAP::CloudController
     end
 
     def cnb_lifecycle_data
-      return unless requested?(:buildpacks) || requested?(:buildpack) || requested?(:stack)
-
-      if requested?(:buildpacks)
-        requested_buildpacks = @buildpacks
-      elsif requested?(:buildpack)
-        requested_buildpacks = []
-        requested_buildpacks.push(@buildpack) unless should_autodetect?(@buildpack)
-      end
-
       {
         type: Lifecycles::CNB,
         data: {
@@ -304,16 +295,8 @@ module VCAP::CloudController
     end
 
     def buildpacks_lifecycle_data
-      return unless requested?(:buildpacks) || requested?(:buildpack) || requested?(:stack)
-
-      if requested?(:buildpacks)
-        requested_buildpacks = @buildpacks
-      elsif requested?(:buildpack)
-        requested_buildpacks = []
-        requested_buildpacks.push(@buildpack) unless should_autodetect?(@buildpack)
-      end
-
       {
+        type: Lifecycles::BUILDPACK,
         data: {
           buildpacks: requested_buildpacks,
           stack: @stack
@@ -492,6 +475,16 @@ module VCAP::CloudController
 
     def add_process_error!(error_message, type)
       errors.add(:base, %(Process "#{type}": #{error_message}))
+    end
+
+    def requested_buildpacks
+      return nil unless requested?(:buildpacks) || requested?(:buildpack)
+      return @buildpacks if requested?(:buildpacks)
+
+      buildpacks = []
+      buildpacks.push(@buildpack) if requested?(:buildpack) && !should_autodetect?(@buildpack)
+
+      buildpacks
     end
   end
 end

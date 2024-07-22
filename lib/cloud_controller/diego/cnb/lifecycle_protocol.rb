@@ -28,6 +28,10 @@ module VCAP
 
             lifecycle_data
           end
+
+          def type
+            VCAP::CloudController::Lifecycles::CNB
+          end
         end
       end
     end
