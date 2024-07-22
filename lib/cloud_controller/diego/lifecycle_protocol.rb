@@ -19,7 +19,7 @@ module VCAP::CloudController
       def initialize(blobstore_url_generator=::CloudController::DependencyLocator.instance.blobstore_url_generator,
                      droplet_url_generator=::CloudController::DependencyLocator.instance.droplet_url_generator)
         @blobstore_url_generator   = blobstore_url_generator
-        @buildpack_entry_generator = BuildpackEntryGenerator.new(@blobstore_url_generator)
+        @buildpack_entry_generator = BuildpackEntryGenerator.new(@blobstore_url_generator, type)
         @droplet_url_generator = droplet_url_generator
       end
 
