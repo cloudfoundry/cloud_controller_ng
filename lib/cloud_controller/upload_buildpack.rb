@@ -1,4 +1,5 @@
 require 'vcap/digester'
+require 'cloud_controller/diego/lifecycles/lifecycles'
 
 module VCAP::CloudController
   class UploadBuildpack
@@ -69,6 +70,8 @@ module VCAP::CloudController
       extracted_stack = Buildpacks::StackNameExtractor.extract_from_file(bits_file_path)
       [extracted_stack, buildpack.stack].find(&:present?)
     rescue CloudController::Errors::BuildpackError => e
+      return buildpack.stack if buildpack.lifecycle == Lifecycles::CNB
+
       raise CloudController::Errors::ApiError.new_from_details('BuildpackZipError', e.message)
     end
 
