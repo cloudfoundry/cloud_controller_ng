@@ -104,7 +104,8 @@ module VCAP::CloudController
         Timecop.return
       end
 
-      subject(:cnb_buildpacks) { Buildpack.list_admin_buildpacks(nil, 'cnb') }
+      let(:cnb_buildpacks) { Buildpack.list_admin_buildpacks(nil, 'cnb') }
+
       subject(:all_buildpacks) { Buildpack.list_admin_buildpacks }
 
       context 'with prioritized buildpacks' do
@@ -191,7 +192,7 @@ module VCAP::CloudController
       end
 
       context 'with a stack' do
-        subject(:cnb_buildpacks) { Buildpack.list_admin_buildpacks('stack2', 'cnb') }
+        let(:cnb_buildpacks) { Buildpack.list_admin_buildpacks('stack2', 'cnb') }
         subject(:all_buildpacks) { Buildpack.list_admin_buildpacks('stack1') }
         let!(:stack1) { Stack.make(name: 'stack1') }
         let!(:stack2) { Stack.make(name: 'stack2') }
@@ -219,7 +220,6 @@ module VCAP::CloudController
         it 'returns the list of cnb buildpacks' do
           expect(cnb_buildpacks.collect(&:key)).to eq(['cnb key'])
         end
-
       end
     end
 
