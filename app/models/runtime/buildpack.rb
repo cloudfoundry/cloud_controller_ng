@@ -4,8 +4,8 @@ module VCAP::CloudController
   class Buildpack < Sequel::Model
     plugin :list, scope: :lifecycle
 
-    export_attributes :name, :stack, :position, :enabled, :locked, :filename
-    import_attributes :name, :stack, :position, :enabled, :locked, :filename, :key
+    export_attributes :name, :stack, :position, :enabled, :locked, :filename, :lifecycle
+    import_attributes :name, :stack, :position, :enabled, :locked, :filename, :lifecycle, :key
 
     PACKAGE_STATES = [
       CREATED_STATE = 'AWAITING_UPLOAD'.freeze,
@@ -24,7 +24,7 @@ module VCAP::CloudController
 
     def self.list_admin_buildpacks(stack_name=nil, lifecycle=VCAP::CloudController::Lifecycles::BUILDPACK)
       scoped = exclude(key: nil).exclude(key: '')
-      scoped = scoped.filter(:lifecycle => lifecycle)
+      scoped = scoped.filter(lifecycle:)
       if stack_name.present?
         scoped = scoped.filter(Sequel.or([
           [:stack, stack_name],

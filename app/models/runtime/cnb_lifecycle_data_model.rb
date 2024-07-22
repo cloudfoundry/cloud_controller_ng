@@ -96,7 +96,7 @@ module VCAP::CloudController
     private
 
     def attributes_from_buildpack_name(buildpack_name)
-      if UriUtils.is_buildpack_uri?(buildpack_name)
+      if UriUtils.is_cnb_buildpack_uri?(buildpack_name)
         { buildpack_url: buildpack_name, admin_buildpack_name: nil }
       else
         { buildpack_url: nil, admin_buildpack_name: buildpack_name }
@@ -107,7 +107,7 @@ module VCAP::CloudController
       admin_buildpack = Buildpack.find(key:)
       if admin_buildpack
         { buildpack_url: nil, admin_buildpack_name: admin_buildpack.name }
-      elsif UriUtils.is_buildpack_uri?(key)
+      elsif UriUtils.is_cnb_buildpack_uri?(key)
         { buildpack_url: key, admin_buildpack_name: nil }
       else
         {} # Will fail a validity check downstream

@@ -131,8 +131,8 @@ module VCAP::CloudController
 
           let(:buildpacks) do
             [
-              { url: 'gcr.io/paketo-buildpacks/node-start', skip_detect: false },
-              { url: 'gcr.io/paketo-buildpacks/node-engine', skip_detect: false }
+              { name: 'custom', url: 'gcr.io/paketo-buildpacks/node-start', skip_detect: false },
+              { name: 'custom', url: 'gcr.io/paketo-buildpacks/node-engine', skip_detect: false }
             ]
           end
 
@@ -238,6 +238,52 @@ module VCAP::CloudController
                 expect(parallel_download_action.actions.count).to eq(1)
                 expect(parallel_download_action.actions[0].download_action).to eq(download_app_package_action)
               end
+            end
+          end
+
+          context('when system-buildpaks are used') do
+            let(:buildpacks) do
+              [
+                { name: 'node-cnb', key: 'node-key', skip_detect: false },
+                { name: 'java-cnb', key: 'java-key', skip_detect: false }
+              ]
+            end
+
+            let(:run_staging_action) do
+              ::Diego::Bbs::Models::RunAction.new(
+                path: '/tmp/lifecycle/builder',
+                user: 'vcap',
+                args: ['--cache-dir', '/tmp/cache', '--cache-output', '/tmp/cache-output.tgz', '--system-buildpack', 'node-key', '--system-buildpack',
+                       'java-key', '--pass-env-var', 'FOO', '--pass-env-var', 'BAR'],
+                env: bbs_env
+              )
+            end
+
+            it 'returns the buildpack staging action without download actions' do
+              result = builder.action
+
+              serial_action = result.serial_action
+              actions       = serial_action.actions
+
+              expect(actions[1].run_action).to eq(run_staging_action)
+              expect(builder.cached_dependencies).to include(::Diego::Bbs::Models::CachedDependency.new(
+                                                               name: 'node-cnb',
+                                                               from: '',
+                                                               to: '/tmp/buildpacks/54548f35489d6234',
+                                                               cache_key: 'node-cnb',
+                                                               log_source: '',
+                                                               checksum_algorithm: '',
+                                                               checksum_value: ''
+                                                             ))
+              expect(builder.cached_dependencies).to include(::Diego::Bbs::Models::CachedDependency.new(
+                                                               name: 'java-cnb',
+                                                               from: '',
+                                                               to: '/tmp/buildpacks/c56b3bfdba7aa4dd',
+                                                               cache_key: 'java-cnb',
+                                                               log_source: '',
+                                                               checksum_algorithm: '',
+                                                               checksum_value: ''
+                                                             ))
             end
           end
         end

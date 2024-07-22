@@ -1,8 +1,8 @@
 require 'messages/base_message'
 
 module VCAP::CloudController
-  GZIP_MIME = Regexp.new("\x1F\x8B\x08".force_encoding("binary"))
-  ZIP_MIME = Regexp.new("PK\x03\x04".force_encoding("binary"))
+  GZIP_MIME = Regexp.new("\x1F\x8B\x08".force_encoding('binary'))
+  ZIP_MIME = Regexp.new("PK\x03\x04".force_encoding('binary'))
 
   class BuildpackUploadMessage < BaseMessage
     class MissingFilePathError < StandardError; end
@@ -49,12 +49,11 @@ module VCAP::CloudController
       return unless bits_name
       return unless bits_path
 
-      case IO.read(bits_path, 4)
-      when /^#{VCAP::CloudController::GZIP_MIME}/, /^#{VCAP::CloudController::ZIP_MIME}/
-      else
-        errors.add(:base, "#{bits_name} is not a zip or gzip archive")
-      end
+      mime_bits = File.read(bits_path, 4)
 
+      return if mime_bits =~ /^#{VCAP::CloudController::GZIP_MIME}/ || mime_bits =~ /^#{VCAP::CloudController::ZIP_MIME}/
+
+      errors.add(:base, "#{bits_name} is not a zip or gzip archive")
     end
 
     def missing_file_path
