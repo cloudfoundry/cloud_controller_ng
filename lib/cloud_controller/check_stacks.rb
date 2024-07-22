@@ -1,6 +1,3 @@
-require 'models/runtime/buildpack_lifecycle_data_model'
-require 'models/runtime/stack'
-
 module VCAP::CloudController
   class CheckStacks
     attr_reader :config
@@ -10,12 +7,10 @@ module VCAP::CloudController
       @stack_config = VCAP::CloudController::Stack::ConfigFile.new(config.get(:stacks_file))
     end
 
-    def logger
-      @logger ||= Steno.logger('cc.install_buildpacks')
-    end
-
     def validate_stacks
       deprecated_stacks = @stack_config.deprecated_stacks
+      return if deprecated_stacks.blank?
+
       deprecated_stacks.each { |stack| validate_stack(stack) }
     end
 
@@ -27,13 +22,9 @@ module VCAP::CloudController
 
       return if deprecated_stack_in_config
 
-      logger = Steno.logger('cc.stack')
-      VCAP::CloudController::DB.connect(RakeConfig.config.get(:db), logger)
       deprecated_stack_in_db = VCAP::CloudController::Stack.first(name: deprecated_stack).present?
-      if deprecated_stack_in_db
-        raise ("rake task 'stack_check' failed, stack '#{deprecated_stack}' not supported")
-      end
 
+      raise "rake task 'stack_check' failed, stack '#{deprecated_stack}' not supported" if deprecated_stack_in_db
     end
   end
 end

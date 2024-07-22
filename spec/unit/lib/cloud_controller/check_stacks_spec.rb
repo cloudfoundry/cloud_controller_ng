@@ -19,7 +19,7 @@ module VCAP::CloudController
     let(:cflinuxfs4) { { 'name' => 'cflinuxfs4', 'description' => 'fs4' } }
 
     before do
-      #binding.pry
+      # binding.pry
       Stack.dataset.destroy
       file = Tempfile.new
       file.write(stack_file_contents.to_yaml)
@@ -30,6 +30,22 @@ module VCAP::CloudController
     end
 
     let(:stack_checker) { CheckStacks.new(TestConfig.config_instance) }
+
+    describe 'there deprecated stacks is nil' do
+      let(:stack_file_contents) do
+        {
+          'default' => 'cflinuxfs4',
+          'stacks' => [
+            cflinuxfs3,
+            cflinuxfs4
+          ]
+        }
+      end
+
+      it 'does nothing' do
+        expect { stack_checker.validate_stacks }.not_to raise_error
+      end
+    end
 
     describe 'there are no deprecated stacks' do
       let(:stack_file_contents) do
@@ -56,7 +72,7 @@ module VCAP::CloudController
             cflinuxfs3,
             cflinuxfs4
           ],
-          'deprecated_stacks' => [ 'cflinuxfs3' ]
+          'deprecated_stacks' => ['cflinuxfs3']
         }
       end
 
