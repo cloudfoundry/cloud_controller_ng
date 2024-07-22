@@ -199,7 +199,7 @@ module VCAP::CloudController
 
         expect(lifecycle_data.valid?).to be(false)
         expect(lifecycle_data.errors.full_messages.size).to eq(1)
-        expect(lifecycle_data.errors.full_messages.first).to include('Specified invalid buildpack URL: "invalid_buildpack_name"')
+        expect(lifecycle_data.errors.full_messages.first).to include('Specified unknown buildpack name: "invalid_buildpack_name"')
       end
 
       it 'is valid' do

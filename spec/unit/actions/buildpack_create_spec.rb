@@ -19,7 +19,8 @@ module VCAP::CloudController
             name: 'the-name',
             stack: 'the-stack',
             enabled: false,
-            locked: true
+            locked: true,
+            lifecycle: Lifecycles::BUILDPACK
           )
           buildpack = BuildpackCreate.new.create(message)
 
@@ -28,6 +29,7 @@ module VCAP::CloudController
           expect(buildpack.position).to eq(1)
           expect(buildpack.enabled).to be(false)
           expect(buildpack.locked).to be(true)
+          expect(buildpack.lifecycle).to eq(Lifecycles::BUILDPACK)
         end
       end
 
@@ -111,6 +113,19 @@ module VCAP::CloudController
           buildpack = BuildpackCreate.new.create(message)
 
           expect(buildpack.locked).to be(false)
+        end
+      end
+
+      context 'when lifecycle is provided' do
+        it 'creates a buildpack with locked set to true' do
+          message = BuildpackCreateMessage.new(
+            name: 'the-name',
+            stack: 'the-stack',
+            lifecycle: Lifecycles::CNB
+          )
+          buildpack = BuildpackCreate.new.create(message)
+
+          expect(buildpack.lifecycle).to eq(Lifecycles::CNB)
         end
       end
 
