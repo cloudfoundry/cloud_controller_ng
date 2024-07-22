@@ -1,8 +1,9 @@
 module VCAP::CloudController
   module Diego
     class BuildpackEntryGenerator
-      def initialize(blobstore_url_generator)
+      def initialize(blobstore_url_generator, type)
         @blobstore_url_generator = blobstore_url_generator
+        @type = type
       end
 
       def buildpack_entries(buildpack_infos, stack_name)
@@ -26,7 +27,7 @@ module VCAP::CloudController
       end
 
       def default_admin_buildpacks(stack_name)
-        VCAP::CloudController::Buildpack.list_admin_buildpacks(stack_name).
+        VCAP::CloudController::Buildpack.list_admin_buildpacks(stack_name, @type).
           select(&:enabled).
           collect { |buildpack| admin_buildpack_entry(buildpack) }
       end
