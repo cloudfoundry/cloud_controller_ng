@@ -16,8 +16,13 @@ module VCAP::CloudController
       context 'when the user specifies buildpacks' do
         let(:request_data) do
           {
-            buildpacks: %w[docker://cool-buildpack docker://rad-buildpack]
+            buildpacks: %w[docker://nodejs cool-buildpack]
           }
+        end
+
+        before do
+          Buildpack.make(name: 'cool-buildpack', lifecycle: 'cnb')
+          Buildpack.make(name: 'rad-buildpack')
         end
 
         it 'uses the buildpacks from the user' do
@@ -29,7 +34,7 @@ module VCAP::CloudController
 
           data_model = VCAP::CloudController::CNBLifecycleDataModel.last
 
-          expect(data_model.buildpacks).to eq(%w[docker://cool-buildpack docker://rad-buildpack])
+          expect(data_model.buildpacks).to eq(%w[docker://nodejs cool-buildpack])
           expect(data_model.build).to eq(build)
         end
       end

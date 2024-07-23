@@ -30,9 +30,10 @@ module VCAP::CloudController
             '--cache-output', '/tmp/cache-output.tgz'
           ]
 
+          args.push('--auto-detect') if lifecycle_data[:auto_detect]
           lifecycle_data[:buildpacks].each do |buildpack|
             args.push('--buildpack', buildpack[:url]) if buildpack[:name] == 'custom'
-            args.push('--system-buildpack', buildpack[:key]) unless buildpack[:name] == 'custom'
+            args.push('--buildpack', buildpack[:key]) unless buildpack[:name] == 'custom'
           end
 
           env_vars = BbsEnvironmentBuilder.build(staging_details.environment_variables)
