@@ -241,7 +241,7 @@ module VCAP::CloudController
             end
           end
 
-          context('when system-buildpaks are used') do
+          context('when system-buildpacks are used') do
             let(:buildpacks) do
               [
                 { name: 'node-cnb', key: 'node-key', skip_detect: false },
@@ -249,11 +249,15 @@ module VCAP::CloudController
               ]
             end
 
+            before do
+              lifecycle_data[:auto_detect] = true
+            end
+
             let(:run_staging_action) do
               ::Diego::Bbs::Models::RunAction.new(
                 path: '/tmp/lifecycle/builder',
                 user: 'vcap',
-                args: ['--cache-dir', '/tmp/cache', '--cache-output', '/tmp/cache-output.tgz', '--system-buildpack', 'node-key', '--system-buildpack',
+                args: ['--cache-dir', '/tmp/cache', '--cache-output', '/tmp/cache-output.tgz', '--auto-detect', '--buildpack', 'node-key', '--buildpack',
                        'java-key', '--pass-env-var', 'FOO', '--pass-env-var', 'BAR'],
                 env: bbs_env
               )
@@ -269,8 +273,8 @@ module VCAP::CloudController
               expect(builder.cached_dependencies).to include(::Diego::Bbs::Models::CachedDependency.new(
                                                                name: 'node-cnb',
                                                                from: '',
-                                                               to: '/tmp/buildpacks/54548f35489d6234',
-                                                               cache_key: 'node-cnb',
+                                                               to: '/tmp/buildpacks/0dcf6bb539d77cbc',
+                                                               cache_key: 'node-key',
                                                                log_source: '',
                                                                checksum_algorithm: '',
                                                                checksum_value: ''
@@ -278,8 +282,8 @@ module VCAP::CloudController
               expect(builder.cached_dependencies).to include(::Diego::Bbs::Models::CachedDependency.new(
                                                                name: 'java-cnb',
                                                                from: '',
-                                                               to: '/tmp/buildpacks/c56b3bfdba7aa4dd',
-                                                               cache_key: 'java-cnb',
+                                                               to: '/tmp/buildpacks/be0ef1aa1092a6db',
+                                                               cache_key: 'java-key',
                                                                log_source: '',
                                                                checksum_algorithm: '',
                                                                checksum_value: ''
