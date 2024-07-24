@@ -204,7 +204,7 @@ module CloudController
           expect(httpclient).to receive(:put) do |*args|
             uri, body, = args
             expect(uri).to eq('http://localhost/admin/droplets/fo/ob/foobar')
-            expect(body).to be_kind_of(File)
+            expect(body).to be_a(File)
             expect(body.read).to eq('file content')
             response
           end
@@ -219,7 +219,7 @@ module CloudController
           expect(httpclient).to receive(:put) do |*args|
             uri, body, = args
             expect(uri).to eq('http://localhost/admin/droplets/fo/ob/foobar')
-            expect(body).to be_kind_of(File)
+            expect(body).to be_a(File)
             expect(body.read).to eq('file content')
             response
           end
