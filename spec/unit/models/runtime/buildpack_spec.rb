@@ -9,7 +9,7 @@ module VCAP::CloudController
     it { is_expected.to have_timestamp_columns }
 
     describe 'Validations' do
-      it { is_expected.to validate_uniqueness %i[name stack] }
+      it { is_expected.to validate_uniqueness %i[name stack lifecycle] }
 
       describe 'stack' do
         let(:stack) {  Stack.make(name: 'happy') }
@@ -74,11 +74,21 @@ module VCAP::CloudController
           end
         end
       end
+
+      describe 'lifecycle' do
+        it 'cannot be changed once it is set' do
+          buildpack = Buildpack.create(name: 'test', lifecycle: 'cnb')
+          buildpack.lifecycle = 'buildpack'
+
+          expect(buildpack).not_to be_valid
+          expect(buildpack.errors.on(:lifecycle)).to include(:buildpack_cant_change_lifecycle)
+        end
+      end
     end
 
     describe 'Serialization' do
-      it { is_expected.to export_attributes :name, :stack, :position, :enabled, :locked, :filename }
-      it { is_expected.to import_attributes :name, :stack, :position, :enabled, :locked, :filename, :key }
+      it { is_expected.to export_attributes :name, :stack, :position, :enabled, :locked, :filename, :lifecycle }
+      it { is_expected.to import_attributes :name, :stack, :position, :enabled, :locked, :filename, :lifecycle, :key }
 
       it 'does not string mung(e)?' do
         expect(Buildpack.new(name: "my_custom_buildpack\r\n").to_json).to eq '"my_custom_buildpack\r\n"'
