@@ -118,6 +118,7 @@ RSpec.describe 'buildpacks' do
             'resources' => [
               {
                 'guid' => buildpack1.guid,
+                'lifecycle' => 'buildpack',
                 'created_at' => iso8601,
                 'updated_at' => iso8601,
                 'name' => buildpack1.name,
@@ -140,6 +141,7 @@ RSpec.describe 'buildpacks' do
               },
               {
                 'guid' => buildpack3.guid,
+                'lifecycle' => 'buildpack',
                 'created_at' => iso8601,
                 'updated_at' => iso8601,
                 'name' => buildpack3.name,
@@ -185,6 +187,7 @@ RSpec.describe 'buildpacks' do
             'resources' => [
               {
                 'guid' => buildpack1.guid,
+                'lifecycle' => 'buildpack',
                 'created_at' => iso8601,
                 'updated_at' => iso8601,
                 'name' => buildpack1.name,
@@ -230,6 +233,7 @@ RSpec.describe 'buildpacks' do
             'resources' => [
               {
                 'guid' => buildpack3.guid,
+                'lifecycle' => 'buildpack',
                 'created_at' => iso8601,
                 'updated_at' => iso8601,
                 'name' => buildpack3.name,
@@ -252,6 +256,7 @@ RSpec.describe 'buildpacks' do
               },
               {
                 'guid' => buildpack1.guid,
+                'lifecycle' => 'buildpack',
                 'created_at' => iso8601,
                 'updated_at' => iso8601,
                 'name' => buildpack1.name,
@@ -360,6 +365,7 @@ RSpec.describe 'buildpacks' do
               'enabled' => params[:enabled],
               'locked' => params[:locked],
               'guid' => buildpack.guid,
+              'lifecycle' => 'buildpack',
               'created_at' => iso8601,
               'updated_at' => iso8601,
               'metadata' => {
@@ -477,6 +483,7 @@ RSpec.describe 'buildpacks' do
             'enabled' => buildpack.enabled,
             'locked' => buildpack.locked,
             'guid' => buildpack.guid,
+            'lifecycle' => 'buildpack',
             'created_at' => iso8601,
             'updated_at' => iso8601,
             'metadata' => { 'labels' => {}, 'annotations' => {} },
