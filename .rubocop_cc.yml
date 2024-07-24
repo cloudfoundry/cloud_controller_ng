@@ -3,7 +3,10 @@
 require:
   - rubocop-sequel
   - rubocop-rails
+  - rubocop-capybara
+  - rubocop-factory_bot
   - rubocop-rspec
+  - rubocop-rspec_rails
   - ./spec/linters/migration/add_constraint_name.rb
   - ./spec/linters/migration/include_string_size.rb
   - ./spec/linters/migration/require_primary_key.rb
@@ -525,17 +528,17 @@ RSpec/SubjectDeclaration:
   Enabled: true
 RSpec/VerifiedDoubleReference:
   Enabled: true
-RSpec/Rails/AvoidSetupHook:
+RSpecRails/AvoidSetupHook:
   Enabled: true
-RSpec/Rails/HaveHttpStatus:
+RSpecRails/HaveHttpStatus:
   Enabled: true
-RSpec/Rails/InferredSpecType:
+RSpecRails/InferredSpecType:
   Enabled: true
-RSpec/Rails/MinitestAssertions:
+RSpecRails/MinitestAssertions:
   Enabled: true
-RSpec/Rails/NegationBeValid:
+RSpecRails/NegationBeValid:
   Enabled: true
-RSpec/Rails/TravelAround:
+RSpecRails/TravelAround:
   Enabled: true
 Style/SingleLineDoEndBlock:
   Enabled: true

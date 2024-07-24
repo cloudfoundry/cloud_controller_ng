@@ -239,7 +239,7 @@ RSpec/ExpectInHook:
 # Offense count: 31
 # Configuration parameters: Include, CustomTransform, IgnoreMethods, SpecSuffixOnly.
 # Include: **/*_spec*rb*, **/spec/**/*
-RSpec/FilePath:
+Rails/FilePath:
   Enabled: false
 
 # Offense count: 1
