@@ -214,6 +214,23 @@ module VCAP::CloudController
           end
         end
 
+        context 'parallel creation of managed service instances' do
+          it 'ensures one creation is successful and the other fails due to name conflict' do
+            # First request, should succeed
+            expect do
+              action.precursor(message:, service_plan:)
+            end.not_to raise_error
+
+            # Mock the validation for the second request to simulate the race condition and trigger a unique constraint violation
+            allow_any_instance_of(ManagedServiceInstance).to receive(:validate).and_return(true)
+
+            # Second request, should fail with correct error message
+            expect do
+              action.precursor(message:, service_plan:)
+            end.to raise_error(ServiceInstanceCreateManaged::InvalidManagedServiceInstance, 'The service instance name is taken: si-test-name.')
+          end
+        end
+
         context 'quotas' do
           context 'when service instance limit has been reached for the space' do
             before do
