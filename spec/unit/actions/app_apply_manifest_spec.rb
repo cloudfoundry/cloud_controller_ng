@@ -119,6 +119,7 @@ module VCAP::CloudController
             end
 
             describe 'using cnb type' do
+              let(:message) { AppManifestMessage.create_from_yml({ name: 'blah', buildpack: buildpack.name, lifecycle: 'cnb' }) }
               let(:app) { AppModel.make(:cnb) }
 
               it 'calls AppUpdate with the correct arguments' do
