@@ -512,8 +512,10 @@ RSpec.describe BuildpacksController, type: :controller do
     let(:buildpack_bits_name) { 'buildpack.zip' }
 
     before do
-      allow(File).to receive(:stat).and_return(stat_double)
-      # allow(VCAP::CloudController::BuildpackUpload).to receive(:new).and_return(uploader)
+      allow(File).to receive_messages(
+        stat: stat_double,
+        read: "PK\x03\x04".force_encoding('binary')
+      )
     end
 
     describe 'permissions' do

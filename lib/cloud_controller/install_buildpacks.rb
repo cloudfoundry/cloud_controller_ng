@@ -12,8 +12,6 @@ module VCAP::CloudController
       CloudController::DependencyLocator.instance.buildpack_blobstore.ensure_bucket_exists
       job_factory = VCAP::CloudController::Jobs::Runtime::BuildpackInstallerFactory.new
 
-      buildpack_install_jobs = []
-
       factory_options = []
       buildpacks.each do |bpack|
         buildpack_opts = bpack.deep_symbolize_keys
@@ -41,19 +39,10 @@ module VCAP::CloudController
           logger.error "File not found: #{buildpack_file}, for the buildpack_opts: #{bpack}"
           next
         end
-
-        detected_stack = VCAP::CloudController::Buildpacks::StackNameExtractor.extract_from_file(buildpack_file) if buildpack_opts[:lifecycle] == Lifecycles::BUILDPACK
-        detected_stack = buildpack_opts[:stack] if buildpack_opts[:lifecycle] == Lifecycles::CNB
-
-        factory_options << { name: buildpack_name, file: buildpack_file, options: buildpack_opts, stack: detected_stack }
+        factory_options << { name: buildpack_name, file: buildpack_file, options: buildpack_opts, stack: detected_stack(buildpack_file, buildpack_opts) }
       end
 
-      buildpacks_by_lifecycle = factory_options.group_by { |options| options[:options][:lifecycle] }
-      buildpacks_by_lifecycle.each_value do |options|
-        options.group_by { |opts| opts[:name] }.each do |name, buildpack_options|
-          buildpack_install_jobs << job_factory.plan(name, buildpack_options)
-        end
-      end
+      buildpack_install_jobs = generate_install_jobs(factory_options, job_factory)
 
       buildpack_install_jobs.flatten!
       run_canary(buildpack_install_jobs)
@@ -65,6 +54,23 @@ module VCAP::CloudController
     end
 
     private
+
+    def generate_install_jobs(factory_options, job_factory)
+      buildpack_install_jobs = []
+      buildpacks_by_lifecycle = factory_options.group_by { |options| options[:options][:lifecycle] }
+      buildpacks_by_lifecycle.each_value do |options|
+        options.group_by { |opts| opts[:name] }.each do |name, buildpack_options|
+          buildpack_install_jobs << job_factory.plan(name, buildpack_options)
+        end
+      end
+      buildpack_install_jobs
+    end
+
+    def detected_stack(file, opts)
+      return opts[:stack] if opts[:lifecycle] == Lifecycles::CNB
+
+      VCAP::CloudController::Buildpacks::StackNameExtractor.extract_from_file(file)
+    end
 
     def buildpack_zip(package, zipfile)
       return zipfile if zipfile
