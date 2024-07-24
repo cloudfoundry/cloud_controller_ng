@@ -37,8 +37,7 @@ module VCAP::CloudController
 
           planned_jobs = []
 
-          found_buildpacks = Buildpack.where(name: buildpack_name).all
-
+          found_buildpacks = Buildpack.where(name: buildpack_name, lifecycle: manifest_fields[0][:lifecycle]).all
           ensure_no_attempt_to_upgrade_a_stackless_locked_buildpack(buildpack_name, found_buildpacks, manifest_fields)
 
           manifest_fields.each do |buildpack_fields|

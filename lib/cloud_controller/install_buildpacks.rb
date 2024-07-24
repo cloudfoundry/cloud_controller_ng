@@ -18,6 +18,8 @@ module VCAP::CloudController
       buildpacks.each do |bpack|
         buildpack_opts = bpack.deep_symbolize_keys
 
+        buildpack_opts[:lifecycle] = Lifecycles::BUILDPACK if buildpack_opts[:lifecycle].nil?
+
         buildpack_name = buildpack_opts.delete(:name)
         if buildpack_name.nil?
           logger.error "A name must be specified for the buildpack_opts: #{buildpack_opts}"
@@ -40,13 +42,17 @@ module VCAP::CloudController
           next
         end
 
-        detected_stack = VCAP::CloudController::Buildpacks::StackNameExtractor.extract_from_file(buildpack_file)
+        detected_stack = VCAP::CloudController::Buildpacks::StackNameExtractor.extract_from_file(buildpack_file) if buildpack_opts[:lifecycle] == Lifecycles::BUILDPACK
+        detected_stack = buildpack_opts[:stack] if buildpack_opts[:lifecycle] == Lifecycles::CNB
+
         factory_options << { name: buildpack_name, file: buildpack_file, options: buildpack_opts, stack: detected_stack }
       end
 
-      buildpacks_by_name = factory_options.group_by { |options| options[:name] }
-      buildpacks_by_name.each do |name, buildpack_options|
-        buildpack_install_jobs << job_factory.plan(name, buildpack_options)
+      buildpacks_by_lifecycle = factory_options.group_by { |options| options[:options][:lifecycle] }
+      buildpacks_by_lifecycle.each_value do |options|
+        options.group_by { |opts| opts[:name] }.each do |name, buildpack_options|
+          buildpack_install_jobs << job_factory.plan(name, buildpack_options)
+        end
       end
 
       buildpack_install_jobs.flatten!
