@@ -178,6 +178,7 @@ module VCAP::CloudController
                       - :lifecycle
                       extra_keys: []
                       lifecycle:
+                        :type: buildpack
                         :data:
                           :buildpacks:
                           - ruby
