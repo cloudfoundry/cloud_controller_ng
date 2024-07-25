@@ -1,5 +1,6 @@
 require 'spec_helper'
 require 'rails_helper'
+# dummy
 
 RSpec.describe PackagesController, type: :controller do # , isolation: :truncation
   describe '#index' do
