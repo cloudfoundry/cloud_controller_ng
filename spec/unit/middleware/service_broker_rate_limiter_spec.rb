@@ -183,9 +183,9 @@ module CloudFoundry
 
             it 'instantiates the appropriate store class' do
               if store_implementation == :in_memory
-                expect(store).to be_kind_of(ConcurrentRequestCounter::InMemoryStore)
+                expect(store).to be_a(ConcurrentRequestCounter::InMemoryStore)
               else
-                expect(store).to be_kind_of(ConcurrentRequestCounter::RedisStore)
+                expect(store).to be_a(ConcurrentRequestCounter::RedisStore)
               end
             end
 

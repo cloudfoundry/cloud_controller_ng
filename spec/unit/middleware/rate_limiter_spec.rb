@@ -351,9 +351,9 @@ module CloudFoundry
 
             it 'instantiates the appropriate store class' do
               if store_implementation == :in_memory
-                expect(store).to be_kind_of(ExpiringRequestCounter::InMemoryStore)
+                expect(store).to be_a(ExpiringRequestCounter::InMemoryStore)
               else
-                expect(store).to be_kind_of(ExpiringRequestCounter::RedisStore)
+                expect(store).to be_a(ExpiringRequestCounter::RedisStore)
               end
             end
 
