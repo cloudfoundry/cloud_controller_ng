@@ -84,7 +84,7 @@ module VCAP::CloudController
     def validate_multiple_nil_stacks
       return unless stack.nil?
 
-      errors.add(:stack, :unique) if Buildpack.exclude(guid:).where(name: name, stack: nil).present?
+      errors.add(:stack, :unique) if Buildpack.exclude(guid:).where(name: name, stack: nil, lifecycle: lifecycle).present?
     end
 
     def validate_stack_change
