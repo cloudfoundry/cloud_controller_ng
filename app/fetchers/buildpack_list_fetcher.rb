@@ -19,7 +19,7 @@ module VCAP::CloudController
         dataset = dataset.where(name: message.names) if message.requested?(:names)
 
         dataset = NullFilterQueryGenerator.add_filter(dataset, :stack, message.stacks) if message.requested?(:stacks)
-        dataset = dataset.where(lifecycle: message.requested?(:lifecycle) ? message.lifecycle : Lifecycles::BUILDPACK)
+        dataset = dataset.where(lifecycle: message.requested?(:lifecycle) ? message.lifecycle : Config.config.get(:default_app_lifecycle))
 
         if message.requested?(:label_selector)
           dataset = LabelSelectorQueryGenerator.add_selector_queries(

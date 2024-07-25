@@ -7,7 +7,7 @@ module VCAP::CloudController
     define_attributes do
       attribute :name, String
       attribute :stack, String, default: nil
-      attribute :lifecycle, String, default: Lifecycles::BUILDPACK, exclude_in: :update
+      attribute :lifecycle, String, default: nil, exclude_in: :update
       attribute :position, Integer, default: 0
       attribute :enabled, Message::Boolean, default: true
       attribute :locked, Message::Boolean, default: false

@@ -14,7 +14,7 @@ module VCAP::CloudController
     ].map(&:freeze).freeze
 
     def after_initialize
-      self.lifecycle ||= Lifecycles::BUILDPACK
+      self.lifecycle ||= Config.config.get(:default_app_lifecycle)
     end
 
     one_to_many :labels, class: 'VCAP::CloudController::BuildpackLabelModel', key: :resource_guid, primary_key: :guid
@@ -27,7 +27,7 @@ module VCAP::CloudController
       full_dataset_filter
     end
 
-    def self.list_admin_buildpacks(stack_name=nil, lifecycle=VCAP::CloudController::Lifecycles::BUILDPACK)
+    def self.list_admin_buildpacks(stack_name=nil, lifecycle=Config.config.get(:default_app_lifecycle))
       scoped = exclude(key: nil).exclude(key: '')
       scoped = scoped.filter(lifecycle:)
       if stack_name.present?

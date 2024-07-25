@@ -26,7 +26,7 @@ module VCAP::CloudController
                                                                                            position: { type: 'integer', default: 0 },
                                                                                            enabled: { type: 'bool', default: true },
                                                                                            locked: { type: 'bool', default: false },
-                                                                                           lifecycle: { type: 'string', default: 'buildpack' }
+                                                                                           lifecycle: { type: 'string' }
                                                                                          })
       end
 
