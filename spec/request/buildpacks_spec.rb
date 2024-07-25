@@ -28,6 +28,7 @@ RSpec.describe 'buildpacks' do
           order_by: 'updated_at',
           names: 'foo',
           stacks: 'cf',
+          lifecycle: 'buildpack',
           label_selector: 'foo,bar',
           guids: 'foo,bar',
           created_ats: "#{Time.now.utc.iso8601},#{Time.now.utc.iso8601}",
@@ -95,6 +96,7 @@ RSpec.describe 'buildpacks' do
       let!(:buildpack1) { VCAP::CloudController::Buildpack.make(stack: stack1.name, position: 1) }
       let!(:buildpack2) { VCAP::CloudController::Buildpack.make(stack: stack2.name, position: 3) }
       let!(:buildpack3) { VCAP::CloudController::Buildpack.make(stack: stack3.name, position: 2) }
+      let!(:buildpack4) { VCAP::CloudController::Buildpack.make(stack: stack1.name, position: 1, lifecycle: 'cnb') }
 
       it 'returns a paginated list of buildpacks, sorted by position' do
         get '/v3/buildpacks?page=1&per_page=2', nil, headers
@@ -204,6 +206,52 @@ RSpec.describe 'buildpacks' do
                   },
                   'upload' => {
                     'href' => "#{link_prefix}/v3/buildpacks/#{buildpack1.guid}/upload",
+                    'method' => 'POST'
+                  }
+                }
+              }
+            ]
+          }
+        )
+      end
+
+      it 'returns a list of buildpacks filtered by lifecycle' do
+        get '/v3/buildpacks?lifecycle=cnb', nil, headers
+
+        expect(parsed_response).to be_a_response_like(
+          {
+            'pagination' => {
+              'total_results' => 1,
+              'total_pages' => 1,
+              'first' => {
+                'href' => "#{link_prefix}/v3/buildpacks?lifecycle=cnb&page=1&per_page=50"
+              },
+              'last' => {
+                'href' => "#{link_prefix}/v3/buildpacks?lifecycle=cnb&page=1&per_page=50"
+              },
+              'next' => nil,
+              'previous' => nil
+            },
+            'resources' => [
+              {
+                'guid' => buildpack4.guid,
+                'lifecycle' => 'cnb',
+                'created_at' => iso8601,
+                'updated_at' => iso8601,
+                'name' => buildpack4.name,
+                'state' => buildpack4.state,
+                'filename' => buildpack4.filename,
+                'stack' => buildpack4.stack,
+                'position' => 1,
+                'enabled' => true,
+                'locked' => false,
+                'metadata' => { 'labels' => {}, 'annotations' => {} },
+                'links' => {
+                  'self' => {
+                    'href' => "#{link_prefix}/v3/buildpacks/#{buildpack4.guid}"
+                  },
+                  'upload' => {
+                    'href' => "#{link_prefix}/v3/buildpacks/#{buildpack4.guid}/upload",
                     'method' => 'POST'
                   }
                 }
