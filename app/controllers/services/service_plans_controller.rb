@@ -116,7 +116,7 @@ module VCAP::CloudController
           left_join(:service_brokers, id: :services__service_broker_id).
           where(service_brokers__guid: service_broker_guid)
       else
-        super(model, dataset, query_params, opts)
+        super
       end
     end
 

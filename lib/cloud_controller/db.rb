@@ -112,7 +112,7 @@ class Sequel::Model
   #   if e.errors.on(:some_attribute).include(:unique)
 
   def default_validation_helpers_options(type)
-    val = super(type).deep_dup
+    val = super.deep_dup
     val[:message] = type
 
     val

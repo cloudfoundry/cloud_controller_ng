@@ -111,7 +111,7 @@ module VCAP::CloudController
 
     # related_guid should map back to other_id
     def remove_related(related_guid, name, user_guid, find_model=model)
-      response = super(related_guid, name, user_guid, find_model)
+      response = super
       user = User.first(guid: user_guid)
       user.username = @uaa_username_lookup_client.usernames_for_ids([user.guid])[user.guid] || ''
 

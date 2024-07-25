@@ -85,7 +85,7 @@ module VCAP::CloudController
         end
       end
 
-      super(org)
+      super
     end
 
     def update(guid)
@@ -388,7 +388,7 @@ module VCAP::CloudController
 
     def after_update(organization)
       @organization_event_repository.record_organization_update(organization, UserAuditInfo.from_context(SecurityContext), request_attrs)
-      super(organization)
+      super
     end
 
     def get_current_role_guids(org)

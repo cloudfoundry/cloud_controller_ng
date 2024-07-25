@@ -7,7 +7,7 @@ module VCAP::CloudController
 
     # rubocop:disable Metrics/CyclomaticComplexity
     def initialize(params={})
-      super(params)
+      super
       params = params.deep_symbolize_keys
       @requested_keys << :health_check_type if HashUtils.dig(params, :health_check)&.key?(:type)
       @requested_keys << :health_check_timeout if HashUtils.dig(params, :health_check, :data)&.key?(:timeout)

@@ -27,7 +27,7 @@ module VCAP::CloudController
       @requested_keys = params.keys
       disallowed_params = params.slice!(*allowed_keys)
       @extra_keys = disallowed_params.keys
-      super(params)
+      super
     end
 
     def requested?(key)

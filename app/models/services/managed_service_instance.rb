@@ -78,10 +78,10 @@ module VCAP::CloudController
     end
 
     def to_hash(opts={})
-      return super(opts) if last_operation.nil?
+      return super if last_operation.nil?
 
       last_operation_hash = last_operation.to_hash({})
-      super(opts).merge!('last_operation' => last_operation_hash)
+      super.merge!('last_operation' => last_operation_hash)
     end
 
     def gateway_data=(val)

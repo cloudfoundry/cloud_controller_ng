@@ -7,7 +7,7 @@ module CloudController
         present_for_class 'VCAP::CloudController::User'
 
         def entity_hash(controller, user, opts, depth, parents, orphans=nil)
-          super(controller, user, opts, depth, parents, orphans).merge(user_fields(user))
+          super.merge(user_fields(user))
         end
 
         def user_fields(user)

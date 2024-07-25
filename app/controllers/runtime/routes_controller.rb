@@ -190,7 +190,7 @@ module VCAP::CloudController
         opts[:q].delete(opts[:q][orgs_index])
       end
 
-      filtered_dataset = super(model, dataset, query_params, opts)
+      filtered_dataset = super
       opts[:q]         = orig_query
 
       if org_guids.any?

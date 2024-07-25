@@ -28,7 +28,7 @@ module VCAP::CloudController
           )
         end
 
-        super(message, dataset, klass)
+        super
       end
 
       def join_service_plans(dataset)

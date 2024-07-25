@@ -88,7 +88,7 @@ module VCAP::CloudController
               if: proc { |a| a.requested?(:timeout) }
 
     def initialize(params={})
-      super(params)
+      super
       @requested_keys << :health_check_timeout if requested? :timeout
       @requested_keys << :health_check_endpoint if requested? :health_check_http_endpoint
       @requested_keys << :readiness_health_check_endpoint if requested? :readiness_health_check_http_endpoint
