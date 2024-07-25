@@ -178,7 +178,7 @@ module VCAP::CloudController
             message = BuildpackCreateMessage.new(name: name, stack: 'the-stack')
             expect do
               BuildpackCreate.new.create(message)
-            end.to raise_error(BuildpackCreate::Error, "Buildpack with name 'the-name' and stack 'the-stack' already exists")
+            end.to raise_error(BuildpackCreate::Error, "Buildpack with name 'the-name', stack 'the-stack' and lifecycle 'buildpack' already exists")
           end
         end
       end

@@ -131,7 +131,8 @@ module VCAP::CloudController
                   VCAP::CloudController::Buildpack.create(name: buildpack.name, stack: valid_zip_manifest_stack)
                   expect do
                     upload_buildpack.upload_buildpack(buildpack, valid_zip, filename)
-                  end.to raise_error(CloudController::Errors::ApiError, /The buildpack name #{buildpack.name} is already in use for the stack #{valid_zip_manifest_stack}/)
+                  end.to raise_error(CloudController::Errors::ApiError,
+                                     /The buildpack name #{buildpack.name} is already in use for the stack #{valid_zip_manifest_stack} and the lifecycle #{buildpack.lifecycle}/)
                 end
               end
             end

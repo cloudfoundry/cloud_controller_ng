@@ -127,7 +127,7 @@ module VCAP::CloudController
                          cnb_lifecycle_data
                        elsif requested?(:docker)
                          docker_lifecycle_data
-                       else
+                       elsif requested?(:buildpacks) || requested?(:buildpack) || requested?(:stack)
                          buildpacks_lifecycle_data
                        end
 

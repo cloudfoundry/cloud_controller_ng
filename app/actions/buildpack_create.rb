@@ -29,7 +29,9 @@ module VCAP::CloudController
 
     def validation_error!(error, create_message)
       error!(%(Stack '#{create_message.stack}' does not exist)) if error.errors.on(:stack)&.include?(:buildpack_stack_does_not_exist)
-      error!(%(Buildpack with name '#{error.model.name}' and stack '#{error.model.stack}' already exists)) if error.errors.on(%i[name stack])&.include?(:unique)
+      if error.errors.on(%i[name stack lifecycle])&.include?(:unique)
+        error!(%(Buildpack with name '#{error.model.name}', stack '#{error.model.stack}' and lifecycle '#{error.model.lifecycle}' already exists))
+      end
       error!(%(Buildpack with name '#{error.model.name}' and an unassigned stack already exists)) if error.errors.on(:stack)&.include?(:unique)
 
       error!(error.message)

@@ -1993,11 +1993,10 @@ module VCAP::CloudController
           context 'when no lifecycle data is requested in the manifest' do
             let(:parsed_yaml) { {} }
 
-            it 'defaults to the buildpack lifecycle' do
+            it 'does not forward missing attributes to the AppUpdateMessage' do
               message = AppManifestMessage.create_from_yml(parsed_yaml)
 
-              expect(message.app_update_message.requested?(:lifecycle)).to be true
-              expect(message.app_update_message.lifecycle_type).to eq('buildpack')
+              expect(message.app_update_message.requested?(:lifecycle)).to be false
             end
           end
 
