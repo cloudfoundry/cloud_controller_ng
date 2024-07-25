@@ -16,9 +16,9 @@ module VCAP::CloudController
     query_parameters :name, :stack, :lifecycle
 
     def self.translate_validation_exception(e, attributes)
-      buildpack_errors = e.errors.on(%i[name stack])
+      buildpack_errors = e.errors.on(%i[name stack lifecycle])
       if buildpack_errors && buildpack_errors.include?(:unique)
-        CloudController::Errors::ApiError.new_from_details('BuildpackNameStackTaken', attributes['name'], attributes['stack'])
+        CloudController::Errors::ApiError.new_from_details('BuildpackNameStackLifecycleTaken', attributes['name'], attributes['stack'], attributes['lifecycle'])
       else
         CloudController::Errors::ApiError.new_from_details('BuildpackInvalid', e.errors.full_messages)
       end
