@@ -1,5 +1,6 @@
 require 'cloud_controller/paging/sequel_paginator'
 require 'cloud_controller/paging/paginated_result'
+require 'cloud_controller/diego/lifecycles/lifecycles'
 require 'fetchers/null_filter_query_generator'
 require 'fetchers/base_list_fetcher'
 
@@ -18,6 +19,7 @@ module VCAP::CloudController
         dataset = dataset.where(name: message.names) if message.requested?(:names)
 
         dataset = NullFilterQueryGenerator.add_filter(dataset, :stack, message.stacks) if message.requested?(:stacks)
+        dataset = dataset.where(lifecycle: message.requested?(:lifecycle) ? message.lifecycle : Lifecycles::BUILDPACK)
 
         if message.requested?(:label_selector)
           dataset = LabelSelectorQueryGenerator.add_selector_queries(
