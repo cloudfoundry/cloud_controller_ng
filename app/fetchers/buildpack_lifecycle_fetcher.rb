@@ -3,7 +3,7 @@ require 'cloud_controller/diego/lifecycles/lifecycles'
 module VCAP::CloudController
   class BuildpackLifecycleFetcher
     class << self
-      def fetch(buildpack_names, stack_name, lifecycle=VCAP::CloudController::Lifecycles::BUILDPACK)
+      def fetch(buildpack_names, stack_name, lifecycle=Config.config.get(:default_app_lifecycle))
         {
           stack: Stack.find(name: stack_name),
           buildpack_infos: ordered_buildpacks(buildpack_names, stack_name, lifecycle)
