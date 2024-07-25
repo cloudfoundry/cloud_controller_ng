@@ -31,7 +31,7 @@ module VCAP::CloudController
 
     let(:stack_checker) { CheckStacks.new(TestConfig.config_instance) }
 
-    describe 'there deprecated stacks is nil' do
+    describe 'the deprecated stacks is nil' do
       let(:stack_file_contents) do
         {
           'default' => 'cflinuxfs4',
