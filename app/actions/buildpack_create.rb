@@ -14,7 +14,7 @@ module VCAP::CloudController
         buildpack = Buildpack.create(
           name: message.name,
           stack: message.stack,
-          lifecycle: (message.lifecycle.nil? ? VCAP::CloudController::Config.config.get(:default_app_lifecycle) : message.lifecycle),
+          lifecycle: (message.lifecycle.nil? ? Config.config.get(:default_app_lifecycle) : message.lifecycle),
           enabled: (message.enabled.nil? ? DEFAULT_ENABLED : message.enabled),
           locked: (message.locked.nil? ? DEFAULT_LOCKED : message.locked)
         )
