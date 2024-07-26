@@ -19,7 +19,6 @@ module VCAP::CloudController
     let(:cflinuxfs4) { { 'name' => 'cflinuxfs4', 'description' => 'fs4' } }
 
     before do
-      # binding.pry
       Stack.dataset.destroy
       file = Tempfile.new
       file.write(stack_file_contents.to_yaml)
