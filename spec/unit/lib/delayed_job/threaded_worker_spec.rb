@@ -5,17 +5,12 @@ require 'delayed_job/threaded_worker'
 RSpec.describe ThreadedWorker do
   let(:options) { { worker_name: 'test_worker' } }
   let(:thread_count) { 2 }
-  let(:worker) { ThreadedWorker.new(options, thread_count) }
+  let(:worker) { ThreadedWorker.new(thread_count, options) }
 
   describe '#initialize' do
     it 'initializes with given options and thread count' do
       expect(worker.instance_variable_get(:@thread_count)).to eq(thread_count)
       expect(worker.instance_variable_get(:@name_prefix)).to eq('test_worker')
-    end
-
-    it 'initializes with default thread count when not specified' do
-      worker_default = ThreadedWorker.new(options)
-      expect(worker_default.instance_variable_get(:@thread_count)).to eq(ThreadedWorker::DEFAULT_THREAD_COUNT)
     end
   end
 

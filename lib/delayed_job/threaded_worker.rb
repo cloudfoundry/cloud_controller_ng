@@ -1,9 +1,7 @@
 require 'socket'
 
 class ThreadedWorker < Delayed::Worker
-  DEFAULT_THREAD_COUNT = 4
-
-  def initialize(options={}, thread_count=DEFAULT_THREAD_COUNT)
+  def initialize(thread_count, options={})
     super(options)
     @thread_count = thread_count
     @threads = []

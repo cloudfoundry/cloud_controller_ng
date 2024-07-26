@@ -1,3 +1,5 @@
+require 'delayed_job/threaded_worker'
+
 class CloudController::DelayedWorker
   def initialize(options)
     @queue_options = {
@@ -21,7 +23,8 @@ class CloudController::DelayedWorker
     Delayed::Worker.max_attempts = 3
     Delayed::Worker.max_run_time = config.get(:jobs, :global, :timeout_in_seconds) + 1
     Delayed::Worker.logger = logger
-    worker = Delayed::Worker.new(@queue_options)
+    num_threads = config.get(:jobs, :threads)
+    worker = num_threads.nil? ? Delayed::Worker.new(@queue_options) : ThreadedWorker.new(num_threads, @queue_options)
     worker.name = @queue_options[:worker_name]
     worker.start
   end
