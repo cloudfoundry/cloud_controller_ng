@@ -59,6 +59,18 @@ module VCAP::CloudController
         expect(deployment.deploying?).to be(true)
       end
 
+      it 'returns true if the deployment is PAUSED' do
+        deployment.state = DeploymentModel::PAUSED_STATE
+
+        expect(deployment.deploying?).to be(true)
+      end
+
+      it 'returns true if the deployment is PREPAUSED' do
+        deployment.state = DeploymentModel::PREPAUSED_STATE
+
+        expect(deployment.deploying?).to be(true)
+      end
+
       it 'returns false if the deployment has been deployed' do
         deployment.state = 'DEPLOYED'
 
@@ -85,6 +97,18 @@ module VCAP::CloudController
         expect(deployment.cancelable?).to be(true)
       end
 
+      it 'returns true if the deployment is PAUSED' do
+        deployment.state = DeploymentModel::PAUSED_STATE
+
+        expect(deployment.cancelable?).to be(true)
+      end
+
+      it 'returns true if the deployment is PREPAUSED' do
+        deployment.state = DeploymentModel::PREPAUSED_STATE
+
+        expect(deployment.cancelable?).to be(true)
+      end
+
       it 'returns false if the deployment is DEPLOYED' do
         deployment.state = DeploymentModel::DEPLOYED_STATE
 
@@ -101,6 +125,65 @@ module VCAP::CloudController
         deployment.state = DeploymentModel::CANCELED_STATE
 
         expect(deployment.cancelable?).to be(false)
+      end
+    end
+
+    describe '#continuable?' do
+      it 'returns true if the deployment is PAUSED' do
+        deployment.state = DeploymentModel::PAUSED_STATE
+
+        expect(deployment.continuable?).to be(true)
+      end
+
+      it 'returns false if the deployment is PREPAUSED' do
+        deployment.state = DeploymentModel::PREPAUSED_STATE
+
+        expect(deployment.continuable?).to be(false)
+      end
+
+      it 'returns false if the deployment is DEPLOYING state' do
+        deployment.state = DeploymentModel::DEPLOYING_STATE
+
+        expect(deployment.continuable?).to be(false)
+      end
+
+      it 'returns false if the deployment is DEPLOYED state' do
+        deployment.state = DeploymentModel::DEPLOYED_STATE
+
+        expect(deployment.continuable?).to be(false)
+      end
+
+      it 'returns true if the deployment is CANCELING' do
+        deployment.state = DeploymentModel::CANCELING_STATE
+
+        expect(deployment.continuable?).to be(false)
+      end
+
+      it 'returns false if the deployment is CANCELED' do
+        deployment.state = DeploymentModel::CANCELED_STATE
+
+        expect(deployment.continuable?).to be(false)
+      end
+    end
+
+    describe 'PROGRESSING_STATES' do
+      it 'contains progressing forward states' do
+        expect(DeploymentModel::PROGRESSING_STATES).to include(
+          DeploymentModel::DEPLOYING_STATE,
+          DeploymentModel::PAUSED_STATE,
+          DeploymentModel::PREPAUSED_STATE
+        )
+      end
+    end
+
+    describe 'ACTIVE_STATES' do
+      it 'contains active states' do
+        expect(DeploymentModel::ACTIVE_STATES).to include(
+          DeploymentModel::DEPLOYING_STATE,
+          DeploymentModel::PAUSED_STATE,
+          DeploymentModel::PREPAUSED_STATE,
+          DeploymentModel::CANCELING_STATE
+        )
       end
     end
 

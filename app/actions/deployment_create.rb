@@ -13,6 +13,8 @@ module VCAP::CloudController
         DeploymentModel.db.transaction do
           app.lock!
 
+          message.strategy ||= DeploymentModel::ROLLING_STRATEGY
+
           target_state = DeploymentTargetState.new(app, message)
 
           previous_droplet = app.droplet
@@ -20,7 +22,7 @@ module VCAP::CloudController
 
           if target_state.rollback_target_revision
             revision = RevisionResolver.rollback_app_revision(app, target_state.rollback_target_revision, user_audit_info)
-            log_rollback_event(app.guid, user_audit_info.user_guid, target_state.rollback_target_revision.guid)
+            log_rollback_event(app.guid, user_audit_info.user_guid, target_state.rollback_target_revision.guid, message.strategy)
           else
             revision = RevisionResolver.update_app_revision(app, user_audit_info)
           end
@@ -41,7 +43,7 @@ module VCAP::CloudController
 
           deployment = DeploymentModel.create(
             app: app,
-            state: DeploymentModel::DEPLOYING_STATE,
+            state: starting_state(message),
             status_value: DeploymentModel::ACTIVE_STATUS_VALUE,
             status_reason: DeploymentModel::DEPLOYING_STATUS_REASON,
             droplet: target_state.droplet,
@@ -49,7 +51,7 @@ module VCAP::CloudController
             original_web_process_instance_count: desired_instances(app.oldest_web_process, previous_deployment),
             revision_guid: revision&.guid,
             revision_version: revision&.version,
-            strategy: DeploymentModel::ROLLING_STRATEGY
+            strategy: message.strategy
           )
           MetadataUpdate.update(deployment, message)
 
@@ -201,7 +203,15 @@ module VCAP::CloudController
         )
       end
 
-      def log_rollback_event(app_guid, user_id, revision_id)
+      def starting_state(message)
+        if message.strategy == DeploymentModel::CANARY_STRATEGY
+          DeploymentModel::PREPAUSED_STATE
+        else
+          DeploymentModel::DEPLOYING_STATE
+        end
+      end
+
+      def log_rollback_event(app_guid, user_id, revision_id, strategy)
         TelemetryLogger.v3_emit(
           'rolled-back-app',
           {
@@ -209,7 +219,7 @@ module VCAP::CloudController
             'user-id' => user_id,
             'revision-id' => revision_id
           },
-          { 'strategy' => 'rolling' }
+          { 'strategy' => strategy }
         )
       end
     end

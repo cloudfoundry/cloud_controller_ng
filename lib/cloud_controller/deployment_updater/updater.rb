@@ -15,6 +15,13 @@ module VCAP::CloudController
         end
       end
 
+      def canary
+        with_error_logging('error-canarying-deployment') do
+          canary_deployment
+          logger.info("ran-canarying-deployment-for-#{deployment.guid}")
+        end
+      end
+
       def cancel
         with_error_logging('error-canceling-deployment') do
           cancel_deployment
@@ -56,6 +63,25 @@ module VCAP::CloudController
             status_value: DeploymentModel::FINALIZED_STATUS_VALUE,
             status_reason: DeploymentModel::CANCELED_STATUS_REASON
           )
+        end
+      end
+
+      def canary_deployment
+        deployment.db.transaction do
+          deployment.lock!
+          return unless deployment.state == DeploymentModel::PREPAUSED_STATE
+
+          scale_canceled_web_processes_to_zero
+
+          if canary_ready?
+            deployment.update(
+              last_healthy_at: Time.now,
+              state: DeploymentModel::PAUSED_STATE,
+              status_value: DeploymentModel::ACTIVE_STATUS_VALUE,
+              status_reason: DeploymentModel::PAUSED_STATUS_REASON
+            )
+            logger.info("paused-canary-deployment-for-#{deployment.guid}")
+          end
         end
       end
 
@@ -184,6 +210,10 @@ module VCAP::CloudController
         app.processes.reject(&:web?).each do |process|
           process.update(command: deploying_web_process.revision.commands_by_process_type[process.type])
         end
+      end
+
+      def canary_ready?
+        ready_to_scale?
       end
 
       def ready_to_scale?

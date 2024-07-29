@@ -47,6 +47,7 @@ module VCAP::CloudController
         APP_REVISION_ENV_VARS_SHOW = 'audit.app.revision.environment_variables.show'.freeze,
         APP_DEPLOYMENT_CANCEL = 'audit.app.deployment.cancel'.freeze,
         APP_DEPLOYMENT_CREATE = 'audit.app.deployment.create'.freeze,
+        APP_DEPLOYMENT_CONTINUE = 'audit.app.deployment.continue'.freeze,
         APP_COPY_BITS = 'audit.app.copy-bits'.freeze,
         APP_UPLOAD_BITS = 'audit.app.upload-bits'.freeze,
         APP_APPLY_MANIFEST = 'audit.app.apply_manifest'.freeze,

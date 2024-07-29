@@ -58,6 +58,7 @@ module VCAP::CloudController
            'audit.app.revision.environment_variables.show',
            'audit.app.deployment.cancel',
            'audit.app.deployment.create',
+           'audit.app.deployment.continue',
            'audit.app.copy-bits',
            'audit.app.upload-bits',
            'audit.app.apply_manifest',

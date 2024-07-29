@@ -561,6 +561,7 @@ RSpec.describe 'Deployments' do
 
       let(:create_request) do
         {
+          strategy: 'canary',
           relationships: {
             app: {
               data: {
@@ -592,7 +593,7 @@ RSpec.describe 'Deployments' do
             'telemetry-time' => Time.now.to_datetime.rfc3339,
             'create-deployment' => {
               'api-version' => 'v3',
-              'strategy' => 'rolling',
+              'strategy' => 'canary',
               'app-id' => OpenSSL::Digest::SHA256.hexdigest(app_model.guid),
               'user-id' => OpenSSL::Digest::SHA256.hexdigest(user.guid)
             }
@@ -612,7 +613,7 @@ RSpec.describe 'Deployments' do
             'telemetry-time' => Time.now.to_datetime.rfc3339,
             'rolled-back-app' => {
               'api-version' => 'v3',
-              'strategy' => 'rolling',
+              'strategy' => 'canary',
               'app-id' => OpenSSL::Digest::SHA256.hexdigest(app_model.guid),
               'user-id' => OpenSSL::Digest::SHA256.hexdigest(user.guid),
               'revision-id' => OpenSSL::Digest::SHA256.hexdigest(revision.guid)
@@ -733,6 +734,67 @@ RSpec.describe 'Deployments' do
                                                             }
                                                           },
                                                           'strategy' => 'rolling',
+                                                          'droplet' => {
+                                                            'guid' => droplet.guid
+                                                          },
+                                                          'revision' => {
+                                                            'guid' => app_model.latest_revision.guid,
+                                                            'version' => app_model.latest_revision.version
+                                                          },
+                                                          'previous_droplet' => {
+                                                            'guid' => droplet.guid
+                                                          },
+                                                          'new_processes' => [{
+                                                            'guid' => deployment.deploying_web_process.guid,
+                                                            'type' => deployment.deploying_web_process.type
+                                                          }],
+                                                          'created_at' => iso8601,
+                                                          'updated_at' => iso8601,
+                                                          'metadata' => metadata,
+                                                          'relationships' => {
+                                                            'app' => {
+                                                              'data' => {
+                                                                'guid' => app_model.guid
+                                                              }
+                                                            }
+                                                          },
+                                                          'links' => {
+                                                            'self' => {
+                                                              'href' => "#{link_prefix}/v3/deployments/#{deployment.guid}"
+                                                            },
+                                                            'app' => {
+                                                              'href' => "#{link_prefix}/v3/apps/#{app_model.guid}"
+                                                            },
+                                                            'cancel' => {
+                                                              'href' => "#{link_prefix}/v3/deployments/#{deployment.guid}/actions/cancel",
+                                                              'method' => 'POST'
+                                                            }
+                                                          }
+                                                        })
+        end
+      end
+
+      context 'when strategy "canary" is provided' do
+        let(:strategy) { 'canary' }
+        let(:user) { make_developer_for_space(space) }
+
+        it 'creates a deployment with strategy "canary" when "strategy":"canary" is provided' do
+          post '/v3/deployments', create_request.to_json, user_header
+          expect(last_response.status).to eq(201), last_response.body
+
+          deployment = VCAP::CloudController::DeploymentModel.last
+
+          expect(parsed_response).to be_a_response_like({
+                                                          'guid' => deployment.guid,
+                                                          'status' => {
+                                                            'value' => VCAP::CloudController::DeploymentModel::ACTIVE_STATUS_VALUE,
+                                                            'reason' => VCAP::CloudController::DeploymentModel::DEPLOYING_STATUS_REASON,
+                                                            'details' => {
+                                                              'last_successful_healthcheck' => iso8601,
+                                                              'last_status_change' => iso8601
+                                                            }
+                                                          },
+                                                          'strategy' => 'canary',
                                                           'droplet' => {
                                                             'guid' => droplet.guid
                                                           },
@@ -984,6 +1046,39 @@ RSpec.describe 'Deployments' do
       h
     end
 
+    context 'PAUSED deployment' do
+      let(:user) { make_developer_for_space(space) }
+      let(:deployment) do
+        VCAP::CloudController::DeploymentModelTestFactory.make(
+          app: app_model,
+          droplet: droplet,
+          previous_droplet: old_droplet,
+          strategy: 'canary',
+          state: VCAP::CloudController::DeploymentModel::PAUSED_STATE,
+          status_value: VCAP::CloudController::DeploymentModel::ACTIVE_STATUS_VALUE,
+          status_reason: VCAP::CloudController::DeploymentModel::PAUSED_STATUS_REASON
+        )
+      end
+
+      it 'includes the continue action in the links' do
+        get "/v3/deployments/#{deployment.guid}", nil, user_header
+        parsed_response = Oj.load(last_response.body)
+        expect(parsed_response['links']['continue']).to eq({
+                                                             'href' => "#{link_prefix}/v3/deployments/#{deployment.guid}/actions/continue",
+                                                             'method' => 'POST'
+                                                           })
+      end
+
+      it 'includes the cancel action in the links' do
+        get "/v3/deployments/#{deployment.guid}", nil, user_header
+        parsed_response = Oj.load(last_response.body)
+        expect(parsed_response['links']['cancel']).to eq({
+                                                           'href' => "#{link_prefix}/v3/deployments/#{deployment.guid}/actions/cancel",
+                                                           'method' => 'POST'
+                                                         })
+      end
+    end
+
     it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS
   end
 
@@ -1054,6 +1149,15 @@ RSpec.describe 'Deployments' do
                                                                status_reason: VCAP::CloudController::DeploymentModel::SUPERSEDED_STATUS_REASON)
       end
 
+      let!(:deployment6) do
+        VCAP::CloudController::DeploymentModelTestFactory.make(app: app5, droplet: droplet5,
+                                                               previous_droplet: droplet5,
+                                                               strategy: 'canary',
+                                                               status_value: VCAP::CloudController::DeploymentModel::ACTIVE_STATUS_VALUE,
+                                                               state: VCAP::CloudController::DeploymentModel::DEPLOYING_STATE,
+                                                               status_reason: VCAP::CloudController::DeploymentModel::DEPLOYING_STATUS_REASON)
+      end
+
       def json_for_deployment(deployment, app_model, droplet, status_value, status_reason, cancel_link=true)
         {
           guid: deployment.guid,
@@ -1065,7 +1169,7 @@ RSpec.describe 'Deployments' do
               last_status_change: iso8601
             }
           },
-          strategy: 'rolling',
+          strategy: deployment.strategy,
           droplet: {
             guid: droplet.guid
           },
@@ -1116,7 +1220,7 @@ RSpec.describe 'Deployments' do
         parsed_response = Oj.load(last_response.body)
         expect(parsed_response).to match_json_response({
                                                          pagination: {
-                                                           total_results: 5,
+                                                           total_results: 6,
                                                            total_pages: 3,
                                                            first: {
                                                              href: "#{link_prefix}/v3/deployments?page=1&per_page=2"
@@ -1249,6 +1353,9 @@ RSpec.describe 'Deployments' do
               response_objects: [
                 json_for_deployment(deployment, app_model, droplet,
                                     VCAP::CloudController::DeploymentModel::ACTIVE_STATUS_VALUE,
+                                    VCAP::CloudController::DeploymentModel::DEPLOYING_STATUS_REASON),
+                json_for_deployment(deployment6, app5, droplet5,
+                                    VCAP::CloudController::DeploymentModel::ACTIVE_STATUS_VALUE,
                                     VCAP::CloudController::DeploymentModel::DEPLOYING_STATUS_REASON)
               ]
             )
@@ -1264,7 +1371,7 @@ RSpec.describe 'Deployments' do
           context 'pagination' do
             let(:pagination_hsh) do
               {
-                total_results: 1,
+                total_results: 2,
                 total_pages: 1,
                 first: { href: "#{link_prefix}#{url}?page=1&per_page=50&#{query.gsub(',', '%2C')}" },
                 last: { href: "#{link_prefix}#{url}?page=1&per_page=50&#{query.gsub(',', '%2C')}" },
@@ -1463,6 +1570,108 @@ RSpec.describe 'Deployments' do
         deployment.reload
         expect(deployment.status_value).to eq(VCAP::CloudController::DeploymentModel::FINALIZED_STATUS_VALUE)
         expect(deployment.status_reason).to eq(VCAP::CloudController::DeploymentModel::CANCELED_STATUS_REASON)
+      end
+    end
+  end
+
+  describe 'POST /v3/deployments/:guid/actions/continue' do
+    let(:state) {}
+    let(:deployment) do
+      VCAP::CloudController::DeploymentModelTestFactory.make(
+        app: app_model,
+        droplet: droplet,
+        state: state
+      )
+    end
+
+    context 'when the deployment is in paused state' do
+      let(:user) { make_developer_for_space(space) }
+      let(:state) { VCAP::CloudController::DeploymentModel::PAUSED_STATE }
+
+      it 'transitions the deployment from paused to deploying' do
+        post "/v3/deployments/#{deployment.guid}/actions/continue", {}.to_json, user_header
+        expect(last_response.status).to eq(200), last_response.body
+        expect(last_response.body).to be_empty
+
+        deployment.reload
+        expect(deployment.state).to eq(VCAP::CloudController::DeploymentModel::DEPLOYING_STATE)
+        expect(deployment.status_reason).to eq(VCAP::CloudController::DeploymentModel::DEPLOYING_STATUS_REASON)
+      end
+    end
+
+    context 'when the deployment is in a prepaused state' do
+      let(:user) { make_developer_for_space(space) }
+      let(:state) { VCAP::CloudController::DeploymentModel::PREPAUSED_STATE }
+
+      it 'returns 422 with an error' do
+        post "/v3/deployments/#{deployment.guid}/actions/continue", {}.to_json, user_header
+        expect(last_response.status).to eq(422), last_response.body
+      end
+    end
+
+    context 'when the deployment is in a deploying state' do
+      let(:user) { make_developer_for_space(space) }
+      let(:state) { VCAP::CloudController::DeploymentModel::DEPLOYING_STATE }
+
+      it 'returns 422 with an error' do
+        post "/v3/deployments/#{deployment.guid}/actions/continue", {}.to_json, user_header
+        expect(last_response.status).to eq(422), last_response.body
+      end
+    end
+
+    context 'when the deployment is in a canceling state' do
+      let(:user) { make_developer_for_space(space) }
+      let(:state) { VCAP::CloudController::DeploymentModel::CANCELING_STATE }
+
+      it 'returns 422 with an error' do
+        post "/v3/deployments/#{deployment.guid}/actions/continue", {}.to_json, user_header
+        expect(last_response.status).to eq(422), last_response.body
+      end
+    end
+
+    context 'when the deployment is in a deployed state' do
+      let(:user) { make_developer_for_space(space) }
+      let(:state) { VCAP::CloudController::DeploymentModel::DEPLOYED_STATE }
+
+      it 'returns 422 with an error' do
+        post "/v3/deployments/#{deployment.guid}/actions/continue", {}.to_json, user_header
+        expect(last_response.status).to eq(422), last_response.body
+      end
+    end
+
+    context 'when the deployment is in a canceled state' do
+      let(:user) { make_developer_for_space(space) }
+      let(:state) { VCAP::CloudController::DeploymentModel::CANCELED_STATE }
+
+      it 'returns 422 with an error' do
+        post "/v3/deployments/#{deployment.guid}/actions/continue", {}.to_json, user_header
+        expect(last_response.status).to eq(422), last_response.body
+      end
+    end
+
+    context 'with a running deployment' do
+      let(:state) { VCAP::CloudController::DeploymentModel::PAUSED_STATE }
+      let(:api_call) { ->(user_headers) { post "/v3/deployments/#{deployment.guid}/actions/continue", {}.to_json, user_headers } }
+      let(:expected_codes_and_responses) do
+        h = Hash.new(code: 404)
+        h['admin'] = h['space_developer'] = h['space_supporter'] = { code: 200 }
+        h
+      end
+
+      it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS
+
+      context 'when organization is suspended' do
+        let(:expected_codes_and_responses) do
+          h = super()
+          %w[space_developer space_supporter].each { |r| h[r] = { code: 404 } }
+          h
+        end
+
+        before do
+          org.update(status: VCAP::CloudController::Organization::SUSPENDED)
+        end
+
+        it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS
       end
     end
   end

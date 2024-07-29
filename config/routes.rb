@@ -87,6 +87,7 @@ Rails.application.routes.draw do
   get '/deployments/', to: 'deployments#index'
   get '/deployments/:guid', to: 'deployments#show'
   post '/deployments/:guid/actions/cancel', to: 'deployments#cancel'
+  post '/deployments/:guid/actions/continue', to: 'deployments#continue'
 
   # domains
   post '/domains', to: 'domains#create'
