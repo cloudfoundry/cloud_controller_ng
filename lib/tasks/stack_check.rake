@@ -3,7 +3,7 @@ namespace :stacks do
   task stack_check: :environment do
     logger = Steno.logger('cc.stack')
     VCAP::CloudController::DB.load_models(RakeConfig.config.get(:db), logger)
-    RakeConfig.config.configure_components
+    RakeConfig.config.load_db_encryption_key
     require 'models/runtime/buildpack_lifecycle_data_model'
     require 'models/runtime/stack'
     require 'cloud_controller/check_stacks'
