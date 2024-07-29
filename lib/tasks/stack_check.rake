@@ -1,7 +1,8 @@
 namespace :stacks do
   desc 'Check Installed Stacks'
   task stack_check: :environment do
-    VCAP::CloudController::DB.load_models(RakeConfig.config.get(:db), @logger)
+    logger = Steno.logger('cc.stack')
+    VCAP::CloudController::DB.load_models(RakeConfig.config.get(:db), logger)
     RakeConfig.config.configure_components
     require 'models/runtime/buildpack_lifecycle_data_model'
     require 'models/runtime/stack'
