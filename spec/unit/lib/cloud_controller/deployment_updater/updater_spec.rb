@@ -97,6 +97,14 @@ module VCAP::CloudController
           )
         end
 
+        it 'scales up the new web process by two' do
+          expect do
+            subject.scale
+          end.to change {
+            deploying_web_process.reload.instances
+          }.by(2)
+        end
+
         it 'scales the old web process down by two after the first iteration' do
           expect do
             subject.scale
@@ -104,13 +112,62 @@ module VCAP::CloudController
             web_process.reload.instances
           }.by(-2)
         end
+      end
 
-        it 'scales up the new web process by two' do
+      context 'when max_in_flight is larger than the number of remaining desired instances' do
+        let(:current_deploying_instances) { 5 }
+        let(:deployment) do
+          DeploymentModel.make(
+            app: web_process.app,
+            deploying_web_process: deploying_web_process,
+            state: 'DEPLOYING',
+            original_web_process_instance_count: 6,
+            max_in_flight: 5
+          )
+        end
+
+        it 'scales up the new web process by the maximum number' do
           expect do
             subject.scale
           end.to change {
             deploying_web_process.reload.instances
-          }.by(2)
+          }.by(1)
+        end
+
+        it 'scales the old web process down to 0' do
+          expect do
+            subject.scale
+          end.to change {
+            web_process.reload.instances
+          }.to(0)
+        end
+      end
+
+      context 'when the max_in_flight is more than the total number of process instances' do
+        let(:deployment) do
+          DeploymentModel.make(
+            app: web_process.app,
+            deploying_web_process: deploying_web_process,
+            state: 'DEPLOYING',
+            original_web_process_instance_count: original_web_process_instance_count,
+            max_in_flight: 100
+          )
+        end
+
+        it 'scales up the new web process by the maximum number' do
+          expect do
+            subject.scale
+          end.to change {
+            deploying_web_process.reload.instances
+          }.by(original_web_process_instance_count)
+        end
+
+        it 'scales the old web process down to 0' do
+          expect do
+            subject.scale
+          end.to change {
+            web_process.reload.instances
+          }.to(0)
         end
       end
 
@@ -527,12 +584,12 @@ module VCAP::CloudController
             )
           end
 
-          it 'scales up the coerced web process by 10' do
+          it 'scales up the coerced web process by the maximum original web process count' do
             expect do
               subject.scale
             end.to change {
               deploying_web_process.reload.instances
-            }.by(10)
+            }.by(original_web_process_instance_count)
           end
         end
       end

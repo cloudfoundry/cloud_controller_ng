@@ -110,7 +110,7 @@ module VCAP::CloudController
           end
 
           scale_down_oldest_web_process_with_instances
-          deploying_web_process.update(instances: deploying_web_process.instances + deployment.max_in_flight)
+          deploying_web_process.update(instances: [deploying_web_process.instances + deployment.max_in_flight, deployment.original_web_process_instance_count].min)
         end
       end
 
