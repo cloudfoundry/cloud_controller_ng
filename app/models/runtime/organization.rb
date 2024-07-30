@@ -128,7 +128,7 @@ module VCAP::CloudController
       can_remove = ([user.spaces, user.audited_spaces, user.managed_spaces].flatten & spaces).empty?
       raise CloudController::Errors::ApiError.new_from_details('AssociationNotEmpty', 'user', 'spaces in the org') unless can_remove
 
-      super(user)
+      super
     end
 
     def remove_user_recursive(user)

@@ -4,6 +4,6 @@ class FakeFrontController < VCAP::CloudController::FrontController
   use(FakeNginxReverseProxy)
 
   def initialize(config)
-    super(config)
+    super
   end
 end

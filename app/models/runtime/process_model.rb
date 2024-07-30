@@ -528,7 +528,7 @@ module VCAP::CloudController
 
     def to_hash(opts={})
       opts[:redact] = (%w[environment_json system_env_json] unless VCAP::CloudController::Security::AccessContext.new.can?(:read_env, self))
-      super(opts)
+      super
     end
 
     def web?

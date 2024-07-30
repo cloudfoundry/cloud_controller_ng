@@ -1,7 +1,7 @@
 module VCAP::CloudController
   class RouteDestinationUpdateMessage < BaseMessage
     def initialize(params)
-      super(params)
+      super
     end
 
     def self.key_requested?(key)

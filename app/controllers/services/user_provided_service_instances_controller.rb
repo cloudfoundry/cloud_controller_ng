@@ -126,9 +126,9 @@ module VCAP::CloudController
       opts.delete(:q) if opts[:q].blank?
 
       if org_filters.empty?
-        super(model, dataset, query_params, opts)
+        super
       else
-        super(model, dataset, query_params, opts).where(space_id: select_on_org_filters_using_spaces(org_filters))
+        super.where(space_id: select_on_org_filters_using_spaces(org_filters))
       end
     ensure
       opts[:q] = orig_query
@@ -155,13 +155,13 @@ module VCAP::CloudController
     define_routes
 
     def add_related(guid, name, other_guid, find_model=model)
-      return super(guid, name, other_guid, find_model) if name != :routes
+      return super if name != :routes
 
       bind_route(other_guid, guid)
     end
 
     def remove_related(guid, name, other_guid, find_model=model)
-      return super(guid, name, other_guid, find_model) if name != :routes
+      return super if name != :routes
 
       unbind_route(other_guid, guid)
     end

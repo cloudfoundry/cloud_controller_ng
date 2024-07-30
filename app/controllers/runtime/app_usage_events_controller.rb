@@ -43,7 +43,7 @@ module VCAP::CloudController
 
         dataset = dataset.filter { id > previous_event.id }
       end
-      super(model, dataset, query_params, opts)
+      super
     end
   end
 end

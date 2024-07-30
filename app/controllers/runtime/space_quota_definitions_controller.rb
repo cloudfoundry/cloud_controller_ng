@@ -40,7 +40,7 @@ module VCAP::CloudController
         end
       end
 
-      super(quota)
+      super
     end
 
     def delete(guid)

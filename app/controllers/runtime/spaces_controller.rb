@@ -302,7 +302,7 @@ module VCAP::CloudController
         end
       end
 
-      super(space)
+      super
     end
 
     def visible_relationship_dataset(name, obj)

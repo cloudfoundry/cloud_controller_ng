@@ -344,7 +344,7 @@ module VCAP::CloudController
     end
 
     def add_related(guid, name, other_guid, find_model=model)
-      return super(guid, name, other_guid, find_model) if name != :routes
+      return super if name != :routes
 
       req_body = body.string.blank? ? '{}' : body
 
@@ -380,7 +380,7 @@ module VCAP::CloudController
     end
 
     def remove_related(guid, name, other_guid, find_model=model)
-      return super(guid, name, other_guid, find_model) if name != :routes
+      return super if name != :routes
 
       unbind_route(other_guid, guid)
     end

@@ -40,7 +40,7 @@ module VCAP::CloudController
     end
 
     def after_create(domain)
-      super(domain)
+      super
       return if domain.nil?
       return if domain.router_group_guid.nil?
 

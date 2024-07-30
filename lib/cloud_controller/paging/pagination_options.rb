@@ -16,7 +16,7 @@ module VCAP::CloudController
     attr_accessor :page, :per_page
 
     def initialize(params)
-      super(params)
+      super
 
       @page ||= PAGE_DEFAULT
       @per_page ||= PER_PAGE_DEFAULT

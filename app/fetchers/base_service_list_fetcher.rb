@@ -143,7 +143,7 @@ module VCAP::CloudController
           dataset = dataset.where { Sequel[:service_brokers][:name] =~ message.service_broker_names }
         end
 
-        super(message, dataset, klass)
+        super
       end
 
       def join_service_plans(_dataset)

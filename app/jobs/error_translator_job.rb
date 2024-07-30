@@ -3,7 +3,7 @@ module VCAP::CloudController
     class ErrorTranslatorJob < VCAP::CloudController::Jobs::WrappingJob
       def error(job, err)
         err = translate_error(err)
-        super(job, err)
+        super
       end
 
       def translate_error(err)

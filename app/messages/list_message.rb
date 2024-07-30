@@ -25,7 +25,7 @@ module VCAP::CloudController
       params = params.symbolize_keys
       @pagination_params = params.slice(*ALLOWED_PAGINATION_KEYS)
       @pagination_options = PaginationOptions.from_params(params)
-      super(params)
+      super
     end
 
     def to_param_hash(exclude: [], fields: [])

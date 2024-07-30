@@ -20,7 +20,7 @@ module VCAP::CloudController::Presenters::V3
       censored_message: VCAP::CloudController::Presenters::Censorship::REDACTED_CREDENTIAL,
       decorators: []
     )
-      super(resource, show_secrets:, censored_message:, decorators:)
+      super
     end
 
     def to_hash

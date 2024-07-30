@@ -3,7 +3,7 @@ module Sequel::Plugins::VcapNormalization
     # Strips attributes of the model if requested.
     def []=(key, value)
       value = strip_if_needed(key, value)
-      super(key, value)
+      super
     end
 
     private

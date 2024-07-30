@@ -166,7 +166,7 @@ module VCAP::CloudController
           it "doesn't add the new destination" do
             expect do
               subject.add(params, route, apps_hash, user_audit_info)
-            end.to change(RouteMappingModel, :count).by(0)
+            end.not_to change(RouteMappingModel, :count)
           end
 
           describe 'audit events' do
@@ -205,7 +205,7 @@ module VCAP::CloudController
           it "doesn't add the new destination" do
             expect do
               subject.add(params, route, apps_hash, user_audit_info)
-            end.to change(RouteMappingModel, :count).by(0)
+            end.not_to change(RouteMappingModel, :count)
           end
 
           describe 'audit events' do
