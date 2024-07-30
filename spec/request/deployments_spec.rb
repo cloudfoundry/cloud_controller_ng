@@ -875,6 +875,159 @@ RSpec.describe 'Deployments' do
       end
     end
 
+    context 'max_in_flight' do
+      context 'when no max_in_flight is provided' do
+        let(:user) { make_developer_for_space(space) }
+        let(:create_request) do
+          {
+            relationships: {
+              app: {
+                data: {
+                  guid: app_model.guid
+                }
+              }
+            }
+          }
+        end
+
+        it 'creates a deployment with a default max_in_flight value of 1' do
+          post '/v3/deployments', create_request.to_json, user_header
+          expect(last_response.status).to eq(201)
+
+          deployment = VCAP::CloudController::DeploymentModel.last
+
+          expect(parsed_response).to be_a_response_like({
+                                                          'guid' => deployment.guid,
+                                                          'status' => {
+                                                            'value' => VCAP::CloudController::DeploymentModel::ACTIVE_STATUS_VALUE,
+                                                            'reason' => VCAP::CloudController::DeploymentModel::DEPLOYING_STATUS_REASON,
+                                                            'details' => {
+                                                              'last_successful_healthcheck' => iso8601,
+                                                              'last_status_change' => iso8601
+                                                            }
+                                                          },
+                                                          'strategy' => 'rolling',
+                                                          'options' => {
+                                                            'max_in_flight' => 1
+                                                          },
+                                                          'droplet' => {
+                                                            'guid' => droplet.guid
+                                                          },
+                                                          'revision' => {
+                                                            'guid' => app_model.latest_revision.guid,
+                                                            'version' => app_model.latest_revision.version
+                                                          },
+                                                          'previous_droplet' => {
+                                                            'guid' => droplet.guid
+                                                          },
+                                                          'new_processes' => [{
+                                                            'guid' => deployment.deploying_web_process.guid,
+                                                            'type' => deployment.deploying_web_process.type
+                                                          }],
+                                                          'created_at' => iso8601,
+                                                          'updated_at' => iso8601,
+                                                          'metadata' => metadata,
+                                                          'relationships' => {
+                                                            'app' => {
+                                                              'data' => {
+                                                                'guid' => app_model.guid
+                                                              }
+                                                            }
+                                                          },
+                                                          'links' => {
+                                                            'self' => {
+                                                              'href' => "#{link_prefix}/v3/deployments/#{deployment.guid}"
+                                                            },
+                                                            'app' => {
+                                                              'href' => "#{link_prefix}/v3/apps/#{app_model.guid}"
+                                                            },
+                                                            'cancel' => {
+                                                              'href' => "#{link_prefix}/v3/deployments/#{deployment.guid}/actions/cancel",
+                                                              'method' => 'POST'
+                                                            }
+                                                          }
+                                                        })
+        end
+      end
+
+      context 'when max_in_flight is provided' do
+        let(:user) { make_developer_for_space(space) }
+        let(:create_request) do
+          {
+            options: {
+              max_in_flight: 5
+            },
+            relationships: {
+              app: {
+                data: {
+                  guid: app_model.guid
+                }
+              }
+            }
+          }
+
+          it 'creates a deployment with a provided max_in_flight value' do
+            post '/v3/deployments', create_request.to_json, user_header
+            expect(last_response.status).to eq(201), last_response.body
+
+            deployment = VCAP::CloudController::DeploymentModel.last
+
+            expect(parsed_response).to be_a_response_like({
+                                                            'guid' => deployment.guid,
+                                                            'status' => {
+                                                              'value' => VCAP::CloudController::DeploymentModel::ACTIVE_STATUS_VALUE,
+                                                              'reason' => VCAP::CloudController::DeploymentModel::DEPLOYING_STATUS_REASON,
+                                                              'details' => {
+                                                                'last_successful_healthcheck' => iso8601,
+                                                                'last_status_change' => iso8601
+                                                              }
+                                                            },
+                                                            'strategy' => 'rolling',
+                                                            'options' => {
+                                                              'max_in_flight' => 5
+                                                            },
+                                                            'droplet' => {
+                                                              'guid' => droplet.guid
+                                                            },
+                                                            'revision' => {
+                                                              'guid' => app_model.latest_revision.guid,
+                                                              'version' => app_model.latest_revision.version
+                                                            },
+                                                            'previous_droplet' => {
+                                                              'guid' => droplet.guid
+                                                            },
+                                                            'new_processes' => [{
+                                                              'guid' => deployment.deploying_web_process.guid,
+                                                              'type' => deployment.deploying_web_process.type
+                                                            }],
+                                                            'created_at' => iso8601,
+                                                            'updated_at' => iso8601,
+                                                            'metadata' => metadata,
+                                                            'relationships' => {
+                                                              'app' => {
+                                                                'data' => {
+                                                                  'guid' => app_model.guid
+                                                                }
+                                                              }
+                                                            },
+                                                            'links' => {
+                                                              'self' => {
+                                                                'href' => "#{link_prefix}/v3/deployments/#{deployment.guid}"
+                                                              },
+                                                              'app' => {
+                                                                'href' => "#{link_prefix}/v3/apps/#{app_model.guid}"
+                                                              },
+                                                              'cancel' => {
+                                                                'href' => "#{link_prefix}/v3/deployments/#{deployment.guid}/actions/cancel",
+                                                                'method' => 'POST'
+                                                              }
+                                                            }
+                                                          })
+          end
+        end
+      end
+    end
+
     context 'validation failures' do
       let(:user) { make_developer_for_space(space) }
       let(:smol_quota) { VCAP::CloudController::QuotaDefinition.make(memory_limit: 1) }
