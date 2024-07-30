@@ -110,7 +110,7 @@ module VCAP::CloudController
           end
 
           scale_down_oldest_web_process_with_instances
-          deploying_web_process.update(instances: deploying_web_process.instances + 1)
+          deploying_web_process.update(instances: [deploying_web_process.instances + deployment.max_in_flight, deployment.original_web_process_instance_count].min)
         end
       end
 
@@ -161,12 +161,12 @@ module VCAP::CloudController
       def scale_down_oldest_web_process_with_instances
         process = oldest_web_process_with_instances
 
-        if process.instances == 1 && is_interim_process?(process)
+        if process.instances <= deployment.max_in_flight && is_interim_process?(process)
           process.destroy
           return
         end
 
-        process.update(instances: process.instances - 1)
+        process.update(instances: [(process.instances - deployment.max_in_flight), 0].max)
       end
 
       def finalize_deployment
