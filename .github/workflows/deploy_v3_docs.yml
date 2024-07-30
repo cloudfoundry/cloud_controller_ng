@@ -2,7 +2,8 @@ name: Deploy V3 API Docs to Pages
 
 on:
   push:
-    branches: [ gh-pages ]
+    branches:
+    - gh-pages
 
   workflow_dispatch:
 
