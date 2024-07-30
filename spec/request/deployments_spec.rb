@@ -833,6 +833,9 @@ RSpec.describe 'Deployments' do
                                                             'guid' => deployment.deploying_web_process.guid,
                                                             'type' => deployment.deploying_web_process.type
                                                           }],
+                                                          'options' => {
+                                                            'max_in_flight' => 1
+                                                          },
                                                           'created_at' => iso8601,
                                                           'updated_at' => iso8601,
                                                           'metadata' => metadata,
