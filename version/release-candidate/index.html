@@ -6224,7 +6224,8 @@ Buildpacks can also be explicitly specified on <a href="#apps">apps</a> and <a h
 
 <ul>
 <li><p><a href="https://docs.cloudfoundry.org/devguide/deploy-apps/rolling-deploy.html">Rolling deployments</a> allows for
-applications to be deployed without incurring downtime by gradually rolling out instances.</p></li>
+applications to be deployed without incurring downtime by gradually rolling out instances. Max-in-flight can be configured
+to specify how many instances are rolled out simultaneously.</p></li>
 <li><p>Canary deployments deploy a single instance and pause for user evaluation. If the canary instance is deemed successful, the deployment can be resumed via the <a href="#continue-a-deployment">continue action</a>. The deployment then continues like a rolling deployment. This feature is experimental and is subject to change.</p></li>
 </ul>
 <h3 id="the-deployment-object">The deployment object</h3>
@@ -6240,6 +6241,9 @@ applications to be deployed without incurring downtime by gradually rolling out 
     </span><span class="p">}</span><span class="w">
   </span><span class="p">},</span><span class="w">
   </span><span class="nl">"strategy"</span><span class="p">:</span><span class="w"> </span><span class="s2">"canary"</span><span class="p">,</span><span class="w">
+  </span><span class="nl">"options"</span><span class="w"> </span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+    </span><span class="nl">"max_in_flight"</span><span class="p">:</span><span class="w"> </span><span class="mi">3</span><span class="p">,</span><span class="w">
+  </span><span class="p">},</span><span class="w">
   </span><span class="nl">"droplet"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
     </span><span class="nl">"guid"</span><span class="p">:</span><span class="w"> </span><span class="s2">"44ccfa61-dbcf-4a0d-82fe-f668e9d2a962"</span><span class="w">
   </span><span class="p">},</span><span class="w">
@@ -6336,6 +6340,11 @@ applications to be deployed without incurring downtime by gradually rolling out 
 <td>Strategy used for the deployment; supported strategies are <code class="prettyprint">rolling</code> and <code class="prettyprint">canary</code> (experimental)</td>
 </tr>
 <tr>
+<td><strong>options.max_in_flight</strong></td>
+<td><em>integer</em></td>
+<td>The maximum number of new instances to deploy simultaneously</td>
+</tr>
+<tr>
 <td><strong>droplet.guid</strong></td>
 <td><em>string</em></td>
 <td>The droplet guid that the deployment is transitioning the app to</td>
@@ -6428,6 +6437,9 @@ applications to be deployed without incurring downtime by gradually rolling out 
     </span><span class="p">}</span><span class="w">
   </span><span class="p">},</span><span class="w">
   </span><span class="nl">"strategy"</span><span class="p">:</span><span class="w"> </span><span class="s2">"canary"</span><span class="p">,</span><span class="w">
+  </span><span class="nl">"options"</span><span class="w"> </span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+    </span><span class="nl">"max_in_flight"</span><span class="p">:</span><span class="w"> </span><span class="mi">3</span><span class="p">,</span><span class="w">
+  </span><span class="p">},</span><span class="w">
   </span><span class="nl">"droplet"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
     </span><span class="nl">"guid"</span><span class="p">:</span><span class="w"> </span><span class="s2">"44ccfa61-dbcf-4a0d-82fe-f668e9d2a962"</span><span class="w">
   </span><span class="p">},</span><span class="w">
@@ -6527,6 +6539,12 @@ applications to be deployed without incurring downtime by gradually rolling out 
 <td><code class="prettyprint">rolling</code></td>
 </tr>
 <tr>
+<td><strong>options.max_in_flight</strong></td>
+<td><em>integer</em></td>
+<td>The maximum number of new instances to deploy simultaneously</td>
+<td>1</td>
+</tr>
+<tr>
 <td><strong>metadata.labels</strong></td>
 <td><a href="#labels"><em>label object</em></a></td>
 <td>Labels applied to the deployment</td>
@@ -6579,6 +6597,9 @@ applications to be deployed without incurring downtime by gradually rolling out 
     </span><span class="p">}</span><span class="w">
   </span><span class="p">},</span><span class="w">
   </span><span class="nl">"strategy"</span><span class="p">:</span><span class="w"> </span><span class="s2">"canary"</span><span class="p">,</span><span class="w">
+  </span><span class="nl">"options"</span><span class="w"> </span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+    </span><span class="nl">"max_in_flight"</span><span class="p">:</span><span class="w"> </span><span class="mi">3</span><span class="p">,</span><span class="w">
+  </span><span class="p">},</span><span class="w">
   </span><span class="nl">"droplet"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
     </span><span class="nl">"guid"</span><span class="p">:</span><span class="w"> </span><span class="s2">"44ccfa61-dbcf-4a0d-82fe-f668e9d2a962"</span><span class="w">
   </span><span class="p">},</span><span class="w">
@@ -6693,6 +6714,9 @@ applications to be deployed without incurring downtime by gradually rolling out 
         </span><span class="nl">"reason"</span><span class="p">:</span><span class="w"> </span><span class="s2">"DEPLOYED"</span><span class="w">
       </span><span class="p">},</span><span class="w">
       </span><span class="nl">"strategy"</span><span class="p">:</span><span class="w"> </span><span class="s2">"rolling"</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"options"</span><span class="w"> </span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+        </span><span class="nl">"max_in_flight"</span><span class="p">:</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span><span class="w">
+      </span><span class="p">},</span><span class="w">
       </span><span class="nl">"droplet"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
         </span><span class="nl">"guid"</span><span class="p">:</span><span class="w"> </span><span class="s2">"44ccfa61-dbcf-4a0d-82fe-f668e9d2a962"</span><span class="w">
       </span><span class="p">},</span><span class="w">
@@ -6836,6 +6860,9 @@ applications to be deployed without incurring downtime by gradually rolling out 
     </span><span class="p">}</span><span class="w">
   </span><span class="p">},</span><span class="w">
   </span><span class="nl">"strategy"</span><span class="p">:</span><span class="w"> </span><span class="s2">"canary"</span><span class="p">,</span><span class="w">
+  </span><span class="nl">"options"</span><span class="w"> </span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+    </span><span class="nl">"max_in_flight"</span><span class="p">:</span><span class="w"> </span><span class="mi">3</span><span class="p">,</span><span class="w">
+  </span><span class="p">},</span><span class="w">
   </span><span class="nl">"droplet"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
     </span><span class="nl">"guid"</span><span class="p">:</span><span class="w"> </span><span class="s2">"44ccfa61-dbcf-4a0d-82fe-f668e9d2a962"</span><span class="w">
   </span><span class="p">},</span><span class="w">
