@@ -107,14 +107,7 @@ module VCAP::CloudController
     end
 
     def configure_components
-      Encryptor.db_encryption_key = get(:db_encryption_key)
-
-      if get(:database_encryption)
-        Encryptor.database_encryption_keys = get(:database_encryption)[:keys]
-        Encryptor.current_encryption_key_label = get(:database_encryption)[:current_key_label]
-        Encryptor.pbkdf2_hmac_iterations = get(:database_encryption)[:pbkdf2_hmac_iterations]
-      end
-
+      load_db_encryption_key
       dependency_locator = CloudController::DependencyLocator.instance
       dependency_locator.config = self
 
@@ -122,6 +115,16 @@ module VCAP::CloudController
 
       ProcessObserver.configure(dependency_locator.stagers, dependency_locator.runners)
       @schema_class.configure_components(self)
+    end
+
+    def load_db_encryption_key
+      Encryptor.db_encryption_key = get(:db_encryption_key)
+
+      return unless get(:database_encryption)
+
+      Encryptor.database_encryption_keys = get(:database_encryption)[:keys]
+      Encryptor.current_encryption_key_label = get(:database_encryption)[:current_key_label]
+      Encryptor.pbkdf2_hmac_iterations = get(:database_encryption)[:pbkdf2_hmac_iterations]
     end
 
     def get(*keys)

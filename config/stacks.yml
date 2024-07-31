@@ -3,3 +3,4 @@ default: "cflinuxfs4"
 stacks:
   - name: "cflinuxfs4"
     description: "test cflinuxfs4 entry"
+deprecated_stacks: [ 'cflinuxfs3' ]

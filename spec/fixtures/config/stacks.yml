@@ -7,3 +7,6 @@ stacks:
     description: "default-stack-description"
   - name: "cider"
     description: "cider-description"
+
+deprecated_stacks:
+  - old_stack
