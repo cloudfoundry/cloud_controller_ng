@@ -493,6 +493,9 @@ module VCAP::CloudController
           end
 
           context 'when the app is stopped' do
+            let(:max_in_flight) { 3 }
+            let(:strategy) { 'canary' }
+
             before do
               app.update(desired_state: ProcessModel::STOPPED)
               app.save
@@ -525,6 +528,8 @@ module VCAP::CloudController
               expect(deployment.previous_droplet).to eq(original_droplet)
               expect(deployment.original_web_process_instance_count).to eq(3)
               expect(deployment.last_healthy_at).to eq(deployment.created_at)
+              expect(deployment.strategy).to eq('canary')
+              expect(deployment.max_in_flight).to eq(3)
             end
 
             it 'records an audit event for the deployment' do
@@ -548,7 +553,7 @@ module VCAP::CloudController
                                              'type' => nil,
                                              'revision_guid' => app.latest_revision.guid,
                                              'request' => message.audit_hash,
-                                             'strategy' => 'rolling'
+                                             'strategy' => 'canary'
                                            })
             end
 
