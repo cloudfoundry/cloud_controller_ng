@@ -75,6 +75,23 @@ module VCAP::CloudController
               end.to raise_error(RoleCreate::Error, "User '#{user.presentation_name}' already has '#{type}' role in space '#{space.name}'.")
             end
           end
+
+          context 'when creating space roles concurrently' do
+            it 'ensures one creation is successful and the other fails due to name conflict' do
+              # First request, should succeed
+              expect do
+                subject.create_space_role(type:, user:, space:)
+              end.not_to raise_error
+
+              # Mock the validation for the second request to simulate the race condition and trigger a unique constraint violation
+              allow_any_instance_of(SpaceRoleMixin).to receive(:validate).and_return(true)
+
+              # Second request, should fail with correct error
+              expect do
+                subject.create_space_role(type:, user:, space:)
+              end.to raise_error(RoleCreate::Error, "User '#{user.presentation_name}' already has '#{type}' role in space '#{space.name}'.")
+            end
+          end
         end
       end
 
@@ -180,6 +197,23 @@ module VCAP::CloudController
             end
 
             it 'raises a human-friendly error' do
+              expect do
+                subject.create_organization_role(type: type, user: user, organization: org)
+              end.to raise_error(RoleCreate::Error, "User '#{user.presentation_name}' already has '#{type}' role in organization '#{org.name}'.")
+            end
+          end
+
+          context 'when creating organization roles concurrently' do
+            it 'ensures one creation is successful and the other fails due to name conflict' do
+              # First request, should succeed
+              expect do
+                subject.create_organization_role(type: type, user: user, organization: org)
+              end.not_to raise_error
+
+              # Mock the validation for the second request to simulate the race condition and trigger a unique constraint violation
+              allow_any_instance_of(OrganizationRoleMixin).to receive(:validate).and_return(true)
+
+              # Second request, should fail with correct error
               expect do
                 subject.create_organization_role(type: type, user: user, organization: org)
               end.to raise_error(RoleCreate::Error, "User '#{user.presentation_name}' already has '#{type}' role in organization '#{org.name}'.")

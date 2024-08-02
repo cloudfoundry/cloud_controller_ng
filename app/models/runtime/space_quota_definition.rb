@@ -25,6 +25,15 @@ module VCAP::CloudController
 
     add_association_dependencies spaces: :nullify
 
+    def around_save
+      yield
+    rescue Sequel::UniqueConstraintViolation => e
+      raise e unless e.message.include?('sqd_org_id_index')
+
+      errors.add(%i[organization_id name], :unique)
+      raise validation_failed_error
+    end
+
     def validate
       validates_presence :name
       validates_presence :non_basic_services_allowed

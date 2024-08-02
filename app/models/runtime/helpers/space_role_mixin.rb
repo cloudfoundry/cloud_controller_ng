@@ -13,6 +13,16 @@ module VCAP::CloudController
       self.guid ||= SecureRandom.uuid
     end
 
+    def around_save
+      yield
+    rescue Sequel::UniqueConstraintViolation => e
+      unique_indexes = %w[space_developers_idx space_auditors_idx space_managers_idx spaces_supporters_user_space_index]
+      raise e unless unique_indexes.any? { |pattern| e.message.include?(pattern) }
+
+      errors.add(%i[space_id user_id], :unique)
+      raise validation_failed_error
+    end
+
     def validate
       validates_presence :space_id
       validates_presence :user_id

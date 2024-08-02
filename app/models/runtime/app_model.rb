@@ -76,6 +76,15 @@ module VCAP::CloudController
       self.enable_ssh = Config.config.get(:default_app_ssh_access) if enable_ssh.nil?
     end
 
+    def around_save
+      yield
+    rescue Sequel::UniqueConstraintViolation => e
+      raise e unless e.message.include?('apps_v3_space_guid_name_index')
+
+      errors.add(%i[space_guid name], :unique)
+      raise validation_failed_error
+    end
+
     def validate
       super
       validates_presence :name
