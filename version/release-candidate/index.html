@@ -15997,14 +15997,14 @@ resource matching will always return an empty array.</p>
 </tbody></table>
 <h2 id="revisions">Revisions</h2>
 
-<p>Revisions represent code used by an application at a specific time. The most recent revision for a running application represents code and configuration currently running in Cloud Foundry.</p>
+<p>Revisions represent code used by an application at a specific time. The most recent revision for a running application represents code and configuration currently running in Cloud Foundry. Revisions are not created for Tasks.</p>
 
 <p>Revision are created when the following is changed:</p>
 
 <ul>
-<li><p>A new droplet is created for an app</p></li>
-<li><p>An app&rsquo;s environment variables are changed</p></li>
-<li><p>The custom start command for an app is added or changed</p></li>
+<li><p>A new droplet is deployed for an app</p></li>
+<li><p>An app is deployed with new environment variables</p></li>
+<li><p>The app is deployed with a new or changed custom start command</p></li>
 <li><p>An app rolls back to a prior revision</p></li>
 </ul>
 
