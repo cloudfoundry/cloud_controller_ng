@@ -1,14 +1,14 @@
 ## Revisions
 
-Revisions represent code used by an application at a specific time. The most recent revision for a running application represents code and configuration currently running in Cloud Foundry.
+Revisions represent code used by an application at a specific time. The most recent revision for a running application represents code and configuration currently running in Cloud Foundry. Revisions are not created for Tasks.
 
 Revision are created when the following is changed:
 
-* A new droplet is created for an app
+* A new droplet is deployed for an app
 
-* An app's environment variables are changed
+* An app is deployed with new environment variables
 
-* The custom start command for an app is added or changed
+* The app is deployed with a new or changed custom start command
 
 * An app rolls back to a prior revision
 
