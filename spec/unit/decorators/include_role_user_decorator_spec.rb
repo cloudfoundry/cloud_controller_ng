@@ -4,8 +4,10 @@ require 'decorators/include_role_user_decorator'
 module VCAP::CloudController
   RSpec.describe IncludeRoleUserDecorator do
     subject(:decorator) { IncludeRoleUserDecorator }
-    let(:user1) { User.make(guid: 'user-1-guid') }
+
+    let(:user1) { User.make(guid: 'user-1-guid', created_at: Time.now.utc - 1.second) }
     let(:user2) { User.make(guid: 'user-2-guid') }
+
     let(:roles) do
       [
         SpaceDeveloper.make(user: user1),
@@ -27,12 +29,12 @@ module VCAP::CloudController
         allow(uaa_client).to receive(:users_for_ids).with([user1.guid, user2.guid]).and_return(user_uaa_info)
       end
 
-      it 'decorates the given hash with associated users' do
+      it 'decorates the given hash with associated users in the correct order' do
         undecorated_hash = { foo: 'bar' }
         hash = subject.decorate(undecorated_hash, roles)
         expect(hash[:foo]).to eq('bar')
-        expect(hash[:included][:users]).to contain_exactly(Presenters::V3::UserPresenter.new(user1, uaa_users: user_uaa_info).to_hash,
-                                                           Presenters::V3::UserPresenter.new(user2, uaa_users: user_uaa_info).to_hash)
+        expect(hash[:included][:users]).to eq([Presenters::V3::UserPresenter.new(user1, uaa_users: user_uaa_info).to_hash,
+                                               Presenters::V3::UserPresenter.new(user2, uaa_users: user_uaa_info).to_hash])
       end
 
       it 'does not overwrite other included fields' do

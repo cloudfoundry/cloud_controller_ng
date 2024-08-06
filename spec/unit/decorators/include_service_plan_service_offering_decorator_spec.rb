@@ -4,13 +4,14 @@ require 'decorators/include_service_plan_service_offering_decorator'
 module VCAP::CloudController
   RSpec.describe IncludeServicePlanServiceOfferingDecorator do
     describe '.decorate' do
-      let(:offering_1) { Service.make }
+      let(:offering_1) { Service.make(created_at: Time.now.utc - 1.second) }
       let(:offering_2) { Service.make }
+
       let(:plan_1) { ServicePlan.make(service: offering_1) }
       let(:plan_2) { ServicePlan.make(service: offering_2) }
       let(:plan_3) { ServicePlan.make(service: offering_2) }
 
-      it 'decorates the given hash with service offerings from service plans' do
+      it 'decorates the given hash with service offerings from service plans in the correct order' do
         undecorated_hash = { foo: 'bar', included: { monkeys: %w[zach greg] } }
         hash = described_class.decorate(undecorated_hash, [plan_1, plan_2, plan_3])
 
@@ -18,8 +19,8 @@ module VCAP::CloudController
         expect(hash[:included][:monkeys]).to contain_exactly('zach', 'greg')
         expect(hash[:included].keys).to have(2).keys
 
-        expect(hash[:included][:service_offerings]).to contain_exactly(Presenters::V3::ServiceOfferingPresenter.new(offering_1).to_hash,
-                                                                       Presenters::V3::ServiceOfferingPresenter.new(offering_2).to_hash)
+        expect(hash[:included][:service_offerings]).to eq([Presenters::V3::ServiceOfferingPresenter.new(offering_1).to_hash,
+                                                           Presenters::V3::ServiceOfferingPresenter.new(offering_2).to_hash])
       end
 
       it 'only includes the service offerings from the specified service plans' do

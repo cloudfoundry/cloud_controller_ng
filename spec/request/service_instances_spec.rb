@@ -3,9 +3,9 @@ require 'request_spec_shared_examples'
 
 RSpec.describe 'V3 service instances' do
   let(:user) { VCAP::CloudController::User.make }
-  let(:org) { VCAP::CloudController::Organization.make }
+  let(:org) { VCAP::CloudController::Organization.make(created_at: Time.now.utc - 1.second) }
   let!(:org_annotation) { VCAP::CloudController::OrganizationAnnotationModel.make(key_prefix: 'pre.fix', key_name: 'foo', value: 'bar', resource_guid: org.guid) }
-  let(:space) { VCAP::CloudController::Space.make(organization: org) }
+  let(:space) { VCAP::CloudController::Space.make(organization: org, created_at: Time.now.utc - 1.second) }
   let!(:space_annotation) { VCAP::CloudController::SpaceAnnotationModel.make(key_prefix: 'pre.fix', key_name: 'baz', value: 'wow', space: space) }
   let(:another_space) { VCAP::CloudController::Space.make }
 
@@ -189,8 +189,30 @@ RSpec.describe 'V3 service instances' do
     end
 
     context 'given a mixture of managed, user-provided and shared service instances' do
-      let!(:msi_1) { VCAP::CloudController::ManagedServiceInstance.make(space:) }
-      let!(:msi_2) { VCAP::CloudController::ManagedServiceInstance.make(space: another_space) }
+      let!(:msi_1) do
+        VCAP::CloudController::ManagedServiceInstance.make(
+          service_plan: VCAP::CloudController::ServicePlan.make(
+            service: VCAP::CloudController::Service.make(
+              service_broker: VCAP::CloudController::ServiceBroker.make(created_at: Time.now.utc - 2.seconds),
+              created_at: Time.now.utc - 2.seconds
+            ),
+            created_at: Time.now.utc - 2.seconds
+          ),
+          space: space
+        )
+      end
+      let!(:msi_2) do
+        VCAP::CloudController::ManagedServiceInstance.make(
+          service_plan: VCAP::CloudController::ServicePlan.make(
+            service: VCAP::CloudController::Service.make(
+              service_broker: VCAP::CloudController::ServiceBroker.make(created_at: Time.now.utc - 1.second),
+              created_at: Time.now.utc - 1.second
+            ),
+            created_at: Time.now.utc - 1.second
+          ),
+          space: another_space
+        )
+      end
       let!(:upsi_1) { VCAP::CloudController::UserProvidedServiceInstance.make(space:) }
       let!(:upsi_2) { VCAP::CloudController::UserProvidedServiceInstance.make(space: another_space) }
       let!(:ssi) { VCAP::CloudController::ManagedServiceInstance.make(space: another_space) }

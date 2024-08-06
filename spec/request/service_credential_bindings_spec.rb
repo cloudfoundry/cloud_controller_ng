@@ -55,13 +55,17 @@ RSpec.describe 'v3 service credential bindings' do
     end
 
     context 'given a mixture of bindings' do
-      let(:now) { Time.now }
-      let(:instance) { VCAP::CloudController::ManagedServiceInstance.make(space:) }
+      let(:now) { Time.now.utc }
+      let(:instance) { VCAP::CloudController::ManagedServiceInstance.make(space: space, created_at: now - 1.second) }
       let(:other_instance) { VCAP::CloudController::ManagedServiceInstance.make(space: other_space) }
       let!(:key_binding) { VCAP::CloudController::ServiceKey.make(service_instance: instance, created_at: now - 4.seconds) }
       let!(:other_key_binding) { VCAP::CloudController::ServiceKey.make(service_instance: other_instance, created_at: now - 3.seconds) }
       let!(:app_binding) do
-        VCAP::CloudController::ServiceBinding.make(service_instance: instance, created_at: now - 2.seconds).tap do |binding|
+        VCAP::CloudController::ServiceBinding.make(
+          app: VCAP::CloudController::AppModel.make(space: space, created_at: now - 1.second),
+          service_instance: instance,
+          created_at: now - 2.seconds
+        ).tap do |binding|
           operate_on(binding)
         end
       end

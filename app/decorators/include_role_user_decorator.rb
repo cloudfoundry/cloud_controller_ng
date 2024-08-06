@@ -8,7 +8,7 @@ module VCAP::CloudController
       def decorate(hash, roles)
         hash[:included] ||= {}
         user_guids = roles.map(&:user_guid).uniq
-        users = User.where(guid: user_guids).order(:created_at).
+        users = User.where(guid: user_guids).order(:created_at, :guid).
                 eager(Presenters::V3::UserPresenter.associated_resources).all
         uaa_users = User.uaa_users_info(user_guids)
 

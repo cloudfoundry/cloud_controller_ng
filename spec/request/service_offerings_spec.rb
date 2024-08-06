@@ -601,7 +601,11 @@ RSpec.describe 'V3 service offerings' do
     end
 
     describe 'fields' do
-      let!(:service_1) { VCAP::CloudController::Service.make }
+      let!(:service_1) do
+        VCAP::CloudController::Service.make(
+          service_broker: VCAP::CloudController::ServiceBroker.make(created_at: Time.now.utc - 1.second)
+        )
+      end
       let!(:service_2) { VCAP::CloudController::Service.make }
 
       it 'can include service broker name and guid' do

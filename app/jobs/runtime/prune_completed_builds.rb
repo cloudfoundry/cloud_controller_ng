@@ -20,7 +20,7 @@ module VCAP::CloudController
             builds_dataset = BuildModel.where(app_guid:)
 
             builds_to_keep = builds_dataset.
-                             order(Sequel.desc(:created_at)).
+                             order(Sequel.desc(:created_at), Sequel.desc(:id)).
                              limit(max_retained_builds_per_app).
                              select(:id)
 

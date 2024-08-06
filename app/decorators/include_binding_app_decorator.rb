@@ -19,7 +19,7 @@ module VCAP::CloudController
         app_guids = bindings.pluck(:app_guid).compact.uniq
         return if app_guids.empty?
 
-        AppModel.where(guid: app_guids).order(:created_at).
+        AppModel.where(guid: app_guids).order(:created_at, :guid).
           eager(Presenters::V3::AppPresenter.associated_resources).all
       end
     end

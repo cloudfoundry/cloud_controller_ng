@@ -58,7 +58,7 @@ module VCAP::CloudController
     end
 
     def filter_non_expirable(dataset, storage_count)
-      data_to_keep = dataset.order_by(Sequel.desc(:created_at)).limit(storage_count).select(:id)
+      data_to_keep = dataset.order_by(Sequel.desc(:created_at), Sequel.desc(:id)).limit(storage_count).select(:id)
       dataset.exclude(id: data_to_keep)
     end
   end
