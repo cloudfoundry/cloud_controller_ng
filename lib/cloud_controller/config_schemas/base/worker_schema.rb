@@ -171,7 +171,8 @@ module VCAP::CloudController
               optional(:app_usage_events_cleanup) => { timeout_in_seconds: Integer },
               optional(:blobstore_delete) => { timeout_in_seconds: Integer },
               optional(:diego_sync) => { timeout_in_seconds: Integer },
-              optional(:priorities) => Hash
+              optional(:priorities) => Hash,
+              optional(:threads) => Integer
             },
 
             volume_services_enabled: bool,
