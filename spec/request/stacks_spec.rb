@@ -399,6 +399,11 @@ RSpec.describe 'Stacks Request' do
                     'data' => {
                       'guid' => space.guid
                     }
+                  },
+                  'current_droplet' => {
+                    'data' => {
+                      'guid' => nil
+                    }
                   }
                 },
                 'created_at' => iso8601,
@@ -463,6 +468,11 @@ RSpec.describe 'Stacks Request' do
                     'data' => {
                       'guid' => space.guid
                     }
+                  },
+                  'current_droplet' => {
+                    'data' => {
+                      'guid' => nil
+                    }
                   }
                 },
                 'created_at' => iso8601,
@@ -500,6 +510,11 @@ RSpec.describe 'Stacks Request' do
                   'space' => {
                     'data' => {
                       'guid' => space2.guid
+                    }
+                  },
+                  'current_droplet' => {
+                    'data' => {
+                      'guid' => nil
                     }
                   }
                 },

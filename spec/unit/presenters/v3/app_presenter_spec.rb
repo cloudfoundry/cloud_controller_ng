@@ -7,7 +7,8 @@ module VCAP::CloudController::Presenters::V3
       VCAP::CloudController::AppModel.make(
         name: 'Davis',
         environment_variables: { 'some' => 'stuff' },
-        desired_state: 'STOPPED'
+        desired_state: 'STOPPED',
+        droplet: VCAP::CloudController::DropletModel.make
       )
     end
 
@@ -53,6 +54,7 @@ module VCAP::CloudController::Presenters::V3
         expect(result[:lifecycle][:data][:stack]).to eq('the-happiest-stack')
         expect(result[:lifecycle][:data][:buildpacks]).to eq(['git://***:***@github.com/repo', 'limabean'])
         expect(result[:relationships][:space][:data][:guid]).to eq(app.space.guid)
+        expect(result[:relationships][:current_droplet][:data][:guid]).to eq(app.droplet.guid)
         expect(result[:metadata][:labels]).to eq({})
         expect(result[:metadata][:annotations]).to eq({})
       end
