@@ -35,6 +35,25 @@ module VCAP::CloudController
         end
       end
 
+      context 'when creating users concurrently' do
+        let(:message) { UserCreateMessage.new({ guid: 'some-nice-user-gu-id' }) }
+
+        it 'ensures one creation is successful and the other fails due to name conflict' do
+          # First request, should succeed
+          expect do
+            subject.create(message:)
+          end.not_to raise_error
+
+          # Mock the validation for the second request to simulate the race condition and trigger a unique constraint violation
+          allow_any_instance_of(User).to receive(:validate).and_return(true)
+
+          # Second request, should fail with correct error
+          expect do
+            subject.create(message:)
+          end.to raise_error(UserCreate::Error, "User with guid 'some-nice-user-gu-id' already exists.")
+        end
+      end
+
       describe 'creating users' do
         context 'when creating a UAA user' do
           let(:message) do

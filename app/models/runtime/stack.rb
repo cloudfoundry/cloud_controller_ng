@@ -30,6 +30,15 @@ module VCAP::CloudController
 
     strip_attributes :name
 
+    def around_save
+      yield
+    rescue Sequel::UniqueConstraintViolation => e
+      raise e unless e.message.include?('stacks_name_index')
+
+      errors.add(:name, :unique)
+      raise validation_failed_error
+    end
+
     def validate
       validates_presence :name
       validates_unique :name

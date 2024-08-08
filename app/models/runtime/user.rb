@@ -76,6 +76,15 @@ module VCAP::CloudController
                       :audited_space_guids,
                       :default_space_guid
 
+    def around_save
+      yield
+    rescue Sequel::UniqueConstraintViolation => e
+      raise e unless e.message.include?('users_guid_index')
+
+      errors.add(:guid, :unique)
+      raise validation_failed_error
+    end
+
     def validate
       validates_presence :guid
       validates_unique :guid

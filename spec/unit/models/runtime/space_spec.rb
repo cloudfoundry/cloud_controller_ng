@@ -25,7 +25,7 @@ module VCAP::CloudController
             dup_space = Space.new(organization_guid: space.organization.guid, name: space.name)
             expect do
               dup_space.save(validate: false)
-            end.to raise_error(Space::DBNameUniqueRaceError)
+            end.to raise_error(Sequel::ValidationFailed)
           end
 
           it 'does not translate db errors not about name uniqueness' do

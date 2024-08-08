@@ -35,6 +35,20 @@ module VCAP::CloudController
 
     delegate :service, :service_plan, to: :service_instance
 
+    def around_save
+      yield
+    rescue Sequel::UniqueConstraintViolation => e
+      if e.message.include?('unique_service_binding_app_guid_name')
+        errors.add(%i[app_guid name], :unique)
+        raise validation_failed_error
+      elsif e.message.include?('Duplicate entry')
+        errors.add(%i[service_instance_guid app_guid], :unique)
+        raise validation_failed_error
+      else
+        raise e
+      end
+    end
+
     def validate
       validates_presence :app
       validates_presence :service_instance

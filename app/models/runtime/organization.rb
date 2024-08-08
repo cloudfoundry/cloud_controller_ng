@@ -207,6 +207,15 @@ module VCAP::CloudController
       super
     end
 
+    def around_save
+      yield
+    rescue Sequel::UniqueConstraintViolation => e
+      raise e unless e.message.include?('organizations_name_index')
+
+      errors.add(:name, :unique)
+      raise validation_failed_error
+    end
+
     def validate
       validates_presence :name
       validates_unique :name

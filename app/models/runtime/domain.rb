@@ -85,6 +85,15 @@ module VCAP::CloudController
     add_association_dependencies labels: :destroy
     add_association_dependencies annotations: :destroy
 
+    def around_save
+      yield
+    rescue Sequel::UniqueConstraintViolation => e
+      raise e unless e.message.include?('domains_name_index')
+
+      errors.add(:name, :unique)
+      raise validation_failed_error
+    end
+
     def validate
       validates_presence :name
       validates_unique :name, dataset: Domain.dataset

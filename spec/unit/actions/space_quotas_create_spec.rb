@@ -175,6 +175,23 @@ module VCAP::CloudController
           end
         end
       end
+
+      context 'when creating space quota with the same name concurrently' do
+        it 'ensures one creation is successful and the other fails due to name conflict' do
+          # First request, should succeed
+          expect do
+            space_quotas_create.create(message, organization: org)
+          end.not_to raise_error
+
+          # Mock the validation for the second request to simulate the race condition and trigger a unique constraint violation
+          allow_any_instance_of(SpaceQuotaDefinition).to receive(:validate).and_return(true)
+
+          # Second request, should fail with correct error
+          expect do
+            space_quotas_create.create(message, organization: org)
+          end.to raise_error(SpaceQuotasCreate::Error, "Space Quota 'my-name' already exists.")
+        end
+      end
     end
   end
 end
