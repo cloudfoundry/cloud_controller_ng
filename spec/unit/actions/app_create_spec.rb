@@ -200,7 +200,7 @@ module VCAP::CloudController
         end
       end
 
-      context 'parallel creation of apps' do
+      context 'when creating apps concurrently' do
         it 'ensures one creation is successful and the other fails due to name conflict' do
           # First request, should succeed
           expect do

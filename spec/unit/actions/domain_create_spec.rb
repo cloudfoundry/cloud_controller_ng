@@ -33,7 +33,7 @@ module VCAP::CloudController
           end
         end
 
-        context 'while doing parallel creation of apps' do
+        context 'when creating domains concurrently' do
           let(:internal) { true }
           let(:p_name) { 'perfect.domain-1.example.com' }
           let(:message) do
