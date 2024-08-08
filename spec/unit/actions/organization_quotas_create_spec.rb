@@ -132,6 +132,26 @@ module VCAP::CloudController
           end
         end
 
+        context 'when creating organization quotas concurrently' do
+          let(:name) { 'awesome' }
+          let(:message) { VCAP::CloudController::OrganizationQuotasCreateMessage.new(name:) }
+
+          it 'ensures one creation is successful and the other fails due to name conflict' do
+            # First request, should succeed
+            expect do
+              org_quotas_create.create(message)
+            end.not_to raise_error
+
+            # Mock the validation for the second request to simulate the race condition and trigger a unique constraint violation
+            allow_any_instance_of(QuotaDefinition).to receive(:validate).and_return(true)
+
+            # Second request, should fail with correct error
+            expect do
+              org_quotas_create.create(message)
+            end.to raise_error(OrganizationQuotasCreate::Error, "Organization Quota 'awesome' already exists.")
+          end
+        end
+
         context 'when the org guid is invalid' do
           let(:invalid_org_guid) { 'invalid_org_guid' }
           let(:message_with_invalid_org_guid) do
