@@ -106,3 +106,5 @@ group :development do
   gem 'spring'
   gem 'spring-commands-rspec'
 end
+
+gem "concurrent-ruby", "~> 1.3"
