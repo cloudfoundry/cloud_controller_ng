@@ -502,7 +502,7 @@ GEM
     ruby_parser (3.8.3)
       sexp_processor (~> 4.1)
     rubyzip (2.3.2)
-    sequel (5.83.0)
+    sequel (5.83.1)
       bigdecimal
     sequel_pg (1.17.1)
       pg (>= 0.18.0, != 1.2.0)
