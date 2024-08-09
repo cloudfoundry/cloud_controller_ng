@@ -124,7 +124,7 @@ namespace :db do
 
     logging_output
     db_logger = Steno.logger('cc.db.migrations')
-    VCAP::CloudController::Encryptor.db_encryption_key = RakeConfig.config.get(:db_encryption_key)
+    RakeConfig.config.load_db_encryption_key
     db = VCAP::CloudController::DB.connect(RakeConfig.config.get(:db), db_logger)
 
     latest_migration_in_db = db[:schema_migrations].order(Sequel.desc(:filename)).first[:filename]
