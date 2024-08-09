@@ -54,6 +54,12 @@ module VCAP::CloudController
     serializes_via_json :process_types
     serializes_via_json :sidecars
 
+    def after_destroy
+      super
+      # The 'UPDATE ... WHERE' statement is efficient and safe, but bypasses Sequel's timestamp updater hook; thus setting 'updated_at' manually.
+      app_dataset.where(droplet_guid: guid).update(droplet_guid: nil, updated_at: Sequel::CURRENT_TIMESTAMP)
+    end
+
     def error
       e = [error_id, error_description].compact.join(' - ')
       e.presence
