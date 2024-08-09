@@ -11,6 +11,7 @@ module VCAP::CloudController
 
     describe '#delete' do
       let!(:droplet) { DropletModel.make }
+      let(:app) { droplet.app }
 
       let!(:label) do
         VCAP::CloudController::DropletLabelModel.make(
@@ -35,13 +36,45 @@ module VCAP::CloudController
         expect { label.refresh }.to raise_error Sequel::Error, 'Record not found'
       end
 
+      context 'when the droplet is the current droplet for the app' do
+        it 'deletes the droplet_guid' do
+          expect(app.refresh.droplet_guid).to eq(droplet.guid)
+
+          droplet_delete.delete([droplet])
+
+          expect(app.refresh.droplet_guid).to be_nil
+        end
+
+        it 'sets the updated_at timestamp' do
+          expect do
+            droplet_delete.delete([droplet])
+          end.to have_queried_db_times(/update .apps. .* .updated_at. = CURRENT_TIMESTAMP/i, 1)
+        end
+      end
+
+      context 'when the droplet is not the current droplet for the app' do
+        let!(:current_droplet) do
+          d = DropletModel.make(app:)
+          app.update(droplet_guid: d.guid)
+          d
+        end
+
+        it 'does not delete the droplet_guid' do
+          expect(app.refresh.droplet_guid).to eq(current_droplet.guid)
+
+          droplet_delete.delete([droplet])
+
+          expect(app.refresh.droplet_guid).to eq(current_droplet.guid)
+        end
+      end
+
       it 'creates an audit event' do
         expect(Repositories::DropletEventRepository).to receive(:record_delete).with(
           instance_of(DropletModel),
           user_audit_info,
-          droplet.app.name,
-          droplet.app.space_guid,
-          droplet.app.space.organization_guid
+          app.name,
+          app.space_guid,
+          app.space.organization_guid
         )
 
         droplet_delete.delete([droplet])
