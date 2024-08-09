@@ -5,7 +5,7 @@ class DBMigrator
   SEQUEL_MIGRATIONS = File.join(MIGRATIONS_DIR, 'migrations')
 
   def self.from_config(config, db_logger)
-    VCAP::CloudController::Encryptor.db_encryption_key = config.get(:db_encryption_key)
+    config.load_db_encryption_key
     db = VCAP::CloudController::DB.connect(config.get(:db), db_logger)
     new(db, config.get(:max_migration_duration_in_minutes), config.get(:max_migration_statement_runtime_in_seconds), config.get(:migration_psql_worker_memory_kb))
   end
