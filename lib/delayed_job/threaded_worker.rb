@@ -1,104 +1,102 @@
-require 'socket'
-
 class ThreadedWorker < Delayed::Worker
-  def initialize(thread_count, options={})
+  def initialize(thread_count, options={}, grace_period_seconds=30)
     super(options)
     @thread_count = thread_count
     @threads = []
-    @stop_signal = false
-    @name_prefix = options[:worker_name] || 'worker'
+    @unexpected_error = false
+    @mutex = Mutex.new
+    @grace_period_seconds = grace_period_seconds
   end
 
   def start
-    trap_signals
+    # add quit trap as in QuitTrap monkey patch
+    trap('QUIT') do
+      Thread.new { say 'Exiting...' }
+      stop
+    end
 
-    say "Starting multi-threaded job worker with #{@thread_count} threads"
+    trap('TERM') do
+      Thread.new { say 'Exiting...' }
+      stop
+      raise SignalException.new('TERM') if self.class.raise_signal_exceptions
+    end
 
-    @thread_count.times do |i|
-      thread_name = generate_thread_name(i + 1)
-      @threads << Thread.new do
-        thread_name(thread_name)
-        threaded_work_off
+    trap('INT') do
+      Thread.new { say 'Exiting...' }
+      stop
+      raise SignalException.new('INT') if self.class.raise_signal_exceptions && self.class.raise_signal_exceptions != :term
+    end
+
+    say "Starting threaded delayed worker with #{@thread_count} threads"
+
+    @thread_count.times do |thread_index|
+      thread = Thread.new do
+        Thread.current[:thread_name] = "thread:#{thread_index + 1}"
+        threaded_start
+      rescue Exception => e # rubocop:disable Lint/RescueException
+        @mutex.synchronize do
+          say "Unexpected error: #{e.message}\n#{e.backtrace.join("\n")}", 'error'
+          @unexpected_error = true
+        end
+        stop
+      end
+      @mutex.synchronize do
+        @threads << thread
       end
     end
 
-    @threads.each(&:join) # Wait for threads to finish
+    @threads.each(&:join)
+  ensure
+    raise 'Unexpected error occurred in one of the worker threads' if @unexpected_error
   end
 
   def name
-    Thread.current[:name] || @name
+    base_name = super
+    thread_name = Thread.current[:thread_name]
+    thread_name ? "#{base_name} #{thread_name}" : base_name
   end
 
-  def name=(name)
-    # Set the instance variable for compatibility && ensure thread-local storage is also updated
-    @name = name
-    Thread.current[:name] = name
-  end
+  def stop
+    Thread.new do
+      say 'Shutting down worker threads gracefully...'
+      super
 
-  private
-
-  def generate_thread_name(thread_index)
-    if @name
-      "#{@name}-thread:#{thread_index}"
-    else
-      "#{@name_prefix}-host:#{Socket.gethostname} pid:#{Process.pid} thread:#{thread_index}"
+      @threads.each do |t|
+        Thread.new do
+          t.join(@grace_period_seconds)
+          if t.alive?
+            say "Killing thread '#{t[:thread_name]}'"
+            t.kill
+          end
+        end
+      end.each(&:join) # Ensure all join threads complete
     end
   end
 
-  def thread_name(name)
-    # Store the name in thread-local storage && Set the name in the instance variable for compatibility
-    Thread.current[:name] = name
-    self.name = name
-  end
-
-  def stop_signal?
-    @stop_signal
-  end
-
-  def threaded_work_off
-    retry_attempts = 0
-
-    until stop_signal?
-      begin
-        runtime = Benchmark.realtime do
-          @result = work_off(100) # Attempt to process one job
+  def threaded_start
+    self.class.lifecycle.run_callbacks(:execute, self) do
+      loop do
+        self.class.lifecycle.run_callbacks(:loop, self) do
+          @realtime = Benchmark.realtime do
+            @result = work_off
+          end
         end
 
         count = @result[0] + @result[1]
 
         if count.zero?
-          sleep(self.class.sleep_delay) unless stop_signal?
+          if self.class.exit_on_complete
+            say 'No more jobs available. Exiting'
+            break
+          elsif !stop?
+            sleep(self.class.sleep_delay)
+            reload!
+          end
         else
-          say sprintf("#{count} jobs processed at %.4f j/s, %d failed", count / runtime, @result.last)
+          say sprintf("#{count} jobs processed at %.4f j/s, %d failed", count / @realtime, @result.last)
         end
-      rescue StandardError => e
-        say "Thread #{name} encountered an error: #{e.message}. Restarting thread..."
-        retry_attempts += 1
-        if retry_attempts >= 5
-          say "Thread #{name} has failed #{retry_attempts} times. Exiting to prevent infinite loop."
-          break
-        end
-        sleep(1) # Adding a delay before retrying
-        retry
+        break if stop?
       end
     end
-
-    say 'Stop signal received. Exiting.'
-  end
-
-  def trap_signals
-    trap('TERM') { initiate_shutdown }
-    trap('INT')  { initiate_shutdown }
-  end
-
-  def initiate_shutdown
-    return if @stop_signal
-
-    Thread.new { say 'Initiating shutdown...' }
-    @stop_signal = true
-
-    # Allow threads to finish current jobs
-    @threads.each { |t| t.join(30) } # Wait up to 30 seconds for each thread to finish (like monit)
-    Thread.new { say 'All threads have finished. Exiting.' }
   end
 end
