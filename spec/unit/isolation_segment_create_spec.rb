@@ -59,7 +59,7 @@ module VCAP::CloudController
           # Second request, should fail with correct error
           expect do
             IsolationSegmentCreate.create(message)
-          end.to raise_error(IsolationSegmentCreate::Error, "name unique")
+          end.to raise_error(IsolationSegmentCreate::Error, 'name unique')
         end
       end
     end
