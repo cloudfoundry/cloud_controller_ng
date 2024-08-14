@@ -41,7 +41,8 @@ module VCAP::CloudController
       if e.message.include?('unique_service_binding_app_guid_name')
         errors.add(%i[app_guid name], :unique)
         raise validation_failed_error
-      elsif e.message.include?('Duplicate entry')
+        # mysql
+      elsif e.message.include?('Duplicate entry') || e.message.include?('unique_service_binding_service_instance_guid_app_guid')
         errors.add(%i[service_instance_guid app_guid], :unique)
         raise validation_failed_error
       else

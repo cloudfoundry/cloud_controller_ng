@@ -145,7 +145,14 @@ module VCAP::CloudController
             end
           end
 
-          context 'when creating bindings with the same name concurrently' do
+          context 'when creating bindings with the same binding name concurrently' do
+            let(:si_details) do
+              {
+                space:
+              }
+            end
+            let(:service_instance2) { ManagedServiceInstance.make(**si_details) }
+
             it 'raises an error when the binding name already exists' do
               # First request, should succeed
               expect do
@@ -154,21 +161,24 @@ module VCAP::CloudController
 
               # Mock the validation for the second request to simulate the race condition and trigger a
               # unique constraint violation on app_guid + name
-              allow_any_instance_of(ServiceCredentialBindingAppCreate).to receive(:validate_binding!).and_return(true)
               allow_any_instance_of(ServiceBinding).to receive(:validate).and_return(true)
-              binding = instance_double(ServiceBinding, destroy: false)
-              allow(ServiceBinding).to receive(:first).with(service_instance:, app:).and_return(binding)
-
-              allow_any_instance_of(ServiceBinding).to receive(:save_with_attributes_and_new_operation) do |instance|
-                instance.errors.add(%i[app_guid name], :unique)
-                raise Sequel::ValidationFailed.new('app_guid and name unique')
-              end
+              allow(ServiceBinding).to receive(:first).with(service_instance: service_instance2, app: app).and_return(nil)
 
               # Second request, should fail with correct error
               expect do
-                action.precursor(service_instance, app:, message:)
-              end.to raise_error(ServiceBindingCreate::UnprocessableCreate,
-                                 "The binding name is invalid. App binding names must be unique. The app already has a binding with name '#{name}'.")
+                action.precursor(service_instance2, app:, message:)
+              end.to raise_error(ServiceBindingCreate::UnprocessableCreate)
+            end
+          end
+
+          context 'when creating bindings with the same service instance concurrently' do
+            let(:name2) { 'foo2' }
+            let(:message2) do
+              VCAP::CloudController::ServiceCredentialAppBindingCreateMessage.new(
+                {
+                  name: name2
+                }
+              )
             end
 
             it 'raises an error when the app is already bound to the service instance' do
@@ -179,19 +189,14 @@ module VCAP::CloudController
 
               # Mock the validation for the second request to simulate the race condition and trigger a
               # unique constraint violation on service_instance_guid + app_guid
-              allow_any_instance_of(ServiceCredentialBindingAppCreate).to receive(:validate_binding!).and_return(true)
+              # allow_any_instance_of(ServiceCredentialBindingAppCreate).to receive(:validate_binding!).and_return(true)
               allow_any_instance_of(ServiceBinding).to receive(:validate).and_return(true)
-              binding = instance_double(ServiceBinding, destroy: false)
-              allow(ServiceBinding).to receive(:first).with(service_instance:, app:).and_return(binding)
-
-              allow_any_instance_of(ServiceBinding).to receive(:save_with_attributes_and_new_operation) do |instance|
-                instance.errors.add(%i[service_instance_guid app_guid], :unique)
-                raise Sequel::ValidationFailed.new('service_instance_guid and app_guid unique')
-              end
+              # binding = instance_double(ServiceBinding, destroy: false)
+              allow(ServiceBinding).to receive(:first).with(service_instance:, app:).and_return(nil)
 
               # Second request, should fail with correct error
               expect do
-                action.precursor(service_instance, app:, message:)
+                action.precursor(service_instance, app: app, message: message2)
               end.to raise_error(ServiceBindingCreate::UnprocessableCreate, 'The app is already bound to the service instance.')
             end
           end

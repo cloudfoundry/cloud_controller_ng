@@ -267,11 +267,11 @@ module VCAP::CloudController
             expect do
               action.precursor(service_instance2, message: message2)
             end.not_to raise_error
+
             # Mock the validation for the second request to simulate the race condition and trigger a unique constraint violation
-            allow_any_instance_of(ServiceCredentialBindingKeyCreate).to receive(:validate_key!).and_return(true)
             allow_any_instance_of(ServiceKey).to receive(:validate).and_return(true)
-            key = instance_double(ServiceKey, destroy: false)
-            allow(ServiceKey).to receive(:first).with(service_instance: service_instance2, name: name2).and_return(key)
+            allow(ServiceKey).to receive(:first).with(service_instance: service_instance2, name: name2).and_return(nil)
+
             expect do
               action.precursor(service_instance2, message: message2)
             end.to raise_error(ServiceBindingCreate::UnprocessableCreate,
