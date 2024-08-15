@@ -173,7 +173,7 @@ class ServiceInstancesV3Controller < ApplicationController
 
   def relationships_shared_spaces
     service_instance = ServiceInstance.first(guid: hashed_params[:guid])
-    resource_not_found!(:service_instance) unless service_instance && can_read_from_space?(service_instance.space)
+    resource_not_found!(:service_instance) unless service_instance && can_read_service_instance?(service_instance)
 
     message = SharedSpacesShowMessage.from_params(query_params)
     invalid_param!(message.errors.full_messages) unless message.valid?

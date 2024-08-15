@@ -4642,10 +4642,9 @@ module VCAP::CloudController
                   )
                 end
 
-                it 'has a 403 http status code' do
+                it 'has a 200 http status code' do
                   get "/v2/service_instances/#{instance.guid}/shared_to"
-                  expect(last_response.status).to eq(403)
-                  expect(Oj.load(last_response.body)['description']).to eq('You are not authorized to perform the requested action')
+                  expect(last_response.status).to eq(200), "Expected 200, got: #{last_response.status}, role: #{role}"
                 end
               end
             end
