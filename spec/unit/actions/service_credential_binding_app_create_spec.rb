@@ -167,7 +167,8 @@ module VCAP::CloudController
               # Second request, should fail with correct error
               expect do
                 action.precursor(service_instance2, app:, message:)
-              end.to raise_error(ServiceBindingCreate::UnprocessableCreate)
+              end.to raise_error(ServiceBindingCreate::UnprocessableCreate,
+                                 "The binding name is invalid. App binding names must be unique. The app already has a binding with name 'foo'.")
             end
           end
 
@@ -189,9 +190,7 @@ module VCAP::CloudController
 
               # Mock the validation for the second request to simulate the race condition and trigger a
               # unique constraint violation on service_instance_guid + app_guid
-              # allow_any_instance_of(ServiceCredentialBindingAppCreate).to receive(:validate_binding!).and_return(true)
               allow_any_instance_of(ServiceBinding).to receive(:validate).and_return(true)
-              # binding = instance_double(ServiceBinding, destroy: false)
               allow(ServiceBinding).to receive(:first).with(service_instance:, app:).and_return(nil)
 
               # Second request, should fail with correct error
