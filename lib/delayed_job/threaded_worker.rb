@@ -1,7 +1,7 @@
 class ThreadedWorker < Delayed::Worker
-  def initialize(thread_count, options={}, grace_period_seconds=30)
+  def initialize(num_threads, options={}, grace_period_seconds=30)
     super(options)
-    @thread_count = thread_count
+    @num_threads = num_threads
     @threads = []
     @unexpected_error = false
     @mutex = Mutex.new
@@ -27,9 +27,9 @@ class ThreadedWorker < Delayed::Worker
       raise SignalException.new('INT') if self.class.raise_signal_exceptions && self.class.raise_signal_exceptions != :term
     end
 
-    say "Starting threaded delayed worker with #{@thread_count} threads"
+    say "Starting threaded delayed worker with #{@num_threads} threads"
 
-    @thread_count.times do |thread_index|
+    @num_threads.times do |thread_index|
       thread = Thread.new do
         Thread.current[:thread_name] = "thread:#{thread_index + 1}"
         threaded_start

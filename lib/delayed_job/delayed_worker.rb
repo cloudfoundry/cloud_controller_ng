@@ -23,8 +23,8 @@ class CloudController::DelayedWorker
     Delayed::Worker.max_attempts = 3
     Delayed::Worker.max_run_time = config.get(:jobs, :global, :timeout_in_seconds) + 1
     Delayed::Worker.logger = logger
-    thread_count = config.get(:jobs, :thread_count)
-    worker = thread_count.nil? ? Delayed::Worker.new(@queue_options) : ThreadedWorker.new(thread_count, @queue_options)
+    num_worker_threads = config.get(:jobs, :number_of_worker_threads)
+    worker = num_worker_threads.nil? ? Delayed::Worker.new(@queue_options) : ThreadedWorker.new(num_worker_threads, @queue_options)
     worker.name = @queue_options[:worker_name]
     worker.start
   end
