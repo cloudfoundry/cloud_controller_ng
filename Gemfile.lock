@@ -429,7 +429,7 @@ GEM
     retriable (3.1.2)
     reverse_markdown (2.1.1)
       nokogiri
-    rexml (3.3.4)
+    rexml (3.3.6)
       strscan
     rfc822 (0.1.5)
     roodi (5.0.0)
