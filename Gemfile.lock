@@ -410,9 +410,9 @@ GEM
     rbs (2.8.4)
     rdoc (6.7.0)
       psych (>= 4.0.0)
-    redis (5.2.0)
+    redis (5.3.0)
       redis-client (>= 0.22.0)
-    redis-client (0.22.0)
+    redis-client (0.22.2)
       connection_pool
     regexp_parser (2.9.2)
     reline (0.5.9)
