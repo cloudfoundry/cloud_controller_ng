@@ -33,6 +33,33 @@ module VCAP::CloudController
           end
         end
 
+        context 'when creating domains concurrently' do
+          let(:internal) { true }
+          let(:p_name) { 'perfect.domain-1.example.com' }
+          let(:message) do
+            DomainCreateMessage.new({
+                                      name: p_name,
+                                      internal: internal,
+                                      metadata: metadata
+                                    })
+          end
+
+          it 'ensures one creation is successful and the other fails due to name conflict' do
+            # First request, should succeed
+            expect do
+              subject.create(message:)
+            end.not_to raise_error
+
+            # Mock the validation for the second request to simulate the race condition and trigger a unique constraint violation
+            allow_any_instance_of(Domain).to receive(:validate).and_return(true)
+
+            # Second request, should fail with correct error
+            expect do
+              subject.create(message:)
+            end.to raise_error(DomainCreate::Error, 'The domain name "perfect.domain-1.example.com" is already in use')
+          end
+        end
+
         context 'when the error is a uniqueness error' do
           let(:existing_domain) { SharedDomain.make }
           let(:message) { DomainCreateMessage.new({ name: existing_domain.name }) }

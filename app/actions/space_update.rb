@@ -23,7 +23,7 @@ module VCAP::CloudController
     end
 
     def validation_error!(error, space)
-      error!("Organization '#{space.organization.name}' already contains a space with name '#{space.name}'.") if error.is_a?(Space::DBNameUniqueRaceError) || error.errors.on(%i[
+      error!("Organization '#{space.organization.name}' already contains a space with name '#{space.name}'.") if error.errors.on(%i[
         organization_id name
       ])&.include?(:unique)
       error!(error.message)

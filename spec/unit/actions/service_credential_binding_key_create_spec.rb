@@ -250,6 +250,26 @@ module VCAP::CloudController
             end
           end
         end
+
+        context 'when creating keys with the same name concurrently' do
+          let(:service_instance) { ManagedServiceInstance.make(space:) }
+
+          it 'ensures one creation is successful and the other fails due to name conflict' do
+            # First request, should succeed
+            expect do
+              action.precursor(service_instance, message:)
+            end.not_to raise_error
+
+            # Mock the validation for the second request to simulate the race condition and trigger a unique constraint violation
+            allow_any_instance_of(ServiceKey).to receive(:validate).and_return(true)
+            allow(ServiceKey).to receive(:first).with(service_instance:, name:).and_return(nil)
+
+            expect do
+              action.precursor(service_instance, message:)
+            end.to raise_error(ServiceBindingCreate::UnprocessableCreate,
+                               "The binding name is invalid. Key binding names must be unique. The service instance already has a key binding with name 'some-binding-name'.")
+          end
+        end
       end
 
       describe '#bind' do
