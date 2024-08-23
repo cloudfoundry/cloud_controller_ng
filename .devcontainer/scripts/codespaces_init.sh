@@ -8,7 +8,7 @@ trap "pkill -P $$" EXIT
 mkdir -p tmp
 
 # Speed up docker builds by prebuilding with buildx
-docker-compose pull || tee tmp/fail &
+docker compose pull || tee tmp/fail &
 docker buildx bake -f docker-compose.yml -f .devcontainer/docker-compose.override.yml || tee tmp/fail &
 
 wait $(jobs -p)
