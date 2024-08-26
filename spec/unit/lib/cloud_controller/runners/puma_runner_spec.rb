@@ -49,6 +49,15 @@ module VCAP::CloudController
         expect(puma_launcher.config.final_options[:binds].first).to eq("unix://#{socket}")
       end
 
+      context 'when socket is not configured' do
+        let(:socket) { '' }
+
+        it 'binds to the nginx default port 3000' do
+          subject
+          expect(puma_launcher.config.final_options[:binds].first).to eq('tcp://0.0.0.0:3000')
+        end
+      end
+
       context 'when not using nginx' do
         let(:use_nginx) { false }
 
