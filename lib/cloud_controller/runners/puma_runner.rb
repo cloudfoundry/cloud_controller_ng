@@ -10,7 +10,11 @@ module VCAP::CloudController
 
       puma_config = Puma::Configuration.new do |conf|
         if config.get(:nginx, :use_nginx)
-          conf.bind "unix://#{config.get(:nginx, :instance_socket)}"
+          if config.get(:nginx, :instance_socket).nil? || config.get(:nginx, :instance_socket).empty?
+            conf.bind 'tcp://0.0.0.0:3000'
+          else
+            conf.bind "unix://#{config.get(:nginx, :instance_socket)}"
+          end
         else
           conf.bind "tcp://0.0.0.0:#{config.get(:external_port)}"
         end
