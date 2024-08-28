@@ -63,7 +63,7 @@ RSpec.describe 'stack_check' do
   end
 
   context 'buildpack_lifecycle_data' do
-    context 'when buildpack_lifecycle_data doesnt exist' do
+    context 'when buildpack_lifecycle_data table doesnt exist' do
       before do
         allow(db_double).to receive(:table_exists?).with(:buildpack_lifecycle_data).and_return false
         allow(VCAP::CloudController::DB).to receive(:connect).and_return(db_double)
