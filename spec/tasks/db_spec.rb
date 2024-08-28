@@ -9,8 +9,6 @@ RSpec.describe 'db.rake', type: :migration do
       allow(RakeConfig).to receive(:config).and_return(TestConfig.config_instance)
       allow(DBMigrator).to receive(:from_config).and_return(db_migrator)
       allow(db_migrator).to receive(:apply_migrations)
-
-      Application.load_tasks
     end
 
     it 'logs to configured sinks + STDOUT' do

@@ -7,7 +7,6 @@ RSpec.describe 'ensure migrations are current', isolation: :truncation, type: :m
   end
 
   it 'runs the rake task successfully' do
-    Application.load_tasks
     expect { Rake::Task['db:ensure_migrations_are_current'].invoke }.not_to raise_error
   end
 end
