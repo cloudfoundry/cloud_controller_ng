@@ -131,7 +131,9 @@ each_run_block = proc do
 
     rspec_config.include SpaceRestrictedResponseGenerators
 
-    rspec_config.before(:all) { WebMock.disable_net_connect!(allow: %w[codeclimate.com fake.bbs]) }
+    rspec_config.before(:all) do
+      WebMock.disable_net_connect!(allow: %w[codeclimate.com fake.bbs])
+    end
     rspec_config.before(:all, type: :integration) do
       WebMock.allow_net_connect!
       @uaa_server = FakeUAAServer.new(6789)
@@ -156,6 +158,10 @@ each_run_block = proc do
 
     rspec_config.before :suite do
       VCAP::CloudController::SpecBootstrap.seed
+      # We only want to load rake tasks once:
+      # calling this more than once will load tasks again and 'invoke' or 'execute' calls
+      # will call rake tasks multiple times
+      Application.load_tasks
     end
 
     rspec_config.before do

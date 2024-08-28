@@ -11,7 +11,7 @@ module VCAP::CloudController
         'stacks' => [
           cflinuxfs4
         ],
-        'deprecated_stacks' => 'cflinuxfs3'
+        'deprecated_stacks' => ['cflinuxfs3']
       }
     end
 
