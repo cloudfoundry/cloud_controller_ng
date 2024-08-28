@@ -13,7 +13,6 @@ RSpec.describe 'stack_check' do
     }
   end
 
-  let(:cflinuxfs3) { { 'name' => 'cflinuxfs3', 'description' => 'fs3' } }
   let(:cflinuxfs4) { { 'name' => 'cflinuxfs4', 'description' => 'fs4' } }
 
   let(:db_double) do
