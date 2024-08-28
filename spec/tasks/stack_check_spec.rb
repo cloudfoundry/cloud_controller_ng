@@ -37,7 +37,7 @@ RSpec.describe 'stack_check' do
   end
 
   context 'stacks' do
-    context 'when stacks doesnt exist' do
+    context 'when stacks table doesnt exist' do
       before do
         allow(db_double).to receive(:table_exists?).with(:stacks).and_return false
         allow(VCAP::CloudController::DB).to receive(:connect).and_return(db_double)
