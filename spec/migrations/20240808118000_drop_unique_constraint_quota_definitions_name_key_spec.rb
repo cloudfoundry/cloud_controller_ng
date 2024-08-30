@@ -5,6 +5,7 @@ RSpec.describe 'migration to add or remove unique constraint on name column in q
   include_context 'migration' do
     let(:migration_filename) { '20240808118000_drop_unique_constraint_quota_definitions_name_key_spec.rb' }
   end
+
   describe 'up migration' do
     context 'unique constraint on name column exists' do
       it 'removes the unique constraint' do
