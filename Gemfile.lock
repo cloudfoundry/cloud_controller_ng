@@ -469,15 +469,14 @@ GEM
       activesupport (>= 3.0.0)
       mustache (~> 1.0, >= 0.99.4)
       rspec (~> 3.0)
-    rubocop (1.65.1)
+    rubocop (1.66.0)
       json (~> 2.3)
       language_server-protocol (>= 3.17.0)
       parallel (~> 1.10)
       parser (>= 3.3.0.2)
       rainbow (>= 2.2.2, < 4.0)
       regexp_parser (>= 2.4, < 3.0)
-      rexml (>= 3.2.5, < 4.0)
-      rubocop-ast (>= 1.31.1, < 2.0)
+      rubocop-ast (>= 1.32.1, < 2.0)
       ruby-progressbar (~> 1.7)
       unicode-display_width (>= 2.4.0, < 3.0)
     rubocop-ast (1.32.1)
@@ -657,7 +656,7 @@ DEPENDENCIES
   rspec-rails (~> 6.1.4)
   rspec-wait
   rspec_api_documentation (>= 6.1.0)
-  rubocop (~> 1.65.1)
+  rubocop (~> 1.66.0)
   rubocop-capybara
   rubocop-factory_bot
   rubocop-rails (~> 2.26)
