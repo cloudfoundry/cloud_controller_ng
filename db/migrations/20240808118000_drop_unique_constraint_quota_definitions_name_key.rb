@@ -31,15 +31,6 @@ Sequel.migration do
       alter_table :quota_definitions do
         add_unique_constraint :name, name: :name, if_not_exists: true
       end
-      mysql_version = server_version
-      if mysql_version < 80_000 # MySQL 5.7 and below
-        alter_table :quota_definitions do
-          # rubocop:disable Sequel/ConcurrentIndex
-          # Add the index only for MySQL 5.7
-          add_index :name, name: :name if @db.indexes(:quota_definitions).include?(:name)
-          # rubocop:enable Sequel/ConcurrentIndex
-        end
-      end
     elsif self.class.name.match?(/postgres/i)
       alter_table :quota_definitions do
         add_unique_constraint :name, name: :quota_definitions_name_key, if_not_exists: true
