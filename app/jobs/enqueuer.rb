@@ -52,6 +52,8 @@ module VCAP::CloudController
       end
 
       def job_timeout
+        return @timeout_calculator.calculate(@job.try(:job_name_in_configuration), @opts[:queue]) if @opts[:queue]
+
         @timeout_calculator.calculate(@job.try(:job_name_in_configuration))
       end
 
