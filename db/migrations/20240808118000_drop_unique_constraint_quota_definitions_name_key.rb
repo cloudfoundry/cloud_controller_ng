@@ -1,15 +1,6 @@
 Sequel.migration do
   up do
     if self.class.name.match?(/mysql/i)
-      mysql_version = server_version
-      if mysql_version < 80_000 # MySQL 5.7 and below
-        alter_table :quota_definitions do
-          # rubocop:disable Sequel/ConcurrentIndex
-          # Drop the index only for MySQL 5.7
-          drop_index :name, name: :name if @db.indexes(:quota_definitions).include?(:name)
-          # rubocop:enable Sequel/ConcurrentIndex
-        end
-      end
       alter_table :quota_definitions do
         drop_constraint :name, if_exists: true
       end
