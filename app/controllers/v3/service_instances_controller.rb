@@ -189,7 +189,7 @@ class ServiceInstancesV3Controller < ApplicationController
 
   def shared_spaces_usage_summary
     service_instance = ServiceInstance.first(guid: hashed_params[:guid])
-    service_instance_not_found! unless service_instance.present? && can_read_from_space?(service_instance.space)
+    service_instance_not_found! unless service_instance.present? && can_read_service_instance?(service_instance)
 
     render status: :ok, json: Presenters::V3::SharedSpacesUsageSummaryPresenter.new(service_instance)
   end
