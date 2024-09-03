@@ -94,7 +94,7 @@ RSpec.describe ThreadedWorker do
 
     it 'allows threads to finish their work without being killed prematurely' do
       allow(worker).to receive(:threaded_start) do
-        5.times { sleep grace_period_seconds / 2 until worker.instance_variable_get(:@exit) == true }
+        sleep grace_period_seconds / 2 until worker.instance_variable_get(:@exit) == true
       end
 
       worker_thread = Thread.new { worker.start }
@@ -107,9 +107,8 @@ RSpec.describe ThreadedWorker do
     end
 
     it 'kills threads that exceed the grace period during shutdown' do
-      worker = ThreadedWorker.new(num_threads, {}, 3)
       allow(worker).to receive(:threaded_start) do
-        10.times { sleep grace_period_seconds * 2 until worker.instance_variable_get(:@exit) == true }
+        sleep grace_period_seconds * 2 until worker.instance_variable_get(:@exit) == true
       end
 
       worker_thread = Thread.new { worker.start }
