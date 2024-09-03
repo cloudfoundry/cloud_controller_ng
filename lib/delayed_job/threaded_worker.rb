@@ -34,10 +34,8 @@ class ThreadedWorker < Delayed::Worker
         Thread.current[:thread_name] = "thread:#{thread_index + 1}"
         threaded_start
       rescue Exception => e # rubocop:disable Lint/RescueException
-        @mutex.synchronize do
-          say "Unexpected error: #{e.message}\n#{e.backtrace.join("\n")}", 'error'
-          @unexpected_error = true
-        end
+        say "Unexpected error: #{e.message}\n#{e.backtrace.join("\n")}", 'error'
+        @mutex.synchronize { @unexpected_error = true }
         stop
       end
       @mutex.synchronize do
@@ -53,7 +51,7 @@ class ThreadedWorker < Delayed::Worker
   def name
     base_name = super
     thread_name = Thread.current[:thread_name]
-    thread_name ? "#{base_name} #{thread_name}" : base_name
+    thread_name.nil? ? base_name : "#{base_name} #{thread_name}"
   end
 
   def stop
