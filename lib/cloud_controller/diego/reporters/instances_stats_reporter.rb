@@ -48,9 +48,9 @@ module VCAP::CloudController
         bbs_instances_client.lrp_instances(process).each do |actual_lrp|
           next unless actual_lrp.actual_lrp_key.index < process.instances
 
-          state ||= LrpStateTranslator.translate_lrp_state(actual_lrp)
+          lrp_state = state || LrpStateTranslator.translate_lrp_state(actual_lrp)
 
-          info = build_info(state, actual_lrp, process, stats, quota_stats, log_cache_errors)
+          info = build_info(lrp_state, actual_lrp, process, stats, quota_stats, log_cache_errors)
           info[:isolation_segment] = isolation_segment unless isolation_segment.nil?
           result[actual_lrp.actual_lrp_key.index] = info
         end
