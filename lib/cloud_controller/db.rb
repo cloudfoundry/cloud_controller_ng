@@ -42,6 +42,7 @@ module VCAP::CloudController
       add_connection_expiration_extension(db, opts)
       add_connection_validator_extension(db, opts)
       db.extension(:requires_unique_column_names_in_subquery)
+      add_connection_metrics_extension(db)
       db
     end
 
@@ -66,6 +67,15 @@ module VCAP::CloudController
       db.pool.connection_expiration_timeout = opts[:connection_expiration_timeout]
       db.pool.connection_expiration_random_delay = opts[:connection_expiration_random_delay] if opts[:connection_expiration_random_delay]
       # So that there are no existing connections without an expiration timestamp
+      db.disconnect
+    end
+
+    def self.add_connection_metrics_extension(db)
+      # only add the metrics for api processes. Otherwise e.g. rake db:migrate would also initialize metric updaters, which need additional config
+      return if Object.const_defined?(:RakeConfig)
+
+      db.extension(:connection_metrics)
+      # so that we gather connection metrics from the beginning
       db.disconnect
     end
 

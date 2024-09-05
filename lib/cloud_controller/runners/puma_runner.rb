@@ -36,6 +36,10 @@ module VCAP::CloudController
         conf.before_fork do
           Sequel::Model.db.disconnect
         end
+        conf.on_worker_boot do
+          ENV['PROCESS_TYPE'] = 'puma_worker'
+          prometheus_updater.update_gauge_metric(:cc_db_connection_pool_timeouts_total, 0, labels: { process_type: 'puma_worker' })
+        end
         conf.on_worker_shutdown do
           request_logs.log_incomplete_requests if request_logs
         end
@@ -48,6 +52,7 @@ module VCAP::CloudController
 
       events = Puma::Events.new
       events.on_booted do
+        prometheus_updater.update_gauge_metric(:cc_db_connection_pool_timeouts_total, 0, labels: { process_type: 'main' })
         Thread.new do
           EM.run { periodic_updater.setup_updates }
         end
@@ -64,6 +69,12 @@ module VCAP::CloudController
     rescue StandardError => e
       @logger.error "Encountered error: #{e}\n#{e.backtrace&.join("\n")}"
       raise e
+    end
+
+    private
+
+    def prometheus_updater
+      CloudController::DependencyLocator.instance.prometheus_updater
     end
   end
 end
