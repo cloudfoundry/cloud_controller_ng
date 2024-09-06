@@ -181,10 +181,10 @@ GEM
       fog-core (~> 2.1)
       fog-json (~> 1.1)
       fog-xml (~> 0.1)
-    fog-core (2.1.2)
+    fog-core (2.4.0)
       builder
-      excon (~> 0.58)
-      formatador (~> 0.2)
+      excon (~> 0.71)
+      formatador (>= 0.2, < 2.0)
       mime-types
     fog-google (1.24.1)
       addressable (>= 2.7.0)
@@ -210,7 +210,7 @@ GEM
     fog-xml (0.1.4)
       fog-core
       nokogiri (>= 1.5.11, < 2.0.0)
-    formatador (0.3.0)
+    formatador (1.1.0)
     google-apis-compute_v1 (0.86.0)
       google-apis-core (>= 0.11.0, < 2.a)
     google-apis-core (0.11.3)
@@ -611,7 +611,7 @@ DEPENDENCIES
   fog-aliyun
   fog-aws
   fog-azure-rm!
-  fog-core (~> 2.1.2)
+  fog-core (~> 2.4.0)
   fog-google (~> 1.24.1)
   fog-local
   fog-openstack
