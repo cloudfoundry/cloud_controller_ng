@@ -22,7 +22,7 @@ module VCAP::CloudController
         end
 
         filter(dataset, message).
-          select_all(:service_instances).
+          select_all(:service_instances)
       end
 
       private
