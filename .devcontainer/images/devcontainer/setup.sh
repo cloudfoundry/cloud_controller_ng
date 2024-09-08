@@ -55,5 +55,7 @@ setupYqCli
 # Setup User Permissions
 sudo groupadd docker
 sudo usermod -aG docker "vscode"
+sudo chmod 777 /tmp
+sudo chmod +t /tmp
 
 trap "" EXIT
