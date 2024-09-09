@@ -26,6 +26,11 @@ module VCAP::CloudController
         expect(fetcher.fetch(message, omniscient: true).all).to contain_exactly(msi_1, msi_2, msi_3, upsi, ssi)
       end
 
+      it 'does not contain duplicates' do
+        ssi.add_shared_space(space_1)
+        expect(fetcher.fetch(message, omniscient: true).all).to contain_exactly(msi_1, msi_2, msi_3, upsi, ssi)
+      end
+
       it 'fetches nothing for users who cannot see any spaces' do
         expect(fetcher.fetch(message, readable_spaces_dataset: Space.where(id: -1).select(:guid)).all).to be_empty
       end
