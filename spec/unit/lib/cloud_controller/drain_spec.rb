@@ -14,8 +14,9 @@ module VCAP::CloudController
     end
 
     let(:pid) { 23_456 }
+    let(:pid_name) { 'pidfile' }
     let(:pid_dir) { Dir.mktmpdir }
-    let(:pid_path) { File.join(pid_dir, 'pidfile') }
+    let(:pid_path) { File.join(pid_dir, pid_name) }
 
     before do
       File.write(pid_path, pid)
@@ -38,7 +39,7 @@ module VCAP::CloudController
         drain.shutdown_nginx(pid_path)
 
         log_contents do |log|
-          expect(log).to match(/Sending signal '\w+' to process '\w+' with pid '\d+'/)
+          expect(log).to include("Sending signal 'QUIT' to process '#{pid_name}' with pid '#{pid}'")
         end
       end
 
@@ -50,8 +51,9 @@ module VCAP::CloudController
 
         expect(drain).to have_received(:sleep).twice
         log_contents do |log|
-          expect(log).to match(/Waiting \d+s for process '\w+' with pid '\d+' to shutdown/)
-          expect(log).to match(/Process '\w+' with pid '\d+' is not running/)
+          expect(log).to include("Waiting 30s for process '#{pid_name}' with pid '#{pid}' to shutdown")
+          expect(log).to include("Waiting 29s for process '#{pid_name}' with pid '#{pid}' to shutdown")
+          expect(log).to include("Process '#{pid_name}' with pid '#{pid}' is not running")
         end
       end
 
@@ -84,7 +86,7 @@ module VCAP::CloudController
 
         expect(drain).to have_received(:sleep).exactly(40).times
         log_contents do |log|
-          expect(log).to match(/Process '\w+' with pid '\d+' is still running - this indicates an error in the shutdown procedure!/)
+          expect(log).to include("Process '#{pid_name}' with pid '#{pid}' is still running - this indicates an error in the shutdown procedure!")
         end
       end
     end
@@ -96,7 +98,7 @@ module VCAP::CloudController
         drain.shutdown_cc(pid_path)
 
         log_contents do |log|
-          expect(log).to match(/Sending signal '\w+' to process '\w+' with pid '\d+'/)
+          expect(log).to match("Sending signal 'TERM' to process '#{pid_name}' with pid '#{pid}'")
         end
       end
 
@@ -107,7 +109,7 @@ module VCAP::CloudController
 
         expect(drain).to have_received(:sleep).exactly(20).times
         log_contents do |log|
-          expect(log).to match(/Process '\w+' with pid '\d+' is still running - this indicates an error in the shutdown procedure!/)
+          expect(log).to match("Process '#{pid_name}' with pid '#{pid}' is still running - this indicates an error in the shutdown procedure!")
         end
       end
     end
