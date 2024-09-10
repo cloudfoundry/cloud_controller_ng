@@ -14,6 +14,10 @@ module VCAP::CloudController
       let(:service_instance_1) { ManagedServiceInstance.make(space: space1) }
       let(:service_instance_2) { UserProvidedServiceInstance.make(space: space2) }
 
+      before do
+        allow(Permissions).to receive(:new).and_return(double(can_read_globally?: true))
+      end
+
       context 'when space guid, name and relationship.organizations are requested' do
         let(:decorator) { described_class.new({ space: ['relationships.organization', 'guid', 'name'] }) }
 

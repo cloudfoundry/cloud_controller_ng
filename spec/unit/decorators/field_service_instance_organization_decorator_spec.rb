@@ -14,6 +14,10 @@ module VCAP::CloudController
       let(:service_instance_1) { ManagedServiceInstance.make(space: space1) }
       let(:service_instance_2) { UserProvidedServiceInstance.make(space: space2) }
 
+      before do
+        allow(Permissions).to receive(:new).and_return(double(can_read_globally?: true))
+      end
+
       it 'decorated the given hash with orgs names from service instances' do
         undecorated_hash = { foo: 'bar', included: { monkeys: %w[zach greg] } }
         decorator = described_class.new({ 'space.organization': %w[name foo] })
