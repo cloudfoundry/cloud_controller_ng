@@ -2,7 +2,6 @@ require 'spec_helper'
 
 ## NOTICE: Prefer request specs over controller specs as per ADR #0003 ##
 
-# rubocop:disable Metrics/ModuleLength
 module VCAP::CloudController
   RSpec.describe VCAP::CloudController::ServiceInstancesController, :services do
     let(:service_broker_url_regex) { %r{http://example.com/v2/service_instances/(.*)} }
@@ -5514,4 +5513,3 @@ module VCAP::CloudController
     end
   end
 end
-# rubocop:enable Metrics/ModuleLength

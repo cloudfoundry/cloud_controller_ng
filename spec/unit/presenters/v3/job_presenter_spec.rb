@@ -136,7 +136,7 @@ module VCAP::CloudController::Presenters::V3
     context 'for droplets' do
       it_behaves_like JobPresenter do
         let(:resource_type) { 'droplet' }
-        let(:resource) { VCAP::CloudController::DropletModel.make }
+        let(:resource) { VCAP::CloudController::DropletModel.make(app: nil) }
       end
     end
 

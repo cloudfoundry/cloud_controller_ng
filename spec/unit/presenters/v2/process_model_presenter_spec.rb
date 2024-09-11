@@ -121,6 +121,7 @@ module CloudController::Presenters::V2
             process.destroy
             parent_app.builds.map(&:destroy)
             parent_app.packages.map(&:destroy)
+            parent_app.update(droplet_guid: nil)
             parent_app.droplets.map(&:destroy)
             parent_app.buildpack_lifecycle_data.buildpack_lifecycle_buildpacks.map(&:destroy)
             parent_app.destroy

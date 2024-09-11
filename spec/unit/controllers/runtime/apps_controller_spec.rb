@@ -1770,6 +1770,7 @@ module VCAP::CloudController
       context 'when app will be staged', isolation: :truncation do
         let(:process) do
           ProcessModelFactory.make(diego: false, state: 'STOPPED', instances: 1).tap do |p|
+            p.desired_droplet.app.update(droplet_guid: nil)
             p.desired_droplet.destroy
             p.reload
           end
@@ -1826,6 +1827,7 @@ module VCAP::CloudController
       end
 
       it 'returns an error for an app without a droplet' do
+        process.desired_droplet.app.update(droplet_guid: nil)
         process.desired_droplet.destroy
 
         get "/v2/apps/#{process.app.guid}/droplet/download", Oj.dump({})

@@ -158,6 +158,7 @@ module VCAP::CloudController
         let!(:process) { ProcessModelFactory.make(state: 'STARTED') }
 
         before do
+          process.desired_droplet.app.update(droplet_guid: nil)
           process.desired_droplet.destroy
         end
 

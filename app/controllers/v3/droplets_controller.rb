@@ -82,6 +82,7 @@ class DropletsController < ApplicationController
 
     unauthorized! unless permission_queryer.can_write_to_active_space?(space.id)
     suspended! unless permission_queryer.is_space_active?(space.id)
+    in_use!(droplet) if droplet.current?
 
     delete_action = DropletDelete.new(user_audit_info)
     deletion_job = VCAP::CloudController::Jobs::DeleteActionJob.new(DropletModel, droplet.guid, delete_action)
@@ -188,6 +189,10 @@ class DropletsController < ApplicationController
 
   def unprocessable_app!(app_guid)
     unprocessable!("App with guid \"#{app_guid}\" does not exist, or you do not have access to it.")
+  end
+
+  def in_use!(droplet)
+    raise droplet.in_use_error
   end
 
   def droplet_not_found!

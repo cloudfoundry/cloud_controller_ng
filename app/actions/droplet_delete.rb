@@ -10,6 +10,10 @@ module VCAP::CloudController
       droplets = Array(droplets)
 
       droplets.each do |droplet|
+        DropletModel.db.transaction do
+          droplet.destroy
+        end
+
         if droplet.blobstore_key
           blobstore_delete = Jobs::Runtime::BlobstoreDelete.new(droplet.blobstore_key, :droplet_blobstore)
           Jobs::Enqueuer.new(blobstore_delete, queue: Jobs::Queues.generic).enqueue
@@ -22,10 +26,6 @@ module VCAP::CloudController
           droplet.app.space_guid,
           droplet.app.space.organization_guid
         )
-
-        DropletModel.db.transaction do
-          droplet.destroy
-        end
       end
 
       []

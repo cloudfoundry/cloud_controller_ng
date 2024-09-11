@@ -47,6 +47,10 @@ Metrics/CyclomaticComplexity:
   Max: 12
 Metrics/MethodLength:
   Max: 60
+Metrics/ModuleLength:
+  Max: 200
+  Exclude:
+    - spec/**/*
 Migration/AddConstraintName: # Exclude for old Migrations
   Include:
     - 'db/migrations/**/*'

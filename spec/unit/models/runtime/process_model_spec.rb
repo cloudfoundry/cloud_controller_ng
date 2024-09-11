@@ -675,6 +675,7 @@ module VCAP::CloudController
 
       context 'when the process does not have a desired droplet' do
         before do
+          process.desired_droplet.app.update(droplet_guid: nil)
           process.desired_droplet.destroy
           process.reload
         end

@@ -43,6 +43,7 @@ module VCAP::CloudController
         app.db.transaction do
           app.lock!
 
+          app.update(droplet_guid: nil)
           delete_subresources(app)
 
           record_audit_event(app) if record_event

@@ -54,6 +54,14 @@ module VCAP::CloudController
     serializes_via_json :process_types
     serializes_via_json :sidecars
 
+    def around_destroy
+      yield
+    rescue Sequel::ForeignKeyConstraintViolation => e
+      raise e unless e.message.include?('fk_apps_droplet_guid')
+
+      raise in_use_error
+    end
+
     def error
       e = [error_id, error_description].compact.join(' - ')
       e.presence
@@ -170,6 +178,14 @@ module VCAP::CloudController
 
     def process_start_command(process_type)
       process_types.try(:[], process_type) || ''
+    end
+
+    def current?
+      app.droplet_guid == guid
+    end
+
+    def in_use_error
+      CloudController::Errors::ApiError.new_from_details('UnprocessableEntity', "The droplet is currently used by app with guid \"#{app_guid}\".")
     end
 
     private

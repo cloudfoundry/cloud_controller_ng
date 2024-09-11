@@ -17,9 +17,9 @@ module VCAP::CloudController
         let(:non_expired_time) { Time.now.utc - staging_timeout - 1.minute }
 
         context 'with droplets which have been staging or processing upload for too long' do
-          let!(:droplet1) { DropletModel.make(state: DropletModel::STAGING_STATE) }
-          let!(:droplet2) { DropletModel.make(state: DropletModel::STAGING_STATE) }
-          let!(:droplet3) { DropletModel.make(state: DropletModel::PROCESSING_UPLOAD_STATE) }
+          let!(:droplet1) { DropletModel.make(state: DropletModel::STAGING_STATE, app: nil) }
+          let!(:droplet2) { DropletModel.make(state: DropletModel::STAGING_STATE, app: nil) }
+          let!(:droplet3) { DropletModel.make(state: DropletModel::PROCESSING_UPLOAD_STATE, app: nil) }
 
           before do
             droplet1.this.update(updated_at: expired_time)
@@ -49,9 +49,9 @@ module VCAP::CloudController
         end
 
         context 'when the droplets were created recently' do
-          let!(:droplet1) { DropletModel.make(state: DropletModel::STAGING_STATE) }
-          let!(:droplet2) { DropletModel.make(state: DropletModel::STAGING_STATE) }
-          let!(:droplet3) { DropletModel.make(state: DropletModel::PROCESSING_UPLOAD_STATE) }
+          let!(:droplet1) { DropletModel.make(state: DropletModel::STAGING_STATE, app: nil) }
+          let!(:droplet2) { DropletModel.make(state: DropletModel::STAGING_STATE, app: nil) }
+          let!(:droplet3) { DropletModel.make(state: DropletModel::PROCESSING_UPLOAD_STATE, app: nil) }
 
           before do
             droplet1.this.update(updated_at: non_expired_time, created_at: non_expired_time)
@@ -73,9 +73,9 @@ module VCAP::CloudController
         end
 
         it 'ignores droplets that have not been staging or processing upload for too long' do
-          droplet1 = DropletModel.make(state: DropletModel::STAGING_STATE)
-          droplet2 = DropletModel.make(state: DropletModel::STAGING_STATE)
-          droplet3 = DropletModel.make(state: DropletModel::PROCESSING_UPLOAD_STATE)
+          droplet1 = DropletModel.make(state: DropletModel::STAGING_STATE, app: nil)
+          droplet2 = DropletModel.make(state: DropletModel::STAGING_STATE, app: nil)
+          droplet3 = DropletModel.make(state: DropletModel::PROCESSING_UPLOAD_STATE, app: nil)
 
           cleanup_job.perform
 
@@ -85,8 +85,8 @@ module VCAP::CloudController
         end
 
         it 'ignores droplets in a completed state' do
-          droplet1 = DropletModel.make(state: DropletModel::EXPIRED_STATE)
-          droplet2 = DropletModel.make(state: DropletModel::STAGED_STATE)
+          droplet1 = DropletModel.make(state: DropletModel::EXPIRED_STATE, app: nil)
+          droplet2 = DropletModel.make(state: DropletModel::STAGED_STATE, app: nil)
           droplet1.this.update(updated_at: expired_time)
           droplet2.this.update(updated_at: expired_time)
 

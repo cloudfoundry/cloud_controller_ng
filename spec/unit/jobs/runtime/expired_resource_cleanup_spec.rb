@@ -14,28 +14,28 @@ module VCAP::CloudController
       describe 'droplets' do
         context 'expired' do
           it 'deletes droplets that are expired and have no checksum information' do
-            droplet = DropletModel.make(state: DropletModel::EXPIRED_STATE, droplet_hash: nil, sha256_checksum: nil)
+            droplet = DropletModel.make(state: DropletModel::EXPIRED_STATE, droplet_hash: nil, sha256_checksum: nil, app: nil)
 
             expect { job.perform }.to change(DropletModel, :count).by(-1)
             expect(droplet).not_to exist
           end
 
           it 'does NOT delete droplets that are expired and has only a sha1 checksum' do
-            droplet = DropletModel.make(state: DropletModel::EXPIRED_STATE, droplet_hash: 'foo', sha256_checksum: nil)
+            droplet = DropletModel.make(state: DropletModel::EXPIRED_STATE, droplet_hash: 'foo', sha256_checksum: nil, app: nil)
 
             expect { job.perform }.not_to(change(DropletModel, :count))
             expect(droplet).to exist
           end
 
           it 'does NOT delete droplets that are expired and has only a sha256 checksum' do
-            droplet = DropletModel.make(state: DropletModel::EXPIRED_STATE, droplet_hash: nil, sha256_checksum: 'foo')
+            droplet = DropletModel.make(state: DropletModel::EXPIRED_STATE, droplet_hash: nil, sha256_checksum: 'foo', app: nil)
 
             expect { job.perform }.not_to(change(DropletModel, :count))
             expect(droplet).to exist
           end
 
           it 'does NOT delete droplets that are NOT expired' do
-            droplet = DropletModel.make
+            droplet = DropletModel.make(app: nil)
 
             job.perform
             expect(droplet).to exist

@@ -11,7 +11,7 @@ module VCAP::CloudController
 
     describe '#update' do
       context 'buildpack droplet update' do
-        let!(:droplet) { DropletModel.make }
+        let!(:droplet) { DropletModel.make(app: nil) }
         let!(:label) do
           VCAP::CloudController::DropletLabelModel.make(
             key_prefix: 'indiana.edu',
@@ -57,7 +57,7 @@ module VCAP::CloudController
 
       context 'image updates' do
         context 'when the droplet is not STAGED' do
-          let!(:droplet) { DropletModel.make(:kpack, state: VCAP::CloudController::DropletModel::STAGING_STATE) }
+          let!(:droplet) { DropletModel.make(:kpack, state: VCAP::CloudController::DropletModel::STAGING_STATE, app: nil) }
 
           let(:message) do
             VCAP::CloudController::DropletUpdateMessage.new({
@@ -74,7 +74,7 @@ module VCAP::CloudController
         end
 
         context 'when the droplet type is buildpack' do
-          let!(:droplet) { DropletModel.make(:buildpack) }
+          let!(:droplet) { DropletModel.make(:buildpack, app: nil) }
 
           let(:message) do
             VCAP::CloudController::DropletUpdateMessage.new({
@@ -101,7 +101,7 @@ module VCAP::CloudController
 
         context 'when the droplet type is docker' do
           let!(:docker_droplet) do
-            VCAP::CloudController::DropletModel.make(:docker)
+            VCAP::CloudController::DropletModel.make(:docker, app: nil)
           end
 
           let(:message) do

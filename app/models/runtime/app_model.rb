@@ -83,6 +83,11 @@ module VCAP::CloudController
 
       errors.add(%i[space_guid name], :unique)
       raise validation_failed_error
+    rescue Sequel::ForeignKeyConstraintViolation => e
+      raise e unless e.message.include?('fk_apps_droplet_guid')
+
+      errors.add(:droplet, :presence)
+      raise validation_failed_error
     end
 
     def validate
