@@ -277,6 +277,12 @@ module VCAP::CloudController
           app_model.droplet = droplet
           expect(app_model).to be_valid
         end
+
+        it 'raises a ValidationFailed error in case the given droplet_guid does not exist' do
+          expect do
+            app_model.update(droplet_guid: 'not-existing')
+          end.to raise_error(Sequel::ValidationFailed, /droplet presence/)
+        end
       end
     end
 
