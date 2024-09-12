@@ -173,7 +173,7 @@ class ServiceInstancesV3Controller < ApplicationController
 
   def relationships_shared_spaces
     service_instance = ServiceInstance.first(guid: hashed_params[:guid])
-    resource_not_found!(:service_instance) unless service_instance && can_read_from_space?(service_instance.space)
+    resource_not_found!(:service_instance) unless service_instance && can_read_service_instance?(service_instance)
 
     message = SharedSpacesShowMessage.from_params(query_params)
     invalid_param!(message.errors.full_messages) unless message.valid?
@@ -189,7 +189,7 @@ class ServiceInstancesV3Controller < ApplicationController
 
   def shared_spaces_usage_summary
     service_instance = ServiceInstance.first(guid: hashed_params[:guid])
-    service_instance_not_found! unless service_instance.present? && can_read_from_space?(service_instance.space)
+    service_instance_not_found! unless service_instance.present? && can_read_service_instance?(service_instance)
 
     render status: :ok, json: Presenters::V3::SharedSpacesUsageSummaryPresenter.new(service_instance)
   end

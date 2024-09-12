@@ -4058,10 +4058,10 @@ RSpec.describe 'V3 service instances' do
       end
     end
 
-    it 'respond with 404 when the user cannot read the originating space' do
+    it 'respond with 200 when the user cannot read the originating space, but has access to the service instance' do
       set_current_user_as_role(role: 'space_developer', org: other_space.organization, space: other_space, user: user)
       get "/v3/service_instances/#{instance.guid}/relationships/shared_spaces", nil, user_header
-      expect(last_response.status).to eq(404)
+      expect(last_response.status).to eq(200)
     end
 
     describe 'fields' do
@@ -4188,14 +4188,14 @@ RSpec.describe 'V3 service instances' do
       end
     end
 
-    context 'when the user cannot read from the originating space' do
-      it 'responds with 404 Not Found' do
+    context 'when the user has access to the service through a shared space' do
+      it 'responds with 200 ok' do
         user = VCAP::CloudController::User.make
         set_current_user_as_role(role: 'space_developer', org: space_2.organization, space: space_2, user: user)
 
         api_call.call(headers_for(user))
 
-        expect(last_response).to have_status_code(404)
+        expect(last_response).to have_status_code(200)
       end
     end
   end

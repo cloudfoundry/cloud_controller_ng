@@ -241,8 +241,6 @@ module VCAP::CloudController
       service_instance = find_service_instance(guid)
       validate_service_instance_access(service_instance)
 
-      validate_access(:read, service_instance.space)
-
       associated_controller = VCAP::CloudController::SpacesController
       associated_path = "#{self.class.url_for_guid(guid, service_instance)}/shared_to"
 
