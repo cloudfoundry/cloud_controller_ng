@@ -84,9 +84,10 @@ module VCAP::CloudController
           {
             type: 'create',
             state: 'failed',
-            description: "Service Broker failed to #{operation} within the required time."
+            description: "Service Broker failed to #{operation} within the required time. Orphan Mitigation will be performed."
           }
         )
+        mitigate_orphaned_service_instance
       end
 
       def compatibility_checks
@@ -145,6 +146,16 @@ module VCAP::CloudController
 
       def cancelled!(operation_in_progress)
         raise CloudController::Errors::ApiError.new_from_details('UnableToPerform', operation_type, "#{operation_in_progress} in progress")
+      end
+
+      def mitigate_orphaned_service_instance
+        orphan_mitigator = VCAP::Services::ServiceBrokers::V2::OrphanMitigator.new
+
+        begin
+          orphan_mitigator.cleanup_failed_provision(service_instance)
+        rescue StandardError => e
+          raise e.exception("Service instance #{service_instance.name}: #{e.message}")
+        end
       end
     end
   end

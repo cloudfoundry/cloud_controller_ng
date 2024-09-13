@@ -33,6 +33,7 @@ module VCAP::CloudController
       let(:plan) { ServicePlan.make(maintenance_info:) }
       let(:maintenance_info) { { 'version' => '1.2.0' } }
       let(:params) { { some_data: 'some_value' } }
+      let(:orphan_mitigator) { instance_double(VCAP::Services::ServiceBrokers::V2::OrphanMitigator) }
 
       it_behaves_like 'delayed job', described_class
 
@@ -307,6 +308,12 @@ module VCAP::CloudController
       end
 
       describe '#handle_timeout' do
+        before do
+          # Mock the orphan mitigator to avoid real cleanup
+          allow(VCAP::Services::ServiceBrokers::V2::OrphanMitigator).to receive(:new).and_return(orphan_mitigator)
+          allow(orphan_mitigator).to receive(:cleanup_failed_provision)
+        end
+
         it 'updates the service instance last operation' do
           job.handle_timeout
 
@@ -314,7 +321,29 @@ module VCAP::CloudController
 
           expect(service_instance.last_operation.type).to eq('create')
           expect(service_instance.last_operation.state).to eq('failed')
-          expect(service_instance.last_operation.description).to eq('Service Broker failed to provision within the required time.')
+          expect(service_instance.last_operation.description).
+            to eq('Service Broker failed to provision within the required time. Orphan Mitigation will be performed.')
+        end
+
+        it 'calls orphan mitigation on timeout' do
+          job.handle_timeout
+
+          service_instance.reload
+
+          expect(orphan_mitigator).to have_received(:cleanup_failed_provision).with(service_instance)
+
+          expect(service_instance.last_operation.type).to eq('create')
+          expect(service_instance.last_operation.state).to eq('failed')
+          expect(service_instance.last_operation.description).
+            to eq('Service Broker failed to provision within the required time. Orphan Mitigation will be performed.')
+        end
+
+        it 'raises an error during orphan mitigation' do
+          allow(orphan_mitigator).to receive(:cleanup_failed_provision).and_raise(StandardError.new('mitigation error'))
+
+          expect { job.handle_timeout }.to raise_error(StandardError, "Service instance #{service_instance.name}: mitigation error")
+
+          expect(orphan_mitigator).to have_received(:cleanup_failed_provision).with(service_instance)
         end
       end
 
