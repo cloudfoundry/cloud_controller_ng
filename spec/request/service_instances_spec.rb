@@ -4095,6 +4095,29 @@ RSpec.describe 'V3 service instances' do
         expect({ included: parsed_response['included'] }).to match_json_response({ included: })
       end
 
+      context 'when the user can read from the originating space only' do
+        before do
+          set_current_user_as_role(role: 'space_developer', org: space.organization, space: space, user: user)
+        end
+
+        it 'does not include space and organization names of the shared space' do
+          get "/v3/service_instances/#{instance.guid}/relationships/shared_spaces?fields[space]=name,guid,relationships.organization&fields[space.organization]=name,guid", nil,
+              user_header
+          expect(last_response).to have_status_code(200)
+
+          included = {
+            spaces: [
+              { guid: other_space.guid, relationships: { organization: { data: { guid: other_space.organization.guid } } } }
+            ],
+            organizations: [
+              { guid: other_space.organization.guid }
+            ]
+          }
+
+          expect({ included: parsed_response['included'] }).to match_json_response({ included: })
+        end
+      end
+
       it 'fails for invalid resources' do
         get "/v3/service_instances/#{instance.guid}/relationships/shared_spaces?fields[fruit]=name", nil, admin_headers
         expect(last_response).to have_status_code(400)
