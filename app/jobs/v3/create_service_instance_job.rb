@@ -84,7 +84,7 @@ module VCAP::CloudController
           {
             type: 'create',
             state: 'failed',
-            description: "Service Broker failed to #{operation} within the required time. Orphan Mitigation will be performed."
+            description: "Service Broker failed to #{operation} within the required time."
           }
         )
         mitigate_orphaned_service_instance
@@ -150,12 +150,7 @@ module VCAP::CloudController
 
       def mitigate_orphaned_service_instance
         orphan_mitigator = VCAP::Services::ServiceBrokers::V2::OrphanMitigator.new
-
-        begin
-          orphan_mitigator.cleanup_failed_provision(service_instance)
-        rescue StandardError => e
-          raise e.exception("Service instance #{service_instance.name}: #{e.message}")
-        end
+        orphan_mitigator.cleanup_failed_provision(service_instance)
       end
     end
   end
