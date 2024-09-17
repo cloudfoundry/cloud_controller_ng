@@ -556,6 +556,12 @@ Style/SuperArguments:
   Enabled: true
 Rails/WhereRange:
   Enabled: true
+Lint/UselessNumericOperation:
+  Enabled: true
+Style/RedundantInterpolationUnfreeze:
+  Enabled: true
+Rails/EnumSyntax:
+  Enabled: true
 
 ### Broken Cops that break code
 Lint/ShadowedException: # Breaks "bundle exec rake rubocop" if enabled

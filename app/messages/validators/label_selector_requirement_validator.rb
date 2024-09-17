@@ -34,7 +34,7 @@ module VCAP::CloudController::Validators
       res = MetadataValidatorHelper.new(key: requirement.key).key_error
       return res unless res.is_valid?
 
-      requirement.values.each do |v|
+      requirement.values.each do |v| # rubocop:disable Style/HashEachMethods
         res = MetadataValidatorHelper.new(value: v).value_error
         return res unless res.is_valid?
       end

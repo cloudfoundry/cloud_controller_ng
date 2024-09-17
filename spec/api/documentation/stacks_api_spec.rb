@@ -11,7 +11,7 @@ RSpec.resource 'Stacks', type: %i[api legacy_api] do
 
   let(:guid) { VCAP::CloudController::Stack.first.guid }
 
-  context do
+  describe 'Standard endpoints' do
     field :name, 'The name for the stack.'
     field :description, 'The description for the stack'
 

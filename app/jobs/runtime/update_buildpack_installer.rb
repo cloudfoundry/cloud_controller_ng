@@ -12,11 +12,7 @@ module VCAP::CloudController
             return
           end
 
-          begin
-            buildpack_uploader.upload_buildpack(buildpack, file, File.basename(file))
-          rescue StandardError
-            raise
-          end
+          buildpack_uploader.upload_buildpack(buildpack, file, File.basename(file))
           buildpack.update(options.merge(stack: stack_name))
 
           logger.info "Buildpack #{name} updated"
