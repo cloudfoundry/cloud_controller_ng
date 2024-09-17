@@ -13,6 +13,7 @@ module VCAP::CloudController::Jobs
           global: {
             timeout_in_seconds: global_timeout
           },
+          queues: {},
           **priorities
         }
       }
@@ -56,7 +57,7 @@ module VCAP::CloudController::Jobs
           original_enqueue.call(enqueued_job, opts)
         end
         Enqueuer.new(wrapped_job, opts).public_send(method_name)
-        expect(timeout_calculator).to have_received(:calculate).with(wrapped_job.job_name_in_configuration)
+        expect(timeout_calculator).to have_received(:calculate).with(wrapped_job.job_name_in_configuration, 'my-queue')
       end
 
       it 'uses the default priority' do

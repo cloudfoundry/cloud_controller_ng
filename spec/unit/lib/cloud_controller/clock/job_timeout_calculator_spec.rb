@@ -9,6 +9,9 @@ module VCAP::CloudController
       Config.new({
                    jobs: {
                      global: { timeout_in_seconds: global_timeout },
+                     queues: {
+                       cc_generic: { timeout_in_seconds: 5.hours }
+                     },
                      app_usage_events_cleanup: { timeout_in_seconds: 2.hours },
                      blobstore_delete: { timeout_in_seconds: 3.hours },
                      diego_sync: { timeout_in_seconds: 4.hours }
@@ -33,6 +36,18 @@ module VCAP::CloudController
     context 'when the job_name is nil' do
       it 'returns the global timeout' do
         expect(JobTimeoutCalculator.new(config).calculate(nil)).to eq(global_timeout)
+      end
+    end
+
+    context 'when a queue timeout is specified' do
+      it 'returns the queue timeout from the config' do
+        expect(JobTimeoutCalculator.new(config).calculate(:bommel, 'cc-generic')).to eq(5.hours)
+      end
+    end
+
+    context 'when the queue timeout is NOT specified in the config' do
+      it 'returns the global timeout' do
+        expect(JobTimeoutCalculator.new(config).calculate(:bommel, 'not-configured-queue')).to eq(global_timeout)
       end
     end
   end
