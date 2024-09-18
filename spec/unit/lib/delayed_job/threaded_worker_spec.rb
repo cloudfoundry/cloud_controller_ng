@@ -1,11 +1,12 @@
 require 'spec_helper'
 require 'delayed_job'
 require 'delayed_job/threaded_worker'
+require 'delayed_job/plugin_threaded_worker_patch'
 
-RSpec.describe ThreadedWorker do
+RSpec.describe Delayed::ThreadedWorker do
   let(:num_threads) { 2 }
   let(:grace_period_seconds) { 2 }
-  let(:worker) { ThreadedWorker.new(num_threads, {}, grace_period_seconds) }
+  let(:worker) { Delayed::ThreadedWorker.new(num_threads, {}, grace_period_seconds) }
   let(:worker_name) { 'instance_name' }
 
   before { worker.name = worker_name }
@@ -20,7 +21,7 @@ RSpec.describe ThreadedWorker do
     end
 
     it 'sets up the grace period to 30 seconds by default' do
-      worker = ThreadedWorker.new(num_threads)
+      worker = Delayed::ThreadedWorker.new(num_threads)
       expect(worker.instance_variable_get(:@grace_period_seconds)).to eq(30)
     end
   end
@@ -155,6 +156,56 @@ RSpec.describe ThreadedWorker do
         expect(worker).to receive(:say).with('No more jobs available. Exiting')
         worker.threaded_start
       end
+    end
+  end
+
+  describe 'plugin registration' do
+    it 'calls the plugin lifecycle callbacks' do
+      exec_counter = 0
+      exec_plugin = Class.new(Delayed::Plugin) { callbacks { |lifecycle| lifecycle.before(:execute) { exec_counter += 1 } } }
+
+      loop_counter = 0
+      loop_plugin = Class.new(Delayed::Plugin) { callbacks { |lifecycle| lifecycle.before(:loop) { loop_counter += 1 } } }
+
+      Delayed::ThreadedWorker.plugins << exec_plugin
+      Delayed::ThreadedWorker.plugins << loop_plugin
+
+      worker = Delayed::ThreadedWorker.new(1)
+      allow(worker).to receive(:work_off).and_return([0, 0])
+
+      queue = Queue.new
+      allow(worker).to receive(:work_off) do
+        queue.push(:work_off_called)
+        [0, 0]
+      end
+      Thread.new { worker.start }
+      sleep 0.1 until queue.size == 1
+
+      expect(exec_counter).to eq(1)
+      expect(loop_counter).to eq(1)
+    end
+
+    it 'calls the clear_locks plugin' do
+      clear_locks_queue = Queue.new
+      allow(Delayed::Backend::Sequel::Job).to receive(:clear_locks!) do |worker_name|
+        clear_locks_queue.push(:clear_locks_called)
+        Delayed::Backend::Sequel::Job.method(:clear_locks!).super_method.call(worker_name)
+      end
+
+      worker = Delayed::ThreadedWorker.new(1)
+      worker.name = worker_name
+
+      work_off_queue = Queue.new
+      allow(worker).to receive(:work_off) do
+        work_off_queue.push(:work_off_called)
+        [0, 0]
+      end
+      Thread.new { worker.start }
+      sleep 0.1 until work_off_queue.size == 1
+      worker.stop
+      sleep 0.1 until clear_locks_queue.size == 1
+
+      expect(Delayed::Backend::Sequel::Job).to have_received(:clear_locks!).with("#{worker_name} thread:1")
     end
   end
 end

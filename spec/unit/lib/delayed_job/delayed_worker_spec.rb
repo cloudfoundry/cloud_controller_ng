@@ -6,14 +6,14 @@ RSpec.describe CloudController::DelayedWorker do
   let(:options) { { queues: 'default', name: 'test_worker' } }
   let(:environment) { instance_double(BackgroundJobEnvironment, setup_environment: nil) }
   let(:delayed_worker) { instance_double(Delayed::Worker, start: nil) }
-  let(:threaded_worker) { instance_double(ThreadedWorker, start: nil) }
+  let(:threaded_worker) { instance_double(Delayed::ThreadedWorker, start: nil) }
 
   before do
     allow(RakeConfig).to receive(:config).and_return(TestConfig.config_instance)
     allow(BackgroundJobEnvironment).to receive(:new).with(anything).and_return(environment)
     allow(Delayed::Worker).to receive(:new).and_return(delayed_worker)
     allow(delayed_worker).to receive(:name=).with(anything)
-    allow(ThreadedWorker).to receive(:new).and_return(threaded_worker)
+    allow(Delayed::ThreadedWorker).to receive(:new).and_return(threaded_worker)
     allow(threaded_worker).to receive(:name=).with(anything)
   end
 
@@ -55,11 +55,19 @@ RSpec.describe CloudController::DelayedWorker do
 
       it 'creates a ThreadedWorker with the specified number of threads' do
         expect(environment).to receive(:setup_environment).with(nil)
-        expect(ThreadedWorker).to receive(:new).with(7, anything).and_return(threaded_worker)
+        expect(Delayed::ThreadedWorker).to receive(:new).with(7, anything).and_return(threaded_worker)
         expect(threaded_worker).to receive(:name=).with('test_worker')
         expect(threaded_worker).to receive(:start)
 
         cc_delayed_worker.start_working
+      end
+
+      it 'loads the monkey patch file when using ThreadedWorker' do
+        cc_delayed_worker.start_working
+
+        expect($LOADED_FEATURES).to include(%r{delayed_job/plugin_threaded_worker_patch\.rb}),
+                                    "Expected 'delayed_job/plugin_threaded_worker_patch.rb' to be loaded, but it wasn't. " \
+                                    'Please ensure the patch is required correctly when using ThreadedWorker.'
       end
     end
   end
