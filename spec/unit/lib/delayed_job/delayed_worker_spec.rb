@@ -18,7 +18,7 @@ RSpec.describe CloudController::DelayedWorker do
   end
 
   describe '#initialize' do
-    it 'sets the correct queue options' do
+    it 'sets the correct queue options sssss' do
       worker_instance = CloudController::DelayedWorker.new(options)
       expect(worker_instance.instance_variable_get(:@queue_options)).to eq({
                                                                              min_priority: nil,
