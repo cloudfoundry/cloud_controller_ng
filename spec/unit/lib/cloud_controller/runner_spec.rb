@@ -66,6 +66,12 @@ module VCAP::CloudController
         end
       end
 
+      it 'sets environment variable `PROCESS_TYPE` to `main`' do
+        subject
+
+        expect(ENV.fetch('PROCESS_TYPE')).to eq('main')
+      end
+
       describe 'setting max db connections per process for puma' do
         context 'when max db connections per process value is specified' do
           before do

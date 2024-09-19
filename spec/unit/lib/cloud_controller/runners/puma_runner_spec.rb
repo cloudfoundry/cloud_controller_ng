@@ -12,6 +12,8 @@ module VCAP::CloudController
     let(:periodic_updater) { double(:periodic_updater) }
     let(:request_logs) { double(:request_logs) }
     let(:puma_launcher) { subject.instance_variable_get(:@puma_launcher) }
+    let(:dependency_locator) { instance_spy(CloudController::DependencyLocator) }
+    let(:prometheus_updater) { spy(VCAP::CloudController::Metrics::PrometheusUpdater) }
 
     subject do
       TestConfig.override(
@@ -30,6 +32,8 @@ module VCAP::CloudController
 
     before do
       allow(logger).to receive(:info)
+      allow(CloudController::DependencyLocator).to receive(:instance).and_return(dependency_locator)
+      allow(dependency_locator).to receive(:prometheus_updater).and_return(prometheus_updater)
     end
 
     describe 'initialize' do
@@ -109,6 +113,20 @@ module VCAP::CloudController
         expect(request_logs).to receive(:log_incomplete_requests)
         puma_launcher.config.final_options[:before_worker_shutdown].first.call
       end
+
+      it 'initializes the cc_db_connection_pool_timeouts_total for the worker on worker boot' do
+        subject
+
+        expect(prometheus_updater).to receive(:update_gauge_metric).with(:cc_db_connection_pool_timeouts_total, 0, labels: { process_type: 'puma_worker' })
+        puma_launcher.config.final_options[:before_worker_boot].first.call
+      end
+
+      it 'sets environment variable `PROCESS_TYPE` to `puma_worker`' do
+        subject
+
+        puma_launcher.config.final_options[:before_worker_boot].first.call
+        expect(ENV.fetch('PROCESS_TYPE')).to eq('puma_worker')
+      end
     end
 
     describe 'start!' do
@@ -128,10 +146,11 @@ module VCAP::CloudController
 
     describe 'Events' do
       describe 'on_booted' do
-        it 'sets up periodic metrics updater with EM' do
+        it 'sets up periodic metrics updater with EM and initializes cc_db_connection_pool_timeouts_total for the main process' do
           expect(Thread).to receive(:new).and_yield
           expect(EM).to receive(:run).and_yield
           expect(periodic_updater).to receive(:setup_updates)
+          expect(prometheus_updater).to receive(:update_gauge_metric).with(:cc_db_connection_pool_timeouts_total, 0, labels: { process_type: 'main' })
 
           puma_launcher.events.fire(:on_booted)
         end

@@ -29,6 +29,11 @@ module VCAP::CloudController
       secrets_hash = parse_secrets
       parse_config(secrets_hash)
 
+      # DB connection metrics have a label to determine whether the process accessing the connection is the
+      # main or a worker process. We need to set this env variable before `setup_db` otherwise the main process
+      # will show up twice in the metrics as main and worker. Thin metrics will be labeled with main as well.
+      ENV['PROCESS_TYPE'] = 'main'
+
       setup_cloud_controller
 
       request_logs = VCAP::CloudController::Logs::RequestLogs.new(Steno.logger('cc.api'))
