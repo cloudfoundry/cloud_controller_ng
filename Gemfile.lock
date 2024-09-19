@@ -341,7 +341,7 @@ GEM
     netaddr (2.0.6)
     netrc (0.11.0)
     newrelic_rpm (9.13.0)
-    nio4r (2.7.0)
+    nio4r (2.7.3)
     nokogiri (1.16.7)
       mini_portile2 (~> 2.8.2)
       racc (~> 1.4)
@@ -374,7 +374,7 @@ GEM
     psych (5.1.2)
       stringio
     public_suffix (6.0.1)
-    puma (6.4.2)
+    puma (6.4.3)
       nio4r (~> 2.0)
     racc (1.8.1)
     rack (2.2.9)
