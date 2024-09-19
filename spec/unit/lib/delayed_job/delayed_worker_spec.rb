@@ -3,6 +3,17 @@ require 'tasks/rake_config'
 require 'delayed_job/delayed_worker'
 
 RSpec.describe CloudController::DelayedWorker do
+  after do
+    module Delayed
+      class Plugin
+        def initialize
+          # Reset to use the original Delayed::Worker lifecycle
+          self.class.callback_block.call(Delayed::Worker.lifecycle) if self.class.callback_block
+        end
+      end
+    end
+  end
+
   let(:options) { { queues: 'default', name: 'test_worker' } }
   let(:environment) { instance_double(BackgroundJobEnvironment, setup_environment: nil) }
   let(:delayed_worker) { instance_double(Delayed::Worker, start: nil) }
