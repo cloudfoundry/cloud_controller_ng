@@ -2,10 +2,14 @@ module VCAP::CloudController
   module Jobs
     module Runtime
       class PollableJobCleanup < VCAP::CloudController::Jobs::CCJob
-        CUTOFF_AGE_IN_DAYS = 90
+        attr_accessor :cutoff_age_in_days
+
+        def initialize(cutoff_age_in_days)
+          @cutoff_age_in_days = cutoff_age_in_days
+        end
 
         def perform
-          old_pollable_jobs = PollableJobModel.where(Sequel.lit("created_at < CURRENT_TIMESTAMP - INTERVAL '?' DAY", CUTOFF_AGE_IN_DAYS))
+          old_pollable_jobs = PollableJobModel.where(Sequel.lit("created_at < CURRENT_TIMESTAMP - INTERVAL '?' DAY", cutoff_age_in_days))
           logger = Steno.logger('cc.background.pollable-job-cleanup')
           logger.info("Cleaning up #{old_pollable_jobs.count} Jobs rows")
           old_pollable_jobs.delete

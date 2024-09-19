@@ -26,6 +26,9 @@ module VCAP::CloudController
               optional(:max_number_of_failed_delayed_jobs) => Integer,
               frequency_in_seconds: Integer
             },
+            pollable_jobs: {
+              cutoff_age_in_days: Integer
+            },
             service_operations_initial_cleanup: {
               frequency_in_seconds: Integer
             },
