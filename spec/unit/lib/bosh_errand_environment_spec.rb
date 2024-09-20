@@ -17,7 +17,7 @@ RSpec.describe BoshErrandEnvironment do
   describe '#initialize' do
     it 'configures steno logger with stdout sink' do
       bosh_errand_environment.setup_environment
-      expect(Steno.logger('cc.errand').instance_variable_get(:@sinks).length).to be(2)
+      expect(Steno.logger('cc.errand').instance_variable_get(:@sinks).length).to eq(2)
     end
 
     context 'when `stdout_sink_enabled` is `false`' do
@@ -25,7 +25,7 @@ RSpec.describe BoshErrandEnvironment do
 
       it 'configures steno logger wo stdout sink' do
         bosh_errand_environment.setup_environment
-        expect(Steno.logger('cc.errand').instance_variable_get(:@sinks).length).to be(1)
+        expect(Steno.logger('cc.errand').instance_variable_get(:@sinks).length).to eq(1)
       end
     end
   end
