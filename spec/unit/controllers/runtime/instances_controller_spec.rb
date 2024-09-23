@@ -48,6 +48,7 @@ module VCAP::CloudController
         end
 
         it "returns '170002 NotStaged' when the app is pending to be staged" do
+          process.desired_droplet.app.update(droplet_guid: nil)
           process.desired_droplet.destroy
           process.reload
 

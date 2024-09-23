@@ -60,6 +60,7 @@ module VCAP::CloudController
         context 'when the app is created' do
           context 'when the package is pending' do
             before do
+              process.desired_droplet.app.update(droplet_guid: nil)
               process.desired_droplet.destroy
               process.reload
             end
@@ -631,6 +632,7 @@ module VCAP::CloudController
 
             context 'when there is no current_droplet' do
               before do
+                process.desired_droplet.app.update(droplet_guid: nil)
                 process.desired_droplet.destroy
                 process.reload
               end

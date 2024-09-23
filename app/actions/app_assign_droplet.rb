@@ -31,6 +31,7 @@ module VCAP::CloudController
            SidecarSynchronizeFromAppDroplet::ConflictingSidecarsError => e
       raise InvalidDroplet.new(e.message)
     rescue ProcessCreate::SidecarMemoryLessThanProcessMemory, Sequel::ValidationFailed => e
+      unable_to_assign! if e.is_a?(Sequel::ValidationFailed) && e.message.include?('droplet presence')
       raise InvalidApp.new(e.message)
     end
 

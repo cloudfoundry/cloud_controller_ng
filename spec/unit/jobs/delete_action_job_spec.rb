@@ -63,20 +63,33 @@ module VCAP::CloudController
 
       context 'when the delete action fails' do
         let(:delete_action) { instance_double(SpaceDelete, delete: errors) }
+        let(:error) { StandardError.new('oops') }
 
         context 'with a single error' do
-          let(:errors) { [StandardError.new] }
+          let(:errors) { [error] }
 
           it 'raises only that error' do
-            expect { job.perform }.to raise_error(errors.first)
+            expect { job.perform }.to raise_error(error)
           end
         end
 
         context 'with multiple errors' do
-          let(:errors) { [StandardError.new('foo'), StandardError.new('bar')] }
+          let(:errors) { [error, StandardError.new('argh')] }
 
           it 'raises the first error' do
-            expect { job.perform }.to raise_error(errors.first)
+            expect { job.perform }.to raise_error(error)
+          end
+        end
+
+        context 'raising an error' do
+          let(:errors) { nil }
+
+          before do
+            allow(delete_action).to receive(:delete).and_raise(error)
+          end
+
+          it 'raises the error' do
+            expect { job.perform }.to raise_error(error)
           end
         end
       end

@@ -94,6 +94,7 @@ module VCAP::CloudController
 
         it 'deletes associated droplets' do
           droplet = DropletModel.make(app:)
+          app.update(droplet_guid: droplet.guid)
 
           expect do
             app_delete.delete(app_dataset)

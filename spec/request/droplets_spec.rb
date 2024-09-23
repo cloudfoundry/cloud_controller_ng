@@ -1069,6 +1069,19 @@ RSpec.describe 'Droplets' do
         end
       end
     end
+
+    context 'when droplet is referenced as current droplet by an app' do
+      before do
+        app_model.update(droplet_guid: droplet.guid)
+      end
+
+      it 'does not allow deletion' do
+        delete "/v3/droplets/#{droplet.guid}", nil, developer_headers
+
+        expect(last_response.status).to eq(422)
+        expect(last_response).to have_error_message("The droplet is currently used by app with guid \"#{app_model.guid}\".")
+      end
+    end
   end
 
   describe 'GET /v3/apps/:guid/droplets' do

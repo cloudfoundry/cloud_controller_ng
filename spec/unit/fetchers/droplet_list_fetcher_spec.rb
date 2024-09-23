@@ -47,7 +47,7 @@ module VCAP::CloudController
 
       context 'filtering states' do
         let(:filters) { { states: [DropletModel::STAGED_STATE, DropletModel::EXPIRED_STATE] } }
-        let!(:expired_droplet_for_other_app) { DropletModel.make(state: DropletModel::EXPIRED_STATE) }
+        let!(:expired_droplet_for_other_app) { DropletModel.make(state: DropletModel::EXPIRED_STATE, app: nil) }
 
         it 'returns all of the droplets with the requested states' do
           results = fetcher.fetch_all(message).all
@@ -229,7 +229,7 @@ module VCAP::CloudController
 
       context 'filtering states' do
         let(:filters) { { states: [DropletModel::FAILED_STATE], app_guid: app.guid } }
-        let!(:failed_droplet_not_on_app) { DropletModel.make(state: DropletModel::FAILED_STATE) }
+        let!(:failed_droplet_not_on_app) { DropletModel.make(state: DropletModel::FAILED_STATE, app: nil) }
 
         it 'returns all of the desired droplets with the requested droplet states' do
           _app, results = fetcher.fetch_for_app(message)
@@ -266,8 +266,8 @@ module VCAP::CloudController
 
     describe '#fetch_for_package' do
       let(:package) { PackageModel.make }
-      let!(:staged_droplet) { DropletModel.make(package_guid: package.guid, state: DropletModel::STAGED_STATE) }
-      let!(:failed_droplet) { DropletModel.make(package_guid: package.guid, state: DropletModel::FAILED_STATE) }
+      let!(:staged_droplet) { DropletModel.make(package_guid: package.guid, state: DropletModel::STAGED_STATE, app: nil) }
+      let!(:failed_droplet) { DropletModel.make(package_guid: package.guid, state: DropletModel::FAILED_STATE, app: nil) }
       let(:filters) { { package_guid: package.guid } }
 
       it 'returns a Sequel::Dataset' do
@@ -297,7 +297,7 @@ module VCAP::CloudController
 
       context 'filtering states' do
         let(:filters) { { states: [DropletModel::FAILED_STATE], package_guid: package.guid } }
-        let!(:failed_droplet_not_on_package) { DropletModel.make(state: DropletModel::FAILED_STATE) }
+        let!(:failed_droplet_not_on_package) { DropletModel.make(state: DropletModel::FAILED_STATE, app: nil) }
 
         it 'returns all of the desired droplets with the requested droplet states' do
           _package, results = fetcher.fetch_for_package(message)

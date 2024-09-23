@@ -5,7 +5,7 @@ module VCAP::CloudController
     it { is_expected.to validates_includes DropletModel::DROPLET_STATES, :state, allow_missing: true }
 
     describe '#blobstore_key' do
-      let(:droplet) { DropletModel.make(droplet_hash:) }
+      let(:droplet) { DropletModel.make(droplet_hash: droplet_hash, app: nil) }
 
       context 'when the droplet has been uploaded' do
         let(:droplet_hash) { 'foobar' }
@@ -26,7 +26,7 @@ module VCAP::CloudController
 
     describe '#staged?' do
       context 'when the droplet has been staged' do
-        let!(:droplet_model) { DropletModel.make(state: 'STAGED') }
+        let!(:droplet_model) { DropletModel.make(state: 'STAGED', app: nil) }
 
         it 'returns true' do
           expect(droplet_model.staged?).to be true
@@ -34,7 +34,7 @@ module VCAP::CloudController
       end
 
       context 'when the droplet has not been staged' do
-        let!(:droplet_model) { DropletModel.make(state: 'STAGING') }
+        let!(:droplet_model) { DropletModel.make(state: 'STAGING', app: nil) }
 
         it 'returns false' do
           expect(droplet_model.staged?).to be false
@@ -43,7 +43,7 @@ module VCAP::CloudController
     end
 
     describe '#mark_as_staged' do
-      let!(:droplet_model) { DropletModel.make }
+      let!(:droplet_model) { DropletModel.make(app: nil) }
 
       it 'changes the droplet state to STAGED' do
         droplet_model.mark_as_staged
@@ -52,7 +52,7 @@ module VCAP::CloudController
     end
 
     describe 'process_types' do
-      let(:droplet_model) { DropletModel.make }
+      let(:droplet_model) { DropletModel.make(app: nil) }
 
       it 'is a persistable hash' do
         info                        = { web: 'started', worker: 'started' }
@@ -65,7 +65,7 @@ module VCAP::CloudController
 
     describe '#lifecycle_type' do
       context 'when there is buildpack_lifecycle_data associated to the droplet' do
-        let(:droplet_model) { DropletModel.make(:buildpack) }
+        let(:droplet_model) { DropletModel.make(:buildpack, app: nil) }
         let!(:lifecycle_data) { BuildpackLifecycleDataModel.make(droplet: droplet_model) }
 
         before do
@@ -80,7 +80,7 @@ module VCAP::CloudController
       end
 
       context 'when there is cnb_lifecycle_data associated to the droplet' do
-        let(:droplet_model) { DropletModel.make(:buildpack) }
+        let(:droplet_model) { DropletModel.make(:buildpack, app: nil) }
         let!(:lifecycle_data) { CNBLifecycleDataModel.make(droplet: droplet_model) }
 
         before do
@@ -95,7 +95,7 @@ module VCAP::CloudController
       end
 
       context 'when there is no lifecycle data associated to the droplet' do
-        let(:droplet_model) { DropletModel.make(:docker) }
+        let(:droplet_model) { DropletModel.make(:docker, app: nil) }
 
         before do
           droplet_model.buildpack_lifecycle_data = nil
@@ -110,7 +110,7 @@ module VCAP::CloudController
 
     describe '#lifecycle_data' do
       context 'when there is buildpack_lifecycle_data associated to the droplet' do
-        let(:droplet_model) { DropletModel.make(:buildpack) }
+        let(:droplet_model) { DropletModel.make(:buildpack, app: nil) }
         let!(:lifecycle_data) do
           BuildpackLifecycleDataModel.make(
             droplet: droplet_model,
@@ -141,7 +141,7 @@ module VCAP::CloudController
       end
 
       context 'when there is kpack_lifecycle_data associated to the droplet' do
-        let(:droplet_model) { DropletModel.make(:kpack) }
+        let(:droplet_model) { DropletModel.make(:kpack, app: nil) }
         let!(:lifecycle_data) do
           KpackLifecycleDataModel.make(droplet: droplet_model)
         end
@@ -159,7 +159,7 @@ module VCAP::CloudController
       end
 
       context 'when there is cnb_lifecycle_data associated to the droplet' do
-        let(:droplet_model) { DropletModel.make(:kpack) }
+        let(:droplet_model) { DropletModel.make(:kpack, app: nil) }
         let!(:lifecycle_data) do
           CNBLifecycleDataModel.make(
             droplet: droplet_model,
@@ -190,7 +190,7 @@ module VCAP::CloudController
       end
 
       context 'when there is no lifecycle data associated to the droplet' do
-        let(:droplet_model) { DropletModel.make(:docker) }
+        let(:droplet_model) { DropletModel.make(:docker, app: nil) }
 
         before do
           droplet_model.buildpack_lifecycle_data = nil
@@ -204,7 +204,7 @@ module VCAP::CloudController
     end
 
     describe '#set_buildpack_receipt' do
-      let!(:droplet_model) { DropletModel.make(state: 'STAGED') }
+      let!(:droplet_model) { DropletModel.make(state: 'STAGED', app: nil) }
 
       it 'records the output of the detect script' do
         droplet_model.set_buildpack_receipt(buildpack_key: nil, requested_buildpack: nil, detect_output: 'detect-output')
@@ -252,7 +252,7 @@ module VCAP::CloudController
     end
 
     describe '#fail_to_stage!' do
-      subject(:droplet) { DropletModel.make(state: DropletModel::STAGING_STATE) }
+      subject(:droplet) { DropletModel.make(state: DropletModel::STAGING_STATE, app: nil) }
 
       it 'sets the state to FAILED' do
         expect { droplet.fail_to_stage! }.to change(droplet, :state).to(DropletModel::FAILED_STATE)
@@ -308,8 +308,8 @@ module VCAP::CloudController
     end
 
     describe '#droplet_checksum' do
-      let!(:droplet_model_with_both) { DropletModel.make(sha256_checksum: 'foo', droplet_hash: 'bar') }
-      let!(:droplet_model_with_only_sha1) { DropletModel.make(sha256_checksum: nil, droplet_hash: 'baz') }
+      let!(:droplet_model_with_both) { DropletModel.make(sha256_checksum: 'foo', droplet_hash: 'bar', app: nil) }
+      let!(:droplet_model_with_only_sha1) { DropletModel.make(sha256_checksum: nil, droplet_hash: 'baz', app: nil) }
 
       it 'returns the sha256_checksum when present' do
         expect(droplet_model_with_both.checksum).to eq('foo')
@@ -321,7 +321,7 @@ module VCAP::CloudController
     end
 
     describe '#labels' do
-      let!(:droplet) { DropletModel.make }
+      let!(:droplet) { DropletModel.make(app: nil) }
       let!(:label) do
         VCAP::CloudController::DropletLabelModel.make(
           key_name: 'potato',

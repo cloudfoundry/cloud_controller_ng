@@ -210,6 +210,7 @@ RSpec.describe DropletsController, type: :controller do
     before do
       allow_user_read_access_for(user, spaces: [space])
       allow_user_write_access(user, space:)
+      droplet.app.update(droplet_guid: nil)
     end
 
     it 'returns a 202 ACCEPTED and the job link in header' do

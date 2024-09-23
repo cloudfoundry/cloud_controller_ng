@@ -228,6 +228,7 @@ module VCAP::CloudController
     # explicitly unstaged app
     let(:process) do
       ProcessModelFactory.make.tap do |p|
+        p.desired_droplet.app.update(droplet_guid: nil)
         p.desired_droplet.destroy
         p.reload
       end

@@ -1156,7 +1156,7 @@ RSpec.describe AppsV3Controller, type: :controller do
 
     context 'when the app does not have a droplet' do
       before do
-        droplet.destroy
+        app_model.update(droplet_guid: nil)
       end
 
       it 'raises an API 422 error' do
@@ -1397,7 +1397,7 @@ RSpec.describe AppsV3Controller, type: :controller do
 
       context 'when the app does not have a droplet' do
         before do
-          droplet.destroy
+          app_model.update(droplet_guid: nil)
         end
 
         it 'raises an API 422 error' do

@@ -311,6 +311,7 @@ RSpec.describe DeploymentsController, type: :controller do
         end
 
         it 'returns a 422 and an error if droplet in the revision does not exist' do
+          droplet.app.update(droplet_guid: nil)
           droplet.destroy
           post :create, params: request_body, as: :json
 

@@ -21,6 +21,10 @@ module VCAP::CloudController
         )
       end
 
+      before do
+        droplet.app.update(droplet_guid: nil)
+      end
+
       it 'deletes the droplet record' do
         expect do
           droplet_delete.delete([droplet])

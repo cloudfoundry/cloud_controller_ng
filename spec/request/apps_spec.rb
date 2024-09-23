@@ -1304,8 +1304,7 @@ RSpec.describe 'Apps' do
         guid: 'app1_guid',
         space: space,
         desired_state: 'STARTED',
-        environment_variables: { 'unicorn' => 'horn' },
-        droplet_guid: 'a-droplet-guid'
+        environment_variables: { 'unicorn' => 'horn' }
       )
     end
 
