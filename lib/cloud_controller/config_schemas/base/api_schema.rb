@@ -381,7 +381,8 @@ module VCAP::CloudController
               dataset: String
             },
 
-            update_metric_tags_on_rename: bool
+            update_metric_tags_on_rename: bool,
+            app_instance_stopping_state: bool
           }
         end
         # rubocop:enable Metrics/BlockLength

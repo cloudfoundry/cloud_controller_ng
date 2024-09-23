@@ -393,3 +393,4 @@ max_manifest_service_binding_poll_duration_in_seconds: 60
 update_metric_tags_on_rename: true
 
 app_log_revision: true
+app_instance_stopping_state: true

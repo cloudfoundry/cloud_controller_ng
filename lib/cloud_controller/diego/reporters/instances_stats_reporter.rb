@@ -85,9 +85,10 @@ module VCAP::CloudController
         if bbs_instances_client.lrp_instances(process).empty?
           [fill_unreported_instances_with_down_instances({}, process, flat: false), []]
         else
+          state = Config.config.get(:app_instance_stopping_state) ? VCAP::CloudController::Diego::LRP_STOPPING : VCAP::CloudController::Diego::LRP_DOWN
           # case when no desired_lrp exists but an actual_lrp
-          logger.debug('Actual LRP found, setting state to STOPPING', process_guid: process.guid)
-          actual_lrp_info(process, nil, nil, nil, nil, VCAP::CloudController::Diego::LRP_STOPPING)
+          logger.debug("Actual LRP found, setting state to #{state}", process_guid: process.guid)
+          actual_lrp_info(process, nil, nil, nil, nil, state)
         end
       rescue CloudController::Errors::NoRunningInstances => e
         logger.info('stats_for_app.error', error: e.to_s)

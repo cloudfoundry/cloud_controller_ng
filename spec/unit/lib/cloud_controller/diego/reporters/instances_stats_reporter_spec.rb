@@ -198,6 +198,39 @@ module VCAP::CloudController
           it 'shows all instances as "STOPPING" state' do
             expect(instances_reporter.stats_for_app(process)).to eq([expected_stopping_response, []])
           end
+
+          context 'when "app_instance_stopping_state" is false' do
+            before do
+              TestConfig.override(app_instance_stopping_state: false)
+            end
+
+            let(:expected_down_response) do
+              {
+                0 => {
+                  state: 'DOWN',
+                  routable: is_routable,
+                  stats: {
+                    name: process.name,
+                    uris: process.uris,
+                    host: 'lrp-host',
+                    port: 2222,
+                    net_info: lrp_1_net_info.to_h,
+                    uptime: two_days_in_seconds,
+                    mem_quota: nil,
+                    disk_quota: nil,
+                    log_rate_limit: nil,
+                    fds_quota: process.file_descriptors,
+                    usage: {}
+                  },
+                  details: 'some-details'
+                }
+              }
+            end
+
+            it 'shows all instances as "DOWN" state' do
+              expect(instances_reporter.stats_for_app(process)).to eq([expected_down_response, []])
+            end
+          end
         end
 
         context 'when a NoRunningInstances error is thrown for desired_lrp and it does not exist an actual_lrp' do
