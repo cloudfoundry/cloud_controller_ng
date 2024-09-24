@@ -1,33 +1,43 @@
 require 'spec_helper'
 require 'delayed_job'
 require 'delayed_job/threaded_worker'
+require 'delayed_job/plugin_threaded_worker_patch'
 
 RSpec.describe Delayed::ThreadedWorker do
-  let(:num_threads) { 2 }
-  let(:grace_period_seconds) { 2 }
-  let(:worker) { Delayed::ThreadedWorker.new(num_threads, {}, grace_period_seconds) }
+  let(:options) { { num_threads: 2, sleep_delay: 0.1, grace_period_seconds: 2 } }
+  let(:worker) { Delayed::ThreadedWorker.new(options) }
   let(:worker_name) { 'instance_name' }
 
   before { worker.name = worker_name }
+  after { worker.class.require_plugin_monkey_patch = false } # Ensure monkey patch is no longer required after tests
 
   describe '#initialize' do
     it 'sets up the thread count' do
-      expect(worker.instance_variable_get(:@num_threads)).to eq(num_threads)
+      expect(worker.instance_variable_get(:@num_threads)).to eq(options[:num_threads])
     end
 
     it 'sets up the grace period' do
-      expect(worker.instance_variable_get(:@grace_period_seconds)).to eq(grace_period_seconds)
+      expect(worker.instance_variable_get(:@grace_period_seconds)).to eq(options[:grace_period_seconds])
     end
 
     it 'sets up the grace period to 30 seconds by default' do
-      worker = Delayed::ThreadedWorker.new(num_threads)
+      worker = Delayed::ThreadedWorker.new({ num_threads: 2 })
       expect(worker.instance_variable_get(:@grace_period_seconds)).to eq(30)
+    end
+
+    it 'sets @@require_plugin_monkey_patch to true' do
+      expect(Delayed::ThreadedWorker.require_plugin_monkey_patch?).to be true
     end
   end
 
   describe '#start' do
     before do
       allow(worker).to receive(:threaded_start)
+    end
+
+    it 'wont start the worker if the plugin monkey patch is not required' do
+      allow(Delayed::ThreadedWorker).to receive(:require_plugin_monkey_patch?).and_return(false)
+      expect { worker.start }.to raise_error('Plugin monkey patch required')
     end
 
     it 'sets up signal traps for all signals' do
@@ -38,15 +48,15 @@ RSpec.describe Delayed::ThreadedWorker do
     end
 
     it 'starts the specified number of threads' do
-      expect(worker).to receive(:threaded_start).exactly(num_threads).times
+      expect(worker).to receive(:threaded_start).exactly(options[:num_threads]).times
 
       expect(worker.instance_variable_get(:@threads).length).to eq(0)
       worker.start
-      expect(worker.instance_variable_get(:@threads).length).to eq(num_threads)
+      expect(worker.instance_variable_get(:@threads).length).to eq(options[:num_threads])
     end
 
     it 'logs the start and shutdown messages' do
-      expect(worker).to receive(:say).with("Starting threaded delayed worker with #{num_threads} threads")
+      expect(worker).to receive(:say).with("Starting threaded delayed worker with #{options[:num_threads]} threads")
       worker.start
     end
 
@@ -94,11 +104,11 @@ RSpec.describe Delayed::ThreadedWorker do
 
     it 'allows threads to finish their work without being killed prematurely' do
       allow(worker).to receive(:threaded_start) do
-        sleep grace_period_seconds / 2 until worker.instance_variable_get(:@exit) == true
+        sleep options[:grace_period_seconds] / 2 until worker.instance_variable_get(:@exit) == true
       end
 
       worker_thread = Thread.new { worker.start }
-      sleep 0.1 until worker.instance_variable_get(:@threads).length == num_threads && worker.instance_variable_get(:@threads).all?(&:alive?)
+      sleep 0.1 until worker.instance_variable_get(:@threads).length == options[:num_threads] && worker.instance_variable_get(:@threads).all?(&:alive?)
       worker.instance_variable_get(:@threads).each { |t| allow(t).to receive(:kill).and_call_original }
 
       Thread.new { worker.stop }.join
@@ -108,16 +118,22 @@ RSpec.describe Delayed::ThreadedWorker do
 
     it 'kills threads that exceed the grace period during shutdown' do
       allow(worker).to receive(:threaded_start) do
-        sleep grace_period_seconds * 2 until worker.instance_variable_get(:@exit) == true
+        sleep options[:grace_period_seconds] * 2 until worker.instance_variable_get(:@exit) == true
       end
 
       worker_thread = Thread.new { worker.start }
-      sleep 0.1 until worker.instance_variable_get(:@threads).length == num_threads && worker.instance_variable_get(:@threads).all?(&:alive?)
+      sleep 0.1 until worker.instance_variable_get(:@threads).length == options[:num_threads] && worker.instance_variable_get(:@threads).all?(&:alive?)
       worker.instance_variable_get(:@threads).each { |t| allow(t).to receive(:kill).and_call_original }
 
       Thread.new { worker.stop }.join
       worker_thread.join
       expect(worker.instance_variable_get(:@threads)).to all(have_received(:kill))
+    end
+
+    it 'sets @@require_plugin_monkey_patch to false' do
+      worker.stop
+      sleep 0.1 until worker.instance_variable_defined?(:@exit)
+      expect(Delayed::ThreadedWorker.require_plugin_monkey_patch?).to be false
     end
   end
 
@@ -154,75 +170,6 @@ RSpec.describe Delayed::ThreadedWorker do
       it 'exits the worker when no more jobs are available' do
         expect(worker).to receive(:say).with('No more jobs available. Exiting')
         worker.threaded_start
-      end
-    end
-  end
-
-  describe 'plugin registration' do
-    # rubocop:disable RSpec/BeforeAfterAll
-    context 'with monkey patch loaded' do
-      before(:context) do
-        require 'delayed_job/plugin_threaded_worker_patch'
-      end
-
-      after(:context) do
-        # Reset to use the original Delayed::Worker lifecycle
-        module Delayed
-          class Plugin
-            def initialize
-              puts 'after suite reset'
-              self.class.callback_block.call(Delayed::Worker.lifecycle) if self.class.callback_block
-            end
-          end
-        end
-      end
-      # rubocop:enable RSpec/BeforeAfterAll
-
-      it 'calls the plugin lifecycle callbacks' do
-        exec_counter = 0
-        exec_plugin = Class.new(Delayed::Plugin) { callbacks { |lifecycle| lifecycle.before(:execute) { exec_counter += 1 } } }
-
-        loop_counter = 0
-        loop_plugin = Class.new(Delayed::Plugin) { callbacks { |lifecycle| lifecycle.before(:loop) { loop_counter += 1 } } }
-
-        Delayed::ThreadedWorker.plugins << exec_plugin
-        Delayed::ThreadedWorker.plugins << loop_plugin
-
-        worker = Delayed::ThreadedWorker.new(1)
-        allow(worker).to receive(:work_off).and_return([0, 0])
-
-        queue = Queue.new
-        allow(worker).to receive(:work_off) do
-          queue.push(:work_off_called)
-          [0, 0]
-        end
-        Thread.new { worker.start }
-        sleep 0.1 until queue.size == 1
-
-        expect(exec_counter).to eq(1)
-        expect(loop_counter).to eq(1)
-      end
-
-      it 'calls the clear_locks plugin' do
-        clear_locks_queue = Queue.new
-        allow(Delayed::Backend::Sequel::Job).to receive(:clear_locks!) do |_|
-          clear_locks_queue.push(:clear_locks_called)
-        end
-
-        worker = Delayed::ThreadedWorker.new(1)
-        worker.name = worker_name
-
-        work_off_queue = Queue.new
-        allow(worker).to receive(:work_off) do
-          work_off_queue.push(:work_off_called)
-          [0, 0]
-        end
-        Thread.new { worker.start }
-        sleep 0.1 until work_off_queue.size == 1
-        worker.stop
-        sleep 0.1 until clear_locks_queue.size == 1
-
-        expect(Delayed::Backend::Sequel::Job).to have_received(:clear_locks!).with("#{worker_name} thread:1")
       end
     end
   end

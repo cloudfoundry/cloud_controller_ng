@@ -3,17 +3,6 @@ require 'tasks/rake_config'
 require 'delayed_job/delayed_worker'
 
 RSpec.describe CloudController::DelayedWorker do
-  after do
-    module Delayed
-      class Plugin
-        def initialize
-          # Reset to use the original Delayed::Worker lifecycle
-          self.class.callback_block.call(Delayed::Worker.lifecycle) if self.class.callback_block
-        end
-      end
-    end
-  end
-
   let(:options) { { queues: 'default', name: 'test_worker' } }
   let(:environment) { instance_double(BackgroundJobEnvironment, setup_environment: nil) }
   let(:delayed_worker) { instance_double(Delayed::Worker, start: nil) }
@@ -66,19 +55,12 @@ RSpec.describe CloudController::DelayedWorker do
 
       it 'creates a ThreadedWorker with the specified number of threads' do
         expect(environment).to receive(:setup_environment).with(nil)
-        expect(Delayed::ThreadedWorker).to receive(:new).with(7, anything).and_return(threaded_worker)
+        expect(Delayed::ThreadedWorker).to receive(:new).with({ max_priority: nil, min_priority: nil, num_threads: 7, queues: 'default', quiet: true,
+                                                                worker_name: 'test_worker' }).and_return(threaded_worker)
         expect(threaded_worker).to receive(:name=).with('test_worker')
         expect(threaded_worker).to receive(:start)
 
         cc_delayed_worker.start_working
-      end
-
-      it 'loads the monkey patch file when using ThreadedWorker' do
-        cc_delayed_worker.start_working
-
-        expect($LOADED_FEATURES).to include(%r{delayed_job/plugin_threaded_worker_patch\.rb}),
-                                    "Expected 'delayed_job/plugin_threaded_worker_patch.rb' to be loaded, but it wasn't. " \
-                                    'Please ensure the patch is required correctly when using ThreadedWorker.'
       end
     end
   end

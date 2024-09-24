@@ -1,15 +1,35 @@
 module Delayed
   class ThreadedWorker < Delayed::Worker
-    def initialize(num_threads, options={}, grace_period_seconds=30)
-      super(options)
-      @num_threads = num_threads
+    # monkey patch 'plugin_threaded_worker_patch' relies on the require_plugin_monkey_patch class variable
+
+    # rubocop:disable Style/ClassVars
+    @@require_plugin_monkey_patch = false
+    # rubocop:enable Style/ClassVars
+
+    def self.require_plugin_monkey_patch?
+      @@require_plugin_monkey_patch
+    end
+
+    def self.require_plugin_monkey_patch=(value)
+      # rubocop:disable Style/ClassVars
+      class_variable_set(:@@require_plugin_monkey_patch, value)
+      # rubocop:enable Style/ClassVars
+    end
+
+    def initialize(options={})
+      self.class.require_plugin_monkey_patch = true
+
+      super
+      @num_threads = options[:num_threads]
+      @grace_period_seconds = options.key?(:grace_period_seconds) ? options[:grace_period_seconds] : 30
       @threads = []
       @unexpected_error = false
       @mutex = Mutex.new
-      @grace_period_seconds = grace_period_seconds
     end
 
     def start
+      raise 'Plugin monkey patch required' unless self.class.require_plugin_monkey_patch?
+
       # add quit trap as in QuitTrap monkey patch
       trap('QUIT') do
         Thread.new { say 'Exiting...' }
@@ -69,6 +89,8 @@ module Delayed
             end
           end
         end.each(&:join) # Ensure all join threads complete
+
+        self.class.require_plugin_monkey_patch = false
       end
     end
 
