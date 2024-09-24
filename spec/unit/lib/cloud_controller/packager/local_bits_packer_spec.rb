@@ -149,6 +149,15 @@ module CloudController::Packager
         end
       end
 
+      context 'when there are leftovers from the previous run on the filesystem' do
+        it 'raises an informative error' do
+          Dir.mkdir(File.join(local_tmp_dir, "local_bits_packer-#{blobstore_key}"))
+          expect do
+            packer.send_package_to_blobstore(blobstore_key, uploaded_files_path, cached_files_fingerprints)
+          end.to raise_error(ConflictError, /unfinished job/)
+        end
+      end
+
       context 'when the app bits are too large' do
         let(:max_package_size) { 1 }
 
