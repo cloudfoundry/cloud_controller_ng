@@ -38,7 +38,12 @@ namespace :spec do
   end
 
   def run_specs_parallel(path, env_vars='')
-    sh "#{env_vars} bundle exec parallel_rspec --test-options '--order rand' --single spec/integration/ --single spec/acceptance/ --single spec/unit/lib/delayed_job/ -- #{path}"
+    sh "#{env_vars} bundle exec parallel_rspec --test-options '--order rand' \
+                          --single spec/integration/ \
+                          --single spec/unit/lib/delayed_job/delayed_worker_spec.rb \
+                          --single spec/unit/lib/delayed_job/delayed_job_spec.rb \
+                          --single spec/unit/lib/delayed_job/threaded_worker_spec.rb \
+                          -- #{path}"
   end
 
   def run_failed_specs
