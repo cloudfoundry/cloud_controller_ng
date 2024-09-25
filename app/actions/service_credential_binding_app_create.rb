@@ -32,7 +32,9 @@ module VCAP::CloudController
 
         ServiceBinding.new.tap do |b|
           ServiceBinding.db.transaction do
-            binding.destroy if binding
+            existing_binding = binding
+            binding.destroy if existing_binding
+            VCAP::Services::ServiceBrokers::V2::OrphanMitigator.new.cleanup_failed_bind(binding) if existing_binding
             b.save_with_attributes_and_new_operation(
               binding_details,
               CREATE_INITIAL_OPERATION
