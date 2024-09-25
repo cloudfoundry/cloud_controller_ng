@@ -24,7 +24,9 @@ RSpec.describe 'plugin_threaded_worker_patch' do
           [0, 0]
         end
         Thread.new { worker.start }
-        sleep 0.1 until queue.size == 1
+        work_counter = 0
+        sleep 0.1 until queue.size == 1 || (work_counter += 1) > 5
+        expect(work_counter).to be <= 5 # If higher work_off was not called
 
         expect(exec_counter).to eq(1)
         expect(loop_counter).to eq(1)
@@ -32,9 +34,7 @@ RSpec.describe 'plugin_threaded_worker_patch' do
 
       it 'calls the clear_locks plugin' do
         clear_locks_queue = Queue.new
-        allow(Delayed::Backend::Sequel::Job).to receive(:clear_locks!) do |_|
-          clear_locks_queue.push(:clear_locks_called)
-        end
+        allow(Delayed::Backend::Sequel::Job).to(receive(:clear_locks!)) { |_| clear_locks_queue.push(:clear_locks_called) }
 
         worker = worker_class.new(worker_options)
         worker.name = worker_name
@@ -45,14 +45,16 @@ RSpec.describe 'plugin_threaded_worker_patch' do
           [0, 0]
         end
         Thread.new { worker.start }
-        sleep 0.1 until work_off_queue.size == 1
+        work_counter = 0
+        sleep 0.1 until work_off_queue.size == 1 || (work_counter += 1) > 5
+        expect(work_counter).to be <= 5 # If higher work_off was not called
+
         worker.stop
 
-        counter = 0
-        until clear_locks_queue.size == 1 || (counter += 1) > 5
-          sleep 0.1
-        end
-        expect(counter).to be <= 5 # If higher clear_locks! was not called
+        clear_counter = 0
+        sleep 0.1 until clear_locks_queue.size == 1 || (clear_counter += 1) > 5
+
+        expect(clear_counter).to be <= 5 # If higher clear_locks! was not called
 
         expect(Delayed::Backend::Sequel::Job).to have_received(:clear_locks!).with(expected_worker_name_in_cleanup)
       end
