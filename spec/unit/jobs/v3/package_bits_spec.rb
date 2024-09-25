@@ -13,6 +13,10 @@ module VCAP::CloudController
 
       it { is_expected.to be_a_valid_job }
 
+      it 'has max_attempts 3' do
+        expect(job.max_attempts).to eq 3
+      end
+
       describe '#perform' do
         let(:package_blobstore) { instance_double(CloudController::Blobstore::Client) }
         let(:tmpdir) { '/tmp/special_temp' }
@@ -27,6 +31,15 @@ module VCAP::CloudController
 
         it 'knows its job name' do
           expect(job.job_name_in_configuration).to equal(:package_bits)
+        end
+      end
+
+      describe '#reschedule_at' do
+        it 'uses exponential backoff' do
+          now = Time.now
+
+          run_at = job.reschedule_at(now, 5)
+          expect(run_at).to eq(now + (2**5).seconds)
         end
       end
     end
