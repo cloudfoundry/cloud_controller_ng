@@ -1,7 +1,6 @@
 require 'spec_helper'
 require 'delayed_job'
 require 'delayed_job/threaded_worker'
-require 'delayed_job/plugin_threaded_worker_patch'
 
 RSpec.describe 'plugin_threaded_worker_patch' do
   RSpec.shared_examples 'a worker with plugins' do |worker_class, worker_options, worker_name, expected_worker_name_in_cleanup|
@@ -61,6 +60,22 @@ RSpec.describe 'plugin_threaded_worker_patch' do
   end
 
   describe Delayed::ThreadedWorker do
+    original_worker = Delayed::Worker
+
+    before do
+      Delayed.module_eval do
+        remove_const(:Worker)
+        const_set(:Worker, Delayed::ThreadedWorker)
+      end
+    end
+
+    after do
+      Delayed.module_eval do
+        remove_const(:Worker)
+        const_set(:Worker, original_worker)
+      end
+    end
+
     it_behaves_like 'a worker with plugins', Delayed::ThreadedWorker, { num_threads: 1, sleep_delay: 0.2, grace_period_seconds: 2 }, 'instance_name',
                     'instance_name thread:1'
   end

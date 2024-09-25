@@ -1,7 +1,6 @@
 require 'spec_helper'
 require 'delayed_job'
 require 'delayed_job/threaded_worker'
-require 'delayed_job/plugin_threaded_worker_patch'
 
 RSpec.describe Delayed::ThreadedWorker do
   let(:options) { { num_threads: 2, sleep_delay: 0.1, grace_period_seconds: 2 } }
@@ -9,7 +8,6 @@ RSpec.describe Delayed::ThreadedWorker do
   let(:worker_name) { 'instance_name' }
 
   before { worker.name = worker_name }
-  after { worker.class.require_plugin_monkey_patch = false } # Ensure monkey patch is no longer required after tests
 
   describe '#initialize' do
     it 'sets up the thread count' do
@@ -24,20 +22,11 @@ RSpec.describe Delayed::ThreadedWorker do
       worker = Delayed::ThreadedWorker.new({ num_threads: 2 })
       expect(worker.instance_variable_get(:@grace_period_seconds)).to eq(30)
     end
-
-    it 'sets @@require_plugin_monkey_patch to true' do
-      expect(Delayed::ThreadedWorker.require_plugin_monkey_patch?).to be true
-    end
   end
 
   describe '#start' do
     before do
       allow(worker).to receive(:threaded_start)
-    end
-
-    it 'wont start the worker if the plugin monkey patch is not required' do
-      allow(Delayed::ThreadedWorker).to receive(:require_plugin_monkey_patch?).and_return(false)
-      expect { worker.start }.to raise_error('Plugin monkey patch required')
     end
 
     it 'sets up signal traps for all signals' do
@@ -128,12 +117,6 @@ RSpec.describe Delayed::ThreadedWorker do
       Thread.new { worker.stop }.join
       worker_thread.join
       expect(worker.instance_variable_get(:@threads)).to all(have_received(:kill))
-    end
-
-    it 'sets @@require_plugin_monkey_patch to false' do
-      worker.stop
-      sleep 0.1 until worker.instance_variable_defined?(:@exit)
-      expect(Delayed::ThreadedWorker.require_plugin_monkey_patch?).to be false
     end
   end
 
