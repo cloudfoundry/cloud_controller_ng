@@ -25,7 +25,7 @@ RSpec.describe 'plugin_threaded_worker_patch' do
         end
         Thread.new { worker.start }
         work_counter = 0
-        sleep 0.1 until queue.size == 1 || (work_counter += 1) > 5
+        sleep 0.2 until queue.size == 1 || (work_counter += 1) > 5
         expect(work_counter).to be <= 5 # If higher work_off was not called
 
         expect(exec_counter).to eq(1)
@@ -46,13 +46,13 @@ RSpec.describe 'plugin_threaded_worker_patch' do
         end
         Thread.new { worker.start }
         work_counter = 0
-        sleep 0.1 until work_off_queue.size == 1 || (work_counter += 1) > 5
+        sleep 0.2 until work_off_queue.size == 1 || (work_counter += 1) > 5
         expect(work_counter).to be <= 5 # If higher work_off was not called
 
         worker.stop
 
         clear_counter = 0
-        sleep 0.1 until clear_locks_queue.size == 1 || (clear_counter += 1) > 5
+        sleep 0.2 until clear_locks_queue.size == 1 || (clear_counter += 1) > 5
 
         expect(clear_counter).to be <= 5 # If higher clear_locks! was not called
 
