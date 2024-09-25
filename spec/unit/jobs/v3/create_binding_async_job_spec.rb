@@ -15,6 +15,79 @@ module VCAP::CloudController
         )
       end
 
+      describe '#handle_timeout' do
+        let(:service_instance) do
+          ManagedServiceInstance.make(service_plan: plan).tap do |si|
+            si.save_with_new_operation(
+              {},
+              {
+                type: 'create',
+                state: 'in progress'
+              }
+            )
+          end
+        end
+        let(:plan) { ServicePlan.make(maintenance_info:) }
+        let(:maintenance_info) { { 'version' => '1.2.0' } }
+        let(:service_binding) do
+          ServiceBinding.new.save_with_attributes_and_new_operation(
+            {
+              type: 'app',
+              service_instance: service_instance,
+              app: AppModel.make(space: service_instance.space),
+              credentials: {}
+            },
+            {
+              type: 'create',
+              state: 'in progress'
+            }
+          )
+        end
+        let(:orphan_mitigator) { instance_double(VCAP::Services::ServiceBrokers::V2::OrphanMitigator) }
+
+        before do
+          allow(subject).to receive(:resource).and_return(service_binding)
+          allow(service_binding).to receive(:save_with_attributes_and_new_operation)
+          allow(VCAP::Services::ServiceBrokers::V2::OrphanMitigator).to receive(:new).and_return(orphan_mitigator)
+          allow(orphan_mitigator).to receive(:cleanup_failed_bind)
+        end
+
+        it 'updates the service binding last operation on timeout' do
+          subject.handle_timeout
+
+          expect(service_binding).to have_received(:save_with_attributes_and_new_operation).with(
+            {},
+            {
+              type: 'create',
+              state: 'failed',
+              description: 'Service Broker failed to bind within the required time.'
+            }
+          )
+        end
+
+        it 'calls orphan mitigation when a timeout occurs' do
+          subject.handle_timeout
+
+          expect(orphan_mitigator).to have_received(:cleanup_failed_bind).with(service_binding)
+          expect(service_binding).to have_received(:save_with_attributes_and_new_operation).with(
+            {},
+            {
+              type: 'create',
+              state: 'failed',
+              description: 'Service Broker failed to bind within the required time.'
+            }
+          )
+        end
+
+        it 'raises an error if orphan mitigation fails' do
+          allow(orphan_mitigator).to receive(:cleanup_failed_bind).and_raise(StandardError.new('mitigation error'))
+
+          expect { subject.handle_timeout }.to raise_error(StandardError, 'mitigation error')
+
+          expect(orphan_mitigator).to have_received(:cleanup_failed_bind).with(service_binding)
+        end
+      end
+
       context 'route' do
         let(:route) { VCAP::CloudController::Route.make(space:) }
         let(:binding) do
