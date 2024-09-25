@@ -13,7 +13,7 @@ module VCAP::CloudController
       { name: 'expired_resource_cleanup', class: Jobs::Runtime::ExpiredResourceCleanup, time: '00:30' },
       { name: 'expired_orphaned_blob_cleanup', class: Jobs::Runtime::ExpiredOrphanedBlobCleanup, time: '01:00' },
       { name: 'orphaned_blobs_cleanup', class: Jobs::Runtime::OrphanedBlobsCleanup, time: '01:30', priority: Clock::MEDIUM_PRIORITY },
-      { name: 'pollable_job_cleanup', class: Jobs::Runtime::PollableJobCleanup, time: '02:00' },
+      { name: 'pollable_job_cleanup', class: Jobs::Runtime::PollableJobCleanup, time: '02:00', arg_from_config: %i[pollable_jobs cutoff_age_in_days] },
       { name: 'prune_completed_deployments', class: Jobs::Runtime::PruneCompletedDeployments, time: '03:00', arg_from_config: [:max_retained_deployments_per_app] },
       { name: 'prune_completed_builds', class: Jobs::Runtime::PruneCompletedBuilds, time: '03:30', arg_from_config: [:max_retained_builds_per_app] },
       { name: 'prune_excess_app_revisions', class: Jobs::Runtime::PruneExcessAppRevisions, time: '03:35', arg_from_config: [:max_retained_revisions_per_app] }

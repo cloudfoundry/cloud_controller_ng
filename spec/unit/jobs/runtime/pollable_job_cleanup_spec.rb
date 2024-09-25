@@ -3,9 +3,10 @@ require 'spec_helper'
 module VCAP::CloudController
   module Jobs::Runtime
     RSpec.describe PollableJobCleanup, job_context: :worker do
-      subject(:job) { PollableJobCleanup.new }
-      let!(:old_job) { PollableJobModel.create(created_at: 91.days.ago) }
-      let!(:new_job) { PollableJobModel.create(created_at: 1.day.ago) }
+      let(:cutoff_age_in_days) { 30 }
+      subject(:job) { PollableJobCleanup.new(cutoff_age_in_days) }
+      let!(:old_job) { PollableJobModel.create(created_at: (cutoff_age_in_days + 1).days.ago) }
+      let!(:new_job) { PollableJobModel.create(created_at: (cutoff_age_in_days - 1).day.ago) }
 
       it { is_expected.to be_a_valid_job }
 

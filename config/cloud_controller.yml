@@ -48,6 +48,9 @@ failed_jobs:
   cutoff_age_in_days: 31
   frequency_in_seconds: 144000 #4h
 
+pollable_jobs:
+  cutoff_age_in_days: 90
+
 service_operations_initial_cleanup:
   frequency_in_seconds: 300
 

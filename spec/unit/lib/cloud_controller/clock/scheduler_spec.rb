@@ -19,6 +19,7 @@ module VCAP::CloudController
           app_usage_events: { cutoff_age_in_days: 1 },
           audit_events: { cutoff_age_in_days: 3 },
           failed_jobs: { frequency_in_seconds: 400, cutoff_age_in_days: 4, max_number_of_failed_delayed_jobs: 10 },
+          pollable_jobs: { cutoff_age_in_days: 2 },
           service_operations_initial_cleanup: { frequency_in_seconds: 600 },
           service_usage_events: { cutoff_age_in_days: 5 },
           completed_tasks: { cutoff_age_in_days: 6 },
@@ -108,7 +109,7 @@ module VCAP::CloudController
 
         expect(clock).to receive(:schedule_daily_job) do |args, &block|
           expect(args).to eql(name: 'pollable_job_cleanup', at: '02:00', priority: 0)
-          expect(Jobs::Runtime::PollableJobCleanup).to receive(:new).with(no_args).and_call_original
+          expect(Jobs::Runtime::PollableJobCleanup).to receive(:new).with(2).and_call_original
           expect(block.call).to be_instance_of(Jobs::Runtime::PollableJobCleanup)
         end
 
