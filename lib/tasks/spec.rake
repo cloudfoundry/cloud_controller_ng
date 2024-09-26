@@ -38,12 +38,9 @@ namespace :spec do
   end
 
   def run_specs_parallel(path, env_vars='')
-    sh "#{env_vars} bundle exec parallel_rspec --test-options '--order rand' \
-    --single spec/integration/ \
-    --single spec/unit/lib/delayed_job/delayed_worker_spec.rb \
-    --single spec/unit/lib/delayed_job/delayed_plugin_spec.rb \
-    --single spec/unit/lib/delayed_job/threaded_worker_spec.rb \
-    -- #{path}"
+    # rubocop:disable Layout/LineLength
+    sh "#{env_vars} bundle exec parallel_rspec --test-options '--order rand' --single spec/integration/ --single spec/unit/lib/delayed_job/delayed_worker_spec.rb --single spec/unit/lib/delayed_job/delayed_plugin_spec.rb --single spec/unit/lib/delayed_job/threaded_worker_spec.rb -- #{path}"
+    # rubocop:enable Layout/LineLength
   end
 
   def run_failed_specs
