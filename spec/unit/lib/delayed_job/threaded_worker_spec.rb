@@ -2,25 +2,24 @@ require 'spec_helper'
 require 'delayed_job'
 require 'delayed_job/threaded_worker'
 
-RSpec.describe ThreadedWorker do
-  let(:num_threads) { 2 }
-  let(:grace_period_seconds) { 2 }
-  let(:worker) { ThreadedWorker.new(num_threads, {}, grace_period_seconds) }
+RSpec.describe Delayed::ThreadedWorker do
+  let(:options) { { num_threads: 2, sleep_delay: 0.1, grace_period_seconds: 2 } }
+  let(:worker) { Delayed::ThreadedWorker.new(options) }
   let(:worker_name) { 'instance_name' }
 
   before { worker.name = worker_name }
 
   describe '#initialize' do
     it 'sets up the thread count' do
-      expect(worker.instance_variable_get(:@num_threads)).to eq(num_threads)
+      expect(worker.instance_variable_get(:@num_threads)).to eq(options[:num_threads])
     end
 
     it 'sets up the grace period' do
-      expect(worker.instance_variable_get(:@grace_period_seconds)).to eq(grace_period_seconds)
+      expect(worker.instance_variable_get(:@grace_period_seconds)).to eq(options[:grace_period_seconds])
     end
 
     it 'sets up the grace period to 30 seconds by default' do
-      worker = ThreadedWorker.new(num_threads)
+      worker = Delayed::ThreadedWorker.new({ num_threads: 2 })
       expect(worker.instance_variable_get(:@grace_period_seconds)).to eq(30)
     end
   end
@@ -38,15 +37,15 @@ RSpec.describe ThreadedWorker do
     end
 
     it 'starts the specified number of threads' do
-      expect(worker).to receive(:threaded_start).exactly(num_threads).times
+      expect(worker).to receive(:threaded_start).exactly(options[:num_threads]).times
 
       expect(worker.instance_variable_get(:@threads).length).to eq(0)
       worker.start
-      expect(worker.instance_variable_get(:@threads).length).to eq(num_threads)
+      expect(worker.instance_variable_get(:@threads).length).to eq(options[:num_threads])
     end
 
     it 'logs the start and shutdown messages' do
-      expect(worker).to receive(:say).with("Starting threaded delayed worker with #{num_threads} threads")
+      expect(worker).to receive(:say).with("Starting threaded delayed worker with #{options[:num_threads]} threads")
       worker.start
     end
 
@@ -94,11 +93,11 @@ RSpec.describe ThreadedWorker do
 
     it 'allows threads to finish their work without being killed prematurely' do
       allow(worker).to receive(:threaded_start) do
-        sleep grace_period_seconds / 2 until worker.instance_variable_get(:@exit) == true
+        sleep options[:grace_period_seconds] / 2 until worker.instance_variable_get(:@exit) == true
       end
 
       worker_thread = Thread.new { worker.start }
-      sleep 0.1 until worker.instance_variable_get(:@threads).length == num_threads && worker.instance_variable_get(:@threads).all?(&:alive?)
+      sleep 0.1 until worker.instance_variable_get(:@threads).length == options[:num_threads] && worker.instance_variable_get(:@threads).all?(&:alive?)
       worker.instance_variable_get(:@threads).each { |t| allow(t).to receive(:kill).and_call_original }
 
       Thread.new { worker.stop }.join
@@ -108,11 +107,11 @@ RSpec.describe ThreadedWorker do
 
     it 'kills threads that exceed the grace period during shutdown' do
       allow(worker).to receive(:threaded_start) do
-        sleep grace_period_seconds * 2 until worker.instance_variable_get(:@exit) == true
+        sleep options[:grace_period_seconds] * 2 until worker.instance_variable_get(:@exit) == true
       end
 
       worker_thread = Thread.new { worker.start }
-      sleep 0.1 until worker.instance_variable_get(:@threads).length == num_threads && worker.instance_variable_get(:@threads).all?(&:alive?)
+      sleep 0.1 until worker.instance_variable_get(:@threads).length == options[:num_threads] && worker.instance_variable_get(:@threads).all?(&:alive?)
       worker.instance_variable_get(:@threads).each { |t| allow(t).to receive(:kill).and_call_original }
 
       Thread.new { worker.stop }.join
