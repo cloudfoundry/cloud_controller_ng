@@ -13,6 +13,8 @@ module VCAP::CloudController
       let!(:app_model2) { AppModel.make }
       let!(:app_model3) { AppModel.make }
       let!(:app_model4) { AppModel.make }
+      let!(:space_manager_model) { SpaceManager.make }
+      let!(:space_developer_model) { SpaceDeveloper.make }
       let(:page) { 1 }
       let(:per_page) { 1 }
 
@@ -94,6 +96,49 @@ module VCAP::CloudController
         end.to have_queried_db_times(/select/i, paginator.can_paginate_with_window_function?(dataset) ? 1 : 2)
         expect(paginated_result.total).to eq(4)
         expect(paginated_result.records[0].associations[:space].name).to eq(space.name)
+      end
+
+      it 'works when pages are generated from a subquery' do
+        options = { page: page, per_page: per_page, order_by: :guid }
+        pagination_options = PaginationOptions.new(options)
+        dataset = Role.dataset
+        paginated_result = nil
+        expect do
+          paginated_result = paginator.get_page(dataset, pagination_options)
+        end.to have_queried_db_times(/select/i, paginator.can_paginate_with_window_function?(dataset) ? 1 : 2)
+        expect(paginated_result.total).to eq(2)
+      end
+
+      context 'when not using window functions' do
+        let(:my_config) do
+          {
+            db: {
+              enable_paginate_window: false
+            }
+          }
+        end
+
+        before do
+          TestConfig.override(**my_config)
+        end
+
+        it 'works when pages are generated from a subquery' do
+          options = { page: page, per_page: per_page, order_by: :guid }
+          pagination_options = PaginationOptions.new(options)
+          dataset = Role.dataset
+          paginated_result = nil
+          expect do
+            paginated_result = paginator.get_page(dataset, pagination_options)
+          end.to have_queried_db_times(/select/i, 2)
+          expect(paginated_result.total).to eq(2)
+        end
+      end
+
+      it 'paged results do not contain extra columns' do
+        options = { page:, per_page: }
+        pagination_options = PaginationOptions.new(options)
+        paginated_result = paginator.get_page(dataset, pagination_options)
+        expect(paginated_result.records.first.keys).to match_array(AppModel.columns)
       end
 
       it 'orders by GUID as a secondary field when available' do
