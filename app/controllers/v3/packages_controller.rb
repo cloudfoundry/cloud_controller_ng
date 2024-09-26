@@ -93,7 +93,6 @@ class PackagesController < ApplicationController
 
     unprocessable!('Package type must be bits.') unless package.type == 'bits'
     unprocessable!('Package has no bits to download.') unless package.state == 'READY'
-    unprocessable!('Unable to download packages when an image registry is used to store packages') if VCAP::CloudController::Config.config.package_image_registry_configured?
 
     VCAP::CloudController::Repositories::PackageEventRepository.record_app_package_download(
       package,
@@ -170,8 +169,6 @@ class PackagesController < ApplicationController
   end
 
   def create_copy
-    unprocessable!('Unable to copy package when an image registry is used to store packages') if VCAP::CloudController::Config.config.package_image_registry_configured?
-
     app_guid = Oj.load(request.body).deep_symbolize_keys.dig(:relationships, :app, :data, :guid)
     destination_app = AppModel.where(guid: app_guid).first
 

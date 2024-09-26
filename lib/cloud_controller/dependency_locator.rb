@@ -22,7 +22,6 @@ require 'cloud_controller/diego/messenger'
 require 'cloud_controller/blobstore/client_provider'
 require 'cloud_controller/resource_pool_wrapper'
 require 'cloud_controller/packager/local_bits_packer'
-require 'cloud_controller/packager/registry_bits_packer'
 require 'credhub/client'
 require 'cloud_controller/metrics/prometheus_updater'
 
@@ -332,18 +331,7 @@ module CloudController
     end
 
     def packer
-      if config.package_image_registry_configured?
-        Packager::RegistryBitsPacker.new
-      else
-        Packager::LocalBitsPacker.new
-      end
-    end
-
-    def registry_buddy_client
-      RegistryBuddy::Client.new(
-        VCAP::CloudController::Config.config.get(:registry_buddy, :host),
-        VCAP::CloudController::Config.config.get(:registry_buddy, :port)
-      )
+      Packager::LocalBitsPacker.new
     end
 
     def statsd_client

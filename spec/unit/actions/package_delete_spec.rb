@@ -19,35 +19,17 @@ module VCAP::CloudController
           expect { package.refresh }.to raise_error Sequel::Error, 'Record not found'
         end
 
-        context 'when using a package registry' do
-          before do
-            TestConfig.override(packages: { image_registry: { base_path: 'hub.example.com/user' } })
-          end
+        it 'schedules a job to the delete the blobstore item' do
+          expect do
+            package_delete.delete(package)
+          end.to change(Delayed::Job, :count).by(1)
 
-          context 'when the package type is docker' do
-            let!(:package) { PackageModel.make(type: PackageModel::DOCKER_TYPE) }
-
-            it 'does not schedule a deletion job since there was no source code uploaded' do
-              expect do
-                package_delete.delete(package)
-              end.not_to(change(Delayed::Job, :count))
-            end
-          end
-        end
-
-        context 'when not using a package registry' do
-          it 'schedules a job to the delete the blobstore item' do
-            expect do
-              package_delete.delete(package)
-            end.to change(Delayed::Job, :count).by(1)
-
-            job = Delayed::Job.last
-            expect(job.handler).to include('VCAP::CloudController::Jobs::Runtime::BlobstoreDelete')
-            expect(job.handler).to match(/key: ['"]?#{package.guid}/)
-            expect(job.handler).to include('package_blobstore')
-            expect(job.queue).to eq(Jobs::Queues.generic)
-            expect(job.guid).not_to be_nil
-          end
+          job = Delayed::Job.last
+          expect(job.handler).to include('VCAP::CloudController::Jobs::Runtime::BlobstoreDelete')
+          expect(job.handler).to match(/key: ['"]?#{package.guid}/)
+          expect(job.handler).to include('package_blobstore')
+          expect(job.queue).to eq(Jobs::Queues.generic)
+          expect(job.guid).not_to be_nil
         end
 
         it 'creates an v3 audit event' do

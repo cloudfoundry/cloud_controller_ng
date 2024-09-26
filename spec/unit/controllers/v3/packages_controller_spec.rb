@@ -287,19 +287,6 @@ RSpec.describe PackagesController, type: :controller do
       end
     end
 
-    context 'when the package is stored in an image registry' do
-      before do
-        TestConfig.override(packages: { image_registry: { base_path: 'hub.example.com/user' } })
-      end
-
-      it 'returns 422' do
-        get :download, params: { guid: package.guid }
-
-        expect(response).to have_http_status(:unprocessable_entity)
-        expect(response.body).to include('UnprocessableEntity')
-      end
-    end
-
     context 'when the package cannot be found' do
       it 'returns 404' do
         get :download, params: { guid: 'a-bogus-guid' }
@@ -1228,19 +1215,6 @@ RSpec.describe PackagesController, type: :controller do
         allow_user_read_access_for(user, spaces: [source_space, destination_space])
         allow_user_write_access(user, space: source_space)
         allow_user_write_access(user, space: destination_space)
-      end
-
-      context 'when the package is stored in an image registry' do
-        before do
-          TestConfig.override(packages: { image_registry: { base_path: 'hub.example.com/user' } })
-        end
-
-        it 'returns 422' do
-          post :create, params: { source_guid: original_package.guid }.merge(relationship_request_body), as: :json
-
-          expect(response).to have_http_status :unprocessable_entity
-          expect(response.body).to include('UnprocessableEntity')
-        end
       end
 
       it 'returns a 201 and the response' do

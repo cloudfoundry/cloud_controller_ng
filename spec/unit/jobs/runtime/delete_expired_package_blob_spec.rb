@@ -9,29 +9,15 @@ module VCAP::CloudController
 
       it { is_expected.to be_a_valid_job }
 
-      context 'when using a package registry' do
-        before do
-          TestConfig.override(packages: { image_registry: { base_path: 'hub.example.com/user' } })
-        end
-
-        it 'nils the package_hash and sha256_checksum values' do
-          expect { job.perform }.to change {
-            [package.reload.package_hash, package.reload.sha256_checksum]
-          }.to([nil, nil])
-        end
+      it 'delegates to blobstore delete job' do
+        expect_any_instance_of(BlobstoreDelete).to receive(:perform)
+        job.perform
       end
 
-      context 'when not using a package registry' do
-        it 'delegates to blobstore delete job' do
-          expect_any_instance_of(BlobstoreDelete).to receive(:perform)
-          job.perform
-        end
-
-        it 'nils the package_hash and sha256_checksum values' do
-          expect { job.perform }.to change {
-            [package.reload.package_hash, package.reload.sha256_checksum]
-          }.to([nil, nil])
-        end
+      it 'nils the package_hash and sha256_checksum values' do
+        expect { job.perform }.to change {
+          [package.reload.package_hash, package.reload.sha256_checksum]
+        }.to([nil, nil])
       end
 
       context 'when the package does not exist' do
