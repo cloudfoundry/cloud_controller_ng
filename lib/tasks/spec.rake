@@ -44,7 +44,7 @@ namespace :spec do
       --single spec/integration/ \
       --single spec/acceptance/ \
       --single spec/unit/lib/delayed_job/ \
-      --isolate-n 6 -- #{path}
+      --isolate-n 3 -- #{path}
     CMD
 
     sh command
