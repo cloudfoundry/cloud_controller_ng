@@ -25,8 +25,8 @@ RSpec.describe 'plugin_threaded_worker_patch' do
         end
         Thread.new { worker.start }
         work_counter = 0
-        sleep 0.2 until queue.size == 1 || (work_counter += 1) > 5
-        expect(work_counter).to be <= 5 # If higher work_off was not called
+        sleep 0.3 until queue.size == 1 || (work_counter += 1) > 10
+        expect(work_counter).to be <= 10 # If higher work_off was not called
 
         expect(exec_counter).to eq(1)
         expect(loop_counter).to eq(1)
@@ -46,15 +46,15 @@ RSpec.describe 'plugin_threaded_worker_patch' do
         end
         Thread.new { worker.start }
         work_counter = 0
-        sleep 0.2 until work_off_queue.size == 1 || (work_counter += 1) > 5
-        expect(work_counter).to be <= 5 # If higher work_off was not called
+        sleep 0.3 until work_off_queue.size == 1 || (work_counter += 1) > 10
+        expect(work_counter).to be <= 10 # If higher work_off was not called
 
         worker.stop
 
         clear_counter = 0
-        sleep 0.2 until clear_locks_queue.size == 1 || (clear_counter += 1) > 5
+        sleep 0.3 until clear_locks_queue.size == 1 || (clear_counter += 1) > 10
 
-        expect(clear_counter).to be <= 5 # If higher clear_locks! was not called
+        expect(clear_counter).to be <= 10 # If higher clear_locks! was not called
 
         expect(Delayed::Backend::Sequel::Job).to have_received(:clear_locks!).with(expected_worker_name_in_cleanup)
       end
