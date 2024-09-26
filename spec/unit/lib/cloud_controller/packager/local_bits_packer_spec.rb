@@ -325,6 +325,33 @@ module CloudController::Packager
           end
         end
       end
+
+      describe 'temporary directory cleanup' do
+        let(:local_bits_packer_path) { File.join(local_tmp_dir, "local_bits_packer-#{blobstore_key}") }
+
+        context 'when the package is successfully uploaded and processed' do
+          it 'removes the temporary directory created for packaging' do
+            allow_any_instance_of(CloudController::Blobstore::FogClient).to receive(:cp_to_blobstore)
+            allow(Digester).to receive(:new).and_return(instance_double(Digester, digest_path: 'fake-digest'))
+            expect(FileUtils).to receive(:remove_dir).with(local_bits_packer_path).and_call_original
+            packer.send_package_to_blobstore(blobstore_key, uploaded_files_path, cached_files_fingerprints)
+          end
+        end
+
+        context 'when an exception is raised during processing' do
+          it 'removes the temporary directory created for packaging' do
+            allow(File).to receive(:join).and_call_original
+            allow(Dir).to receive(:exist?).and_return(false)
+            allow(Dir).to receive(:mkdir)
+
+            expect(FileUtils).to receive(:remove_dir).with(local_bits_packer_path)
+            expect do
+              allow_any_instance_of(CloudController::Blobstore::FogClient).to receive(:cp_to_blobstore).and_raise(StandardError)
+              packer.send_package_to_blobstore(blobstore_key, uploaded_files_path, cached_files_fingerprints)
+            end.to raise_error(StandardError)
+          end
+        end
+      end
     end
   end
 end
