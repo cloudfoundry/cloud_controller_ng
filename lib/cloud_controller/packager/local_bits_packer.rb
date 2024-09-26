@@ -14,11 +14,11 @@ module CloudController
         tmp_dir = VCAP::CloudController::Config.config.get(:directories, :tmpdir)
         local_bits_packer_path = File.join(tmp_dir, "local_bits_packer-#{blobstore_key}")
 
-        begin
-          Dir.mkdir(local_bits_packer_path)
-        rescue StandardError => e
-          raise ConflictError.new("Found a leftover directory that might be from the previous worker’s unfinished job: #{e.message}")
+        if Dir.exist?(local_bits_packer_path)
+          raise ConflictError.new("Found a leftover directory that might be from the previous worker's unfinished job: #{local_bits_packer_path}")
         end
+
+        Dir.mkdir(local_bits_packer_path)
 
         begin
           complete_package_path = match_resources_and_validate_package(local_bits_packer_path, uploaded_package_zip, cached_files_fingerprints)
