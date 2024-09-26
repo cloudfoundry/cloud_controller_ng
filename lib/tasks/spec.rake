@@ -42,6 +42,7 @@ namespace :spec do
       #{env_vars} bundle exec parallel_rspec \
       --test-options '--order rand' \
       --single spec/integration/ \
+      --single spec/acceptance/ \
       --single spec/unit/lib/delayed_job/delayed_worker_spec.rb \
       --single spec/unit/lib/delayed_job/delayed_plugin_spec.rb \
       --single spec/unit/lib/delayed_job/threaded_worker_spec.rb \
