@@ -43,10 +43,8 @@ namespace :spec do
       --test-options '--order rand' \
       --single spec/integration/ \
       --single spec/acceptance/ \
-      --single spec/unit/lib/delayed_job/delayed_worker_spec.rb \
-      --single spec/unit/lib/delayed_job/delayed_plugin_spec.rb \
-      --single spec/unit/lib/delayed_job/threaded_worker_spec.rb \
-      --isolate -- #{path}
+      --single spec/unit/lib/delayed_job/ \
+      --isolate-n 4 -- #{path}
     CMD
 
     sh command
