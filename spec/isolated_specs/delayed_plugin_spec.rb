@@ -2,6 +2,12 @@ require 'spec_helper'
 require 'delayed_job'
 require 'delayed_job/threaded_worker'
 
+########### Note ###########
+# This test modifies the Delayed::Worker class to use the Delayed::ThreadedWorker class
+# which might affect other tests running in parallel
+# It is recommended to run this test in isolation
+############################
+
 RSpec.describe 'plugin_threaded_worker_patch' do
   RSpec.shared_examples 'a worker with plugins' do |worker_class, worker_options, worker_name, expected_worker_name_in_cleanup|
     describe 'plugins' do

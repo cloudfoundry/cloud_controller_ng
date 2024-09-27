@@ -51,12 +51,19 @@ RSpec.describe CloudController::DelayedWorker do
     end
 
     context 'when the number of threads is specified' do
-      before { TestConfig.config[:jobs].merge!(number_of_worker_threads: 7) }
+      before do
+        allow(Delayed).to receive(:remove_const).with(:Worker)
+        allow(Delayed).to receive(:const_set).with(:Worker, Delayed::ThreadedWorker)
+
+        TestConfig.config[:jobs].merge!(number_of_worker_threads: 7)
+      end
 
       it 'creates a ThreadedWorker with the specified number of threads' do
+        expect(Delayed).to receive(:remove_const).with(:Worker).once
+        expect(Delayed).to receive(:const_set).with(:Worker, Delayed::ThreadedWorker).once
         expect(environment).to receive(:setup_environment).with(nil)
-        expect(Delayed::ThreadedWorker).to receive(:new).with({ max_priority: nil, min_priority: nil, num_threads: 7, queues: 'default', quiet: true,
-                                                                worker_name: 'test_worker' }).and_return(threaded_worker)
+        expect(Delayed::Worker).to receive(:new).with({ max_priority: nil, min_priority: nil, num_threads: 7, queues: 'default', quiet: true,
+                                                        worker_name: 'test_worker' }).and_return(threaded_worker)
         expect(threaded_worker).to receive(:name=).with('test_worker')
         expect(threaded_worker).to receive(:start)
 
