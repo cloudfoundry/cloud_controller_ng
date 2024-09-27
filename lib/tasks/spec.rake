@@ -33,7 +33,7 @@ namespace :spec do
     else
       run_specs_parallel('spec', 'NO_DB_MIGRATION=true')
       # Run isolated specs separately since they might affect other tests
-      run_specs('spec/isolated_specs')
+      run_specs('spec/isolated_specs', 'NO_DB_MIGRATION=true')
     end
   end
 
