@@ -34,15 +34,26 @@ module VCAP::CloudController
         end
 
         if message.requested?(:lifecycle_type)
-          if message.lifecycle_type == BuildpackLifecycleDataModel::LIFECYCLE_TYPE
+          case message.lifecycle_type
+          when BuildpackLifecycleDataModel::LIFECYCLE_TYPE
             dataset = dataset.where(
               guid: BuildpackLifecycleDataModel.
               where(Sequel.~(app_guid: nil)).
               select(:app_guid)
             )
-          elsif message.lifecycle_type == DockerLifecycleDataModel::LIFECYCLE_TYPE
+          when DockerLifecycleDataModel::LIFECYCLE_TYPE
             dataset = dataset.exclude(
               guid: BuildpackLifecycleDataModel.
+              where(Sequel.~(app_guid: nil)).
+              select(:app_guid)
+            ).exclude(
+              guid: CNBLifecycleDataModel.
+              where(Sequel.~(app_guid: nil)).
+              select(:app_guid)
+            )
+          when CNBLifecycleDataModel::LIFECYCLE_TYPE
+            dataset = dataset.where(
+              guid: CNBLifecycleDataModel.
               where(Sequel.~(app_guid: nil)).
               select(:app_guid)
             )

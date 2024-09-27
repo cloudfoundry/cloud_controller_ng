@@ -143,7 +143,7 @@ module VCAP::CloudController
       def validate(record)
         return unless record.requested?(:lifecycle_type)
 
-        valid_lifecycle_types = [BuildpackLifecycleDataModel::LIFECYCLE_TYPE, DockerLifecycleDataModel::LIFECYCLE_TYPE]
+        valid_lifecycle_types = [BuildpackLifecycleDataModel::LIFECYCLE_TYPE, DockerLifecycleDataModel::LIFECYCLE_TYPE, CNBLifecycleDataModel::LIFECYCLE_TYPE]
         return if valid_lifecycle_types.include?(record.lifecycle_type)
 
         record.errors.add(:base, message: "Invalid lifecycle_type: '#{record.lifecycle_type}'")

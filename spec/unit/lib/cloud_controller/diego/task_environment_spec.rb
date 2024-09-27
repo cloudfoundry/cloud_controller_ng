@@ -96,6 +96,15 @@ module VCAP::CloudController::Diego
         end
       end
 
+      context 'when the task is for a cnb app' do
+        let(:app) { VCAP::CloudController::AppModel.make(:cnb) }
+
+        it 'sets the LANG environment variable' do
+          constructed_envs = TaskEnvironment.new(app, task, space).build
+          expect(constructed_envs).to include('LANG' => 'en_US.UTF-8')
+        end
+      end
+
       context 'when the app has a route associated with it' do
         let(:expected_vcap_application) do
           {
