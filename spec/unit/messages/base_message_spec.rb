@@ -271,8 +271,14 @@ module VCAP::CloudController
         end
       end
 
-      it 'is valid with an allowed lifecycle_type value' do
+      it 'is valid with docker lifecycle_type value' do
         message = fake_class.new({ lifecycle_type: 'docker' })
+
+        expect(message).to be_valid
+      end
+
+      it 'is valid with cnb lifecycle_type value' do
+        message = fake_class.new({ lifecycle_type: 'cnb' })
 
         expect(message).to be_valid
       end
