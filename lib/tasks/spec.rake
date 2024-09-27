@@ -7,6 +7,8 @@ namespace :spec do
       run_specs(ARGV[1])
     else
       run_specs_parallel('spec')
+      # Run isolated specs separately since they might affect other tests
+      run_specs('spec/isolated_specs')
     end
   end
 
@@ -30,6 +32,8 @@ namespace :spec do
       run_specs(ARGV[1], 'NO_DB_MIGRATION=true')
     else
       run_specs_parallel('spec', 'NO_DB_MIGRATION=true')
+      # Run isolated specs separately since they might affect other tests
+      run_specs('spec/isolated_specs', 'NO_DB_MIGRATION=true')
     end
   end
 
@@ -43,10 +47,8 @@ namespace :spec do
       --test-options '--order rand' \
       --single spec/integration/ \
       --single spec/acceptance/ \
-      --single spec/unit/lib/delayed_job/delayed_worker_spec.rb \
-      --single spec/unit/lib/delayed_job/delayed_plugin_spec.rb \
-      --single spec/unit/lib/delayed_job/threaded_worker_spec.rb \
-      --isolate -- #{path}
+      --exclude-pattern 'spec/isolated_specs/' \
+      -- #{path}
     CMD
 
     sh command

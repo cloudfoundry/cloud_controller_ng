@@ -2,6 +2,12 @@ require 'spec_helper'
 require 'delayed_job'
 require 'delayed_job/threaded_worker'
 
+########### Note ###########
+# This test modifies the Delayed::Worker class to use the Delayed::ThreadedWorker class
+# which might affect other tests running in parallel
+# It is recommended to run this test separately
+############################
+
 RSpec.describe 'plugin_threaded_worker_patch' do
   RSpec.shared_examples 'a worker with plugins' do |worker_class, worker_options, worker_name, expected_worker_name_in_cleanup|
     describe 'plugins' do
@@ -16,6 +22,7 @@ RSpec.describe 'plugin_threaded_worker_patch' do
         worker_class.plugins << loop_plugin
 
         worker = worker_class.new(worker_options)
+        worker.name = worker_name
         allow(worker).to receive(:work_off).and_return([0, 0])
 
         queue = Queue.new
@@ -23,13 +30,16 @@ RSpec.describe 'plugin_threaded_worker_patch' do
           queue.push(:work_off_called)
           [0, 0]
         end
-        Thread.new { worker.start }
+        start_thread = Thread.new { worker.start }
         work_counter = 0
         sleep 0.1 until queue.size >= 1 || (work_counter += 1) > 10
         expect(work_counter).to be <= 10 # If higher work_off was not called
 
         expect(exec_counter).to be >= 1
         expect(loop_counter).to be >= 1
+
+        worker.stop
+        start_thread.join(1)
       end
 
       it 'calls the clear_locks plugin' do
@@ -44,7 +54,7 @@ RSpec.describe 'plugin_threaded_worker_patch' do
           work_off_queue.push(:work_off_called)
           [0, 0]
         end
-        Thread.new { worker.start }
+        start_thread = Thread.new { worker.start }
         work_counter = 0
         sleep 0.1 until work_off_queue.size >= 1 || (work_counter += 1) > 10
         expect(work_counter).to be <= 10 # If higher work_off was not called
@@ -56,6 +66,7 @@ RSpec.describe 'plugin_threaded_worker_patch' do
         expect(clear_counter).to be <= 10 # If higher clear_locks! was not called
 
         expect(Delayed::Backend::Sequel::Job).to have_received(:clear_locks!).with(expected_worker_name_in_cleanup)
+        start_thread.join(1)
       end
     end
   end
