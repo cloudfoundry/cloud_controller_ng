@@ -17,8 +17,30 @@ class CloudController::DelayedWorker
 
     logger = Steno.logger('cc-worker')
     logger.info("Starting job with options #{@queue_options}")
-
     setup_app_log_emitter(config, logger)
+
+    worker = get_initialized_delayed_worker(config, logger)
+    worker.start
+  end
+
+  def clear_locks!
+    config = RakeConfig.config
+    BackgroundJobEnvironment.new(config).setup_environment(readiness_port)
+
+    logger = Steno.logger('cc-worker-clear-locks')
+    logger.info("Clearing pending locks with options #{@queue_options}")
+    setup_app_log_emitter(config, logger)
+
+    worker = get_initialized_delayed_worker(config, logger)
+    Delayed::Job.clear_locks!(worker.name)
+
+    # Clear locks for all threads when using a threaded worker
+    worker.names_with_threads.each { |name| Delayed::Job.clear_locks!(name) } if worker.respond_to?(:names_with_threads)
+  end
+
+  private
+
+  def get_initialized_delayed_worker(config, logger)
     Delayed::Worker.destroy_failed_jobs = false
     Delayed::Worker.max_attempts = 3
     Delayed::Worker.max_run_time = config.get(:jobs, :global, :timeout_in_seconds) + 1
@@ -36,10 +58,8 @@ class CloudController::DelayedWorker
 
     worker = Delayed::Worker.new(@queue_options)
     worker.name = @queue_options[:worker_name]
-    worker.start
+    worker
   end
-
-  private
 
   def setup_app_log_emitter(config, logger)
     VCAP::AppLogEmitter.fluent_emitter = fluent_emitter(config) if config.get(:fluent)

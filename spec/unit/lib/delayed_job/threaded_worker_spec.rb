@@ -49,10 +49,10 @@ RSpec.describe Delayed::ThreadedWorker do
       worker.start
     end
 
-    it 'sets the thread_name variable for each thread' do
+    it 'sets the thread_index variable for each thread' do
       worker.start
       worker.instance_variable_get(:@threads).each_with_index do |thread, index|
-        expect(thread[:thread_name]).to eq("thread:#{index + 1}")
+        expect(thread[:thread_index]).to eq(index)
       end
     end
 
@@ -64,15 +64,42 @@ RSpec.describe Delayed::ThreadedWorker do
     end
   end
 
+  describe '#names_with_threads' do
+    it 'returns an array of names for each thread' do
+      expect(worker.names_with_threads).to eq(['instance_name thread:1', 'instance_name thread:2'])
+    end
+  end
+
   describe '#name' do
     it 'returns the instance name if thread name is set' do
-      allow(Thread.current).to receive(:[]).with(:thread_name).and_return('some-thread-name')
-      expect(worker.name).to eq('instance_name some-thread-name')
+      allow(Thread.current).to receive(:[]).with(:thread_index).and_return(0)
+      expect(worker.name).to eq('instance_name thread:1')
     end
 
-    it 'returns the instance name if thread name is not set' do
-      allow(Thread.current).to receive(:[]).with(:thread_name).and_return(nil)
-      expect(worker.name).to eq(worker_name)
+    context 'when base_name is set' do
+      it 'returns base_name if thread_index is not set' do
+        allow(Thread.current).to receive(:[]).with(:thread_index).and_return(nil)
+        expect(worker.name).to eq('instance_name')
+      end
+
+      it 'returns base_name if thread_index is empty' do
+        allow(Thread.current).to receive(:[]).with(:thread_index).and_return('')
+        expect(worker.name).to eq('instance_name')
+      end
+    end
+
+    context 'when the thread name is set' do
+      before { allow(Thread.current).to receive(:[]).with(:thread_index).and_return(0) }
+
+      it 'raises and error if base_name is not set' do
+        allow_any_instance_of(Delayed::Worker).to receive(:name).and_return(nil)
+        expect { worker.name }.to raise_error(ArgumentError, 'base_name cannot be nil or empty')
+      end
+
+      it 'raises and error if base_name is empty' do
+        allow_any_instance_of(Delayed::Worker).to receive(:name).and_return('')
+        expect { worker.name }.to raise_error('base_name cannot be nil or empty')
+      end
     end
   end
 

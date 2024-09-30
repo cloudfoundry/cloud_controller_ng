@@ -11,6 +11,18 @@ namespace :jobs do
     end
   end
 
+  desc 'Clear locks for the current delayed worker.'
+  task :clear_locks_for_current_worker, [:name] => :environment do |_t, args|
+    puts RUBY_DESCRIPTION
+    puts "Clearing pending locks for worker: #{args.name}"
+    args.with_defaults(name: ENV.fetch('HOSTNAME', nil))
+
+    RakeConfig.context = :worker
+
+    CloudController::DelayedWorker.new(queues: [],
+                                       name: args.name).clear_locks!
+  end
+
   desc 'Start a delayed_job worker that works on jobs that require access to local resources.'
 
   task :local, [:name] => :environment do |_t, args|

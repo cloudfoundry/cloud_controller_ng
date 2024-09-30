@@ -36,7 +36,6 @@ RSpec.describe CloudController::DelayedWorker do
     it 'sets up the environment and starts the worker' do
       expect(environment).to receive(:setup_environment).with(nil)
       expect(Delayed::Worker).to receive(:new).with(anything).and_return(delayed_worker)
-      expect(delayed_worker).to receive(:name=).with('test_worker')
       expect(delayed_worker).to receive(:start)
 
       cc_delayed_worker.start_working
@@ -68,6 +67,37 @@ RSpec.describe CloudController::DelayedWorker do
         expect(threaded_worker).to receive(:start)
 
         cc_delayed_worker.start_working
+      end
+    end
+  end
+
+  describe '#clear_locks!' do
+    let(:cc_delayed_worker) { CloudController::DelayedWorker.new(options) }
+
+    context 'when Delayed::Worker is used' do
+      it 'clears the locks' do
+        expect(environment).to receive(:setup_environment).with(nil)
+        expect(Delayed::Worker).to receive(:new).with(anything).and_return(delayed_worker)
+        expect(delayed_worker).to receive(:name=).with('test_worker')
+        expect(delayed_worker).to receive(:name).and_return('test_worker')
+        expect(Delayed::Job).to receive(:clear_locks!).with('test_worker')
+
+        cc_delayed_worker.clear_locks!
+      end
+    end
+
+    context 'when Delayed::ThreadedWorker is used' do
+      it 'clears the locks for all threads' do
+        expect(environment).to receive(:setup_environment).with(nil)
+        expect(Delayed::Worker).to receive(:new).with(anything).and_return(threaded_worker)
+        expect(threaded_worker).to receive(:name=).with('test_worker')
+        expect(threaded_worker).to receive(:name).and_return('test_worker')
+        expect(threaded_worker).to receive(:names_with_threads).and_return(['test_worker thread:1', 'test_worker thread:2'])
+        expect(Delayed::Job).to receive(:clear_locks!).with('test_worker').once
+        expect(Delayed::Job).to receive(:clear_locks!).with('test_worker thread:1').once
+        expect(Delayed::Job).to receive(:clear_locks!).with('test_worker thread:2').once
+
+        cc_delayed_worker.clear_locks!
       end
     end
   end
