@@ -27,7 +27,7 @@ module VCAP::CloudController
             'MEMORY_LIMIT' => "#{memory_limit}m"
           }
         ).
-        merge(SystemEnvPresenter.new(app.service_bindings).system_env.stringify_keys)
+        merge(SystemEnvPresenter.new(app).system_env.stringify_keys)
     end
   end
 end

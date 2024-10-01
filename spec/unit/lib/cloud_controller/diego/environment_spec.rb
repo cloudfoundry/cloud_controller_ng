@@ -23,7 +23,7 @@ module VCAP::CloudController::Diego
       encoded_vcap_application_json = vcap_app.to_json
 
       vcap_services_key = :VCAP_SERVICES
-      system_env = SystemEnvPresenter.new(process.service_bindings).system_env
+      system_env = SystemEnvPresenter.new(process).system_env
       expect(system_env).to have_key(vcap_services_key)
 
       encoded_vcap_services_json = system_env[vcap_services_key].to_json
