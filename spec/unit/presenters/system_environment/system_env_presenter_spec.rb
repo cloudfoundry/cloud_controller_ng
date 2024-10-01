@@ -2,7 +2,23 @@ require 'spec_helper'
 
 module VCAP::CloudController
   RSpec.describe SystemEnvPresenter do
-    subject(:system_env_presenter) { SystemEnvPresenter.new(app.service_bindings) }
+    subject(:system_env_presenter) { SystemEnvPresenter.new(app) }
+
+    shared_examples 'file-based service bindings' do
+      context 'when file-based service bindings are enabled' do
+        before do
+          app.update(file_based_service_bindings_enabled: true)
+        end
+
+        it 'does not contain vcap_services' do
+          expect(system_env_presenter.system_env).not_to have_key(:VCAP_SERVICES)
+        end
+
+        it 'contains service_binding_root' do
+          expect(system_env_presenter.system_env[:SERVICE_BINDING_ROOT]).to eq('/etc/cf-service-bindings')
+        end
+      end
+    end
 
     describe '#system_env' do
       context 'when there are no services' do
@@ -11,6 +27,8 @@ module VCAP::CloudController
         it 'contains an empty vcap_services' do
           expect(system_env_presenter.system_env[:VCAP_SERVICES]).to eq({})
         end
+
+        include_examples 'file-based service bindings'
       end
 
       context 'when there are services' do
@@ -154,6 +172,8 @@ module VCAP::CloudController
             expect(system_env_presenter.system_env[:VCAP_SERVICES][service_alt.label.to_sym]).to have(1).service
           end
         end
+
+        include_examples 'file-based service bindings'
       end
     end
   end
