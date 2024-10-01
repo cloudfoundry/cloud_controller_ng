@@ -45,7 +45,7 @@ RSpec.describe Delayed::ThreadedWorker do
     end
 
     it 'logs the start and shutdown messages' do
-      expect(worker).to receive(:say).with("Starting threaded delayed worker with #{options[:num_threads]} threads")
+      expect(worker).to receive(:say).with("Starting threaded delayed worker with #{options[:num_threads]} threads and grace period of #{options[:grace_period_seconds]} seconds")
       worker.start
     end
 

@@ -28,7 +28,7 @@ module Delayed
         raise SignalException.new('INT') if self.class.raise_signal_exceptions && self.class.raise_signal_exceptions != :term
       end
 
-      say "Starting threaded delayed worker with #{@num_threads} threads"
+      say "Starting threaded delayed worker with #{@num_threads} threads and grace period of #{@grace_period_seconds} seconds"
 
       @num_threads.times do |thread_index|
         thread = Thread.new do

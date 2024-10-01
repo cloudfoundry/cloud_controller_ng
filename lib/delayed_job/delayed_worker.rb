@@ -9,6 +9,10 @@ class CloudController::DelayedWorker
       worker_name: options[:name],
       quiet: true
     }
+    return unless options[:num_threads] && options[:num_threads].to_i > 0
+
+    @queue_options[:num_threads] = options[:num_threads].to_i
+    @queue_options[:grace_period_seconds] = options[:thread_grace_period_seconds].to_i if options[:thread_grace_period_seconds] && options[:thread_grace_period_seconds].to_i > 0
   end
 
   def start_working
@@ -46,9 +50,7 @@ class CloudController::DelayedWorker
     Delayed::Worker.max_run_time = config.get(:jobs, :global, :timeout_in_seconds) + 1
     Delayed::Worker.logger = logger
 
-    num_worker_threads = config.get(:jobs, :number_of_worker_threads)
-    unless num_worker_threads.nil?
-      @queue_options[:num_threads] = num_worker_threads
+    unless @queue_options[:num_threads].nil?
       # Dynamically alias Delayed::Worker to ThreadedWorker to ensure plugins etc are working correctly
       Delayed.module_eval do
         remove_const(:Worker) if const_defined?(:Worker)

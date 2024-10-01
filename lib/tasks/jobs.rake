@@ -37,9 +37,11 @@ namespace :jobs do
   end
 
   desc 'Start a delayed_job worker.'
-  task :generic, [:name] => :environment do |_t, args|
+  task :generic, %i[name num_threads thread_grace_period_seconds] => :environment do |_t, args|
     puts RUBY_DESCRIPTION
     args.with_defaults(name: ENV.fetch('HOSTNAME', nil))
+    args.with_defaults(num_threads: nil)
+    args.with_defaults(thread_grace_period_seconds: nil)
 
     RakeConfig.context = :worker
     queues = [
@@ -62,7 +64,6 @@ namespace :jobs do
       'prune_excess_app_revisions'
     ]
 
-    CloudController::DelayedWorker.new(queues: queues,
-                                       name: args.name).start_working
+    CloudController::DelayedWorker.new(queues: queues, name: args.name, num_threads: args.num_threads, thread_grace_period_seconds: args.thread_grace_period_seconds).start_working
   end
 end
