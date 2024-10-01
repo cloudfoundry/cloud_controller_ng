@@ -69,10 +69,10 @@ module VCAP::CloudController
             expect(File).to receive(:file?).with(buildpack2_file).
               and_return(true)
 
-            TestConfig.config[:install_buildpacks].concat [
+            TestConfig.config[:install_buildpacks].push(
               { 'name' => 'buildpack1', 'package' => 'myotherpkg' },
               { 'name' => 'buildpack2', 'package' => 'myotherpkg2' }
-            ]
+            )
 
             allow(Buildpacks::StackNameExtractor).to receive(:extract_from_file).with(buildpack1a_file).and_return('cflinuxfs11')
             allow(Buildpacks::StackNameExtractor).to receive(:extract_from_file).with(buildpack1b_file).and_return('cflinuxfs12')

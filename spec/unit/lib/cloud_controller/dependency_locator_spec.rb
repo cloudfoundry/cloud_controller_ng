@@ -172,7 +172,7 @@ RSpec.describe CloudController::DependencyLocator do
     it { is_expected.to be_a(VCAP::CloudController::Repositories::AppEventRepository) }
 
     it 'memoizes the instance' do
-      expect(locator.app_event_repository).to eq(locator.app_event_repository)
+      expect(subject).to eq(locator.app_event_repository)
     end
   end
 

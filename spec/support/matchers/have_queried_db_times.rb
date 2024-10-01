@@ -1,6 +1,5 @@
 RSpec::Matchers.define :have_queried_db_times do |query_regex, expected_times|
   match do |actual_blk|
-    matched_calls = []
     stub = allow(Sequel::Model.db).to receive(:_execute)
     stub.and_call_original
     calls = stub.and_record_arguments

@@ -39,7 +39,7 @@ RSpec.describe SidecarsController, type: :controller do
         set_current_user_as_role(role: :space_developer, org: org, user: user, space: space)
       end
 
-      it 'works' do
+      it 'succeeds' do
         get :index_by_app, params: { app_guid: app_model.guid }
         expect(response.status).to eq(200), response.body
       end

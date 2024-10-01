@@ -28,7 +28,7 @@ module VCAP::CloudController
         def present_pagination_hash(filters=nil)
           pagination_options = @paginated_result.pagination_options
 
-          last_page     = (@paginated_result.total.to_f / pagination_options.per_page.to_f).ceil
+          last_page     = (@paginated_result.total.to_f / pagination_options.per_page).ceil
           last_page     = 1 if last_page < 1
           previous_page = pagination_options.page - 1
           next_page     = pagination_options.page + 1

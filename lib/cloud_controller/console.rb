@@ -16,10 +16,7 @@ rescue LoadError
 end
 
 @config_file = ARGV[0] || ENV['CLOUD_CONTROLLER_NG_CONFIG'] || File.expand_path('../../config/cloud_controller.yml', __dir__)
-unless File.exist?(@config_file)
-  warn "#{@config_file} not found. Try running bin/console <PATH_TO_CONFIG_FILE>."
-  exit 1
-end
+raise "#{@config_file} not found. Try running bin/console <PATH_TO_CONFIG_FILE>." unless File.exist?(@config_file)
 
 context = ARGV[1].try(:to_sym) || :api
 config_kwargs = { context: }

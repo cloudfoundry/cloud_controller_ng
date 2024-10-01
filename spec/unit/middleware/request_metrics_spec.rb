@@ -32,7 +32,7 @@ module CloudFoundry
           end
 
           it 'catches the exception and calls complete request on request metrics' do
-            expect { middleware.call({}) }.to raise_error do
+            expect { middleware.call({}) }.to raise_error('Unexpected') do
               expect(request_metrics).to have_received(:complete_request).with(500)
             end
           end
