@@ -124,7 +124,7 @@ module VCAP::CloudController
             entity = encrypted_models[klass]
             nilable_string_columns = nilable_columns(entity)
             vals = entity.reload.values.except(*encrypted_columns(entity.class), *nilable_string_columns)
-            expect(vals.values).to be_all(&:present?), "all fields of #{entity.class} need to have values"
+            vals.each { |k, v| expect(v).not_to be_nil, "field #{k} of #{entity.class} does not have a value" }
 
             RotateDatabaseKey.perform(batch_size: 1)
 
