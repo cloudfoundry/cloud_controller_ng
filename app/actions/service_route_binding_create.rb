@@ -26,9 +26,8 @@ module VCAP::CloudController
 
         RouteBinding.new.tap do |b|
           RouteBinding.db.transaction do
-            existing_binding = binding
-            binding.destroy if existing_binding
-            VCAP::Services::ServiceBrokers::V2::OrphanMitigator.new.cleanup_failed_bind(binding) if existing_binding
+            binding&.destroy
+            VCAP::Services::ServiceBrokers::V2::OrphanMitigator.new.cleanup_failed_bind(binding) if binding
             b.save_with_attributes_and_new_operation(
               binding_details,
               CREATE_INITIAL_OPERATION
