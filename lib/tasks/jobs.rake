@@ -11,8 +11,8 @@ namespace :jobs do
     end
   end
 
-  desc 'Clear locks for the current delayed worker.'
-  task :clear_locks_for_current_worker, [:name] => :environment do |_t, args|
+  desc 'Clear pending locks for the current delayed worker.'
+  task :clear_pending_locks, [:name] => :environment do |_t, args|
     puts RUBY_DESCRIPTION
     puts "Clearing pending locks for worker: #{args.name}"
     args.with_defaults(name: ENV.fetch('HOSTNAME', nil))
