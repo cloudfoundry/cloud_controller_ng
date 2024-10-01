@@ -430,8 +430,7 @@ GEM
     retriable (3.1.2)
     reverse_markdown (2.1.1)
       nokogiri
-    rexml (3.3.6)
-      strscan
+    rexml (3.3.8)
     rfc822 (0.1.5)
     roodi (5.0.0)
       ruby_parser (~> 3.2, >= 3.2.2)
@@ -554,7 +553,6 @@ GEM
       fluent-logger
       yajl-ruby (~> 1.0)
     stringio (3.1.1)
-    strscan (3.1.0)
     talentbox-delayed_job_sequel (4.3.0)
       delayed_job (~> 4.1.0)
       sequel (>= 3.38, < 6.0)
@@ -575,7 +573,7 @@ GEM
     vhd (0.0.4)
       bit-struct
     vmstat (2.3.1)
-    webmock (3.23.1)
+    webmock (3.24.0)
       addressable (>= 2.8.0)
       crack (>= 0.3.2)
       hashdiff (>= 0.4.0, < 2.0.0)
