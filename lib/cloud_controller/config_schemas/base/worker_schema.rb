@@ -84,10 +84,7 @@ module VCAP::CloudController
               app_package_directory_key: String,
               fog_connection: Hash,
               fog_aws_storage_options: Hash,
-              fog_gcp_storage_options: Hash,
-              optional(:image_registry) => {
-                base_path: String
-              }
+              fog_gcp_storage_options: Hash
             },
 
             droplets: {
@@ -95,11 +92,6 @@ module VCAP::CloudController
               fog_connection: Hash,
               fog_aws_storage_options: Hash,
               fog_gcp_storage_options: Hash
-            },
-
-            optional(:registry_buddy) => {
-              host: String,
-              port: Integer
             },
 
             db_encryption_key: enum(String, NilClass),

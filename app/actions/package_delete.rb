@@ -24,13 +24,7 @@ module VCAP::CloudController
     private
 
     def create_package_source_deletion_job(package)
-      return Jobs::Runtime::BlobstoreDelete.new(package.guid, :package_blobstore) unless package_registry_configured?
-
-      nil
-    end
-
-    def package_registry_configured?
-      VCAP::CloudController::Config.config.package_image_registry_configured?
+      Jobs::Runtime::BlobstoreDelete.new(package.guid, :package_blobstore)
     end
   end
 end
