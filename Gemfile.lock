@@ -304,6 +304,7 @@ GEM
     llhttp-ffi (0.5.0)
       ffi-compiler (~> 1.0)
       rake (~> 13.0)
+    logger (1.6.1)
     loggregator_emitter (5.2.0)
       beefcake (~> 1.0.0)
     loofah (2.22.0)
@@ -312,9 +313,10 @@ GEM
     machinist (1.0.6)
     membrane (1.1.0)
     method_source (1.0.0)
-    mime-types (3.5.2)
+    mime-types (3.6.0)
+      logger
       mime-types-data (~> 3.2015)
-    mime-types-data (3.2024.0903)
+    mime-types-data (3.2024.1001)
     mini_mime (1.1.5)
     mini_portile2 (2.8.7)
     minitest (5.25.1)
@@ -624,7 +626,7 @@ DEPENDENCIES
   loggregator_emitter (~> 5.0)
   machinist (~> 1.0.6)
   membrane (~> 1.0)
-  mime-types (~> 3.5)
+  mime-types (~> 3.6)
   mock_redis
   multipart-parser
   mysql2 (~> 0.5.6)
