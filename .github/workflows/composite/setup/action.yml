@@ -2,10 +2,6 @@ name: "setup"
 description: "Configure Ubuntu to run Cloud_Controller_NG and its tests"
 
 inputs:
-  BOSH_CLI_VERSION:
-    description: "Bosh CLI Version"
-    required: true
-    default: 6.4.17
   WORKING_DIRECTORY:
     description: "The Current Work Directory from which installs specifically bundle installs should take place"
     required: true
@@ -35,8 +31,6 @@ runs:
         wget \
         zip \
         zlib1g-dev
-        
-        sudo wget -O /usr/local/bin/bosh https://s3.amazonaws.com/bosh-cli-artifacts/bosh-cli-${{ inputs.BOSH_CLI_VERSION }}-linux-amd64 && sudo chmod +x /usr/local/bin/bosh
       shell: bash
       working-directory: ${{ inputs.WORKING_DIRECTORY }}
     - name: Setup Bundler
