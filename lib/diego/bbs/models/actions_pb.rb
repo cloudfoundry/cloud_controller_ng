@@ -4,6 +4,7 @@
 require 'google/protobuf'
 
 require 'environment_variables_pb'
+require 'files_pb'
 Google::Protobuf::DescriptorPool.generated_pool.build do
   add_message "diego.bbs.models.Action" do
     optional :download_action, :message, 1, "diego.bbs.models.DownloadAction"
@@ -42,6 +43,7 @@ Google::Protobuf::DescriptorPool.generated_pool.build do
     optional :user, :string, 6
     optional :log_source, :string, 7
     optional :suppress_log_output, :bool, 8
+    repeated :service_binding_files, :message, 9, "diego.bbs.models.Files"
   end
   add_message "diego.bbs.models.TimeoutAction" do
     optional :action, :message, 1, "diego.bbs.models.Action"
