@@ -37,6 +37,7 @@ module VCAP::CloudController
             log_level: opts[:log_level],
             max_connections: opts[:max_connections],
             pool_timeout: opts[:pool_timeout],
+            pool_class: :threaded,
             read_timeout: opts[:read_timeout],
             sql_mode: %i[strict_trans_tables strict_all_tables no_zero_in_date]
           }
