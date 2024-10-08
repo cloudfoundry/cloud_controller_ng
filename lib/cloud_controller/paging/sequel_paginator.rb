@@ -54,6 +54,7 @@ module VCAP::CloudController
       records = paged_dataset.all
 
       count = records.any? ? records.first[:pagination_total_results] : 0
+
       records.each do |x|
         x.values.delete(:pagination_total_results)
         x.values.delete(:tmp_deferred_id)
@@ -74,7 +75,9 @@ module VCAP::CloudController
       end
 
       records = paged_dataset.all
-      records.each { |x| x.values.delete(:tmp_deferred_id) }
+
+      has_tmp_deferred_id = records.first&.keys&.include?(:tmp_deferred_id)
+      records.each { |x| x.values.delete(:tmp_deferred_id) } if has_tmp_deferred_id
 
       [records, count]
     end
