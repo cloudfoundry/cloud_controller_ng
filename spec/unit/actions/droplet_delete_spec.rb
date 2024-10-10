@@ -71,6 +71,40 @@ module VCAP::CloudController
         expect(job.guid).not_to be_nil
       end
 
+      context 'when droplet is referenced as current droplet by an app' do
+        before do
+          droplet.app.update(droplet_guid: droplet.guid)
+        end
+
+        it 'raises an UnprocessableEntity error' do
+          expect do
+            droplet_delete.delete([droplet])
+          end.to raise_error do |error|
+            expect(error).to be_a(CloudController::Errors::ApiError)
+            expect(error.name).to eq('UnprocessableEntity')
+            expect(error.message).to match(/^The droplet is currently used.*/)
+          end
+        end
+
+        it 'does not delete the droplet' do
+          expect do
+            expect { droplet_delete.delete([droplet]) }.to raise_error(CloudController::Errors::ApiError)
+          end.not_to(change(DropletModel, :count))
+        end
+
+        it 'does not create an audit event' do
+          expect(Repositories::DropletEventRepository).not_to receive(:record_delete)
+
+          expect { droplet_delete.delete([droplet]) }.to raise_error(CloudController::Errors::ApiError)
+        end
+
+        it 'does not schedule a blobstore delete job' do
+          expect do
+            expect { droplet_delete.delete([droplet]) }.to raise_error(CloudController::Errors::ApiError)
+          end.not_to(change(Delayed::Job, :count))
+        end
+      end
+
       context 'when the droplet does not have a blobstore key' do
         before do
           allow(droplet).to receive(:blobstore_key).and_return(nil)

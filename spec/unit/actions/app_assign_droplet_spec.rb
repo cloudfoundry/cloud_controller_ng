@@ -25,7 +25,6 @@ module VCAP::CloudController
       let(:message) { { 'droplet_guid' => droplet_guid } }
 
       before do
-        app_model.add_droplet_by_guid(droplet_guid)
         allow(ProcessCreateFromAppDroplet).to receive(:new).with(user_audit_info).and_return(process_create_from_app_droplet)
         allow(process_create_from_app_droplet).to receive(:create).with(app_model)
 
@@ -86,6 +85,21 @@ module VCAP::CloudController
           end
         end
 
+        context 'when the droplet gets deleted in parallel (race condition)' do
+          before do
+            allow(app_model).to receive(:lock!).and_wrap_original do |original_method|
+              droplet.destroy
+              original_method.call
+            end
+          end
+
+          it 'raises an error' do
+            expect do
+              app_assign_droplet.assign(app_model, droplet)
+            end.to raise_error AppAssignDroplet::InvalidDroplet, 'Unable to assign current droplet. Ensure the droplet exists and belongs to this app.'
+          end
+        end
+
         context 'when we fail to create missing processes' do
           before do
             allow(process_create_from_app_droplet).to receive(:create).and_raise(ProcessCreateFromAppDroplet::ProcessTypesNotFound, 'some message')
@@ -98,7 +112,7 @@ module VCAP::CloudController
           end
         end
 
-        context 'when we fail to create missing processes' do
+        context 'when we fail to create missing sidecars' do
           before do
             allow(process_create_from_app_droplet).to receive(:create).and_raise(SidecarSynchronizeFromAppDroplet::ConflictingSidecarsError, 'some message')
           end
