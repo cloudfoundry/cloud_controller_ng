@@ -37,6 +37,16 @@ module VCAP::CloudController
             expect(AppLifecycleProvider.provide_for_create(message)).to be_a(AppBuildpackLifecycle)
           end
         end
+
+        context 'default_app_lifecycle is set to cnb' do
+          before do
+            TestConfig.override(default_app_lifecycle: 'cnb')
+          end
+
+          it 'returns a AppCNBLifecycle' do
+            expect(AppLifecycleProvider.provide_for_create(message)).to be_a(AppCNBLifecycle)
+          end
+        end
       end
     end
 
