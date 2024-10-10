@@ -19,6 +19,15 @@ module VCAP::CloudController
                       :app_instance_limit, :app_task_limit, :total_service_keys, :total_reserved_route_ports,
                       :log_rate_limit
 
+    def around_save
+      yield
+    rescue Sequel::UniqueConstraintViolation => e
+      raise e unless e.message.include?('qd_name_index')
+
+      errors.add(:name, :unique)
+      raise validation_failed_error
+    end
+
     def validate
       validates_presence :name
       validates_unique :name
