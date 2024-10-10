@@ -25,6 +25,10 @@ Google::Protobuf::DescriptorPool.generated_pool.build do
     optional :error, :message, 1, "diego.bbs.models.Error"
     repeated :desired_lrp_scheduling_infos, :message, 2, "diego.bbs.models.DesiredLRPSchedulingInfo"
   end
+  add_message "diego.bbs.models.DesiredLRPSchedulingInfoByProcessGuidResponse" do
+    optional :error, :message, 1, "diego.bbs.models.Error"
+    optional :desired_lrp_scheduling_info, :message, 2, "diego.bbs.models.DesiredLRPSchedulingInfo"
+  end
   add_message "diego.bbs.models.DesiredLRPByProcessGuidRequest" do
     optional :process_guid, :string, 1
   end
@@ -48,6 +52,7 @@ module Diego
       DesiredLRPsRequest = Google::Protobuf::DescriptorPool.generated_pool.lookup("diego.bbs.models.DesiredLRPsRequest").msgclass
       DesiredLRPResponse = Google::Protobuf::DescriptorPool.generated_pool.lookup("diego.bbs.models.DesiredLRPResponse").msgclass
       DesiredLRPSchedulingInfosResponse = Google::Protobuf::DescriptorPool.generated_pool.lookup("diego.bbs.models.DesiredLRPSchedulingInfosResponse").msgclass
+      DesiredLRPSchedulingInfoByProcessGuidResponse = Google::Protobuf::DescriptorPool.generated_pool.lookup("diego.bbs.models.DesiredLRPSchedulingInfoByProcessGuidResponse").msgclass
       DesiredLRPByProcessGuidRequest = Google::Protobuf::DescriptorPool.generated_pool.lookup("diego.bbs.models.DesiredLRPByProcessGuidRequest").msgclass
       DesireLRPRequest = Google::Protobuf::DescriptorPool.generated_pool.lookup("diego.bbs.models.DesireLRPRequest").msgclass
       UpdateDesiredLRPRequest = Google::Protobuf::DescriptorPool.generated_pool.lookup("diego.bbs.models.UpdateDesiredLRPRequest").msgclass
