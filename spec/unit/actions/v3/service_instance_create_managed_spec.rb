@@ -123,14 +123,19 @@ module VCAP::CloudController
           end
 
           context "when the last operation is in state 'create failed'" do
+            let(:fake_orphan_mitigator) { double(VCAP::Services::ServiceBrokers::V2::OrphanMitigator) }
+
             before do
               instance.save_with_new_operation({}, { type: 'create', state: 'failed' })
+              allow(VCAP::Services::ServiceBrokers::V2::OrphanMitigator).to receive(:new).and_return(fake_orphan_mitigator)
+              allow(fake_orphan_mitigator).to receive(:cleanup_failed_provision).with(instance)
             end
 
             it 'deletes the existing service instance and creates a new one' do
               service_instance = action.precursor(message:, service_plan:)
 
               expect(service_instance.guid).not_to eq(instance.guid)
+              expect(fake_orphan_mitigator).to have_received(:cleanup_failed_provision).with(instance)
               expect(service_instance.last_operation.type).to eq('create')
               expect(service_instance.last_operation.state).to eq('initial')
             end

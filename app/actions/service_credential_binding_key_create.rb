@@ -27,7 +27,8 @@ module VCAP::CloudController
 
         ServiceKey.new.tap do |b|
           ServiceKey.db.transaction do
-            key.destroy if key
+            key&.destroy
+            VCAP::Services::ServiceBrokers::V2::OrphanMitigator.new.cleanup_failed_bind(key) if key
             b.save_with_attributes_and_new_operation(
               binding_details,
               CREATE_INITIAL_OPERATION
