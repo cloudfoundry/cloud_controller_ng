@@ -32,7 +32,7 @@ class CloudController::DelayedWorker
     BackgroundJobEnvironment.new(config).setup_environment(readiness_port)
 
     logger = Steno.logger('cc-worker-clear-locks')
-    logger.info("Clearing pending locks with options #{@queue_options}")
+    logger.info("Clearing pending locks with options {#{@queue_options.map { |k, v| "#{k}: #{v.inspect}" }.join(', ')}}")
     setup_app_log_emitter(config, logger)
 
     worker = get_initialized_delayed_worker(config, logger)
