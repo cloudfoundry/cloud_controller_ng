@@ -67,7 +67,7 @@ module VCAP::CloudController
             end
 
             context "when the last key operation is in 'create failed' state" do
-              let(:fake_orphan_mitigator) { double(VCAP::Services::ServiceBrokers::V2::OrphanMitigator) }
+              let(:fake_orphan_mitigator) { instance_double(VCAP::Services::ServiceBrokers::V2::OrphanMitigator) }
 
               before do
                 binding.save_with_attributes_and_new_operation({}, { type: 'create', state: 'failed' })

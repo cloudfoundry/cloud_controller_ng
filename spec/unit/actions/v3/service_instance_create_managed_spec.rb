@@ -123,7 +123,7 @@ module VCAP::CloudController
           end
 
           context "when the last operation is in state 'create failed'" do
-            let(:fake_orphan_mitigator) { double(VCAP::Services::ServiceBrokers::V2::OrphanMitigator) }
+            let(:fake_orphan_mitigator) { instance_double(VCAP::Services::ServiceBrokers::V2::OrphanMitigator) }
 
             before do
               instance.save_with_new_operation({}, { type: 'create', state: 'failed' })
