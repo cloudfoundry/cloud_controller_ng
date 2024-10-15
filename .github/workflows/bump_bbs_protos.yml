@@ -1,0 +1,78 @@
+name: Bump BBS Protos
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: '0 0 * * *' # Runs daily, adjust as needed
+
+jobs:
+  update-protos:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout ccng
+        uses: actions/checkout@v3
+
+      - name: Clone bbs repository
+        run: |
+          git clone --depth=1 https://github.com/cloudfoundry/bbs.git
+          echo "BBS_REPO_PATH=$(pwd)/bbs" >> $GITHUB_ENV
+
+      - name: Install protoc
+        run: |
+          wget -q -O /tmp/protoc.zip https://github.com/protocolbuffers/protobuf/releases/download/v3.6.1/protoc-3.6.1-linux-x86_64.zip
+          unzip -q /tmp/protoc.zip -d /usr/local
+          rm /tmp/protoc.zip
+          export PATH=$PATH:/usr/local/bin
+
+      - name: Clone gogo/protobuf
+        run: |
+          PROTO_SRC=$(mktemp -d)
+          git clone https://github.com/gogo/protobuf.git "$PROTO_SRC/github.com/gogo/protobuf"
+          echo "PROTO_SRC=$PROTO_SRC" >> $GITHUB_ENV
+
+      - name: Generate Ruby files from protos
+        run: |
+          RUBY_OUT=$(mktemp -d)
+          pushd $BBS_REPO_PATH/models > /dev/null
+            sed -i'' -e 's/package models/package diego.bbs.models/' models/*.proto
+            protoc --proto_path="$PROTO_SRC":models --ruby_out="$RUBY_OUT" models/*.proto
+          popd > /dev/null
+          cp -r "$RUBY_OUT/." cloud_controller_ng/lib/diego/bbs/models
+
+      - name: Check for changes
+        id: check_changes
+        run: |
+          pushd cloud_controller_ng > /dev/null
+            if git diff --quiet; then
+              echo "No changes detected."
+              echo "changes=false" >> $GITHUB_ENV
+            else
+              echo "Changes detected."
+              echo "changes=true" >> $GITHUB_ENV
+            fi
+          popd > /dev/null
+
+      - name: Commit changes
+        if: env.changes == 'true'
+        run: |
+          pushd cloud_controller_ng > /dev/null
+            git config user.name "ari-wg-gitbot"
+            git config user.email "app-runtime-interfaces@cloudfoundry.org"
+            git add .
+            git commit -m "Bump BBS protos"
+          popd > /dev/null
+
+      - name: Create or Update Pull Request
+        if: env.changes == 'true'
+        uses: peter-evans/create-pull-request@v7
+        with:
+          branch: bbs-protos
+          base: main
+          title: "Automated Update of BBS Protobuf Resources"
+          body: |
+            This PR contains updates to the bbs protobuf resources.
+            Please review carefully before merging.
+          labels: "bump_bbs_protos, needs_review"
+          commit-message: "Bump BBS protos"
+          author: "ari-wg-gitbot <app-runtime-interfaces@cloudfoundry.org>"
