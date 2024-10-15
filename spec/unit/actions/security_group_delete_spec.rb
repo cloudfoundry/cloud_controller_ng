@@ -30,8 +30,9 @@ module VCAP::CloudController
         end
 
         it 'updates the latest security group update table' do
+          last_update = AsgLatestUpdate.last_update
           security_group_delete.delete([security_group])
-          expect(AsgLatestUpdate.last_update).to be > 1.second.ago
+          expect(AsgLatestUpdate.last_update).to be > last_update
         end
 
         it 'deletes associated staging spaces roles' do
