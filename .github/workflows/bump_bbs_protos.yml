@@ -76,8 +76,9 @@ jobs:
         if: env.changes == 'true'
         uses: peter-evans/create-pull-request@v7
         with:
-          branch: bbs-protos
-          base: main
+          path: cloud_controller_ng
+          branch: bbs-protos-bump-test
+          base: bump-bbs-protos-workflow-fix
           title: "Automated Update of BBS Protobuf Resources"
           body: |
             This PR contains updates to the bbs protobuf resources.
