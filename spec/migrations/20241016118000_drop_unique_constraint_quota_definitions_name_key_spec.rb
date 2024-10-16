@@ -3,7 +3,7 @@ require 'migrations/helpers/migration_shared_context'
 
 RSpec.describe 'migration to add or remove unique constraint on name column in quota_definitions table', isolation: :truncation, type: :migration do
   include_context 'migration' do
-    let(:migration_filename) { '20240808118000_drop_unique_constraint_quota_definitions_name_key_spec.rb' }
+    let(:migration_filename) { '20241016118000_drop_unique_constraint_quota_definitions_name_key_spec.rb' }
   end
   describe 'up migration' do
     context 'mysql' do
