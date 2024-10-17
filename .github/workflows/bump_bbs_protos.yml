@@ -66,8 +66,8 @@ jobs:
         if: env.changes == 'true'
         run: |
           pushd cloud_controller_ng > /dev/null
-            git config user.name "ari-wg-gitbot"
-            git config user.email "app-runtime-interfaces@cloudfoundry.org"
+            git config user.name "capi-bot"
+            git config user.email "cf-capi-eng@pivotal.io"
             git add .
             git commit -m "Bump BBS protos"
           popd > /dev/null
@@ -85,4 +85,5 @@ jobs:
             Please review carefully before merging.
           labels: "bump_bbs_protos, needs_review"
           commit-message: "Bump BBS protos"
-          author: "ari-wg-gitbot <app-runtime-interfaces@cloudfoundry.org>"
+          author: "capi-bot <cf-capi-eng@pivotal.io>"
+          committer: "capi-bot <cf-capi-eng@pivotal.io>"
