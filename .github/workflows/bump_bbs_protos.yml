@@ -3,26 +3,35 @@ name: Bump BBS Protos
 on:
   workflow_dispatch:
   schedule:
-    - cron: '0 0 * * *' # Runs daily, adjust as needed
+    - cron: '0 0 * * *' # Runs daily at midnight
 
 jobs:
   update-protos:
     runs-on: ubuntu-latest
 
     steps:
+      - uses: hmarr/debug-action@v3
       - name: Checkout ccng
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
+        with:
+          path: cloud_controller_ng
 
       - name: Clone bbs repository
-        run: |
-          git clone --depth=1 https://github.com/cloudfoundry/bbs.git
-          echo "BBS_REPO_PATH=$(pwd)/bbs" >> $GITHUB_ENV
+        uses: actions/checkout@v4
+        with:
+          repository: cloudfoundry/bbs
+          path: bbs
 
       - name: Install protoc
         run: |
           wget -q -O /tmp/protoc.zip https://github.com/protocolbuffers/protobuf/releases/download/v3.6.1/protoc-3.6.1-linux-x86_64.zip
-          unzip -q /tmp/protoc.zip -d /usr/local
+          sudo unzip -q /tmp/protoc.zip -d /usr/local
           rm /tmp/protoc.zip
+          wget -q -O /tmp/protobuf.zip https://github.com/protocolbuffers/protobuf/archive/v3.6.1.zip
+          unzip -q /tmp/protobuf.zip -d /tmp
+          sudo cp -r /tmp/protobuf-3.6.1/src/google /usr/local/include/
+          sudo chmod -R 755 /usr/local/include/google
+          rm -rf /tmp/protobuf.zip /tmp/protobuf-3.6.1
           export PATH=$PATH:/usr/local/bin
 
       - name: Clone gogo/protobuf
@@ -34,7 +43,7 @@ jobs:
       - name: Generate Ruby files from protos
         run: |
           RUBY_OUT=$(mktemp -d)
-          pushd $BBS_REPO_PATH/models > /dev/null
+          pushd bbs > /dev/null
             sed -i'' -e 's/package models/package diego.bbs.models/' models/*.proto
             protoc --proto_path="$PROTO_SRC":models --ruby_out="$RUBY_OUT" models/*.proto
           popd > /dev/null
@@ -67,12 +76,13 @@ jobs:
         if: env.changes == 'true'
         uses: peter-evans/create-pull-request@v7
         with:
-          branch: bbs-protos
-          base: main
+          path: cloud_controller_ng
+          branch: bbs-protos-bump-${{ github.ref_name }}
           title: "Automated Update of BBS Protobuf Resources"
           body: |
             This PR contains updates to the bbs protobuf resources.
             Please review carefully before merging.
           labels: "bump_bbs_protos, needs_review"
           commit-message: "Bump BBS protos"
+          committer: "ari-wg-gitbot <app-runtime-interfaces@cloudfoundry.org>"
           author: "ari-wg-gitbot <app-runtime-interfaces@cloudfoundry.org>"
