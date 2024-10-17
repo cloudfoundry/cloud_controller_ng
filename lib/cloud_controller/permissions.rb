@@ -240,11 +240,9 @@ class VCAP::CloudController::Permissions
   def can_read_route?(space_id)
     return true if can_read_globally?
 
-    space = VCAP::CloudController::Space.where(id: space_id).first
+    org_id = VCAP::CloudController::Space.where(id: space_id).get(:organization_id)
 
-    space.has_member?(@user) || space.has_supporter?(@user) ||
-      @user.managed_organizations.map(&:id).include?(space.organization_id) ||
-      @user.audited_organizations.map(&:id).include?(space.organization_id)
+    membership.role_applies?(ROLES_FOR_ROUTE_READING, space_id, org_id)
   end
 
   def space_guids_with_readable_routes_query
