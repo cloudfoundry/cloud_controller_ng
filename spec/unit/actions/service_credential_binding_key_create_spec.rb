@@ -67,8 +67,12 @@ module VCAP::CloudController
             end
 
             context "when the last key operation is in 'create failed' state" do
+              let(:fake_orphan_mitigator) { instance_double(VCAP::Services::ServiceBrokers::V2::OrphanMitigator) }
+
               before do
                 binding.save_with_attributes_and_new_operation({}, { type: 'create', state: 'failed' })
+                allow(VCAP::Services::ServiceBrokers::V2::OrphanMitigator).to receive(:new).and_return(fake_orphan_mitigator)
+                allow(fake_orphan_mitigator).to receive(:cleanup_failed_bind).with(binding)
               end
 
               it 'deletes the existing key and creates a new one' do
@@ -77,6 +81,7 @@ module VCAP::CloudController
                 expect(b.guid).not_to eq(binding.guid)
                 expect(b).to be_create_in_progress
                 expect { binding.reload }.to raise_error Sequel::NoExistingObject
+                expect(fake_orphan_mitigator).to have_received(:cleanup_failed_bind).with(binding)
               end
             end
 
