@@ -177,6 +177,10 @@ module VCAP::CloudController
       app.revisions_enabled
     end
 
+    def file_based_service_bindings_enabled
+      app.file_based_service_bindings_enabled
+    end
+
     def package_hash
       # this caches latest_package for performance reasons
       package = latest_package
