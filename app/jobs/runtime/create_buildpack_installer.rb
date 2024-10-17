@@ -10,7 +10,7 @@ module VCAP::CloudController
           buildpacks_lock = Locking[name: 'buildpacks']
           buildpacks_lock.db.transaction do
             buildpacks_lock.lock!
-            buildpack = Buildpack.create(name: name, stack: stack_name)
+            buildpack = Buildpack.create(name: name, stack: stack_name, lifecycle: options[:lifecycle])
           end
           begin
             buildpack_uploader.upload_buildpack(buildpack, file, File.basename(file))

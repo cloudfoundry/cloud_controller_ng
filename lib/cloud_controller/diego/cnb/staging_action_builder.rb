@@ -8,19 +8,7 @@ module VCAP::CloudController
     module CNB
       class StagingActionBuilder < VCAP::CloudController::Diego::StagingActionBuilder
         def initialize(config, staging_details, lifecycle_data)
-          super(config, staging_details, lifecycle_data, 'cnb', '/home/vcap/workspace', '/tmp/cache-output.tgz')
-        end
-
-        def cached_dependencies
-          return nil if @config.get(:diego, :enable_declarative_asset_downloads)
-
-          [
-            ::Diego::Bbs::Models::CachedDependency.new(
-              from: LifecycleBundleUriGenerator.uri(config.get(:diego, :lifecycle_bundles)[lifecycle_bundle_key]),
-              to: '/tmp/lifecycle',
-              cache_key: "#{@prefix}-#{lifecycle_stack}-lifecycle"
-            )
-          ]
+          super(config, staging_details, lifecycle_data, 'cnb', '/home/vcap/workspace', '/tmp/cache-output.tgz', ::Diego::Bbs::Models::ImageLayer::MediaType::TGZ)
         end
 
         def task_environment_variables
@@ -42,8 +30,10 @@ module VCAP::CloudController
             '--cache-output', '/tmp/cache-output.tgz'
           ]
 
+          args.push('--auto-detect') if lifecycle_data[:auto_detect]
           lifecycle_data[:buildpacks].each do |buildpack|
-            args.push('--buildpack', buildpack[:url])
+            args.push('--buildpack', buildpack[:url]) if buildpack[:name] == 'custom'
+            args.push('--buildpack', buildpack[:key]) unless buildpack[:name] == 'custom'
           end
 
           env_vars = BbsEnvironmentBuilder.build(staging_details.environment_variables)
