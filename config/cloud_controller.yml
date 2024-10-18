@@ -374,8 +374,6 @@ credhub_api:
 credential_references:
   interpolate_service_bindings: true
 
-internal_route_vip_range: '127.128.0.0/9'
-
 locket:
   host: 'locket.service.cf.internal'
   port: 8891
