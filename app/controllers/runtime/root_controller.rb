@@ -15,13 +15,6 @@ module VCAP::CloudController
             href: api_url_builder.build_url
           },
 
-          cloud_controller_v2: {
-            href: api_url_builder.build_url(path: '/v2'),
-            meta: {
-              version: VCAP::CloudController::Constants::API_VERSION
-            }
-          },
-
           cloud_controller_v3: {
             href: api_url_builder.build_url(path: '/v3'),
             meta: {
@@ -71,6 +64,10 @@ module VCAP::CloudController
         }
       }
 
+      if config.get(:temporary_enable_v2)
+        response[:links].merge!(cloud_controller_v2(api_url_builder))
+      end
+
       [200, Oj.dump(response, mode: :compat)]
     end
 
@@ -90,6 +87,17 @@ module VCAP::CloudController
       return if config.get(:routing_api).blank?
 
       { href: config.get(:routing_api, :url) }
+    end
+
+    def cloud_controller_v2(api_url_builder)
+      { cloud_controller_v2:
+          {
+            href: api_url_builder.build_url(path: '/v2'),
+            meta: {
+              version: VCAP::CloudController::Constants::API_VERSION
+            }
+          }
+      }
     end
   end
 end

@@ -26,6 +26,18 @@ module VCAP::CloudController
         )
       end
 
+      context 'temporary_enable_v2 is false' do
+        before do
+          TestConfig.override(temporary_enable_v2: false)
+        end
+
+        it 'returns no cloud controller v2 link with metadata' do
+          get '/'
+          hash = Oj.load(last_response.body)
+          expect(hash['links']['cloud_controller_v2']).to be_nil
+        end
+      end
+
       it 'returns a cloud controller v3 link with metadata' do
         get '/'
         hash = Oj.load(last_response.body)

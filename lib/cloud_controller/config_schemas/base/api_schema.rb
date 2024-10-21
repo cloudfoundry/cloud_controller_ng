@@ -322,6 +322,8 @@ module VCAP::CloudController
               reset_interval_in_minutes: Integer
             },
 
+            optional(:temporary_enable_v2) => bool,
+
             allow_app_ssh_access: bool,
 
             optional(:external_host) => String,
