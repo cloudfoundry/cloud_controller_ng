@@ -64,9 +64,7 @@ module VCAP::CloudController
         }
       }
 
-      if config.get(:temporary_enable_v2)
-        response[:links].merge!(cloud_controller_v2(api_url_builder))
-      end
+      response[:links].merge!(cloud_controller_v2(api_url_builder)) if config.get(:temporary_enable_v2)
 
       [200, Oj.dump(response, mode: :compat)]
     end
@@ -90,7 +88,8 @@ module VCAP::CloudController
     end
 
     def cloud_controller_v2(api_url_builder)
-      { cloud_controller_v2:
+      {
+        cloud_controller_v2:
           {
             href: api_url_builder.build_url(path: '/v2'),
             meta: {
