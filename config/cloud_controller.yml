@@ -279,6 +279,8 @@ rate_limiter_v2_api:
   global_admin_limit: 20000
   reset_interval_in_minutes: 60
 
+temporary_enable_v2: true
+
 max_concurrent_service_broker_requests: 0
 
 diego:
