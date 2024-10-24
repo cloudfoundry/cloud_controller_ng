@@ -110,6 +110,7 @@ each_run_block = proc do
     rspec_config.include TimeHelpers
     rspec_config.include LinkHelpers
     rspec_config.include BackgroundJobHelpers
+    rspec_config.include LogHelpers
 
     rspec_config.include ServiceBrokerHelpers
     rspec_config.include UserHelpers
