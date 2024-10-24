@@ -30,8 +30,9 @@ module VCAP::CloudController
         end
 
         it 'updates the latest security group update table' do
+          last_update = AsgLatestUpdate.last_update
           subject.apply_running(security_group, message, visible_space_guids:, all_spaces_visible:)
-          expect(AsgLatestUpdate.last_update).to be > 1.second.ago
+          expect(AsgLatestUpdate.last_update).to be > last_update
         end
       end
 
@@ -112,8 +113,9 @@ module VCAP::CloudController
         end
 
         it 'updates the latest security group update table' do
+          last_update = AsgLatestUpdate.last_update
           subject.apply_staging(security_group, message, visible_space_guids:, all_spaces_visible:)
-          expect(AsgLatestUpdate.last_update).to be > 1.second.ago
+          expect(AsgLatestUpdate.last_update).to be > last_update
         end
       end
 

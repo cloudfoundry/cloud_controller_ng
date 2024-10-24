@@ -11,8 +11,9 @@ module VCAP::CloudController
 
       context 'when there is no previous update' do
         it 'creates an asgLatestUpdate' do
+          last_update = AsgLatestUpdate.last_update
           AsgLatestUpdate.renew
-          expect(AsgLatestUpdate.last_update).to be > 1.second.ago
+          expect(AsgLatestUpdate.last_update).to be > last_update
         end
       end
     end

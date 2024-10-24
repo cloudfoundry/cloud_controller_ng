@@ -39,8 +39,9 @@ module VCAP::CloudController
         end
 
         it 'updates the latest security group update table' do
+          last_update = AsgLatestUpdate.last_update
           SecurityGroupUpdate.update(security_group, update_message)
-          expect(AsgLatestUpdate.last_update).to be > 1.second.ago
+          expect(AsgLatestUpdate.last_update).to be > last_update
         end
       end
 
