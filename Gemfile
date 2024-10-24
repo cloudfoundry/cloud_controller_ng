@@ -91,7 +91,7 @@ group :test do
   gem 'rubocop-rails', '~> 2.26'
   gem 'rubocop-rspec', '~> 3.1'
   gem 'rubocop-rspec_rails'
-  gem 'rubocop-sequel', '~> 0.3.4'
+  gem 'rubocop-sequel', '~> 0.3.5'
   gem 'timecop'
   gem 'webmock', '> 2.3.1'
 end
