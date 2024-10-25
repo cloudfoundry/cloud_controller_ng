@@ -33,6 +33,11 @@ module VCAP::CloudController
       rescue CloudController::Errors::ApiError => e
         raise e
       rescue StandardError => e
+        logger.error('stage.package.error',
+                     package_guid: staging_details.package.guid,
+                     staging_guid: staging_details.staging_guid,
+                     error: e,
+                     backtrace: e.backtrace)
         raise CloudController::Errors::ApiError.new_from_details('StagerError', e)
       end
 
