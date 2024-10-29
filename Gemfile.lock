@@ -487,7 +487,7 @@ GEM
       rubocop (~> 1.41)
     rubocop-factory_bot (2.26.1)
       rubocop (~> 1.61)
-    rubocop-rails (2.26.2)
+    rubocop-rails (2.27.0)
       activesupport (>= 4.2.0)
       rack (>= 1.1)
       rubocop (>= 1.52.0, < 2.0)
@@ -662,7 +662,7 @@ DEPENDENCIES
   rubocop (~> 1.67.0)
   rubocop-capybara
   rubocop-factory_bot
-  rubocop-rails (~> 2.26)
+  rubocop-rails (~> 2.27)
   rubocop-rspec (~> 3.2)
   rubocop-rspec_rails
   rubocop-sequel (~> 0.3.4)
