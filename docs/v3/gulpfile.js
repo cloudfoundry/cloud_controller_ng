@@ -1,10 +1,21 @@
 const fs = require('fs');
 const gulp = require('gulp');
-const {exec} = require('child_process');
+const { exec } = require('child_process');
 const express = require('express');
-const checkPages = require('check-pages');
 const { glob } = require('glob');
 const cheerio = require('cheerio');
+
+async function linkCheck(options) {
+  const { LinkChecker } = await import('linkinator');
+  const checker = new LinkChecker();
+
+  return await checker.check({
+    path: options.pageUrls[0],
+    linksToSkip: options.linksToSkip,
+    recurse: true,
+    concurrency: 5
+  });
+}
 
 function displayErrors(err, stdout, stderr) {
   if (err) {
@@ -32,13 +43,12 @@ function checkInternalLinksAndExit(htmlPath) {
       if (foundElementByName) return;
 
       const text = $(anchor).text();
-      badLinks.push({text, href});
+      badLinks.push({ text, href });
     }
   });
 
   $('h1,h2,h3').each((index, element) => {
     const id = $(element).attr('id');
-
     if (id) {
       if (seenHeadingIds.has(id)) duplicateHeadingIds.push(id);
       else seenHeadingIds.add(id);
@@ -48,7 +58,7 @@ function checkInternalLinksAndExit(htmlPath) {
   if (badLinks.length) {
     console.error('v3 docs error: Found invalid internal links');
     console.error('Make sure these `href`s correspond to the `id`s of real headings in the HTML:');
-    console.error(badLinks.map(({text, href}) => `  - [${text}](${href})`).join('\n'));
+    console.error(badLinks.map(({ text, href }) => `  - [${text}](${href})`).join('\n'));
   }
 
   if (duplicateHeadingIds.length) {
@@ -65,6 +75,7 @@ function checkInternalLinksAndExit(htmlPath) {
 function checkSyntaxErrorsAndExit(htmlPath) {
   const $ = cheerio.load(fs.readFileSync(htmlPath, 'utf8'));
   const syntaxErrors = $('code .err');
+
   if (syntaxErrors.length) {
     syntaxErrors.each((_index, errorElement) => {
       console.error('⚠️ v3 docs error: Found syntax error');
@@ -77,21 +88,34 @@ function checkSyntaxErrorsAndExit(htmlPath) {
   }
 }
 
-function checkPathAndExit(path, options, done) {
+async function checkPathAndExit(path, options, done) {
   const app = express();
   app.use(express.static(path));
-  const server = app.listen({port: 8001});
+  const server = app.listen({ port: 8001 });
+  
+  try {
+    const result = await linkCheck({
+      linksToSkip: options.linksToSkip,
+      pageUrls: (options.pageUrls && options.pageUrls.length) ? options.pageUrls : ['http://localhost:8001/']
+    });
 
-  return checkPages(console, options, (err, stdout, stderr) => {
     server.close();
     done();
 
-    if (err) {
-      return displayErrors(err, stdout, stderr);
+    if (result.passed === false) {
+      // linkinator gives us a state for each link, e.g. 'BROKEN', 'OK', 'SKIPPED' etc.
+      const brokenLinks = result.links.filter(x => x.state === 'BROKEN');
+      console.error(`Found ${brokenLinks.length} broken links:`);
+      brokenLinks.forEach((link) => {
+        console.error(`- ${link.url}: ${link.status}`);
+      });
+      process.exit(1);
     }
-
-    return true;
-  });
+  } catch (err) {
+    server.close();
+    done();
+    displayErrors(err, '', '');
+  }
 }
 
 gulp.task('build', cb => {
@@ -110,7 +134,7 @@ gulp.task('webserver', cb => {
     }
     cb();
   });
-  console.log('Your docs are waiting for you at http://localhost:8000')
+  console.log('Your docs are waiting for you at http://localhost:8000');
 });
 
 gulp.task('default', gulp.series('webserver'));
@@ -125,12 +149,18 @@ gulp.task('checkV3docs', gulp.series('build', done => {
     terse: true,
     onlySameDomain: true,
     pageUrls: ['http://localhost:8001/'],
-    linksToIgnore: ['http://localhost:8001/version/release-candidate']
+    linksToSkip: ['http://localhost:8001/version/release-candidate']
   }, done);
 }));
 
-gulp.task('checkV2docs', async(done) => {
-  const htmlFiles = await glob('../v2/**/*.html')
+gulp.task('checkV2docs', async (done) => {
+  const htmlFiles = await new Promise((resolve, reject) => {
+    glob('../v2/**/*.html', (err, matches) => {
+      if (err) return reject(err);
+      resolve(matches);
+    });
+  });
+
   const fixedFiles = htmlFiles.map(fname => {
     return 'http://localhost:8001' + fname.substr('../v2'.length);
   });
@@ -140,7 +170,8 @@ gulp.task('checkV2docs', async(done) => {
     summary: true,
     terse: true,
     onlySameDomain: true,
-    pageUrls: ['http://localhost:8001/'].concat(fixedFiles)
+    pageUrls: ['http://localhost:8001/'].concat(fixedFiles),
+    linksToSkip: []
   }, done);
 });
 
