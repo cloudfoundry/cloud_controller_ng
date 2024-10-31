@@ -149,6 +149,40 @@ module VCAP::Services::ServiceBrokers::V2
         end
       end
 
+      context 'X-Api-Info-Location' do
+        context 'when temporary_enable_v2 is true' do
+          before do
+            TestConfig.config[:temporary_enable_v2] = true
+          end
+
+          it 'sets the info location to /v2/info' do
+            make_request
+
+            expect(a_request(http_method, full_url).
+              with(basic_auth:).
+              with(query: hash_including({})).
+              with(headers: { 'X-Api-Info-Location' => 'api2.vcap.me/v2/info' })).
+              to have_been_made
+          end
+        end
+
+        context 'when temporary_enable_v2 is false' do
+          before do
+            TestConfig.config[:temporary_enable_v2] = false
+          end
+
+          it 'sets the info location to /' do
+            make_request
+
+            expect(a_request(http_method, full_url).
+              with(basic_auth:).
+              with(query: hash_including({})).
+              with(headers: { 'X-Api-Info-Location' => 'api2.vcap.me/' })).
+              to have_been_made
+          end
+        end
+      end
+
       context 'X-Broker-Api-Originating-Identity' do
         context 'when user guid is set in the SecurityContext' do
           before do
