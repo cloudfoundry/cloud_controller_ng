@@ -17,7 +17,8 @@ module VCAP::Services
         @auth_password = attrs.fetch(:auth_password)
         @verify_mode = verify_certs? ? OpenSSL::SSL::VERIFY_PEER : OpenSSL::SSL::VERIFY_NONE
         @broker_client_timeout = VCAP::CloudController::Config.config.get(:broker_client_timeout_seconds)
-        @header_api_info_location = "#{VCAP::CloudController::Config.config.get(:external_domain)}/v2/info"
+        api_info_path = VCAP::CloudController::Config.config.get(:temporary_enable_v2) ? '/v2/info' : '/'
+        @header_api_info_location = "#{VCAP::CloudController::Config.config.get(:external_domain)}#{api_info_path}"
         @logger = logger || Steno.logger('cc.service_broker.v2.http_client')
       end
 
