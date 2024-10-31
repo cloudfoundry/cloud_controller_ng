@@ -58,7 +58,14 @@ module VCAP::CloudController
               optional(:ca_file) => String,
               :client_timeout => Integer,
               optional(:symmetric_secret) => String,
-              optional(:symmetric_secret2) => String
+              optional(:symmetric_secret2) => String,
+              optional(:clients) => [
+                {
+                  'name' => String,
+                  'id' => String,
+                  'secret' => String
+                }
+              ]
             },
 
             logging: {

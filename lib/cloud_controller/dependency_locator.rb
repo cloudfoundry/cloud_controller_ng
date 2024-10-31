@@ -288,6 +288,19 @@ module CloudController
       )
     end
 
+    def uaa_shadow_user_creation_client
+      client = config.get(:uaa, :clients)&.find { |client| client['name'] == 'cloud_controller_shadow_user_creation' }
+
+      return unless client
+
+      UaaClient.new(
+        uaa_target: config.get(:uaa, :internal_url),
+        client_id: client['id'],
+        secret: client['secret'],
+        ca_file: config.get(:uaa, :ca_file)
+      )
+    end
+
     def routing_api_client
       return RoutingApi::DisabledClient.new if config.get(:routing_api).nil?
 
