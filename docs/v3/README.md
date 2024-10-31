@@ -6,7 +6,7 @@ Built with [Slate](https://github.com/lord/slate).
 Getting Started
 ---------------
 
-- Ensure you have Ruby 2.4.x installed
+- Ensure you have Ruby 3.2.x installed
 - Ensure you have Bundler installed and have run `bundle install` in this directory
 - Ensure you have the latest version of NodeJS installed
 - Get the npm dependencies: `npm install`

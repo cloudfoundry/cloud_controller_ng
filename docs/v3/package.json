@@ -18,15 +18,13 @@
     "url": "https://github.com/cloudfoundry-incubator/api-docs/issues"
   },
   "homepage": "https://github.com/cloudfoundry-incubator/api-docs#readme",
+  "type": "module",
   "devDependencies": {
-    "check-pages": "^0.10.0",
     "cheerio": "^1.0.0",
     "express": "^5.0.1",
     "glob": "^11.0.0",
     "gulp": "^5.0.0",
-    "gulp-cli": "^3.0.0"
-  },
-  "dependencies": {
-    "css-select": "^5.1.0"
+    "gulp-cli": "^3.0.0",
+    "linkinator": "^6.1.2"
   }
 }
