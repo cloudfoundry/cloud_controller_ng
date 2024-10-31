@@ -18,6 +18,7 @@
     "url": "https://github.com/cloudfoundry-incubator/api-docs/issues"
   },
   "homepage": "https://github.com/cloudfoundry-incubator/api-docs#readme",
+  "type": "module",
   "devDependencies": {
     "cheerio": "^1.0.0",
     "express": "^5.0.1",

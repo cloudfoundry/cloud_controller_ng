@@ -1,21 +1,11 @@
-const fs = require('fs');
-const gulp = require('gulp');
-const { exec } = require('child_process');
-const express = require('express');
-const { glob } = require('glob');
-const cheerio = require('cheerio');
+import { exec } from 'child_process';
+import { readFileSync } from 'fs';
+import gulp from 'gulp';
+import express from 'express';
+import { glob } from 'glob';
+import { LinkChecker } from 'linkinator';
 
-async function linkCheck(options) {
-  const { LinkChecker } = await import('linkinator');
-  const checker = new LinkChecker();
-
-  return await checker.check({
-    path: options.pageUrls[0],
-    linksToSkip: options.linksToSkip,
-    recurse: true,
-    concurrency: 5
-  });
-}
+const cheerio = await import('cheerio');
 
 function displayErrors(err, stdout, stderr) {
   if (err) {
@@ -30,7 +20,7 @@ function checkInternalLinksAndExit(htmlPath) {
   const duplicateHeadingIds = [];
   const seenHeadingIds = new Set();
   const badLinks = [];
-  const $ = cheerio.load(fs.readFileSync(htmlPath, 'utf8'));
+  const $ = cheerio.load(readFileSync(htmlPath, 'utf8'));
 
   $('a').each((index, anchor) => {
     const href = $(anchor).attr('href') || '';
@@ -73,7 +63,7 @@ function checkInternalLinksAndExit(htmlPath) {
 }
 
 function checkSyntaxErrorsAndExit(htmlPath) {
-  const $ = cheerio.load(fs.readFileSync(htmlPath, 'utf8'));
+  const $ = cheerio.load(readFileSync(htmlPath, 'utf8'));
   const syntaxErrors = $('code .err');
 
   if (syntaxErrors.length) {
@@ -84,7 +74,7 @@ function checkSyntaxErrorsAndExit(htmlPath) {
       console.error('👆👆👆👆👆👆👆👆👆👆👆👆👆👆👆👆👆\n')
     });
 
-    process.exit(1)
+    process.exit(1);
   }
 }
 
@@ -92,29 +82,57 @@ async function checkPathAndExit(path, options, done) {
   const app = express();
   app.use(express.static(path));
   const server = app.listen({ port: 8001 });
-  
+
+  const url = 'http://localhost:8001/';
+
+  const config = {
+    path: url,
+    linksToSkip: options.linksToSkip || [],
+    recurse: options.recurse,
+    silent: options.silent,
+    markdown: options.markdown,
+  };
+
   try {
-    const result = await linkCheck({
-      linksToSkip: options.linksToSkip,
-      pageUrls: (options.pageUrls && options.pageUrls.length) ? options.pageUrls : ['http://localhost:8001/']
-    });
+    const checker = new LinkChecker();
+
+    if (path === '../v2') {
+      const htmlFiles = await glob(path + '/**/*.html');
+      let allResults = { links: [] };
+      for (let file of htmlFiles) {
+        const fileUrl = url + file.substr(path.length);
+        const fileConfig = { ...config, path: fileUrl };
+        const results = await checker.check(fileConfig);
+        allResults.links = allResults.links.concat(results.links);
+      }
+      displayResults(allResults);
+    } else {
+      const results = await checker.check(config);
+      displayResults(results);
+    }
 
     server.close();
     done();
 
-    if (result.passed === false) {
-      // linkinator gives us a state for each link, e.g. 'BROKEN', 'OK', 'SKIPPED' etc.
-      const brokenLinks = result.links.filter(x => x.state === 'BROKEN');
-      console.error(`Found ${brokenLinks.length} broken links:`);
-      brokenLinks.forEach((link) => {
-        console.error(`- ${link.url}: ${link.status}`);
-      });
-      process.exit(1);
-    }
   } catch (err) {
     server.close();
-    done();
-    displayErrors(err, '', '');
+    done(err);
+    process.exit(1);
+  }
+}
+
+function displayResults(results) {
+  const totalLinks = results.links.length;
+  const brokenLinks = results.links.filter(link => link.state === 'BROKEN');
+
+  console.log(`Total Links Checked: ${totalLinks}`);
+  console.log(`Broken Links Found: ${brokenLinks.length}`);
+  if (brokenLinks.length > 0) {
+    console.log('Broken Links:');
+    brokenLinks.forEach(link => {
+      console.log(`  - ${link.url} (status: ${link.status})`);
+    });
+    process.exitCode = 1;
   }
 }
 
@@ -143,36 +161,29 @@ gulp.task('checkV3docs', gulp.series('build', done => {
   checkInternalLinksAndExit('build/index.html');
   checkSyntaxErrorsAndExit('build/index.html');
 
-  checkPathAndExit('build', {
-    checkLinks: true,
-    summary: true,
-    terse: true,
-    onlySameDomain: true,
-    pageUrls: ['http://localhost:8001/'],
-    linksToSkip: ['http://localhost:8001/version/release-candidate']
-  }, done);
+  try {
+    checkPathAndExit('build', {
+      linksToSkip: ['http://localhost:8001/version/release-candidate'],
+      recurse: true,
+      silent: true,
+      markdown: true,
+    }, done);
+  } catch (err) {
+    done(err);
+  }
 }));
 
-gulp.task('checkV2docs', async (done) => {
-  const htmlFiles = await new Promise((resolve, reject) => {
-    glob('../v2/**/*.html', (err, matches) => {
-      if (err) return reject(err);
-      resolve(matches);
-    });
-  });
-
-  const fixedFiles = htmlFiles.map(fname => {
-    return 'http://localhost:8001' + fname.substr('../v2'.length);
-  });
-
-  checkPathAndExit('../v2', {
-    checkLinks: true,
-    summary: true,
-    terse: true,
-    onlySameDomain: true,
-    pageUrls: ['http://localhost:8001/'].concat(fixedFiles),
-    linksToSkip: []
-  }, done);
+gulp.task('checkV2docs', done => {
+  try {
+    checkPathAndExit('../v2', {
+      linksToSkip: [],
+      recurse: true,
+      silent: true,
+      markdown: true,
+    }, done);
+  } catch (err) {
+    done(err);
+  }
 });
 
-gulp.task('checkdocs', gulp.parallel('checkV2docs', 'checkV3docs'));
+gulp.task('checkdocs', gulp.series('checkV2docs', 'checkV3docs'));
