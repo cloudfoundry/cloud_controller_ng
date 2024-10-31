@@ -49,9 +49,9 @@ GIT
 GEM
   remote: https://rubygems.org/
   specs:
-    actionpack (7.2.1.2)
-      actionview (= 7.2.1.2)
-      activesupport (= 7.2.1.2)
+    actionpack (7.2.2)
+      actionview (= 7.2.2)
+      activesupport (= 7.2.2)
       nokogiri (>= 1.8.5)
       racc
       rack (>= 2.2.4, < 3.2)
@@ -60,16 +60,17 @@ GEM
       rails-dom-testing (~> 2.2)
       rails-html-sanitizer (~> 1.6)
       useragent (~> 0.16)
-    actionview (7.2.1.2)
-      activesupport (= 7.2.1.2)
+    actionview (7.2.2)
+      activesupport (= 7.2.2)
       builder (~> 3.1)
       erubi (~> 1.11)
       rails-dom-testing (~> 2.2)
       rails-html-sanitizer (~> 1.6)
-    activemodel (7.2.1.2)
-      activesupport (= 7.2.1.2)
-    activesupport (7.2.1.2)
+    activemodel (7.2.2)
+      activesupport (= 7.2.2)
+    activesupport (7.2.2)
       base64
+      benchmark (>= 0.3)
       bigdecimal
       concurrent-ruby (~> 1.0, >= 1.3.1)
       connection_pool (>= 2.2.5)
@@ -309,7 +310,7 @@ GEM
     logger (1.6.1)
     loggregator_emitter (5.2.0)
       beefcake (~> 1.0.0)
-    loofah (2.22.0)
+    loofah (2.23.1)
       crass (~> 1.0.2)
       nokogiri (>= 1.12.0)
     machinist (1.0.6)
@@ -388,7 +389,7 @@ GEM
       rack (< 3)
     rack-test (2.1.0)
       rack (>= 1.3)
-    rackup (1.0.0)
+    rackup (1.0.1)
       rack (< 3)
       webrick
     rails-dom-testing (2.2.0)
@@ -398,9 +399,9 @@ GEM
     rails-html-sanitizer (1.6.0)
       loofah (~> 2.21)
       nokogiri (~> 1.14)
-    railties (7.2.1.2)
-      actionpack (= 7.2.1.2)
-      activesupport (= 7.2.1.2)
+    railties (7.2.2)
+      actionpack (= 7.2.2)
+      activesupport (= 7.2.2)
       irb (~> 1.13)
       rackup (>= 1.0.0)
       rake (>= 12.2)
@@ -587,7 +588,7 @@ GEM
       rexml
     yajl-ruby (1.4.3)
     yard (0.9.36)
-    zeitwerk (2.6.18)
+    zeitwerk (2.7.1)
 
 PLATFORMS
   ruby
@@ -647,7 +648,7 @@ DEPENDENCIES
   public_suffix
   puma
   rack-test
-  railties (~> 7.2.1)
+  railties (~> 7.2.2)
   rake
   redis
   rfc822
