@@ -8,6 +8,48 @@ module VCAP::CloudController
         @logger = logger
       end
 
+      # single dispatcher process runs with threaded workpool ( every 5 seconds )
+
+      # strategy:
+      #  rolling
+      #     max_in_flight: 1
+      #  canary
+      #     
+      #     max_in_flight: 1
+      #     step weights (Q: What if max_in_flight is greater than step weight?)
+      #     
+      #  blue-green (future) ??
+
+      # desired state vs current state
+      # old processes 
+      # interim web processes (??)
+
+      # states
+      # DEPLOYING_STATUS_REASON = 'DEPLOYING'.freeze,
+      # PAUSED_STATUS_REASON = 'PAUSED'.freeze,
+      # DEPLOYED_STATUS_REASON = 'DEPLOYED'.freeze,
+      # CANCELED_STATUS_REASON = 'CANCELED'.freeze,
+      # CANCELING_STATUS_REASON = 'CANCELING'.freeze,
+      # SUPERSEDED_STATUS_REASON = 'SUPERSEDED'.freeze
+
+
+      # prev deployment is ACTIVE prevous deployments
+      
+
+      # if prev deployment -> superseded state with (depploying -> deployed, cancelling -> canceled)
+
+      # on success
+      #  cleanup ALL other web processes.
+
+      # starting 
+
+
+      # cancel
+      # 1. find last web process
+      # 2. restore
+
+
+
       def scale
         with_error_logging('error-scaling-deployment') do
           scale_deployment
