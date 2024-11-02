@@ -159,9 +159,8 @@ module VCAP::CloudController::Metrics
 
       local_stats = Puma.stats_hash
       worker_count = local_stats[:booted_workers]
-      worker_stats = []
-      local_stats[:worker_status].each do |worker_status|
-        worker_stats << {
+      worker_stats = local_stats[:worker_status].map do |worker_status|
+        {
           started_at: Time.parse(worker_status[:started_at]).utc.to_i,
           index: worker_status[:index],
           pid: worker_status[:pid],
