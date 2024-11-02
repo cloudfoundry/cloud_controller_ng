@@ -77,10 +77,10 @@ Sequel/ConcurrentIndex: # Exclude for old Migrations
     - !ruby/regexp /db/migrations/202([0-2]|30[0-7]).+\.rb$/
     - spec/**/*
 
-Sequel/ColumnDefault: # Exclude for old Migrations
+Sequel/IrreversibleMigration: # Exclude for old Migrations
   Exclude:
     - !ruby/regexp /db/migrations/201([0-9]).+\.rb$/
-    - !ruby/regexp /db/migrations/202([0-2]).+\.rb$/
+    - !ruby/regexp /db/migrations/202([0-3]).+\.rb$/
     - spec/**/*
 
 Rails/HttpPositionalArguments: # Breaks Code for specs as it`s not rails used there it`s a test framework(racktest)
