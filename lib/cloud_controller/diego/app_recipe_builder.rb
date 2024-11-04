@@ -151,13 +151,15 @@ module VCAP::CloudController
 
       def generate_routes(info)
         http_routes = (info['http_routes'] || []).map do |i|
-          {
+          http_route = {
             hostnames: [i['hostname']],
             port: i['port'],
             route_service_url: i['route_service_url'],
             isolation_segment: IsolationSegmentSelector.for_space(process.space),
             protocol: i['protocol']
           }
+          http_route[:options] = i['options'] if i['options']
+          http_route
         end
 
         {

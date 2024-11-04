@@ -624,6 +624,136 @@ RSpec.describe 'Space Manifests' do
       end
     end
 
+    describe 'route options' do
+      context 'when an empty route options hash is provided' do
+        let(:yml_manifest) do
+          {
+            'applications' => [
+              {
+                'name' => app1_model.name,
+                'routes' => [
+                  { 'route' => "https://#{route.host}.#{route.domain.name}",
+                    'options' => {} }
+                ]
+              }
+            ]
+          }.to_yaml
+        end
+
+        it 'applies the manifest' do
+          post "/v3/spaces/#{space.guid}/actions/apply_manifest", yml_manifest, yml_headers(user_header)
+
+          expect(last_response.status).to eq(202)
+        end
+      end
+
+      context 'when an invalid route option is provided' do
+        let(:yml_manifest) do
+          {
+            'applications' => [
+              {
+                'name' => app1_model.name,
+                'routes' => [
+                  { 'route' => "https://#{route.host}.#{route.domain.name}",
+                    'options' => {
+                      'doesnt-exist' => 'doesnt-exist'
+                    } }
+                ]
+              }
+            ]
+          }.to_yaml
+        end
+
+        it 'returns a 422' do
+          post "/v3/spaces/#{space.guid}/actions/apply_manifest", yml_manifest, yml_headers(user_header)
+
+          expect(last_response).to have_status_code(422)
+          expect(last_response).to have_error_message('Routes contains invalid route options')
+        end
+      end
+
+      context 'loadbalancing-algorithm' do
+        context 'when the loadbalancing-algorithm is not supported' do
+          let(:yml_manifest) do
+            {
+              'applications' => [
+                {
+                  'name' => app1_model.name,
+                  'routes' => [
+                    { 'route' => "https://#{route.host}.#{route.domain.name}",
+                      'options' => {
+                        'loadbalancing-algorithm' => 'unsupported-lb-algorithm'
+                      } }
+                  ]
+                }
+              ]
+            }.to_yaml
+          end
+
+          it 'returns a 422' do
+            post "/v3/spaces/#{space.guid}/actions/apply_manifest", yml_manifest, yml_headers(user_header)
+
+            expect(last_response).to have_status_code(422)
+            expect(last_response).to have_error_message('Routes contains an invalid loadbalancing-algorithm option')
+          end
+        end
+
+        context 'when the loadbalancing-algorithm is supported' do
+          let(:yml_manifest) do
+            {
+              'applications' => [
+                { 'name' => app1_model.name,
+                  'routes' => [
+                    { 'route' => "https://round-robin-app.#{shared_domain.name}",
+                      'options' => {
+                        'loadbalancing-algorithm' => 'round-robin'
+                      } }
+                  ] }
+              ]
+            }.to_yaml
+          end
+
+          it 'adds and updates the loadbalancing-algorithm' do
+            post "/v3/spaces/#{space.guid}/actions/apply_manifest", yml_manifest, yml_headers(user_header)
+
+            expect(last_response.status).to eq(202)
+            job_guid = VCAP::CloudController::PollableJobModel.last.guid
+
+            Delayed::Worker.new.work_off
+            expect(VCAP::CloudController::PollableJobModel.find(guid: job_guid)).to be_complete, VCAP::CloudController::PollableJobModel.find(guid: job_guid).cf_api_error
+
+            app1_model.reload
+            expect(app1_model.routes.first.options).to eq({ 'lb_algo' => 'round-robin' })
+
+            ### update the loadbalancing-algorithm from the route
+
+            yml_manifest = {
+              'applications' => [
+                { 'name' => app1_model.name,
+                  'routes' => [
+                    { 'route' => "https://round-robin-app.#{shared_domain.name}",
+                      'options' => {
+                        'loadbalancing-algorithm' => 'least-connections'
+                      } }
+                  ] }
+              ]
+            }.to_yaml
+
+            post "/v3/spaces/#{space.guid}/actions/apply_manifest", yml_manifest, yml_headers(user_header)
+
+            expect(last_response.status).to eq(202)
+            job_guid = VCAP::CloudController::PollableJobModel.last.guid
+
+            Delayed::Worker.new.work_off
+            expect(VCAP::CloudController::PollableJobModel.find(guid: job_guid)).to be_complete, VCAP::CloudController::PollableJobModel.find(guid: job_guid).cf_api_error
+
+            app1_model.reload
+            expect(app1_model.routes.first.options).to eq({ 'lb_algo' => 'least-connections' })
+          end
+        end
+      end
+    end
+
     describe 'audit events' do
       let!(:process1) { nil }
 

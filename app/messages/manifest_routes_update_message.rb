@@ -1,4 +1,5 @@
 require 'messages/base_message'
+require 'messages/route_options_message'
 require 'cloud_controller/app_manifest/manifest_route'
 
 module VCAP::CloudController
@@ -7,9 +8,20 @@ module VCAP::CloudController
 
     class ManifestRoutesYAMLValidator < ActiveModel::Validator
       def validate(record)
-        return unless is_not_array?(record.routes) || contains_non_route_hash_values?(record.routes)
+        if is_not_array?(record.routes) || contains_non_route_hash_values?(record.routes)
+          record.errors.add(:routes, message: 'must be a list of route objects')
+          return
+        end
 
-        record.errors.add(:routes, message: 'must be a list of route objects')
+        if contains_invalid_route_options?(record.routes)
+          record.errors.add(:routes, message: 'contains invalid route options')
+          return
+        end
+
+        return unless contains_invalid_lb_algo?(record.routes)
+
+        record.errors.add(:routes, message: 'contains an invalid loadbalancing-algorithm option')
+        nil
       end
 
       def is_not_array?(routes)
@@ -18,6 +30,26 @@ module VCAP::CloudController
 
       def contains_non_route_hash_values?(routes)
         routes.any? { |r| !(r.is_a?(Hash) && r[:route].present?) }
+      end
+
+      def contains_invalid_route_options?(routes)
+        routes.any? do |r|
+          next unless r[:options]
+
+          return true unless r[:options].is_a?(Hash)
+
+          return false if r[:options].empty?
+
+          return r[:options].keys.all? { |key| RouteOptionsMessage::VALID_MANIFEST_ROUTE_OPTIONS.exclude?(key) }
+        end
+      end
+
+      def contains_invalid_lb_algo?(routes)
+        routes.any? do |r|
+          next unless r[:options] && r[:options][:'loadbalancing-algorithm']
+
+          return true if r[:options][:'loadbalancing-algorithm'] && RouteOptionsMessage::VALID_LOADBALANCING_ALGORITHMS.exclude?(r[:options][:'loadbalancing-algorithm'])
+        end
       end
     end
 
@@ -32,10 +64,12 @@ module VCAP::CloudController
 
     def manifest_route_mappings
       @manifest_route_mappings ||= routes.map do |route|
-        {
-          route: ManifestRoute.parse(route[:route]),
+        r = {
+          route: ManifestRoute.parse(route[:route], route[:options]),
           protocol: route[:protocol]
         }
+        r[:options] = route[:options] unless route[:options].nil?
+        r
       end
     end
 

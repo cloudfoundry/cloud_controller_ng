@@ -1,4 +1,5 @@
 require 'messages/metadata_base_message'
+require 'messages/route_options_message'
 
 module VCAP::CloudController
   class RouteCreateMessage < MetadataBaseMessage
@@ -10,6 +11,7 @@ module VCAP::CloudController
       path
       port
       relationships
+      options
     ]
 
     validates :host,
@@ -56,6 +58,7 @@ module VCAP::CloudController
 
     validates_with NoAdditionalKeysValidator
     validates_with RelationshipValidator
+    validates_with OptionsValidator
 
     delegate :space_guid, to: :relationships_message
     delegate :domain_guid, to: :relationships_message
@@ -63,6 +66,10 @@ module VCAP::CloudController
     def relationships_message
       # need the & instead of doing if requested(rel..) because we can't delegate if rl_msg nil
       @relationships_message ||= Relationships.new(relationships&.deep_symbolize_keys)
+    end
+
+    def options_message
+      @options_message ||= RouteOptionsMessage.new(options&.deep_symbolize_keys)
     end
 
     def wildcard?

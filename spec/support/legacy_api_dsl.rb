@@ -4,7 +4,7 @@ module LegacyApiDsl
   extend ActiveSupport::Concern
 
   def validate_response(model, json, expected_values: {}, ignored_attributes: [], expected_attributes: nil)
-    ignored_attributes.push :guid
+    ignored_attributes.push :guid, :options
     (expected_attributes || expected_attributes_for_model(model)).each do |expected_attribute|
       # refactor: pass exclusions, and figure out which are valid to not be there
       next if ignored_attributes.include? expected_attribute
