@@ -1,3 +1,5 @@
+# This class is used in capi-release (e.g. https://github.com/cloudfoundry/capi-release/blob/b817791b0f4d8780304cef148f1aeb3f2a944af8/jobs/cloud_controller_ng/templates/shutdown_drain.rb.erb#L8)
+
 require 'logger'
 require 'fileutils'
 

@@ -77,9 +77,5 @@ module VCAP::CloudController
     def dependency_locator
       CloudController::DependencyLocator.instance
     end
-
-    def staging_timeout
-      @config.get(:staging, :timeout_in_seconds)
-    end
   end
 end

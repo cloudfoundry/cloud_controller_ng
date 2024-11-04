@@ -192,14 +192,6 @@ module VCAP::CloudController
       def routing_api_client
         CloudController::DependencyLocator.instance.routing_api_client
       end
-
-      def domain_overlap(parsed_domain, system_config)
-        overlap = false
-        parsed_domain.each do |d|
-          overlap = true if d['name'].include?(system_config)
-        end
-        overlap
-      end
     end
   end
 end

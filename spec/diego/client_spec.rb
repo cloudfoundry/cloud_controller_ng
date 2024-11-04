@@ -34,49 +34,6 @@ module Diego
       end
     end
 
-    describe '#ping' do
-      let(:response_body) { Bbs::Models::PingResponse.encode(Bbs::Models::PingResponse.new(available: true)).to_s }
-      let(:response_status) { 200 }
-
-      before do
-        stub_request(:post, "#{bbs_url}/v1/ping").to_return(status: response_status, body: response_body)
-      end
-
-      it 'returns a ping response' do
-        expect(client.ping.available).to be_truthy
-        expect(a_request(:post, "#{bbs_url}/v1/ping")).to have_been_made.once
-      end
-
-      context 'when it does not return successfully' do
-        let(:response_status) { 500 }
-        let(:response_body) { 'Internal Server Error' }
-
-        it 'raises' do
-          expect { client.ping }.to raise_error(ResponseError, /status: 500, body: Internal Server Error/)
-        end
-      end
-
-      context 'when it fails to make the request' do
-        before do
-          stub_request(:post, "#{bbs_url}/v1/ping").to_raise(StandardError.new('error message'))
-          allow(subject).to receive(:sleep) { |n| Timecop.travel(n) }
-        end
-
-        it 'raises' do
-          expect { client.ping }.to raise_error(RequestError, /error message/)
-          expect(a_request(:post, "#{bbs_url}/v1/ping")).to have_been_made.times(17)
-        end
-      end
-
-      context 'when decoding the response fails' do
-        let(:response_body) { 'potato' }
-
-        it 'raises' do
-          expect { client.ping }.to raise_error(DecodeError)
-        end
-      end
-    end
-
     describe '#upsert_domain' do
       let(:response_body) { Bbs::Models::UpsertDomainResponse.encode(Bbs::Models::UpsertDomainResponse.new(error: nil)).to_s }
       let(:response_status) { 200 }
@@ -887,7 +844,6 @@ module Diego
       end
 
       it 'sets TCPSocket:connect_timeout to HTTPClient:connect_timeout / 2' do
-        expect { client.ping }.to raise_error('done!')
         expect(TCPSocket).to have_received(:new).with(bbs_host, bbs_port, { connect_timeout: timeout / 2 }).exactly(17).times
       end
     end
