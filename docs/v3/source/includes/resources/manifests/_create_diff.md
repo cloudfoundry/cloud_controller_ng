@@ -60,7 +60,6 @@ Name           | Type | Description
 **value** | _any_ | For `add` and `replace` operations, the new value; otherwise key is omitted
 
 #### Definition
-
 `POST /v3/spaces/:guid/manifest_diff`
 
 #### Permitted roles
