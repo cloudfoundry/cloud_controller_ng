@@ -1,0 +1,5 @@
+
+/* Ensures that divs with the class 'highlight' don't take up the full width of the page preventing excessive whitespace */
+.highlight {
+    display: inline;
+}
