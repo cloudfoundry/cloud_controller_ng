@@ -5,7 +5,6 @@ gem 'allowy', '>= 2.1.0'
 gem 'clockwork', require: false
 gem 'cloudfront-signer'
 gem 'digest-xxhash'
-gem 'em-http-request', '~> 1.1'
 gem 'eventmachine', '~> 1.2.7'
 gem 'fluent-logger'
 gem 'googleapis-common-protos', '>= 1.3.12'
