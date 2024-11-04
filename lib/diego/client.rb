@@ -20,15 +20,6 @@ module Diego
       )
     end
 
-    def ping
-      response = with_request_error_handling do
-        client.post(Routes::PING)
-      end
-
-      validate_status_200!(response)
-      protobuf_decode!(response.body, Bbs::Models::PingResponse)
-    end
-
     def upsert_domain(domain:, ttl:)
       request = protobuf_encode!({ domain: domain, ttl: ttl.to_i }, Bbs::Models::UpsertDomainRequest)
 
