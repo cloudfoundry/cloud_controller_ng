@@ -21,6 +21,8 @@ module VCAP::CloudController
             default_health_check_timeout: Integer,
             maximum_health_check_timeout: Integer,
 
+            optional(:temporary_enable_v2) => bool,
+
             uaa: {
               internal_url: String,
               optional(:ca_file) => String,
