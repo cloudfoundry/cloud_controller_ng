@@ -208,6 +208,56 @@ module VCAP::CloudController
           expect(msg.errors.full_messages).to include("Route protocol must be 'http1', 'http2' or 'tcp'.")
         end
       end
+
+      context 'when a route contains empty route options' do
+        let(:body) do
+          { 'routes' =>
+              [
+                { 'route' => 'existing.example.com',
+                  'options' => {} }
+              ] }
+        end
+
+        it 'returns true' do
+          msg = ManifestRoutesUpdateMessage.new(body)
+
+          expect(msg.valid?).to be(true)
+        end
+      end
+
+      context 'when a route contains invalid route options' do
+        let(:body) do
+          { 'routes' =>
+              [
+                { 'route' => 'existing.example.com',
+                  'options' => { 'invalid' => 'invalid' } }
+              ] }
+        end
+
+        it 'returns true' do
+          msg = ManifestRoutesUpdateMessage.new(body)
+
+          expect(msg.valid?).to be(false)
+        end
+      end
+
+      context 'when a route contains a valid loadbalancing-algorithm' do
+        let(:body) do
+          { 'routes' =>
+              [
+                { 'route' => 'existing.example.com',
+                  'options' => {
+                    'loadbalancing-algorithm' => 'round-robin'
+                  } }
+              ] }
+        end
+
+        it 'returns true' do
+          msg = ManifestRoutesUpdateMessage.new(body)
+
+          expect(msg.valid?).to be(true)
+        end
+      end
     end
   end
 end

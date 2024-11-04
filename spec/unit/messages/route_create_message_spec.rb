@@ -19,6 +19,9 @@ module VCAP::CloudController
             metadata: {
               labels: { potato: 'yam' },
               annotations: { style: 'mashed' }
+            },
+            options: {
+              lb_algo: 'round-robin'
             }
           }
         end
@@ -351,6 +354,111 @@ module VCAP::CloudController
           it 'is not valid' do
             expect(subject).not_to be_valid
             expect(subject.errors[:relationships]).to include("Unknown field(s): 'other'")
+          end
+        end
+      end
+
+      context 'options' do
+        context 'when not provided' do
+          let(:params) do
+            {
+              host: 'some-host',
+              relationships: {
+                space: { data: { guid: 'space-guid' } },
+                domain: { data: { guid: 'domain-guid' } }
+              }
+            }
+          end
+
+          it 'is valid' do
+            expect(subject).to be_valid
+          end
+        end
+
+        context 'when empty' do
+          let(:params) do
+            {
+              host: 'some-host',
+              relationships: {
+                space: { data: { guid: 'space-guid' } },
+                domain: { data: { guid: 'domain-guid' } }
+              },
+              options: {}
+            }
+          end
+
+          it 'is valid' do
+            expect(subject).to be_valid
+          end
+        end
+
+        context 'when options has invalid key' do
+          let(:params) do
+            {
+              host: 'some-host',
+              relationships: {
+                space: { data: { guid: 'space-guid' } },
+                domain: { data: { guid: 'domain-guid' } }
+              },
+              options: { foobar: 'baz' }
+            }
+          end
+
+          it 'is not valid' do
+            expect(subject).not_to be_valid
+            expect(subject.errors[:options]).to include("Unknown field(s): 'foobar'")
+          end
+        end
+
+        context 'when lb_algo has value round-robin' do
+          let(:params) do
+            {
+              host: 'some-host',
+              relationships: {
+                space: { data: { guid: 'space-guid' } },
+                domain: { data: { guid: 'domain-guid' } }
+              },
+              options: { lb_algo: 'round-robin' }
+            }
+          end
+
+          it 'is valid' do
+            expect(subject).to be_valid
+          end
+
+          context 'when lb_algo has value least-connections' do
+            let(:params) do
+              {
+                host: 'some-host',
+                relationships: {
+                  space: { data: { guid: 'space-guid' } },
+                  domain: { data: { guid: 'domain-guid' } }
+                },
+                options: { lb_algo: 'least-connections' }
+              }
+            end
+
+            it 'is valid' do
+              expect(subject).to be_valid
+            end
+          end
+
+          context 'when lb_algo has invalid value' do
+            let(:params) do
+              {
+                host: 'some-host',
+                relationships: {
+                  space: { data: { guid: 'space-guid' } },
+                  domain: { data: { guid: 'domain-guid' } }
+                },
+                options: { lb_algo: 'random' }
+              }
+            end
+
+            it 'is not valid' do
+              expect(subject).not_to be_valid
+              expect(subject.errors[:options]).to include("Lb algo 'random' is not a supported load-balancing algorithm")
+            end
           end
         end
       end

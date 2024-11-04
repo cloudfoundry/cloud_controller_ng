@@ -43,6 +43,7 @@ module VCAP::CloudController
             info['router_group_guid'] = r.domain.router_group_guid if r.domain.is_a?(SharedDomain) && !r.domain.router_group_guid.nil?
             info['port'] = get_port_to_use(route_mapping)
             info['protocol'] = route_mapping.protocol
+            info['options'] = r.options if r.options
             info
           end
         end

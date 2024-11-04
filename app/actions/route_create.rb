@@ -15,7 +15,8 @@ module VCAP::CloudController
         path: message.path || '',
         port: port(message, domain),
         space: space,
-        domain: domain
+        domain: domain,
+        options: message.options
       )
 
       Route.db.transaction do

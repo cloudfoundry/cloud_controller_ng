@@ -6,8 +6,8 @@ module VCAP::CloudController
     SUPPORTED_TCP_SCHEMES = %w[tcp unspecified].freeze
     WILDCARD_HOST = '*'.freeze
 
-    def self.parse(string)
-      parsed_uri = Addressable::URI.heuristic_parse(string, scheme: 'unspecified')
+    def self.parse(route, options=nil)
+      parsed_uri = Addressable::URI.heuristic_parse(route, scheme: 'unspecified')
 
       attrs = if parsed_uri.nil?
                 {}
@@ -15,11 +15,22 @@ module VCAP::CloudController
                 parsed_uri.to_hash
               end
 
-      attrs[:full_route] = string
+      attrs[:full_route] = route
+
+      if options
+        attrs[:options] = {}
+        attrs[:options][:lb_algo] = options[:'loadbalancing-algorithm'] if options[:'loadbalancing-algorithm']
+      end
+
       ManifestRoute.new(attrs)
     end
 
     def valid?
+      if @attrs[:options] && !@attrs[:options].empty?
+        return false if @attrs[:options].keys.any? { |key| RouteOptionsMessage::VALID_ROUTE_OPTIONS.exclude?(key) }
+        return false if @attrs[:options][:lb_algo] && RouteOptionsMessage::VALID_LOADBALANCING_ALGORITHMS.exclude?(@attrs[:options][:lb_algo])
+      end
+
       return false if @attrs[:host].blank?
 
       return SUPPORTED_TCP_SCHEMES.include?(@attrs[:scheme]) if @attrs[:port]
@@ -43,7 +54,8 @@ module VCAP::CloudController
       {
         candidate_host_domain_pairs: pairs,
         port: @attrs[:port],
-        path: @attrs[:path]
+        path: @attrs[:path],
+        options: @attrs[:options]
       }
     end
 

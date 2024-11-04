@@ -58,6 +58,16 @@ module VCAP::CloudController
             expect(manifest_route.valid?).to be(true)
           end
         end
+
+        context 'when there is a valid loadbalancing-algorithm' do
+          let(:route) { 'http://example.com' }
+          let(:options) { { 'loadbalancing-algorithm' => 'round-robin' } }
+
+          it 'is valid' do
+            manifest_route = ManifestRoute.parse(route, options)
+            expect(manifest_route.valid?).to be(true)
+          end
+        end
       end
 
       describe 'invalid routes' do
@@ -106,6 +116,16 @@ module VCAP::CloudController
             expect(manifest_route.valid?).to be(false)
           end
         end
+
+        context 'when there is an invalid loadbalancing-algorithm' do
+          let(:route) { 'http://example.com' }
+          let(:options) { { 'loadbalancing-algorithm': 'invalid' } }
+
+          it 'is invalid' do
+            manifest_route = ManifestRoute.parse(route, options)
+            expect(manifest_route.valid?).to be(false)
+          end
+        end
       end
     end
 
@@ -119,7 +139,8 @@ module VCAP::CloudController
                                         { host: 'host', domain: 'sub.some-domain.com' }
                                       ],
                                       port: nil,
-                                      path: '/path'
+                                      path: '/path',
+                                      options: nil
                                     })
       end
 
@@ -131,7 +152,8 @@ module VCAP::CloudController
                                         { host: '*', domain: 'sub.some-domain.com' }
                                       ],
                                       port: nil,
-                                      path: '/path'
+                                      path: '/path',
+                                      options: nil
                                     })
       end
 
@@ -144,7 +166,8 @@ module VCAP::CloudController
                                         { host: 'potato', domain: 'sub.some-domain.com' }
                                       ],
                                       port: nil,
-                                      path: '/path'
+                                      path: '/path',
+                                      options: nil
                                     })
       end
 
@@ -157,7 +180,22 @@ module VCAP::CloudController
                                         { host: 'potato', domain: 'sub.some-domain.com' }
                                       ],
                                       port: 1234,
-                                      path: ''
+                                      path: '',
+                                      options: nil
+                                    })
+      end
+
+      it 'parses a route with a loadbalancing-algorithm into route components' do
+        route = ManifestRoute.parse('http://potato.sub.some-domain.com', { 'loadbalancing-algorithm': 'round-robin' })
+
+        expect(route.to_hash).to eq({
+                                      candidate_host_domain_pairs: [
+                                        { host: '', domain: 'potato.sub.some-domain.com' },
+                                        { host: 'potato', domain: 'sub.some-domain.com' }
+                                      ],
+                                      port: nil,
+                                      path: '',
+                                      options: { lb_algo: 'round-robin' }
                                     })
       end
     end
