@@ -66,12 +66,12 @@ module VCAP::Services::ServiceBrokers::V2
           to have_been_made
       end
 
-      it 'sets the X-Api-Info-Location header to the /v2/info endpoint at the external address' do
+      it 'sets the X-Api-Info-Location header to the correct endpoint at the external address' do
         make_request
         expect(a_request(http_method, full_url).
           with(basic_auth:).
           with(query: hash_including({})).
-          with(headers: { 'X-Api-Info-Location' => "#{TestConfig.config[:external_domain]}/v2/info" })).
+          with(headers: { 'X-Api-Info-Location' => "#{TestConfig.config[:external_domain]}#{TestConfig.config[:temporary_enable_v2] ? '/v2/info' : '/'}" })).
           to have_been_made
       end
 
@@ -86,7 +86,8 @@ module VCAP::Services::ServiceBrokers::V2
         expect(fake_logger).to have_received(:debug).with(match(/X-VCAP-Request-ID"=>"[[:alnum:]-]+/))
         expect(fake_logger).to have_received(:debug).with(match(/X-Broker-API-Request-Identity"=>"[[:alnum:]-]+/))
         expect(fake_logger).to have_received(:debug).with(match(/X-Broker-Api-Version"=>"2\.15/))
-        expect(fake_logger).to have_received(:debug).with(match(%r{X-Api-Info-Location"=>"api2\.vcap\.me/v2/info}))
+        api_info_path = TestConfig.config[:temporary_enable_v2] ? '/v2/info' : '/'
+        expect(fake_logger).to have_received(:debug).with(match(/X-Api-Info-Location"=>"api2\.vcap\.me#{api_info_path}/))
       end
 
       context 'when an https URL is used' do
@@ -144,6 +145,40 @@ module VCAP::Services::ServiceBrokers::V2
               expect(http_client).to have_received(:ssl_config).exactly(2).times
               expect(ssl_config).to have_received(:verify_mode=).with(OpenSSL::SSL::VERIFY_PEER)
             end
+          end
+        end
+      end
+
+      context 'X-Api-Info-Location' do
+        context 'when temporary_enable_v2 is true' do
+          before do
+            TestConfig.config[:temporary_enable_v2] = true
+          end
+
+          it 'sets the info location to /v2/info' do
+            make_request
+
+            expect(a_request(http_method, full_url).
+              with(basic_auth:).
+              with(query: hash_including({})).
+              with(headers: { 'X-Api-Info-Location' => 'api2.vcap.me/v2/info' })).
+              to have_been_made
+          end
+        end
+
+        context 'when temporary_enable_v2 is false' do
+          before do
+            TestConfig.config[:temporary_enable_v2] = false
+          end
+
+          it 'sets the info location to /' do
+            make_request
+
+            expect(a_request(http_method, full_url).
+              with(basic_auth:).
+              with(query: hash_including({})).
+              with(headers: { 'X-Api-Info-Location' => 'api2.vcap.me/' })).
+              to have_been_made
           end
         end
       end
