@@ -63,45 +63,4 @@ RSpec.describe 'Sequel::Plugins::VcapValidations' do
       end
     end
   end
-
-  describe 'validates_email' do
-    before do
-      @c.define_validations { validates_email(:val) }
-    end
-
-    it 'allows a valid email' do
-      @m.val = 'some_guy@foo.com'
-      expect(@m).to be_valid
-    end
-
-    it 'does not allow an email with no domain' do
-      @m.val = 'some_guy'
-      expect(@m).not_to be_valid
-    end
-
-    it 'does not allow an email with no user' do
-      @m.val = '@somedomain.com'
-      expect(@m).not_to be_valid
-    end
-
-    it 'does not allow a malformed email with multiple @' do
-      @m.val = 'foo@some@domain.com'
-      expect(@m).not_to be_valid
-    end
-
-    it 'allows a nil email' do
-      @m.val = nil
-      expect(@m).to be_valid
-    end
-
-    it 'does not allow an empty email' do
-      @m.val = ''
-      expect(@m).not_to be_valid
-    end
-
-    it 'does not allow an email with only spaces' do
-      @m.val = ' '
-      expect(@m).not_to be_valid
-    end
-  end
 end

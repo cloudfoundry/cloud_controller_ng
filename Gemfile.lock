@@ -425,7 +425,6 @@ GEM
     reverse_markdown (2.1.1)
       nokogiri
     rexml (3.3.9)
-    rfc822 (0.1.5)
     roodi (5.0.0)
       ruby_parser (~> 3.2, >= 3.2.2)
     rspec (3.13.0)
@@ -640,7 +639,6 @@ DEPENDENCIES
   railties (~> 7.2.1)
   rake
   redis
-  rfc822
   roodi
   rspec (~> 3.13.0)
   rspec-collection_matchers
