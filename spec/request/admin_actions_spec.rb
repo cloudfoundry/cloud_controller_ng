@@ -14,6 +14,7 @@ RSpec.describe 'admin actions' do
       h = Hash.new(
         { code: 403 }.freeze
       )
+
       h['admin'] = {
         code: 202
       }
