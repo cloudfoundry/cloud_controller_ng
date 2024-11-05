@@ -13,6 +13,7 @@ module VCAP::CloudController
         elsif record.username || record.origin
           record.errors.add(:origin, message: "'username' is missing") unless record.username
           record.errors.add(:username, message: "'origin' is missing") unless record.origin
+          record.errors.add(:origin, message: "cannot be 'uaa' when creating a user by username") unless record.origin != 'uaa'
         else
           record.errors.add(:guid, message: "either 'guid' or 'username' and 'origin' must be provided")
         end

@@ -150,6 +150,17 @@ module VCAP::CloudController
             expect(subject.errors[:origin]).to include("'username' is missing")
           end
         end
+
+        context 'when equal to "uaa"' do
+          let(:params) do
+            { origin: 'uaa' }
+          end
+
+          it 'is not valid' do
+            expect(subject).not_to be_valid
+            expect(subject.errors[:origin]).to include("cannot be 'uaa' when creating a user by username")
+          end
+        end
       end
     end
   end
