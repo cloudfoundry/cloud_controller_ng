@@ -1,11 +1,4 @@
 GIT
-  remote: https://github.com/cloudfoundry/vcap-concurrency.git
-  revision: 2a5b0179642cb3d3e7f912a6453ec5731979d115
-  ref: 2a5b0179
-  specs:
-    vcap-concurrency (0.1.0)
-
-GIT
   remote: https://github.com/fog/fog-azure-rm.git
   revision: 379e352cce817f8e67618062bf7095095d8f5c4c
   branch: fog-arm-cf
@@ -341,7 +334,6 @@ GEM
     mustermann (3.0.0)
       ruby2_keywords (~> 0.0.1)
     mysql2 (0.5.6)
-    net-ssh (7.3.0)
     netaddr (2.0.6)
     netrc (0.11.0)
     newrelic_rpm (9.15.0)
@@ -634,7 +626,6 @@ DEPENDENCIES
   mock_redis
   multipart-parser
   mysql2 (~> 0.5.6)
-  net-ssh
   netaddr (>= 2.0.4)
   newrelic_rpm
   nokogiri (>= 1.10.5)
@@ -682,7 +673,6 @@ DEPENDENCIES
   talentbox-delayed_job_sequel (~> 4.3.0)
   thin
   timecop
-  vcap-concurrency!
   vmstat (~> 2.3)
   webmock (> 2.3.1)
 

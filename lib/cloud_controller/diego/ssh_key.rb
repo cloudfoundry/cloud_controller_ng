@@ -1,4 +1,3 @@
-require 'net/ssh'
 require 'sshkey'
 
 module VCAP
