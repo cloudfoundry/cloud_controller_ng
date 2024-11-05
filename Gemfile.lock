@@ -1,11 +1,4 @@
 GIT
-  remote: https://github.com/cloudfoundry/vcap-concurrency.git
-  revision: 2a5b0179642cb3d3e7f912a6453ec5731979d115
-  ref: 2a5b0179
-  specs:
-    vcap-concurrency (0.1.0)
-
-GIT
   remote: https://github.com/fog/fog-azure-rm.git
   revision: 379e352cce817f8e67618062bf7095095d8f5c4c
   branch: fog-arm-cf
@@ -682,7 +675,6 @@ DEPENDENCIES
   talentbox-delayed_job_sequel (~> 4.3.0)
   thin
   timecop
-  vcap-concurrency!
   vmstat (~> 2.3)
   webmock (> 2.3.1)
 
