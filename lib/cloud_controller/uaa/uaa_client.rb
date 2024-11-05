@@ -96,6 +96,10 @@ module VCAP::CloudController
       raise UaaUnavailable
     end
 
+    def create_shadow_user(username, origin)
+      with_cache_retry { scim.add(:user, { username: username, origin: origin, emails: [{ primary: true, value: username}]}) }
+    end
+
     def info
       CF::UAA::Info.new(uaa_target, uaa_connection_opts)
     end
