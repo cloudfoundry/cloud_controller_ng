@@ -39,7 +39,7 @@ class UsersController < ApplicationController
 
   def create
     message = UserCreateMessage.new(hashed_params[:body])
-    unauthorized! unless permission_queryer.can_write_globally? || (permission_queryer.is_org_manager? && !message.guid)
+    unauthorized! unless permission_queryer.can_write_globally? || org_managers_can_create_users?(message:)
     unprocessable!(message.errors.full_messages) unless message.valid?
 
     user = UserCreate.new.create(message:)
@@ -92,5 +92,9 @@ class UsersController < ApplicationController
 
   def user_not_found!
     resource_not_found!(:user)
+  end
+
+  def org_managers_can_create_users?(message:)
+    VCAP::CloudController::Config.config.get(:allow_user_creation_by_org_manager) && permission_queryer.is_org_manager? && !message.guid
   end
 end

@@ -68,6 +68,8 @@ module VCAP::CloudController
               ]
             },
 
+            optional(:allow_user_creation_by_org_manager) => bool,
+
             logging: {
               level: String, # debug, info, etc.
               file: String, # Log file to use
