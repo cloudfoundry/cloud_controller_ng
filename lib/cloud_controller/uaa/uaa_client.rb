@@ -98,6 +98,9 @@ module VCAP::CloudController
 
     def create_shadow_user(username, origin)
       with_cache_retry { scim.add(:user, { username: username, origin: origin, emails: [{ primary: true, value: username}]}) }
+    rescue CF::UAA::BadTarget => e
+      logger.error("UAA request for creating a user failed: #{e.inspect}")
+      raise UaaUnavailable
     end
 
     def info
