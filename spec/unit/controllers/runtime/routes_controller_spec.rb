@@ -244,8 +244,7 @@ module VCAP::CloudController
 
           expect(last_response).to have_status_code 400
           expect(last_response.body).to include 'AssociationNotEmpty'
-          expect(last_response.body).to include
-          'Please delete the service_instance associations for your routes'
+          expect(last_response.body).to include 'Please delete the service_instance associations for your routes'
         end
       end
     end

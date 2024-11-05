@@ -2925,8 +2925,7 @@ module VCAP::CloudController
 
             expect(last_response).to have_status_code 400
             expect(last_response.body).to include 'AssociationNotEmpty'
-            expect(last_response.body).to include
-            'Please delete the service_bindings, service_keys, and routes associations for your service_instances'
+            expect(last_response.body).to include 'Please delete the service_bindings, service_keys, and routes associations for your service_instances'
           end
 
           context 'and recursive=true' do
@@ -3018,8 +3017,7 @@ module VCAP::CloudController
 
               expect(last_response).to have_status_code 400
               expect(last_response.body).to include 'AssociationNotEmpty'
-              expect(last_response.body).to include
-              'Please delete the service_bindings, service_keys, and routes associations for your service_instances'
+              expect(last_response.body).to include 'Please delete the service_bindings, service_keys, and routes associations for your service_instances'
             end
           end
 
@@ -3052,8 +3050,7 @@ module VCAP::CloudController
 
               expect(last_response).to have_status_code 400
               expect(last_response.body).to include 'AssociationNotEmpty'
-              expect(last_response.body).to include
-              'Please delete the service_bindings, service_keys, and routes associations for your service_instances'
+              expect(last_response.body).to include 'Please delete the service_bindings, service_keys, and routes associations for your service_instances'
             end
           end
 
@@ -3697,8 +3694,7 @@ module VCAP::CloudController
 
             expect(last_response).to have_status_code 400
             expect(last_response.body).to include 'AssociationNotEmpty'
-            expect(last_response.body).to include
-            'Please delete the service_bindings, service_keys, and routes associations for your service_instances'
+            expect(last_response.body).to include 'Please delete the service_bindings, service_keys, and routes associations for your service_instances'
           end
 
           context 'when recursive=true' do

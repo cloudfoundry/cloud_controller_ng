@@ -83,7 +83,7 @@ group :test do
   gem 'rspec-collection_matchers'
   gem 'rspec-instafail'
   gem 'rspec-its'
-  gem 'rspec-rails', '~> 6.1.4'
+  gem 'rspec-rails', '~> 7.0.1'
   gem 'rspec-wait'
   gem 'rubocop', '~> 1.67.0'
   gem 'rubocop-capybara'
