@@ -25,13 +25,9 @@ module VCAP::CloudController
         private
 
         def build_relations
-          data = []
-
-          @relationships.each do |relationship|
-            data << { guid: relationship.guid }
+          @relationships.map do |relationship|
+            { guid: relationship.guid }
           end
-
-          data
         end
 
         def build_links

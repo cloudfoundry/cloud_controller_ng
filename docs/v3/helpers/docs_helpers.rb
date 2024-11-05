@@ -13,14 +13,13 @@ module DocsHelpers
   def extract_table_of_contents(html)
     page = Nokogiri::HTML(html)
 
-    headings = []
-    page.css('h1,h2,h3').each do |heading|
-      headings.push({
-                      id: heading.attribute('id').to_s,
-                      text: heading.content,
-                      level: heading.name[1].to_i,
-                      children: []
-                    })
+    headings = page.css('h1,h2,h3').map do |heading|
+      {
+        id: heading.attribute('id').to_s,
+        text: heading.content,
+        level: heading.name[1].to_i,
+        children: []
+      }
     end
 
     [3, 2].each do |heading_level|
