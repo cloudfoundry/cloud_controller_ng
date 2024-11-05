@@ -38,10 +38,10 @@ class UsersController < ApplicationController
   end
 
   def create
-    unauthorized! unless permission_queryer.can_write_globally?
-
     message = UserCreateMessage.new(hashed_params[:body])
+    unauthorized! unless permission_queryer.can_write_globally? || (permission_queryer.is_org_manager? && !message.guid)
     unprocessable!(message.errors.full_messages) unless message.valid?
+
     user = UserCreate.new.create(message:)
 
     render status: :created, json: Presenters::V3::UserPresenter.new(user, uaa_users: User.uaa_users_info([user.guid]))
