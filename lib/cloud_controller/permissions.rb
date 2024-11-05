@@ -97,6 +97,10 @@ class VCAP::CloudController::Permissions
     roles.admin?
   end
 
+  def is_org_manager?
+    VCAP::CloudController::OrganizationManager.where(user_id: @user.id).any?
+  end
+
   def readable_org_guids
     readable_org_guids_query.select_map(:guid)
   end
