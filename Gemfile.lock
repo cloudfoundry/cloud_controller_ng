@@ -289,7 +289,7 @@ GEM
     json-diff (0.4.1)
     json-schema (5.0.1)
       addressable (~> 2.8)
-    json_pure (2.7.6)
+    json_pure (2.8.1)
     jwt (2.8.1)
       base64
     kramdown (2.4.0)
