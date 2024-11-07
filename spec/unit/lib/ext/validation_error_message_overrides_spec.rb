@@ -35,15 +35,6 @@ RSpec.describe Membrane::Schemas::Regexp::MatchValidator do
       end
     end
 
-    context 'with a custom readable_regexp for an email' do
-      let(:regexp) { VCAP::RestAPI::Message::EMAIL }
-
-      it 'generates a readable message' do
-        expected_emsg = 'must be a valid email'
-        expect { subject.fail!(regexp, object) }.to raise_error(Membrane::SchemaValidationError, /#{expected_emsg}/)
-      end
-    end
-
     context 'with a custom readable_regexp for a git URL' do
       let(:regexp) { VCAP::RestAPI::Message::GIT_URL }
 
