@@ -1,3 +1,5 @@
+# Git ignore file
+
 build/
 .bundle/
 doc/
