@@ -1,0 +1,13 @@
+# This is a dummy workflow just to appear in the UI
+# The actual workflow is defined on the gh-pages branch - deploy_v3_docs.yml
+name: Deploy V3 API Docs to Pages
+
+on:
+  workflow_dispatch:
+
+jobs:
+  dummy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Dummy Step
+        run: echo "This is a dummy action to ensure visibility"
