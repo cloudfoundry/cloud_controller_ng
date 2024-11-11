@@ -1,4 +1,3 @@
-require 'vcap/services/api'
 require 'jobs/audit_event_job'
 require 'actions/services/service_instance_create'
 require 'actions/services/service_instance_update'

@@ -95,10 +95,6 @@ module VCAP::CloudController
       val
     end
 
-    def requester
-      VCAP::Services::Api::SynchronousHttpRequest
-    end
-
     delegate :service, to: :service_plan
 
     delegate :service_broker, to: :service_plan
