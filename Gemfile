@@ -17,7 +17,6 @@ gem 'json-schema'
 gem 'loggregator_emitter', '~> 5.0'
 gem 'membrane', '~> 1.0'
 gem 'mime-types', '~> 3.6'
-gem 'mock_redis'
 gem 'multipart-parser'
 gem 'netaddr', '>= 2.0.4'
 gem 'net-ssh'
@@ -60,7 +59,6 @@ gem 'fog-local'
 gem 'fog-openstack'
 
 gem 'cf-uaa-lib', '~> 4.0.4'
-gem 'vcap-concurrency', git: 'https://github.com/cloudfoundry/vcap-concurrency.git', ref: '2a5b0179'
 
 group :db do
   gem 'mysql2', '~> 0.5.6'
@@ -74,6 +72,7 @@ end
 group :test do
   gem 'codeclimate-test-reporter', '>= 1.0.8', require: false
   gem 'machinist', '~> 1.0.6'
+  gem 'mock_redis'
   gem 'parallel_tests'
   gem 'rack-test'
   gem 'rspec', '~> 3.13.0'
