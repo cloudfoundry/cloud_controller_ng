@@ -110,9 +110,10 @@ GEM
     bit-struct (0.17)
     builder (3.3.0)
     byebug (11.1.3)
-    cf-uaa-lib (4.0.4)
+    cf-uaa-lib (4.0.6)
       addressable (~> 2.8, >= 2.8.0)
       httpclient (~> 2.8, >= 2.8.2.4)
+      json_pure (~> 2.7)
       multi_json (>= 1.12.1, < 1.16)
     clockwork (3.0.2)
       activesupport
@@ -585,7 +586,7 @@ DEPENDENCIES
   allowy (>= 2.1.0)
   azure-storage-blob!
   byebug
-  cf-uaa-lib (~> 4.0.4)
+  cf-uaa-lib (~> 4.0.6)
   clockwork
   cloudfront-signer
   codeclimate-test-reporter (>= 1.0.8)
