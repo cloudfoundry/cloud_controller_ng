@@ -10850,6 +10850,7 @@ In the case where the specified isolation segment is the system-wide shared segm
     <span class="na">disk_quota</span><span class="pi">:</span> <span class="s">512M</span>
     <span class="na">health-check-http-endpoint</span><span class="pi">:</span> <span class="s">/healthcheck</span>
     <span class="na">health-check-type</span><span class="pi">:</span> <span class="s">http</span>
+    <span class="na">health-check-interval</span><span class="pi">:</span> <span class="m">5</span>
     <span class="na">health-check-invocation-timeout</span><span class="pi">:</span> <span class="m">10</span>
     <span class="na">instances</span><span class="pi">:</span> <span class="m">3</span>
     <span class="na">memory</span><span class="pi">:</span> <span class="s">500M</span>
@@ -11028,6 +11029,11 @@ In the case where the specified isolation segment is the system-wide shared segm
 <td><strong>health-check-http-endpoint</strong></td>
 <td><em>string</em></td>
 <td>Endpoint called to determine if the app is healthy</td>
+</tr>
+<tr>
+<td><strong>health-check-interval</strong></td>
+<td><em>integer</em></td>
+<td>The interval in seconds between health check requests</td>
 </tr>
 <tr>
 <td><strong>health-check-invocation-timeout</strong></td>
