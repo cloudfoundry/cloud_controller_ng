@@ -105,7 +105,7 @@ GEM
     backport (1.2.0)
     base64 (0.2.0)
     beefcake (1.0.0)
-    benchmark (0.3.0)
+    benchmark (0.4.0)
     bigdecimal (3.1.8)
     bit-struct (0.17)
     builder (3.3.0)
@@ -358,7 +358,7 @@ GEM
     pry-byebug (3.10.1)
       byebug (~> 11.0)
       pry (>= 0.13, < 0.15)
-    psych (5.1.2)
+    psych (5.2.0)
       stringio
     public_suffix (6.0.1)
     puma (6.4.3)
@@ -372,7 +372,7 @@ GEM
       rack (< 3)
     rack-test (2.1.0)
       rack (>= 1.3)
-    rackup (1.0.0)
+    rackup (1.0.1)
       rack (< 3)
       webrick
     rails-dom-testing (2.2.0)
@@ -403,7 +403,7 @@ GEM
     redis-client (0.22.2)
       connection_pool
     regexp_parser (2.9.2)
-    reline (0.5.10)
+    reline (0.5.11)
       io-console (~> 0.5)
     representable (3.2.0)
       declarative (< 0.1.0)
@@ -436,10 +436,10 @@ GEM
     rspec-its (2.0.0)
       rspec-core (>= 3.13.0)
       rspec-expectations (>= 3.13.0)
-    rspec-mocks (3.13.1)
+    rspec-mocks (3.13.2)
       diff-lcs (>= 1.2.0, < 2.0)
       rspec-support (~> 3.13.0)
-    rspec-rails (7.0.1)
+    rspec-rails (7.1.0)
       actionpack (>= 7.0)
       activesupport (>= 7.0)
       railties (>= 7.0)
@@ -487,7 +487,7 @@ GEM
     ruby_parser (3.8.3)
       sexp_processor (~> 4.1)
     rubyzip (2.3.2)
-    securerandom (0.3.1)
+    securerandom (0.3.2)
     sequel (5.86.0)
       bigdecimal
     sequel_pg (1.17.1)
@@ -539,7 +539,7 @@ GEM
     steno (1.3.5)
       fluent-logger
       yajl-ruby (~> 1.0)
-    stringio (3.1.1)
+    stringio (3.1.2)
     talentbox-delayed_job_sequel (4.3.0)
       delayed_job (~> 4.1.0)
       sequel (>= 3.38, < 6.0)
@@ -565,12 +565,12 @@ GEM
       addressable (>= 2.8.0)
       crack (>= 0.3.2)
       hashdiff (>= 0.4.0, < 2.0.0)
-    webrick (1.8.2)
+    webrick (1.9.0)
     xml-simple (1.1.9)
       rexml
     yajl-ruby (1.4.3)
     yard (0.9.36)
-    zeitwerk (2.6.18)
+    zeitwerk (2.7.1)
 
 PLATFORMS
   ruby
@@ -637,7 +637,7 @@ DEPENDENCIES
   rspec-collection_matchers
   rspec-instafail
   rspec-its
-  rspec-rails (~> 7.0.1)
+  rspec-rails (~> 7.1.0)
   rspec-wait
   rspec_api_documentation (>= 6.1.0)
   rubocop (~> 1.68.0)
