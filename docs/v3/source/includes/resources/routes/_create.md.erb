@@ -21,6 +21,9 @@ curl "https://api.example.org/v3/routes" \
         "data": { "guid": "space-guid" }
       }
     },
+    "options": {
+        "lb_algo": "round-robin"
+    }
     "metadata": {
       "labels": { "key": "value" },
       "annotations": { "note": "detailed information"}
@@ -44,20 +47,21 @@ Content-Type: application/json
 
 #### Required parameters
 
-| Name                                      | Type                                           | Description                                                                                                |
-| ----------------------------------------- | ---------------------------------------------- | ---------------------------------------------------------------------------------------------------------- |
-| **relationships.space**                   | [_to-one relationship_](#to-one-relationships) | A relationship to the space containing the route; routes can only be mapped to destinations in that space |
-| **relationships.domain**                  | [_to-one relationship_](#to-one-relationships) | A relationship to the domain of the route                                                                 |
+| Name                     | Type                                           | Description                                                                                               |
+|--------------------------|------------------------------------------------|-----------------------------------------------------------------------------------------------------------|
+| **relationships.space**  | [_to-one relationship_](#to-one-relationships) | A relationship to the space containing the route; routes can only be mapped to destinations in that space |
+| **relationships.domain** | [_to-one relationship_](#to-one-relationships) | A relationship to the domain of the route                                                                 |
 
 #### Optional parameters
 
-| Name                     | Type                                | Description                       |
-| ------------------------ | ----------------------------------- | --------------------------------- |
-| **host**                 | _string_                            | The host component for the route; not compatible with routes specifying the `tcp` protocol |
-| **path**                 | _string_                            | The path component for the route; should begin with a `/` and not compatible with routes specifying the `tcp` protocol |
-| **port**                 | _integer_                           | The port the route will listen on; only compatible with routes leveraging a domain that supports the `tcp` protocol. For `tcp` domains, a port will be randomly assigned if not specified
-| **metadata.annotations** | [_annotation object_](#annotations) | Annotations applied to the route |
-| **metadata.labels**      | [_label object_](#labels)           | Labels applied to the route      |
+| Name                     | Type                                               | Description                                                                                                                                                                               |
+|--------------------------|----------------------------------------------------|-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| **host**                 | _string_                                           | The host component for the route; not compatible with routes specifying the `tcp` protocol                                                                                                |
+| **path**                 | _string_                                           | The path component for the route; should begin with a `/` and not compatible with routes specifying the `tcp` protocol                                                                    |
+| **port**                 | _integer_                                          | The port the route will listen on; only compatible with routes leveraging a domain that supports the `tcp` protocol. For `tcp` domains, a port will be randomly assigned if not specified |
+| **options**              | [_route option object_](#the-route-options-object) | Options applied to the route                                                                                                                                                              |
+| **metadata.annotations** | [_annotation object_](#annotations)                | Annotations applied to the route                                                                                                                                                          |
+| **metadata.labels**      | [_label object_](#labels)                          | Labels applied to the route                                                                                                                                                               |
 
 #### Permitted roles
 
