@@ -8,7 +8,7 @@ module CloudFoundry
       let(:path_info) { '/v3/service_instances' }
       let(:user_guid) { SecureRandom.uuid }
       let(:user_env) { { 'cf.user_guid' => user_guid, 'PATH_INFO' => path_info } }
-      let(:fake_request) { instance_double(ActionDispatch::Request, fullpath: '/v3/service_instances', method: 'POST') }
+      let(:fake_request) { instance_double(ActionDispatch::Request, fullpath: '/v3/service_instances', method: 'PUT') }
       let(:max_concurrent_requests) { 1 }
       let(:broker_timeout) { 60 }
       let(:middleware) do
@@ -25,6 +25,8 @@ module CloudFoundry
       end
 
       describe 'included requests' do
+        let(:request_method) { 'PUT' }
+
         it 'allows a service broker request within the limit' do
           status, = middleware.call(user_env)
           expect(status).to eq(200)
@@ -114,6 +116,21 @@ module CloudFoundry
               end
             end
           end
+        end
+      end
+
+      describe 'excluded requests' do
+        let(:request_method) { 'POST' }
+
+        it 'allows requests that are no longer rate limited' do
+          status, = middleware.call(user_env)
+          expect(status).to eq(200)
+
+          status, = middleware.call(user_env)
+          expect(status).to eq(200)
+
+          statuses = 2.times.map { middleware.call(user_env).first }
+          expect(statuses).to match_array([200, 200])
         end
       end
 
