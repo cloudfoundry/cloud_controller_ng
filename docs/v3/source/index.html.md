@@ -243,6 +243,7 @@ includes:
   - resources/routes/header
   - resources/routes/object
   - resources/routes/destination_object
+  - resources/routes/route_options_object
   - resources/routes/create
   - resources/routes/get
   - resources/routes/list

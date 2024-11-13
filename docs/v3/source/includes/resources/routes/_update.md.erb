@@ -10,6 +10,9 @@ curl "https://api.example.org/v3/routes/[guid]" \
   -H "Authorization: bearer [token]" \
   -H "Content-type: application/json" \
   -d '{
+    "options": {
+      "lb_algo": "round-robin"
+    }
     "metadata": {
       "labels": {"key": "value"},
       "annotations": {"note": "detailed information"}
@@ -33,14 +36,15 @@ Content-Type: application/json
 
 #### Optional parameters
 
-| Name                                      | Type                                | Description                                                              | Default |
-| -----------                               | --------                            | ------------------------------------------------------------------------ | ------- |
-| **metadata.labels**                       | [_label object_](#labels)           | Labels applied to the route                                            |         |
-| **metadata.annotations**                  | [_annotation object_](#annotations) | Annotations applied to the route                                       |         |
+| Name                       | Type                                                | Description                      | Default |
+|----------------------------|-----------------------------------------------------|----------------------------------|---------|
+| **options**                | [_route option object_](#the-route-options-object)  | Options applied to the route     |         |
+| **metadata.labels**        | [_label object_](#labels)                           | Labels applied to the route      |         |
+| **metadata.annotations**   | [_annotation object_](#annotations)                 | Annotations applied to the route |         |
 
 #### Permitted roles
 
- |
+|
 ----- |
 Admin |
 Space Developer |
