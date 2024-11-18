@@ -11,7 +11,7 @@ module VCAP::CloudController
 
     def expire_droplets!(app)
       expirable_candidates = DropletModel.
-                             where(state: DropletModel::STAGED_STATE, app_guid: app.guid).
+                             where(state: [DropletModel::STAGED_STATE, DropletModel::FAILED_STATE], app_guid: app.guid).
                              exclude(guid: app.droplet_guid)
 
       return if expirable_candidates.count < droplets_storage_count
@@ -28,7 +28,7 @@ module VCAP::CloudController
       current_package_guid = app.droplet.try(:package_guid)
 
       expirable_candidates = PackageModel.
-                             where(state: PackageModel::READY_STATE, app_guid: app.guid).
+                             where(state: [PackageModel::READY_STATE, PackageModel::FAILED_STATE], app_guid: app.guid).
                              exclude(guid: current_package_guid)
 
       return if expirable_candidates.count < packages_storage_count
@@ -37,7 +37,7 @@ module VCAP::CloudController
 
       packages_to_expire.each do |package|
         package.update(state: PackageModel::EXPIRED_STATE)
-        enqueue_package_delete_job(package.guid)
+        enqueue_package_delete_job(package.guid) if package.package_hash
       end
     end
 
