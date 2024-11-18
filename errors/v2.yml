@@ -1372,7 +1372,7 @@
 430002:
   name: CNBDownloadBuildpackFailed 
   http_code: 400
-  message: "cnb: downloading buildpacks failed: Please verify that the provided buildpacks are valid and credentials (if necessary) have been provided."
+  message: "cnb: downloading buildpacks failed: This may be caused by a wrong url, invalid buildpack or invalid credentials. Check the staging logs for more details."
 
 430003:
   name: CNBDetectFailed            
