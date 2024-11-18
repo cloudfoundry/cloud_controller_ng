@@ -12,8 +12,8 @@ module CloudFoundry
         start_time = Time.now
 
         status, headers, body = @app.call(env)
-
-        time_taken = Time.now - start_time
+        # convert to milliseconds
+        time_taken = (Time.now - start_time) * 1000
         @request_logs.complete_request(request_id, status, env, time_taken)
 
         [status, headers, body]

@@ -28,10 +28,11 @@ module VCAP::CloudController
 
       def complete_request(request_id, status, env, time_taken)
         return if @incomplete_requests.delete(request_id).nil?
+
         request = ActionDispatch::Request.new(env)
-        @logger.info("Completed #{status} vcap-request-id: #{request_id}", 
+        @logger.info("Completed #{status} vcap-request-id: #{request_id}",
                      { status_code: status,
-                       time_taken: time_taken,
+                       time_taken_in_ms: time_taken,
                        request_method: request.request_method,
                        request_fullpath: request.filtered_path })
       end
