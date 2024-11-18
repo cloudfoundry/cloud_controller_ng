@@ -47,13 +47,13 @@ module VCAP::CloudController::Logs
 
           it 'logs the completion of the request' do
             request_logs.complete_request(request_id, status, env, time_taken)
-           expect(logger).to have_received(:info).with(
-            /\ACompleted 200 vcap-request-id: ID/,
-            time_taken_in_ms: 30,
-            request_method: 'request_method',
-            request_fullpath: 'filtered_path',
-            status_code: 200
-           )
+            expect(logger).to have_received(:info).with(
+             /\ACompleted 200 vcap-request-id: ID/,
+             time_taken_in_ms: 30,
+             request_method: 'request_method',
+             request_fullpath: 'filtered_path',
+             status_code: 200
+            )
           end
         end
 
