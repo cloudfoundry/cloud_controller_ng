@@ -4,18 +4,18 @@ module VCAP::CloudController
       @overwritten_job_priorities = config.get(:jobs, :priorities)
     end
 
-    def get(job_display_name)
-      return unless overwritten?(job_display_name)
+    def get(job_name)
+      return unless overwritten?(job_name)
 
-      @overwritten_job_priorities[job_display_name.to_sym]
+      @overwritten_job_priorities[job_name.to_sym]
     end
 
     private
 
-    def overwritten?(job_display_name)
-      return false if @overwritten_job_priorities.nil? || job_display_name.nil?
+    def overwritten?(job_name)
+      return false if @overwritten_job_priorities.nil? || job_name.nil?
 
-      @overwritten_job_priorities.key?(job_display_name.to_sym)
+      @overwritten_job_priorities.key?(job_name.to_sym)
     end
 
     attr_reader :config

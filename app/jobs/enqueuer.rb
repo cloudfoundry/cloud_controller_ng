@@ -58,7 +58,7 @@ module VCAP::CloudController
       end
 
       def job_priority
-        @priority_overwriter.get(@job.try(:display_name))
+        @priority_overwriter.get(@job.try(:display_name)) || @priority_overwriter.get(@job.try(:job_name_in_configuration)) || @priority_overwriter.get(@job.class.name)
       end
 
       def run_immediately
