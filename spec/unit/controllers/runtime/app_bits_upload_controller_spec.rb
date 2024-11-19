@@ -117,7 +117,7 @@ module VCAP::CloudController
           end
 
           context 'with at least one resource and no application' do
-            let(:req_body) { { resources: Oj.dump([{ 'fn' => 'lol', 'sha1' => 'abc', 'size' => 2048 }]) } }
+            let(:req_body) { { resources: Oj.dump([{ 'fn' => 'lol', 'sha1' => 'da39a3ee5e6b4b0d3255bfef95601890afd80709', 'size' => 2048 }]) } }
 
             before do
               # rack_test overrides 'CONTENT_TYPE' header with 'boundary' which causes errors when the request does not contain an application
@@ -132,7 +132,7 @@ module VCAP::CloudController
           end
 
           context 'with at least one resource and an application' do
-            let(:req_body) { { resources: Oj.dump([{ 'fn' => 'lol', 'sha1' => 'abc', 'size' => 2048 }]), application: valid_zip } }
+            let(:req_body) { { resources: Oj.dump([{ 'fn' => 'lol', 'sha1' => 'da39a3ee5e6b4b0d3255bfef95601890afd80709', 'size' => 2048 }]), application: valid_zip } }
 
             it 'succeeds to upload' do
               make_request

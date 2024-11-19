@@ -26,10 +26,19 @@ module CloudController::Packager
       )
     end
 
-    let(:fingerprints) do
+    let(:corrupted_fingerprints) do
       path = File.join(local_tmp_dir, 'content')
       sha  = 'some_fake_sha'
       File.write(path, 'content')
+      global_app_bits_cache.cp_to_blobstore(path, sha)
+
+      [{ 'fn' => 'path/to/content.txt', 'size' => 123, 'sha1' => sha }]
+    end
+
+    let(:fingerprints) do
+      path = File.join(local_tmp_dir, 'content')
+      File.write(path, 'content')
+      sha = Digester.new.digest_path(path)
       global_app_bits_cache.cp_to_blobstore(path, sha)
 
       [{ 'fn' => 'path/to/content.txt', 'size' => 123, 'sha1' => sha }]
@@ -134,6 +143,18 @@ module CloudController::Packager
           it 'packs a zip with the cached files' do
             packer.send_package_to_blobstore(blobstore_key, uploaded_files_path, cached_files_fingerprints)
             expect(package_blobstore.exists?(blobstore_key)).to be true
+          end
+        end
+
+        context 'and there are corrupted cached files' do
+          let(:cached_files_fingerprints) { corrupted_fingerprints }
+
+          it 'deletes the offending files from the blobstore and errors with a ChecksumMismatch error' do
+            expect(global_app_bits_cache).to receive(:delete).with('some_fake_sha')
+            expect do
+              packer.send_package_to_blobstore(blobstore_key, uploaded_files_path, cached_files_fingerprints)
+            end.
+              to raise_error(CloudController::Errors::ApiError, /One or more cached resources/)
           end
         end
       end
