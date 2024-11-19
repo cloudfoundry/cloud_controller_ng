@@ -92,7 +92,9 @@ module VCAP::CloudController
               domain: existing_domain,
               manifest_triggered: true
             )
-          elsif route[:options] != manifest_route[:options]
+          elsif manifest_route[:options] && route[:options] != manifest_route[:options]
+            # remove nil values from options
+            manifest_route[:options] = manifest_route[:options].compact
             message = RouteUpdateMessage.new({
                                                'options' => manifest_route[:options]
                                              })
