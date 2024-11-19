@@ -549,5 +549,34 @@ module VCAP::CloudController
         expect(billing_manager_result).to contain_exactly(org_billing_manager.id, other_user4.id)
       end
     end
+
+    describe '#create_uaa_shadow_user' do
+      let(:uaa_client) { instance_double(UaaClient) }
+
+      before do
+        allow(CloudController::DependencyLocator.instance).to receive(:uaa_shadow_user_creation_client).and_return(uaa_client)
+      end
+
+      context 'when uaa client returns shadow user info' do
+        before do
+          allow(uaa_client).to receive(:create_shadow_user).and_return({ 'id' => 'shadow-user-id' })
+        end
+
+        it 'returns shadow user info' do
+          shadow_user = User.create_uaa_shadow_user('shadow-user', 'idp.local')
+          expect(shadow_user['id']).to eq('shadow-user-id')
+        end
+      end
+
+      context 'when uaa client raises UaaUnavailable' do
+        before do
+          allow(uaa_client).to receive(:create_shadow_user).and_raise(UaaUnavailable)
+        end
+
+        it 'raises UaaUnavailable' do
+          expect { User.create_uaa_shadow_user('shadow-user', 'idp.local') }.to raise_error(UaaUnavailable)
+        end
+      end
+    end
   end
 end

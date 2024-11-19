@@ -289,7 +289,7 @@ module CloudController
     end
 
     def uaa_shadow_user_creation_client
-      client = config.get(:uaa, :clients)&.find { |client| client['name'] == 'cloud_controller_shadow_user_creation' }
+      client = config.get(:uaa, :clients)&.find { |client_config| client_config['name'] == 'cloud_controller_shadow_user_creation' }
 
       return unless client
 

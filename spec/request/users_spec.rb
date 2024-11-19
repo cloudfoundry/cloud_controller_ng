@@ -720,7 +720,7 @@ RSpec.describe 'Users Request' do
         let(:uaa_client_id) { 'cc_routing' }
 
         before do
-          allow(uaa_client).to receive_messages(users_for_ids: {}, get_clients: [{ client_id: uaa_client_id }])
+          allow(uaa_client).to receive_messages(users_for_ids: {})
         end
 
         let(:api_call) { ->(user_headers) { post '/v3/users', params.to_json, user_headers } }
@@ -812,6 +812,159 @@ RSpec.describe 'Users Request' do
 
           expect(parsed_response['errors'][0]['detail']).to eq "User with guid '#{existing_user.guid}' already exists."
         end
+      end
+    end
+
+    context 'when "allow_user_creation_by_org_manager" is enabled' do
+      before do
+        TestConfig.override(allow_user_creation_by_org_manager: true)
+        allow(CloudController::DependencyLocator.instance).to receive(:uaa_shadow_user_creation_client).and_return(uaa_client)
+      end
+
+      describe 'when creating a user by guid' do
+        before do
+          allow(uaa_client).to receive(:users_for_ids).and_return({})
+        end
+
+        let(:api_call) { ->(user_headers) { post '/v3/users', params.to_json, user_headers } }
+
+        let(:user_json) do
+          {
+            guid: params[:guid],
+            created_at: iso8601,
+            updated_at: iso8601,
+            username: nil,
+            presentation_name: params[:guid],
+            origin: nil,
+            metadata: {
+              labels: {},
+              annotations: {}
+            },
+            links: {
+              self: { href: %r{#{Regexp.escape(link_prefix)}/v3/users/#{params[:guid]}} }
+            }
+          }
+        end
+
+        let(:expected_codes_and_responses) do
+          h = Hash.new(
+            code: 403
+          )
+          h['admin'] = {
+            code: 201,
+            response_object: user_json
+          }
+          h
+        end
+
+        it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS
+      end
+
+      describe 'when creating a user by username and origin' do
+        let(:params) do
+          {
+            username: 'some-user',
+            origin: 'idp.local'
+          }
+        end
+        let(:user_guid) { 'new-user-guid' }
+
+        let(:api_call) { ->(user_headers) { post '/v3/users', params.to_json, user_headers } }
+
+        let(:user_json) do
+          {
+            guid: user_guid,
+            created_at: iso8601,
+            updated_at: iso8601,
+            username: params[:username],
+            presentation_name: params[:username],
+            origin: params[:origin],
+            metadata: {
+              labels: {},
+              annotations: {}
+            },
+            links: {
+              self: { href: %r{#{Regexp.escape(link_prefix)}/v3/users/#{user_guid}} }
+            }
+          }
+        end
+
+        let(:expected_codes_and_responses) do
+          h = Hash.new(
+            code: 403
+          )
+          h['admin'] = {
+            code: 201,
+            response_object: user_json
+          }
+          h['org_manager'] = {
+            code: 201,
+            response_object: user_json
+          }
+          h
+        end
+
+        before do
+          allow(uaa_client).to receive(:users_for_ids).with(['new-user-guid']).and_return(
+            {
+              user_guid => {
+                'username' => 'some-user',
+                'origin' => 'idp.local'
+              }
+            }
+          )
+          allow(uaa_client).to receive(:create_shadow_user).and_return({ 'id' => user_guid })
+        end
+
+        it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS
+      end
+
+      context 'when parameters are invalid' do
+        let(:params) do
+          {
+            guid: user_guid,
+            username: 'some-user',
+            origin: 'idp.local'
+          }
+        end
+        let(:user_guid) { 'new-user-guid' }
+
+        let(:api_call) { ->(user_headers) { post '/v3/users', params.to_json, user_headers } }
+
+        let(:user_json) do
+          {
+            guid: user_guid,
+            created_at: iso8601,
+            updated_at: iso8601,
+            username: params[:username],
+            presentation_name: params[:username],
+            origin: params[:origin],
+            metadata: {
+              labels: {},
+              annotations: {}
+            },
+            links: {
+              self: { href: %r{#{Regexp.escape(link_prefix)}/v3/users/#{user_guid}} }
+            }
+          }
+        end
+
+        let(:expected_codes_and_responses) do
+          h = Hash.new(
+            code: 403
+          )
+          h['admin'] = {
+            code: 422,
+            response_object: user_json
+          }
+          h['org_manager'] = {
+            code: 422,
+            response_object: user_json
+          }
+          h
+        end
+
+        it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS
       end
     end
   end

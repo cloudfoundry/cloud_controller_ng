@@ -4,7 +4,6 @@ module VCAP::CloudController
   class UserCreateMessage < MetadataBaseMessage
     register_allowed_keys %i[guid origin username]
 
-
     class UserCreateValidator < ActiveModel::Validator
       def validate(record)
         if record.guid
