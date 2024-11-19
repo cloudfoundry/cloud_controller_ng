@@ -11,6 +11,7 @@ module VCAP::CloudController
                             route.options.merge(message.options)
                           end
         end
+
         route.save
         MetadataUpdate.update(route, message)
       end

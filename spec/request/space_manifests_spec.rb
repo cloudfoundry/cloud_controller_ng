@@ -606,7 +606,7 @@ RSpec.describe 'Space Manifests' do
       before do
         app1_model.web_processes.first.update(state: VCAP::CloudController::ProcessModel::STARTED, instances: 4)
         space.update(space_quota_definition:
-          VCAP::CloudController::SpaceQuotaDefinition.make(organization: space.organization, log_rate_limit: 0))
+                       VCAP::CloudController::SpaceQuotaDefinition.make(organization: space.organization, log_rate_limit: 0))
       end
 
       it 'successfully applies the manifest' do
@@ -625,28 +625,6 @@ RSpec.describe 'Space Manifests' do
     end
 
     describe 'route options' do
-      context 'when an empty route options hash is provided' do
-        let(:yml_manifest) do
-          {
-            'applications' => [
-              {
-                'name' => app1_model.name,
-                'routes' => [
-                  { 'route' => "https://#{route.host}.#{route.domain.name}",
-                    'options' => {} }
-                ]
-              }
-            ]
-          }.to_yaml
-        end
-
-        it 'applies the manifest' do
-          post "/v3/spaces/#{space.guid}/actions/apply_manifest", yml_manifest, yml_headers(user_header)
-
-          expect(last_response.status).to eq(202)
-        end
-      end
-
       context 'when an invalid route option is provided' do
         let(:yml_manifest) do
           {
@@ -672,7 +650,146 @@ RSpec.describe 'Space Manifests' do
         end
       end
 
-      context 'loadbalancing-algorithm' do
+      context 'updating existing route options' do
+        # using loadbalancing-algorithm as an example since it is the only route option currently supported
+        before do
+          yml_manifest = {
+            'applications' => [
+              { 'name' => app1_model.name,
+                'routes' => [
+                  { 'route' => "https://round-robin-app.#{shared_domain.name}",
+                    'options' => {
+                      'loadbalancing-algorithm' => 'round-robin'
+                    } }
+                ] }
+            ]
+          }.to_yaml
+
+          # apply the manifest with the route option
+          post "/v3/spaces/#{space.guid}/actions/apply_manifest", yml_manifest, yml_headers(user_header)
+
+          expect(last_response.status).to eq(202)
+          job_guid = VCAP::CloudController::PollableJobModel.last.guid
+
+          Delayed::Worker.new.work_off
+          expect(VCAP::CloudController::PollableJobModel.find(guid: job_guid)).to be_complete, VCAP::CloudController::PollableJobModel.find(guid: job_guid).cf_api_error
+          app1_model.reload
+          expect(app1_model.routes.first.options).to eq({ 'lb_algo' => 'round-robin' })
+        end
+
+        it 'updates the route option when a new value is provided' do
+          yml_manifest = {
+            'applications' => [
+              { 'name' => app1_model.name,
+                'routes' => [
+                  { 'route' => "https://round-robin-app.#{shared_domain.name}",
+                    'options' => {
+                      'loadbalancing-algorithm' => 'least-connections'
+                    } }
+                ] }
+            ]
+          }.to_yaml
+
+          post "/v3/spaces/#{space.guid}/actions/apply_manifest", yml_manifest, yml_headers(user_header)
+
+          expect(last_response.status).to eq(202)
+          job_guid = VCAP::CloudController::PollableJobModel.last.guid
+
+          Delayed::Worker.new.work_off
+          expect(VCAP::CloudController::PollableJobModel.find(guid: job_guid)).to be_complete, VCAP::CloudController::PollableJobModel.find(guid: job_guid).cf_api_error
+          app1_model.reload
+          expect(app1_model.routes.first.options).to eq({ 'lb_algo' => 'least-connections' })
+        end
+
+        it 'does not modify any route options when the options hash is not provided' do
+          yml_manifest = {
+            'applications' => [
+              { 'name' => app1_model.name,
+                'routes' => [
+                  { 'route' => "https://round-robin-app.#{shared_domain.name}" }
+                ] }
+            ]
+          }.to_yaml
+
+          # apply the manifest with the route option
+          post "/v3/spaces/#{space.guid}/actions/apply_manifest", yml_manifest, yml_headers(user_header)
+
+          expect(last_response.status).to eq(202)
+          job_guid = VCAP::CloudController::PollableJobModel.last.guid
+
+          Delayed::Worker.new.work_off
+          expect(VCAP::CloudController::PollableJobModel.find(guid: job_guid)).to be_complete, VCAP::CloudController::PollableJobModel.find(guid: job_guid).cf_api_error
+          app1_model.reload
+          expect(app1_model.routes.first.options).to eq({ 'lb_algo' => 'round-robin' })
+        end
+
+        it 'does not modify any route options options: nil is provided' do
+          yml_manifest = {
+            'applications' => [
+              { 'name' => app1_model.name,
+                'routes' => [
+                  { 'route' => "https://round-robin-app.#{shared_domain.name}",
+                    'options' => nil }
+                ] }
+            ]
+          }.to_yaml
+
+          # apply the manifest with the route option
+          post "/v3/spaces/#{space.guid}/actions/apply_manifest", yml_manifest, yml_headers(user_header)
+
+          expect(last_response.status).to eq(202)
+          job_guid = VCAP::CloudController::PollableJobModel.last.guid
+
+          Delayed::Worker.new.work_off
+          expect(VCAP::CloudController::PollableJobModel.find(guid: job_guid)).to be_complete, VCAP::CloudController::PollableJobModel.find(guid: job_guid).cf_api_error
+          app1_model.reload
+          expect(app1_model.routes.first.options).to eq({ 'lb_algo' => 'round-robin' })
+        end
+
+        it 'does not modify any route options if an empty options hash is provided' do
+          yml_manifest = {
+            'applications' => [
+              { 'name' => app1_model.name,
+                'routes' => [
+                  { 'route' => "https://round-robin-app.#{shared_domain.name}",
+                    'options' => {} }
+                ] }
+            ]
+          }.to_yaml
+
+          # apply the manifest with the route option
+          post "/v3/spaces/#{space.guid}/actions/apply_manifest", yml_manifest, yml_headers(user_header)
+
+          expect(last_response.status).to eq(202)
+
+          app1_model.reload
+          expect(app1_model.routes.first.options).to eq({ 'lb_algo' => 'round-robin' })
+        end
+
+        it 'does not modify any option when options: { key: nil } is provided' do
+          yml_manifest = {
+            'applications' => [
+              { 'name' => app1_model.name,
+                'routes' => [
+                  { 'route' => "https://round-robin-app.#{shared_domain.name}",
+                    'options' => {
+                      'loadbalancing-algorithm' => nil
+                    } }
+                ] }
+            ]
+          }.to_yaml
+
+          # apply the manifest with the route option
+          post "/v3/spaces/#{space.guid}/actions/apply_manifest", yml_manifest, yml_headers(user_header)
+
+          expect(last_response.status).to eq(202)
+
+          app1_model.reload
+          expect(app1_model.routes.first.options).to eq({ 'lb_algo' => 'round-robin' })
+        end
+      end
+
+      context 'route-option: loadbalancing-algorithm' do
         context 'when the loadbalancing-algorithm is not supported' do
           let(:yml_manifest) do
             {
@@ -713,7 +830,7 @@ RSpec.describe 'Space Manifests' do
             }.to_yaml
           end
 
-          it 'adds and updates the loadbalancing-algorithm' do
+          it 'adds the loadbalancing-algorithm' do
             post "/v3/spaces/#{space.guid}/actions/apply_manifest", yml_manifest, yml_headers(user_header)
 
             expect(last_response.status).to eq(202)
@@ -724,31 +841,6 @@ RSpec.describe 'Space Manifests' do
 
             app1_model.reload
             expect(app1_model.routes.first.options).to eq({ 'lb_algo' => 'round-robin' })
-
-            ### update the loadbalancing-algorithm from the route
-
-            yml_manifest = {
-              'applications' => [
-                { 'name' => app1_model.name,
-                  'routes' => [
-                    { 'route' => "https://round-robin-app.#{shared_domain.name}",
-                      'options' => {
-                        'loadbalancing-algorithm' => 'least-connections'
-                      } }
-                  ] }
-              ]
-            }.to_yaml
-
-            post "/v3/spaces/#{space.guid}/actions/apply_manifest", yml_manifest, yml_headers(user_header)
-
-            expect(last_response.status).to eq(202)
-            job_guid = VCAP::CloudController::PollableJobModel.last.guid
-
-            Delayed::Worker.new.work_off
-            expect(VCAP::CloudController::PollableJobModel.find(guid: job_guid)).to be_complete, VCAP::CloudController::PollableJobModel.find(guid: job_guid).cf_api_error
-
-            app1_model.reload
-            expect(app1_model.routes.first.options).to eq({ 'lb_algo' => 'least-connections' })
           end
         end
       end
