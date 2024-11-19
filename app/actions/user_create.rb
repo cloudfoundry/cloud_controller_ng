@@ -4,15 +4,8 @@ module VCAP::CloudController
     end
 
     def create(message:)
-      begin
-        shadow_user = User.create_uaa_shadow_user(message.username, message.origin) if message.username && message.origin
-      rescue CF::UAA::TargetError => e
-        raise e unless e.info['error'] == 'scim_resource_already_exists'
-
-        existing_guid = e.info['user_id']
-      end
-
-      user_guid = existing_guid || shadow_user['id'] || message.guid
+      shadow_user = User.create_uaa_shadow_user(message.username, message.origin) if message.username && message.origin
+      user_guid = shadow_user ? shadow_user['id'] : message.guid
 
       user = User.create(guid: user_guid)
       User.db.transaction do
