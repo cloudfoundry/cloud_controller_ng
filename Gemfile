@@ -58,7 +58,7 @@ gem 'fog-google', '~> 1.24.1'
 gem 'fog-local'
 gem 'fog-openstack'
 
-gem 'cf-uaa-lib', '~> 4.0.4'
+gem 'cf-uaa-lib', '~> 4.0.7'
 
 group :db do
   gem 'mysql2', '~> 0.5.6'
