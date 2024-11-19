@@ -3,7 +3,7 @@ require 'redis'
 
 module CloudFoundry
   module Middleware
-    RateLimitEndpoint = Struct.new(:endpoint_pattern, :methods)
+    RateLimitEndpoint = Struct.new(:endpoint_pattern, :request_methods)
 
     RATE_LIMITED_ENDPOINTS = [
       RateLimitEndpoint.new(%r{\A/v2/(service_instances|service_credential_bindings|service_route_bindings)}, %w[PUT POST DELETE PATCH]),

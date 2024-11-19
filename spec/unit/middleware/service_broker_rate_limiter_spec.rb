@@ -130,7 +130,7 @@ module CloudFoundry
           expect(status).to eq(200)
 
           statuses = 2.times.map { middleware.call(user_env).first }
-          expect(statuses).to match_array([200, 200])
+          expect(statuses).to contain_exactly(200, 200)
         end
       end
 
