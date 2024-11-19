@@ -145,15 +145,43 @@ module VCAP::CloudController::Jobs
       end
 
       context 'priority from config' do
-        let(:priorities) { { priorities: { wrapped_job.display_name.to_sym => 1899 } } }
+        context 'priority is configured via display_name' do
+          let(:priorities) { { priorities: { 'object.delete': 1899, delete_action_job: 1900, 'VCAP::CloudController::Jobs::DeleteActionJob': 1901 } } }
 
-        it 'uses the configured priority' do
-          original_enqueue = Delayed::Job.method(:enqueue)
-          expect(Delayed::Job).to receive(:enqueue) do |enqueued_job, opts|
-            expect(opts).to include({ priority: 1899 })
-            original_enqueue.call(enqueued_job, opts)
+          it 'uses the configured priority' do
+            original_enqueue = Delayed::Job.method(:enqueue)
+            expect(Delayed::Job).to receive(:enqueue) do |enqueued_job, opts|
+              expect(opts).to include({ priority: 1899 })
+              original_enqueue.call(enqueued_job, opts)
+            end
+            Enqueuer.new(wrapped_job, opts).enqueue_pollable
           end
-          Enqueuer.new(wrapped_job, opts).enqueue_pollable
+        end
+
+        context 'priority is configured via job_name_in_configuration' do
+          let(:priorities) { { priorities: { delete_action_job: 1900, 'VCAP::CloudController::Jobs::DeleteActionJob': 1901 } } }
+
+          it 'uses the configured priority' do
+            original_enqueue = Delayed::Job.method(:enqueue)
+            expect(Delayed::Job).to receive(:enqueue) do |enqueued_job, opts|
+              expect(opts).to include({ priority: 1900 })
+              original_enqueue.call(enqueued_job, opts)
+            end
+            Enqueuer.new(wrapped_job, opts).enqueue_pollable
+          end
+        end
+
+        context 'priority is configured via class name' do
+          let(:priorities) { { priorities: { 'VCAP::CloudController::Jobs::DeleteActionJob': 1901 } } }
+
+          it 'uses the configured priority' do
+            original_enqueue = Delayed::Job.method(:enqueue)
+            expect(Delayed::Job).to receive(:enqueue) do |enqueued_job, opts|
+              expect(opts).to include({ priority: 1901 })
+              original_enqueue.call(enqueued_job, opts)
+            end
+            Enqueuer.new(wrapped_job, opts).enqueue_pollable
+          end
         end
 
         context 'and priority from Enqueuer (e.g. from reoccurring jobs)' do
