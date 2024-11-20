@@ -16,18 +16,17 @@ module VCAP::CloudController
           deployment.db.transaction do
             deployment.lock!
             return unless deployment.state == DeploymentModel::PREPAUSED_STATE
+            return unless Calculators::AllInstancesRoutable.new(deployment, logger).call
 
             ScaleDownSuperseded.new(deployment).call
 
-            if Calculators::AllInstancesRoutable.new(deployment, logger).call
-              deployment.update(
-                last_healthy_at: Time.now,
-                state: DeploymentModel::PAUSED_STATE,
-                status_value: DeploymentModel::ACTIVE_STATUS_VALUE,
-                status_reason: DeploymentModel::PAUSED_STATUS_REASON
-              )
-              logger.info("paused-canary-deployment-for-#{deployment.guid}")
-            end
+            deployment.update(
+              last_healthy_at: Time.now,
+              state: DeploymentModel::PAUSED_STATE,
+              status_value: DeploymentModel::ACTIVE_STATUS_VALUE,
+              status_reason: DeploymentModel::PAUSED_STATUS_REASON
+            )
+            logger.info("paused-canary-deployment-for-#{deployment.guid}")
           end
         end
 

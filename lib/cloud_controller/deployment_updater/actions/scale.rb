@@ -2,6 +2,8 @@ require 'cloud_controller/deployment_updater/actions/scale_down_superseded'
 require 'cloud_controller/deployment_updater/actions/scale_down_old_process'
 require 'cloud_controller/deployment_updater/actions/finalize'
 require 'cloud_controller/deployment_updater/calculators/all_instances_routable'
+require 'cloud_controller/deployment_updater/calculators/instances_to_scale_up'
+require 'cloud_controller/deployment_updater/calculators/instances_to_scale_down'
 
 module VCAP::CloudController
   module DeploymentUpdater
@@ -17,16 +19,15 @@ module VCAP::CloudController
 
         def call
           deployment.db.transaction do
-            app.lock!
-
             return unless deployment.lock!.state == DeploymentModel::DEPLOYING_STATE
+            return unless Calculators::AllInstancesRoutable.new(deployment, logger).call
 
-            ScaleDownSuperseded.new(deployment).call
-
+            app.lock!
             oldest_web_process_with_instances.lock!
             deploying_web_process.lock!
 
-            return unless Calculators::AllInstancesRoutable.new(deployment, logger).call
+            instances_to_scale_up = Calculators::InstancesToScaleUp.new(deployment).call
+            instances_to_scale_down = Calculators::InstancesToScaleDown.new(deployment, oldest_web_process_with_instances).call
 
             deployment.update(
               last_healthy_at: Time.now,
@@ -40,10 +41,10 @@ module VCAP::CloudController
               return
             end
 
-            ScaleDownOldProcess.new(deployment).call
+            ScaleDownSuperseded.new(deployment).call
+            ScaleDownOldProcess.new(deployment, oldest_web_process_with_instances, instances_to_scale_down).call
 
-            instances_to_scale = [deploying_web_process.instances + deployment.max_in_flight, deployment.original_web_process_instance_count].min
-            deploying_web_process.update(instances: instances_to_scale)
+            deploying_web_process.update(instances: instances_to_scale_up)
           end
         end
 

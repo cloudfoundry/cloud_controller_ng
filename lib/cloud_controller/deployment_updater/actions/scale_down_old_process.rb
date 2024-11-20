@@ -2,29 +2,25 @@ module VCAP::CloudController
   module DeploymentUpdater
     module Actions
       class ScaleDownOldProcess
-        attr_reader :deployment, :app
+        attr_reader :deployment, :process, :app, :instances_to_scale_down
 
-        def initialize(deployment)
+        def initialize(deployment, process, instances_to_scale_down)
           @deployment = deployment
           @app = deployment.app
+          @process = process
+          @instances_to_scale_down = instances_to_scale_down
         end
 
         def call
-          process = oldest_web_process_with_instances
-
           if process.instances <= deployment.max_in_flight && is_interim_process?(process)
             process.destroy
             return
           end
 
-          process.update(instances: [(process.instances - deployment.max_in_flight), 0].max)
+          process.update(instances: instances_to_scale_down)
         end
 
         private
-
-        def oldest_web_process_with_instances
-          @oldest_web_process_with_instances ||= app.web_processes.select { |process| process.instances > 0 }.min_by { |p| [p.created_at, p.id] }
-        end
 
         def is_original_web_process?(process)
           process == app.oldest_web_process

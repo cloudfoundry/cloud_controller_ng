@@ -37,7 +37,6 @@ module VCAP::CloudController
       def with_error_logging(error_message)
         yield
       rescue StandardError => e
-        # raise e
         error_name = e.is_a?(CloudController::Errors::ApiError) ? e.name : e.class.name
         logger.error(
           error_message,

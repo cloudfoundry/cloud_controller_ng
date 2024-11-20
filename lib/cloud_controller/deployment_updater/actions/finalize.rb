@@ -1,3 +1,4 @@
+require 'cloud_controller/deployment_updater/actions/cleanup_web_processes'
 module VCAP::CloudController
   module DeploymentUpdater
     module Actions
@@ -13,7 +14,7 @@ module VCAP::CloudController
         def call
           promote_deploying_web_process
 
-          cleanup_web_processes_except(deploying_web_process)
+          CleanupWebProcesses.new(deployment, deploying_web_process).call
 
           update_non_web_processes
           restart_non_web_processes
@@ -28,12 +29,6 @@ module VCAP::CloudController
 
         def promote_deploying_web_process
           deploying_web_process.update(type: ProcessTypes::WEB)
-        end
-
-        def cleanup_web_processes_except(protected_process)
-          app.web_processes.
-            reject { |p| p.guid == protected_process.guid }.
-            map(&:destroy)
         end
 
         def update_non_web_processes
