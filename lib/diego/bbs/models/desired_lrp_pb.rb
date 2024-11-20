@@ -16,6 +16,7 @@ require 'image_layer_pb'
 require 'metric_tags_pb'
 require 'sidecar_pb'
 require 'log_rate_limit_pb'
+require 'file_pb'
 Google::Protobuf::DescriptorPool.generated_pool.build do
   add_message "diego.bbs.models.DesiredLRPSchedulingInfo" do
     optional :desired_lrp_key, :message, 1, "diego.bbs.models.DesiredLRPKey"
@@ -55,6 +56,7 @@ Google::Protobuf::DescriptorPool.generated_pool.build do
     map :metric_tags, :string, :message, 25, "diego.bbs.models.MetricTagValue"
     repeated :sidecars, :message, 26, "diego.bbs.models.Sidecar"
     optional :log_rate_limit, :message, 27, "diego.bbs.models.LogRateLimit"
+    repeated :volume_mounted_files, :message, 28, "diego.bbs.models.File"
   end
   add_message "diego.bbs.models.ProtoRoutes" do
     map :routes, :string, :bytes, 1
@@ -118,6 +120,7 @@ Google::Protobuf::DescriptorPool.generated_pool.build do
     map :metric_tags, :string, :message, 35, "diego.bbs.models.MetricTagValue"
     repeated :sidecars, :message, 36, "diego.bbs.models.Sidecar"
     optional :log_rate_limit, :message, 37, "diego.bbs.models.LogRateLimit"
+    repeated :volume_mounted_files, :message, 38, "diego.bbs.models.File"
   end
 end
 
