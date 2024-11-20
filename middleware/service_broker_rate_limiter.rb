@@ -123,7 +123,7 @@ module CloudFoundry
 
       def rate_limit_method?(request)
         RATE_LIMITED_ENDPOINTS.any? do |endpoint|
-          endpoint.endpoint_pattern.match?(request.fullpath) && endpoint.methods.include?(request.method)
+          endpoint.endpoint_pattern.match?(request.fullpath) && endpoint.request_methods.include?(request.method)
         end
       end
 

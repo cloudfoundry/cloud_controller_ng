@@ -8,7 +8,7 @@ module CloudFoundry
       let(:path_info) { '/v3/service_instances' }
       let(:user_guid) { SecureRandom.uuid }
       let(:user_env) { { 'cf.user_guid' => user_guid, 'PATH_INFO' => path_info } }
-      let(:fake_request) { instance_double(ActionDispatch::Request, fullpath: '/v3/service_instances', method: 'PUT') }
+      let(:fake_request) { instance_double(ActionDispatch::Request, fullpath: '/v3/service_instances', method: 'POST') }
       let(:max_concurrent_requests) { 1 }
       let(:broker_timeout) { 60 }
       let(:middleware) do
@@ -25,7 +25,7 @@ module CloudFoundry
       end
 
       describe 'included requests' do
-        let(:request_method) { 'PUT' }
+        let(:fake_request) { instance_double(ActionDispatch::Request, fullpath: '/v3/service_instances', method: 'PUT') }
 
         it 'allows a service broker request within the limit' do
           status, = middleware.call(user_env)
