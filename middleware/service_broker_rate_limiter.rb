@@ -7,8 +7,7 @@ module CloudFoundry
 
     RATE_LIMITED_ENDPOINTS = [
       RateLimitEndpoint.new(%r{\A/v2/(service_instances|service_credential_bindings|service_route_bindings)}, %w[PUT POST DELETE PATCH]),
-      RateLimitEndpoint.new(%r{\A/v3/(service_instances|service_credential_bindings|service_route_bindings)/.+/parameters\z}, %w[GET]),
-      RateLimitEndpoint.new(%r{\A/v3/(service_instances|service_credential_bindings|service_route_bindings)}, %w[PUT])
+      RateLimitEndpoint.new(%r{\A/v3/(service_instances|service_credential_bindings|service_route_bindings)/.+/parameters\z}, %w[GET])
     ].freeze
 
     class ConcurrentRequestCounter

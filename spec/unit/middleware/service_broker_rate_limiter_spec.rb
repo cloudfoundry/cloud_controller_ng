@@ -25,7 +25,7 @@ module CloudFoundry
       end
 
       describe 'included requests' do
-        let(:fake_request) { instance_double(ActionDispatch::Request, fullpath: '/v3/service_instances', method: 'PUT') }
+        let(:fake_request) { instance_double(ActionDispatch::Request, fullpath: '/v2/service_instances', method: 'PUT') }
 
         it 'allows a service broker request within the limit' do
           status, = middleware.call(user_env)
@@ -120,7 +120,7 @@ module CloudFoundry
       end
 
       describe 'excluded requests' do
-        let(:request_method) { 'POST' }
+        let(:fake_request) { instance_double(ActionDispatch::Request, fullpath: '/v3/service_instances', method: 'POST') }
 
         it 'allows requests that are no longer rate limited' do
           status, = middleware.call(user_env)
