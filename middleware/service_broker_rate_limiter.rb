@@ -6,7 +6,7 @@ module CloudFoundry
     RateLimitEndpoint = Struct.new(:endpoint_pattern, :request_methods)
 
     RATE_LIMITED_ENDPOINTS = [
-      RateLimitEndpoint.new(%r{\A/v2/(service_instances|service_credential_bindings|service_route_bindings)}, %w[PUT POST DELETE PATCH]),
+      RateLimitEndpoint.new(%r{\A/v2/(service_instances|service_bindings|service_keys)}, %w[PUT POST DELETE]),
       RateLimitEndpoint.new(%r{\A/v3/(service_instances|service_credential_bindings|service_route_bindings)/.+/parameters\z}, %w[GET])
     ].freeze
 
