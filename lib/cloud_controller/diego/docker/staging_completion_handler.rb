@@ -25,10 +25,12 @@ module VCAP::CloudController
           }
         end
 
+        # rubocop:disable Style/OptionalBooleanParameter
         def staging_complete(payload, with_start=false)
           super
           BitsExpiration.new.expire_packages!(build.app)
         end
+        # rubocop:enable Style/OptionalBooleanParameter
 
         private
 
