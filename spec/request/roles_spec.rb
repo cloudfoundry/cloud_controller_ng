@@ -13,13 +13,14 @@ RSpec.describe 'Roles Request' do
   let(:uaa_client) { instance_double(VCAP::CloudController::UaaClient) }
 
   before do
-    allow(CloudController::DependencyLocator.instance).to receive(:uaa_username_lookup_client).and_return(uaa_client)
+    allow(CloudController::DependencyLocator.instance).to receive_messages(uaa_username_lookup_client: uaa_client, uaa_shadow_user_creation_client: uaa_client)
     allow(uaa_client).to receive(:usernames_for_ids).with([user_with_role.guid]).and_return(
       { user_with_role.guid => 'mona' }
     )
     allow(uaa_client).to receive(:usernames_for_ids).with([user_unaffiliated.guid]).and_return(
       { user_with_role.guid => 'bob_unaffiliated' }
     )
+    allow(uaa_client).to receive(:create_shadow_user)
   end
 
   describe 'POST /v3/roles' do
@@ -87,6 +88,19 @@ RSpec.describe 'Roles Request' do
       end
 
       it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS
+
+      context 'when "allow_user_creation_by_org_manager" is enabled' do
+        before do
+          TestConfig.override(allow_user_creation_by_org_manager: true)
+        end
+
+        it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS
+
+        it 'does not create a uaa shadow user' do
+          post '/v3/roles', params.to_json, admin_header
+          expect(uaa_client).not_to have_received(:create_shadow_user)
+        end
+      end
 
       context 'when user is invalid' do
         let(:params) do
@@ -163,7 +177,7 @@ RSpec.describe 'Roles Request' do
       end
     end
 
-    context 'creating a organization role' do
+    context 'creating a organization role by guid' do
       let(:params) do
         {
           type: 'organization_auditor',
@@ -215,11 +229,20 @@ RSpec.describe 'Roles Request' do
         h
       end
 
-      before do
-        org.add_user(user_with_role)
-      end
-
       it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS
+
+      context 'when "allow_user_creation_by_org_manager" is enabled' do
+        before do
+          TestConfig.override(allow_user_creation_by_org_manager: true)
+        end
+
+        it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS
+
+        it 'does not create a uaa shadow user' do
+          post '/v3/roles', params.to_json, admin_header
+          expect(uaa_client).not_to have_received(:create_shadow_user)
+        end
+      end
 
       context 'when organization is invalid' do
         let(:params) do
@@ -330,24 +353,24 @@ RSpec.describe 'Roles Request' do
       end
     end
 
-    context 'creating a role by username' do
-      let(:params) do
-        {
-          type: 'space_auditor',
-          relationships: {
-            user: {
-              data: {
-                username: 'uuu'
+    describe 'creating a role by username' do
+      context 'when space role' do
+        let(:params) do
+          {
+            type: 'space_auditor',
+            relationships: {
+              user: {
+                data: {
+                  username: 'uuu'
+                }
+              },
+              space: {
+                data: { guid: space.guid }
               }
-            },
-            space: {
-              data: { guid: space.guid }
             }
           }
-        }
-      end
+        end
 
-      context 'when the user exists in a single origin' do
         let(:expected_response) do
           {
             guid: UUID_REGEX,
@@ -390,38 +413,38 @@ RSpec.describe 'Roles Request' do
           h
         end
 
-        before do
-          allow(uaa_client).to receive(:origins_for_username).with('uuu').and_return(['uaa'])
-          allow(uaa_client).to receive(:id_for_username).with('uuu', origin: 'uaa').and_return(user_with_role.guid)
-          org.add_user(user_with_role)
+        context 'when the user exists in a single origin' do
+          before do
+            allow(uaa_client).to receive(:origins_for_username).with('uuu').and_return(['uaa'])
+            allow(uaa_client).to receive(:id_for_username).with('uuu', origin: 'uaa').and_return(user_with_role.guid)
+            org.add_user(user_with_role)
+          end
+
+          it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS
         end
 
-        it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS
-      end
+        context 'when there are multiple users with the same username' do
+          before do
+            allow(uaa_client).to receive(:origins_for_username).with('uuu').and_return(%w[uaa ldap okta])
+            allow(uaa_client).to receive(:id_for_username).with('uuu', origin: 'uaa').and_return(user_with_role.guid)
+          end
 
-      context 'when there are multiple users with the same username' do
-        before do
-          allow(uaa_client).to receive(:origins_for_username).with('uuu').and_return(%w[uaa ldap okta])
-          allow(uaa_client).to receive(:id_for_username).with('uuu', origin: 'uaa').and_return(user_with_role.guid)
+          it 'returns a 422 with a helpful message' do
+            post '/v3/roles', params.to_json, admin_header
+
+            expect(last_response).to have_status_code(422)
+            expect(last_response).to have_error_message(
+              "User with username 'uuu' exists in the following origins: ldap, okta, uaa. Specify an origin to disambiguate."
+            )
+          end
         end
 
-        it 'returns a 422 with a helpful message' do
-          post '/v3/roles', params.to_json, admin_header
+        context 'when there is no user with the given username' do
+          before do
+            allow(uaa_client).to receive(:origins_for_username).with('uuu').and_return([])
+            allow(uaa_client).to receive(:id_for_username).with('uuu', origin: nil).and_return(nil)
+          end
 
-          expect(last_response).to have_status_code(422)
-          expect(last_response).to have_error_message(
-            "User with username 'uuu' exists in the following origins: ldap, okta, uaa. Specify an origin to disambiguate."
-          )
-        end
-      end
-
-      context 'when there is no user with the given username' do
-        before do
-          allow(uaa_client).to receive(:origins_for_username).with('uuu').and_return([])
-          allow(uaa_client).to receive(:id_for_username).with('uuu', origin: nil).and_return(nil)
-        end
-
-        context 'for a space role' do
           it 'returns a 422 with a helpful message' do
             post '/v3/roles', params.to_json, admin_header
 
@@ -432,7 +455,111 @@ RSpec.describe 'Roles Request' do
           end
         end
 
-        context 'for an org role' do
+        context 'when "allow_user_creation_by_org_manager" is enabled' do
+          before do
+            TestConfig.override(allow_user_creation_by_org_manager: true)
+            allow(uaa_client).to receive(:origins_for_username).with('uuu').and_return(['uaa'])
+            allow(uaa_client).to receive(:id_for_username).with('uuu', origin: 'uaa').and_return(user_with_role.guid)
+            org.add_user(user_with_role)
+          end
+
+          it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS
+
+          it 'does not create a uaa shadow user' do
+            post '/v3/roles', params.to_json, admin_header
+            expect(last_response).to have_status_code(201)
+            expect(parsed_response).to match_json_response(expected_response)
+            expect(uaa_client).not_to have_received(:create_shadow_user)
+          end
+        end
+      end
+
+      context 'when org role' do
+        let(:params) do
+          {
+            type: 'organization_auditor',
+            relationships: {
+              user: {
+                data: {
+                  username: 'uuu'
+                }
+              },
+              organization: {
+                data: { guid: org.guid }
+              }
+            }
+          }
+        end
+
+        let(:expected_response) do
+          {
+            guid: UUID_REGEX,
+            created_at: iso8601,
+            updated_at: iso8601,
+            type: 'organization_auditor',
+            relationships: {
+              user: {
+                data: { guid: user_with_role.guid }
+              },
+              space: {
+                data: nil
+              },
+              organization: {
+                data: { guid: org.guid }
+              }
+            },
+            links: {
+              self: { href: %r{#{Regexp.escape(link_prefix)}/v3/roles/#{UUID_REGEX}} },
+              user: { href: %r{#{Regexp.escape(link_prefix)}/v3/users/#{user_with_role.guid}} },
+              organization: { href: %r{#{Regexp.escape(link_prefix)}/v3/organizations/#{org.guid}} }
+            }
+          }
+        end
+
+        let(:expected_codes_and_responses) do
+          h = Hash.new(code: 403)
+          h['admin'] = {
+            code: 201,
+            response_object: expected_response
+          }
+          h['org_manager'] = {
+            code: 201,
+            response_object: expected_response
+          }
+          h
+        end
+
+        context 'when the user exists in a single origin' do
+          before do
+            allow(uaa_client).to receive(:origins_for_username).with('uuu').and_return(['uaa'])
+            allow(uaa_client).to receive(:id_for_username).with('uuu', origin: 'uaa').and_return(user_with_role.guid)
+          end
+
+          it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS
+        end
+
+        context 'when there are multiple users with the same username' do
+          before do
+            allow(uaa_client).to receive(:origins_for_username).with('uuu').and_return(%w[uaa ldap okta])
+            allow(uaa_client).to receive(:id_for_username).with('uuu', origin: 'uaa').and_return(user_with_role.guid)
+          end
+
+          it 'returns a 422 with a helpful message' do
+            post '/v3/roles', params.to_json, admin_header
+
+            expect(last_response).to have_status_code(422)
+            expect(last_response).to have_error_message(
+              "User with username 'uuu' exists in the following origins: ldap, okta, uaa. Specify an origin to disambiguate."
+            )
+          end
+        end
+
+        context 'when there is no user with the given username' do
+          before do
+            allow(uaa_client).to receive(:origins_for_username).with('uuu').and_return([])
+            allow(uaa_client).to receive(:id_for_username).with('uuu', origin: nil).and_return(nil)
+          end
+
           let(:params) do
             {
               type: 'organization_auditor',
@@ -456,6 +583,23 @@ RSpec.describe 'Roles Request' do
             expect(last_response).to have_error_message(
               "No user exists with the username 'uuu'."
             )
+          end
+        end
+
+        context 'when "allow_user_creation_by_org_manager" is enabled' do
+          before do
+            TestConfig.override(allow_user_creation_by_org_manager: true)
+            allow(uaa_client).to receive(:origins_for_username).with('uuu').and_return(['uaa'])
+            allow(uaa_client).to receive(:id_for_username).with('uuu', origin: 'uaa').and_return(user_with_role.guid)
+          end
+
+          it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS
+
+          it 'does not create a uaa shadow user' do
+            post '/v3/roles', params.to_json, admin_header
+            expect(last_response).to have_status_code(201)
+            expect(parsed_response).to match_json_response(expected_response)
+            expect(uaa_client).not_to have_received(:create_shadow_user)
           end
         end
       end
@@ -564,52 +708,6 @@ RSpec.describe 'Roles Request' do
         it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS
       end
 
-      context 'when there is no user with the given username and origin' do
-        before do
-          allow(uaa_client).to receive(:origins_for_username).with('uuu').and_return(['something-else'])
-          allow(uaa_client).to receive(:id_for_username).with('uuu', origin: 'okta').and_return(nil)
-        end
-
-        context 'for a space role' do
-          it 'returns a 422 with a helpful message' do
-            post '/v3/roles', params.to_json, admin_header
-
-            expect(last_response).to have_status_code(422)
-            expect(last_response).to have_error_message(
-              "Users cannot be assigned roles in a space if they do not have a role in that space's organization."
-            )
-          end
-        end
-
-        context 'for an org role' do
-          let(:params) do
-            {
-              type: 'organization_auditor',
-              relationships: {
-                user: {
-                  data: {
-                    username: 'uuu',
-                    origin: 'okta'
-                  }
-                },
-                organization: {
-                  data: { guid: org.guid }
-                }
-              }
-            }
-          end
-
-          it 'returns a 422 with a helpful message' do
-            post '/v3/roles', params.to_json, admin_header
-
-            expect(last_response).to have_status_code(422)
-            expect(last_response).to have_error_message(
-              "No user exists with the username 'uuu' and origin 'okta'."
-            )
-          end
-        end
-      end
-
       context 'when UAA is unavailable' do
         before do
           allow(uaa_client).to receive(:id_for_username).and_raise(VCAP::CloudController::UaaUnavailable)
@@ -629,10 +727,12 @@ RSpec.describe 'Roles Request' do
       # a space role must also have at least an org user role
       context 'when the user is unaffiliated' do
         before do
-          allow(uaa_client).to receive(:origins_for_username).with('bob_unaffiliated').and_return(['uaa'])
-          allow(uaa_client).to receive(:id_for_username).with('bob_unaffiliated', origin: 'uaa').and_return(user_unaffiliated.guid)
+          allow(uaa_client).to receive(:origins_for_username).with('bob_unaffiliated').and_return([origin])
+          allow(uaa_client).to receive(:id_for_username).with('bob_unaffiliated', origin:).and_return(user_unaffiliated.guid)
           allow(uaa_client).to receive(:usernames_for_ids).with([user_unaffiliated.guid]).and_return({ user_unaffiliated.guid => 'bob_unaffiliated' })
         end
+
+        let(:origin) { 'uaa' }
 
         let(:params) do
           {
@@ -640,7 +740,8 @@ RSpec.describe 'Roles Request' do
             relationships: {
               user: {
                 data: {
-                  username: 'bob_unaffiliated'
+                  username: 'bob_unaffiliated',
+                  origin: origin
                 }
               },
               organization: {
@@ -708,88 +809,219 @@ RSpec.describe 'Roles Request' do
 
           it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS
         end
+
+        context 'when "allow_user_creation_by_org_manager" is enabled' do
+          before do
+            TestConfig.override(allow_user_creation_by_org_manager: true)
+            allow(uaa_client).to receive(:create_shadow_user).with('bob_unaffiliated', origin).and_return({ 'id' => user_unaffiliated.guid })
+          end
+
+          it 'does not call create_shadow_user' do
+            post '/v3/roles', params.to_json, admin_header
+            expect(last_response).to have_status_code(201)
+            expect(parsed_response).to match_json_response(expected_response)
+            expect(uaa_client).not_to have_received(:create_shadow_user)
+          end
+
+          context 'with origin different from uaa' do
+            let(:origin) { 'idp.local' }
+
+            it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS
+
+            it 'calls create_shadow_user and retrieves the guid of the user from uaa' do
+              post '/v3/roles', params.to_json, admin_header
+              expect(last_response).to have_status_code(201)
+              expect(parsed_response).to match_json_response(expected_response)
+              expect(uaa_client).to have_received(:create_shadow_user)
+            end
+          end
+        end
       end
     end
 
-    context 'creating a role for a user that does not exist' do
-      let(:expected_response) do
-        {
-          guid: UUID_REGEX,
-          created_at: iso8601,
-          updated_at: iso8601,
-          type: 'organization_auditor',
-          relationships: {
-            user: {
-              data: { guid: 'a-new-user-guid' }
-            },
-            space: {
-              data: nil
-            },
-            organization: {
-              data: { guid: org.guid }
-            }
-          },
-          links: {
-            self: { href: %r{#{Regexp.escape(link_prefix)}/v3/roles/#{UUID_REGEX}} },
-            user: { href: %r{#{Regexp.escape(link_prefix)}/v3/users/a-new-user-guid} },
-            organization: { href: %r{#{Regexp.escape(link_prefix)}/v3/organizations/#{org.guid}} }
-          }
-        }
-      end
+    context 'creating a role for a user that does not exist in cc' do
+      let(:origin) { 'uaa' }
 
       before do
         allow(uaa_client).to receive(:usernames_for_ids).with(['a-new-user-guid']).and_return({ 'a-new-user-guid' => 'a-new-user-name' })
-        allow(uaa_client).to receive(:id_for_username).with('a-new-user-name', origin: 'uaa').and_return('a-new-user-guid')
+        allow(uaa_client).to receive(:id_for_username).with('a-new-user-name', origin:).and_return('a-new-user-guid')
         allow(uaa_client).to receive(:users_for_ids).with(['a-new-user-guid']).and_return({ 'a-new-user-guid' => { 'username' => 'a-new-user-name' } })
+        allow(uaa_client).to receive(:origins_for_username).with('a-new-user-name').and_return([origin])
       end
 
-      context 'by user guid' do
-        let(:params) do
+      context 'when the request is for a org role' do
+        let(:expected_response) do
           {
+            guid: UUID_REGEX,
+            created_at: iso8601,
+            updated_at: iso8601,
             type: 'organization_auditor',
             relationships: {
               user: {
                 data: { guid: 'a-new-user-guid' }
               },
-              organization: {
-                data: { guid: org.guid }
-              }
-            }
-          }
-        end
-
-        it 'creates the user and the role' do
-          expect(VCAP::CloudController::User.where(guid: 'a-new-user-guid').empty?).to be true
-          post '/v3/roles', params.to_json, admin_headers
-
-          expect(last_response).to have_status_code(201)
-          expect(parsed_response).to match_json_response(expected_response)
-          expect(VCAP::CloudController::User.where(guid: 'a-new-user-guid').empty?).to be false
-        end
-      end
-
-      context 'by user name' do
-        let(:params) do
-          {
-            type: 'organization_auditor',
-            relationships: {
-              user: {
-                data: { username: 'a-new-user-name', origin: 'uaa' }
+              space: {
+                data: nil
               },
               organization: {
                 data: { guid: org.guid }
               }
+            },
+            links: {
+              self: { href: %r{#{Regexp.escape(link_prefix)}/v3/roles/#{UUID_REGEX}} },
+              user: { href: %r{#{Regexp.escape(link_prefix)}/v3/users/a-new-user-guid} },
+              organization: { href: %r{#{Regexp.escape(link_prefix)}/v3/organizations/#{org.guid}} }
             }
           }
         end
 
-        it 'creates the user and the role' do
-          expect(VCAP::CloudController::User.where(guid: 'a-new-user-guid').empty?).to be true
-          post '/v3/roles', params.to_json, admin_headers
+        let(:expected_codes_and_responses) do
+          h = Hash.new(
+            code: 403
+          )
+          h['admin'] = {
+            code: 201,
+            response_object: expected_response
+          }
+          h['org_manager'] = {
+            code: 201,
+            response_object: expected_response
+          }
+          h
+        end
 
-          expect(last_response).to have_status_code(201)
-          expect(parsed_response).to match_json_response(expected_response)
-          expect(VCAP::CloudController::User.where(guid: 'a-new-user-guid').empty?).to be false
+        context 'by user guid' do
+          let(:params) do
+            {
+              type: 'organization_auditor',
+              relationships: {
+                user: {
+                  data: { guid: 'a-new-user-guid' }
+                },
+                organization: {
+                  data: { guid: org.guid }
+                }
+              }
+            }
+          end
+
+          it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS
+
+          it 'creates the user and the role' do
+            expect(VCAP::CloudController::User.where(guid: 'a-new-user-guid').empty?).to be true
+            post '/v3/roles', params.to_json, admin_headers
+
+            expect(last_response).to have_status_code(201)
+            expect(parsed_response).to match_json_response(expected_response)
+            expect(VCAP::CloudController::User.where(guid: 'a-new-user-guid').empty?).to be false
+          end
+
+          context 'when "allow_user_creation_by_org_manager" is enabled' do
+            before do
+              TestConfig.override(allow_user_creation_by_org_manager: true)
+            end
+
+            it 'does not call create_shadow_user' do
+              post '/v3/roles', params.to_json, admin_header
+              expect(last_response).to have_status_code(201)
+              expect(parsed_response).to match_json_response(expected_response)
+              expect(uaa_client).not_to have_received(:create_shadow_user)
+            end
+          end
+        end
+
+        context 'by user name' do
+          let(:params) do
+            {
+              type: 'organization_auditor',
+              relationships: {
+                user: {
+                  data: { username: 'a-new-user-name' }
+                },
+                organization: {
+                  data: { guid: org.guid }
+                }
+              }
+            }
+          end
+
+          it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS
+
+          it 'creates the user and the role' do
+            expect(VCAP::CloudController::User.where(guid: 'a-new-user-guid').empty?).to be true
+            post '/v3/roles', params.to_json, admin_headers
+
+            expect(last_response).to have_status_code(201)
+            expect(parsed_response).to match_json_response(expected_response)
+            expect(VCAP::CloudController::User.where(guid: 'a-new-user-guid').empty?).to be false
+          end
+
+          context 'when "allow_user_creation_by_org_manager" is enabled' do
+            before do
+              TestConfig.override(allow_user_creation_by_org_manager: true)
+            end
+
+            it 'does not call create_shadow_user' do
+              post '/v3/roles', params.to_json, admin_header
+              expect(last_response).to have_status_code(201)
+              expect(parsed_response).to match_json_response(expected_response)
+              expect(uaa_client).not_to have_received(:create_shadow_user)
+            end
+          end
+        end
+
+        context 'by user name and origin' do
+          let(:params) do
+            {
+              type: 'organization_auditor',
+              relationships: {
+                user: {
+                  data: { username: 'a-new-user-name', origin: origin }
+                },
+                organization: {
+                  data: { guid: org.guid }
+                }
+              }
+            }
+          end
+
+          it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS
+
+          it 'creates the user and the role' do
+            expect(VCAP::CloudController::User.where(guid: 'a-new-user-guid').empty?).to be true
+            post '/v3/roles', params.to_json, admin_headers
+
+            expect(last_response).to have_status_code(201)
+            expect(parsed_response).to match_json_response(expected_response)
+            expect(VCAP::CloudController::User.where(guid: 'a-new-user-guid').empty?).to be false
+          end
+
+          context 'when "allow_user_creation_by_org_manager" is enabled' do
+            before do
+              TestConfig.override(allow_user_creation_by_org_manager: true)
+              allow(uaa_client).to receive(:create_shadow_user).and_return({ 'id' => 'a-new-user-guid' })
+            end
+
+            it 'does not create a uaa shadow user' do
+              post '/v3/roles', params.to_json, admin_header
+              expect(last_response).to have_status_code(201)
+              expect(parsed_response).to match_json_response(expected_response)
+              expect(uaa_client).not_to have_received(:create_shadow_user)
+            end
+
+            context 'origin is different from uaa' do
+              let(:origin) { 'idp.local' }
+
+              it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS
+
+              it 'calls create_shadow_user and retrieves the guid of the user from uaa' do
+                post '/v3/roles', params.to_json, admin_header
+                expect(last_response).to have_status_code(201)
+                expect(parsed_response).to match_json_response(expected_response)
+                expect(uaa_client).to have_received(:create_shadow_user)
+              end
+            end
+          end
         end
       end
 
