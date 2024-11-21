@@ -52,6 +52,7 @@ RSpec.describe 'stack_check' do
       before do
         allow(db_double).to receive(:table_exists?).with(:stacks).and_return true
         allow(VCAP::CloudController::DB).to receive(:connect).and_return(db_double)
+        allow(db_double).to receive(:fetch).with('SELECT * FROM stacks WHERE name LIKE ? ', 'cflinuxfs3').and_return('1')
       end
 
       it 'validates stacks' do
@@ -78,6 +79,7 @@ RSpec.describe 'stack_check' do
       before do
         allow(double).to receive(:table_exists?).with(:buildpack_lifecycle_data).and_return true
         allow(VCAP::CloudController::DB).to receive(:connect).and_return(db_double)
+        allow(db_double).to receive(:fetch).with('SELECT * FROM stacks WHERE name LIKE ? ', 'cflinuxfs3').and_return('1')
       end
 
       it 'validates stacks' do
