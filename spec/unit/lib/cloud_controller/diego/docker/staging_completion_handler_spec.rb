@@ -48,6 +48,11 @@ module VCAP::CloudController
               subject.staging_complete(payload)
             end
 
+            it 'expires any old packages' do
+              expect_any_instance_of(BitsExpiration).to receive(:expire_packages!)
+              subject.staging_complete(payload)
+            end
+
             context 'when staging result is returned' do
               before do
                 payload[:result][:process_types] = {

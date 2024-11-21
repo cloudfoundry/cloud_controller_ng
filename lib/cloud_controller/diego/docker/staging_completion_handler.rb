@@ -25,6 +25,11 @@ module VCAP::CloudController
           }
         end
 
+        def staging_complete(payload, with_start=false)
+          super
+          BitsExpiration.new.expire_packages!(build.app)
+        end
+
         private
 
         def handle_missing_droplet!(_payload)
