@@ -97,9 +97,9 @@ module VCAP::CloudController
 
             expect(created_user.guid).to eq guid
             expect(created_user).to have_labels(
-                                      { prefix: nil, key_name: 'release', value: 'stable' },
-                                      { prefix: 'seriouseats.com', key_name: 'potato', value: 'mashed' }
-                                    )
+              { prefix: nil, key_name: 'release', value: 'stable' },
+              { prefix: 'seriouseats.com', key_name: 'potato', value: 'mashed' }
+            )
             expect(created_user).to have_annotations({ key_name: 'anno', value: 'tations' })
           end
 
