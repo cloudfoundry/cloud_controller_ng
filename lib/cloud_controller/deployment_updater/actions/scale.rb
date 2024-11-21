@@ -2,8 +2,6 @@ require 'cloud_controller/deployment_updater/actions/scale_down_superseded'
 require 'cloud_controller/deployment_updater/actions/scale_down_old_process'
 require 'cloud_controller/deployment_updater/actions/finalize'
 require 'cloud_controller/deployment_updater/calculators/all_instances_routable'
-require 'cloud_controller/deployment_updater/calculators/instances_to_scale_up'
-require 'cloud_controller/deployment_updater/calculators/instances_to_scale_down'
 
 module VCAP::CloudController
   module DeploymentUpdater
@@ -26,9 +24,6 @@ module VCAP::CloudController
             oldest_web_process_with_instances.lock!
             deploying_web_process.lock!
 
-            instances_to_scale_up = Calculators::InstancesToScaleUp.new(deployment).call
-            instances_to_scale_down = Calculators::InstancesToScaleDown.new(deployment, oldest_web_process_with_instances).call
-
             deployment.update(
               last_healthy_at: Time.now,
               state: DeploymentModel::DEPLOYING_STATE,
@@ -49,6 +44,14 @@ module VCAP::CloudController
         end
 
         private
+
+        def instances_to_scale_down
+          [(oldest_web_process_with_instances.instances - deployment.max_in_flight), 0].max
+        end
+
+        def instances_to_scale_up
+          [deploying_web_process.instances + deployment.max_in_flight, deployment.original_web_process_instance_count].min
+        end
 
         def oldest_web_process_with_instances
           @oldest_web_process_with_instances ||= app.web_processes.select { |process| process.instances > 0 }.min_by { |p| [p.created_at, p.id] }

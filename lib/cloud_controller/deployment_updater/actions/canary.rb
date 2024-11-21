@@ -29,10 +29,6 @@ module VCAP::CloudController
             logger.info("paused-canary-deployment-for-#{deployment.guid}")
           end
         end
-
-        def instance_reporters
-          CloudController::DependencyLocator.instance.instances_reporters
-        end
       end
     end
   end

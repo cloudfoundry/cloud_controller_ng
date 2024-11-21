@@ -24,7 +24,7 @@ module VCAP::CloudController
             prior_web_process = Calculators::FindInterimWebProcess.new(deployment).call || app.oldest_web_process
             prior_web_process.lock!
 
-            prior_web_process.update(instances: deployment.original_web_process_instance_count, type: ProcessTypes::WEB)
+            prior_web_process.update(instances: deployment.original_web_process_instance_count)
 
             CleanupWebProcesses.new(deployment, prior_web_process).call
 

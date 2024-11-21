@@ -12,8 +12,6 @@ module VCAP::CloudController
         end
 
         def call
-          promote_deploying_web_process
-
           CleanupWebProcesses.new(deployment, deploying_web_process).call
 
           update_non_web_processes
@@ -26,10 +24,6 @@ module VCAP::CloudController
         end
 
         private
-
-        def promote_deploying_web_process
-          deploying_web_process.update(type: ProcessTypes::WEB)
-        end
 
         def update_non_web_processes
           return if deploying_web_process.revision.nil?
