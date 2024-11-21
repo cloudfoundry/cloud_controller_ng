@@ -7,9 +7,7 @@ namespace :stacks do
     next unless db.table_exists?(:buildpack_lifecycle_data)
 
     RakeConfig.config.load_db_encryption_key
-    require 'models/runtime/buildpack_lifecycle_data_model'
-    require 'models/runtime/stack'
     require 'cloud_controller/check_stacks'
-    VCAP::CloudController::CheckStacks.new(RakeConfig.config).validate_stacks
+    VCAP::CloudController::CheckStacks.new(RakeConfig.config, db).validate_stacks
   end
 end
