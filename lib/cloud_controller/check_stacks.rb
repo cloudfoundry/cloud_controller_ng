@@ -4,7 +4,7 @@ module VCAP::CloudController
 
     def initialize(config, db)
       @config = config
-      @stack_config = VCAP::CloudController::Stack::ConfigFile.new(config.get(:stacks_file))
+      @stack_config = VCAP::CloudController::ConfigFile.new(config.get(:stacks_file))
       @db = db
     end
 
