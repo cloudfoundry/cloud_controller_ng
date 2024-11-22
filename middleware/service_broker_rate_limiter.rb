@@ -113,14 +113,14 @@ module CloudFoundry
 
       def apply_rate_limiting?(env)
         request = ActionDispatch::Request.new(env)
-        !admin? && rate_limit_method?(request)
+        !admin? && is_rate_limited_service_request?(request)
       end
 
       def admin?
         VCAP::CloudController::SecurityContext.admin? || VCAP::CloudController::SecurityContext.admin_read_only?
       end
 
-      def rate_limit_method?(request)
+      def is_rate_limited_service_request?(request)
         RATE_LIMITED_ENDPOINTS.any? do |endpoint|
           endpoint.endpoint_pattern.match?(request.fullpath) && endpoint.request_methods.include?(request.method)
         end
