@@ -1,4 +1,3 @@
-require 'cloud_controller/deployment_updater/actions/cleanup_web_processes'
 module VCAP::CloudController
   module DeploymentUpdater
     module Actions
@@ -12,7 +11,7 @@ module VCAP::CloudController
         end
 
         def call
-          CleanupWebProcesses.new(deployment, deploying_web_process).call
+          app.web_processes.reject { |p| p.guid == deploying_web_process.guid }.map(&:destroy)
 
           update_non_web_processes
           restart_non_web_processes

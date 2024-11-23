@@ -18,7 +18,7 @@ module VCAP::CloudController
             return unless deployment.state == DeploymentModel::PREPAUSED_STATE
             return unless Calculators::AllInstancesRoutable.new(deployment, logger).call
 
-            ScaleDownSuperseded.new(deployment).call
+            ScaleDownCanceled.new(deployment).call
 
             deployment.update(
               last_healthy_at: Time.now,

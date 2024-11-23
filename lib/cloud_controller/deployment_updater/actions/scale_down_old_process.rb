@@ -12,7 +12,7 @@ module VCAP::CloudController
         end
 
         def call
-          if process.instances <= deployment.max_in_flight && is_interim_process?(process)
+          if process.instances <= instances_to_scale_down && is_interim_process?(process)
             process.destroy
             return
           end

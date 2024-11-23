@@ -36,7 +36,7 @@ module VCAP::CloudController
               return
             end
 
-            ScaleDownSuperseded.new(deployment).call
+            ScaleDownCanceled.new(deployment).call
             ScaleDownOldProcess.new(deployment, oldest_web_process_with_instances, instances_to_scale_down).call
 
             deploying_web_process.update(instances: instances_to_scale_up)

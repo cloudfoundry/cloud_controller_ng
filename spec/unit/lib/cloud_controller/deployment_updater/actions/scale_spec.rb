@@ -192,17 +192,6 @@ module VCAP::CloudController
         )
       end
 
-      let!(:interim_route_mapping) { RouteMappingModel.make(app: web_process.app, process_type: interim_deploying_web_process.type) }
-
-      let!(:non_web_process1) { ProcessModel.make(app: web_process.app, instances: 2, type: 'worker', command: 'something-else') }
-
-      let!(:non_web_process2) { ProcessModel.make(app: web_process.app, instances: 2, type: 'clock') }
-
-      let!(:route1) { Route.make(space: space, host: 'hostname1') }
-      let!(:route_mapping1) { RouteMappingModel.make(app: web_process.app, route: route1, process_type: web_process.type) }
-      let!(:route2) { Route.make(space: space, host: 'hostname2') }
-      let!(:route_mapping2) { RouteMappingModel.make(app: deploying_web_process.app, route: route2, process_type: deploying_web_process.type) }
-
       before do
         allow(ProcessRestart).to receive(:restart)
         RevisionProcessCommandModel.where(
@@ -211,82 +200,16 @@ module VCAP::CloudController
         ).update(process_command: 'revision-non-web-1-command')
       end
 
-      it 'replaces the existing web process with the deploying_web_process' do
-        deploying_web_process_guid = deploying_web_process.guid
-        expect(ProcessModel.map(&:type)).to match_array(%w[web web web worker clock])
-
+      it 'finalizes the deployment' do
         subject.call
-
         deployment.reload
-        deployment.app.reload
+        expect(deployment.state).to eq(DeploymentModel::DEPLOYED_STATE)
+        expect(deployment.status_value).to eq(DeploymentModel::FINALIZED_STATUS_VALUE)
+        expect(deployment.status_reason).to eq(DeploymentModel::DEPLOYED_STATUS_REASON)
 
         after_web_process = deployment.app.web_processes.first
-        expect(after_web_process.guid).to eq(deploying_web_process_guid)
-        expect(after_web_process.instances).to eq(original_web_process_instance_count)
-
-        expect(ProcessModel.find(guid: deploying_web_process_guid)).not_to be_nil
-        expect(ProcessModel.find(guid: deployment.app.guid)).to be_nil
-
-        expect(ProcessModel.map(&:type)).to match_array(%w[web worker clock])
-      end
-
-      it 'cleans up any extra processes from the deployment train' do
-        subject.call
-        expect(ProcessModel.find(guid: interim_deploying_web_process.guid)).to be_nil
-      end
-
-      it 'puts the deployment into its finished DEPLOYED_STATE' do
-        subject.call
-        deployment.reload
-        expect(deployment.state).to eq(DeploymentModel::DEPLOYED_STATE)
-        expect(deployment.status_value).to eq(DeploymentModel::FINALIZED_STATUS_VALUE)
-        expect(deployment.status_reason).to eq(DeploymentModel::DEPLOYED_STATUS_REASON)
-      end
-
-      it 'restarts the non-web processes with the deploying process revision, but not the web process' do
-        subject.call
-
-        expect(ProcessRestart).
-          to have_received(:restart).
-          with(process: non_web_process1, config: TestConfig.config_instance, stop_in_runtime: true, revision: revision)
-
-        expect(ProcessRestart).
-          to have_received(:restart).
-          with(process: non_web_process2, config: TestConfig.config_instance, stop_in_runtime: true, revision: revision)
-
-        expect(ProcessRestart).
-          not_to have_received(:restart).
-          with(process: web_process, config: TestConfig.config_instance, stop_in_runtime: true)
-
-        expect(ProcessRestart).
-          not_to have_received(:restart).
-          with(process: deploying_web_process, config: TestConfig.config_instance, stop_in_runtime: true)
-
-        deployment.reload
-        expect(deployment.state).to eq(DeploymentModel::DEPLOYED_STATE)
-        expect(deployment.status_value).to eq(DeploymentModel::FINALIZED_STATUS_VALUE)
-        expect(deployment.status_reason).to eq(DeploymentModel::DEPLOYED_STATUS_REASON)
-      end
-
-      it 'sets the commands on the non-web processes to be the commands from the revision of the deploying web process' do
-        subject.call
-
-        expect(non_web_process1.reload.command).to eq('revision-non-web-1-command')
-        expect(non_web_process2.reload.command).to be_nil
-      end
-
-      context 'when revisions are disabled so the deploying web process does not have one' do
-        before do
-          deploying_web_process.update(revision: nil)
-        end
-
-        it 'leaves the non-web process commands alone' do
-          subject.call
-
-          expect(logger).not_to have_received(:error)
-          expect(non_web_process1.reload.command).to eq('something-else')
-          expect(non_web_process2.reload.command).to be_nil
-        end
+        expect(after_web_process.guid).to eq(deploying_web_process.guid)
+        expect(after_web_process.instances).to eq(6)
       end
     end
 

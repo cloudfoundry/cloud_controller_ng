@@ -1,6 +1,4 @@
 require 'cloud_controller/deployment_updater/calculators/find_interim_web_process'
-require 'cloud_controller/deployment_updater/actions/cleanup_web_processes'
-
 module VCAP::CloudController
   module DeploymentUpdater
     module Actions
@@ -26,7 +24,7 @@ module VCAP::CloudController
 
             prior_web_process.update(instances: deployment.original_web_process_instance_count)
 
-            CleanupWebProcesses.new(deployment, prior_web_process).call
+            app.web_processes.reject { |p| p.guid == prior_web_process.guid }.map(&:destroy)
 
             deployment.update(
               state: DeploymentModel::CANCELED_STATE,

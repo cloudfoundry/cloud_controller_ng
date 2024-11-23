@@ -1,7 +1,7 @@
 module VCAP::CloudController
   module DeploymentUpdater
     module Actions
-      class ScaleDownSuperseded
+      class ScaleDownCanceled
         attr_reader :deployment
 
         def initialize(deployment)
