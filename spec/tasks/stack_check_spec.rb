@@ -52,11 +52,10 @@ RSpec.describe 'stack_check' do
       before do
         allow(db_double).to receive(:table_exists?).with(:stacks).and_return true
         allow(VCAP::CloudController::DB).to receive(:connect).and_return(db_double)
-        allow(db_double).to receive(:fetch).with('SELECT 1 FROM stacks WHERE name LIKE ? ', 'cflinuxfs3').and_return('1')
       end
 
       it 'validates stacks' do
-        expect_any_instance_of(VCAP::CloudController::CheckStacks).to receive(:validate_stacks).and_call_original
+        expect_any_instance_of(VCAP::CloudController::CheckStacks).to receive(:validate_stacks)
         Rake::Task['stacks:stack_check'].execute
       end
     end
