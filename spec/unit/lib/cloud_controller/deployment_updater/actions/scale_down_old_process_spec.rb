@@ -50,13 +50,13 @@ module VCAP::CloudController
       expect(interim_web_process.reload.instances).to eq(1)
     end
 
-    it 'deletes interim processes if they will have 0 instances' do
-      DeploymentUpdater::Actions::ScaleDownOldProcess.new(deployment, interim_web_process, 3).call
+    it 'deletes interim processes if they are scaled to 0 instances' do
+      DeploymentUpdater::Actions::ScaleDownOldProcess.new(deployment, interim_web_process, 0).call
       expect(ProcessModel.find(guid: interim_web_process.guid)).to be_nil
     end
 
-    it 'does not delete the apps oldest web process' do
-      DeploymentUpdater::Actions::ScaleDownOldProcess.new(deployment, oldest_web_process, 3).call
+    it 'does not delete the apps oldest web process if it is scaled to 0 instances' do
+      DeploymentUpdater::Actions::ScaleDownOldProcess.new(deployment, oldest_web_process, 0).call
       expect(interim_web_process.reload.guid).to be_present
     end
   end
