@@ -1,5 +1,4 @@
 require 'cloud_controller/deployment_updater/actions/scale_down_canceled'
-require 'cloud_controller/deployment_updater/calculators/all_instances_routable'
 
 module VCAP::CloudController
   module DeploymentUpdater
@@ -16,7 +15,7 @@ module VCAP::CloudController
           deployment.db.transaction do
             deployment.lock!
             return unless deployment.state == DeploymentModel::PREPAUSED_STATE
-            return unless Calculators::AllInstancesRoutable.new(deployment, logger).call
+            return unless all_instances_routable?
 
             ScaleDownCanceled.new(deployment).call
 
@@ -28,6 +27,20 @@ module VCAP::CloudController
             )
             logger.info("paused-canary-deployment-for-#{deployment.guid}")
           end
+        end
+
+        private
+
+        def all_instances_routable?
+          instances = instance_reporters.all_instances_for_app(deployment.deploying_web_process)
+          instances.all? { |_, val| val[:state] == VCAP::CloudController::Diego::LRP_RUNNING && val[:routable] }
+        rescue CloudController::Errors::ApiError # the instances_reporter re-raises InstancesUnavailable as ApiError
+          logger.info("skipping-canary-update-for-#{deployment.guid}")
+          false
+        end
+
+        def instance_reporters
+          CloudController::DependencyLocator.instance.instances_reporters
         end
       end
     end
