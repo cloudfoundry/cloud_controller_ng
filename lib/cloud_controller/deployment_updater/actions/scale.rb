@@ -1,4 +1,4 @@
-require 'cloud_controller/deployment_updater/actions/scale_down_superseded'
+require 'cloud_controller/deployment_updater/actions/scale_down_canceled'
 require 'cloud_controller/deployment_updater/actions/scale_down_old_process'
 require 'cloud_controller/deployment_updater/actions/finalize'
 require 'cloud_controller/deployment_updater/calculators/all_instances_routable'
