@@ -37,19 +37,19 @@ module VCAP::CloudController
             end
 
             ScaleDownCanceled.new(deployment).call
-            ScaleDownOldProcess.new(deployment, oldest_web_process_with_instances, instances_to_scale_down).call
+            ScaleDownOldProcess.new(deployment, oldest_web_process_with_instances, desired_old_instances).call
 
-            deploying_web_process.update(instances: instances_to_scale_up)
+            deploying_web_process.update(instances: desired_new_instances)
           end
         end
 
         private
 
-        def instances_to_scale_down
+        def desired_old_instances
           [(oldest_web_process_with_instances.instances - deployment.max_in_flight), 0].max
         end
 
-        def instances_to_scale_up
+        def desired_new_instances
           [deploying_web_process.instances + deployment.max_in_flight, deployment.original_web_process_instance_count].min
         end
 

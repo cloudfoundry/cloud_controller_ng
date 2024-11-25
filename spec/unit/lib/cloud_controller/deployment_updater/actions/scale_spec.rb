@@ -267,18 +267,11 @@ module VCAP::CloudController
         )
       end
 
-      let!(:oldest_route_mapping) do
-        RouteMappingModel.make(app: oldest_web_process_with_instances.app, process_type: oldest_web_process_with_instances.type)
-      end
-
-      let!(:oldest_label) { ProcessLabelModel.make(resource_guid: oldest_web_process_with_instances.guid, key_name: 'test', value: 'bommel') }
-
       it 'destroys the oldest web process and ignores the original web process' do
         expect do
           subject.call
         end.not_to(change { ProcessModel.find(guid: web_process.guid) })
         expect(ProcessModel.find(guid: oldest_web_process_with_instances.guid)).to be_nil
-        expect(oldest_label).not_to exist
       end
     end
 

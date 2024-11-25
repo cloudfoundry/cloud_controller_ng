@@ -2,22 +2,22 @@ module VCAP::CloudController
   module DeploymentUpdater
     module Actions
       class ScaleDownOldProcess
-        attr_reader :deployment, :process, :app, :instances_to_scale_down
+        attr_reader :deployment, :process, :app, :desired_instances
 
-        def initialize(deployment, process, instances_to_scale_down)
+        def initialize(deployment, process, desired_instances)
           @deployment = deployment
           @app = deployment.app
           @process = process
-          @instances_to_scale_down = instances_to_scale_down
+          @desired_instances = desired_instances
         end
 
         def call
-          if process.instances <= instances_to_scale_down && is_interim_process?(process)
+          if desired_instances == 0 && is_interim_process?(process)
             process.destroy
             return
           end
 
-          process.update(instances: instances_to_scale_down)
+          process.update(instances: desired_instances)
         end
 
         private
