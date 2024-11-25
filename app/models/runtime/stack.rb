@@ -1,5 +1,5 @@
 require 'models/helpers/process_types'
-require 'models/helpers/config_file'
+require 'models/helpers/stack_config_file'
 
 module VCAP::CloudController
   class Stack < Sequel::Model
