@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 module VCAP::CloudController
-    class ConfigFile
+    class StackConfigFile
       def initialize(file_path)
         @hash = YAMLConfig.safe_load_file(file_path).tap do |h|
           Schema.validate(h)

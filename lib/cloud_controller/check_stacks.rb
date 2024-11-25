@@ -4,7 +4,7 @@ module VCAP::CloudController
 
     def initialize(config, db)
       @config = config
-      @stack_config = VCAP::CloudController::ConfigFile.new(config.get(:stacks_file))
+      @stack_config = VCAP::CloudController::StackConfigFile.new(config.get(:stacks_file))
       @db = db
     end
 
@@ -20,7 +20,6 @@ module VCAP::CloudController
     def validate_stack(deprecated_stack)
       configured_stacks = @stack_config.stacks
       deprecated_stack_in_config = (configured_stacks.find { |stack| stack['name'] == deprecated_stack }).present?
-
       return if deprecated_stack_in_config
 
       deprecated_stack_in_db = false

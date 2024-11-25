@@ -66,7 +66,7 @@ module VCAP::CloudController
     end
 
     def self.configure(file_path)
-      @config_file = (ConfigFile.new(file_path) if file_path)
+      @config_file = (StackConfigFile.new(file_path) if file_path)
     end
 
     def self.populate
