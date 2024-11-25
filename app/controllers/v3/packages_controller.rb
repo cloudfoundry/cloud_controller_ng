@@ -165,7 +165,9 @@ class PackagesController < ApplicationController
       unprocessable_non_bits_package!
     end
 
-    PackageCreate.create(message:, user_audit_info:)
+    package = PackageCreate.create(message:, user_audit_info:)
+    BitsExpiration.new.expire_packages!(app)
+    package
   end
 
   def create_copy
@@ -182,11 +184,13 @@ class PackagesController < ApplicationController
     unauthorized! unless permission_queryer.can_write_to_active_space?(source_package.space.id)
     suspended! unless permission_queryer.is_space_active?(source_package.space.id)
 
-    PackageCopy.new.copy(
+    package = PackageCopy.new.copy(
       destination_app_guid: app_guid,
       source_package: source_package,
       user_audit_info: user_audit_info
     )
+    BitsExpiration.new.expire_packages!(destination_app)
+    package
   end
 
   def package_not_found!
