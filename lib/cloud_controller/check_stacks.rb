@@ -22,10 +22,8 @@ module VCAP::CloudController
       deprecated_stack_in_config = (configured_stacks.find { |stack| stack['name'] == deprecated_stack }).present?
       return if deprecated_stack_in_config
 
-      deprecated_stack_in_db = false
-      @db.fetch('SELECT 1 FROM stacks WHERE name LIKE ? ', deprecated_stack) do |_row|
-        deprecated_stack_in_db = true
-      end
+      deprecated_stack_in_db = true if @db.fetch('SELECT 1 FROM stacks WHERE name LIKE ? ', deprecated_stack).empty?
+
       raise "rake task 'stack_check' failed, stack '#{deprecated_stack}' not supported" if deprecated_stack_in_db
     end
   end
