@@ -1,4 +1,4 @@
-require 'cloud_controller/deployment_updater/actions/scale_down_canceled'
+require 'cloud_controller/deployment_updater/actions/scale_down_canceled_processes'
 require 'cloud_controller/deployment_updater/actions/scale_down_old_process'
 require 'cloud_controller/deployment_updater/actions/finalize'
 
@@ -35,7 +35,7 @@ module VCAP::CloudController
               return
             end
 
-            ScaleDownCanceled.new(deployment).call
+            ScaleDownCanceledProcesses.new(deployment).call
             ScaleDownOldProcess.new(deployment, oldest_web_process_with_instances, desired_old_instances).call
 
             deploying_web_process.update(instances: desired_new_instances)

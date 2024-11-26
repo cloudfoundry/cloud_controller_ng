@@ -1,9 +1,9 @@
 require 'spec_helper'
-require 'cloud_controller/deployment_updater/actions/scale_down_canceled'
+require 'cloud_controller/deployment_updater/actions/scale_down_canceled_processes'
 
 module VCAP::CloudController
-  RSpec.describe DeploymentUpdater::Actions::ScaleDownCanceled do
-    subject(:finalize_action) { DeploymentUpdater::Actions::ScaleDownCanceled.new(deployment) }
+  RSpec.describe DeploymentUpdater::Actions::ScaleDownCanceledProcesses do
+    subject(:finalize_action) { DeploymentUpdater::Actions::ScaleDownCanceledProcesses.new(deployment) }
 
     let(:app) { AppModel.make(revisions_enabled: true) }
     let(:droplet) { DropletModel.make(app: app, process_types: { 'web' => 'serve', 'worker' => 'work' }) }

@@ -1,4 +1,4 @@
-require 'cloud_controller/deployment_updater/actions/scale_down_canceled'
+require 'cloud_controller/deployment_updater/actions/scale_down_canceled_processes'
 
 module VCAP::CloudController
   module DeploymentUpdater
@@ -17,7 +17,7 @@ module VCAP::CloudController
             return unless deployment.state == DeploymentModel::PREPAUSED_STATE
             return unless all_instances_routable?
 
-            ScaleDownCanceled.new(deployment).call
+            ScaleDownCanceledProcesses.new(deployment).call
 
             deployment.update(
               last_healthy_at: Time.now,
