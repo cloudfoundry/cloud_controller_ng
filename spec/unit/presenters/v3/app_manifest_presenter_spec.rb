@@ -111,8 +111,8 @@ module VCAP::CloudController::Presenters::V3
             service_instance2.name
           ])
           expect(application[:routes]).to eq([
-            { route: route.uri, protocol: 'http1' },
-            { route: route2.uri, protocol: 'http1' }
+            { route: route.uri, protocol: 'http1', options: {} },
+            { route: route2.uri, protocol: 'http1', options: {} }
           ])
           expect(application[:env]).to match({ 'one' => 'potato', 'two' => 'tomato' })
           expect(application[:metadata]).to match({ labels: { 'potato' => 'idaho' }, annotations: { 'style' => 'mashed' } })

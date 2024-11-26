@@ -13,14 +13,8 @@ module VCAP::CloudController
           return
         end
 
-        if contains_invalid_route_options?(record.routes)
-          record.errors.add(:routes, message: 'contains invalid route options')
-          return
-        end
-
-        return unless contains_invalid_lb_algo?(record.routes)
-
-        record.errors.add(:routes, message: 'contains an invalid loadbalancing-algorithm option')
+        contains_invalid_route_options?(record)
+        contains_invalid_lb_algo?(record)
         nil
       end
 
@@ -32,7 +26,8 @@ module VCAP::CloudController
         routes.any? { |r| !(r.is_a?(Hash) && r[:route].present?) }
       end
 
-      def contains_invalid_route_options?(routes)
+      def contains_invalid_route_options?(record)
+        routes = record.routes
         routes.any? do |r|
           next unless r[:options]
 
@@ -40,15 +35,25 @@ module VCAP::CloudController
 
           return false if r[:options].empty?
 
-          return r[:options].keys.all? { |key| RouteOptionsMessage::VALID_MANIFEST_ROUTE_OPTIONS.exclude?(key) }
+          r[:options].each_key do |key|
+            RouteOptionsMessage::VALID_MANIFEST_ROUTE_OPTIONS.exclude?(key) &&
+              record.errors.add(:base,
+                                message: "Route '#{r[:route]}' contains invalid route option '#{key}'. \
+Valid keys: '#{RouteOptionsMessage::VALID_MANIFEST_ROUTE_OPTIONS.join(', ')}'")
+          end
         end
       end
 
-      def contains_invalid_lb_algo?(routes)
-        routes.any? do |r|
+      def contains_invalid_lb_algo?(record)
+        routes = record.routes
+        routes.each do |r|
           next unless r[:options] && r[:options][:'loadbalancing-algorithm']
 
-          return true if r[:options][:'loadbalancing-algorithm'] && RouteOptionsMessage::VALID_LOADBALANCING_ALGORITHMS.exclude?(r[:options][:'loadbalancing-algorithm'])
+          lb_algo = r[:options][:'loadbalancing-algorithm']
+          RouteOptionsMessage::VALID_LOADBALANCING_ALGORITHMS.exclude?(lb_algo) &&
+            record.errors.add(:base,
+                              message: "Route '#{r[:route]}' contains invalid load-balancing algorithm '#{lb_algo}'. \
+Valid algorithms: '#{RouteOptionsMessage::VALID_LOADBALANCING_ALGORITHMS.join(', ')}'")
         end
       end
     end

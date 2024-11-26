@@ -555,6 +555,17 @@ module VCAP::CloudController::Validators
         expect(message).to be_valid
       end
 
+      it 'adds invalid options message when options is null' do
+        message = OptionsMessage.new({ options: nil })
+        expect(message).not_to be_valid
+        expect(message.errors_on(:options)).to include("'options' is not a valid object")
+      end
+
+      it 'successfully validates empty load balancer' do
+        message = OptionsMessage.new({ options: { lb_algo: nil } })
+        expect(message).to be_valid
+      end
+
       it 'adds invalid object error message when options is not an object' do
         message = OptionsMessage.new({ options: 'cheesecake' })
         expect(message).not_to be_valid

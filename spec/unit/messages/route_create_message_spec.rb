@@ -392,6 +392,24 @@ module VCAP::CloudController
           end
         end
 
+        context 'when nil' do
+          let(:params) do
+            {
+              host: 'some-host',
+              relationships: {
+                space: { data: { guid: 'space-guid' } },
+                domain: { data: { guid: 'domain-guid' } }
+              },
+              options: nil
+            }
+          end
+
+          it 'is not valid' do
+            expect(subject).not_to be_valid
+            expect(subject.errors[:options]).to include("'options' is not a valid object")
+          end
+        end
+
         context 'when options has invalid key' do
           let(:params) do
             {
@@ -435,6 +453,23 @@ module VCAP::CloudController
                   domain: { data: { guid: 'domain-guid' } }
                 },
                 options: { lb_algo: 'least-connections' }
+              }
+            end
+
+            it 'is valid' do
+              expect(subject).to be_valid
+            end
+          end
+
+          context 'when lb_algo is nil' do
+            let(:params) do
+              {
+                host: 'some-host',
+                relationships: {
+                  space: { data: { guid: 'space-guid' } },
+                  domain: { data: { guid: 'domain-guid' } }
+                },
+                options: { lb_algo: nil }
               }
             end
 

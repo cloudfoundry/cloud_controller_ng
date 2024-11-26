@@ -646,7 +646,8 @@ RSpec.describe 'Space Manifests' do
           post "/v3/spaces/#{space.guid}/actions/apply_manifest", yml_manifest, yml_headers(user_header)
 
           expect(last_response).to have_status_code(422)
-          expect(last_response).to have_error_message('Routes contains invalid route options')
+          expect(last_response).to have_error_message("For application '#{app1_model.name}': \
+Route 'https://#{route.host}.#{route.domain.name}' contains invalid route option 'doesnt-exist'. Valid keys: 'loadbalancing-algorithm'")
         end
       end
 
@@ -811,7 +812,8 @@ RSpec.describe 'Space Manifests' do
             post "/v3/spaces/#{space.guid}/actions/apply_manifest", yml_manifest, yml_headers(user_header)
 
             expect(last_response).to have_status_code(422)
-            expect(last_response).to have_error_message('Routes contains an invalid loadbalancing-algorithm option')
+            expect(last_response).to have_error_message("For application '#{app1_model.name}': \
+Route 'https://#{route.host}.#{route.domain.name}' contains invalid load-balancing algorithm 'unsupported-lb-algorithm'. Valid algorithms: 'round-robin, least-connections'")
           end
         end
 
