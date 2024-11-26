@@ -80,6 +80,8 @@ module VCAP::CloudController
         self.state = VCAP::CloudController::PackageModel::READY_STATE
         save
       end
+
+      BitsExpiration.new.expire_packages!(app)
     end
 
     def fail_upload!(err_msg)
