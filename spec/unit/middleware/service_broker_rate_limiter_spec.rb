@@ -5,10 +5,12 @@ module CloudFoundry
     RSpec.describe ServiceBrokerRateLimiter do
       let(:app) { double(:app) }
       let(:logger) { double }
-      let(:path_info) { '/v3/service_instances' }
+      let(:instance) { VCAP::CloudController::Service.make(instances_retrievable: true) }
+      let(:path_info) { '/v2/service_instances' }
       let(:user_guid) { SecureRandom.uuid }
       let(:user_env) { { 'cf.user_guid' => user_guid, 'PATH_INFO' => path_info } }
-      let(:fake_request) { instance_double(ActionDispatch::Request, fullpath: '/v3/service_instances', method: 'POST') }
+      let(:env) { { 'cf.user_guid' => user_guid, 'PATH_INFO' => path, 'REQUEST_METHOD' => request_method } }
+      let(:fake_request) { instance_double(ActionDispatch::Request, fullpath: '/v2/service_instances', method: 'POST') }
       let(:max_concurrent_requests) { 1 }
       let(:broker_timeout) { 60 }
       let(:middleware) do
@@ -25,6 +27,8 @@ module CloudFoundry
       end
 
       describe 'included requests' do
+        let(:fake_request) { instance_double(ActionDispatch::Request, fullpath: '/v2/service_instances', method: 'PUT') }
+
         it 'allows a service broker request within the limit' do
           status, = middleware.call(user_env)
           expect(status).to eq(200)
@@ -35,16 +39,6 @@ module CloudFoundry
           expect(status).to eq(200)
           status, = middleware.call(user_env)
           expect(status).to eq(200)
-        end
-
-        it 'does not allow more than the max number of concurrent requests' do
-          threads = 2.times.map { Thread.new { Thread.current[:status], = middleware.call(user_env) } }
-          statuses = threads.map { |t| t.join[:status] }
-
-          expect(statuses).to include(200)
-          expect(statuses).to include(429)
-          expect(app).to have_received(:call).once
-          expect(logger).to have_received(:info).with("Service broker concurrent rate limit exceeded for user '#{user_guid}'")
         end
 
         it 'counts concurrent requests per user' do
@@ -65,6 +59,73 @@ module CloudFoundry
           allow(app).to receive(:call).and_return [200, {}, 'a body']
           status, = middleware.call(user_env)
           expect(status).to eq(200)
+        end
+
+        describe 'service endpoints' do
+          context 'v2 and v3 rate limited service endpoints' do
+            rate_limited_service_endpoints = [
+              %w[/v2/service_instances POST],
+              %w[/v2/service_bindings POST],
+              %w[/v2/service_keys POST],
+              %w[/v2/service_instances PUT],
+              %w[/v2/service_bindings PUT],
+              %w[/v2/service_keys PUT],
+              %w[/v2/service_instances DELETE],
+              %w[/v2/service_bindings DELETE],
+              %w[/v2/service_keys DELETE],
+              %w[/v3/service_instances/:guid/parameters GET],
+              %w[/v3/service_credential_bindings/:guid/parameters GET],
+              %w[/v3/service_route_bindings/:guid/parameters GET]
+            ]
+            rate_limited_service_endpoints.each do |endpoint, method|
+              context "#{endpoint} #{method} - rate-limited" do
+                let(:path) { endpoint.gsub(':guid', instance.guid.to_s) }
+                let(:request_method) { method }
+                let(:fake_request) { instance_double(ActionDispatch::Request, fullpath: endpoint, method: method) }
+
+                it 'does not allow more than the max number of concurrent requests' do
+                  threads = 2.times.map { Thread.new { middleware.call(env) } }
+                  statuses = threads.map(&:join).map(&:value).map(&:first)
+
+                  expect(statuses).to include(200)
+                  expect(statuses).to include(429)
+                  expect(app).to have_received(:call).once
+                  expect(logger).to have_received(:info).with("Service broker concurrent rate limit exceeded for user '#{user_guid}'")
+                end
+              end
+            end
+          end
+
+          context 'v3 non rate limited service endpoints' do
+            v3_not_rate_limited_service_endpoints = [
+              %w[/v3/service_instances POST],
+              %w[/v3/service_credential_bindings POST],
+              %w[/v3/service_route_bindings POST],
+              %w[/v3/service_instances PATCH],
+              %w[/v3/service_credential_bindings PATCH],
+              %w[/v3/service_route_bindings PATCH],
+              %w[/v3/service_instances DELETE],
+              %w[/v3/service_credential_bindings DELETE],
+              %w[/v3/service_route_bindings DELETE]
+            ]
+
+            v3_not_rate_limited_service_endpoints.each do |endpoint, method|
+              context "#{endpoint} #{method} - non-rate-limited" do
+                let(:path) { endpoint }
+                let(:request_method) { method }
+                let(:fake_request) { instance_double(ActionDispatch::Request, fullpath: endpoint, method: method) }
+
+                it 'allows concurrent requests without limits' do
+                  threads = 2.times.map { Thread.new { middleware.call(env) } }
+                  statuses = threads.map(&:join).map(&:value).map(&:first)
+
+                  expect(statuses).to all(eq(200))
+                  expect(app).to have_received(:call).twice
+                  expect(logger).not_to have_received(:info)
+                end
+              end
+            end
+          end
         end
 
         describe 'errors' do
