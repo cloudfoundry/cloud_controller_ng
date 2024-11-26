@@ -14,6 +14,10 @@ module VCAP::CloudController
       options
     ]
 
+    def self.options_requested?
+      @options_requested ||= proc { |a| a.requested?(:options) }
+    end
+
     validates :host,
               allow_nil: true,
               string: true,
@@ -58,7 +62,7 @@ module VCAP::CloudController
 
     validates_with NoAdditionalKeysValidator
     validates_with RelationshipValidator
-    validates_with OptionsValidator
+    validates_with OptionsValidator, if: options_requested?
 
     delegate :space_guid, to: :relationships_message
     delegate :domain_guid, to: :relationships_message

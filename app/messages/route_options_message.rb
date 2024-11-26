@@ -6,7 +6,7 @@ module VCAP::CloudController
     VALID_ROUTE_OPTIONS = %i[lb_algo].freeze
     VALID_LOADBALANCING_ALGORITHMS = %w[round-robin least-connections].freeze
 
-    register_allowed_keys %i[lb_algo]
+    register_allowed_keys VALID_ROUTE_OPTIONS
     validates_with NoAdditionalKeysValidator
     validates :lb_algo,
               inclusion: { in: VALID_LOADBALANCING_ALGORITHMS, message: "'%<value>s' is not a supported load-balancing algorithm" },

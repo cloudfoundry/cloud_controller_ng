@@ -36,9 +36,6 @@ module VCAP::CloudController
         metadata: {
           labels: new_labels,
           annotations: new_annotations
-        },
-        options: {
-          lb_algo: 'round-robin'
         }
       }
     end
@@ -136,98 +133,94 @@ module VCAP::CloudController
         end
       end
     end
+
     describe '#update options' do
-      context 'when the route has no existing metadata' do
-        context 'when no metadata is specified' do
+      context 'when the route has no existing options' do
+        context 'when no options are specified' do
           let(:body) do
             {}
           end
 
-          it 'adds no metadata' do
+          it 'adds no options' do
             expect(message).to be_valid
             subject.update(route:, message:)
             route.reload
-            expect(route.labels.size).to eq(0)
-            expect(route.annotations.size).to eq(0)
+            expect(route.options).to eq({})
           end
         end
 
-        context 'when metadata is specified' do
-          it 'updates the route metadata' do
+        context 'when an option is specified' do
+          let(:body) do
+            {
+              options: {
+                lb_algo: 'round-robin'
+              }
+            }
+          end
+
+          it 'adds the route option' do
             expect(message).to be_valid
             subject.update(route:, message:)
 
             route.reload
-            expect(route).to have_labels(
-              { prefix: 'doordash.com', key_name: 'potato', value: 'mashed' },
-              { prefix: nil, key_name: 'fruit', value: 'strawberries' },
-              { prefix: nil, key_name: 'cuisine', value: 'thai' }
-            )
-            expect(route).to have_annotations(
-              { key_name: 'potato', value: 'idaho' }
-            )
             expect(route[:options]).to eq('{"lb_algo":"round-robin"}')
           end
         end
       end
 
-      context 'when the route has existing metadata' do
+      context 'when the route has existing options' do
         before do
-          VCAP::CloudController::LabelsUpdate.update(route, old_labels, VCAP::CloudController::RouteLabelModel)
-          VCAP::CloudController::AnnotationsUpdate.update(route, old_annotations, VCAP::CloudController::RouteAnnotationModel)
           route[:options] = '{"lb_algo": "round-robin"}'
         end
 
-        context 'when no metadata is specified' do
+        context 'when no options are specified' do
           let(:body) do
             {}
           end
 
-          it 'adds no metadata' do
+          it 'modifies nothing' do
             expect(message).to be_valid
             subject.update(route:, message:)
             route.reload
-            expect(route).to have_labels(
-              { prefix: nil, key_name: 'fruit', value: 'peach' },
-              { prefix: nil, key_name: 'clothing', value: 'blouse' }
-            )
-            expect(route).to have_annotations(
-              { key_name: 'potato', value: 'celandine' },
-              { key_name: 'beet', value: 'formanova' }
-            )
             expect(route.options).to include({ 'lb_algo' => 'round-robin' })
           end
         end
 
-        context 'when metadata is specified' do
+        context 'when an option is specified' do
           let(:body) do
             {
-              metadata: {
-                labels: new_labels.merge(fruit: nil, newstuff: 'here'),
-                annotations: new_annotations.merge(beet: nil, asparagus: 'crunchy')
+              options: {
+                lb_algo: 'least-connections'
               }
             }
           end
 
-          it 'updates some, deletes nils, leaves unspecified fields alone' do
+          it 'updates the option' do
             expect(message).to be_valid
             subject.update(route:, message:)
             route.reload
 
-            expect(route).to have_labels(
-              { prefix: 'doordash.com', key_name: 'potato', value: 'mashed' },
-              { prefix: nil, key_name: 'clothing', value: 'blouse' },
-              { prefix: nil, key_name: 'newstuff', value: 'here' },
-              { prefix: nil, key_name: 'cuisine', value: 'thai' }
-            )
-            expect(route).to have_annotations(
-              { key_name: 'potato', value: 'idaho' },
-              { key_name: 'asparagus', value: 'crunchy' }
-            )
+            expect(route.options).to include({ 'lb_algo' => 'least-connections' })
+          end
+        end
+
+        context 'when the option value is set to null' do
+          let(:body) do
+            {
+              options: {
+                lb_algo: nil
+              }
+            }
+          end
+
+          it 'removes this option' do
+            expect(message).to be_valid
+            subject.update(route:, message:)
+            route.reload
+            expect(route.options).to eq({})
           end
         end
       end
     end
-
   end
 end

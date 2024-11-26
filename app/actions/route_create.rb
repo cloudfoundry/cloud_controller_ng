@@ -16,7 +16,7 @@ module VCAP::CloudController
         port: port(message, domain),
         space: space,
         domain: domain,
-        options: message.options
+        options: message.options.nil? ? {} : message.options.compact
       )
 
       Route.db.transaction do

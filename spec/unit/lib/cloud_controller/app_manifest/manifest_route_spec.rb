@@ -140,7 +140,7 @@ module VCAP::CloudController
                                       ],
                                       port: nil,
                                       path: '/path',
-                                      options: nil
+                                      options: {}
                                     })
       end
 
@@ -153,7 +153,7 @@ module VCAP::CloudController
                                       ],
                                       port: nil,
                                       path: '/path',
-                                      options: nil
+                                      options: {}
                                     })
       end
 
@@ -167,7 +167,7 @@ module VCAP::CloudController
                                       ],
                                       port: nil,
                                       path: '/path',
-                                      options: nil
+                                      options: {}
                                     })
       end
 
@@ -181,7 +181,7 @@ module VCAP::CloudController
                                       ],
                                       port: 1234,
                                       path: '',
-                                      options: nil
+                                      options: {}
                                     })
       end
 
