@@ -30,6 +30,18 @@ module VCAP::CloudController
 
     set_field_as_encrypted :docker_password, salt: :docker_password_salt, column: :encrypted_docker_password
 
+    def after_create
+      super
+      BitsExpiration.new.expire_packages!(app) if ready?
+    end
+
+    def after_update
+      super
+      return unless column_changed?(:state)
+
+      BitsExpiration.new.expire_packages!(app) if ready?
+    end
+
     def validate
       validates_max_length 5_000, :docker_password, message: 'can be up to 5,000 characters', allow_nil: true
       validates_includes PACKAGE_STATES, :state, allow_missing: true
