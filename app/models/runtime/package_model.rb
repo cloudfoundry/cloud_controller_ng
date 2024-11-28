@@ -39,7 +39,7 @@ module VCAP::CloudController
       super
       return unless column_changed?(:state)
 
-      BitsExpiration.new.expire_packages!(app) if ready? or failed?
+      BitsExpiration.new.expire_packages!(app) if ready? || failed?
     end
 
     def validate
