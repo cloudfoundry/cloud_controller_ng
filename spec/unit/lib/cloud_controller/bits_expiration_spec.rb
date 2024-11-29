@@ -161,14 +161,12 @@ module VCAP::CloudController
 
       it 'expires old packages' do
         expiration = BitsExpiration.new
-        expiration.expire_packages!(app)
         num_of_packages_to_keep = expiration.packages_storage_count + 1
         remaining_packages      = PackageModel.where(state: PackageModel::READY_STATE, app_guid: app.guid)
         expect(remaining_packages.count).to eq(num_of_packages_to_keep)
       end
 
       it 'does not delete the package related to the current droplet' do
-        BitsExpiration.new.expire_packages!(app)
         app.reload && @current_package.reload
         expect(@current_package.state).to eq(PackageModel::READY_STATE)
       end
@@ -181,7 +179,7 @@ module VCAP::CloudController
       end
 
       it 'enqueues a job to delete the blob' do
-        expect { BitsExpiration.new.expire_packages!(app) }.to change(Delayed::Job, :count).from(0).to(5)
+        expect(Delayed::Job.count).to eq(5)
         expect(Delayed::Job).to(be_all { |j| j.handler.include?('DeleteExpiredPackageBlob') })
       end
     end

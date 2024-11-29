@@ -238,6 +238,7 @@ module VCAP::CloudController
       Fog.unmock!
       TestConfig.override(**staging_config)
       set_current_user_as_admin(user: User.make(guid: '1234'), email: 'joe@joe.com', user_name: 'briggs')
+      allow_any_instance_of(BitsExpiration).to receive(:expire_packages!)
     end
 
     after { FileUtils.rm_rf(workspace) }
