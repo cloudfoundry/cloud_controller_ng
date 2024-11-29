@@ -83,6 +83,7 @@ module VCAP::CloudController
 
             packages: {
               max_package_size: Integer,
+              max_valid_packages_stored: Integer,
               app_package_directory_key: String,
               fog_connection: Hash,
               fog_aws_storage_options: Hash,
