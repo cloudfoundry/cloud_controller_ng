@@ -17,7 +17,7 @@ module VCAP::CloudController
         def call
           deployment.db.transaction do
             return unless deployment.lock!.state == DeploymentModel::DEPLOYING_STATE
-            return unless has_space_to_scale?
+            return unless can_scale?
 
             app.lock!
 
@@ -38,27 +38,31 @@ module VCAP::CloudController
 
             ScaleDownCanceledProcesses.new(deployment).call
 
-            instances_to_reduce = non_deploying_web_processes.map(&:instances).sum - desired_non_deploying_instances
+            scale_down_old_processes
 
-            if instances_to_reduce > 0
-
-              non_deploying_web_processes.each do |process|
-                if instances_to_reduce > process.instances
-                  instances_to_reduce -= process.instances
-                  ScaleDownOldProcess.new(deployment, process, 0).call
-                else
-                  ScaleDownOldProcess.new(deployment, process, process.instances - instances_to_reduce).call
-                  break
-                end
-              end
-            end
             deploying_web_process.update(instances: desired_new_instances)
           end
         end
 
         private
 
-        def has_space_to_scale?
+        def scale_down_old_processes
+          instances_to_reduce = non_deploying_web_processes.map(&:instances).sum - desired_non_deploying_instances
+
+          return if instances_to_reduce < 0
+
+          non_deploying_web_processes.each do |process|
+            if instances_to_reduce < process.instances
+              ScaleDownOldProcess.new(deployment, process, process.instances - instances_to_reduce).call
+              break
+            end
+
+            instances_to_reduce -= process.instances
+            ScaleDownOldProcess.new(deployment, process, 0).call
+          end
+        end
+
+        def can_scale?
           nonroutable_instance_count < deployment.max_in_flight
         rescue CloudController::Errors::ApiError # the instances_reporter re-raises InstancesUnavailable as ApiError
           logger.info("skipping-deployment-update-for-#{deployment.guid}")
