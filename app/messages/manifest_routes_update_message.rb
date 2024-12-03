@@ -8,14 +8,9 @@ module VCAP::CloudController
 
     class ManifestRoutesYAMLValidator < ActiveModel::Validator
       def validate(record)
-        if is_not_array?(record.routes) || contains_non_route_hash_values?(record.routes)
-          record.errors.add(:routes, message: 'must be a list of route objects')
-          return
-        end
+        return unless is_not_array?(record.routes) || contains_non_route_hash_values?(record.routes)
 
-        contains_invalid_route_options?(record)
-        contains_invalid_lb_algo?(record)
-        nil
+        record.errors.add(:routes, message: 'must be a list of route objects')
       end
 
       def is_not_array?(routes)
@@ -25,43 +20,14 @@ module VCAP::CloudController
       def contains_non_route_hash_values?(routes)
         routes.any? { |r| !(r.is_a?(Hash) && r[:route].present?) }
       end
-
-      def contains_invalid_route_options?(record)
-        routes = record.routes
-        routes.any? do |r|
-          next unless r[:options]
-
-          return true unless r[:options].is_a?(Hash)
-
-          return false if r[:options].empty?
-
-          r[:options].each_key do |key|
-            RouteOptionsMessage::VALID_MANIFEST_ROUTE_OPTIONS.exclude?(key) &&
-              record.errors.add(:base,
-                                message: "Route '#{r[:route]}' contains invalid route option '#{key}'. \
-Valid keys: '#{RouteOptionsMessage::VALID_MANIFEST_ROUTE_OPTIONS.join(', ')}'")
-          end
-        end
-      end
-
-      def contains_invalid_lb_algo?(record)
-        routes = record.routes
-        routes.each do |r|
-          next unless r[:options] && r[:options][:'loadbalancing-algorithm']
-
-          lb_algo = r[:options][:'loadbalancing-algorithm']
-          RouteOptionsMessage::VALID_LOADBALANCING_ALGORITHMS.exclude?(lb_algo) &&
-            record.errors.add(:base,
-                              message: "Route '#{r[:route]}' contains invalid load-balancing algorithm '#{lb_algo}'. \
-Valid algorithms: '#{RouteOptionsMessage::VALID_LOADBALANCING_ALGORITHMS.join(', ')}'")
-        end
-      end
     end
 
     validates_with NoAdditionalKeysValidator
     validates_with ManifestRoutesYAMLValidator, if: proc { |record| record.requested?(:routes) }
     validate :routes_are_uris, if: proc { |record| record.requested?(:routes) }
     validate :route_protocols_are_valid, if: proc { |record| record.requested?(:routes) }
+    validate :route_options_are_valid, if: proc { |record| record.requested?(:routes) }
+    validate :lb_algos_are_valid, if: proc { |record| record.requested?(:routes) }
     validate :no_route_is_boolean
     validate :default_route_is_boolean
     validate :random_route_is_boolean
@@ -79,6 +45,39 @@ Valid algorithms: '#{RouteOptionsMessage::VALID_LOADBALANCING_ALGORITHMS.join(',
     end
 
     private
+
+    def route_options_are_valid
+      return if errors[:routes].present?
+
+      routes.any? do |r|
+        next unless r[:options]
+
+        return true unless r[:options].is_a?(Hash)
+
+        return false if r[:options].empty?
+
+        r[:options].each_key do |key|
+          RouteOptionsMessage::VALID_MANIFEST_ROUTE_OPTIONS.exclude?(key) &&
+            errors.add(:base,
+                       message: "Route '#{r[:route]}' contains invalid route option '#{key}'. \
+Valid keys: '#{RouteOptionsMessage::VALID_MANIFEST_ROUTE_OPTIONS.join(', ')}'")
+        end
+      end
+    end
+
+    def lb_algos_are_valid
+      return if errors[:routes].present?
+
+      routes.each do |r|
+        next unless r[:options] && r[:options][:'loadbalancing-algorithm']
+
+        lb_algo = r[:options][:'loadbalancing-algorithm']
+        RouteOptionsMessage::VALID_LOADBALANCING_ALGORITHMS.exclude?(lb_algo) &&
+          errors.add(:base,
+                     message: "Route '#{r[:route]}' contains invalid load-balancing algorithm '#{lb_algo}'. \
+Valid algorithms: '#{RouteOptionsMessage::VALID_LOADBALANCING_ALGORITHMS.join(', ')}'")
+      end
+    end
 
     def routes_are_uris
       return if errors[:routes].present?

@@ -238,6 +238,7 @@ module VCAP::CloudController
           msg = ManifestRoutesUpdateMessage.new(body)
 
           expect(msg.valid?).to be(false)
+          expect(msg.errors.errors.length).to eq(1)
           expect(msg.errors.full_messages).to include("Route 'existing.example.com' contains invalid route option 'invalid'. Valid keys: 'loadbalancing-algorithm'")
         end
       end
@@ -275,6 +276,7 @@ module VCAP::CloudController
           msg = ManifestRoutesUpdateMessage.new(body)
 
           expect(msg.valid?).to be(false)
+          expect(msg.errors.errors.length).to eq(1)
           expect(msg.errors.full_messages).to include("Route 'existing.example.com' contains invalid load-balancing algorithm 'sushi'. \
 Valid algorithms: 'round-robin, least-connections'")
         end

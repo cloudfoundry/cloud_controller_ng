@@ -116,16 +116,6 @@ module VCAP::CloudController
             expect(manifest_route.valid?).to be(false)
           end
         end
-
-        context 'when there is an invalid loadbalancing-algorithm' do
-          let(:route) { 'http://example.com' }
-          let(:options) { { 'loadbalancing-algorithm': 'invalid' } }
-
-          it 'is invalid' do
-            manifest_route = ManifestRoute.parse(route, options)
-            expect(manifest_route.valid?).to be(false)
-          end
-        end
       end
     end
 
