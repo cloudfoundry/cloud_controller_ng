@@ -352,6 +352,35 @@ module VCAP::CloudController
         expect(ProcessModel.find(guid: oldest_web_process_with_instances.guid)).to be_nil
         expect(ProcessModel.find(guid: other_web_process_with_instances.guid)).to be_present
       end
+
+      context 'when all in-flight instances are not up' do
+        let(:all_instances_results) do
+          {
+            0 => { state: 'RUNNING',  uptime: 50, since: 2, routable: true },
+            1 => { state: 'RUNNING',  uptime: 50, since: 2, routable: true },
+            2 => { state: 'RUNNING',  uptime: 50, since: 2, routable: true },
+            3 => { state: 'RUNNING',  uptime: 50, since: 2, routable: true },
+            4 => { state: 'RUNNING',  uptime: 50, since: 2, routable: true },
+            5 => { state: 'RUNNING',  uptime: 50, since: 2, routable: true },
+            6 => { state: 'STARTING', uptime: 50, since: 2, routable: true },
+            7 => { state: 'STARTING', uptime: 50, since: 2, routable: true },
+            8 => { state: 'DOWN',     uptime: 0,  since: 2, routable: false },
+            9 => { state: 'FAILING',  uptime: 50, since: 2, routable: false }
+          }
+        end
+
+        it 'scales down interim proceses so all instances equal original instance count + max in flight' do
+          non_deploying_instance_count = app.web_processes.reject { |p| p.guid == deploying_web_process.guid }.map(&:instances).sum
+          expect(non_deploying_instance_count).to eq 30
+          expect(deploying_web_process.instances).to eq 10
+
+          subject.call
+
+          non_deploying_instance_count = app.reload.web_processes.reject { |p| p.guid == deploying_web_process.guid }.map(&:instances).sum
+          expect(non_deploying_instance_count).to eq 14
+          expect(deploying_web_process.reload.instances).to eq 10
+        end
+      end
     end
 
     context 'when there are fewer instances in interim processes than there should be' do
@@ -412,7 +441,7 @@ module VCAP::CloudController
           1 => { state: 'RUNNING', uptime: 50, since: 2, routable: true },
           2 => { state: 'STARTING', uptime: 50, since: 2, routable: true },
           3 => { state: 'RUNNING', uptime: 50, since: 2, routable: false },
-          4 => { state: 'FAILING', uptime: 50, since: 2, routable: false }
+          4 => { state: 'STARTING', uptime: 50, since: 2, routable: false }
         }
       end
 
@@ -438,13 +467,15 @@ module VCAP::CloudController
         }
       end
 
-      it 'does not scales the process' do
+      it 'downscales the original process' do
         expect do
           subject.call
-        end.not_to(change do
+        end.to(change do
           web_process.reload.instances
-        end)
+        end.from(6).to(5))
+      end
 
+      it 'does not scale the deploying web process' do
         expect do
           subject.call
         end.not_to(change do
@@ -464,13 +495,15 @@ module VCAP::CloudController
         }
       end
 
-      it 'does not scales the process' do
+      it 'downscales the original process' do
         expect do
           subject.call
-        end.not_to(change do
+        end.to(change do
           web_process.reload.instances
-        end)
+        end.from(6).to(5))
+      end
 
+      it 'does not scale the deploying web process' do
         expect do
           subject.call
         end.not_to(change do
@@ -486,17 +519,19 @@ module VCAP::CloudController
         {
           0 => { state: 'RUNNING', uptime: 50, since: 2, routable: true },
           1 => { state: 'FAILING', uptime: 50, since: 2, routable: true },
-          2 => { state: 'FAILING', uptime: 50, since: 2, routable: true }
+          2 => { state: 'CRASHED', uptime: 50, since: 2, routable: true }
         }
       end
 
-      it 'does not scale the process' do
+      it 'downscales the original process' do
         expect do
           subject.call
-        end.not_to(change do
+        end.to(change do
           web_process.reload.instances
-        end)
+        end.from(6).to(5))
+      end
 
+      it 'does not scale the deploying web process' do
         expect do
           subject.call
         end.not_to(change do
