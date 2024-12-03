@@ -2,6 +2,7 @@ require 'messages/app_feature_update_message'
 require 'controllers/v3/mixins/app_sub_resource'
 require 'presenters/v3/app_ssh_feature_presenter'
 require 'presenters/v3/app_revisions_feature_presenter'
+require 'presenters/v3/app_file_based_service_bindings_feature_presenter'
 require 'presenters/v3/app_ssh_status_presenter'
 require 'actions/app_feature_update'
 
@@ -10,8 +11,9 @@ class AppFeaturesController < ApplicationController
 
   SSH_FEATURE = 'ssh'.freeze
   REVISIONS_FEATURE = 'revisions'.freeze
+  FILE_BASED_SERVICE_BINDINGS_FEATURE = 'file-based-service-bindings'.freeze
 
-  TRUSTED_APP_FEATURES = [SSH_FEATURE].freeze
+  TRUSTED_APP_FEATURES = [SSH_FEATURE, FILE_BASED_SERVICE_BINDINGS_FEATURE].freeze
   UNTRUSTED_APP_FEATURES = [REVISIONS_FEATURE].freeze
   APP_FEATURES = (TRUSTED_APP_FEATURES + UNTRUSTED_APP_FEATURES).freeze
 
@@ -80,7 +82,8 @@ class AppFeaturesController < ApplicationController
   def feature_presenter_for(feature_name, app)
     presenters = {
       SSH_FEATURE => Presenters::V3::AppSshFeaturePresenter,
-      REVISIONS_FEATURE => Presenters::V3::AppRevisionsFeaturePresenter
+      REVISIONS_FEATURE => Presenters::V3::AppRevisionsFeaturePresenter,
+      FILE_BASED_SERVICE_BINDINGS_FEATURE => Presenters::V3::AppFileBasedServiceBindingsFeaturePresenter
     }
     presenters[feature_name].new(app)
   end
@@ -88,7 +91,8 @@ class AppFeaturesController < ApplicationController
   def presented_app_features(app)
     [
       Presenters::V3::AppSshFeaturePresenter.new(app),
-      Presenters::V3::AppRevisionsFeaturePresenter.new(app)
+      Presenters::V3::AppRevisionsFeaturePresenter.new(app),
+      Presenters::V3::AppFileBasedServiceBindingsFeaturePresenter.new(app)
     ]
   end
 end
