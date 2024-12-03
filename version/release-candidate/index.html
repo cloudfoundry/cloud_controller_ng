@@ -3675,6 +3675,10 @@ Environment variable names may not start with VCAP_. PORT is not a valid environ
 <td><strong>revisions</strong></td>
 <td>Enable <a href="#revisions">versioning</a> of an application</td>
 </tr>
+<tr>
+<td><strong>file-based-service-bindings</strong></td>
+<td>Enable file-based service bindings for the app (experimental)</td>
+</tr>
 </tbody></table>
 <h3 id="get-an-app-feature">Get an app feature</h3>
 <div class="highlight"><pre class="highlight plaintext"><code>Example Request
@@ -3748,10 +3752,15 @@ Environment variable names may not start with VCAP_. PORT is not a valid environ
       </span><span class="nl">"name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"revisions"</span><span class="p">,</span><span class="w">
       </span><span class="nl">"description"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Enable versioning of an application"</span><span class="p">,</span><span class="w">
       </span><span class="nl">"enabled"</span><span class="p">:</span><span class="w"> </span><span class="kc">false</span><span class="w">
+    </span><span class="p">},</span><span class="w">
+    </span><span class="p">{</span><span class="w">
+      </span><span class="nl">"name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"file-based-service-bindings"</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"description"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Enable file-based service bindings for the app"</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"enabled"</span><span class="p">:</span><span class="w"> </span><span class="kc">false</span><span class="w">
     </span><span class="p">}</span><span class="w">
   </span><span class="p">],</span><span class="w">
   </span><span class="nl">"pagination"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
-    </span><span class="nl">"total_results"</span><span class="p">:</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span><span class="w">
+    </span><span class="nl">"total_results"</span><span class="p">:</span><span class="w"> </span><span class="mi">3</span><span class="p">,</span><span class="w">
     </span><span class="nl">"total_pages"</span><span class="p">:</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span><span class="w">
     </span><span class="nl">"first"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nl">"href"</span><span class="p">:</span><span class="w"> </span><span class="s2">"/v3/apps/05d39de4-2c9e-4c76-8fd6-10417da07e42/features"</span><span class="w"> </span><span class="p">},</span><span class="w">
     </span><span class="nl">"last"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nl">"href"</span><span class="p">:</span><span class="w"> </span><span class="s2">"/v3/apps/05d39de4-2c9e-4c76-8fd6-10417da07e42/features"</span><span class="w"> </span><span class="p">},</span><span class="w">
