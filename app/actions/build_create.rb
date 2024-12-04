@@ -32,7 +32,6 @@ module VCAP::CloudController
                    disk_limit_calculator: StagingDiskCalculator.new,
                    log_rate_limit_calculator: QuotaValidatingStagingLogRateLimitCalculator.new,
                    environment_presenter: StagingEnvironmentBuilder.new)
-
       @user_audit_info         = user_audit_info
       @memory_limit_calculator = memory_limit_calculator
       @disk_limit_calculator   = disk_limit_calculator
