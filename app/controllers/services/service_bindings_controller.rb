@@ -1,4 +1,3 @@
-require 'vcap/services/api'
 require 'controllers/services/lifecycle/service_instance_binding_manager'
 require 'models/helpers/process_types'
 require 'actions/v2/services/service_binding_read'
