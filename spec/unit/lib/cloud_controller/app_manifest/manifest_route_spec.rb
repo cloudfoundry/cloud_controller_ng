@@ -176,7 +176,7 @@ module VCAP::CloudController
       end
 
       it 'parses a route with a loadbalancing into route components' do
-        route = ManifestRoute.parse('http://potato.sub.some-domain.com', { 'loadbalancing': 'round-robin' })
+        route = ManifestRoute.parse('http://potato.sub.some-domain.com', { loadbalancing: 'round-robin' })
 
         expect(route.to_hash).to eq({
                                       candidate_host_domain_pairs: [

@@ -658,7 +658,7 @@ Route 'https://#{route.host}.#{route.domain.name}' contains invalid route option
             'applications' => [
               { 'name' => app1_model.name,
                 'routes' => [
-                  { 'route' => "https://round-robin-app.#{shared_domain.name}",
+                  { 'route' => "https://#{route.host}.#{shared_domain.name}",
                     'options' => {
                       'loadbalancing' => 'round-robin'
                     } }
@@ -683,7 +683,7 @@ Route 'https://#{route.host}.#{route.domain.name}' contains invalid route option
             'applications' => [
               { 'name' => app1_model.name,
                 'routes' => [
-                  { 'route' => "https://round-robin-app.#{shared_domain.name}",
+                  { 'route' => "https://#{route.host}.#{shared_domain.name}",
                     'options' => {
                       'loadbalancing' => 'least-connections'
                     } }
@@ -707,7 +707,7 @@ Route 'https://#{route.host}.#{route.domain.name}' contains invalid route option
             'applications' => [
               { 'name' => app1_model.name,
                 'routes' => [
-                  { 'route' => "https://round-robin-app.#{shared_domain.name}" }
+                  { 'route' => "https://#{route.host}.#{shared_domain.name}" }
                 ] }
             ]
           }.to_yaml
@@ -724,12 +724,12 @@ Route 'https://#{route.host}.#{route.domain.name}' contains invalid route option
           expect(app1_model.routes.first.options).to eq({ 'loadbalancing' => 'round-robin' })
         end
 
-        it 'does not modify any route options options: nil is provided' do
+        it 'returns 422 when options: null is provided' do
           yml_manifest = {
             'applications' => [
               { 'name' => app1_model.name,
                 'routes' => [
-                  { 'route' => "https://round-robin-app.#{shared_domain.name}",
+                  { 'route' => "https://#{route.host}.#{shared_domain.name}",
                     'options' => nil }
                 ] }
             ]
@@ -738,9 +738,11 @@ Route 'https://#{route.host}.#{route.domain.name}' contains invalid route option
           # apply the manifest with the route option
           post "/v3/spaces/#{space.guid}/actions/apply_manifest", yml_manifest, yml_headers(user_header)
 
-          expect(last_response.status).to eq(202)
-          job_guid = VCAP::CloudController::PollableJobModel.last.guid
+          expect(last_response.status).to eq(422)
+          expect(last_response).to have_error_message("For application '#{app1_model.name}': \
+Route 'https://#{route.host}.#{route.domain.name}': options must be an object")
 
+          job_guid = VCAP::CloudController::PollableJobModel.last.guid
           Delayed::Worker.new.work_off
           expect(VCAP::CloudController::PollableJobModel.find(guid: job_guid)).to be_complete, VCAP::CloudController::PollableJobModel.find(guid: job_guid).cf_api_error
           app1_model.reload
@@ -752,7 +754,7 @@ Route 'https://#{route.host}.#{route.domain.name}' contains invalid route option
             'applications' => [
               { 'name' => app1_model.name,
                 'routes' => [
-                  { 'route' => "https://round-robin-app.#{shared_domain.name}",
+                  { 'route' => "https://#{route.host}.#{shared_domain.name}",
                     'options' => {} }
                 ] }
             ]
@@ -767,12 +769,12 @@ Route 'https://#{route.host}.#{route.domain.name}' contains invalid route option
           expect(app1_model.routes.first.options).to eq({ 'loadbalancing' => 'round-robin' })
         end
 
-        it 'does not modify any option when options: { key: nil } is provided' do
+        it 'returns 422 when { loadbalancing: null } is provided' do
           yml_manifest = {
             'applications' => [
               { 'name' => app1_model.name,
                 'routes' => [
-                  { 'route' => "https://round-robin-app.#{shared_domain.name}",
+                  { 'route' => "https://#{route.host}.#{shared_domain.name}",
                     'options' => {
                       'loadbalancing' => nil
                     } }
@@ -783,7 +785,9 @@ Route 'https://#{route.host}.#{route.domain.name}' contains invalid route option
           # apply the manifest with the route option
           post "/v3/spaces/#{space.guid}/actions/apply_manifest", yml_manifest, yml_headers(user_header)
 
-          expect(last_response.status).to eq(202)
+          expect(last_response.status).to eq(422)
+          expect(last_response).to have_error_message("For application '#{app1_model.name}': \
+Invalid value for 'loadbalancing' for Route 'https://#{route.host}.#{route.domain.name}'; Valid values are: 'round-robin, least-connections'")
 
           app1_model.reload
           expect(app1_model.routes.first.options).to eq({ 'loadbalancing' => 'round-robin' })
@@ -813,7 +817,7 @@ Route 'https://#{route.host}.#{route.domain.name}' contains invalid route option
 
             expect(last_response).to have_status_code(422)
             expect(last_response).to have_error_message("For application '#{app1_model.name}': \
-Route 'https://#{route.host}.#{route.domain.name}' contains invalid load-balancing algorithm 'unsupported-lb-algorithm'. Valid algorithms: 'round-robin, least-connections'")
+Cannot use loadbalancing value 'unsupported-lb-algorithm' for Route 'https://#{route.host}.#{route.domain.name}'; Valid values are: 'round-robin, least-connections'")
           end
         end
 
@@ -823,7 +827,7 @@ Route 'https://#{route.host}.#{route.domain.name}' contains invalid load-balanci
               'applications' => [
                 { 'name' => app1_model.name,
                   'routes' => [
-                    { 'route' => "https://round-robin-app.#{shared_domain.name}",
+                    { 'route' => "https://#{route.host}.#{shared_domain.name}",
                       'options' => {
                         'loadbalancing' => 'round-robin'
                       } }

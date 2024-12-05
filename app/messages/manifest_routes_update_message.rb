@@ -50,11 +50,12 @@ module VCAP::CloudController
       return if errors[:routes].present?
 
       routes.any? do |r|
-        next unless r[:options]
+        next unless r.keys.include?(:options)
 
-        return true unless r[:options].is_a?(Hash)
-
-        return false if r[:options].empty?
+        unless r[:options].is_a?(Hash)
+          errors.add(:base, message: "Route '#{r[:route]}': options must be an object")
+          next
+        end
 
         r[:options].each_key do |key|
           RouteOptionsMessage::VALID_MANIFEST_ROUTE_OPTIONS.exclude?(key) &&
@@ -69,13 +70,19 @@ Valid keys: '#{RouteOptionsMessage::VALID_MANIFEST_ROUTE_OPTIONS.join(', ')}'")
       return if errors[:routes].present?
 
       routes.each do |r|
-        next unless r[:options] && r[:options][:'loadbalancing']
+        next unless r.keys.include?(:options) && r[:options].is_a?(Hash) && r[:options].keys.include?(:loadbalancing)
 
-        loadbalancing = r[:options][:'loadbalancing']
+        loadbalancing = r[:options][:loadbalancing]
+        unless loadbalancing.is_a?(String)
+          errors.add(:base,
+                     message: "Invalid value for 'loadbalancing' for Route '#{r[:route]}'; \
+Valid values are: '#{RouteOptionsMessage::VALID_LOADBALANCING_ALGORITHMS.join(', ')}'")
+          next
+        end
         RouteOptionsMessage::VALID_LOADBALANCING_ALGORITHMS.exclude?(loadbalancing) &&
           errors.add(:base,
-                     message: "Route '#{r[:route]}' contains invalid load-balancing algorithm '#{loadbalancing}'. \
-Valid algorithms: '#{RouteOptionsMessage::VALID_LOADBALANCING_ALGORITHMS.join(', ')}'")
+                     message: "Cannot use loadbalancing value '#{loadbalancing}' for Route '#{r[:route]}'; \
+Valid values are: '#{RouteOptionsMessage::VALID_LOADBALANCING_ALGORITHMS.join(', ')}'")
       end
     end
 

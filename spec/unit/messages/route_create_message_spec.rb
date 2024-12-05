@@ -492,7 +492,7 @@ module VCAP::CloudController
 
             it 'is not valid' do
               expect(subject).not_to be_valid
-              expect(subject.errors[:options]).to include("Loadbalancing 'random' is not supported")
+              expect(subject.errors[:options]).to include("Loadbalancing must be one of 'round-robin, least-connections' if present")
             end
           end
         end
