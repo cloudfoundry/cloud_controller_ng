@@ -35,7 +35,7 @@
     }
  ],
   "options": {
-    "lb_algo": "round-robin"
+    "loadbalancing": "round-robin"
   },
   "metadata": {
     "labels": <%= metadata.fetch(:labels, {}).to_json(space: ' ', object_nl: ' ')%>,
@@ -128,7 +128,7 @@
         }
       ],
       "options": {
-        "lb_algo": "round-robin"
+        "loadbalancing": "round-robin"
       },
       "metadata": {
         "labels": {},
@@ -221,6 +221,6 @@
 
 <% content_for :route_options do %>
   {
-    "lb_algo": "round-robin"
+    "loadbalancing": "round-robin"
   }
 <% end %>

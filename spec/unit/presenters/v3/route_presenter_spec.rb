@@ -5,7 +5,7 @@ module VCAP::CloudController::Presenters::V3
   RSpec.describe RoutePresenter do
     let!(:app) { VCAP::CloudController::AppModel.make }
     let(:space) { VCAP::CloudController::Space.make }
-    let(:options) { { lb_algo: 'round-robin' } }
+    let(:options) { { loadbalancing: 'round-robin' } }
     let(:org) { space.organization }
     let(:route_host) { 'host' }
     let(:path) { '/path' }
@@ -72,7 +72,7 @@ module VCAP::CloudController::Presenters::V3
         expect(subject[:updated_at]).to be_a(Time)
         expect(subject[:host]).to eq(route_host)
         expect(subject[:path]).to eq(path)
-        expect(subject[:options]).to eq('lb_algo' => 'round-robin')
+        expect(subject[:options]).to eq('loadbalancing' => 'round-robin')
         expect(subject[:url]).to eq("#{route.host}.#{domain.name}#{route.path}")
 
         expected_destinations = [
