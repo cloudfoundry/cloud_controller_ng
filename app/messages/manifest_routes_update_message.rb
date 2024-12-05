@@ -1,4 +1,5 @@
 require 'messages/base_message'
+require 'messages/route_options_message'
 require 'cloud_controller/app_manifest/manifest_route'
 
 module VCAP::CloudController
@@ -25,6 +26,8 @@ module VCAP::CloudController
     validates_with ManifestRoutesYAMLValidator, if: proc { |record| record.requested?(:routes) }
     validate :routes_are_uris, if: proc { |record| record.requested?(:routes) }
     validate :route_protocols_are_valid, if: proc { |record| record.requested?(:routes) }
+    validate :route_options_are_valid, if: proc { |record| record.requested?(:routes) }
+    validate :loadbalancings_are_valid, if: proc { |record| record.requested?(:routes) }
     validate :no_route_is_boolean
     validate :default_route_is_boolean
     validate :random_route_is_boolean
@@ -32,14 +35,56 @@ module VCAP::CloudController
 
     def manifest_route_mappings
       @manifest_route_mappings ||= routes.map do |route|
-        {
-          route: ManifestRoute.parse(route[:route]),
+        r = {
+          route: ManifestRoute.parse(route[:route], route[:options]),
           protocol: route[:protocol]
         }
+        r[:options] = route[:options] unless route[:options].nil?
+        r
       end
     end
 
     private
+
+    def route_options_are_valid
+      return if errors[:routes].present?
+
+      routes.any? do |r|
+        next unless r.keys.include?(:options)
+
+        unless r[:options].is_a?(Hash)
+          errors.add(:base, message: "Route '#{r[:route]}': options must be an object")
+          next
+        end
+
+        r[:options].each_key do |key|
+          RouteOptionsMessage::VALID_MANIFEST_ROUTE_OPTIONS.exclude?(key) &&
+            errors.add(:base,
+                       message: "Route '#{r[:route]}' contains invalid route option '#{key}'. \
+Valid keys: '#{RouteOptionsMessage::VALID_MANIFEST_ROUTE_OPTIONS.join(', ')}'")
+        end
+      end
+    end
+
+    def loadbalancings_are_valid
+      return if errors[:routes].present?
+
+      routes.each do |r|
+        next unless r.keys.include?(:options) && r[:options].is_a?(Hash) && r[:options].keys.include?(:loadbalancing)
+
+        loadbalancing = r[:options][:loadbalancing]
+        unless loadbalancing.is_a?(String)
+          errors.add(:base,
+                     message: "Invalid value for 'loadbalancing' for Route '#{r[:route]}'; \
+Valid values are: '#{RouteOptionsMessage::VALID_LOADBALANCING_ALGORITHMS.join(', ')}'")
+          next
+        end
+        RouteOptionsMessage::VALID_LOADBALANCING_ALGORITHMS.exclude?(loadbalancing) &&
+          errors.add(:base,
+                     message: "Cannot use loadbalancing value '#{loadbalancing}' for Route '#{r[:route]}'; \
+Valid values are: '#{RouteOptionsMessage::VALID_LOADBALANCING_ALGORITHMS.join(', ')}'")
+      end
+    end
 
     def routes_are_uris
       return if errors[:routes].present?

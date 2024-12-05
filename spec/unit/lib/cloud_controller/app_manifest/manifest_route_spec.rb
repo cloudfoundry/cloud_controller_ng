@@ -58,6 +58,16 @@ module VCAP::CloudController
             expect(manifest_route.valid?).to be(true)
           end
         end
+
+        context 'when there is a valid loadbalancing' do
+          let(:route) { 'http://example.com' }
+          let(:options) { { 'loadbalancing' => 'round-robin' } }
+
+          it 'is valid' do
+            manifest_route = ManifestRoute.parse(route, options)
+            expect(manifest_route.valid?).to be(true)
+          end
+        end
       end
 
       describe 'invalid routes' do
@@ -119,7 +129,8 @@ module VCAP::CloudController
                                         { host: 'host', domain: 'sub.some-domain.com' }
                                       ],
                                       port: nil,
-                                      path: '/path'
+                                      path: '/path',
+                                      options: {}
                                     })
       end
 
@@ -131,7 +142,8 @@ module VCAP::CloudController
                                         { host: '*', domain: 'sub.some-domain.com' }
                                       ],
                                       port: nil,
-                                      path: '/path'
+                                      path: '/path',
+                                      options: {}
                                     })
       end
 
@@ -144,7 +156,8 @@ module VCAP::CloudController
                                         { host: 'potato', domain: 'sub.some-domain.com' }
                                       ],
                                       port: nil,
-                                      path: '/path'
+                                      path: '/path',
+                                      options: {}
                                     })
       end
 
@@ -157,7 +170,22 @@ module VCAP::CloudController
                                         { host: 'potato', domain: 'sub.some-domain.com' }
                                       ],
                                       port: 1234,
-                                      path: ''
+                                      path: '',
+                                      options: {}
+                                    })
+      end
+
+      it 'parses a route with a loadbalancing into route components' do
+        route = ManifestRoute.parse('http://potato.sub.some-domain.com', { loadbalancing: 'round-robin' })
+
+        expect(route.to_hash).to eq({
+                                      candidate_host_domain_pairs: [
+                                        { host: '', domain: 'potato.sub.some-domain.com' },
+                                        { host: 'potato', domain: 'sub.some-domain.com' }
+                                      ],
+                                      port: nil,
+                                      path: '',
+                                      options: { loadbalancing: 'round-robin' }
                                     })
       end
     end

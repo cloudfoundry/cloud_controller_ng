@@ -97,11 +97,13 @@ RSpec.describe 'App Manifests' do
               'routes' => [
                 {
                   'route' => "#{route.host}.#{route.domain.name}",
-                  'protocol' => 'http1'
+                  'protocol' => 'http1',
+                  'options' => {}
                 },
                 {
                   'route' => "#{second_route.host}.#{second_route.domain.name}/path",
-                  'protocol' => 'http1'
+                  'protocol' => 'http1',
+                  'options' => {}
                 }
               ],
               'metadata' => { 'labels' => { 'potato' => 'idaho' }, 'annotations' => { 'style' => 'mashed' } },
@@ -201,11 +203,13 @@ RSpec.describe 'App Manifests' do
               'routes' => [
                 {
                   'route' => "#{route.host}.#{route.domain.name}",
-                  'protocol' => 'http1'
+                  'protocol' => 'http1',
+                  'options' => {}
                 },
                 {
                   'route' => "#{second_route.host}.#{second_route.domain.name}/path",
-                  'protocol' => 'http1'
+                  'protocol' => 'http1',
+                  'options' => {}
                 }
               ],
               'metadata' => { 'labels' => { 'potato' => 'idaho' }, 'annotations' => { 'style' => 'mashed' } },
@@ -273,11 +277,13 @@ RSpec.describe 'App Manifests' do
               'routes' => [
                 {
                   'route' => "#{route.host}.#{route.domain.name}",
-                  'protocol' => 'http2'
+                  'protocol' => 'http2',
+                  'options' => {}
                 },
                 {
                   'route' => "#{second_route.host}.#{second_route.domain.name}/path",
-                  'protocol' => 'http1'
+                  'protocol' => 'http1',
+                  'options' => {}
                 }
               ]
             }

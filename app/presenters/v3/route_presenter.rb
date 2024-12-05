@@ -48,6 +48,7 @@ module VCAP::CloudController::Presenters::V3
         },
         links: build_links
       }
+      hash.merge!(options: route.options) unless route.options.nil?
 
       @decorators.reduce(hash) { |memo, d| d.decorate(memo, [route]) }
     end
