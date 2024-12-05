@@ -9,7 +9,7 @@ module VCAP::CloudController
     register_allowed_keys VALID_ROUTE_OPTIONS
     validates_with NoAdditionalKeysValidator
     validates :loadbalancing,
-              inclusion: { in: VALID_LOADBALANCING_ALGORITHMS, message: "'%<value>s' is not supported" },
+              inclusion: { in: VALID_LOADBALANCING_ALGORITHMS, message: "must be one of '#{RouteOptionsMessage::VALID_LOADBALANCING_ALGORITHMS.join(', ')}' if present" },
               presence: true,
               allow_nil: true
   end

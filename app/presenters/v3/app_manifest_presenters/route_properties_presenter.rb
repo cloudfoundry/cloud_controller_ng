@@ -12,7 +12,7 @@ module VCAP::CloudController
 
               if route_mapping.route.options
                 route_hash[:options] = {}
-                route_hash[:options][:'loadbalancing'] = route_mapping.route.options[:loadbalancing] if route_mapping.route.options[:loadbalancing]
+                route_hash[:options][:loadbalancing] = route_mapping.route.options[:loadbalancing] if route_mapping.route.options[:loadbalancing]
               end
 
               route_hash

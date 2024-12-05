@@ -575,7 +575,7 @@ module VCAP::CloudController::Validators
       it 'adds invalid load balancer error message to the base class' do
         message = OptionsMessage.new({ options: { loadbalancing: 'donuts' } })
         expect(message).not_to be_valid
-        expect(message.errors_on(:options)).to include('Loadbalancing \'donuts\' is not supported')
+        expect(message.errors_on(:options)).to include("Loadbalancing must be one of 'round-robin, least-connections' if present")
       end
 
       it 'adds invalid field error message to the base class' do

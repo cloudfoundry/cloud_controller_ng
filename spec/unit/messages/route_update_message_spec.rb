@@ -53,7 +53,7 @@ module VCAP::CloudController
       it 'does not accept unknown load-balancing algorithm' do
         message = RouteUpdateMessage.new(params.merge(options: { loadbalancing: 'cheesecake' }))
         expect(message).not_to be_valid
-        expect(message.errors.full_messages[0]).to include("Options Loadbalancing 'cheesecake' is not supported")
+        expect(message.errors.full_messages[0]).to include("Options Loadbalancing must be one of 'round-robin, least-connections' if present")
       end
 
       it 'does not accept unknown option' do
