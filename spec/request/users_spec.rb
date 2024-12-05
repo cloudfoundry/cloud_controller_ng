@@ -662,6 +662,55 @@ RSpec.describe 'Users Request' do
       end
 
       it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS
+
+      context 'using username and origin' do
+        let(:params) do
+          {
+            username: 'some-user',
+            origin: 'idp.local'
+          }
+        end
+
+        let(:user_guid) { 'new-user-guid' }
+
+        let(:api_call) { ->(user_headers) { post '/v3/users', params.to_json, user_headers } }
+
+        let(:user_json) do
+          {
+            guid: user_guid,
+            created_at: iso8601,
+            updated_at: iso8601,
+            username: params[:username],
+            presentation_name: params[:username],
+            origin: params[:origin],
+            metadata: {
+              labels: {},
+              annotations: {}
+            },
+            links: {
+              self: { href: %r{#{Regexp.escape(link_prefix)}/v3/users/#{user_guid}} }
+            }
+          }
+        end
+
+        let(:expected_codes_and_responses) do
+          h = Hash.new(
+            code: 403
+          )
+          h['admin'] = {
+            code: 201,
+            response_object: user_json
+          }
+          h
+        end
+
+        before do
+          allow(CloudController::DependencyLocator.instance).to receive(:uaa_shadow_user_creation_client).and_return(uaa_client)
+          allow(uaa_client).to receive(:create_shadow_user).and_return({ 'id' => user_guid })
+        end
+
+        it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS
+      end
     end
 
     describe 'when creating a user that exists in uaa' do
