@@ -905,18 +905,19 @@ RSpec.describe 'Users Request' do
         end
 
         before do
-          allow(uaa_client).to receive(:users_for_ids).with(['new-user-guid']).and_return(
-            {
-              user_guid => {
-                'username' => 'some-user',
-                'origin' => 'idp.local'
-              }
-            }
-          )
           allow(uaa_client).to receive(:create_shadow_user).and_return({ 'id' => user_guid })
         end
 
         it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS
+
+        it 'constructs the response with the given information without calling the UAA again' do
+          post '/v3/users', params.to_json, admin_header
+
+          expect(last_response).to have_status_code(201)
+          expect(parsed_response).to match_json_response(user_json)
+
+          expect(uaa_client).not_to have_received(:users_for_ids)
+        end
       end
 
       context 'when parameters are invalid' do
