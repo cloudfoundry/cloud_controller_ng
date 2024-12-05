@@ -47,7 +47,13 @@ class UsersController < ApplicationController
 
     user = UserCreate.new.create(message:)
 
-    render status: :created, json: Presenters::V3::UserPresenter.new(user, uaa_users: User.uaa_users_info([user.guid]))
+    if message.username && message.origin
+      render status: :created,
+             json: Presenters::V3::UserPresenter.new(user,
+                                                     uaa_users: { user.guid => { 'username' => message.username, 'id' => user.guid, 'origin' => message.origin } })
+    else
+      render status: :created, json: Presenters::V3::UserPresenter.new(user, uaa_users: User.uaa_users_info([user.guid]))
+    end
   rescue VCAP::CloudController::UaaUnavailable
     raise CloudController::Errors::ApiError.new_from_details('UaaUnavailable')
   rescue UserCreate::Error => e
