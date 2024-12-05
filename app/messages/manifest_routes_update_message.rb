@@ -27,7 +27,7 @@ module VCAP::CloudController
     validate :routes_are_uris, if: proc { |record| record.requested?(:routes) }
     validate :route_protocols_are_valid, if: proc { |record| record.requested?(:routes) }
     validate :route_options_are_valid, if: proc { |record| record.requested?(:routes) }
-    validate :lb_algos_are_valid, if: proc { |record| record.requested?(:routes) }
+    validate :loadbalancings_are_valid, if: proc { |record| record.requested?(:routes) }
     validate :no_route_is_boolean
     validate :default_route_is_boolean
     validate :random_route_is_boolean
@@ -65,16 +65,16 @@ Valid keys: '#{RouteOptionsMessage::VALID_MANIFEST_ROUTE_OPTIONS.join(', ')}'")
       end
     end
 
-    def lb_algos_are_valid
+    def loadbalancings_are_valid
       return if errors[:routes].present?
 
       routes.each do |r|
-        next unless r[:options] && r[:options][:'loadbalancing-algorithm']
+        next unless r[:options] && r[:options][:'loadbalancing']
 
-        lb_algo = r[:options][:'loadbalancing-algorithm']
-        RouteOptionsMessage::VALID_LOADBALANCING_ALGORITHMS.exclude?(lb_algo) &&
+        loadbalancing = r[:options][:'loadbalancing']
+        RouteOptionsMessage::VALID_LOADBALANCING_ALGORITHMS.exclude?(loadbalancing) &&
           errors.add(:base,
-                     message: "Route '#{r[:route]}' contains invalid load-balancing algorithm '#{lb_algo}'. \
+                     message: "Route '#{r[:route]}' contains invalid load-balancing algorithm '#{loadbalancing}'. \
 Valid algorithms: '#{RouteOptionsMessage::VALID_LOADBALANCING_ALGORITHMS.join(', ')}'")
       end
     end

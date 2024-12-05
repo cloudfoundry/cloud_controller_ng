@@ -17,7 +17,7 @@ module VCAP::CloudController
       }
     end
     let(:old_options) do
-      '{"lb_algo": "round-robin"}'
+      '{"loadbalancing": "round-robin"}'
     end
     let(:new_labels) do
       {
@@ -153,7 +153,7 @@ module VCAP::CloudController
           let(:body) do
             {
               options: {
-                lb_algo: 'round-robin'
+                loadbalancing: 'round-robin'
               }
             }
           end
@@ -163,14 +163,14 @@ module VCAP::CloudController
             subject.update(route:, message:)
 
             route.reload
-            expect(route[:options]).to eq('{"lb_algo":"round-robin"}')
+            expect(route[:options]).to eq('{"loadbalancing":"round-robin"}')
           end
         end
       end
 
       context 'when the route has existing options' do
         before do
-          route[:options] = '{"lb_algo": "round-robin"}'
+          route[:options] = '{"loadbalancing": "round-robin"}'
         end
 
         context 'when no options are specified' do
@@ -182,7 +182,7 @@ module VCAP::CloudController
             expect(message).to be_valid
             subject.update(route:, message:)
             route.reload
-            expect(route.options).to include({ 'lb_algo' => 'round-robin' })
+            expect(route.options).to include({ 'loadbalancing' => 'round-robin' })
           end
         end
 
@@ -190,7 +190,7 @@ module VCAP::CloudController
           let(:body) do
             {
               options: {
-                lb_algo: 'least-connections'
+                loadbalancing: 'least-connections'
               }
             }
           end
@@ -200,7 +200,7 @@ module VCAP::CloudController
             subject.update(route:, message:)
             route.reload
 
-            expect(route.options).to include({ 'lb_algo' => 'least-connections' })
+            expect(route.options).to include({ 'loadbalancing' => 'least-connections' })
           end
         end
 
@@ -208,7 +208,7 @@ module VCAP::CloudController
           let(:body) do
             {
               options: {
-                lb_algo: nil
+                loadbalancing: nil
               }
             }
           end

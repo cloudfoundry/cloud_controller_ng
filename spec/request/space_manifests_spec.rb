@@ -647,12 +647,12 @@ RSpec.describe 'Space Manifests' do
 
           expect(last_response).to have_status_code(422)
           expect(last_response).to have_error_message("For application '#{app1_model.name}': \
-Route 'https://#{route.host}.#{route.domain.name}' contains invalid route option 'doesnt-exist'. Valid keys: 'loadbalancing-algorithm'")
+Route 'https://#{route.host}.#{route.domain.name}' contains invalid route option 'doesnt-exist'. Valid keys: 'loadbalancing'")
         end
       end
 
       context 'updating existing route options' do
-        # using loadbalancing-algorithm as an example since it is the only route option currently supported
+        # using loadbalancing as an example since it is the only route option currently supported
         before do
           yml_manifest = {
             'applications' => [
@@ -660,7 +660,7 @@ Route 'https://#{route.host}.#{route.domain.name}' contains invalid route option
                 'routes' => [
                   { 'route' => "https://round-robin-app.#{shared_domain.name}",
                     'options' => {
-                      'loadbalancing-algorithm' => 'round-robin'
+                      'loadbalancing' => 'round-robin'
                     } }
                 ] }
             ]
@@ -675,7 +675,7 @@ Route 'https://#{route.host}.#{route.domain.name}' contains invalid route option
           Delayed::Worker.new.work_off
           expect(VCAP::CloudController::PollableJobModel.find(guid: job_guid)).to be_complete, VCAP::CloudController::PollableJobModel.find(guid: job_guid).cf_api_error
           app1_model.reload
-          expect(app1_model.routes.first.options).to eq({ 'lb_algo' => 'round-robin' })
+          expect(app1_model.routes.first.options).to eq({ 'loadbalancing' => 'round-robin' })
         end
 
         it 'updates the route option when a new value is provided' do
@@ -685,7 +685,7 @@ Route 'https://#{route.host}.#{route.domain.name}' contains invalid route option
                 'routes' => [
                   { 'route' => "https://round-robin-app.#{shared_domain.name}",
                     'options' => {
-                      'loadbalancing-algorithm' => 'least-connections'
+                      'loadbalancing' => 'least-connections'
                     } }
                 ] }
             ]
@@ -699,7 +699,7 @@ Route 'https://#{route.host}.#{route.domain.name}' contains invalid route option
           Delayed::Worker.new.work_off
           expect(VCAP::CloudController::PollableJobModel.find(guid: job_guid)).to be_complete, VCAP::CloudController::PollableJobModel.find(guid: job_guid).cf_api_error
           app1_model.reload
-          expect(app1_model.routes.first.options).to eq({ 'lb_algo' => 'least-connections' })
+          expect(app1_model.routes.first.options).to eq({ 'loadbalancing' => 'least-connections' })
         end
 
         it 'does not modify any route options when the options hash is not provided' do
@@ -721,7 +721,7 @@ Route 'https://#{route.host}.#{route.domain.name}' contains invalid route option
           Delayed::Worker.new.work_off
           expect(VCAP::CloudController::PollableJobModel.find(guid: job_guid)).to be_complete, VCAP::CloudController::PollableJobModel.find(guid: job_guid).cf_api_error
           app1_model.reload
-          expect(app1_model.routes.first.options).to eq({ 'lb_algo' => 'round-robin' })
+          expect(app1_model.routes.first.options).to eq({ 'loadbalancing' => 'round-robin' })
         end
 
         it 'does not modify any route options options: nil is provided' do
@@ -744,7 +744,7 @@ Route 'https://#{route.host}.#{route.domain.name}' contains invalid route option
           Delayed::Worker.new.work_off
           expect(VCAP::CloudController::PollableJobModel.find(guid: job_guid)).to be_complete, VCAP::CloudController::PollableJobModel.find(guid: job_guid).cf_api_error
           app1_model.reload
-          expect(app1_model.routes.first.options).to eq({ 'lb_algo' => 'round-robin' })
+          expect(app1_model.routes.first.options).to eq({ 'loadbalancing' => 'round-robin' })
         end
 
         it 'does not modify any route options if an empty options hash is provided' do
@@ -764,7 +764,7 @@ Route 'https://#{route.host}.#{route.domain.name}' contains invalid route option
           expect(last_response.status).to eq(202)
 
           app1_model.reload
-          expect(app1_model.routes.first.options).to eq({ 'lb_algo' => 'round-robin' })
+          expect(app1_model.routes.first.options).to eq({ 'loadbalancing' => 'round-robin' })
         end
 
         it 'does not modify any option when options: { key: nil } is provided' do
@@ -774,7 +774,7 @@ Route 'https://#{route.host}.#{route.domain.name}' contains invalid route option
                 'routes' => [
                   { 'route' => "https://round-robin-app.#{shared_domain.name}",
                     'options' => {
-                      'loadbalancing-algorithm' => nil
+                      'loadbalancing' => nil
                     } }
                 ] }
             ]
@@ -786,12 +786,12 @@ Route 'https://#{route.host}.#{route.domain.name}' contains invalid route option
           expect(last_response.status).to eq(202)
 
           app1_model.reload
-          expect(app1_model.routes.first.options).to eq({ 'lb_algo' => 'round-robin' })
+          expect(app1_model.routes.first.options).to eq({ 'loadbalancing' => 'round-robin' })
         end
       end
 
-      context 'route-option: loadbalancing-algorithm' do
-        context 'when the loadbalancing-algorithm is not supported' do
+      context 'route-option: loadbalancing' do
+        context 'when the loadbalancing is not supported' do
           let(:yml_manifest) do
             {
               'applications' => [
@@ -800,7 +800,7 @@ Route 'https://#{route.host}.#{route.domain.name}' contains invalid route option
                   'routes' => [
                     { 'route' => "https://#{route.host}.#{route.domain.name}",
                       'options' => {
-                        'loadbalancing-algorithm' => 'unsupported-lb-algorithm'
+                        'loadbalancing' => 'unsupported-lb-algorithm'
                       } }
                   ]
                 }
@@ -817,7 +817,7 @@ Route 'https://#{route.host}.#{route.domain.name}' contains invalid load-balanci
           end
         end
 
-        context 'when the loadbalancing-algorithm is supported' do
+        context 'when the loadbalancing is supported' do
           let(:yml_manifest) do
             {
               'applications' => [
@@ -825,14 +825,14 @@ Route 'https://#{route.host}.#{route.domain.name}' contains invalid load-balanci
                   'routes' => [
                     { 'route' => "https://round-robin-app.#{shared_domain.name}",
                       'options' => {
-                        'loadbalancing-algorithm' => 'round-robin'
+                        'loadbalancing' => 'round-robin'
                       } }
                   ] }
               ]
             }.to_yaml
           end
 
-          it 'adds the loadbalancing-algorithm' do
+          it 'adds the loadbalancing' do
             post "/v3/spaces/#{space.guid}/actions/apply_manifest", yml_manifest, yml_headers(user_header)
 
             expect(last_response.status).to eq(202)
@@ -842,7 +842,7 @@ Route 'https://#{route.host}.#{route.domain.name}' contains invalid load-balanci
             expect(VCAP::CloudController::PollableJobModel.find(guid: job_guid)).to be_complete, VCAP::CloudController::PollableJobModel.find(guid: job_guid).cf_api_error
 
             app1_model.reload
-            expect(app1_model.routes.first.options).to eq({ 'lb_algo' => 'round-robin' })
+            expect(app1_model.routes.first.options).to eq({ 'loadbalancing' => 'round-robin' })
           end
         end
       end

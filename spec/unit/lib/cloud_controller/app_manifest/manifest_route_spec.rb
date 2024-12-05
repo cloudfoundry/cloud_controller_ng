@@ -59,9 +59,9 @@ module VCAP::CloudController
           end
         end
 
-        context 'when there is a valid loadbalancing-algorithm' do
+        context 'when there is a valid loadbalancing' do
           let(:route) { 'http://example.com' }
-          let(:options) { { 'loadbalancing-algorithm' => 'round-robin' } }
+          let(:options) { { 'loadbalancing' => 'round-robin' } }
 
           it 'is valid' do
             manifest_route = ManifestRoute.parse(route, options)
@@ -175,8 +175,8 @@ module VCAP::CloudController
                                     })
       end
 
-      it 'parses a route with a loadbalancing-algorithm into route components' do
-        route = ManifestRoute.parse('http://potato.sub.some-domain.com', { 'loadbalancing-algorithm': 'round-robin' })
+      it 'parses a route with a loadbalancing into route components' do
+        route = ManifestRoute.parse('http://potato.sub.some-domain.com', { 'loadbalancing': 'round-robin' })
 
         expect(route.to_hash).to eq({
                                       candidate_host_domain_pairs: [
@@ -185,7 +185,7 @@ module VCAP::CloudController
                                       ],
                                       port: nil,
                                       path: '',
-                                      options: { lb_algo: 'round-robin' }
+                                      options: { loadbalancing: 'round-robin' }
                                     })
       end
     end

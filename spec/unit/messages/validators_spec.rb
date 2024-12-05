@@ -541,12 +541,12 @@ module VCAP::CloudController::Validators
       end
 
       it 'successfully validates round-robin load-balancing algorithm' do
-        message = OptionsMessage.new({ options: { lb_algo: 'round-robin' } })
+        message = OptionsMessage.new({ options: { loadbalancing: 'round-robin' } })
         expect(message).to be_valid
       end
 
       it 'successfully validates least-connections load-balancing algorithm' do
-        message = OptionsMessage.new({ options: { lb_algo: 'least-connections' } })
+        message = OptionsMessage.new({ options: { loadbalancing: 'least-connections' } })
         expect(message).to be_valid
       end
 
@@ -562,7 +562,7 @@ module VCAP::CloudController::Validators
       end
 
       it 'successfully validates empty load balancer' do
-        message = OptionsMessage.new({ options: { lb_algo: nil } })
+        message = OptionsMessage.new({ options: { loadbalancing: nil } })
         expect(message).to be_valid
       end
 
@@ -573,9 +573,9 @@ module VCAP::CloudController::Validators
       end
 
       it 'adds invalid load balancer error message to the base class' do
-        message = OptionsMessage.new({ options: { lb_algo: 'donuts' } })
+        message = OptionsMessage.new({ options: { loadbalancing: 'donuts' } })
         expect(message).not_to be_valid
-        expect(message.errors_on(:options)).to include('Lb algo \'donuts\' is not a supported load-balancing algorithm')
+        expect(message.errors_on(:options)).to include('Loadbalancing \'donuts\' is not supported')
       end
 
       it 'adds invalid field error message to the base class' do

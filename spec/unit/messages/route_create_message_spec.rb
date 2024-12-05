@@ -21,7 +21,7 @@ module VCAP::CloudController
               annotations: { style: 'mashed' }
             },
             options: {
-              lb_algo: 'round-robin'
+              loadbalancing: 'round-robin'
             }
           }
         end
@@ -428,7 +428,7 @@ module VCAP::CloudController
           end
         end
 
-        context 'when lb_algo has value round-robin' do
+        context 'when loadbalancing has value round-robin' do
           let(:params) do
             {
               host: 'some-host',
@@ -436,7 +436,7 @@ module VCAP::CloudController
                 space: { data: { guid: 'space-guid' } },
                 domain: { data: { guid: 'domain-guid' } }
               },
-              options: { lb_algo: 'round-robin' }
+              options: { loadbalancing: 'round-robin' }
             }
           end
 
@@ -444,7 +444,7 @@ module VCAP::CloudController
             expect(subject).to be_valid
           end
 
-          context 'when lb_algo has value least-connections' do
+          context 'when loadbalancing has value least-connections' do
             let(:params) do
               {
                 host: 'some-host',
@@ -452,7 +452,7 @@ module VCAP::CloudController
                   space: { data: { guid: 'space-guid' } },
                   domain: { data: { guid: 'domain-guid' } }
                 },
-                options: { lb_algo: 'least-connections' }
+                options: { loadbalancing: 'least-connections' }
               }
             end
 
@@ -461,7 +461,7 @@ module VCAP::CloudController
             end
           end
 
-          context 'when lb_algo is nil' do
+          context 'when loadbalancing is nil' do
             let(:params) do
               {
                 host: 'some-host',
@@ -469,7 +469,7 @@ module VCAP::CloudController
                   space: { data: { guid: 'space-guid' } },
                   domain: { data: { guid: 'domain-guid' } }
                 },
-                options: { lb_algo: nil }
+                options: { loadbalancing: nil }
               }
             end
 
@@ -478,7 +478,7 @@ module VCAP::CloudController
             end
           end
 
-          context 'when lb_algo has invalid value' do
+          context 'when loadbalancing has invalid value' do
             let(:params) do
               {
                 host: 'some-host',
@@ -486,13 +486,13 @@ module VCAP::CloudController
                   space: { data: { guid: 'space-guid' } },
                   domain: { data: { guid: 'domain-guid' } }
                 },
-                options: { lb_algo: 'random' }
+                options: { loadbalancing: 'random' }
               }
             end
 
             it 'is not valid' do
               expect(subject).not_to be_valid
-              expect(subject.errors[:options]).to include("Lb algo 'random' is not a supported load-balancing algorithm")
+              expect(subject.errors[:options]).to include("Loadbalancing 'random' is not supported")
             end
           end
         end
