@@ -58,8 +58,17 @@ module VCAP::CloudController
               optional(:ca_file) => String,
               :client_timeout => Integer,
               optional(:symmetric_secret) => String,
-              optional(:symmetric_secret2) => String
+              optional(:symmetric_secret2) => String,
+              optional(:clients) => enum([
+                {
+                  'name' => String,
+                  'id' => String,
+                  'secret' => String
+                }
+              ], NilClass)
             },
+
+            optional(:allow_user_creation_by_org_manager) => bool,
 
             logging: {
               level: String, # debug, info, etc.
