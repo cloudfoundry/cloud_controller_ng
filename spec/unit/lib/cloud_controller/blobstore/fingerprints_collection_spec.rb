@@ -23,12 +23,6 @@ module CloudController
         end
       end
 
-      describe '#storage_size' do
-        it 'sums the sizes' do
-          expect(collection.storage_size).to eq 123 + 321 + 112
-        end
-      end
-
       describe '#fingerprints' do
         let(:unpresented_fingerprints) do
           [

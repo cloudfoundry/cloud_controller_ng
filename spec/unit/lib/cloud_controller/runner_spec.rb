@@ -43,10 +43,6 @@ module VCAP::CloudController
     end
 
     describe '#initialize' do
-      before do
-        allow_any_instance_of(Runner).to receive(:deprecation_warning)
-      end
-
       describe 'web server selection' do
         context 'when thin is specifed' do
           it 'chooses ThinRunner as the web server' do
