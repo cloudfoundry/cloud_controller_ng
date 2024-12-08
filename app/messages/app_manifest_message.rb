@@ -72,7 +72,6 @@ module VCAP::CloudController
     validate :validate_buildpack_and_buildpacks_combination!
     validate :validate_docker_enabled!
     validate :validate_cnb_enabled!
-    validate :validate_cnb_buildpacks!
     validate :validate_docker_buildpacks_combination!
     validate :validate_service_bindings_message!, if: ->(record) { record.requested?(:services) }
     validate :validate_env_update_message!,       if: ->(record) { record.requested?(:env) }
@@ -128,7 +127,7 @@ module VCAP::CloudController
                          cnb_lifecycle_data
                        elsif requested?(:docker)
                          docker_lifecycle_data
-                       else
+                       elsif requested?(:buildpacks) || requested?(:buildpack) || requested?(:stack)
                          buildpacks_lifecycle_data
                        end
 
@@ -285,15 +284,6 @@ module VCAP::CloudController
     end
 
     def cnb_lifecycle_data
-      return unless requested?(:buildpacks) || requested?(:buildpack) || requested?(:stack)
-
-      if requested?(:buildpacks)
-        requested_buildpacks = @buildpacks
-      elsif requested?(:buildpack)
-        requested_buildpacks = []
-        requested_buildpacks.push(@buildpack)
-      end
-
       {
         type: Lifecycles::CNB,
         data: {
@@ -305,16 +295,8 @@ module VCAP::CloudController
     end
 
     def buildpacks_lifecycle_data
-      return unless requested?(:buildpacks) || requested?(:buildpack) || requested?(:stack)
-
-      if requested?(:buildpacks)
-        requested_buildpacks = @buildpacks
-      elsif requested?(:buildpack)
-        requested_buildpacks = []
-        requested_buildpacks.push(@buildpack) unless should_autodetect?(@buildpack)
-      end
-
       {
+        type: Lifecycles::BUILDPACK,
         data: {
           buildpacks: requested_buildpacks,
           stack: @stack
@@ -485,13 +467,6 @@ module VCAP::CloudController
       errors.add(:base, e.message)
     end
 
-    def validate_cnb_buildpacks!
-      return unless @lifecycle == 'cnb'
-      return if requested?(:lifecycle) && (requested?(:buildpack) || requested?(:buildpacks))
-
-      errors.add(:base, 'Buildpack(s) must be specified when using Cloud Native Buildpacks')
-    end
-
     def validate_docker_buildpacks_combination!
       return unless requested?(:docker) && (requested?(:buildpack) || requested?(:buildpacks))
 
@@ -500,6 +475,16 @@ module VCAP::CloudController
 
     def add_process_error!(error_message, type)
       errors.add(:base, %(Process "#{type}": #{error_message}))
+    end
+
+    def requested_buildpacks
+      return nil unless requested?(:buildpacks) || requested?(:buildpack)
+      return @buildpacks if requested?(:buildpacks)
+
+      buildpacks = []
+      buildpacks.push(@buildpack) if requested?(:buildpack) && !should_autodetect?(@buildpack)
+
+      buildpacks
     end
   end
 end

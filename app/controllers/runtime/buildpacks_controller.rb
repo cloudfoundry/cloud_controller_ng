@@ -7,17 +7,18 @@ module VCAP::CloudController
     define_attributes do
       attribute :name, String
       attribute :stack, String, default: nil
+      attribute :lifecycle, String, default: nil, exclude_in: :update
       attribute :position, Integer, default: 0
       attribute :enabled, Message::Boolean, default: true
       attribute :locked, Message::Boolean, default: false
     end
 
-    query_parameters :name, :stack
+    query_parameters :name, :stack, :lifecycle
 
     def self.translate_validation_exception(e, attributes)
-      buildpack_errors = e.errors.on(%i[name stack])
+      buildpack_errors = e.errors.on(%i[name stack lifecycle])
       if buildpack_errors && buildpack_errors.include?(:unique)
-        CloudController::Errors::ApiError.new_from_details('BuildpackNameStackTaken', attributes['name'], attributes['stack'])
+        CloudController::Errors::ApiError.new_from_details('BuildpackNameStackLifecycleTaken', attributes['name'], attributes['stack'], attributes['lifecycle'])
       else
         CloudController::Errors::ApiError.new_from_details('BuildpackInvalid', e.errors.full_messages)
       end
