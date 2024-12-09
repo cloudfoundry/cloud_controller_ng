@@ -52,6 +52,23 @@ module VCAP::CloudController
           expect(lrp.trusted_system_certificates_path).to eq(RUNNING_TRUSTED_SYSTEM_CERT_PATH)
           expect(lrp.PlacementTags).to eq(['placement-tag'])
           expect(lrp.certificate_properties).to eq(expected_certificate_properties)
+
+          expect(lrp.volume_mounted_files).to be_empty
+        end
+      end
+
+      shared_examples 'file-based service bindings' do
+        context 'when file-based service bindings are enabled' do
+          before do
+            app = process.app
+            app.update(file_based_service_bindings_enabled: true)
+            VCAP::CloudController::ServiceBinding.make(service_instance: ManagedServiceInstance.make(space: app.space), app: app)
+          end
+
+          it 'includes volume mounted files' do
+            lrp = builder.build_app_lrp
+            expect(lrp.volume_mounted_files).not_to be_empty
+          end
         end
       end
 
@@ -914,6 +931,8 @@ module VCAP::CloudController
               expect(lrp2.action).to eq(expected_action)
             end
           end
+
+          include_examples 'file-based service bindings'
         end
 
         context 'when the lifecycle_type is "cnb"' do
@@ -1005,6 +1024,8 @@ module VCAP::CloudController
                                                                    }))
             end
           end
+
+          include_examples 'file-based service bindings'
         end
 
         context 'when the lifecycle_type is "docker"' do
@@ -1348,6 +1369,8 @@ module VCAP::CloudController
                                                                    }))
             end
           end
+
+          include_examples 'file-based service bindings'
         end
       end
 
