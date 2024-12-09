@@ -34,6 +34,9 @@
       "protocol": "tcp"
     }
  ],
+  "options": {
+    "loadbalancing": "round-robin"
+  },
   "metadata": {
     "labels": <%= metadata.fetch(:labels, {}).to_json(space: ' ', object_nl: ' ')%>,
     "annotations": <%= metadata.fetch(:annotations, {}).to_json(space: ' ', object_nl: ' ')%>
@@ -124,6 +127,9 @@
           "protocol": "http1"
         }
       ],
+      "options": {
+        "loadbalancing": "round-robin"
+      },
       "metadata": {
         "labels": {},
         "annotations": {}
@@ -211,4 +217,10 @@
   "port": 8080,
   "protocol": "http2"
 }
+<% end %>
+
+<% content_for :route_options do %>
+  {
+    "loadbalancing": "round-robin"
+  }
 <% end %>

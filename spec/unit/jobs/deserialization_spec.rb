@@ -217,6 +217,7 @@ module VCAP::CloudController
                             :query:#{' '}
                             :fragment:#{' '}
                             :full_route: app.bommel
+                            :options: {}
                         :protocol:#{' '}
                 apply_manifest_action: !ruby/object:VCAP::CloudController::AppApplyManifest
                   user_audit_info: &6 !ruby/object:VCAP::CloudController::UserAuditInfo
