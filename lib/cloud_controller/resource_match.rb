@@ -1,6 +1,6 @@
 module VCAP::CloudController
   class ResourceMatch
-    attr_reader :descriptors, :minimum_size, :maximum_size, :resource_batch_id
+    attr_reader :descriptors
 
     FILE_SIZE_GROUPS = {
       '1KB or less': 0...1.kilobyte,

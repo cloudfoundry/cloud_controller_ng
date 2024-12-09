@@ -14,8 +14,6 @@ class BackgroundJobEnvironment
     @logger = Steno.logger('cc.background')
   end
 
-  READINESS_SOCKET_QUEUE_DEPTH = 100
-
   def setup_environment(readiness_port=nil)
     VCAP::CloudController::DB.load_models(@config.get(:db), @logger)
     @config.configure_components
