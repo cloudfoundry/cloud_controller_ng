@@ -33,7 +33,7 @@ module VCAP::CloudController
 
       def join_service_plans(dataset)
         dataset = join(dataset, :inner, :service_plans, service_id: Sequel[:services][:id])
-        dataset.distinct # services can have multiple plans
+        distinct(dataset) # services can have multiple plans
       end
 
       def join_services(dataset)
@@ -43,7 +43,7 @@ module VCAP::CloudController
       def distinct_union(dataset)
         # The UNIONed :services datasets (permissions granted on org level for plans / permissions
         # granted on space level for brokers / public plans) might contain duplicate entries.
-        dataset.distinct
+        distinct(dataset)
       end
     end
   end

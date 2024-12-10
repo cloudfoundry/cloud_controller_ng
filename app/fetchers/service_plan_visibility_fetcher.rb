@@ -24,7 +24,7 @@ module VCAP::CloudController
 
       dataset.
         select_all(:organizations).
-        distinct.
+        distinct(:organizations__id).
         order_by(:id)
     end
   end
