@@ -15,6 +15,18 @@ module VCAP::CloudController
 
       dataset = dataset.order_append(Sequel.send(order_direction, Sequel.qualify(table_name, :guid))) if order_by != 'id' && has_guid_column
 
+      distinct_opt = dataset.opts[:distinct]
+      if !distinct_opt.nil? && !distinct_opt.empty? # DISTINCT ON
+        order_opt = dataset.opts[:order]
+        dataset = if order_opt.any? { |o| %i[id guid].include?(o.expression.column.to_sym) }
+                    # If ORDER BY columns are unique, use them for the DISTINCT ON clause.
+                    dataset.distinct(*order_opt.map(&:expression))
+                  else
+                    # Otherwise, use DISTINCT.
+                    dataset.distinct
+                  end
+      end
+
       records, count = if can_paginate_with_window_function?(dataset)
                          paginate_with_window_function(dataset, per_page, page, table_name)
                        else
