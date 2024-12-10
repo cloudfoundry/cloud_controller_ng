@@ -606,7 +606,7 @@ RSpec.describe 'Space Manifests' do
       before do
         app1_model.web_processes.first.update(state: VCAP::CloudController::ProcessModel::STARTED, instances: 4)
         space.update(space_quota_definition:
-          VCAP::CloudController::SpaceQuotaDefinition.make(organization: space.organization, log_rate_limit: 0))
+                       VCAP::CloudController::SpaceQuotaDefinition.make(organization: space.organization, log_rate_limit: 0))
       end
 
       it 'successfully applies the manifest' do
@@ -621,6 +621,234 @@ RSpec.describe 'Space Manifests' do
         # job does not restart app, so applying the manifest succeeds
         expect(VCAP::CloudController::PollableJobModel.find(guid: job_guid)).to be_complete,
                                                                                 VCAP::CloudController::PollableJobModel.find(guid: job_guid).cf_api_error
+      end
+    end
+
+    describe 'route options' do
+      context 'when an invalid route option is provided' do
+        let(:yml_manifest) do
+          {
+            'applications' => [
+              {
+                'name' => app1_model.name,
+                'routes' => [
+                  { 'route' => "https://#{route.host}.#{route.domain.name}",
+                    'options' => {
+                      'doesnt-exist' => 'doesnt-exist'
+                    } }
+                ]
+              }
+            ]
+          }.to_yaml
+        end
+
+        it 'returns a 422' do
+          post "/v3/spaces/#{space.guid}/actions/apply_manifest", yml_manifest, yml_headers(user_header)
+
+          expect(last_response).to have_status_code(422)
+          expect(last_response).to have_error_message("For application '#{app1_model.name}': \
+Route 'https://#{route.host}.#{route.domain.name}' contains invalid route option 'doesnt-exist'. Valid keys: 'loadbalancing'")
+        end
+      end
+
+      context 'updating existing route options' do
+        # using loadbalancing as an example since it is the only route option currently supported
+        before do
+          yml_manifest = {
+            'applications' => [
+              { 'name' => app1_model.name,
+                'routes' => [
+                  { 'route' => "https://#{route.host}.#{shared_domain.name}",
+                    'options' => {
+                      'loadbalancing' => 'round-robin'
+                    } }
+                ] }
+            ]
+          }.to_yaml
+
+          # apply the manifest with the route option
+          post "/v3/spaces/#{space.guid}/actions/apply_manifest", yml_manifest, yml_headers(user_header)
+
+          expect(last_response.status).to eq(202)
+          job_guid = VCAP::CloudController::PollableJobModel.last.guid
+
+          Delayed::Worker.new.work_off
+          expect(VCAP::CloudController::PollableJobModel.find(guid: job_guid)).to be_complete, VCAP::CloudController::PollableJobModel.find(guid: job_guid).cf_api_error
+          app1_model.reload
+          expect(app1_model.routes.first.options).to eq({ 'loadbalancing' => 'round-robin' })
+        end
+
+        it 'updates the route option when a new value is provided' do
+          yml_manifest = {
+            'applications' => [
+              { 'name' => app1_model.name,
+                'routes' => [
+                  { 'route' => "https://#{route.host}.#{shared_domain.name}",
+                    'options' => {
+                      'loadbalancing' => 'least-connections'
+                    } }
+                ] }
+            ]
+          }.to_yaml
+
+          post "/v3/spaces/#{space.guid}/actions/apply_manifest", yml_manifest, yml_headers(user_header)
+
+          expect(last_response.status).to eq(202)
+          job_guid = VCAP::CloudController::PollableJobModel.last.guid
+
+          Delayed::Worker.new.work_off
+          expect(VCAP::CloudController::PollableJobModel.find(guid: job_guid)).to be_complete, VCAP::CloudController::PollableJobModel.find(guid: job_guid).cf_api_error
+          app1_model.reload
+          expect(app1_model.routes.first.options).to eq({ 'loadbalancing' => 'least-connections' })
+        end
+
+        it 'does not modify any route options when the options hash is not provided' do
+          yml_manifest = {
+            'applications' => [
+              { 'name' => app1_model.name,
+                'routes' => [
+                  { 'route' => "https://#{route.host}.#{shared_domain.name}" }
+                ] }
+            ]
+          }.to_yaml
+
+          # apply the manifest with the route option
+          post "/v3/spaces/#{space.guid}/actions/apply_manifest", yml_manifest, yml_headers(user_header)
+
+          expect(last_response.status).to eq(202)
+          job_guid = VCAP::CloudController::PollableJobModel.last.guid
+
+          Delayed::Worker.new.work_off
+          expect(VCAP::CloudController::PollableJobModel.find(guid: job_guid)).to be_complete, VCAP::CloudController::PollableJobModel.find(guid: job_guid).cf_api_error
+          app1_model.reload
+          expect(app1_model.routes.first.options).to eq({ 'loadbalancing' => 'round-robin' })
+        end
+
+        it 'returns 422 when options: null is provided' do
+          yml_manifest = {
+            'applications' => [
+              { 'name' => app1_model.name,
+                'routes' => [
+                  { 'route' => "https://#{route.host}.#{shared_domain.name}",
+                    'options' => nil }
+                ] }
+            ]
+          }.to_yaml
+
+          # apply the manifest with the route option
+          post "/v3/spaces/#{space.guid}/actions/apply_manifest", yml_manifest, yml_headers(user_header)
+
+          expect(last_response.status).to eq(422)
+          expect(last_response).to have_error_message("For application '#{app1_model.name}': \
+Route 'https://#{route.host}.#{route.domain.name}': options must be an object")
+
+          job_guid = VCAP::CloudController::PollableJobModel.last.guid
+          Delayed::Worker.new.work_off
+          expect(VCAP::CloudController::PollableJobModel.find(guid: job_guid)).to be_complete, VCAP::CloudController::PollableJobModel.find(guid: job_guid).cf_api_error
+          app1_model.reload
+          expect(app1_model.routes.first.options).to eq({ 'loadbalancing' => 'round-robin' })
+        end
+
+        it 'does not modify any route options if an empty options hash is provided' do
+          yml_manifest = {
+            'applications' => [
+              { 'name' => app1_model.name,
+                'routes' => [
+                  { 'route' => "https://#{route.host}.#{shared_domain.name}",
+                    'options' => {} }
+                ] }
+            ]
+          }.to_yaml
+
+          # apply the manifest with the route option
+          post "/v3/spaces/#{space.guid}/actions/apply_manifest", yml_manifest, yml_headers(user_header)
+
+          expect(last_response.status).to eq(202)
+
+          app1_model.reload
+          expect(app1_model.routes.first.options).to eq({ 'loadbalancing' => 'round-robin' })
+        end
+
+        it 'returns 422 when { loadbalancing: null } is provided' do
+          yml_manifest = {
+            'applications' => [
+              { 'name' => app1_model.name,
+                'routes' => [
+                  { 'route' => "https://#{route.host}.#{shared_domain.name}",
+                    'options' => {
+                      'loadbalancing' => nil
+                    } }
+                ] }
+            ]
+          }.to_yaml
+
+          # apply the manifest with the route option
+          post "/v3/spaces/#{space.guid}/actions/apply_manifest", yml_manifest, yml_headers(user_header)
+
+          expect(last_response.status).to eq(422)
+          expect(last_response).to have_error_message("For application '#{app1_model.name}': \
+Invalid value for 'loadbalancing' for Route 'https://#{route.host}.#{route.domain.name}'; Valid values are: 'round-robin, least-connections'")
+
+          app1_model.reload
+          expect(app1_model.routes.first.options).to eq({ 'loadbalancing' => 'round-robin' })
+        end
+      end
+
+      context 'route-option: loadbalancing' do
+        context 'when the loadbalancing is not supported' do
+          let(:yml_manifest) do
+            {
+              'applications' => [
+                {
+                  'name' => app1_model.name,
+                  'routes' => [
+                    { 'route' => "https://#{route.host}.#{route.domain.name}",
+                      'options' => {
+                        'loadbalancing' => 'unsupported-lb-algorithm'
+                      } }
+                  ]
+                }
+              ]
+            }.to_yaml
+          end
+
+          it 'returns a 422' do
+            post "/v3/spaces/#{space.guid}/actions/apply_manifest", yml_manifest, yml_headers(user_header)
+
+            expect(last_response).to have_status_code(422)
+            expect(last_response).to have_error_message("For application '#{app1_model.name}': \
+Cannot use loadbalancing value 'unsupported-lb-algorithm' for Route 'https://#{route.host}.#{route.domain.name}'; Valid values are: 'round-robin, least-connections'")
+          end
+        end
+
+        context 'when the loadbalancing is supported' do
+          let(:yml_manifest) do
+            {
+              'applications' => [
+                { 'name' => app1_model.name,
+                  'routes' => [
+                    { 'route' => "https://#{route.host}.#{shared_domain.name}",
+                      'options' => {
+                        'loadbalancing' => 'round-robin'
+                      } }
+                  ] }
+              ]
+            }.to_yaml
+          end
+
+          it 'adds the loadbalancing' do
+            post "/v3/spaces/#{space.guid}/actions/apply_manifest", yml_manifest, yml_headers(user_header)
+
+            expect(last_response.status).to eq(202)
+            job_guid = VCAP::CloudController::PollableJobModel.last.guid
+
+            Delayed::Worker.new.work_off
+            expect(VCAP::CloudController::PollableJobModel.find(guid: job_guid)).to be_complete, VCAP::CloudController::PollableJobModel.find(guid: job_guid).cf_api_error
+
+            app1_model.reload
+            expect(app1_model.routes.first.options).to eq({ 'loadbalancing' => 'round-robin' })
+          end
+        end
       end
     end
 

@@ -16,6 +16,9 @@ module VCAP::CloudController
         beet: 'formanova'
       }
     end
+    let(:old_options) do
+      '{"loadbalancing": "round-robin"}'
+    end
     let(:new_labels) do
       {
         cuisine: 'thai',
@@ -41,7 +44,7 @@ module VCAP::CloudController
     let(:route) { Route.make }
 
     subject { RouteUpdate.new }
-    describe '#update' do
+    describe '#update metadata' do
       context 'when the route has no existing metadata' do
         context 'when no metadata is specified' do
           let(:body) do
@@ -126,6 +129,95 @@ module VCAP::CloudController
               { key_name: 'potato', value: 'idaho' },
               { key_name: 'asparagus', value: 'crunchy' }
             )
+          end
+        end
+      end
+    end
+
+    describe '#update options' do
+      context 'when the route has no existing options' do
+        context 'when no options are specified' do
+          let(:body) do
+            {}
+          end
+
+          it 'adds no options' do
+            expect(message).to be_valid
+            subject.update(route:, message:)
+            route.reload
+            expect(route.options).to eq({})
+          end
+        end
+
+        context 'when an option is specified' do
+          let(:body) do
+            {
+              options: {
+                loadbalancing: 'round-robin'
+              }
+            }
+          end
+
+          it 'adds the route option' do
+            expect(message).to be_valid
+            subject.update(route:, message:)
+
+            route.reload
+            expect(route[:options]).to eq('{"loadbalancing":"round-robin"}')
+          end
+        end
+      end
+
+      context 'when the route has existing options' do
+        before do
+          route[:options] = '{"loadbalancing": "round-robin"}'
+        end
+
+        context 'when no options are specified' do
+          let(:body) do
+            {}
+          end
+
+          it 'modifies nothing' do
+            expect(message).to be_valid
+            subject.update(route:, message:)
+            route.reload
+            expect(route.options).to include({ 'loadbalancing' => 'round-robin' })
+          end
+        end
+
+        context 'when an option is specified' do
+          let(:body) do
+            {
+              options: {
+                loadbalancing: 'least-connections'
+              }
+            }
+          end
+
+          it 'updates the option' do
+            expect(message).to be_valid
+            subject.update(route:, message:)
+            route.reload
+
+            expect(route.options).to include({ 'loadbalancing' => 'least-connections' })
+          end
+        end
+
+        context 'when the option value is set to null' do
+          let(:body) do
+            {
+              options: {
+                loadbalancing: nil
+              }
+            }
+          end
+
+          it 'removes this option' do
+            expect(message).to be_valid
+            subject.update(route:, message:)
+            route.reload
+            expect(route.options).to eq({})
           end
         end
       end

@@ -208,6 +208,114 @@ module VCAP::CloudController
           expect(msg.errors.full_messages).to include("Route protocol must be 'http1', 'http2' or 'tcp'.")
         end
       end
+
+      context 'when a route contains empty route options' do
+        let(:body) do
+          { 'routes' =>
+              [
+                { 'route' => 'existing.example.com',
+                  'options' => {} }
+              ] }
+        end
+
+        it 'returns true' do
+          msg = ManifestRoutesUpdateMessage.new(body)
+
+          expect(msg.valid?).to be(true)
+        end
+      end
+
+      context 'when a route contains nil route option' do
+        let(:body) do
+          { 'routes' =>
+            [
+              { 'route' => 'existing.example.com',
+                'options' => nil }
+            ] }
+        end
+
+        it 'returns true' do
+          msg = ManifestRoutesUpdateMessage.new(body)
+
+          expect(msg.valid?).to be(false)
+          expect(msg.errors.full_messages).to include("Route 'existing.example.com': options must be an object")
+        end
+      end
+
+      context 'when a route contains invalid route options' do
+        let(:body) do
+          { 'routes' =>
+              [
+                { 'route' => 'existing.example.com',
+                  'options' => { 'invalid' => 'invalid' } }
+              ] }
+        end
+
+        it 'returns true' do
+          msg = ManifestRoutesUpdateMessage.new(body)
+
+          expect(msg.valid?).to be(false)
+          expect(msg.errors.errors.length).to eq(1)
+          expect(msg.errors.full_messages).to include("Route 'existing.example.com' contains invalid route option 'invalid'. Valid keys: 'loadbalancing'")
+        end
+      end
+
+      context 'when a route contains a valid value for loadbalancing' do
+        let(:body) do
+          { 'routes' =>
+              [
+                { 'route' => 'existing.example.com',
+                  'options' => {
+                    'loadbalancing' => 'round-robin'
+                  } }
+              ] }
+        end
+
+        it 'returns true' do
+          msg = ManifestRoutesUpdateMessage.new(body)
+
+          expect(msg.valid?).to be(true)
+        end
+      end
+
+      context 'when a route contains null as a value for loadbalancing' do
+        let(:body) do
+          { 'routes' =>
+            [
+              { 'route' => 'existing.example.com',
+                'options' => {
+                  'loadbalancing' => nil
+                } }
+            ] }
+        end
+
+        it 'returns true' do
+          msg = ManifestRoutesUpdateMessage.new(body)
+
+          expect(msg.valid?).to be(false)
+          expect(msg.errors.full_messages).to include("Invalid value for 'loadbalancing' for Route 'existing.example.com'; Valid values are: 'round-robin, least-connections'")
+        end
+      end
+
+      context 'when a route contains an invalid value for loadbalancing' do
+        let(:body) do
+          { 'routes' =>
+            [
+              { 'route' => 'existing.example.com',
+                'options' => {
+                  'loadbalancing' => 'sushi'
+                } }
+            ] }
+        end
+
+        it 'returns false' do
+          msg = ManifestRoutesUpdateMessage.new(body)
+
+          expect(msg.valid?).to be(false)
+          expect(msg.errors.errors.length).to eq(1)
+          expect(msg.errors.full_messages).to include("Cannot use loadbalancing value 'sushi' for Route 'existing.example.com'; Valid values are: 'round-robin, least-connections'")
+        end
+      end
     end
   end
 end

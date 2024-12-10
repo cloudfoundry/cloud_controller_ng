@@ -1,5 +1,6 @@
 require 'cloud_controller/app_manifest/manifest_route'
 require 'actions/route_create'
+require 'actions/route_update'
 
 module VCAP::CloudController
   class ManifestRouteUpdate
@@ -81,7 +82,8 @@ module VCAP::CloudController
             message = RouteCreateMessage.new({
                                                'host' => host,
                                                'path' => manifest_route[:path],
-                                               'port' => manifest_route[:port]
+                                               'port' => manifest_route[:port],
+                                               'options' => manifest_route[:options]
                                              })
 
             route = RouteCreate.new(user_audit_info).create(
@@ -92,6 +94,13 @@ module VCAP::CloudController
             )
           elsif route.space.guid != app.space_guid
             raise InvalidRoute.new('Routes cannot be mapped to destinations in different spaces')
+          elsif manifest_route[:options] && route[:options] != manifest_route[:options]
+            # remove nil values from options
+            manifest_route[:options] = manifest_route[:options].compact
+            message = RouteUpdateMessage.new({
+                                               'options' => manifest_route[:options]
+                                             })
+            route = RouteUpdate.new.update(route:, message:)
           end
 
           return route
