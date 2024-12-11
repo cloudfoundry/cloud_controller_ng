@@ -27,12 +27,6 @@ module CloudController
         end
       end
 
-      def storage_size
-        @fingerprints.inject(0) do |sum, fingerprint|
-          sum + fingerprint['size']
-        end
-      end
-
       private
 
       def parse_mode(raw_mode, filename)
