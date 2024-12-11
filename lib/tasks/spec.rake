@@ -47,6 +47,7 @@ namespace :spec do
       --test-options '--order rand' \
       --single spec/integration/ \
       --single spec/acceptance/ \
+      --isolate \
       --exclude-pattern 'spec/isolated_specs/' \
       -- #{path}
     CMD
