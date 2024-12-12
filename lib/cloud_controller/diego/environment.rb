@@ -41,7 +41,7 @@ module VCAP::CloudController
           @initial_env.
           merge(process.environment_json || {}).
           merge(blk.call).
-          merge(SystemEnvPresenter.new(process.service_bindings).system_env)
+          merge(SystemEnvPresenter.new(process).system_env)
 
         diego_env = diego_env.merge(DATABASE_URL: process.database_uri) if process.database_uri
 
