@@ -44,6 +44,7 @@ namespace :spec do
   def run_specs_parallel(path, env_vars='')
     command = <<~CMD
       #{env_vars} bundle exec parallel_rspec \
+      --verbose \
       --test-options '--order rand' \
       --single spec/integration/ \
       --single spec/acceptance/ \
