@@ -456,7 +456,7 @@ GEM
       activesupport (>= 3.0.0)
       mustache (~> 1.0, >= 0.99.4)
       rspec (~> 3.0)
-    rubocop (1.69.1)
+    rubocop (1.69.2)
       json (~> 2.3)
       language_server-protocol (>= 3.17.0)
       parallel (~> 1.10)
@@ -644,7 +644,7 @@ DEPENDENCIES
   rspec-rails (~> 7.1.0)
   rspec-wait
   rspec_api_documentation (>= 6.1.0)
-  rubocop (~> 1.69.1)
+  rubocop (~> 1.69.2)
   rubocop-capybara
   rubocop-factory_bot
   rubocop-rails (~> 2.27)
