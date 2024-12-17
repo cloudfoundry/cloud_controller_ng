@@ -705,8 +705,8 @@ RSpec.describe 'Users Request' do
         end
 
         before do
-          allow(CloudController::DependencyLocator.instance).to receive(:uaa_shadow_user_creation_client).and_return(uaa_client)
-          allow(uaa_client).to receive(:create_shadow_user).and_return({ 'id' => user_guid })
+          allow(CloudController::DependencyLocator.instance).to receive_messages(uaa_shadow_user_creation_client: uaa_client, uaa_username_lookup_client: uaa_client)
+          allow(uaa_client).to receive_messages(create_shadow_user: { 'id' => user_guid }, ids_for_usernames_and_origins: [])
         end
 
         it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS
@@ -867,7 +867,7 @@ RSpec.describe 'Users Request' do
     context 'when "allow_user_creation_by_org_manager" is enabled' do
       before do
         TestConfig.override(allow_user_creation_by_org_manager: true)
-        allow(CloudController::DependencyLocator.instance).to receive(:uaa_shadow_user_creation_client).and_return(uaa_client)
+        allow(CloudController::DependencyLocator.instance).to receive_messages(uaa_shadow_user_creation_client: uaa_client, uaa_username_lookup_client: uaa_client)
       end
 
       describe 'when creating a user by guid' do
@@ -954,7 +954,7 @@ RSpec.describe 'Users Request' do
         end
 
         before do
-          allow(uaa_client).to receive(:create_shadow_user).and_return({ 'id' => user_guid })
+          allow(uaa_client).to receive_messages(create_shadow_user: { 'id' => user_guid }, ids_for_usernames_and_origins: [])
         end
 
         it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS
@@ -966,6 +966,21 @@ RSpec.describe 'Users Request' do
           expect(parsed_response).to match_json_response(user_json)
 
           expect(uaa_client).not_to have_received(:users_for_ids)
+        end
+
+        context 'when user already exists in UAA' do
+          before do
+            allow(uaa_client).to receive(:ids_for_usernames_and_origins).and_return([user_guid])
+          end
+
+          it 'does not try to create a shadow user' do
+            post '/v3/users', params.to_json, admin_header
+
+            expect(last_response).to have_status_code(201)
+            expect(parsed_response).to match_json_response(user_json)
+
+            expect(uaa_client).not_to have_received(:create_shadow_user)
+          end
         end
       end
 

@@ -578,5 +578,45 @@ module VCAP::CloudController
         end
       end
     end
+
+    describe '#get_user_id_by_username_and_origin' do
+      let(:uaa_client) { instance_double(UaaClient) }
+
+      before do
+        allow(CloudController::DependencyLocator.instance).to receive(:uaa_username_lookup_client).and_return(uaa_client)
+      end
+
+      context 'when uaa client returns user id' do
+        before do
+          allow(uaa_client).to receive(:ids_for_usernames_and_origins).and_return(['some-user-id'])
+        end
+
+        it 'returns user id' do
+          user_id = User.get_user_id_by_username_and_origin(['shadow-user'], ['idp.local'])
+          expect(user_id).to eq('some-user-id')
+        end
+      end
+
+      context 'when uaa client returns empty array' do
+        before do
+          allow(uaa_client).to receive(:ids_for_usernames_and_origins).and_return([])
+        end
+
+        it 'returns nil' do
+          user_id = User.get_user_id_by_username_and_origin(['shadow-user'], ['idp.local'])
+          expect(user_id).to be_nil
+        end
+      end
+
+      context 'when uaa client raises UaaUnavailable' do
+        before do
+          allow(uaa_client).to receive(:ids_for_usernames_and_origins).and_raise(UaaUnavailable)
+        end
+
+        it 'raises UaaUnavailable' do
+          expect { User.get_user_id_by_username_and_origin(['shadow-user'], ['idp.local']) }.to raise_error(UaaUnavailable)
+        end
+      end
+    end
   end
 end

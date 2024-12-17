@@ -4,9 +4,15 @@ module VCAP::CloudController
     end
 
     def create(message:)
-      shadow_user = User.create_uaa_shadow_user(message.username, message.origin) if message.username && message.origin
-      user_guid = shadow_user ? shadow_user['id'] : message.guid
+      if message.username && message.origin
+        existing_user_guid = User.get_user_id_by_username_and_origin(message.username, message.origin)
 
+        shadow_user = User.create_uaa_shadow_user(message.username, message.origin) unless existing_user_guid
+
+        user_guid = existing_user_guid || shadow_user['id']
+      else
+        user_guid = message.guid
+      end
       user = User.create(guid: user_guid)
       User.db.transaction do
         MetadataUpdate.update(user, message)
