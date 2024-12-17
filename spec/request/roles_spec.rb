@@ -814,6 +814,7 @@ RSpec.describe 'Roles Request' do
           before do
             TestConfig.override(allow_user_creation_by_org_manager: true)
             allow(uaa_client).to receive(:create_shadow_user).with('bob_unaffiliated', origin).and_return({ 'id' => user_unaffiliated.guid })
+            allow(uaa_client).to receive(:ids_for_usernames_and_origins).and_return([])
           end
 
           it 'does not call create_shadow_user' do
@@ -830,9 +831,28 @@ RSpec.describe 'Roles Request' do
 
             it 'calls create_shadow_user and retrieves the guid of the user from uaa' do
               post '/v3/roles', params.to_json, admin_header
+
               expect(last_response).to have_status_code(201)
               expect(parsed_response).to match_json_response(expected_response)
+
+              expect(uaa_client).to have_received(:ids_for_usernames_and_origins)
               expect(uaa_client).to have_received(:create_shadow_user)
+            end
+
+            context 'user already exists in UAA' do
+              before do
+                allow(uaa_client).to receive(:ids_for_usernames_and_origins).and_return([user_unaffiliated.guid])
+              end
+
+              it 'retrieves the id from UAA and does not create a shadow user' do
+                post '/v3/roles', params.to_json, admin_header
+
+                expect(last_response).to have_status_code(201)
+                expect(parsed_response).to match_json_response(expected_response)
+
+                expect(uaa_client).to have_received(:ids_for_usernames_and_origins)
+                expect(uaa_client).not_to have_received(:create_shadow_user)
+              end
             end
           end
         end
@@ -971,6 +991,10 @@ RSpec.describe 'Roles Request' do
         end
 
         context 'by user name and origin' do
+          before do
+            allow(uaa_client).to receive(:ids_for_usernames_and_origins).and_return([])
+          end
+
           let(:params) do
             {
               type: 'organization_auditor',
