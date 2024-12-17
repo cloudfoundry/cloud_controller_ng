@@ -114,12 +114,11 @@ class RolesController < ApplicationController
     unauthorized! unless permission_queryer.can_write_to_active_org?(org.id)
     suspended! unless permission_queryer.is_org_active?(org.id)
 
-    if message.username && message.user_origin && message.user_origin != 'uaa' && org_managers_can_create_users?
-      user = create_uaa_shadow_user(message.username, message.user_origin)
-      user_guid = user['id']
-    else
-      user_guid = message.user_guid || lookup_user_guid_in_uaa(message.username, message.user_origin)
-    end
+    user_guid = if message.username && message.user_origin && message.user_origin != 'uaa' && org_managers_can_create_users?
+                  create_or_get_uaa_user(message)
+                else
+                  message.user_guid || lookup_user_guid_in_uaa(message.username, message.user_origin)
+                end
 
     user = User.first(guid: user_guid) || create_cc_user(user_guid)
 
@@ -145,9 +144,20 @@ class RolesController < ApplicationController
     UserCreate.new.create(message:)
   end
 
-  def create_uaa_shadow_user(username, origin)
-    message = UserCreateMessage.new(username:, origin:)
-    unprocessable!(message.errors.full_messages) unless message.valid?
+  def create_or_get_uaa_user(message)
+    user_create_message = UserCreateMessage.new(username: message.username, origin: message.user_origin)
+    unprocessable!(user_create_message.errors.full_messages) unless user_create_message.valid?
+
+    existing_user_id = get_uaa_user_id(user_create_message)
+    user = create_uaa_shadow_user(user_create_message) unless existing_user_id
+    existing_user_id || user['id']
+  end
+
+  def get_uaa_user_id(message)
+    User.get_user_id_by_username_and_origin(message.username, message.origin)
+  end
+
+  def create_uaa_shadow_user(message)
     User.create_uaa_shadow_user(message.username, message.origin)
   end
 
