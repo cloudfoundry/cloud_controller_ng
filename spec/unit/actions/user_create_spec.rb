@@ -56,7 +56,7 @@ module VCAP::CloudController
 
       describe 'creating users' do
         before do
-          allow(User).to receive(:create_uaa_shadow_user).and_return({ 'id' => guid })
+          allow(User).to receive_messages(create_uaa_shadow_user: { 'id' => guid }, get_user_id_by_username_and_origin: nil)
         end
 
         context 'when creating a UAA user by guid' do
@@ -106,6 +106,17 @@ module VCAP::CloudController
           it 'creates a shadow user in uaa' do
             subject.create(message:)
             expect(User).to have_received(:create_uaa_shadow_user).with(username, origin)
+          end
+
+          context 'when user already exists in UAA' do
+            before do
+              allow(User).to receive(:get_user_id_by_username_and_origin).and_return('some-user-guid')
+            end
+
+            it 'does not try to create a shadow user' do
+              subject.create(message:)
+              expect(User).not_to have_received(:create_uaa_shadow_user)
+            end
           end
 
           context 'when an UaaUnavailable error is raised' do
