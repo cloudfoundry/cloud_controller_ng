@@ -1,7 +1,7 @@
 require 'cloud_controller/encryptor'
 
 module VCAP::CloudController
-  shared_examples 'a model with an encrypted attribute' do
+  RSpec.shared_examples 'a model with an encrypted attribute' do
     before do
       allow(Encryptor).to receive(:database_encryption_keys).
         and_return({ Encryptor.current_encryption_key_label.to_sym => 'correct-key' })

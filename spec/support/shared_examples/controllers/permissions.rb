@@ -1,4 +1,4 @@
-shared_context 'permissions' do
+RSpec.shared_context 'permissions' do
   before do
     @org_a = VCAP::CloudController::Organization.make
     @org_a_manager = VCAP::CloudController::User.make
@@ -44,7 +44,7 @@ shared_context 'permissions' do
   end
 end
 
-shared_examples 'permission enumeration' do |perm_name, opts|
+RSpec.shared_examples 'permission enumeration' do |perm_name, opts|
   name = opts[:name]
   path = opts[:path]
   expected = opts[:enumerate]
