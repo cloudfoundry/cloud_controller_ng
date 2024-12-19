@@ -13,8 +13,8 @@ module VCAP::CloudController
           logger.info('Cleaning up old deployments')
 
           guids_for_apps_with_deployments = DeploymentModel.
-                                            distinct(:app_guid).
-                                            map(&:app_guid)
+                                            distinct.
+                                            select_map(:app_guid)
 
           guids_for_apps_with_deployments.each do |app_guid|
             deployments_dataset = DeploymentModel.where(app_guid:)

@@ -25,7 +25,7 @@ module VCAP::CloudController
         if message.requested? :space_guids
           dataset = dataset.
                     join(:spaces, space_quota_definition_id: :id).
-                    where(Sequel[:spaces][:guid] => message.space_guids).distinct.
+                    where(Sequel[:spaces][:guid] => message.space_guids).distinct(:id).
                     qualify(:space_quota_definitions)
         end
 

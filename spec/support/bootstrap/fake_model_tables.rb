@@ -9,6 +9,7 @@ class FakeModelTables
     tables_for_vcap_relations_spec
     tables_for_sequel_case_insensitive_string_monkeypatch
     tables_for_query_spec
+    tables_for_sequel_paginator_spec
   end
 
   private
@@ -18,6 +19,7 @@ class FakeModelTables
     drop_tables_for_vcap_relations_spec
     drop_tables_for_sequel_case_insensitive_string_monkeypatch
     drop_tables_for_query_spec
+    drop_tables_for_sequel_paginator_spec
   end
 
   def tables_for_model_controller_spec
@@ -271,6 +273,17 @@ class FakeModelTables
     db.drop_table? :magazines
     db.drop_table? :books
     db.drop_table? :authors
+  end
+
+  def tables_for_sequel_paginator_spec
+    db.create_table :table_without_guid do
+      primary_key :id
+      DateTime :created_at
+    end
+  end
+
+  def drop_tables_for_sequel_paginator_spec
+    db.drop_table? :table_without_guid
   end
 
   attr_reader :db
