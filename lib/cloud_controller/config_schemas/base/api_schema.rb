@@ -335,7 +335,10 @@ module VCAP::CloudController
             default_app_ssh_access: bool,
 
             jobs: {
-              global: { timeout_in_seconds: Integer },
+              global: {
+                timeout_in_seconds: Integer,
+                worker_sleep_delay_in_seconds: Integer
+              },
               queues: {
                 optional(:cc_generic) => { timeout_in_seconds: Integer }
               },

@@ -33,6 +33,7 @@ system_hostnames:
 jobs:
   global:
     timeout_in_seconds: 14400
+    worker_sleep_delay_in_seconds: 5
   queues: {}
 
 app_usage_events:
