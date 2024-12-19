@@ -2,7 +2,7 @@ require 'spec_helper'
 
 module CloudFoundry
   module Middleware
-    RSpec.describe ServiceBrokerRateLimiter do
+    RSpec.describe ServiceBrokerRateLimiter, isolation: :truncation do
       let(:app) { double(:app) }
       let(:logger) { double }
       let(:instance) { VCAP::CloudController::Service.make(instances_retrievable: true) }
