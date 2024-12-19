@@ -1,7 +1,7 @@
 module VCAP::CloudController
   class FieldServiceInstancePlanDecorator
     def self.allowed
-      Set['guid', 'name', 'relationships.service_offering']
+      Set['guid', 'name', 'broker_catalog.id', 'relationships.service_offering']
     end
 
     def self.match?(fields)
@@ -23,6 +23,11 @@ module VCAP::CloudController
         plan_view = {}
         plan_view[:guid] = plan.guid if @fields.include?('guid')
         plan_view[:name] = plan.name if @fields.include?('name')
+        if @fields.include?('broker_catalog.id')
+          plan_view[:broker_catalog] = {
+            id: plan.unique_id
+          }
+        end
         if @fields.include?('relationships.service_offering')
           plan_view[:relationships] = {
             service_offering: {
