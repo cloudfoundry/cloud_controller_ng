@@ -10,6 +10,7 @@ require 'presenters/v2/service_instance_shared_to_presenter'
 require 'presenters/v2/service_instance_shared_from_presenter'
 
 module VCAP::CloudController
+  # rubocop:disable Metrics/ClassLength
   class ServiceInstancesController < RestController::ModelController
     include VCAP::CloudController::LockCheck
 
@@ -141,6 +142,10 @@ module VCAP::CloudController
     rescue LockCheck::ServiceBindingLockedError => e
       raise CloudController::Errors::ApiError.new_from_details('AsyncServiceBindingOperationInProgress', e.service_binding.app.name, e.service_binding.service_instance.name)
     end
+
+    deprecated_endpoint '/v2/managed_service_instances'
+    get '/v2/managed_service_instances', :enumerate
+    get '/v2/managed_service_instances/:guid', :read
 
     def read(guid)
       service_instance = find_guid_and_validate_access(:read, guid, ServiceInstance)
@@ -597,4 +602,5 @@ module VCAP::CloudController
       service_instance.clone.set(request_attrs.select { |k, _v| ServiceInstanceUpdate::KEYS_TO_UPDATE_CC.include? k })
     end
   end
+  # rubocop:enable Metrics/ClassLength
 end
