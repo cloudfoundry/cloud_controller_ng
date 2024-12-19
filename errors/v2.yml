@@ -964,9 +964,9 @@
   message: "Encountered an error while attempting to sync cloud controller with the service broker's catalog: %s"
 
 290000:
-  name: BuildpackNameStackTaken
+  name: BuildpackNameStackLifecycleTaken
   http_code: 422
-  message: "The buildpack name %s is already in use for the stack %s"
+  message: "The buildpack name %s is already in use for the stack %s and the lifecycle %s"
 
 290001:
   name: BuildpackNameTaken
