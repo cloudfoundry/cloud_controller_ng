@@ -95,7 +95,7 @@ end
 
 group :development do
   gem 'byebug'
-  gem 'debug', '~> 1.9'
+  gem 'debug', '~> 1.10'
   gem 'listen'
   gem 'roodi'
   gem 'solargraph'
