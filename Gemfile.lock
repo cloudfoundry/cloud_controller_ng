@@ -128,7 +128,8 @@ GEM
       rexml
     crass (1.0.6)
     daemons (1.4.1)
-    debug (1.9.2)
+    date (3.4.1)
+    debug (1.10.0)
       irb (~> 1.10)
       reline (>= 0.3.8)
     declarative (0.0.20)
@@ -262,9 +263,9 @@ GEM
     httpclient (2.8.3)
     i18n (1.14.6)
       concurrent-ruby (~> 1.0)
-    io-console (0.7.2)
+    io-console (0.8.0)
     ipaddress (0.8.3)
-    irb (1.14.1)
+    irb (1.14.3)
       rdoc (>= 4.0.0)
       reline (>= 0.4.2)
     jaro_winkler (1.5.6)
@@ -360,7 +361,8 @@ GEM
     pry-byebug (3.10.1)
       byebug (~> 11.0)
       pry (>= 0.13, < 0.15)
-    psych (5.2.0)
+    psych (5.2.2)
+      date
       stringio
     public_suffix (6.0.1)
     puma (6.5.0)
@@ -398,14 +400,14 @@ GEM
     rb-inotify (0.10.1)
       ffi (~> 1.0)
     rbs (2.8.4)
-    rdoc (6.7.0)
+    rdoc (6.10.0)
       psych (>= 4.0.0)
     redis (5.3.0)
       redis-client (>= 0.22.0)
     redis-client (0.22.2)
       connection_pool
     regexp_parser (2.9.3)
-    reline (0.5.11)
+    reline (0.6.0)
       io-console (~> 0.5)
     representable (3.2.0)
       declarative (< 0.1.0)
@@ -593,7 +595,7 @@ DEPENDENCIES
   clockwork
   cloudfront-signer
   codeclimate-test-reporter (>= 1.0.8)
-  debug (~> 1.9)
+  debug (~> 1.10)
   digest-xxhash
   eventmachine (~> 1.2.7)
   fluent-logger
