@@ -20,7 +20,7 @@ module VCAP::CloudController
                   join(:service_plans, service_id: :services__id).
                   join(:service_instances, service_plan_id: :service_plans__id).
                   where(service_instances__id: managed_service_instances.map(&:id)).
-                  distinct.
+                  distinct(:services__created_at, :services__guid).
                   order_by(:services__created_at, :services__guid).
                   select(:services__label, :services__guid, :services__description, :services__tags, :services__extra, :services__service_broker_id, :services__created_at).
                   all

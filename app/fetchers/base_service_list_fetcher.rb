@@ -161,7 +161,7 @@ module VCAP::CloudController
       def join_plan_org_visibilities(dataset)
         dataset = join_service_plans(dataset)
         dataset = join(dataset, :inner, :service_plan_visibilities, service_plan_id: Sequel[:service_plans][:id])
-        dataset.distinct # service plans can have multiple visibilities
+        distinct(dataset) # service plans can have multiple visibilities
       end
 
       def join_service_brokers(dataset)
@@ -187,13 +187,13 @@ module VCAP::CloudController
       def join_plan_spaces(dataset)
         dataset = join_plan_orgs(dataset)
         dataset = join(dataset, :inner, Sequel[:spaces].as(:plan_spaces), organization_id: Sequel[:plan_orgs][:id])
-        dataset.distinct # organizations can have multiple spaces
+        distinct(dataset) # organizations can have multiple spaces
       end
 
       def join_service_instances(dataset)
         dataset = join_service_plans(dataset)
         dataset = join(dataset, :inner, :service_instances, service_plan_id: Sequel[:service_plans][:id])
-        dataset.distinct # service plans can have multiple instances
+        distinct(dataset) # service plans can have multiple instances
       end
 
       def join(dataset, type, table, on)
@@ -201,6 +201,10 @@ module VCAP::CloudController
           return dataset if j.table_expr == table
         end
         dataset.join_table(type, table, on)
+      end
+
+      def distinct(dataset)
+        dataset.distinct(Sequel.qualify(dataset.model.table_name, :id))
       end
     end
   end

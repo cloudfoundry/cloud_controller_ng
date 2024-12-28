@@ -228,13 +228,13 @@ class SpacesV3Controller < ApplicationController
   def fetch_running_security_group_guids(space)
     space_level_groups = SecurityGroup.where(spaces: space)
     global_groups = SecurityGroup.where(running_default: true)
-    space_level_groups.union(global_groups).map(&:guid)
+    space_level_groups.union(global_groups).select_map(:guid)
   end
 
   def fetch_staging_security_group_guids(space)
     space_level_groups = SecurityGroup.where(staging_spaces: space)
     global_groups = SecurityGroup.where(staging_default: true)
-    space_level_groups.union(global_groups).distinct.map(&:guid)
+    space_level_groups.union(global_groups).distinct.select_map(:guid)
   end
 
   def space_not_found!
