@@ -2,11 +2,14 @@ require 'presenters/system_environment/service_instance_presenter'
 require 'presenters/system_environment/service_binding_presenter'
 
 class SystemEnvPresenter
-  def initialize(service_bindings)
-    @service_bindings = service_bindings
+  def initialize(app_or_process)
+    @file_based_service_bindings_enabled = app_or_process.file_based_service_bindings_enabled
+    @service_bindings = app_or_process.service_bindings
   end
 
   def system_env
+    return { SERVICE_BINDING_ROOT: '/etc/cf-service-bindings' } if @file_based_service_bindings_enabled
+
     { VCAP_SERVICES: service_binding_env_variables }
   end
 
