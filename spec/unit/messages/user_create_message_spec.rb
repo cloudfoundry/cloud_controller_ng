@@ -27,7 +27,7 @@ module VCAP::CloudController
 
         it 'is not valid' do
           expect(subject).not_to be_valid
-          expect(subject.errors[:guid]).to include("either 'guid' or 'username' and 'origin' must be provided")
+          expect(subject.errors[:guid]).to include("or 'username' and 'origin' must be provided")
         end
       end
 
@@ -123,7 +123,7 @@ module VCAP::CloudController
 
           it 'is not valid' do
             expect(subject).not_to be_valid
-            expect(subject.errors[:username]).to include("'origin' is missing")
+            expect(subject.errors[:username]).to include("can only be provided together with 'origin'")
           end
         end
       end
@@ -147,7 +147,7 @@ module VCAP::CloudController
 
           it 'is not valid' do
             expect(subject).not_to be_valid
-            expect(subject.errors[:origin]).to include("'username' is missing")
+            expect(subject.errors[:origin]).to include("can only be provided together with 'username'")
           end
         end
 

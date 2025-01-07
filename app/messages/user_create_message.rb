@@ -10,11 +10,11 @@ module VCAP::CloudController
           record.errors.add(:username, message: "cannot be provided with 'guid'") if record.username
           record.errors.add(:origin, message: "cannot be provided with 'guid'") if record.origin
         elsif record.username || record.origin
-          record.errors.add(:origin, message: "'username' is missing") unless record.username
-          record.errors.add(:username, message: "'origin' is missing") unless record.origin
+          record.errors.add(:origin, message: "can only be provided together with 'username'") unless record.username
+          record.errors.add(:username, message: "can only be provided together with 'origin'") unless record.origin
           record.errors.add(:origin, message: "cannot be 'uaa' when creating a user by username") unless record.origin != 'uaa'
         else
-          record.errors.add(:guid, message: "either 'guid' or 'username' and 'origin' must be provided")
+          record.errors.add(:guid, message: "or 'username' and 'origin' must be provided")
         end
       end
     end
