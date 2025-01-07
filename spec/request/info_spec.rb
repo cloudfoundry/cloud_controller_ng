@@ -38,6 +38,7 @@ RSpec.describe 'Info Request' do
           description: '',
           name: '',
           version: 0,
+          osbapi_version: 0,
           links: {
             self: { href: "#{link_prefix}/v3/info" },
             support: { href: '' }
