@@ -38,13 +38,24 @@ class UsersController < ApplicationController
   end
 
   def create
-    unauthorized! unless permission_queryer.can_write_globally?
-
     message = UserCreateMessage.new(hashed_params[:body])
+    unauthorized! unless permission_queryer.can_write_globally? || org_managers_can_create_users?
     unprocessable!(message.errors.full_messages) unless message.valid?
+
+    # prevent org_managers from creating users by guid
+    unauthorized! if !permission_queryer.can_write_globally? && !(!message.guid && org_managers_can_create_users?)
+
     user = UserCreate.new.create(message:)
 
-    render status: :created, json: Presenters::V3::UserPresenter.new(user, uaa_users: User.uaa_users_info([user.guid]))
+    if message.username && message.origin
+      render status: :created,
+             json: Presenters::V3::UserPresenter.new(user,
+                                                     uaa_users: { user.guid => { 'username' => message.username, 'id' => user.guid, 'origin' => message.origin } })
+    else
+      render status: :created, json: Presenters::V3::UserPresenter.new(user, uaa_users: User.uaa_users_info([user.guid]))
+    end
+  rescue VCAP::CloudController::UaaUnavailable
+    raise CloudController::Errors::ApiError.new_from_details('UaaUnavailable')
   rescue UserCreate::Error => e
     unprocessable!(e)
   end
@@ -90,5 +101,9 @@ class UsersController < ApplicationController
 
   def user_not_found!
     resource_not_found!(:user)
+  end
+
+  def org_managers_can_create_users?
+    VCAP::CloudController::Config.config.get(:allow_user_creation_by_org_manager) && permission_queryer.is_org_manager?
   end
 end

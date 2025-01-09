@@ -662,6 +662,55 @@ RSpec.describe 'Users Request' do
       end
 
       it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS
+
+      context 'using username and origin' do
+        let(:params) do
+          {
+            username: 'some-user',
+            origin: 'idp.local'
+          }
+        end
+
+        let(:user_guid) { 'new-user-guid' }
+
+        let(:api_call) { ->(user_headers) { post '/v3/users', params.to_json, user_headers } }
+
+        let(:user_json) do
+          {
+            guid: user_guid,
+            created_at: iso8601,
+            updated_at: iso8601,
+            username: params[:username],
+            presentation_name: params[:username],
+            origin: params[:origin],
+            metadata: {
+              labels: {},
+              annotations: {}
+            },
+            links: {
+              self: { href: %r{#{Regexp.escape(link_prefix)}/v3/users/#{user_guid}} }
+            }
+          }
+        end
+
+        let(:expected_codes_and_responses) do
+          h = Hash.new(
+            code: 403
+          )
+          h['admin'] = {
+            code: 201,
+            response_object: user_json
+          }
+          h
+        end
+
+        before do
+          allow(CloudController::DependencyLocator.instance).to receive_messages(uaa_shadow_user_creation_client: uaa_client, uaa_username_lookup_client: uaa_client)
+          allow(uaa_client).to receive_messages(create_shadow_user: { 'id' => user_guid }, ids_for_usernames_and_origins: [])
+        end
+
+        it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS
+      end
     end
 
     describe 'when creating a user that exists in uaa' do
@@ -720,7 +769,7 @@ RSpec.describe 'Users Request' do
         let(:uaa_client_id) { 'cc_routing' }
 
         before do
-          allow(uaa_client).to receive_messages(users_for_ids: {}, get_clients: [{ client_id: uaa_client_id }])
+          allow(uaa_client).to receive_messages(users_for_ids: {})
         end
 
         let(:api_call) { ->(user_headers) { post '/v3/users', params.to_json, user_headers } }
@@ -812,6 +861,175 @@ RSpec.describe 'Users Request' do
 
           expect(parsed_response['errors'][0]['detail']).to eq "User with guid '#{existing_user.guid}' already exists."
         end
+      end
+    end
+
+    context 'when "allow_user_creation_by_org_manager" is enabled' do
+      before do
+        TestConfig.override(allow_user_creation_by_org_manager: true)
+        allow(CloudController::DependencyLocator.instance).to receive_messages(uaa_shadow_user_creation_client: uaa_client, uaa_username_lookup_client: uaa_client)
+      end
+
+      describe 'when creating a user by guid' do
+        before do
+          allow(uaa_client).to receive(:users_for_ids).and_return({})
+        end
+
+        let(:api_call) { ->(user_headers) { post '/v3/users', params.to_json, user_headers } }
+
+        let(:user_json) do
+          {
+            guid: params[:guid],
+            created_at: iso8601,
+            updated_at: iso8601,
+            username: nil,
+            presentation_name: params[:guid],
+            origin: nil,
+            metadata: {
+              labels: {},
+              annotations: {}
+            },
+            links: {
+              self: { href: %r{#{Regexp.escape(link_prefix)}/v3/users/#{params[:guid]}} }
+            }
+          }
+        end
+
+        let(:expected_codes_and_responses) do
+          h = Hash.new(
+            code: 403
+          )
+          h['admin'] = {
+            code: 201,
+            response_object: user_json
+          }
+          h
+        end
+
+        it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS
+      end
+
+      describe 'when creating a user by username and origin' do
+        let(:params) do
+          {
+            username: 'some-user',
+            origin: 'idp.local'
+          }
+        end
+        let(:user_guid) { 'new-user-guid' }
+
+        let(:api_call) { ->(user_headers) { post '/v3/users', params.to_json, user_headers } }
+
+        let(:user_json) do
+          {
+            guid: user_guid,
+            created_at: iso8601,
+            updated_at: iso8601,
+            username: params[:username],
+            presentation_name: params[:username],
+            origin: params[:origin],
+            metadata: {
+              labels: {},
+              annotations: {}
+            },
+            links: {
+              self: { href: %r{#{Regexp.escape(link_prefix)}/v3/users/#{user_guid}} }
+            }
+          }
+        end
+
+        let(:expected_codes_and_responses) do
+          h = Hash.new(
+            code: 403
+          )
+          h['admin'] = {
+            code: 201,
+            response_object: user_json
+          }
+          h['org_manager'] = {
+            code: 201,
+            response_object: user_json
+          }
+          h
+        end
+
+        before do
+          allow(uaa_client).to receive_messages(create_shadow_user: { 'id' => user_guid }, ids_for_usernames_and_origins: [])
+        end
+
+        it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS
+
+        it 'constructs the response with the given information without calling the UAA again' do
+          post '/v3/users', params.to_json, admin_header
+
+          expect(last_response).to have_status_code(201)
+          expect(parsed_response).to match_json_response(user_json)
+
+          expect(uaa_client).not_to have_received(:users_for_ids)
+        end
+
+        context 'when user already exists in UAA' do
+          before do
+            allow(uaa_client).to receive(:ids_for_usernames_and_origins).and_return([user_guid])
+          end
+
+          it 'does not try to create a shadow user' do
+            post '/v3/users', params.to_json, admin_header
+
+            expect(last_response).to have_status_code(201)
+            expect(parsed_response).to match_json_response(user_json)
+
+            expect(uaa_client).not_to have_received(:create_shadow_user)
+          end
+        end
+      end
+
+      context 'when parameters are invalid' do
+        let(:params) do
+          {
+            guid: user_guid,
+            username: 'some-user',
+            origin: 'idp.local'
+          }
+        end
+        let(:user_guid) { 'new-user-guid' }
+
+        let(:api_call) { ->(user_headers) { post '/v3/users', params.to_json, user_headers } }
+
+        let(:user_json) do
+          {
+            guid: user_guid,
+            created_at: iso8601,
+            updated_at: iso8601,
+            username: params[:username],
+            presentation_name: params[:username],
+            origin: params[:origin],
+            metadata: {
+              labels: {},
+              annotations: {}
+            },
+            links: {
+              self: { href: %r{#{Regexp.escape(link_prefix)}/v3/users/#{user_guid}} }
+            }
+          }
+        end
+
+        let(:expected_codes_and_responses) do
+          h = Hash.new(
+            code: 403
+          )
+          h['admin'] = {
+            code: 422,
+            response_object: user_json
+          }
+          h['org_manager'] = {
+            code: 422,
+            response_object: user_json
+          }
+          h
+        end
+
+        it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS
       end
     end
   end
