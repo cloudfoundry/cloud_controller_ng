@@ -267,6 +267,7 @@ module VCAP::CloudController
 
             webserver: String, # thin or puma
             optional(:puma) => {
+              automatic_worker_count: bool,
               workers: Integer,
               max_threads: Integer,
               optional(:max_db_connections_per_process) => Integer

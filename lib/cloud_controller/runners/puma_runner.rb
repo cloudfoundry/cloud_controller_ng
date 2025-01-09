@@ -8,6 +8,7 @@ module VCAP::CloudController
     def initialize(config, app, logger, periodic_updater, request_logs)
       @logger = logger
 
+      ENV['WEB_CONCURRENCY'] = 'auto' if config.get(:puma, :automatic_worker_count)
       puma_config = Puma::Configuration.new do |conf|
         if config.get(:nginx, :use_nginx)
           if config.get(:nginx, :instance_socket).nil? || config.get(:nginx, :instance_socket).empty?
@@ -19,7 +20,7 @@ module VCAP::CloudController
           conf.bind "tcp://0.0.0.0:#{config.get(:external_port)}"
         end
 
-        conf.workers(config.get(:puma, :workers) || 1)
+        conf.workers(config.get(:puma, :workers) || 1) unless config.get(:puma, :automatic_worker_count)
         num_threads = config.get(:puma, :max_threads) || 1
         conf.threads(num_threads, num_threads)
 
