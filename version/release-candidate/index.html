@@ -229,6 +229,7 @@
 
 
 
+
 <h1 id="introduction">Introduction</h1>
 
 <h2 id="overview">Overview</h2>
@@ -17026,6 +17027,9 @@ spaces, and assign &amp; unassign roles to users.</p>
 
 <p>If the associated user is valid but does not exist in Cloud Controller&rsquo;s database, a user resource will be created automatically.</p>
 
+<p>If CAPI property <code class="prettyprint">cc.allow_user_creation_by_org_manager</code> is enabled, the organization role is being created by username + origin and the user does not exist in UAA yet, the user will be created.
+The origin must be different from <code class="prettyprint">uaa</code> in this case.</p>
+
 <h4 id="definition">Definition</h4>
 
 <p><code class="prettyprint">POST /v3/roles</code></p>
@@ -32101,7 +32105,12 @@ apps, delete apps).</p>
 Controller database.</p>
 
 <p>Generally, the GUID should match the GUID of an already-created user in the
-UAA database, though this is not required.</p>
+UAA database, though this is not required.
+Creating a user by guid is only permitted by admins.</p>
+
+<p>If CAPI property <code class="prettyprint">cc.allow_user_creation_by_org_manager</code> is enabled, a UAA user will be automatically created if it does not exist yet.
+The UAA user will be only created when <code class="prettyprint">username</code> and <code class="prettyprint">origin</code> have been provided instead of a guid. Additionally <code class="prettyprint">origin</code> must be different from <code class="prettyprint">uaa</code>.
+Admins and OrgManagers can make use of the UAA user creation.</p>
 <div class="highlight"><pre class="highlight plaintext"><code>Example Request
 </code></pre></div><div class="highlight"><pre class="highlight shell"><code>curl <span class="s2">"https://api.example.org/v3/users"</span> <span class="se">\</span>
   <span class="nt">-X</span> POST <span class="se">\</span>
@@ -32121,6 +32130,37 @@ UAA database, though this is not required.</p>
     </span><span class="nl">"username"</span><span class="p">:</span><span class="w"> </span><span class="s2">"some-name"</span><span class="p">,</span><span class="w">
     </span><span class="nl">"presentation_name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"some-name"</span><span class="p">,</span><span class="w">
     </span><span class="nl">"origin"</span><span class="p">:</span><span class="w"> </span><span class="s2">"uaa"</span><span class="p">,</span><span class="w">
+    </span><span class="nl">"metadata"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+      </span><span class="nl">"labels"</span><span class="p">:</span><span class="w"> </span><span class="p">{},</span><span class="w">
+      </span><span class="nl">"annotations"</span><span class="p">:{}</span><span class="w">
+    </span><span class="p">},</span><span class="w">
+    </span><span class="nl">"links"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+      </span><span class="nl">"self"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+        </span><span class="nl">"href"</span><span class="p">:</span><span class="w"> </span><span class="s2">"https://api.example.org/v3/users/3a5d3d89-3f89-4f05-8188-8a2b298c79d5"</span><span class="w">
+      </span><span class="p">}</span><span class="w">
+    </span><span class="p">}</span><span class="w">
+  </span><span class="p">}</span><span class="w">
+
+</span></code></pre></div><div class="highlight"><pre class="highlight plaintext"><code>Example Request (by username and origin)
+</code></pre></div><div class="highlight"><pre class="highlight shell"><code>curl <span class="s2">"https://api.example.org/v3/users"</span> <span class="se">\</span>
+  <span class="nt">-X</span> POST <span class="se">\</span>
+  <span class="nt">-H</span> <span class="s2">"Authorization: bearer [token]"</span> <span class="se">\</span>
+  <span class="nt">-H</span> <span class="s2">"Content-type: application/json"</span> <span class="se">\</span>
+  <span class="nt">-d</span> <span class="s1">'{
+    "username": "some-user",
+    "origin": "some-origin"
+  }'</span>
+</code></pre></div><div class="highlight"><pre class="highlight plaintext"><code>Example Response
+</code></pre></div><div class="highlight"><pre class="highlight http"><code><span class="k">HTTP</span><span class="o">/</span><span class="m">1.1</span> <span class="m">201</span> <span class="ne">Created</span>
+<span class="na">Content-Type</span><span class="p">:</span> <span class="s">application/json</span>
+
+<span class="w">  </span><span class="p">{</span><span class="w">
+    </span><span class="nl">"guid"</span><span class="p">:</span><span class="w"> </span><span class="s2">"3a5d3d89-3f89-4f05-8188-8a2b298c79d5"</span><span class="p">,</span><span class="w">
+    </span><span class="nl">"created_at"</span><span class="p">:</span><span class="w"> </span><span class="s2">"2019-03-08T01:06:19Z"</span><span class="p">,</span><span class="w">
+    </span><span class="nl">"updated_at"</span><span class="p">:</span><span class="w"> </span><span class="s2">"2019-03-08T01:06:19Z"</span><span class="p">,</span><span class="w">
+    </span><span class="nl">"username"</span><span class="p">:</span><span class="w"> </span><span class="s2">"some-user"</span><span class="p">,</span><span class="w">
+    </span><span class="nl">"presentation_name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"some-user"</span><span class="p">,</span><span class="w">
+    </span><span class="nl">"origin"</span><span class="p">:</span><span class="w"> </span><span class="s2">"some-origin"</span><span class="p">,</span><span class="w">
     </span><span class="nl">"metadata"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
       </span><span class="nl">"labels"</span><span class="p">:</span><span class="w"> </span><span class="p">{},</span><span class="w">
       </span><span class="nl">"annotations"</span><span class="p">:{}</span><span class="w">
@@ -32152,6 +32192,16 @@ UAA database, though this is not required.</p>
 <td>Unique identifier for the user. For UAA users this will match the user ID of an existing UAA user&rsquo;s GUID; in the case of UAA clients, this will match the UAA client ID</td>
 </tr>
 <tr>
+<td><strong>username</strong></td>
+<td><em>string</em></td>
+<td>Username of the user to be created. This can only be provided together with <code class="prettyprint">origin</code>.</td>
+</tr>
+<tr>
+<td><strong>origin</strong></td>
+<td><em>string</em></td>
+<td>Origin of the user to be created. This can only be provided together with <code class="prettyprint">username</code> and cannot be <code class="prettyprint">uaa</code>.</td>
+</tr>
+<tr>
 <td><strong>metadata.labels</strong></td>
 <td><a href="#links"><em>label object</em></a></td>
 <td>Labels applied to the user</td>
@@ -32167,11 +32217,17 @@ UAA database, though this is not required.</p>
 
 <table><thead>
 <tr>
-<th></th>
+<th>Role</th>
+<th>Notes</th>
 </tr>
 </thead><tbody>
 <tr>
 <td>Admin</td>
+<td></td>
+</tr>
+<tr>
+<td>OrgManager</td>
+<td>can only create users by <code class="prettyprint">username</code> and <code class="prettyprint">origin</code> and when CAPI property <code class="prettyprint">cc.allow_user_creation_by_org_manager</code> is enabled</td>
 </tr>
 </tbody></table>
 <h3 id="get-a-user">Get a user</h3>
