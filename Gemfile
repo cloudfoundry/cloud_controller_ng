@@ -4,6 +4,7 @@ gem 'addressable'
 gem 'allowy', '>= 2.1.0'
 gem 'clockwork', require: false
 gem 'cloudfront-signer'
+gem 'concurrent-ruby'
 gem 'digest-xxhash'
 gem 'eventmachine', '~> 1.2.7'
 gem 'fluent-logger'

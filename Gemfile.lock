@@ -595,6 +595,7 @@ DEPENDENCIES
   clockwork
   cloudfront-signer
   codeclimate-test-reporter (>= 1.0.8)
+  concurrent-ruby
   debug (~> 1.10)
   digest-xxhash
   eventmachine (~> 1.2.7)
