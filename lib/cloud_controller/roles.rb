@@ -6,6 +6,7 @@ module VCAP::CloudController
     CLOUD_CONTROLLER_BUILD_STATE_UPDATER = 'cloud_controller.update_build_state'.freeze
     CLOUD_CONTROLLER_READER_SCOPE = 'cloud_controller.read'.freeze
     CLOUD_CONTROLLER_WRITER_SCOPE = 'cloud_controller.write'.freeze
+    CLOUD_CONTROLLER_USER_SCOPE = 'cloud_controller.user'.freeze
     CLOUD_CONTROLLER_SERVICE_PERMISSIONS_READER = 'cloud_controller_service_permissions.read'.freeze
     CLOUD_CONTROLLER_V2_RATE_LIMIT_EXEMPTION_SCOPE = 'cloud_controller.v2_api_rate_limit_exempt'.freeze
 
@@ -34,6 +35,10 @@ module VCAP::CloudController
 
     def cloud_controller_writer?
       @scopes.include?(CLOUD_CONTROLLER_WRITER_SCOPE)
+    end
+
+    def cloud_controller_user?
+      @scopes.include?(CLOUD_CONTROLLER_USER_SCOPE)
     end
 
     def cloud_controller_service_permissions_reader?

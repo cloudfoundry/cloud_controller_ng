@@ -74,6 +74,7 @@ class ApplicationController < ActionController::Base
 
   ANONYMOUSLY_AVAILABLE = %w[not_found internal_error bad_request v3_info].map(&:freeze).freeze
   UNSCOPED_PAGES = %w[not_found internal_error bad_request v3_root v3_info].map(&:freeze).freeze
+  USER_SCOPED_PAGES = %w[show_permissions].map(&:freeze).freeze
   READ_SCOPE_HTTP_METHODS = %w[GET HEAD].map(&:freeze).freeze
   YAML_CONTENT_TYPE = 'application/x-yaml'.freeze
 
@@ -82,6 +83,7 @@ class ApplicationController < ActionController::Base
   before_action :validate_token!, if: :enforce_authentication?
   before_action :check_read_permissions!, if: :enforce_read_scope?
   before_action :check_write_permissions!, if: :enforce_write_scope?
+  before_action :check_user_permissions!, if: :enforce_user_scope?
   before_action :hashify_params
   before_action :null_coalesce_body
 
@@ -170,14 +172,22 @@ class ApplicationController < ActionController::Base
 
   def enforce_read_scope?
     return false if UNSCOPED_PAGES.include?(action_name)
-
+    return false if USER_SCOPED_PAGES.include?(action_name)
+    
     READ_SCOPE_HTTP_METHODS.include?(request.method)
   end
 
   def enforce_write_scope?
     return false if UNSCOPED_PAGES.include?(action_name)
+    return false if USER_SCOPED_PAGES.include?(action_name)
 
     READ_SCOPE_HTTP_METHODS.exclude?(request.method)
+  end
+
+  def enforce_user_scope?
+    return false if UNSCOPED_PAGES.include?(action_name)
+
+    USER_SCOPED_PAGES.include?(action_name)
   end
 
   def read_scope
@@ -194,6 +204,10 @@ class ApplicationController < ActionController::Base
 
   def check_write_permissions!
     raise CloudController::Errors::ApiError.new_from_details('NotAuthorized') if !roles.admin? && !write_scope
+  end
+
+  def check_user_permissions!
+    raise CloudController::Errors::ApiError.new_from_details('NotAuthorized') if !roles.admin? && !roles.admin_read_only? && !roles.global_auditor? && !roles.cloud_controller_user?
   end
 
   def validate_token!
