@@ -91,7 +91,7 @@ module VCAP::CloudController
 
       def task_finished_while_iterating?(task_guid)
         cc_task = TaskModel.find(guid: task_guid)
-        cc_task.state == TaskModel::FAILED_STATE || cc_task.state == TaskModel::SUCCEEDED_STATE
+        [TaskModel::FAILED_STATE, TaskModel::SUCCEEDED_STATE].include?(cc_task.state)
       end
 
       def batched_cc_tasks
