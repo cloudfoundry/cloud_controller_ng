@@ -68,7 +68,7 @@ RSpec.describe 'v3 service route bindings' do
     describe 'no bindings to list' do
       let(:api_call) { ->(user_headers) { get '/v3/service_route_bindings', nil, user_headers } }
       let(:expected_codes_and_responses) do
-        Hash.new(code: 200, response_objects: [])
+        Hash.new({ code: 200, response_objects: [] }.freeze)
       end
 
       it_behaves_like 'permissions for list endpoint', ALL_PERMISSIONS
@@ -116,7 +116,7 @@ RSpec.describe 'v3 service route bindings' do
       end
 
       let(:expected_codes_and_responses) do
-        Hash.new(code: 200, response_objects: []).tap do |h|
+        Hash.new({ code: 200, response_objects: [] }.freeze).tap do |h|
           h['admin'] = bindings_response_body
           h['admin_read_only'] = bindings_response_body
           h['global_auditor'] = bindings_response_body
@@ -1610,7 +1610,7 @@ RSpec.describe 'v3 service route bindings' do
 
       context 'permissions' do
         let(:expected_codes_and_responses) do
-          Hash.new(code: 403, errors: CF_NOT_AUTHORIZED).tap do |h|
+          Hash.new({ code: 403, errors: CF_NOT_AUTHORIZED }.freeze).tap do |h|
             h['admin'] = parameters_response
             h['admin_readonly'] = parameters_response
             h['space_developer'] = parameters_response
@@ -1772,7 +1772,7 @@ RSpec.describe 'v3 service route bindings' do
 
       context 'permissions' do
         let(:expected_codes_and_responses) do
-          Hash.new(code: 403, errors: CF_NOT_AUTHORIZED).tap do |h|
+          Hash.new({ code: 403, errors: CF_NOT_AUTHORIZED }.freeze).tap do |h|
             h['admin'] = { code: 400, response_object: error_response }
             h['admin_readonly'] = { code: 400, response_object: error_response }
             h['space_developer'] = { code: 400, response_object: error_response }

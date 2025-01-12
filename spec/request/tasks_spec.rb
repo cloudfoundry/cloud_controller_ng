@@ -300,7 +300,7 @@ RSpec.describe 'Tasks' do
       end
 
       let(:expected_codes_and_responses) do
-        h = Hash.new(code: 200, response_objects: expected_response)
+        h = Hash.new({ code: 200, response_objects: expected_response }.freeze)
         h['org_billing_manager'] = h['org_auditor'] = h['no_role'] = {
           code: 200,
           response_objects: []
@@ -460,7 +460,7 @@ RSpec.describe 'Tasks' do
       end
       let(:expected_response_with_command) { expected_response.merge({ 'command' => 'echo task' }) }
       let(:expected_codes_and_responses) do
-        h = Hash.new(code: 200, response_object: expected_response)
+        h = Hash.new({ code: 200, response_object: expected_response }.freeze)
         h['admin'] = h['admin_read_only'] = h['space_developer'] = { code: 200, response_object: expected_response_with_command }
         h['org_auditor'] = h['org_billing_manager'] = h['no_role'] = { code: 404 }
         h
@@ -584,7 +584,7 @@ RSpec.describe 'Tasks' do
     context 'permissions' do
       let(:api_call) { ->(headers) { patch "/v3/tasks/#{task_guid}", request_body, headers } }
       let(:expected_codes_and_responses) do
-        h = Hash.new(code: 403, errors: CF_NOT_AUTHORIZED)
+        h = Hash.new({ code: 403, errors: CF_NOT_AUTHORIZED }.freeze)
         %w[no_role org_auditor org_billing_manager].each { |r| h[r] = { code: 404 } }
         %w[admin space_developer].each { |r| h[r] = { code: 200 } }
         h
@@ -660,7 +660,7 @@ RSpec.describe 'Tasks' do
       }
     end
     let(:expected_codes_and_responses) do
-      h = Hash.new(code: 403, errors: CF_NOT_AUTHORIZED)
+      h = Hash.new({ code: 403, errors: CF_NOT_AUTHORIZED }.freeze)
       h['org_auditor'] = h['org_billing_manager'] = h['no_role'] = { code: 404 }
       h['admin'] = h['space_developer'] = h['space_supporter'] = {
         code: 202,
@@ -901,7 +901,7 @@ RSpec.describe 'Tasks' do
       let(:expected_response_with_command) { expected_response.map { |task| task.merge({ 'command' => 'echo task' }) } }
 
       let(:expected_codes_and_responses) do
-        h = Hash.new(code: 200, response_objects: expected_response)
+        h = Hash.new({ code: 200, response_objects: expected_response }.freeze)
         h['admin'] = h['admin_read_only'] = h['space_developer'] = { code: 200, response_objects: expected_response_with_command }
         h['org_auditor'] = h['org_billing_manager'] = h['no_role'] = { code: 404 }
         h
@@ -1289,7 +1289,7 @@ RSpec.describe 'Tasks' do
     context 'permissions' do
       let(:api_call) { ->(headers) { post "/v3/apps/#{app_model.guid}/tasks", body.to_json, headers } }
       let(:expected_codes_and_responses) do
-        h = Hash.new(code: 403, errors: CF_NOT_AUTHORIZED)
+        h = Hash.new({ code: 403, errors: CF_NOT_AUTHORIZED }.freeze)
         %w[no_role org_auditor org_billing_manager].each { |r| h[r] = { code: 404 } }
         %w[admin space_developer].each { |r| h[r] = { code: 202 } }
         h

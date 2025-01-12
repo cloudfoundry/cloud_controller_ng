@@ -103,7 +103,7 @@ RSpec.describe 'Packages' do
         let(:org) { space.organization }
         let(:user) { VCAP::CloudController::User.make }
         let(:expected_codes_and_responses) do
-          h = Hash.new(code: 201)
+          h = Hash.new({ code: 201 }.freeze)
           h['org_auditor'] = { code: 422 }
           h['org_billing_manager'] = { code: 422 }
           h['no_role'] = { code: 422 }
@@ -213,7 +213,7 @@ RSpec.describe 'Packages' do
           }
         end
         let(:expected_codes_and_responses) do
-          h = Hash.new(code: 201)
+          h = Hash.new({ code: 201 }.freeze)
           h['org_auditor'] = { code: 422 }
           h['org_billing_manager'] = { code: 422 }
           h['no_role'] = { code: 422 }
@@ -296,7 +296,7 @@ RSpec.describe 'Packages' do
       end
 
       let(:expected_codes_and_responses) do
-        h = Hash.new(code: 200, response_objects: packages_response_objects)
+        h = Hash.new({ code: 200, response_objects: packages_response_objects }.freeze)
         h['org_auditor'] = { code: 404 }
         h['org_billing_manager'] = { code: 404 }
         h['no_role'] = { code: 404 }
@@ -548,7 +548,7 @@ RSpec.describe 'Packages' do
       end
 
       let(:expected_codes_and_responses) do
-        h = Hash.new(code: 200, response_objects: packages_response_objects)
+        h = Hash.new({ code: 200, response_objects: packages_response_objects }.freeze)
         h['org_auditor'] = { code: 200, response_objects: [] }
         h['org_billing_manager'] = { code: 200, response_objects: [] }
         h['no_role'] = { code: 200, response_objects: [] }
@@ -810,7 +810,7 @@ RSpec.describe 'Packages' do
       }
     end
     let(:expected_codes_and_responses) do
-      h = Hash.new(code: 200, response_object: package_model_response_object)
+      h = Hash.new({ code: 200, response_object: package_model_response_object }.freeze)
       h['org_auditor'] = { code: 404 }
       h['org_billing_manager'] = { code: 404 }
       h['no_role'] = { code: 404 }
@@ -981,7 +981,7 @@ RSpec.describe 'Packages' do
         }
       end
       let(:expected_codes_and_responses) do
-        h = Hash.new(code: 200, response_object: package_model_response_object)
+        h = Hash.new({ code: 200, response_object: package_model_response_object }.freeze)
         h['org_auditor'] = { code: 404 }
         h['org_billing_manager'] = { code: 404 }
         h['no_role'] = { code: 404 }
@@ -1077,7 +1077,7 @@ RSpec.describe 'Packages' do
       let(:org) { space.organization }
       let(:user) { VCAP::CloudController::User.make }
       let(:expected_codes_and_responses) do
-        h = Hash.new(code: 302)
+        h = Hash.new({ code: 302 }.freeze)
         h['global_auditor'] = { code: 403 }
         h['org_auditor'] = { code: 404 }
         h['org_billing_manager'] = { code: 404 }
@@ -1145,7 +1145,7 @@ RSpec.describe 'Packages' do
       let(:org) { space.organization }
       let(:user) { VCAP::CloudController::User.make }
       let(:expected_codes_and_responses) do
-        h = Hash.new(code: 200)
+        h = Hash.new({ code: 200 }.freeze)
         h['org_auditor'] = { code: 404 }
         h['org_billing_manager'] = { code: 404 }
         h['no_role'] = { code: 404 }
@@ -1237,7 +1237,7 @@ RSpec.describe 'Packages' do
       let(:org) { space.organization }
       let(:user) { VCAP::CloudController::User.make }
       let(:expected_codes_and_responses) do
-        h = Hash.new(code: 202)
+        h = Hash.new({ code: 202 }.freeze)
         h['org_auditor'] = { code: 404 }
         h['org_billing_manager'] = { code: 404 }
         h['no_role'] = { code: 404 }

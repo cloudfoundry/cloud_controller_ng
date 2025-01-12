@@ -63,7 +63,7 @@ module VCAP::CloudController
 
       let(:expected_codes_and_responses) do
         h = Hash.new(
-          code: 403
+          { code: 403 }.freeze
         )
         h['admin'] = {
           code: 201,
@@ -203,7 +203,7 @@ module VCAP::CloudController
         let(:org_response) { { guid: 'organization-guid' } }
 
         let(:expected_codes_and_responses) do
-          h = Hash.new(code: 200, response_objects: generate_org_quota_list_response([org_response], false))
+          h = Hash.new({ code: 200, response_objects: generate_org_quota_list_response([org_response], false) }.freeze)
           h['admin'] = { code: 200, response_objects: generate_org_quota_list_response([org_response, other_org_response], true) }
           h['admin_read_only'] = { code: 200, response_objects: generate_org_quota_list_response([org_response, other_org_response], true) }
           h['global_auditor'] = { code: 200, response_objects: generate_org_quota_list_response([org_response, other_org_response], true) }
@@ -270,7 +270,7 @@ module VCAP::CloudController
         let(:org_response) { { guid: 'organization-guid' } }
 
         let(:expected_codes_and_responses) do
-          h = Hash.new(code: 200, response_object: generate_org_quota_single_response([org_response]))
+          h = Hash.new({ code: 200, response_object: generate_org_quota_single_response([org_response]) }.freeze)
           h['admin'] = { code: 200, response_object: generate_org_quota_single_response([org_response, other_org_response]) }
           h['admin_read_only'] = { code: 200, response_object: generate_org_quota_single_response([org_response, other_org_response]) }
           h['global_auditor'] = { code: 200, response_object: generate_org_quota_single_response([org_response, other_org_response]) }
@@ -376,7 +376,7 @@ module VCAP::CloudController
 
       let(:expected_codes_and_responses) do
         h = Hash.new(
-          code: 403
+          { code: 403 }.freeze
         )
         h['admin'] = {
           code: 200,
@@ -504,7 +504,7 @@ module VCAP::CloudController
         end
 
         let(:expected_codes_and_responses) do
-          h = Hash.new(code: 403)
+          h = Hash.new({ code: 403 }.freeze)
           h['admin'] = { code: 200, response_object: data_json }
           h
         end
@@ -572,7 +572,7 @@ module VCAP::CloudController
 
       context 'when deleting an organization quota' do
         let(:expected_codes_and_responses) do
-          h = Hash.new(code: 403)
+          h = Hash.new({ code: 403 }.freeze)
           h['admin'] = { code: 202 }
           h
         end

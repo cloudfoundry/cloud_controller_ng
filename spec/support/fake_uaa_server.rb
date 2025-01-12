@@ -8,7 +8,7 @@ class FakeUAAServer
       BindAddress: 'localhost',
       Port: port,
       AccessLog: [],
-      Logger: WEBrick::Log.new('/dev/null')
+      Logger: WEBrick::Log.new(File::NULL)
     )
 
     server.mount '/.well-known/openid-configuration', UAAIssuer

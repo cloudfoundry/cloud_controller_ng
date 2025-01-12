@@ -107,7 +107,7 @@ RSpec.describe 'Events' do
       let(:api_call) { ->(user_headers) { get '/v3/audit_events', nil, user_headers } }
 
       let(:expected_codes_and_responses) do
-        h = Hash.new(code: 200, response_objects: [])
+        h = Hash.new({ code: 200, response_objects: [] }.freeze)
 
         h['admin'] = { code: 200, response_objects: [unscoped_event_json, org_scoped_event_json, space_scoped_event_json] }
         h['admin_read_only'] = { code: 200, response_objects: [unscoped_event_json, org_scoped_event_json, space_scoped_event_json] }
@@ -285,8 +285,8 @@ RSpec.describe 'Events' do
 
           let(:expected_codes_and_responses) do
             h = Hash.new(
-              code: 200,
-              response_object: event_json
+              { code: 200,
+                response_object: event_json }.freeze
             )
             h
           end
@@ -345,8 +345,8 @@ RSpec.describe 'Events' do
 
         let(:expected_codes_and_responses) do
           h = Hash.new(
-            code: 200,
-            response_object: event_json
+            { code: 200,
+              response_object: event_json }.freeze
           )
           h['space_auditor'] = {
             code: 404,
@@ -388,8 +388,8 @@ RSpec.describe 'Events' do
 
           let(:expected_codes_and_responses) do
             h = Hash.new(
-              code: 200,
-              response_object: event_json
+              { code: 200,
+                response_object: event_json }.freeze
             )
             h
           end
@@ -445,8 +445,8 @@ RSpec.describe 'Events' do
 
         let(:expected_codes_and_responses) do
           h = Hash.new(
-            code: 404,
-            response_object: []
+            { code: 404,
+              response_object: [] }.freeze
           )
           %w[admin admin_read_only global_auditor].each do |role|
             h[role] = {

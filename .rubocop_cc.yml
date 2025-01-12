@@ -162,6 +162,8 @@ Lint/AmbiguousRange:
   Enabled: true
 Lint/ConstantOverwrittenInRescue:
   Enabled: true
+Lint/ConstantReassignment:
+  Enabled: true
 Lint/DeprecatedConstants:
   Enabled: true
 Lint/DuplicateBranch:
@@ -172,11 +174,15 @@ Lint/DuplicateMatchPattern:
   Enabled: true
 Lint/DuplicateRegexpCharacterClassElement:
   Enabled: true
+Lint/DuplicateSetElement:
+  Enabled: true
 Lint/EmptyBlock:
   Enabled: true
 Lint/EmptyClass:
   Enabled: true
 Lint/EmptyInPattern:
+  Enabled: true
+Lint/HashNewWithKeywordArgumentsAsDefault:
   Enabled: true
 Lint/IncompatibleIoSelectWithFiberScheduler:
   Enabled: true
@@ -194,6 +200,8 @@ Lint/NonAtomicFileOperation:
   Enabled: true
 Lint/NumberedParameterAssignment:
   Enabled: true
+Lint/NumericOperationWithConstantResult:
+  Enabled: true
 Lint/OrAssignmentToConstant:
   Enabled: true
 Lint/RedundantDirGlobSort:
@@ -206,15 +214,21 @@ Lint/RequireRangeParentheses:
   Enabled: true
 Lint/RequireRelativeSelfPath:
   Enabled: true
+Lint/SharedMutableDefault:
+  Enabled: true
 Lint/SymbolConversion:
   Enabled: true
 Lint/ToEnumArguments:
   Enabled: true
 Lint/TripleQuotes:
   Enabled: true
+Lint/UnescapedBracketInRegexp:
+  Enabled: true
 Lint/UnexpectedBlockArity:
   Enabled: true
 Lint/UnmodifiedReduceAccumulator:
+  Enabled: true
+Lint/UselessDefined:
   Enabled: true
 Lint/UselessRescue:
   Enabled: true
@@ -228,17 +242,25 @@ Security/CompoundHash:
   Enabled: true
 Security/IoMethods:
   Enabled: true
+Style/AmbiguousEndlessMethodDefinition:
+  Enabled: true
 Style/ArgumentsForwarding:
   Enabled: true
 Style/ArrayIntersect:
   Enabled: true
+Style/BitwisePredicate:
+  Enabled: true
 Style/CollectionCompact:
+  Enabled: true
+Style/CombinableDefined:
   Enabled: true
 Style/ComparableClamp:
   Enabled: true
 Style/ConcatArrayLiterals:
   Enabled: true
 Style/DataInheritance:
+  Enabled: true
+Style/DigChain:
   Enabled: true
 Style/DirEmpty:
   Enabled: true
@@ -256,7 +278,11 @@ Style/FetchEnvVar:
   Enabled: true
 Style/FileEmpty:
   Enabled: true
+Style/FileNull:
+  Enabled: true
 Style/FileRead:
+  Enabled: true
+Style/FileTouch:
   Enabled: true
 Style/FileWrite:
   Enabled: true
@@ -267,6 +293,10 @@ Style/HashExcept:
 Style/IfWithBooleanLiteralBranches:
   Enabled: true
 Style/InPatternThen:
+  Enabled: true
+Style/ItAssignment:
+  Enabled: true
+Style/KeywordArgumentsMerging:
   Enabled: true
 Style/MagicCommentFormat:
   Enabled: true
@@ -327,6 +357,8 @@ Style/RedundantSelfAssignmentBranch:
 Style/RedundantStringEscape:
   Enabled: true
 Style/ReturnNilInPredicateMethodDefinition:
+  Enabled: true
+Style/SafeNavigationChainLength:
   Enabled: true
 Style/SelectByRegexp:
   Enabled: true
@@ -527,6 +559,8 @@ RSpec/SortMetadata:
 RSpec/SpecFilePathFormat:
   Enabled: true
 RSpec/SpecFilePathSuffix:
+  Enabled: true
+RSpec/StringAsInstanceDoubleConstant:
   Enabled: true
 RSpec/SubjectDeclaration:
   Enabled: true

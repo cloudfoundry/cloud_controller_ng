@@ -115,8 +115,8 @@ RSpec.describe 'v3 service credential bindings' do
 
         let(:expected_codes_and_responses) do
           Hash.new(
-            code: 200,
-            response_objects: []
+            { code: 200,
+              response_objects: [] }.freeze
           ).tap do |h|
             h['admin'] = all_bindings
             h['admin_read_only'] = all_bindings
@@ -506,7 +506,7 @@ RSpec.describe 'v3 service credential bindings' do
       let(:api_call) { ->(user_headers) { get '/v3/service_credential_bindings/no-binding', nil, user_headers } }
 
       let(:expected_codes_and_responses) do
-        Hash.new(code: 404)
+        Hash.new({ code: 404 }.freeze)
       end
 
       it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS
@@ -721,7 +721,7 @@ RSpec.describe 'v3 service credential bindings' do
     context 'permissions' do
       it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS do
         let(:expected_codes_and_responses) do
-          h = Hash.new(code: 404, response_object: binding_credentials)
+          h = Hash.new({ code: 404, response_object: binding_credentials }.freeze)
           h['admin'] = h['admin_read_only'] = h['space_developer'] = { code: 200 }
           h
         end
@@ -2428,7 +2428,7 @@ RSpec.describe 'v3 service credential bindings' do
             end
 
             let(:expected_codes_and_responses) do
-              h = Hash.new(code: 404)
+              h = Hash.new({ code: 404 }.freeze)
               h['admin'] = { code: 202 }
               h['admin_read_only'] = h['global_auditor'] = { code: 403 }
               h

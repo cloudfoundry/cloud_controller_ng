@@ -16,8 +16,8 @@ RSpec.describe 'App Usage Events' do
 
     let(:expected_codes_and_responses) do
       h = Hash.new(
-        code: 404,
-        response_object: []
+        { code: 404,
+          response_object: [] }.freeze
       )
       h['admin'] = {
         code: 200,
@@ -63,8 +63,8 @@ RSpec.describe 'App Usage Events' do
 
     let(:expected_codes_and_responses) do
       h = Hash.new(
-        code: 200,
-        response_objects: []
+        { code: 200,
+          response_objects: [] }.freeze
       )
       h['admin'] = {
         code: 200,
@@ -151,7 +151,7 @@ RSpec.describe 'App Usage Events' do
     end
 
     let(:expected_codes_and_responses) do
-      h = Hash.new(code: 403)
+      h = Hash.new({ code: 403 }.freeze)
       h['admin'] = { code: 200 }
       h
     end
