@@ -58,7 +58,7 @@ RSpec.describe 'App Manifests' do
     context 'permissions' do
       let(:api_call) { ->(user_headers) { get "/v3/apps/#{app_model.guid}/manifest", nil, user_headers } }
       let(:expected_codes_and_responses) do
-        h = Hash.new(code: 403)
+        h = Hash.new({ code: 403 }.freeze)
         h['no_role'] = { code: 404 }
         h['org_auditor'] = { code: 404 }
         h['org_billing_manager'] = { code: 404 }

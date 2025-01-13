@@ -157,10 +157,10 @@ RSpec.describe 'Users Request' do
       context 'when there are no other users in your space or org' do
         let(:expected_codes_and_responses) do
           h = Hash.new(
-            code: 200,
-            response_objects: [
-              current_user_json
-            ]
+            { code: 200,
+              response_objects: [
+                current_user_json
+              ] }.freeze
           )
           h['admin'] = {
             code: 200,
@@ -202,11 +202,11 @@ RSpec.describe 'Users Request' do
 
         let(:expected_codes_and_responses) do
           h = Hash.new(
-            code: 200,
-            response_objects: [
-              actee_json,
-              current_user_json
-            ]
+            { code: 200,
+              response_objects: [
+                actee_json,
+                current_user_json
+              ] }.freeze
           )
           h['admin'] = {
             code: 200,
@@ -252,10 +252,10 @@ RSpec.describe 'Users Request' do
 
         let(:expected_codes_and_responses) do
           h = Hash.new(
-            code: 200,
-            response_objects: [
-              current_user_json
-            ]
+            { code: 200,
+              response_objects: [
+                current_user_json
+              ] }.freeze
           )
           h
         end
@@ -288,10 +288,10 @@ RSpec.describe 'Users Request' do
 
         let(:expected_codes_and_responses) do
           h = Hash.new(
-            code: 200,
-            response_objects: [
-              current_user_json
-            ]
+            { code: 200,
+              response_objects: [
+                current_user_json
+              ] }.freeze
           )
           h
         end
@@ -316,10 +316,10 @@ RSpec.describe 'Users Request' do
         let(:api_call) { ->(user_headers) { get endpoint, nil, user_headers } }
         let(:expected_codes_and_responses) do
           h = Hash.new(
-            code: 200,
-            response_objects: [
-              current_user_json
-            ]
+            { code: 200,
+              response_objects: [
+                current_user_json
+              ] }.freeze
           )
           h
         end
@@ -464,7 +464,7 @@ RSpec.describe 'Users Request' do
     context 'when the actee is not in an org or space' do
       let(:expected_codes_and_responses) do
         h = Hash.new(
-          code: 404
+          { code: 404 }.freeze
         )
         h['admin'] = {
           code: 200,
@@ -487,8 +487,8 @@ RSpec.describe 'Users Request' do
     context 'when the actee has an org or space role' do
       let(:expected_codes_and_responses) do
         h = Hash.new(
-          code: 200,
-          response_object: client_json
+          { code: 200,
+            response_object: client_json }.freeze
         )
         h['no_role'] = {
           code: 404,
@@ -652,7 +652,7 @@ RSpec.describe 'Users Request' do
 
       let(:expected_codes_and_responses) do
         h = Hash.new(
-          code: 403
+          { code: 403 }.freeze
         )
         h['admin'] = {
           code: 201,
@@ -695,7 +695,7 @@ RSpec.describe 'Users Request' do
 
         let(:expected_codes_and_responses) do
           h = Hash.new(
-            code: 403
+            { code: 403 }.freeze
           )
           h['admin'] = {
             code: 201,
@@ -748,7 +748,7 @@ RSpec.describe 'Users Request' do
 
         let(:expected_codes_and_responses) do
           h = Hash.new(
-            code: 403
+            { code: 403 }.freeze
           )
           h['admin'] = {
             code: 201,
@@ -794,7 +794,7 @@ RSpec.describe 'Users Request' do
 
         let(:expected_codes_and_responses) do
           h = Hash.new(
-            code: 403
+            { code: 403 }.freeze
           )
           h['admin'] = {
             code: 201,
@@ -897,7 +897,7 @@ RSpec.describe 'Users Request' do
 
         let(:expected_codes_and_responses) do
           h = Hash.new(
-            code: 403
+            { code: 403 }.freeze
           )
           h['admin'] = {
             code: 201,
@@ -940,7 +940,7 @@ RSpec.describe 'Users Request' do
 
         let(:expected_codes_and_responses) do
           h = Hash.new(
-            code: 403
+            { code: 403 }.freeze
           )
           h['admin'] = {
             code: 201,
@@ -1016,7 +1016,7 @@ RSpec.describe 'Users Request' do
 
         let(:expected_codes_and_responses) do
           h = Hash.new(
-            code: 403
+            { code: 403 }.freeze
           )
           h['admin'] = {
             code: 422,
@@ -1082,7 +1082,7 @@ RSpec.describe 'Users Request' do
       context 'when the actee is not associated with any org or space' do
         let(:expected_codes_and_responses) do
           h = Hash.new(
-            code: 404
+            { code: 404 }.freeze
           )
           h['admin'] = {
             code: 200,
@@ -1104,7 +1104,7 @@ RSpec.describe 'Users Request' do
       context 'when the actee has an org or space role' do
         let(:expected_codes_and_responses) do
           h = Hash.new(
-            code: 403
+            { code: 403 }.freeze
           )
           h['admin'] = {
             code: 200,
@@ -1164,7 +1164,7 @@ RSpec.describe 'Users Request' do
 
     context 'when the actee is not associated with any org or space' do
       let(:expected_codes_and_responses) do
-        h = Hash.new(code: 404)
+        h = Hash.new({ code: 404 }.freeze)
 
         h['admin_read_only'] = { code: 403 }
         h['global_auditor'] = { code: 403 }
@@ -1181,7 +1181,7 @@ RSpec.describe 'Users Request' do
       end
 
       let(:expected_codes_and_responses) do
-        h = Hash.new(code: 403)
+        h = Hash.new({ code: 403 }.freeze)
         h['admin'] = { code: 202 }
         h['no_role'] = { code: 404 }
         h
@@ -1238,7 +1238,7 @@ RSpec.describe 'Users Request' do
     context 'permissions' do
       it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS do
         let(:expected_codes_and_responses) do
-          h = Hash.new(code: 404)
+          h = Hash.new({ code: 404 }.freeze)
           h['admin'] = { code: 202 }
           h['admin_read_only'] = { code: 403 }
           h['global_auditor'] = { code: 403 }

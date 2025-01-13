@@ -96,7 +96,7 @@ RSpec.describe 'Info Request' do
     end
 
     let(:expected_codes_and_responses) do
-      h = Hash.new(code: 404)
+      h = Hash.new({ code: 404 }.freeze)
       h['admin'] = { code: 200, response_object: info_summary }
       h['admin_read_only'] = { code: 200, response_object: info_summary }
       h['global_auditor'] = { code: 200, response_object: info_summary }

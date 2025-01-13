@@ -67,7 +67,7 @@ RSpec.describe 'Roles Request' do
       end
 
       let(:expected_codes_and_responses) do
-        h = Hash.new(code: 403, errors: CF_NOT_AUTHORIZED)
+        h = Hash.new({ code: 403, errors: CF_NOT_AUTHORIZED }.freeze)
         h['admin'] = {
           code: 201,
           response_object: expected_response
@@ -217,7 +217,7 @@ RSpec.describe 'Roles Request' do
       end
 
       let(:expected_codes_and_responses) do
-        h = Hash.new(code: 403, errors: CF_NOT_AUTHORIZED)
+        h = Hash.new({ code: 403, errors: CF_NOT_AUTHORIZED }.freeze)
         h['admin'] = {
           code: 201,
           response_object: expected_response
@@ -336,7 +336,7 @@ RSpec.describe 'Roles Request' do
         end
 
         let(:expected_codes_and_responses) do
-          h = Hash.new(code: 403)
+          h = Hash.new({ code: 403 }.freeze)
           h['admin'] = h['org_manager'] = {
             code: 201,
             response_object: expected_response
@@ -397,7 +397,7 @@ RSpec.describe 'Roles Request' do
         end
 
         let(:expected_codes_and_responses) do
-          h = Hash.new(code: 403)
+          h = Hash.new({ code: 403 }.freeze)
           h['admin'] = {
             code: 201,
             response_object: expected_response
@@ -517,7 +517,7 @@ RSpec.describe 'Roles Request' do
         end
 
         let(:expected_codes_and_responses) do
-          h = Hash.new(code: 403)
+          h = Hash.new({ code: 403 }.freeze)
           h['admin'] = {
             code: 201,
             response_object: expected_response
@@ -649,7 +649,7 @@ RSpec.describe 'Roles Request' do
       end
 
       let(:expected_codes_and_responses) do
-        h = Hash.new(code: 403)
+        h = Hash.new({ code: 403 }.freeze)
         h['admin'] = {
           code: 201,
           response_object: expected_response
@@ -696,7 +696,7 @@ RSpec.describe 'Roles Request' do
         end
 
         let(:expected_codes_and_responses) do
-          h = Hash.new(code: 403)
+          h = Hash.new({ code: 403 }.freeze)
           h['admin'] = {
             code: 201,
             response_object: expected_response
@@ -778,7 +778,7 @@ RSpec.describe 'Roles Request' do
 
         let(:expected_codes_and_responses) do
           h = Hash.new(
-            code: 403
+            { code: 403 }.freeze
           )
           h['admin'] = {
             code: 201,
@@ -799,7 +799,7 @@ RSpec.describe 'Roles Request' do
           end
 
           let(:expected_codes_and_responses) do
-            h = Hash.new(code: 403)
+            h = Hash.new({ code: 403 }.freeze)
             h['admin'] = {
               code: 201,
               response_object: expected_response
@@ -897,7 +897,7 @@ RSpec.describe 'Roles Request' do
 
         let(:expected_codes_and_responses) do
           h = Hash.new(
-            code: 403
+            { code: 403 }.freeze
           )
           h['admin'] = {
             code: 201,
@@ -1238,7 +1238,7 @@ RSpec.describe 'Roles Request' do
 
     context 'listing all roles' do
       let(:expected_codes_and_responses) do
-        h = Hash.new(code: 200, response_objects: [space_auditor_response_object, org_auditor_response_object])
+        h = Hash.new({ code: 200, response_objects: [space_auditor_response_object, org_auditor_response_object] }.freeze)
 
         h['org_auditor'] = {
           code: 200,
@@ -1334,7 +1334,7 @@ order_by=-created_at&created_ats[lt]=2028-05-26T18:47:01Z&guids=#{organization_a
       end
 
       let(:expected_codes_and_responses) do
-        h = Hash.new(code: 200, response_objects: [org_auditor_response_object, space_auditor_response_object])
+        h = Hash.new({ code: 200, response_objects: [org_auditor_response_object, space_auditor_response_object] }.freeze)
         h['org_auditor'] = {
           code: 200,
           response_objects: contain_exactly(
@@ -1639,7 +1639,7 @@ order_by=-created_at&created_ats[lt]=2028-05-26T18:47:01Z&guids=#{organization_a
       end
 
       let(:expected_codes_and_responses) do
-        h = Hash.new(code: 200, response_object: expected_response)
+        h = Hash.new({ code: 200, response_object: expected_response }.freeze)
         h['org_auditor'] = { code: 404 }
         h['org_billing_manager'] = { code: 404 }
         h['no_role'] = { code: 404 }
@@ -1682,7 +1682,7 @@ order_by=-created_at&created_ats[lt]=2028-05-26T18:47:01Z&guids=#{organization_a
       end
 
       let(:expected_codes_and_responses) do
-        h = Hash.new(code: 200, response_object: expected_response)
+        h = Hash.new({ code: 200, response_object: expected_response }.freeze)
         h['no_role'] = { code: 404 }
         h
       end
@@ -1838,7 +1838,7 @@ order_by=-created_at&created_ats[lt]=2028-05-26T18:47:01Z&guids=#{organization_a
       let(:role) { VCAP::CloudController::SpaceAuditor.make(user: user_with_role, space: space) }
 
       let(:expected_codes_and_responses) do
-        h = Hash.new(code: 403, errors: CF_NOT_AUTHORIZED)
+        h = Hash.new({ code: 403, errors: CF_NOT_AUTHORIZED }.freeze)
         h['admin'] = { code: 202 }
         h['space_manager'] = { code: 202 }
         h['org_manager'] = { code: 202 }
@@ -1869,7 +1869,7 @@ order_by=-created_at&created_ats[lt]=2028-05-26T18:47:01Z&guids=#{organization_a
       let(:role) { VCAP::CloudController::OrganizationAuditor.make(user: user_with_role, organization: org) }
 
       let(:expected_codes_and_responses) do
-        h = Hash.new(code: 403, errors: CF_NOT_AUTHORIZED)
+        h = Hash.new({ code: 403, errors: CF_NOT_AUTHORIZED }.freeze)
         h['admin'] = { code: 202 }
         h['org_manager'] = { code: 202 }
         h['no_role'] = { code: 404 }

@@ -167,7 +167,7 @@ RSpec.describe 'Jobs' do
 
     context 'when the user has a global scope or a local role' do
       let(:api_call) { ->(user_headers) { get "/v3/jobs/#{job.guid}", nil, user_headers } }
-      let(:expected_codes_and_responses) { Hash.new(code: 200) }
+      let(:expected_codes_and_responses) { Hash.new({ code: 200 }.freeze) }
 
       before do
         space.organization.add_user(user)

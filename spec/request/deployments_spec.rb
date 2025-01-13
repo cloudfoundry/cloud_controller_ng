@@ -87,7 +87,7 @@ RSpec.describe 'Deployments' do
       end
       let(:api_call) { ->(user_headers) { post '/v3/deployments', create_request.to_json, user_headers } }
       let(:expected_codes_and_responses) do
-        h = Hash.new(code: 422)
+        h = Hash.new({ code: 422 }.freeze)
         h['admin'] = h['space_developer'] = h['space_supporter'] = { code: 201, response_object: expected_response }
         h
       end
@@ -1141,7 +1141,7 @@ RSpec.describe 'Deployments' do
       let(:api_call) { ->(user_headers) { patch "/v3/deployments/#{deployment.guid}", update_request, user_headers } }
 
       let(:expected_codes_and_responses) do
-        h = Hash.new(code: 403, errors: CF_NOT_AUTHORIZED)
+        h = Hash.new({ code: 403, errors: CF_NOT_AUTHORIZED }.freeze)
         h['admin'] = { code: 200 }
         h['space_developer'] = { code: 200 }
         %w[org_auditor org_billing_manager no_role].each { |r| h[r] = { code: 404 } }
@@ -1227,7 +1227,7 @@ RSpec.describe 'Deployments' do
       }
     end
     let(:expected_codes_and_responses) do
-      h = Hash.new(code: 200, response_object: expected_response)
+      h = Hash.new({ code: 200, response_object: expected_response }.freeze)
       h['org_auditor'] = h['org_billing_manager'] = h['no_role'] = { code: 404 }
       h
     end
@@ -1442,21 +1442,21 @@ RSpec.describe 'Deployments' do
           let(:endpoint) { "#{url}?#{query}" }
           let(:expected_codes_and_responses) do
             h = Hash.new(
-              code: 200,
-              response_objects: [
-                json_for_deployment(deployment3, app3, droplet3,
-                                    VCAP::CloudController::DeploymentModel::FINALIZED_STATUS_VALUE,
-                                    VCAP::CloudController::DeploymentModel::DEPLOYED_STATUS_REASON,
-                                    false),
-                json_for_deployment(deployment4, app4, droplet4,
-                                    VCAP::CloudController::DeploymentModel::FINALIZED_STATUS_VALUE,
-                                    VCAP::CloudController::DeploymentModel::CANCELED_STATUS_REASON,
-                                    false),
-                json_for_deployment(deployment5, app5, droplet5,
-                                    VCAP::CloudController::DeploymentModel::FINALIZED_STATUS_VALUE,
-                                    VCAP::CloudController::DeploymentModel::SUPERSEDED_STATUS_REASON,
-                                    false)
-              ]
+              { code: 200,
+                response_objects: [
+                  json_for_deployment(deployment3, app3, droplet3,
+                                      VCAP::CloudController::DeploymentModel::FINALIZED_STATUS_VALUE,
+                                      VCAP::CloudController::DeploymentModel::DEPLOYED_STATUS_REASON,
+                                      false),
+                  json_for_deployment(deployment4, app4, droplet4,
+                                      VCAP::CloudController::DeploymentModel::FINALIZED_STATUS_VALUE,
+                                      VCAP::CloudController::DeploymentModel::CANCELED_STATUS_REASON,
+                                      false),
+                  json_for_deployment(deployment5, app5, droplet5,
+                                      VCAP::CloudController::DeploymentModel::FINALIZED_STATUS_VALUE,
+                                      VCAP::CloudController::DeploymentModel::SUPERSEDED_STATUS_REASON,
+                                      false)
+                ] }.freeze
             )
             h['org_billing_manager'] = h['org_auditor'] = h['no_role'] = {
               code: 200,
@@ -1492,17 +1492,17 @@ RSpec.describe 'Deployments' do
           let(:endpoint) { "#{url}?#{query}" }
           let(:expected_codes_and_responses) do
             h = Hash.new(
-              code: 200,
-              response_objects: [
-                json_for_deployment(deployment3, app3, droplet3,
-                                    VCAP::CloudController::DeploymentModel::FINALIZED_STATUS_VALUE,
-                                    VCAP::CloudController::DeploymentModel::DEPLOYED_STATUS_REASON,
-                                    false),
-                json_for_deployment(deployment5, app5, droplet5,
-                                    VCAP::CloudController::DeploymentModel::FINALIZED_STATUS_VALUE,
-                                    VCAP::CloudController::DeploymentModel::SUPERSEDED_STATUS_REASON,
-                                    false)
-              ]
+              { code: 200,
+                response_objects: [
+                  json_for_deployment(deployment3, app3, droplet3,
+                                      VCAP::CloudController::DeploymentModel::FINALIZED_STATUS_VALUE,
+                                      VCAP::CloudController::DeploymentModel::DEPLOYED_STATUS_REASON,
+                                      false),
+                  json_for_deployment(deployment5, app5, droplet5,
+                                      VCAP::CloudController::DeploymentModel::FINALIZED_STATUS_VALUE,
+                                      VCAP::CloudController::DeploymentModel::SUPERSEDED_STATUS_REASON,
+                                      false)
+                ] }.freeze
             )
             h['org_billing_manager'] = h['org_auditor'] = h['no_role'] = {
               code: 200,
@@ -1538,15 +1538,15 @@ RSpec.describe 'Deployments' do
           let(:endpoint) { "#{url}?#{query}" }
           let(:expected_codes_and_responses) do
             h = Hash.new(
-              code: 200,
-              response_objects: [
-                json_for_deployment(deployment, app_model, droplet,
-                                    VCAP::CloudController::DeploymentModel::ACTIVE_STATUS_VALUE,
-                                    VCAP::CloudController::DeploymentModel::DEPLOYING_STATUS_REASON),
-                json_for_deployment(deployment6, app5, droplet5,
-                                    VCAP::CloudController::DeploymentModel::ACTIVE_STATUS_VALUE,
-                                    VCAP::CloudController::DeploymentModel::DEPLOYING_STATUS_REASON)
-              ]
+              { code: 200,
+                response_objects: [
+                  json_for_deployment(deployment, app_model, droplet,
+                                      VCAP::CloudController::DeploymentModel::ACTIVE_STATUS_VALUE,
+                                      VCAP::CloudController::DeploymentModel::DEPLOYING_STATUS_REASON),
+                  json_for_deployment(deployment6, app5, droplet5,
+                                      VCAP::CloudController::DeploymentModel::ACTIVE_STATUS_VALUE,
+                                      VCAP::CloudController::DeploymentModel::DEPLOYING_STATUS_REASON)
+                ] }.freeze
             )
             h['org_billing_manager'] = h['org_auditor'] = h['no_role'] = {
               code: 200,
@@ -1721,7 +1721,7 @@ RSpec.describe 'Deployments' do
     context 'with a running deployment' do
       let(:api_call) { ->(user_headers) { post "/v3/deployments/#{deployment.guid}/actions/cancel", {}.to_json, user_headers } }
       let(:expected_codes_and_responses) do
-        h = Hash.new(code: 404)
+        h = Hash.new({ code: 404 }.freeze)
         h['admin'] = h['space_developer'] = h['space_supporter'] = { code: 200 }
         h
       end
@@ -1845,7 +1845,7 @@ RSpec.describe 'Deployments' do
       let(:state) { VCAP::CloudController::DeploymentModel::PAUSED_STATE }
       let(:api_call) { ->(user_headers) { post "/v3/deployments/#{deployment.guid}/actions/continue", {}.to_json, user_headers } }
       let(:expected_codes_and_responses) do
-        h = Hash.new(code: 404)
+        h = Hash.new({ code: 404 }.freeze)
         h['admin'] = h['space_developer'] = h['space_supporter'] = { code: 200 }
         h
       end

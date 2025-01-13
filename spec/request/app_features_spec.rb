@@ -44,7 +44,7 @@ RSpec.describe 'App Features' do
       end
 
       let(:expected_codes_and_responses) do
-        h = Hash.new(code: 404)
+        h = Hash.new({ code: 404 }.freeze)
         %w[admin admin_read_only global_auditor space_developer space_manager space_auditor org_manager
            space_supporter].each do |r|
           h[r] = { code: 200, response_object: features_response_object }
@@ -62,7 +62,7 @@ RSpec.describe 'App Features' do
 
   describe 'GET /v3/apps/:guid/features/:name' do
     let(:expected_codes_and_responses) do
-      h = Hash.new(code: 404)
+      h = Hash.new({ code: 404 }.freeze)
       %w[admin admin_read_only global_auditor space_developer space_manager space_auditor org_manager
          space_supporter].each do |r|
         h[r] = { code: 200, response_object: feature_response_object }
@@ -132,7 +132,7 @@ RSpec.describe 'App Features' do
       end
 
       let(:expected_codes_and_responses) do
-        h = Hash.new(code: 403, errors: CF_NOT_AUTHORIZED)
+        h = Hash.new({ code: 403, errors: CF_NOT_AUTHORIZED }.freeze)
         %w[no_role org_auditor org_billing_manager].each { |r| h[r] = { code: 404 } }
         %w[admin space_developer].each { |r| h[r] = { code: 200, response_object: feature_response_object } }
         h
@@ -166,7 +166,7 @@ RSpec.describe 'App Features' do
       end
 
       let(:expected_codes_and_responses) do
-        h = Hash.new(code: 403, errors: CF_NOT_AUTHORIZED)
+        h = Hash.new({ code: 403, errors: CF_NOT_AUTHORIZED }.freeze)
         %w[no_role org_auditor org_billing_manager].each { |r| h[r] = { code: 404 } }
         %w[admin space_developer space_supporter].each do |r|
           h[r] = { code: 200, response_object: feature_response_object }
@@ -202,7 +202,7 @@ RSpec.describe 'App Features' do
       end
 
       let(:expected_codes_and_responses) do
-        h = Hash.new(code: 403, errors: CF_NOT_AUTHORIZED)
+        h = Hash.new({ code: 403, errors: CF_NOT_AUTHORIZED }.freeze)
         %w[no_role org_auditor org_billing_manager].each { |r| h[r] = { code: 404 } }
         %w[admin space_developer].each { |r| h[r] = { code: 200, response_object: feature_response_object } }
         h

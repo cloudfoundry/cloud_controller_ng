@@ -26,8 +26,8 @@ RSpec.describe 'V3 service plan visibility' do
       let!(:service_plan) { VCAP::CloudController::ServicePlan.make }
       let(:expected_codes_and_responses) do
         Hash.new(
-          code: 200,
-          response_object: { 'type' => 'public' }
+          { code: 200,
+            response_object: { 'type' => 'public' } }.freeze
         )
       end
 
@@ -43,7 +43,7 @@ RSpec.describe 'V3 service plan visibility' do
         }
       end
       let(:expected_codes_and_responses) do
-        Hash.new(code: 404).tap do |h|
+        Hash.new({ code: 404 }.freeze).tap do |h|
           h['admin'] = admin_only_response
           h['admin_read_only'] = admin_only_response
           h['global_auditor'] = admin_only_response
@@ -158,7 +158,7 @@ RSpec.describe 'V3 service plan visibility' do
       let(:service_plan) { VCAP::CloudController::ServicePlan.make(public: false) }
 
       let(:expected_codes_and_responses) do
-        Hash.new(code: 404).tap do |h|
+        Hash.new({ code: 404 }.freeze).tap do |h|
           h['admin'] = successful_response
           h['admin_read_only'] = { code: 403 }
           h['global_auditor'] = { code: 403 }
@@ -191,7 +191,7 @@ RSpec.describe 'V3 service plan visibility' do
     context 'when the plan current visibility is "public"' do
       let(:service_plan) { VCAP::CloudController::ServicePlan.make(public: true) }
       let(:expected_codes_and_responses) do
-        Hash.new(code: 403).tap do |h|
+        Hash.new({ code: 403 }.freeze).tap do |h|
           h['admin'] = successful_response
           h['unauthenticated'] = { code: 401 }
         end
@@ -252,7 +252,7 @@ RSpec.describe 'V3 service plan visibility' do
       context 'and its being updated to "public"' do
         let(:successful_response) { { code: 200, response_object: { type: 'public' } } }
         let(:expected_codes_and_responses) do
-          Hash.new(code: 403).tap do |h|
+          Hash.new({ code: 403 }.freeze).tap do |h|
             h['admin'] = successful_response
             h['unauthenticated'] = { code: 401 }
             h['no_role'] = { code: 404 }
@@ -282,7 +282,7 @@ RSpec.describe 'V3 service plan visibility' do
         let(:req_body) { { type: 'admin' } }
         let(:successful_response) { { code: 200, response_object: { type: 'admin' } } }
         let(:expected_codes_and_responses) do
-          Hash.new(code: 403).tap do |h|
+          Hash.new({ code: 403 }.freeze).tap do |h|
             h['admin'] = successful_response
             h['no_role'] = { code: 404 }
             h['unauthenticated'] = { code: 401 }
@@ -544,7 +544,7 @@ RSpec.describe 'V3 service plan visibility' do
       let(:req_body) { { type: 'organization', organizations: [{ guid: third_org.guid }] } }
       let(:successful_response) { { code: 200, response_object: { type: 'organization' } } }
       let(:expected_codes_and_responses) do
-        Hash.new(code: 403).tap do |h|
+        Hash.new({ code: 403 }.freeze).tap do |h|
           h['admin'] = successful_response
           h['unauthenticated'] = { code: 401 }
           h['no_role'] = { code: 404 }
@@ -623,7 +623,7 @@ RSpec.describe 'V3 service plan visibility' do
 
       let(:successful_response) { { code: 204 } }
       let(:expected_codes_and_responses) do
-        Hash.new(code: 403).tap do |h|
+        Hash.new({ code: 403 }.freeze).tap do |h|
           h['admin'] = successful_response
           h['unauthenticated'] = { code: 401 }
           h['no_role'] = { code: 404 }
