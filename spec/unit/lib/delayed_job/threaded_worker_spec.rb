@@ -62,6 +62,16 @@ RSpec.describe Delayed::ThreadedWorker do
       expect { worker.start }.to raise_error('Unexpected error occurred in one of the worker threads')
       expect(worker.instance_variable_get(:@unexpected_error)).to be true
     end
+
+    it 'sets the worker name in the Steno context' do
+      steno_data_spy = spy('data')
+      allow(Steno.config.context).to receive(:data).and_return(steno_data_spy)
+
+      worker.start
+      worker.instance_variable_get(:@threads).each_with_index do |_, index|
+        expect(steno_data_spy).to have_received(:[]=).with(:worker_name, "#{worker_name} thread:#{index + 1}")
+      end
+    end
   end
 
   describe '#names_with_threads' do
