@@ -522,6 +522,38 @@ module VCAP::CloudController
           expect(mock_logger).to have_received(:error).with("UAA request for creating a user failed: #{uaa_error.inspect}")
         end
       end
+
+      context 'when uaa is rate limited' do
+        let(:uaa_error) { CF::UAA::BadResponse.new('invalid status response: 429') }
+        let(:mock_logger) { double(:steno_logger, warn: nil) }
+
+        before do
+          scim = instance_double(CF::UAA::Scim)
+          allow(scim).to receive(:add).and_raise(uaa_error)
+          allow(uaa_client).to receive_messages(scim: scim, logger: mock_logger)
+        end
+
+        it 'logs the error and raises UaaRateLimited' do
+          expect { uaa_client.create_shadow_user('test-user@idp.local', 'idp.local') }.to raise_error(UaaRateLimited)
+          expect(mock_logger).to have_received(:warn).with("UAA request for creating a user ran into rate limits: #{uaa_error.inspect}")
+        end
+      end
+
+      context 'when a BadResponse is raised' do
+        let(:uaa_error) { CF::UAA::BadResponse.new('invalid status response: 433') }
+        let(:mock_logger) { double(:steno_logger, error: nil) }
+
+        before do
+          scim = instance_double(CF::UAA::Scim)
+          allow(scim).to receive(:add).and_raise(uaa_error)
+          allow(uaa_client).to receive_messages(scim: scim, logger: mock_logger)
+        end
+
+        it 'logs and raises the error' do
+          expect { uaa_client.create_shadow_user('test-user@idp.local', 'idp.local') }.to raise_error(UaaUnavailable)
+          expect(mock_logger).to have_received(:error).with("UAA request for creating a user failed: #{uaa_error.inspect}")
+        end
+      end
     end
 
     describe '#id_for_username' do

@@ -102,6 +102,14 @@ module VCAP::CloudController
       raise e unless e.info['error'] == 'scim_resource_already_exists'
 
       { 'id' => e.info['user_id'] }
+    rescue CF::UAA::BadResponse => e
+      unless e.message == 'invalid status response: 429'
+        logger.error("UAA request for creating a user failed: #{e.inspect}")
+        raise UaaUnavailable
+      end
+
+      logger.warn("UAA request for creating a user ran into rate limits: #{e.inspect}")
+      raise UaaRateLimited
     rescue CF::UAA::UAAError => e
       logger.error("UAA request for creating a user failed: #{e.inspect}")
       raise UaaUnavailable
