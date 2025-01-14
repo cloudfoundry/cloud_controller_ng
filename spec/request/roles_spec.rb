@@ -1044,6 +1044,22 @@ RSpec.describe 'Roles Request' do
                 expect(parsed_response).to match_json_response(expected_response)
                 expect(uaa_client).to have_received(:create_shadow_user)
               end
+
+              context 'when UAA is rate limited' do
+                before do
+                  allow(uaa_client).to receive(:create_shadow_user).and_raise(VCAP::CloudController::UaaRateLimited)
+                end
+
+                it 'raises a 429 with a helpful message and Retry-After header' do
+                  post '/v3/roles', params.to_json, admin_header
+
+                  expect(last_response).to have_status_code(429)
+                  expect(last_response).to have_error_message(
+                    'The UAA is currently rate limited. Please try again later'
+                  )
+                  expect(last_response.headers).to include('Retry-After')
+                end
+              end
             end
           end
         end
