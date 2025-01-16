@@ -1,7 +1,7 @@
 module RuboCop
   module Cop
     module Migration
-      class RequirePrimaryKey < RuboCop::Cop::Cop
+      class RequirePrimaryKey < RuboCop::Cop::Base
         # Require all newly created tables to have a primary key defined
         TABLE_CREATE_METHODS = %i[
           create_table
@@ -14,7 +14,7 @@ module RuboCop
 
           return if has_primary_key_call?(node) || has_vcap_migration_call?(node)
 
-          add_offense(node, location: :expression, message: PRIMARY_KEY_WARNING)
+          add_offense(node.loc.expression, message: PRIMARY_KEY_WARNING)
         end
 
         private

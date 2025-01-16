@@ -18,7 +18,7 @@ RSpec.describe RuboCop::Cop::MatchRequiresWithIncludes do
   end
 
   it 'registers an offense if MetadataPresentationHelpers is included without requiring it' do
-    inspect_source(<<~RUBY)
+    result = inspect_source(<<~RUBY)
       require 'cows'
       module M
       class C
@@ -27,12 +27,12 @@ RSpec.describe RuboCop::Cop::MatchRequiresWithIncludes do
       end
     RUBY
 
-    expect(cop.offenses.size).to eq(1)
-    expect(cop.messages).to eq([missing_metadata_presentation_helper])
+    expect(result.size).to eq(1)
+    expect(result.map(&:message)).to eq([missing_metadata_presentation_helper])
   end
 
   it 'does not register an offense if metadata_presentation_helpers required' do
-    inspect_source(<<~RUBY)
+    result = inspect_source(<<~RUBY)
       require 'presenters/mixins/metadata_presentation_helpers'
       module M
       class C
@@ -41,11 +41,11 @@ RSpec.describe RuboCop::Cop::MatchRequiresWithIncludes do
       end
     RUBY
 
-    expect(cop.offenses.size).to eq(0)
+    expect(result.size).to eq(0)
   end
 
   it 'registers an offense if SubResource is included without requiring it' do
-    inspect_source(<<~RUBY)
+    result = inspect_source(<<~RUBY)
       require 'cows'
       module M
       class C
@@ -54,12 +54,12 @@ RSpec.describe RuboCop::Cop::MatchRequiresWithIncludes do
       end
     RUBY
 
-    expect(cop.offenses.size).to eq(1)
-    expect(cop.messages).to eq([missing_sub_resource])
+    expect(result.size).to eq(1)
+    expect(result.map(&:message)).to eq([missing_sub_resource])
   end
 
   it 'does not register an offense if metadata_presentation_helpers required' do
-    inspect_source(<<~RUBY)
+    result = inspect_source(<<~RUBY)
       require 'controllers/v3/mixins/sub_resource'
       module M
       class C
@@ -68,11 +68,11 @@ RSpec.describe RuboCop::Cop::MatchRequiresWithIncludes do
       end
     RUBY
 
-    expect(cop.offenses.size).to eq(0)
+    expect(result.size).to eq(0)
   end
 
   it 'finds multiple offences' do
-    inspect_source(<<~RUBY)
+    result = inspect_source(<<~RUBY)
       require 'cows'
       module M
       class C
@@ -81,7 +81,8 @@ RSpec.describe RuboCop::Cop::MatchRequiresWithIncludes do
       end
       end
     RUBY
-    expect(cop.offenses.size).to eq(2)
-    expect(cop.messages).to contain_exactly(missing_metadata_presentation_helper, missing_sub_resource)
+
+    expect(result.size).to eq(2)
+    expect(result.map(&:message)).to contain_exactly(missing_metadata_presentation_helper, missing_sub_resource)
   end
 end
