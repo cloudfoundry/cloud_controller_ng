@@ -30,4 +30,10 @@ module VCAP::CloudController
       'The UAA returned an unexpected error'
     end
   end
+
+  class UaaRateLimited < UaaError
+    def message
+      'The UAA is currently rate limited. Please try again later'
+    end
+  end
 end
