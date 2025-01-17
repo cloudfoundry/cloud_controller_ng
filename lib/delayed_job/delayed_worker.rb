@@ -61,6 +61,7 @@ class CloudController::DelayedWorker
 
     worker = Delayed::Worker.new(@queue_options)
     worker.name = @queue_options[:worker_name]
+    Steno.config.context.data[:worker_name] = worker.name
     worker
   end
 

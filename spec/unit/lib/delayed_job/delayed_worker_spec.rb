@@ -69,6 +69,8 @@ RSpec.describe CloudController::DelayedWorker do
   describe '#start_working' do
     let(:cc_delayed_worker) { CloudController::DelayedWorker.new(options) }
 
+    before { allow(delayed_worker).to receive(:name).and_return(options[:name]) }
+
     it 'sets up the environment and starts the worker' do
       expect(environment).to receive(:setup_environment).with(nil)
       expect(Delayed::Worker).to receive(:new).with(anything).and_return(delayed_worker)
@@ -86,10 +88,16 @@ RSpec.describe CloudController::DelayedWorker do
       expect(Delayed::Worker.sleep_delay).to eq(5)
     end
 
+    it 'sets the worker name in the Steno context' do
+      cc_delayed_worker.start_working
+      expect(Steno.config.context.data[:worker_name]).to eq(options[:name])
+    end
+
     context 'when the number of threads is specified' do
       before do
         allow(Delayed).to receive(:remove_const).with(:Worker)
         allow(Delayed).to receive(:const_set).with(:Worker, Delayed::ThreadedWorker)
+        allow(threaded_worker).to receive(:name)
         options[:num_threads] = 7
       end
 
@@ -122,7 +130,7 @@ RSpec.describe CloudController::DelayedWorker do
         expect(environment).to receive(:setup_environment).with(nil)
         expect(Delayed::Worker).to receive(:new).with(anything).and_return(delayed_worker).once
         expect(delayed_worker).to receive(:name=).with(options[:name]).once
-        expect(delayed_worker).to receive(:name).and_return(options[:name]).once
+        expect(delayed_worker).to receive(:name).and_return(options[:name]).twice
         expect(Delayed::Job).to receive(:clear_locks!).with(options[:name]).once
 
         cc_delayed_worker.clear_locks!
@@ -134,7 +142,7 @@ RSpec.describe CloudController::DelayedWorker do
         expect(environment).to receive(:setup_environment).with(nil)
         expect(Delayed::Worker).to receive(:new).with(anything).and_return(threaded_worker).once
         expect(threaded_worker).to receive(:name=).with(options[:name]).once
-        expect(threaded_worker).to receive(:name).and_return(options[:name]).once
+        expect(threaded_worker).to receive(:name).and_return(options[:name]).twice
         expect(threaded_worker).to receive(:names_with_threads).and_return(["#{options[:name]} thread:1", "#{options[:name]} thread:2"]).once
         expect(Delayed::Job).to receive(:clear_locks!).with(options[:name]).once
         expect(Delayed::Job).to receive(:clear_locks!).with("#{options[:name]} thread:1").once
