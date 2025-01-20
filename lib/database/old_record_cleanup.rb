@@ -5,9 +5,9 @@ module Database
     class NoCurrentTimestampError < StandardError; end
     attr_reader :model, :days_ago, :keep_at_least_one_record
 
-    def initialize(model, days_ago, keep_at_least_one_record: false)
+    def initialize(model, cutoff_age_in_days:, keep_at_least_one_record: false)
       @model = model
-      @days_ago = days_ago
+      @days_ago = cutoff_age_in_days
       @keep_at_least_one_record = keep_at_least_one_record
     end
 
