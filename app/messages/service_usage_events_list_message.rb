@@ -6,6 +6,7 @@ module VCAP::CloudController
       after_guid
       service_instance_types
       service_offering_guids
+      consumer_guid
     ]
 
     validates_with NoAdditionalParamsValidator
@@ -24,7 +25,7 @@ module VCAP::CloudController
     end
 
     def self.from_params(params)
-      super(params, %w[after_guid service_instance_types service_offering_guids])
+      super(params, %w[after_guid service_instance_types service_offering_guids consumer_guid])
     end
   end
 end
