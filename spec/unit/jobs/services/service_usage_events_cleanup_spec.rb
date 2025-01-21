@@ -4,12 +4,13 @@ module VCAP::CloudController
   module Jobs::Services
     RSpec.describe ServiceUsageEventsCleanup, job_context: :worker do
       let(:cutoff_age_in_days) { 30 }
+      let(:threshold_for_keeping_unprocessed_records) { 5_000_000 }
       let(:logger) { double(Steno::Logger, info: nil) }
       let!(:event_before_threshold) { ServiceUsageEvent.make(created_at: (cutoff_age_in_days + 1).days.ago, state: 'DELETED') }
       let!(:event_after_threshold) { ServiceUsageEvent.make(created_at: (cutoff_age_in_days - 1).days.ago) }
 
       subject(:job) do
-        ServiceUsageEventsCleanup.new(cutoff_age_in_days)
+        ServiceUsageEventsCleanup.new(cutoff_age_in_days, threshold_for_keeping_unprocessed_records)
       end
 
       before do

@@ -16,7 +16,8 @@ module VCAP::CloudController
               clock: Integer
             },
             app_usage_events: {
-              cutoff_age_in_days: Integer
+              cutoff_age_in_days: Integer,
+              threshold_for_keeping_unprocessed_records: Integer
             },
             audit_events: {
               cutoff_age_in_days: Integer
@@ -169,7 +170,10 @@ module VCAP::CloudController
               frequency_in_seconds: Integer
             },
 
-            service_usage_events: { cutoff_age_in_days: Integer },
+            service_usage_events: {
+              cutoff_age_in_days: Integer,
+              threshold_for_keeping_unprocessed_records: Integer
+            },
             default_app_ssh_access: bool,
             allow_app_ssh_access: bool,
             jobs: {

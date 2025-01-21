@@ -10,7 +10,7 @@ newrelic_enabled: false
 external_protocol: https
 external_domain: api.bosh-lite.com
 
-system_domain_organization: 
+system_domain_organization:
 system_domain: bosh-lite.com
 app_domains:
   - name: bosh-lite.com
@@ -21,9 +21,11 @@ jobs:
 
 app_usage_events:
   cutoff_age_in_days: 31
+  threshold_for_keeping_unprocessed_records: 5000000
 
 service_usage_events:
   cutoff_age_in_days: 31
+  threshold_for_keeping_unprocessed_records: 5000000
 
 audit_events:
   cutoff_age_in_days: 31
@@ -133,8 +135,8 @@ resource_pool:
   maximum_size: 536870912
   resource_directory_key: bosh-lite.com-cc-resources
   cdn:
-    uri: 
-    key_pair_id: 
+    uri:
+    key_pair_id:
     private_key: ""
   fog_connection: {}
 
@@ -150,8 +152,8 @@ packages:
   max_valid_packages_stored: 5
   max_package_size: 1073741824
   cdn:
-    uri: 
-    key_pair_id: 
+    uri:
+    key_pair_id:
     private_key: ""
   fog_connection: {}
 
@@ -165,8 +167,8 @@ droplets:
     password: blobstore-password
   droplet_directory_key: bosh-lite.com-cc-droplets
   cdn:
-    uri: 
-    key_pair_id: 
+    uri:
+    key_pair_id:
     private_key: ""
   fog_connection: {}
   max_staged_droplets_stored: 5
@@ -181,8 +183,8 @@ buildpacks:
     password: blobstore-password
   buildpack_directory_key: bosh-lite.com-cc-buildpacks
   cdn:
-    uri: 
-    key_pair_id: 
+    uri:
+    key_pair_id:
     private_key: ""
   fog_connection: {}
 
@@ -211,7 +213,7 @@ default_app_ssh_access: true
 
 skip_cert_verify: true
 
-install_buildpacks: 
+install_buildpacks:
 - name: staticfile_buildpack
   package: staticfile-buildpack
 - name: java_buildpack

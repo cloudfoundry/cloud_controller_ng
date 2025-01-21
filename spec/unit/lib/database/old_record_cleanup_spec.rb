@@ -125,7 +125,7 @@ RSpec.describe Database::OldRecordCleanup do
       stale_app_usage_event_3_stop = VCAP::CloudController::AppUsageEvent.make(created_at: 1.year.ago, state: 'STOPPED', app_guid: 'guid3')
 
       record_cleanup = Database::OldRecordCleanup.new(VCAP::CloudController::AppUsageEvent, cutoff_age_in_days: 1, keep_at_least_one_record: false, keep_running_records: false,
-                                                                                            keep_unprocessed_records: true)
+                                                                                            keep_unprocessed_records: true, threshold_for_keeping_unprocessed_records: 5_000_000)
       record_cleanup.delete
       expect { stale_app_usage_event_1_stop.reload }.to raise_error(Sequel::NoExistingObject)
       expect(stale_app_usage_event_2_stop.reload).to be_present
@@ -139,7 +139,8 @@ RSpec.describe Database::OldRecordCleanup do
       stale_service_usage_event_3_stop = VCAP::CloudController::ServiceUsageEvent.make(created_at: 1.year.ago, state: 'STOPPED', service_instance_guid: 'guid3')
 
       record_cleanup = Database::OldRecordCleanup.new(VCAP::CloudController::ServiceUsageEvent, cutoff_age_in_days: 1, keep_at_least_one_record: false, keep_running_records: false,
-                                                                                                keep_unprocessed_records: true)
+                                                                                                keep_unprocessed_records: true,
+                                                                                                threshold_for_keeping_unprocessed_records: 5_000_000)
       record_cleanup.delete
       expect { stale_service_usage_event_1_stop.reload }.to raise_error(Sequel::NoExistingObject)
       expect(stale_service_usage_event_2_stop.reload).to be_present
@@ -153,7 +154,7 @@ RSpec.describe Database::OldRecordCleanup do
       VCAP::CloudController::AppUsageConsumer.make(consumer_guid: 'guid2', last_processed_guid: 'fake-guid-2')
 
       record_cleanup = Database::OldRecordCleanup.new(VCAP::CloudController::AppUsageEvent, cutoff_age_in_days: 1, keep_at_least_one_record: false, keep_running_records: false,
-                                                                                            keep_unprocessed_records: true)
+                                                                                            keep_unprocessed_records: true, threshold_for_keeping_unprocessed_records: 5_000_000)
       record_cleanup.delete
       expect { stale_app_usage_event_1_stop.reload }.to raise_error(Sequel::NoExistingObject)
       expect { stale_app_usage_event_2_stop.reload }.to raise_error(Sequel::NoExistingObject)
@@ -166,7 +167,8 @@ RSpec.describe Database::OldRecordCleanup do
       VCAP::CloudController::ServiceUsageConsumer.make(consumer_guid: 'guid2', last_processed_guid: 'fake-guid-2')
 
       record_cleanup = Database::OldRecordCleanup.new(VCAP::CloudController::ServiceUsageEvent, cutoff_age_in_days: 1, keep_at_least_one_record: false, keep_running_records: false,
-                                                                                                keep_unprocessed_records: true)
+                                                                                                keep_unprocessed_records: true,
+                                                                                                threshold_for_keeping_unprocessed_records: 5_000_000)
       record_cleanup.delete
       expect { stale_service_usage_event_1_stop.reload }.to raise_error(Sequel::NoExistingObject)
       expect { stale_service_usage_event_2_stop.reload }.to raise_error(Sequel::NoExistingObject)
@@ -179,7 +181,7 @@ RSpec.describe Database::OldRecordCleanup do
       VCAP::CloudController::AppUsageConsumer.make(consumer_guid: 'guid2', last_processed_guid: stale_app_usage_event_2_stop.guid)
 
       record_cleanup = Database::OldRecordCleanup.new(VCAP::CloudController::AppUsageEvent, cutoff_age_in_days: 1, keep_at_least_one_record: false, keep_running_records: false,
-                                                                                            keep_unprocessed_records: true)
+                                                                                            keep_unprocessed_records: true, threshold_for_keeping_unprocessed_records: 5_000_000)
       record_cleanup.delete
       expect { stale_app_usage_event_1_stop.reload }.to raise_error(Sequel::NoExistingObject)
       expect(stale_app_usage_event_2_stop.reload).to be_present
@@ -192,10 +194,89 @@ RSpec.describe Database::OldRecordCleanup do
       VCAP::CloudController::ServiceUsageConsumer.make(consumer_guid: 'guid2', last_processed_guid: stale_service_usage_event_2_stop.guid)
 
       record_cleanup = Database::OldRecordCleanup.new(VCAP::CloudController::ServiceUsageEvent, cutoff_age_in_days: 1, keep_at_least_one_record: false, keep_running_records: false,
-                                                                                                keep_unprocessed_records: true)
+                                                                                                keep_unprocessed_records: true,
+                                                                                                threshold_for_keeping_unprocessed_records: 5_000_000)
       record_cleanup.delete
       expect { stale_service_usage_event_1_stop.reload }.to raise_error(Sequel::NoExistingObject)
       expect(stale_service_usage_event_2_stop.reload).to be_present
+    end
+
+    describe 'threshold_for_keeping_unprocessed_records behavior' do
+      context 'when row count is below threshold' do
+        it 'keeps unprocessed app usage events that are referenced by consumers' do
+          stale_app_usage_event = VCAP::CloudController::AppUsageEvent.make(created_at: 1.year.ago, state: 'STOPPED')
+          VCAP::CloudController::AppUsageConsumer.make(consumer_guid: 'guid1', last_processed_guid: stale_app_usage_event.guid)
+
+          record_cleanup = Database::OldRecordCleanup.new(
+            VCAP::CloudController::AppUsageEvent,
+            cutoff_age_in_days: 1,
+            keep_at_least_one_record: false,
+            keep_running_records: false,
+            keep_unprocessed_records: true,
+            threshold_for_keeping_unprocessed_records: 5_000_000
+          )
+
+          record_cleanup.delete
+          expect(stale_app_usage_event.reload).to be_present
+        end
+
+        it 'keeps unprocessed service usage events that are referenced by consumers' do
+          stale_service_usage_event = VCAP::CloudController::ServiceUsageEvent.make(created_at: 1.year.ago, state: 'STOPPED')
+          VCAP::CloudController::ServiceUsageConsumer.make(consumer_guid: 'guid1', last_processed_guid: stale_service_usage_event.guid)
+
+          record_cleanup = Database::OldRecordCleanup.new(
+            VCAP::CloudController::ServiceUsageEvent,
+            cutoff_age_in_days: 1,
+            keep_at_least_one_record: false,
+            keep_running_records: false,
+            keep_unprocessed_records: true,
+            threshold_for_keeping_unprocessed_records: 5_000_000
+          )
+
+          record_cleanup.delete
+          expect(stale_service_usage_event.reload).to be_present
+        end
+      end
+
+      context 'when row count is above threshold' do
+        before do
+          allow_any_instance_of(Database::OldRecordCleanup).to receive(:approximate_row_count).and_return(6_000_000)
+        end
+
+        it 'deletes app usage events even if referenced by consumers' do
+          stale_app_usage_event = VCAP::CloudController::AppUsageEvent.make(created_at: 1.year.ago, state: 'STOPPED')
+          VCAP::CloudController::AppUsageConsumer.make(consumer_guid: 'guid1', last_processed_guid: stale_app_usage_event.guid)
+
+          record_cleanup = Database::OldRecordCleanup.new(
+            VCAP::CloudController::AppUsageEvent,
+            cutoff_age_in_days: 1,
+            keep_at_least_one_record: false,
+            keep_running_records: false,
+            keep_unprocessed_records: true,
+            threshold_for_keeping_unprocessed_records: 5_000_000
+          )
+
+          record_cleanup.delete
+          expect { stale_app_usage_event.reload }.to raise_error(Sequel::NoExistingObject)
+        end
+
+        it 'deletes service usage events even if referenced by consumers' do
+          stale_service_usage_event = VCAP::CloudController::ServiceUsageEvent.make(created_at: 1.year.ago, state: 'STOPPED')
+          VCAP::CloudController::ServiceUsageConsumer.make(consumer_guid: 'guid1', last_processed_guid: stale_service_usage_event.guid)
+
+          record_cleanup = Database::OldRecordCleanup.new(
+            VCAP::CloudController::ServiceUsageEvent,
+            cutoff_age_in_days: 1,
+            keep_at_least_one_record: false,
+            keep_running_records: false,
+            keep_unprocessed_records: true,
+            threshold_for_keeping_unprocessed_records: 5_000_000
+          )
+
+          record_cleanup.delete
+          expect { stale_service_usage_event.reload }.to raise_error(Sequel::NoExistingObject)
+        end
+      end
     end
   end
 end

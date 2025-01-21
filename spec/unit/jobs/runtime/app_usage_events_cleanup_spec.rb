@@ -4,12 +4,13 @@ module VCAP::CloudController
   module Jobs::Runtime
     RSpec.describe AppUsageEventsCleanup, job_context: :worker do
       let(:cutoff_age_in_days) { 30 }
+      let(:threshold_for_keeping_unprocessed_records) { 5_000_000 }
       let(:logger) { double(Steno::Logger, info: nil) }
       let!(:event_before_threshold) { AppUsageEvent.make(created_at: (cutoff_age_in_days + 1).days.ago, state: 'STOPPED') }
       let!(:event_after_threshold) { AppUsageEvent.make(created_at: (cutoff_age_in_days - 1).days.ago) }
 
       subject(:job) do
-        AppUsageEventsCleanup.new(cutoff_age_in_days)
+        AppUsageEventsCleanup.new(cutoff_age_in_days, threshold_for_keeping_unprocessed_records)
       end
 
       before do

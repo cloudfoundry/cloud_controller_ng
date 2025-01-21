@@ -4,10 +4,11 @@ module VCAP::CloudController
   module Jobs
     module Services
       class ServiceUsageEventsCleanup < VCAP::CloudController::Jobs::CCJob
-        attr_accessor :cutoff_age_in_days
+        attr_accessor :cutoff_age_in_days, :threshold_for_keeping_unprocessed_records
 
-        def initialize(cutoff_age_in_days)
+        def initialize(cutoff_age_in_days, threshold_for_keeping_unprocessed_records)
           @cutoff_age_in_days = cutoff_age_in_days
+          @threshold_for_keeping_unprocessed_records = threshold_for_keeping_unprocessed_records
         end
 
         def perform
@@ -15,7 +16,7 @@ module VCAP::CloudController
           logger.info('Cleaning up old ServiceUsageEvent rows')
 
           repository = Repositories::ServiceUsageEventRepository.new
-          repository.delete_events_older_than(cutoff_age_in_days)
+          repository.delete_events_older_than(cutoff_age_in_days, threshold_for_keeping_unprocessed_records)
         end
 
         def job_name_in_configuration

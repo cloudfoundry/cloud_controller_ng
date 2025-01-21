@@ -3,14 +3,16 @@ require 'database/batch_delete'
 module Database
   class OldRecordCleanup
     class NoCurrentTimestampError < StandardError; end
-    attr_reader :model, :days_ago, :keep_at_least_one_record, :keep_running_records, :keep_unprocessed_records
+    attr_reader :model, :days_ago, :keep_at_least_one_record, :keep_running_records, :keep_unprocessed_records, :threshold_for_keeping_unprocessed_records
 
-    def initialize(model, cutoff_age_in_days:, keep_at_least_one_record: false, keep_running_records: false, keep_unprocessed_records: false)
+    def initialize(model, cutoff_age_in_days:, keep_at_least_one_record: false, keep_running_records: false, keep_unprocessed_records: false,
+                   threshold_for_keeping_unprocessed_records: nil)
       @model = model
       @days_ago = cutoff_age_in_days
       @keep_at_least_one_record = keep_at_least_one_record
       @keep_running_records = keep_running_records
       @keep_unprocessed_records = keep_unprocessed_records
+      @threshold_for_keeping_unprocessed_records = threshold_for_keeping_unprocessed_records
     end
 
     def delete
@@ -97,16 +99,22 @@ module Database
 
       return old_records unless consumer_model
 
-      # Find the usage event record with the lowest ID
-      # of any that are referenced by a consumer
-      referenced_event = model.
-                         join(consumer_model.table_name.to_sym, last_processed_guid: :guid).
-                         select(Sequel.function(:min, Sequel.qualify(model.table_name, :id)).as(:min_id)).
-                         first
+      if approximate_row_count(model) < threshold_for_keeping_unprocessed_records.to_i
+        # Find the usage event record with the lowest ID
+        # of any that are referenced by a consumer
+        referenced_event = model.
+                           join(consumer_model.table_name.to_sym, last_processed_guid: :guid).
+                           select(Sequel.function(:min, Sequel.qualify(model.table_name, :id)).as(:min_id)).
+                           first
 
-      return old_records if referenced_event[:min_id].nil?
+        return old_records if referenced_event[:min_id].nil?
 
-      old_records.where { id < referenced_event[:min_id] }
+        old_records.where { id < referenced_event[:min_id] }
+      else
+        # When above threshold, we don't exclude any records
+        # Associated consumers will be automatically deleted by Sequel
+        old_records
+      end
     end
 
     def registered_consumer_model(model)
@@ -115,6 +123,28 @@ module Database
       return VCAP::CloudController::ServiceUsageConsumer if model == VCAP::CloudController::ServiceUsageEvent && VCAP::CloudController::ServiceUsageConsumer.present?
 
       false
+    end
+
+    def approximate_row_count(model)
+      case model.db.database_type
+      when :postgres
+        result = model.db[<<-SQL.squish
+          SELECT reltuples::bigint AS estimate
+          FROM pg_class
+          WHERE relname = '#{model.table_name}'
+        SQL
+        ].first
+        result[:estimate].to_i
+      when :mysql, :mysql2
+        result = model.db[<<-SQL.squish
+          SELECT table_rows
+          FROM information_schema.tables
+          WHERE table_schema = DATABASE()
+            AND table_name = '#{model.table_name}'
+        SQL
+        ].first
+        result[:table_rows].to_i
+      end
     end
   end
 end
