@@ -42,26 +42,25 @@ GIT
 GEM
   remote: https://rubygems.org/
   specs:
-    actionpack (7.2.2.1)
-      actionview (= 7.2.2.1)
-      activesupport (= 7.2.2.1)
+    actionpack (8.0.1)
+      actionview (= 8.0.1)
+      activesupport (= 8.0.1)
       nokogiri (>= 1.8.5)
-      racc
-      rack (>= 2.2.4, < 3.2)
+      rack (>= 2.2.4)
       rack-session (>= 1.0.1)
       rack-test (>= 0.6.3)
       rails-dom-testing (~> 2.2)
       rails-html-sanitizer (~> 1.6)
       useragent (~> 0.16)
-    actionview (7.2.2.1)
-      activesupport (= 7.2.2.1)
+    actionview (8.0.1)
+      activesupport (= 8.0.1)
       builder (~> 3.1)
       erubi (~> 1.11)
       rails-dom-testing (~> 2.2)
       rails-html-sanitizer (~> 1.6)
-    activemodel (7.2.2.1)
-      activesupport (= 7.2.2.1)
-    activesupport (7.2.2.1)
+    activemodel (8.0.1)
+      activesupport (= 8.0.1)
+    activesupport (8.0.1)
       base64
       benchmark (>= 0.3)
       bigdecimal
@@ -73,6 +72,7 @@ GEM
       minitest (>= 5.1)
       securerandom (>= 0.3)
       tzinfo (~> 2.0, >= 2.0.5)
+      uri (>= 0.13.1)
     addressable (2.8.7)
       public_suffix (>= 2.0.2, < 7.0)
     aliyun-sdk (0.8.0)
@@ -135,14 +135,14 @@ GEM
       irb (~> 1.10)
       reline (>= 0.3.8)
     declarative (0.0.20)
-    delayed_job (4.1.12)
-      activesupport (>= 3.0, < 8.0)
+    delayed_job (4.1.13)
+      activesupport (>= 3.0, < 9.0)
     diff-lcs (1.5.1)
     digest-xxhash (0.2.9)
     docile (1.1.5)
     domain_name (0.6.20240107)
     drb (2.2.1)
-    erubi (1.13.0)
+    erubi (1.13.1)
     eventmachine (1.2.7)
     excon (0.112.0)
     faraday (0.17.6)
@@ -296,7 +296,7 @@ GEM
     logger (1.6.5)
     loggregator_emitter (5.2.0)
       beefcake (~> 1.0.0)
-    loofah (2.23.1)
+    loofah (2.24.0)
       crass (~> 1.0.2)
       nokogiri (>= 1.12.0)
     machinist (1.0.6)
@@ -364,7 +364,7 @@ GEM
     pry-byebug (3.10.1)
       byebug (~> 11.0)
       pry (>= 0.13, < 0.15)
-    psych (5.2.2)
+    psych (5.2.3)
       date
       stringio
     public_suffix (6.0.1)
@@ -386,12 +386,12 @@ GEM
       activesupport (>= 5.0.0)
       minitest
       nokogiri (>= 1.6)
-    rails-html-sanitizer (1.6.1)
+    rails-html-sanitizer (1.6.2)
       loofah (~> 2.21)
       nokogiri (>= 1.15.7, != 1.16.7, != 1.16.6, != 1.16.5, != 1.16.4, != 1.16.3, != 1.16.2, != 1.16.1, != 1.16.0.rc1, != 1.16.0)
-    railties (7.2.2.1)
-      actionpack (= 7.2.2.1)
-      activesupport (= 7.2.2.1)
+    railties (8.0.1)
+      actionpack (= 8.0.1)
+      activesupport (= 8.0.1)
       irb (~> 1.13)
       rackup (>= 1.0.0)
       rake (>= 12.2)
@@ -404,7 +404,7 @@ GEM
       ffi (~> 1.0)
     rbs (3.8.1)
       logger
-    rdoc (6.10.0)
+    rdoc (6.11.0)
       psych (>= 4.0.0)
     redis (5.3.0)
       redis-client (>= 0.22.0)
@@ -569,7 +569,8 @@ GEM
     unicode-display_width (3.1.4)
       unicode-emoji (~> 4.0, >= 4.0.4)
     unicode-emoji (4.0.4)
-    useragent (0.16.10)
+    uri (1.0.2)
+    useragent (0.16.11)
     vhd (0.0.4)
       bit-struct
     vmstat (2.3.1)
@@ -577,7 +578,7 @@ GEM
       addressable (>= 2.8.0)
       crack (>= 0.3.2)
       hashdiff (>= 0.4.0, < 2.0.0)
-    webrick (1.9.0)
+    webrick (1.9.1)
     xml-simple (1.1.9)
       rexml
     yajl-ruby (1.4.3)
@@ -590,9 +591,9 @@ PLATFORMS
   x86_64-linux
 
 DEPENDENCIES
-  actionpack (~> 7.2.2)
-  actionview (~> 7.2.1)
-  activemodel (~> 7.2.2)
+  actionpack (~> 8.0.1)
+  actionview (~> 8.0.1)
+  activemodel (~> 8.0.1)
   addressable
   allowy (>= 2.1.0)
   azure-storage-blob!
@@ -642,7 +643,7 @@ DEPENDENCIES
   public_suffix
   puma
   rack-test
-  railties (~> 7.2.1)
+  railties (~> 8.0.1)
   rake
   redis
   roodi
