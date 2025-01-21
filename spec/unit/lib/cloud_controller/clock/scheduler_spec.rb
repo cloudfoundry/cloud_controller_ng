@@ -16,12 +16,18 @@ module VCAP::CloudController
           jobs: {
             global: { timeout_in_seconds: global_timeout }
           },
-          app_usage_events: { cutoff_age_in_days: 1 },
+          app_usage_events: {
+            cutoff_age_in_days: 1,
+            threshold_for_keeping_unprocessed_records: 5_000_000
+          },
           audit_events: { cutoff_age_in_days: 3 },
           failed_jobs: { frequency_in_seconds: 400, cutoff_age_in_days: 4, max_number_of_failed_delayed_jobs: 10 },
           pollable_jobs: { cutoff_age_in_days: 2 },
           service_operations_initial_cleanup: { frequency_in_seconds: 600 },
-          service_usage_events: { cutoff_age_in_days: 5 },
+          service_usage_events: {
+            cutoff_age_in_days: 5,
+            threshold_for_keeping_unprocessed_records: 5_000_000
+          },
           completed_tasks: { cutoff_age_in_days: 6 },
           pending_droplets: { frequency_in_seconds: 300, expiration_in_seconds: 600 },
           pending_builds: { frequency_in_seconds: 400, expiration_in_seconds: 700 },
@@ -61,7 +67,7 @@ module VCAP::CloudController
 
         expect(clock).to receive(:schedule_daily_job) do |args, &block|
           expect(args).to eql(name: 'app_usage_events', at: '18:00', priority: 0)
-          expect(Jobs::Runtime::AppUsageEventsCleanup).to receive(:new).with(1).and_call_original
+          expect(Jobs::Runtime::AppUsageEventsCleanup).to receive(:new).with(1, 5_000_000).and_call_original
           expect(block.call).to be_instance_of(Jobs::Runtime::AppUsageEventsCleanup)
         end
 
@@ -73,7 +79,7 @@ module VCAP::CloudController
 
         expect(clock).to receive(:schedule_daily_job) do |args, &block|
           expect(args).to eql(name: 'service_usage_events', at: '22:00', priority: 0)
-          expect(Jobs::Services::ServiceUsageEventsCleanup).to receive(:new).with(5).and_call_original
+          expect(Jobs::Services::ServiceUsageEventsCleanup).to receive(:new).with(5, 5_000_000).and_call_original
           expect(block.call).to be_instance_of(Jobs::Services::ServiceUsageEventsCleanup)
         end
 
