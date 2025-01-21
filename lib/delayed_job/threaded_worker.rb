@@ -33,6 +33,7 @@ module Delayed
       @num_threads.times do |thread_index|
         thread = Thread.new do
           Thread.current[:thread_index] = thread_index
+          Steno.config.context.data[:worker_name] = name # override logged worker name with thread specific name
           threaded_start
         rescue Exception => e # rubocop:disable Lint/RescueException
           say "Unexpected error: #{e.message}\n#{e.backtrace.join("\n")}", 'error'
