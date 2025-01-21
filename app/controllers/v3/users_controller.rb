@@ -54,6 +54,9 @@ class UsersController < ApplicationController
     else
       render status: :created, json: Presenters::V3::UserPresenter.new(user, uaa_users: User.uaa_users_info([user.guid]))
     end
+  rescue UaaRateLimited
+    headers['Retry-After'] = rand(5..20).to_s
+    raise CloudController::Errors::V3::ApiError.new_from_details('UaaRateLimited')
   rescue VCAP::CloudController::UaaUnavailable
     raise CloudController::Errors::ApiError.new_from_details('UaaUnavailable')
   rescue UserCreate::Error => e

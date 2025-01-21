@@ -58,6 +58,9 @@ class RolesController < ApplicationController
     render status: :created, json: Presenters::V3::RolePresenter.new(role)
   rescue RoleCreate::Error => e
     unprocessable!(e)
+  rescue UaaRateLimited
+    headers['Retry-After'] = rand(5..20).to_s
+    raise CloudController::Errors::V3::ApiError.new_from_details('UaaRateLimited')
   rescue UaaUnavailable
     raise CloudController::Errors::ApiError.new_from_details('UaaUnavailable')
   end
