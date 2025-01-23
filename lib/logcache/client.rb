@@ -16,13 +16,13 @@ module Logcache
           "#{host}:#{port}",
           GRPC::Core::ChannelCredentials.new(client_ca, client_key, client_cert),
           channel_args: { GRPC::Core::Channel::SSL_TARGET => tls_subject_name },
-          timeout: 250
+          timeout: 10
         )
       else
         @service = Logcache::V1::Egress::Stub.new(
           "#{host}:#{port}",
           :this_channel_is_insecure,
-          timeout: 250
+          timeout: 10
         )
       end
     end
@@ -46,7 +46,12 @@ module Logcache
 
     def with_request_error_handling(_source_guid)
       tries ||= 3
+      start_time = Time.now
       yield
+
+      # convert to milliseconds to get more precise information
+      time_taken = (Time.now - start_time) * 1000
+      logger.info("Response time: #{time_taken.round(2)} ms")
     rescue StandardError => e
       raise CloudController::Errors::ApiError.new_from_details('ServiceUnavailable', 'Connection to Log Cache timed out') if e.is_a?(GRPC::DeadlineExceeded)
 
