@@ -74,6 +74,10 @@ module CloudController
       @dependencies[:prometheus_updater] || register(:prometheus_updater, VCAP::CloudController::Metrics::PrometheusUpdater.new)
     end
 
+    def cc_worker_prometheus_updater
+      @dependencies[:cc_worker_prometheus_updater] || register(:cc_worker_prometheus_updater, VCAP::CloudController::Metrics::PrometheusUpdater.new(cc_worker: true))
+    end
+
     def statsd_updater
       @dependencies[:statsd_updater] || register(:statsd_updater, VCAP::CloudController::Metrics::StatsdUpdater.new(statsd_client))
     end

@@ -37,6 +37,10 @@ module VCAP::CloudController
 
             log_audit_events: bool,
 
+            directories: {
+              tmpdir: String,
+            },
+
             stacks_file: String,
             newrelic_enabled: bool,
 

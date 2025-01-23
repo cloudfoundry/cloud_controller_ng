@@ -64,6 +64,12 @@ namespace :jobs do
       'prune_excess_app_revisions'
     ]
 
-    CloudController::DelayedWorker.new(queues: queues, name: args.name, num_threads: args.num_threads, thread_grace_period_seconds: args.thread_grace_period_seconds).start_working
+    ENV['PROCESS_TYPE'] = 'cc-worker'
+
+    CloudController::DelayedWorker.new(queues: queues,
+                                       name: args.name,
+                                       num_threads: args.num_threads,
+                                       thread_grace_period_seconds: args.thread_grace_period_seconds,
+                                       publish_metrics: true).start_working
   end
 end
