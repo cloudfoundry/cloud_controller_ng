@@ -47,11 +47,11 @@ module Logcache
     def with_request_error_handling(_source_guid)
       tries ||= 3
       start_time = Time.now
-      yield
 
       # convert to milliseconds to get more precise information
       time_taken = (Time.now - start_time) * 1000
       logger.info("Response time: #{time_taken.round(2)} ms")
+      yield
     rescue StandardError => e
       raise CloudController::Errors::ApiError.new_from_details('ServiceUnavailable', 'Connection to Log Cache timed out') if e.is_a?(GRPC::DeadlineExceeded)
 
