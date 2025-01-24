@@ -41,6 +41,7 @@ gem 'statsd-ruby', '~> 1.5.0'
 gem 'steno'
 gem 'talentbox-delayed_job_sequel', '~> 4.3.0'
 gem 'thin'
+gem 'uri', '~> 0.13'
 gem 'vmstat', '~> 2.3'
 
 # Rails Components
