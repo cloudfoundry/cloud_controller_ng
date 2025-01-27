@@ -26,6 +26,7 @@ module Logcache
       let(:client_ca) { File.read(client_ca_path) }
       let(:client_key) { File.read(client_key_path) }
       let(:client_cert) { File.read(client_cert_path) }
+      let(:mock_logger) { double(Steno::Logger, info: nil) }
 
       describe '#container_metrics' do
         let(:instance_count) { 2 }
@@ -39,6 +40,7 @@ module Logcache
             with("#{host}:#{port}", credentials, channel_args: channel_arg_hash, timeout: 10).
             and_return(logcache_service)
           allow(Logcache::V1::ReadRequest).to receive(:new).and_return(logcache_request)
+          allow_any_instance_of(Client).to receive(:logger).and_return(mock_logger)
         end
 
         it 'calls Logcache with the correct parameters and returns envelopes' do
@@ -55,6 +57,18 @@ module Logcache
             envelope_types: [:GAUGE]
           )
           expect(logcache_service).to have_received(:read).with(logcache_request)
+        end
+
+        it 'logs the response time and metadata' do
+          client.container_metrics(source_guid: process.guid, envelope_limit: 1000, start_time: 100, end_time: 101)
+          expect(mock_logger).to have_received(:info).with(
+            a_string_matching(/Response time: \d+\.\d+ ms/),
+            hash_including(
+              source_id: process.guid,
+              event: 'log_cache_request',
+              time_taken_in_ms: be_a(Float)
+            )
+          )
         end
       end
 
