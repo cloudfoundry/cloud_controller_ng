@@ -1,4 +1,4 @@
-require 'spec_helper'
+# require 'spec_helper'
 require 'lightweight_spec_helper'
 require 'messages/validators'
 require 'messages/base_message'
@@ -8,6 +8,7 @@ require 'cloud_controller/diego/lifecycles/app_docker_lifecycle'
 require 'cloud_controller/diego/lifecycles/app_buildpack_lifecycle'
 require 'cloud_controller/diego/lifecycles/lifecycles'
 require 'rspec/collection_matchers'
+require 'pry'
 
 module VCAP::CloudController::Validators
   RSpec.describe 'Validators' do
@@ -583,6 +584,143 @@ module VCAP::CloudController::Validators
         expect(message).not_to be_valid
         expect(message.errors_on(:options)).to include('Unknown field(s): \'cookies\'')
       end
+    end
+
+    describe 'DeploymentOptionsValidator' do
+      class DeploymentOptionsMessage < VCAP::CloudController::BaseMessage
+        register_allowed_keys [:options, :strategy]
+
+        validates_with DeploymentOptionsValidator
+      end
+
+      it 'is valid when options is nil' do
+        message = DeploymentOptionsMessage.new({ options: nil })
+        expect(message).to be_valid
+      end
+
+      it 'errors when options is not a hash' do
+        message = DeploymentOptionsMessage.new({ options: 'test' })
+        expect(message).not_to be_valid
+        expect(message.errors_on(:options)).to include('must be an object')
+      end
+
+      context 'max_in_flight' do
+        it 'validates when max_in_flight is an Integer greater than or equal to 1' do
+          message = DeploymentOptionsMessage.new({ options: { max_in_flight: 1 } })
+          expect(message).to be_valid
+        end
+
+        it 'errors when max_in_flight is not an Integer' do
+          message = DeploymentOptionsMessage.new({ options: { max_in_flight: 1.0 } })
+          expect(message).not_to be_valid
+          expect(message.errors_on(:max_in_flight)).to include('must be an integer greater than 0')
+        end
+
+        it 'errors when max_in_flight is less than or equal to 0' do
+          message = DeploymentOptionsMessage.new({ options: { max_in_flight: 0 } })
+          expect(message).not_to be_valid
+          expect(message.errors_on(:max_in_flight)).to include('must be an integer greater than 0')
+        end
+
+        it 'errors when nil' do
+          message = DeploymentOptionsMessage.new({ options: { max_in_flight: nil } })
+          expect(message).not_to be_valid
+          expect(message.errors_on(:max_in_flight)).to include('must be an integer greater than 0')
+        end
+
+        it 'valid when not set' do
+          message = DeploymentOptionsMessage.new({ options: { } })
+          expect(message).to be_valid
+        end
+      end
+
+      context 'canary options' do
+        it 'is valid when options is nil' do
+          message = DeploymentOptionsMessage.new({ options: {canary:  nil }})
+          expect(message).to be_valid
+        end
+
+        it 'is valid when options a hash' do
+          message = DeploymentOptionsMessage.new({ strategy: "canary", options: {canary: {}}})
+          expect(message).to be_valid
+        end
+  
+        it 'errors when options is not a hash' do
+          message = DeploymentOptionsMessage.new({ options: { canary: 'test' } })
+          expect(message).not_to be_valid
+          expect(message.errors_on(:"options.canary")).to include('must be an object')
+        end
+
+        it 'errors when strategy is not set' do 
+          message = DeploymentOptionsMessage.new({ options: { canary: {} } })
+          expect(message).not_to be_valid
+          expect(message.errors_on(:"options.canary")).to include('are only valid for Canary deployments')
+        end
+        
+        it 'errors when strategy is set to rolling' do
+          message = DeploymentOptionsMessage.new({ strategy: 'rolling', options: { canary: {} } })
+          expect(message).not_to be_valid
+          expect(message.errors_on(:"options.canary")).to include('are only valid for Canary deployments')
+        end
+
+        context 'steps' do
+          it 'errors when is not an array' do
+            message = DeploymentOptionsMessage.new({ strategy: 'canary', options: {canary: { steps: 'foo' } }})
+            expect(message).not_to be_valid
+            expect(message.errors_on(:"options.canary.steps")).to include('must be an array of objects')
+          end
+  
+          it 'is valid when is an array' do
+            message = DeploymentOptionsMessage.new({ strategy: 'canary', options: {canary: { steps: []}}})
+            expect(message).to be_valid
+          end
+
+          it 'errors if not an array of objects' do 
+            message = DeploymentOptionsMessage.new({ strategy: 'canary', options: {canary: { steps: [{instance_weight: 1}, "foo"]}}})
+            expect(message).to_not be_valid
+            expect(message.errors_on(:"options.canary.steps")).to include('must be an array of objects')
+          end
+        end
+      end
+
+      # it 'successfully validates least-connections load-balancing algorithm' do
+      #   message = DeploymentOptionsMessage.new({ options: { loadbalancing: 'least-connections' } })
+      #   expect(message).to be_valid
+      # end
+
+      # it 'successfully validates empty options' do
+      #   message = DeploymentOptionsMessage.new({ options: {} })
+      #   expect(message).to be_valid
+      # end
+
+      # it 'adds invalid options message when options is null' do
+      #   message = DeploymentOptionsMessage.new({ options: nil })
+      #   expect(message).not_to be_valid
+      #   expect(message.errors_on(:options)).to include("'options' is not a valid object")
+      # end
+
+      # it 'successfully validates empty load balancer' do
+      #   message = DeploymentOptionsMessage.new({ options: { loadbalancing: nil } })
+      #   expect(message).to be_valid
+      # end
+
+      # it 'adds invalid object error message when options is not an object' do
+      #   message = DeploymentOptionsMessage.new({ options: 'cheesecake' })
+      #   expect(message).not_to be_valid
+      #   expect(message.errors_on(:options)).to include("'options' is not a valid object")
+      # end
+
+      # it 'adds invalid load balancer error message to the base class' do
+      #   message = DeploymentOptionsMessage.new({ options: { loadbalancing: 'donuts' } })
+      #   expect(message).not_to be_valid
+      #   expect(message.errors_on(:options)).to include("Loadbalancing must be one of 'round-robin, least-connections' if present")
+      # end
+
+      # it 'adds invalid field error message to the base class' do
+      #   message = DeploymentOptionsMessage.new({ options: { cookies: 'round-robin' } })
+      #   expect(message).not_to be_valid
+      #   expect(message.errors_on(:options)).to include('Unknown field(s): \'cookies\'')
+      # end
     end
 
     describe 'ToOneRelationshipValidator' do
