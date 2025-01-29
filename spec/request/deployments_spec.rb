@@ -1028,6 +1028,111 @@ RSpec.describe 'Deployments' do
       end
     end
 
+    context 'canary steps' do
+      let(:user) { make_developer_for_space(space) }
+      let(:create_request) do
+        {
+          strategy: strategy,
+          options: {
+            canary: {
+              steps: [
+                { instance_weight: 20 },
+                { instance_weight: 40 },
+                { instance_weight: 60 },
+                { instance_weight: 80 }
+              ]
+            }
+          },
+          relationships: {
+            app: {
+              data: {
+                guid: app_model.guid
+              }
+            }
+          }
+        }
+      end
+
+      context 'when deployment type is "rolling"' do
+        let(:strategy) { 'rolling' }
+
+        it 'returns a 422' do
+          post '/v3/deployments', create_request.to_json, user_header
+          expect(last_response.status).to eq(422), last_response.body
+          expect(parsed_response['errors'][0]['detail']).to match('canary options are only valid for canary strategy')
+        end
+      end
+
+      context 'when deployment type is "canary"' do
+        let(:strategy) { 'canary' }
+
+        it 'succeeds and returns the canary steps in the response' do
+          post '/v3/deployments', create_request.to_json, user_header
+          expect(last_response.status).to eq(201), last_response.body
+
+          deployment = VCAP::CloudController::DeploymentModel.last
+
+          expect(parsed_response).to be_a_response_like({
+                                                          'guid' => deployment.guid,
+                                                          'status' => {
+                                                            'value' => VCAP::CloudController::DeploymentModel::ACTIVE_STATUS_VALUE,
+                                                            'reason' => VCAP::CloudController::DeploymentModel::DEPLOYING_STATUS_REASON,
+                                                            'details' => {
+                                                              'last_successful_healthcheck' => iso8601,
+                                                              'last_status_change' => iso8601
+                                                            }
+                                                          },
+                                                          'strategy' => 'canary',
+                                                          'options' => {
+                                                            'max_in_flight' => 1,
+                                                            'steps' => [
+                                                              { 'instance_weight' => 20 },
+                                                              { 'instance_weight' => 40 },
+                                                              { 'instance_weight' => 60 },
+                                                              { 'instance_weight' => 80 }
+                                                            ]
+                                                          },
+                                                          'droplet' => {
+                                                            'guid' => droplet.guid
+                                                          },
+                                                          'revision' => {
+                                                            'guid' => app_model.latest_revision.guid,
+                                                            'version' => app_model.latest_revision.version
+                                                          },
+                                                          'previous_droplet' => {
+                                                            'guid' => droplet.guid
+                                                          },
+                                                          'new_processes' => [{
+                                                            'guid' => deployment.deploying_web_process.guid,
+                                                            'type' => deployment.deploying_web_process.type
+                                                          }],
+                                                          'created_at' => iso8601,
+                                                          'updated_at' => iso8601,
+                                                          'metadata' => metadata,
+                                                          'relationships' => {
+                                                            'app' => {
+                                                              'data' => {
+                                                                'guid' => app_model.guid
+                                                              }
+                                                            }
+                                                          },
+                                                          'links' => {
+                                                            'self' => {
+                                                              'href' => "#{link_prefix}/v3/deployments/#{deployment.guid}"
+                                                            },
+                                                            'app' => {
+                                                              'href' => "#{link_prefix}/v3/apps/#{app_model.guid}"
+                                                            },
+                                                            'cancel' => {
+                                                              'href' => "#{link_prefix}/v3/deployments/#{deployment.guid}/actions/cancel",
+                                                              'method' => 'POST'
+                                                            }
+                                                          }
+                                                        })
+        end
+      end
+    end
+
     context 'validation failures' do
       let(:user) { make_developer_for_space(space) }
       let(:smol_quota) { VCAP::CloudController::QuotaDefinition.make(memory_limit: 1) }

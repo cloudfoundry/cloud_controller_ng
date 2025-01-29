@@ -20,7 +20,15 @@ module VCAP::CloudController
               allow_nil: true,
               hash: true
 
-    validate :validate_max_in_flight
+    validates :canary_steps,
+              allow_nil: true,
+              array: true
+
+    validates :canary_options,
+              allow_nil: true,
+              hash: true
+
+    validate :validate_canary_options
 
     def app_guid
       relationships&.dig(:app, :data, :guid)
@@ -38,6 +46,18 @@ module VCAP::CloudController
       options&.dig(:max_in_flight) || 1
     end
 
+    def canary_steps
+      return [] unless canary_options.present? && canary_options.is_a?(Hash)
+
+      canary_options&.dig(:steps) || []
+    end
+
+    def canary_options
+      return {} unless options.present? && options.is_a?(Hash)
+
+      options&.dig(:canary) || {}
+    end
+
     private
 
     def mutually_exclusive_droplet_sources
@@ -46,14 +66,10 @@ module VCAP::CloudController
       errors.add(:droplet, "Cannot set both fields 'droplet' and 'revision'")
     end
 
-    def validate_max_in_flight
-      return unless options.present? && options.is_a?(Hash) && options[:max_in_flight]
+    def validate_canary_options
+      return if canary_options.blank?
 
-      max_in_flight = options[:max_in_flight]
-
-      return unless !max_in_flight.is_a?(Integer) || max_in_flight < 1
-
-      errors.add(:max_in_flight, 'must be an integer greater than 0')
+      errors.add(:canary_options, 'are only valid for Canary deployments') unless strategy == 'canary'
     end
   end
 end
