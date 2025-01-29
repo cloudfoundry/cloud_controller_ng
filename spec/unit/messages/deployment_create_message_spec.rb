@@ -213,5 +213,113 @@ module VCAP::CloudController
         end
       end
     end
+
+    describe 'canary options' do
+      before do
+        body['strategy'] = 'canary'
+      end
+
+      context 'when options.canary is a hash"' do
+        before do
+          body['options'] = { canary: { my_option: 'foo' } }
+        end
+
+        it 'is valid' do
+          message = DeploymentCreateMessage.new(body)
+          expect(message).to be_valid
+          expect(message.canary_options).to eq({ my_option: 'foo' })
+        end
+      end
+
+      context 'when options.canary is not a hash"' do
+        before do
+          body['options'] = { canary: 'I should be a hash' }
+        end
+
+        it 'is invalid' do
+          message = DeploymentCreateMessage.new(body)
+          expect(message).not_to be_valid
+          expect(message.errors_on(:canary_options)).to include('must be an object')
+        end
+      end
+
+      context 'when options.canary is specified but strategy is "rolling"' do
+        before do
+          body['strategy'] = 'rolling'
+          body['options'] = { canary: { my_option: 'foo' } }
+        end
+
+        it 'errors' do
+          message = DeploymentCreateMessage.new(body)
+          expect(message).not_to be_valid
+          expect(message.errors.full_messages).to include('Canary options are only valid for Canary deployments')
+        end
+      end
+    end
+
+    describe 'canary steps' do
+      context 'when objects is not specified' do
+        before do
+          body['options'] = nil
+        end
+
+        it 'returns the default value of empty array' do
+          message = DeploymentCreateMessage.new(body)
+          expect(message).to be_valid
+          expect(message.canary_steps).to eq []
+        end
+      end
+
+      context 'when options.canary_steps is specified' do
+        before do
+          body['strategy'] = 'canary'
+          body['options'] = { canary: {
+            steps: [
+              { instance_weight: 20 },
+              { instance_weight: 40 },
+              { instance_weight: 60 },
+              { instance_weight: 80 }
+            ]
+          } }
+        end
+
+        # TODO: Perhaps this should be converted to an `instance_weights` property?
+        it 'returns the array of weights' do
+          message = DeploymentCreateMessage.new(body)
+          expect(message).to be_valid
+          expect(message.canary_steps).to eq [
+            { instance_weight: 20 },
+            { instance_weight: 40 },
+            { instance_weight: 60 },
+            { instance_weight: 80 }
+          ]
+        end
+      end
+
+      context 'when options.canary_steps is not an array' do
+        before do
+          body['strategy'] = 'canary'
+          body['options'] = { canary: {
+            steps: { instance_weight: 80 }
+          } }
+        end
+
+        # TODO: Perhaps this should be converted to an `instance_weights` property?
+        it 'errors' do
+          message = DeploymentCreateMessage.new(body)
+          expect(message).not_to be_valid
+          expect(message.errors.full_messages).to include('Canary steps must be an array')
+        end
+      end
+
+      context 'validations' do
+        context 'when one object in the array is missing "instance_weight"'
+        context 'when one object in the array has a bad key"'
+        context 'when one instance_weight is below 0'
+        context 'when one instance_weight is above 100'
+        context 'when an instance weight is a decimal or non-integer'
+        context 'when canary steps is an empty array'
+      end
+    end
   end
 end
