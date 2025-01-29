@@ -22,7 +22,7 @@ class CloudController::DelayedWorker
 
   def start_working
     config = RakeConfig.config
-    setup_metrics_endpoint if @publish_metrics
+    setup_metrics_endpoint(config) if @publish_metrics
     BackgroundJobEnvironment.new(config).setup_environment(readiness_port)
 
     logger = Steno.logger('cc-worker')
@@ -99,8 +99,8 @@ class CloudController::DelayedWorker
     RakeConfig.context != :api && ENV['INDEX']&.to_i == 1
   end
 
-  def setup_metrics_endpoint
-    prometheus_dir = File.join(RakeConfig.config.get(:directories, :tmpdir), 'prometheus')
+  def setup_metrics_endpoint(config)
+    prometheus_dir = File.join(config.get(:directories, :tmpdir), 'prometheus')
     Prometheus::Client.config.data_store = Prometheus::Client::DataStores::DirectFileStore.new(dir: prometheus_dir)
     return unless is_first_generic_worker_on_machine?
 
@@ -124,7 +124,7 @@ class CloudController::DelayedWorker
 
     Thread.new do
       server = Puma::Server.new(metrics_app)
-      server.add_tcp_listener '0.0.0.0', 9394
+      server.add_tcp_listener '0.0.0.0', config.get(:prometheus_port) || 9394
       server.run
     end
   end

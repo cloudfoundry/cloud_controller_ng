@@ -66,10 +66,12 @@ namespace :jobs do
 
     ENV['PROCESS_TYPE'] = 'cc-worker'
 
+    publish_metrics = RakeConfig.config.get(:publish_metrics) || false
+
     CloudController::DelayedWorker.new(queues: queues,
                                        name: args.name,
                                        num_threads: args.num_threads,
                                        thread_grace_period_seconds: args.thread_grace_period_seconds,
-                                       publish_metrics: true).start_working
+                                       publish_metrics: publish_metrics).start_working
   end
 end
