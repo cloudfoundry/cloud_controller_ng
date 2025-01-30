@@ -1,6 +1,6 @@
 GIT
   remote: https://github.com/sap-contributions/fog-azure-rm.git
-  revision: 95a33d542a727191a1c2bc5bed05d1c3abd171ff
+  revision: d26d58071f4bbe1746b9b3f4ea02fcf7810f643b
   branch: update-azure-storage
   specs:
     fog-azure-rm (0.6.1)
