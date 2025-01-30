@@ -1,5 +1,5 @@
-require 'spec_helper'
-
+require 'lightweight_spec_helper'
+require 'messages/deployment_create_message'
 module VCAP::CloudController
   RSpec.describe DeploymentCreateMessage do
     let(:body) do
@@ -127,6 +127,127 @@ module VCAP::CloudController
         end
       end
 
+      describe 'canary options' do
+        before do
+          body['strategy'] = 'canary'
+        end
+
+        it 'is valid when options is nil' do
+          body['options'] = { 'canary' => nil }
+          message = DeploymentCreateMessage.new(body)
+          expect(message).to be_valid
+        end
+
+        it 'is valid when options a hash' do
+          body['options'] = { canary: {} }
+          message = DeploymentCreateMessage.new(body)
+          expect(message).to be_valid
+        end
+
+        it 'errors when options is not a hash' do
+          body['options'] = { canary: 'test' }
+          message = DeploymentCreateMessage.new(body)
+          expect(message).not_to be_valid
+          expect(message.errors[:'options.canary']).to include('must be an object')
+        end
+
+        it 'errors when strategy is not set' do
+          body['options'] = { canary: {} }
+          body['strategy'] = nil
+          message = DeploymentCreateMessage.new(body)
+          expect(message).not_to be_valid
+          expect(message.errors[:'options.canary']).to include('are only valid for Canary deployments')
+        end
+
+        it 'errors when strategy is set to rolling' do
+          body['options'] = { canary: {} }
+          body['strategy'] = 'rolling'
+          message = DeploymentCreateMessage.new(body)
+          expect(message).not_to be_valid
+          expect(message.errors[:'options.canary']).to include('are only valid for Canary deployments')
+        end
+
+        context 'steps' do
+          it 'errors when is not an array' do
+            body['options'] = { canary: { steps: 'foo' } }
+            message = DeploymentCreateMessage.new(body)
+            expect(message).not_to be_valid
+            expect(message.errors[:'options.canary.steps']).to include('must be an array of objects')
+          end
+
+          it 'is valid when is an array' do
+            body['options'] = { canary: { steps: [] } }
+            message = DeploymentCreateMessage.new(body)
+            expect(message).to be_valid
+          end
+
+          it 'is valid when is nil' do
+            body['options'] = { canary: { steps: nil } }
+            message = DeploymentCreateMessage.new(body)
+            expect(message).to be_valid
+          end
+
+          it 'is valid if instance_weights are Integers between 1-100 in ascending order' do
+            body['options'] = { canary: { steps: [{ instance_weight: 1 }, { instance_weight: 2 }, { instance_weight: 50 }, { instance_weight: 99 }, { instance_weight: 100 }] } }
+            message = DeploymentCreateMessage.new(body)
+            expect(message).to be_valid
+          end
+
+          it 'errors if not an array of objects' do
+            body['options'] = { canary: { steps: [{ instance_weight: 1 }, 'foo'] } }
+            message = DeploymentCreateMessage.new(body)
+            expect(message).not_to be_valid
+            expect(message.errors[:'options.canary.steps']).to include('must be an array of objects')
+          end
+
+          it 'errors if steps have an unsupported key' do
+            body['options'] = { canary: { steps: [{ instance_weight: 1 }, { instance_weight: 1, foo: 'bar', baz: 1 }, { baz: 1 }] } }
+            message = DeploymentCreateMessage.new(body)
+            expect(message).not_to be_valid
+            expect(message.errors[:'options.canary.steps']).to include('has unsupported key(s): foo, baz')
+            expect(message.errors[:'options.canary.steps']).to include('has unsupported key(s): baz')
+          end
+
+          context 'instance_weights' do
+            it 'errors if steps are missing instance_weight' do
+              body['options'] = { canary: { steps: [{ instance_weight: 1 }, { foo: 'bar' }] } }
+              message = DeploymentCreateMessage.new(body)
+              expect(message).not_to be_valid
+              expect(message.errors[:'options.canary.steps']).to include('missing key: "instance_weight"')
+            end
+
+            it 'errors if any instance_weight is less than or equal to 0' do
+              body['options'] = { canary: { steps: [{ instance_weight: 0 }, { instance_weight: 50 }] } }
+              message = DeploymentCreateMessage.new(body)
+              expect(message).not_to be_valid
+              expect(message.errors[:'options.canary.steps.instance_weight']).to include('must be an Integer between 1-100 (inclusive)')
+            end
+
+            it 'errors if any instance_weight is greater than 100' do
+              body['options'] = { canary: { steps: [{ instance_weight: 50 }, { instance_weight: 101 }] } }
+              message = DeploymentCreateMessage.new(body)
+              expect(message).not_to be_valid
+              expect(message.errors[:'options.canary.steps.instance_weight']).to include('must be an Integer between 1-100 (inclusive)')
+            end
+
+            it 'errors if any instance_weights are not sorted in ascending order' do
+              body['options'] = { canary: { steps: [{ instance_weight: 75 }, { instance_weight: 25 }] } }
+              message = DeploymentCreateMessage.new(body)
+              expect(message).not_to be_valid
+              expect(message.errors[:'options.canary.steps.instance_weight']).to include('must be sorted in ascending order')
+            end
+
+            it 'errors if any instance_weights are not an Integer' do
+              # TODO: should we coerce values like 25.0 to 25? only error on 25.1 etc?
+              body['options'] = { canary: { steps: [{ instance_weight: 2 }, { instance_weight: 25.0 }] } }
+              message = DeploymentCreateMessage.new(body)
+              expect(message).not_to be_valid
+              expect(message.errors[:'options.canary.steps.instance_weight']).to include('must be an Integer between 1-100 (inclusive)')
+            end
+          end
+        end
+      end
+
       describe 'metadata' do
         context 'when the annotations params are valid' do
           let(:params) do
@@ -158,7 +279,7 @@ module VCAP::CloudController
           it 'is invalid' do
             message = DeploymentCreateMessage.new(params)
             expect(message).not_to be_valid
-            expect(message.errors_on(:metadata)).to include('\'annotations\' is not an object')
+            expect(message.errors[:metadata]).to include('\'annotations\' is not an object')
           end
         end
       end
@@ -214,112 +335,12 @@ module VCAP::CloudController
       end
     end
 
-    describe 'canary options' do
-      before do
-        body['strategy'] = 'canary'
-      end
-
-      context 'when options.canary is a hash"' do
-        before do
-          body['options'] = { canary: { my_option: 'foo' } }
-        end
-
-        it 'is valid' do
-          message = DeploymentCreateMessage.new(body)
-          expect(message).to be_valid
-          expect(message.canary_options).to eq({ my_option: 'foo' })
-        end
-      end
-
-      context 'when options.canary is not a hash"' do
-        before do
-          body['options'] = { canary: 'I should be a hash' }
-        end
-
-        it 'is invalid' do
-          message = DeploymentCreateMessage.new(body)
-          expect(message).not_to be_valid
-          expect(message.errors_on(:canary_options)).to include('must be an object')
-        end
-      end
-
-      context 'when options.canary is specified but strategy is "rolling"' do
-        before do
-          body['strategy'] = 'rolling'
-          body['options'] = { canary: { my_option: 'foo' } }
-        end
-
-        it 'errors' do
-          message = DeploymentCreateMessage.new(body)
-          expect(message).not_to be_valid
-          expect(message.errors.full_messages).to include('Canary options are only valid for Canary deployments')
-        end
-      end
-    end
-
-    describe 'canary steps' do
-      context 'when objects is not specified' do
-        before do
-          body['options'] = nil
-        end
-
-        it 'returns the default value of empty array' do
-          message = DeploymentCreateMessage.new(body)
-          expect(message).to be_valid
-          expect(message.canary_steps).to eq []
-        end
-      end
-
-      context 'when options.canary_steps is specified' do
-        before do
-          body['strategy'] = 'canary'
-          body['options'] = { canary: {
-            steps: [
-              { instance_weight: 20 },
-              { instance_weight: 40 },
-              { instance_weight: 60 },
-              { instance_weight: 80 }
-            ]
-          } }
-        end
-
-        # TODO: Perhaps this should be converted to an `instance_weights` property?
-        it 'returns the array of weights' do
-          message = DeploymentCreateMessage.new(body)
-          expect(message).to be_valid
-          expect(message.canary_steps).to eq [
-            { instance_weight: 20 },
-            { instance_weight: 40 },
-            { instance_weight: 60 },
-            { instance_weight: 80 }
-          ]
-        end
-      end
-
-      context 'when options.canary_steps is not an array' do
-        before do
-          body['strategy'] = 'canary'
-          body['options'] = { canary: {
-            steps: { instance_weight: 80 }
-          } }
-        end
-
-        # TODO: Perhaps this should be converted to an `instance_weights` property?
-        it 'errors' do
-          message = DeploymentCreateMessage.new(body)
-          expect(message).not_to be_valid
-          expect(message.errors.full_messages).to include('Canary steps must be an array')
-        end
-      end
-
-      context 'validations' do
-        context 'when one object in the array is missing "instance_weight"'
-        context 'when one object in the array has a bad key"'
-        context 'when one instance_weight is below 0'
-        context 'when one instance_weight is above 100'
-        context 'when an instance weight is a decimal or non-integer'
-        context 'when canary steps is an empty array'
-      end
+    context 'validations' do
+      context 'when one instance_weight is below 0'
+      context 'when one instance_weight is above 100'
+      context 'when an instance weight is a decimal or non-integer'
+      context 'when canary steps is an empty array'
+      context 'when canary steps are non-increasing (e.g. 1,50,20)'
     end
   end
 end

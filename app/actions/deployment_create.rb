@@ -219,6 +219,8 @@ module VCAP::CloudController
 
       def starting_process_instances(message, desired_instances)
         if message.strategy == DeploymentModel::CANARY_STRATEGY
+          # TODO: replace this with [message.max_in_flight, deployment.next_canary_step].min
+          # or remove this 'if' and make `desired_instances` do this work
           1
         else
           [message.max_in_flight, desired_instances].min

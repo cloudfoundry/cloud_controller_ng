@@ -262,23 +262,21 @@ module VCAP::CloudController::Validators
       options = record.options
       return unless options.present?
 
-      if !options.is_a?(Hash)
+      unless options.is_a?(Hash)
         record.errors.add(:options, 'must be an object')
         return
       end
-      
+
       max_in_flight = options[:max_in_flight]
 
       # TODO: figure out if we should allow max_in_flight set to nil explicitly
-      if options.key?(:max_in_flight) && (!max_in_flight.is_a?(Integer) || max_in_flight < 1)
-        record.errors.add(:max_in_flight, 'must be an integer greater than 0')
-      end
+      record.errors.add(:max_in_flight, 'must be an integer greater than 0') if options.key?(:max_in_flight) && (!max_in_flight.is_a?(Integer) || max_in_flight < 1)
 
       canary_options = options[:canary]
       return if canary_options.nil?
-      
-      if !canary_options.is_a?(Hash)
-        record.errors.add(:"options.canary", 'must be an object')
+
+      unless canary_options.is_a?(Hash)
+        record.errors.add(:'options.canary', 'must be an object')
         return
       end
 
@@ -286,16 +284,16 @@ module VCAP::CloudController::Validators
 
       strategy = record.strategy
 
-      if canary_options && strategy != "canary"
-        record.errors.add(:"options.canary", 'are only valid for Canary deployments')
+      if canary_options && strategy != 'canary'
+        record.errors.add(:'options.canary', 'are only valid for Canary deployments')
         return
       end
 
       steps = canary_options[:steps]
 
-      if steps && (!steps.is_a?(Array) || steps.any? { |step| !step.is_a?(Hash) })
-        record.errors.add(:"options.canary.steps", 'must be an array of objects')
-      end
+      return unless steps && (!steps.is_a?(Array) || steps.any? { |step| !step.is_a?(Hash) })
+
+      record.errors.add(:'options.canary.steps', 'must be an array of objects')
     end
   end
 
