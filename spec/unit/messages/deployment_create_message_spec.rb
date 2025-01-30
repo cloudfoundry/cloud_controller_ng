@@ -167,6 +167,13 @@ module VCAP::CloudController
           expect(message.errors[:'options.canary']).to include('are only valid for Canary deployments')
         end
 
+        it 'errors when there is an unknown option' do
+          body['options'] = { foo: 'bar', baz: 'boo' }
+          message = DeploymentCreateMessage.new(body)
+          expect(message).not_to be_valid
+          expect(message.errors[:options]).to include('has unsupported key(s): foo, baz')
+        end
+
         context 'steps' do
           it 'errors when is not an array' do
             body['options'] = { canary: { steps: 'foo' } }
@@ -175,7 +182,7 @@ module VCAP::CloudController
             expect(message.errors[:'options.canary.steps']).to include('must be an array of objects')
           end
 
-          it 'is valid when is an array' do
+          it 'is valid when is an empty array' do
             body['options'] = { canary: { steps: [] } }
             message = DeploymentCreateMessage.new(body)
             expect(message).to be_valid
@@ -183,12 +190,6 @@ module VCAP::CloudController
 
           it 'is valid when is nil' do
             body['options'] = { canary: { steps: nil } }
-            message = DeploymentCreateMessage.new(body)
-            expect(message).to be_valid
-          end
-
-          it 'is valid if instance_weights are Integers between 1-100 in ascending order' do
-            body['options'] = { canary: { steps: [{ instance_weight: 1 }, { instance_weight: 2 }, { instance_weight: 50 }, { instance_weight: 99 }, { instance_weight: 100 }] } }
             message = DeploymentCreateMessage.new(body)
             expect(message).to be_valid
           end
@@ -209,6 +210,18 @@ module VCAP::CloudController
           end
 
           context 'instance_weights' do
+            it 'is valid if instance_weights are Integers between 1-100 in ascending order' do
+              body['options'] = { canary: { steps: [{ instance_weight: 1 }, { instance_weight: 2 }, { instance_weight: 50 }, { instance_weight: 99 }, { instance_weight: 100 }] } }
+              message = DeploymentCreateMessage.new(body)
+              expect(message).to be_valid
+            end
+
+            it 'is valid if there are duplicate instance_weights' do
+              body['options'] = { canary: { steps: [{ instance_weight: 10 }, { instance_weight: 10 }, { instance_weight: 50 }, { instance_weight: 50 }] } }
+              message = DeploymentCreateMessage.new(body)
+              expect(message).to be_valid
+            end
+
             it 'errors if steps are missing instance_weight' do
               body['options'] = { canary: { steps: [{ instance_weight: 1 }, { foo: 'bar' }] } }
               message = DeploymentCreateMessage.new(body)
@@ -216,8 +229,29 @@ module VCAP::CloudController
               expect(message.errors[:'options.canary.steps']).to include('missing key: "instance_weight"')
             end
 
-            it 'errors if any instance_weight is less than or equal to 0' do
+            it 'errors if steps are missing instance_weight with empty hash' do
+              body['options'] = { canary: { steps: [{ instance_weight: 1 }, {}] } }
+              message = DeploymentCreateMessage.new(body)
+              expect(message).not_to be_valid
+              expect(message.errors[:'options.canary.steps']).to include('missing key: "instance_weight"')
+            end
+
+            it 'errors if any instance_weight is not an Integer' do
+              body['options'] = { canary: { steps: [{ instance_weight: 'foo' }] } }
+              message = DeploymentCreateMessage.new(body)
+              expect(message).not_to be_valid
+              expect(message.errors[:'options.canary.steps.instance_weight']).to include('must be an Integer between 1-100 (inclusive)')
+            end
+
+            it 'errors if any instance_weight is equal to 0' do
               body['options'] = { canary: { steps: [{ instance_weight: 0 }, { instance_weight: 50 }] } }
+              message = DeploymentCreateMessage.new(body)
+              expect(message).not_to be_valid
+              expect(message.errors[:'options.canary.steps.instance_weight']).to include('must be an Integer between 1-100 (inclusive)')
+            end
+
+            it 'errors if any instance_weight is less than 0' do
+              body['options'] = { canary: { steps: [{ instance_weight: -5 }, { instance_weight: 50 }] } }
               message = DeploymentCreateMessage.new(body)
               expect(message).not_to be_valid
               expect(message.errors[:'options.canary.steps.instance_weight']).to include('must be an Integer between 1-100 (inclusive)')
@@ -237,8 +271,7 @@ module VCAP::CloudController
               expect(message.errors[:'options.canary.steps.instance_weight']).to include('must be sorted in ascending order')
             end
 
-            it 'errors if any instance_weights are not an Integer' do
-              # TODO: should we coerce values like 25.0 to 25? only error on 25.1 etc?
+            it 'errors if any instance_weights are not a non-integer numeric' do
               body['options'] = { canary: { steps: [{ instance_weight: 2 }, { instance_weight: 25.0 }] } }
               message = DeploymentCreateMessage.new(body)
               expect(message).not_to be_valid
@@ -300,7 +333,7 @@ module VCAP::CloudController
 
       context 'when options is specified, but not max_in_flight' do
         before do
-          body['options'] = { other_key: 'other_value' }
+          body['options'] = { canary: nil }
         end
 
         it 'returns the default value of 1' do
@@ -333,14 +366,6 @@ module VCAP::CloudController
           expect(message.max_in_flight).to be 10
         end
       end
-    end
-
-    context 'validations' do
-      context 'when one instance_weight is below 0'
-      context 'when one instance_weight is above 100'
-      context 'when an instance weight is a decimal or non-integer'
-      context 'when canary steps is an empty array'
-      context 'when canary steps are non-increasing (e.g. 1,50,20)'
     end
   end
 end
