@@ -102,30 +102,33 @@ class CloudController::DelayedWorker
   def setup_metrics_endpoint(config)
     prometheus_dir = File.join(config.get(:directories, :tmpdir), 'prometheus')
     Prometheus::Client.config.data_store = Prometheus::Client::DataStores::DirectFileStore.new(dir: prometheus_dir)
-    return unless is_first_generic_worker_on_machine?
 
-    FileUtils.mkdir_p(prometheus_dir)
+    if is_first_generic_worker_on_machine?
+      FileUtils.mkdir_p(prometheus_dir)
 
-    # Resetting metrics on startup
-    Dir["#{prometheus_dir}/*.bin"].each do |file_path|
-      File.unlink(file_path)
-    end
+      # Resetting metrics on startup
+      Dir["#{prometheus_dir}/*.bin"].each do |file_path|
+        File.unlink(file_path)
+      end
 
-    metrics_app = Rack::Builder.new do
-      use Prometheus::Middleware::Exporter, path: '/metrics'
+      metrics_app = Rack::Builder.new do
+        use Prometheus::Middleware::Exporter, path: '/metrics'
 
-      map '/' do
-        run lambda { |env|
-          # Return 404 for any other request
-          ['404', { 'Content-Type' => 'text/plain' }, ['Not Found']]
-        }
+        map '/' do
+          run lambda { |env|
+            # Return 404 for any other request
+            ['404', { 'Content-Type' => 'text/plain' }, ['Not Found']]
+          }
+        end
+      end
+
+      Thread.new do
+        server = Puma::Server.new(metrics_app)
+        server.add_tcp_listener '0.0.0.0', config.get(:prometheus_port) || 9394
+        server.run
       end
     end
 
-    Thread.new do
-      server = Puma::Server.new(metrics_app)
-      server.add_tcp_listener '0.0.0.0', config.get(:prometheus_port) || 9394
-      server.run
-    end
+    CloudController::DependencyLocator.instance.cc_worker_prometheus_updater.update_gauge_metric(:cc_db_connection_pool_timeouts_total, 0, labels: { process_type: 'cc-worker' })
   end
 end

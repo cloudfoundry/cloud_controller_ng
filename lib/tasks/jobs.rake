@@ -65,6 +65,7 @@ namespace :jobs do
     ]
 
     ENV['PROCESS_TYPE'] = 'cc-worker'
+    require 'cloud_controller/metrics/custom_process_id'
 
     publish_metrics = RakeConfig.config.get(:publish_metrics) || false
 
