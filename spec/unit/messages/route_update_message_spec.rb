@@ -28,8 +28,8 @@ module VCAP::CloudController
         expect(message).to be_valid
       end
 
-      it 'accepts options params with least-connections load-balancing algorithm' do
-        message = RouteUpdateMessage.new(params.merge(options: { loadbalancing: 'least-connections' }))
+      it 'accepts options params with least-connection load-balancing algorithm' do
+        message = RouteUpdateMessage.new(params.merge(options: { loadbalancing: 'least-connection' }))
         expect(message).to be_valid
       end
 
@@ -53,7 +53,7 @@ module VCAP::CloudController
       it 'does not accept unknown load-balancing algorithm' do
         message = RouteUpdateMessage.new(params.merge(options: { loadbalancing: 'cheesecake' }))
         expect(message).not_to be_valid
-        expect(message.errors.full_messages[0]).to include("Options Loadbalancing must be one of 'round-robin, least-connections' if present")
+        expect(message.errors.full_messages[0]).to include("Options Loadbalancing must be one of 'round-robin, least-connection' if present")
       end
 
       it 'does not accept unknown option' do

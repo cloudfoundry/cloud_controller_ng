@@ -293,7 +293,7 @@ module VCAP::CloudController
           msg = ManifestRoutesUpdateMessage.new(body)
 
           expect(msg.valid?).to be(false)
-          expect(msg.errors.full_messages).to include("Invalid value for 'loadbalancing' for Route 'existing.example.com'; Valid values are: 'round-robin, least-connections'")
+          expect(msg.errors.full_messages).to include("Invalid value for 'loadbalancing' for Route 'existing.example.com'; Valid values are: 'round-robin, least-connection'")
         end
       end
 
@@ -313,7 +313,7 @@ module VCAP::CloudController
 
           expect(msg.valid?).to be(false)
           expect(msg.errors.errors.length).to eq(1)
-          expect(msg.errors.full_messages).to include("Cannot use loadbalancing value 'sushi' for Route 'existing.example.com'; Valid values are: 'round-robin, least-connections'")
+          expect(msg.errors.full_messages).to include("Cannot use loadbalancing value 'sushi' for Route 'existing.example.com'; Valid values are: 'round-robin, least-connection'")
         end
       end
     end

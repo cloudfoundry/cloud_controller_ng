@@ -4,7 +4,7 @@ module VCAP::CloudController
   class RouteOptionsMessage < BaseMessage
     VALID_MANIFEST_ROUTE_OPTIONS = %i[loadbalancing].freeze
     VALID_ROUTE_OPTIONS = %i[loadbalancing].freeze
-    VALID_LOADBALANCING_ALGORITHMS = %w[round-robin least-connections].freeze
+    VALID_LOADBALANCING_ALGORITHMS = %w[round-robin least-connection].freeze
 
     register_allowed_keys VALID_ROUTE_OPTIONS
     validates_with NoAdditionalKeysValidator

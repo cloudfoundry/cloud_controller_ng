@@ -444,7 +444,7 @@ module VCAP::CloudController
             expect(subject).to be_valid
           end
 
-          context 'when loadbalancing has value least-connections' do
+          context 'when loadbalancing has value least-connection' do
             let(:params) do
               {
                 host: 'some-host',
@@ -452,7 +452,7 @@ module VCAP::CloudController
                   space: { data: { guid: 'space-guid' } },
                   domain: { data: { guid: 'domain-guid' } }
                 },
-                options: { loadbalancing: 'least-connections' }
+                options: { loadbalancing: 'least-connection' }
               }
             end
 
@@ -492,7 +492,7 @@ module VCAP::CloudController
 
             it 'is not valid' do
               expect(subject).not_to be_valid
-              expect(subject.errors[:options]).to include("Loadbalancing must be one of 'round-robin, least-connections' if present")
+              expect(subject.errors[:options]).to include("Loadbalancing must be one of 'round-robin, least-connection' if present")
             end
           end
         end
