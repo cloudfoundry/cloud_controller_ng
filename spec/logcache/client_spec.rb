@@ -62,11 +62,10 @@ module Logcache
         it 'logs the response time and metadata' do
           client.container_metrics(source_guid: process.guid, envelope_limit: 1000, start_time: 100, end_time: 101)
           expect(mock_logger).to have_received(:info).with(
-            a_string_matching(/Response time: \d+\.\d+ ms/),
+            a_string_matching(/logcache.response/),
             hash_including(
               source_id: process.guid,
-              event: 'log_cache_request',
-              time_taken_in_ms: be_a(Float)
+              time_taken_in_ms: be_a(Integer)
             )
           )
         end
