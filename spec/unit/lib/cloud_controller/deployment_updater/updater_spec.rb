@@ -63,6 +63,72 @@ module VCAP::CloudController
     end
 
     describe '#scale' do
+
+      context 'when the deployment process has reached original_web_process_instance_count' do
+        let(:droplet) do
+          DropletModel.make(
+            process_types: {
+              'clock' => 'droplet_clock_command',
+              'worker' => 'droplet_worker_command'
+            }
+          )
+        end
+
+        let(:all_instances_results) do
+            {
+              0 => { state: 'RUNNING', uptime: 50, since: 2, routable: true },
+              1 => { state: 'RUNNING', uptime: 50, since: 2, routable: true },
+              2 => { state: 'RUNNING', uptime: 50, since: 2, routable: true },
+              3 => { state: 'RUNNING', uptime: 50, since: 2, routable: true },
+              4 => { state: 'RUNNING', uptime: 50, since: 2, routable: true },
+              5 => { state: 'RUNNING', uptime: 50, since: 2, routable: true }
+            }
+          end
+
+          let(:current_deploying_instances) { 6 }
+
+        before do
+          allow(ProcessRestart).to receive(:restart)
+          RevisionProcessCommandModel.where(
+            process_type: 'worker',
+            revision_guid: revision.guid
+          ).update(process_command: 'revision-non-web-1-command')
+        end
+
+        it 'finalizes the deployment' do
+          subject.scale
+          deployment.reload
+          expect(deployment.state).to eq(DeploymentModel::DEPLOYED_STATE)
+          expect(deployment.status_value).to eq(DeploymentModel::FINALIZED_STATUS_VALUE)
+          expect(deployment.status_reason).to eq(DeploymentModel::DEPLOYED_STATUS_REASON)
+
+          after_web_process = deployment.app.web_processes.first
+          expect(after_web_process.guid).to eq(deploying_web_process.guid)
+          expect(after_web_process.instances).to eq(6)
+        end
+
+        context 'but one instance is failing' do 
+          let(:all_instances_results) do
+            {
+              0 => { state: 'RUNNING', uptime: 50, since: 2, routable: true },
+              1 => { state: 'RUNNING', uptime: 50, since: 2, routable: true },
+              2 => { state: 'RUNNING', uptime: 50, since: 2, routable: true },
+              3 => { state: 'RUNNING', uptime: 50, since: 2, routable: true },
+              4 => { state: 'RUNNING', uptime: 50, since: 2, routable: true },
+              5 => { state: 'FAILING', uptime: 50, since: 2, routable: false }
+            }
+          end
+
+          # Not sure if this behavior is OK
+          # Seems like we shouldn't finalize if there is a failing instance, but that is the current behavior
+          skip 'doesn\'t finalize the deployment' do
+            subject.scale
+            deployment.reload
+            expect(deployment.state).to eq(DeploymentModel::DEPLOYING_STATE)
+          end
+        end
+      end
+
       context 'when an error occurs while scaling a deployment' do
         let(:failing_process) { ProcessModel.make(app: web_process.app, type: 'failing', instances: 5) }
         let(:deployment) { DeploymentModel.make(app: web_process.app, deploying_web_process: failing_process, state: 'DEPLOYING') }
@@ -93,6 +159,9 @@ module VCAP::CloudController
           end.not_to raise_error
         end
       end
+
+      
+  
     end
 
     describe '#canary' do
