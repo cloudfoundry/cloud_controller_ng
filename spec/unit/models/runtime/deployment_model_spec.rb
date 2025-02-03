@@ -5,8 +5,9 @@ module VCAP::CloudController
     let(:app) { AppModel.make(name: 'rolling-app') }
     let(:droplet) { DropletModel.make(app:) }
     let(:deploying_web_process) { ProcessModel.make(health_check_timeout: 180) }
+    let(:canary_steps) { [{ 'instance_weight' => 20 }, { 'instance_weight' => 40 }] }
 
-    let(:deployment) { DeploymentModel.make(app:, droplet:, deploying_web_process:) }
+    let(:deployment) { DeploymentModel.make(app:, droplet:, deploying_web_process:, canary_steps:) }
 
     it 'has an app' do
       expect(deployment.app.name).to eq('rolling-app')
@@ -18,6 +19,10 @@ module VCAP::CloudController
 
     it 'has a deploying web process' do
       expect(deployment.deploying_web_process).to eq(deploying_web_process)
+    end
+
+    it 'has canary steps' do
+      expect(deployment.canary_steps).to eq(canary_steps)
     end
 
     describe '#processes' do
@@ -234,6 +239,147 @@ module VCAP::CloudController
         deployment.save
         expect(deployment.status_updated_at).to eq creation_time
       end
+    end
+
+    describe '#canary_step_plan' do
+      tests = [
+        {
+          existing_instances: 10,
+          weights: [20, 40],
+          expected: [
+            { canary: 2, original: 9 },
+            { canary: 4, original: 7 }
+          ]
+        },
+        {
+          existing_instances: 10,
+          weights: [80],
+          expected: [
+            { canary: 8, original: 3 }
+          ]
+        },
+        {
+          existing_instances: 5,
+          weights: [20, 40],
+          expected: [
+            { canary: 1, original: 5 },
+            { canary: 2, original: 4 }
+          ]
+        },
+        {
+          existing_instances: 10,
+          weights: [20, 20, 20, 20],
+          expected: [
+            { canary: 2, original: 9 },
+            { canary: 2, original: 9 },
+            { canary: 2, original: 9 },
+            { canary: 2, original: 9 }
+          ]
+        },
+        {
+          existing_instances: 3,
+          weights: [1],
+          expected: [
+            { canary: 1, original: 3 }
+          ]
+        },
+        {
+          existing_instances: 1,
+          weights: [1, 20, 40, 80, 100],
+          expected: [
+            { canary: 1, original: 1 },
+            { canary: 1, original: 1 },
+            { canary: 1, original: 1 },
+            { canary: 1, original: 1 },
+            { canary: 1, original: 1 }
+          ]
+        }
+        # TODO: this rounds up at mid point 5.5 (is this an issue(?))
+        # {
+        #   existing_instances: 10,
+        #   weights: [45],
+        #   expected: [
+        #     { canary: 4, original: 7 },
+        #   ]
+        # }
+      ]
+
+      tests.each do |test|
+        context "with #{test[:existing_instances]} existing instances and weights #{test[:weights]}" do
+          let(:canary_steps) { test[:weights].map { |weight| { 'instance_weight' => weight } } }
+
+          let(:deployment) do
+            DeploymentModel.make(
+              app: app,
+              droplet: droplet,
+              deploying_web_process: deploying_web_process,
+              original_web_process_instance_count: test[:existing_instances],
+              canary_steps: canary_steps,
+              canary_current_step: 1
+            )
+          end
+
+          it 'returns the correct deployment plan' do
+            expect(deployment.canary_step_plan).to eq(test[:expected])
+          end
+        end
+      end
+
+      context 'when deployment is canary but canary steps are empty' do
+        let(:deployment) do
+          DeploymentModel.make(
+            app: app,
+            droplet: droplet,
+            deploying_web_process: deploying_web_process,
+            original_web_process_instance_count: 10,
+            canary_current_step: 1
+          )
+        end
+
+        it 'returns the correct deployment plan' do
+          expect(deployment.canary_step_plan).to eq([{ canary: 1, original: 10 }])
+        end
+      end
+
+      # TODO: when strategy isnt canary
+    end
+
+    describe '#canary_step' do
+      let(:deployment) do
+        DeploymentModel.make(
+          app: app,
+          droplet: droplet,
+          deploying_web_process: deploying_web_process,
+          original_web_process_instance_count: 10,
+          canary_steps: [{ 'instance_weight' => 20 }, { 'instance_weight' => 40 }],
+          canary_current_step: 1
+        )
+      end
+
+      it 'returns the correct deployment plan' do
+        deployment.canary_current_step = 1
+        expect(deployment.canary_step).to eq({ canary: 2, original: 9 })
+        deployment.canary_current_step = 2
+        expect(deployment.canary_step).to eq({ canary: 4, original: 7 })
+      end
+
+      context 'when canary current step is not set' do
+        let(:deployment) do
+          DeploymentModel.make(
+            app: app,
+            droplet: droplet,
+            strategy: 'canary',
+            deploying_web_process: deploying_web_process,
+            original_web_process_instance_count: 10
+          )
+        end
+
+        it 'returns the correct deployment plan' do
+          expect(deployment.canary_step).to eq({ canary: 1, original: 10 })
+        end
+      end
+      # TODO: when canary current step is not set
+      # todo when strategy isnt canary
     end
   end
 end
