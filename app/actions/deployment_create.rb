@@ -56,11 +56,21 @@ module VCAP::CloudController
             strategy: message.strategy,
             max_in_flight: message.max_in_flight
           )
+
+          # TODO: should this dig go into a model func
+          canary_steps = message.options&.dig(:canary, :steps)
+          if canary_steps && canary_steps.any?
+            deployment.update(
+              canary_steps: canary_steps.map(&:stringify_keys),
+              canary_current_step: 1
+            )
+          end
+
           MetadataUpdate.update(deployment, message)
 
           supersede_deployment(previous_deployment)
 
-          process_instances = starting_process_instances(message, desired_instances)
+          process_instances = starting_process_instances(deployment, desired_instances)
 
           process = create_deployment_process(app, deployment.guid, revision, process_instances)
           # Need to transition from STOPPED to STARTED to engage the ProcessObserver to desire the LRP.
@@ -165,6 +175,8 @@ module VCAP::CloudController
         # Do not create a revision here because AppStart will not handle the rollback case
         AppStart.start(app: app, user_audit_info: user_audit_info, create_revision: false)
 
+        # TODO, do we update this for canary steps?
+
         deployment = DeploymentModel.create(
           app: app,
           state: DeploymentModel::DEPLOYED_STATE,
@@ -217,14 +229,14 @@ module VCAP::CloudController
         end
       end
 
-      def starting_process_instances(message, desired_instances)
-        if message.strategy == DeploymentModel::CANARY_STRATEGY
-          # TODO: replace this with [message.max_in_flight, deployment.next_canary_step].min
-          # or remove this 'if' and make `desired_instances` do this work
-          1
-        else
-          [message.max_in_flight, desired_instances].min
-        end
+      def starting_process_instances(deployment, desired_instances)
+        starting_process_count = if deployment.strategy == DeploymentModel::CANARY_STRATEGY
+                                   deployment.canary_step[:canary]
+                                 else
+                                   desired_instances
+                                 end
+
+        [deployment.max_in_flight, starting_process_count].min
       end
 
       def log_rollback_event(app_guid, user_id, revision_id, strategy)
