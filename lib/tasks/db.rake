@@ -38,7 +38,7 @@ namespace :db do
     migrate
   end
 
-  desc 'Make up to 5 attempts to connect to the database. Succeed it one is successful, and fail otherwise.'
+  desc 'Make up to 5 attempts to connect to the database. Succeed if one is successful, and fail otherwise.'
   task connect: :environment do
     RakeConfig.context = :migrate
 
