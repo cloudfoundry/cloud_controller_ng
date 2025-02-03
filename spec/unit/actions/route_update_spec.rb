@@ -190,7 +190,7 @@ module VCAP::CloudController
           let(:body) do
             {
               options: {
-                loadbalancing: 'least-connections'
+                loadbalancing: 'least-connection'
               }
             }
           end
@@ -200,7 +200,7 @@ module VCAP::CloudController
             subject.update(route:, message:)
             route.reload
 
-            expect(route.options).to include({ 'loadbalancing' => 'least-connections' })
+            expect(route.options).to include({ 'loadbalancing' => 'least-connection' })
           end
         end
 

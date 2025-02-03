@@ -685,7 +685,7 @@ Route 'https://#{route.host}.#{route.domain.name}' contains invalid route option
                 'routes' => [
                   { 'route' => "https://#{route.host}.#{shared_domain.name}",
                     'options' => {
-                      'loadbalancing' => 'least-connections'
+                      'loadbalancing' => 'least-connection'
                     } }
                 ] }
             ]
@@ -699,7 +699,7 @@ Route 'https://#{route.host}.#{route.domain.name}' contains invalid route option
           Delayed::Worker.new.work_off
           expect(VCAP::CloudController::PollableJobModel.find(guid: job_guid)).to be_complete, VCAP::CloudController::PollableJobModel.find(guid: job_guid).cf_api_error
           app1_model.reload
-          expect(app1_model.routes.first.options).to eq({ 'loadbalancing' => 'least-connections' })
+          expect(app1_model.routes.first.options).to eq({ 'loadbalancing' => 'least-connection' })
         end
 
         it 'does not modify any route options when the options hash is not provided' do
@@ -787,7 +787,7 @@ Route 'https://#{route.host}.#{route.domain.name}': options must be an object")
 
           expect(last_response.status).to eq(422)
           expect(last_response).to have_error_message("For application '#{app1_model.name}': \
-Invalid value for 'loadbalancing' for Route 'https://#{route.host}.#{route.domain.name}'; Valid values are: 'round-robin, least-connections'")
+Invalid value for 'loadbalancing' for Route 'https://#{route.host}.#{route.domain.name}'; Valid values are: 'round-robin, least-connection'")
 
           app1_model.reload
           expect(app1_model.routes.first.options).to eq({ 'loadbalancing' => 'round-robin' })
@@ -817,7 +817,7 @@ Invalid value for 'loadbalancing' for Route 'https://#{route.host}.#{route.domai
 
             expect(last_response).to have_status_code(422)
             expect(last_response).to have_error_message("For application '#{app1_model.name}': \
-Cannot use loadbalancing value 'unsupported-lb-algorithm' for Route 'https://#{route.host}.#{route.domain.name}'; Valid values are: 'round-robin, least-connections'")
+Cannot use loadbalancing value 'unsupported-lb-algorithm' for Route 'https://#{route.host}.#{route.domain.name}'; Valid values are: 'round-robin, least-connection'")
           end
         end
 
