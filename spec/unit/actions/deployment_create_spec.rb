@@ -1124,6 +1124,58 @@ module VCAP::CloudController
 
             expect(deployment.state).to eq(DeploymentModel::PREPAUSED_STATE)
           end
+
+          context 'and there are canary options with steps' do
+            let(:message) do
+              DeploymentCreateMessage.new({
+                                            relationships: { app: { data: { guid: app.guid } } },
+                                            droplet: { guid: next_droplet.guid },
+                                            strategy: strategy,
+                                            options: {
+                                              max_in_flight: max_in_flight,
+                                              canary: { steps: [{ 'instance_weight' => 66 }, { 'instance_weight' => 99 }] }
+                                            }
+                                          })
+            end
+
+            it 'sets the deployment canary steps' do
+              deployment = nil
+
+              expect do
+                deployment = DeploymentCreate.create(app:, message:, user_audit_info:)
+              end.to change(DeploymentModel, :count).by(1)
+
+              expect(deployment.canary_steps).to eq([{ instance_weight: 66 }, { instance_weight: 99 }])
+            end
+
+            it 'sets the deployment canary current step' do
+              deployment = nil
+
+              expect do
+                deployment = DeploymentCreate.create(app:, message:, user_audit_info:)
+              end.to change(DeploymentModel, :count).by(1)
+
+              expect(deployment.canary_current_step).to eq(1)
+            end
+
+            it 'sets starting instances to max in flight' do
+              DeploymentCreate.create(app:, message:, user_audit_info:)
+
+              deploying_web_process = app.reload.newest_web_process
+              expect(deploying_web_process.instances).to eq(1)
+            end
+
+            context 'when max_in_flight is more than first canary step' do
+              let!(:max_in_flight) { 100 }
+
+              it 'creates a process with first canary step' do
+                DeploymentCreate.create(app:, message:, user_audit_info:)
+
+                deploying_web_process = app.reload.newest_web_process
+                expect(deploying_web_process.instances).to eq(2)
+              end
+            end
+          end
         end
 
         context 'when the strategy is nil' do
