@@ -9,7 +9,7 @@ module VCAP::CloudController
       @staging_message = staging_message
       @package = package
 
-      db_result = BuildpackLifecycleFetcher.fetch(buildpacks_to_use, staging_stack)
+      db_result = BuildpackLifecycleFetcher.fetch(buildpacks_to_use, staging_stack, type)
       @buildpack_infos = db_result[:buildpack_infos]
       @validator = BuildpackLifecycleDataValidator.new({ buildpack_infos: buildpack_infos, stack: db_result[:stack] })
     end
