@@ -356,7 +356,7 @@ GEM
       ast (~> 2.4.1)
       racc
     pg (1.5.9)
-    prometheus-client (4.2.3)
+    prometheus-client (4.2.4)
       base64
     pry (0.14.1)
       coderay (~> 1.1)
