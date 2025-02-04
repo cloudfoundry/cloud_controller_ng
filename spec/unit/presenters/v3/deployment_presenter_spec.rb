@@ -128,6 +128,53 @@ module VCAP::CloudController::Presenters::V3
           end
         end
       end
+
+      describe 'status' do
+        context 'when the strategy is rolling' do
+          before do
+            deployment.strategy = VCAP::CloudController::DeploymentModel::ROLLING_STRATEGY
+          end
+
+          it 'shows no canary status' do
+            result = DeploymentPresenter.new(deployment).to_hash
+            expect(result[:status][:canary]).to be_nil
+          end
+        end
+
+        context 'when the strategy is canary' do
+          before do
+            deployment.strategy = VCAP::CloudController::DeploymentModel::CANARY_STRATEGY
+            deployment.canary_current_step = 1
+          end
+
+          context 'when there are no explicit steps' do
+            it 'presents the canary status' do
+              result = DeploymentPresenter.new(deployment).to_hash
+              expect(result[:status][:canary][:steps][:current]).to eq(1)
+              expect(result[:status][:canary][:steps][:total]).to eq(1)
+            end
+          end
+
+          context 'when there are explicit steps' do
+            before do
+              deployment.strategy = VCAP::CloudController::DeploymentModel::CANARY_STRATEGY
+              deployment.canary_current_step = 2
+              deployment.canary_steps = [
+                { instance_weight: 1 },
+                { instance_weight: 2 },
+                { instance_weight: 3 },
+                { instance_weight: 4 }
+              ]
+            end
+
+            it 'presents the canary status' do
+              result = DeploymentPresenter.new(deployment).to_hash
+              expect(result[:status][:canary][:steps][:current]).to eq(2)
+              expect(result[:status][:canary][:steps][:total]).to eq(4)
+            end
+          end
+        end
+      end
     end
   end
 end
