@@ -1,4 +1,13 @@
 GIT
+  remote: https://github.com/sap-contributions/azure-storage-ruby.git
+  revision: a93d91a2e75b138980bd7a90547ae43ea6299401
+  branch: merge-x-ms-branch-on-master
+  specs:
+    azure-storage-blob (2.0.3)
+      azure-storage-common (~> 2.0)
+      nokogiri (~> 1, >= 1.10.8)
+
+GIT
   remote: https://github.com/sap-contributions/fog-azure-rm.git
   revision: d26d58071f4bbe1746b9b3f4ea02fcf7810f643b
   branch: update-azure-storage
@@ -69,9 +78,6 @@ GEM
       activesupport (>= 3.2)
       i18n
     ast (2.4.2)
-    azure-storage-blob (2.0.3)
-      azure-storage-common (~> 2.0)
-      nokogiri (~> 1, >= 1.10.8)
     azure-storage-common (2.0.4)
       faraday (~> 1.0)
       faraday_middleware (~> 1.0, >= 1.0.0.rc1)
@@ -601,6 +607,7 @@ DEPENDENCIES
   activemodel (~> 7.2.2)
   addressable
   allowy (>= 2.1.0)
+  azure-storage-blob!
   byebug
   cf-uaa-lib (~> 4.0.7)
   clockwork

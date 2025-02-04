@@ -48,6 +48,8 @@ gem 'actionview', '~> 7.2.1'
 gem 'activemodel', '~> 7.2.2'
 gem 'railties', '~> 7.2.1'
 
+gem 'azure-storage-blob', git: 'https://github.com/sap-contributions/azure-storage-ruby.git', branch: 'merge-x-ms-branch-on-master'
+
 gem 'fog-aliyun'
 gem 'fog-aws'
 gem 'fog-azure-rm', git: 'https://github.com/sap-contributions/fog-azure-rm.git', branch: 'update-azure-storage'
