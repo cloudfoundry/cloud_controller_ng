@@ -17,6 +17,7 @@ class Application < Rails::Application
   Rails.autoloaders.main.ignore(Rails.root.join('app/**/*'))
 
   config.active_support.cache_format_version = 7.0
+  config.active_support.to_time_preserves_timezone = :zone
 
   config.generators do |g|
     g.orm             false
