@@ -5,14 +5,13 @@ module VCAP::CloudController
   RSpec.describe DeploymentUpdater::Actions::Scale do
     subject(:scale_action) { DeploymentUpdater::Actions::Scale.new(deployment, logger, target_total_instance_count) }
     let(:target_total_instance_count) { 6 }
-    let(:a_day_ago) { Time.now - 1.day }
-    let(:an_hour_ago) { Time.now - 1.hour }
+
     let(:app) { AppModel.make(droplet: droplet, revisions_enabled: true) }
     let(:droplet) { DropletModel.make }
     let!(:web_process) do
       ProcessModel.make(
         instances: current_web_instances,
-        created_at: a_day_ago,
+        created_at: 1.day.ago,
         guid: 'guid-original',
         app: app
       )
@@ -47,7 +46,6 @@ module VCAP::CloudController
 
     let(:max_in_flight) { 1 }
 
-    let(:diego_instances_reporter) { instance_double(Diego::InstancesReporter) }
     let(:all_instances_results) do
       instances = {}
       current_deploying_instances.times do |i|
@@ -55,12 +53,13 @@ module VCAP::CloudController
       end
       instances
     end
-    let(:instances_reporters) { double(:instance_reporters) }
+
     let(:logger) { instance_double(Steno::Logger, info: nil, error: nil) }
+    let(:diego_reporter) { Diego::InstancesReporter.new(nil) }
 
     before do
-      allow(CloudController::DependencyLocator.instance).to receive(:instances_reporters).and_return(instances_reporters)
-      allow(instances_reporters).to receive(:all_instances_for_app).and_return(all_instances_results)
+      allow_any_instance_of(VCAP::CloudController::InstancesReporters).to receive(:diego_reporter).and_return(diego_reporter)
+      allow(diego_reporter).to receive(:all_instances_for_app).and_return(all_instances_results)
     end
 
     it 'locks the deployment' do
@@ -194,7 +193,7 @@ module VCAP::CloudController
       let!(:interim_deploying_web_process) do
         ProcessModel.make(
           app: web_process.app,
-          created_at: an_hour_ago,
+          created_at: 1.hour.ago,
           type: ProcessTypes::WEB,
           instances: 1,
           guid: 'guid-interim'
@@ -223,7 +222,7 @@ module VCAP::CloudController
       let!(:interim_deploying_web_process) do
         ProcessModel.make(
           app: web_process.app,
-          created_at: an_hour_ago,
+          created_at: 1.hour.ago,
           type: ProcessTypes::WEB,
           instances: 3,
           guid: 'guid-interim'
@@ -265,7 +264,7 @@ module VCAP::CloudController
           guid: 'web_process',
           instances: 0,
           app: app,
-          created_at: a_day_ago - 11,
+          created_at: 1.day.ago - 11,
           type: ProcessTypes::WEB
         )
       end
@@ -274,7 +273,7 @@ module VCAP::CloudController
           guid: 'oldest_web_process_with_instances',
           instances: 1,
           app: app,
-          created_at: a_day_ago - 10,
+          created_at: 1.day.ago - 10,
           type: ProcessTypes::WEB
         )
       end
@@ -305,7 +304,7 @@ module VCAP::CloudController
           guid: 'web_process',
           instances: 10,
           app: app,
-          created_at: a_day_ago - 11,
+          created_at: 1.day.ago - 11,
           type: ProcessTypes::WEB
         )
       end
@@ -314,7 +313,7 @@ module VCAP::CloudController
           guid: 'oldest_web_process_with_instances',
           instances: 10,
           app: app,
-          created_at: a_day_ago - 10,
+          created_at: 1.day.ago - 10,
           type: ProcessTypes::WEB
         )
       end
@@ -322,7 +321,7 @@ module VCAP::CloudController
         ProcessModel.make(
           instances: 10,
           app: app,
-          created_at: a_day_ago - 9,
+          created_at: 1.day.ago - 9,
           type: ProcessTypes::WEB
         )
       end
@@ -386,7 +385,7 @@ module VCAP::CloudController
           guid: 'web_process',
           instances: 1,
           app: app,
-          created_at: a_day_ago - 11,
+          created_at: 1.day.ago - 11,
           type: ProcessTypes::WEB
         )
       end
@@ -395,7 +394,7 @@ module VCAP::CloudController
           guid: 'oldest_web_process_with_instances',
           instances: 1,
           app: app,
-          created_at: a_day_ago - 10,
+          created_at: 1.day.ago - 10,
           type: ProcessTypes::WEB
         )
       end
@@ -403,7 +402,7 @@ module VCAP::CloudController
         ProcessModel.make(
           instances: 1,
           app: app,
-          created_at: a_day_ago - 10,
+          created_at: 1.day.ago - 10,
           type: ProcessTypes::WEB
         )
       end
@@ -627,7 +626,7 @@ module VCAP::CloudController
       let(:current_deploying_instances) { 3 }
 
       before do
-        allow(instances_reporters).to receive(:all_instances_for_app).and_raise(CloudController::Errors::ApiError.new_from_details('InstancesUnavailable', 'omg it broke'))
+        allow(diego_reporter).to receive(:all_instances_for_app).and_raise(CloudController::Errors::ApiError.new_from_details('InstancesUnavailable', 'omg it broke'))
       end
 
       it 'does not scale the process' do
@@ -688,7 +687,7 @@ module VCAP::CloudController
       let!(:interim_canceling_web_process) do
         ProcessModel.make(
           app: app,
-          created_at: an_hour_ago,
+          created_at: 1.hour.ago,
           type: ProcessTypes::WEB,
           instances: 1,
           guid: 'guid-canceling'
@@ -721,7 +720,7 @@ module VCAP::CloudController
       end
     end
 
-    describe 'interim_desired_instance_count' do 
+    describe 'interim_desired_instance_count' do
       let(:deployment) do
         DeploymentModel.make(
           app: web_process.app,
@@ -731,7 +730,7 @@ module VCAP::CloudController
         )
       end
 
-      context 'when not passed in' do 
+      context 'when not passed in' do
         subject(:scale_action) { DeploymentUpdater::Actions::Scale.new(deployment, logger, target_total_instance_count) }
         let(:target_total_instance_count) { 6 }
 
@@ -751,7 +750,7 @@ module VCAP::CloudController
           end)
         end
 
-        context 'when there are routable instances' do 
+        context 'when there are routable instances' do
           let(:current_deploying_instances) { 6 }
 
           it 'does scale down the old web process' do
@@ -761,13 +760,13 @@ module VCAP::CloudController
               web_process.reload.instances
             end.from(6).to(0))
           end
-
         end
       end
 
-      context 'when passed in' do 
+      context 'when passed in' do
         let(:interim_desired_instance_count) { 3 }
         let(:target_total_instance_count) { 6 }
+
         subject(:scale_action) { DeploymentUpdater::Actions::Scale.new(deployment, logger, target_total_instance_count, interim_desired_instance_count) }
 
         it 'scales up the new web process to the interim_desired_instance_count' do
@@ -786,7 +785,7 @@ module VCAP::CloudController
           end)
         end
 
-        context 'when there are routable instances' do 
+        context 'when there are routable instances' do
           let(:current_deploying_instances) { 3 }
 
           it 'does scale down the old web process' do

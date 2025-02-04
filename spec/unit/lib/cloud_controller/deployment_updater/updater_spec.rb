@@ -46,7 +46,6 @@ module VCAP::CloudController
       )
     end
 
-    let(:diego_instances_reporter) { instance_double(Diego::InstancesReporter) }
     let(:all_instances_results) do
       {
         0 => { state: 'RUNNING', uptime: 50, since: 2, routable: true },
@@ -54,16 +53,16 @@ module VCAP::CloudController
         2 => { state: 'RUNNING', uptime: 50, since: 2, routable: true }
       }
     end
-    let(:instances_reporters) { double(:instance_reporters) }
     let(:logger) { instance_double(Steno::Logger, info: nil, error: nil) }
 
+    let(:diego_reporter) { Diego::InstancesReporter.new(nil) }
+
     before do
-      allow(CloudController::DependencyLocator.instance).to receive(:instances_reporters).and_return(instances_reporters)
-      allow(instances_reporters).to receive(:all_instances_for_app).and_return(all_instances_results)
+      allow_any_instance_of(VCAP::CloudController::InstancesReporters).to receive(:diego_reporter).and_return(diego_reporter)
+      allow(diego_reporter).to receive(:all_instances_for_app).and_return(all_instances_results)
     end
 
     describe '#scale' do
-
       context 'when the deployment process has reached original_web_process_instance_count' do
         let(:droplet) do
           DropletModel.make(
@@ -75,17 +74,17 @@ module VCAP::CloudController
         end
 
         let(:all_instances_results) do
-            {
-              0 => { state: 'RUNNING', uptime: 50, since: 2, routable: true },
-              1 => { state: 'RUNNING', uptime: 50, since: 2, routable: true },
-              2 => { state: 'RUNNING', uptime: 50, since: 2, routable: true },
-              3 => { state: 'RUNNING', uptime: 50, since: 2, routable: true },
-              4 => { state: 'RUNNING', uptime: 50, since: 2, routable: true },
-              5 => { state: 'RUNNING', uptime: 50, since: 2, routable: true }
-            }
-          end
+          {
+            0 => { state: 'RUNNING', uptime: 50, since: 2, routable: true },
+            1 => { state: 'RUNNING', uptime: 50, since: 2, routable: true },
+            2 => { state: 'RUNNING', uptime: 50, since: 2, routable: true },
+            3 => { state: 'RUNNING', uptime: 50, since: 2, routable: true },
+            4 => { state: 'RUNNING', uptime: 50, since: 2, routable: true },
+            5 => { state: 'RUNNING', uptime: 50, since: 2, routable: true }
+          }
+        end
 
-          let(:current_deploying_instances) { 6 }
+        let(:current_deploying_instances) { 6 }
 
         before do
           allow(ProcessRestart).to receive(:restart)
@@ -107,7 +106,7 @@ module VCAP::CloudController
           expect(after_web_process.instances).to eq(6)
         end
 
-        context 'but one instance is failing' do 
+        context 'but one instance is failing' do
           let(:all_instances_results) do
             {
               0 => { state: 'RUNNING', uptime: 50, since: 2, routable: true },
@@ -119,9 +118,8 @@ module VCAP::CloudController
             }
           end
 
-          # Not sure if this behavior is OK
-          # Seems like we shouldn't finalize if there is a failing instance, but that is the current behavior
-          skip 'doesn\'t finalize the deployment' do
+          it 'doesn\'t finalize the deployment' do
+            skip 'Seems like we shouldn\'t finalize if there is a failing instance, but that is the current behavior'
             subject.scale
             deployment.reload
             expect(deployment.state).to eq(DeploymentModel::DEPLOYING_STATE)
@@ -159,9 +157,6 @@ module VCAP::CloudController
           end.not_to raise_error
         end
       end
-
-      
-  
     end
 
     describe '#canary' do

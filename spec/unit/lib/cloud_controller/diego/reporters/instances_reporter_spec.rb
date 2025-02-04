@@ -13,19 +13,16 @@ module VCAP::CloudController
       let(:two_days_ago_since_epoch_ns) { 2.days.ago.to_f * 1e9 }
       let(:two_days_in_seconds) { 60 * 60 * 24 * 2 }
 
-      def make_actual_lrp(instance_guid:, index:, state:, error:, since:)
-        ::Diego::Bbs::Models::ActualLRP.new(
+      def make_actual_lrp(instance_guid:, index:, state:, error:, since:, routable: nil)
+        lrp = ::Diego::Bbs::Models::ActualLRP.new(
           actual_lrp_key: ::Diego::Bbs::Models::ActualLRPKey.new(index:),
           actual_lrp_instance_key: ::Diego::Bbs::Models::ActualLRPInstanceKey.new(instance_guid:),
           state: state,
           placement_error: error,
           since: since
         )
-      end
 
-      def make_actual_lrp_with_routable(instance_guid:, index:, state:, error:, since:, routable:)
-        lrp = make_actual_lrp(instance_guid:, index:, state:, error:, since:)
-        lrp.routable = routable
+        lrp.routable = routable unless routable.nil?
         lrp
       end
 
@@ -352,10 +349,10 @@ module VCAP::CloudController
         let(:bbs_instances_response) do
           [
             make_actual_lrp(instance_guid: 'instance-a', index: 0, state: ::Diego::ActualLRPState::RUNNING, error: '', since: two_days_ago_since_epoch_ns),
-            make_actual_lrp_with_routable(instance_guid: 'instance-b', index: 1, state: ::Diego::ActualLRPState::CLAIMED, error: '', since: two_days_ago_since_epoch_ns,
-                                          routable: true),
-            make_actual_lrp_with_routable(instance_guid: 'instance-c', index: 2, state: ::Diego::ActualLRPState::CRASHED, error: '', since: two_days_ago_since_epoch_ns,
-                                          routable: false)
+            make_actual_lrp(instance_guid: 'instance-b', index: 1, state: ::Diego::ActualLRPState::CLAIMED, error: '', since: two_days_ago_since_epoch_ns,
+                            routable: true),
+            make_actual_lrp(instance_guid: 'instance-c', index: 2, state: ::Diego::ActualLRPState::CRASHED, error: '', since: two_days_ago_since_epoch_ns,
+                            routable: false)
           ]
         end
 
@@ -454,6 +451,56 @@ module VCAP::CloudController
             it 'reraises the exception' do
               expect { instances_reporter.all_instances_for_app(process) }.to raise_error(CloudController::Errors::InstancesUnavailable, /ruh roh/)
             end
+          end
+        end
+      end
+
+      describe '#instance_count_summary' do
+        let(:desired_instances) { bbs_instances_response.length }
+        let(:bbs_instances_response) do
+          [
+            make_actual_lrp(instance_guid: 'instance-a', index: 1, state: ::Diego::ActualLRPState::RUNNING, error: '', since: two_days_ago_since_epoch_ns, routable: false),
+            make_actual_lrp(instance_guid: 'instance-b', index: 2, state: ::Diego::ActualLRPState::RUNNING, error: '', since: two_days_ago_since_epoch_ns, routable: true),
+            make_actual_lrp(instance_guid: 'instance-c', index: 3, state: ::Diego::ActualLRPState::RUNNING, error: '', since: two_days_ago_since_epoch_ns, routable: true),
+            make_actual_lrp(instance_guid: 'instance-d', index: 4, state: ::Diego::ActualLRPState::RUNNING, error: '', since: two_days_ago_since_epoch_ns, routable: false),
+            # Claimed/Unclaimed get translated to "Starting", unless there is a placement error
+            make_actual_lrp(instance_guid: 'instance-e', index: 5, state: ::Diego::ActualLRPState::CLAIMED, error: '', since: two_days_ago_since_epoch_ns),
+            make_actual_lrp(instance_guid: 'instance-f', index: 6, state: ::Diego::ActualLRPState::UNCLAIMED, error: '', since: two_days_ago_since_epoch_ns),
+            make_actual_lrp(instance_guid: 'instance-g', index: 7, state: ::Diego::ActualLRPState::UNCLAIMED, error: '', since: two_days_ago_since_epoch_ns),
+            make_actual_lrp(instance_guid: 'instance-h', index: 8, state: ::Diego::ActualLRPState::UNCLAIMED, error: 'Startup failed', since: two_days_ago_since_epoch_ns),
+
+            make_actual_lrp(instance_guid: 'instance-i', index: 9, state: ::Diego::ActualLRPState::CRASHED, error: '', since: two_days_ago_since_epoch_ns),
+            make_actual_lrp(instance_guid: 'instance-j', index: 10, state: 'Unknown', error: '', since: two_days_ago_since_epoch_ns)
+          ]
+        end
+
+        let(:summary) { instances_reporter.instance_count_summary(process) }
+
+        before do
+          allow(bbs_instances_client).to receive(:lrp_instances).with(process).and_return(bbs_instances_response)
+        end
+
+        describe '#starting_instances_count' do
+          it 'returns number of starting processes AND running processes that are NOT routable' do
+            expect(summary.starting_instances_count).to eq 5
+          end
+        end
+
+        describe '#routable_instances_count' do
+          it 'returns number of instances instances that are running AND routable' do
+            expect(summary.routable_instances_count).to eq 2
+          end
+        end
+
+        describe '#healthy_instances_count' do
+          it 'returns number of instances instances that are running or starting, regardless of routability' do
+            expect(summary.healthy_instances_count).to eq 7
+          end
+        end
+
+        describe '#unhealthy_instances_count' do
+          it 'returns number of instances instances that are not running or starting' do
+            expect(summary.unhealthy_instances_count).to eq 3
           end
         end
       end
