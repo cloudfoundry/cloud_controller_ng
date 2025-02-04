@@ -81,10 +81,6 @@ module VCAP::CloudController::Metrics
       PUMA_METRICS.each { |metric| register(metric) } if VCAP::CloudController::Config.config&.get(:webserver) == 'puma'
     end
 
-    def registry
-      @registry
-    end
-
     def update_gauge_metric(metric, value, labels: {})
       @registry.get(metric).set(value, labels:)
     end

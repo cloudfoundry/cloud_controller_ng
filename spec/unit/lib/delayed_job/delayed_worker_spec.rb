@@ -64,6 +64,26 @@ RSpec.describe CloudController::DelayedWorker do
       worker_instance = CloudController::DelayedWorker.new(options)
       expect(worker_instance.instance_variable_get(:@queue_options)).not_to include(:grace_period_seconds)
     end
+
+    describe 'publish metrics' do
+      context 'when not set' do
+        it 'does not publish metrics' do
+          worker_instance = CloudController::DelayedWorker.new(options)
+          expect(worker_instance.instance_variable_get(:@publish_metrics)).to be(false)
+        end
+      end
+
+      context 'when set to true' do
+        before do
+          options[:publish_metrics] = true
+        end
+
+        it 'publishes metrics' do
+          worker_instance = CloudController::DelayedWorker.new(options)
+          expect(worker_instance.instance_variable_get(:@publish_metrics)).to be(true)
+        end
+      end
+    end
   end
 
   describe '#start_working' do
@@ -118,6 +138,47 @@ RSpec.describe CloudController::DelayedWorker do
         expect(Delayed::Worker).to receive(:new).with({ max_priority: nil, min_priority: nil, num_threads: 7, grace_period_seconds: 32, queues: options[:queues], quiet: true,
                                                         worker_name: options[:name] }).and_return(threaded_worker)
         cc_delayed_worker.start_working
+      end
+    end
+
+    describe 'publish metrics' do
+      before do
+        allow(Prometheus::Client::DataStores::DirectFileStore).to receive(:new)
+      end
+
+      context 'when set to false' do
+        before do
+          options[:publish_metrics] = false
+        end
+
+        it 'does not publish metrics' do
+          cc_delayed_worker.start_working
+          expect(Prometheus::Client::DataStores::DirectFileStore).not_to have_received(:new)
+        end
+      end
+
+      context 'when set to true' do
+        before do
+          options[:publish_metrics] = true
+        end
+
+        it 'publishes metrics' do
+          cc_delayed_worker.start_working
+          expect(Prometheus::Client::DataStores::DirectFileStore).to have_received(:new)
+        end
+
+        context 'when first worker on machine' do
+          before do
+            allow(cc_delayed_worker).to receive(:is_first_generic_worker_on_machine?).and_return(true)
+            allow(cc_delayed_worker).to receive(:readiness_port)
+            allow(cc_delayed_worker).to receive(:setup_webserver)
+          end
+
+          it 'sets up a webserver' do
+            cc_delayed_worker.start_working
+            expect(cc_delayed_worker).to have_received(:setup_webserver)
+          end
+        end
       end
     end
   end

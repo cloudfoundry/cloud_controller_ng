@@ -24,9 +24,9 @@ module Sequel
       pool.instance_exec do
         sync do
           @prometheus_updater = if process_type == 'cc-worker'
-            CloudController::DependencyLocator.instance.cc_worker_prometheus_updater
+                                  CloudController::DependencyLocator.instance.cc_worker_prometheus_updater
                                 else
-            CloudController::DependencyLocator.instance.prometheus_updater
+                                  CloudController::DependencyLocator.instance.prometheus_updater
                                 end
           @connection_info = {}
         end
