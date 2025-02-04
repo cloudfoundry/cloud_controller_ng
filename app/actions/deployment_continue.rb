@@ -26,7 +26,7 @@ module VCAP::CloudController
           # )
 
           # TODO: Should we increment step here or in the PAUSE action?
-          if deployment.canary_steps && deployment.canary_current_step <= deployment.canary_steps.length
+          if deployment.canary_steps && deployment.canary_current_step < deployment.canary_steps.length
             deployment.update(
               state: DeploymentModel::PREPAUSED_STATE,
               status_value: DeploymentModel::ACTIVE_STATUS_VALUE,
