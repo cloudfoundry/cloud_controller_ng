@@ -71,8 +71,8 @@ module VCAP::CloudController
     end
 
     def self.add_connection_metrics_extension(db)
-      # only add the metrics for api processes. Otherwise e.g. rake db:migrate would also initialize metric updaters, which need additional config
-      return if Object.const_defined?(:RakeConfig)
+      # only add the metrics for api and cc-worker processes. Otherwise e.g. rake db:migrate would also initialize metric updaters, which need additional config
+      return if Object.const_defined?(:RakeConfig) && RakeConfig.context != :worker
 
       db.extension(:connection_metrics)
       # so that we gather connection metrics from the beginning
