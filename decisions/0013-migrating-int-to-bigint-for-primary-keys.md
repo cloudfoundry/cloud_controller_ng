@@ -21,7 +21,7 @@ This migration must:
 - Handle tables with millions of records efficiently. 
 - Provide a safe rollback mechanism in case of issues during the migration.
 - Be reusable for other tables in the future.
-- Ensure that migration only is executed when id_bigint is fully populated.
+- Ensure that migration only is executed when the new `id_bigint` column is fully populated.
 
 The largest tables in a long-running foundation are `events`, `delayed_jobs`, `jobs`, and `app_usage_events`.
 
@@ -42,31 +42,40 @@ The migration will be conducted in multiple steps to ensure minimal risk.
 #### Step 2 - Backfill
 - Use a batch-processing script (e.g. a delayed job) to populate `id_bigint` for existing rows in both the primary table and, if applicable, all foreign key references.
 - Table locks will be avoided by using a batch processing approach.
-- In case the table has configurable cleanup duration, the backfill job will only process records which are beyond the cleanup duration to reduce the number of records to be processed. 
+- In case the table has a configurable cleanup duration, the backfill job will only process records which are beyond the cleanup duration to reduce the number of records to be processed. 
 - Backfill will be executed outside the migration due to its potentially long runtime.
-- If necessary the backfill will run over multiple releases.
+- If necessary the backfill will run for multiple weeks to ensure all records are processed.
 
 #### Step 3a - Migration Pre Check
-- Double check that `id_bigint` is fully populated before proceeding.
+- Add a `CHECK` constraint to verify that id_bigint is fully populated (`id_bigint == id & id_bigint != NULL`).
 - In case the backfill is not yet complete or the `id_bigint` column is not fully populated the migration exits gracefully and is retried in the next deploy.
 #### Step 3b - Actual Migration
-- Retain the `id` column as a backup by renaming it to `id_old`.
-- If foreign keys exist, rename the corresponding id columns in referencing tables to `<ref>_id_old` as well.
+- Remove the `CHECK` constraint once verified.
+- Drop the primary key constraint on id.
+- If foreign keys exist, drop the corresponding foreign key constraints.
 - Remove the sync triggers.
 - Switch the primary key by renaming `id_bigint` to `id`.
 - If foreign keys exist, rename `id_bigint` to `id` in referencing tables accordingly.
-- Create new sync triggers for keeping `id` and `id_bigint` in sync for newly inserted records.
 - Everything is done in a single transaction to ensure consistency.
-#### Step 4 - Cleanup
-- Remove remaining sync triggers.
-- Drop the `id_old` column after verifying stability and ensuring the system fully relies on the migrated id column
-- If foreign keys exist, drop the `id_old` columns in referencing tables after verification.
+
+### Database Specifics
+
+#### PostgreSQL
+The default value of the `id` column could be either a sequence (for older PostgreSQL versions) or an identity column (for newer PostgreSQL versions).
+This depends on the version of PostgreSQL which was used when the table was initially created.
+The migration script needs to handle both cases.
+
+#### MySQL
+Unknown at this point. Further investigation is needed.
 
 ### Rollback Mechanism
-Retain the original `id` column until the cleanup phase, allowing for reversion to the previous state if needed.
+The old `id` column is no longer retained, as the `CHECK` constraint ensures correctness during migration.
+If unexpected issues occur, the migration will fail explicitly, requiring intervention.
+If rollback is needed, either backups could be restored or the migration needs to be reverted manually.
 
 ### Standardized Approach
-Write reusable scripts for adding `id_bigin`t, setting up triggers, backfilling data, and verifying migration readiness.
+Write reusable scripts for adding `id_bigint`, setting up triggers, backfilling data, and verifying migration readiness.
+These scripts can be reused for other tables in the future.
 
 ### Release Strategy
 
@@ -74,7 +83,7 @@ Steps 1-2 will be released as a cf-deployment major release to ensure that the d
 Steps 3-4 will be released as a subsequent cf-deployment major release to complete the migration.  
 Between these releases there should be a reasonable time to allow the backfill to complete.
 
-For the `events` table there is a default cleanup interval of 31 days. Therefore for the `events` table the gap between the releases should be around 60 days.
+For the `events` table there is a default cleanup interval of 31 days. Therefore, for the `events` table the gap between the releases should be around 60 days.
 
 ## Consequences
 ### Positive Consequences
@@ -86,7 +95,7 @@ For the `events` table there is a default cleanup interval of 31 days. Therefore
 ### Negative Consequences
 
 - Increased complexity in the migration process.
-- Potentially long runtimes for backfilling data in tables with millions of records.
+- Potentially long runtimes for backfilling data in case tables have millions of records.
 - Requires careful coordination across multiple CAPI/CF-Deployment versions.
 - If backfilling encounters edge cases (e.g., missing cleanup jobs), the migration may be delayed until operators intervene.
 
@@ -122,7 +131,7 @@ Cons: Requires downtime, locks the table for the duration of the migration, and 
 Reason Rejected: Downtimes are unacceptable for productive foundations.
 
 
-## Example Migration Scripts With PostgreSQL Syntax
+## Example Migration Scripts With PostgreSQL Syntax For `events` Table
 
 ### Step 1 - Preparation
 ```sql
@@ -169,16 +178,18 @@ WHERE events.id = batch.id;
 
 ### Step 3a - Migration Pre Check
 ```sql
-SELECT COUNT(*) FROM events WHERE id_bigint IS NULL;
--- should return 0
+ALTER TABLE events  ADD CONSTRAINT check_id_bigint_matches CHECK (id_bigint IS NOT NULL AND id_bigint = id);
 
-SELECT COUNT(*) FROM events WHERE id_bigint <> id;
+-- Alternative:
+SELECT COUNT(*) FROM events WHERE id_bigint IS DISTINCT FROM id;
 -- should return 0
 ```
 
 ### Step 3b - Actual Migration
 ```sql
 BEGIN;
+
+ALTER TABLE events DROP CONSTRAINT check_id_bigint_matches;
 
 -- Drop primary key constraint
 ALTER TABLE events DROP CONSTRAINT events_pkey;
@@ -187,48 +198,40 @@ ALTER TABLE events DROP CONSTRAINT events_pkey;
 DROP TRIGGER IF EXISTS trigger_events_set_id_bigint ON events;
 DROP FUNCTION IF EXISTS events_set_id_bigint_on_insert();
 
+-- Drop the old id column
+ALTER TABLE events DROP COLUMN id;
+
 -- Rename columns
-ALTER TABLE events RENAME COLUMN id TO id_old;
 ALTER TABLE events RENAME COLUMN id_bigint TO id;
 
 -- Recreate primary key on new `id`
 ALTER TABLE events ADD PRIMARY KEY (id);
 
--- Update sequence ownership
-ALTER TABLE events ALTER COLUMN id_old DROP DEFAULT;
-ALTER SEQUENCE events_id_seq OWNED BY events.id;
-ALTER TABLE events ALTER COLUMN id SET DEFAULT nextval('events_id_seq');
-
--- Ensure new inserts update `id_old`
-CREATE OR REPLACE FUNCTION events_set_id_old_on_insert()
-RETURNS TRIGGER AS $$
+-- Set `id` as IDENTITY with correct starting value
+DO $$ 
+DECLARE max_id BIGINT;
 BEGIN
-    NEW.id_old := NEW.id;
-RETURN NEW;
-END;
-$$ LANGUAGE plpgsql;
+SELECT COALESCE(MAX(id), 1) + 1 INTO max_id FROM events;
 
-DROP TRIGGER IF EXISTS trigger_events_set_id_old ON events;
+-- Set the column to IDENTITY with the correct start value
+EXECUTE format(
+        'ALTER TABLE events ALTER COLUMN id ADD GENERATED BY DEFAULT AS IDENTITY (START WITH %s)',
+        max_id
+        );
 
-CREATE TRIGGER trigger_events_set_id_old
-    BEFORE INSERT ON events
-    FOR EACH ROW
-    EXECUTE FUNCTION events_set_id_old_on_insert();
+RAISE NOTICE 'Set id as IDENTITY starting from %', max_id;
+END $$;
 
 COMMIT;
 ```
 
-### Step 4 - Cleanup
+### Helpful Commands
 ```sql
-BEGIN;
--- Drop old id_old column
-ALTER TABLE events DROP COLUMN id_old;
+SELECT COUNT(*) FROM events WHERE id_bigint IS NULL;
+-- should return 0
 
--- Remove triggers and functions
-DROP TRIGGER IF EXISTS trigger_events_set_id_old ON events;
-DROP FUNCTION IF EXISTS events_set_id_old_on_insert();
-
-COMMIT;
+SELECT COUNT(*) FROM events WHERE id_bigint IS DISTINCT FROM id;
+-- should return 0
 ```
 
 ## References
