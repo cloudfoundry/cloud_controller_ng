@@ -55,13 +55,14 @@ The migration will be conducted in multiple steps to ensure minimal risk.
 - If foreign keys exist, drop the corresponding foreign key constraints.
 - Remove the sync triggers.
 - Switch the primary key by renaming `id_bigint` to `id`.
+- Add PK constraint on `id` column and configure `id` generator.
 - If foreign keys exist, rename `id_bigint` to `id` in referencing tables accordingly.
 - Everything is done in a single transaction to ensure consistency.
 
 ### Database Specifics
 
 #### PostgreSQL
-The default value of the `id` column could be either a sequence (for older PostgreSQL versions) or an identity column (for newer PostgreSQL versions).
+The default value of the `id` column could be either a sequence (for PostgreSQL versions < 10) or an identity column (for newer PostgreSQL versions).
 This depends on the version of PostgreSQL which was used when the table was initially created.
 The migration script needs to handle both cases.
 
@@ -70,6 +71,7 @@ Unknown at this point. Further investigation is needed.
 
 ### Rollback Mechanism
 The old `id` column is no longer retained, as the `CHECK` constraint ensures correctness during migration.
+Step 3b (switch over) will be executed in a single transaction and will be rolled back if any issues occur.
 If unexpected issues occur, the migration will fail explicitly, requiring intervention.
 If rollback is needed, either backups could be restored or the migration needs to be reverted manually.
 
@@ -89,7 +91,7 @@ For the `events` table there is a default cleanup interval of 31 days. Therefore
 ### Positive Consequences
 
 - Future-proofing the schema for tables with high record counts.
-- Minimal downtime due to the phased approach.
+- Minimal locking during step 3b (actual migration) could result in slower queries or minimal downtime.
 - A standardized process for similar migrations across the database.
 
 ### Negative Consequences
@@ -98,10 +100,6 @@ For the `events` table there is a default cleanup interval of 31 days. Therefore
 - Potentially long runtimes for backfilling data in case tables have millions of records.
 - Requires careful coordination across multiple CAPI/CF-Deployment versions.
 - If backfilling encounters edge cases (e.g., missing cleanup jobs), the migration may be delayed until operators intervene.
-
-## Rollback Plan
-Keep the original id column intact until the final cleanup phase.
-If issues arise during the switch, revert the primary key to id.
 
 ## Alternatives Considered
 
