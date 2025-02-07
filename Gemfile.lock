@@ -142,7 +142,7 @@ GEM
     docile (1.1.5)
     domain_name (0.6.20240107)
     drb (2.2.1)
-    erubi (1.13.0)
+    erubi (1.13.1)
     eventmachine (1.2.7)
     excon (0.112.0)
     faraday (0.17.6)
@@ -266,7 +266,8 @@ GEM
       concurrent-ruby (~> 1.0)
     io-console (0.8.0)
     ipaddress (0.8.3)
-    irb (1.14.3)
+    irb (1.15.1)
+      pp (>= 0.6.0)
       rdoc (>= 4.0.0)
       reline (>= 0.4.2)
     jaro_winkler (1.6.0)
@@ -296,7 +297,7 @@ GEM
     logger (1.6.5)
     loggregator_emitter (5.2.0)
       beefcake (~> 1.0.0)
-    loofah (2.23.1)
+    loofah (2.24.0)
       crass (~> 1.0.2)
       nokogiri (>= 1.12.0)
     machinist (1.0.6)
@@ -356,6 +357,9 @@ GEM
       ast (~> 2.4.1)
       racc
     pg (1.5.9)
+    pp (0.6.2)
+      prettyprint
+    prettyprint (0.2.0)
     prometheus-client (4.2.4)
       base64
     pry (0.14.1)
@@ -364,7 +368,7 @@ GEM
     pry-byebug (3.10.1)
       byebug (~> 11.0)
       pry (>= 0.13, < 0.15)
-    psych (5.2.2)
+    psych (5.2.3)
       date
       stringio
     public_suffix (6.0.1)
@@ -386,7 +390,7 @@ GEM
       activesupport (>= 5.0.0)
       minitest
       nokogiri (>= 1.6)
-    rails-html-sanitizer (1.6.1)
+    rails-html-sanitizer (1.6.2)
       loofah (~> 2.21)
       nokogiri (>= 1.15.7, != 1.16.7, != 1.16.6, != 1.16.5, != 1.16.4, != 1.16.3, != 1.16.2, != 1.16.1, != 1.16.0.rc1, != 1.16.0)
     railties (7.2.2.1)
@@ -404,7 +408,7 @@ GEM
       ffi (~> 1.0)
     rbs (3.8.1)
       logger
-    rdoc (6.10.0)
+    rdoc (6.12.0)
       psych (>= 4.0.0)
     redis (5.3.0)
       redis-client (>= 0.22.0)
@@ -434,7 +438,7 @@ GEM
       rspec-mocks (~> 3.13.0)
     rspec-collection_matchers (1.2.1)
       rspec-expectations (>= 2.99.0.beta1)
-    rspec-core (3.13.2)
+    rspec-core (3.13.3)
       rspec-support (~> 3.13.0)
     rspec-expectations (3.13.3)
       diff-lcs (>= 1.2.0, < 2.0)
@@ -447,7 +451,7 @@ GEM
     rspec-mocks (3.13.2)
       diff-lcs (>= 1.2.0, < 2.0)
       rspec-support (~> 3.13.0)
-    rspec-rails (7.1.0)
+    rspec-rails (7.1.1)
       actionpack (>= 7.0)
       activesupport (>= 7.0)
       railties (>= 7.0)
@@ -455,7 +459,7 @@ GEM
       rspec-expectations (~> 3.13)
       rspec-mocks (~> 3.13)
       rspec-support (~> 3.13)
-    rspec-support (3.13.1)
+    rspec-support (3.13.2)
     rspec-wait (1.0.1)
       rspec (>= 3.4)
     rspec_api_documentation (6.1.0)
@@ -569,7 +573,7 @@ GEM
     unicode-display_width (3.1.4)
       unicode-emoji (~> 4.0, >= 4.0.4)
     unicode-emoji (4.0.4)
-    useragent (0.16.10)
+    useragent (0.16.11)
     vhd (0.0.4)
       bit-struct
     vmstat (2.3.1)
@@ -577,7 +581,7 @@ GEM
       addressable (>= 2.8.0)
       crack (>= 0.3.2)
       hashdiff (>= 0.4.0, < 2.0.0)
-    webrick (1.9.0)
+    webrick (1.9.1)
     xml-simple (1.1.9)
       rexml
     yajl-ruby (1.4.3)
@@ -650,7 +654,7 @@ DEPENDENCIES
   rspec-collection_matchers
   rspec-instafail
   rspec-its
-  rspec-rails (~> 7.1.0)
+  rspec-rails (~> 7.1.1)
   rspec-wait
   rspec_api_documentation (>= 6.1.0)
   rubocop (~> 1.71.1)
