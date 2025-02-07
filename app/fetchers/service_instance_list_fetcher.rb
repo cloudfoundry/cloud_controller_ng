@@ -23,7 +23,7 @@ module VCAP::CloudController
 
         filter(dataset, message).
           select_all(:service_instances).
-          distinct(:service_instances__id)
+          distinct
       end
 
       private
