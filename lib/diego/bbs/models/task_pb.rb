@@ -13,7 +13,6 @@ require 'certificate_properties_pb'
 require 'image_layer_pb'
 require 'log_rate_limit_pb'
 require 'metric_tags_pb'
-require 'file_pb'
 Google::Protobuf::DescriptorPool.generated_pool.build do
   add_message "diego.bbs.models.TaskDefinition" do
     optional :root_fs, :string, 1
@@ -43,7 +42,6 @@ Google::Protobuf::DescriptorPool.generated_pool.build do
     repeated :image_layers, :message, 25, "diego.bbs.models.ImageLayer"
     optional :log_rate_limit, :message, 26, "diego.bbs.models.LogRateLimit"
     map :metric_tags, :string, :message, 27, "diego.bbs.models.MetricTagValue"
-    repeated :volume_mounted_files, :message, 28, "diego.bbs.models.File"
   end
   add_message "diego.bbs.models.Task" do
     optional :task_definition, :message, 1, "diego.bbs.models.TaskDefinition"
