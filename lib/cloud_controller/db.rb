@@ -255,11 +255,3 @@ module VCAP
     end
   end
 end
-
-if Rails::VERSION::MAJOR < 8
-  module ActiveModel
-    # rubocop:disable Lint/EmptyClass
-    class ValidationContext; end
-    # rubocop:enable Lint/EmptyClass
-  end
-end
