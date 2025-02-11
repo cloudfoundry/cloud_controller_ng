@@ -561,6 +561,12 @@ The message in the <code class="prettyprint">detail</code> field is subject to c
 <td>Catch-all error when an operation fails to complete; the <code class="prettyprint">detail</code> field will contain more information</td>
 </tr>
 <tr>
+<td><code class="prettyprint">CF-UaaRateLimited</code></td>
+<td>20008</td>
+<td>429</td>
+<td>Too many requests were made to the UAA instance. The request can be retried after the period stated in the <code class="prettyprint">Retry-After</code> header</td>
+</tr>
+<tr>
 <td><code class="prettyprint">UnknownError</code></td>
 <td>10001</td>
 <td>500</td>
@@ -6288,7 +6294,7 @@ Buildpacks can also be explicitly specified on <a href="#apps">apps</a> and <a h
 <li><p><a href="https://docs.cloudfoundry.org/devguide/deploy-apps/rolling-deploy.html">Rolling deployments</a> allows for
 applications to be deployed without incurring downtime by gradually rolling out instances. Max-in-flight can be configured
 to specify how many instances are rolled out simultaneously.</p></li>
-<li><p>Canary deployments deploy a single instance and pause for user evaluation. If the canary instance is deemed successful, the deployment can be resumed via the <a href="#continue-a-deployment">continue action</a>. The deployment then continues like a rolling deployment. This feature is experimental and is subject to change.</p></li>
+<li><p><a href="https://docs.cloudfoundry.org/devguide/deploy-apps/rolling-deploy.html#canary-deployment-process">Canary deployments</a> deploy a single instance and pause for user evaluation. If the canary instance is deemed successful, the deployment can be resumed via the <a href="#continue-a-deployment">continue action</a>. The deployment then continues like a rolling deployment. This feature is experimental and is subject to change.</p></li>
 </ul>
 <h3 id="the-deployment-object">The deployment object</h3>
 <div class="highlight"><pre class="highlight plaintext"><code>Example Deployment object
@@ -6299,7 +6305,8 @@ to specify how many instances are rolled out simultaneously.</p></li>
     </span><span class="nl">"value"</span><span class="p">:</span><span class="w"> </span><span class="s2">"ACTIVE"</span><span class="p">,</span><span class="w">
     </span><span class="nl">"reason"</span><span class="p">:</span><span class="w"> </span><span class="s2">"DEPLOYING"</span><span class="p">,</span><span class="w">
     </span><span class="nl">"details"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
-      </span><span class="nl">"last_successful_healthcheck"</span><span class="p">:</span><span class="w"> </span><span class="s2">"2018-04-25T22:42:10Z"</span><span class="w">
+      </span><span class="nl">"last_successful_healthcheck"</span><span class="p">:</span><span class="w"> </span><span class="s2">"2018-04-25T22:42:10Z"</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"last_status_change"</span><span class="p">:</span><span class="w"> </span><span class="s2">"2018-04-25T22:42:10Z"</span><span class="w">
     </span><span class="p">}</span><span class="w">
   </span><span class="p">},</span><span class="w">
   </span><span class="nl">"strategy"</span><span class="p">:</span><span class="w"> </span><span class="s2">"canary"</span><span class="p">,</span><span class="w">
@@ -6495,7 +6502,8 @@ to specify how many instances are rolled out simultaneously.</p></li>
     </span><span class="nl">"value"</span><span class="p">:</span><span class="w"> </span><span class="s2">"ACTIVE"</span><span class="p">,</span><span class="w">
     </span><span class="nl">"reason"</span><span class="p">:</span><span class="w"> </span><span class="s2">"DEPLOYING"</span><span class="p">,</span><span class="w">
     </span><span class="nl">"details"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
-      </span><span class="nl">"last_successful_healthcheck"</span><span class="p">:</span><span class="w"> </span><span class="s2">"2018-04-25T22:42:10Z"</span><span class="w">
+      </span><span class="nl">"last_successful_healthcheck"</span><span class="p">:</span><span class="w"> </span><span class="s2">"2018-04-25T22:42:10Z"</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"last_status_change"</span><span class="p">:</span><span class="w"> </span><span class="s2">"2018-04-25T22:42:10Z"</span><span class="w">
     </span><span class="p">}</span><span class="w">
   </span><span class="p">},</span><span class="w">
   </span><span class="nl">"strategy"</span><span class="p">:</span><span class="w"> </span><span class="s2">"canary"</span><span class="p">,</span><span class="w">
@@ -6655,7 +6663,8 @@ to specify how many instances are rolled out simultaneously.</p></li>
     </span><span class="nl">"value"</span><span class="p">:</span><span class="w"> </span><span class="s2">"ACTIVE"</span><span class="p">,</span><span class="w">
     </span><span class="nl">"reason"</span><span class="p">:</span><span class="w"> </span><span class="s2">"DEPLOYING"</span><span class="p">,</span><span class="w">
     </span><span class="nl">"details"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
-      </span><span class="nl">"last_successful_healthcheck"</span><span class="p">:</span><span class="w"> </span><span class="s2">"2018-04-25T22:42:10Z"</span><span class="w">
+      </span><span class="nl">"last_successful_healthcheck"</span><span class="p">:</span><span class="w"> </span><span class="s2">"2018-04-25T22:42:10Z"</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"last_status_change"</span><span class="p">:</span><span class="w"> </span><span class="s2">"2018-04-25T22:42:10Z"</span><span class="w">
     </span><span class="p">}</span><span class="w">
   </span><span class="p">},</span><span class="w">
   </span><span class="nl">"strategy"</span><span class="p">:</span><span class="w"> </span><span class="s2">"canary"</span><span class="p">,</span><span class="w">
@@ -6773,7 +6782,11 @@ to specify how many instances are rolled out simultaneously.</p></li>
       </span><span class="nl">"guid"</span><span class="p">:</span><span class="w"> </span><span class="s2">"59c3d133-2b83-46f3-960e-7765a129aea4"</span><span class="p">,</span><span class="w">
       </span><span class="nl">"status"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
         </span><span class="nl">"value"</span><span class="p">:</span><span class="w"> </span><span class="s2">"FINALIZED"</span><span class="p">,</span><span class="w">
-        </span><span class="nl">"reason"</span><span class="p">:</span><span class="w"> </span><span class="s2">"DEPLOYED"</span><span class="w">
+        </span><span class="nl">"reason"</span><span class="p">:</span><span class="w"> </span><span class="s2">"DEPLOYED"</span><span class="p">,</span><span class="w">
+        </span><span class="nl">"details"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+          </span><span class="nl">"last_successful_healthcheck"</span><span class="p">:</span><span class="w"> </span><span class="s2">"2018-04-25T22:42:10Z"</span><span class="p">,</span><span class="w">
+          </span><span class="nl">"last_status_change"</span><span class="p">:</span><span class="w"> </span><span class="s2">"2018-04-25T22:42:10Z"</span><span class="w">
+        </span><span class="p">}</span><span class="w">
       </span><span class="p">},</span><span class="w">
       </span><span class="nl">"strategy"</span><span class="p">:</span><span class="w"> </span><span class="s2">"rolling"</span><span class="p">,</span><span class="w">
       </span><span class="nl">"options"</span><span class="w"> </span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
@@ -6918,7 +6931,8 @@ to specify how many instances are rolled out simultaneously.</p></li>
     </span><span class="nl">"value"</span><span class="p">:</span><span class="w"> </span><span class="s2">"ACTIVE"</span><span class="p">,</span><span class="w">
     </span><span class="nl">"reason"</span><span class="p">:</span><span class="w"> </span><span class="s2">"DEPLOYING"</span><span class="p">,</span><span class="w">
     </span><span class="nl">"details"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
-      </span><span class="nl">"last_successful_healthcheck"</span><span class="p">:</span><span class="w"> </span><span class="s2">"2018-04-25T22:42:10Z"</span><span class="w">
+      </span><span class="nl">"last_successful_healthcheck"</span><span class="p">:</span><span class="w"> </span><span class="s2">"2018-04-25T22:42:10Z"</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"last_status_change"</span><span class="p">:</span><span class="w"> </span><span class="s2">"2018-04-25T22:42:10Z"</span><span class="w">
     </span><span class="p">}</span><span class="w">
   </span><span class="p">},</span><span class="w">
   </span><span class="nl">"strategy"</span><span class="p">:</span><span class="w"> </span><span class="s2">"canary"</span><span class="p">,</span><span class="w">
@@ -17843,7 +17857,7 @@ The origin must be different from <code class="prettyprint">uaa</code> in this c
 <tr>
 <td><strong>loadbalancing</strong></td>
 <td><em>string</em></td>
-<td>The load-balancer associated with this route. Valid values are &lsquo;round-robin&rsquo; and &lsquo;least-connections&rsquo;</td>
+<td>The load-balancer associated with this route. Valid values are &lsquo;round-robin&rsquo; and &lsquo;least-connection&rsquo;</td>
 </tr>
 </tbody></table>
 <h3 id="create-a-route">Create a route</h3>
