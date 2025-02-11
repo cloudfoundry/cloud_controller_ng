@@ -37,6 +37,10 @@ module VCAP::CloudController
 
             log_audit_events: bool,
 
+            directories: {
+              tmpdir: String
+            },
+
             stacks_file: String,
             newrelic_enabled: bool,
 
@@ -138,6 +142,9 @@ module VCAP::CloudController
               optional(:host) => String,
               optional(:port) => Integer
             },
+
+            optional(:publish_metrics) => bool,
+            optional(:prometheus_port) => Integer,
 
             skip_cert_verify: bool,
 

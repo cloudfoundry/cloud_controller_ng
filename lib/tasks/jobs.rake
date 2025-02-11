@@ -64,6 +64,15 @@ namespace :jobs do
       'prune_excess_app_revisions'
     ]
 
-    CloudController::DelayedWorker.new(queues: queues, name: args.name, num_threads: args.num_threads, thread_grace_period_seconds: args.thread_grace_period_seconds).start_working
+    ENV['PROCESS_TYPE'] = 'cc-worker'
+    require 'cloud_controller/metrics/custom_process_id'
+
+    publish_metrics = RakeConfig.config.get(:publish_metrics) || false
+
+    CloudController::DelayedWorker.new(queues: queues,
+                                       name: args.name,
+                                       num_threads: args.num_threads,
+                                       thread_grace_period_seconds: args.thread_grace_period_seconds,
+                                       publish_metrics: publish_metrics).start_working
   end
 end
