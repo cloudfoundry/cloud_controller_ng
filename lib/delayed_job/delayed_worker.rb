@@ -130,7 +130,7 @@ class CloudController::DelayedWorker
 
     Thread.new do
       server = Puma::Server.new(metrics_app)
-      server.add_tcp_listener '0.0.0.0', config.get(:prometheus_port) || 9394
+      server.add_tcp_listener '127.0.0.1', config.get(:prometheus_port) || 9394
       server.run
     end
   end
