@@ -255,7 +255,7 @@ class ServiceInstancesV3Controller < ApplicationController
   def create_managed(message, space:)
     service_plan = ServicePlan.first(guid: message.service_plan_guid)
     unprocessable_service_plan! unless service_plan_valid?(service_plan)
-    service_plan_not_visible_in_space! unless resource_exists_in_space?(service_plan, space)
+    service_plan_not_visible_in_space! unless service_plan_exists_in_space?(service_plan, space)
 
     action = V3::ServiceInstanceCreateManaged.new(user_audit_info, message.audit_hash)
     VCAP::CloudController::ManagedServiceInstance.db.transaction do
@@ -397,10 +397,10 @@ class ServiceInstancesV3Controller < ApplicationController
 
   def service_plan_valid?(service_plan)
     service_plan &&
-    visible_to_current_user?(plan: service_plan)
+      visible_to_current_user?(plan: service_plan)
   end
 
-  def resource_exists_in_space?(service_plan, space)
+  def service_plan_exists_in_space?(service_plan, space)
     service_plan.visible_in_space?(space)
   end
 
@@ -409,7 +409,7 @@ class ServiceInstancesV3Controller < ApplicationController
 
     service_plan = ServicePlan.first(guid: message.service_plan_guid)
     unprocessable_service_plan! unless service_plan_valid?(service_plan)
-    service_plan_not_visible_in_space! unless resource_exists_in_space?(service_plan, service_instance.space)
+    service_plan_not_visible_in_space! unless service_plan_exists_in_space?(service_plan, service_instance.space)
     invalid_service_plan_relation! unless service_plan.service == service_instance.service
   end
 
