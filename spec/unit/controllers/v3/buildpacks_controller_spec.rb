@@ -54,6 +54,7 @@ RSpec.describe BuildpacksController, type: :controller do
 
       let!(:buildpack1) { VCAP::CloudController::Buildpack.make(stack: stack1.name) }
       let!(:buildpack2) { VCAP::CloudController::Buildpack.make(stack: stack2.name) }
+      let!(:buildpack3) { VCAP::CloudController::Buildpack.make(stack: stack1.name, lifecycle: 'cnb') }
 
       before do
         set_current_user(user)
@@ -64,6 +65,12 @@ RSpec.describe BuildpacksController, type: :controller do
 
         expect(parsed_body['resources'].first['guid']).to eq(buildpack1.guid)
         expect(parsed_body['resources'].second['guid']).to eq(buildpack2.guid)
+      end
+
+      it 'renders a lifecycle filtered list of buildpacks' do
+        get :index, params: { lifecycle: 'cnb' }
+
+        expect(parsed_body['resources'].first['guid']).to eq(buildpack3.guid)
       end
 
       it 'renders a name filtered list of buildpacks' do
@@ -512,8 +519,10 @@ RSpec.describe BuildpacksController, type: :controller do
     let(:buildpack_bits_name) { 'buildpack.zip' }
 
     before do
-      allow(File).to receive(:stat).and_return(stat_double)
-      # allow(VCAP::CloudController::BuildpackUpload).to receive(:new).and_return(uploader)
+      allow(File).to receive_messages(
+        stat: stat_double,
+        read: "PK\x03\x04".force_encoding('binary')
+      )
     end
 
     describe 'permissions' do

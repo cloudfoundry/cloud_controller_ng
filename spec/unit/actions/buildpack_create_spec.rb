@@ -19,7 +19,8 @@ module VCAP::CloudController
             name: 'the-name',
             stack: 'the-stack',
             enabled: false,
-            locked: true
+            locked: true,
+            lifecycle: Lifecycles::BUILDPACK
           )
           buildpack = BuildpackCreate.new.create(message)
 
@@ -28,6 +29,7 @@ module VCAP::CloudController
           expect(buildpack.position).to eq(1)
           expect(buildpack.enabled).to be(false)
           expect(buildpack.locked).to be(true)
+          expect(buildpack.lifecycle).to eq(Lifecycles::BUILDPACK)
         end
       end
 
@@ -114,6 +116,19 @@ module VCAP::CloudController
         end
       end
 
+      context 'when lifecycle is provided' do
+        it 'creates a buildpack with locked set to true' do
+          message = BuildpackCreateMessage.new(
+            name: 'the-name',
+            stack: 'the-stack',
+            lifecycle: Lifecycles::CNB
+          )
+          buildpack = BuildpackCreate.new.create(message)
+
+          expect(buildpack.lifecycle).to eq(Lifecycles::CNB)
+        end
+      end
+
       context 'when a model validation fails' do
         it 'raises an error' do
           errors = Sequel::Model::Errors.new
@@ -163,7 +178,7 @@ module VCAP::CloudController
             message = BuildpackCreateMessage.new(name: name, stack: 'the-stack')
             expect do
               BuildpackCreate.new.create(message)
-            end.to raise_error(BuildpackCreate::Error, "Buildpack with name 'the-name' and stack 'the-stack' already exists")
+            end.to raise_error(BuildpackCreate::Error, "Buildpack with name 'the-name', stack 'the-stack' and lifecycle 'buildpack' already exists")
           end
         end
       end

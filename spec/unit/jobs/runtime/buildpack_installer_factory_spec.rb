@@ -6,7 +6,7 @@ module VCAP::CloudController
       describe '#plan' do
         let(:name) { 'the-buildpack' }
         let(:file) { 'the-file' }
-        let(:opts) { { enabled: true, locked: false, position: 1 } }
+        let(:opts) { { enabled: true, locked: false, position: 1, lifecycle: 'buildpack' } }
         let(:factory) { BuildpackInstallerFactory.new }
         let(:jobs) { factory.plan(name, buildpack_fields) }
 
