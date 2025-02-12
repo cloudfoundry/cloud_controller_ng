@@ -596,6 +596,24 @@ module VCAP::CloudController
               end
             end
 
+            context 'uses canary steps from the message' do
+              let(:strategy) { 'canary' }
+
+              before do
+                message.options[:canary] = {
+                  steps: [
+                    { instance_weight: 40 },
+                    { instance_weight: 80 }
+                  ]
+                }
+              end
+
+              it 'saves the canary steps' do
+                deployment = DeploymentCreate.create(app:, message:, user_audit_info:)
+                expect(deployment.canary_steps).to eq([{ 'instance_weight' => 40 }, { 'instance_weight' => 80 }])
+              end
+            end
+
             context 'when the app fails to start' do
               before do
                 allow(VCAP::CloudController::AppStart).to receive(:start).and_raise(VCAP::CloudController::AppStart::InvalidApp.new('memory quota_exceeded'))
@@ -1133,7 +1151,7 @@ module VCAP::CloudController
                                             strategy: strategy,
                                             options: {
                                               max_in_flight: max_in_flight,
-                                              canary: { steps: [{ 'instance_weight' => 66 }, { 'instance_weight' => 99 }] }
+                                              canary: { steps: [{ instance_weight: 66 }, { instance_weight: 99 }] }
                                             }
                                           })
             end
@@ -1145,17 +1163,7 @@ module VCAP::CloudController
                 deployment = DeploymentCreate.create(app:, message:, user_audit_info:)
               end.to change(DeploymentModel, :count).by(1)
 
-              expect(deployment.canary_steps).to eq([{ instance_weight: 66 }, { instance_weight: 99 }])
-            end
-
-            it 'sets the deployment canary current step' do
-              deployment = nil
-
-              expect do
-                deployment = DeploymentCreate.create(app:, message:, user_audit_info:)
-              end.to change(DeploymentModel, :count).by(1)
-
-              expect(deployment.canary_current_step).to eq(1)
+              expect(deployment.canary_steps).to eq([{ 'instance_weight' => 66 }, { 'instance_weight' => 99 }])
             end
 
             it 'sets starting instances to max in flight' do

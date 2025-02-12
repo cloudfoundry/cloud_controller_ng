@@ -175,6 +175,47 @@ module VCAP::CloudController::Presenters::V3
           end
         end
       end
+
+      describe 'options' do
+        it 'sets max in flight' do
+          result = DeploymentPresenter.new(deployment).to_hash
+          expect(result[:options][:max_in_flight]).to be(1)
+        end
+
+        context 'when the strategy is not canary' do
+          it 'does not present the canary steps' do
+            result = DeploymentPresenter.new(deployment).to_hash
+            expect(result[:options][:canary]).to be_nil
+          end
+        end
+
+        context 'when the strategy is canary without steps' do
+          before do
+            deployment.strategy = VCAP::CloudController::DeploymentModel::CANARY_STRATEGY
+            deployment.canary_steps = nil
+          end
+
+          it 'does not present the canary steps' do
+            result = DeploymentPresenter.new(deployment).to_hash
+            expect(result[:options][:canary]).to be_nil
+          end
+        end
+
+        context 'when the strategy is canary with steps' do
+          before do
+            deployment.strategy = VCAP::CloudController::DeploymentModel::CANARY_STRATEGY
+            deployment.canary_steps = [
+              { instance_weight: 1 },
+              { instance_weight: 2 }
+            ]
+          end
+
+          it 'presents the canary steps' do
+            result = DeploymentPresenter.new(deployment).to_hash
+            expect(result[:options][:canary][:steps]).to eq([{ instance_weight: 1 }, { instance_weight: 2 }])
+          end
+        end
+      end
     end
   end
 end

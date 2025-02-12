@@ -816,7 +816,14 @@ RSpec.describe 'Deployments' do
                                                             'details' => {
                                                               'last_successful_healthcheck' => iso8601,
                                                               'last_status_change' => iso8601
-                                                            }
+                                                            },
+                                                            'canary' =>
+                                                              {
+                                                                'steps' => {
+                                                                  'current' => 1,
+                                                                  'total' => 1
+                                                                }
+                                                              }
                                                           },
                                                           'strategy' => 'canary',
                                                           'droplet' => {
@@ -1059,7 +1066,7 @@ RSpec.describe 'Deployments' do
         it 'returns a 422' do
           post '/v3/deployments', create_request.to_json, user_header
           expect(last_response.status).to eq(422), last_response.body
-          expect(parsed_response['errors'][0]['detail']).to match('canary options are only valid for canary strategy')
+          expect(parsed_response['errors'][0]['detail']).to match('Options canary are only valid for Canary deployments')
         end
       end
 
@@ -1080,17 +1087,26 @@ RSpec.describe 'Deployments' do
                                                             'details' => {
                                                               'last_successful_healthcheck' => iso8601,
                                                               'last_status_change' => iso8601
+                                                            },
+                                                            'canary' =>
+                                                            {
+                                                              'steps' => {
+                                                                'current' => 1,
+                                                                'total' => 4
+                                                              }
                                                             }
                                                           },
                                                           'strategy' => 'canary',
                                                           'options' => {
                                                             'max_in_flight' => 1,
-                                                            'steps' => [
-                                                              { 'instance_weight' => 20 },
-                                                              { 'instance_weight' => 40 },
-                                                              { 'instance_weight' => 60 },
-                                                              { 'instance_weight' => 80 }
-                                                            ]
+                                                            'canary' => {
+                                                              'steps' => [
+                                                                { 'instance_weight' => 20 },
+                                                                { 'instance_weight' => 40 },
+                                                                { 'instance_weight' => 60 },
+                                                                { 'instance_weight' => 80 }
+                                                              ]
+                                                            }
                                                           },
                                                           'droplet' => {
                                                             'guid' => droplet.guid
@@ -1452,18 +1468,9 @@ RSpec.describe 'Deployments' do
       def json_for_deployment(deployment, app_model, droplet, status_value, status_reason, cancel_link=true)
         {
           guid: deployment.guid,
-          status: {
-            value: status_value,
-            reason: status_reason,
-            details: {
-              last_successful_healthcheck: iso8601,
-              last_status_change: iso8601
-            }
-          },
+          status: json_for_status(deployment, status_value, status_reason),
           strategy: deployment.strategy,
-          options: {
-            max_in_flight: 1
-          },
+          options: json_for_options(deployment),
           droplet: {
             guid: droplet.guid
           },
@@ -1505,6 +1512,38 @@ RSpec.describe 'Deployments' do
             }
           end
         end
+      end
+
+      def json_for_status(deployment, status_value, status_reason)
+        status = {
+          value: status_value,
+          reason: status_reason,
+          details: {
+            last_successful_healthcheck: iso8601,
+            last_status_change: iso8601
+          }
+        }
+        if deployment.strategy == 'canary'
+          status[:canary] = {
+            steps: {
+              current: deployment.canary_current_step || 1,
+              total: deployment.canary_steps&.length || 1
+            }
+          }
+        end
+        status
+      end
+
+      def json_for_options(deployment)
+        options = {
+          max_in_flight: deployment.max_in_flight
+        }
+        if deployment.canary_steps
+          options[:canary] = {
+            steps: deployment.canary_steps
+          }
+        end
+        options
       end
 
       it 'lists all deployments' do
