@@ -130,7 +130,14 @@ class CloudController::DelayedWorker
 
     Thread.new do
       server = Puma::Server.new(metrics_app)
-      server.add_tcp_listener '127.0.0.1', config.get(:prometheus_port) || 9394
+
+      context = Puma::MiniSSL::Context.new
+      context.cert        = '/var/vcap/jobs/cloud_controller_worker/config/certs/scrape.crt'
+      context.key         = '/var/vcap/jobs/cloud_controller_worker/config/certs/scrape.key'
+      context.ca          = '/var/vcap/jobs/cloud_controller_worker/config/certs/scrape_ca.crt'
+      context.verify_mode = Puma::MiniSSL::VERIFY_PEER | Puma::MiniSSL::VERIFY_FAIL_IF_NO_PEER_CERT
+
+      server.add_ssl_listener('127.0.0.1', config.get(:prometheus_port) || 9394, context)
       server.run
     end
   end
