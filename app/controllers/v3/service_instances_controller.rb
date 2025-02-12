@@ -430,7 +430,7 @@ class ServiceInstancesV3Controller < ApplicationController
   end
 
   def service_plan_not_visible_in_space!
-    unprocessable!('Invalid service plan. Ensure that the service plan is visible in your current space.')
+    unprocessable!('Invalid service plan. Ensure that the service plan is visible in your current space and still available in the broker\'s catalog.')
   end
 
   def invalid_service_plan_relation!
