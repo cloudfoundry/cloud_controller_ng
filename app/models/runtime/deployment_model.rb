@@ -90,6 +90,17 @@ module VCAP::CloudController
       super
       set_status_updated_at
     end
+    # TODO: documentation
+
+    def before_create
+      self.canary_current_step = 1 if strategy == DeploymentModel::CANARY_STRATEGY
+
+      unless canary_steps.nil?
+        # ensure that canary steps are in the correct format for serialization
+        self.canary_steps = canary_steps.map(&:stringify_keys)
+      end
+      super
+    end
 
     def deploying?
       DeploymentModel::PROGRESSING_STATES.include?(state)
@@ -103,34 +114,21 @@ module VCAP::CloudController
       state == DeploymentModel::PAUSED_STATE
     end
 
-    # TODO: index 0 for visibility??
     def canary_step
-      # TODO: when strategy is not canary
-      plan = canary_step_plan
+      raise 'canary_step is only valid for canary deloyments' unless strategy == CANARY_STRATEGY
 
       current_step = canary_current_step || 1
-      plan[current_step - 1]
+      canary_step_plan[current_step - 1]
     end
 
-    # TODO: to be called by continue deployment. Should this also set the state to pre-paused conditionally (if not last step)
-    # def set_canary_step_complete
-    #   self.canary_current_step = canary_current_step + 1
-    #   # TODO: do we need to do something for model to save here or is it automatic?
-
-    #   # if (more steps)
-    #   # set state to prepaused
-    #   # else
-    #   # set state to deploying
-    # end
-
-    # TODO: would be used to populate any API.
     def canary_step_plan
-      # TODO: when strategy is not canary
+      raise 'canary_step_plan is only valid for canary deloyments' unless strategy == CANARY_STRATEGY
+
       return [{ canary: 1, original: original_web_process_instance_count }] if canary_steps.nil?
 
       canary_steps.map do |step|
         weight = step['instance_weight']
-        target_canary = (original_web_process_instance_count * (weight.to_f / 100)).round.to_i # TODO: this rounds up at mid point 5.5 (is this an issue(?))
+        target_canary = (original_web_process_instance_count * (weight.to_f / 100)).round.to_i
         target_canary = 1 if target_canary.zero?
         target_original = original_web_process_instance_count - target_canary + 1
         { canary: target_canary, original: target_original }

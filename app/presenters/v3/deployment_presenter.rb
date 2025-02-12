@@ -10,11 +10,9 @@ module VCAP::CloudController::Presenters::V3
         guid: deployment.guid,
         created_at: deployment.created_at,
         updated_at: deployment.updated_at,
-        status: build_status(deployment),
+        status: status(deployment),
         strategy: deployment.strategy,
-        options: {
-          max_in_flight: deployment.max_in_flight
-        },
+        options: options(deployment),
         droplet: {
           guid: deployment.droplet_guid
         },
@@ -57,7 +55,21 @@ module VCAP::CloudController::Presenters::V3
       end
     end
 
-    def build_status(deployment)
+    def options(deployment)
+      options = {
+        max_in_flight: deployment.max_in_flight
+      }
+
+      if deployment.strategy == VCAP::CloudController::DeploymentModel::CANARY_STRATEGY && deployment.canary_steps
+        options[:canary] = {
+          steps: deployment.canary_steps
+        }
+      end
+
+      options
+    end
+
+    def status(deployment)
       status = {
         value: deployment.status_value,
         reason: deployment.status_reason,
@@ -70,7 +82,6 @@ module VCAP::CloudController::Presenters::V3
       if deployment.strategy == VCAP::CloudController::DeploymentModel::CANARY_STRATEGY
         status[:canary] = {
           steps: {
-            # TODO: delegate to model ?
             current: deployment.canary_current_step,
             total: deployment.canary_steps&.length || 1
           }

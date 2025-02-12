@@ -54,17 +54,9 @@ module VCAP::CloudController
             revision_guid: revision&.guid,
             revision_version: revision&.version,
             strategy: message.strategy,
-            max_in_flight: message.max_in_flight
+            max_in_flight: message.max_in_flight,
+            canary_steps: message.options&.dig(:canary, :steps)
           )
-
-          # TODO: should this dig go into a model func
-          canary_steps = message.options&.dig(:canary, :steps)
-          if canary_steps && canary_steps.any?
-            deployment.update(
-              canary_steps: canary_steps.map(&:stringify_keys),
-              canary_current_step: 1
-            )
-          end
 
           MetadataUpdate.update(deployment, message)
 
@@ -175,8 +167,6 @@ module VCAP::CloudController
         # Do not create a revision here because AppStart will not handle the rollback case
         AppStart.start(app: app, user_audit_info: user_audit_info, create_revision: false)
 
-        # TODO, do we update this for canary steps?
-
         deployment = DeploymentModel.create(
           app: app,
           state: DeploymentModel::DEPLOYED_STATE,
@@ -188,7 +178,8 @@ module VCAP::CloudController
           revision_guid: revision&.guid,
           revision_version: revision&.version,
           strategy: message.strategy,
-          max_in_flight: message.max_in_flight
+          max_in_flight: message.max_in_flight,
+          canary_steps: message.options&.dig(:canary, :steps)
         )
 
         MetadataUpdate.update(deployment, message)
