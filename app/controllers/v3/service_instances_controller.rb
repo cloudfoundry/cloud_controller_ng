@@ -438,13 +438,13 @@ class ServiceInstancesV3Controller < ApplicationController
   end
 
   def unavailable_service_plan!(service_plan, service_plan_guid)
-    unprocessable!("Invalid service plan. The service plan #{service_plan} with guid #{service_plan_guid} has been removed from the service broker's catalog." \
+    unprocessable!("Invalid service plan. The service plan '#{service_plan}' with guid '#{service_plan_guid}' has been removed from the service broker's catalog." \
                    'It is not possible to create new service instances using this plan.')
   end
 
   def service_plan_not_visible_in_space!(service_plan, service_plan_guid, space_name, space_guid)
-    unprocessable!("Invalid service plan. Ensure that the service plan #{service_plan} with guid #{service_plan_guid} \
-is visible in your current space #{space_name} with guid #{space_guid}.")
+    unprocessable!("Invalid service plan. Ensure that the service plan '#{service_plan}' with guid '#{service_plan_guid}' \
+is visible in your current space '#{space_name}' with guid '#{space_guid}'.")
   end
 
   def invalid_service_plan_relation!
