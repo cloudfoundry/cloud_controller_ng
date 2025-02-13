@@ -1260,7 +1260,8 @@ RSpec.describe 'V3 service instances' do
             expect(last_response).to have_status_code(422)
             expect(parsed_response['errors']).to include(
               include({
-                        'detail' => 'Invalid service plan. Ensure that the service plan is visible in your current space.',
+                        'detail' => "Invalid service plan. Ensure that the service plan #{service_plan.name} with \
+guid #{service_plan_guid} is visible in your current space #{space.name} with guid #{space.guid}.",
                         'title' => 'CF-UnprocessableEntity',
                         'code' => 10_008
                       })
@@ -1276,7 +1277,8 @@ RSpec.describe 'V3 service instances' do
             expect(last_response).to have_status_code(422)
             expect(parsed_response['errors']).to include(
               include({
-                        'detail' => "Invalid service plan. The service plan #{service_plan.name} has been removed from the service broker's catalog." \
+                        'detail' => "Invalid service plan. The service plan #{service_plan.name} with guid #{service_plan.guid} " \
+                                    "has been removed from the service broker's catalog." \
                                     'It is not possible to create new service instances using this plan.',
                         'title' => 'CF-UnprocessableEntity',
                         'code' => 10_008
@@ -2414,7 +2416,8 @@ RSpec.describe 'V3 service instances' do
             expect(last_response).to have_status_code(422)
             expect(parsed_response['errors']).to include(
               include({
-                        'detail' => "Invalid service plan. The service plan #{service_plan.name} has been removed from the service broker's catalog." \
+                        'detail' => "Invalid service plan. The service plan #{service_plan.name} with guid #{service_plan.guid} " \
+                                    "has been removed from the service broker's catalog." \
                                     'It is not possible to create new service instances using this plan.',
                         'title' => 'CF-UnprocessableEntity',
                         'code' => 10_008
