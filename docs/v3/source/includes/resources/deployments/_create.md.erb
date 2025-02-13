@@ -78,6 +78,7 @@ Name | Type | Description | Default
 **revision**<sup>[1]</sup> | _object_ | The [revision](#revisions) whose droplet to deploy for the app; this will update the app's [current droplet](#get-current-droplet-association-for-an-app) to this droplet |
 **strategy** | _string_ | The strategy to use for the deployment | `rolling`
 **options.max_in_flight** | _integer_ | The maximum number of new instances to deploy simultaneously | 1
+**options.canary.steps** | _array of [canary step objects](#canary-steps-object)_ | Canary steps to use for the deployment An array of canary steps to use for the deployment
 **metadata.labels** | [_label object_](#labels) | Labels applied to the deployment
 **metadata.annotations**  | [_annotation object_](#annotations) | Annotations applied to the deployment
 
