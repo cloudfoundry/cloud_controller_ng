@@ -255,9 +255,8 @@ class ServiceInstancesV3Controller < ApplicationController
   def create_managed(message, space:)
     service_plan = ServicePlan.first(guid: message.service_plan_guid)
     unprocessable_service_plan! unless service_plan_valid?(service_plan)
-    unavailable_service_plan!(service_plan.name, service_plan.guid) unless service_plan_active?(service_plan)
-    service_plan_not_visible_in_space!(service_plan.name, service_plan.guid, space.name, space.guid) \
-      unless service_plan_exists_in_space?(service_plan, space)
+    unavailable_service_plan!(service_plan) unless service_plan_active?(service_plan)
+    service_plan_not_visible_in_space!(service_plan, space) unless service_plan_exists_in_space?(service_plan, space)
 
     action = V3::ServiceInstanceCreateManaged.new(user_audit_info, message.audit_hash)
     VCAP::CloudController::ManagedServiceInstance.db.transaction do
@@ -415,9 +414,8 @@ class ServiceInstancesV3Controller < ApplicationController
 
     service_plan = ServicePlan.first(guid: message.service_plan_guid)
     unprocessable_service_plan! unless service_plan_valid?(service_plan)
-    unavailable_service_plan!(service_plan.name, service_plan.guid) unless service_plan_active?(service_plan)
-    service_plan_not_visible_in_space!(service_plan.name, service_plan.guid, space.name, space.guid) \
-      unless service_plan_exists_in_space?(service_plan, service_instance.space)
+    unavailable_service_plan!(service_plan) unless service_plan_active?(service_plan)
+    service_plan_not_visible_in_space!(service_plan, space) unless service_plan_exists_in_space?(service_plan, service_instance.space)
     invalid_service_plan_relation! unless service_plan.service == service_instance.service
   end
 
@@ -437,14 +435,16 @@ class ServiceInstancesV3Controller < ApplicationController
     unprocessable!('Invalid service plan. Ensure that the service plan exists, is available, and you have access to it.')
   end
 
-  def unavailable_service_plan!(service_plan, service_plan_guid)
-    unprocessable!("Invalid service plan. The service plan '#{service_plan}' with guid '#{service_plan_guid}' has been removed from the service broker's catalog." \
+  def unavailable_service_plan!(service_plan)
+    unprocessable!("Invalid service plan. The service plan '#{service_plan.name}' with guid '#{service_plan.guid}' has been removed from the service broker's catalog. " \
                    'It is not possible to create new service instances using this plan.')
   end
 
-  def service_plan_not_visible_in_space!(service_plan, service_plan_guid, space_name, space_guid)
-    unprocessable!("Invalid service plan. Ensure that the service plan '#{service_plan}' with guid '#{service_plan_guid}' \
-is visible in your current space '#{space_name}' with guid '#{space_guid}'.")
+  def service_plan_not_visible_in_space!(service_plan, space)
+    unprocessable!('Invalid service plan. This could be due to a space-scoped broker which is offering the service plan ' \
+                   "'#{service_plan.name}' with guid '#{service_plan.guid} in another space or that the plan " \
+                   'is not enabled in this organization. Ensure that the service plan is visible in your current space ' \
+                   "'#{space.name}' with guid '#{space.guid}'.")
   end
 
   def invalid_service_plan_relation!
