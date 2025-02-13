@@ -255,6 +255,7 @@ class ServiceInstancesV3Controller < ApplicationController
   def create_managed(message, space:)
     service_plan = ServicePlan.first(guid: message.service_plan_guid)
     unprocessable_service_plan! unless service_plan_valid?(service_plan)
+    unavailable_service_plan!(service_plan.name) unless service_plan_active?(service_plan)
     service_plan_not_visible_in_space! unless service_plan_exists_in_space?(service_plan, space)
 
     action = V3::ServiceInstanceCreateManaged.new(user_audit_info, message.audit_hash)
@@ -400,6 +401,10 @@ class ServiceInstancesV3Controller < ApplicationController
       visible_to_current_user?(plan: service_plan)
   end
 
+  def service_plan_active?(service_plan)
+    service_plan.active?
+  end
+
   def service_plan_exists_in_space?(service_plan, space)
     service_plan.visible_in_space?(space)
   end
@@ -409,6 +414,7 @@ class ServiceInstancesV3Controller < ApplicationController
 
     service_plan = ServicePlan.first(guid: message.service_plan_guid)
     unprocessable_service_plan! unless service_plan_valid?(service_plan)
+    unavailable_service_plan!(service_plan.name) unless service_plan_active?(service_plan)
     service_plan_not_visible_in_space! unless service_plan_exists_in_space?(service_plan, service_instance.space)
     invalid_service_plan_relation! unless service_plan.service == service_instance.service
   end
@@ -429,8 +435,12 @@ class ServiceInstancesV3Controller < ApplicationController
     unprocessable!('Invalid service plan. Ensure that the service plan exists, is available, and you have access to it.')
   end
 
+  def unavailable_service_plan!(service_plan)
+    unprocessable!("Invalid service plan. The service plan #{service_plan} has been removed from the service broker's catalog. It is not possible to create new service instances using this plan.")
+  end
+
   def service_plan_not_visible_in_space!
-    unprocessable!('Invalid service plan. Ensure that the service plan is visible in your current space and still available in the broker\'s catalog.')
+    unprocessable!('Invalid service plan. Ensure that the service plan is visible in your current space.')
   end
 
   def invalid_service_plan_relation!
