@@ -1276,7 +1276,8 @@ RSpec.describe 'V3 service instances' do
             expect(last_response).to have_status_code(422)
             expect(parsed_response['errors']).to include(
               include({
-                        'detail' => "Invalid service plan. The service plan #{service_plan.name} has been removed from the service broker\'s catalog. It is not possible to create new service instances using this plan.",
+                        'detail' => "Invalid service plan. The service plan #{service_plan.name} has been removed from the service broker's catalog." \
+                                    'It is not possible to create new service instances using this plan.',
                         'title' => 'CF-UnprocessableEntity',
                         'code' => 10_008
                       })
@@ -2413,7 +2414,8 @@ RSpec.describe 'V3 service instances' do
             expect(last_response).to have_status_code(422)
             expect(parsed_response['errors']).to include(
               include({
-                        'detail' => "Invalid service plan. The service plan #{service_plan.name} has been removed from the service broker\'s catalog. It is not possible to create new service instances using this plan.",
+                        'detail' => "Invalid service plan. The service plan #{service_plan.name} has been removed from the service broker's catalog." \
+                                    'It is not possible to create new service instances using this plan.',
                         'title' => 'CF-UnprocessableEntity',
                         'code' => 10_008
                       })

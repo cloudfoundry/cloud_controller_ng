@@ -436,7 +436,8 @@ class ServiceInstancesV3Controller < ApplicationController
   end
 
   def unavailable_service_plan!(service_plan)
-    unprocessable!("Invalid service plan. The service plan #{service_plan} has been removed from the service broker's catalog. It is not possible to create new service instances using this plan.")
+    unprocessable!("Invalid service plan. The service plan #{service_plan} has been removed from the service broker's catalog." \
+                   'It is not possible to create new service instances using this plan.')
   end
 
   def service_plan_not_visible_in_space!
