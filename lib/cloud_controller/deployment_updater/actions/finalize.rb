@@ -15,6 +15,7 @@ module VCAP::CloudController
 
           update_non_web_processes
           restart_non_web_processes
+
           deployment.update(
             state: DeploymentModel::DEPLOYED_STATE,
             status_value: DeploymentModel::FINALIZED_STATUS_VALUE,

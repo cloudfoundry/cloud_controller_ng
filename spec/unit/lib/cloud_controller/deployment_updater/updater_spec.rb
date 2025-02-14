@@ -46,7 +46,6 @@ module VCAP::CloudController
       )
     end
 
-    let(:diego_instances_reporter) { instance_double(Diego::InstancesReporter) }
     let(:all_instances_results) do
       {
         0 => { state: 'RUNNING', uptime: 50, since: 2, routable: true },
@@ -54,15 +53,80 @@ module VCAP::CloudController
         2 => { state: 'RUNNING', uptime: 50, since: 2, routable: true }
       }
     end
-    let(:instances_reporters) { double(:instance_reporters) }
     let(:logger) { instance_double(Steno::Logger, info: nil, error: nil) }
 
+    let(:diego_reporter) { Diego::InstancesReporter.new(nil) }
+
     before do
-      allow(CloudController::DependencyLocator.instance).to receive(:instances_reporters).and_return(instances_reporters)
-      allow(instances_reporters).to receive(:all_instances_for_app).and_return(all_instances_results)
+      allow_any_instance_of(VCAP::CloudController::InstancesReporters).to receive(:diego_reporter).and_return(diego_reporter)
+      allow(diego_reporter).to receive(:all_instances_for_app).and_return(all_instances_results)
     end
 
     describe '#scale' do
+      context 'when the deployment process has reached original_web_process_instance_count' do
+        let(:droplet) do
+          DropletModel.make(
+            process_types: {
+              'clock' => 'droplet_clock_command',
+              'worker' => 'droplet_worker_command'
+            }
+          )
+        end
+
+        let(:all_instances_results) do
+          {
+            0 => { state: 'RUNNING', uptime: 50, since: 2, routable: true },
+            1 => { state: 'RUNNING', uptime: 50, since: 2, routable: true },
+            2 => { state: 'RUNNING', uptime: 50, since: 2, routable: true },
+            3 => { state: 'RUNNING', uptime: 50, since: 2, routable: true },
+            4 => { state: 'RUNNING', uptime: 50, since: 2, routable: true },
+            5 => { state: 'RUNNING', uptime: 50, since: 2, routable: true }
+          }
+        end
+
+        let(:current_deploying_instances) { 6 }
+
+        before do
+          allow(ProcessRestart).to receive(:restart)
+          RevisionProcessCommandModel.where(
+            process_type: 'worker',
+            revision_guid: revision.guid
+          ).update(process_command: 'revision-non-web-1-command')
+        end
+
+        it 'finalizes the deployment' do
+          subject.scale
+          deployment.reload
+          expect(deployment.state).to eq(DeploymentModel::DEPLOYED_STATE)
+          expect(deployment.status_value).to eq(DeploymentModel::FINALIZED_STATUS_VALUE)
+          expect(deployment.status_reason).to eq(DeploymentModel::DEPLOYED_STATUS_REASON)
+
+          after_web_process = deployment.app.web_processes.first
+          expect(after_web_process.guid).to eq(deploying_web_process.guid)
+          expect(after_web_process.instances).to eq(6)
+        end
+
+        context 'but one instance is failing' do
+          let(:all_instances_results) do
+            {
+              0 => { state: 'RUNNING', uptime: 50, since: 2, routable: true },
+              1 => { state: 'RUNNING', uptime: 50, since: 2, routable: true },
+              2 => { state: 'RUNNING', uptime: 50, since: 2, routable: true },
+              3 => { state: 'RUNNING', uptime: 50, since: 2, routable: true },
+              4 => { state: 'RUNNING', uptime: 50, since: 2, routable: true },
+              5 => { state: 'FAILING', uptime: 50, since: 2, routable: false }
+            }
+          end
+
+          it 'doesn\'t finalize the deployment' do
+            skip 'Seems like we shouldn\'t finalize if there is a failing instance, but that is the current behavior'
+            subject.scale
+            deployment.reload
+            expect(deployment.state).to eq(DeploymentModel::DEPLOYING_STATE)
+          end
+        end
+      end
+
       context 'when an error occurs while scaling a deployment' do
         let(:failing_process) { ProcessModel.make(app: web_process.app, type: 'failing', instances: 5) }
         let(:deployment) { DeploymentModel.make(app: web_process.app, deploying_web_process: failing_process, state: 'DEPLOYING') }

@@ -1,6 +1,7 @@
 require 'cloud_controller/deployment_updater/actions/scale'
 require 'cloud_controller/deployment_updater/actions/cancel'
 require 'cloud_controller/deployment_updater/actions/canary'
+require 'cloud_controller/deployment_updater/actions/finalize'
 module VCAP::CloudController
   module DeploymentUpdater
     class Updater
@@ -13,7 +14,8 @@ module VCAP::CloudController
 
       def scale
         with_error_logging('error-scaling-deployment') do
-          Actions::Scale.new(deployment, logger).call
+          finished = Actions::Scale.new(deployment, logger, deployment.original_web_process_instance_count).call
+          Actions::Finalize.new(deployment).call if finished
           logger.info("ran-deployment-update-for-#{deployment.guid}")
         end
       end
