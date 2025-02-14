@@ -20,7 +20,7 @@ module VCAP::CloudController
           droplet.space.organization_guid
         )
 
-        enqueued_job = Jobs::Enqueuer.new(upload_job, queue: Jobs::Queues.local(config)).enqueue_pollable
+        enqueued_job = Jobs::Enqueuer.new(queue: Jobs::Queues.local(config)).enqueue_pollable(upload_job)
       end
 
       enqueued_job

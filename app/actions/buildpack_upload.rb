@@ -4,7 +4,7 @@ module VCAP::CloudController
       logger.info("uploading buildpacks bits for buildpack #{buildpack.guid}")
 
       upload_job = Jobs::V3::BuildpackBits.new(buildpack.guid, message.bits_path, message.bits_name)
-      Jobs::Enqueuer.new(upload_job, queue: Jobs::Queues.local(config)).enqueue_pollable
+      Jobs::Enqueuer.new(queue: Jobs::Queues.local(config)).enqueue_pollable(upload_job)
     end
 
     private

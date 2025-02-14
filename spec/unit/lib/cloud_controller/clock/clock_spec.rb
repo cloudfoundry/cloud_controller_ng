@@ -41,8 +41,8 @@ module VCAP::CloudController
         clock.schedule_daily_job(**clock_opts) { some_job_class.new }
 
         expected_job_opts = { queue: job_name, priority: 0 }
-        expect(Jobs::Enqueuer).to have_received(:new).with(instance_of(some_job_class), expected_job_opts)
-        expect(enqueuer).to have_received(:enqueue)
+        expect(Jobs::Enqueuer).to have_received(:new).with(expected_job_opts)
+        expect(enqueuer).to have_received(:enqueue).with(instance_of(some_job_class))
       end
 
       context 'when a job has a priority' do
@@ -70,8 +70,8 @@ module VCAP::CloudController
           clock.schedule_daily_job(**clock_opts) { some_job_class.new }
 
           expected_job_opts = { queue: job_name, priority: priority }
-          expect(Jobs::Enqueuer).to have_received(:new).with(instance_of(some_job_class), expected_job_opts)
-          expect(enqueuer).to have_received(:enqueue)
+          expect(Jobs::Enqueuer).to have_received(:new).with(expected_job_opts)
+          expect(enqueuer).to have_received(:enqueue).with(instance_of(some_job_class))
         end
       end
     end
@@ -97,8 +97,8 @@ module VCAP::CloudController
         clock.schedule_frequent_worker_job(**clock_opts) { some_job_class.new }
 
         expected_job_opts = { queue: job_name }
-        expect(Jobs::Enqueuer).to have_received(:new).with(instance_of(some_job_class), expected_job_opts)
-        expect(enqueuer).to have_received(:enqueue)
+        expect(Jobs::Enqueuer).to have_received(:new).with(expected_job_opts)
+        expect(enqueuer).to have_received(:enqueue).with(instance_of(some_job_class))
       end
     end
 
@@ -127,8 +127,8 @@ module VCAP::CloudController
         clock.schedule_frequent_inline_job(**clock_opts) { some_job_class.new }
 
         expected_job_opts = { queue: job_name }
-        expect(Jobs::Enqueuer).to have_received(:new).with(instance_of(some_job_class), expected_job_opts)
-        expect(enqueuer).to have_received(:run_inline)
+        expect(Jobs::Enqueuer).to have_received(:new).with(expected_job_opts)
+        expect(enqueuer).to have_received(:run_inline).with(instance_of(some_job_class))
       end
     end
   end

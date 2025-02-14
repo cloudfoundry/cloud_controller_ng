@@ -74,7 +74,7 @@ module VCAP::CloudController
       check_content_digest
 
       upload_job = Jobs::V3::BuildpackCacheUpload.new(local_path: upload_path, app_guid: guid, stack_name: stack_name)
-      Jobs::Enqueuer.new(upload_job, queue: Jobs::Queues.local(config)).enqueue
+      Jobs::Enqueuer.new(queue: Jobs::Queues.local(config)).enqueue(upload_job)
 
       HTTP::OK
     end
@@ -119,7 +119,7 @@ module VCAP::CloudController
 
       droplet_upload_job = Jobs::V3::DropletUpload.new(upload_path, droplet.guid, skip_state_transition: true)
 
-      Jobs::Enqueuer.new(droplet_upload_job, queue: Jobs::Queues.local(config)).enqueue
+      Jobs::Enqueuer.new(queue: Jobs::Queues.local(config)).enqueue(droplet_upload_job)
     end
 
     def droplet_from_build(build, guid)

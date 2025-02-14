@@ -25,7 +25,7 @@ module VCAP::CloudController
         def enqueue_again
           opts = { queue: Jobs::Queues.generic, run_at: Delayed::Job.db_time_now + next_execution_in }
           self.retry_number += 1
-          Jobs::Enqueuer.new(self, opts).enqueue
+          Jobs::Enqueuer.new(opts).enqueue(self)
         end
 
         def default_polling_exponential_backoff

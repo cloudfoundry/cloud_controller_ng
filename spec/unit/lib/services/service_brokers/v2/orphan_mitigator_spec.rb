@@ -17,16 +17,16 @@ module VCAP::Services
 
           OrphanMitigator.new.cleanup_failed_provision(service_instance)
 
-          expect(VCAP::CloudController::Jobs::Enqueuer).to have_received(:new) do |job, opts|
+          expect(VCAP::CloudController::Jobs::Enqueuer).to have_received(:new) do |opts|
             expect(opts[:queue]).to eq VCAP::CloudController::Jobs::Queues.generic
+          end
 
+          expect(mock_enqueuer).to have_received(:enqueue) do |job|
             expect(job).to be_a VCAP::CloudController::Jobs::Services::DeleteOrphanedInstance
             expect(job.name).to eq 'service-instance-deprovision'
             expect(job.service_instance_guid).to eq service_instance.guid
             expect(job.service_plan_guid).to eq service_instance.service_plan.guid
           end
-
-          expect(mock_enqueuer).to have_received(:enqueue)
         end
 
         specify 'the enqueued job has a reschedule_at define such that exponential backoff occurs' do
@@ -52,16 +52,16 @@ module VCAP::Services
           end
 
           it 'enqueues an unbind job' do
-            expect(VCAP::CloudController::Jobs::Enqueuer).to have_received(:new) do |job, opts|
+            expect(VCAP::CloudController::Jobs::Enqueuer).to have_received(:new) do |opts|
               expect(opts[:queue]).to eq VCAP::CloudController::Jobs::Queues.generic
+            end
 
+            expect(mock_enqueuer).to have_received(:enqueue) do |job|
               expect(job).to be_a VCAP::CloudController::Jobs::Services::DeleteOrphanedBinding
               expect(job.name).to eq 'service-instance-unbind'
               expect(job.binding_info.guid).to eq binding.guid
               expect(job.binding_info.service_instance_guid).to eq binding.service_instance.guid
             end
-
-            expect(mock_enqueuer).to have_received(:enqueue)
           end
         end
 
@@ -97,16 +97,16 @@ module VCAP::Services
 
           OrphanMitigator.new.cleanup_failed_key(service_key)
 
-          expect(VCAP::CloudController::Jobs::Enqueuer).to have_received(:new) do |job, opts|
+          expect(VCAP::CloudController::Jobs::Enqueuer).to have_received(:new) do |opts|
             expect(opts[:queue]).to eq VCAP::CloudController::Jobs::Queues.generic
+          end
 
+          expect(mock_enqueuer).to have_received(:enqueue) do |job|
             expect(job).to be_a VCAP::CloudController::Jobs::Services::DeleteOrphanedKey
             expect(job.name).to eq 'service-key-delete'
             expect(job.key_guid).to eq service_key.guid
             expect(job.service_instance_guid).to eq service_key.service_instance.guid
           end
-
-          expect(mock_enqueuer).to have_received(:enqueue)
         end
 
         specify 'the enqueued job has a reschedule_at define such that exponential backoff occurs' do
