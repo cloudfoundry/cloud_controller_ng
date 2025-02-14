@@ -19,7 +19,7 @@ module VCAP::CloudController
           result = binding_delete_action.delete(binding)
           unless result[:finished]
             polling_job = DeleteBindingJob.new(type, binding.guid, user_audit_info:)
-            Jobs::Enqueuer.new(polling_job, queue: Jobs::Queues.generic).enqueue_pollable
+            Jobs::Enqueuer.new(queue: Jobs::Queues.generic).enqueue_pollable(polling_job)
             unbinding_operation_in_progress!(binding)
           end
         rescue StandardError => e

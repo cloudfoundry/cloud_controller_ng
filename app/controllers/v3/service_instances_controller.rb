@@ -267,7 +267,7 @@ class ServiceInstancesV3Controller < ApplicationController
         audit_hash: message.audit_hash
       )
 
-      pollable_job = Jobs::Enqueuer.new(provision_job, queue: Jobs::Queues.generic).enqueue_pollable
+      pollable_job = Jobs::Enqueuer.new(queue: Jobs::Queues.generic).enqueue_pollable(provision_job)
 
       head :accepted, 'Location' => url_builder.build_url(path: "/v3/jobs/#{pollable_job.guid}")
     end
@@ -349,7 +349,7 @@ class ServiceInstancesV3Controller < ApplicationController
 
   def enqueue_delete_job(service_instance)
     delete_job = V3::DeleteServiceInstanceJob.new(service_instance.guid, user_audit_info)
-    pollable_job = Jobs::Enqueuer.new(delete_job, queue: Jobs::Queues.generic).enqueue_pollable
+    pollable_job = Jobs::Enqueuer.new(queue: Jobs::Queues.generic).enqueue_pollable(delete_job)
     pollable_job.guid
   end
 

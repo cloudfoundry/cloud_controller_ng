@@ -23,7 +23,7 @@ module VCAP::CloudController::Jobs
       let(:job) { DeleteActionJob.new(VCAP::CloudController::DropletModel, 'fake', delete_action) }
 
       it 'creates a job record and marks the job model as completed' do
-        enqueued_job = VCAP::CloudController::Jobs::Enqueuer.new(pollable_job).enqueue
+        enqueued_job = VCAP::CloudController::Jobs::Enqueuer.new.enqueue(pollable_job)
 
         job_record = VCAP::CloudController::PollableJobModel.find(delayed_job_guid: enqueued_job.guid)
         expect(job_record).not_to be_nil, "Expected to find PollableJobModel with delayed_job_guid '#{enqueued_job.guid}', but did not"
@@ -49,15 +49,15 @@ module VCAP::CloudController::Jobs
 
           before do
             stub_const('VCAP::CloudController::SecurityContext', security_context)
-            VCAP::CloudController::Jobs::Enqueuer.new(PollableJobWrapper.new(job)).enqueue
-            VCAP::CloudController::Jobs::Enqueuer.new(PollableJobWrapper.new(job)).enqueue
-            VCAP::CloudController::Jobs::Enqueuer.new(PollableJobWrapper.new(job)).enqueue
+            VCAP::CloudController::Jobs::Enqueuer.new.enqueue(PollableJobWrapper.new(job))
+            VCAP::CloudController::Jobs::Enqueuer.new.enqueue(PollableJobWrapper.new(job))
+            VCAP::CloudController::Jobs::Enqueuer.new.enqueue(PollableJobWrapper.new(job))
           end
 
           it 'adds +1 to base priority for each active job' do
             TestConfig.config[:jobs][:priorities] = { 'droplet.delete': 20 }
 
-            enqueued_job = VCAP::CloudController::Jobs::Enqueuer.new(pollable_job).enqueue
+            enqueued_job = VCAP::CloudController::Jobs::Enqueuer.new.enqueue(pollable_job)
             expect(enqueued_job.priority).to eq(23)
           end
 
@@ -71,14 +71,14 @@ module VCAP::CloudController::Jobs
             it 'does not change its delayed job\'s base priority' do
               TestConfig.config[:jobs][:priorities] = { 'droplet.delete': 20 }
 
-              enqueued_job = VCAP::CloudController::Jobs::Enqueuer.new(pollable_job).enqueue
+              enqueued_job = VCAP::CloudController::Jobs::Enqueuer.new.enqueue(pollable_job)
               expect(enqueued_job.priority).to eq(20)
             end
 
             it 'uses nil for the user_guid' do
               TestConfig.config[:jobs][:priorities] = { 'droplet.delete': 20 }
 
-              enqueued_job = VCAP::CloudController::Jobs::Enqueuer.new(pollable_job).enqueue
+              enqueued_job = VCAP::CloudController::Jobs::Enqueuer.new.enqueue(pollable_job)
 
               job_record = VCAP::CloudController::PollableJobModel.find(delayed_job_guid: enqueued_job.guid)
               expect(job_record.user_guid).to be_nil
@@ -94,15 +94,15 @@ module VCAP::CloudController::Jobs
 
           before do
             stub_const('VCAP::CloudController::SecurityContext', security_context)
-            VCAP::CloudController::Jobs::Enqueuer.new(PollableJobWrapper.new(job)).enqueue
-            VCAP::CloudController::Jobs::Enqueuer.new(PollableJobWrapper.new(job)).enqueue
-            VCAP::CloudController::Jobs::Enqueuer.new(PollableJobWrapper.new(job)).enqueue
+            VCAP::CloudController::Jobs::Enqueuer.new.enqueue(PollableJobWrapper.new(job))
+            VCAP::CloudController::Jobs::Enqueuer.new.enqueue(PollableJobWrapper.new(job))
+            VCAP::CloudController::Jobs::Enqueuer.new.enqueue(PollableJobWrapper.new(job))
           end
 
           it 'does not change its delayed job\'s base priority' do
             TestConfig.config[:jobs][:priorities] = { 'droplet.delete': 20 }
 
-            enqueued_job = VCAP::CloudController::Jobs::Enqueuer.new(pollable_job).enqueue
+            enqueued_job = VCAP::CloudController::Jobs::Enqueuer.new.enqueue(pollable_job)
             expect(enqueued_job.priority).to eq(20)
           end
         end
@@ -116,7 +116,7 @@ module VCAP::CloudController::Jobs
           jobs_before_enqueue = VCAP::CloudController::PollableJobModel.all.length
           expect(jobs_before_enqueue).to eq(1)
 
-          enqueued_job = VCAP::CloudController::Jobs::Enqueuer.new(pollable_job).enqueue
+          enqueued_job = VCAP::CloudController::Jobs::Enqueuer.new.enqueue(pollable_job)
 
           jobs_after_enqueue = VCAP::CloudController::PollableJobModel.all.length
           expect(jobs_after_enqueue).to eq(1)
@@ -140,15 +140,15 @@ module VCAP::CloudController::Jobs
 
             before do
               stub_const('VCAP::CloudController::SecurityContext', security_context)
-              VCAP::CloudController::Jobs::Enqueuer.new(PollableJobWrapper.new(job)).enqueue
-              VCAP::CloudController::Jobs::Enqueuer.new(PollableJobWrapper.new(job)).enqueue
-              VCAP::CloudController::Jobs::Enqueuer.new(PollableJobWrapper.new(job)).enqueue
+              VCAP::CloudController::Jobs::Enqueuer.new.enqueue(PollableJobWrapper.new(job))
+              VCAP::CloudController::Jobs::Enqueuer.new.enqueue(PollableJobWrapper.new(job))
+              VCAP::CloudController::Jobs::Enqueuer.new.enqueue(PollableJobWrapper.new(job))
             end
 
             it 'does not change its delayed job\'s base priority' do
               TestConfig.config[:jobs][:priorities] = { 'droplet.delete': 20 }
 
-              enqueued_job = VCAP::CloudController::Jobs::Enqueuer.new(pollable_job).enqueue
+              enqueued_job = VCAP::CloudController::Jobs::Enqueuer.new.enqueue(pollable_job)
               expect(enqueued_job.priority).to eq(20)
             end
           end
@@ -162,7 +162,7 @@ module VCAP::CloudController::Jobs
           end
 
           it 'updates the existing job state accordingly' do
-            enqueued_job = VCAP::CloudController::Jobs::Enqueuer.new(pollable_job).enqueue
+            enqueued_job = VCAP::CloudController::Jobs::Enqueuer.new.enqueue(pollable_job)
             job_record = VCAP::CloudController::PollableJobModel.find(delayed_job_guid: enqueued_job.guid)
             expect(job_record.state).to eq('ABRACADABRA')
           end
@@ -178,7 +178,7 @@ module VCAP::CloudController::Jobs
 
         context 'when there is an associated job model' do
           it 'marks the job model failed and records errors' do
-            enqueued_job = VCAP::CloudController::Jobs::Enqueuer.new(pollable_job).enqueue
+            enqueued_job = VCAP::CloudController::Jobs::Enqueuer.new.enqueue(pollable_job)
             job_model = VCAP::CloudController::PollableJobModel.make(delayed_job_guid: enqueued_job.guid, state: 'PROCESSING')
 
             execute_all_jobs(expected_successes: 0, expected_failures: 1)
@@ -196,7 +196,7 @@ module VCAP::CloudController::Jobs
 
         context 'when there is NOT an associated job model' do
           it 'does NOT choke' do
-            VCAP::CloudController::Jobs::Enqueuer.new(pollable_job).enqueue
+            VCAP::CloudController::Jobs::Enqueuer.new.enqueue(pollable_job)
 
             execute_all_jobs(expected_successes: 0, expected_failures: 1)
           end
@@ -229,7 +229,7 @@ module VCAP::CloudController::Jobs
         let(:expected_warnings) { [{ detail: 'warning 1' }, { detail: 'warning 2' }] }
 
         it 'records all warnings' do
-          enqueued_job = VCAP::CloudController::Jobs::Enqueuer.new(pollable_job).enqueue
+          enqueued_job = VCAP::CloudController::Jobs::Enqueuer.new.enqueue(pollable_job)
           job_model = VCAP::CloudController::PollableJobModel.make(delayed_job_guid: enqueued_job.guid, state: 'PROCESSING')
 
           execute_all_jobs(expected_successes: 1, expected_failures: 0)
@@ -245,7 +245,7 @@ module VCAP::CloudController::Jobs
         let(:expected_warnings) { nil }
 
         it 'has empty list of warnings' do
-          enqueued_job = VCAP::CloudController::Jobs::Enqueuer.new(pollable_job).enqueue
+          enqueued_job = VCAP::CloudController::Jobs::Enqueuer.new.enqueue(pollable_job)
           job_model = VCAP::CloudController::PollableJobModel.make(delayed_job_guid: enqueued_job.guid, state: 'PROCESSING')
 
           execute_all_jobs(expected_successes: 1, expected_failures: 0)

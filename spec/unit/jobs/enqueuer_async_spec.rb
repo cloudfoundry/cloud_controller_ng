@@ -69,7 +69,7 @@ module VCAP::CloudController::Jobs
         Delayed::Worker.plugins << BeforeAfterEnqueueHook  # Collecting state via callback
         Delayed::Worker.plugins << AfterEnqueueHook
 
-        Enqueuer.new(wrapped_job, opts).enqueue_pollable
+        Enqueuer.new(opts).enqueue_pollable(wrapped_job)
         job_state = TestDelayedPlugin.callback_counts
 
         # We are testing an asynchronous event to verify that the PollableJobModel is updated before DelayedJob

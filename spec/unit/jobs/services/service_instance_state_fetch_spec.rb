@@ -58,7 +58,7 @@ module VCAP::CloudController
         end
 
         def run_job(job)
-          Jobs::Enqueuer.new(job, { queue: Jobs::Queues.generic, run_at: Delayed::Job.db_time_now }).enqueue
+          Jobs::Enqueuer.new({ queue: Jobs::Queues.generic, run_at: Delayed::Job.db_time_now }).enqueue(job)
           execute_all_jobs(expected_successes: 1, expected_failures: 0)
         end
 
@@ -524,7 +524,7 @@ module VCAP::CloudController
               Timecop.freeze(Time.now)
               first_run_time = Time.now
 
-              Jobs::Enqueuer.new(job, { queue: Jobs::Queues.generic, run_at: first_run_time }).enqueue
+              Jobs::Enqueuer.new({ queue: Jobs::Queues.generic, run_at: first_run_time }).enqueue(job)
               execute_all_jobs(expected_successes: 1, expected_failures: 0)
               expect(Delayed::Job.count).to eq(1)
 
@@ -558,7 +558,7 @@ module VCAP::CloudController
               updated_username = 'new-username'
               updated_password = 'new-password'
 
-              Jobs::Enqueuer.new(job, { queue: Jobs::Queues.generic, run_at: Delayed::Job.db_time_now }).enqueue
+              Jobs::Enqueuer.new({ queue: Jobs::Queues.generic, run_at: Delayed::Job.db_time_now }).enqueue(job)
 
               broker.update({
                               broker_url: updated_url,
@@ -610,7 +610,7 @@ module VCAP::CloudController
 
               job_id = nil
               Timecop.freeze now do
-                enqueued_job = Jobs::Enqueuer.new(job, queue: Jobs::Queues.generic, run_at: Time.now).enqueue
+                enqueued_job = Jobs::Enqueuer.new(queue: Jobs::Queues.generic, run_at: Time.now).enqueue(job)
                 job_id = enqueued_job.id
               end
 

@@ -83,7 +83,7 @@ module VCAP::CloudController
         }
 
         @retry_number += 1
-        Jobs::Enqueuer.new(self, opts).enqueue_pollable(existing_guid: pollable_job.guid)
+        Jobs::Enqueuer.new(opts).enqueue_pollable(self, existing_guid: pollable_job.guid)
       end
     end
   end

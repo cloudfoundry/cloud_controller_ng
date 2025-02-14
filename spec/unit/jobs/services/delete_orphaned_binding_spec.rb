@@ -21,7 +21,7 @@ module VCAP::CloudController
           expect(VCAP::Services::ServiceClientProvider).to receive(:provide).
             with(instance: service_binding.service_instance)
 
-          Jobs::Enqueuer.new(job, { queue: Jobs::Queues.generic, run_at: Delayed::Job.db_time_now }).enqueue
+          Jobs::Enqueuer.new({ queue: Jobs::Queues.generic, run_at: Delayed::Job.db_time_now }).enqueue(job)
           execute_all_jobs(expected_successes: 1, expected_failures: 0)
 
           expect(client).to have_received(:unbind) do |binding|
@@ -61,7 +61,7 @@ module VCAP::CloudController
 
           start = Delayed::Job.db_time_now
           opts = { queue: Jobs::Queues.generic, run_at: start }
-          Jobs::Enqueuer.new(job, opts).enqueue
+          Jobs::Enqueuer.new(opts).enqueue(job)
 
           run_at_time = start
           10.times do |i|

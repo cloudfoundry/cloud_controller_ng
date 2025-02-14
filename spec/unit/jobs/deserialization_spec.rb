@@ -82,7 +82,7 @@ module VCAP::CloudController
         end
 
         it 'equals dumped job yaml' do
-          VCAP::CloudController::Jobs::Enqueuer.new(job).enqueue_pollable
+          VCAP::CloudController::Jobs::Enqueuer.new.enqueue_pollable(job)
           jobs_in_db = Sequel::Model.db.fetch('SELECT handler FROM delayed_jobs').all
           expect(jobs_in_db.size).to eq(1)
 
@@ -348,7 +348,7 @@ module VCAP::CloudController
         end
 
         it 'equals dumped job yaml' do
-          VCAP::CloudController::Jobs::Enqueuer.new(job).enqueue
+          VCAP::CloudController::Jobs::Enqueuer.new.enqueue(job)
           jobs_in_db = Sequel::Model.db.fetch('SELECT handler FROM delayed_jobs').all
           expect(jobs_in_db.size).to eq(1)
 

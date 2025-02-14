@@ -82,7 +82,7 @@ module VCAP::CloudController::RestController
 
     def run_or_enqueue_deletion_job(deletion_job)
       if async?
-        job = Jobs::Enqueuer.new(deletion_job, queue: Jobs::Queues.generic).enqueue
+        job = Jobs::Enqueuer.new(queue: Jobs::Queues.generic).enqueue(deletion_job)
         [HTTP::ACCEPTED, JobPresenter.new(job).to_json]
       else
         deletion_job.perform
