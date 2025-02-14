@@ -254,7 +254,9 @@ class ServiceInstancesV3Controller < ApplicationController
 
   def create_managed(message, space:)
     service_plan = ServicePlan.first(guid: message.service_plan_guid)
-    unprocessable_service_plan! unless service_plan_valid?(service_plan, space)
+    unprocessable_service_plan! unless service_plan_valid?(service_plan)
+    unavailable_service_plan!(service_plan) unless service_plan_active?(service_plan)
+    service_plan_not_visible_in_space!(service_plan, space) unless service_plan_exists_in_space?(service_plan, space)
 
     action = V3::ServiceInstanceCreateManaged.new(user_audit_info, message.audit_hash)
     VCAP::CloudController::ManagedServiceInstance.db.transaction do
@@ -394,17 +396,26 @@ class ServiceInstancesV3Controller < ApplicationController
     permission_queryer.can_write_globally?
   end
 
-  def service_plan_valid?(service_plan, space)
+  def service_plan_valid?(service_plan)
     service_plan &&
-      visible_to_current_user?(plan: service_plan) &&
-      service_plan.visible_in_space?(space)
+      visible_to_current_user?(plan: service_plan)
+  end
+
+  def service_plan_active?(service_plan)
+    service_plan.active?
+  end
+
+  def service_plan_exists_in_space?(service_plan, space)
+    service_plan.visible_in_space?(space)
   end
 
   def raise_if_invalid_service_plan!(service_instance, message)
     return unless message.service_plan_guid
 
     service_plan = ServicePlan.first(guid: message.service_plan_guid)
-    unprocessable_service_plan! unless service_plan_valid?(service_plan, service_instance.space)
+    unprocessable_service_plan! unless service_plan_valid?(service_plan)
+    unavailable_service_plan!(service_plan) unless service_plan_active?(service_plan)
+    service_plan_not_visible_in_space!(service_plan, service_instance.space) unless service_plan_exists_in_space?(service_plan, service_instance.space)
     invalid_service_plan_relation! unless service_plan.service == service_instance.service
   end
 
@@ -422,6 +433,18 @@ class ServiceInstancesV3Controller < ApplicationController
 
   def unprocessable_service_plan!
     unprocessable!('Invalid service plan. Ensure that the service plan exists, is available, and you have access to it.')
+  end
+
+  def unavailable_service_plan!(service_plan)
+    unprocessable!("Invalid service plan. The service plan '#{service_plan.name}' with guid '#{service_plan.guid}' has been removed from the service broker's catalog. " \
+                   'It is not possible to create new service instances using this plan.')
+  end
+
+  def service_plan_not_visible_in_space!(service_plan, space)
+    unprocessable!('Invalid service plan. This could be due to a space-scoped broker which is offering the service plan ' \
+                   "'#{service_plan.name}' with guid '#{service_plan.guid}' in another space or that the plan " \
+                   'is not enabled in this organization. Ensure that the service plan is visible in your current space ' \
+                   "'#{space.name}' with guid '#{space.guid}'.")
   end
 
   def invalid_service_plan_relation!
