@@ -816,7 +816,14 @@ RSpec.describe 'Deployments' do
                                                             'details' => {
                                                               'last_successful_healthcheck' => iso8601,
                                                               'last_status_change' => iso8601
-                                                            }
+                                                            },
+                                                            'canary' =>
+                                                              {
+                                                                'steps' => {
+                                                                  'current' => 1,
+                                                                  'total' => 1
+                                                                }
+                                                              }
                                                           },
                                                           'strategy' => 'canary',
                                                           'droplet' => {
@@ -1024,6 +1031,120 @@ RSpec.describe 'Deployments' do
                                                             }
                                                           })
           end
+        end
+      end
+    end
+
+    context 'canary steps' do
+      let(:user) { make_developer_for_space(space) }
+      let(:create_request) do
+        {
+          strategy: strategy,
+          options: {
+            canary: {
+              steps: [
+                { instance_weight: 20 },
+                { instance_weight: 40 },
+                { instance_weight: 60 },
+                { instance_weight: 80 }
+              ]
+            }
+          },
+          relationships: {
+            app: {
+              data: {
+                guid: app_model.guid
+              }
+            }
+          }
+        }
+      end
+
+      context 'when deployment type is "rolling"' do
+        let(:strategy) { 'rolling' }
+
+        it 'returns a 422' do
+          post '/v3/deployments', create_request.to_json, user_header
+          expect(last_response.status).to eq(422), last_response.body
+          expect(parsed_response['errors'][0]['detail']).to match('Options canary are only valid for Canary deployments')
+        end
+      end
+
+      context 'when deployment type is "canary"' do
+        let(:strategy) { 'canary' }
+
+        it 'succeeds and returns the canary steps in the response' do
+          post '/v3/deployments', create_request.to_json, user_header
+          expect(last_response.status).to eq(201), last_response.body
+
+          deployment = VCAP::CloudController::DeploymentModel.last
+
+          expect(parsed_response).to be_a_response_like({
+                                                          'guid' => deployment.guid,
+                                                          'status' => {
+                                                            'value' => VCAP::CloudController::DeploymentModel::ACTIVE_STATUS_VALUE,
+                                                            'reason' => VCAP::CloudController::DeploymentModel::DEPLOYING_STATUS_REASON,
+                                                            'details' => {
+                                                              'last_successful_healthcheck' => iso8601,
+                                                              'last_status_change' => iso8601
+                                                            },
+                                                            'canary' =>
+                                                            {
+                                                              'steps' => {
+                                                                'current' => 1,
+                                                                'total' => 4
+                                                              }
+                                                            }
+                                                          },
+                                                          'strategy' => 'canary',
+                                                          'options' => {
+                                                            'max_in_flight' => 1,
+                                                            'canary' => {
+                                                              'steps' => [
+                                                                { 'instance_weight' => 20 },
+                                                                { 'instance_weight' => 40 },
+                                                                { 'instance_weight' => 60 },
+                                                                { 'instance_weight' => 80 }
+                                                              ]
+                                                            }
+                                                          },
+                                                          'droplet' => {
+                                                            'guid' => droplet.guid
+                                                          },
+                                                          'revision' => {
+                                                            'guid' => app_model.latest_revision.guid,
+                                                            'version' => app_model.latest_revision.version
+                                                          },
+                                                          'previous_droplet' => {
+                                                            'guid' => droplet.guid
+                                                          },
+                                                          'new_processes' => [{
+                                                            'guid' => deployment.deploying_web_process.guid,
+                                                            'type' => deployment.deploying_web_process.type
+                                                          }],
+                                                          'created_at' => iso8601,
+                                                          'updated_at' => iso8601,
+                                                          'metadata' => metadata,
+                                                          'relationships' => {
+                                                            'app' => {
+                                                              'data' => {
+                                                                'guid' => app_model.guid
+                                                              }
+                                                            }
+                                                          },
+                                                          'links' => {
+                                                            'self' => {
+                                                              'href' => "#{link_prefix}/v3/deployments/#{deployment.guid}"
+                                                            },
+                                                            'app' => {
+                                                              'href' => "#{link_prefix}/v3/apps/#{app_model.guid}"
+                                                            },
+                                                            'cancel' => {
+                                                              'href' => "#{link_prefix}/v3/deployments/#{deployment.guid}/actions/cancel",
+                                                              'method' => 'POST'
+                                                            }
+                                                          }
+                                                        })
         end
       end
     end
@@ -1347,18 +1468,9 @@ RSpec.describe 'Deployments' do
       def json_for_deployment(deployment, app_model, droplet, status_value, status_reason, cancel_link=true)
         {
           guid: deployment.guid,
-          status: {
-            value: status_value,
-            reason: status_reason,
-            details: {
-              last_successful_healthcheck: iso8601,
-              last_status_change: iso8601
-            }
-          },
+          status: json_for_status(deployment, status_value, status_reason),
           strategy: deployment.strategy,
-          options: {
-            max_in_flight: 1
-          },
+          options: json_for_options(deployment),
           droplet: {
             guid: droplet.guid
           },
@@ -1400,6 +1512,38 @@ RSpec.describe 'Deployments' do
             }
           end
         end
+      end
+
+      def json_for_status(deployment, status_value, status_reason)
+        status = {
+          value: status_value,
+          reason: status_reason,
+          details: {
+            last_successful_healthcheck: iso8601,
+            last_status_change: iso8601
+          }
+        }
+        if deployment.strategy == 'canary'
+          status[:canary] = {
+            steps: {
+              current: deployment.canary_current_step || 1,
+              total: deployment.canary_steps&.length || 1
+            }
+          }
+        end
+        status
+      end
+
+      def json_for_options(deployment)
+        options = {
+          max_in_flight: deployment.max_in_flight
+        }
+        if deployment.canary_steps
+          options[:canary] = {
+            steps: deployment.canary_steps
+          }
+        end
+        options
       end
 
       it 'lists all deployments' do

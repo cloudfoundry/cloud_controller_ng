@@ -30,36 +30,140 @@ module VCAP::CloudController
         let(:status_value) { DeploymentModel::ACTIVE_STATUS_VALUE }
         let(:status_reason) { DeploymentModel::DEPLOYING_STATUS_REASON }
 
-        it 'sets the deployments status to DEPLOYING' do
-          expect(deployment.state).not_to eq(DeploymentModel::DEPLOYING_STATE)
+        context 'there are no steps defined' do
+          it 'sets the deployments status to DEPLOYING' do
+            expect(deployment.state).not_to eq(DeploymentModel::DEPLOYING_STATE)
 
-          DeploymentContinue.continue(deployment:, user_audit_info:)
-          deployment.reload
+            DeploymentContinue.continue(deployment:, user_audit_info:)
+            deployment.reload
 
-          expect(deployment.state).to eq(DeploymentModel::DEPLOYING_STATE)
-          expect(deployment.status_value).to eq(DeploymentModel::ACTIVE_STATUS_VALUE)
-          expect(deployment.status_reason).to eq(DeploymentModel::DEPLOYING_STATUS_REASON)
+            expect(deployment.state).to eq(DeploymentModel::DEPLOYING_STATE)
+            expect(deployment.status_value).to eq(DeploymentModel::ACTIVE_STATUS_VALUE)
+            expect(deployment.status_reason).to eq(DeploymentModel::DEPLOYING_STATUS_REASON)
+          end
+
+          it 'records an audit event for the continue deployment' do
+            DeploymentContinue.continue(deployment:, user_audit_info:)
+
+            event = VCAP::CloudController::Event.find(type: 'audit.app.deployment.continue')
+            expect(event).not_to be_nil
+            expect(event.actor).to eq('1234')
+            expect(event.actor_type).to eq('user')
+            expect(event.actor_name).to eq('eric@example.com')
+            expect(event.actor_username).to eq('eric')
+            expect(event.actee).to eq(app.guid)
+            expect(event.actee_type).to eq('app')
+            expect(event.actee_name).to eq(app.name)
+            expect(event.timestamp).to be
+            expect(event.space_guid).to eq(app.space_guid)
+            expect(event.organization_guid).to eq(app.space.organization.guid)
+            expect(event.metadata).to eq({
+                                           'droplet_guid' => droplet.guid,
+                                           'deployment_guid' => deployment.guid
+                                         })
+          end
         end
 
-        it 'records an audit event for the continue deployment' do
-          DeploymentContinue.continue(deployment:, user_audit_info:)
+        context 'and there are no remaining steps' do
+          let!(:deployment) do
+            VCAP::CloudController::DeploymentModel.make(
+              state: state,
+              status_value: status_value,
+              status_reason: status_reason,
+              droplet: droplet,
+              app: original_web_process.app,
+              deploying_web_process: deploying_web_process,
+              canary_current_step: 2
+            )
+          end
 
-          event = VCAP::CloudController::Event.find(type: 'audit.app.deployment.continue')
-          expect(event).not_to be_nil
-          expect(event.actor).to eq('1234')
-          expect(event.actor_type).to eq('user')
-          expect(event.actor_name).to eq('eric@example.com')
-          expect(event.actor_username).to eq('eric')
-          expect(event.actee).to eq(app.guid)
-          expect(event.actee_type).to eq('app')
-          expect(event.actee_name).to eq(app.name)
-          expect(event.timestamp).to be
-          expect(event.space_guid).to eq(app.space_guid)
-          expect(event.organization_guid).to eq(app.space.organization.guid)
-          expect(event.metadata).to eq({
-                                         'droplet_guid' => droplet.guid,
-                                         'deployment_guid' => deployment.guid
-                                       })
+          it 'sets the deployments status to DEPLOYING' do
+            expect(deployment.state).not_to eq(DeploymentModel::DEPLOYING_STATE)
+
+            DeploymentContinue.continue(deployment:, user_audit_info:)
+            deployment.reload
+
+            expect(deployment.state).to eq(DeploymentModel::DEPLOYING_STATE)
+            expect(deployment.status_value).to eq(DeploymentModel::ACTIVE_STATUS_VALUE)
+            expect(deployment.status_reason).to eq(DeploymentModel::DEPLOYING_STATUS_REASON)
+          end
+
+          it 'records an audit event for the continue deployment' do
+            DeploymentContinue.continue(deployment:, user_audit_info:)
+
+            event = VCAP::CloudController::Event.find(type: 'audit.app.deployment.continue')
+            expect(event).not_to be_nil
+            expect(event.actor).to eq('1234')
+            expect(event.actor_type).to eq('user')
+            expect(event.actor_name).to eq('eric@example.com')
+            expect(event.actor_username).to eq('eric')
+            expect(event.actee).to eq(app.guid)
+            expect(event.actee_type).to eq('app')
+            expect(event.actee_name).to eq(app.name)
+            expect(event.timestamp).to be
+            expect(event.space_guid).to eq(app.space_guid)
+            expect(event.organization_guid).to eq(app.space.organization.guid)
+            expect(event.metadata).to eq({
+                                           'droplet_guid' => droplet.guid,
+                                           'deployment_guid' => deployment.guid
+                                         })
+          end
+        end
+
+        context 'and there are remaining steps' do
+          let!(:deployment) do
+            VCAP::CloudController::DeploymentModel.make(
+              state: state,
+              status_value: status_value,
+              status_reason: status_reason,
+              droplet: droplet,
+              app: original_web_process.app,
+              deploying_web_process: deploying_web_process,
+              canary_current_step: 1,
+              canary_steps: [{ 'instance_weight' => 10 }, { 'instance_weight' => 40 }]
+            )
+          end
+
+          it 'sets the deployments status to PREPAUSED' do
+            expect(deployment.state).not_to eq(DeploymentModel::DEPLOYING_STATE)
+
+            DeploymentContinue.continue(deployment:, user_audit_info:)
+            deployment.reload
+
+            expect(deployment.state).to eq(DeploymentModel::PREPAUSED_STATE)
+            expect(deployment.status_value).to eq(DeploymentModel::ACTIVE_STATUS_VALUE)
+            expect(deployment.status_reason).to eq(DeploymentModel::DEPLOYING_STATUS_REASON)
+          end
+
+          it 'increments the current canary step' do
+            expect(deployment.state).not_to eq(DeploymentModel::DEPLOYING_STATE)
+
+            DeploymentContinue.continue(deployment:, user_audit_info:)
+            deployment.reload
+
+            expect(deployment.canary_current_step).to eq(2)
+          end
+
+          it 'records an audit event for the continue deployment' do
+            DeploymentContinue.continue(deployment:, user_audit_info:)
+
+            event = VCAP::CloudController::Event.find(type: 'audit.app.deployment.continue')
+            expect(event).not_to be_nil
+            expect(event.actor).to eq('1234')
+            expect(event.actor_type).to eq('user')
+            expect(event.actor_name).to eq('eric@example.com')
+            expect(event.actor_username).to eq('eric')
+            expect(event.actee).to eq(app.guid)
+            expect(event.actee_type).to eq('app')
+            expect(event.actee_name).to eq(app.name)
+            expect(event.timestamp).to be
+            expect(event.space_guid).to eq(app.space_guid)
+            expect(event.organization_guid).to eq(app.space.organization.guid)
+            expect(event.metadata).to eq({
+                                           'droplet_guid' => droplet.guid,
+                                           'deployment_guid' => deployment.guid
+                                         })
+          end
         end
       end
 
