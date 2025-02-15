@@ -23,7 +23,8 @@ module VCAP::CloudController
           up_scaler = UpScaler.new(deployment, logger, interim_desired_instance_count, instance_count_summary)
 
           deployment.db.transaction do
-            return unless deployment.lock!.state == DeploymentModel::DEPLOYING_STATE
+            # TODO: write scale test for prepaused state
+            return unless [DeploymentModel::DEPLOYING_STATE, DeploymentModel::PREPAUSED_STATE].include?(deployment.lock!.state)
             return unless up_scaler.can_scale? || down_scaler.can_downscale?
 
             app.lock!

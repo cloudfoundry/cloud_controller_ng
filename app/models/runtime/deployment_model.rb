@@ -114,6 +114,10 @@ module VCAP::CloudController
       state == DeploymentModel::PAUSED_STATE
     end
 
+    def current_canary_instance_target
+      canary_step[:canary]
+    end
+
     def canary_step
       raise 'canary_step is only valid for canary deloyments' unless strategy == CANARY_STRATEGY
 

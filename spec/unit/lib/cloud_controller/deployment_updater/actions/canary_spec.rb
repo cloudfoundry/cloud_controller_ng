@@ -121,7 +121,7 @@ module VCAP::CloudController
       end
     end
 
-    context 'when the canary is not routable routable' do
+    context 'when the canary is not routable' do
       let(:all_instances_results) do
         {
           0 => { state: 'RUNNING', uptime: 50, since: 2, routable: false }
