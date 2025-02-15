@@ -21,6 +21,7 @@ module VCAP::CloudController
           deployment.update(last_healthy_at: Time.now)
         end
 
+        # TODO: change name to something like has_capacity_to_scale? (or something better)
         def can_scale?
           @starting_instances_count < deployment.max_in_flight &&
             @unhealthy_instances_count == 0 &&

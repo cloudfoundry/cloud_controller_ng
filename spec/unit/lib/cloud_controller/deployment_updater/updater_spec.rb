@@ -162,12 +162,115 @@ module VCAP::CloudController
     describe '#canary' do
       let(:state) { DeploymentModel::PREPAUSED_STATE }
       let(:current_deploying_instances) { 1 }
+      let(:deployment) do
+        DeploymentModel.make(
+          app: web_process.app,
+          deploying_web_process: deploying_web_process,
+          state: state,
+          strategy: 'canary',
+          original_web_process_instance_count: original_web_process_instance_count,
+          max_in_flight: 1
+        )
+      end
+
+      describe 'canary steps' do
+        let(:max_in_flight) { 1 }
+        let(:original_web_process_instance_count) { 10 }
+        let(:deployment) do
+          DeploymentModel.make(
+            app: web_process.app,
+            deploying_web_process: deploying_web_process,
+            strategy: 'canary',
+            droplet: droplet,
+            state: state,
+            max_in_flight: max_in_flight,
+            original_web_process_instance_count: 10,
+            canary_steps: [{ instance_weight: 50 }, { instance_weight: 80 }],
+            canary_current_step: 1
+          )
+        end
+
+        context 'when the current step instance count has been reached' do
+          let(:current_deploying_instances) { 5 }
+          let(:all_instances_results) do
+            {
+              0 => { state: 'RUNNING', uptime: 50, since: 2, routable: true },
+              1 => { state: 'RUNNING', uptime: 50, since: 2, routable: true },
+              2 => { state: 'RUNNING', uptime: 50, since: 2, routable: true },
+              3 => { state: 'RUNNING', uptime: 50, since: 2, routable: true },
+              4 => { state: 'RUNNING', uptime: 50, since: 2, routable: true }
+            }
+          end
+
+          it 'transitions state to paused' do
+            subject.canary
+            expect(deployment.state).to eq(DeploymentModel::PAUSED_STATE)
+          end
+        end
+
+        context 'when the current step instance count has not been reached' do
+          let(:current_deploying_instances) { 4 }
+          let(:all_instances_results) do
+            {
+              0 => { state: 'RUNNING', uptime: 50, since: 2, routable: true },
+              1 => { state: 'RUNNING', uptime: 50, since: 2, routable: true },
+              2 => { state: 'RUNNING', uptime: 50, since: 2, routable: true },
+              3 => { state: 'RUNNING', uptime: 50, since: 2, routable: true }
+            }
+          end
+
+          it 'does not transition to paused' do
+            subject.canary
+            expect(deployment.state).not_to eq(DeploymentModel::PAUSED_STATE)
+          end
+        end
+
+        context 'when there is a single unhealthy instance' do
+          let(:current_deploying_instances) { 5 }
+          let(:all_instances_results) do
+            {
+              0 => { state: 'RUNNING', uptime: 50, since: 2, routable: true },
+              1 => { state: 'RUNNING', uptime: 50, since: 2, routable: true },
+              2 => { state: 'RUNNING', uptime: 50, since: 2, routable: true },
+              3 => { state: 'RUNNING', uptime: 50, since: 2, routable: false },
+              4 => { state: 'RUNNING', uptime: 50, since: 2, routable: true }
+            }
+          end
+
+          it 'does not transition to paused' do
+            subject.canary
+            expect(deployment.state).not_to eq(DeploymentModel::PAUSED_STATE)
+          end
+        end
+
+        context 'when there are not enough actual instances' do
+          let(:current_deploying_instances) { 5 }
+          let(:all_instances_results) do
+            {
+              0 => { state: 'RUNNING', uptime: 50, since: 2, routable: true },
+              1 => { state: 'RUNNING', uptime: 50, since: 2, routable: true },
+              2 => { state: 'RUNNING', uptime: 50, since: 2, routable: true },
+              3 => { state: 'RUNNING', uptime: 50, since: 2, routable: true }
+            }
+          end
+
+          it 'does not transition to paused' do
+            subject.canary
+            expect(deployment.state).not_to eq(DeploymentModel::PAUSED_STATE)
+          end
+        end
+      end
 
       context 'when the canary instance starts succesfully' do
         let(:all_instances_results) do
           {
             0 => { state: 'RUNNING', uptime: 50, since: 2, routable: true }
           }
+        end
+
+        it 'transitions state to paused' do
+          subject.canary
+          expect(deployment.state).to eq(DeploymentModel::PAUSED_STATE)
         end
 
         it 'logs the canary is paused' do
@@ -182,6 +285,59 @@ module VCAP::CloudController
           expect(logger).to have_received(:info).with(
             "ran-canarying-deployment-for-#{deployment.guid}"
           )
+        end
+      end
+
+      context 'when the canary is not routable' do
+        let(:all_instances_results) do
+          {
+            0 => { state: 'RUNNING', uptime: 50, since: 2, routable: false }
+          }
+        end
+
+        it 'does not transition state to paused' do
+          subject.canary
+          expect(deployment.state).to eq(DeploymentModel::PREPAUSED_STATE)
+          expect(deployment.status_value).to eq(DeploymentModel::ACTIVE_STATUS_VALUE)
+          expect(deployment.status_reason).to eq(DeploymentModel::DEPLOYING_STATUS_REASON)
+        end
+      end
+
+      context 'while the canary instance is still starting' do
+        let(:all_instances_results) do
+          {
+            0 => { state: 'STARTING', uptime: 50, since: 2, routable: true }
+          }
+        end
+
+        it 'skips the deployment update' do
+          subject.canary
+          expect(deployment.state).to eq(DeploymentModel::PREPAUSED_STATE)
+          expect(deployment.status_value).to eq(DeploymentModel::ACTIVE_STATUS_VALUE)
+          expect(deployment.status_reason).to eq(DeploymentModel::DEPLOYING_STATUS_REASON)
+        end
+      end
+
+      context 'when the canary instance is failing' do
+        let(:all_instances_results) do
+          {
+            0 => { state: 'FAILING', uptime: 50, since: 2, routable: true }
+          }
+        end
+
+        it 'does not update the deployments last_healthy_at' do
+          Timecop.travel(Time.now + 1.minute) do
+            expect do
+              subject.canary
+            end.not_to(change { deployment.reload.last_healthy_at })
+          end
+        end
+
+        it 'skips the deployment update' do
+          subject.canary
+          expect(deployment.state).to eq(DeploymentModel::PREPAUSED_STATE)
+          expect(deployment.status_value).to eq(DeploymentModel::ACTIVE_STATUS_VALUE)
+          expect(deployment.status_reason).to eq(DeploymentModel::DEPLOYING_STATUS_REASON)
         end
       end
 
