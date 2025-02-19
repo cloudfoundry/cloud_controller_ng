@@ -8,7 +8,7 @@ module VCAP::CloudController
         end
         if buildpack.key
           blobstore_delete = Jobs::Runtime::BlobstoreDelete.new(buildpack.key, :buildpack_blobstore)
-          Jobs::Enqueuer.new(blobstore_delete, queue: Jobs::Queues.generic).enqueue
+          Jobs::Enqueuer.new(queue: Jobs::Queues.generic).enqueue(blobstore_delete)
         end
       end
 

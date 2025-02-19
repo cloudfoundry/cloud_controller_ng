@@ -58,7 +58,7 @@ module VCAP::CloudController
             previous_broker_state,
             user_audit_info: service_event_repository.user_audit_info
           )
-          pollable_job = Jobs::Enqueuer.new(synchronization_job, queue: Jobs::Queues.generic).enqueue_pollable
+          pollable_job = Jobs::Enqueuer.new(queue: Jobs::Queues.generic).enqueue_pollable(synchronization_job)
         end
 
         pollable_job

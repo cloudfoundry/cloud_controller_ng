@@ -46,7 +46,7 @@ module VCAP::CloudController::Jobs
         end
 
         ::VCAP::Request.current_id = request_id
-        Enqueuer.new(wrapped_job, opts).public_send(method_name)
+        Enqueuer.new(opts).public_send(method_name, wrapped_job)
       end
 
       it 'uses the JobTimeoutCalculator' do
@@ -56,7 +56,7 @@ module VCAP::CloudController::Jobs
           expect(enqueued_job.handler.timeout).to eq(job_timeout)
           original_enqueue.call(enqueued_job, opts)
         end
-        Enqueuer.new(wrapped_job, opts).public_send(method_name)
+        Enqueuer.new(opts).public_send(method_name, wrapped_job)
         expect(timeout_calculator).to have_received(:calculate).with(wrapped_job.job_name_in_configuration, 'my-queue')
       end
 
@@ -66,7 +66,7 @@ module VCAP::CloudController::Jobs
           expect(opts).not_to include(:priority)
           original_enqueue.call(enqueued_job, opts)
         end
-        Enqueuer.new(wrapped_job, opts).public_send(method_name)
+        Enqueuer.new(opts).public_send(method_name, wrapped_job)
       end
     end
 
@@ -88,7 +88,7 @@ module VCAP::CloudController::Jobs
           expect(enqueued_job.handler.handler).to be wrapped_job
           original_enqueue.call(enqueued_job, opts)
         end
-        Enqueuer.new(wrapped_job, opts).enqueue
+        Enqueuer.new(opts).enqueue(wrapped_job)
       end
     end
 
@@ -111,11 +111,11 @@ module VCAP::CloudController::Jobs
           expect(enqueued_job.handler.handler.handler).to be wrapped_job
           original_enqueue.call(enqueued_job, opts)
         end
-        Enqueuer.new(wrapped_job, opts).enqueue_pollable
+        Enqueuer.new(opts).enqueue_pollable(wrapped_job)
       end
 
       it 'returns the PollableJobModel' do
-        result = Enqueuer.new(wrapped_job, opts).enqueue_pollable
+        result = Enqueuer.new(opts).enqueue_pollable(wrapped_job)
         latest_job = VCAP::CloudController::PollableJobModel.last
         expect(result).to eq(latest_job)
       end
@@ -129,7 +129,7 @@ module VCAP::CloudController::Jobs
             original_enqueue.call(enqueued_job, opts)
           end
 
-          Enqueuer.new(wrapped_job, opts).enqueue_pollable do |pollable_job|
+          Enqueuer.new(opts).enqueue_pollable(wrapped_job) do |pollable_job|
             ErrorTranslatorJob.new(pollable_job)
           end
         end
@@ -141,7 +141,7 @@ module VCAP::CloudController::Jobs
           expect(opts).not_to include(:priority)
           original_enqueue.call(enqueued_job, opts)
         end
-        Enqueuer.new(wrapped_job, opts).enqueue_pollable
+        Enqueuer.new(opts).enqueue_pollable(wrapped_job)
       end
 
       context 'priority from config' do
@@ -154,7 +154,7 @@ module VCAP::CloudController::Jobs
               expect(opts).to include({ priority: 1899 })
               original_enqueue.call(enqueued_job, opts)
             end
-            Enqueuer.new(wrapped_job, opts).enqueue_pollable
+            Enqueuer.new(opts).enqueue_pollable(wrapped_job)
           end
         end
 
@@ -167,7 +167,7 @@ module VCAP::CloudController::Jobs
               expect(opts).to include({ priority: 1900 })
               original_enqueue.call(enqueued_job, opts)
             end
-            Enqueuer.new(wrapped_job, opts).enqueue_pollable
+            Enqueuer.new(opts).enqueue_pollable(wrapped_job)
           end
         end
 
@@ -180,7 +180,7 @@ module VCAP::CloudController::Jobs
               expect(opts).to include({ priority: 1901 })
               original_enqueue.call(enqueued_job, opts)
             end
-            Enqueuer.new(wrapped_job, opts).enqueue_pollable
+            Enqueuer.new(opts).enqueue_pollable(wrapped_job)
           end
         end
 
@@ -192,7 +192,7 @@ module VCAP::CloudController::Jobs
               original_enqueue.call(enqueued_job, opts)
             end
             opts[:priority] = 2000
-            Enqueuer.new(wrapped_job, opts).enqueue_pollable
+            Enqueuer.new(opts).enqueue_pollable(wrapped_job)
           end
         end
       end
@@ -208,7 +208,7 @@ module VCAP::CloudController::Jobs
         end
 
         expect(Delayed::Worker.delay_jobs).to be(true)
-        Enqueuer.new(wrapped_job, opts).run_inline
+        Enqueuer.new(opts).run_inline(wrapped_job)
         expect(Delayed::Worker.delay_jobs).to be(true)
       end
 
@@ -217,7 +217,7 @@ module VCAP::CloudController::Jobs
           expect(enqueued_job).to be_a TimeoutJob
           expect(enqueued_job.timeout).to eq(global_timeout)
         end
-        Enqueuer.new(wrapped_job, opts).run_inline
+        Enqueuer.new(opts).run_inline(wrapped_job)
       end
 
       context 'when executing the job fails' do
@@ -225,7 +225,7 @@ module VCAP::CloudController::Jobs
           expect(Delayed::Job).to receive(:enqueue).and_raise('Boom!')
           expect(Delayed::Worker.delay_jobs).to be(true)
           expect do
-            Enqueuer.new(wrapped_job, opts).run_inline
+            Enqueuer.new(opts).run_inline(wrapped_job)
           end.to raise_error(/Boom!/)
           expect(Delayed::Worker.delay_jobs).to be(true)
         end

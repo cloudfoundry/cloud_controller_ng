@@ -10,7 +10,7 @@ module VCAP::CloudController
       packages.each do |package|
         unless package.docker?
           package_src_delete_job = create_package_source_deletion_job(package)
-          Jobs::Enqueuer.new(package_src_delete_job, queue: Jobs::Queues.generic).enqueue if package_src_delete_job
+          Jobs::Enqueuer.new(queue: Jobs::Queues.generic).enqueue(package_src_delete_job) if package_src_delete_job
         end
 
         package.destroy
