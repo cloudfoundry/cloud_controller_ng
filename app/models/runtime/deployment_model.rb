@@ -118,6 +118,10 @@ module VCAP::CloudController
       canary_step[:canary]
     end
 
+    def canary_total_instances
+      canary_step[:canary] + canary_step[:original]
+    end
+
     def canary_step
       raise 'canary_step is only valid for canary deloyments' unless strategy == CANARY_STRATEGY
 
@@ -135,6 +139,7 @@ module VCAP::CloudController
         target_canary = (original_web_process_instance_count * (weight.to_f / 100)).round.to_i
         target_canary = 1 if target_canary.zero?
         target_original = original_web_process_instance_count - target_canary + 1
+        target_original = 0 if weight == 100
         { canary: target_canary, original: target_original }
       end
     end

@@ -31,7 +31,7 @@ module VCAP::CloudController
         end
 
         def finished_scaling?
-          deploying_web_process.instances >= interim_desired_instance_count
+          deploying_web_process.instances >= interim_desired_instance_count && @routable_instances_count >= interim_desired_instance_count
         end
 
         private

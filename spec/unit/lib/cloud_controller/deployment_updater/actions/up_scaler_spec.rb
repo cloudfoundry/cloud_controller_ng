@@ -101,30 +101,22 @@ module VCAP::CloudController
         expect(up_scaler.finished_scaling?).to be false
       end
 
-      # TODO: Currently, deployments transition to COMPLETED even if there are some instances that have not started and become routable
-      # Since they can still fail at this stage, it might be better to wait for them to all become healthy and routable
-      # before transitioning the deployment to completed
-
       it 'returns false if number of routable instances does not match desired instances' do
-        skip('Might need to restructure the scale action if we do this')
         summary = double(starting_instances_count: 0, routable_instances_count: 4, healthy_instances_count: 5, unhealthy_instances_count: 0)
         up_scaler = DeploymentUpdater::Actions::UpScaler.new(deployment, logger, 5, summary)
         expect(up_scaler.finished_scaling?).to be false
       end
 
-      it 'returns false if there are any unhealthy instances' do
-        skip('Might need to restructure the scale action if we do this')
+      it 'returns true if there are any unhealthy instances but we have already reached the target' do
         summary = double(starting_instances_count: 0, routable_instances_count: 5, healthy_instances_count: 5, unhealthy_instances_count: 1)
-        up_scaler = DeploymentUpdater::Actions::UpScaler.new(deployment, logger, 10, summary)
-        expect(up_scaler.finished_scaling?).to be false
+        up_scaler = DeploymentUpdater::Actions::UpScaler.new(deployment, logger, 5, summary)
+        expect(up_scaler.finished_scaling?).to be true
       end
 
-      it 'returns false if there are any starting instances' do
-        skip('Might need to restructure the scale action if we do this')
-        # TODO: perhaps this should return true?  We have reached the target, after all...
+      it 'returns true if there are any starting instances but we have already reached the target' do
         summary = double(starting_instances_count: 1, routable_instances_count: 5, healthy_instances_count: 5, unhealthy_instances_count: 0)
-        up_scaler = DeploymentUpdater::Actions::UpScaler.new(deployment, logger, 10, summary)
-        expect(up_scaler.finished_scaling?).to be false
+        up_scaler = DeploymentUpdater::Actions::UpScaler.new(deployment, logger, 5, summary)
+        expect(up_scaler.finished_scaling?).to be true
       end
     end
 

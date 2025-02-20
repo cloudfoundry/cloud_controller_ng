@@ -192,6 +192,7 @@ module VCAP::CloudController
 
         context 'when the current step instance count has been reached' do
           let(:current_deploying_instances) { 5 }
+          let(:current_web_instances) { 8 }
           let(:all_instances_results) do
             {
               0 => { state: 'RUNNING', uptime: 50, since: 2, routable: true },
@@ -205,6 +206,8 @@ module VCAP::CloudController
           it 'transitions state to paused' do
             subject.canary
             expect(deployment.state).to eq(DeploymentModel::PAUSED_STATE)
+            expect(web_process.reload.instances).to eq(6)
+            expect(deploying_web_process.instances).to eq(5)
           end
         end
 

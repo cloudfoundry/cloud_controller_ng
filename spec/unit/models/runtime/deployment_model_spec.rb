@@ -317,14 +317,14 @@ module VCAP::CloudController
             { canary: 1, original: 1 },
             { canary: 1, original: 1 },
             { canary: 1, original: 1 },
-            { canary: 1, original: 1 }
+            { canary: 1, original: 0 }
           ]
         }
       ]
 
       tests.each do |test|
         context "with #{test[:existing_instances]} existing instances and weights #{test[:weights]}" do
-          let(:canary_steps) { test[:weights].map { |weight| { :instance_weight => weight } } }
+          let(:canary_steps) { test[:weights].map { |weight| { instance_weight: weight } } }
 
           let(:deployment) do
             DeploymentModel.make(
@@ -361,6 +361,25 @@ module VCAP::CloudController
         end
       end
 
+      context 'when deployment is has a 100% step' do
+        let(:deployment) do
+          DeploymentModel.make(
+            app: app,
+            strategy: 'canary',
+            droplet: droplet,
+            deploying_web_process: deploying_web_process,
+            canary_steps: [{ instance_weight: 1 }, { instance_weight: 25 }, { instance_weight: 50 }, { instance_weight: 99 }, { instance_weight: 100 }],
+            original_web_process_instance_count: 10,
+            canary_current_step: 1
+          )
+        end
+
+        it 'provides an extra canary instance for every step except at 100%' do
+          expect(deployment.canary_step_plan).to eq([{ canary: 1, original: 10 }, { canary: 3, original: 8 }, { canary: 5, original: 6 }, { canary: 10, original: 1 },
+                                                     { canary: 10, original: 0 }])
+        end
+      end
+
       context 'when deployment is not canary' do
         let(:deployment) do
           DeploymentModel.make(
@@ -378,6 +397,44 @@ module VCAP::CloudController
       end
     end
 
+    describe '#current_canary_instance_target' do
+      let(:deployment) do
+        DeploymentModel.make(
+          app: app,
+          strategy: 'canary',
+          droplet: droplet,
+          deploying_web_process: deploying_web_process,
+          canary_steps: [{ instance_weight: 1 }, { instance_weight: 25 }, { instance_weight: 50 }, { instance_weight: 99 }, { instance_weight: 100 }],
+          original_web_process_instance_count: 10
+        )
+      end
+
+      it 'returns the canary target of the current step' do
+        deployment.update(canary_current_step: 3)
+
+        expect(deployment.current_canary_instance_target).to eq(5)
+      end
+    end
+
+    describe '#canary_total_instances' do
+      let(:deployment) do
+        DeploymentModel.make(
+          app: app,
+          strategy: 'canary',
+          droplet: droplet,
+          deploying_web_process: deploying_web_process,
+          canary_steps: [{ instance_weight: 1 }, { instance_weight: 25 }, { instance_weight: 50 }, { instance_weight: 99 }, { instance_weight: 100 }],
+          original_web_process_instance_count: 10
+        )
+      end
+
+      it 'returns the total instances of the canary and original processes' do
+        deployment.update(canary_current_step: 3)
+
+        expect(deployment.canary_total_instances).to eq(11)
+      end
+    end
+
     describe '#canary_step' do
       let(:deployment) do
         DeploymentModel.make(
@@ -386,7 +443,7 @@ module VCAP::CloudController
           droplet: droplet,
           deploying_web_process: deploying_web_process,
           original_web_process_instance_count: 10,
-          canary_steps: [{ :instance_weight => 20 }, { :instance_weight => 40 }],
+          canary_steps: [{ instance_weight: 20 }, { instance_weight: 40 }],
           canary_current_step: 1
         )
       end
