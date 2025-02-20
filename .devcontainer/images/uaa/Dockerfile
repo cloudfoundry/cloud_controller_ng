@@ -3,12 +3,8 @@ FROM sapmachine:21-jdk-headless-ubuntu-jammy AS builder
 
 WORKDIR /uaa
 
-# Patch admin client, add authority password.write
-COPY PatchAdminOAuthClient.java /PatchAdminOAuthClient.java
 RUN apt-get  update && apt-get install jq git curl -y \
   && git clone -b $(curl -s https://api.github.com/repos/cloudfoundry/uaa/releases/latest | jq -r '.tag_name') https://github.com/cloudfoundry/uaa.git . --recursive --depth=1 --shallow-submodules \
-  && javac /PatchAdminOAuthClient.java -d / \
-  && java -cp / PatchAdminOAuthClient uaa/src/main/webapp/WEB-INF/spring/oauth-clients.xml \
   && ./gradlew -Pversion=$(curl -s https://api.github.com/repos/cloudfoundry/uaa/releases/latest | jq -r '.tag_name') clean build -x test
 
 FROM mikefarah/yq:4 AS yq
