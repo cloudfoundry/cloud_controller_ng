@@ -174,6 +174,7 @@ module VCAP::CloudController
             allow_app_ssh_access: bool,
             jobs: {
               global: { timeout_in_seconds: Integer },
+              optional(:read_ahead) => Integer,
               optional(:app_usage_events_cleanup) => { timeout_in_seconds: Integer },
               optional(:blobstore_delete) => { timeout_in_seconds: Integer },
               optional(:diego_sync) => { timeout_in_seconds: Integer },

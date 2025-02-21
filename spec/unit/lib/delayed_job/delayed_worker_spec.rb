@@ -141,6 +141,56 @@ RSpec.describe CloudController::DelayedWorker do
       end
     end
 
+    context 'when DB type is mysql' do
+      before do
+        db = instance_double(Sequel::Database)
+        allow(db).to receive(:database_type).and_return(:mysql)
+        allow(Sequel::Model).to receive(:db).and_return(db)
+      end
+
+      it 'read_ahead defaults to DEFAULT_READ_AHEAD' do
+        cc_delayed_worker.start_working
+        expect(Delayed::Worker.read_ahead).to eq(Delayed::Worker::DEFAULT_READ_AHEAD)
+      end
+
+      it 'read_ahead can be configured' do
+        TestConfig.config[:jobs][:read_ahead] = 3
+        cc_delayed_worker.start_working
+        expect(Delayed::Worker.read_ahead).to eq(3)
+      end
+
+      it 'read_ahead cant be set to 0' do
+        TestConfig.config[:jobs][:read_ahead] = 0
+        cc_delayed_worker.start_working
+        expect(Delayed::Worker.read_ahead).to eq(Delayed::Worker::DEFAULT_READ_AHEAD)
+      end
+    end
+
+    context 'when DB type is postgres' do
+      before do
+        db = instance_double(Sequel::Database)
+        allow(db).to receive(:database_type).and_return(:postgres)
+        allow(Sequel::Model).to receive(:db).and_return(db)
+      end
+
+      it 'read_ahead defaults to 0' do
+        cc_delayed_worker.start_working
+        expect(Delayed::Worker.read_ahead).to eq(0)
+      end
+
+      it 'read_ahead can be configured' do
+        TestConfig.config[:jobs][:read_ahead] = 3
+        cc_delayed_worker.start_working
+        expect(Delayed::Worker.read_ahead).to eq(3)
+      end
+
+      it 'read_ahead cant be set to negative values' do
+        TestConfig.config[:jobs][:read_ahead] = -1
+        cc_delayed_worker.start_working
+        expect(Delayed::Worker.read_ahead).to eq(0)
+      end
+    end
+
     describe 'publish metrics' do
       before do
         allow(Prometheus::Client::DataStores::DirectFileStore).to receive(:new)

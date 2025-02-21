@@ -25,6 +25,8 @@ class CloudController::DelayedWorker
     setup_metrics(config) if @publish_metrics
     BackgroundJobEnvironment.new(config).setup_environment(readiness_port)
 
+    # load monkey patch for sequel backend to support configurable job lock method (postgres only)
+    require 'delayed_job/sequel_patch'
     logger = Steno.logger('cc-worker')
     logger.info("Starting job with options #{@queue_options}")
     setup_app_log_emitter(config, logger)
@@ -56,6 +58,16 @@ class CloudController::DelayedWorker
     Delayed::Worker.max_run_time = config.get(:jobs, :global, :timeout_in_seconds) + 1
     Delayed::Worker.sleep_delay = config.get(:jobs, :global, :worker_sleep_delay_in_seconds)
     Delayed::Worker.logger = logger
+    if ::Sequel::Model.db.database_type == :mysql
+      read_ahead = config.get(:jobs, :read_ahead) || Delayed::Worker::DEFAULT_READ_AHEAD
+      # lock for update is not configurable for mysql
+      read_ahead = Delayed::Worker::DEFAULT_READ_AHEAD if read_ahead <= 0
+    else
+      # read_ahead 0 = lock for update (default for postgres)
+      read_ahead = config.get(:jobs, :read_ahead) || 0
+      read_ahead = 0 if read_ahead < 0
+    end
+    Delayed::Worker.read_ahead = read_ahead
 
     unless @queue_options[:num_threads].nil?
       # Dynamically alias Delayed::Worker to ThreadedWorker to ensure plugins etc are working correctly

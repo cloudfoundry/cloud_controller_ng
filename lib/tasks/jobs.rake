@@ -75,4 +75,24 @@ namespace :jobs do
                                        thread_grace_period_seconds: args.thread_grace_period_seconds,
                                        publish_metrics: publish_metrics).start_working
   end
+
+  desc 'Generate dummy jobs for tests. Usage: rake jobs:generate_load\'[num,delay]\''
+  task :generate_load, %i[num delay] => :environment do |_t, args|
+    args.with_defaults(num: '1')
+    args.with_defaults(delay: '1')
+    num = args[:num].to_i
+    delay = args[:delay].to_f
+    puts "Generating #{num} dummy job(s) with delay of #{delay} seconds"
+
+    ENV['PROCESS_TYPE'] = 'cc-worker'
+    RakeConfig.context = :worker
+    VCAP::CloudController::DB.load_models(RakeConfig.config.get(:db), @logger)
+    RakeConfig.config.configure_components
+
+    num.times do
+      dummy_job = VCAP::CloudController::Jobs::Runtime::BlobstoreDelete.new('00000000-0000-0000-0000-000000000000/0000000000000000000000000000000000000000', :droplet_blobstore)
+      VCAP::CloudController::Jobs::Enqueuer.new(dummy_job, queue: VCAP::CloudController::Jobs::Queues.generic).enqueue
+      sleep delay
+    end
+  end
 end
