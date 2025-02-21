@@ -254,6 +254,7 @@ class ServiceInstancesV3Controller < ApplicationController
 
   def create_managed(message, space:)
     service_plan = ServicePlan.first(guid: message.service_plan_guid)
+    log_service_plan_visibility(service_plan)
     unprocessable_service_plan! unless service_plan_valid?(service_plan)
     unavailable_service_plan!(service_plan) unless service_plan_active?(service_plan)
     service_plan_not_visible_in_space!(service_plan, space) unless service_plan_exists_in_space?(service_plan, space)
@@ -413,6 +414,7 @@ class ServiceInstancesV3Controller < ApplicationController
     return unless message.service_plan_guid
 
     service_plan = ServicePlan.first(guid: message.service_plan_guid)
+    log_service_plan_visibility(service_plan)
     unprocessable_service_plan! unless service_plan_valid?(service_plan)
     unavailable_service_plan!(service_plan) unless service_plan_active?(service_plan)
     service_plan_not_visible_in_space!(service_plan, service_instance.space) unless service_plan_exists_in_space?(service_plan, service_instance.space)
@@ -457,5 +459,21 @@ class ServiceInstancesV3Controller < ApplicationController
 
   def read_scope
     %w[show_permissions].include?(action_name) && roles.cloud_controller_service_permissions_reader? ? true : super
+  end
+
+  def logger
+    @logger ||= Steno.logger('cc.api')
+  end
+
+  def log_service_plan_visibility(service_plan)
+    unless service_plan
+      logger.info('Service Plan does not exist.')
+      return
+    end
+
+    return if visible_to_current_user?(plan: service_plan)
+
+    user = VCAP::CloudController::SecurityContext.current_user
+    logger.info("Service Plan with guid '#{service_plan.guid}' and id '#{service_plan.id}' is not visible in current org to user with guid '#{user.guid}'.")
   end
 end
