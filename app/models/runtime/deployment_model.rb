@@ -94,10 +94,10 @@ module VCAP::CloudController
     def before_create
       self.canary_current_step = 1 if strategy == DeploymentModel::CANARY_STRATEGY
 
-      unless canary_steps.nil?
-        # ensure that canary steps are in the correct format for serialization
-        self.canary_steps = canary_steps.map(&:stringify_keys)
-      end
+      # unless canary_steps.nil?
+      #   # ensure that canary steps are in the correct format for serialization
+      #   self.canary_steps = canary_steps.map(&:stringify_keys)
+      # end
       super
     end
 

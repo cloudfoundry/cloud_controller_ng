@@ -1,7 +1,6 @@
 Sequel.migration do
   up do
     alter_table(:deployments) do
-      # TODO: what size?
       add_column :canary_steps, String, size: 4096
       add_column :canary_current_step, :integer
     end

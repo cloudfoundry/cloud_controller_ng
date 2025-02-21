@@ -610,6 +610,7 @@ module VCAP::CloudController
 
               it 'saves the canary steps' do
                 deployment = DeploymentCreate.create(app:, message:, user_audit_info:)
+                deployment.reload
                 expect(deployment.canary_steps).to eq([{ 'instance_weight' => 40 }, { 'instance_weight' => 80 }])
               end
             end
@@ -1151,7 +1152,7 @@ module VCAP::CloudController
                                             strategy: strategy,
                                             options: {
                                               max_in_flight: max_in_flight,
-                                              canary: { steps: [{ instance_weight: 66 }, { instance_weight: 99 }] }
+                                              canary: { steps: [{ instance_weight: 33 }, { instance_weight: 99 }] }
                                             }
                                           })
             end
@@ -1163,7 +1164,9 @@ module VCAP::CloudController
                 deployment = DeploymentCreate.create(app:, message:, user_audit_info:)
               end.to change(DeploymentModel, :count).by(1)
 
-              expect(deployment.canary_steps).to eq([{ 'instance_weight' => 66 }, { 'instance_weight' => 99 }])
+              deployment.reload
+
+              expect(deployment.canary_steps).to eq([{ 'instance_weight' => 33 }, { 'instance_weight' => 99 }])
             end
 
             it 'sets starting instances to max in flight' do
@@ -1180,7 +1183,7 @@ module VCAP::CloudController
                 DeploymentCreate.create(app:, message:, user_audit_info:)
 
                 deploying_web_process = app.reload.newest_web_process
-                expect(deploying_web_process.instances).to eq(2)
+                expect(deploying_web_process.instances).to eq(1)
               end
             end
           end
