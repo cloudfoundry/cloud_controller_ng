@@ -90,7 +90,6 @@ module VCAP::CloudController
       super
       set_status_updated_at
     end
-    # TODO: documentation
 
     def before_create
       self.canary_current_step = 1 if strategy == DeploymentModel::CANARY_STRATEGY

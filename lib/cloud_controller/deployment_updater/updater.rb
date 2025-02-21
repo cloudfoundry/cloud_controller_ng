@@ -22,7 +22,6 @@ module VCAP::CloudController
 
       def canary
         with_error_logging('error-canarying-deployment') do
-          # TODO: do we need to pass in deployment.original_web_process_instance_count + 1 if there is a single canary instance?
           finished = Actions::Scale.new(deployment, logger, deployment.canary_total_instances, deployment.current_canary_instance_target).call
           if finished
             deployment.update(
@@ -33,7 +32,6 @@ module VCAP::CloudController
             )
             logger.info("paused-canary-deployment-for-#{deployment.guid}")
           end
-          # Actions::Canary.new(deployment, logger).call
           logger.info("ran-canarying-deployment-for-#{deployment.guid}")
         end
       end

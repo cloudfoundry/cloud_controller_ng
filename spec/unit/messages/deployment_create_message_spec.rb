@@ -271,7 +271,7 @@ module VCAP::CloudController
               expect(message.errors[:'options.canary.steps.instance_weight']).to include('must be sorted in ascending order')
             end
 
-            it 'errors if any instance_weights are not a non-integer numeric' do
+            it 'errors if any instance_weights are a non-integer numeric' do
               body['options'] = { canary: { steps: [{ instance_weight: 2 }, { instance_weight: 25.0 }] } }
               message = DeploymentCreateMessage.new(body)
               expect(message).not_to be_valid
