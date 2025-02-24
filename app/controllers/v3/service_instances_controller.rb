@@ -467,16 +467,4 @@ class ServiceInstancesV3Controller < ApplicationController
   def logger
     @logger ||= Steno.logger('cc.api')
   end
-
-  def log_service_plan_visibility(service_plan)
-    unless service_plan
-      logger.info('Service Plan does not exist.')
-      return
-    end
-
-    return if visible_to_current_user?(plan: service_plan)
-
-    user = VCAP::CloudController::SecurityContext.current_user
-    logger.info("Service Plan with guid '#{service_plan.guid}' and id '#{service_plan.id}' is not visible in current org to user with guid '#{user.guid}'.")
-  end
 end
