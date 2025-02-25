@@ -4,14 +4,14 @@ require 'permissions_spec_helper'
 ## NOTICE: Prefer request specs over controller specs as per ADR #0003 ##
 
 RSpec.describe AppFeaturesController, type: :controller do
-  let(:app_model) { VCAP::CloudController::AppModel.make(enable_ssh: true, file_based_service_bindings_enabled: true) }
+  let(:app_model) { VCAP::CloudController::AppModel.make(enable_ssh: true, service_binding_k8s_enabled: true) }
   let(:space) { app_model.space }
   let(:org) { space.organization }
   let(:user) { VCAP::CloudController::User.make }
   let(:app_feature_ssh_response) { { 'name' => 'ssh', 'description' => 'Enable SSHing into the app.', 'enabled' => true } }
   let(:app_feature_revisions_response) { { 'name' => 'revisions', 'description' => 'Enable versioning of an application', 'enabled' => true } }
-  let(:app_feature_file_based_service_bindings_response) do
-    { 'name' => 'file-based-service-bindings', 'description' => 'Enable file-based service bindings for the app', 'enabled' => true }
+  let(:app_feature_service_binding_k8s_response) do
+    { 'name' => 'service-binding-k8s', 'description' => 'Enable k8s service bindings for the app', 'enabled' => true }
   end
 
   before do
@@ -42,7 +42,7 @@ RSpec.describe AppFeaturesController, type: :controller do
     it 'returns app features' do
       get :index, params: { app_guid: app_model.guid }
       expect(parsed_body).to eq(
-        'resources' => [app_feature_ssh_response, app_feature_revisions_response, app_feature_file_based_service_bindings_response],
+        'resources' => [app_feature_ssh_response, app_feature_revisions_response, app_feature_service_binding_k8s_response],
         'pagination' => pagination_hash
       )
     end
@@ -70,9 +70,9 @@ RSpec.describe AppFeaturesController, type: :controller do
       expect(parsed_body).to eq(app_feature_revisions_response)
     end
 
-    it 'returns the file-based-service-bindings app feature' do
-      get :show, params: { app_guid: app_model.guid, name: 'file-based-service-bindings' }
-      expect(parsed_body).to eq(app_feature_file_based_service_bindings_response)
+    it 'returns the service-binding-k8s app feature' do
+      get :show, params: { app_guid: app_model.guid, name: 'service-binding-k8s' }
+      expect(parsed_body).to eq(app_feature_service_binding_k8s_response)
     end
 
     it 'throws 404 for a non-existent feature' do

@@ -7,7 +7,7 @@ RSpec.describe 'App Features' do
   let(:admin_header) { admin_headers_for(user) }
   let(:org) { VCAP::CloudController::Organization.make(created_at: 3.days.ago) }
   let(:space) { VCAP::CloudController::Space.make(organization: org) }
-  let(:app_model) { VCAP::CloudController::AppModel.make(space: space, enable_ssh: true, file_based_service_bindings_enabled: true) }
+  let(:app_model) { VCAP::CloudController::AppModel.make(space: space, enable_ssh: true, service_binding_k8s_enabled: true) }
 
   describe 'GET /v3/apps/:guid/features' do
     context 'getting a list of available features for the app' do
@@ -26,8 +26,8 @@ RSpec.describe 'App Features' do
               'enabled' => true
             },
             {
-              'name' => 'file-based-service-bindings',
-              'description' => 'Enable file-based service bindings for the app',
+              'name' => 'service-binding-k8s',
+              'description' => 'Enable k8s service bindings for the app',
               'enabled' => true
             }
           ],
@@ -100,12 +100,12 @@ RSpec.describe 'App Features' do
       it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS
     end
 
-    context 'file-based-service-bindings app feature' do
-      let(:api_call) { ->(user_headers) { get "/v3/apps/#{app_model.guid}/features/file-based-service-bindings", nil, user_headers } }
+    context 'service-binding-k8s app feature' do
+      let(:api_call) { ->(user_headers) { get "/v3/apps/#{app_model.guid}/features/service-binding-k8s", nil, user_headers } }
       let(:feature_response_object) do
         {
-          'name' => 'file-based-service-bindings',
-          'description' => 'Enable file-based service bindings for the app',
+          'name' => 'service-binding-k8s',
+          'description' => 'Enable k8s service bindings for the app',
           'enabled' => true
         }
       end
@@ -191,12 +191,12 @@ RSpec.describe 'App Features' do
       end
     end
 
-    context 'file-based-service-bindings app feature' do
-      let(:api_call) { ->(user_headers) { patch "/v3/apps/#{app_model.guid}/features/file-based-service-bindings", request_body.to_json, user_headers } }
+    context 'service-binding-k8s app feature' do
+      let(:api_call) { ->(user_headers) { patch "/v3/apps/#{app_model.guid}/features/service-binding-k8s", request_body.to_json, user_headers } }
       let(:feature_response_object) do
         {
-          'name' => 'file-based-service-bindings',
-          'description' => 'Enable file-based service bindings for the app',
+          'name' => 'service-binding-k8s',
+          'description' => 'Enable k8s service bindings for the app',
           'enabled' => false
         }
       end
