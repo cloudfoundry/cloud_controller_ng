@@ -25,11 +25,11 @@ module VCAP::CloudController
         end
       end
 
-      context 'when the feature name is file-based-service-bindings' do
-        it 'updates the file_based_service_bindings_enabled column on the app' do
+      context 'when the feature name is service-binding-k8s' do
+        it 'updates the service_binding_k8s_enabled column on the app' do
           expect do
-            AppFeatureUpdate.update('file-based-service-bindings', app, message)
-          end.to change { app.reload.file_based_service_bindings_enabled }.to(true)
+            AppFeatureUpdate.update('service-binding-k8s', app, message)
+          end.to change { app.reload.service_binding_k8s_enabled }.to(true)
         end
       end
     end
