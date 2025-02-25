@@ -404,7 +404,7 @@ RSpec.describe 'Service Broker' do
           end
 
           context "of type #{test[:type]} and action #{schema_action} has a valid schema" do
-            let(:schema) { { (test[:type]).to_s => { schema_action => { 'parameters' => { '$schema': 'http://json-schema.org/draft-04/schema#', type: 'object' } } } } }
+            let(:schema) { { test[:type].to_s => { schema_action => { 'parameters' => { '$schema': 'http://json-schema.org/draft-04/schema#', type: 'object' } } } } }
 
             before do
               stub_catalog_fetch(200, default_catalog(plan_schemas: schema))
@@ -424,8 +424,8 @@ RSpec.describe 'Service Broker' do
 
           context "of type #{test[:type]} and action #{schema_action} is not a JSON object" do
             {
-              "#{test[:type]}.#{schema_action}": { (test[:type]).to_s => { schema_action => true } },
-              "#{test[:type]}.#{schema_action}.parameters": { (test[:type]).to_s => { schema_action => { 'parameters' => true } } }
+              "#{test[:type]}.#{schema_action}": { test[:type].to_s => { schema_action => true } },
+              "#{test[:type]}.#{schema_action}.parameters": { test[:type].to_s => { schema_action => { 'parameters' => true } } }
             }.each do |path, schema|
               context "operator receives an error about #{path} #{schema}" do
                 before do
@@ -456,7 +456,7 @@ RSpec.describe 'Service Broker' do
 
           context "of type #{test[:type]} and action #{schema_action} does not conform to JSON Schema Draft 04 (experimental support for later versions)" do
             let(:path) { "#{test[:type]}.#{schema_action}.parameters" }
-            let(:schema) { { (test[:type]).to_s => { schema_action => { 'parameters' => { '$schema': 'http://json-schema.org/draft-04/schema#', properties: true } } } } }
+            let(:schema) { { test[:type].to_s => { schema_action => { 'parameters' => { '$schema': 'http://json-schema.org/draft-04/schema#', properties: true } } } } }
 
             before do
               stub_catalog_fetch(200, default_catalog(plan_schemas: schema))
@@ -487,7 +487,7 @@ RSpec.describe 'Service Broker' do
             let(:path) { "#{test[:type]}.#{schema_action}.parameters" }
             let(:schema) do
               {
-                (test[:type]).to_s => {
+                test[:type].to_s => {
                   schema_action => {
                     'parameters' => {
                       '$schema': 'http://json-schema.org/draft-04/schema#',
@@ -528,7 +528,7 @@ RSpec.describe 'Service Broker' do
 
           context "of type #{test[:type]} and action #{schema_action} has an external schema" do
             let(:path) { "#{test[:type]}.#{schema_action}.parameters" }
-            let(:schema) { { (test[:type]).to_s => { schema_action => { 'parameters' => { '$schema': 'http://example.com/schema', type: 'object' } } } } }
+            let(:schema) { { test[:type].to_s => { schema_action => { 'parameters' => { '$schema': 'http://example.com/schema', type: 'object' } } } } }
 
             before do
               stub_catalog_fetch(200, default_catalog(plan_schemas: schema))
@@ -558,7 +558,7 @@ RSpec.describe 'Service Broker' do
             let(:path) { "#{test[:type]}.#{schema_action}.parameters" }
             let(:schema) do
               {
-                (test[:type]).to_s => {
+                test[:type].to_s => {
                   schema_action => {
                     'parameters' => {
                       '$schema': 'http://json-schema.org/draft-04/schema#',
@@ -595,7 +595,7 @@ RSpec.describe 'Service Broker' do
 
           context "of type #{test[:type]} and action #{schema_action} has no $schema" do
             let(:path) { "#{test[:type]}.#{schema_action}.parameters" }
-            let(:schema) { { (test[:type]).to_s => { schema_action => { 'parameters' => { type: 'object' } } } } }
+            let(:schema) { { test[:type].to_s => { schema_action => { 'parameters' => { type: 'object' } } } } }
 
             before do
               stub_catalog_fetch(200, default_catalog(plan_schemas: schema))
