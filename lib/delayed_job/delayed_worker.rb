@@ -4,6 +4,9 @@ require 'puma'
 require 'prometheus/middleware/exporter'
 
 class CloudController::DelayedWorker
+  DEFAULT_READ_AHEAD_POSTGRES = 0
+  DEFAULT_READ_AHEAD_MYSQL = Delayed::Worker::DEFAULT_READ_AHEAD
+
   def initialize(options)
     @queue_options = {
       min_priority: ENV.fetch('MIN_PRIORITY', nil),
@@ -56,6 +59,16 @@ class CloudController::DelayedWorker
     Delayed::Worker.max_run_time = config.get(:jobs, :global, :timeout_in_seconds) + 1
     Delayed::Worker.sleep_delay = config.get(:jobs, :global, :worker_sleep_delay_in_seconds)
     Delayed::Worker.logger = logger
+    if ::Sequel::Model.db.database_type == :mysql
+      read_ahead = config.get(:jobs, :read_ahead) || DEFAULT_READ_AHEAD_MYSQL
+      # lock for update is not configurable for mysql
+      read_ahead = DEFAULT_READ_AHEAD_MYSQL if read_ahead <= 0
+    else
+      # read_ahead 0 = lock for update (default for postgres)
+      read_ahead = config.get(:jobs, :read_ahead) || DEFAULT_READ_AHEAD_POSTGRES
+      read_ahead = DEFAULT_READ_AHEAD_POSTGRES if read_ahead < 0
+    end
+    Delayed::Worker.read_ahead = read_ahead
 
     unless @queue_options[:num_threads].nil?
       # Dynamically alias Delayed::Worker to ThreadedWorker to ensure plugins etc are working correctly
