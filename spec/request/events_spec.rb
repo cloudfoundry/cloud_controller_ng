@@ -107,7 +107,7 @@ RSpec.describe 'Events' do
       let(:api_call) { ->(user_headers) { get '/v3/audit_events', nil, user_headers } }
 
       let(:expected_codes_and_responses) do
-        h = Hash.new(code: 200, response_objects: [])
+        h = Hash.new({ code: 200, response_objects: [] })
 
         h['admin'] = { code: 200, response_objects: [unscoped_event_json, org_scoped_event_json, space_scoped_event_json] }
         h['admin_read_only'] = { code: 200, response_objects: [unscoped_event_json, org_scoped_event_json, space_scoped_event_json] }
@@ -284,10 +284,10 @@ RSpec.describe 'Events' do
           end
 
           let(:expected_codes_and_responses) do
-            h = Hash.new(
-              code: 200,
-              response_object: event_json
-            )
+            h = Hash.new({
+                           code: 200,
+                           response_object: event_json
+                         })
             h
           end
 
@@ -344,10 +344,10 @@ RSpec.describe 'Events' do
         end
 
         let(:expected_codes_and_responses) do
-          h = Hash.new(
-            code: 200,
-            response_object: event_json
-          )
+          h = Hash.new({
+                         code: 200,
+                         response_object: event_json
+                       })
           h['space_auditor'] = {
             code: 404,
             response_object: []
@@ -387,10 +387,10 @@ RSpec.describe 'Events' do
           end
 
           let(:expected_codes_and_responses) do
-            h = Hash.new(
-              code: 200,
-              response_object: event_json
-            )
+            h = Hash.new({
+                           code: 200,
+                           response_object: event_json
+                         })
             h
           end
 
@@ -444,10 +444,10 @@ RSpec.describe 'Events' do
         end
 
         let(:expected_codes_and_responses) do
-          h = Hash.new(
-            code: 404,
-            response_object: []
-          )
+          h = Hash.new({
+                         code: 404,
+                         response_object: []
+                       })
           %w[admin admin_read_only global_auditor].each do |role|
             h[role] = {
               code: 200,

@@ -206,15 +206,15 @@ RSpec.describe 'Domains Request' do
         context 'when the user has the required scopes' do
           let(:api_call) { ->(user_headers) { get '/v3/domains', nil, user_headers } }
           let(:expected_codes_and_responses) do
-            Hash.new(
-              code: 200,
-              response_objects: [
-                visible_owned_private_domain_json,
-                visible_shared_private_domain_json,
-                not_visible_private_domain_json,
-                shared_domain_json
-              ]
-            )
+            Hash.new({
+                       code: 200,
+                       response_objects: [
+                         visible_owned_private_domain_json,
+                         visible_shared_private_domain_json,
+                         not_visible_private_domain_json,
+                         shared_domain_json
+                       ]
+                     })
           end
 
           it_behaves_like 'permissions for list endpoint', GLOBAL_SCOPES
@@ -232,14 +232,14 @@ RSpec.describe 'Domains Request' do
           let(:api_call) { ->(user_headers) { get '/v3/domains', nil, user_headers } }
 
           let(:expected_codes_and_responses) do
-            h = Hash.new(
-              code: 200,
-              response_objects: [
-                visible_owned_private_domain_json,
-                visible_shared_private_domain_json,
-                shared_domain_json
-              ]
-            )
+            h = Hash.new({
+                           code: 200,
+                           response_objects: [
+                             visible_owned_private_domain_json,
+                             visible_shared_private_domain_json,
+                             shared_domain_json
+                           ]
+                         })
             h['org_billing_manager'] = {
               code: 200,
               response_objects: [
@@ -268,14 +268,14 @@ RSpec.describe 'Domains Request' do
           let(:api_call) { ->(user_headers) { get '/v3/domains', nil, user_headers } }
 
           let(:expected_codes_and_responses) do
-            h = Hash.new(
-              code: 200,
-              response_objects: [
-                visible_owned_private_domain_json,
-                visible_shared_private_domain_json,
-                shared_domain_json
-              ]
-            )
+            h = Hash.new({
+                           code: 200,
+                           response_objects: [
+                             visible_owned_private_domain_json,
+                             visible_shared_private_domain_json,
+                             shared_domain_json
+                           ]
+                         })
             # because the user is a manager in the shared org, they have access to see the domain
             h['org_billing_manager'] = {
               code: 200,
@@ -304,12 +304,12 @@ RSpec.describe 'Domains Request' do
         let(:api_call) { ->(user_headers) { get endpoint, nil, user_headers } }
 
         let(:expected_codes_and_responses) do
-          h = Hash.new(
-            code: 200,
-            response_objects: [
-              visible_shared_private_domain_json
-            ]
-          )
+          h = Hash.new({
+                         code: 200,
+                         response_objects: [
+                           visible_shared_private_domain_json
+                         ]
+                       })
           # because the user is a manager in the shared org, they have access to see the domain
           h['org_billing_manager'] = {
             code: 200,
@@ -349,12 +349,12 @@ RSpec.describe 'Domains Request' do
         let(:api_call) { ->(user_headers) { get endpoint, nil, user_headers } }
 
         let(:expected_codes_and_responses) do
-          h = Hash.new(
-            code: 200,
-            response_objects: [
-              visible_shared_private_domain_json
-            ]
-          )
+          h = Hash.new({
+                         code: 200,
+                         response_objects: [
+                           visible_shared_private_domain_json
+                         ]
+                       })
           # because the user is a manager in the shared org, they have access to see the domain
           h['org_billing_manager'] = {
             code: 200,
@@ -394,13 +394,13 @@ RSpec.describe 'Domains Request' do
 
         context 'when the user can read globally' do
           let(:expected_codes_and_responses) do
-            Hash.new(
-              code: 200,
-              response_objects: [
-                visible_shared_private_domain_json,
-                not_visible_private_domain_json
-              ]
-            )
+            Hash.new({
+                       code: 200,
+                       response_objects: [
+                         visible_shared_private_domain_json,
+                         not_visible_private_domain_json
+                       ]
+                     })
           end
 
           it_behaves_like 'permissions for list endpoint', GLOBAL_SCOPES
@@ -408,12 +408,12 @@ RSpec.describe 'Domains Request' do
 
         context 'when the user cannot read globally' do
           let(:expected_codes_and_responses) do
-            h = Hash.new(
-              code: 200,
-              response_objects: [
-                visible_shared_private_domain_json
-              ]
-            )
+            h = Hash.new({
+                           code: 200,
+                           response_objects: [
+                             visible_shared_private_domain_json
+                           ]
+                         })
             # because the user is a manager in the shared org, they have access to see the domain
             h['org_billing_manager'] = {
               code: 200,
@@ -638,10 +638,10 @@ RSpec.describe 'Domains Request' do
       end
 
       let(:expected_codes_and_responses) do
-        h = Hash.new(
-          code: 200,
-          response_object: matching_route_json
-        )
+        h = Hash.new({
+                       code: 200,
+                       response_object: matching_route_json
+                     })
         h['org_billing_manager'] = {
           code: 404
         }
@@ -666,10 +666,10 @@ RSpec.describe 'Domains Request' do
         end
 
         let(:expected_codes_and_responses) do
-          h = Hash.new(
-            code: 200,
-            response_object: matching_route_json
-          )
+          h = Hash.new({
+                         code: 200,
+                         response_object: matching_route_json
+                       })
           h['org_billing_manager'] = {
             code: 404
           }
@@ -693,10 +693,10 @@ RSpec.describe 'Domains Request' do
         end
 
         let(:expected_codes_and_responses) do
-          h = Hash.new(
-            code: 200,
-            response_object: matching_route_json
-          )
+          h = Hash.new({
+                         code: 200,
+                         response_object: matching_route_json
+                       })
           h['org_billing_manager'] = {
             code: 404
           }
@@ -734,10 +734,10 @@ RSpec.describe 'Domains Request' do
         end
 
         let(:expected_codes_and_responses) do
-          h = Hash.new(
-            code: 200,
-            response_object: matching_route_json
-          )
+          h = Hash.new({
+                         code: 200,
+                         response_object: matching_route_json
+                       })
           h
         end
 
@@ -838,9 +838,9 @@ RSpec.describe 'Domains Request' do
       end
 
       let(:expected_codes_and_responses) do
-        h = Hash.new(
-          code: 403
-        )
+        h = Hash.new({
+                       code: 403
+                     })
         h['admin'] = {
           code: 201,
           response_object: domain_json
@@ -968,7 +968,7 @@ RSpec.describe 'Domains Request' do
         let(:api_call) { ->(user_headers) { post '/v3/domains', private_domain_params.to_json, user_headers } }
 
         let(:expected_codes_and_responses) do
-          h = Hash.new(code: 403, errors: CF_NOT_AUTHORIZED)
+          h = Hash.new({ code: 403, errors: CF_NOT_AUTHORIZED })
           h['admin'] = {
             code: 201,
             response_object: domain_json
@@ -1520,7 +1520,7 @@ RSpec.describe 'Domains Request' do
         let(:api_call) { ->(user_headers) { post "/v3/domains/#{private_domain.guid}/relationships/shared_organizations", private_domain_params.to_json, user_headers } }
 
         let(:expected_codes_and_responses) do
-          h = Hash.new(code: 403, errors: CF_NOT_AUTHORIZED)
+          h = Hash.new({ code: 403, errors: CF_NOT_AUTHORIZED })
           h['admin'] = {
             code: 200,
             response_object: domain_shared_orgs
@@ -1575,9 +1575,9 @@ RSpec.describe 'Domains Request' do
       let(:api_call) { ->(user_headers) { post "/v3/domains/#{unreadable_domain.guid}/relationships/shared_organizations", unreadable_domain_params.to_json, user_headers } }
 
       let(:expected_codes_and_responses) do
-        h = Hash.new(
-          code: 404
-        )
+        h = Hash.new({
+                       code: 404
+                     })
         h['admin'] = {
           code: 200,
           response_object: domain_shared_orgs
@@ -1610,9 +1610,9 @@ RSpec.describe 'Domains Request' do
       end
 
       let(:expected_codes_and_responses) do
-        h = Hash.new(
-          code: 403
-        )
+        h = Hash.new({
+                       code: 403
+                     })
 
         h['admin'] = {
           code: 202
@@ -1648,7 +1648,7 @@ RSpec.describe 'Domains Request' do
       end
 
       let(:expected_codes_and_responses) do
-        h = Hash.new(code: 403, errors: CF_NOT_AUTHORIZED)
+        h = Hash.new({ code: 403, errors: CF_NOT_AUTHORIZED })
         h['admin'] = { code: 202 }
         h['org_manager'] = { code: 202 }
         h['org_billing_manager'] = { code: 404 }
@@ -1826,7 +1826,7 @@ RSpec.describe 'Domains Request' do
       let(:api_call) { ->(user_headers) { delete "/v3/domains/#{private_domain.guid}/relationships/shared_organizations/#{shared_org1.guid}", nil, user_headers } }
 
       let(:expected_codes_and_responses) do
-        h = Hash.new(code: 403, errors: CF_NOT_AUTHORIZED)
+        h = Hash.new({ code: 403, errors: CF_NOT_AUTHORIZED })
         %w[org_billing_manager no_role].each { |r| h[r] = { code: 404 } }
         h['org_manager'] = { code: 403, errors: CF_ORG_SUSPENDED }
         h['admin'] = { code: 204 }
@@ -1847,7 +1847,7 @@ RSpec.describe 'Domains Request' do
       let(:api_call) { ->(user_headers) { delete "/v3/domains/#{private_domain.guid}/relationships/shared_organizations/#{shared_org1.guid}", nil, user_headers } }
 
       let(:expected_codes_and_responses) do
-        h = Hash.new(code: 403, errors: CF_NOT_AUTHORIZED)
+        h = Hash.new({ code: 403, errors: CF_NOT_AUTHORIZED })
         %w[org_billing_manager no_role].each { |r| h[r] = { code: 404 } }
         h['org_manager'] = { code: 403, errors: CF_ORG_SUSPENDED }
         h['admin'] = { code: 204 }
@@ -1881,9 +1881,9 @@ RSpec.describe 'Domains Request' do
         end
 
         let(:expected_codes_and_responses) do
-          h = Hash.new(
-            code: 204
-          )
+          h = Hash.new({
+                         code: 204
+                       })
 
           h['admin_read_only'] = {
             code: 204
@@ -1905,7 +1905,7 @@ RSpec.describe 'Domains Request' do
         end
 
         let(:expected_codes_and_responses) do
-          h = Hash.new(code: 403, errors: CF_NOT_AUTHORIZED)
+          h = Hash.new({ code: 403, errors: CF_NOT_AUTHORIZED })
           h['admin'] = {
             code: 204
           }
@@ -1971,10 +1971,10 @@ RSpec.describe 'Domains Request' do
       let(:api_call) { ->(user_headers) { get "/v3/domains/#{shared_domain.guid}", nil, user_headers } }
 
       let(:expected_codes_and_responses) do
-        h = Hash.new(
-          code: 200,
-          response_object: shared_domain_json
-        )
+        h = Hash.new({
+                       code: 200,
+                       response_object: shared_domain_json
+                     })
         h
       end
 
@@ -2018,10 +2018,10 @@ RSpec.describe 'Domains Request' do
         end
 
         let(:expected_codes_and_responses) do
-          h = Hash.new(
-            code: 200,
-            response_object: private_domain_json
-          )
+          h = Hash.new({
+                         code: 200,
+                         response_object: private_domain_json
+                       })
           h['org_billing_manager'] = {
             code: 404
           }
@@ -2089,10 +2089,10 @@ RSpec.describe 'Domains Request' do
           end
 
           let(:expected_codes_and_responses) do
-            Hash.new(
-              code: 200,
-              response_object: private_domain_json
-            )
+            Hash.new({
+                       code: 200,
+                       response_object: private_domain_json
+                     })
           end
 
           it_behaves_like 'permissions for single object endpoint', LOCAL_ROLES
@@ -2102,10 +2102,10 @@ RSpec.describe 'Domains Request' do
           let(:shared_organizations) { [{ guid: non_visible_org.guid }, { guid: user_visible_org.guid }] }
 
           let(:expected_codes_and_responses) do
-            Hash.new(
-              code: 200,
-              response_object: private_domain_json
-            )
+            Hash.new({
+                       code: 200,
+                       response_object: private_domain_json
+                     })
           end
 
           it_behaves_like 'permissions for single object endpoint', GLOBAL_SCOPES
@@ -2185,7 +2185,7 @@ RSpec.describe 'Domains Request' do
       end
 
       let(:expected_codes_and_responses) do
-        h = Hash.new(code: 403)
+        h = Hash.new({ code: 403 })
 
         h['admin'] = { code: 200, response_object: domain_json }
 
@@ -2240,7 +2240,7 @@ RSpec.describe 'Domains Request' do
       end
 
       let(:expected_codes_and_responses) do
-        h = Hash.new(code: 403, errors: CF_NOT_AUTHORIZED)
+        h = Hash.new({ code: 403, errors: CF_NOT_AUTHORIZED })
 
         h['admin'] = { code: 200, response_object: domain_json }
         h['org_manager'] = { code: 200, response_object: domain_json }
@@ -2312,7 +2312,7 @@ RSpec.describe 'Domains Request' do
       end
 
       let(:expected_codes_and_responses) do
-        h = Hash.new(code: 403)
+        h = Hash.new({ code: 403 })
 
         h['admin'] = { code: 200, response_object: domain_json }
         h['org_billing_manager'] = { code: 404 }

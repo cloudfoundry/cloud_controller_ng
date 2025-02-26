@@ -15,10 +15,10 @@ RSpec.describe 'Service Usage Events' do
     let(:usage_event_json) { build_usage_event_json(usage_event) }
 
     let(:expected_codes_and_responses) do
-      h = Hash.new(
-        code: 404,
-        response_object: []
-      )
+      h = Hash.new({
+                     code: 404,
+                     response_object: []
+                   })
       h['admin'] = {
         code: 200,
         response_object: usage_event_json
@@ -75,10 +75,10 @@ RSpec.describe 'Service Usage Events' do
     let(:service_usage_event_2_json) { build_usage_event_json(service_usage_event_2) }
 
     let(:expected_codes_and_responses) do
-      h = Hash.new(
-        code: 200,
-        response_objects: []
-      )
+      h = Hash.new({
+                     code: 200,
+                     response_objects: []
+                   })
       h['admin'] = {
         code: 200,
         response_objects: [service_usage_event_json, service_usage_event_2_json]
@@ -181,7 +181,7 @@ RSpec.describe 'Service Usage Events' do
     end
 
     let(:expected_codes_and_responses) do
-      h = Hash.new(code: 403)
+      h = Hash.new({ code: 403 })
       h['admin'] = { code: 200 }
       h
     end

@@ -156,12 +156,12 @@ RSpec.describe 'Users Request' do
 
       context 'when there are no other users in your space or org' do
         let(:expected_codes_and_responses) do
-          h = Hash.new(
-            code: 200,
-            response_objects: [
-              current_user_json
-            ]
-          )
+          h = Hash.new({
+                         code: 200,
+                         response_objects: [
+                           current_user_json
+                         ]
+                       })
           h['admin'] = {
             code: 200,
             response_objects: [
@@ -201,13 +201,13 @@ RSpec.describe 'Users Request' do
         let(:api_call) { ->(user_headers) { get '/v3/users', nil, user_headers } }
 
         let(:expected_codes_and_responses) do
-          h = Hash.new(
-            code: 200,
-            response_objects: [
-              actee_json,
-              current_user_json
-            ]
-          )
+          h = Hash.new({
+                         code: 200,
+                         response_objects: [
+                           actee_json,
+                           current_user_json
+                         ]
+                       })
           h['admin'] = {
             code: 200,
             response_objects: [
@@ -251,12 +251,12 @@ RSpec.describe 'Users Request' do
         let(:api_call) { ->(user_headers) { get endpoint, nil, user_headers } }
 
         let(:expected_codes_and_responses) do
-          h = Hash.new(
-            code: 200,
-            response_objects: [
-              current_user_json
-            ]
-          )
+          h = Hash.new({
+                         code: 200,
+                         response_objects: [
+                           current_user_json
+                         ]
+                       })
           h
         end
 
@@ -287,12 +287,12 @@ RSpec.describe 'Users Request' do
         end
 
         let(:expected_codes_and_responses) do
-          h = Hash.new(
-            code: 200,
-            response_objects: [
-              current_user_json
-            ]
-          )
+          h = Hash.new({
+                         code: 200,
+                         response_objects: [
+                           current_user_json
+                         ]
+                       })
           h
         end
 
@@ -315,12 +315,12 @@ RSpec.describe 'Users Request' do
         let(:endpoint) { '/v3/users?usernames=bob-mcjames' }
         let(:api_call) { ->(user_headers) { get endpoint, nil, user_headers } }
         let(:expected_codes_and_responses) do
-          h = Hash.new(
-            code: 200,
-            response_objects: [
-              current_user_json
-            ]
-          )
+          h = Hash.new({
+                         code: 200,
+                         response_objects: [
+                           current_user_json
+                         ]
+                       })
           h
         end
 
@@ -463,9 +463,9 @@ RSpec.describe 'Users Request' do
 
     context 'when the actee is not in an org or space' do
       let(:expected_codes_and_responses) do
-        h = Hash.new(
-          code: 404
-        )
+        h = Hash.new({
+                       code: 404
+                     })
         h['admin'] = {
           code: 200,
           response_object: client_json
@@ -486,10 +486,10 @@ RSpec.describe 'Users Request' do
 
     context 'when the actee has an org or space role' do
       let(:expected_codes_and_responses) do
-        h = Hash.new(
-          code: 200,
-          response_object: client_json
-        )
+        h = Hash.new({
+                       code: 200,
+                       response_object: client_json
+                     })
         h['no_role'] = {
           code: 404,
           response_object: []
@@ -651,9 +651,9 @@ RSpec.describe 'Users Request' do
       end
 
       let(:expected_codes_and_responses) do
-        h = Hash.new(
-          code: 403
-        )
+        h = Hash.new({
+                       code: 403
+                     })
         h['admin'] = {
           code: 201,
           response_object: user_json
@@ -698,9 +698,9 @@ RSpec.describe 'Users Request' do
         end
 
         let(:expected_codes_and_responses) do
-          h = Hash.new(
-            code: 403
-          )
+          h = Hash.new({
+                         code: 403
+                       })
           h['admin'] = {
             code: 201,
             response_object: user_json
@@ -744,9 +744,9 @@ RSpec.describe 'Users Request' do
         end
 
         let(:expected_codes_and_responses) do
-          h = Hash.new(
-            code: 403
-          )
+          h = Hash.new({
+                         code: 403
+                       })
           h['admin'] = {
             code: 201,
             response_object: user_json
@@ -863,9 +863,9 @@ RSpec.describe 'Users Request' do
 
       context 'when the actee is not associated with any org or space' do
         let(:expected_codes_and_responses) do
-          h = Hash.new(
-            code: 404
-          )
+          h = Hash.new({
+                         code: 404
+                       })
           h['admin'] = {
             code: 200,
             response_object: client_json
@@ -885,9 +885,9 @@ RSpec.describe 'Users Request' do
 
       context 'when the actee has an org or space role' do
         let(:expected_codes_and_responses) do
-          h = Hash.new(
-            code: 403
-          )
+          h = Hash.new({
+                         code: 403
+                       })
           h['admin'] = {
             code: 200,
             response_object: client_json
@@ -946,7 +946,7 @@ RSpec.describe 'Users Request' do
 
     context 'when the actee is not associated with any org or space' do
       let(:expected_codes_and_responses) do
-        h = Hash.new(code: 404)
+        h = Hash.new({ code: 404 })
 
         h['admin_read_only'] = { code: 403 }
         h['global_auditor'] = { code: 403 }
@@ -963,7 +963,7 @@ RSpec.describe 'Users Request' do
       end
 
       let(:expected_codes_and_responses) do
-        h = Hash.new(code: 403)
+        h = Hash.new({ code: 403 })
         h['admin'] = { code: 202 }
         h['no_role'] = { code: 404 }
         h
@@ -1020,7 +1020,7 @@ RSpec.describe 'Users Request' do
     context 'permissions' do
       it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS do
         let(:expected_codes_and_responses) do
-          h = Hash.new(code: 404)
+          h = Hash.new({ code: 404 })
           h['admin'] = { code: 202 }
           h['admin_read_only'] = { code: 403 }
           h['global_auditor'] = { code: 403 }

@@ -92,7 +92,7 @@ RSpec.describe 'Apps' do
       end
 
       let(:expected_codes_and_responses) do
-        h = Hash.new(code: 403, errors: CF_NOT_AUTHORIZED)
+        h = Hash.new({ code: 403, errors: CF_NOT_AUTHORIZED })
         h['org_billing_manager'] = { code: 422 }
         h['org_auditor'] = { code: 422 }
         h['no_role'] = { code: 422 }
@@ -453,7 +453,7 @@ RSpec.describe 'Apps' do
       end
 
       let(:expected_codes_and_responses) do
-        h = Hash.new(code: 200, response_objects: [app_model1_response_object, app_model2_response_object])
+        h = Hash.new({ code: 200, response_objects: [app_model1_response_object, app_model2_response_object] })
 
         h['org_auditor'] = {
           code: 200,
@@ -1359,7 +1359,7 @@ RSpec.describe 'Apps' do
       end
 
       let(:expected_codes_and_responses) do
-        h = Hash.new(code: 200, response_object: app_model_response_object)
+        h = Hash.new({ code: 200, response_object: app_model_response_object })
         h['org_auditor'] = { code: 404 }
         h['org_billing_manager'] = { code: 404 }
         h['no_role'] = { code: 404 }
@@ -1593,7 +1593,7 @@ RSpec.describe 'Apps' do
       end
 
       let(:expected_codes_and_responses) do
-        h = Hash.new(code: 200, response_object: app_model_response_object)
+        h = Hash.new({ code: 200, response_object: app_model_response_object })
         h['space_supporter'] = { code: 200, response_object: app_model_empty_system_env_response_object }
         h['global_auditor'] = h['org_manager'] = h['space_manager'] = h['space_auditor'] = { code: 403 }
         h['org_auditor'] = h['org_billing_manager'] = h['no_role'] = { code: 404 }
@@ -1725,7 +1725,7 @@ RSpec.describe 'Apps' do
       end
 
       let(:expected_codes_and_responses) do
-        h = Hash.new(code: 403)
+        h = Hash.new({ code: 403 })
         h['admin'] = h['admin_read_only'] = h['space_developer'] = { code: 200, response_object: expected_response }
         h['space_supporter'] = { code: 200, response_object: expected_response_system_env_redacted }
         h['org_auditor'] = h['org_billing_manager'] = h['no_role'] = { code: 404 }
@@ -1741,7 +1741,7 @@ RSpec.describe 'Apps' do
 
         it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS do
           let(:expected_codes_and_responses) do
-            h = Hash.new(code: 403)
+            h = Hash.new({ code: 403 })
             h['admin'] = h['admin_read_only'] = { code: 200, response_object: expected_response }
             h['org_auditor'] = h['org_billing_manager'] = h['no_role'] = { code: 404 }
             h
@@ -1810,7 +1810,7 @@ RSpec.describe 'Apps' do
         ->(headers) { get "/v3/apps/#{app_model.guid}/builds", nil, headers }
       end
       let(:expected_codes_and_responses) do
-        h = Hash.new(code: 200, response_guids: [build.guid, second_build.guid])
+        h = Hash.new({ code: 200, response_guids: [build.guid, second_build.guid] })
         h['org_auditor'] = { code: 404 }
         h['org_billing_manager'] = { code: 404 }
         h['no_role'] = { code: 404 }

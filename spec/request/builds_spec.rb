@@ -126,9 +126,9 @@ RSpec.describe 'Builds' do
       let(:user) { VCAP::CloudController::User.make }
 
       let(:expected_codes_and_responses) do
-        h = Hash.new(
-          code: 422
-        )
+        h = Hash.new({
+                       code: 422
+                     })
         h['admin'] = {
           code: 201
         }
@@ -291,10 +291,10 @@ RSpec.describe 'Builds' do
         let(:user) { VCAP::CloudController::User.make }
 
         let(:expected_codes_and_responses) do
-          h = Hash.new(
-            code: 200,
-            response_guids: [build.guid, second_build.guid]
-          )
+          h = Hash.new({
+                         code: 200,
+                         response_guids: [build.guid, second_build.guid]
+                       })
           h['org_auditor'] = { code: 200, response_objects: [] }
           h['org_billing_manager'] = { code: 200, response_objects: [] }
           h['no_role'] = { code: 200, response_objects: [] }
@@ -511,7 +511,7 @@ RSpec.describe 'Builds' do
         let(:api_call) { ->(user_headers) { get "v3/builds/#{build.guid}", nil, user_headers } }
 
         let(:expected_codes_and_responses) do
-          h = Hash.new(code: 200)
+          h = Hash.new({ code: 200 })
           h['org_auditor'] = { code: 404 }
           h['org_billing_manager'] = { code: 404 }
           h['no_role'] = { code: 404 }
@@ -582,7 +582,7 @@ RSpec.describe 'Builds' do
         let(:api_call) { ->(user_headers) { patch "/v3/builds/#{build_model.guid}", { metadata: }.to_json, user_headers } }
 
         let(:expected_codes_and_responses) do
-          h = Hash.new(code: 403, errors: CF_NOT_AUTHORIZED)
+          h = Hash.new({ code: 403, errors: CF_NOT_AUTHORIZED })
           h['admin'] = { code: 200 }
           h['org_auditor'] = { code: 404 }
           h['org_billing_manager'] = { code: 404 }

@@ -169,10 +169,10 @@ RSpec.describe 'Routes Request' do
 
     context 'when the user is a member in the routes org' do
       let(:expected_codes_and_responses) do
-        h = Hash.new(
-          code: 200,
-          response_objects: [route_in_org_json]
-        )
+        h = Hash.new({
+                       code: 200,
+                       response_objects: [route_in_org_json]
+                     })
 
         h['admin'] = { code: 200, response_objects: [route_in_org_json, route_in_other_org_json] }
         h['admin_read_only'] = { code: 200, response_objects: [route_in_org_json, route_in_other_org_json] }
@@ -988,10 +988,10 @@ RSpec.describe 'Routes Request' do
 
     context 'when the user is a member in the routes org' do
       let(:expected_codes_and_responses) do
-        h = Hash.new(
-          code: 200,
-          response_object: route_json
-        )
+        h = Hash.new({
+                       code: 200,
+                       response_object: route_json
+                     })
 
         h['org_billing_manager'] = { code: 404 }
         h['no_role'] = { code: 404 }
@@ -1221,9 +1221,9 @@ RSpec.describe 'Routes Request' do
           let(:api_call) { ->(user_headers) { post '/v3/routes', params.to_json, user_headers } }
 
           let(:expected_codes_and_responses) do
-            h = Hash.new(
-              code: 403
-            )
+            h = Hash.new({
+                           code: 403
+                         })
             h['admin'] = {
               code: 201,
               response_object: route_json
@@ -1300,9 +1300,9 @@ RSpec.describe 'Routes Request' do
             let(:api_call) { ->(user_headers) { post '/v3/routes', params.to_json, user_headers } }
 
             let(:expected_codes_and_responses) do
-              h = Hash.new(
-                code: 403
-              )
+              h = Hash.new({
+                             code: 403
+                           })
               h['admin'] = {
                 code: 201,
                 response_object: route_json
@@ -1384,9 +1384,9 @@ RSpec.describe 'Routes Request' do
           let(:api_call) { ->(user_headers) { post '/v3/routes', params.to_json, user_headers } }
 
           let(:expected_codes_and_responses) do
-            h = Hash.new(
-              code: 403
-            )
+            h = Hash.new({
+                           code: 403
+                         })
             h['admin'] = {
               code: 201,
               response_object: route_json
@@ -1482,9 +1482,9 @@ RSpec.describe 'Routes Request' do
           let(:api_call) { ->(user_headers) { post '/v3/routes', params.to_json, user_headers } }
 
           let(:expected_codes_and_responses) do
-            h = Hash.new(
-              code: 403
-            )
+            h = Hash.new({
+                           code: 403
+                         })
             h['admin'] = {
               code: 201,
               response_object: route_json
@@ -1555,9 +1555,9 @@ RSpec.describe 'Routes Request' do
           let(:api_call) { ->(user_headers) { post '/v3/routes', params.to_json, user_headers } }
 
           let(:expected_codes_and_responses) do
-            h = Hash.new(
-              code: 403
-            )
+            h = Hash.new({
+                           code: 403
+                         })
             h['admin'] = {
               code: 201,
               response_object: route_json
@@ -1639,9 +1639,9 @@ RSpec.describe 'Routes Request' do
         end
 
         let(:expected_codes_and_responses) do
-          h = Hash.new(
-            code: 403
-          )
+          h = Hash.new({
+                         code: 403
+                       })
           h['admin'] = {
             code: 201,
             response_object: route_json
@@ -1782,7 +1782,7 @@ RSpec.describe 'Routes Request' do
         let(:api_call) { ->(user_headers) { post '/v3/routes', params.to_json, user_headers } }
 
         let(:expected_codes_and_responses) do
-          h = Hash.new(code: 403, errors: CF_NOT_AUTHORIZED)
+          h = Hash.new({ code: 403, errors: CF_NOT_AUTHORIZED })
           h['admin'] = {
             code: 201,
             response_object: route_json
@@ -1894,9 +1894,9 @@ RSpec.describe 'Routes Request' do
           let(:api_call) { ->(user_headers) { post '/v3/routes', params.to_json, user_headers } }
 
           let(:expected_codes_and_responses) do
-            h = Hash.new(
-              code: 403
-            )
+            h = Hash.new({
+                           code: 403
+                         })
             h['admin'] = {
               code: 201,
               response_object: route_json
@@ -2124,9 +2124,9 @@ RSpec.describe 'Routes Request' do
       end
 
       let(:expected_codes_and_responses) do
-        h = Hash.new(
-          code: 403
-        )
+        h = Hash.new({
+                       code: 403
+                     })
         h['admin'] = {
           code: 201,
           response_object: route_json
@@ -2441,7 +2441,7 @@ RSpec.describe 'Routes Request' do
 
     context 'when the user logged in' do
       let(:expected_codes_and_responses) do
-        h = Hash.new(code: 403, errors: CF_NOT_AUTHORIZED)
+        h = Hash.new({ code: 403, errors: CF_NOT_AUTHORIZED })
         h['admin'] = { code: 200, response_object: route_json }
         h['no_role'] = { code: 404 }
         h['org_billing_manager'] = { code: 404 }
@@ -2510,7 +2510,7 @@ RSpec.describe 'Routes Request' do
         }
       end
       let(:expected_codes_and_responses) do
-        h = Hash.new(code: 404)
+        h = Hash.new({ code: 404 })
         h['admin'] = {
           code: 200,
           response_object: route_json
@@ -2603,7 +2603,7 @@ RSpec.describe 'Routes Request' do
 
     context 'when the user is a member in the routes org' do
       let(:expected_codes_and_responses) do
-        h = Hash.new(code: 403, errors: CF_NOT_AUTHORIZED)
+        h = Hash.new({ code: 403, errors: CF_NOT_AUTHORIZED })
         h['org_billing_manager'] = { code: 404 }
         h['no_role'] = { code: 404 }
         h['admin'] = { code: 202 }
@@ -2761,7 +2761,7 @@ RSpec.describe 'Routes Request' do
 
     describe 'permissions' do
       let(:expected_codes_and_responses) do
-        h = Hash.new(code: 403, errors: CF_NOT_AUTHORIZED)
+        h = Hash.new({ code: 403, errors: CF_NOT_AUTHORIZED })
 
         h['org_billing_manager'] = { code: 404 }
         h['no_role'] = { code: 404 }
@@ -3053,7 +3053,7 @@ RSpec.describe 'Routes Request' do
 
     describe 'permissions' do
       let(:expected_codes_and_responses) do
-        h = Hash.new(code: 403, errors: CF_NOT_AUTHORIZED)
+        h = Hash.new({ code: 403, errors: CF_NOT_AUTHORIZED })
 
         h['org_billing_manager'] = { code: 404 }
         h['no_role'] = { code: 404 }
@@ -3285,7 +3285,7 @@ RSpec.describe 'Routes Request' do
 
     context 'when the user logged in' do
       let(:expected_codes_and_responses) do
-        h = Hash.new(code: 403, errors: CF_NOT_AUTHORIZED)
+        h = Hash.new({ code: 403, errors: CF_NOT_AUTHORIZED })
         h['admin'] = { code: 200 }
         h['no_role'] = { code: 404 }
         h['org_billing_manager'] = { code: 404 }
@@ -3655,10 +3655,10 @@ RSpec.describe 'Routes Request' do
 
     context 'when the user is a member in the app space' do
       let(:expected_codes_and_responses) do
-        h = Hash.new(
-          code: 200,
-          response_objects: [route1_json, route2_json]
-        )
+        h = Hash.new({
+                       code: 200,
+                       response_objects: [route1_json, route2_json]
+                     })
 
         h['org_auditor'] = { code: 404 }
         h['org_billing_manager'] = { code: 404 }

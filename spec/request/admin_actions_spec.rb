@@ -11,9 +11,9 @@ RSpec.describe 'admin actions' do
     let(:api_call) { ->(user_headers) { post '/v3/admin/actions/clear_buildpack_cache', {}, user_headers } }
 
     let(:expected_codes_and_responses) do
-      h = Hash.new(
-        code: 403
-      )
+      h = Hash.new({
+                     code: 403
+                   })
       h['admin'] = {
         code: 202
       }

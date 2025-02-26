@@ -131,10 +131,10 @@ RSpec.describe 'V3 service brokers' do
 
     describe 'empty response' do
       let(:expected_codes_and_responses) do
-        h = Hash.new(
-          code: 200,
-          response_objects: []
-        )
+        h = Hash.new({
+                       code: 200,
+                       response_objects: []
+                     })
 
         h
       end
@@ -200,10 +200,10 @@ RSpec.describe 'V3 service brokers' do
       end
 
       let(:expected_codes_and_responses) do
-        h = Hash.new(
-          code: 200,
-          response_objects: []
-        )
+        h = Hash.new({
+                       code: 200,
+                       response_objects: []
+                     })
 
         h['admin'] = { code: 200, response_objects: [broker_created_with_v3_json, broker_created_with_v2_json] }
         h['admin_read_only'] = { code: 200, response_objects: [broker_created_with_v3_json, broker_created_with_v2_json] }
@@ -242,10 +242,10 @@ RSpec.describe 'V3 service brokers' do
         }
       end
       let(:expected_codes_and_responses) do
-        h = Hash.new(
-          code: 200,
-          response_objects: []
-        )
+        h = Hash.new({
+                       code: 200,
+                       response_objects: []
+                     })
 
         h['admin'] = {
           code: 200,
@@ -381,7 +381,7 @@ RSpec.describe 'V3 service brokers' do
       end
 
       let(:expected_codes_and_responses) do
-        h = Hash.new(code: 404)
+        h = Hash.new({ code: 404 })
 
         h['admin'] = {
           code: 200,
@@ -431,7 +431,7 @@ RSpec.describe 'V3 service brokers' do
         }
       end
       let(:expected_codes_and_responses) do
-        h = Hash.new(code: 404)
+        h = Hash.new({ code: 404 })
 
         h['admin'] = {
           code: 200,
@@ -494,7 +494,7 @@ RSpec.describe 'V3 service brokers' do
         it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS do
           let(:api_call) { ->(user_headers) { patch "/v3/service_brokers/#{broker.guid}", update_request_body.to_json, user_headers } }
           let(:expected_codes_and_responses) do
-            Hash.new(code: 404).tap do |h|
+            Hash.new({ code: 404 }).tap do |h|
               h['admin'] = { code: 202 }
               h['admin_read_only'] = { code: 403 }
               h['global_auditor'] = { code: 403 }
@@ -1028,7 +1028,7 @@ RSpec.describe 'V3 service brokers' do
       it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS do
         let(:api_call) { ->(user_headers) { post '/v3/service_brokers', global_broker_request_body.to_json, user_headers } }
         let(:expected_codes_and_responses) do
-          Hash.new(code: 403).tap do |h|
+          Hash.new({ code: 403 }).tap do |h|
             h['admin'] = { code: 202 }
           end
         end
@@ -1466,7 +1466,7 @@ RSpec.describe 'V3 service brokers' do
 
           it_behaves_like 'permissions for delete endpoint', ALL_PERMISSIONS do
             let(:expected_codes_and_responses) do
-              Hash.new(code: 404).tap do |h|
+              Hash.new({ code: 404 }).tap do |h|
                 h['admin'] = { code: 202 }
                 h['admin_read_only'] = { code: 403 }
                 h['global_auditor'] = { code: 403 }

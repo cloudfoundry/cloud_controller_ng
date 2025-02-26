@@ -319,7 +319,7 @@ module VCAP::CloudController
           let(:space) { VCAP::CloudController::Space.make }
           let(:org) { space.organization }
           let(:expected_codes_and_responses) do
-            h = Hash.new(code: 200, response_guids: [org.guid])
+            h = Hash.new({ code: 200, response_guids: [org.guid] })
             h['admin'] = { code: 200, response_guids: VCAP::CloudController::Organization.select_map(:guid) }
             h['admin_read_only'] = { code: 200, response_guids: VCAP::CloudController::Organization.select_map(:guid) }
             h['global_auditor'] = { code: 200, response_guids: VCAP::CloudController::Organization.select_map(:guid) }
@@ -551,14 +551,14 @@ module VCAP::CloudController
         context 'without filters' do
           let(:api_call) { ->(user_headers) { get "/v3/organizations/#{org.guid}/domains", nil, user_headers } }
           let(:expected_codes_and_responses) do
-            h = Hash.new(
-              code: 200,
-              response_objects: [
-                shared_domain_json,
-                owned_private_domain_json,
-                shared_private_domain_json
-              ]
-            )
+            h = Hash.new({
+                           code: 200,
+                           response_objects: [
+                             shared_domain_json,
+                             owned_private_domain_json,
+                             shared_private_domain_json
+                           ]
+                         })
             h['org_billing_manager'] = {
               code: 200,
               response_objects: [
@@ -579,12 +579,12 @@ module VCAP::CloudController
           let(:api_call) { ->(user_headers) { get "/v3/organizations/#{org.guid}/domains?names=#{shared_domain.name}", nil, user_headers } }
 
           let(:expected_codes_and_responses) do
-            h = Hash.new(
-              code: 200,
-              response_objects: [
-                shared_domain_json
-              ]
-            )
+            h = Hash.new({
+                           code: 200,
+                           response_objects: [
+                             shared_domain_json
+                           ]
+                         })
             h['no_role'] = {
               code: 404
             }
@@ -598,12 +598,12 @@ module VCAP::CloudController
           let(:api_call) { ->(user_headers) { get "/v3/organizations/#{org.guid}/domains?guids=#{shared_domain.guid}", nil, user_headers } }
 
           let(:expected_codes_and_responses) do
-            h = Hash.new(
-              code: 200,
-              response_objects: [
-                shared_domain_json
-              ]
-            )
+            h = Hash.new({
+                           code: 200,
+                           response_objects: [
+                             shared_domain_json
+                           ]
+                         })
             h['no_role'] = {
               code: 404
             }
@@ -617,12 +617,12 @@ module VCAP::CloudController
           let(:api_call) { ->(user_headers) { get "/v3/organizations/#{org.guid}/domains?organization_guids=#{org.guid}", nil, user_headers } }
 
           let(:expected_codes_and_responses) do
-            h = Hash.new(
-              code: 200,
-              response_objects: [
-                owned_private_domain_json
-              ]
-            )
+            h = Hash.new({
+                           code: 200,
+                           response_objects: [
+                             owned_private_domain_json
+                           ]
+                         })
             h['org_billing_manager'] = {
               code: 200,
               response_objects: []
@@ -841,10 +841,10 @@ module VCAP::CloudController
         let!(:internal_domain) { SharedDomain.make(internal: true) } # used to ensure internal domains do not get returned in any case
         let!(:tcp_domain) { SharedDomain.make(router_group_guid: 'default-tcp') }
         let(:expected_codes_and_responses) do
-          h = Hash.new(
-            code: 200,
-            response_object: domain_json
-          )
+          h = Hash.new({
+                         code: 200,
+                         response_object: domain_json
+                       })
           h['no_role'] = { code: 404 }
           h
         end
@@ -859,10 +859,10 @@ module VCAP::CloudController
 
         context 'when at least one private domain exists' do
           let(:expected_codes_and_responses) do
-            h = Hash.new(
-              code: 200,
-              response_object: domain_json
-            )
+            h = Hash.new({
+                           code: 200,
+                           response_object: domain_json
+                         })
             h['org_billing_manager'] = { code: 404 }
             h['no_role'] = { code: 404 }
             h
@@ -942,9 +942,9 @@ module VCAP::CloudController
         let!(:internal_domain) { SharedDomain.make(internal: true) } # used to ensure internal domains do not get returned in any case
 
         let(:expected_codes_and_responses) do
-          h = Hash.new(
-            code: 404
-          )
+          h = Hash.new({
+                         code: 404
+                       })
           h
         end
 
@@ -955,9 +955,9 @@ module VCAP::CloudController
         let!(:tcp_domain) { SharedDomain.make(router_group_guid: 'default-tcp') }
 
         let(:expected_codes_and_responses) do
-          h = Hash.new(
-            code: 404
-          )
+          h = Hash.new({
+                         code: 404
+                       })
           h
         end
 
@@ -966,9 +966,9 @@ module VCAP::CloudController
 
       context 'when no domains exist' do
         let(:expected_codes_and_responses) do
-          h = Hash.new(
-            code: 404
-          )
+          h = Hash.new({
+                         code: 404
+                       })
           h
         end
 
@@ -1010,10 +1010,10 @@ module VCAP::CloudController
       end
 
       let(:expected_codes_and_responses) do
-        h = Hash.new(
-          code: 200,
-          response_object: org_summary_json
-        )
+        h = Hash.new({
+                       code: 200,
+                       response_object: org_summary_json
+                     })
         h['no_role'] = { code: 404 }
         h
       end
@@ -1088,7 +1088,7 @@ module VCAP::CloudController
         let(:space) { Space.make(organization: org) }
         let(:api_call) { ->(user_headers) { patch "/v3/organizations/#{org.guid}/relationships/default_isolation_segment", nil, user_headers } }
         let(:expected_codes_and_responses) do
-          h = Hash.new(code: 403, errors: CF_NOT_AUTHORIZED)
+          h = Hash.new({ code: 403, errors: CF_NOT_AUTHORIZED })
           h['admin'] = { code: 200 }
           h['org_manager'] = { code: 403, errors: CF_ORG_SUSPENDED }
           h['no_role'] = { code: 404 }
@@ -1128,7 +1128,7 @@ module VCAP::CloudController
         }
       end
       let(:expected_codes_and_responses) do
-        h = Hash.new(code: 200, response_object: expected_response_object)
+        h = Hash.new({ code: 200, response_object: expected_response_object })
         h['no_role'] = { code: 404 }
         h
       end
@@ -1294,7 +1294,7 @@ module VCAP::CloudController
         let(:space) { Space.make(organization: org) }
         let(:api_call) { ->(user_headers) { patch "/v3/organizations/#{org.guid}", nil, user_headers } }
         let(:expected_codes_and_responses) do
-          h = Hash.new(code: 403, errors: CF_NOT_AUTHORIZED)
+          h = Hash.new({ code: 403, errors: CF_NOT_AUTHORIZED })
           h['admin'] = { code: 200 }
           h['org_manager'] = { code: 403, errors: CF_ORG_SUSPENDED }
           h['no_role'] = { code: 404 }
@@ -1376,7 +1376,7 @@ module VCAP::CloudController
 
       context 'when the user is a member in the org' do
         let(:expected_codes_and_responses) do
-          h = Hash.new(code: 403)
+          h = Hash.new({ code: 403 })
           h['admin'] = { code: 202 }
           h['no_role'] = { code: 404 }
           h
@@ -1648,13 +1648,13 @@ module VCAP::CloudController
         let(:user_json) { build_user_json(user.guid, 'bob-mcjames', 'Okta') }
         let(:org_manager_json) { build_user_json(org_manager.guid, 'rob-mcjames', 'Okta') }
         let(:expected_codes_and_responses) do
-          h = Hash.new(
-            code: 200,
-            response_objects: [
-              user_json,
-              org_manager_json
-            ]
-          )
+          h = Hash.new({
+                         code: 200,
+                         response_objects: [
+                           user_json,
+                           org_manager_json
+                         ]
+                       })
           h['no_role'] = {
             code: 404
           }
