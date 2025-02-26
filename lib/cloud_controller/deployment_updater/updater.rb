@@ -1,7 +1,7 @@
 require 'cloud_controller/deployment_updater/actions/scale'
 require 'cloud_controller/deployment_updater/actions/cancel'
-require 'cloud_controller/deployment_updater/actions/canary'
 require 'cloud_controller/deployment_updater/actions/finalize'
+
 module VCAP::CloudController
   module DeploymentUpdater
     class Updater
@@ -22,7 +22,16 @@ module VCAP::CloudController
 
       def canary
         with_error_logging('error-canarying-deployment') do
-          Actions::Canary.new(deployment, logger).call
+          finished = Actions::Scale.new(deployment, logger, deployment.canary_total_instances, deployment.current_canary_instance_target).call
+          if finished
+            deployment.update(
+              last_healthy_at: Time.now,
+              state: DeploymentModel::PAUSED_STATE,
+              status_value: DeploymentModel::ACTIVE_STATUS_VALUE,
+              status_reason: DeploymentModel::PAUSED_STATUS_REASON
+            )
+            logger.info("paused-canary-deployment-for-#{deployment.guid}")
+          end
           logger.info("ran-canarying-deployment-for-#{deployment.guid}")
         end
       end

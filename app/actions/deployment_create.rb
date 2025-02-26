@@ -54,13 +54,15 @@ module VCAP::CloudController
             revision_guid: revision&.guid,
             revision_version: revision&.version,
             strategy: message.strategy,
-            max_in_flight: message.max_in_flight
+            max_in_flight: message.max_in_flight,
+            canary_steps: message.options&.dig(:canary, :steps)
           )
+
           MetadataUpdate.update(deployment, message)
 
           supersede_deployment(previous_deployment)
 
-          process_instances = starting_process_instances(message, desired_instances)
+          process_instances = starting_process_instances(deployment, desired_instances)
 
           process = create_deployment_process(app, deployment.guid, revision, process_instances)
           # Need to transition from STOPPED to STARTED to engage the ProcessObserver to desire the LRP.
@@ -176,7 +178,8 @@ module VCAP::CloudController
           revision_guid: revision&.guid,
           revision_version: revision&.version,
           strategy: message.strategy,
-          max_in_flight: message.max_in_flight
+          max_in_flight: message.max_in_flight,
+          canary_steps: message.options&.dig(:canary, :steps)
         )
 
         MetadataUpdate.update(deployment, message)
@@ -217,12 +220,14 @@ module VCAP::CloudController
         end
       end
 
-      def starting_process_instances(message, desired_instances)
-        if message.strategy == DeploymentModel::CANARY_STRATEGY
-          1
-        else
-          [message.max_in_flight, desired_instances].min
-        end
+      def starting_process_instances(deployment, desired_instances)
+        starting_process_count = if deployment.strategy == DeploymentModel::CANARY_STRATEGY
+                                   deployment.canary_step[:canary]
+                                 else
+                                   desired_instances
+                                 end
+
+        [deployment.max_in_flight, starting_process_count].min
       end
 
       def log_rollback_event(app_guid, user_id, revision_id, strategy)

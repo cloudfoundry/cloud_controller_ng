@@ -1,4 +1,3 @@
-require 'spec_helper'
 require 'lightweight_spec_helper'
 require 'messages/validators'
 require 'messages/base_message'
@@ -8,6 +7,7 @@ require 'cloud_controller/diego/lifecycles/app_docker_lifecycle'
 require 'cloud_controller/diego/lifecycles/app_buildpack_lifecycle'
 require 'cloud_controller/diego/lifecycles/lifecycles'
 require 'rspec/collection_matchers'
+require 'pry'
 
 module VCAP::CloudController::Validators
   RSpec.describe 'Validators' do
