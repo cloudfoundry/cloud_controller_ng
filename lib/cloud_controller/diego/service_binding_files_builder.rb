@@ -10,12 +10,12 @@ module VCAP::CloudController
       end
 
       def initialize(app_or_process)
-        @file_based_service_bindings_enabled = app_or_process.file_based_service_bindings_enabled
+        @service_binding_k8s_enabled = app_or_process.service_binding_k8s_enabled
         @service_bindings = app_or_process.service_bindings
       end
 
       def build
-        return nil unless @file_based_service_bindings_enabled
+        return nil unless @service_binding_k8s_enabled
 
         service_binding_files = {}
         names = Set.new # to check for duplicate binding names

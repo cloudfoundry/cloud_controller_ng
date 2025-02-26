@@ -97,7 +97,7 @@ module VCAP::CloudController::Diego
     let(:directory) { 'binding-name' }
 
     before do
-      app.update(file_based_service_bindings_enabled: true)
+      app.update(service_binding_k8s_enabled: true)
     end
 
     describe '#build' do

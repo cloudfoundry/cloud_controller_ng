@@ -4,10 +4,10 @@ module VCAP::CloudController
   RSpec.describe SystemEnvPresenter do
     subject(:system_env_presenter) { SystemEnvPresenter.new(app) }
 
-    shared_examples 'file-based service bindings' do
-      context 'when file-based service bindings are enabled' do
+    shared_examples 'k8s service bindings' do
+      context 'when k8s service bindings are enabled' do
         before do
-          app.update(file_based_service_bindings_enabled: true)
+          app.update(service_binding_k8s_enabled: true)
         end
 
         it 'does not contain vcap_services' do
@@ -28,7 +28,7 @@ module VCAP::CloudController
           expect(system_env_presenter.system_env[:VCAP_SERVICES]).to eq({})
         end
 
-        include_examples 'file-based service bindings'
+        include_examples 'k8s service bindings'
       end
 
       context 'when there are services' do
@@ -173,7 +173,7 @@ module VCAP::CloudController
           end
         end
 
-        include_examples 'file-based service bindings'
+        include_examples 'k8s service bindings'
       end
     end
   end
