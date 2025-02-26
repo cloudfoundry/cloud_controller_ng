@@ -57,11 +57,11 @@ module VCAP::CloudController
         end
       end
 
-      shared_examples 'file-based service bindings' do
-        context 'when file-based service bindings are enabled' do
+      shared_examples 'k8s service bindings' do
+        context 'when k8s service bindings are enabled' do
           before do
             app = process.app
-            app.update(file_based_service_bindings_enabled: true)
+            app.update(service_binding_k8s_enabled: true)
             VCAP::CloudController::ServiceBinding.make(service_instance: ManagedServiceInstance.make(space: app.space), app: app)
           end
 
@@ -932,7 +932,7 @@ module VCAP::CloudController
             end
           end
 
-          include_examples 'file-based service bindings'
+          include_examples 'k8s service bindings'
         end
 
         context 'when the lifecycle_type is "cnb"' do
@@ -1025,7 +1025,7 @@ module VCAP::CloudController
             end
           end
 
-          include_examples 'file-based service bindings'
+          include_examples 'k8s service bindings'
         end
 
         context 'when the lifecycle_type is "docker"' do
@@ -1370,7 +1370,7 @@ module VCAP::CloudController
             end
           end
 
-          include_examples 'file-based service bindings'
+          include_examples 'k8s service bindings'
         end
       end
 

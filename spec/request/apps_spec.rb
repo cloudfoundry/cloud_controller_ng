@@ -1602,7 +1602,7 @@ RSpec.describe 'Apps' do
 
       it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS
 
-      context 'when file-based service bindings are enabled' do
+      context 'when k8s service bindings are enabled' do
         let(:app_model_response_object) do
           r = super()
           r[:system_env_json] = { SERVICE_BINDING_ROOT: '/etc/cf-service-bindings' }
@@ -1610,7 +1610,7 @@ RSpec.describe 'Apps' do
         end
 
         before do
-          app_model.update(file_based_service_bindings_enabled: true)
+          app_model.update(service_binding_k8s_enabled: true)
         end
 
         it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS

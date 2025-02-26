@@ -201,10 +201,10 @@ module VCAP::CloudController
             end
           end
 
-          context 'when file-based service bindings are enabled' do
+          context 'when k8s service bindings are enabled' do
             before do
               app = staging_details.package.app
-              app.update(file_based_service_bindings_enabled: true)
+              app.update(service_binding_k8s_enabled: true)
               VCAP::CloudController::ServiceBinding.make(service_instance: ManagedServiceInstance.make(space: app.space), app: app)
             end
 
@@ -601,10 +601,10 @@ module VCAP::CloudController
             end
           end
 
-          context 'when file-based service bindings are enabled' do
+          context 'when k8s service bindings are enabled' do
             before do
               app = task.app
-              app.update(file_based_service_bindings_enabled: true)
+              app.update(service_binding_k8s_enabled: true)
               VCAP::CloudController::ServiceBinding.make(service_instance: ManagedServiceInstance.make(space: app.space), app: app)
             end
 
@@ -769,10 +769,10 @@ module VCAP::CloudController
             end
           end
 
-          context 'when file-based service bindings are enabled' do
+          context 'when k8s service bindings are enabled' do
             before do
               app = task.app
-              app.update(file_based_service_bindings_enabled: true)
+              app.update(service_binding_k8s_enabled: true)
               VCAP::CloudController::ServiceBinding.make(service_instance: ManagedServiceInstance.make(space: app.space), app: app)
             end
 
