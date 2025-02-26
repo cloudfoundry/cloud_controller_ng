@@ -56,7 +56,11 @@ RSpec.describe 'Stacks Request' do
         end
 
         let(:expected_codes_and_responses) do
+<<<<<<< HEAD
           Hash.new({ code: 200, response_objects: stacks_response_objects }.freeze)
+=======
+          Hash.new({ code: 200, response_objects: stacks_response_objects })
+>>>>>>> f9c219ec5 (Initial attempt at upgrading to Ruby 3.4)
         end
         let!(:stack1) { VCAP::CloudController::Stack.make }
         let!(:stack2) { VCAP::CloudController::Stack.make(name: default_stack_name) }
@@ -335,7 +339,11 @@ RSpec.describe 'Stacks Request' do
       }
     end
     let(:expected_codes_and_responses) do
+<<<<<<< HEAD
       Hash.new({ code: 200, response_object: stacks_response_object }.freeze)
+=======
+      Hash.new({ code: 200, response_object: stacks_response_object })
+>>>>>>> f9c219ec5 (Initial attempt at upgrading to Ruby 3.4)
     end
 
     it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS
@@ -548,7 +556,11 @@ RSpec.describe 'Stacks Request' do
       let(:api_call) { ->(user_headers) { get "/v3/stacks/#{stack.guid}/apps", nil, user_headers } }
 
       let(:expected_codes_and_responses) do
+<<<<<<< HEAD
         h = Hash.new({ code: 200, response_guids: [app_model1.guid, app_model2.guid] }.freeze)
+=======
+        h = Hash.new({ code: 200, response_guids: [app_model1.guid, app_model2.guid] })
+>>>>>>> f9c219ec5 (Initial attempt at upgrading to Ruby 3.4)
 
         h['org_auditor'] = {
           code: 200,
