@@ -239,7 +239,7 @@ module VCAP::CloudController::Diego
           let(:binding_name) { 'binding_name' }
 
           it 'raises an exception' do
-            expect { service_binding_files }.to raise_error(ServiceBindingFilesBuilder::IncompatibleBindings, 'Invalid binding name: binding_name')
+            expect { service_binding_files }.to raise_error(ServiceBindingFilesBuilder::IncompatibleBindings, "Invalid binding name: 'binding_name'. Name must match /^[a-z0-9\\-.]{1,253}$/")
           end
         end
 
