@@ -24,7 +24,7 @@ module VCAP::CloudController
         @service_bindings.select(&:create_succeeded?).each do |service_binding|
           sb_hash = ServiceBindingPresenter.new(service_binding, include_instance: true).to_hash
           name = sb_hash[:name]
-          raise IncompatibleBindings.new("Invalid binding name: #{name}") unless valid_name?(name)
+          raise IncompatibleBindings.new("Invalid binding name: '#{name}'. Name must match #{binding_naming_convention.inspect}") unless valid_name?(name)
           raise IncompatibleBindings.new("Duplicate binding name: #{name}") if names.add?(name).nil?
 
           # add the credentials first
@@ -46,6 +46,10 @@ module VCAP::CloudController
       end
 
       private
+
+      def binding_naming_convention
+        /^[a-z0-9\-.]{1,253}$/
+      end
 
       # - adds a Diego::Bbs::Models::File object to the service_binding_files hash
       # - binding name is used as the directory name, key is used as the file name
@@ -71,7 +75,7 @@ module VCAP::CloudController
       end
 
       def valid_name?(name)
-        name.match?(/^[a-z0-9\-.]{1,253}$/)
+        name.match?(binding_naming_convention)
       end
 
       def transform_vcap_services_attribute(name)
