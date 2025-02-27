@@ -210,7 +210,21 @@ module VCAP::CloudController
 
             it 'includes volume mounted files' do
               result = task_recipe_builder.build_staging_task(config, staging_details)
-              expect(result.volume_mounted_files).not_to be_empty
+              expect(result.volume_mounted_files.size).to be > 1
+            end
+          end
+
+          context 'when file-based VCAP service bindings are enabled' do
+            before do
+              app = staging_details.package.app
+              app.update(file_based_vcap_services_enabled: true)
+              VCAP::CloudController::ServiceBinding.make(service_instance: ManagedServiceInstance.make(space: app.space), app: app)
+            end
+
+            it 'includes volume mounted files' do
+              result = task_recipe_builder.build_staging_task(config, staging_details)
+              expect(result.volume_mounted_files.size).to eq(1)
+              expect(result.volume_mounted_files[0].path).to eq('vcap_services')
             end
           end
         end
@@ -610,7 +624,21 @@ module VCAP::CloudController
 
             it 'includes volume mounted files' do
               result = task_recipe_builder.build_app_task(config, task)
-              expect(result.volume_mounted_files).not_to be_empty
+              expect(result.volume_mounted_files.size).to be > 1
+            end
+          end
+
+          context 'when file-based VCAP service bindings are enabled' do
+            before do
+              app = task.app
+              app.update(file_based_vcap_services_enabled: true)
+              VCAP::CloudController::ServiceBinding.make(service_instance: ManagedServiceInstance.make(space: app.space), app: app)
+            end
+
+            it 'includes volume mounted files' do
+              result = task_recipe_builder.build_app_task(config, task)
+              expect(result.volume_mounted_files.size).to eq(1)
+              expect(result.volume_mounted_files[0].path).to eq('vcap_services')
             end
           end
         end
@@ -778,7 +806,21 @@ module VCAP::CloudController
 
             it 'includes volume mounted files' do
               result = task_recipe_builder.build_app_task(config, task)
-              expect(result.volume_mounted_files).not_to be_empty
+              expect(result.volume_mounted_files.size).to be > 1
+            end
+          end
+
+          context 'when file-based VCAP service bindings are enabled' do
+            before do
+              app = task.app
+              app.update(file_based_vcap_services_enabled: true)
+              VCAP::CloudController::ServiceBinding.make(service_instance: ManagedServiceInstance.make(space: app.space), app: app)
+            end
+
+            it 'includes volume mounted files' do
+              result = task_recipe_builder.build_app_task(config, task)
+              expect(result.volume_mounted_files.size).to eq(1)
+              expect(result.volume_mounted_files[0].path).to eq('vcap_services')
             end
           end
         end

@@ -96,151 +96,197 @@ module VCAP::CloudController::Diego
     let(:app) { binding.app }
     let(:directory) { 'binding-name' }
 
-    before do
-      app.update(service_binding_k8s_enabled: true)
-    end
-
     describe '#build' do
       subject(:build) { ServiceBindingFilesBuilder.build(app) }
 
-      it 'returns an array of Diego::Bbs::Models::File objects' do
-        expect(build).to be_an(Array)
-        expect(build).not_to be_empty
-        expect(build).to all(be_a(Diego::Bbs::Models::File))
+      context 'when service-binding-k8s feature is enabled' do
+        before do
+          app.update(service_binding_k8s_enabled: true)
+        end
+
+        it 'returns an array of Diego::Bbs::Models::File objects' do
+          expect(build).to be_an(Array)
+          expect(build).not_to be_empty
+          expect(build).to all(be_a(Diego::Bbs::Models::File))
+        end
+
+        describe 'mapping rules for service binding files' do
+          subject(:service_binding_files) { build }
+
+          it 'puts all files into a directory named after the service binding' do
+            expect(service_binding_files).not_to be_empty
+            expect(service_binding_files).to all(have_attributes(path: match(%r{^binding-name/.+$})))
+          end
+
+          include_examples 'mapping of type and provider'
+          include_examples 'mapping of binding metadata'
+          include_examples 'mapping of instance metadata'
+          include_examples 'mapping of plan metadata'
+          include_examples 'mapping of tags'
+          include_examples 'mapping of credentials'
+
+          it 'omits null or empty array attributes' do
+            expect(service_binding_files).not_to include(have_attributes(path: 'binding-name/syslog_drain_url'))
+            expect(service_binding_files).not_to include(have_attributes(path: 'binding-name/volume_mounts'))
+          end
+
+          include_examples 'expected files', %w[type provider label binding-guid name binding-name instance-guid instance-name plan tags string number boolean array hash]
+
+          context 'when binding_name is nil' do
+            let(:binding_name) { nil }
+            let(:directory) { 'instance-name' }
+
+            include_examples 'mapping of type and provider'
+            include_examples 'mapping of binding metadata', 'instance-name'
+            include_examples 'mapping of instance metadata'
+            include_examples 'mapping of plan metadata'
+            include_examples 'mapping of tags'
+            include_examples 'mapping of credentials'
+
+            include_examples 'expected files', %w[type provider label binding-guid name instance-guid instance-name plan tags string number boolean array hash]
+          end
+
+          context 'when syslog_drain_url is set' do
+            let(:syslog_drain_url) { 'https://syslog.drain' }
+
+            it 'maps the attribute to a file' do
+              expect(service_binding_files.find { |f| f.path == 'binding-name/syslog-drain-url' }).to have_attributes(content: 'https://syslog.drain')
+            end
+
+            include_examples 'mapping of type and provider'
+            include_examples 'mapping of binding metadata'
+            include_examples 'mapping of instance metadata'
+            include_examples 'mapping of plan metadata'
+            include_examples 'mapping of tags'
+            include_examples 'mapping of credentials'
+
+            include_examples 'expected files',
+                             %w[type provider label binding-guid name binding-name instance-guid instance-name plan tags string number boolean array hash syslog-drain-url]
+          end
+
+          context 'when volume_mounts is set' do
+            let(:volume_mounts) do
+              [{
+                container_dir: 'dir1',
+                device_type: 'type1',
+                mode: 'mode1',
+                foo: 'bar'
+              }, {
+                container_dir: 'dir2',
+                device_type: 'type2',
+                mode: 'mode2',
+                foo: 'baz'
+              }]
+            end
+
+            it 'maps the attribute to a file' do
+              expect(service_binding_files.find do |f|
+                f.path == 'binding-name/volume-mounts'
+              end).to have_attributes(content: '[{"container_dir":"dir1","device_type":"type1","mode":"mode1"},{"container_dir":"dir2","device_type":"type2","mode":"mode2"}]')
+            end
+
+            include_examples 'mapping of type and provider'
+            include_examples 'mapping of binding metadata'
+            include_examples 'mapping of instance metadata'
+            include_examples 'mapping of plan metadata'
+            include_examples 'mapping of tags'
+            include_examples 'mapping of credentials'
+
+            include_examples 'expected files',
+                             %w[type provider label binding-guid name binding-name instance-guid instance-name plan tags string number boolean array hash volume-mounts]
+          end
+
+          context 'when the instance is user-provided' do
+            let(:instance) { VCAP::CloudController::UserProvidedServiceInstance.make(name: 'upsi', tags: %w[an-upsi-tag another-upsi-tag]) }
+
+            include_examples 'mapping of type and provider', 'user-provided'
+            include_examples 'mapping of binding metadata'
+            include_examples 'mapping of instance metadata', 'upsi'
+            include_examples 'mapping of tags', '["an-upsi-tag","another-upsi-tag"]'
+            include_examples 'mapping of credentials'
+
+            include_examples 'expected files', %w[type provider label binding-guid name binding-name instance-guid instance-name tags string number boolean array hash]
+          end
+
+          context 'when there are duplicate keys at different levels' do
+            let(:credentials) { { type: 'duplicate-type', name: 'duplicate-name', credentials: { password: 'secret' } } }
+
+            include_examples 'mapping of type and provider' # no 'duplicate-type'
+            include_examples 'mapping of binding metadata' # no 'duplicate-name'
+            include_examples 'mapping of instance metadata'
+            include_examples 'mapping of plan metadata'
+            include_examples 'mapping of tags'
+            include_examples 'mapping of credentials', { credentials: '{"password":"secret"}' }
+
+            include_examples 'expected files', %w[type provider label binding-guid name binding-name instance-guid instance-name plan tags credentials]
+          end
+
+          context 'when there are duplicate binding names' do
+            let(:binding_name) { 'duplicate-name' }
+
+            before do
+              VCAP::CloudController::ServiceBinding.make(app: app,
+                                                         service_instance: VCAP::CloudController::UserProvidedServiceInstance.make(
+                                                           space: app.space, name: 'duplicate-name'
+                                                         ))
+            end
+
+            it 'raises an exception' do
+              expect { service_binding_files }.to raise_error(ServiceBindingFilesBuilder::IncompatibleBindings, 'Duplicate binding name: duplicate-name')
+            end
+          end
+
+          context 'when binding names violate the Service Binding Specification for Kubernetes' do
+            let(:binding_name) { 'binding_name' }
+
+            it 'raises an exception' do
+              expect do
+                service_binding_files
+              end.to raise_error(ServiceBindingFilesBuilder::IncompatibleBindings, "Invalid binding name: 'binding_name'. Name must match /^[a-z0-9\\-.]{1,253}$/")
+            end
+          end
+
+          context 'when the bindings exceed the maximum allowed bytesize' do
+            let(:xxl_credentials) do
+              c = {}
+              value = 'v' * 1000
+              1000.times do |i|
+                c["key#{i}"] = value
+              end
+              c
+            end
+
+            before do
+              allow_any_instance_of(ServiceBindingPresenter).to receive(:to_hash).and_wrap_original do |original|
+                original.call.merge(credentials: xxl_credentials)
+              end
+            end
+
+            it 'raises an exception' do
+              expect { service_binding_files }.to raise_error(ServiceBindingFilesBuilder::IncompatibleBindings, /^Bindings exceed the maximum allowed bytesize of 1000000: \d+/)
+            end
+          end
+
+          context 'when credential keys violate the Service Binding Specification for Kubernetes for binding entry file names' do
+            let(:credentials) { { '../secret': 'hidden' } }
+
+            it 'raises an exception' do
+              expect { service_binding_files }.to raise_error(ServiceBindingFilesBuilder::IncompatibleBindings, 'Invalid file name: ../secret')
+            end
+          end
+        end
       end
 
-      describe 'mapping rules for service binding files' do
-        subject(:service_binding_files) { build }
-
-        it 'puts all files into a directory named after the service binding' do
-          expect(service_binding_files).not_to be_empty
-          expect(service_binding_files).to all(have_attributes(path: match(%r{^binding-name/.+$})))
+      context 'when file-based-vcap-services feature is enabled' do
+        before do
+          app.update(file_based_vcap_services_enabled: true)
         end
 
-        include_examples 'mapping of type and provider'
-        include_examples 'mapping of binding metadata'
-        include_examples 'mapping of instance metadata'
-        include_examples 'mapping of plan metadata'
-        include_examples 'mapping of tags'
-        include_examples 'mapping of credentials'
-
-        it 'omits null or empty array attributes' do
-          expect(service_binding_files).not_to include(have_attributes(path: 'binding-name/syslog_drain_url'))
-          expect(service_binding_files).not_to include(have_attributes(path: 'binding-name/volume_mounts'))
-        end
-
-        include_examples 'expected files', %w[type provider label binding-guid name binding-name instance-guid instance-name plan tags string number boolean array hash]
-
-        context 'when binding_name is nil' do
-          let(:binding_name) { nil }
-          let(:directory) { 'instance-name' }
-
-          include_examples 'mapping of type and provider'
-          include_examples 'mapping of binding metadata', 'instance-name'
-          include_examples 'mapping of instance metadata'
-          include_examples 'mapping of plan metadata'
-          include_examples 'mapping of tags'
-          include_examples 'mapping of credentials'
-
-          include_examples 'expected files', %w[type provider label binding-guid name instance-guid instance-name plan tags string number boolean array hash]
-        end
-
-        context 'when syslog_drain_url is set' do
-          let(:syslog_drain_url) { 'https://syslog.drain' }
-
-          it 'maps the attribute to a file' do
-            expect(service_binding_files.find { |f| f.path == 'binding-name/syslog-drain-url' }).to have_attributes(content: 'https://syslog.drain')
-          end
-
-          include_examples 'mapping of type and provider'
-          include_examples 'mapping of binding metadata'
-          include_examples 'mapping of instance metadata'
-          include_examples 'mapping of plan metadata'
-          include_examples 'mapping of tags'
-          include_examples 'mapping of credentials'
-
-          include_examples 'expected files',
-                           %w[type provider label binding-guid name binding-name instance-guid instance-name plan tags string number boolean array hash syslog-drain-url]
-        end
-
-        context 'when volume_mounts is set' do
-          let(:volume_mounts) do
-            [{
-              container_dir: 'dir1',
-              device_type: 'type1',
-              mode: 'mode1',
-              foo: 'bar'
-            }, {
-              container_dir: 'dir2',
-              device_type: 'type2',
-              mode: 'mode2',
-              foo: 'baz'
-            }]
-          end
-
-          it 'maps the attribute to a file' do
-            expect(service_binding_files.find do |f|
-              f.path == 'binding-name/volume-mounts'
-            end).to have_attributes(content: '[{"container_dir":"dir1","device_type":"type1","mode":"mode1"},{"container_dir":"dir2","device_type":"type2","mode":"mode2"}]')
-          end
-
-          include_examples 'mapping of type and provider'
-          include_examples 'mapping of binding metadata'
-          include_examples 'mapping of instance metadata'
-          include_examples 'mapping of plan metadata'
-          include_examples 'mapping of tags'
-          include_examples 'mapping of credentials'
-
-          include_examples 'expected files',
-                           %w[type provider label binding-guid name binding-name instance-guid instance-name plan tags string number boolean array hash volume-mounts]
-        end
-
-        context 'when the instance is user-provided' do
-          let(:instance) { VCAP::CloudController::UserProvidedServiceInstance.make(name: 'upsi', tags: %w[an-upsi-tag another-upsi-tag]) }
-
-          include_examples 'mapping of type and provider', 'user-provided'
-          include_examples 'mapping of binding metadata'
-          include_examples 'mapping of instance metadata', 'upsi'
-          include_examples 'mapping of tags', '["an-upsi-tag","another-upsi-tag"]'
-          include_examples 'mapping of credentials'
-
-          include_examples 'expected files', %w[type provider label binding-guid name binding-name instance-guid instance-name tags string number boolean array hash]
-        end
-
-        context 'when there are duplicate keys at different levels' do
-          let(:credentials) { { type: 'duplicate-type', name: 'duplicate-name', credentials: { password: 'secret' } } }
-
-          include_examples 'mapping of type and provider' # no 'duplicate-type'
-          include_examples 'mapping of binding metadata' # no 'duplicate-name'
-          include_examples 'mapping of instance metadata'
-          include_examples 'mapping of plan metadata'
-          include_examples 'mapping of tags'
-          include_examples 'mapping of credentials', { credentials: '{"password":"secret"}' }
-
-          include_examples 'expected files', %w[type provider label binding-guid name binding-name instance-guid instance-name plan tags credentials]
-        end
-
-        context 'when there are duplicate binding names' do
-          let(:binding_name) { 'duplicate-name' }
-
-          before do
-            VCAP::CloudController::ServiceBinding.make(app: app,
-                                                       service_instance: VCAP::CloudController::UserProvidedServiceInstance.make(
-                                                         space: app.space, name: 'duplicate-name'
-                                                       ))
-          end
-
-          it 'raises an exception' do
-            expect { service_binding_files }.to raise_error(ServiceBindingFilesBuilder::IncompatibleBindings, 'Duplicate binding name: duplicate-name')
-          end
-        end
-
-        context 'when binding names violate the Service Binding Specification for Kubernetes' do
-          let(:binding_name) { 'binding_name' }
-
-          it 'raises an exception' do
-            expect { service_binding_files }.to raise_error(ServiceBindingFilesBuilder::IncompatibleBindings, "Invalid binding name: 'binding_name'. Name must match /^[a-z0-9\\-.]{1,253}$/")
-          end
+        it 'returns an array containing vcap_services file as Diego::Bbs::Models::File object' do
+          expect(build).to be_an(Array)
+          expect(build.size).to eq(1)
+          expect(build).to all(be_a(Diego::Bbs::Models::File))
+          expect(build[0].path).to eq('vcap_services')
         end
 
         context 'when the bindings exceed the maximum allowed bytesize' do
@@ -260,15 +306,7 @@ module VCAP::CloudController::Diego
           end
 
           it 'raises an exception' do
-            expect { service_binding_files }.to raise_error(ServiceBindingFilesBuilder::IncompatibleBindings, /^Bindings exceed the maximum allowed bytesize of 1000000: \d+/)
-          end
-        end
-
-        context 'when credential keys violate the Service Binding Specification for Kubernetes for binding entry file names' do
-          let(:credentials) { { '../secret': 'hidden' } }
-
-          it 'raises an exception' do
-            expect { service_binding_files }.to raise_error(ServiceBindingFilesBuilder::IncompatibleBindings, 'Invalid file name: ../secret')
+            expect { build }.to raise_error(ServiceBindingFilesBuilder::IncompatibleBindings, /^Bindings exceed the maximum allowed bytesize of 1000000: \d+/)
           end
         end
       end
