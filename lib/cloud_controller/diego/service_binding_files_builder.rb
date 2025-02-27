@@ -10,11 +10,24 @@ module VCAP::CloudController
       end
 
       def initialize(app_or_process)
+        @app_or_process = app_or_process
         @service_binding_k8s_enabled = app_or_process.service_binding_k8s_enabled
+        @file_based_vcap_services = app_or_process.file_based_vcap_services_enabled
         @service_bindings = app_or_process.service_bindings
       end
 
       def build
+        if @service_binding_k8s_enabled
+          build_service_binding_k8s
+        elsif @file_based_vcap_services
+          vcap_services = SystemEnvPresenter.new(@app_or_process).vcap_services[:VCAP_SERVICES]
+          build_vcap_service_file(vcap_services)
+        end
+      end
+
+      private
+
+      def build_service_binding_k8s
         return nil unless @service_binding_k8s_enabled
 
         service_binding_files = {}
@@ -45,7 +58,15 @@ module VCAP::CloudController
         service_binding_files.values
       end
 
-      private
+      def build_vcap_service_file(vcap_services)
+        path = 'vcap_services'
+        vcap_services_string = Oj.dump(vcap_services, mode: :compat)
+        total_bytesize = vcap_services_string.bytesize + path.bytesize
+
+        raise IncompatibleBindings.new("Bindings exceed the maximum allowed bytesize of #{MAX_ALLOWED_BYTESIZE}: #{total_bytesize}") if total_bytesize > MAX_ALLOWED_BYTESIZE
+
+        [::Diego::Bbs::Models::File.new(path: path, content: vcap_services_string)]
+      end
 
       def binding_naming_convention
         /^[a-z0-9\-.]{1,253}$/

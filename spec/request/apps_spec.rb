@@ -1615,6 +1615,20 @@ RSpec.describe 'Apps' do
 
         it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS
       end
+
+      context 'when file-based VCAP service bindings are enabled' do
+        let(:app_model_response_object) do
+          r = super()
+          r[:system_env_json] = { VCAP_SERVICES_FILE_PATH: '/etc/cf-service-bindings/vcap_services' }
+          r
+        end
+
+        before do
+          app_model.update(file_based_vcap_services_enabled: true)
+        end
+
+        it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS
+      end
     end
 
     context 'when VCAP_SERVICES contains potentially sensitive information' do
