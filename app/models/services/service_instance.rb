@@ -10,7 +10,10 @@ module VCAP::CloudController
     plugin :serialization
     plugin :single_table_inheritance, :is_gateway_service,
            model_map: lambda { |is_gateway_service|
-             if is_gateway_service
+             # When selecting a UNION of multiple sub-queries, MySQL does not maintain the original type - i.e. tinyint(1) - and
+             # thus Sequel does not convert the value to a boolean.
+             # See https://bugs.mysql.com/bug.php?id=30886
+             if ActiveModel::Type::Boolean.new.cast(is_gateway_service)
                VCAP::CloudController::ManagedServiceInstance
              else
                VCAP::CloudController::UserProvidedServiceInstance
