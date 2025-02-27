@@ -20,6 +20,22 @@ module VCAP::CloudController
       end
     end
 
+    shared_examples 'file-based VCAP service bindings' do
+      context 'when file-based VCAP service bindings are enabled' do
+        before do
+          app.update(file_based_vcap_services_enabled: true)
+        end
+
+        it 'does not contain vcap_services' do
+          expect(system_env_presenter.system_env).not_to have_key(:VCAP_SERVICES)
+        end
+
+        it 'contains service_binding_root' do
+          expect(system_env_presenter.system_env[:VCAP_SERVICES_FILE_PATH]).to eq('/etc/cf-service-bindings/vcap_services')
+        end
+      end
+    end
+
     describe '#system_env' do
       context 'when there are no services' do
         let(:app) { AppModel.make(environment_variables: { 'jesse' => 'awesome' }) }
@@ -29,6 +45,7 @@ module VCAP::CloudController
         end
 
         include_examples 'k8s service bindings'
+        include_examples 'file-based VCAP service bindings'
       end
 
       context 'when there are services' do
@@ -174,6 +191,7 @@ module VCAP::CloudController
         end
 
         include_examples 'k8s service bindings'
+        include_examples 'file-based VCAP service bindings'
       end
     end
   end
