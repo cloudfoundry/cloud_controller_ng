@@ -67,7 +67,23 @@ module VCAP::CloudController
 
           it 'includes volume mounted files' do
             lrp = builder.build_app_lrp
-            expect(lrp.volume_mounted_files).not_to be_empty
+            expect(lrp.volume_mounted_files.size).to be > 1
+          end
+        end
+      end
+
+      shared_examples 'file-based VCAP service bindings' do
+        context 'when file-based VCAP service bindings are enabled' do
+          before do
+            app = process.app
+            app.update(file_based_vcap_services_enabled: true)
+            VCAP::CloudController::ServiceBinding.make(service_instance: ManagedServiceInstance.make(space: app.space), app: app)
+          end
+
+          it 'includes the vcap_services file' do
+            lrp = builder.build_app_lrp
+            expect(lrp.volume_mounted_files.size).to eq(1)
+            expect(lrp.volume_mounted_files[0].path).to eq('vcap_services')
           end
         end
       end
@@ -933,6 +949,7 @@ module VCAP::CloudController
           end
 
           include_examples 'k8s service bindings'
+          include_examples 'file-based VCAP service bindings'
         end
 
         context 'when the lifecycle_type is "cnb"' do
@@ -1026,6 +1043,7 @@ module VCAP::CloudController
           end
 
           include_examples 'k8s service bindings'
+          include_examples 'file-based VCAP service bindings'
         end
 
         context 'when the lifecycle_type is "docker"' do
@@ -1371,6 +1389,7 @@ module VCAP::CloudController
           end
 
           include_examples 'k8s service bindings'
+          include_examples 'file-based VCAP service bindings'
         end
       end
 
