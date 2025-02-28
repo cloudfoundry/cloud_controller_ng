@@ -55,6 +55,9 @@ module VCAP::CloudController
         delete_action.respond_to?(:can_return_warnings?) && delete_action.can_return_warnings?
       end
 
+      # def delete_action_can_enqueue_jobs?
+      #   delete_action.respond_to?(:can_enqueue_jobs?) && delete_action.can_enqueue_jobs?
+      # end
       attr_reader :model_class, :delete_action
     end
   end

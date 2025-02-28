@@ -16,7 +16,7 @@ module VCAP::CloudController
 
         if droplet.blobstore_key
           blobstore_delete = Jobs::Runtime::BlobstoreDelete.new(droplet.blobstore_key, :droplet_blobstore)
-          Jobs::Enqueuer.new(queue: Jobs::Queues.generic).enqueue(blobstore_delete)
+          Jobs::GenericEnqueuer.shared.enqueue(blobstore_delete, priority_increment: Jobs::REDUCED_PRIORITY)
         end
 
         Repositories::DropletEventRepository.record_delete(
