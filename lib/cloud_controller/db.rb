@@ -85,6 +85,8 @@ module VCAP::CloudController
 
       require 'models'
       require 'delayed_job_sequel'
+      # load monkey patch for sequel backend to support configurable job lock method (postgres only)
+      require 'delayed_job/sequel_patch'
     end
 
     def self.load_models_without_migrations_check(db_config, logger)
@@ -92,6 +94,8 @@ module VCAP::CloudController
 
       require 'models'
       require 'delayed_job_sequel'
+      # load monkey patch for sequel backend to support configurable job lock method (postgres only)
+      require 'delayed_job/sequel_patch'
     end
   end
 end
