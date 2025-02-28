@@ -1,12 +1,13 @@
 require 'messages/metadata_base_message'
 require 'messages/validators'
+require 'cloud_controller/diego/lifecycles/lifecycles'
 
 module VCAP::CloudController
   class BuildpackCreateMessage < MetadataBaseMessage
     MAX_BUILDPACK_NAME_LENGTH = 250
     MAX_STACK_LENGTH = 250
 
-    register_allowed_keys %i[name stack position enabled locked]
+    register_allowed_keys %i[name stack position enabled locked lifecycle]
     validates_with NoAdditionalKeysValidator
 
     validates :name,
@@ -32,5 +33,10 @@ module VCAP::CloudController
     validates :locked,
               allow_nil: true,
               boolean: true
+
+    validates :lifecycle,
+              string: true,
+              allow_nil: true,
+              inclusion: { in: [VCAP::CloudController::Lifecycles::BUILDPACK, VCAP::CloudController::Lifecycles::CNB], message: 'must be either "buildpack" or "cnb"' }
   end
 end
