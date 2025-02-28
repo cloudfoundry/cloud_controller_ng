@@ -90,6 +90,31 @@ module VCAP::CloudController::Jobs
         end
         Enqueuer.new(opts).enqueue(wrapped_job)
       end
+
+      context 'when run_at is provided' do
+        it 'enqueues the job with the specified run_at time' do
+          original_enqueue = Delayed::Job.method(:enqueue)
+          wrapped_job = Runtime::ModelDeletion.new('one', 'two')
+          future_time = Time.now + 1.month
+          expect(Delayed::Job).to(receive(:enqueue)) do |enqueued_job, opts|
+            expect(opts[:run_at]).to eq(future_time)
+            original_enqueue.call(enqueued_job, opts)
+          end
+          Enqueuer.new({ queue: 'my-queue', run_at: Time.now + 1.hour }).enqueue(wrapped_job, run_at: future_time)
+        end
+      end
+
+      context 'when priority_increment is provided' do
+        it 'adds the priority_increment to the base priority' do
+          original_enqueue = Delayed::Job.method(:enqueue)
+          expect(Delayed::Job).to receive(:enqueue) do |enqueued_job, opts|
+            expect(opts[:priority]).to eq(17)
+            original_enqueue.call(enqueued_job, opts)
+          end
+          opts[:priority] = 10
+          Enqueuer.new(opts).enqueue(wrapped_job, priority_increment: 7)
+        end
+      end
     end
 
     describe '#enqueue_pollable' do
@@ -194,6 +219,74 @@ module VCAP::CloudController::Jobs
             opts[:priority] = 2000
             Enqueuer.new(opts).enqueue_pollable(wrapped_job)
           end
+        end
+      end
+
+      context 'when run_at is provided' do
+        it 'enqueues the job with the specified run_at time' do
+          future_time = Time.now + 1.month
+          original_enqueue = Delayed::Job.method(:enqueue)
+          expect(Delayed::Job).to(receive(:enqueue)) do |enqueued_job, opts|
+            expect(opts[:run_at]).to eq(future_time)
+            original_enqueue.call(enqueued_job, opts)
+          end
+          Enqueuer.new(opts).enqueue_pollable(wrapped_job, run_at: future_time)
+        end
+      end
+
+      context 'when priority_increment is provided' do
+        it 'enqueues the job with the specified priority_increment' do
+          original_enqueue = Delayed::Job.method(:enqueue)
+          expect(Delayed::Job).to receive(:enqueue) do |enqueued_job, opts|
+            expect(opts[:priority]).to eq(3)
+            original_enqueue.call(enqueued_job, opts)
+          end
+          Enqueuer.new(opts).enqueue_pollable(wrapped_job, priority_increment: 3)
+        end
+
+        it 'adds the priority_increment to the base priority' do
+          original_enqueue = Delayed::Job.method(:enqueue)
+          expect(Delayed::Job).to receive(:enqueue) do |enqueued_job, opts|
+            expect(opts[:priority]).to eq(17)
+            original_enqueue.call(enqueued_job, opts)
+          end
+          opts[:priority] = 10
+          Enqueuer.new(opts).enqueue_pollable(wrapped_job, priority_increment: 7)
+        end
+
+        it 'ignores negative priority_increment values' do
+          original_enqueue = Delayed::Job.method(:enqueue)
+          expect(Delayed::Job).to receive(:enqueue) do |enqueued_job, opts|
+            expect(opts[:priority]).to eq(3)
+            original_enqueue.call(enqueued_job, opts)
+          end
+          opts[:priority] = 3
+          Enqueuer.new(opts).enqueue_pollable(wrapped_job, priority_increment: -8)
+        end
+
+        it 'adds the priority_increment to the configured priority' do
+          original_enqueue = Delayed::Job.method(:enqueue)
+          allow_any_instance_of(Enqueuer).to receive(:get_overwritten_job_priority_from_config).and_return(1899)
+
+          expect(Delayed::Job).to receive(:enqueue) do |enqueued_job, opts|
+            expect(opts[:priority]).to eq(1903)
+            original_enqueue.call(enqueued_job, opts)
+          end
+          Enqueuer.new(opts).enqueue_pollable(wrapped_job, priority_increment: 4)
+        end
+      end
+
+      context 'when preserve_priority is true' do
+        it 'does not modify the priority even if a configured priority is present or a priority_increment is provided' do
+          original_enqueue = Delayed::Job.method(:enqueue)
+          allow_any_instance_of(Enqueuer).to receive(:get_overwritten_job_priority_from_config).and_return(1899)
+
+          expect(Delayed::Job).to receive(:enqueue) do |enqueued_job, opts|
+            expect(opts[:priority]).to eq(1901)
+            original_enqueue.call(enqueued_job, opts)
+          end
+          opts[:priority] = 1901
+          Enqueuer.new(opts).enqueue_pollable(wrapped_job, preserve_priority: true, priority_increment: 4)
         end
       end
     end

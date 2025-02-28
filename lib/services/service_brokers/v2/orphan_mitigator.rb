@@ -13,8 +13,7 @@ module VCAP::Services
             service_instance.service_plan.guid
           )
 
-          opts = { queue: VCAP::CloudController::Jobs::Queues.generic, run_at: Delayed::Job.db_time_now }
-          VCAP::CloudController::Jobs::Enqueuer.new(opts).enqueue(orphan_deprovision_job)
+          VCAP::CloudController::Jobs::GenericEnqueuer.shared.enqueue(orphan_deprovision_job, run_at: Delayed::Job.db_time_now)
         end
 
         def cleanup_failed_bind(service_binding)
@@ -24,8 +23,7 @@ module VCAP::Services
             binding_info
           )
 
-          opts = { queue: VCAP::CloudController::Jobs::Queues.generic, run_at: Delayed::Job.db_time_now }
-          VCAP::CloudController::Jobs::Enqueuer.new(opts).enqueue(unbind_job)
+          VCAP::CloudController::Jobs::GenericEnqueuer.shared.enqueue(unbind_job, run_at: Delayed::Job.db_time_now)
         end
 
         def cleanup_failed_key(service_key)
@@ -35,8 +33,7 @@ module VCAP::Services
             service_key.service_instance.guid
           )
 
-          opts = { queue: VCAP::CloudController::Jobs::Queues.generic, run_at: Delayed::Job.db_time_now }
-          VCAP::CloudController::Jobs::Enqueuer.new(opts).enqueue(key_delete_job)
+          VCAP::CloudController::Jobs::GenericEnqueuer.shared.enqueue(key_delete_job, run_at: Delayed::Job.db_time_now)
         end
       end
     end

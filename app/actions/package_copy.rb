@@ -20,7 +20,7 @@ module VCAP::CloudController
       package.db.transaction do
         package.save
 
-        @enqueued_job = Jobs::Enqueuer.new(queue: Jobs::Queues.generic).enqueue(Jobs::V3::PackageBitsCopier.new(source_package.guid, package.guid)) if source_package.type == 'bits'
+        @enqueued_job = Jobs::GenericEnqueuer.shared.enqueue(Jobs::V3::PackageBitsCopier.new(source_package.guid, package.guid)) if source_package.type == 'bits'
 
         record_audit_event(package, source_package, user_audit_info) if record_event
       end

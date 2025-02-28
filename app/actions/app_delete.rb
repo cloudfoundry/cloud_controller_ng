@@ -97,7 +97,7 @@ module VCAP::CloudController
 
     def delete_buildpack_cache(app)
       delete_job = Jobs::V3::BuildpackCacheDelete.new(app.guid)
-      Jobs::Enqueuer.new(queue: Jobs::Queues.generic).enqueue(delete_job)
+      Jobs::GenericEnqueuer.shared.enqueue(delete_job, priority_increment: Jobs::REDUCED_PRIORITY)
     end
 
     def logger
