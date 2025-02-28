@@ -35,6 +35,7 @@ def check_constraint_exists?(database)
   if database.database_type == :postgres
     database.check_constraints(:apps).include?(:only_one_sb_feature_enabled)
   elsif database.database_type == :mysql
-    database[:information_schema__table_constraints].where(TABLE_NAME: 'apps', CONSTRAINT_TYPE: 'CHECK', CONSTRAINT_NAME: 'only_one_sb_feature_enabled').any?
+    database[:information_schema__table_constraints].where(TABLE_SCHEMA: database.opts[:database], TABLE_NAME: 'apps', CONSTRAINT_TYPE: 'CHECK',
+                                                           CONSTRAINT_NAME: 'only_one_sb_feature_enabled').any?
   end
 end
