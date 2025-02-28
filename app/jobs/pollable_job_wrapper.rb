@@ -27,7 +27,8 @@ module VCAP::CloudController
           user_guid = VCAP::CloudController::UserAuditInfo.from_context(VCAP::CloudController::SecurityContext).user_guid
 
           if VCAP::CloudController::Config.config.get(:jobs, :enable_dynamic_job_priorities) && user_guid
-            job.values[:priority] += PollableJobModel.number_of_active_jobs_by_user(user_guid)
+            # job.values[:priority] += PollableJobModel.number_of_active_jobs_by_user(user_guid)
+            job.values[:priority] += 100
           end
 
           PollableJobModel.create(
