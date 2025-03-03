@@ -177,6 +177,9 @@ module VCAP::CloudController
       app.revisions_enabled
     end
 
+    delegate :service_binding_k8s_enabled, to: :app
+    delegate :file_based_vcap_services_enabled, to: :app
+
     def package_hash
       # this caches latest_package for performance reasons
       package = latest_package
