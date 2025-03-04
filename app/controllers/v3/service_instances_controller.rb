@@ -435,7 +435,7 @@ class ServiceInstancesV3Controller < ApplicationController
 
   def service_plan_not_visible_to_user!(service_plan)
     user = VCAP::CloudController::SecurityContext.current_user
-    logger.info("Service Plan with guid '#{service_plan.guid}' and id '#{service_plan.id}' is not visible in current org to user with guid '#{user.guid}'.")
+    logger.info("Service Plan with guid '#{service_plan.guid}' and id '#{service_plan.id}' is not visible to user with guid '#{user.guid}'.")
 
     unprocessable!('Invalid service plan. Ensure that the service plan exists, is available, and you have access to it.')
   end
