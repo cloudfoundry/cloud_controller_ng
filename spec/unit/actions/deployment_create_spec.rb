@@ -6,7 +6,7 @@ module VCAP::CloudController
   RSpec.describe DeploymentCreate do
     let(:app) { AppModel.make(desired_state: ProcessModel::STARTED) }
 
-    let!(:web_process) { ProcessModel.make(app: app, instances: 3, log_rate_limit: 101) }
+    let!(:web_process) { ProcessModel.make(app: app, instances: original_instances, log_rate_limit: 101, state: process_state) }
     let(:original_droplet) { DropletModel.make(app: app, process_types: { 'web' => 'asdf' }) }
     let(:next_droplet) { DropletModel.make(app: app, process_types: { 'web' => '1234' }) }
     let!(:route1) { Route.make(space: app.space) }
@@ -16,15 +16,19 @@ module VCAP::CloudController
     let(:user_audit_info) { UserAuditInfo.new(user_guid: '123', user_email: 'connor@example.com', user_name: 'braa') }
     let(:runner) { instance_double(Diego::Runner) }
 
+    let(:process_state) { ProcessModel::STARTED }
+
     let(:strategy) { 'rolling' }
     let(:max_in_flight) { 1 }
+    let(:original_instances) { 3 }
+    let(:web_instances) { nil }
 
     let(:message) do
       DeploymentCreateMessage.new({
                                     relationships: { app: { data: { guid: app.guid } } },
                                     droplet: { guid: next_droplet.guid },
                                     strategy: strategy,
-                                    options: { max_in_flight: }
+                                    options: { max_in_flight:, web_instances: }
                                   })
     end
 
@@ -495,6 +499,7 @@ module VCAP::CloudController
           context 'when the app is stopped' do
             let(:max_in_flight) { 3 }
             let(:strategy) { 'canary' }
+            let(:process_state) { ProcessModel::STOPPED }
 
             before do
               app.update(desired_state: ProcessModel::STOPPED)
@@ -593,6 +598,53 @@ module VCAP::CloudController
               it 'saves the max_in_flight' do
                 deployment = DeploymentCreate.create(app:, message:, user_audit_info:)
                 expect(deployment.max_in_flight).to eq(12)
+              end
+            end
+
+            context 'uses the web_instances from the message' do
+              # stopped apps come up immediately and don't go through the deployment updater
+              let(:web_instances) { 12 }
+
+              it 'saves the web_instances' do
+                deployment = DeploymentCreate.create(app:, message:, user_audit_info:)
+                expect(deployment.web_instances).to eq(12)
+                expect(app.reload.newest_web_process.instances).to eq(12)
+              end
+
+              context 'when web_instances is not set' do
+                let(:web_instances) { nil }
+
+                it 'sets web_instances to the original web process\'s instance count' do
+                  deployment = DeploymentCreate.create(app:, message:, user_audit_info:)
+                  expect(deployment.web_instances).to eq(3)
+                  expect(app.reload.newest_web_process.instances).to eq(3)
+                end
+              end
+            end
+
+            context 'quota validations' do
+              let!(:web_process) { ProcessModel.make(app: app, instances: 3, memory: 999) }
+
+              before do
+                app.organization.quota_definition = QuotaDefinition.make(app.organization, memory_limit: 10_000)
+                app.organization.save
+              end
+
+              context 'when the final state of the resulting web_process will violate a quota' do
+                let(:web_instances) { 11 }
+
+                it 'throws an error' do
+                  expect { DeploymentCreate.create(app:, message:, user_audit_info:) }.to raise_error(DeploymentCreate::Error, 'memory quota_exceeded')
+                end
+              end
+
+              context 'when the final state of the resulting web_process does not violate a quota' do
+                let(:web_instances) { 10 }
+
+                it 'does not throw an error' do
+                  deployment = DeploymentCreate.create(app:, message:, user_audit_info:)
+                  expect(deployment.web_instances).to eq(10)
+                end
               end
             end
 
@@ -723,6 +775,81 @@ module VCAP::CloudController
             it 'sets the default' do
               deployment = DeploymentCreate.create(app:, message:, user_audit_info:)
               expect(deployment.max_in_flight).to eq(1)
+            end
+          end
+
+          context 'uses the web_instances from the message' do
+            let(:web_instances) { 12 }
+
+            it 'saves the web_instances' do
+              deployment = DeploymentCreate.create(app:, message:, user_audit_info:)
+              expect(deployment.web_instances).to eq(12)
+            end
+
+            context 'when web_instances is not set' do
+              let(:web_instances) { nil }
+
+              it 'sets web_instances to the original web process\'s instance count' do
+                deployment = DeploymentCreate.create(app:, message:, user_audit_info:)
+                expect(deployment.web_instances).to eq(3)
+              end
+            end
+
+            context 'when max_in_flight instances is higher than web_instances' do
+              let(:web_instances) { 10 }
+              let(:max_in_flight) { 200 }
+              let(:original_instances) { 5 }
+
+              it 'creates a web process with web_instances, not original_instances or max_in_flight' do
+                deployment = DeploymentCreate.create(app:, message:, user_audit_info:)
+                expect(deployment.deploying_web_process.instances).to eq(10)
+              end
+            end
+
+            context 'web_instances is lower than original_instances' do
+              let(:web_instances) { 5 }
+              let(:max_in_flight) { 200 }
+              let(:original_instances) { 10 }
+
+              it 'creates a web process with web_instances, not original_instances or max_in_flight' do
+                deployment = DeploymentCreate.create(app:, message:, user_audit_info:)
+                expect(deployment.deploying_web_process.instances).to eq(5)
+              end
+            end
+          end
+
+          context 'quota validations' do
+            let!(:web_process) { ProcessModel.make(app: app, instances: 3, memory: 999, state: process_state) }
+
+            before do
+              app.organization.quota_definition = QuotaDefinition.make(app.organization, memory_limit: 10_000)
+              app.organization.save
+            end
+
+            context 'when the final state of the resulting web_process will violate a quota' do
+              let(:web_instances) { 11 }
+
+              it 'throws an error' do
+                expect { DeploymentCreate.create(app:, message:, user_audit_info:) }.to raise_error(DeploymentCreate::Error, 'memory quota_exceeded')
+              end
+            end
+
+            context 'when the final state of the resulting web_process does not violate a quota' do
+              let(:web_instances) { 10 }
+
+              it 'does not throw an error' do
+                deployment = DeploymentCreate.create(app:, message:, user_audit_info:)
+                expect(deployment.web_instances).to eq(10)
+              end
+            end
+
+            context 'when checking quota validations' do
+              let(:web_instances) { 10 }
+
+              it 'doesnt alter the state of the current web process' do
+                DeploymentCreate.create(app:, message:, user_audit_info:)
+                expect(app.newest_web_process.instances).to eq(3)
+              end
             end
           end
 

@@ -14,7 +14,7 @@ module VCAP::CloudController
 
       def scale
         with_error_logging('error-scaling-deployment') do
-          finished = Actions::Scale.new(deployment, logger, deployment.original_web_process_instance_count).call
+          finished = Actions::Scale.new(deployment, logger, deployment.desired_web_instances).call
           Actions::Finalize.new(deployment).call if finished
           logger.info("ran-deployment-update-for-#{deployment.guid}")
         end
