@@ -254,7 +254,8 @@ class ServiceInstancesV3Controller < ApplicationController
 
   def create_managed(message, space:)
     service_plan = ServicePlan.first(guid: message.service_plan_guid)
-    unprocessable_service_plan! unless service_plan_valid?(service_plan)
+    service_plan_does_not_exist! unless service_plan
+    service_plan_not_visible_to_user!(service_plan) unless visible_to_current_user?(plan: service_plan)
     unavailable_service_plan!(service_plan) unless service_plan_active?(service_plan)
     service_plan_not_visible_in_space!(service_plan, space) unless service_plan_exists_in_space?(service_plan, space)
 
@@ -396,11 +397,6 @@ class ServiceInstancesV3Controller < ApplicationController
     permission_queryer.can_write_globally?
   end
 
-  def service_plan_valid?(service_plan)
-    service_plan &&
-      visible_to_current_user?(plan: service_plan)
-  end
-
   def service_plan_active?(service_plan)
     service_plan.active?
   end
@@ -413,7 +409,8 @@ class ServiceInstancesV3Controller < ApplicationController
     return unless message.service_plan_guid
 
     service_plan = ServicePlan.first(guid: message.service_plan_guid)
-    unprocessable_service_plan! unless service_plan_valid?(service_plan)
+    service_plan_does_not_exist! unless service_plan
+    service_plan_not_visible_to_user!(service_plan) unless visible_to_current_user?(plan: service_plan)
     unavailable_service_plan!(service_plan) unless service_plan_active?(service_plan)
     service_plan_not_visible_in_space!(service_plan, service_instance.space) unless service_plan_exists_in_space?(service_plan, service_instance.space)
     invalid_service_plan_relation! unless service_plan.service == service_instance.service
@@ -431,7 +428,15 @@ class ServiceInstancesV3Controller < ApplicationController
     unprocessable!('Invalid space. Ensure that the space exists and you have access to it.')
   end
 
-  def unprocessable_service_plan!
+  def service_plan_does_not_exist!
+    logger.info('Service Plan does not exist.')
+    unprocessable!('Invalid service plan. Ensure that the service plan exists, is available, and you have access to it.')
+  end
+
+  def service_plan_not_visible_to_user!(service_plan)
+    user = VCAP::CloudController::SecurityContext.current_user
+    logger.info("Service Plan with guid '#{service_plan.guid}' and id '#{service_plan.id}' is not visible to user with guid '#{user.guid}'.")
+
     unprocessable!('Invalid service plan. Ensure that the service plan exists, is available, and you have access to it.')
   end
 
@@ -457,5 +462,9 @@ class ServiceInstancesV3Controller < ApplicationController
 
   def read_scope
     %w[show_permissions].include?(action_name) && roles.cloud_controller_service_permissions_reader? ? true : super
+  end
+
+  def logger
+    @logger ||= Steno.logger('cc.api')
   end
 end
