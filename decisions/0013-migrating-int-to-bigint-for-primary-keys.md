@@ -27,10 +27,20 @@ The largest tables in a long-running foundation are `events`, `delayed_jobs`, `j
 
 ## Decisions
 
+### Opt-Out Mechanism
+Operators of smaller foundations, which are unlikely to ever encounter the integer overflow issue, may wish to avoid the risks and complexity associated with this migration.
+They can opt out of the migration by setting the `skip_bigint_id_migration` flag in the CAPI-Release manifest.
+When this flag is set, all migration steps will result in a no-op but will still be marked as applied in the `schema_versions` table.
+*Important*: Removing the flag later will *not* re-trigger the migration. Operators must handle the migration manually if they choose to opt out.
+
 ### Scope
 
 The `events` table will be migrated first as it has the most significant growth in `id` values.
 Other tables will be migrated at a later stage.
+
+### Newly Created Foundations
+For newly created foundations, the `id` column for the `events` table will be created as `bigint` by default.
+This will be implemented with migration step 1 and will be only applied, if the `events` table is empty.
 
 ### Phased Migration
 The migration will be conducted in multiple steps to ensure minimal risk.
@@ -67,7 +77,9 @@ This depends on the version of PostgreSQL which was used when the table was init
 The migration script needs to handle both cases.
 
 #### MySQL
-Unknown at this point. Further investigation is needed.
+MySQL primary key changes typically cause table rebuilds due to clustered indexing, which can be expensive and disruptive, especially with clustered replication setups like Galera.
+A common approach to mitigate this involves creating a new shadow table, performing a backfill, and then swapping tables atomically.  
+Further details will be refined during implementation.
 
 ### Rollback Mechanism
 The old `id` column is no longer retained, as the `CHECK` constraint ensures correctness during migration.
