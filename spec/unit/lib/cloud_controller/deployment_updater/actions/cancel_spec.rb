@@ -6,14 +6,21 @@ module VCAP::CloudController
     subject(:cancel_action) { DeploymentUpdater::Actions::Cancel.new(deployment, logger) }
     let(:a_day_ago) { Time.now - 1.day }
     let(:an_hour_ago) { Time.now - 1.hour }
-    let(:app) { AppModel.make(droplet: droplet, revisions_enabled: true) }
+    let(:organization) { Organization.make }
+    let(:space) { Space.make(organization: organization, space_quota_definition: quota) }
+    let(:app) { AppModel.make(droplet: droplet, revisions_enabled: true, space: space) }
     let(:droplet) { DropletModel.make }
+    let(:memory) { 1024 }
+    let(:memory_limit) { memory * 1000 }
+    let(:quota) { SpaceQuotaDefinition.make(organization:, memory_limit:) }
     let!(:web_process) do
       ProcessModel.make(
         instances: current_web_instances,
         created_at: a_day_ago,
         guid: 'guid-original',
-        app: app
+        app: app,
+        memory: memory,
+        state: ProcessModel::STARTED
       )
     end
     let!(:route_mapping) { RouteMappingModel.make(app: web_process.app, process_type: web_process.type) }
@@ -24,12 +31,12 @@ module VCAP::CloudController
         instances: current_deploying_instances,
         guid: 'guid-final',
         revision: revision,
-        state: ProcessModel::STOPPED
+        memory: memory,
+        state: ProcessModel::STARTED
       )
     end
     let(:revision) { RevisionModel.make(app: app, droplet: droplet, version: 300) }
     let!(:deploying_route_mapping) { RouteMappingModel.make(app: web_process.app, process_type: deploying_web_process.type) }
-    let(:space) { web_process.space }
     let(:original_web_process_instance_count) { 6 }
     let(:current_web_instances) { 2 }
 
@@ -186,6 +193,17 @@ module VCAP::CloudController
       it 'skips execution' do
         subject.call
         expect(deployment).not_to have_received(:update)
+      end
+    end
+
+    context 'when the app is at a quota limit' do
+      let(:current_web_instances) { 1 }
+      let(:current_deploying_instances) { original_web_process_instance_count }
+      let(:memory_limit) { memory * (current_deploying_instances + current_web_instances) }
+
+      it 'can still be cancelled succesfully' do
+        expect { subject.call }.not_to raise_error
+        expect(ProcessModel.find(guid: deploying_web_process.guid)).to be_nil
       end
     end
   end
