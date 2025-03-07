@@ -47,7 +47,7 @@ module VCAP::CloudController
     end
 
     def enqueue_unlock!(job)
-      Jobs::Enqueuer.new(queue: Jobs::Queues.generic).enqueue(job)
+      Jobs::GenericEnqueuer.shared.enqueue(job)
       @needs_unlock = false
     end
 
