@@ -7,7 +7,8 @@ module VCAP::CloudController
     let(:deploying_web_process) { ProcessModel.make(health_check_timeout: 180) }
     let(:canary_steps) { [{ 'instance_weight' => 20 }, { 'instance_weight' => 40 }] }
     let(:strategy) { DeploymentModel::CANARY_STRATEGY }
-    let(:deployment) { DeploymentModel.make(app:, droplet:, deploying_web_process:, canary_steps:, strategy:) }
+    let(:deployment) { DeploymentModel.make(app:, droplet:, deploying_web_process:, canary_steps:, strategy:, web_instances:) }
+    let(:web_instances) { nil }
 
     it 'has an app' do
       expect(deployment.app.name).to eq('rolling-app')
@@ -267,6 +268,22 @@ module VCAP::CloudController
       end
     end
 
+    describe '#desired_web_instances' do
+      context 'when web_instances is set' do
+        let(:web_instances) { 10 }
+
+        it 'returns web_instances' do
+          expect(deployment.desired_web_instances).to eq(10)
+        end
+      end
+
+      context 'when web_instances is not set' do
+        it 'returns original_web_process' do
+          expect(deployment.desired_web_instances).to eq(1)
+        end
+      end
+    end
+
     describe '#canary_step_plan' do
       tests = [
         {
@@ -375,6 +392,46 @@ module VCAP::CloudController
         end
 
         it 'provides an extra canary instance for every step except at 100%' do
+          expect(deployment.canary_step_plan).to eq([{ canary: 1, original: 10 }, { canary: 3, original: 8 }, { canary: 5, original: 6 }, { canary: 10, original: 1 },
+                                                     { canary: 10, original: 0 }])
+        end
+      end
+
+      context 'when web_instances is lower than original_web_process_instance_count' do
+        let(:deployment) do
+          DeploymentModel.make(
+            app: app,
+            strategy: 'canary',
+            droplet: droplet,
+            deploying_web_process: deploying_web_process,
+            canary_steps: [{ instance_weight: 1 }, { instance_weight: 25 }, { instance_weight: 50 }, { instance_weight: 99 }, { instance_weight: 100 }],
+            original_web_process_instance_count: 100,
+            web_instances: 10,
+            canary_current_step: 1
+          )
+        end
+
+        it 'uses web_instances to calculate a plan' do
+          expect(deployment.canary_step_plan).to eq([{ canary: 1, original: 10 }, { canary: 3, original: 8 }, { canary: 5, original: 6 }, { canary: 10, original: 1 },
+                                                     { canary: 10, original: 0 }])
+        end
+      end
+
+      context 'when original_web_process_instance_count is lower than web_instances' do
+        let(:deployment) do
+          DeploymentModel.make(
+            app: app,
+            strategy: 'canary',
+            droplet: droplet,
+            deploying_web_process: deploying_web_process,
+            canary_steps: [{ instance_weight: 1 }, { instance_weight: 25 }, { instance_weight: 50 }, { instance_weight: 99 }, { instance_weight: 100 }],
+            original_web_process_instance_count: 10,
+            web_instances: 100,
+            canary_current_step: 1
+          )
+        end
+
+        it 'uses original_web_process_instance_count to calculate a plan' do
           expect(deployment.canary_step_plan).to eq([{ canary: 1, original: 10 }, { canary: 3, original: 8 }, { canary: 5, original: 6 }, { canary: 10, original: 1 },
                                                      { canary: 10, original: 0 }])
         end

@@ -13,6 +13,7 @@ module VCAP::CloudController
     ALLOWED_OPTION_KEYS = %i[
       canary
       max_in_flight
+      web_instances
     ].freeze
 
     ALLOWED_STEP_KEYS = [
@@ -43,6 +44,10 @@ module VCAP::CloudController
       options&.dig(:max_in_flight) || 1
     end
 
+    def web_instances
+      options&.dig(:web_instances)
+    end
+
     private
 
     def mutually_exclusive_droplet_sources
@@ -62,6 +67,7 @@ module VCAP::CloudController
       disallowed_keys = options.keys - ALLOWED_OPTION_KEYS
       errors.add(:options, "has unsupported key(s): #{disallowed_keys.join(', ')}") if disallowed_keys.present?
 
+      validate_web_instances if options[:web_instances]
       validate_max_in_flight if options[:max_in_flight]
       validate_canary if options[:canary]
     end
@@ -72,6 +78,14 @@ module VCAP::CloudController
       return unless !max_in_flight.is_a?(Integer) || max_in_flight < 1
 
       errors.add(:max_in_flight, 'must be an integer greater than 0')
+    end
+
+    def validate_web_instances
+      web_instances = options[:web_instances]
+
+      return unless !web_instances.is_a?(Integer) || web_instances < 1
+
+      errors.add(:web_instances, 'must be an integer greater than 0')
     end
 
     def validate_canary
