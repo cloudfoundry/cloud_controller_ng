@@ -6307,11 +6307,27 @@ to specify how many instances are rolled out simultaneously.</p></li>
     </span><span class="nl">"details"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
       </span><span class="nl">"last_successful_healthcheck"</span><span class="p">:</span><span class="w"> </span><span class="s2">"2018-04-25T22:42:10Z"</span><span class="p">,</span><span class="w">
       </span><span class="nl">"last_status_change"</span><span class="p">:</span><span class="w"> </span><span class="s2">"2018-04-25T22:42:10Z"</span><span class="w">
+    </span><span class="p">},</span><span class="w">
+    </span><span class="nl">"canary"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+      </span><span class="nl">"steps"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+        </span><span class="nl">"current"</span><span class="p">:</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span><span class="w">
+        </span><span class="nl">"total"</span><span class="p">:</span><span class="w"> </span><span class="mi">2</span><span class="w">
+      </span><span class="p">}</span><span class="w">
     </span><span class="p">}</span><span class="w">
   </span><span class="p">},</span><span class="w">
   </span><span class="nl">"strategy"</span><span class="p">:</span><span class="w"> </span><span class="s2">"canary"</span><span class="p">,</span><span class="w">
   </span><span class="nl">"options"</span><span class="w"> </span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
     </span><span class="nl">"max_in_flight"</span><span class="p">:</span><span class="w"> </span><span class="mi">3</span><span class="p">,</span><span class="w">
+    </span><span class="nl">"canary"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+      </span><span class="nl">"steps"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="w">
+        </span><span class="p">{</span><span class="w">
+          </span><span class="nl">"instance_weight"</span><span class="p">:</span><span class="w"> </span><span class="mi">10</span><span class="w">
+        </span><span class="p">},</span><span class="w">
+        </span><span class="p">{</span><span class="w">
+          </span><span class="nl">"instance_weight"</span><span class="p">:</span><span class="w"> </span><span class="mi">20</span><span class="w">
+        </span><span class="p">}</span><span class="w">
+      </span><span class="p">]</span><span class="w">
+    </span><span class="p">}</span><span class="w">
   </span><span class="p">},</span><span class="w">
   </span><span class="nl">"droplet"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
     </span><span class="nl">"guid"</span><span class="p">:</span><span class="w"> </span><span class="s2">"44ccfa61-dbcf-4a0d-82fe-f668e9d2a962"</span><span class="w">
@@ -6401,7 +6417,17 @@ to specify how many instances are rolled out simultaneously.</p></li>
 <tr>
 <td><strong>status.details.last_status_change</strong></td>
 <td><em><a href="#timestamps">timestamp</a></em></td>
-<td>Timestamp of last change to status.value or status.reason</td>
+<td>Timestamp of last change to status.value or status.reason*<em>status.details.last_status_change</em>*</td>
+</tr>
+<tr>
+<td><strong>status.canary.steps.current</strong></td>
+<td><em>integer</em></td>
+<td>The current canary step. Only available for deployments with strategy &lsquo;canary&rsquo;. (experimental)</td>
+</tr>
+<tr>
+<td><strong>status.canary.steps.total</strong></td>
+<td><em>integer</em></td>
+<td>The total number of canary steps. Only available for deployments with strategy &lsquo;canary&rsquo;. (experimental)</td>
 </tr>
 <tr>
 <td><strong>strategy</strong></td>
@@ -6412,6 +6438,11 @@ to specify how many instances are rolled out simultaneously.</p></li>
 <td><strong>options.max_in_flight</strong></td>
 <td><em>integer</em></td>
 <td>The maximum number of new instances to deploy simultaneously</td>
+</tr>
+<tr>
+<td><strong>options.canary.steps</strong></td>
+<td><em>array of <a href="#canary-steps-object">canary step objects</a></em></td>
+<td>Canary steps to use for the deployment. Only available for deployments with strategy &lsquo;canary&rsquo;. (experimental)</td>
 </tr>
 <tr>
 <td><strong>droplet.guid</strong></td>
@@ -6454,6 +6485,10 @@ to specify how many instances are rolled out simultaneously.</p></li>
 <td>Links to related resources</td>
 </tr>
 </tbody></table>
+
+<h4 id="canary-steps-object">Canary steps object</h4>
+
+<p><strong>instance_weight</strong> | <em>integer</em> | The percentage of instances to be deployed as part of the canary process in this step (experimental)</p>
 <h3 id="create-a-deployment">Create a deployment</h3>
 <div class="highlight"><pre class="highlight plaintext"><code>Example Request with Droplet
 </code></pre></div><div class="highlight"><pre class="highlight shell"><code>curl <span class="s2">"https://api.example.org/v3/deployments"</span> <span class="se">\</span>
@@ -6504,11 +6539,27 @@ to specify how many instances are rolled out simultaneously.</p></li>
     </span><span class="nl">"details"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
       </span><span class="nl">"last_successful_healthcheck"</span><span class="p">:</span><span class="w"> </span><span class="s2">"2018-04-25T22:42:10Z"</span><span class="p">,</span><span class="w">
       </span><span class="nl">"last_status_change"</span><span class="p">:</span><span class="w"> </span><span class="s2">"2018-04-25T22:42:10Z"</span><span class="w">
+    </span><span class="p">},</span><span class="w">
+    </span><span class="nl">"canary"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+      </span><span class="nl">"steps"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+        </span><span class="nl">"current"</span><span class="p">:</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span><span class="w">
+        </span><span class="nl">"total"</span><span class="p">:</span><span class="w"> </span><span class="mi">2</span><span class="w">
+      </span><span class="p">}</span><span class="w">
     </span><span class="p">}</span><span class="w">
   </span><span class="p">},</span><span class="w">
   </span><span class="nl">"strategy"</span><span class="p">:</span><span class="w"> </span><span class="s2">"canary"</span><span class="p">,</span><span class="w">
   </span><span class="nl">"options"</span><span class="w"> </span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
     </span><span class="nl">"max_in_flight"</span><span class="p">:</span><span class="w"> </span><span class="mi">3</span><span class="p">,</span><span class="w">
+    </span><span class="nl">"canary"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+      </span><span class="nl">"steps"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="w">
+        </span><span class="p">{</span><span class="w">
+          </span><span class="nl">"instance_weight"</span><span class="p">:</span><span class="w"> </span><span class="mi">10</span><span class="w">
+        </span><span class="p">},</span><span class="w">
+        </span><span class="p">{</span><span class="w">
+          </span><span class="nl">"instance_weight"</span><span class="p">:</span><span class="w"> </span><span class="mi">20</span><span class="w">
+        </span><span class="p">}</span><span class="w">
+      </span><span class="p">]</span><span class="w">
+    </span><span class="p">}</span><span class="w">
   </span><span class="p">},</span><span class="w">
   </span><span class="nl">"droplet"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
     </span><span class="nl">"guid"</span><span class="p">:</span><span class="w"> </span><span class="s2">"44ccfa61-dbcf-4a0d-82fe-f668e9d2a962"</span><span class="w">
@@ -6615,6 +6666,12 @@ to specify how many instances are rolled out simultaneously.</p></li>
 <td>1</td>
 </tr>
 <tr>
+<td><strong>options.canary.steps</strong></td>
+<td><em>array of <a href="#canary-steps-object">canary step objects</a></em></td>
+<td>An array of canary steps to use for the deployment</td>
+<td></td>
+</tr>
+<tr>
 <td><strong>metadata.labels</strong></td>
 <td><a href="#labels"><em>label object</em></a></td>
 <td>Labels applied to the deployment</td>
@@ -6665,11 +6722,27 @@ to specify how many instances are rolled out simultaneously.</p></li>
     </span><span class="nl">"details"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
       </span><span class="nl">"last_successful_healthcheck"</span><span class="p">:</span><span class="w"> </span><span class="s2">"2018-04-25T22:42:10Z"</span><span class="p">,</span><span class="w">
       </span><span class="nl">"last_status_change"</span><span class="p">:</span><span class="w"> </span><span class="s2">"2018-04-25T22:42:10Z"</span><span class="w">
+    </span><span class="p">},</span><span class="w">
+    </span><span class="nl">"canary"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+      </span><span class="nl">"steps"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+        </span><span class="nl">"current"</span><span class="p">:</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span><span class="w">
+        </span><span class="nl">"total"</span><span class="p">:</span><span class="w"> </span><span class="mi">2</span><span class="w">
+      </span><span class="p">}</span><span class="w">
     </span><span class="p">}</span><span class="w">
   </span><span class="p">},</span><span class="w">
   </span><span class="nl">"strategy"</span><span class="p">:</span><span class="w"> </span><span class="s2">"canary"</span><span class="p">,</span><span class="w">
   </span><span class="nl">"options"</span><span class="w"> </span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
     </span><span class="nl">"max_in_flight"</span><span class="p">:</span><span class="w"> </span><span class="mi">3</span><span class="p">,</span><span class="w">
+    </span><span class="nl">"canary"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+      </span><span class="nl">"steps"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="w">
+        </span><span class="p">{</span><span class="w">
+          </span><span class="nl">"instance_weight"</span><span class="p">:</span><span class="w"> </span><span class="mi">10</span><span class="w">
+        </span><span class="p">},</span><span class="w">
+        </span><span class="p">{</span><span class="w">
+          </span><span class="nl">"instance_weight"</span><span class="p">:</span><span class="w"> </span><span class="mi">20</span><span class="w">
+        </span><span class="p">}</span><span class="w">
+      </span><span class="p">]</span><span class="w">
+    </span><span class="p">}</span><span class="w">
   </span><span class="p">},</span><span class="w">
   </span><span class="nl">"droplet"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
     </span><span class="nl">"guid"</span><span class="p">:</span><span class="w"> </span><span class="s2">"44ccfa61-dbcf-4a0d-82fe-f668e9d2a962"</span><span class="w">
@@ -6933,11 +7006,27 @@ to specify how many instances are rolled out simultaneously.</p></li>
     </span><span class="nl">"details"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
       </span><span class="nl">"last_successful_healthcheck"</span><span class="p">:</span><span class="w"> </span><span class="s2">"2018-04-25T22:42:10Z"</span><span class="p">,</span><span class="w">
       </span><span class="nl">"last_status_change"</span><span class="p">:</span><span class="w"> </span><span class="s2">"2018-04-25T22:42:10Z"</span><span class="w">
+    </span><span class="p">},</span><span class="w">
+    </span><span class="nl">"canary"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+      </span><span class="nl">"steps"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+        </span><span class="nl">"current"</span><span class="p">:</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span><span class="w">
+        </span><span class="nl">"total"</span><span class="p">:</span><span class="w"> </span><span class="mi">2</span><span class="w">
+      </span><span class="p">}</span><span class="w">
     </span><span class="p">}</span><span class="w">
   </span><span class="p">},</span><span class="w">
   </span><span class="nl">"strategy"</span><span class="p">:</span><span class="w"> </span><span class="s2">"canary"</span><span class="p">,</span><span class="w">
   </span><span class="nl">"options"</span><span class="w"> </span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
     </span><span class="nl">"max_in_flight"</span><span class="p">:</span><span class="w"> </span><span class="mi">3</span><span class="p">,</span><span class="w">
+    </span><span class="nl">"canary"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+      </span><span class="nl">"steps"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="w">
+        </span><span class="p">{</span><span class="w">
+          </span><span class="nl">"instance_weight"</span><span class="p">:</span><span class="w"> </span><span class="mi">10</span><span class="w">
+        </span><span class="p">},</span><span class="w">
+        </span><span class="p">{</span><span class="w">
+          </span><span class="nl">"instance_weight"</span><span class="p">:</span><span class="w"> </span><span class="mi">20</span><span class="w">
+        </span><span class="p">}</span><span class="w">
+      </span><span class="p">]</span><span class="w">
+    </span><span class="p">}</span><span class="w">
   </span><span class="p">},</span><span class="w">
   </span><span class="nl">"droplet"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
     </span><span class="nl">"guid"</span><span class="p">:</span><span class="w"> </span><span class="s2">"44ccfa61-dbcf-4a0d-82fe-f668e9d2a962"</span><span class="w">
