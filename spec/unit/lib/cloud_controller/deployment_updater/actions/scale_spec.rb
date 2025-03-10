@@ -89,6 +89,15 @@ module VCAP::CloudController
       }.by(1)
     end
 
+    context 'when the app has been scaled to 0 instances' do
+      let(:current_web_instances) { 0 }
+      let(:target_total_instance_count) { 0 }
+
+      it 'finishes scaling' do
+        expect(subject.call).to be true
+      end
+    end
+
     context 'when the max_in_flight is set to 2' do
       let(:deployment) do
         DeploymentModel.make(

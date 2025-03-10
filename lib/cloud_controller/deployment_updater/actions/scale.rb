@@ -28,8 +28,7 @@ module VCAP::CloudController
 
             app.lock!
 
-            oldest_web_process_with_instances.lock!
-            deploying_web_process.lock!
+            app.web_processes.each(&:lock!)
 
             deployment.update(
               status_value: DeploymentModel::ACTIVE_STATUS_VALUE,
@@ -51,11 +50,6 @@ module VCAP::CloudController
         end
 
         private
-
-        def oldest_web_process_with_instances
-          # TODO: lock all web processes?  We might alter all of them, depending on max-in-flight size
-          @oldest_web_process_with_instances ||= app.web_processes.select { |process| process.instances > 0 }.min_by { |p| [p.created_at, p.id] }
-        end
 
         def instance_count_summary
           @instance_count_summary ||= instance_reporters.instance_count_summary(deploying_web_process)
