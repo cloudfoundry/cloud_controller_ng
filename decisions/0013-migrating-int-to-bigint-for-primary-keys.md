@@ -75,7 +75,8 @@ The migration will be conducted in multiple steps to ensure minimal risk.
 - Drop the primary key constraint on id.
 - If foreign keys exist, drop the corresponding foreign key constraints.
 - Remove the sync triggers.
-- Switch the primary key by renaming `id_bigint` to `id`.
+- Drop the old `id` column.
+- Rename the `id_bigint` column to `id`.
 - Add PK constraint on `id` column and configure `id` generator.
 - If foreign keys exist, rename `id_bigint` to `id` in referencing tables accordingly.
 
