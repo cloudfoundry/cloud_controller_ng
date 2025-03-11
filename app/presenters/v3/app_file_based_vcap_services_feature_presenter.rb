@@ -4,7 +4,7 @@ module VCAP::CloudController::Presenters::V3
   class AppFileBasedVcapServicesFeaturePresenter < BasePresenter
     def to_hash
       {
-        name: 'file-based-vcap-services',
+        name: AppFeaturesController::FILE_BASED_VCAP_SERVICES_FEATURE,
         description: 'Enable file-based VCAP service bindings for the app',
         enabled: app.file_based_vcap_services_enabled
       }

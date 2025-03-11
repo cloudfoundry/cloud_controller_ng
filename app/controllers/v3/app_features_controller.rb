@@ -56,7 +56,7 @@ class AppFeaturesController < ApplicationController
     unprocessable!(message.errors.full_messages) unless message.valid?
 
     if message.enabled && both_service_binding_features_enabled?(app, name)
-      unprocessable!("'file-based-vcap-services' and 'service-binding-k8s' features cannot be enabled at the same time.")
+      unprocessable!("'#{FILE_BASED_VCAP_SERVICES_FEATURE}' and '#{SERVICE_BINDING_K8S_FEATURE}' features cannot be enabled at the same time.")
     end
 
     AppFeatureUpdate.update(hashed_params[:name], app, message)
@@ -105,9 +105,9 @@ class AppFeaturesController < ApplicationController
   end
 
   def both_service_binding_features_enabled?(app, feature_name)
-    if feature_name == 'file-based-vcap-services'
+    if feature_name == FILE_BASED_VCAP_SERVICES_FEATURE
       app.service_binding_k8s_enabled
-    elsif feature_name == 'service-binding-k8s'
+    elsif feature_name == SERVICE_BINDING_K8S_FEATURE
       app.file_based_vcap_services_enabled
     end
   end
