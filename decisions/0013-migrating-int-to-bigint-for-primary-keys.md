@@ -45,21 +45,32 @@ This will be implemented with migration step 1 and will be only applied, if the 
 ### Phased Migration
 The migration will be conducted in multiple steps to ensure minimal risk.
 #### Step 1 - Preparation
-- Add a new column `id_bigint` of type `bigint` to the target table. If the `id` column is referenced as a foreign key in other tables, also add an `<ref>_id_bigint` column in those referencing tables.
-- Create triggers to keep `id_bigint` in sync with `id` when new records are inserted.
-- Add constraints and indexes to `id_bigint` as required to match primary key and foreign key requirements.
+- If the opt-out flag is set, this step will be a no-op.
+- In case the target table is empty the type of the `id` column will be set to `bigint` directly.
+- Otherwise, the following steps will be executed:
+  - Add a new column `id_bigint` of type `bigint` to the target table. If the `id` column is referenced as a foreign key in other tables, also add an `<ref>_id_bigint` column in those referencing tables.
+  - Create triggers to keep `id_bigint` in sync with `id` when new records are inserted.
+  - Add constraints and indexes to `id_bigint` as required to match primary key and foreign key requirements.
 
 #### Step 2 - Backfill
+- Backfill will not be scheduled if the opt-out flag is set.
+- If the `id_bigint` column does not exist, backfill will be skipped or result in a no-op.
 - Use a batch-processing script (e.g. a delayed job) to populate `id_bigint` for existing rows in both the primary table and, if applicable, all foreign key references.
 - Table locks will be avoided by using a batch processing approach.
 - In case the table has a configurable cleanup duration, the backfill job will only process records which are beyond the cleanup duration to reduce the number of records to be processed. 
 - Backfill will be executed outside the migration due to its potentially long runtime.
 - If necessary the backfill will run for multiple weeks to ensure all records are processed.
 
-#### Step 3a - Migration Pre Check
-- Add a `CHECK` constraint to verify that id_bigint is fully populated (`id_bigint == id & id_bigint != NULL`).
-- In case the backfill is not yet complete or the `id_bigint` column is not fully populated the migration exits gracefully and is retried in the next deploy.
-#### Step 3b - Actual Migration
+#### Step 3 - Migration
+- The migration is divided into two parts: a pre-check and the actual migration but both will be stored in a single migration script.
+- This step will be a no-op if the opt-out flag is set or the `id` column is already of type `bigint`.
+- All sql statements will be executed in a single transaction to ensure consistency.
+##### Step 3a - Migration Pre Check
+- In case the `id_bigint` column does not exist the migration will fail with a clear error message.
+- Add a `CHECK` constraint to verify that `id_bigint` is fully populated (`id_bigint == id & id_bigint != NULL`).
+- In case the backfill is not yet complete or the `id_bigint` column is not fully populated the migration will fail.
+- If pre-check fails, operators might need to take manual actions to ensure all preconditions are met as the migration will be retried during the next deployment.
+##### Step 3b - Actual Migration
 - Remove the `CHECK` constraint once verified.
 - Drop the primary key constraint on id.
 - If foreign keys exist, drop the corresponding foreign key constraints.
@@ -67,7 +78,6 @@ The migration will be conducted in multiple steps to ensure minimal risk.
 - Switch the primary key by renaming `id_bigint` to `id`.
 - Add PK constraint on `id` column and configure `id` generator.
 - If foreign keys exist, rename `id_bigint` to `id` in referencing tables accordingly.
-- Everything is done in a single transaction to ensure consistency.
 
 ### Database Specifics
 
