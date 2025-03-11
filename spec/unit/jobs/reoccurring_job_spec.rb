@@ -74,11 +74,11 @@ module VCAP
         TestConfig.config[:jobs][:priorities] = { 'fake-job': 20 }
 
         pollable_job = Jobs::Enqueuer.new({ queue: Jobs::Queues.generic, priority: 22 }).enqueue_pollable(FakeJob.new)
-        expect(Delayed::Job.where(guid: PollableJobModel.first.delayed_job_guid).first[:priority]).to eq(22)
+        expect(Delayed::Job.where(guid: PollableJobModel.first.delayed_job_guid).first[:priority]).to eq(42)
 
         execute_all_jobs(expected_successes: 1, expected_failures: 0, jobs_to_execute: 1)
 
-        expect(Delayed::Job.where(guid: PollableJobModel.first.delayed_job_guid).first[:priority]).to eq(22)
+        expect(Delayed::Job.where(guid: PollableJobModel.first.delayed_job_guid).first[:priority]).to eq(42)
         expect(PollableJobModel.first.delayed_job_guid).not_to eq(pollable_job.delayed_job_guid)
       end
 

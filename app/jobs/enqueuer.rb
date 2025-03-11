@@ -16,16 +16,16 @@ module VCAP::CloudController
         load_delayed_job_plugins
       end
 
-      def enqueue(job)
-        enqueue_job(job)
+      def enqueue(job, run_at: nil, priority_increment: nil)
+        enqueue_job(job, run_at:, priority_increment:)
       end
 
-      def enqueue_pollable(job, existing_guid: nil)
+      def enqueue_pollable(job, existing_guid: nil, run_at: nil, priority_increment: nil, preserve_priority: false)
         wrapped_job = PollableJobWrapper.new(job, existing_guid:)
 
         wrapped_job = yield wrapped_job if block_given?
 
-        delayed_job = enqueue_job(wrapped_job)
+        delayed_job = enqueue_job(wrapped_job, run_at:, priority_increment:, preserve_priority:)
         PollableJobModel.find_by_delayed_job(delayed_job)
       end
 
@@ -37,14 +37,26 @@ module VCAP::CloudController
 
       private
 
-      def enqueue_job(job)
+      def enqueue_job(job, run_at: nil, priority_increment: nil, preserve_priority: false)
         @opts['guid'] = SecureRandom.uuid
         request_id = ::VCAP::Request.current_id
         timeout_job = TimeoutJob.new(job, job_timeout(job))
         logging_context_job = LoggingContextJob.new(timeout_job, request_id)
-        job_priority = job_priority(job)
-        @opts[:priority] = job_priority unless @opts[:priority] || job_priority.nil?
-        Delayed::Job.enqueue(logging_context_job, @opts)
+
+        base_priority = @opts[:priority] || 0
+        priority_from_config = get_overwritten_job_priority_from_config(job) || 0
+
+        final_priority = base_priority
+        final_priority += priority_from_config unless preserve_priority
+        final_priority += [priority_increment, 0].max if priority_increment && !preserve_priority
+
+        local_opts = {}
+        # DelayedJob might have a different default priority. In the context of the enqueuer, we consider 0 as the default priority.
+        # Thus, we only set the priority if we use a non-default priority.
+        local_opts[:priority] = final_priority if final_priority > 0
+        local_opts[:run_at] = run_at if run_at
+
+        Delayed::Job.enqueue(logging_context_job, @opts.merge(local_opts))
       end
 
       def load_delayed_job_plugins
@@ -58,7 +70,7 @@ module VCAP::CloudController
         @timeout_calculator.calculate(unwrapped_job.try(:job_name_in_configuration))
       end
 
-      def job_priority(job)
+      def get_overwritten_job_priority_from_config(job)
         unwrapped_job = unwrap_job(job)
         @priority_overwriter.get(unwrapped_job.try(:display_name)) ||
           @priority_overwriter.get(unwrapped_job.try(:job_name_in_configuration)) ||

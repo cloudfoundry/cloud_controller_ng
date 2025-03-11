@@ -48,7 +48,7 @@ module VCAP::CloudController
         @services_event_repository.user_audit_info,
         request_attrs
       )
-      Jobs::Enqueuer.new(queue: Jobs::Queues.generic).enqueue(job)
+      Jobs::GenericEnqueuer.shared.enqueue(job)
       @services_event_repository.record_service_instance_event(:start_create, service_instance, request_attrs)
     end
 

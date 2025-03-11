@@ -15,7 +15,7 @@ module VCAP::CloudController
     end
 
     def delete_async(route:, recursive:)
-      Jobs::Enqueuer.new(queue: Jobs::Queues.generic).enqueue(do_delete(recursive, route))
+      Jobs::GenericEnqueuer.shared.enqueue(do_delete(recursive, route))
     end
 
     def delete_unmapped_route(route:)

@@ -83,7 +83,7 @@ module VCAP::CloudController
             user_audit_info: user_audit_info,
             audit_hash: message.audit_hash
           )
-          pollable_job = Jobs::Enqueuer.new(queue: Jobs::Queues.generic).enqueue_pollable(update_job)
+          pollable_job = Jobs::GenericEnqueuer.shared.enqueue_pollable(update_job)
           lock.asynchronous_unlock!
         ensure
           lock.unlock_and_fail! if lock.present? && lock.needs_unlock?
