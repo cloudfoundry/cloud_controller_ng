@@ -114,7 +114,7 @@ module VCAP::CloudController
                       'package_guid' => package.guid,
                       'staging_guid' => build.guid,
                       'error' => 'something is very wrong',
-                      'backtrace' => array_including(/and_raise/)
+                      'backtrace' => array_including(/send_stage_package_request/)
                     }
                   )
                 )
