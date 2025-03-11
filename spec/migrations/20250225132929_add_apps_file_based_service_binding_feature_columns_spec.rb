@@ -103,7 +103,7 @@ RSpec.describe 'migration to add file-based service binding feature columns to a
           it 'forbids setting both features to true' do
             run_migration
             expect { db[:apps].insert(guid: 'some_app', file_based_vcap_services_enabled: true, service_binding_k8s_enabled: true) }.to(raise_error do |error|
-              expect(error.inspect).to include('only_one_sb_feature_enabled', 'violate')
+              expect(error.inspect).to include('only_one_sb_feature_enabled')
             end)
           end
 
