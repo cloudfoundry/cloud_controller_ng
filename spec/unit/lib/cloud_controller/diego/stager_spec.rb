@@ -105,19 +105,12 @@ module VCAP::CloudController
                   stager.stage(staging_details)
                 end.to raise_error(CloudController::Errors::ApiError)
 
-                expect(
-                  logs.read.find { |l| l['message'] == 'stage.package.error' }
-                ).to match(
-                  hash_including(
-                    'message' => 'stage.package.error',
-                    'data' => {
-                      'package_guid' => package.guid,
-                      'staging_guid' => build.guid,
-                      'error' => 'something is very wrong',
-                      'backtrace' => array_including(/send_stage_package_request/)
-                    }
-                  )
-                )
+                log_hash = logs.read.find { |l| l['message'] == 'stage.package.error' }
+                expect(log_hash['message']).to eq('stage.package.error')
+                expect(log_hash['data']['package_guid']).to eq(package.guid)
+                expect(log_hash['data']['staging_guid']).to eq(build.guid)
+                expect(log_hash['data']['error']).to eq('something is very wrong')
+                expect(log_hash['data']['backtrace'].any? { |trace| trace.include?('send_stage_package_request') }).to be(true)
               end
             end
           end
