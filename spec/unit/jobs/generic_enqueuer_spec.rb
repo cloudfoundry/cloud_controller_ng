@@ -21,7 +21,8 @@ module VCAP::CloudController::Jobs
 
     before do
       # Reset singleton instance to ensure clean tests
-      Thread.current[:generic_enqueuer] = nil
+      puts 'Resetting GenericEnqueuer instance in before'
+      GenericEnqueuer.reset!
     end
 
     describe '.shared' do
