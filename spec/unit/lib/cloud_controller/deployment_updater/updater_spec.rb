@@ -42,9 +42,13 @@ module VCAP::CloudController
         deploying_web_process: deploying_web_process,
         state: state,
         original_web_process_instance_count: original_web_process_instance_count,
-        max_in_flight: 1
+        max_in_flight: max_in_flight,
+        web_instances: web_instances
       )
     end
+
+    let(:web_instances) { nil }
+    let(:max_in_flight) { 1 }
 
     let(:all_instances_results) do
       {
@@ -124,6 +128,30 @@ module VCAP::CloudController
             deployment.reload
             expect(deployment.state).to eq(DeploymentModel::DEPLOYING_STATE)
           end
+        end
+      end
+
+      context 'when deployment has web_instances' do
+        let(:web_instances) { 10 }
+        let(:max_in_flight) { 100 }
+
+        it 'scales to web_instances instead of original_web_process_instance_count' do
+          subject.scale
+          deployment.reload
+
+          expect(deployment.deploying_web_process.instances).to eq(10)
+        end
+      end
+
+      context 'when deployment does not have web_instances' do
+        let(:web_instances) { nil }
+        let(:max_in_flight) { 100 }
+
+        it 'scales to original_web_process_instance_count' do
+          subject.scale
+          deployment.reload
+
+          expect(deployment.deploying_web_process.instances).to eq(6)
         end
       end
 

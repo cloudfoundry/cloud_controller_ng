@@ -43,6 +43,8 @@ module VCAP::CloudController
 
           desired_instances = desired_instances(app.oldest_web_process, previous_deployment)
 
+          validate_quota!(message, app)
+
           deployment = DeploymentModel.create(
             app: app,
             state: starting_state(message),
@@ -55,7 +57,8 @@ module VCAP::CloudController
             revision_version: revision&.version,
             strategy: message.strategy,
             max_in_flight: message.max_in_flight,
-            canary_steps: message.options&.dig(:canary, :steps)
+            canary_steps: message.options&.dig(:canary, :steps),
+            web_instances: message.web_instances || desired_instances
           )
 
           MetadataUpdate.update(deployment, message)
@@ -163,7 +166,21 @@ module VCAP::CloudController
 
       private
 
+      def validate_quota!(message, app)
+        return if message.web_instances.blank?
+
+        current_web_process = app.newest_web_process
+        current_web_process.instances = message.web_instances
+
+        current_web_process.validate
+
+        raise Sequel::ValidationFailed.new(current_web_process) unless current_web_process.valid?
+
+        current_web_process.reload
+      end
+
       def deployment_for_stopped_app(app, message, previous_deployment, previous_droplet, revision, target_state, user_audit_info)
+        app.newest_web_process.update(instances: message.web_instances) if message.web_instances
         # Do not create a revision here because AppStart will not handle the rollback case
         AppStart.start(app: app, user_audit_info: user_audit_info, create_revision: false)
 
@@ -179,7 +196,8 @@ module VCAP::CloudController
           revision_version: revision&.version,
           strategy: message.strategy,
           max_in_flight: message.max_in_flight,
-          canary_steps: message.options&.dig(:canary, :steps)
+          canary_steps: message.options&.dig(:canary, :steps),
+          web_instances: message.web_instances || desired_instances(app.oldest_web_process, previous_deployment)
         )
 
         MetadataUpdate.update(deployment, message)
@@ -223,6 +241,8 @@ module VCAP::CloudController
       def starting_process_instances(deployment, desired_instances)
         starting_process_count = if deployment.strategy == DeploymentModel::CANARY_STRATEGY
                                    deployment.canary_step[:canary]
+                                 elsif deployment.web_instances
+                                   deployment.web_instances
                                  else
                                    desired_instances
                                  end

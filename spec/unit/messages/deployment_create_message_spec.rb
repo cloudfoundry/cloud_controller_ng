@@ -127,6 +127,55 @@ module VCAP::CloudController
         end
       end
 
+      describe 'web_instances' do
+        context 'when set to a non-integer' do
+          before do
+            body['options'] = { web_instances: 'two' }
+          end
+
+          it 'is not valid' do
+            message = DeploymentCreateMessage.new(body)
+            expect(message).not_to be_valid
+            expect(message.errors.full_messages).to include('Web instances must be an integer greater than 0')
+          end
+        end
+
+        context 'when set to a negative integer' do
+          before do
+            body['options'] = { web_instances: -2 }
+          end
+
+          it 'is not valid' do
+            message = DeploymentCreateMessage.new(body)
+            expect(message).not_to be_valid
+            expect(message.errors.full_messages).to include('Web instances must be an integer greater than 0')
+          end
+        end
+
+        context 'when set to zero' do
+          before do
+            body['options'] = { web_instances: 0 }
+          end
+
+          it 'is not valid' do
+            message = DeploymentCreateMessage.new(body)
+            expect(message).not_to be_valid
+            expect(message.errors.full_messages).to include('Web instances must be an integer greater than 0')
+          end
+        end
+
+        context 'when set to positive integer' do
+          before do
+            body['options'] = { web_instances: 2 }
+          end
+
+          it 'succeeds' do
+            message = DeploymentCreateMessage.new(body)
+            expect(message).to be_valid
+          end
+        end
+      end
+
       describe 'canary options' do
         before do
           body['strategy'] = 'canary'
@@ -318,8 +367,34 @@ module VCAP::CloudController
       end
     end
 
+    describe 'web_instances' do
+      context 'when options is not specified' do
+        before do
+          body['options'] = nil
+        end
+
+        it 'returns nil' do
+          message = DeploymentCreateMessage.new(body)
+          expect(message).to be_valid
+          expect(message.web_instances).to be_nil
+        end
+      end
+
+      context 'when web_instances is specified' do
+        before do
+          body['options'] = { 'web_instances' => 10 }
+        end
+
+        it 'returns the passed value' do
+          message = DeploymentCreateMessage.new(body)
+          expect(message).to be_valid
+          expect(message.web_instances).to eq 10
+        end
+      end
+    end
+
     describe 'max_in_flight' do
-      context 'when objects is not specified' do
+      context 'when options is not specified' do
         before do
           body['options'] = nil
         end
