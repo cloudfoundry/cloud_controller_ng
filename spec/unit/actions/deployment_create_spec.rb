@@ -6,7 +6,7 @@ module VCAP::CloudController
   RSpec.describe DeploymentCreate do
     let(:app) { AppModel.make(desired_state: ProcessModel::STARTED) }
 
-    let!(:web_process) { ProcessModel.make(app: app, instances: original_instances, log_rate_limit: 101, state: process_state) }
+    let!(:web_process) { ProcessModel.make(app: app, instances: original_instances, memory: 500, log_rate_limit: 101, state: process_state) }
     let(:original_droplet) { DropletModel.make(app: app, process_types: { 'web' => 'asdf' }) }
     let(:next_droplet) { DropletModel.make(app: app, process_types: { 'web' => '1234' }) }
     let!(:route1) { Route.make(space: app.space) }
@@ -22,13 +22,14 @@ module VCAP::CloudController
     let(:max_in_flight) { 1 }
     let(:original_instances) { 3 }
     let(:web_instances) { nil }
+    let(:memory_in_mb) { nil }
 
     let(:message) do
       DeploymentCreateMessage.new({
                                     relationships: { app: { data: { guid: app.guid } } },
                                     droplet: { guid: next_droplet.guid },
                                     strategy: strategy,
-                                    options: { max_in_flight:, web_instances: }
+                                    options: { max_in_flight:, web_instances:, memory_in_mb: }
                                   })
     end
 
@@ -620,30 +621,77 @@ module VCAP::CloudController
                   expect(app.reload.newest_web_process.instances).to eq(3)
                 end
               end
+
+              context 'quota validations' do
+                let!(:web_process) { ProcessModel.make(app: app, instances: 3, memory: 999) }
+
+                before do
+                  app.organization.quota_definition = QuotaDefinition.make(app.organization, memory_limit: 10_000)
+                  app.organization.save
+                end
+
+                context 'when the final state of the resulting web_process will violate a quota' do
+                  let(:web_instances) { 11 }
+
+                  it 'throws an error' do
+                    expect { DeploymentCreate.create(app:, message:, user_audit_info:) }.to raise_error(DeploymentCreate::Error, 'memory quota_exceeded')
+                  end
+                end
+
+                context 'when the final state of the resulting web_process does not violate a quota' do
+                  let(:web_instances) { 10 }
+
+                  it 'does not throw an error' do
+                    deployment = DeploymentCreate.create(app:, message:, user_audit_info:)
+                    expect(deployment.web_instances).to eq(10)
+                  end
+                end
+              end
             end
 
-            context 'quota validations' do
-              let!(:web_process) { ProcessModel.make(app: app, instances: 3, memory: 999) }
+            context 'uses the memory_in_mb from the message' do
+              let(:memory_in_mb) { 1000 }
 
-              before do
-                app.organization.quota_definition = QuotaDefinition.make(app.organization, memory_limit: 10_000)
-                app.organization.save
+              it 'saves the memory_in_mb' do
+                deployment = DeploymentCreate.create(app:, message:, user_audit_info:)
+                expect(deployment.memory_in_mb).to eq(1000)
+                expect(app.reload.newest_web_process.memory).to eq(1000)
               end
 
-              context 'when the final state of the resulting web_process will violate a quota' do
-                let(:web_instances) { 11 }
+              context 'when memory_in_mb is not set' do
+                let(:memory_in_mb) { nil }
 
-                it 'throws an error' do
-                  expect { DeploymentCreate.create(app:, message:, user_audit_info:) }.to raise_error(DeploymentCreate::Error, 'memory quota_exceeded')
+                it 'sets web_instances to the original web process\'s instance count' do
+                  deployment = DeploymentCreate.create(app:, message:, user_audit_info:)
+                  expect(deployment.memory_in_mb).to eq(nil)
+                  expect(app.reload.newest_web_process.memory).to eq(500)
                 end
               end
 
-              context 'when the final state of the resulting web_process does not violate a quota' do
-                let(:web_instances) { 10 }
+              context 'quota validations' do
+                let!(:web_process) { ProcessModel.make(app: app, instances: 3, memory: 999) }
 
-                it 'does not throw an error' do
-                  deployment = DeploymentCreate.create(app:, message:, user_audit_info:)
-                  expect(deployment.web_instances).to eq(10)
+                before do
+                  app.organization.quota_definition = QuotaDefinition.make(app.organization, memory_limit: 10_000)
+                  app.organization.save
+                end
+
+                context 'when the final state of the resulting web_process will violate a quota' do
+                  let(:memory_in_mb) { 4000 }
+
+                  it 'throws an error' do
+                    expect { DeploymentCreate.create(app:, message:, user_audit_info:) }.to raise_error(DeploymentCreate::Error, 'memory quota_exceeded')
+                  end
+                end
+
+                context 'when the final state of the resulting web_process does not violate a quota' do
+                  let(:memory_in_mb) { 3000 }
+
+                  it 'does not throw an error' do
+                    deployment = DeploymentCreate.create(app:, message:, user_audit_info:)
+                    expect(deployment.memory_in_mb).to eq(3000)
+                    expect(app.reload.newest_web_process.memory).to eq(3000)
+                  end
                 end
               end
             end
@@ -816,39 +864,86 @@ module VCAP::CloudController
                 expect(deployment.deploying_web_process.instances).to eq(5)
               end
             end
+
+            context 'quota validations' do
+              let!(:web_process) { ProcessModel.make(app: app, instances: 3, memory: 999, state: 'STOPPED') }
+
+              before do
+                app.organization.quota_definition = QuotaDefinition.make(app.organization, memory_limit: 10_000)
+                app.organization.save
+              end
+
+              context 'when the final state of the resulting web_process will violate a quota' do
+                let(:web_instances) { 11 }
+
+                it 'throws an error' do
+                  expect { DeploymentCreate.create(app:, message:, user_audit_info:) }.to raise_error(DeploymentCreate::Error, 'memory quota_exceeded')
+                end
+              end
+
+              context 'when the final state of the resulting web_process does not violate a quota' do
+                let(:web_instances) { 10 }
+
+                it 'does not throw an error' do
+                  deployment = DeploymentCreate.create(app:, message:, user_audit_info:)
+                  expect(deployment.web_instances).to eq(10)
+                end
+              end
+
+              context 'when checking quota validations' do
+                let(:web_instances) { 10 }
+
+                it 'doesnt alter the state of the current web process' do
+                  DeploymentCreate.create(app:, message:, user_audit_info:)
+                  expect(app.newest_web_process.instances).to eq(3)
+                end
+              end
+            end
           end
 
-          context 'quota validations' do
-            let!(:web_process) { ProcessModel.make(app: app, instances: 3, memory: 999, state: process_state) }
+          context 'uses the memory_in_mb from the message' do
+            let(:memory_in_mb) { 1000 }
 
-            before do
-              app.organization.quota_definition = QuotaDefinition.make(app.organization, memory_limit: 10_000)
-              app.organization.save
+            it 'saves the memory_in_mb' do
+              deployment = DeploymentCreate.create(app:, message:, user_audit_info:)
+              expect(deployment.memory_in_mb).to eq(1000)
+              expect(app.reload.newest_web_process.memory).to eq(1000)
             end
 
-            context 'when the final state of the resulting web_process will violate a quota' do
-              let(:web_instances) { 11 }
+            context 'when memory_in_mb is not set' do
+              let(:memory_in_mb) { nil }
 
-              it 'throws an error' do
-                expect { DeploymentCreate.create(app:, message:, user_audit_info:) }.to raise_error(DeploymentCreate::Error, 'memory quota_exceeded')
-              end
-            end
-
-            context 'when the final state of the resulting web_process does not violate a quota' do
-              let(:web_instances) { 10 }
-
-              it 'does not throw an error' do
+              it 'sets web_instances to the original web process\'s instance count' do
                 deployment = DeploymentCreate.create(app:, message:, user_audit_info:)
-                expect(deployment.web_instances).to eq(10)
+                expect(deployment.memory_in_mb).to eq(nil)
+                expect(app.reload.newest_web_process.memory).to eq(500)
               end
             end
 
-            context 'when checking quota validations' do
-              let(:web_instances) { 10 }
+            context 'quota validations' do
+              let!(:web_process) { ProcessModel.make(app: app, instances: 3, memory: 999, state: process_state) }
 
-              it 'doesnt alter the state of the current web process' do
-                DeploymentCreate.create(app:, message:, user_audit_info:)
-                expect(app.newest_web_process.instances).to eq(3)
+              before do
+                app.organization.quota_definition = QuotaDefinition.make(app.organization, memory_limit: 10_000)
+                app.organization.save
+              end
+
+              context 'when the final state of the resulting web_process will violate a quota' do
+                let(:memory_in_mb) { 4000 }
+
+                it 'throws an error' do
+                  expect { DeploymentCreate.create(app:, message:, user_audit_info:) }.to raise_error(DeploymentCreate::Error, 'memory quota_exceeded')
+                end
+              end
+
+              context 'when the final state of the resulting web_process does not violate a quota' do
+                let(:memory_in_mb) { 3000 }
+
+                it 'does not throw an error' do
+                  deployment = DeploymentCreate.create(app:, message:, user_audit_info:)
+                  expect(deployment.memory_in_mb).to eq(3000)
+                  expect(app.reload.newest_web_process.memory).to eq(3000)
+                end
               end
             end
           end

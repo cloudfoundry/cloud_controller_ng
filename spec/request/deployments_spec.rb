@@ -1161,6 +1161,76 @@ RSpec.describe 'Deployments' do
       end
     end
 
+    context 'memory_in_mb' do
+      let!(:process_model) { VCAP::CloudController::ProcessModel.make(app: app_model, instances: 10) }
+      let(:user) { make_developer_for_space(space) }
+      let(:memory_in_mb) { 5 }
+      let(:create_request) do
+        {
+          options: {
+            memory_in_mb:
+          },
+          relationships: {
+            app: {
+              data: {
+                guid: app_model.guid
+              }
+            }
+          }
+        }
+      end
+
+      context 'when memory_in_mb is provided' do
+        it 'is set on the resource' do
+          post '/v3/deployments', create_request.to_json, user_header
+          expect(last_response.status).to eq(201), last_response.body
+
+          expect(parsed_response['options']['memory_in_mb']).to eq(5)
+        end
+      end
+
+      context 'when memory_in_mb violates a quota' do
+        let(:memory_in_mb) { 100_000 }
+        let(:quota) { VCAP::CloudController::QuotaDefinition.make(memory_limit: 1_000_000) }
+
+        before do
+          org.quota_definition = quota
+          org.save
+        end
+
+        it 'is set on the resource' do
+          post '/v3/deployments', create_request.to_json, user_header
+          expect(last_response.status).to eq(422), last_response.body
+          expect(parsed_response['errors'][0]['detail']).to match('memory quota_exceeded')
+        end
+      end
+
+      context 'when memory_in_mb is not provided' do
+        let(:create_request) do
+          {
+            relationships: {
+              app: {
+                data: {
+                  guid: app_model.guid
+                }
+              }
+            }
+          }
+        end
+
+        it 'is not returned as part of the deployment options' do
+          post '/v3/deployments', create_request.to_json, user_header
+          expect(last_response.status).to eq(201), last_response.body
+
+          expect(parsed_response['options'].key?('memory_in_mb')).to be false
+        end
+      end
+    end
+
+    context 'disk_in_mb'
+
+    context 'log_rate_limit_in_bytes_per_second'
+
     context 'web_instances' do
       let!(:process_model) { VCAP::CloudController::ProcessModel.make(app: app_model, instances: 10) }
       let(:user) { make_developer_for_space(space) }
