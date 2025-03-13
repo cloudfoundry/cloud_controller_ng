@@ -44,7 +44,7 @@ module VCAP::CloudController
     def buildpack_models
       if buildpack_lifecycle_buildpacks.present?
         buildpack_lifecycle_buildpacks.map do |buildpack|
-          CustomBuildpack.new(buildpack.name)
+          Buildpack.find(name: buildpack.name) || CustomBuildpack.new(buildpack.name)
         end
       else
         []
@@ -64,11 +64,7 @@ module VCAP::CloudController
     end
 
     def using_custom_buildpack?
-      true
-    end
-
-    def attributes_from_buildpack(buildpack_name)
-      { buildpack_url: buildpack_name, admin_buildpack_name: nil }
+      buildpack_lifecycle_buildpacks.any?(&:custom?)
     end
 
     def to_hash
@@ -95,6 +91,45 @@ module VCAP::CloudController
 
     def credentials=(creds)
       self.registry_credentials_json = Oj.dump(creds)
+    end
+
+    private
+
+    def attributes_from_buildpack_name(buildpack_name)
+      if UriUtils.is_cnb_buildpack_uri?(buildpack_name)
+        { buildpack_url: buildpack_name, admin_buildpack_name: nil }
+      else
+        { buildpack_url: nil, admin_buildpack_name: buildpack_name }
+      end
+    end
+
+    def attributes_from_buildpack_key(key)
+      admin_buildpack = Buildpack.find(key:)
+      if admin_buildpack
+        { buildpack_url: nil, admin_buildpack_name: admin_buildpack.name }
+      elsif UriUtils.is_cnb_buildpack_uri?(key)
+        { buildpack_url: key, admin_buildpack_name: nil }
+      else
+        {} # Will fail a validity check downstream
+      end
+    end
+
+    def attributes_from_buildpack_hash(buildpack)
+      {
+        buildpack_name: buildpack[:name],
+        version: buildpack[:version]
+      }.merge(buildpack[:key] ? attributes_from_buildpack_key(buildpack[:key]) : attributes_from_buildpack_name(buildpack[:name]))
+    end
+
+    def attributes_from_buildpack(buildpack)
+      if buildpack.is_a?(String)
+        attributes_from_buildpack_name buildpack
+      elsif buildpack.is_a?(Hash)
+        attributes_from_buildpack_hash buildpack
+      else
+        # Don't set anything -- this will fail later on a validity check
+        {}
+      end
     end
   end
 end
