@@ -78,6 +78,8 @@ module VCAP::CloudController
       def enqueue_next_job(pollable_job)
         run_at = Delayed::Job.db_time_now + next_execution_in
         @retry_number += 1
+        puts "Enqueuing next job for #{self.class} with guid: #{pollable_job.guid} at #{run_at}"
+        puts "Using generic enqueuer: #{Thread.current[:generic_enqueuer]} in process: #{Process.pid} | Thread: #{Thread.current.object_id}"
         Jobs::GenericEnqueuer.shared.enqueue_pollable(self, existing_guid: pollable_job.guid, run_at: run_at, preserve_priority: true)
       end
     end
