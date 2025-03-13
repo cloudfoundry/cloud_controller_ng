@@ -136,7 +136,7 @@ module VCAP::CloudController
           it 'is not valid' do
             message = DeploymentCreateMessage.new(body)
             expect(message).not_to be_valid
-            expect(message.errors.full_messages).to include('Web instances must be an integer greater than 0')
+            expect(message.errors.full_messages).to include('Web instances is not a number')
           end
         end
 
@@ -148,7 +148,7 @@ module VCAP::CloudController
           it 'is not valid' do
             message = DeploymentCreateMessage.new(body)
             expect(message).not_to be_valid
-            expect(message.errors.full_messages).to include('Web instances must be an integer greater than 0')
+            expect(message.errors.full_messages).to include('Web instances must be greater than or equal to 0')
           end
         end
 
@@ -157,16 +157,64 @@ module VCAP::CloudController
             body['options'] = { web_instances: 0 }
           end
 
-          it 'is not valid' do
+          it 'is valid' do
             message = DeploymentCreateMessage.new(body)
-            expect(message).not_to be_valid
-            expect(message.errors.full_messages).to include('Web instances must be an integer greater than 0')
+            expect(message).to be_valid
           end
         end
 
         context 'when set to positive integer' do
           before do
             body['options'] = { web_instances: 2 }
+          end
+
+          it 'succeeds' do
+            message = DeploymentCreateMessage.new(body)
+            expect(message).to be_valid
+          end
+        end
+      end
+
+      describe 'memory_in_mb' do
+        context 'when set to a non-integer' do
+          before do
+            body['options'] = { memory_in_mb: 'two' }
+          end
+
+          it 'is not valid' do
+            message = DeploymentCreateMessage.new(body)
+            expect(message).not_to be_valid
+            expect(message.errors.full_messages).to include('Memory in mb is not a number')
+          end
+        end
+
+        context 'when set to a negative integer' do
+          before do
+            body['options'] = { memory_in_mb: -2 }
+          end
+
+          it 'is not valid' do
+            message = DeploymentCreateMessage.new(body)
+            expect(message).not_to be_valid
+            expect(message.errors.full_messages).to include('Memory in mb must be greater than 0')
+          end
+        end
+
+        context 'when set to zero' do
+          before do
+            body['options'] = { memory_in_mb: 0 }
+          end
+
+          it 'is not valid' do
+            message = DeploymentCreateMessage.new(body)
+            expect(message).not_to be_valid
+            expect(message.errors.full_messages).to include('Memory in mb must be greater than 0')
+          end
+        end
+
+        context 'when set to positive integer' do
+          before do
+            body['options'] = { memory_in_mb: 2 }
           end
 
           it 'succeeds' do

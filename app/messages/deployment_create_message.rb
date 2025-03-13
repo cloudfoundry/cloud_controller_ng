@@ -1,4 +1,5 @@
 require 'messages/metadata_base_message'
+require 'messages/process_scale_message'
 
 module VCAP::CloudController
   class DeploymentCreateMessage < MetadataBaseMessage
@@ -14,6 +15,7 @@ module VCAP::CloudController
       canary
       max_in_flight
       web_instances
+      memory_in_mb
     ].freeze
 
     ALLOWED_STEP_KEYS = [
@@ -48,6 +50,10 @@ module VCAP::CloudController
       options&.dig(:web_instances)
     end
 
+    def memory_in_mb
+      options&.dig(:memory_in_mb)
+    end
+
     private
 
     def mutually_exclusive_droplet_sources
@@ -66,10 +72,28 @@ module VCAP::CloudController
 
       disallowed_keys = options.keys - ALLOWED_OPTION_KEYS
       errors.add(:options, "has unsupported key(s): #{disallowed_keys.join(', ')}") if disallowed_keys.present?
-
-      validate_web_instances if options[:web_instances]
+      validate_scaling_options
+      # validate_web_instances if options[:web_instances]
       validate_max_in_flight if options[:max_in_flight]
       validate_canary if options[:canary]
+    end
+
+    def validate_scaling_options
+      scaling_options = {
+        instances: options[:web_instances],
+        memory_in_mb: options[:memory_in_mb]
+      }
+
+      message = ProcessScaleMessage.new(scaling_options)
+      message.valid?
+      if message.errors[:instances].present?
+        message.errors.select { |e| e.attribute == :instances }.each do |error|
+          errors.import(error, { attribute: :web_instances })
+        end
+        message.errors.delete(:instances)
+      end
+
+      errors.merge!(message.errors)
     end
 
     def validate_max_in_flight

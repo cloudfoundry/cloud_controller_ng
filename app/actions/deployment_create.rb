@@ -56,6 +56,7 @@ module VCAP::CloudController
             revision_guid: revision&.guid,
             revision_version: revision&.version,
             strategy: message.strategy,
+            memory_in_mb: message.memory_in_mb,
             max_in_flight: message.max_in_flight,
             canary_steps: message.options&.dig(:canary, :steps),
             web_instances: message.web_instances || desired_instances
@@ -67,7 +68,7 @@ module VCAP::CloudController
 
           process_instances = starting_process_instances(deployment, desired_instances)
 
-          process = create_deployment_process(app, deployment.guid, revision, process_instances)
+          process = create_deployment_process(app, message, deployment.guid, revision, process_instances)
           # Need to transition from STOPPED to STARTED to engage the ProcessObserver to desire the LRP.
           # It'd be better to do this via Diego::Runner.new(process, config).start,
           # but it is nontrivial to get that working in test.
@@ -85,8 +86,8 @@ module VCAP::CloudController
         raise error
       end
 
-      def create_deployment_process(app, deployment_guid, revision, process_instances)
-        process = clone_existing_web_process(app, revision, process_instances)
+      def create_deployment_process(app, message, deployment_guid, revision, process_instances)
+        process = clone_existing_web_process(app, message, revision, process_instances)
 
         DeploymentProcessModel.create(
           deployment_guid: deployment_guid,
@@ -97,21 +98,20 @@ module VCAP::CloudController
         process
       end
 
-      def clone_existing_web_process(app, revision, process_instances)
+      def clone_existing_web_process(app, message, revision, process_instances)
         web_process = app.newest_web_process
         command = if revision
                     revision.commands_by_process_type[ProcessTypes::WEB]
                   else
                     web_process.command
                   end
-
         ProcessModel.create(
           app: app,
           type: ProcessTypes::WEB,
           state: ProcessModel::STOPPED,
           instances: process_instances,
           command: command,
-          memory: web_process.memory,
+          memory: message.memory_in_mb || web_process.memory,
           file_descriptors: web_process.file_descriptors,
           disk_quota: web_process.disk_quota,
           log_rate_limit: web_process.log_rate_limit,
@@ -167,11 +167,13 @@ module VCAP::CloudController
       private
 
       def validate_quota!(message, app)
-        return if message.web_instances.blank?
+        return if message.web_instances.blank? && message.memory_in_mb.blank?
 
         current_web_process = app.newest_web_process
-        current_web_process.instances = message.web_instances
-
+        current_web_process.instances = message.web_instances if message.web_instances
+        current_web_process.memory = message.memory_in_mb if message.memory_in_mb
+        # Quotas wont get checked unless the process is started
+        current_web_process.state = ProcessModel::STARTED
         current_web_process.validate
 
         raise Sequel::ValidationFailed.new(current_web_process) unless current_web_process.valid?
@@ -181,6 +183,7 @@ module VCAP::CloudController
 
       def deployment_for_stopped_app(app, message, previous_deployment, previous_droplet, revision, target_state, user_audit_info)
         app.newest_web_process.update(instances: message.web_instances) if message.web_instances
+        app.newest_web_process.update(memory: message.memory_in_mb) if message.memory_in_mb
         # Do not create a revision here because AppStart will not handle the rollback case
         AppStart.start(app: app, user_audit_info: user_audit_info, create_revision: false)
 
@@ -197,6 +200,7 @@ module VCAP::CloudController
           strategy: message.strategy,
           max_in_flight: message.max_in_flight,
           canary_steps: message.options&.dig(:canary, :steps),
+          memory_in_mb: message.memory_in_mb,
           web_instances: message.web_instances || desired_instances(app.oldest_web_process, previous_deployment)
         )
 
