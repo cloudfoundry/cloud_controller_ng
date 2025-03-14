@@ -34,15 +34,6 @@ class BaseMaxMemoryPolicy
 end
 
 class AppMaxMemoryPolicy < BaseMaxMemoryPolicy
-  def validate
-    return unless policy_target
-    return unless additional_checks
-
-    return if policy_target.has_remaining_memory(requested_memory)
-
-    resource.errors.add(field, error_name)
-  end
-
   private
 
   def additional_checks

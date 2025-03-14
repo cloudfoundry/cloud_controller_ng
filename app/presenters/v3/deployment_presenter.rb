@@ -61,6 +61,10 @@ module VCAP::CloudController::Presenters::V3
         web_instances: deployment.desired_web_instances
       }
 
+      options[:memory_in_mb] = deployment.memory_in_mb if deployment.memory_in_mb
+      options[:disk_in_mb] = deployment.disk_in_mb if deployment.disk_in_mb
+      options[:log_rate_limit_in_bytes_per_second] = deployment.log_rate_limit_in_bytes_per_second if deployment.log_rate_limit_in_bytes_per_second
+
       if deployment.strategy == VCAP::CloudController::DeploymentModel::CANARY_STRATEGY && deployment.canary_steps
         options[:canary] = {
           steps: deployment.canary_steps

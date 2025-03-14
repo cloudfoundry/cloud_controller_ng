@@ -16,6 +16,8 @@ module VCAP::CloudController
       max_in_flight
       web_instances
       memory_in_mb
+      disk_in_mb
+      log_rate_limit_in_bytes_per_second
     ].freeze
 
     ALLOWED_STEP_KEYS = [
@@ -54,6 +56,14 @@ module VCAP::CloudController
       options&.dig(:memory_in_mb)
     end
 
+    def disk_in_mb
+      options&.dig(:disk_in_mb)
+    end
+
+    def log_rate_limit_in_bytes_per_second
+      options&.dig(:log_rate_limit_in_bytes_per_second)
+    end
+
     private
 
     def mutually_exclusive_droplet_sources
@@ -81,7 +91,9 @@ module VCAP::CloudController
     def validate_scaling_options
       scaling_options = {
         instances: options[:web_instances],
-        memory_in_mb: options[:memory_in_mb]
+        memory_in_mb: options[:memory_in_mb],
+        disk_in_mb: options[:disk_in_mb],
+        log_rate_limit_in_bytes_per_second: options[:log_rate_limit_in_bytes_per_second]
       }
 
       message = ProcessScaleMessage.new(scaling_options)

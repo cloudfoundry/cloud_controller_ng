@@ -1164,7 +1164,7 @@ RSpec.describe 'Deployments' do
     context 'memory_in_mb' do
       let!(:process_model) { VCAP::CloudController::ProcessModel.make(app: app_model, instances: 10) }
       let(:user) { make_developer_for_space(space) }
-      let(:memory_in_mb) { 5 }
+      let(:memory_in_mb) { 500 }
       let(:create_request) do
         {
           options: {
@@ -1185,13 +1185,13 @@ RSpec.describe 'Deployments' do
           post '/v3/deployments', create_request.to_json, user_header
           expect(last_response.status).to eq(201), last_response.body
 
-          expect(parsed_response['options']['memory_in_mb']).to eq(5)
+          expect(parsed_response['options']['memory_in_mb']).to eq(500)
         end
       end
 
       context 'when memory_in_mb violates a quota' do
-        let(:memory_in_mb) { 100_000 }
-        let(:quota) { VCAP::CloudController::QuotaDefinition.make(memory_limit: 1_000_000) }
+        let(:memory_in_mb) { 1001 }
+        let(:quota) { VCAP::CloudController::QuotaDefinition.make(memory_limit: 10_000) }
 
         before do
           org.quota_definition = quota
@@ -1227,9 +1227,135 @@ RSpec.describe 'Deployments' do
       end
     end
 
-    context 'disk_in_mb'
+    context 'disk_in_mb' do
+      let!(:process_model) { VCAP::CloudController::ProcessModel.make(app: app_model, instances: 10) }
+      let(:user) { make_developer_for_space(space) }
+      let(:disk_in_mb) { 500 }
+      let(:create_request) do
+        {
+          options: {
+            disk_in_mb:
+          },
+          relationships: {
+            app: {
+              data: {
+                guid: app_model.guid
+              }
+            }
+          }
+        }
+      end
 
-    context 'log_rate_limit_in_bytes_per_second'
+      context 'when disk_in_mb is provided' do
+        it 'is set on the resource' do
+          post '/v3/deployments', create_request.to_json, user_header
+          expect(last_response.status).to eq(201), last_response.body
+
+          expect(parsed_response['options']['disk_in_mb']).to eq(500)
+        end
+      end
+
+      context 'when disk_in_mb violates a quota' do
+        let(:disk_in_mb) { 1001 }
+
+        before do
+          TestConfig.override(maximum_app_disk_in_mb: 1000)
+        end
+
+        it 'is set on the resource' do
+          post '/v3/deployments', create_request.to_json, user_header
+          expect(last_response.status).to eq(422), last_response.body
+          expect(parsed_response['errors'][0]['detail']).to match('disk_quota too much disk requested (requested 1024 MB - must be less than 1000 MB)')
+        end
+      end
+
+      context 'when disk_in_mb is not provided' do
+        let(:create_request) do
+          {
+            relationships: {
+              app: {
+                data: {
+                  guid: app_model.guid
+                }
+              }
+            }
+          }
+        end
+
+        it 'is not returned as part of the deployment options' do
+          post '/v3/deployments', create_request.to_json, user_header
+          expect(last_response.status).to eq(201), last_response.body
+
+          expect(parsed_response['options'].key?('disk_in_mb')).to be false
+        end
+      end
+    end
+
+    context 'log_rate_limit_in_bytes_per_second' do
+      let!(:process_model) { VCAP::CloudController::ProcessModel.make(app: app_model, instances: 10) }
+      let(:user) { make_developer_for_space(space) }
+      let(:log_rate_limit_in_bytes_per_second) { 500 }
+      let(:create_request) do
+        {
+          options: {
+            log_rate_limit_in_bytes_per_second:
+          },
+          relationships: {
+            app: {
+              data: {
+                guid: app_model.guid
+              }
+            }
+          }
+        }
+      end
+
+      context 'when log_rate_limit_in_bytes_per_second is provided' do
+        it 'is set on the resource' do
+          post '/v3/deployments', create_request.to_json, user_header
+          expect(last_response.status).to eq(201), last_response.body
+
+          expect(parsed_response['options']['log_rate_limit_in_bytes_per_second']).to eq(500)
+        end
+      end
+
+      context 'when log_rate_limit_in_bytes_per_second violates a quota' do
+        let(:log_rate_limit_in_bytes_per_second) { 1001 }
+        let(:quota) { VCAP::CloudController::QuotaDefinition.make(log_rate_limit: 1000) }
+
+        before do
+          org.quota_definition = quota
+          org.save
+        end
+
+        it 'is set on the resource' do
+          post '/v3/deployments', create_request.to_json, user_header
+          expect(last_response.status).to eq(422), last_response.body
+          expect(parsed_response['errors'][0]['detail']).to match('log_rate_limit exceeds organization log rate quota')
+        end
+      end
+
+      context 'when log_rate_limit_in_bytes_per_second is not provided' do
+        let(:create_request) do
+          {
+            relationships: {
+              app: {
+                data: {
+                  guid: app_model.guid
+                }
+              }
+            }
+          }
+        end
+
+        it 'is not returned as part of the deployment options' do
+          post '/v3/deployments', create_request.to_json, user_header
+          expect(last_response.status).to eq(201), last_response.body
+
+          expect(parsed_response['options'].key?('log_rate_limit_in_bytes_per_second')).to be false
+        end
+      end
+    end
 
     context 'web_instances' do
       let!(:process_model) { VCAP::CloudController::ProcessModel.make(app: app_model, instances: 10) }
