@@ -6,7 +6,7 @@ module VCAP::CloudController
   RSpec.describe DeploymentCreate do
     let(:app) { AppModel.make(desired_state: ProcessModel::STARTED) }
 
-    let!(:web_process) { ProcessModel.make(app: app, instances: original_instances, memory: 500, log_rate_limit: 101, state: process_state) }
+    let!(:web_process) { ProcessModel.make(app: app, instances: original_instances, memory: 500, disk_quota: 1024, log_rate_limit: 101, state: process_state) }
     let(:original_droplet) { DropletModel.make(app: app, process_types: { 'web' => 'asdf' }) }
     let(:next_droplet) { DropletModel.make(app: app, process_types: { 'web' => '1234' }) }
     let!(:route1) { Route.make(space: app.space) }
@@ -23,13 +23,15 @@ module VCAP::CloudController
     let(:original_instances) { 3 }
     let(:web_instances) { nil }
     let(:memory_in_mb) { nil }
+    let(:disk_in_mb) { nil }
+    let(:log_rate_limit_in_bytes_per_second) { nil }
 
     let(:message) do
       DeploymentCreateMessage.new({
                                     relationships: { app: { data: { guid: app.guid } } },
                                     droplet: { guid: next_droplet.guid },
                                     strategy: strategy,
-                                    options: { max_in_flight:, web_instances:, memory_in_mb: }
+                                    options: { max_in_flight:, web_instances:, memory_in_mb:, disk_in_mb:, log_rate_limit_in_bytes_per_second: }
                                   })
     end
 
@@ -663,7 +665,7 @@ module VCAP::CloudController
 
                 it 'sets web_instances to the original web process\'s instance count' do
                   deployment = DeploymentCreate.create(app:, message:, user_audit_info:)
-                  expect(deployment.memory_in_mb).to eq(nil)
+                  expect(deployment.memory_in_mb).to be_nil
                   expect(app.reload.newest_web_process.memory).to eq(500)
                 end
               end
@@ -915,7 +917,7 @@ module VCAP::CloudController
 
               it 'sets web_instances to the original web process\'s instance count' do
                 deployment = DeploymentCreate.create(app:, message:, user_audit_info:)
-                expect(deployment.memory_in_mb).to eq(nil)
+                expect(deployment.memory_in_mb).to be_nil
                 expect(app.reload.newest_web_process.memory).to eq(500)
               end
             end
@@ -943,6 +945,102 @@ module VCAP::CloudController
                   deployment = DeploymentCreate.create(app:, message:, user_audit_info:)
                   expect(deployment.memory_in_mb).to eq(3000)
                   expect(app.reload.newest_web_process.memory).to eq(3000)
+                end
+              end
+            end
+          end
+
+          context 'uses the disk_in_mb from the message' do
+            let(:disk_in_mb) { 1000 }
+
+            it 'saves the disk_in_mb' do
+              deployment = DeploymentCreate.create(app:, message:, user_audit_info:)
+              expect(deployment.disk_in_mb).to eq(1000)
+              expect(app.reload.newest_web_process.disk_quota).to eq(1000)
+            end
+
+            context 'when disk_in_mb is not set' do
+              let(:disk_in_mb) { nil }
+
+              it 'sets web_instances to the original web process\'s instance count' do
+                deployment = DeploymentCreate.create(app:, message:, user_audit_info:)
+                expect(deployment.disk_in_mb).to be_nil
+                expect(app.reload.newest_web_process.disk_quota).to eq(1024)
+              end
+            end
+
+            context 'quota validations' do
+              let!(:web_process) { ProcessModel.make(app: app, instances: 3, disk_quota: 999, state: process_state) }
+
+              before do
+                TestConfig.override(maximum_app_disk_in_mb: 1000)
+              end
+
+              context 'when the final state of the resulting web_process will violate a quota' do
+                let(:disk_in_mb) { 4000 }
+
+                it 'throws an error' do
+                  expect do
+                    DeploymentCreate.create(app:, message:,
+                                            user_audit_info:)
+                  end.to raise_error(DeploymentCreate::Error, 'disk_quota too much disk requested (requested 4000 MB - must be less than 1000 MB)')
+                end
+              end
+
+              context 'when the final state of the resulting web_process does not violate a quota' do
+                let(:disk_in_mb) { 1023 }
+
+                it 'does not throw an error' do
+                  deployment = DeploymentCreate.create(app:, message:, user_audit_info:)
+                  expect(deployment.disk_in_mb).to eq(1023)
+                  expect(app.reload.newest_web_process.disk_quota).to eq(1023)
+                end
+              end
+            end
+          end
+
+          context 'uses the log_rate_limit_in_bytes_per_second from the message' do
+            let(:log_rate_limit_in_bytes_per_second) { 1000 }
+
+            it 'saves the log_rate_limit_in_bytes_per_second' do
+              deployment = DeploymentCreate.create(app:, message:, user_audit_info:)
+              expect(deployment.log_rate_limit_in_bytes_per_second).to eq(1000)
+              expect(app.reload.newest_web_process.log_rate_limit).to eq(1000)
+            end
+
+            context 'when log_rate_limit_in_bytes_per_second is not set' do
+              let(:log_rate_limit_in_bytes_per_second) { nil }
+
+              it 'sets web_instances to the original web process\'s instance count' do
+                deployment = DeploymentCreate.create(app:, message:, user_audit_info:)
+                expect(deployment.log_rate_limit_in_bytes_per_second).to be_nil
+                expect(app.reload.newest_web_process.log_rate_limit).to eq(101)
+              end
+            end
+
+            context 'quota validations' do
+              let!(:web_process) { ProcessModel.make(app: app, instances: 3, memory: 999, state: process_state) }
+
+              before do
+                app.organization.quota_definition = QuotaDefinition.make(app.organization, log_rate_limit: 10_000)
+                app.organization.save
+              end
+
+              context 'when the final state of the resulting web_process will violate a quota' do
+                let(:log_rate_limit_in_bytes_per_second) { 4000 }
+
+                it 'throws an error' do
+                  expect { DeploymentCreate.create(app:, message:, user_audit_info:) }.to raise_error(DeploymentCreate::Error, 'log_rate_limit exceeds organization log rate quota')
+                end
+              end
+
+              context 'when the final state of the resulting web_process does not violate a quota' do
+                let(:log_rate_limit_in_bytes_per_second) { 3000 }
+
+                it 'does not throw an error' do
+                  deployment = DeploymentCreate.create(app:, message:, user_audit_info:)
+                  expect(deployment.log_rate_limit_in_bytes_per_second).to eq(3000)
+                  expect(app.reload.newest_web_process.log_rate_limit).to eq(3000)
                 end
               end
             end

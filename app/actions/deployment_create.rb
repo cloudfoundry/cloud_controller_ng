@@ -50,6 +50,8 @@ module VCAP::CloudController
           end
 
           process.memory = message.memory_in_mb if message.memory_in_mb
+          process.disk_quota = message.disk_in_mb if message.disk_in_mb
+          process.log_rate_limit = message.log_rate_limit_in_bytes_per_second if message.log_rate_limit_in_bytes_per_second
 
           if app.stopped?
             process.instances = message.web_instances if message.web_instances
@@ -172,6 +174,8 @@ module VCAP::CloudController
         current_web_process = app.newest_web_process
         current_web_process.instances = message.web_instances if message.web_instances
         current_web_process.memory = message.memory_in_mb if message.memory_in_mb
+        current_web_process.disk_quota = message.disk_in_mb if message.disk_in_mb
+        current_web_process.log_rate_limit = message.log_rate_limit_in_bytes_per_second if message.log_rate_limit_in_bytes_per_second
         # Quotas wont get checked unless the process is started
         current_web_process.state = ProcessModel::STARTED
         current_web_process.validate
@@ -181,7 +185,7 @@ module VCAP::CloudController
         current_web_process.reload
       end
 
-      def create_deployment(app, message, previous_deployment, previous_droplet, revision, target_state, user_audit_info)
+      def create_deployment(app, message, previous_deployment, previous_droplet, revision, target_state, _user_audit_info)
         deployment = DeploymentModel.create(
           app: app,
           state: starting_state(message),
@@ -193,8 +197,10 @@ module VCAP::CloudController
           revision_guid: revision&.guid,
           revision_version: revision&.version,
           strategy: message.strategy,
-          memory_in_mb: message.memory_in_mb,
           max_in_flight: message.max_in_flight,
+          memory_in_mb: message.memory_in_mb,
+          disk_in_mb: message.disk_in_mb,
+          log_rate_limit_in_bytes_per_second: message.log_rate_limit_in_bytes_per_second,
           canary_steps: message.options&.dig(:canary, :steps),
           web_instances: message.web_instances || desired_instances(app.oldest_web_process, previous_deployment)
         )
