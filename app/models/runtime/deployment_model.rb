@@ -113,6 +113,14 @@ module VCAP::CloudController
       state == DeploymentModel::PAUSED_STATE
     end
 
+    def desired_web_instances
+      # It seems redundant to have method since web_instances defaults to original_web_process_instance_count,
+      # (in deployment create action)
+      # but this should handle deployments created on old API vms mid bosh deployment
+      # we can probably clean this up in the future
+      web_instances || original_web_process_instance_count
+    end
+
     def current_canary_instance_target
       canary_step[:canary]
     end
@@ -133,11 +141,17 @@ module VCAP::CloudController
 
       return [{ canary: 1, original: original_web_process_instance_count }] if canary_steps.nil?
 
+      instances = if web_instances && web_instances < original_web_process_instance_count
+                    web_instances
+                  else
+                    original_web_process_instance_count
+                  end
+
       canary_steps.map do |step|
         weight = step['instance_weight']
-        target_canary = (original_web_process_instance_count * (weight.to_f / 100)).round.to_i
+        target_canary = (instances * (weight.to_f / 100)).round.to_i
         target_canary = 1 if target_canary.zero?
-        target_original = original_web_process_instance_count - target_canary + 1
+        target_original = instances - target_canary + 1
         target_original = 0 if weight == 100
         { canary: target_canary, original: target_original }
       end

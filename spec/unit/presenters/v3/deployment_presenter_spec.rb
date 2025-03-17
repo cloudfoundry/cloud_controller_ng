@@ -18,7 +18,8 @@ module VCAP::CloudController::Presenters::V3
         status_updated_at: '2019-07-11 19:01:54',
         state: deployment_state,
         status_value: VCAP::CloudController::DeploymentModel::ACTIVE_STATUS_VALUE,
-        status_reason: VCAP::CloudController::DeploymentModel::DEPLOYING_STATUS_REASON
+        status_reason: VCAP::CloudController::DeploymentModel::DEPLOYING_STATUS_REASON,
+        web_instances: 20
       )
     end
 
@@ -179,7 +180,12 @@ module VCAP::CloudController::Presenters::V3
       describe 'options' do
         it 'sets max in flight' do
           result = DeploymentPresenter.new(deployment).to_hash
-          expect(result[:options][:max_in_flight]).to be(1)
+          expect(result[:options][:max_in_flight]).to eq(1)
+        end
+
+        it 'sets web_instances' do
+          result = DeploymentPresenter.new(deployment).to_hash
+          expect(result[:options][:web_instances]).to eq(20)
         end
 
         context 'when the strategy is not canary' do

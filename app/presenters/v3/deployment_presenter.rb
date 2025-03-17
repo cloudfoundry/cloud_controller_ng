@@ -57,7 +57,8 @@ module VCAP::CloudController::Presenters::V3
 
     def options(deployment)
       options = {
-        max_in_flight: deployment.max_in_flight
+        max_in_flight: deployment.max_in_flight,
+        web_instances: deployment.desired_web_instances
       }
 
       if deployment.strategy == VCAP::CloudController::DeploymentModel::CANARY_STRATEGY && deployment.canary_steps
