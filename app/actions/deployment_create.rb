@@ -169,7 +169,7 @@ module VCAP::CloudController
       private
 
       def validate_quota!(message, app)
-        return if message.web_instances.blank? && message.memory_in_mb.blank?
+        return if message.web_instances.blank? && message.memory_in_mb.blank? && message.log_rate_limit_in_bytes_per_second.blank?
 
         current_web_process = app.newest_web_process
         current_web_process.instances = message.web_instances if message.web_instances
@@ -179,7 +179,6 @@ module VCAP::CloudController
         # Quotas wont get checked unless the process is started
         current_web_process.state = ProcessModel::STARTED
         current_web_process.validate
-
         raise Sequel::ValidationFailed.new(current_web_process) unless current_web_process.valid?
 
         current_web_process.reload

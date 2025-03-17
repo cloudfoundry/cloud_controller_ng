@@ -79,6 +79,9 @@ Name | Type | Description | Default
 **strategy** | _string_ | The strategy to use for the deployment | `rolling`
 **options.max_in_flight** | _integer_ | The maximum number of new instances to deploy simultaneously | 1
 **options.web_instances** | _integer_ | The number of web instances the deployment will scale to | The current web process's instance count
+**options.memory_in_mb** |  _integer_ | The amount of memory in megabytes to allocate per web process instance.  If `null`, the amount allocated will be taken from the previous web process. | `null`
+**options.disk_in_mb** | _integer_ | The amount of disk in megabytes to allocate per web process instance.  If `null`, the amount allocated will be taken from the previous web process. | `null`
+**options.log_rate_limit_in_bytes_per_second** | _integer_ | Log rate limit in bytes per second to allocate per web process instance.  If `null`, the amount allocated will be taken from the previous web process. | `null`
 **options.canary.steps** | _array of [canary step objects](#canary-steps-object)_ | An array of canary steps to use for the deployment
 **metadata.labels** | [_label object_](#labels) | Labels applied to the deployment
 **metadata.annotations**  | [_annotation object_](#annotations) | Annotations applied to the deployment

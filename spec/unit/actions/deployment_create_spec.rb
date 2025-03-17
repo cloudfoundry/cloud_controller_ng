@@ -988,12 +988,12 @@ module VCAP::CloudController
               end
 
               context 'when the final state of the resulting web_process does not violate a quota' do
-                let(:disk_in_mb) { 1023 }
+                let(:disk_in_mb) { 999 }
 
                 it 'does not throw an error' do
                   deployment = DeploymentCreate.create(app:, message:, user_audit_info:)
-                  expect(deployment.disk_in_mb).to eq(1023)
-                  expect(app.reload.newest_web_process.disk_quota).to eq(1023)
+                  expect(deployment.disk_in_mb).to eq(999)
+                  expect(app.reload.newest_web_process.disk_quota).to eq(999)
                 end
               end
             end
@@ -1019,7 +1019,7 @@ module VCAP::CloudController
             end
 
             context 'quota validations' do
-              let!(:web_process) { ProcessModel.make(app: app, instances: 3, memory: 999, state: process_state) }
+              let!(:web_process) { ProcessModel.make(app: app, instances: 3, log_rate_limit: 999, memory: 999, state: process_state) }
 
               before do
                 app.organization.quota_definition = QuotaDefinition.make(app.organization, log_rate_limit: 10_000)
