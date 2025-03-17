@@ -6327,6 +6327,7 @@ to specify how many instances are rolled out simultaneously.</p></li>
   </span><span class="nl">"strategy"</span><span class="p">:</span><span class="w"> </span><span class="s2">"canary"</span><span class="p">,</span><span class="w">
   </span><span class="nl">"options"</span><span class="w"> </span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
     </span><span class="nl">"max_in_flight"</span><span class="p">:</span><span class="w"> </span><span class="mi">3</span><span class="p">,</span><span class="w">
+    </span><span class="nl">"web_instances"</span><span class="p">:</span><span class="w"> </span><span class="mi">5</span><span class="p">,</span><span class="w">
     </span><span class="nl">"canary"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
       </span><span class="nl">"steps"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="w">
         </span><span class="p">{</span><span class="w">
@@ -6449,6 +6450,11 @@ to specify how many instances are rolled out simultaneously.</p></li>
 <td>The maximum number of new instances to deploy simultaneously</td>
 </tr>
 <tr>
+<td><strong>options.web_instances</strong></td>
+<td><em>integer</em></td>
+<td>The number of web instances the deployment will scale to</td>
+</tr>
+<tr>
 <td><strong>options.canary.steps</strong></td>
 <td><em>array of <a href="#canary-steps-object">canary step objects</a></em></td>
 <td>Canary steps to use for the deployment. Only available for deployments with strategy &lsquo;canary&rsquo;. (experimental)</td>
@@ -6559,6 +6565,7 @@ to specify how many instances are rolled out simultaneously.</p></li>
   </span><span class="nl">"strategy"</span><span class="p">:</span><span class="w"> </span><span class="s2">"canary"</span><span class="p">,</span><span class="w">
   </span><span class="nl">"options"</span><span class="w"> </span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
     </span><span class="nl">"max_in_flight"</span><span class="p">:</span><span class="w"> </span><span class="mi">3</span><span class="p">,</span><span class="w">
+    </span><span class="nl">"web_instances"</span><span class="p">:</span><span class="w"> </span><span class="mi">5</span><span class="p">,</span><span class="w">
     </span><span class="nl">"canary"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
       </span><span class="nl">"steps"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="w">
         </span><span class="p">{</span><span class="w">
@@ -6675,6 +6682,12 @@ to specify how many instances are rolled out simultaneously.</p></li>
 <td>1</td>
 </tr>
 <tr>
+<td><strong>options.web_instances</strong></td>
+<td><em>integer</em></td>
+<td>The number of web instances the deployment will scale to</td>
+<td>The current web process&rsquo;s instance count</td>
+</tr>
+<tr>
 <td><strong>options.canary.steps</strong></td>
 <td><em>array of <a href="#canary-steps-object">canary step objects</a></em></td>
 <td>An array of canary steps to use for the deployment</td>
@@ -6742,6 +6755,7 @@ to specify how many instances are rolled out simultaneously.</p></li>
   </span><span class="nl">"strategy"</span><span class="p">:</span><span class="w"> </span><span class="s2">"canary"</span><span class="p">,</span><span class="w">
   </span><span class="nl">"options"</span><span class="w"> </span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
     </span><span class="nl">"max_in_flight"</span><span class="p">:</span><span class="w"> </span><span class="mi">3</span><span class="p">,</span><span class="w">
+    </span><span class="nl">"web_instances"</span><span class="p">:</span><span class="w"> </span><span class="mi">5</span><span class="p">,</span><span class="w">
     </span><span class="nl">"canary"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
       </span><span class="nl">"steps"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="w">
         </span><span class="p">{</span><span class="w">
@@ -7026,6 +7040,7 @@ to specify how many instances are rolled out simultaneously.</p></li>
   </span><span class="nl">"strategy"</span><span class="p">:</span><span class="w"> </span><span class="s2">"canary"</span><span class="p">,</span><span class="w">
   </span><span class="nl">"options"</span><span class="w"> </span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
     </span><span class="nl">"max_in_flight"</span><span class="p">:</span><span class="w"> </span><span class="mi">3</span><span class="p">,</span><span class="w">
+    </span><span class="nl">"web_instances"</span><span class="p">:</span><span class="w"> </span><span class="mi">5</span><span class="p">,</span><span class="w">
     </span><span class="nl">"canary"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
       </span><span class="nl">"steps"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="w">
         </span><span class="p">{</span><span class="w">
