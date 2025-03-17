@@ -137,7 +137,7 @@ GEM
     declarative (0.0.20)
     delayed_job (4.1.12)
       activesupport (>= 3.0, < 8.0)
-    diff-lcs (1.5.1)
+    diff-lcs (1.6.0)
     digest-xxhash (0.2.9)
     docile (1.1.5)
     domain_name (0.6.20240107)
@@ -271,7 +271,7 @@ GEM
       rdoc (>= 4.0.0)
       reline (>= 0.4.2)
     jaro_winkler (1.6.0)
-    json (2.9.1)
+    json (2.10.2)
     json-diff (0.4.1)
     json-schema (5.1.1)
       addressable (~> 2.8)
@@ -294,7 +294,7 @@ GEM
     llhttp-ffi (0.5.0)
       ffi-compiler (~> 1.0)
       rake (~> 13.0)
-    logger (1.6.5)
+    logger (1.6.6)
     loggregator_emitter (5.2.0)
       beefcake (~> 1.0.0)
     loofah (2.24.0)
@@ -353,7 +353,7 @@ GEM
     parallel (1.26.3)
     parallel_tests (5.1.0)
       parallel
-    parser (3.3.7.0)
+    parser (3.3.7.1)
       ast (~> 2.4.1)
       racc
     pg (1.5.9)
@@ -476,7 +476,7 @@ GEM
       rubocop-ast (>= 1.38.0, < 2.0)
       ruby-progressbar (~> 1.7)
       unicode-display_width (>= 2.4.0, < 4.0)
-    rubocop-ast (1.38.0)
+    rubocop-ast (1.39.0)
       parser (>= 3.3.1.0)
     rubocop-capybara (2.21.0)
       rubocop (~> 1.41)
@@ -527,7 +527,7 @@ GEM
       rack-protection (= 3.2.0)
       sinatra (= 3.2.0)
       tilt (~> 2.0)
-    solargraph (0.51.2)
+    solargraph (0.52.0)
       backport (~> 1.2)
       benchmark
       bundler (~> 2.0)
@@ -545,6 +545,7 @@ GEM
       thor (~> 1.0)
       tilt (~> 2.0)
       yard (~> 0.9, >= 0.9.24)
+      yard-solargraph (~> 0.1)
     spring (4.3.0)
     spring-commands-rspec (1.0.4)
       spring (>= 0.9.1)
@@ -586,6 +587,8 @@ GEM
       rexml
     yajl-ruby (1.4.3)
     yard (0.9.37)
+    yard-solargraph (0.1.0)
+      yard (~> 0.9)
     zeitwerk (2.7.1)
 
 PLATFORMS
