@@ -73,6 +73,8 @@ module VCAP
       it 'keeps the delayed job\'s priority when re-enqueuing' do
         TestConfig.config[:jobs][:priorities] = { 'fake-job': 20 }
 
+        Jobs::GenericEnqueuer.reset! # Ensure no previous state interferes
+
         pollable_job = Jobs::Enqueuer.new({ queue: Jobs::Queues.generic, priority: 22 }).enqueue_pollable(FakeJob.new)
         expect(Delayed::Job.where(guid: PollableJobModel.first.delayed_job_guid).first[:priority]).to eq(42)
 
