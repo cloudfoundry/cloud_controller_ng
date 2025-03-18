@@ -202,7 +202,7 @@ module VCAP::CloudController
           disk_in_mb: message.disk_in_mb,
           log_rate_limit_in_bytes_per_second: message.log_rate_limit_in_bytes_per_second,
           canary_steps: message.options&.dig(:canary, :steps),
-          web_instances: message.web_instances || desired_instances(app.oldest_web_process, previous_deployment)
+          web_instances: message.web_instances
         )
         MetadataUpdate.update(deployment, message)
         deployment

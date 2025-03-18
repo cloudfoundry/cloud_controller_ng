@@ -617,9 +617,9 @@ module VCAP::CloudController
               context 'when web_instances is not set' do
                 let(:web_instances) { nil }
 
-                it 'sets web_instances to the original web process\'s instance count' do
+                it 'sets web_instances to nil' do
                   deployment = DeploymentCreate.create(app:, message:, user_audit_info:)
-                  expect(deployment.web_instances).to eq(3)
+                  expect(deployment.web_instances).to be_nil
                   expect(app.reload.newest_web_process.instances).to eq(3)
                 end
               end
@@ -839,9 +839,9 @@ module VCAP::CloudController
             context 'when web_instances is not set' do
               let(:web_instances) { nil }
 
-              it 'sets web_instances to the original web process\'s instance count' do
+              it 'sets web_instances to nil' do
                 deployment = DeploymentCreate.create(app:, message:, user_audit_info:)
-                expect(deployment.web_instances).to eq(3)
+                expect(deployment.web_instances).to be_nil
               end
             end
 

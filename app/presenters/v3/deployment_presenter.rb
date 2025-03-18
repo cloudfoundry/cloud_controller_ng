@@ -57,10 +57,9 @@ module VCAP::CloudController::Presenters::V3
 
     def options(deployment)
       options = {
-        max_in_flight: deployment.max_in_flight,
-        web_instances: deployment.desired_web_instances
+        max_in_flight: deployment.max_in_flight
       }
-
+      options[:web_instances] = deployment.web_instances if deployment.web_instances
       options[:memory_in_mb] = deployment.memory_in_mb if deployment.memory_in_mb
       options[:disk_in_mb] = deployment.disk_in_mb if deployment.disk_in_mb
       options[:log_rate_limit_in_bytes_per_second] = deployment.log_rate_limit_in_bytes_per_second if deployment.log_rate_limit_in_bytes_per_second
