@@ -50,6 +50,17 @@ RSpec.describe 'max log_rate_limit policies' do
             expect(validator).to validate_with_error(process, :log_rate_limit, error_name)
           end
         end
+
+        context 'when the log_rate_limit has changed and would exceed the quota' do
+          before do
+            process.log_rate_limit = 500
+          end
+
+          it 'registers an error' do
+            expect(org_or_space).to receive(:has_remaining_log_rate_limit).with(400).and_return(false)
+            expect(validator).to validate_with_error(process, :log_rate_limit, error_name)
+          end
+        end
       end
 
       context 'when the app is being stopped' do

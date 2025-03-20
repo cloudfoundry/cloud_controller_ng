@@ -45,8 +45,7 @@ RSpec.describe 'Deployments' do
           },
           'strategy' => 'rolling',
           'options' => {
-            'max_in_flight' => 1,
-            'web_instances' => 1
+            'max_in_flight' => 1
           },
           'droplet' => {
             'guid' => droplet.guid
@@ -147,8 +146,7 @@ RSpec.describe 'Deployments' do
                                                         },
                                                         'strategy' => 'rolling',
                                                         'options' => {
-                                                          'max_in_flight' => 1,
-                                                          'web_instances' => 1
+                                                          'max_in_flight' => 1
                                                         },
                                                         'droplet' => {
                                                           'guid' => other_droplet.guid
@@ -234,8 +232,7 @@ RSpec.describe 'Deployments' do
                                                         },
                                                         'strategy' => 'rolling',
                                                         'options' => {
-                                                          'max_in_flight' => 1,
-                                                          'web_instances' => 1
+                                                          'max_in_flight' => 1
                                                         },
                                                         'droplet' => {
                                                           'guid' => other_droplet.guid
@@ -357,8 +354,7 @@ RSpec.describe 'Deployments' do
                                                         },
                                                         'strategy' => 'rolling',
                                                         'options' => {
-                                                          'max_in_flight' => 1,
-                                                          'web_instances' => 1
+                                                          'max_in_flight' => 1
                                                         },
                                                         'droplet' => {
                                                           'guid' => droplet.guid
@@ -440,8 +436,7 @@ RSpec.describe 'Deployments' do
                                                         },
                                                         'strategy' => 'rolling',
                                                         'options' => {
-                                                          'max_in_flight' => 1,
-                                                          'web_instances' => 1
+                                                          'max_in_flight' => 1
                                                         },
                                                         'droplet' => {
                                                           'guid' => other_droplet.guid
@@ -525,8 +520,7 @@ RSpec.describe 'Deployments' do
                                                         },
                                                         'strategy' => 'rolling',
                                                         'options' => {
-                                                          'max_in_flight' => 1,
-                                                          'web_instances' => 1
+                                                          'max_in_flight' => 1
                                                         },
                                                         'droplet' => {
                                                           'guid' => other_droplet.guid
@@ -698,8 +692,7 @@ RSpec.describe 'Deployments' do
                                                           },
                                                           'strategy' => 'rolling',
                                                           'options' => {
-                                                            'max_in_flight' => 1,
-                                                            'web_instances' => 1
+                                                            'max_in_flight' => 1
                                                           },
                                                           'droplet' => {
                                                             'guid' => droplet.guid
@@ -763,8 +756,7 @@ RSpec.describe 'Deployments' do
                                                           },
                                                           'strategy' => 'rolling',
                                                           'options' => {
-                                                            'max_in_flight' => 1,
-                                                            'web_instances' => 1
+                                                            'max_in_flight' => 1
                                                           },
                                                           'droplet' => {
                                                             'guid' => droplet.guid
@@ -849,8 +841,7 @@ RSpec.describe 'Deployments' do
                                                             'type' => deployment.deploying_web_process.type
                                                           }],
                                                           'options' => {
-                                                            'max_in_flight' => 1,
-                                                            'web_instances' => 1
+                                                            'max_in_flight' => 1
                                                           },
                                                           'created_at' => iso8601,
                                                           'updated_at' => iso8601,
@@ -924,8 +915,7 @@ RSpec.describe 'Deployments' do
                                                           },
                                                           'strategy' => 'rolling',
                                                           'options' => {
-                                                            'max_in_flight' => 1,
-                                                            'web_instances' => 1
+                                                            'max_in_flight' => 1
                                                           },
                                                           'droplet' => {
                                                             'guid' => droplet.guid
@@ -1001,8 +991,7 @@ RSpec.describe 'Deployments' do
                                                             },
                                                             'strategy' => 'rolling',
                                                             'options' => {
-                                                              'max_in_flight' => 5,
-                                                              'web_instances' => 1
+                                                              'max_in_flight' => 5
                                                             },
                                                             'droplet' => {
                                                               'guid' => droplet.guid
@@ -1110,7 +1099,6 @@ RSpec.describe 'Deployments' do
                                                           'strategy' => 'canary',
                                                           'options' => {
                                                             'max_in_flight' => 1,
-                                                            'web_instances' => 1,
                                                             'canary' => {
                                                               'steps' => [
                                                                 { 'instance_weight' => 20 },
@@ -1157,6 +1145,202 @@ RSpec.describe 'Deployments' do
                                                             }
                                                           }
                                                         })
+        end
+      end
+    end
+
+    context 'memory_in_mb' do
+      let!(:process_model) { VCAP::CloudController::ProcessModel.make(app: app_model, instances: 10) }
+      let(:user) { make_developer_for_space(space) }
+      let(:memory_in_mb) { 500 }
+      let(:create_request) do
+        {
+          options: {
+            memory_in_mb:
+          },
+          relationships: {
+            app: {
+              data: {
+                guid: app_model.guid
+              }
+            }
+          }
+        }
+      end
+
+      context 'when memory_in_mb is provided' do
+        it 'is set on the resource' do
+          post '/v3/deployments', create_request.to_json, user_header
+          expect(last_response.status).to eq(201), last_response.body
+
+          expect(parsed_response['options']['memory_in_mb']).to eq(500)
+        end
+      end
+
+      context 'when memory_in_mb violates a quota' do
+        let(:memory_in_mb) { 1001 }
+        let(:quota) { VCAP::CloudController::QuotaDefinition.make(memory_limit: 10_000) }
+
+        before do
+          org.quota_definition = quota
+          org.save
+        end
+
+        it 'is set on the resource' do
+          post '/v3/deployments', create_request.to_json, user_header
+          expect(last_response.status).to eq(422), last_response.body
+          expect(parsed_response['errors'][0]['detail']).to match('memory quota_exceeded')
+        end
+      end
+
+      context 'when memory_in_mb is not provided' do
+        let(:create_request) do
+          {
+            relationships: {
+              app: {
+                data: {
+                  guid: app_model.guid
+                }
+              }
+            }
+          }
+        end
+
+        it 'is not returned as part of the deployment options' do
+          post '/v3/deployments', create_request.to_json, user_header
+          expect(last_response.status).to eq(201), last_response.body
+
+          expect(parsed_response['options'].key?('memory_in_mb')).to be false
+        end
+      end
+    end
+
+    context 'disk_in_mb' do
+      let!(:process_model) { VCAP::CloudController::ProcessModel.make(app: app_model, instances: 10) }
+      let(:user) { make_developer_for_space(space) }
+      let(:disk_in_mb) { 500 }
+      let(:create_request) do
+        {
+          options: {
+            disk_in_mb:
+          },
+          relationships: {
+            app: {
+              data: {
+                guid: app_model.guid
+              }
+            }
+          }
+        }
+      end
+
+      context 'when disk_in_mb is provided' do
+        it 'is set on the resource' do
+          post '/v3/deployments', create_request.to_json, user_header
+          expect(last_response.status).to eq(201), last_response.body
+
+          expect(parsed_response['options']['disk_in_mb']).to eq(500)
+        end
+      end
+
+      context 'when disk_in_mb violates a quota' do
+        let(:disk_in_mb) { 1001 }
+
+        before do
+          TestConfig.override(maximum_app_disk_in_mb: 1000)
+        end
+
+        it 'is set on the resource' do
+          post '/v3/deployments', create_request.to_json, user_header
+          expect(last_response.status).to eq(422), last_response.body
+          expect(parsed_response['errors'][0]['detail']).to match('disk_quota too much disk requested (requested 1024 MB - must be less than 1000 MB)')
+        end
+      end
+
+      context 'when disk_in_mb is not provided' do
+        let(:create_request) do
+          {
+            relationships: {
+              app: {
+                data: {
+                  guid: app_model.guid
+                }
+              }
+            }
+          }
+        end
+
+        it 'is not returned as part of the deployment options' do
+          post '/v3/deployments', create_request.to_json, user_header
+          expect(last_response.status).to eq(201), last_response.body
+
+          expect(parsed_response['options'].key?('disk_in_mb')).to be false
+        end
+      end
+    end
+
+    context 'log_rate_limit_in_bytes_per_second' do
+      let!(:process_model) { VCAP::CloudController::ProcessModel.make(app: app_model, instances: 10) }
+      let(:user) { make_developer_for_space(space) }
+      let(:log_rate_limit_in_bytes_per_second) { 500 }
+      let(:create_request) do
+        {
+          options: {
+            log_rate_limit_in_bytes_per_second:
+          },
+          relationships: {
+            app: {
+              data: {
+                guid: app_model.guid
+              }
+            }
+          }
+        }
+      end
+
+      context 'when log_rate_limit_in_bytes_per_second is provided' do
+        it 'is set on the resource' do
+          post '/v3/deployments', create_request.to_json, user_header
+          expect(last_response.status).to eq(201), last_response.body
+
+          expect(parsed_response['options']['log_rate_limit_in_bytes_per_second']).to eq(500)
+        end
+      end
+
+      context 'when log_rate_limit_in_bytes_per_second violates a quota' do
+        let(:log_rate_limit_in_bytes_per_second) { 1001 }
+        let(:quota) { VCAP::CloudController::QuotaDefinition.make(log_rate_limit: 1000) }
+
+        before do
+          org.quota_definition = quota
+          org.save
+        end
+
+        it 'is set on the resource' do
+          post '/v3/deployments', create_request.to_json, user_header
+          expect(last_response.status).to eq(422), last_response.body
+          expect(parsed_response['errors'][0]['detail']).to match('log_rate_limit exceeds organization log rate quota')
+        end
+      end
+
+      context 'when log_rate_limit_in_bytes_per_second is not provided' do
+        let(:create_request) do
+          {
+            relationships: {
+              app: {
+                data: {
+                  guid: app_model.guid
+                }
+              }
+            }
+          }
+        end
+
+        it 'is not returned as part of the deployment options' do
+          post '/v3/deployments', create_request.to_json, user_header
+          expect(last_response.status).to eq(201), last_response.body
+
+          expect(parsed_response['options'].key?('log_rate_limit_in_bytes_per_second')).to be false
         end
       end
     end
@@ -1218,11 +1402,11 @@ RSpec.describe 'Deployments' do
           }
         end
 
-        it 'defaults to original_web_process_instance_count' do
+        it 'is not set' do
           post '/v3/deployments', create_request.to_json, user_header
           expect(last_response.status).to eq(201), last_response.body
 
-          expect(parsed_response['options']['web_instances']).to eq(10)
+          expect(parsed_response['options'].key?('web_instances')).to be false
         end
       end
     end
@@ -1294,8 +1478,7 @@ RSpec.describe 'Deployments' do
                                                       },
                                                       'strategy' => 'rolling',
                                                       'options' => {
-                                                        'max_in_flight' => 1,
-                                                        'web_instances' => 1
+                                                        'max_in_flight' => 1
                                                       },
                                                       'droplet' => {
                                                         'guid' => droplet.guid
@@ -1403,8 +1586,7 @@ RSpec.describe 'Deployments' do
         'metadata' => metadata,
         'strategy' => 'rolling',
         'options' => {
-          'max_in_flight' => 1,
-          'web_instances' => 1
+          'max_in_flight' => 1
         },
         'relationships' => {
           'app' => {
@@ -1616,9 +1798,9 @@ RSpec.describe 'Deployments' do
 
       def json_for_options(deployment)
         options = {
-          max_in_flight: deployment.max_in_flight,
-          web_instances: deployment.desired_web_instances
+          max_in_flight: deployment.max_in_flight
         }
+        options[:web_instances] = deployment.web_instances if deployment.web_instances
         if deployment.canary_steps
           options[:canary] = {
             steps: deployment.canary_steps
@@ -1883,8 +2065,7 @@ RSpec.describe 'Deployments' do
                                                             },
                                                             'strategy' => 'rolling',
                                                             'options' => {
-                                                              'max_in_flight' => 1,
-                                                              'web_instances' => 1
+                                                              'max_in_flight' => 1
                                                             },
                                                             'droplet' => {
                                                               'guid' => droplet.guid

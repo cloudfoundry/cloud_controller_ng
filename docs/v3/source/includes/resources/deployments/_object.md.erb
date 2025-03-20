@@ -21,6 +21,9 @@ Name | Type | Description
 **strategy** | _string_ | Strategy used for the deployment; supported strategies are `rolling` and `canary` (experimental)
 **options.max_in_flight** | _integer_ | The maximum number of new instances to deploy simultaneously
 **options.web_instances** | _integer_ | The number of web instances the deployment will scale to
+**options.memory_in_mb** |  _integer_ | The amount of memory in megabytes to allocate per web process instance.  If `null`, the amount allocated will be taken from the previous web process.
+**options.disk_in_mb** | _integer_ | The amount of disk in megabytes to allocate per web process instance.  If `null`, the amount allocated will be taken from the previous web process.
+**options.log_rate_limit_in_bytes_per_second** | _integer_ | Log rate limit in bytes per second to allocate per web process instance.  If `null`, the amount allocated will be taken from the previous web process.
 **options.canary.steps** | _array of [canary step objects](#canary-steps-object)_ | Canary steps to use for the deployment. Only available for deployments with strategy 'canary'. (experimental)
 **droplet.guid** | _string_ | The droplet guid that the deployment is transitioning the app to
 **previous_droplet.guid** | _string_ | The app's [current droplet guid](#get-current-droplet-association-for-an-app) before the deployment was created

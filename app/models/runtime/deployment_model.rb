@@ -114,10 +114,6 @@ module VCAP::CloudController
     end
 
     def desired_web_instances
-      # It seems redundant to have method since web_instances defaults to original_web_process_instance_count,
-      # (in deployment create action)
-      # but this should handle deployments created on old API vms mid bosh deployment
-      # we can probably clean this up in the future
       web_instances || original_web_process_instance_count
     end
 
