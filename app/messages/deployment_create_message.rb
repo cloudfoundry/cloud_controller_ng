@@ -83,7 +83,6 @@ module VCAP::CloudController
       disallowed_keys = options.keys - ALLOWED_OPTION_KEYS
       errors.add(:options, "has unsupported key(s): #{disallowed_keys.join(', ')}") if disallowed_keys.present?
       validate_scaling_options
-      # validate_web_instances if options[:web_instances]
       validate_max_in_flight if options[:max_in_flight]
       validate_canary if options[:canary]
     end

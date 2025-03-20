@@ -13,7 +13,7 @@ module VCAP::CloudController
         DeploymentModel.db.transaction do
           app.lock!
 
-          # Stopped apps will have quota validated since we their process up immediately
+          # Stopped apps will have quota validated since we scale their process up immediately later
           validate_quota!(message, app) unless app.stopped?
 
           message.strategy ||= DeploymentModel::ROLLING_STRATEGY
