@@ -114,10 +114,17 @@ RSpec.describe 'v3 service credential bindings' do
         end
 
         let(:expected_codes_and_responses) do
+<<<<<<< HEAD
           Hash.new(
             { code: 200,
               response_objects: [] }.freeze
           ).tap do |h|
+=======
+          Hash.new({
+            code: 200,
+            response_objects: []
+          }).tap do |h|
+>>>>>>> 2f67f926f (more keyword argument fixes)
             h['admin'] = all_bindings
             h['admin_read_only'] = all_bindings
             h['global_auditor'] = all_bindings
@@ -506,7 +513,11 @@ RSpec.describe 'v3 service credential bindings' do
       let(:api_call) { ->(user_headers) { get '/v3/service_credential_bindings/no-binding', nil, user_headers } }
 
       let(:expected_codes_and_responses) do
+<<<<<<< HEAD
         Hash.new({ code: 404 }.freeze)
+=======
+        Hash.new({code: 404})
+>>>>>>> 2f67f926f (more keyword argument fixes)
       end
 
       it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS
@@ -721,7 +732,11 @@ RSpec.describe 'v3 service credential bindings' do
     context 'permissions' do
       it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS do
         let(:expected_codes_and_responses) do
+<<<<<<< HEAD
           h = Hash.new({ code: 404, response_object: binding_credentials }.freeze)
+=======
+          h = Hash.new({code: 404, response_object: binding_credentials})
+>>>>>>> 2f67f926f (more keyword argument fixes)
           h['admin'] = h['admin_read_only'] = h['space_developer'] = { code: 200 }
           h
         end
@@ -2428,7 +2443,11 @@ RSpec.describe 'v3 service credential bindings' do
             end
 
             let(:expected_codes_and_responses) do
+<<<<<<< HEAD
               h = Hash.new({ code: 404 }.freeze)
+=======
+              h = Hash.new({code: 404})
+>>>>>>> 2f67f926f (more keyword argument fixes)
               h['admin'] = { code: 202 }
               h['admin_read_only'] = h['global_auditor'] = { code: 403 }
               h

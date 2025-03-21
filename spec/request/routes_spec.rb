@@ -2695,6 +2695,7 @@ RSpec.describe 'Routes Request' do
     describe 'permissions' do
       it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS do
         let(:expected_codes_and_responses) do
+<<<<<<< HEAD
           h = Hash.new({ code: 200, response_object: {
             data: [
               {
@@ -2705,6 +2706,18 @@ RSpec.describe 'Routes Request' do
               self: { href: %r{#{Regexp.escape(link_prefix)}/v3/routes/#{route.guid}/relationships/shared_spaces} }
             }
           } }.freeze)
+=======
+          h = Hash.new({code: 200, response_object: {
+                         data: [
+                           {
+                             guid: target_space_1.guid
+                           }
+                         ],
+                         links: {
+                           self: { href: %r{#{Regexp.escape(link_prefix)}/v3/routes/#{route.guid}/relationships/shared_spaces} }
+                         }
+                       }})
+>>>>>>> 2f67f926f (more keyword argument fixes)
 
           h['org_billing_manager'] = { code: 404 }
           h['no_role'] = { code: 404 }

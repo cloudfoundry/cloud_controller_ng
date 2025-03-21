@@ -88,7 +88,11 @@ RSpec.describe 'IsolationSegmentModels' do
         let(:user) { VCAP::CloudController::User.make }
 
         let(:expected_codes_and_responses) do
+<<<<<<< HEAD
           h = Hash.new({ code: 200, response_guids: [org1.guid, org2.guid, space.organization.guid] }.freeze)
+=======
+          h = Hash.new({code: 200, response_guids: [org1.guid, org2.guid, space.organization.guid]})
+>>>>>>> 2f67f926f (more keyword argument fixes)
           h['org_auditor'] = { code: 200, response_guids: [space.organization.guid] }
           h['org_billing_manager'] = { code: 200, response_guids: [space.organization.guid] }
           h['org_manager'] = { code: 200, response_guids: [space.organization.guid] }
@@ -136,7 +140,11 @@ RSpec.describe 'IsolationSegmentModels' do
         let(:user) { VCAP::CloudController::User.make }
 
         let(:expected_codes_and_responses) do
+<<<<<<< HEAD
           h = Hash.new({ code: 200, response_guids: [space1.guid, space2.guid] }.freeze)
+=======
+          h = Hash.new({code: 200, response_guids: [space1.guid, space2.guid]})
+>>>>>>> 2f67f926f (more keyword argument fixes)
           h['org_auditor'] = { code: 200, response_guids: [] }
           h['org_billing_manager'] = { code: 200, response_guids: [] }
           h['org_manager'] = { code: 200, response_guids: [space1.guid] }
@@ -230,7 +238,11 @@ RSpec.describe 'IsolationSegmentModels' do
         let(:org) { space.organization }
         let(:user) { VCAP::CloudController::User.make }
         let(:expected_codes_and_responses) do
+<<<<<<< HEAD
           h = Hash.new({ code: 200, response_object: expected_response_object }.freeze)
+=======
+          h = Hash.new({code: 200, response_object: expected_response_object})
+>>>>>>> 2f67f926f (more keyword argument fixes)
           h['no_role'] = { code: 404 }
           h
         end
@@ -243,7 +255,11 @@ RSpec.describe 'IsolationSegmentModels' do
         let(:org) { space.organization }
         let(:user) { VCAP::CloudController::User.make }
         let(:expected_codes_and_responses) do
+<<<<<<< HEAD
           h = Hash.new({ code: 404 }.freeze)
+=======
+          h = Hash.new({code: 404})
+>>>>>>> 2f67f926f (more keyword argument fixes)
           h['admin'] = { code: 200, response_object: expected_response_object }
           h['admin_read_only'] = { code: 200, response_object: expected_response_object }
           h['global_auditor'] = { code: 200, response_object: expected_response_object }
@@ -485,7 +501,11 @@ RSpec.describe 'IsolationSegmentModels' do
         let(:org) { space.organization }
         let(:user) { VCAP::CloudController::User.make }
         let(:expected_codes_and_responses) do
+<<<<<<< HEAD
           h = Hash.new({ code: 200, response_guids: [iso_seg1.guid] }.freeze)
+=======
+          h = Hash.new({code: 200, response_guids: [iso_seg1.guid]})
+>>>>>>> 2f67f926f (more keyword argument fixes)
           h['admin'] = { code: 200, response_guids: [iso_seg1.guid, VCAP::CloudController::IsolationSegmentModel::SHARED_ISOLATION_SEGMENT_GUID] }
           h['admin_read_only'] = { code: 200, response_guids: [iso_seg1.guid, VCAP::CloudController::IsolationSegmentModel::SHARED_ISOLATION_SEGMENT_GUID] }
           h['global_auditor'] = { code: 200, response_guids: [iso_seg1.guid, VCAP::CloudController::IsolationSegmentModel::SHARED_ISOLATION_SEGMENT_GUID] }

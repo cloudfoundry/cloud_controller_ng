@@ -1980,7 +1980,11 @@ RSpec.describe 'Apps' do
       end
 
       let(:expected_codes_and_responses) do
+<<<<<<< HEAD
         h = Hash.new({ code: 200 }.freeze)
+=======
+        h = Hash.new({code: 200})
+>>>>>>> 2f67f926f (more keyword argument fixes)
         h['org_auditor'] = { code: 404 }
         h['org_billing_manager'] = { code: 404 }
         h['no_role'] = { code: 404 }
@@ -2033,7 +2037,11 @@ RSpec.describe 'Apps' do
     context 'permissions for deleting an app' do
       let(:api_call) { ->(user_headers) { delete "/v3/apps/#{app_model.guid}", nil, user_headers } }
       let(:expected_codes_and_responses) do
+<<<<<<< HEAD
         h = Hash.new({ code: 202 }.freeze)
+=======
+        h = Hash.new({code: 202})
+>>>>>>> 2f67f926f (more keyword argument fixes)
         %w[admin_read_only global_auditor org_manager space_auditor space_manager space_supporter].each do |r|
           h[r] = { code: 403, errors: CF_NOT_AUTHORIZED }
         end
@@ -2257,7 +2265,11 @@ RSpec.describe 'Apps' do
     context 'permissions for updating an app' do
       let(:api_call) { ->(user_headers) { patch "/v3/apps/#{app_model.guid}", update_request.to_json, user_headers } }
       let(:expected_codes_and_responses) do
+<<<<<<< HEAD
         h = Hash.new({ code: 200, response_object: expected_response_object }.freeze)
+=======
+        h = Hash.new({code: 200, response_object: expected_response_object})
+>>>>>>> 2f67f926f (more keyword argument fixes)
         %w[admin_read_only global_auditor org_manager space_auditor space_manager space_supporter].each do |r|
           h[r] = { code: 403, errors: CF_NOT_AUTHORIZED }
         end
@@ -2387,7 +2399,11 @@ RSpec.describe 'Apps' do
         end
 
         let(:expected_codes_and_responses) do
+<<<<<<< HEAD
           h = Hash.new({ code: 403, errors: CF_NOT_AUTHORIZED }.freeze)
+=======
+          h = Hash.new({code: 403, errors: CF_NOT_AUTHORIZED})
+>>>>>>> 2f67f926f (more keyword argument fixes)
           h['no_role'] = { code: 404 }
           h['org_auditor'] = { code: 404 }
           h['org_billing_manager'] = { code: 404 }
@@ -2727,7 +2743,11 @@ RSpec.describe 'Apps' do
       end
 
       let(:expected_codes_and_responses) do
+<<<<<<< HEAD
         h = Hash.new({ code: 403, errors: CF_NOT_AUTHORIZED }.freeze)
+=======
+        h = Hash.new({code: 403, errors: CF_NOT_AUTHORIZED})
+>>>>>>> 2f67f926f (more keyword argument fixes)
         h['no_role'] = { code: 404 }
         h['org_auditor'] = { code: 404 }
         h['org_billing_manager'] = { code: 404 }
@@ -2896,7 +2916,11 @@ RSpec.describe 'Apps' do
         end
 
         let(:expected_codes_and_responses) do
+<<<<<<< HEAD
           h = Hash.new({ code: 403, errors: CF_NOT_AUTHORIZED }.freeze)
+=======
+          h = Hash.new({code: 403, errors: CF_NOT_AUTHORIZED})
+>>>>>>> 2f67f926f (more keyword argument fixes)
           h['no_role'] = { code: 404 }
           h['org_auditor'] = { code: 404 }
           h['org_billing_manager'] = { code: 404 }
@@ -2981,7 +3005,11 @@ RSpec.describe 'Apps' do
     end
 
     let(:expected_codes_and_responses) do
+<<<<<<< HEAD
       h = Hash.new({ code: 200, response_object: expected_response }.freeze)
+=======
+      h = Hash.new({code: 200, response_object: expected_response})
+>>>>>>> 2f67f926f (more keyword argument fixes)
       h['no_role'] = { code: 404 }
       h['org_billing_manager'] = { code: 404 }
       h['org_auditor'] = { code: 404 }
@@ -3044,7 +3072,11 @@ RSpec.describe 'Apps' do
       }
     end
     let(:expected_codes_and_responses) do
+<<<<<<< HEAD
       h = Hash.new({ code: 200, response_object: expected_response }.freeze)
+=======
+      h = Hash.new({code: 200, response_object: expected_response})
+>>>>>>> 2f67f926f (more keyword argument fixes)
       h['no_role'] = { code: 404 }
       h['org_billing_manager'] = { code: 404 }
       h['org_auditor'] = { code: 404 }
@@ -3102,7 +3134,11 @@ RSpec.describe 'Apps' do
       end
 
       let(:expected_codes_and_responses) do
+<<<<<<< HEAD
         h = Hash.new({ code: 403, errors: CF_NOT_AUTHORIZED }.freeze)
+=======
+        h = Hash.new({code: 403, errors: CF_NOT_AUTHORIZED})
+>>>>>>> 2f67f926f (more keyword argument fixes)
         h['no_role'] = { code: 404 }
         h['org_auditor'] = { code: 404 }
         h['org_billing_manager'] = { code: 404 }
@@ -3322,7 +3358,11 @@ RSpec.describe 'Apps' do
       }
     end
     let(:expected_codes_and_responses) do
+<<<<<<< HEAD
       h = Hash.new({ code: 404 }.freeze)
+=======
+      h = Hash.new({code: 404})
+>>>>>>> 2f67f926f (more keyword argument fixes)
       %w[global_auditor admin_read_only org_manager space_auditor space_manager].each do |r|
         h[r] = { code: 403, errors: CF_NOT_AUTHORIZED }
       end
@@ -3371,7 +3411,11 @@ RSpec.describe 'Apps' do
 
     it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS do
       let(:expected_codes_and_responses) do
+<<<<<<< HEAD
         h = Hash.new({ code: 404 }.freeze)
+=======
+        h = Hash.new({code: 404})
+>>>>>>> 2f67f926f (more keyword argument fixes)
         h['global_auditor'] = h['org_manager'] = h['space_auditor'] = h['space_manager'] = { code: 403 }
         h['admin'] = h['admin_read_only'] = h['space_developer'] = h['space_supporter'] = {
           code: 200,
@@ -3388,7 +3432,11 @@ RSpec.describe 'Apps' do
 
       it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS do
         let(:expected_codes_and_responses) do
+<<<<<<< HEAD
           h = Hash.new({ code: 404 }.freeze)
+=======
+          h = Hash.new({code: 404})
+>>>>>>> 2f67f926f (more keyword argument fixes)
           h['global_auditor'] = h['org_manager'] = h['space_auditor'] = h['space_manager'] = h['space_developer'] = h['space_supporter'] = { code: 403 }
           h['admin'] = h['admin_read_only'] = {
             code: 200,
@@ -3421,7 +3469,11 @@ RSpec.describe 'Apps' do
     end
 
     let(:expected_codes_and_responses) do
+<<<<<<< HEAD
       h = Hash.new({ code: 404 }.freeze)
+=======
+      h = Hash.new({code: 404})
+>>>>>>> 2f67f926f (more keyword argument fixes)
       h['admin'] = { code: 200, response_object: read_all_response }
       h['admin_read_only'] = { code: 200, response_object: read_all_response }
       h['global_auditor'] = { code: 200, response_object: read_basic_response }

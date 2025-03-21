@@ -16,7 +16,11 @@ RSpec.describe 'V3 service plans' do
       let(:guid) { 'no-such-plan' }
 
       let(:expected_codes_and_responses) do
+<<<<<<< HEAD
         Hash.new({ code: 404 }.freeze)
+=======
+        Hash.new({code: 404})
+>>>>>>> 2f67f926f (more keyword argument fixes)
       end
 
       it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS + UNAUTHENTICATED
@@ -33,10 +37,17 @@ RSpec.describe 'V3 service plans' do
       let(:guid) { service_plan.guid }
 
       let(:expected_codes_and_responses) do
+<<<<<<< HEAD
         Hash.new(
           { code: 200,
             response_object: create_plan_json(service_plan, maintenance_info:) }.freeze
         )
+=======
+        Hash.new({
+          code: 200,
+          response_object: create_plan_json(service_plan, maintenance_info:)
+      })
+>>>>>>> 2f67f926f (more keyword argument fixes)
       end
 
       it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS + UNAUTHENTICATED
@@ -47,7 +58,11 @@ RSpec.describe 'V3 service plans' do
         end
 
         let(:expected_codes_and_responses) do
+<<<<<<< HEAD
           Hash.new({ code: 401 }.freeze)
+=======
+          Hash.new({code: 401})
+>>>>>>> 2f67f926f (more keyword argument fixes)
         end
 
         it_behaves_like 'permissions for single object endpoint', UNAUTHENTICATED
@@ -61,7 +76,11 @@ RSpec.describe 'V3 service plans' do
         let(:guid) { service_plan.guid }
 
         let(:expected_codes_and_responses) do
+<<<<<<< HEAD
           Hash.new({ code: 200, response_object: create_plan_json(service_plan) }.freeze).tap do |r|
+=======
+          Hash.new({code: 200, response_object: create_plan_json(service_plan)}).tap do |r|
+>>>>>>> 2f67f926f (more keyword argument fixes)
             r['unauthenticated'] = { code: 404 }
             r['no_role'] = { code: 404 }
           end
@@ -258,12 +277,21 @@ RSpec.describe 'V3 service plans' do
       end
 
       let(:expected_codes_and_responses) do
+<<<<<<< HEAD
         Hash.new(
           { code: 200,
             response_objects: [
               create_plan_json(public_service_plan)
             ] }.freeze
         ).tap do |h|
+=======
+        Hash.new({
+          code: 200,
+          response_objects: [
+            create_plan_json(public_service_plan)
+          ]
+        }).tap do |h|
+>>>>>>> 2f67f926f (more keyword argument fixes)
           h['admin'] = all_plans_response
           h['admin_read_only'] = all_plans_response
           h['global_auditor'] = all_plans_response
@@ -285,7 +313,11 @@ RSpec.describe 'V3 service plans' do
         end
 
         let(:expected_codes_and_responses) do
+<<<<<<< HEAD
           Hash.new({ code: 401 }.freeze)
+=======
+          Hash.new({code: 401})
+>>>>>>> 2f67f926f (more keyword argument fixes)
         end
 
         it_behaves_like 'permissions for list endpoint', UNAUTHENTICATED
@@ -666,7 +698,11 @@ RSpec.describe 'V3 service plans' do
       let(:guid) { 'non-existing-guid' }
 
       let(:expected_codes_and_responses) do
+<<<<<<< HEAD
         Hash.new({ code: 404 }.freeze).tap do |h|
+=======
+        Hash.new({code: 404}).tap do |h|
+>>>>>>> 2f67f926f (more keyword argument fixes)
           h['unauthenticated'] = { code: 401 }
         end
       end
@@ -681,7 +717,11 @@ RSpec.describe 'V3 service plans' do
         let!(:service_plan) { VCAP::CloudController::ServicePlan.make(public: false) }
 
         let(:expected_codes_and_responses) do
+<<<<<<< HEAD
           Hash.new({ code: 404 }.freeze).tap do |h|
+=======
+          Hash.new({code: 404}).tap do |h|
+>>>>>>> 2f67f926f (more keyword argument fixes)
             h['admin'] = { code: 204 }
             h['admin_read_only'] = { code: 403 }
             h['global_auditor'] = { code: 403 }
@@ -696,7 +736,11 @@ RSpec.describe 'V3 service plans' do
         let!(:service_plan) { VCAP::CloudController::ServicePlan.make }
 
         let(:expected_codes_and_responses) do
+<<<<<<< HEAD
           Hash.new({ code: 403 }.freeze).tap do |h|
+=======
+          Hash.new({code: 403}).tap do |h|
+>>>>>>> 2f67f926f (more keyword argument fixes)
             h['admin'] = { code: 204 }
             h['unauthenticated'] = { code: 401 }
           end
@@ -713,7 +757,11 @@ RSpec.describe 'V3 service plans' do
         end
 
         let(:expected_codes_and_responses) do
+<<<<<<< HEAD
           Hash.new({ code: 403 }.freeze).tap do |h|
+=======
+          Hash.new({code: 403}).tap do |h|
+>>>>>>> 2f67f926f (more keyword argument fixes)
             h['admin'] = { code: 204 }
             h['no_role'] = { code: 404 }
             h['unauthenticated'] = { code: 401 }
@@ -729,7 +777,11 @@ RSpec.describe 'V3 service plans' do
         let!(:service_plan) { VCAP::CloudController::ServicePlan.make(service: service_offering, public: false) }
 
         let(:expected_codes_and_responses) do
+<<<<<<< HEAD
           Hash.new({ code: 404 }.freeze).tap do |h|
+=======
+          Hash.new({code: 404}).tap do |h|
+>>>>>>> 2f67f926f (more keyword argument fixes)
             h['admin'] = { code: 204 }
             h['admin_read_only'] = { code: 403 }
             h['global_auditor'] = { code: 403 }
@@ -832,7 +884,11 @@ RSpec.describe 'V3 service plans' do
         let!(:service_plan) { VCAP::CloudController::ServicePlan.make(public: false) }
 
         let(:expected_codes_and_responses) do
+<<<<<<< HEAD
           Hash.new({ code: 404 }.freeze).tap do |h|
+=======
+          Hash.new({code: 404}).tap do |h|
+>>>>>>> 2f67f926f (more keyword argument fixes)
             h['admin'] = { code: 200, response_object: create_plan_json(service_plan, labels:, annotations:) }
             h['admin_read_only'] = { code: 403 }
             h['global_auditor'] = { code: 403 }
@@ -847,7 +903,11 @@ RSpec.describe 'V3 service plans' do
         let!(:service_plan) { VCAP::CloudController::ServicePlan.make }
 
         let(:expected_codes_and_responses) do
+<<<<<<< HEAD
           Hash.new({ code: 403 }.freeze).tap do |h|
+=======
+          Hash.new({code: 403}).tap do |h|
+>>>>>>> 2f67f926f (more keyword argument fixes)
             h['admin'] = { code: 200, response_object: create_plan_json(service_plan, labels:, annotations:) }
             h['unauthenticated'] = { code: 401 }
           end
@@ -864,7 +924,11 @@ RSpec.describe 'V3 service plans' do
         end
 
         let(:expected_codes_and_responses) do
+<<<<<<< HEAD
           Hash.new({ code: 403 }.freeze).tap do |h|
+=======
+          Hash.new({code: 403}).tap do |h|
+>>>>>>> 2f67f926f (more keyword argument fixes)
             h['admin'] = { code: 200, response_object: create_plan_json(service_plan, labels:, annotations:) }
             h['no_role'] = { code: 404 }
             h['unauthenticated'] = { code: 401 }
@@ -880,7 +944,11 @@ RSpec.describe 'V3 service plans' do
         let!(:service_plan) { VCAP::CloudController::ServicePlan.make(service: service_offering, public: false) }
 
         let(:expected_codes_and_responses) do
+<<<<<<< HEAD
           Hash.new({ code: 404 }.freeze).tap do |h|
+=======
+          Hash.new({code: 404}).tap do |h|
+>>>>>>> 2f67f926f (more keyword argument fixes)
             h['admin'] = { code: 200, response_object: create_plan_json(service_plan, labels:, annotations:) }
             h['admin_read_only'] = { code: 403 }
             h['global_auditor'] = { code: 403 }

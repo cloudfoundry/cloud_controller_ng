@@ -16,7 +16,11 @@ RSpec.describe 'V3 service instances' do
       let(:guid) { 'no-such-guid' }
 
       let(:expected_codes_and_responses) do
+<<<<<<< HEAD
         Hash.new({ code: 404 }.freeze)
+=======
+        Hash.new({code: 404})
+>>>>>>> 2f67f926f (more keyword argument fixes)
       end
 
       it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS
@@ -247,10 +251,17 @@ RSpec.describe 'V3 service instances' do
         end
 
         let(:expected_codes_and_responses) do
+<<<<<<< HEAD
           h = Hash.new(
             { code: 200,
               response_objects: [] }.freeze
           )
+=======
+          h = Hash.new({
+            code: 200,
+            response_objects: []
+          })
+>>>>>>> 2f67f926f (more keyword argument fixes)
 
           h['admin'] = all_instances
           h['admin_read_only'] = all_instances
@@ -526,10 +537,17 @@ RSpec.describe 'V3 service instances' do
       let(:guid) { instance.guid }
 
       let(:expected_codes_and_responses) do
+<<<<<<< HEAD
         h = Hash.new(
           { code: 200,
             response_object: credentials }.freeze
         )
+=======
+        h = Hash.new({
+          code: 200,
+          response_object: credentials
+        })
+>>>>>>> 2f67f926f (more keyword argument fixes)
 
         h['global_auditor'] = h['space_supporter'] = h['space_manager'] = h['space_auditor'] = h['org_manager'] = { code: 403 }
         h['org_auditor'] = h['org_billing_manager'] = h['no_role'] = { code: 404 }
@@ -593,10 +611,17 @@ RSpec.describe 'V3 service instances' do
       let(:guid) { instance.guid }
 
       let(:expected_codes_and_responses) do
+<<<<<<< HEAD
         h = Hash.new(
           { code: 200,
             response_object: parameters }.freeze
         )
+=======
+        h = Hash.new({
+          code: 200,
+          response_object: parameters
+        })
+>>>>>>> 2f67f926f (more keyword argument fixes)
 
         h['org_auditor'] = { code: 404 }
         h['org_billing_manager'] = { code: 404 }
@@ -702,10 +727,17 @@ RSpec.describe 'V3 service instances' do
         end
 
         let(:expected_codes_and_responses) do
+<<<<<<< HEAD
           h = Hash.new(
             { code: 200,
               response_object: parameters }.freeze
           )
+=======
+          h = Hash.new({
+            code: 200,
+            response_object: parameters
+          })
+>>>>>>> 2f67f926f (more keyword argument fixes)
 
           h['space_supporter'] = h['space_developer'] = h['space_manager'] = h['space_auditor'] = h['org_manager'] = { code: 403 }
           h['org_auditor'] = h['org_billing_manager'] = h['no_role'] = { code: 404 }
@@ -4264,7 +4296,11 @@ RSpec.describe 'V3 service instances' do
       let(:guid) { 'no-such-guid' }
 
       let(:expected_codes_and_responses) do
+<<<<<<< HEAD
         h = Hash.new({ code: 404 }.freeze)
+=======
+        h = Hash.new({code: 404})
+>>>>>>> 2f67f926f (more keyword argument fixes)
         h['unauthenticated'] = { code: 401 }
         h
       end
@@ -4277,7 +4313,11 @@ RSpec.describe 'V3 service instances' do
       let(:guid) { instance.guid }
 
       let(:expected_codes_and_responses) do
+<<<<<<< HEAD
         h = Hash.new({ code: 404 }.freeze)
+=======
+        h = Hash.new({code: 404})
+>>>>>>> 2f67f926f (more keyword argument fixes)
         %w[admin space_developer].each { |r| h[r] = READ_AND_WRITE }
         %w[admin_read_only global_auditor org_manager space_manager space_auditor space_supporter].each { |r| h[r] = READ_ONLY }
         %w[org_billing_manager org_auditor no_role service_permissions_reader].each { |r| h[r] = NO_PERMISSIONS }
@@ -4326,7 +4366,11 @@ RSpec.describe 'V3 service instances' do
       let(:guid) { instance.guid }
 
       let(:expected_codes_and_responses) do
+<<<<<<< HEAD
         h = Hash.new({ code: 404 }.freeze)
+=======
+        h = Hash.new({code: 404})
+>>>>>>> 2f67f926f (more keyword argument fixes)
         h['admin'] = READ_AND_WRITE
         %w[admin_read_only global_auditor].each { |r| h[r] = READ_ONLY }
         %w[org_billing_manager org_auditor org_manager space_manager space_auditor space_developer space_supporter no_role service_permissions_reader].each do |r|
