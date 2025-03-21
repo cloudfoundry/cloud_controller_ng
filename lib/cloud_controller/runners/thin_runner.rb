@@ -46,6 +46,7 @@ module VCAP::CloudController
     def trap_signals
       %w[TERM INT QUIT].each do |signal|
         trap(signal) do
+          return if Rails.env.test?
           EM.add_timer(0) do
             logger.warn("Caught signal #{signal}")
             stop!
