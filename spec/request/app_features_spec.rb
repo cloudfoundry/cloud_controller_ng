@@ -165,7 +165,7 @@ RSpec.describe 'App Features' do
         h = Hash.new({ code: 403, errors: CF_NOT_AUTHORIZED }.freeze)
 
         %w[no_role org_auditor org_billing_manager].each { |r| h[r] = { code: 404 } }
-        %w[admin space_devµeloper].each { |r| h[r] = { code: 200, response_object: feature_response_object } }
+        %w[admin space_developer].each { |r| h[r] = { code: 200, response_object: feature_response_object } }
         h
       end
 
