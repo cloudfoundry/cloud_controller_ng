@@ -1,13 +1,25 @@
 Sequel.migration do
   up do
-    run <<-SQL
-      ALTER TABLE asg_timestamps RENAME COLUMN `{:name=>:id}` to `id`;
-    SQL
+    if database_type == :mysql
+      run <<-SQL
+        ALTER TABLE asg_timestamps RENAME COLUMN `{:name=>:id}` to id;
+      SQL
+    else
+      run <<-SQL
+        ALTER TABLE asg_timestamps RENAME COLUMN "{:name=>:id}" to id;
+      SQL
+    end
   end
 
   down do
-    run <<-SQL
-      ALTER TABLE asg_timestamps RENAME COLUMN `id` to `{:name=>:id}`;
-    SQL
+    if database_type == :mysql
+      run <<-SQL
+        ALTER TABLE asg_timestamps RENAME COLUMN id to `{:name=>:id}`;
+      SQL
+    else
+      run <<-SQL
+        ALTER TABLE asg_timestamps RENAME COLUMN id to "{:name=>:id}";
+      SQL
+    end
   end
 end
