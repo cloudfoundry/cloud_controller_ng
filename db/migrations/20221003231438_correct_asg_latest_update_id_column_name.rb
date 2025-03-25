@@ -1,25 +1,25 @@
 Sequel.migration do
   up do
     if database_type == :mysql
-      run <<-SQL
+      run <<-SQL.squish
         ALTER TABLE asg_timestamps RENAME COLUMN `{:name=>:id}` to id;
-      SQL.squish
+      SQL
     else
-      run <<-SQL
+      run <<-SQL.squish
         ALTER TABLE asg_timestamps RENAME COLUMN "{:name=>:id}" to id;
-      SQL.squish
+      SQL
     end
   end
 
   down do
     if database_type == :mysql
-      run <<-SQL
+      run <<-SQL.squish
         ALTER TABLE asg_timestamps RENAME COLUMN id to `{:name=>:id}`;
-      SQL.squish
+      SQL
     else
-      run <<-SQL
+      run <<-SQL.squish
         ALTER TABLE asg_timestamps RENAME COLUMN id to "{:name=>:id}";
-      SQL.squish
+      SQL
     end
   end
 end
