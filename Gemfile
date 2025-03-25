@@ -60,6 +60,8 @@ gem 'fog-google', '~> 1.24.1'
 gem 'fog-local'
 gem 'fog-openstack'
 
+gem 'google-protobuf', '~> 3.25'
+
 gem 'cf-uaa-lib', '~> 4.0.8'
 
 group :db do
