@@ -34,6 +34,7 @@ module VCAP::CloudController
           {
             type: @type,
             index: index,
+            instance_guid: stats[:stats][:instance_guid],
             state: stats[:state],
             routable: stats[:routable],
             host: stats[:stats][:host],
