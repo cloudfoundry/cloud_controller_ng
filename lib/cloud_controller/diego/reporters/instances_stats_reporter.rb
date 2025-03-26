@@ -68,6 +68,7 @@ module VCAP::CloudController
             name: process.name,
             uris: process.uris,
             host: actual_lrp.actual_lrp_net_info.address,
+            instance_id: actual_lrp.actual_lrp_instance_key.instance_guid,
             port: get_default_port(actual_lrp.actual_lrp_net_info),
             net_info: actual_lrp.actual_lrp_net_info.to_h,
             uptime: nanoseconds_to_seconds((Time.now.to_f * 1e9) - actual_lrp.since),
