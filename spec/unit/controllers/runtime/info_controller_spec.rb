@@ -61,6 +61,25 @@ module VCAP::CloudController
         expect(hash['min_recommended_cli_version']).to eq('min_recommended_cli_version')
       end
 
+      it 'returns limited info when cc.temporary_enable_v2 is disabled' do
+        TestConfig.override(temporary_enable_v2: false)
+
+        get '/v2/info'
+        hash = Oj.load(last_response.body)
+        expect(hash['name']).to eq(TestConfig.config[:info][:name])
+        expect(hash['build']).to eq(TestConfig.config[:info][:build])
+        expect(hash['support']).to eq('CF API v2 is disabled')
+        expect(hash['version']).to eq(TestConfig.config[:info][:version])
+        expect(hash['description']).to eq(TestConfig.config[:info][:description])
+        expect(hash['authorization_endpoint']).to eq(TestConfig.config[:login][:url])
+        expect(hash['token_endpoint']).to eq(TestConfig.config[:uaa][:url])
+        expect(hash['app_ssh_endpoint']).to eq(TestConfig.config[:info][:app_ssh_endpoint])
+        expect(hash['app_ssh_host_key_fingerprint']).to eq(TestConfig.config[:info][:app_ssh_host_key_fingerprint])
+        expect(hash['app_ssh_oauth_client']).to eq(TestConfig.config[:info][:app_ssh_oauth_client])
+        expect(hash['api_version']).to eq('')
+        expect(hash['osbapi_version']).to eq(VCAP::CloudController::Constants::OSBAPI_VERSION)
+      end
+
       describe 'custom fields' do
         context 'without custom fields in config' do
           before { TestConfig.override(info: {}) }
