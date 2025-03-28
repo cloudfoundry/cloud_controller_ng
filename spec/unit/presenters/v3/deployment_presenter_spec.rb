@@ -19,7 +19,8 @@ module VCAP::CloudController::Presenters::V3
         state: deployment_state,
         status_value: VCAP::CloudController::DeploymentModel::ACTIVE_STATUS_VALUE,
         status_reason: VCAP::CloudController::DeploymentModel::DEPLOYING_STATUS_REASON,
-        web_instances: 20
+        web_instances: 20,
+        memory_in_mb: 1000
       )
     end
 
@@ -186,6 +187,11 @@ module VCAP::CloudController::Presenters::V3
         it 'sets web_instances' do
           result = DeploymentPresenter.new(deployment).to_hash
           expect(result[:options][:web_instances]).to eq(20)
+        end
+
+        it 'sets memory_in_mb' do
+          result = DeploymentPresenter.new(deployment).to_hash
+          expect(result[:options][:memory_in_mb]).to eq(1000)
         end
 
         context 'when the strategy is not canary' do
