@@ -19,6 +19,7 @@ gem 'loggregator_emitter', '~> 5.0'
 gem 'membrane', '~> 1.0'
 gem 'mime-types', '~> 3.6'
 gem 'multipart-parser'
+gem 'mutex_m'
 gem 'netaddr', '>= 2.0.4'
 gem 'net-ssh'
 gem 'newrelic_rpm'
@@ -39,10 +40,10 @@ gem 'sinatra-contrib'
 gem 'sshkey'
 gem 'statsd-ruby', '~> 1.5.0'
 gem 'steno'
+gem 'syslog'
 gem 'talentbox-delayed_job_sequel', '~> 4.3.0'
 gem 'thin'
 gem 'vmstat', '~> 2.3'
-
 # Rails Components
 gem 'actionpack', '~> 7.2.2'
 gem 'actionview', '~> 7.2.1'
@@ -58,6 +59,8 @@ gem 'fog-core', '~> 2.4.0'
 gem 'fog-google', '~> 1.24.1'
 gem 'fog-local'
 gem 'fog-openstack'
+
+gem 'google-protobuf', '~> 3.25'
 
 gem 'cf-uaa-lib', '~> 4.0.8'
 

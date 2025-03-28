@@ -567,7 +567,7 @@ module VCAP::CloudController
           context 'when http error is raised' do
             let(:fake_logger) { instance_double(Steno::Logger, error: nil, info: nil) }
             let(:err) do
-              response = VCAP::Services::ServiceBrokers::V2::HttpResponse.new(code: 412, body: {})
+              response = VCAP::Services::ServiceBrokers::V2::HttpResponse.new({ code: 412, body: {} })
               HttpResponseError.new('oops', 'GET', response)
             end
 

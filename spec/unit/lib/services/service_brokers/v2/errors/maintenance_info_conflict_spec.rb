@@ -6,7 +6,7 @@ module VCAP::Services
       module Errors
         RSpec.describe MaintenanceInfoConflict do
           let(:uri) { 'http://www.example.com/' }
-          let(:response) { double(code: 422, body: response_body) }
+          let(:response) { double({ code: 422, body: response_body }) }
           let(:method) { 'PATCH' }
           let(:response_body) do
             {

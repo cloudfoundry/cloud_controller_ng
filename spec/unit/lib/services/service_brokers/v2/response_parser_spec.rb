@@ -299,7 +299,7 @@ module VCAP::Services
 
             before do
               @method, @path = get_method_and_path(operation)
-              allow(fake_response).to receive_messages(code: code, body: body, message: 'message')
+              allow(fake_response).to receive_messages({ code: code, body: body, message: 'message' })
               allow(Steno).to receive(:logger).and_return(logger)
             end
 
