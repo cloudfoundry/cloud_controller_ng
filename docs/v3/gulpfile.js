@@ -5,7 +5,7 @@ import express from 'express';
 import { glob } from 'glob';
 import { LinkChecker } from 'linkinator';
 
-const cheerio = await import('cheerio');
+import * as cheerio from 'cheerio';
 
 function displayErrors(err, stdout, stderr) {
   if (err) {
