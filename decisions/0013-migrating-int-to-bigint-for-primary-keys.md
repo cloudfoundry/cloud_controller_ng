@@ -1,24 +1,21 @@
 # 13: Migrating `int` to `bigint` for `id` Primary Keys
-
-Date: 2025-02-04
+Date: 2025-04-04
 
 ## Status
-
 Draft :construction:
 
 ## Context
-
 The primary key `id` columns in all database tables use the integer type, which has a maximum value of 2,147,483,647.
 As foundations grow over time, the `id` values in some of these tables (e.g., events) are approaching this limit.
-If the limit is reached, the cloud controller will be unable to insert new records, leading to critical failures in the CF API.  
+If the limit is reached, the cloud controller will be unable to insert new records, leading to critical failures in the CF API.
 E.g.:
 ```
 PG::SequenceGeneratorLimitExceeded: ERROR:  nextval: reached maximum value of sequence "events_id_seq"
 ```
-The goal is to migrate these primary key `id` columns from `int` to `bigint` without causing downtime and to ensure compatibility across PostgreSQL and MySQL databases.
+The goal is to migrate these primary key `id` columns from `int` to `bigint` without causing downtime.
 This migration must:
 - Avoid downtime since the CF API is actively used in production.
-- Handle tables with millions of records efficiently. 
+- Handle tables with millions of records efficiently.
 - Provide a safe rollback mechanism in case of issues during the migration.
 - Be reusable for other tables in the future.
 - Ensure that migration only is executed when the new `id_bigint` column is fully populated.
@@ -26,15 +23,28 @@ This migration must:
 The largest tables in a long-running foundation are `events`, `delayed_jobs`, `jobs`, and `app_usage_events`.
 
 ## Decisions
+### PostgreSQL Only
+We will implement the migration exclusively for PostgreSQL databases.
+The reasons for this decision are:
+- **Organizational Usage**: Our organization exclusively uses PostgreSQL, not MySQL. This allows us to test the migration with copies of large production databases and perform a step-wise rollout from test environments to production.
+- **Support and Contribution**: Focusing on PostgreSQL enables us to identify and address any issues during the migration process. We can contribute solutions back to the migration procedure, benefiting the broader community.
+- **Deployment Environments**: We operate PostgreSQL instances across various hyperscalers. Successful migration in our environments increases confidence that it will work for others using PostgreSQL.
+- **Limited MySQL Exposure**: We lack access to production environments using MySQL and have limited expertise with it. Testing would be confined to community-owned test foundations, which do not reflect real-world production data. Additionally, the community uses a limited set of MySQL variants, reducing our ability to detect and resolve issues during a production rollout.
+- **Community Feedback**: Feedback from other organizations operating Cloud Foundry on MySQL indicates they would opt-out of this migration, as their foundations are smaller and unlikely to encounter the issues this migration addresses.
+
+While this approach results in somewhat inconsistent schemas between PostgreSQL and MySQL — specifically regarding the data types of primary and foreign keys — the application layer does not depend on these specifics.
+Therefore, no additional application logic is required to handle these differences.
+
+By concentrating our efforts on PostgreSQL, we can ensure a robust and thoroughly tested migration process, leveraging our expertise and infrastructure to maintain the stability and scalability of the Cloud Controller database.
 
 ### Opt-Out Mechanism
 Operators of smaller foundations, which are unlikely to ever encounter the integer overflow issue, may wish to avoid the risks and complexity associated with this migration.
-They can opt out of the migration by setting the `skip_bigint_id_migration` flag in the CAPI-Release manifest.
+They can opt-out of the migration by setting a flag in the CAPI-Release manifest.
 When this flag is set, all migration steps will result in a no-op but will still be marked as applied in the `schema_versions` table.
-*Important*: Removing the flag later will *not* re-trigger the migration. Operators must handle the migration manually if they choose to opt out.
+
+*Important*: Removing the flag later will *not* re-trigger the migration. Operators must handle the migration manually if they choose to opt-out.
 
 ### Scope
-
 The `events` table will be migrated first as it has the most significant growth in `id` values.
 Other tables will be migrated at a later stage.
 
@@ -44,6 +54,7 @@ This will be implemented with migration step 1 and will be only applied, if the 
 
 ### Phased Migration
 The migration will be conducted in multiple steps to ensure minimal risk.
+
 #### Step 1 - Preparation
 - If the opt-out flag is set, this step will be a no-op.
 - In case the target table is empty the type of the `id` column will be set to `bigint` directly.
@@ -57,7 +68,7 @@ The migration will be conducted in multiple steps to ensure minimal risk.
 - If the `id_bigint` column does not exist, backfill will be skipped or result in a no-op.
 - Use a batch-processing script (e.g. a delayed job) to populate `id_bigint` for existing rows in both the primary table and, if applicable, all foreign key references.
 - Table locks will be avoided by using a batch processing approach.
-- In case the table has a configurable cleanup duration, the backfill job will only process records which are beyond the cleanup duration to reduce the number of records to be processed. 
+- In case the table has a configurable cleanup duration (e.g. events), no backfill job will be created. The recommended procedure is to wait with the next migration step until the cleanup job has removed all records without `id_bigint` from the table. Additionally, there is a Rake task (`bundle exec rake 'db:bigint_backfill[table]'`) to manually force backfilling. This could be used in case the next migration step should be applied before the cleanup duration has passed. Performance implications on the database should be considered when running this task.
 - Backfill will be executed outside the migration due to its potentially long runtime.
 - If necessary the backfill will run for multiple weeks to ensure all records are processed.
 
@@ -65,11 +76,13 @@ The migration will be conducted in multiple steps to ensure minimal risk.
 - The migration is divided into two parts: a pre-check and the actual migration but both will be stored in a single migration script.
 - This step will be a no-op if the opt-out flag is set or the `id` column is already of type `bigint`.
 - All sql statements will be executed in a single transaction to ensure consistency.
+
 ##### Step 3a - Migration Pre Check
 - In case the `id_bigint` column does not exist the migration will fail with a clear error message.
 - Add a `CHECK` constraint to verify that `id_bigint` is fully populated (`id_bigint == id & id_bigint != NULL`).
 - In case the backfill is not yet complete or the `id_bigint` column is not fully populated the migration will fail.
 - If pre-check fails, operators might need to take manual actions to ensure all preconditions are met as the migration will be retried during the next deployment.
+
 ##### Step 3b - Actual Migration
 - Remove the `CHECK` constraint once verified.
 - Drop the primary key constraint on id.
@@ -87,11 +100,6 @@ The default value of the `id` column could be either a sequence (for PostgreSQL 
 This depends on the version of PostgreSQL which was used when the table was initially created.
 The migration script needs to handle both cases.
 
-#### MySQL
-MySQL primary key changes typically cause table rebuilds due to clustered indexing, which can be expensive and disruptive, especially with clustered replication setups like Galera.
-A common approach to mitigate this involves creating a new shadow table, performing a backfill, and then swapping tables atomically.  
-Further details will be refined during implementation.
-
 ### Rollback Mechanism
 The old `id` column is no longer retained, as the `CHECK` constraint ensures correctness during migration.
 Step 3b (switch over) will be executed in a single transaction and will be rolled back if any issues occur.
@@ -103,22 +111,21 @@ Write reusable scripts for adding `id_bigint`, setting up triggers, backfilling 
 These scripts can be reused for other tables in the future.
 
 ### Release Strategy
-
-Steps 1-2 will be released as a cf-deployment major release to ensure that the database is prepared for the migration.  
-Steps 3-4 will be released as a subsequent cf-deployment major release to complete the migration.  
+Steps 1-2 will be released as a cf-deployment major release to ensure that the database is prepared for the migration.
+Steps 3-4 will be released as a subsequent cf-deployment major release to complete the migration.
 Between these releases there should be a reasonable time to allow the backfill to complete.
 
-For the `events` table there is a default cleanup interval of 31 days. Therefore, for the `events` table the gap between the releases should be around 60 days.
+For the `events` table there is a default cleanup interval of 31 days.
+Therefore, for the `events` table the gap between the releases should be around 60 days.
 
 ## Consequences
-### Positive Consequences
 
+### Positive Consequences
 - Future-proofing the schema for tables with high record counts.
 - Minimal locking during step 3b (actual migration) could result in slower queries or minimal downtime.
 - A standardized process for similar migrations across the database.
 
 ### Negative Consequences
-
 - Increased complexity in the migration process.
 - Potentially long runtimes for backfilling data in case tables have millions of records.
 - Requires careful coordination across multiple CAPI/CF-Deployment versions.
@@ -127,7 +134,6 @@ For the `events` table there is a default cleanup interval of 31 days. Therefore
 ## Alternatives Considered
 
 ### Switching to `guid` Field as Primary Key
-
 Pros: Provides globally unique identifiers and eliminates the risk of overflow.
 
 Cons: Might decrease query and index performance, requires significant changes for foreign key constraints, and introduces non-sequential keys.
@@ -135,22 +141,18 @@ Cons: Might decrease query and index performance, requires significant changes f
 Reason Rejected: The overhead and complexity outweighed the benefits for our use case.
 
 ### Implementing Rollover for `id` Reuse
-
 Pros: Delays the overflow issue by reusing IDs from deleted rows. Minimal schema changes.
 
 Cons: Potential issues with foreign key constraints and increased complexity in the rollover process. Could be problematic for tables which do not have frequent deletions.
 
 Reason Rejected: Might work well for tables like events, but not a universal solution for all tables where there is no guarantee of frequent deletions.
 
-
 ### Direct Migration of `id` to `bigint` via `ALTER TABLE` Statement
-
 Pros: One-step migration process.
 
 Cons: Requires downtime, locks the table for the duration of the migration, and can be slow for tables with millions of records.
 
 Reason Rejected: Downtimes are unacceptable for productive foundations.
-
 
 ## Example Migration Scripts With PostgreSQL Syntax For `events` Table
 
@@ -178,7 +180,6 @@ CREATE TRIGGER trigger_events_set_id_bigint
     EXECUTE FUNCTION events_set_id_bigint_on_insert();
 
 COMMIT;
-
 ```
 
 ### Step 2 - Backfill
@@ -196,10 +197,9 @@ FROM batch
 WHERE events.id = batch.id;
 ```
 
-
 ### Step 3a - Migration Pre Check
 ```sql
-ALTER TABLE events  ADD CONSTRAINT check_id_bigint_matches CHECK (id_bigint IS NOT NULL AND id_bigint = id);
+ALTER TABLE events ADD CONSTRAINT check_id_bigint_matches CHECK (id_bigint IS NOT NULL AND id_bigint = id);
 
 -- Alternative:
 SELECT COUNT(*) FROM events WHERE id_bigint IS DISTINCT FROM id;
@@ -229,7 +229,7 @@ ALTER TABLE events RENAME COLUMN id_bigint TO id;
 ALTER TABLE events ADD PRIMARY KEY (id);
 
 -- Set `id` as IDENTITY with correct starting value
-DO $$ 
+DO $$
 DECLARE max_id BIGINT;
 BEGIN
 SELECT COALESCE(MAX(id), 1) + 1 INTO max_id FROM events;
@@ -256,10 +256,10 @@ SELECT COUNT(*) FROM events WHERE id_bigint IS DISTINCT FROM id;
 ```
 
 ## References
-WIP - e.g.:  
-Migration scripts in the repository.  
-Backfill script documentation.  
-Trigger functions for PostgreSQL and MySQL.  
+WIP - e.g.:
+Migration scripts in the repository.
+Backfill script documentation.
+Trigger functions for PostgreSQL and MySQL.
 
 ### Helpful Links
 - [Stack Overflow: Migrating int to bigint](https://stackoverflow.com/questions/33504982/postgresql-concurrently-change-column-type-from-int-to-bigint)
