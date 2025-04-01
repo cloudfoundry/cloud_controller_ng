@@ -7,7 +7,7 @@ module VCAP::Services
         RSpec.describe 'ServiceBrokerConflict' do
           let(:error_message) { 'error message' }
           let(:response_body) { "{\"description\": \"#{error_message}\"}" }
-          let(:response) { double(code: 409, reason: 'Conflict', body: response_body) }
+          let(:response) { double({ code: 409, reason: 'Conflict', body: response_body }) }
 
           let(:uri) { 'http://uri.example.com' }
           let(:method) { 'POST' }

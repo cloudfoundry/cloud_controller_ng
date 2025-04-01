@@ -30,7 +30,7 @@ RSpec.describe SidecarsController, type: :controller do
       it 'fails to map a route' do
         expect do
           get :index_by_process
-        end.to raise_error(ActionController::UrlGenerationError, /No route matches \{:action=>"index_by_process", :controller=>"sidecars"\}/)
+        end.to raise_error(ActionController::UrlGenerationError, /No route matches \{action: "index_by_process", controller: "sidecars"\}/)
       end
     end
 

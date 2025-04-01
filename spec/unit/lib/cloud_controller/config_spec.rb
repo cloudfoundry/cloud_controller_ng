@@ -155,7 +155,7 @@ module VCAP::CloudController
               it "can't handle an unescaped @" do
                 expect do
                   DatabasePartsParser.database_parts_from_connection(uri)
-                end.to raise_error(URI::InvalidURIError, "bad URI(is not URI?): \"#{uri}\"")
+                end.to raise_error(URI::InvalidURIError, "bad URI (is not URI?): \"#{uri}\"")
               end
             end
 

@@ -72,7 +72,7 @@ RSpec.shared_examples 'service binding deletion' do |binding_model|
             VCAP::Services::ServiceBrokers::V2::Errors::ConcurrencyError.new(
               'foo',
               :delete,
-              double(code: '500', reason: '', body: '')
+              double({ code: '500', reason: '', body: '' })
             )
           )
           dbl

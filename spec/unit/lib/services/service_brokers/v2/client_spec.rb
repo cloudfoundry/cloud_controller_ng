@@ -92,7 +92,7 @@ module VCAP::Services::ServiceBrokers::V2
       end
 
       let(:path) { '/v2/catalog' }
-      let(:catalog_response) { HttpResponse.new(code: code, body: catalog_response_body, message: message) }
+      let(:catalog_response) { HttpResponse.new({ code: code, body: catalog_response_body, message: message }) }
       let(:catalog_response_body) { response_data.to_json }
       let(:code) { 200 }
       let(:message) { 'OK' }
@@ -135,7 +135,7 @@ module VCAP::Services::ServiceBrokers::V2
       end
 
       let(:path) { "/v2/service_instances/#{instance.guid}" }
-      let(:response) { HttpResponse.new(code: code, body: response_body, message: message) }
+      let(:response) { HttpResponse.new({ code: code, body: response_body, message: message }) }
       let(:response_body) { response_data.to_json }
       let(:code) { 201 }
       let(:message) { 'Created' }
@@ -356,7 +356,7 @@ module VCAP::Services::ServiceBrokers::V2
 
       context 'when provision fails' do
         let(:uri) { 'some-uri.com/v2/service_instances/some-guid' }
-        let(:response) { HttpResponse.new(code: nil, body: nil, message: nil) }
+        let(:response) { HttpResponse.new({ code: nil, body: nil, message: nil }) }
 
         context 'due to an http client error' do
           let(:http_client) { instance_double(HttpClient) }
@@ -434,7 +434,7 @@ module VCAP::Services::ServiceBrokers::V2
             end
 
             context 'when the status code was a 200' do
-              let(:response) { HttpResponse.new(code: 200, body: nil, message: nil) }
+              let(:response) { HttpResponse.new({ code: 200, body: nil, message: nil }) }
 
               it 'does not initiate orphan mitigation' do
                 expect do
@@ -467,7 +467,7 @@ module VCAP::Services::ServiceBrokers::V2
       end
 
       let(:path) { "/v2/service_instances/#{instance.guid}" }
-      let(:response) { HttpResponse.new(code: code, message: message, body: response_body) }
+      let(:response) { HttpResponse.new({ code: code, message: message, body: response_body }) }
       let(:response_body) { response_data.to_json }
       let(:code) { 200 }
       let(:message) { 'OK' }
@@ -634,7 +634,7 @@ module VCAP::Services::ServiceBrokers::V2
       end
 
       context 'when the broker returns headers' do
-        let(:response) { HttpResponse.new(code: code, message: message, body: response_body, headers: { 'Retry-After' => 10 }) }
+        let(:response) { HttpResponse.new({ code: code, message: message, body: response_body, headers: { 'Retry-After' => 10 } }) }
 
         it 'returns the retry after header in the result' do
           attrs = client.fetch_service_instance_last_operation(instance)
@@ -673,7 +673,7 @@ module VCAP::Services::ServiceBrokers::V2
       let(:response_data) { {} }
 
       before do
-        response = HttpResponse.new(code: code, body: response_body, message: message)
+        response = HttpResponse.new({ code: code, body: response_body, message: message })
         allow(http_client).to receive(:patch).and_return(response)
         instance.service_instance_operation = last_operation
       end
@@ -1770,7 +1770,7 @@ module VCAP::Services::ServiceBrokers::V2
               end
 
               context 'when the status code was a 200' do
-                let(:response) { HttpResponse.new(code: 200, body: nil, message: nil) }
+                let(:response) { HttpResponse.new({ code: 200, body: nil, message: nil }) }
 
                 it 'does not initiate orphan mitigation' do
                   expect do
@@ -1804,7 +1804,7 @@ module VCAP::Services::ServiceBrokers::V2
       let(:response_data) { {} }
 
       let(:path) { "/v2/service_instances/#{binding.service_instance.guid}/service_bindings/#{binding.guid}" }
-      let(:response) { HttpResponse.new(code: code, body: response_body, message: message) }
+      let(:response) { HttpResponse.new({ code: code, body: response_body, message: message }) }
       let(:response_body) { response_data.to_json }
       let(:code) { 200 }
       let(:message) { 'OK' }
@@ -1955,7 +1955,7 @@ module VCAP::Services::ServiceBrokers::V2
       let(:response_data) { {} }
 
       let(:path) { "/v2/service_instances/#{instance.guid}" }
-      let(:response) { HttpResponse.new(code: code, body: response_body, message: message) }
+      let(:response) { HttpResponse.new({ code: code, body: response_body, message: message }) }
       let(:response_body) { response_data.to_json }
       let(:code) { 200 }
       let(:message) { 'OK' }
@@ -2144,7 +2144,7 @@ module VCAP::Services::ServiceBrokers::V2
         )
       end
 
-      let(:broker_response) { HttpResponse.new(code: 200, body: { foo: 'bar' }.to_json) }
+      let(:broker_response) { HttpResponse.new({ code: 200, body: { foo: 'bar' }.to_json }) }
 
       before do
         allow(http_client).to receive(:get).and_return(broker_response)
@@ -2178,7 +2178,7 @@ module VCAP::Services::ServiceBrokers::V2
 
     describe '#fetch_service_instance' do
       let(:instance) { VCAP::CloudController::ManagedServiceInstance.make }
-      let(:broker_response) { HttpResponse.new(code: 200, body: { foo: 'bar' }.to_json) }
+      let(:broker_response) { HttpResponse.new({ code: 200, body: { foo: 'bar' }.to_json }) }
 
       before do
         allow(http_client).to receive(:get).and_return(broker_response)
@@ -2219,7 +2219,7 @@ module VCAP::Services::ServiceBrokers::V2
       end
       let(:service_binding) { VCAP::CloudController::ServiceBinding.make }
       let(:binding_operation) { VCAP::CloudController::ServiceBindingOperation.make }
-      let(:broker_response) { HttpResponse.new(code: code, body: response_body) }
+      let(:broker_response) { HttpResponse.new({ code: code, body: response_body }) }
       let(:response_body) { response_data.to_json }
       let(:code) { 200 }
 
@@ -2320,7 +2320,7 @@ module VCAP::Services::ServiceBrokers::V2
       end
 
       context 'when the broker returns headers' do
-        let(:broker_response) { HttpResponse.new(code: 200, body: response_body, headers: { 'Retry-After' => 10 }) }
+        let(:broker_response) { HttpResponse.new({ code: 200, body: response_body, headers: { 'Retry-After' => 10 } }) }
 
         it 'returns the retry after header in the result' do
           attrs = client.fetch_service_binding_last_operation(service_binding)
@@ -2341,7 +2341,7 @@ module VCAP::Services::ServiceBrokers::V2
 
       let(:code) { 200 }
       let(:response_body) { response_data.to_json }
-      let(:broker_response) { HttpResponse.new(code: code, body: response_body) }
+      let(:broker_response) { HttpResponse.new({ code: code, body: response_body }) }
 
       before do
         service_binding.service_binding_operation = binding_operation
@@ -2427,12 +2427,12 @@ module VCAP::Services::ServiceBrokers::V2
           end
 
           errors = [
-            Errors::ServiceBrokerBadResponse.new('some-uri.com', :get, HttpResponse.new(code: nil, body: nil, message: nil)),
-            Errors::ServiceBrokerApiAuthenticationFailed.new('some-uri.com', :get, HttpResponse.new(code: nil, body: nil, message: nil)),
-            Errors::ServiceBrokerApiTimeout.new('some-uri.com', :get, HttpResponse.new(code: nil, body: nil, message: nil)),
-            Errors::ServiceBrokerRequestRejected.new('some-uri.com', :get, HttpResponse.new(code: nil, body: nil, message: nil)),
-            Errors::ServiceBrokerResponseMalformed.new('some-uri.com', :get, HttpResponse.new(code: nil, body: nil, message: nil), 'some desc'),
-            HttpResponseError.new('some failure', :get, HttpResponse.new(code: nil, body: nil, message: nil))
+            Errors::ServiceBrokerBadResponse.new('some-uri.com', :get, HttpResponse.new({ code: nil, body: nil, message: nil })),
+            Errors::ServiceBrokerApiAuthenticationFailed.new('some-uri.com', :get, HttpResponse.new({ code: nil, body: nil, message: nil })),
+            Errors::ServiceBrokerApiTimeout.new('some-uri.com', :get, HttpResponse.new({ code: nil, body: nil, message: nil })),
+            Errors::ServiceBrokerRequestRejected.new('some-uri.com', :get, HttpResponse.new({ code: nil, body: nil, message: nil })),
+            Errors::ServiceBrokerResponseMalformed.new('some-uri.com', :get, HttpResponse.new({ code: nil, body: nil, message: nil }), 'some desc'),
+            HttpResponseError.new('some failure', :get, HttpResponse.new({ code: nil, body: nil, message: nil }))
           ]
 
           errors.each do |error|
@@ -2509,7 +2509,7 @@ module VCAP::Services::ServiceBrokers::V2
       end
 
       context 'when the broker returns headers' do
-        let(:broker_response) { HttpResponse.new(code: 200, body: response_body, headers: { 'Retry-After' => 10 }) }
+        let(:broker_response) { HttpResponse.new({ code: 200, body: response_body, headers: { 'Retry-After' => 10 } }) }
 
         it 'returns the retry after header in the result' do
           attrs = client.fetch_and_handle_service_binding_last_operation(service_binding)
