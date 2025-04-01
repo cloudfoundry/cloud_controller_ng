@@ -14,6 +14,9 @@ module VCAP::CloudController
       let!(:buildpack2) { Buildpack.make(stack: stack2.name) }
       let!(:buildpack3) { Buildpack.make(stack: stack3.name) }
       let!(:buildpack4) { Buildpack.make(stack: stack1.name) }
+      let!(:buildpack5) { Buildpack.make(stack: stack1.name, lifecycle: 'cnb') }
+      let!(:buildpack6) { Buildpack.make(stack: stack2.name, lifecycle: 'cnb') }
+      let!(:buildpack7) { Buildpack.make(stack: nil, lifecycle: 'cnb') }
       let!(:buildpack_without_stack) { Buildpack.make(stack: nil) }
 
       let(:message) { BuildpacksListMessage.from_params(filters) }
@@ -71,6 +74,26 @@ module VCAP::CloudController
 
         it 'returns all of the desired buildpacks' do
           expect(subject).to contain_exactly(buildpack2, buildpack_without_stack)
+        end
+      end
+
+      context 'when filtering by lifecycle' do
+        let(:filters) do
+          { 'lifecycle' => 'cnb' }
+        end
+
+        it 'returns all buildpacks with the cnb lifecycle' do
+          expect(subject).to contain_exactly(buildpack5, buildpack6, buildpack7)
+        end
+      end
+
+      context 'when filtering by lifecycle and stack' do
+        let(:filters) do
+          { 'lifecycle' => 'cnb', 'stacks' => stack1.name }
+        end
+
+        it 'returns all buildpacks with the cnb lifecycle' do
+          expect(subject).to contain_exactly(buildpack5)
         end
       end
     end

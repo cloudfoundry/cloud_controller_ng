@@ -8,6 +8,7 @@ module VCAP::CloudController
         {
           'names' => 'name1,name2',
           'stacks' => 'stack1,stack2',
+          'lifecycle' => 'buildpack',
           'label_selector' => 'foo=bar',
           'page' => 1,
           'per_page' => 5
@@ -21,6 +22,7 @@ module VCAP::CloudController
 
         expect(message.stacks).to eq(%w[stack1 stack2])
         expect(message.names).to eq(%w[name1 name2])
+        expect(message.lifecycle).to eq('buildpack')
         expect(message.label_selector).to eq('foo=bar')
         expect(message.requirements.first.key).to eq('foo')
         expect(message.page).to eq(1)
@@ -32,6 +34,7 @@ module VCAP::CloudController
 
         expect(message).to be_requested(:stacks)
         expect(message).to be_requested(:names)
+        expect(message).to be_requested(:lifecycle)
         expect(message).to be_requested(:label_selector)
         expect(message).to be_requested(:page)
         expect(message).to be_requested(:per_page)
@@ -43,6 +46,7 @@ module VCAP::CloudController
         {
           names: %w[name1 name2],
           stacks: %w[stack1 stack2],
+          lifecycle: 'buildpack',
           label_selector: 'foo=bar',
           page: 1,
           per_page: 5
@@ -50,7 +54,7 @@ module VCAP::CloudController
       end
 
       it 'excludes the pagination keys' do
-        expected_params = %i[names stacks label_selector]
+        expected_params = %i[names stacks label_selector lifecycle]
         expect(BuildpacksListMessage.from_params(opts).to_param_hash.keys).to match_array(expected_params)
       end
     end
@@ -61,7 +65,8 @@ module VCAP::CloudController
           BuildpacksListMessage.from_params({
                                               names: [],
                                               stacks: [],
-                                              label_selector: ''
+                                              label_selector: '',
+                                              lifecycle: 'buildpack'
                                             })
         end.not_to raise_error
       end
@@ -100,6 +105,12 @@ module VCAP::CloudController
           with(message).
           and_call_original
         message.valid?
+      end
+
+      it 'validates lifecycle' do
+        message = BuildpacksListMessage.from_params lifecycle: 'foo'
+        expect(message).not_to be_valid
+        expect(message.errors[:lifecycle].length).to eq 1
       end
     end
   end

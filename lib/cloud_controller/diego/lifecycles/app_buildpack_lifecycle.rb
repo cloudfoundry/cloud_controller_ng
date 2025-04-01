@@ -8,7 +8,7 @@ module VCAP::CloudController
     def initialize(message)
       @message = message
 
-      db_result       = BuildpackLifecycleFetcher.fetch(buildpacks, stack)
+      db_result       = BuildpackLifecycleFetcher.fetch(buildpacks, stack, type)
       @validator      = BuildpackLifecycleDataValidator.new({
                                                               buildpack_infos: db_result[:buildpack_infos],
                                                               stack: db_result[:stack]
