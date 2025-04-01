@@ -193,7 +193,7 @@ GEM
       multi_json (~> 1.10)
     fog-local (0.9.0)
       fog-core (>= 1.27, < 3.0)
-    fog-openstack (1.1.4)
+    fog-openstack (1.1.5)
       fog-core (~> 2.1)
       fog-json (>= 1.0)
     fog-xml (0.1.4)
