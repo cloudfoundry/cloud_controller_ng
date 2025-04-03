@@ -32,7 +32,11 @@ module VCAP::CloudController
         db_resetter.recreate_tables(without_migration: !do_schema_migration)
       end
 
-      DB.load_models(db_config.config, db_config.db_logger)
+      if do_schema_migration
+        DB.load_models(db_config.config, db_config.db_logger)
+      else
+        DB.load_models_without_migrations_check(db_config.config, db_config.db_logger)
+      end
     end
 
     def self.seed
