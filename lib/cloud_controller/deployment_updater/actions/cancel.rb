@@ -28,7 +28,8 @@ module VCAP::CloudController
             deployment.update(
               state: DeploymentModel::CANCELED_STATE,
               status_value: DeploymentModel::FINALIZED_STATUS_VALUE,
-              status_reason: DeploymentModel::CANCELED_STATUS_REASON
+              status_reason: DeploymentModel::CANCELED_STATUS_REASON,
+              error: nil
             )
           end
         end

@@ -83,6 +83,8 @@ module VCAP::CloudController::Presenters::V3
         }
       }
 
+      status[:details][:error] = deployment.error if deployment.error
+
       if deployment.strategy == VCAP::CloudController::DeploymentModel::CANARY_STRATEGY
         status[:canary] = {
           steps: {
