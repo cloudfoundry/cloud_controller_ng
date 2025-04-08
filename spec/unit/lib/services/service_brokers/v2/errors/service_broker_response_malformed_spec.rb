@@ -9,7 +9,7 @@ module VCAP::Services
           let(:method) { 'POST' }
           let(:error) { StandardError.new }
           let(:response_body) { 'foo' }
-          let(:response) { double(code: 200, reason: 'OK', body: response_body) }
+          let(:response) { double({ code: 200, reason: 'OK', body: response_body }) }
           let(:description) { 'this is the error description' }
 
           it 'initializes the base class correctly' do

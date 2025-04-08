@@ -11,7 +11,7 @@ module VCAP::Services
 
           describe ServiceBrokerApiAuthenticationFailed do
             let(:response_body) { 'foo' }
-            let(:response) { double(code: 401, reason: 'Auth Error', body: response_body) }
+            let(:response) { double({ code: 401, reason: 'Auth Error', body: response_body }) }
 
             it 'initializes the base class correctly' do
               exception = ServiceBrokerApiAuthenticationFailed.new(uri, method, response)
