@@ -276,7 +276,7 @@ GEM
     json-schema (5.1.1)
       addressable (~> 2.8)
       bigdecimal (~> 3.1)
-    json_pure (2.7.6)
+    json_pure (2.8.1)
     jwt (2.8.1)
       base64
     kramdown (2.5.1)
