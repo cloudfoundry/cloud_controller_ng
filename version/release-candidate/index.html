@@ -15016,6 +15016,11 @@ Processes for an app are defined by the buildpack used to stage the app and can 
 <td>The zero-based index of running instances</td>
 </tr>
 <tr>
+<td><strong>instance_guid</strong></td>
+<td><em>string</em></td>
+<td>The unique identifier of the instance</td>
+</tr>
+<tr>
 <td><strong>state</strong></td>
 <td><em>string</em></td>
 <td>The state of the instance; valid values are <code class="prettyprint">RUNNING</code>, <code class="prettyprint">CRASHED</code>, <code class="prettyprint">STARTING</code>, <code class="prettyprint">STOPPING</code>, <code class="prettyprint">DOWN</code></td>
@@ -15237,6 +15242,7 @@ Processes for an app are defined by the buildpack used to stage the app and can 
     </span><span class="p">{</span><span class="w">
       </span><span class="nl">"type"</span><span class="p">:</span><span class="w"> </span><span class="s2">"web"</span><span class="p">,</span><span class="w">
       </span><span class="nl">"index"</span><span class="p">:</span><span class="w"> </span><span class="mi">0</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"instance_guid"</span><span class="p">:</span><span class="w"> </span><span class="s2">"e49f448e-54d2-4c33-61a3-5335"</span><span class="p">,</span><span class="w">
       </span><span class="nl">"state"</span><span class="p">:</span><span class="w"> </span><span class="s2">"RUNNING"</span><span class="p">,</span><span class="w">
       </span><span class="nl">"usage"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
         </span><span class="nl">"time"</span><span class="p">:</span><span class="w"> </span><span class="s2">"2016-03-23T23:17:30.476314154Z"</span><span class="p">,</span><span class="w">
