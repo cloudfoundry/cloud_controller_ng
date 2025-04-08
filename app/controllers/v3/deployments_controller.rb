@@ -58,7 +58,11 @@ class DeploymentsController < ApplicationController
           'app-id' => app.guid,
           'user-id' => current_user.guid
         },
-        { 'strategy' => deployment.strategy }
+        {
+          'strategy' => deployment.strategy,
+          'max-in-flight' => deployment.max_in_flight,
+          'canary-steps' => deployment.canary_steps
+        }
       )
     rescue DeploymentCreate::Error => e
       unprocessable!(e.message)
