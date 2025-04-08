@@ -6328,6 +6328,9 @@ to specify how many instances are rolled out simultaneously.</p></li>
   </span><span class="nl">"options"</span><span class="w"> </span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
     </span><span class="nl">"max_in_flight"</span><span class="p">:</span><span class="w"> </span><span class="mi">3</span><span class="p">,</span><span class="w">
     </span><span class="nl">"web_instances"</span><span class="p">:</span><span class="w"> </span><span class="mi">5</span><span class="p">,</span><span class="w">
+    </span><span class="nl">"memory_in_mb"</span><span class="p">:</span><span class="w"> </span><span class="mi">1024</span><span class="p">,</span><span class="w">
+    </span><span class="nl">"disk_in_mb"</span><span class="p">:</span><span class="w"> </span><span class="mi">1024</span><span class="p">,</span><span class="w">
+    </span><span class="nl">"log_rate_limit_in_bytes_per_second"</span><span class="p">:</span><span class="w"> </span><span class="mi">-1</span><span class="p">,</span><span class="w">
     </span><span class="nl">"canary"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
       </span><span class="nl">"steps"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="w">
         </span><span class="p">{</span><span class="w">
@@ -6455,6 +6458,21 @@ to specify how many instances are rolled out simultaneously.</p></li>
 <td>The number of web instances the deployment will scale to</td>
 </tr>
 <tr>
+<td><strong>options.memory_in_mb</strong></td>
+<td><em>integer</em></td>
+<td>The amount of memory in megabytes to allocate per web process instance.  If <code class="prettyprint">null</code>, the amount allocated will be taken from the previous web process.</td>
+</tr>
+<tr>
+<td><strong>options.disk_in_mb</strong></td>
+<td><em>integer</em></td>
+<td>The amount of disk in megabytes to allocate per web process instance.  If <code class="prettyprint">null</code>, the amount allocated will be taken from the previous web process.</td>
+</tr>
+<tr>
+<td><strong>options.log_rate_limit_in_bytes_per_second</strong></td>
+<td><em>integer</em></td>
+<td>Log rate limit in bytes per second to allocate per web process instance.  If <code class="prettyprint">null</code>, the amount allocated will be taken from the previous web process.</td>
+</tr>
+<tr>
 <td><strong>options.canary.steps</strong></td>
 <td><em>array of <a href="#canary-steps-object">canary step objects</a></em></td>
 <td>Canary steps to use for the deployment. Only available for deployments with strategy &lsquo;canary&rsquo;. (experimental)</td>
@@ -6566,6 +6584,9 @@ to specify how many instances are rolled out simultaneously.</p></li>
   </span><span class="nl">"options"</span><span class="w"> </span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
     </span><span class="nl">"max_in_flight"</span><span class="p">:</span><span class="w"> </span><span class="mi">3</span><span class="p">,</span><span class="w">
     </span><span class="nl">"web_instances"</span><span class="p">:</span><span class="w"> </span><span class="mi">5</span><span class="p">,</span><span class="w">
+    </span><span class="nl">"memory_in_mb"</span><span class="p">:</span><span class="w"> </span><span class="mi">1024</span><span class="p">,</span><span class="w">
+    </span><span class="nl">"disk_in_mb"</span><span class="p">:</span><span class="w"> </span><span class="mi">1024</span><span class="p">,</span><span class="w">
+    </span><span class="nl">"log_rate_limit_in_bytes_per_second"</span><span class="p">:</span><span class="w"> </span><span class="mi">-1</span><span class="p">,</span><span class="w">
     </span><span class="nl">"canary"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
       </span><span class="nl">"steps"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="w">
         </span><span class="p">{</span><span class="w">
@@ -6688,6 +6709,24 @@ to specify how many instances are rolled out simultaneously.</p></li>
 <td>The current web process&rsquo;s instance count</td>
 </tr>
 <tr>
+<td><strong>options.memory_in_mb</strong></td>
+<td><em>integer</em></td>
+<td>The amount of memory in megabytes to allocate per web process instance.  If <code class="prettyprint">null</code>, the amount allocated will be taken from the previous web process.</td>
+<td><code class="prettyprint">null</code></td>
+</tr>
+<tr>
+<td><strong>options.disk_in_mb</strong></td>
+<td><em>integer</em></td>
+<td>The amount of disk in megabytes to allocate per web process instance.  If <code class="prettyprint">null</code>, the amount allocated will be taken from the previous web process.</td>
+<td><code class="prettyprint">null</code></td>
+</tr>
+<tr>
+<td><strong>options.log_rate_limit_in_bytes_per_second</strong></td>
+<td><em>integer</em></td>
+<td>Log rate limit in bytes per second to allocate per web process instance.  If <code class="prettyprint">null</code>, the amount allocated will be taken from the previous web process.</td>
+<td><code class="prettyprint">null</code></td>
+</tr>
+<tr>
 <td><strong>options.canary.steps</strong></td>
 <td><em>array of <a href="#canary-steps-object">canary step objects</a></em></td>
 <td>An array of canary steps to use for the deployment</td>
@@ -6756,6 +6795,9 @@ to specify how many instances are rolled out simultaneously.</p></li>
   </span><span class="nl">"options"</span><span class="w"> </span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
     </span><span class="nl">"max_in_flight"</span><span class="p">:</span><span class="w"> </span><span class="mi">3</span><span class="p">,</span><span class="w">
     </span><span class="nl">"web_instances"</span><span class="p">:</span><span class="w"> </span><span class="mi">5</span><span class="p">,</span><span class="w">
+    </span><span class="nl">"memory_in_mb"</span><span class="p">:</span><span class="w"> </span><span class="mi">1024</span><span class="p">,</span><span class="w">
+    </span><span class="nl">"disk_in_mb"</span><span class="p">:</span><span class="w"> </span><span class="mi">1024</span><span class="p">,</span><span class="w">
+    </span><span class="nl">"log_rate_limit_in_bytes_per_second"</span><span class="p">:</span><span class="w"> </span><span class="mi">-1</span><span class="p">,</span><span class="w">
     </span><span class="nl">"canary"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
       </span><span class="nl">"steps"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="w">
         </span><span class="p">{</span><span class="w">
@@ -7041,6 +7083,9 @@ to specify how many instances are rolled out simultaneously.</p></li>
   </span><span class="nl">"options"</span><span class="w"> </span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
     </span><span class="nl">"max_in_flight"</span><span class="p">:</span><span class="w"> </span><span class="mi">3</span><span class="p">,</span><span class="w">
     </span><span class="nl">"web_instances"</span><span class="p">:</span><span class="w"> </span><span class="mi">5</span><span class="p">,</span><span class="w">
+    </span><span class="nl">"memory_in_mb"</span><span class="p">:</span><span class="w"> </span><span class="mi">1024</span><span class="p">,</span><span class="w">
+    </span><span class="nl">"disk_in_mb"</span><span class="p">:</span><span class="w"> </span><span class="mi">1024</span><span class="p">,</span><span class="w">
+    </span><span class="nl">"log_rate_limit_in_bytes_per_second"</span><span class="p">:</span><span class="w"> </span><span class="mi">-1</span><span class="p">,</span><span class="w">
     </span><span class="nl">"canary"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
       </span><span class="nl">"steps"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="w">
         </span><span class="p">{</span><span class="w">
