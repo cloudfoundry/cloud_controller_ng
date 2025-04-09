@@ -18,6 +18,7 @@ module VCAP::CloudController::Metrics
 
     DURATION_BUCKETS = [5, 10, 30, 60, 300, 600, 890].freeze
     CONNECTION_DURATION_BUCKETS = [0.001, 0.005, 0.01, 0.05, 0.1, 0.5, 1, 5, 10].freeze
+    DELAYED_JOB_METRIC_BUCKETS = [0.01, 0.05, 0.1, 0.5, 1, 2, 5, 10, 30, 60, 120, 300, 600].freeze
 
     METRICS = [
       { type: :gauge, name: :cc_job_queues_length_total, docstring: 'Job queues length of worker processes', labels: [:queue], aggregation: :most_recent },
@@ -67,6 +68,11 @@ module VCAP::CloudController::Metrics
         buckets: CONNECTION_DURATION_BUCKETS }
     ].freeze
 
+    DELAYED_JOB_METRICS = [
+      { type: :histogram, name: :cc_job_pickup_delay_seconds, docstring: 'Job pickup time (from enqueue to start)', labels: %i[queue worker], buckets: DELAYED_JOB_METRIC_BUCKETS },
+      { type: :histogram, name: :cc_job_duration_seconds, docstring: 'Job processing time (start to finish)', labels: %i[queue worker], buckets: DELAYED_JOB_METRIC_BUCKETS }
+    ].freeze
+
     def initialize(registry: Prometheus::Client.registry, cc_worker: false)
       self.class.allow_pid_label
 
@@ -74,6 +80,7 @@ module VCAP::CloudController::Metrics
 
       # Register all metrics, to initialize them for discoverability
       DB_CONNECTION_POOL_METRICS.each { |metric| register(metric) }
+      DELAYED_JOB_METRICS.each { |metric| register(metric) }
 
       return if cc_worker
 
@@ -98,8 +105,8 @@ module VCAP::CloudController::Metrics
       @registry.get(metric).increment
     end
 
-    def update_histogram_metric(metric, value)
-      @registry.get(metric).observe(value)
+    def update_histogram_metric(metric, value, labels: {})
+      @registry.get(metric).observe(value, labels:)
     end
 
     def update_summary_metric(metric, value)
