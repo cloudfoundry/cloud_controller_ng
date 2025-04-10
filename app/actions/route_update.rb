@@ -6,6 +6,10 @@ module VCAP::CloudController
 
         route.save
         MetadataUpdate.update(route, message)
+
+        route.apps.each do |process|
+          ProcessRouteHandler.new(process).notify_backend_of_route_update
+        end
       end
 
       route
