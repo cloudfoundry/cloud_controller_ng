@@ -76,12 +76,15 @@ module VCAP
         Jobs::GenericEnqueuer.reset! # Ensure no previous state interferes
 
         pollable_job = Jobs::Enqueuer.new({ queue: Jobs::Queues.generic, priority: 22 }).enqueue_pollable(FakeJob.new)
-        expect(Delayed::Job.where(guid: PollableJobModel.first.delayed_job_guid).first[:priority]).to eq(42)
+        first_delayed_job_guid = pollable_job.delayed_job_guid
+        expect(Delayed::Job.where(guid: first_delayed_job_guid).first[:priority]).to eq(42)
 
         execute_all_jobs(expected_successes: 1, expected_failures: 0, jobs_to_execute: 1)
 
-        expect(Delayed::Job.where(guid: PollableJobModel.first.delayed_job_guid).first[:priority]).to eq(42)
-        expect(PollableJobModel.first.delayed_job_guid).not_to eq(pollable_job.delayed_job_guid)
+        pollable_job.reload
+        second_delayed_job_guid = pollable_job.delayed_job_guid
+        expect(Delayed::Job.where(guid: second_delayed_job_guid).first[:priority]).to eq(42)
+        expect(first_delayed_job_guid).not_to eq(second_delayed_job_guid)
       end
 
       it 'waits for the polling interval' do
