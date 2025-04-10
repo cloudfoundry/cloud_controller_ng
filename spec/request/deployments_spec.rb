@@ -580,6 +580,12 @@ RSpec.describe 'Deployments' do
       let(:create_request) do
         {
           strategy: 'canary',
+          options: {
+            max_in_flight: 10,
+            canary: {
+              steps: [{ instance_weight: 1 }, { instance_weight: 2 }]
+            }
+          },
           relationships: {
             app: {
               data: {
@@ -593,6 +599,13 @@ RSpec.describe 'Deployments' do
         {
           revision: {
             guid: revision.guid
+          },
+          strategy: 'canary',
+          options: {
+            max_in_flight: 10,
+            canary: {
+              steps: [{ instance_weight: 1 }, { instance_weight: 2 }]
+            }
           },
           relationships: {
             app: {
@@ -612,6 +625,8 @@ RSpec.describe 'Deployments' do
             'create-deployment' => {
               'api-version' => 'v3',
               'strategy' => 'canary',
+              'max-in-flight' => 10,
+              'canary-steps' => [{ 'instance_weight' => 1 }, { 'instance_weight' => 2 }],
               'app-id' => OpenSSL::Digest::SHA256.hexdigest(app_model.guid),
               'user-id' => OpenSSL::Digest::SHA256.hexdigest(user.guid)
             }
@@ -632,6 +647,8 @@ RSpec.describe 'Deployments' do
             'rolled-back-app' => {
               'api-version' => 'v3',
               'strategy' => 'canary',
+              'max-in-flight' => 10,
+              'canary-steps' => [{ 'instance_weight' => 1 }, { 'instance_weight' => 2 }],
               'app-id' => OpenSSL::Digest::SHA256.hexdigest(app_model.guid),
               'user-id' => OpenSSL::Digest::SHA256.hexdigest(user.guid),
               'revision-id' => OpenSSL::Digest::SHA256.hexdigest(revision.guid)

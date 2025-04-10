@@ -598,5 +598,29 @@ module VCAP::CloudController
         end
       end
     end
+
+    describe 'canary steps' do
+      context 'when options is not specified' do
+        before do
+          body['options'] = nil
+        end
+
+        it 'returns nil' do
+          message = DeploymentCreateMessage.new(body)
+          expect(message.canary_steps).to be_nil
+        end
+      end
+
+      context 'when canary and steps are specified' do
+        before do
+          body['options'] = { canary: { steps: [{ instance_weight: 1 }] } }
+        end
+
+        it 'returns the passed value' do
+          message = DeploymentCreateMessage.new(body)
+          expect(message.canary_steps).to eq [{ instance_weight: 1 }]
+        end
+      end
+    end
   end
 end

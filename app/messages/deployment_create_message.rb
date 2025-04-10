@@ -64,6 +64,10 @@ module VCAP::CloudController
       options&.dig(:log_rate_limit_in_bytes_per_second)
     end
 
+    def canary_steps
+      options&.dig(:canary, :steps)
+    end
+
     private
 
     def mutually_exclusive_droplet_sources

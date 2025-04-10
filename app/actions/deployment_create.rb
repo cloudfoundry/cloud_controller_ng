@@ -25,7 +25,7 @@ module VCAP::CloudController
 
           if target_state.rollback_target_revision
             revision = RevisionResolver.rollback_app_revision(app, target_state.rollback_target_revision, user_audit_info)
-            log_rollback_event(app.guid, user_audit_info.user_guid, target_state.rollback_target_revision.guid, message.strategy)
+            log_rollback_event(app.guid, user_audit_info.user_guid, target_state.rollback_target_revision.guid, message.strategy, message.max_in_flight, message.canary_steps)
           else
             revision = RevisionResolver.update_app_revision(app, user_audit_info)
           end
@@ -201,7 +201,7 @@ module VCAP::CloudController
           memory_in_mb: message.memory_in_mb,
           disk_in_mb: message.disk_in_mb,
           log_rate_limit_in_bytes_per_second: message.log_rate_limit_in_bytes_per_second,
-          canary_steps: message.options&.dig(:canary, :steps),
+          canary_steps: message.canary_steps,
           web_instances: message.web_instances
         )
         MetadataUpdate.update(deployment, message)
@@ -251,7 +251,7 @@ module VCAP::CloudController
         [deployment.max_in_flight, starting_process_count].min
       end
 
-      def log_rollback_event(app_guid, user_id, revision_id, strategy)
+      def log_rollback_event(app_guid, user_id, revision_id, strategy, max_in_flight, canary_steps)
         TelemetryLogger.v3_emit(
           'rolled-back-app',
           {
@@ -259,7 +259,11 @@ module VCAP::CloudController
             'user-id' => user_id,
             'revision-id' => revision_id
           },
-          { 'strategy' => strategy }
+          {
+            'strategy' => strategy,
+            'max-in-flight' => max_in_flight,
+            'canary-steps' => canary_steps
+          }
         )
       end
     end
