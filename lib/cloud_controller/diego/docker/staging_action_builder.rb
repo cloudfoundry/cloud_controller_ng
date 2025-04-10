@@ -67,6 +67,10 @@ module VCAP::CloudController
           ]
         end
 
+        def additional_image_layers
+          []
+        end
+
         def stack
           "preloaded:#{config.get(:diego, :docker_staging_stack)}"
         end

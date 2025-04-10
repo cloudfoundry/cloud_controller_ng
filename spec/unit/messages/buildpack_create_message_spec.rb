@@ -156,6 +156,17 @@ module VCAP::CloudController
           it { is_expected.to be_valid }
         end
       end
+
+      describe 'lifecycle' do
+        context 'when the lifecycle is invalid' do
+          let(:params) { { name: 'cnb-test', enabled: true, lifecycle: 'foo' } }
+
+          it 'is not valid' do
+            expect(subject).not_to be_valid
+            expect(subject.errors[:lifecycle]).to include('must be either "buildpack" or "cnb"')
+          end
+        end
+      end
     end
   end
 end
