@@ -30,6 +30,7 @@ module VCAP::CloudController
               optional(:app_ssh_host_key_fingerprint) => String,
               optional(:custom) => Hash
             },
+            optional(:custom_root_links) => Array,
 
             system_domain: String,
             optional(:system_domain_organization) => enum(String, NilClass),
