@@ -45,10 +45,32 @@ module VCAP::CloudController
 
       private
 
+      APPROVED_ERRORS = [
+        Sequel::ValidationFailed,
+        CloudController::Errors::ApiError
+      ].freeze
+
       def with_error_logging(error_message)
         yield
       rescue StandardError => e
         error_name = e.is_a?(CloudController::Errors::ApiError) ? e.name : e.class.name
+
+        begin
+          if APPROVED_ERRORS.include?(e.class)
+            deployment.update(error: e.message)
+          else
+            deployment.update(error: 'An unexpected error has occurred.')
+          end
+        rescue StandardError => new_error
+          logger.error(
+            'error-saving-deployment-error',
+            deployment_guid: deployment.guid,
+            error: new_error.class.name,
+            error_message: new_error.message,
+            backtrace: new_error.backtrace.join("\n")
+          )
+        end
+
         logger.error(
           error_message,
           deployment_guid: deployment.guid,

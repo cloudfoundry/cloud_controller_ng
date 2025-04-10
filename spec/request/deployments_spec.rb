@@ -1665,6 +1665,24 @@ RSpec.describe 'Deployments' do
       end
     end
 
+    context 'when a deployment has had an error' do
+      let(:user) { make_developer_for_space(space) }
+      let(:deployment) do
+        VCAP::CloudController::DeploymentModelTestFactory.make(
+          app: app_model,
+          droplet: droplet,
+          previous_droplet: old_droplet,
+          error: 'Quota error'
+        )
+      end
+
+      it 'includes the error as part of the status details' do
+        get "/v3/deployments/#{deployment.guid}", nil, user_header
+        parsed_response = Oj.load(last_response.body)
+        expect(parsed_response['status']['details']['error']).to eq('Quota error')
+      end
+    end
+
     it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS
   end
 

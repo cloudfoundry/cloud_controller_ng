@@ -24,7 +24,7 @@ module VCAP::CloudController
         instances: current_deploying_instances,
         guid: 'guid-final',
         revision: revision,
-        state: ProcessModel::STOPPED
+        state: ProcessModel::STARTED
       )
     end
     let(:revision) { RevisionModel.make(app: app, droplet: droplet, version: 300) }
@@ -183,6 +183,8 @@ module VCAP::CloudController
           expect do
             subject.scale
           end.not_to raise_error
+
+          expect(deployment.error).to eq 'An unexpected error has occurred.'
         end
       end
     end
@@ -393,6 +395,8 @@ module VCAP::CloudController
           expect do
             subject.canary
           end.not_to raise_error
+
+          expect(deployment.error).to eq 'An unexpected error has occurred.'
         end
       end
     end
@@ -424,6 +428,118 @@ module VCAP::CloudController
           expect do
             subject.cancel
           end.not_to raise_error
+
+          expect(deployment.error).to eq 'An unexpected error has occurred.'
+        end
+      end
+    end
+
+    describe 'error handling' do
+      context 'when saving the error to the deployment model' do
+        context 'when the error is a quota error' do
+          let(:web_instances) { nil }
+          let(:max_in_flight) { 100 }
+          let!(:quota_definition) { QuotaDefinition.make(memory_limit: 1) }
+
+          before do
+            org = app.organization
+            org.quota_definition = quota_definition
+            org.save
+          end
+
+          it 'saves the quota error to the model' do
+            subject.scale
+            expect(deployment.error).to eq 'memory quota_exceeded'
+          end
+        end
+
+        context 'when the error is not an approved error' do
+          before do
+            allow(deployment).to receive(:app).and_raise(StandardError.new('unrecognized error'))
+          end
+
+          it 'provides a helpful error on the deployment model' do
+            subject.scale
+            expect(deployment.error).to eq 'An unexpected error has occurred.'
+          end
+        end
+
+        context 'when the error is a SequelValidation error' do
+          before do
+            allow(deployment).to receive(:app).and_raise(Sequel::ValidationFailed.new('Something bad happened with model validation'))
+          end
+
+          it 'provides a helpful error on the deployment model' do
+            subject.scale
+            expect(deployment.error).to eq 'Something bad happened with model validation'
+          end
+        end
+
+        context 'when the error is a CloudController::Errors::ApiError error' do
+          before do
+            allow(deployment).to receive(:app).and_raise(CloudController::Errors::ApiError.new_from_details('RunnerError', 'some error'))
+          end
+
+          it 'provides a helpful error on the deployment model' do
+            subject.scale
+            expect(deployment.error).to eq 'Runner error: some error'
+          end
+        end
+
+        context 'when there is a problem saving the error column' do
+          before do
+            # too long for db column
+            allow(deployment).to receive(:app).and_raise(CloudController::Errors::ApiError.new_from_details('RunnerError', 'a' * 5000))
+          end
+
+          it 'logs the issue and continues' do
+            subject.scale
+
+            expect(logger).to have_received(:error).with(
+              'error-saving-deployment-error',
+              deployment_guid: deployment.guid,
+              error: 'Sequel::DatabaseError',
+              error_message: anything,
+              backtrace: anything
+            )
+          end
+        end
+
+        context 'when there was a prior error, but the error no longer occurs' do
+          describe '#scale' do
+            before do
+              deployment.error = 'old error'
+              deployment.save
+            end
+
+            it 'clears the error' do
+              subject.scale
+              expect(deployment.error).to be_nil
+            end
+          end
+
+          describe '#cancel' do
+            before do
+              deployment.update(state: 'CANCELING', error: 'old error')
+              allow_any_instance_of(VCAP::CloudController::Diego::Runner).to receive(:stop)
+            end
+
+            it 'clears the error' do
+              subject.cancel
+              expect(deployment.error).to be_nil
+            end
+          end
+
+          describe '#canary' do
+            before do
+              deployment.update(strategy: 'canary', error: 'old error')
+            end
+
+            it 'clears the error' do
+              subject.canary
+              expect(deployment.error).to be_nil
+            end
+          end
         end
       end
     end
