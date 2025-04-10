@@ -214,11 +214,6 @@
   message: "The service instance name is taken: %s"
 
 60003:
-  name: ServiceInstanceServiceBindingWrongSpace
-  http_code: 400
-  message: "The service instance and the service binding are in different app spaces: %s"
-
-60003:
   name: ServiceInstanceInvalid
   http_code: 400
   message: "The service instance is invalid: %s"
@@ -1024,19 +1019,14 @@
   message: "Resource inside space %s must first be deleted, or specify recursive delete."
 
 290013:
-  name: OrganizationRolesDeletionTimeout
+  name: SpaceRolesDeletionTimeout
   http_code: 524
-  message: "Deletion of roles for organization %s timed out before all roles could be deleted"
+  message: "Deletion of roles for space %s timed out before all roles could be deleted"
 
 290014:
   name: OrganizationRolesDeletionFailed
   http_code: 502
   message: "Failed to delete one or more roles for organization %s"
-
-290013:
-  name: SpaceRolesDeletionTimeout
-  http_code: 524
-  message: "Deletion of roles for space %s timed out before all roles could be deleted"
 
 290016:
   name: SpaceRolesDeletionFailed
