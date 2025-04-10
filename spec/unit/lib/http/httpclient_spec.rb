@@ -3,7 +3,7 @@ require 'http/httpclient'
 RSpec.describe HTTPClient do
   describe 'version' do
     it 'is not updated' do
-      expect(HTTPClient::VERSION).to eq('2.8.3'), 'revisit monkey patch in lib/http/httpclient.rb'
+      expect(HTTPClient::VERSION).to eq('2.9.0'), 'revisit monkey patch in lib/http/httpclient.rb'
     end
   end
 

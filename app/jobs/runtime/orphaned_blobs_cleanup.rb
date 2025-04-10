@@ -165,7 +165,7 @@ module VCAP::CloudController
 
             logger.info("Enqueuing deletion of orphaned blob #{orphaned_blob.blob_key} inside directory_key #{directory_key}")
             blobstore_delete_job = BlobstoreDelete.new(unpartitioned_blob_key, blobstore_type)
-            Jobs::Enqueuer.new(blobstore_delete_job, queue: Jobs::Queues.generic, priority: VCAP::CloudController::Clock::LOW_PRIORITY).enqueue
+            Jobs::Enqueuer.new(queue: Jobs::Queues.generic, priority: VCAP::CloudController::Clock::LOW_PRIORITY).enqueue(blobstore_delete_job)
 
             VCAP::CloudController::Repositories::OrphanedBlobEventRepository.record_delete(directory_key, orphaned_blob.blob_key)
             orphaned_blob.delete

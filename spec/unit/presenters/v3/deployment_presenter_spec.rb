@@ -18,7 +18,9 @@ module VCAP::CloudController::Presenters::V3
         status_updated_at: '2019-07-11 19:01:54',
         state: deployment_state,
         status_value: VCAP::CloudController::DeploymentModel::ACTIVE_STATUS_VALUE,
-        status_reason: VCAP::CloudController::DeploymentModel::DEPLOYING_STATUS_REASON
+        status_reason: VCAP::CloudController::DeploymentModel::DEPLOYING_STATUS_REASON,
+        web_instances: 20,
+        memory_in_mb: 1000
       )
     end
 
@@ -125,6 +127,104 @@ module VCAP::CloudController::Presenters::V3
             result = DeploymentPresenter.new(deployment).to_hash
 
             expect(result[:links][:cancel]).to be_nil
+          end
+        end
+      end
+
+      describe 'status' do
+        context 'when the strategy is rolling' do
+          before do
+            deployment.strategy = VCAP::CloudController::DeploymentModel::ROLLING_STRATEGY
+          end
+
+          it 'shows no canary status' do
+            result = DeploymentPresenter.new(deployment).to_hash
+            expect(result[:status][:canary]).to be_nil
+          end
+        end
+
+        context 'when the strategy is canary' do
+          before do
+            deployment.strategy = VCAP::CloudController::DeploymentModel::CANARY_STRATEGY
+            deployment.canary_current_step = 1
+          end
+
+          context 'when there are no explicit steps' do
+            it 'presents the canary status' do
+              result = DeploymentPresenter.new(deployment).to_hash
+              expect(result[:status][:canary][:steps][:current]).to eq(1)
+              expect(result[:status][:canary][:steps][:total]).to eq(1)
+            end
+          end
+
+          context 'when there are explicit steps' do
+            before do
+              deployment.strategy = VCAP::CloudController::DeploymentModel::CANARY_STRATEGY
+              deployment.canary_current_step = 2
+              deployment.canary_steps = [
+                { instance_weight: 1 },
+                { instance_weight: 2 },
+                { instance_weight: 3 },
+                { instance_weight: 4 }
+              ]
+            end
+
+            it 'presents the canary status' do
+              result = DeploymentPresenter.new(deployment).to_hash
+              expect(result[:status][:canary][:steps][:current]).to eq(2)
+              expect(result[:status][:canary][:steps][:total]).to eq(4)
+            end
+          end
+        end
+      end
+
+      describe 'options' do
+        it 'sets max in flight' do
+          result = DeploymentPresenter.new(deployment).to_hash
+          expect(result[:options][:max_in_flight]).to eq(1)
+        end
+
+        it 'sets web_instances' do
+          result = DeploymentPresenter.new(deployment).to_hash
+          expect(result[:options][:web_instances]).to eq(20)
+        end
+
+        it 'sets memory_in_mb' do
+          result = DeploymentPresenter.new(deployment).to_hash
+          expect(result[:options][:memory_in_mb]).to eq(1000)
+        end
+
+        context 'when the strategy is not canary' do
+          it 'does not present the canary steps' do
+            result = DeploymentPresenter.new(deployment).to_hash
+            expect(result[:options][:canary]).to be_nil
+          end
+        end
+
+        context 'when the strategy is canary without steps' do
+          before do
+            deployment.strategy = VCAP::CloudController::DeploymentModel::CANARY_STRATEGY
+            deployment.canary_steps = nil
+          end
+
+          it 'does not present the canary steps' do
+            result = DeploymentPresenter.new(deployment).to_hash
+            expect(result[:options][:canary]).to be_nil
+          end
+        end
+
+        context 'when the strategy is canary with steps' do
+          before do
+            deployment.strategy = VCAP::CloudController::DeploymentModel::CANARY_STRATEGY
+            deployment.canary_steps = [
+              { instance_weight: 1 },
+              { instance_weight: 2 }
+            ]
+          end
+
+          it 'presents the canary steps' do
+            result = DeploymentPresenter.new(deployment).to_hash
+            expect(result[:options][:canary][:steps]).to eq([{ instance_weight: 1 }, { instance_weight: 2 }])
           end
         end
       end

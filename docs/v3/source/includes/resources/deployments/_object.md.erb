@@ -15,9 +15,16 @@ Name | Type | Description
 **status.value** | _string_ | The current status of the deployment; valid values are `ACTIVE` (meaning in progress) and `FINALIZED` (meaning finished, either successfully or not)
 **status.reason** | _string_ | The reason for the status of the deployment;<br>following list represents valid values:<br>1. If **status.value** is `ACTIVE`<br>- `DEPLOYING`<br>- `PAUSED` (only valid for canary deployments) <br>- `CANCELING`<br>2. If **status.value** is `FINALIZED`<br>- `DEPLOYED`<br>- `CANCELED`<br>- `SUPERSEDED` (another deployment created for app before completion)<br>
 **status.details.last_successful_healthcheck** | _[timestamp](#timestamps)_ | Timestamp of the last successful healthcheck
-**status.details.last_status_change** | _[timestamp](#timestamps)_ | Timestamp of last change to status.value or status.reason
+**status.details.last_status_change** | _[timestamp](#timestamps)_ | Timestamp of last change to status.value or status.reason**status.details.last_status_change** | _[timestamp](#timestamps)_ | Timestamp of last change to status.value or status.reason
+**status.canary.steps.current** | _integer_ | The current canary step. Only available for deployments with strategy 'canary'. (experimental)
+**status.canary.steps.total** | _integer_ |  The total number of canary steps. Only available for deployments with strategy 'canary'. (experimental)
 **strategy** | _string_ | Strategy used for the deployment; supported strategies are `rolling` and `canary` (experimental)
 **options.max_in_flight** | _integer_ | The maximum number of new instances to deploy simultaneously
+**options.web_instances** | _integer_ | The number of web instances the deployment will scale to
+**options.memory_in_mb** |  _integer_ | The amount of memory in megabytes to allocate per web process instance.  If `null`, the amount allocated will be taken from the previous web process.
+**options.disk_in_mb** | _integer_ | The amount of disk in megabytes to allocate per web process instance.  If `null`, the amount allocated will be taken from the previous web process.
+**options.log_rate_limit_in_bytes_per_second** | _integer_ | Log rate limit in bytes per second to allocate per web process instance.  If `null`, the amount allocated will be taken from the previous web process.
+**options.canary.steps** | _array of [canary step objects](#canary-steps-object)_ | Canary steps to use for the deployment. Only available for deployments with strategy 'canary'. (experimental)
 **droplet.guid** | _string_ | The droplet guid that the deployment is transitioning the app to
 **previous_droplet.guid** | _string_ | The app's [current droplet guid](#get-current-droplet-association-for-an-app) before the deployment was created
 **new_processes** | _array_ | List of processes created as part of the deployment
@@ -26,3 +33,8 @@ Name | Type | Description
 **metadata.labels** | [_label object_](#labels) | Labels applied to the deployment
 **metadata.annotations**  | [_annotation object_](#annotations) | Annotations applied to the deployment
 **links** | [_links object_](#links) | Links to related resources
+
+
+#### Canary steps object
+
+**instance_weight** | _integer_ | The percentage of instances to be deployed as part of the canary process in this step (experimental)

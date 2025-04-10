@@ -31,7 +31,7 @@ module VCAP::CloudController
           service_event_repository.record_broker_event_with_request(:create, broker, message.audit_hash)
 
           synchronization_job = SynchronizeBrokerCatalogJob.new(broker.guid, user_audit_info: service_event_repository.user_audit_info)
-          pollable_job = Jobs::Enqueuer.new(synchronization_job, queue: Jobs::Queues.generic).enqueue_pollable
+          pollable_job = Jobs::GenericEnqueuer.shared.enqueue_pollable(synchronization_job)
         end
 
         { pollable_job: }
