@@ -41,7 +41,8 @@ module VCAP::CloudController
     end
 
     let(:message) { RouteUpdateMessage.new(body) }
-    let(:route) { Route.make }
+    let(:space) { Space.make }
+    let(:route) { Route.make(space:) }
 
     subject { RouteUpdate.new }
     describe '#update metadata' do
@@ -143,6 +144,13 @@ module VCAP::CloudController
 
           it 'adds no options' do
             expect(message).to be_valid
+
+            fake_route_handler = instance_double(ProcessRouteHandler)
+            process = ProcessModelFactory.make(space: space, state: 'STARTED', diego: false)
+            RouteMappingModel.make(app: process.app, route: route, process_type: process.type)
+            allow(ProcessRouteHandler).to receive(:new).with(process).and_return(fake_route_handler)
+            expect(fake_route_handler).to receive(:notify_backend_of_route_update)
+
             subject.update(route:, message:)
             route.reload
             expect(route.options).to eq({})
@@ -160,8 +168,14 @@ module VCAP::CloudController
 
           it 'adds the route option' do
             expect(message).to be_valid
-            subject.update(route:, message:)
 
+            fake_route_handler = instance_double(ProcessRouteHandler)
+            process = ProcessModelFactory.make(space: space, state: 'STARTED', diego: false)
+            RouteMappingModel.make(app: process.app, route: route, process_type: process.type)
+            allow(ProcessRouteHandler).to receive(:new).with(process).and_return(fake_route_handler)
+            expect(fake_route_handler).to receive(:notify_backend_of_route_update)
+
+            subject.update(route:, message:)
             route.reload
             expect(route[:options]).to eq('{"loadbalancing":"round-robin"}')
           end
@@ -180,6 +194,13 @@ module VCAP::CloudController
 
           it 'modifies nothing' do
             expect(message).to be_valid
+
+            fake_route_handler = instance_double(ProcessRouteHandler)
+            process = ProcessModelFactory.make(space: space, state: 'STARTED', diego: false)
+            RouteMappingModel.make(app: process.app, route: route, process_type: process.type)
+            allow(ProcessRouteHandler).to receive(:new).with(process).and_return(fake_route_handler)
+            expect(fake_route_handler).to receive(:notify_backend_of_route_update)
+
             subject.update(route:, message:)
             route.reload
             expect(route.options).to include({ 'loadbalancing' => 'round-robin' })
@@ -197,6 +218,13 @@ module VCAP::CloudController
 
           it 'updates the option' do
             expect(message).to be_valid
+
+            fake_route_handler = instance_double(ProcessRouteHandler)
+            process = ProcessModelFactory.make(space: space, state: 'STARTED', diego: false)
+            RouteMappingModel.make(app: process.app, route: route, process_type: process.type)
+            allow(ProcessRouteHandler).to receive(:new).with(process).and_return(fake_route_handler)
+            expect(fake_route_handler).to receive(:notify_backend_of_route_update)
+
             subject.update(route:, message:)
             route.reload
 
@@ -215,6 +243,13 @@ module VCAP::CloudController
 
           it 'removes this option' do
             expect(message).to be_valid
+
+            fake_route_handler = instance_double(ProcessRouteHandler)
+            process = ProcessModelFactory.make(space: space, state: 'STARTED', diego: false)
+            RouteMappingModel.make(app: process.app, route: route, process_type: process.type)
+            allow(ProcessRouteHandler).to receive(:new).with(process).and_return(fake_route_handler)
+            expect(fake_route_handler).to receive(:notify_backend_of_route_update)
+
             subject.update(route:, message:)
             route.reload
             expect(route.options).to eq({})
