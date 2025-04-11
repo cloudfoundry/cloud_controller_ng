@@ -41,11 +41,16 @@ module VCAP::CloudController
     end
 
     let(:message) { RouteUpdateMessage.new(body) }
-    let(:space) { Space.make }
-    let(:route) { Route.make(space:) }
+    let(:process) { ProcessModel.make }
+    let(:route_mapping) { RouteMappingModel.make(app: process.app) }
+    let(:route) { route_mapping.route }
 
     subject { RouteUpdate.new }
     describe '#update metadata' do
+      before do
+        expect(ProcessRouteHandler).not_to receive(:new)
+      end
+
       context 'when the route has no existing metadata' do
         context 'when no metadata is specified' do
           let(:body) do
@@ -136,6 +141,13 @@ module VCAP::CloudController
     end
 
     describe '#update options' do
+      let(:fake_route_handler) { instance_double(ProcessRouteHandler) }
+
+      before do
+        allow(ProcessRouteHandler).to receive(:new).with(process).and_return(fake_route_handler)
+        allow(fake_route_handler).to receive(:notify_backend_of_route_update)
+      end
+
       context 'when the route has no existing options' do
         context 'when no options are specified' do
           let(:body) do
@@ -144,16 +156,14 @@ module VCAP::CloudController
 
           it 'adds no options' do
             expect(message).to be_valid
-
-            fake_route_handler = instance_double(ProcessRouteHandler)
-            process = ProcessModelFactory.make(space: space, state: 'STARTED', diego: false)
-            RouteMappingModel.make(app: process.app, route: route, process_type: process.type)
-            allow(ProcessRouteHandler).to receive(:new).with(process).and_return(fake_route_handler)
-            expect(fake_route_handler).to receive(:notify_backend_of_route_update)
-
             subject.update(route:, message:)
             route.reload
             expect(route.options).to eq({})
+          end
+
+          it 'does not notifies the backend' do
+            expect(fake_route_handler).not_to receive(:notify_backend_of_route_update)
+            subject.update(route:, message:)
           end
         end
 
@@ -168,16 +178,14 @@ module VCAP::CloudController
 
           it 'adds the route option' do
             expect(message).to be_valid
-
-            fake_route_handler = instance_double(ProcessRouteHandler)
-            process = ProcessModelFactory.make(space: space, state: 'STARTED', diego: false)
-            RouteMappingModel.make(app: process.app, route: route, process_type: process.type)
-            allow(ProcessRouteHandler).to receive(:new).with(process).and_return(fake_route_handler)
-            expect(fake_route_handler).to receive(:notify_backend_of_route_update)
-
             subject.update(route:, message:)
             route.reload
             expect(route[:options]).to eq('{"loadbalancing":"round-robin"}')
+          end
+
+          it 'notifies the backend' do
+            expect(fake_route_handler).to receive(:notify_backend_of_route_update)
+            subject.update(route:, message:)
           end
         end
       end
@@ -194,16 +202,14 @@ module VCAP::CloudController
 
           it 'modifies nothing' do
             expect(message).to be_valid
-
-            fake_route_handler = instance_double(ProcessRouteHandler)
-            process = ProcessModelFactory.make(space: space, state: 'STARTED', diego: false)
-            RouteMappingModel.make(app: process.app, route: route, process_type: process.type)
-            allow(ProcessRouteHandler).to receive(:new).with(process).and_return(fake_route_handler)
-            expect(fake_route_handler).to receive(:notify_backend_of_route_update)
-
             subject.update(route:, message:)
             route.reload
             expect(route.options).to include({ 'loadbalancing' => 'round-robin' })
+          end
+
+          it 'does not notifies the backend' do
+            expect(fake_route_handler).not_to receive(:notify_backend_of_route_update)
+            subject.update(route:, message:)
           end
         end
 
@@ -218,17 +224,14 @@ module VCAP::CloudController
 
           it 'updates the option' do
             expect(message).to be_valid
-
-            fake_route_handler = instance_double(ProcessRouteHandler)
-            process = ProcessModelFactory.make(space: space, state: 'STARTED', diego: false)
-            RouteMappingModel.make(app: process.app, route: route, process_type: process.type)
-            allow(ProcessRouteHandler).to receive(:new).with(process).and_return(fake_route_handler)
-            expect(fake_route_handler).to receive(:notify_backend_of_route_update)
-
             subject.update(route:, message:)
             route.reload
-
             expect(route.options).to include({ 'loadbalancing' => 'least-connection' })
+          end
+
+          it 'notifies the backend' do
+            expect(fake_route_handler).to receive(:notify_backend_of_route_update)
+            subject.update(route:, message:)
           end
         end
 
@@ -243,16 +246,14 @@ module VCAP::CloudController
 
           it 'removes this option' do
             expect(message).to be_valid
-
-            fake_route_handler = instance_double(ProcessRouteHandler)
-            process = ProcessModelFactory.make(space: space, state: 'STARTED', diego: false)
-            RouteMappingModel.make(app: process.app, route: route, process_type: process.type)
-            allow(ProcessRouteHandler).to receive(:new).with(process).and_return(fake_route_handler)
-            expect(fake_route_handler).to receive(:notify_backend_of_route_update)
-
             subject.update(route:, message:)
             route.reload
             expect(route.options).to eq({})
+          end
+
+          it 'notifies the backend' do
+            expect(fake_route_handler).to receive(:notify_backend_of_route_update)
+            subject.update(route:, message:)
           end
         end
       end
