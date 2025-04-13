@@ -45,19 +45,32 @@ module VCAP::CloudController
       def actual_lrp_info(process, stats=nil, quota_stats=nil, log_cache_errors=nil, isolation_segment=nil, state=nil)
         # rubocop:enable Metrics/ParameterLists
         result = {}
+        lrp_instances = {}
+
         bbs_instances_client.lrp_instances(process).each do |actual_lrp|
           next unless actual_lrp.actual_lrp_key.index < process.instances
+          # if an LRP already exists with the same index use the one with the latest since value
+
+          if lrp_instances.include?(actual_lrp.actual_lrp_key.index)
+          
+            existing_lrp = lrp_instances[actual_lrp.actual_lrp_key.index]
+            next if (actual_lrp.since < existing_lrp.since)
+            lrp_instances.delete(actual_lrp.actual_lrp_key.index)
+            result.delete(actual_lrp.actual_lrp_key.index)
+            lrp_instances[actual_lrp.actual_lrp_key.index] = actual_lrp
+          end
 
           lrp_state = state || LrpStateTranslator.translate_lrp_state(actual_lrp)
-
           info = build_info(lrp_state, actual_lrp, process, stats, quota_stats, log_cache_errors)
           info[:isolation_segment] = isolation_segment unless isolation_segment.nil?
           result[actual_lrp.actual_lrp_key.index] = info
+          lrp_instances[actual_lrp.actual_lrp_key.index] = actual_lrp
         end
-
+  
         fill_unreported_instances_with_down_instances(result, process, flat: false)
 
         warnings = [log_cache_errors].compact
+
         [result, warnings]
       end
 

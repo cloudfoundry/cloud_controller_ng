@@ -148,6 +148,52 @@ module VCAP::CloudController
           end
         end
 
+        context 'when there are multiple lrps with the same index' do
+          let(:bbs_actual_lrps_response) { [actual_lrp_1, actual_lrp_2, actual_lrp_3, actual_lrp_4] }
+          let(:actual_lrp_1) do
+            make_actual_lrp(
+              instance_guid: '', index: 0, state: ::Diego::ActualLRPState::UNCLAIMED, error: 'some-details', since: two_days_ago_since_epoch_ns
+            ).tap do |actual_lrp|
+              actual_lrp.actual_lrp_net_info = lrp_1_net_info
+            end
+          end
+          let(:actual_lrp_2) do
+            make_actual_lrp(
+              instance_guid: 'instance-a', index: 0, state: ::Diego::ActualLRPState::RUNNING, error: 'some-details', since: two_days_ago_since_epoch_ns-1000
+            ).tap do |actual_lrp|
+              actual_lrp.actual_lrp_net_info = lrp_1_net_info
+            end
+          end
+
+          let(:actual_lrp_3) do
+            make_actual_lrp(
+              instance_guid: '', index: 1, state: ::Diego::ActualLRPState::UNCLAIMED, error: 'some-details', since: two_days_ago_since_epoch_ns
+            ).tap do |actual_lrp|
+              actual_lrp.actual_lrp_net_info = lrp_1_net_info
+            end
+          end
+
+          let(:actual_lrp_4) do
+            make_actual_lrp(
+              instance_guid: 'instance-b', index: 1, state: ::Diego::ActualLRPState::CLAIMED, error: 'some-details', since: two_days_ago_since_epoch_ns-1000
+            ).tap do |actual_lrp|
+              actual_lrp.actual_lrp_net_info = lrp_1_net_info
+            end
+          end
+
+          before do
+            allow(bbs_instances_client).to receive_messages(lrp_instances: bbs_actual_lrps_response, desired_lrp_instance: bbs_desired_lrp_response)
+          end
+
+          it 'shows all correct state for all instances' do
+            result, = instances_reporter.stats_for_app(process)
+            expect(result[0][:state]).to eq('DOWN')
+            expect(result[1][:state]).to eq('DOWN')
+          end
+        end
+
+
+
         context 'when a NoRunningInstances error is thrown for desired_lrp and it exists an actual_lrp' do
           let(:error) { CloudController::Errors::NoRunningInstances.new('No running instances ruh roh') }
           let(:expected_stopping_response) do
