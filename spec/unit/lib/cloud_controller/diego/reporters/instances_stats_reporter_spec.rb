@@ -159,7 +159,7 @@ module VCAP::CloudController
           end
           let(:actual_lrp_2) do
             make_actual_lrp(
-              instance_guid: 'instance-a', index: 0, state: ::Diego::ActualLRPState::RUNNING, error: 'some-details', since: two_days_ago_since_epoch_ns-1000
+              instance_guid: 'instance-a', index: 0, state: ::Diego::ActualLRPState::RUNNING, error: 'some-details', since: two_days_ago_since_epoch_ns - 1000
             ).tap do |actual_lrp|
               actual_lrp.actual_lrp_net_info = lrp_1_net_info
             end
@@ -175,7 +175,7 @@ module VCAP::CloudController
 
           let(:actual_lrp_4) do
             make_actual_lrp(
-              instance_guid: 'instance-b', index: 1, state: ::Diego::ActualLRPState::CLAIMED, error: 'some-details', since: two_days_ago_since_epoch_ns-1000
+              instance_guid: 'instance-b', index: 1, state: ::Diego::ActualLRPState::CLAIMED, error: 'some-details', since: two_days_ago_since_epoch_ns - 1000
             ).tap do |actual_lrp|
               actual_lrp.actual_lrp_net_info = lrp_1_net_info
             end
@@ -191,8 +191,6 @@ module VCAP::CloudController
             expect(result[1][:state]).to eq('DOWN')
           end
         end
-
-
 
         context 'when a NoRunningInstances error is thrown for desired_lrp and it exists an actual_lrp' do
           let(:error) { CloudController::Errors::NoRunningInstances.new('No running instances ruh roh') }

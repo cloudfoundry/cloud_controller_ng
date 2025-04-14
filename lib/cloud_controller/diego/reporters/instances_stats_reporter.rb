@@ -49,12 +49,14 @@ module VCAP::CloudController
 
         bbs_instances_client.lrp_instances(process).each do |actual_lrp|
           next unless actual_lrp.actual_lrp_key.index < process.instances
+
           # if an LRP already exists with the same index use the one with the latest since value
 
           if lrp_instances.include?(actual_lrp.actual_lrp_key.index)
-          
+
             existing_lrp = lrp_instances[actual_lrp.actual_lrp_key.index]
-            next if (actual_lrp.since < existing_lrp.since)
+            next if actual_lrp.since < existing_lrp.since
+
             lrp_instances.delete(actual_lrp.actual_lrp_key.index)
             result.delete(actual_lrp.actual_lrp_key.index)
             lrp_instances[actual_lrp.actual_lrp_key.index] = actual_lrp
@@ -66,7 +68,7 @@ module VCAP::CloudController
           result[actual_lrp.actual_lrp_key.index] = info
           lrp_instances[actual_lrp.actual_lrp_key.index] = actual_lrp
         end
-  
+
         fill_unreported_instances_with_down_instances(result, process, flat: false)
 
         warnings = [log_cache_errors].compact
