@@ -70,7 +70,6 @@ module VCAP::CloudController
         fill_unreported_instances_with_down_instances(result, process, flat: false)
 
         warnings = [log_cache_errors].compact
-
         [result, warnings]
       end
 
