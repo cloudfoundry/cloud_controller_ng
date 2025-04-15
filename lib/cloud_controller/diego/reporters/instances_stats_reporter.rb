@@ -51,9 +51,7 @@ module VCAP::CloudController
           next unless actual_lrp.actual_lrp_key.index < process.instances
 
           # if an LRP already exists with the same index use the one with the latest since value
-
           if lrp_instances.include?(actual_lrp.actual_lrp_key.index)
-
             existing_lrp = lrp_instances[actual_lrp.actual_lrp_key.index]
             next if actual_lrp.since < existing_lrp.since
 
