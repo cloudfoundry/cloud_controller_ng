@@ -149,7 +149,8 @@ module VCAP::CloudController
         end
 
         context 'when there are multiple lrps with the same index' do
-          let(:bbs_actual_lrps_response) { [actual_lrp_1, actual_lrp_2, actual_lrp_3, actual_lrp_4] }
+          let(:desired_instances) { 3 }
+          let(:bbs_actual_lrps_response) { [actual_lrp_1, actual_lrp_2, actual_lrp_3, actual_lrp_4, actual_lrp_5] }
           let(:actual_lrp_1) do
             make_actual_lrp(
               instance_guid: '', index: 0, state: ::Diego::ActualLRPState::UNCLAIMED, error: 'some-details', since: two_days_ago_since_epoch_ns
@@ -181,14 +182,24 @@ module VCAP::CloudController
             end
           end
 
+          let(:actual_lrp_5) do
+            make_actual_lrp(
+              instance_guid: 'instance-c', index: 2, state: ::Diego::ActualLRPState::RUNNING, error: 'some-details', since: two_days_ago_since_epoch_ns
+            ).tap do |actual_lrp|
+              actual_lrp.actual_lrp_net_info = lrp_1_net_info
+            end
+          end
+
           before do
             allow(bbs_instances_client).to receive_messages(lrp_instances: bbs_actual_lrps_response, desired_lrp_instance: bbs_desired_lrp_response)
           end
 
           it 'shows all correct state for all instances' do
             result, = instances_reporter.stats_for_app(process)
+            expect(result.length).to eq(3)
             expect(result[0][:state]).to eq('DOWN')
             expect(result[1][:state]).to eq('DOWN')
+            expect(result[2][:state]).to eq('RUNNING')
           end
         end
 

@@ -54,10 +54,6 @@ module VCAP::CloudController
           if lrp_instances.include?(actual_lrp.actual_lrp_key.index)
             existing_lrp = lrp_instances[actual_lrp.actual_lrp_key.index]
             next if actual_lrp.since < existing_lrp.since
-
-            lrp_instances.delete(actual_lrp.actual_lrp_key.index)
-            result.delete(actual_lrp.actual_lrp_key.index)
-            lrp_instances[actual_lrp.actual_lrp_key.index] = actual_lrp
           end
 
           lrp_state = state || LrpStateTranslator.translate_lrp_state(actual_lrp)
