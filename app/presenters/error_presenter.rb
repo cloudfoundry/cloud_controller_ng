@@ -29,9 +29,7 @@ class ErrorPresenter
     end
   end
 
-  def api_error?
-    @error_hasher.api_error?
-  end
+  delegate :api_error?, to: :@error_hasher
 
   private
 
