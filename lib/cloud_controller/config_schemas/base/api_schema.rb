@@ -378,7 +378,7 @@ module VCAP::CloudController
 
             internal_route_vip_range: String,
 
-            default_app_lifecycle: String,
+            default_app_lifecycle: enum('buildpack', 'cnb'),
             custom_metric_tag_prefix_list: Array,
 
             optional(:cc_service_key_client_name) => String,

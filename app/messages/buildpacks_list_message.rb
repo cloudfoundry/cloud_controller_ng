@@ -5,12 +5,17 @@ module VCAP::CloudController
     register_allowed_keys %i[
       stacks
       names
+      lifecycle
       page
       per_page
     ]
 
     validates :names, array: true, allow_nil: true
     validates :stacks, array: true, allow_nil: true
+    validates :lifecycle,
+              string: true,
+              allow_nil: true,
+              inclusion: { in: [VCAP::CloudController::Lifecycles::BUILDPACK, VCAP::CloudController::Lifecycles::CNB], message: 'must be either "buildpack" or "cnb"' }
 
     validates_with NoAdditionalParamsValidator
 

@@ -10,13 +10,14 @@ module VCAP::CloudController
 
       attr_reader :config, :lifecycle_data, :staging_details
 
-      def initialize(config, staging_details, lifecycle_data, prefix, app_destination_path, cache_source)
+      def initialize(config, staging_details, lifecycle_data, prefix, app_destination_path, cache_source, bp_media_type)
         @config          = config
         @staging_details = staging_details
         @lifecycle_data  = lifecycle_data
         @prefix = prefix
         @app_destination_path = app_destination_path
         @cache_source = cache_source
+        @bp_media_type = bp_media_type
       end
 
       def action
@@ -35,8 +36,55 @@ module VCAP::CloudController
         serial(actions)
       end
 
+      def cached_dependencies
+        return nil if @config.get(:diego, :enable_declarative_asset_downloads)
+
+        dependencies = [
+          ::Diego::Bbs::Models::CachedDependency.new(
+            from: LifecycleBundleUriGenerator.uri(config.get(:diego, :lifecycle_bundles)[lifecycle_bundle_key]),
+            to: '/tmp/lifecycle',
+            cache_key: "#{@prefix}-#{lifecycle_stack}-lifecycle"
+          )
+        ]
+
+        others = lifecycle_data[:buildpacks].map do |buildpack|
+          next if buildpack[:name] == 'custom'
+
+          buildpack_dependency = {
+            name: buildpack[:name],
+            from: buildpack[:url],
+            to: buildpack_path(buildpack[:key]),
+            cache_key: buildpack[:key]
+          }
+          if buildpack[:sha256]
+            buildpack_dependency[:checksum_algorithm] = 'sha256'
+            buildpack_dependency[:checksum_value] = buildpack[:sha256]
+          end
+
+          ::Diego::Bbs::Models::CachedDependency.new(buildpack_dependency.compact)
+        end.compact
+
+        dependencies.concat(others)
+      end
+
       def additional_image_layers
-        []
+        lifecycle_data[:buildpacks].
+          reject { |buildpack| buildpack[:name] == 'custom' }.
+          map do |buildpack|
+          layer = {
+            name: buildpack[:name],
+            url: buildpack[:url],
+            destination_path: buildpack_path(buildpack[:key]),
+            layer_type: ::Diego::Bbs::Models::ImageLayer::Type::SHARED,
+            media_type: @bp_media_type
+          }
+          if buildpack[:sha256]
+            layer[:digest_algorithm] = ::Diego::Bbs::Models::ImageLayer::DigestAlgorithm::SHA256
+            layer[:digest_value] = buildpack[:sha256]
+          end
+
+          ::Diego::Bbs::Models::ImageLayer.new(layer.compact)
+        end
       end
 
       def image_layers
