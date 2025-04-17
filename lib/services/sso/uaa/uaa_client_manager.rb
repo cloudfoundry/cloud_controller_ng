@@ -10,9 +10,7 @@ module VCAP::Services::SSO::UAA
       @uaa_client = create_uaa_client
     end
 
-    def get_clients(client_ids)
-      @uaa_client.get_clients(client_ids)
-    end
+    delegate :get_clients, to: :@uaa_client
 
     def modify_transaction(changeset)
       return if changeset.empty?
