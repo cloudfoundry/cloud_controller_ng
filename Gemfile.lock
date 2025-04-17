@@ -124,7 +124,7 @@ GEM
       simplecov (<= 0.13)
     coderay (1.1.3)
     concurrent-ruby (1.3.5)
-    connection_pool (2.5.0)
+    connection_pool (2.5.1)
     crack (1.0.0)
       bigdecimal
       rexml
@@ -489,11 +489,11 @@ GEM
     rubocop-factory_bot (2.27.1)
       lint_roller (~> 1.1)
       rubocop (~> 1.72, >= 1.72.1)
-    rubocop-rails (2.30.3)
+    rubocop-rails (2.31.0)
       activesupport (>= 4.2.0)
       lint_roller (~> 1.1)
       rack (>= 1.1)
-      rubocop (>= 1.72.1, < 2.0)
+      rubocop (>= 1.75.0, < 2.0)
       rubocop-ast (>= 1.38.0, < 2.0)
     rubocop-rspec (3.5.0)
       lint_roller (~> 1.1)
@@ -674,7 +674,7 @@ DEPENDENCIES
   rubocop (~> 1.75.2)
   rubocop-capybara
   rubocop-factory_bot
-  rubocop-rails (~> 2.30)
+  rubocop-rails (~> 2.31)
   rubocop-rspec (~> 3.4)
   rubocop-rspec_rails
   rubocop-sequel (~> 0.4.1)
