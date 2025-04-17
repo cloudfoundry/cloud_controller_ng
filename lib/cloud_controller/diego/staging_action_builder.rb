@@ -109,7 +109,7 @@ module VCAP::CloudController
         end
 
         if !@config.get(:diego,
-                        :enable_declarative_asset_downloads) && (lifecycle_data[:build_artifacts_cache_download_uri] && lifecycle_data[:buildpack_cache_checksum].present?)
+                        :enable_declarative_asset_downloads) && lifecycle_data[:build_artifacts_cache_download_uri] && lifecycle_data[:buildpack_cache_checksum].present?
           result << try_action(::Diego::Bbs::Models::DownloadAction.new({
             artifact: 'build artifacts cache',
             from: lifecycle_data[:build_artifacts_cache_download_uri],
