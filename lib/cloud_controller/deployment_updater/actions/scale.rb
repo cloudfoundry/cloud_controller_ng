@@ -32,7 +32,8 @@ module VCAP::CloudController
 
             deployment.update(
               status_value: DeploymentModel::ACTIVE_STATUS_VALUE,
-              status_reason: DeploymentModel::DEPLOYING_STATUS_REASON
+              status_reason: DeploymentModel::DEPLOYING_STATUS_REASON,
+              error: nil
             )
 
             ScaleDownCanceledProcesses.new(deployment).call

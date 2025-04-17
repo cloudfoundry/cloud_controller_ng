@@ -131,6 +131,30 @@ module VCAP::CloudController::Presenters::V3
         end
       end
 
+      describe 'error' do
+        context 'when the deployment has no error' do
+          before do
+            deployment.error = nil
+          end
+
+          it 'does not have the error key' do
+            result = DeploymentPresenter.new(deployment).to_hash
+            expect(result[:status][:details].key?(:error)).to be false
+          end
+        end
+
+        context 'when the deployment has an error' do
+          before do
+            deployment.error = 'Quota error'
+          end
+
+          it 'renders the error' do
+            result = DeploymentPresenter.new(deployment).to_hash
+            expect(result[:status][:details][:error]).to eq 'Quota error'
+          end
+        end
+      end
+
       describe 'status' do
         context 'when the strategy is rolling' do
           before do
