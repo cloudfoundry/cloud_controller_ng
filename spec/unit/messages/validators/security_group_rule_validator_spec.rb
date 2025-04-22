@@ -81,22 +81,6 @@ module VCAP::CloudController::Validators
     end
 
     describe 'destination validation' do
-      context 'the destination is valid' do
-        let(:rules) do
-          [
-            {
-              protocol: 'udp',
-              destination: '10.10.10.0/24',
-              ports: '8080'
-            }
-          ]
-        end
-
-        it 'accepts the valid destination' do
-          expect(subject).to be_valid
-        end
-      end
-
       context 'the destination is not a string' do
         let(:rules) do
           [
@@ -129,140 +113,6 @@ module VCAP::CloudController::Validators
         end
       end
 
-      context 'when the destination field contains whitespace' do
-        context 'in a single destination' do
-          let(:rules) do
-            [
-              {
-                protocol: 'udp',
-                destination: '    10.10.10.10'
-              }
-            ]
-          end
-
-          it 'is not valid' do
-            expect(subject).not_to be_valid
-            expect(subject.errors.full_messages).to include 'Rules[0]: destination must not contain whitespace'
-          end
-        end
-
-        context 'in a comma-delimited destination' do
-          let(:rules) do
-            [
-              {
-                protocol: 'udp',
-                destination: '    10.10.10.10   ,   192.168.17.12'
-              }
-            ]
-          end
-
-          it 'is not valid' do
-            expect(subject).not_to be_valid
-            expect(subject.errors.full_messages).to include 'Rules[0]: destination must not contain whitespace'
-          end
-        end
-      end
-
-      context 'when the destination contains a comma and comma_delimited_destinations are DISABLED' do
-        let(:rules) do
-          [
-            {
-              protocol: 'udp',
-              destination: '10.10.10.10,'
-            }
-          ]
-        end
-
-        it 'is not valid' do
-          expect(subject).not_to be_valid
-          expect(subject.errors.full_messages).to include 'Rules[0]: destination must be a valid CIDR, IP address, or IP address range'
-        end
-      end
-
-      context 'when there is a leading zero in an octet' do
-        context 'in a CIDR' do
-          let(:rules) do
-            [
-              {
-                protocol: 'tcp',
-                destination: '10.000.0.0/24',
-                ports: '443'
-              },
-              {
-                protocol: 'tcp',
-                destination: '10.0.0.000/24',
-                ports: '443'
-              }
-            ]
-          end
-
-          it 'is not valid' do
-            expect(subject).not_to be_valid
-            expect(subject.errors.full_messages).to include 'Rules[0]: destination octets cannot contain leading zeros'
-            expect(subject.errors.full_messages).to include 'Rules[1]: destination octets cannot contain leading zeros'
-          end
-        end
-
-        context 'in an IP range' do
-          let(:rules) do
-            [
-              {
-                protocol: 'tcp',
-                destination: '1.0.0.000-1.0.0.200',
-                ports: '443'
-              }
-            ]
-          end
-
-          it 'is not valid' do
-            expect(subject).not_to be_valid
-            expect(subject.errors.full_messages).to include 'Rules[0]: destination octets cannot contain leading zeros'
-          end
-        end
-
-        context 'in an IP' do
-          let(:rules) do
-            [
-              {
-                protocol: 'tcp',
-                destination: '010.0.0.53',
-                ports: '443'
-              },
-              {
-                protocol: 'tcp',
-                destination: '10.000.0.53',
-                ports: '443'
-              },
-              {
-                protocol: 'tcp',
-                destination: '10.0.000.53',
-                ports: '443'
-              },
-              {
-                protocol: 'tcp',
-                destination: '10.0.0.053',
-                ports: '443'
-              },
-              {
-                protocol: 'tcp',
-                destination: '010.000.000.053',
-                ports: '443'
-              }
-            ]
-          end
-
-          it 'is not valid' do
-            expect(subject).not_to be_valid
-            expect(subject.errors.full_messages.length).to eq(5)
-            expect(subject.errors.full_messages).to include 'Rules[0]: destination octets cannot contain leading zeros'
-            expect(subject.errors.full_messages).to include 'Rules[1]: destination octets cannot contain leading zeros'
-            expect(subject.errors.full_messages).to include 'Rules[2]: destination octets cannot contain leading zeros'
-            expect(subject.errors.full_messages).to include 'Rules[3]: destination octets cannot contain leading zeros'
-            expect(subject.errors.full_messages).to include 'Rules[4]: destination octets cannot contain leading zeros'
-          end
-        end
-      end
-
       context 'when the destination field is not a valid CIDR or IP range' do
         let(:rules) do
           [
@@ -279,140 +129,9 @@ module VCAP::CloudController::Validators
         end
       end
 
-      context 'when the destination field is an invalid IP range' do
-        let(:rules) do
-          [
-            {
-              protocol: 'tcp',
-              destination: '192.168.10.2-192.168.105',
-              ports: '8080'
-            }
-          ]
-        end
-
-        it 'adds an error' do
-          expect(subject).not_to be_valid
-          expect(subject.errors.full_messages).to include 'Rules[0]: destination IP address range is invalid'
-        end
-      end
-
-      context 'when the destination field is an IP address range in reverse order' do
-        let(:rules) do
-          [
-            {
-              protocol: 'udp',
-              destination: '9.9.9.9-0.0.0.0'
-            }
-          ]
-        end
-
-        it 'adds an error' do
-          expect(subject).not_to be_valid
-          expect(subject.errors.full_messages).to include 'Rules[0]: beginning of IP address range is numerically greater than the end of its range (range endpoints are inverted)'
-        end
-      end
-
-      context 'when the destination field is an invalid CIDR notation' do
-        let(:rules) do
-          [
-            {
-              protocol: 'udp',
-              destination: '192.168.10.2/240'
-            }
-          ]
-        end
-
-        it 'adds an error' do
-          expect(subject).not_to be_valid
-          expect(subject.errors.full_messages).to include 'Rules[0]: destination must be a valid CIDR, IP address, or IP address range'
-        end
-      end
-
-      context 'when the destination field is a valid IP address' do
-        let(:rules) do
-          [
-            {
-              protocol: 'udp',
-              destination: '192.168.10.2',
-              ports: '8080'
-            }
-          ]
-        end
-
-        it 'accepts the valid IP address' do
-          expect(subject).to be_valid
-        end
-      end
-
-      context 'when the destination field is a valid IP address range' do
-        let(:rules) do
-          [
-            {
-              protocol: 'udp',
-              destination: '192.168.10.2-192.168.15.254',
-              ports: '8080'
-            }
-          ]
-        end
-
-        it 'accepts the valid IP address range' do
-          expect(subject).to be_valid
-        end
-      end
-
-      context 'when the destination field is a valid CIDR notation' do
-        let(:rules) do
-          [
-            {
-              protocol: 'udp',
-              destination: '192.168.10.2/24',
-              ports: '8080'
-            }
-          ]
-        end
-
-        it 'accepts the valid CIDR notation' do
-          expect(subject).to be_valid
-        end
-      end
-
       context 'comma-delimited destinations are enabled' do
         before do
           TestConfig.config[:security_groups][:enable_comma_delimited_destinations] = true
-        end
-
-        context 'the destination is valid comma-delimited list' do
-          context 'of CIDRs' do
-            let(:rules) do
-              [
-                {
-                  protocol: 'udp',
-                  destination: '10.0.0.0/8,192.168.0.0/16',
-                  ports: '8080'
-                }
-              ]
-            end
-
-            it 'accepts the destination' do
-              expect(subject).to be_valid
-            end
-          end
-
-          context 'of a CIDR, a range and an IP address' do
-            let(:rules) do
-              [
-                {
-                  protocol: 'udp',
-                  destination: '10.0.0.0/8,1.0.0.0-1.0.0.255,4.5.6.7',
-                  ports: '8080'
-                }
-              ]
-            end
-
-            it 'accepts the chimeric destination' do
-              expect(subject).to be_valid
-            end
-          end
         end
 
         context 'the destination is nil' do
@@ -431,61 +150,6 @@ module VCAP::CloudController::Validators
 
             expect(subject).not_to be_valid
             expect(subject.errors.full_messages).to include expected_error
-          end
-        end
-
-        context 'one of the destinations is invalid' do
-          let(:rules) do
-            [
-              {
-                protocol: 'udp',
-                destination: '192.168.10.2/24,1.2',
-                ports: '8080'
-              }
-            ]
-          end
-
-          it 'throws a specific error to comma-delimited destinations' do
-            expect(subject).not_to be_valid
-            expect(subject.errors.full_messages).to include 'Rules[0]: destination must contain valid CIDR(s), IP address(es), or IP address range(s)'
-          end
-        end
-
-        context 'all of the destinations are invalid' do
-          let(:rules) do
-            [
-              {
-                protocol: 'udp',
-                destination: '1.2-7.8,999.999.999.999,200.0.0.0-150.0.0.0,10.0.0.0/500',
-                ports: '8080'
-              }
-            ]
-          end
-
-          it 'throws an error for every destination' do
-            expect(subject).not_to be_valid
-            expect(subject.errors.full_messages.length).to equal(4)
-            expect(subject.errors.full_messages).to include 'Rules[0]: destination must contain valid CIDR(s), IP address(es), or IP address range(s)'
-            expect(subject.errors.full_messages).to include 'Rules[0]: destination IP address range is invalid'
-
-            expected_error = 'Rules[0]: beginning of IP address range is numerically greater than the end of its range (range endpoints are inverted)'
-            expect(subject.errors.full_messages).to include expected_error
-          end
-        end
-
-        context 'more than 6000 destinations per rule' do
-          let(:rules) do
-            [
-              {
-                protocol: 'all',
-                destination: (['192.168.1.3'] * 7000).join(',')
-              }
-            ]
-          end
-
-          it 'throws an error' do
-            expect(subject).not_to be_valid
-            expect(subject.errors.full_messages).to include 'Rules[0]: maximum destinations per rule exceeded - must be under 6000'
           end
         end
 
@@ -564,6 +228,762 @@ module VCAP::CloudController::Validators
             expect(subject.errors.full_messages[0]).to eq 'Rules[0]: empty destination specified in comma-delimited list'
             expect(subject.errors.full_messages[2]).to eq 'Rules[0]: empty destination specified in comma-delimited list'
             expect(subject.errors.full_messages[4]).to eq 'Rules[0]: empty destination specified in comma-delimited list'
+          end
+        end
+      end
+
+      describe 'ipv4' do
+        context 'the destination is valid' do
+          let(:rules) do
+            [
+              {
+                protocol: 'udp',
+                destination: '10.10.10.0/24',
+                ports: '8080'
+              }
+            ]
+          end
+
+          it 'accepts the valid destination' do
+            expect(subject).to be_valid
+          end
+        end
+
+        context 'when the destination field contains whitespace' do
+          context 'in a single destination' do
+            let(:rules) do
+              [
+                {
+                  protocol: 'udp',
+                  destination: '    10.10.10.10'
+                }
+              ]
+            end
+
+            it 'is not valid' do
+              expect(subject).not_to be_valid
+              expect(subject.errors.full_messages).to include 'Rules[0]: destination must not contain whitespace'
+            end
+          end
+
+          context 'in a comma-delimited destination' do
+            let(:rules) do
+              [
+                {
+                  protocol: 'udp',
+                  destination: '    10.10.10.10   ,   192.168.17.12'
+                }
+              ]
+            end
+
+            it 'is not valid' do
+              expect(subject).not_to be_valid
+              expect(subject.errors.full_messages).to include 'Rules[0]: destination must not contain whitespace'
+            end
+          end
+        end
+
+        context 'when the destination contains a comma and comma_delimited_destinations are DISABLED' do
+          let(:rules) do
+            [
+              {
+                protocol: 'udp',
+                destination: '10.10.10.10,'
+              }
+            ]
+          end
+
+          it 'is not valid' do
+            expect(subject).not_to be_valid
+            expect(subject.errors.full_messages).to include 'Rules[0]: destination must be a valid CIDR, IP address, or IP address range'
+          end
+        end
+
+        context 'when there is a leading zero in an octet' do
+          context 'in a CIDR' do
+            let(:rules) do
+              [
+                {
+                  protocol: 'tcp',
+                  destination: '10.000.0.0/24',
+                  ports: '443'
+                },
+                {
+                  protocol: 'tcp',
+                  destination: '10.0.0.000/24',
+                  ports: '443'
+                }
+              ]
+            end
+
+            it 'is not valid' do
+              expect(subject).not_to be_valid
+              expect(subject.errors.full_messages).to include 'Rules[0]: destination octets cannot contain leading zeros'
+              expect(subject.errors.full_messages).to include 'Rules[1]: destination octets cannot contain leading zeros'
+            end
+          end
+
+          context 'in an IP range' do
+            let(:rules) do
+              [
+                {
+                  protocol: 'tcp',
+                  destination: '1.0.0.000-1.0.0.200',
+                  ports: '443'
+                }
+              ]
+            end
+
+            it 'is not valid' do
+              expect(subject).not_to be_valid
+              expect(subject.errors.full_messages).to include 'Rules[0]: destination octets cannot contain leading zeros'
+            end
+          end
+
+          context 'in an IP' do
+            let(:rules) do
+              [
+                {
+                  protocol: 'tcp',
+                  destination: '010.0.0.53',
+                  ports: '443'
+                },
+                {
+                  protocol: 'tcp',
+                  destination: '10.000.0.53',
+                  ports: '443'
+                },
+                {
+                  protocol: 'tcp',
+                  destination: '10.0.000.53',
+                  ports: '443'
+                },
+                {
+                  protocol: 'tcp',
+                  destination: '10.0.0.053',
+                  ports: '443'
+                },
+                {
+                  protocol: 'tcp',
+                  destination: '010.000.000.053',
+                  ports: '443'
+                }
+              ]
+            end
+
+            it 'is not valid' do
+              expect(subject).not_to be_valid
+              expect(subject.errors.full_messages.length).to eq(5)
+              expect(subject.errors.full_messages).to include 'Rules[0]: destination octets cannot contain leading zeros'
+              expect(subject.errors.full_messages).to include 'Rules[1]: destination octets cannot contain leading zeros'
+              expect(subject.errors.full_messages).to include 'Rules[2]: destination octets cannot contain leading zeros'
+              expect(subject.errors.full_messages).to include 'Rules[3]: destination octets cannot contain leading zeros'
+              expect(subject.errors.full_messages).to include 'Rules[4]: destination octets cannot contain leading zeros'
+            end
+          end
+        end
+
+        context 'when the destination field is an invalid IP range' do
+          let(:rules) do
+            [
+              {
+                protocol: 'tcp',
+                destination: '192.168.10.2-192.168.105',
+                ports: '8080'
+              }
+            ]
+          end
+
+          it 'adds an error' do
+            expect(subject).not_to be_valid
+            expect(subject.errors.full_messages).to include 'Rules[0]: destination IP address range is invalid'
+          end
+        end
+
+        context 'when the destination field is an IP address range in reverse order' do
+          let(:rules) do
+            [
+              {
+                protocol: 'udp',
+                destination: '9.9.9.9-0.0.0.0'
+              }
+            ]
+          end
+
+          it 'adds an error' do
+            expect(subject).not_to be_valid
+            expect(subject.errors.full_messages).
+              to include 'Rules[0]: beginning of IP address range is numerically greater than the end of its range (range endpoints are inverted)'
+          end
+        end
+
+        context 'when the destination field is an invalid CIDR notation' do
+          let(:rules) do
+            [
+              {
+                protocol: 'udp',
+                destination: '192.168.10.2/240'
+              }
+            ]
+          end
+
+          it 'adds an error' do
+            expect(subject).not_to be_valid
+            expect(subject.errors.full_messages).to include 'Rules[0]: destination must be a valid CIDR, IP address, or IP address range'
+          end
+        end
+
+        context 'when the destination field is a valid IP address' do
+          let(:rules) do
+            [
+              {
+                protocol: 'udp',
+                destination: '192.168.10.2',
+                ports: '8080'
+              }
+            ]
+          end
+
+          it 'accepts the valid IP address' do
+            expect(subject).to be_valid
+          end
+        end
+
+        context 'when the destination field is a valid IP address range' do
+          let(:rules) do
+            [
+              {
+                protocol: 'udp',
+                destination: '192.168.10.2-192.168.15.254',
+                ports: '8080'
+              }
+            ]
+          end
+
+          it 'accepts the valid IP address range' do
+            expect(subject).to be_valid
+          end
+        end
+
+        context 'when the destination field is a valid CIDR notation' do
+          let(:rules) do
+            [
+              {
+                protocol: 'udp',
+                destination: '192.168.10.2/24',
+                ports: '8080'
+              }
+            ]
+          end
+
+          it 'accepts the valid CIDR notation' do
+            expect(subject).to be_valid
+          end
+        end
+
+        context 'comma-delimited destinations are enabled' do
+          before do
+            TestConfig.config[:security_groups][:enable_comma_delimited_destinations] = true
+          end
+
+          context 'the destination is valid comma-delimited list' do
+            context 'of CIDRs' do
+              let(:rules) do
+                [
+                  {
+                    protocol: 'udp',
+                    destination: '10.0.0.0/8,192.168.0.0/16',
+                    ports: '8080'
+                  }
+                ]
+              end
+
+              it 'accepts the destination' do
+                expect(subject).to be_valid
+              end
+            end
+
+            context 'of a CIDR, a range and an IP address' do
+              let(:rules) do
+                [
+                  {
+                    protocol: 'udp',
+                    destination: '10.0.0.0/8,1.0.0.0-1.0.0.255,4.5.6.7',
+                    ports: '8080'
+                  }
+                ]
+              end
+
+              it 'accepts the chimeric destination' do
+                expect(subject).to be_valid
+              end
+            end
+          end
+
+          context 'one of the destinations is invalid' do
+            let(:rules) do
+              [
+                {
+                  protocol: 'udp',
+                  destination: '192.168.10.2/24,1.2',
+                  ports: '8080'
+                }
+              ]
+            end
+
+            it 'throws a specific error to comma-delimited destinations' do
+              expect(subject).not_to be_valid
+              expect(subject.errors.full_messages).to include 'Rules[0]: destination must contain valid CIDR(s), IP address(es), or IP address range(s)'
+            end
+          end
+
+          context 'all of the destinations are invalid' do
+            let(:rules) do
+              [
+                {
+                  protocol: 'udp',
+                  destination: '1.2-7.8,999.999.999.999,200.0.0.0-150.0.0.0,10.0.0.0/500',
+                  ports: '8080'
+                }
+              ]
+            end
+
+            it 'throws an error for every destination' do
+              expect(subject).not_to be_valid
+              expect(subject.errors.full_messages.length).to equal(4)
+              expect(subject.errors.full_messages).to include 'Rules[0]: destination must contain valid CIDR(s), IP address(es), or IP address range(s)'
+              expect(subject.errors.full_messages).to include 'Rules[0]: destination IP address range is invalid'
+
+              expected_error = 'Rules[0]: beginning of IP address range is numerically greater than the end of its range (range endpoints are inverted)'
+              expect(subject.errors.full_messages).to include expected_error
+            end
+          end
+
+          context 'more than 6000 destinations per rule' do
+            let(:rules) do
+              [
+                {
+                  protocol: 'all',
+                  destination: (['192.168.1.3'] * 7000).join(',')
+                }
+              ]
+            end
+
+            it 'throws an error' do
+              expect(subject).not_to be_valid
+              expect(subject.errors.full_messages).to include 'Rules[0]: maximum destinations per rule exceeded - must be under 6000'
+            end
+          end
+        end
+      end
+
+      describe 'ipv6' do
+        before do
+          TestConfig.config[:enable_ipv6] = true
+        end
+
+        context 'the destination is valid' do
+          let(:rules) do
+            [
+              {
+                protocol: 'udp',
+                destination: '2001:db8::/32',
+                ports: '8080'
+              }
+            ]
+          end
+
+          it 'accepts the valid destination' do
+            expect(subject).to be_valid
+          end
+        end
+
+        context 'when the destination field contains whitespace' do
+          context 'in a single destination' do
+            let(:rules) do
+              [
+                {
+                  protocol: 'udp',
+                  destination: '    2001:0db8::1'
+                }
+              ]
+            end
+
+            it 'is not valid' do
+              expect(subject).not_to be_valid
+              expect(subject.errors.full_messages).to include 'Rules[0]: destination must not contain whitespace'
+            end
+          end
+
+          context 'in a comma-delimited destination' do
+            let(:rules) do
+              [
+                {
+                  protocol: 'udp',
+                  destination: '    2001:0db8::1   ,   2001:0db8::2'
+                }
+              ]
+            end
+
+            it 'is not valid' do
+              expect(subject).not_to be_valid
+              expect(subject.errors.full_messages).to include 'Rules[0]: destination must not contain whitespace'
+            end
+          end
+        end
+
+        context 'when the destination contains a comma and comma_delimited_destinations are DISABLED' do
+          let(:rules) do
+            [
+              {
+                protocol: 'udp',
+                destination: '2001:0db8::1,'
+              }
+            ]
+          end
+
+          it 'is not valid' do
+            expect(subject).not_to be_valid
+            expect(subject.errors.full_messages).to include 'Rules[0]: destination must be a valid CIDR, IP address, or IP address range'
+          end
+        end
+
+        context 'when there is a leading zero in an octet' do
+          context 'in a CIDR' do
+            let(:rules) do
+              [
+                {
+                  protocol: 'tcp',
+                  destination: '2001:0db8::/32',
+                  ports: '443'
+                },
+                {
+                  protocol: 'tcp',
+                  destination: '2001:db8:0000::/32',
+                  ports: '443'
+                }
+              ]
+            end
+
+            it 'is not valid' do
+              expect(subject).not_to be_valid
+              expect(subject.errors.full_messages).to include 'Rules[0]: destination octets cannot contain leading zeros'
+              expect(subject.errors.full_messages).to include 'Rules[1]: destination octets cannot contain leading zeros'
+            end
+          end
+
+          context 'in an IP range' do
+            let(:rules) do
+              [
+                {
+                  protocol: 'tcp',
+                  destination: '2001:0db8::1-2001:0db8::ff',
+                  ports: '443'
+                }
+              ]
+            end
+
+            it 'is not valid' do
+              expect(subject).not_to be_valid
+              expect(subject.errors.full_messages).to include 'Rules[0]: destination octets cannot contain leading zeros'
+            end
+          end
+
+          context 'in an IP' do
+            let(:rules) do
+              [
+                {
+                  protocol: 'tcp',
+                  destination: '2001:0db8::1',
+                  ports: '443'
+                },
+                {
+                  protocol: 'tcp',
+                  destination: '2001:db8:0000::1',
+                  ports: '443'
+                },
+                {
+                  protocol: 'tcp',
+                  destination: '2001:db8::0001',
+                  ports: '443'
+                },
+                {
+                  protocol: 'tcp',
+                  destination: '2001:db8::01',
+                  ports: '443'
+                },
+                {
+                  protocol: 'tcp',
+                  destination: '2001:db8:0000:0000::01',
+                  ports: '443'
+                }
+              ]
+            end
+
+            it 'is not valid' do
+              expect(subject).not_to be_valid
+              expect(subject.errors.full_messages.length).to eq(5)
+              expect(subject.errors.full_messages).to include 'Rules[0]: destination octets cannot contain leading zeros'
+              expect(subject.errors.full_messages).to include 'Rules[1]: destination octets cannot contain leading zeros'
+              expect(subject.errors.full_messages).to include 'Rules[2]: destination octets cannot contain leading zeros'
+              expect(subject.errors.full_messages).to include 'Rules[3]: destination octets cannot contain leading zeros'
+              expect(subject.errors.full_messages).to include 'Rules[4]: destination octets cannot contain leading zeros'
+            end
+          end
+        end
+
+        context 'when the destination field is an invalid IP range' do
+          let(:rules) do
+            [
+              {
+                protocol: 'tcp',
+                destination: '2001:db8::1-2001:db8::g',
+                ports: '8080'
+              }
+            ]
+          end
+
+          it 'adds an error' do
+            expect(subject).not_to be_valid
+            expect(subject.errors.full_messages).to include 'Rules[0]: destination IP address range is invalid'
+          end
+        end
+
+        context 'when the destination field is an IP address range in reverse order' do
+          let(:rules) do
+            [
+              {
+                protocol: 'udp',
+                destination: '2001:db8::ff-2001:db8::1'
+              }
+            ]
+          end
+
+          it 'adds an error' do
+            expect(subject).not_to be_valid
+            expect(subject.errors.full_messages).
+              to include 'Rules[0]: beginning of IP address range is numerically greater than the end of its range (range endpoints are inverted)'
+          end
+        end
+
+        context 'when the destination field is an invalid CIDR notation' do
+          let(:rules) do
+            [
+              {
+                protocol: 'udp',
+                destination: '2001:db8::/129'
+              }
+            ]
+          end
+
+          it 'adds an error' do
+            expect(subject).not_to be_valid
+            expect(subject.errors.full_messages).to include 'Rules[0]: destination must be a valid CIDR, IP address, or IP address range'
+          end
+        end
+
+        context 'when the destination field is a valid IP address' do
+          let(:rules) do
+            [
+              {
+                protocol: 'udp',
+                destination: '2001:db8::',
+                ports: '8080'
+              }
+            ]
+          end
+
+          it 'accepts the valid IP address' do
+            expect(subject).to be_valid
+          end
+        end
+
+        context 'when the destination field is a valid IP address range' do
+          let(:rules) do
+            [
+              {
+                protocol: 'udp',
+                destination: '2001:db8::1-2001:db8::ff',
+                ports: '8080'
+              }
+            ]
+          end
+
+          it 'accepts the valid IP address range' do
+            expect(subject).to be_valid
+          end
+        end
+
+        context 'when the destination field is a valid CIDR notation' do
+          let(:rules) do
+            [
+              {
+                protocol: 'udp',
+                destination: '2001:db8::/32',
+                ports: '8080'
+              }
+            ]
+          end
+
+          it 'accepts the valid CIDR notation' do
+            expect(subject).to be_valid
+          end
+        end
+
+        context 'comma-delimited destinations are enabled' do
+          before do
+            TestConfig.config[:security_groups][:enable_comma_delimited_destinations] = true
+          end
+
+          context 'the destination is valid comma-delimited list' do
+            context 'of CIDRs' do
+              let(:rules) do
+                [
+                  {
+                    protocol: 'udp',
+                    destination: '10.0.0.0/8,192.168.0.0/16',
+                    ports: '8080'
+                  }
+                ]
+              end
+
+              it 'accepts the destination' do
+                expect(subject).to be_valid
+              end
+            end
+
+            context 'of a CIDR, a range and an IP address' do
+              let(:rules) do
+                [
+                  {
+                    protocol: 'udp',
+                    destination: '10.0.0.0/8,1.0.0.0-1.0.0.255,4.5.6.7',
+                    ports: '8080'
+                  }
+                ]
+              end
+
+              it 'accepts the chimeric destination' do
+                expect(subject).to be_valid
+              end
+            end
+
+            context 'of a IPv4 and IPv6 address' do
+              let(:rules) do
+                [
+                  {
+                    protocol: 'udp',
+                    destination: '2001:db8::,4.5.6.7',
+                    ports: '8080'
+                  }
+                ]
+              end
+
+              it 'accepts the chimeric destination' do
+                expect(subject).to be_valid
+              end
+            end
+          end
+
+          context 'one of the destinations is invalid' do
+            let(:rules) do
+              [
+                {
+                  protocol: 'udp',
+                  destination: '2001:db8::/32,2001',
+                  ports: '8080'
+                }
+              ]
+            end
+
+            it 'throws a specific error to comma-delimited destinations' do
+              expect(subject).not_to be_valid
+              expect(subject.errors.full_messages).to include 'Rules[0]: destination must contain valid CIDR(s), IP address(es), or IP address range(s)'
+            end
+          end
+
+          context 'all of the destinations are invalid' do
+            let(:rules) do
+              [
+                {
+                  protocol: 'udp',
+                  destination: '2001:db8::1-2001:db8::g,2001:db8::/129,2001:db8:0000::/32,2001:db8::ff-2001:db8::1',
+                  ports: '8080'
+                }
+              ]
+            end
+
+            it 'throws an error for every destination' do
+              expect(subject).not_to be_valid
+              expect(subject.errors.full_messages.length).to equal(4)
+              expect(subject.errors.full_messages).to include 'Rules[0]: destination must contain valid CIDR(s), IP address(es), or IP address range(s)'
+              expect(subject.errors.full_messages).to include 'Rules[0]: destination IP address range is invalid'
+
+              expected_error = 'Rules[0]: beginning of IP address range is numerically greater than the end of its range (range endpoints are inverted)'
+              expect(subject.errors.full_messages).to include expected_error
+            end
+          end
+
+          context 'more than 6000 destinations per rule' do
+            let(:rules) do
+              [
+                {
+                  protocol: 'all',
+                  destination: (['2001:db8::'] * 7000).join(',')
+                }
+              ]
+            end
+
+            it 'throws an error' do
+              expect(subject).not_to be_valid
+              expect(subject.errors.full_messages).to include 'Rules[0]: maximum destinations per rule exceeded - must be under 6000'
+            end
+          end
+
+          context 'ipv6 is disabled' do
+            before do
+              TestConfig.config[:enable_ipv6] = false
+            end
+
+            context 'when the destination contains IPv4 and IPv6 addresses' do
+              let(:rules) do
+                [
+                  {
+                    protocol: 'udp',
+                    destination: '2001:db8::,192.168.200.1',
+                    ports: '8080'
+                  }
+                ]
+              end
+
+              it 'throws an error' do
+                expect(subject).not_to be_valid
+                expect(subject.errors.full_messages).to include 'Rules[0]: destination must contain valid CIDR(s), IP address(es), or IP address range(s)'
+              end
+            end
+          end
+        end
+
+        context 'ipv6 is disabled' do
+          before do
+            TestConfig.config[:enable_ipv6] = false
+          end
+
+          context 'when the destination field is a valid IPv6 address' do
+            let(:rules) do
+              [
+                {
+                  protocol: 'udp',
+                  destination: '2001:db8::',
+                  ports: '8080'
+                }
+              ]
+            end
+
+            it 'does not accept a valid ipv6 address' do
+              expect(subject).not_to be_valid
+              expect(subject.errors.full_messages).to include 'Rules[0]: destination must be a valid CIDR, IP address, or IP address range'
+            end
           end
         end
       end
