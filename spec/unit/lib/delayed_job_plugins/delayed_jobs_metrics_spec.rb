@@ -1,4 +1,4 @@
-require 'spec_helper'
+require 'db_spec_helper'
 
 RSpec.describe DelayedJobMetrics::Plugin do
   let(:prometheus) { instance_double(VCAP::CloudController::Metrics::PrometheusUpdater) }
