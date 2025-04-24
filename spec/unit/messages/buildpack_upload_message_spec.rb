@@ -102,15 +102,26 @@ module VCAP::CloudController
           allow(File).to receive(:read).and_return("PX\x03\x04".force_encoding('binary'))
           upload_message = BuildpackUploadMessage.new(opts)
           expect(upload_message).not_to be_valid
-          expect(upload_message.errors.full_messages[0]).to include('buildpack.abcd is not a zip or gzip')
+          expect(upload_message.errors.full_messages[0]).to include('buildpack.abcd is not a zip or gzip archive or cnb file')
         end
       end
 
       context 'when the file is a tgz' do
         let(:opts) { { bits_path: '/tmp/bar', bits_name: 'buildpack.tgz' } }
 
-        it 'is not valid' do
+        it 'is valid' do
           allow(File).to receive(:read).and_return("\x1F\x8B\x08".force_encoding('binary'))
+          upload_message = BuildpackUploadMessage.new(opts)
+          expect(upload_message).to be_valid
+        end
+      end
+
+      context 'when the file is a cnb/tar' do
+        let(:opts) { { bits_path: '/tmp/bar', bits_name: 'buildpack.cnb' } }
+
+        it 'is valid' do
+          values = ["\x0".force_encoding('binary'), "\x75\x73\x74\x61\x72\x00\x30\x30".force_encoding('binary')]
+          allow(File).to receive(:read).and_return(*values)
           upload_message = BuildpackUploadMessage.new(opts)
           expect(upload_message).to be_valid
         end

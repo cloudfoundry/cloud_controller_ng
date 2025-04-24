@@ -10,10 +10,12 @@ module VCAP::CloudController
     let(:tmpdir) { Dir.mktmpdir }
     let(:filename) { 'file.zip' }
     let(:tgz_filename) { 'file.tgz' }
+    let(:cnb_filename) { 'file.cnb' }
 
     let(:sha_valid_zip) { Digester.new(algorithm: OpenSSL::Digest::SHA256).digest_file(valid_zip) }
     let(:sha_valid_zip2) { Digester.new(algorithm: OpenSSL::Digest::SHA256).digest_file(valid_zip2) }
     let(:sha_valid_tgz) { Digester.new(algorithm: OpenSSL::Digest::SHA256).digest_file(valid_tgz) }
+    let(:sha_valid_cnb) { Digester.new(algorithm: OpenSSL::Digest::SHA256).digest_file(valid_cnb) }
 
     let(:valid_zip_manifest_stack) { nil }
     let(:valid_zip) do
@@ -41,6 +43,13 @@ module VCAP::CloudController
       TestTgz.create(tgz_name, 3, 1024)
       tgz_file = File.new(tgz_name)
       Rack::Test::UploadedFile.new(tgz_file)
+    end
+
+    let(:valid_cnb) do
+      cnb_name = File.join(tmpdir, cnb_filename)
+      TestCnb.create(cnb_name, 3, 1024)
+      cnb_file = File.new(cnb_name)
+      Rack::Test::UploadedFile.new(cnb_file)
     end
 
     let(:staging_timeout) { TestConfig.config_instance.get(:staging, :timeout_in_seconds) }
@@ -152,7 +161,7 @@ module VCAP::CloudController
           end
         end
 
-        context 'lifecycle: cnb' do
+        context 'lifecycle: gzip cnb' do
           let!(:buildpack) { VCAP::CloudController::Buildpack.create_from_hash({ name: 'upload_cnb_buildpack', stack: 'cider', position: 0, lifecycle: 'cnb' }) }
           let(:expected_sha_valid_tgz) { "#{buildpack.guid}_#{sha_valid_tgz}" }
 
@@ -160,6 +169,17 @@ module VCAP::CloudController
             expect(buildpack_blobstore).to receive(:cp_to_blobstore).with(valid_tgz, expected_sha_valid_tgz)
 
             upload_buildpack.upload_buildpack(buildpack, valid_tgz, tgz_filename)
+          end
+        end
+
+        context 'lifecycle: cnb' do
+          let!(:buildpack) { VCAP::CloudController::Buildpack.create_from_hash({ name: 'upload_cnb_buildpack', stack: 'cider', position: 0, lifecycle: 'cnb' }) }
+          let(:expected_sha_valid_cnb) { "#{buildpack.guid}_#{sha_valid_cnb}" }
+
+          it 'uploads' do
+            expect(buildpack_blobstore).to receive(:cp_to_blobstore).with(valid_cnb, expected_sha_valid_cnb)
+
+            upload_buildpack.upload_buildpack(buildpack, valid_cnb, cnb_filename)
           end
         end
 
