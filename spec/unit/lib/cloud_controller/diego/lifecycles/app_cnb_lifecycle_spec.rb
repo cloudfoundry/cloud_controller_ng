@@ -102,14 +102,6 @@ module VCAP::CloudController
         it 'invalid' do
           expect(lifecycle.valid?).to be(false)
         end
-
-        context 'during an update' do
-          let(:message) { VCAP::CloudController::AppUpdateMessage.new(request) }
-
-          it 'valid' do
-            expect(lifecycle.valid?).to be(true)
-          end
-        end
       end
 
       context 'with buildpacks' do
@@ -122,6 +114,14 @@ module VCAP::CloudController
 
         it 'valid' do
           expect(lifecycle.valid?).to be(true)
+        end
+
+        context 'during an update' do
+          let(:message) { VCAP::CloudController::AppUpdateMessage.new(request) }
+
+          it 'valid' do
+            expect(lifecycle.valid?).to be(true)
+          end
         end
       end
     end
