@@ -2,7 +2,7 @@ require 'zlib'
 require 'rubygems/package'
 
 module TestCnb
-  def self.create(name, file_count, file_size = 1024, &)
+  def self.create(name, file_count, file_size=1024, &)
     File.open(name, 'wb') do |file|
       Gem::Package::TarWriter.new(file) do |tar|
         file_count.times do |i|
