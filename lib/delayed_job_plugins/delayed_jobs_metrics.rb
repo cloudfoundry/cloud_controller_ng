@@ -1,7 +1,11 @@
 module DelayedJobMetrics
   class Plugin < Delayed::Plugin
-    def self.prometheus
-      @prometheus ||= CloudController::DependencyLocator.instance.cc_worker_prometheus_updater
+    class << self
+      attr_writer :prometheus
+
+      def prometheus
+        @prometheus ||= CloudController::DependencyLocator.instance.cc_worker_prometheus_updater
+      end
     end
 
     callbacks do |lifecycle|

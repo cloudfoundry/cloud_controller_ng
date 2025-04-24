@@ -1,12 +1,15 @@
 require 'spec_helper'
 
 RSpec.describe DelayedJobMetrics::Plugin do
-  let(:worker) { instance_double(Delayed::Worker, name: 'test_worker') }
+  let(:prometheus) { instance_double(VCAP::CloudController::Metrics::PrometheusUpdater) }
 
   before do
-    @prometheus = instance_double(VCAP::CloudController::Metrics::PrometheusUpdater)
-    allow(CloudController::DependencyLocator.instance).to receive(:cc_worker_prometheus_updater).and_return(@prometheus)
-    allow(@prometheus).to receive(:update_histogram_metric)
+    DelayedJobMetrics::Plugin.prometheus = prometheus
+    allow(prometheus).to receive(:update_histogram_metric)
+  end
+
+  after do
+    DelayedJobMetrics::Plugin.prometheus = nil # Reset after each test
   end
 
   it 'loads the plugin' do
@@ -26,13 +29,13 @@ RSpec.describe DelayedJobMetrics::Plugin do
       worker.name = 'test_worker'
       worker.work_off(1)
 
-      expect(@prometheus).to have_received(:update_histogram_metric).with(
+      expect(prometheus).to have_received(:update_histogram_metric).with(
         :cc_job_pickup_delay_seconds,
         be_within(0.5).of(10.0),
         labels: { queue: VCAP::CloudController::Jobs::Queues.generic, worker: 'test_worker' }
       ).once
 
-      expect(@prometheus).to have_received(:update_histogram_metric).with(
+      expect(prometheus).to have_received(:update_histogram_metric).with(
         :cc_job_duration_seconds,
         kind_of(Numeric),
         labels: { queue: VCAP::CloudController::Jobs::Queues.generic, worker: 'test_worker' }
