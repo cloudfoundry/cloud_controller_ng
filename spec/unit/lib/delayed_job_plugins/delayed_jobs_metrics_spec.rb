@@ -25,6 +25,8 @@ RSpec.describe DelayedJobMetrics::Plugin do
       worker = Delayed::Worker.new
       worker.name = 'test_worker'
       worker.work_off(1)
+      # Debug plugins
+      puts "Plugins: #{Delayed::Worker.plugins.inspect}"
 
       expect(prometheus).to have_received(:update_histogram_metric).with(
         :cc_job_pickup_delay_seconds,
