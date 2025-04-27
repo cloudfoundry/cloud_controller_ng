@@ -75,7 +75,7 @@ RSpec.describe 'Sinatra::VCAP', type: :v2_controller do
       expect(last_response.body).to eq('ok')
     end
 
-    it_behaves_like 'http header content type'
+    include_examples 'http header content type'
   end
 
   describe 'accessing an invalid route' do
@@ -90,7 +90,7 @@ RSpec.describe 'Sinatra::VCAP', type: :v2_controller do
       expect(decoded_response['description']).to match(/Unknown request/)
     end
 
-    it_behaves_like 'http header content type'
+    include_examples 'http header content type'
   end
 
   describe 'accessing a route that throws a low level exception' do
@@ -108,7 +108,7 @@ RSpec.describe 'Sinatra::VCAP', type: :v2_controller do
                                      })
     end
 
-    it_behaves_like 'http header content type'
+    include_examples 'http header content type'
   end
 
   describe 'accessing a route that throws a vcap error' do

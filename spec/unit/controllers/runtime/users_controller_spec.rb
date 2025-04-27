@@ -80,22 +80,22 @@ module VCAP::CloudController
         let(:member_a) { @org_a_manager }
         let(:member_b) { @space_a_manager }
 
-        it_behaves_like 'permission enumeration', 'User',
-                        name: 'user',
-                        path: '/v2/users',
-                        enumerate: :not_allowed
+        include_examples 'permission enumeration', 'User',
+                         name: 'user',
+                         path: '/v2/users',
+                         enumerate: :not_allowed
       end
 
       context 'admin user' do
         let(:member_a) { User.make }
         let(:enumeration_expectation_a) { User.order(:id).limit(50) }
 
-        it_behaves_like 'permission enumeration', 'Admin',
-                        name: 'user',
-                        path: '/v2/users',
-                        enumerate: proc { User.count },
-                        permissions_overlap: true,
-                        user_opts: { admin: true }
+        include_examples 'permission enumeration', 'Admin',
+                         name: 'user',
+                         path: '/v2/users',
+                         enumerate: proc { User.count },
+                         permissions_overlap: true,
+                         user_opts: { admin: true }
       end
     end
 

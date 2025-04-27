@@ -5,11 +5,11 @@ require 'spec_helper'
 module VCAP::CloudController
   RSpec.describe ServicePlansController, :services do
     shared_examples 'enumerate and read plan only' do |perm_name|
-      it_behaves_like 'permission enumeration', perm_name,
-                      name: 'service plan',
-                      path: '/v2/service_plans',
-                      permissions_overlap: true,
-                      enumerate: 7
+      include_examples 'permission enumeration', perm_name,
+                       name: 'service plan',
+                       path: '/v2/service_plans',
+                       permissions_overlap: true,
+                       enumerate: 7
     end
 
     let(:developer) { make_developer_for_space(Space.make) }
@@ -70,28 +70,28 @@ module VCAP::CloudController
           let(:member_a) { @org_a_manager }
           let(:member_b) { @org_b_manager }
 
-          it_behaves_like 'enumerate and read plan only', 'OrgManager'
+          include_examples 'enumerate and read plan only', 'OrgManager'
         end
 
         describe 'OrgUser' do
           let(:member_a) { @org_a_member }
           let(:member_b) { @org_b_member }
 
-          it_behaves_like 'enumerate and read plan only', 'OrgUser'
+          include_examples 'enumerate and read plan only', 'OrgUser'
         end
 
         describe 'BillingManager' do
           let(:member_a) { @org_a_billing_manager }
           let(:member_b) { @org_b_billing_manager }
 
-          it_behaves_like 'enumerate and read plan only', 'BillingManager'
+          include_examples 'enumerate and read plan only', 'BillingManager'
         end
 
         describe 'Auditor' do
           let(:member_a) { @org_a_auditor }
           let(:member_b) { @org_b_auditor }
 
-          it_behaves_like 'enumerate and read plan only', 'Auditor'
+          include_examples 'enumerate and read plan only', 'Auditor'
         end
       end
 
@@ -100,21 +100,21 @@ module VCAP::CloudController
           let(:member_a) { @space_a_manager }
           let(:member_b) { @space_b_manager }
 
-          it_behaves_like 'enumerate and read plan only', 'SpaceManager'
+          include_examples 'enumerate and read plan only', 'SpaceManager'
         end
 
         describe 'Developer' do
           let(:member_a) { @space_a_developer }
           let(:member_b) { @space_b_developer }
 
-          it_behaves_like 'enumerate and read plan only', 'Developer'
+          include_examples 'enumerate and read plan only', 'Developer'
         end
 
         describe 'SpaceAuditor' do
           let(:member_a) { @space_a_auditor }
           let(:member_b) { @space_b_auditor }
 
-          it_behaves_like 'enumerate and read plan only', 'SpaceAuditor'
+          include_examples 'enumerate and read plan only', 'SpaceAuditor'
         end
       end
     end

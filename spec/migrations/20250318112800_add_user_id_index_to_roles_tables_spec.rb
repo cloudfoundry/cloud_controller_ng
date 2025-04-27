@@ -65,12 +65,12 @@ RSpec.describe 'migration to add an index for user_id on all roles tables', isol
     let(:migration_filename) { '20250318112800_add_user_id_index_to_roles_tables.rb' }
   end
 
-  it_behaves_like 'adding an index for table', 'organizations_auditors'
-  it_behaves_like 'adding an index for table', 'organizations_billing_managers'
-  it_behaves_like 'adding an index for table', 'organizations_managers'
-  it_behaves_like 'adding an index for table', 'organizations_users'
-  it_behaves_like 'adding an index for table', 'spaces_auditors'
-  it_behaves_like 'adding an index for table', 'spaces_developers'
-  it_behaves_like 'adding an index for table', 'spaces_managers'
-  it_behaves_like 'adding an index for table', 'spaces_supporters'
+  include_examples 'adding an index for table', 'organizations_auditors'
+  include_examples 'adding an index for table', 'organizations_billing_managers'
+  include_examples 'adding an index for table', 'organizations_managers'
+  include_examples 'adding an index for table', 'organizations_users'
+  include_examples 'adding an index for table', 'spaces_auditors'
+  include_examples 'adding an index for table', 'spaces_developers'
+  include_examples 'adding an index for table', 'spaces_managers'
+  include_examples 'adding an index for table', 'spaces_supporters'
 end

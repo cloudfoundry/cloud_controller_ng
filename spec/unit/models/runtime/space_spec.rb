@@ -388,7 +388,7 @@ module VCAP::CloudController
         end
 
         %w[developer manager auditor supporter].each do |perm|
-          it_behaves_like 'bad app space permission', perm
+          include_examples 'bad app space permission', perm
         end
       end
 

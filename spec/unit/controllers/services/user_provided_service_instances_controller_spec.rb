@@ -51,10 +51,10 @@ module VCAP::CloudController
           let(:member_a) { instance_variable_get(member_a_ivar) }
           let(:member_b) { instance_variable_get(member_b_ivar) }
 
-          it_behaves_like 'permission enumeration', user_role,
-                          name: 'user provided service instance',
-                          path: '/v2/user_provided_service_instances',
-                          enumerate: 0
+          include_examples 'permission enumeration', user_role,
+                           name: 'user provided service instance',
+                           path: '/v2/user_provided_service_instances',
+                           enumerate: 0
         end
       end
 
@@ -67,10 +67,10 @@ module VCAP::CloudController
           let(:member_a) { @org_a_manager }
           let(:member_b) { @org_b_manager }
 
-          it_behaves_like 'permission enumeration', 'OrgManager',
-                          name: 'user provided service instance',
-                          path: '/v2/user_provided_service_instances',
-                          enumerate: 1
+          include_examples 'permission enumeration', 'OrgManager',
+                           name: 'user provided service instance',
+                           path: '/v2/user_provided_service_instances',
+                           enumerate: 1
         end
       end
 
@@ -79,30 +79,30 @@ module VCAP::CloudController
           let(:member_a) { @space_a_developer }
           let(:member_b) { @space_b_developer }
 
-          it_behaves_like 'permission enumeration', 'Developer',
-                          name: 'user provided service instance',
-                          path: '/v2/user_provided_service_instances',
-                          enumerate: 1
+          include_examples 'permission enumeration', 'Developer',
+                           name: 'user provided service instance',
+                           path: '/v2/user_provided_service_instances',
+                           enumerate: 1
         end
 
         describe 'SpaceAuditor' do
           let(:member_a) { @space_a_auditor }
           let(:member_b) { @space_b_auditor }
 
-          it_behaves_like 'permission enumeration', 'SpaceAuditor',
-                          name: 'user provided service instance',
-                          path: '/v2/user_provided_service_instances',
-                          enumerate: 1
+          include_examples 'permission enumeration', 'SpaceAuditor',
+                           name: 'user provided service instance',
+                           path: '/v2/user_provided_service_instances',
+                           enumerate: 1
         end
 
         describe 'SpaceManager' do
           let(:member_a) { @space_a_manager }
           let(:member_b) { @space_b_manager }
 
-          it_behaves_like 'permission enumeration', 'SpaceManager',
-                          name: 'user provided service instance',
-                          path: '/v2/user_provided_service_instances',
-                          enumerate: 1
+          include_examples 'permission enumeration', 'SpaceManager',
+                           name: 'user provided service instance',
+                           path: '/v2/user_provided_service_instances',
+                           enumerate: 1
         end
       end
     end

@@ -118,32 +118,32 @@ module VCAP::CloudController::Diego
             expect(service_binding_files).to all(have_attributes(path: match(%r{^binding-name/.+$})))
           end
 
-          it_behaves_like 'mapping of type and provider'
-          it_behaves_like 'mapping of binding metadata'
-          it_behaves_like 'mapping of instance metadata'
-          it_behaves_like 'mapping of plan metadata'
-          it_behaves_like 'mapping of tags'
-          it_behaves_like 'mapping of credentials'
+          include_examples 'mapping of type and provider'
+          include_examples 'mapping of binding metadata'
+          include_examples 'mapping of instance metadata'
+          include_examples 'mapping of plan metadata'
+          include_examples 'mapping of tags'
+          include_examples 'mapping of credentials'
 
           it 'omits null or empty array attributes' do
             expect(service_binding_files).not_to include(have_attributes(path: 'binding-name/syslog_drain_url'))
             expect(service_binding_files).not_to include(have_attributes(path: 'binding-name/volume_mounts'))
           end
 
-          it_behaves_like 'expected files', %w[type provider label binding-guid name binding-name instance-guid instance-name plan tags string number boolean array hash]
+          include_examples 'expected files', %w[type provider label binding-guid name binding-name instance-guid instance-name plan tags string number boolean array hash]
 
           context 'when binding_name is nil' do
             let(:binding_name) { nil }
             let(:directory) { 'instance-name' }
 
-            it_behaves_like 'mapping of type and provider'
-            it_behaves_like 'mapping of binding metadata', 'instance-name'
-            it_behaves_like 'mapping of instance metadata'
-            it_behaves_like 'mapping of plan metadata'
-            it_behaves_like 'mapping of tags'
-            it_behaves_like 'mapping of credentials'
+            include_examples 'mapping of type and provider'
+            include_examples 'mapping of binding metadata', 'instance-name'
+            include_examples 'mapping of instance metadata'
+            include_examples 'mapping of plan metadata'
+            include_examples 'mapping of tags'
+            include_examples 'mapping of credentials'
 
-            it_behaves_like 'expected files', %w[type provider label binding-guid name instance-guid instance-name plan tags string number boolean array hash]
+            include_examples 'expected files', %w[type provider label binding-guid name instance-guid instance-name plan tags string number boolean array hash]
           end
 
           context 'when syslog_drain_url is set' do
@@ -153,15 +153,15 @@ module VCAP::CloudController::Diego
               expect(service_binding_files.find { |f| f.path == 'binding-name/syslog-drain-url' }).to have_attributes(content: 'https://syslog.drain')
             end
 
-            it_behaves_like 'mapping of type and provider'
-            it_behaves_like 'mapping of binding metadata'
-            it_behaves_like 'mapping of instance metadata'
-            it_behaves_like 'mapping of plan metadata'
-            it_behaves_like 'mapping of tags'
-            it_behaves_like 'mapping of credentials'
+            include_examples 'mapping of type and provider'
+            include_examples 'mapping of binding metadata'
+            include_examples 'mapping of instance metadata'
+            include_examples 'mapping of plan metadata'
+            include_examples 'mapping of tags'
+            include_examples 'mapping of credentials'
 
-            it_behaves_like 'expected files',
-                            %w[type provider label binding-guid name binding-name instance-guid instance-name plan tags string number boolean array hash syslog-drain-url]
+            include_examples 'expected files',
+                             %w[type provider label binding-guid name binding-name instance-guid instance-name plan tags string number boolean array hash syslog-drain-url]
           end
 
           context 'when volume_mounts is set' do
@@ -185,40 +185,40 @@ module VCAP::CloudController::Diego
               end).to have_attributes(content: '[{"container_dir":"dir1","device_type":"type1","mode":"mode1"},{"container_dir":"dir2","device_type":"type2","mode":"mode2"}]')
             end
 
-            it_behaves_like 'mapping of type and provider'
-            it_behaves_like 'mapping of binding metadata'
-            it_behaves_like 'mapping of instance metadata'
-            it_behaves_like 'mapping of plan metadata'
-            it_behaves_like 'mapping of tags'
-            it_behaves_like 'mapping of credentials'
+            include_examples 'mapping of type and provider'
+            include_examples 'mapping of binding metadata'
+            include_examples 'mapping of instance metadata'
+            include_examples 'mapping of plan metadata'
+            include_examples 'mapping of tags'
+            include_examples 'mapping of credentials'
 
-            it_behaves_like 'expected files',
-                            %w[type provider label binding-guid name binding-name instance-guid instance-name plan tags string number boolean array hash volume-mounts]
+            include_examples 'expected files',
+                             %w[type provider label binding-guid name binding-name instance-guid instance-name plan tags string number boolean array hash volume-mounts]
           end
 
           context 'when the instance is user-provided' do
             let(:instance) { VCAP::CloudController::UserProvidedServiceInstance.make(name: 'upsi', tags: %w[an-upsi-tag another-upsi-tag]) }
 
-            it_behaves_like 'mapping of type and provider', 'user-provided'
-            it_behaves_like 'mapping of binding metadata'
-            it_behaves_like 'mapping of instance metadata', 'upsi'
-            it_behaves_like 'mapping of tags', '["an-upsi-tag","another-upsi-tag"]'
-            it_behaves_like 'mapping of credentials'
+            include_examples 'mapping of type and provider', 'user-provided'
+            include_examples 'mapping of binding metadata'
+            include_examples 'mapping of instance metadata', 'upsi'
+            include_examples 'mapping of tags', '["an-upsi-tag","another-upsi-tag"]'
+            include_examples 'mapping of credentials'
 
-            it_behaves_like 'expected files', %w[type provider label binding-guid name binding-name instance-guid instance-name tags string number boolean array hash]
+            include_examples 'expected files', %w[type provider label binding-guid name binding-name instance-guid instance-name tags string number boolean array hash]
           end
 
           context 'when there are duplicate keys at different levels' do
             let(:credentials) { { type: 'duplicate-type', name: 'duplicate-name', credentials: { password: 'secret' } } }
 
-            it_behaves_like 'mapping of type and provider' # no 'duplicate-type'
-            it_behaves_like 'mapping of binding metadata' # no 'duplicate-name'
-            it_behaves_like 'mapping of instance metadata'
-            it_behaves_like 'mapping of plan metadata'
-            it_behaves_like 'mapping of tags'
-            it_behaves_like 'mapping of credentials', { credentials: '{"password":"secret"}' }
+            include_examples 'mapping of type and provider' # no 'duplicate-type'
+            include_examples 'mapping of binding metadata' # no 'duplicate-name'
+            include_examples 'mapping of instance metadata'
+            include_examples 'mapping of plan metadata'
+            include_examples 'mapping of tags'
+            include_examples 'mapping of credentials', { credentials: '{"password":"secret"}' }
 
-            it_behaves_like 'expected files', %w[type provider label binding-guid name binding-name instance-guid instance-name plan tags credentials]
+            include_examples 'expected files', %w[type provider label binding-guid name binding-name instance-guid instance-name plan tags credentials]
           end
 
           context 'when there are duplicate binding names' do

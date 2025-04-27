@@ -948,8 +948,8 @@ module VCAP::CloudController
             end
           end
 
-          it_behaves_like 'k8s service bindings'
-          it_behaves_like 'file-based VCAP service bindings'
+          include_examples 'k8s service bindings'
+          include_examples 'file-based VCAP service bindings'
         end
 
         context 'when the lifecycle_type is "cnb"' do
@@ -1042,8 +1042,8 @@ module VCAP::CloudController
             end
           end
 
-          it_behaves_like 'k8s service bindings'
-          it_behaves_like 'file-based VCAP service bindings'
+          include_examples 'k8s service bindings'
+          include_examples 'file-based VCAP service bindings'
         end
 
         context 'when the lifecycle_type is "docker"' do
@@ -1388,8 +1388,8 @@ module VCAP::CloudController
             end
           end
 
-          it_behaves_like 'k8s service bindings'
-          it_behaves_like 'file-based VCAP service bindings'
+          include_examples 'k8s service bindings'
+          include_examples 'file-based VCAP service bindings'
         end
       end
 

@@ -29,7 +29,7 @@ module VCAP::CloudController
 
       describe 'domain' do
         subject { private_domain }
-        it_behaves_like 'domain validation'
+        include_examples 'domain validation'
       end
 
       it 'denies private uaa.customer-app-domain1.com when customer-app-domain1.com is the system domain' do

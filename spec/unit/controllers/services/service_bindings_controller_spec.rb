@@ -93,40 +93,40 @@ module VCAP::CloudController
           let(:member_a) { @org_a_manager }
           let(:member_b) { @org_b_manager }
 
-          it_behaves_like 'permission enumeration', 'OrgManager',
-                          name: 'service binding',
-                          path: '/v2/service_bindings',
-                          enumerate: 1
+          include_examples 'permission enumeration', 'OrgManager',
+                           name: 'service binding',
+                           path: '/v2/service_bindings',
+                           enumerate: 1
         end
 
         describe 'OrgUser' do
           let(:member_a) { @org_a_member }
           let(:member_b) { @org_b_member }
 
-          it_behaves_like 'permission enumeration', 'OrgUser',
-                          name: 'service binding',
-                          path: '/v2/service_bindings',
-                          enumerate: 0
+          include_examples 'permission enumeration', 'OrgUser',
+                           name: 'service binding',
+                           path: '/v2/service_bindings',
+                           enumerate: 0
         end
 
         describe 'BillingManager' do
           let(:member_a) { @org_a_billing_manager }
           let(:member_b) { @org_b_billing_manager }
 
-          it_behaves_like 'permission enumeration', 'BillingManager',
-                          name: 'service binding',
-                          path: '/v2/service_bindings',
-                          enumerate: 0
+          include_examples 'permission enumeration', 'BillingManager',
+                           name: 'service binding',
+                           path: '/v2/service_bindings',
+                           enumerate: 0
         end
 
         describe 'Auditor' do
           let(:member_a) { @org_a_auditor }
           let(:member_b) { @org_b_auditor }
 
-          it_behaves_like 'permission enumeration', 'Auditor',
-                          name: 'service binding',
-                          path: '/v2/service_bindings',
-                          enumerate: 0
+          include_examples 'permission enumeration', 'Auditor',
+                           name: 'service binding',
+                           path: '/v2/service_bindings',
+                           enumerate: 0
         end
       end
 
@@ -135,40 +135,40 @@ module VCAP::CloudController
           let(:member_a) { @space_a_manager }
           let(:member_b) { @space_b_manager }
 
-          it_behaves_like 'permission enumeration', 'SpaceManager',
-                          name: 'service binding',
-                          path: '/v2/service_bindings',
-                          enumerate: 1
+          include_examples 'permission enumeration', 'SpaceManager',
+                           name: 'service binding',
+                           path: '/v2/service_bindings',
+                           enumerate: 1
         end
 
         describe 'Developer' do
           let(:member_a) { @space_a_developer }
           let(:member_b) { @space_b_developer }
 
-          it_behaves_like 'permission enumeration', 'Developer',
-                          name: 'service binding',
-                          path: '/v2/service_bindings',
-                          enumerate: 1
+          include_examples 'permission enumeration', 'Developer',
+                           name: 'service binding',
+                           path: '/v2/service_bindings',
+                           enumerate: 1
         end
 
         describe 'SpaceAuditor' do
           let(:member_a) { @space_a_auditor }
           let(:member_b) { @space_b_auditor }
 
-          it_behaves_like 'permission enumeration', 'SpaceAuditor',
-                          name: 'service binding',
-                          path: '/v2/service_bindings',
-                          enumerate: 1
+          include_examples 'permission enumeration', 'SpaceAuditor',
+                           name: 'service binding',
+                           path: '/v2/service_bindings',
+                           enumerate: 1
         end
 
         describe 'Developer in service instance space' do
           let(:member_a) { make_developer_for_space(@service_instance_a.space) }
           let(:member_b) { make_developer_for_space(@service_instance_b.space) }
 
-          it_behaves_like 'permission enumeration', 'Developer in service instance space',
-                          name: 'service binding',
-                          path: '/v2/service_bindings',
-                          enumerate: 0
+          include_examples 'permission enumeration', 'Developer in service instance space',
+                           name: 'service binding',
+                           path: '/v2/service_bindings',
+                           enumerate: 0
         end
       end
     end

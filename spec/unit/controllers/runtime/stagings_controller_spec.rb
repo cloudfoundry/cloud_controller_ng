@@ -74,7 +74,7 @@ module VCAP::CloudController
   end
 
   RSpec.shared_examples 'droplet staging error handling' do
-    it_behaves_like 'check content digest'
+    include_examples 'check content digest'
 
     context 'with an invalid app' do
       it 'returns 404' do
@@ -329,7 +329,7 @@ module VCAP::CloudController
         expect(last_response.status).to eq(404)
       end
 
-      it_behaves_like 'staging bad auth', :get, 'packages'
+      include_examples 'staging bad auth', :get, 'packages'
     end
 
     describe 'POST /internal/v4/droplets/:guid/upload' do
@@ -423,7 +423,7 @@ module VCAP::CloudController
           expect(last_response.status).to eq 200
         end
 
-        it_behaves_like 'check content digest' do
+        include_examples 'check content digest' do
           let(:url) { "/internal/v4/buildpack_cache/#{stack}/#{app_model.guid}/upload" }
         end
       end
@@ -569,7 +569,7 @@ module VCAP::CloudController
         expect(last_response.status).to eq(404)
       end
 
-      it_behaves_like 'staging bad auth', :get, 'droplets'
+      include_examples 'staging bad auth', :get, 'droplets'
     end
   end
 end

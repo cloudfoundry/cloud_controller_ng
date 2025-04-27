@@ -49,8 +49,8 @@ module VCAP::CloudController
       end
     end
 
-    it_behaves_like 'operation list', :exclude_in, :exclude_in?, 'excluded'
-    it_behaves_like 'operation list', :optional_in, :optional_in?, 'optional'
-    it_behaves_like 'operation list', :redact_in, :redact_in?, 'redacted'
+    include_examples 'operation list', :exclude_in, :exclude_in?, 'excluded'
+    include_examples 'operation list', :optional_in, :optional_in?, 'optional'
+    include_examples 'operation list', :redact_in, :redact_in?, 'redacted'
   end
 end

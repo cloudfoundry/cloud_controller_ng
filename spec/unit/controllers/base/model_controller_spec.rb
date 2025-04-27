@@ -372,7 +372,7 @@ module VCAP::CloudController
           expect(last_response.body).to eq('')
         end
 
-        it_behaves_like 'tests with associations'
+        include_examples 'tests with associations'
       end
 
       context 'when async=true' do
@@ -392,7 +392,7 @@ module VCAP::CloudController
           end
         end
 
-        it_behaves_like 'tests with associations'
+        include_examples 'tests with associations'
       end
     end
 
