@@ -80,10 +80,10 @@ module VCAP::CloudController
           let(:member_a) { @org_a_manager }
           let(:member_b) { @org_b_manager }
 
-          include_examples 'permission enumeration', 'OrgManager',
-                           name: 'organization',
-                           path: '/v2/organizations',
-                           enumerate: 1
+          it_behaves_like 'permission enumeration', 'OrgManager',
+                          name: 'organization',
+                          path: '/v2/organizations',
+                          enumerate: 1
 
           it 'cannot update quota definition' do
             quota = QuotaDefinition.make
@@ -111,30 +111,30 @@ module VCAP::CloudController
           let(:member_a) { @org_a_member }
           let(:member_b) { @org_b_member }
 
-          include_examples 'permission enumeration', 'OrgUser',
-                           name: 'organization',
-                           path: '/v2/organizations',
-                           enumerate: 1
+          it_behaves_like 'permission enumeration', 'OrgUser',
+                          name: 'organization',
+                          path: '/v2/organizations',
+                          enumerate: 1
         end
 
         describe 'BillingManager' do
           let(:member_a) { @org_a_billing_manager }
           let(:member_b) { @org_b_billing_manager }
 
-          include_examples 'permission enumeration', 'BillingManager',
-                           name: 'organization',
-                           path: '/v2/organizations',
-                           enumerate: 1
+          it_behaves_like 'permission enumeration', 'BillingManager',
+                          name: 'organization',
+                          path: '/v2/organizations',
+                          enumerate: 1
         end
 
         describe 'Auditor' do
           let(:member_a) { @org_a_auditor }
           let(:member_b) { @org_b_auditor }
 
-          include_examples 'permission enumeration', 'Auditor',
-                           name: 'organization',
-                           path: '/v2/organizations',
-                           enumerate: 1
+          it_behaves_like 'permission enumeration', 'Auditor',
+                          name: 'organization',
+                          path: '/v2/organizations',
+                          enumerate: 1
         end
       end
     end

@@ -44,8 +44,8 @@ module VCAP::CloudController
           expect(system_env_presenter.system_env[:VCAP_SERVICES]).to eq({})
         end
 
-        include_examples 'k8s service bindings'
-        include_examples 'file-based VCAP service bindings'
+        it_behaves_like 'k8s service bindings'
+        it_behaves_like 'file-based VCAP service bindings'
       end
 
       context 'when there are services' do
@@ -190,8 +190,8 @@ module VCAP::CloudController
           end
         end
 
-        include_examples 'k8s service bindings'
-        include_examples 'file-based VCAP service bindings'
+        it_behaves_like 'k8s service bindings'
+        it_behaves_like 'file-based VCAP service bindings'
       end
     end
   end

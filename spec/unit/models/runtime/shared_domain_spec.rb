@@ -26,7 +26,7 @@ module VCAP::CloudController
     end
 
     describe '#validate' do
-      include_examples 'domain validation'
+      it_behaves_like 'domain validation'
 
       context 'when the name is foo.com and bar.foo.com is a shared domain' do
         before do

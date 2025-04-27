@@ -37,10 +37,10 @@ module VCAP::CloudController
           let(:member_a) { instance_variable_get(member_a_ivar) }
           let(:member_b) { instance_variable_get(member_b_ivar) }
 
-          include_examples 'permission enumeration', user_role,
-                           name: 'service plan visibility',
-                           path: '/v2/service_plan_visibilities',
-                           enumerate: 0
+          it_behaves_like 'permission enumeration', user_role,
+                          name: 'service plan visibility',
+                          path: '/v2/service_plan_visibilities',
+                          enumerate: 0
         end
       end
 

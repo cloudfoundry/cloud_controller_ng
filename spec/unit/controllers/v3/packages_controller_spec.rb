@@ -90,7 +90,7 @@ RSpec.describe PackagesController, type: :controller do
             }
           end
 
-          include_examples 'uploading successfully'
+          it_behaves_like 'uploading successfully'
         end
 
         context 'v3 resource format' do
@@ -100,7 +100,7 @@ RSpec.describe PackagesController, type: :controller do
             }
           end
 
-          include_examples 'uploading successfully'
+          it_behaves_like 'uploading successfully'
         end
       end
     end

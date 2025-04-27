@@ -33,7 +33,7 @@ module VCAP::CloudController
     describe '#fetch_all' do
       let(:security_groups) { fetcher.fetch_all(message) }
 
-      include_examples 'eager loading'
+      it_behaves_like 'eager loading'
 
       it 'includes all the security_groups' do
         expect(security_groups.all).to include(security_group_1, security_group_2, security_group_3)
@@ -44,7 +44,7 @@ module VCAP::CloudController
       let(:visible_security_groups) { [security_group_1.guid, security_group_2.guid] }
       let(:security_groups) { fetcher.fetch(message, visible_security_groups) }
 
-      include_examples 'eager loading'
+      it_behaves_like 'eager loading'
 
       context 'when no filters are specified' do
         it 'returns all of the security groups' do

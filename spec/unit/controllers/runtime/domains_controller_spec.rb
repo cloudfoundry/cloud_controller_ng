@@ -60,10 +60,10 @@ module VCAP::CloudController
           let(:member_b) { @org_b_manager }
           let(:enumeration_expectation_a) { [@obj_a, @shared_domain] }
 
-          include_examples 'permission enumeration', 'OrgManager',
-                           name: 'domain',
-                           path: '/v2/domains',
-                           enumerate: 2
+          it_behaves_like 'permission enumeration', 'OrgManager',
+                          name: 'domain',
+                          path: '/v2/domains',
+                          enumerate: 2
         end
 
         describe 'OrgUser' do
@@ -71,10 +71,10 @@ module VCAP::CloudController
           let(:member_b) { @org_b_member }
           let(:enumeration_expectation_a) { [@shared_domain] }
 
-          include_examples 'permission enumeration', 'OrgUser',
-                           name: 'domain',
-                           path: '/v2/domains',
-                           enumerate: 1
+          it_behaves_like 'permission enumeration', 'OrgUser',
+                          name: 'domain',
+                          path: '/v2/domains',
+                          enumerate: 1
         end
 
         describe 'BillingManager' do
@@ -82,10 +82,10 @@ module VCAP::CloudController
           let(:member_b) { @org_b_billing_manager }
           let(:enumeration_expectation_a) { [@shared_domain] }
 
-          include_examples 'permission enumeration', 'BillingManager',
-                           name: 'domain',
-                           path: '/v2/domains',
-                           enumerate: 1
+          it_behaves_like 'permission enumeration', 'BillingManager',
+                          name: 'domain',
+                          path: '/v2/domains',
+                          enumerate: 1
         end
 
         describe 'Auditor' do
@@ -93,10 +93,10 @@ module VCAP::CloudController
           let(:member_b) { @org_b_auditor }
           let(:enumeration_expectation_a) { [@obj_a, @shared_domain] }
 
-          include_examples 'permission enumeration', 'Auditor',
-                           name: 'domain',
-                           path: '/v2/domains',
-                           enumerate: 2
+          it_behaves_like 'permission enumeration', 'Auditor',
+                          name: 'domain',
+                          path: '/v2/domains',
+                          enumerate: 2
         end
 
         context 'with a shared private domain' do
@@ -108,22 +108,22 @@ module VCAP::CloudController
             let(:member_a) { @org_b_manager }
             let(:enumeration_expectation_a) { [@obj_a, @obj_b, @shared_domain] }
 
-            include_examples 'permission enumeration', 'OrgManager',
-                             permissions_overlap: true,
-                             name: 'domain',
-                             path: '/v2/domains',
-                             enumerate: 3
+            it_behaves_like 'permission enumeration', 'OrgManager',
+                            permissions_overlap: true,
+                            name: 'domain',
+                            path: '/v2/domains',
+                            enumerate: 3
           end
 
           describe 'SpaceDeveloper' do
             let(:member_a) { @space_b_developer }
             let(:enumeration_expectation_a) { [@obj_a, @obj_b, @shared_domain] }
 
-            include_examples 'permission enumeration', 'SpaceDeveloper',
-                             permissions_overlap: true,
-                             name: 'domain',
-                             path: '/v2/domains',
-                             enumerate: 3
+            it_behaves_like 'permission enumeration', 'SpaceDeveloper',
+                            permissions_overlap: true,
+                            name: 'domain',
+                            path: '/v2/domains',
+                            enumerate: 3
           end
         end
       end

@@ -54,10 +54,10 @@ module VCAP::CloudController
           let(:member_a) { instance_variable_get(member_a_ivar) }
           let(:member_b) { instance_variable_get(member_b_ivar) }
 
-          include_examples 'permission enumeration', user_role,
-                           name: 'managed service instance',
-                           path: '/v2/service_instances',
-                           enumerate: 0
+          it_behaves_like 'permission enumeration', user_role,
+                          name: 'managed service instance',
+                          path: '/v2/service_instances',
+                          enumerate: 0
         end
       end
 
@@ -70,10 +70,10 @@ module VCAP::CloudController
           let(:member_a) { @org_a_manager }
           let(:member_b) { @org_b_manager }
 
-          include_examples 'permission enumeration', 'OrgManager',
-                           name: 'managed service instance',
-                           path: '/v2/service_instances',
-                           enumerate: 1
+          it_behaves_like 'permission enumeration', 'OrgManager',
+                          name: 'managed service instance',
+                          path: '/v2/service_instances',
+                          enumerate: 1
         end
       end
 
@@ -218,10 +218,10 @@ module VCAP::CloudController
           let(:member_a) { @space_a_developer }
           let(:member_b) { @space_b_developer }
 
-          include_examples 'permission enumeration', 'Developer',
-                           name: 'managed service instance',
-                           path: '/v2/service_instances',
-                           enumerate: 1
+          it_behaves_like 'permission enumeration', 'Developer',
+                          name: 'managed service instance',
+                          path: '/v2/service_instances',
+                          enumerate: 1
 
           it 'prevents a developer from creating a service instance in an unauthorized space' do
             plan = ServicePlan.make(:v2)
@@ -244,20 +244,20 @@ module VCAP::CloudController
           let(:member_a) { @space_a_auditor }
           let(:member_b) { @space_b_auditor }
 
-          include_examples 'permission enumeration', 'SpaceAuditor',
-                           name: 'managed service instance',
-                           path: '/v2/service_instances',
-                           enumerate: 1
+          it_behaves_like 'permission enumeration', 'SpaceAuditor',
+                          name: 'managed service instance',
+                          path: '/v2/service_instances',
+                          enumerate: 1
         end
 
         describe 'SpaceManager' do
           let(:member_a) { @space_a_manager }
           let(:member_b) { @space_b_manager }
 
-          include_examples 'permission enumeration', 'SpaceManager',
-                           name: 'managed service instance',
-                           path: '/v2/service_instances',
-                           enumerate: 1
+          it_behaves_like 'permission enumeration', 'SpaceManager',
+                          name: 'managed service instance',
+                          path: '/v2/service_instances',
+                          enumerate: 1
         end
       end
     end

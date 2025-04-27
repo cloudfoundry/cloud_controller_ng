@@ -5,11 +5,11 @@ require 'spec_helper'
 module VCAP::CloudController
   RSpec.describe ServicesController, :services do
     shared_examples 'enumerate and read service only' do |perm_name|
-      include_examples 'permission enumeration', perm_name,
-                       name: 'service',
-                       path: '/v2/services',
-                       permissions_overlap: true,
-                       enumerate: 7
+      it_behaves_like 'permission enumeration', perm_name,
+                      name: 'service',
+                      path: '/v2/services',
+                      permissions_overlap: true,
+                      enumerate: 7
     end
 
     describe 'Query Parameters' do
@@ -54,28 +54,28 @@ module VCAP::CloudController
           let(:member_a) { @org_a_manager }
           let(:member_b) { @org_b_manager }
 
-          include_examples 'enumerate and read service only', 'OrgManager'
+          it_behaves_like 'enumerate and read service only', 'OrgManager'
         end
 
         describe 'OrgUser' do
           let(:member_a) { @org_a_member }
           let(:member_b) { @org_b_member }
 
-          include_examples 'enumerate and read service only', 'OrgUser'
+          it_behaves_like 'enumerate and read service only', 'OrgUser'
         end
 
         describe 'BillingManager' do
           let(:member_a) { @org_a_billing_manager }
           let(:member_b) { @org_b_billing_manager }
 
-          include_examples 'enumerate and read service only', 'BillingManager'
+          it_behaves_like 'enumerate and read service only', 'BillingManager'
         end
 
         describe 'Auditor' do
           let(:member_a) { @org_a_auditor }
           let(:member_b) { @org_b_auditor }
 
-          include_examples 'enumerate and read service only', 'Auditor'
+          it_behaves_like 'enumerate and read service only', 'Auditor'
         end
       end
 
@@ -84,21 +84,21 @@ module VCAP::CloudController
           let(:member_a) { @space_a_manager }
           let(:member_b) { @space_b_manager }
 
-          include_examples 'enumerate and read service only', 'SpaceManager'
+          it_behaves_like 'enumerate and read service only', 'SpaceManager'
         end
 
         describe 'Developer' do
           let(:member_a) { @space_a_developer }
           let(:member_b) { @space_b_developer }
 
-          include_examples 'enumerate and read service only', 'Developer'
+          it_behaves_like 'enumerate and read service only', 'Developer'
         end
 
         describe 'SpaceAuditor' do
           let(:member_a) { @space_a_auditor }
           let(:member_b) { @space_b_auditor }
 
-          include_examples 'enumerate and read service only', 'SpaceAuditor'
+          it_behaves_like 'enumerate and read service only', 'SpaceAuditor'
         end
       end
     end

@@ -913,7 +913,7 @@ RSpec.describe 'Packages' do
         }
       end
 
-      include_examples 'upload bits successfully'
+      it_behaves_like 'upload bits successfully'
     end
 
     context 'with v3 resources' do
@@ -927,7 +927,7 @@ RSpec.describe 'Packages' do
         }
       end
 
-      include_examples 'upload bits successfully'
+      it_behaves_like 'upload bits successfully'
     end
 
     context 'telemetry' do

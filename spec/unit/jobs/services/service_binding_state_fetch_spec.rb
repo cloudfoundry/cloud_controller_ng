@@ -423,7 +423,7 @@ module VCAP::CloudController
                 end
               end
 
-              include_examples 'when exponential backoff is not set to default'
+              it_behaves_like 'when exponential backoff is not set to default'
             end
 
             context 'when the last_operation state is failed' do
@@ -789,7 +789,7 @@ module VCAP::CloudController
             end
           end
 
-          include_examples 'when brokers return Retry-After header', :fetch_service_binding_last_operation
+          it_behaves_like 'when brokers return Retry-After header', :fetch_service_binding_last_operation
         end
 
         describe '#display_name' do

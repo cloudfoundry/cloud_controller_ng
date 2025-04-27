@@ -376,7 +376,7 @@ module VCAP::CloudController
               expect(Event.find(type: 'audit.service_instance.create')).to be_nil
             end
 
-            include_examples 'when exponential backoff is not set to default'
+            it_behaves_like 'when exponential backoff is not set to default'
 
             context 'when the last_operation is replaced with delete in progress' do
               let(:polling_interval) { 60 }
@@ -575,7 +575,7 @@ module VCAP::CloudController
             end
           end
 
-          include_examples 'when brokers return Retry-After header', :fetch_service_instance_last_operation
+          it_behaves_like 'when brokers return Retry-After header', :fetch_service_instance_last_operation
         end
 
         describe '#job_name_in_configuration' do

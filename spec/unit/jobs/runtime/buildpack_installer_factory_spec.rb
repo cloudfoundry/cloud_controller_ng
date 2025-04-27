@@ -36,7 +36,7 @@ module VCAP::CloudController
             context 'and there is a detected stack in the zipfile' do
               let(:buildpack_fields) { [{ file: file, options: opts, stack: 'detected stack' }] }
 
-              include_examples 'passthrough parameters'
+              it_behaves_like 'passthrough parameters'
 
               it 'plans to create the record' do
                 expect(single_buildpack_job).to be_a(CreateBuildpackInstaller)
@@ -48,7 +48,7 @@ module VCAP::CloudController
             end
 
             context 'and there is not a detected stack in the zipfile' do
-              include_examples 'passthrough parameters'
+              it_behaves_like 'passthrough parameters'
 
               it 'plans to create the record' do
                 expect(single_buildpack_job).to be_a(CreateBuildpackInstaller)
@@ -68,7 +68,7 @@ module VCAP::CloudController
               context 'and the buildpack zip has the same stack' do
                 let(:buildpack_fields) { [{ file: file, options: opts, stack: existing_stack.name }] }
 
-                include_examples 'passthrough parameters'
+                it_behaves_like 'passthrough parameters'
 
                 it 'sets the stack to the matching stack' do
                   expect(single_buildpack_job.stack_name).to eq(existing_stack.name)
@@ -86,7 +86,7 @@ module VCAP::CloudController
               context 'and the buildpack zip has a different stack' do
                 let(:buildpack_fields) { [{ file: file, options: opts, stack: 'manifest stack' }] }
 
-                include_examples 'passthrough parameters'
+                it_behaves_like 'passthrough parameters'
 
                 it 'plans on creating a new record' do
                   expect(single_buildpack_job).to be_a(CreateBuildpackInstaller)
@@ -114,7 +114,7 @@ module VCAP::CloudController
               context 'and the buildpack zip also has a nil stack' do
                 let(:buildpack_fields) { [{ file: file, options: opts, stack: nil }] }
 
-                include_examples 'passthrough parameters'
+                it_behaves_like 'passthrough parameters'
 
                 it 'plans to update' do
                   expect(single_buildpack_job).to be_a(UpdateBuildpackInstaller)
@@ -132,7 +132,7 @@ module VCAP::CloudController
               context 'but the buildpack zip /has/ a stack' do
                 let(:buildpack_fields) { [{ file: file, options: opts, stack: 'manifest stack' }] }
 
-                include_examples 'passthrough parameters'
+                it_behaves_like 'passthrough parameters'
 
                 it 'plans on updating it' do
                   expect(single_buildpack_job).to be_a(UpdateBuildpackInstaller)
@@ -159,7 +159,7 @@ module VCAP::CloudController
             context 'and one matches the manifest stack' do
               let(:buildpack_fields) { [{ file: file, options: opts, stack: existing_stack.name }] }
 
-              include_examples 'passthrough parameters'
+              it_behaves_like 'passthrough parameters'
 
               it 'sets the stack to the matching stack' do
                 expect(single_buildpack_job.stack_name).to eq(existing_stack.name)
@@ -187,7 +187,7 @@ module VCAP::CloudController
             context 'and none match the manifest stack' do
               let(:buildpack_fields) { [{ file: file, options: opts, stack: 'manifest stack' }] }
 
-              include_examples 'passthrough parameters'
+              it_behaves_like 'passthrough parameters'
 
               it 'plans on creating a new record' do
                 expect(single_buildpack_job).to be_a(CreateBuildpackInstaller)

@@ -456,7 +456,7 @@ module VCAP::Services::ServiceBrokers::V2
       end
 
       describe 'handling errors' do
-        include_examples 'broker communication errors' do
+        it_behaves_like 'broker communication errors' do
           let(:request) { client.get(path) }
         end
       end
@@ -527,7 +527,7 @@ module VCAP::Services::ServiceBrokers::V2
       end
 
       describe 'handling errors' do
-        include_examples 'broker communication errors' do
+        it_behaves_like 'broker communication errors' do
           let(:request) { client.put(path, message) }
         end
       end
@@ -604,7 +604,7 @@ module VCAP::Services::ServiceBrokers::V2
       end
 
       describe 'handling errors' do
-        include_examples 'broker communication errors' do
+        it_behaves_like 'broker communication errors' do
           let(:request) { client.patch(path, message) }
         end
       end
@@ -674,7 +674,7 @@ module VCAP::Services::ServiceBrokers::V2
       end
 
       describe 'handling errors' do
-        include_examples 'broker communication errors' do
+        it_behaves_like 'broker communication errors' do
           let(:full_url) { "http://broker.example.com#{path}?#{message.to_query}" }
           let(:request) { client.delete(path, message) }
         end

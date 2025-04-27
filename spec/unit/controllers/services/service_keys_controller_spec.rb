@@ -89,40 +89,40 @@ module VCAP::CloudController
           let(:member_a) { @org_a_manager }
           let(:member_b) { @org_b_manager }
 
-          include_examples 'permission enumeration', 'OrgManager',
-                           name: 'getting service key',
-                           path: '/v2/service_keys',
-                           enumerate: 0
+          it_behaves_like 'permission enumeration', 'OrgManager',
+                          name: 'getting service key',
+                          path: '/v2/service_keys',
+                          enumerate: 0
         end
 
         describe 'OrgUser' do
           let(:member_a) { @org_a_member }
           let(:member_b) { @org_b_member }
 
-          include_examples 'permission enumeration', 'OrgUser',
-                           name: 'getting service key',
-                           path: '/v2/service_keys',
-                           enumerate: 0
+          it_behaves_like 'permission enumeration', 'OrgUser',
+                          name: 'getting service key',
+                          path: '/v2/service_keys',
+                          enumerate: 0
         end
 
         describe 'BillingManager' do
           let(:member_a) { @org_a_billing_manager }
           let(:member_b) { @org_b_billing_manager }
 
-          include_examples 'permission enumeration', 'BillingManager',
-                           name: 'getting service key',
-                           path: '/v2/service_keys',
-                           enumerate: 0
+          it_behaves_like 'permission enumeration', 'BillingManager',
+                          name: 'getting service key',
+                          path: '/v2/service_keys',
+                          enumerate: 0
         end
 
         describe 'Auditor' do
           let(:member_a) { @org_a_auditor }
           let(:member_b) { @org_b_auditor }
 
-          include_examples 'permission enumeration', 'Auditor',
-                           name: 'getting service key',
-                           path: '/v2/service_keys',
-                           enumerate: 0
+          it_behaves_like 'permission enumeration', 'Auditor',
+                          name: 'getting service key',
+                          path: '/v2/service_keys',
+                          enumerate: 0
         end
       end
 
@@ -131,30 +131,30 @@ module VCAP::CloudController
           let(:member_a) { @space_a_manager }
           let(:member_b) { @space_b_manager }
 
-          include_examples 'permission enumeration', 'SpaceManager',
-                           name: 'getting service key',
-                           path: '/v2/service_keys',
-                           enumerate: 0
+          it_behaves_like 'permission enumeration', 'SpaceManager',
+                          name: 'getting service key',
+                          path: '/v2/service_keys',
+                          enumerate: 0
         end
 
         describe 'Developer' do
           let(:member_a) { @space_a_developer }
           let(:member_b) { @space_b_developer }
 
-          include_examples 'permission enumeration', 'Developer',
-                           name: 'getting service key',
-                           path: '/v2/service_keys',
-                           enumerate: 1
+          it_behaves_like 'permission enumeration', 'Developer',
+                          name: 'getting service key',
+                          path: '/v2/service_keys',
+                          enumerate: 1
         end
 
         describe 'SpaceAuditor' do
           let(:member_a) { @space_a_auditor }
           let(:member_b) { @space_b_auditor }
 
-          include_examples 'permission enumeration', 'SpaceAuditor',
-                           name: 'getting service key',
-                           path: '/v2/service_keys',
-                           enumerate: 0
+          it_behaves_like 'permission enumeration', 'SpaceAuditor',
+                          name: 'getting service key',
+                          path: '/v2/service_keys',
+                          enumerate: 0
         end
       end
     end

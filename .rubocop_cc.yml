@@ -560,6 +560,8 @@ RSpec/ExcessiveDocstringSpacing:
   Enabled: true
 RSpec/IdenticalEqualityAssertion:
   Enabled: true
+RSpec/IncludeExamples:
+  Enabled: true
 RSpec/IndexedLet:
   Enabled: true
 RSpec/MatchArray:

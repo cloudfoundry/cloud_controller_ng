@@ -105,7 +105,7 @@ RSpec.describe 'Service Broker API integration' do
 
           it_behaves_like 'a catalog fetch request'
 
-          include_examples 'broker errors'
+          it_behaves_like 'broker errors'
 
           it 'handles the broker response' do
             expect(last_response).to have_status_code(201)
@@ -126,7 +126,7 @@ RSpec.describe 'Service Broker API integration' do
 
           it_behaves_like 'a catalog fetch request'
 
-          include_examples 'broker errors'
+          it_behaves_like 'broker errors'
 
           it 'handles the broker response' do
             expect(last_response).to have_status_code(200)
@@ -169,7 +169,7 @@ RSpec.describe 'Service Broker API integration' do
                admin_headers)
         end
 
-        include_examples 'broker errors'
+        it_behaves_like 'broker errors'
 
         it 'sends all required fields' do
           expect(a_request(:put, %r{broker-url/v2/service_instances/#{guid_pattern}}).
@@ -258,7 +258,7 @@ RSpec.describe 'Service Broker API integration' do
                admin_headers)
         end
 
-        include_examples 'broker errors'
+        it_behaves_like 'broker errors'
 
         it 'uses the correct version header' do
           request_has_version_header(:put, %r{/v2/service_instances/#{service_instance_guid}/service_bindings/#{guid_pattern}$})
@@ -340,7 +340,7 @@ RSpec.describe 'Service Broker API integration' do
                  admin_headers)
         end
 
-        include_examples 'broker errors'
+        it_behaves_like 'broker errors'
 
         it 'sends all required fields' do
           expected_url = %r{broker-url/v2/service_instances/#{service_instance_guid}/service_bindings/#{guid_pattern}\?plan_id=plan1-guid-here&service_id=service-guid-here}
@@ -397,7 +397,7 @@ RSpec.describe 'Service Broker API integration' do
                  admin_headers)
         end
 
-        include_examples 'broker errors'
+        it_behaves_like 'broker errors'
 
         it 'sends all required fields' do
           expect(a_request(:delete, %r{broker-url/v2/service_instances/#{service_instance_guid}\?plan_id=plan1-guid-here&service_id=service-guid-here})).
