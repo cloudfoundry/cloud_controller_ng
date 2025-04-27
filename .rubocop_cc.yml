@@ -264,6 +264,8 @@ Style/CollectionCompact:
   Enabled: true
 Style/CombinableDefined:
   Enabled: true
+Style/ComparableBetween:
+  Enabled: true
 Style/ComparableClamp:
   Enabled: true
 Style/ConcatArrayLiterals:

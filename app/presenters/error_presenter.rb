@@ -8,7 +8,7 @@ class ErrorPresenter
   end
 
   def client_error?
-    response_code >= 400 && response_code <= 499
+    response_code.between?(400, 499)
   end
 
   def log_message
