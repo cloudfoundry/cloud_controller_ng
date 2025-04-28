@@ -166,8 +166,8 @@ module VCAP::CloudController
 
         {
           CF_ROUTES_KEY => Oj.dump(http_routes),
-          TCP_ROUTES_KEY => Oj.dump((info['tcp_routes'] || [])),
-          INTERNAL_ROUTES_KEY => Oj.dump((info['internal_routes'] || []))
+          TCP_ROUTES_KEY => Oj.dump(info['tcp_routes'] || []),
+          INTERNAL_ROUTES_KEY => Oj.dump(info['internal_routes'] || [])
         }
       end
 
