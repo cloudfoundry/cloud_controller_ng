@@ -1,12 +1,14 @@
 # Cloud Controller Specific Rubocop Config
 
-require:
+plugins:
   - rubocop-sequel
   - rubocop-rails
   - rubocop-capybara
   - rubocop-factory_bot
   - rubocop-rspec
   - rubocop-rspec_rails
+
+require:
   - ./spec/linters/migration/add_constraint_name.rb
   - ./spec/linters/migration/include_string_size.rb
   - ./spec/linters/migration/require_primary_key.rb
@@ -160,9 +162,13 @@ Lint/AmbiguousOperatorPrecedence:
   Enabled: true
 Lint/AmbiguousRange:
   Enabled: true
+Lint/ArrayLiteralInRegexp:
+  Enabled: true
 Lint/ConstantOverwrittenInRescue:
   Enabled: true
 Lint/ConstantReassignment:
+  Enabled: true
+Lint/CopDirectiveSyntax:
   Enabled: true
 Lint/DeprecatedConstants:
   Enabled: true
@@ -208,6 +214,8 @@ Lint/RedundantDirGlobSort:
   Enabled: true
 Lint/RedundantRegexpQuantifiers:
   Enabled: true
+Lint/RedundantTypeConversion:
+  Enabled: true
 Lint/RefinementImportMethods:
   Enabled: true
 Lint/RequireRangeParentheses:
@@ -215,6 +223,8 @@ Lint/RequireRangeParentheses:
 Lint/RequireRelativeSelfPath:
   Enabled: true
 Lint/SharedMutableDefault:
+  Enabled: true
+Lint/SuppressedExceptionInNumberConversion:
   Enabled: true
 Lint/SymbolConversion:
   Enabled: true
@@ -254,6 +264,8 @@ Style/CollectionCompact:
   Enabled: true
 Style/CombinableDefined:
   Enabled: true
+Style/ComparableBetween:
+  Enabled: true
 Style/ComparableClamp:
   Enabled: true
 Style/ConcatArrayLiterals:
@@ -290,11 +302,15 @@ Style/HashConversion:
   Enabled: true
 Style/HashExcept:
   Enabled: true
+Style/HashFetchChain:
+  Enabled: true
 Style/IfWithBooleanLiteralBranches:
   Enabled: true
 Style/InPatternThen:
   Enabled: true
 Style/ItAssignment:
+  Enabled: true
+Style/ItBlockParameter:
   Enabled: true
 Style/KeywordArgumentsMerging:
   Enabled: true
@@ -341,6 +357,8 @@ Style/RedundantDoubleSplatHashBraces:
 Style/RedundantEach:
   Enabled: true
 Style/RedundantFilterChain:
+  Enabled: true
+Style/RedundantFormat:
   Enabled: true
 Style/RedundantHeredocDelimiterQuotes:
   Enabled: true
@@ -424,6 +442,8 @@ Rails/MatchRoute:
   Enabled: true
 Rails/MigrationClassName:
   Enabled: true
+Rails/MultipleRoutePaths:
+  Enabled: true
 Rails/NegateInclude:
   Enabled: true
 Rails/Pluck:
@@ -454,6 +474,8 @@ Rails/SquishedSQLHeredocs:
   Enabled: true
 Rails/StripHeredoc:
   Enabled: true
+Rails/StrongParametersExpect:
+  Enabled: true
 Rails/ThreeStateBooleanColumn:
   Enabled: true
 Rails/TimeZoneAssignment:
@@ -482,10 +504,14 @@ Rails/WhereNotWithMultipleConditions:
   Enabled: true
 Capybara/ClickLinkOrButtonStyle:
   Enabled: false
+Capybara/FindAllFirst:
+  Enabled: true
 Capybara/MatchStyle:
   Enabled: false
 Capybara/NegationMatcher:
   Enabled: false
+Capybara/NegationMatcherAfterVisit:
+  Enabled: true
 Capybara/RedundantWithinFind:
   Enabled: true
 Capybara/SpecificActions:
