@@ -390,7 +390,9 @@ module VCAP::CloudController
             },
 
             update_metric_tags_on_rename: bool,
-            app_instance_stopping_state: bool
+            app_instance_stopping_state: bool,
+
+            optional(:enable_ipv6) => bool
           }
         end
         # rubocop:enable Metrics/BlockLength
