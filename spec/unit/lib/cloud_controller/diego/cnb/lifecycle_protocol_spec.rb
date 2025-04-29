@@ -208,9 +208,6 @@ module VCAP
             end
 
             it 'creates a diego DesiredLrpBuilder' do
-              puts 'hello'
-              puts 'world!'
-
               expect(VCAP::CloudController::Diego::CNB::DesiredLrpBuilder).to receive(:new).with(
                 config,
                 builder_opts
