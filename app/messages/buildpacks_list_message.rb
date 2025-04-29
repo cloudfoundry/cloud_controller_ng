@@ -21,7 +21,8 @@ module VCAP::CloudController
 
     def initialize(params={})
       super
-      pagination_options.default_order_by = :position
+      pagination_options.default_order_by = :lifecycle
+      pagination_options.secondary_default_order_by = :position
     end
 
     def self.from_params(params)
@@ -33,7 +34,7 @@ module VCAP::CloudController
     end
 
     def valid_order_by_values
-      super << :position
+      super + %i[position lifecycle]
     end
   end
 

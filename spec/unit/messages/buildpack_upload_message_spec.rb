@@ -156,8 +156,8 @@ module VCAP::CloudController
               allow(File).to receive(:read).and_return("PK\x03\x04".force_encoding('binary'))
               upload_message = BuildpackUploadMessage.new(opts, lifecycle)
               expect(upload_message).not_to be_valid
-              expect(upload_message.errors.full_messages[0]).to
-              include('buildpack.zip is not a gzip archive or cnb file. Buildpacks of lifecycle "cnb" must be valid gzip archives or cnb files.')
+              expect(upload_message.errors.full_messages[0]).
+                to include('buildpack.zip is not a gzip archive or cnb file. Buildpacks of lifecycle "cnb" must be valid gzip archives or cnb files.')
             end
           end
 

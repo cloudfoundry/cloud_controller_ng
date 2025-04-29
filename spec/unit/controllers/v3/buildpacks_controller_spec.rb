@@ -52,9 +52,9 @@ RSpec.describe BuildpacksController, type: :controller do
       let!(:stack1) { VCAP::CloudController::Stack.make }
       let!(:stack2) { VCAP::CloudController::Stack.make }
 
-      let!(:buildpack1) { VCAP::CloudController::Buildpack.make(stack: stack1.name) }
-      let!(:buildpack2) { VCAP::CloudController::Buildpack.make(stack: stack2.name) }
-      let!(:buildpack3) { VCAP::CloudController::Buildpack.make(stack: stack1.name, lifecycle: 'cnb') }
+      let!(:buildpack1) { VCAP::CloudController::Buildpack.make(stack: stack1.name, position: 2) }
+      let!(:buildpack2) { VCAP::CloudController::Buildpack.make(stack: stack2.name, position: 1) }
+      let!(:buildpack3) { VCAP::CloudController::Buildpack.make(stack: stack1.name, lifecycle: 'cnb', position: 1) }
 
       before do
         set_current_user(user)
@@ -63,8 +63,9 @@ RSpec.describe BuildpacksController, type: :controller do
       it 'renders a paginated list of buildpacks' do
         get :index
 
-        expect(parsed_body['resources'].first['guid']).to eq(buildpack1.guid)
-        expect(parsed_body['resources'].second['guid']).to eq(buildpack2.guid)
+        expect(parsed_body['resources'].first['guid']).to eq(buildpack2.guid)
+        expect(parsed_body['resources'].second['guid']).to eq(buildpack1.guid)
+        expect(parsed_body['resources'].third['guid']).to eq(buildpack3.guid)
       end
 
       it 'renders a lifecycle filtered list of buildpacks' do
@@ -90,9 +91,10 @@ RSpec.describe BuildpacksController, type: :controller do
       it 'renders an ordered list of buildpacks' do
         get :index, params: { order_by: '-position' }
 
-        expect(parsed_body['resources']).to have(2).buildpack
-        expect(parsed_body['resources'].first['position']).to eq(buildpack2.position)
-        expect(parsed_body['resources'].second['position']).to eq(buildpack1.position)
+        expect(parsed_body['resources']).to have(3).buildpack
+        expect(parsed_body['resources'].first['position']).to eq(2)
+        expect(parsed_body['resources'].second['position']).to eq(1)
+        expect(parsed_body['resources'].third['position']).to eq(1)
       end
 
       it 'eager loads associated resources that the presenter specifies' do
