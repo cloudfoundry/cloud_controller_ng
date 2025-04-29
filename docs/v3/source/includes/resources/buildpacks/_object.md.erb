@@ -15,7 +15,8 @@ Name           | Type                     | Description
 **updated_at** | _[timestamp](#timestamps)_               | The time with zone when the object was last updated
 **name**       | _string_                 | The name of the buildpack; to be used by app buildpack field (only alphanumeric characters)
 **state**      | _string_                 | The state of the buildpack; valid states are: `AWAITING_UPLOAD`, `READY`
-**stack**      | _string_                 | The name of the stack that the buildpack will use
+**stack**      | _string_                 | The name of the stack that the buildpack uses
+**lifecycle**  | _string_                 | The version of buildpacks the buildpack uses. `buildpack` indicates [Classic Buildpacks](https://docs.cloudfoundry.org/buildpacks/classic.html). `cnb` indicates [Cloud Native Buildpacks](https://docs.cloudfoundry.org/buildpacks/cnb/)
 **filename**   | _string_                 | The filename of the buildpack
 **position**   | _integer_                | The order in which the buildpacks are checked during buildpack auto-detection
 **enabled**    | _boolean_                | Whether or not the buildpack can be used for staging

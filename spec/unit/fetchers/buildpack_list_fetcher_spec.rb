@@ -38,7 +38,7 @@ module VCAP::CloudController
         let(:filters) { {} }
 
         it 'fetches all the buildpacks' do
-          expect(subject).to contain_exactly(buildpack1, buildpack2, buildpack3, buildpack4, buildpack_without_stack)
+          expect(subject).to contain_exactly(buildpack1, buildpack2, buildpack3, buildpack4, buildpack_without_stack, buildpack5, buildpack6, buildpack7)
         end
       end
 
@@ -63,7 +63,7 @@ module VCAP::CloudController
         end
 
         it 'returns all of the desired buildpacks' do
-          expect(subject).to contain_exactly(buildpack_without_stack)
+          expect(subject).to contain_exactly(buildpack_without_stack, buildpack7)
         end
       end
 
@@ -73,7 +73,7 @@ module VCAP::CloudController
         end
 
         it 'returns all of the desired buildpacks' do
-          expect(subject).to contain_exactly(buildpack2, buildpack_without_stack)
+          expect(subject).to contain_exactly(buildpack2, buildpack_without_stack, buildpack6, buildpack7)
         end
       end
 
