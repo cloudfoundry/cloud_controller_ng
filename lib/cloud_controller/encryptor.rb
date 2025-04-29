@@ -86,15 +86,7 @@ module VCAP::CloudController
           begin
             cipher.key = OpenSSL::PKCS5.pbkdf2_hmac(key, salt, iterations, 16, OpenSSL::Digest.new('SHA256'))
           rescue StandardError => e
-            if key.nil?
-              logger.error("Failed to derive cipher key due to missing key for encryption_key_label=#{current_encryption_key_label}: #{e.class}: #{e.message}")
-            elsif salt.nil?
-              logger.error("Failed to derive cipher key due to missing salt: #{e.class}: #{e.message}")
-            elsif input.nil?
-              logger.error("Failed to derive cipher key due to missing input: #{e.class}: #{e.message}")
-            elsif !iterations.is_a?(Integer)
-              logger.error("Failed to derive cipher key due to wrong type of iterations (must be integer): #{e.class}: #{e.message}")
-            end
+            logger.error("Failed to derive cipher key due to missing key for encryption_key_label=#{current_encryption_key_label}: #{e.class}: #{e.message}") if key.nil?
             raise
           end
           cipher.iv = salt
