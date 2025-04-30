@@ -133,7 +133,15 @@ class ServiceCredentialBindingsController < ApplicationController
     credentials = if service_credential_binding.is_a?(ServiceKey) && service_credential_binding.credhub_reference?
                     fetch_credentials_value(service_credential_binding.credhub_reference)
                   else
-                    service_credential_binding.credentials
+                    begin
+                      service_credential_binding.credentials
+                    rescue StandardError => e
+                      logger.error("Failed to decrypt credentials: #{e.message}")
+                      raise CloudController::Errors::ApiError.new_from_details('UnprocessableEntity',
+                                                                               "Cannot read credentials for \
+                                                                                      service_credential_binding \
+                                                                                      with guid: #{service_credential_binding.guid}")
+                    end
                   end
 
     details = Presenters::V3::ServiceCredentialBindingDetailsPresenter.new(

@@ -47,8 +47,11 @@ module VCAP::CloudController
         return unless encrypted_input
 
         key = key_to_use(label)
-
-        decrypt_raw(encrypted_input, key, salt, iterations:)
+        begin
+          decrypt_raw(encrypted_input, key, salt, iterations:)
+        rescue OpenSSL::Cipher::CipherError, StandardError => e
+          raise StandardError.new("Decryption failed: #{e.message}")
+        end
       end
 
       def decrypt_raw(encrypted_input, key, salt, iterations:)

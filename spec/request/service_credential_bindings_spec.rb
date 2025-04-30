@@ -624,6 +624,27 @@ RSpec.describe 'v3 service credential bindings' do
       }
     end
 
+    context 'when the encryption_key_label is invalid' do
+      before do
+        VCAP::CloudController::Encryptor.database_encryption_keys = {
+          encryption_key_0: 'somevalidkeyvalue',
+          foo: 'fooencryptionkey',
+          death: 'headbangingdeathmetalkey', 'invalid-key-label': 'fakekey'
+        }
+      end
+
+      it 'fails to decrypt the credentials and returns a 500 error' do
+        app_binding.class.db[:service_bindings].where(id: app_binding.id).update(encryption_key_label: 'invalid-key-label')
+
+        allow(VCAP::CloudController::Encryptor).to receive(:decrypt_raw).and_raise(StandardError.new('Decryption failed'))
+
+        api_call.call(admin_headers)
+
+        expect(last_response).to have_status_code(422)
+        expect(parsed_response['errors'].first['detail']).to match(/Cannot read credentials/i)
+      end
+    end
+
     context "last binding operation is in 'create succeeded' state" do
       before do
         app_binding.save_with_attributes_and_new_operation({}, { type: 'create', state: 'succeeded' })
