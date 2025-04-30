@@ -30,7 +30,7 @@ module VCAP::CloudController
       end
 
       def polling_interval_seconds
-        [@polling_interval || 0, default_polling_interval_seconds].max
+        @polling_interval || 0
       end
 
       def polling_interval_seconds=(interval)
@@ -59,7 +59,7 @@ module VCAP::CloudController
       end
 
       def next_execution_in
-        polling_interval_seconds * (default_polling_exponential_backoff**retry_number)
+        [polling_interval_seconds, default_polling_interval_seconds * (default_polling_exponential_backoff**retry_number)].max
       end
 
       def next_enqueue_would_exceed_maximum_duration?

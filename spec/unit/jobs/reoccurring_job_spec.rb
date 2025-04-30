@@ -118,11 +118,13 @@ module VCAP
         expect(job.polling_interval_seconds).to eq(24.hours)
       end
 
-      context 'exponential backoff rate' do
-        context 'updates the polling interval' do
-          it 'when changing exponential backoff rate only' do
+      describe 'exponential backoff rate' do
+        context 'when changing exponential backoff rate only' do
+          before do
             TestConfig.config[:broker_client_async_poll_exponential_backoff_rate] = 2.0
+          end
 
+          it 'updates the polling interval' do
             enqueued_time = 0
 
             Timecop.freeze do
@@ -141,11 +143,15 @@ module VCAP
               end
             end
           end
+        end
 
-          it 'when changing exponential backoff rate and default polling interval' do
+        context 'when changing exponential backoff rate and default polling interval' do
+          before do
             TestConfig.config[:broker_client_async_poll_exponential_backoff_rate] = 1.3
             TestConfig.config[:broker_client_default_async_poll_interval_seconds] = 10
+          end
 
+          it 'updates the polling interval' do
             enqueued_time = 0
 
             Timecop.freeze do
@@ -164,36 +170,130 @@ module VCAP
               end
             end
           end
+        end
 
-          it 'when changing exponential backoff rate and retry_after from the job' do
-            TestConfig.config[:broker_client_async_poll_exponential_backoff_rate] = 1.3
-            TestConfig.config[:broker_client_default_async_poll_interval_seconds] = 10
+        describe 'changing exponential backoff rate and retry_after from the job' do
+          context 'when retry-after is larger than calculated backoff' do
+            let(:fake_job) { FakeJob.new(retry_after: [20, 30]) }
 
-            enqueued_time = 0
-
-            Timecop.freeze do
-              Jobs::Enqueuer.new(queue: Jobs::Queues.generic).enqueue_pollable(FakeJob.new(retry_after: [20, 30]))
-              execute_all_jobs(expected_successes: 1, expected_failures: 0)
-              enqueued_time = Time.now
+            before do
+              TestConfig.config[:broker_client_async_poll_exponential_backoff_rate] = 1.3
+              TestConfig.config[:broker_client_default_async_poll_interval_seconds] = 10
             end
 
-            # the job should run after 20s * 1.3^0 = 20 seconds
-            Timecop.freeze(19.seconds.after(enqueued_time)) do
-              execute_all_jobs(expected_successes: 0, expected_failures: 0)
+            it 'uses retry-after interval' do
+              enqueued_time = 0
+
+              Timecop.freeze do
+                Jobs::Enqueuer.new(queue: Jobs::Queues.generic).enqueue_pollable(fake_job)
+                execute_all_jobs(expected_successes: 1, expected_failures: 0)
+                enqueued_time = Time.now
+              end
+
+              # the job should run after 20s (20s > 10 * 1.3^0)
+              Timecop.freeze(19.seconds.after(enqueued_time)) do
+                execute_all_jobs(expected_successes: 0, expected_failures: 0)
+              end
+
+              Timecop.freeze(21.seconds.after(enqueued_time)) do
+                enqueued_time = Time.now
+                execute_all_jobs(expected_successes: 1, expected_failures: 0)
+              end
+
+              # the job should run after 30s (30s > 10 * 1.3^1)
+              Timecop.freeze(29.seconds.after(enqueued_time)) do
+                execute_all_jobs(expected_successes: 0, expected_failures: 0)
+              end
+
+              Timecop.freeze(31.seconds.after(enqueued_time)) do
+                execute_all_jobs(expected_successes: 1, expected_failures: 0)
+              end
+            end
+          end
+
+          context 'when retry-after is smaller than calculated backoff' do
+            let(:fake_job) { FakeJob.new(retry_after: [10, 20]) }
+
+            before do
+              TestConfig.config[:broker_client_async_poll_exponential_backoff_rate] = 1.3
+              TestConfig.config[:broker_client_default_async_poll_interval_seconds] = 30
             end
 
-            Timecop.freeze(21.seconds.after(enqueued_time)) do
-              enqueued_time = Time.now
-              execute_all_jobs(expected_successes: 1, expected_failures: 0)
+            it 'uses calculated interval' do
+              enqueued_time = 0
+
+              Timecop.freeze do
+                Jobs::Enqueuer.new(queue: Jobs::Queues.generic).enqueue_pollable(fake_job)
+                execute_all_jobs(expected_successes: 1, expected_failures: 0)
+                enqueued_time = Time.now
+              end
+
+              # the job should run after 30s (30s > 10s)
+              Timecop.freeze(29.seconds.after(enqueued_time)) do
+                execute_all_jobs(expected_successes: 0, expected_failures: 0)
+              end
+
+              Timecop.freeze(31.seconds.after(enqueued_time)) do
+                enqueued_time = Time.now
+                execute_all_jobs(expected_successes: 1, expected_failures: 0)
+              end
+
+              # the job should run after 30s (30s * 1.3^1 = 39 > 20s)
+              Timecop.freeze(38.seconds.after(enqueued_time)) do
+                execute_all_jobs(expected_successes: 0, expected_failures: 0)
+              end
+
+              Timecop.freeze(40.seconds.after(enqueued_time)) do
+                execute_all_jobs(expected_successes: 1, expected_failures: 0)
+              end
+            end
+          end
+
+          context 'when calculated backoff gets larger than retry-after' do
+            let(:fake_job) { FakeJob.new(retry_after: [15, 15, 15]) }
+
+            before do
+              TestConfig.config[:broker_client_async_poll_exponential_backoff_rate] = 2
+              TestConfig.config[:broker_client_default_async_poll_interval_seconds] = 5
             end
 
-            # the job should run after 30s * 1.3^1 = 39 seconds
-            Timecop.freeze(38.seconds.after(enqueued_time)) do
-              execute_all_jobs(expected_successes: 0, expected_failures: 0)
-            end
+            it 'uses retry-after until calculated backoff is larger' do
+              enqueued_time = 0
 
-            Timecop.freeze(40.seconds.after(enqueued_time)) do
-              execute_all_jobs(expected_successes: 1, expected_failures: 0)
+              Timecop.freeze do
+                Jobs::Enqueuer.new(queue: Jobs::Queues.generic).enqueue_pollable(fake_job)
+                execute_all_jobs(expected_successes: 1, expected_failures: 0)
+                enqueued_time = Time.now
+              end
+
+              # the job should run after 15s (15s > 5s (5 * 2^0))
+              Timecop.freeze(14.seconds.after(enqueued_time)) do
+                execute_all_jobs(expected_successes: 0, expected_failures: 0)
+              end
+
+              Timecop.freeze(16.seconds.after(enqueued_time)) do
+                enqueued_time = Time.now
+                execute_all_jobs(expected_successes: 1, expected_failures: 0)
+              end
+
+              # the job should run after 15s (15s > 10s (5 * 2^1))
+              Timecop.freeze(14.seconds.after(enqueued_time)) do
+                execute_all_jobs(expected_successes: 0, expected_failures: 0)
+              end
+
+              Timecop.freeze(16.seconds.after(enqueued_time)) do
+                enqueued_time = Time.now
+                execute_all_jobs(expected_successes: 1, expected_failures: 0)
+              end
+
+              # the job should run after 20s (20s > 15s (5 * 2^2))
+              Timecop.freeze(19.seconds.after(enqueued_time)) do
+                execute_all_jobs(expected_successes: 0, expected_failures: 0)
+              end
+
+              Timecop.freeze(21.seconds.after(enqueued_time)) do
+                execute_all_jobs(expected_successes: 1, expected_failures: 0)
+              end
             end
           end
         end
