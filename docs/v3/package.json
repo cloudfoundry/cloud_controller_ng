@@ -22,7 +22,7 @@
   "devDependencies": {
     "cheerio": "^1.0.0",
     "express": "^5.1.0",
-    "glob": "^11.0.1",
+    "glob": "^11.0.2",
     "gulp": "^5.0.0",
     "gulp-cli": "^3.0.0",
     "linkinator": "^6.1.2"
