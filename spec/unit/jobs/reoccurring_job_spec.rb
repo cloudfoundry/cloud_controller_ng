@@ -109,13 +109,25 @@ module VCAP
         end
       end
 
-      it 'keeps the polling interval within the bounds' do
+      it 'keeps the polling interval within the default bounds' do
         job = FakeJob.new
         job.polling_interval_seconds = 5
         expect(job.polling_interval_seconds).to eq(60)
 
         job.polling_interval_seconds = 10.days
         expect(job.polling_interval_seconds).to eq(24.hours)
+      end
+
+      context 'when maximum polling interval is configured' do
+        before do
+          TestConfig.config[:broker_client_max_async_poll_interval_seconds] = 1800
+        end
+
+        it 'limits the polling interval to the configured maximum' do
+          job = FakeJob.new
+          job.polling_interval_seconds = 10.days
+          expect(job.polling_interval_seconds).to eq(1800)
+        end
       end
 
       describe 'exponential backoff rate' do
@@ -293,6 +305,51 @@ module VCAP
 
               Timecop.freeze(21.seconds.after(enqueued_time)) do
                 execute_all_jobs(expected_successes: 1, expected_failures: 0)
+              end
+            end
+
+            context 'when maximum polling interval is configured' do
+              before do
+                TestConfig.config[:broker_client_max_async_poll_interval_seconds] = 18
+              end
+
+              it 'limits the polling interval to the configured maximum' do
+                enqueued_time = 0
+
+                Timecop.freeze do
+                  Jobs::Enqueuer.new(queue: Jobs::Queues.generic).enqueue_pollable(fake_job)
+                  execute_all_jobs(expected_successes: 1, expected_failures: 0)
+                  enqueued_time = Time.now
+                end
+
+                # the job should run after 15s (15s > 5s (5 * 2^0))
+                Timecop.freeze(14.seconds.after(enqueued_time)) do
+                  execute_all_jobs(expected_successes: 0, expected_failures: 0)
+                end
+
+                Timecop.freeze(16.seconds.after(enqueued_time)) do
+                  enqueued_time = Time.now
+                  execute_all_jobs(expected_successes: 1, expected_failures: 0)
+                end
+
+                # the job should run after 15s (15s > 10s (5 * 2^1))
+                Timecop.freeze(14.seconds.after(enqueued_time)) do
+                  execute_all_jobs(expected_successes: 0, expected_failures: 0)
+                end
+
+                Timecop.freeze(16.seconds.after(enqueued_time)) do
+                  enqueued_time = Time.now
+                  execute_all_jobs(expected_successes: 1, expected_failures: 0)
+                end
+
+                # the job should run after 18s (capped at )
+                Timecop.freeze(17.seconds.after(enqueued_time)) do
+                  execute_all_jobs(expected_successes: 0, expected_failures: 0)
+                end
+
+                Timecop.freeze(19.seconds.after(enqueued_time)) do
+                  execute_all_jobs(expected_successes: 1, expected_failures: 0)
+                end
               end
             end
           end
