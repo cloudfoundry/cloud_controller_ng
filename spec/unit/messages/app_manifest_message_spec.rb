@@ -1064,6 +1064,7 @@ module VCAP::CloudController
             message = AppManifestMessage.create_from_yml(params_from_yaml)
 
             expect(message).not_to be_valid
+
             expect(message.errors).to have(1).items
             expect(message.errors.full_messages).to include('Cannot specify both buildpack(s) and docker keys')
           end
@@ -1995,7 +1996,6 @@ module VCAP::CloudController
 
             it 'does not forward missing attributes to the AppUpdateMessage' do
               message = AppManifestMessage.create_from_yml(parsed_yaml)
-
               expect(message.app_update_message.requested?(:lifecycle)).to be false
             end
           end
@@ -2102,6 +2102,42 @@ module VCAP::CloudController
               expect(message.app_update_message.buildpack_data.stack).to eq(stack.name)
               expect(message.app_update_message.buildpack_data.credentials).to eq({ registry: { username: 'password' } })
             end
+          end
+        end
+
+        context 'when buildpack is the default_app_lifecycle but lifecycle is not set' do
+          before do
+            TestConfig.override(default_app_lifecycle: 'buildpack')
+          end
+
+          let(:parsed_yaml) { { name: 'cnb', buildpacks: %w[nodejs java], stack: stack.name } }
+
+          it 'sets the app lifecycle to nil' do
+            message = AppManifestMessage.create_from_yml(parsed_yaml)
+
+            expect(message).to be_valid
+            expect(message.app_update_message.lifecycle_type).to eq(nil)
+            expect(message.app_update_message.buildpack_data.buildpacks).to eq(%w[nodejs java])
+            expect(message.app_update_message.buildpack_data.stack).to eq(stack.name)
+            expect(message.app_update_message.buildpack_data.credentials).to be_nil
+          end
+        end
+
+        context 'when cnb is the default_app_lifecycle but lifecycle is not set' do
+          before do
+            TestConfig.override(default_app_lifecycle: 'cnb')
+          end
+
+          let(:parsed_yaml) { { name: 'cnb', buildpacks: %w[nodejs java], stack: stack.name } }
+
+          it 'sets the app lifecycle to cnb' do
+            message = AppManifestMessage.create_from_yml(parsed_yaml)
+
+            expect(message).to be_valid
+            expect(message.app_update_message.lifecycle_type).to eq(nil)
+            expect(message.app_update_message.buildpack_data.buildpacks).to eq(%w[nodejs java])
+            expect(message.app_update_message.buildpack_data.stack).to eq(stack.name)
+            expect(message.app_update_message.buildpack_data.credentials).to be_nil
           end
         end
 
