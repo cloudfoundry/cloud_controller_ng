@@ -2116,7 +2116,7 @@ module VCAP::CloudController
             message = AppManifestMessage.create_from_yml(parsed_yaml)
 
             expect(message).to be_valid
-            expect(message.app_update_message.lifecycle_type).to eq(nil)
+            expect(message.app_update_message.lifecycle_type).to be_nil
             expect(message.app_update_message.buildpack_data.buildpacks).to eq(%w[nodejs java])
             expect(message.app_update_message.buildpack_data.stack).to eq(stack.name)
             expect(message.app_update_message.buildpack_data.credentials).to be_nil
@@ -2134,7 +2134,7 @@ module VCAP::CloudController
             message = AppManifestMessage.create_from_yml(parsed_yaml)
 
             expect(message).to be_valid
-            expect(message.app_update_message.lifecycle_type).to eq(nil)
+            expect(message.app_update_message.lifecycle_type).to be_nil
             expect(message.app_update_message.buildpack_data.buildpacks).to eq(%w[nodejs java])
             expect(message.app_update_message.buildpack_data.stack).to eq(stack.name)
             expect(message.app_update_message.buildpack_data.credentials).to be_nil
