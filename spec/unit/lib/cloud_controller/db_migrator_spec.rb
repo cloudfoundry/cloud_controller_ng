@@ -3,6 +3,10 @@ require 'spec_helper'
 RSpec.describe DBMigrator do
   let(:db) { Sequel::Model.db }
 
+  before do
+    Sequel.extension :migration
+  end
+
   describe '#wait_for_migrations!' do
     let(:migrator) { DBMigrator.new(db, 1) }
 
