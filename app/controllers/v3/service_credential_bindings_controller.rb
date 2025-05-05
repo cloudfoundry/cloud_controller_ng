@@ -135,7 +135,7 @@ class ServiceCredentialBindingsController < ApplicationController
                   else
                     begin
                       service_credential_binding.credentials
-                    rescue VCAP::CloudController::Encryptor::EncryptorError => e
+                    rescue VCAP::CloudController::Encryptor::KeyDerivationError => e
                       logger.error("Failed to decrypt credentials: #{e.message}")
                       raise CloudController::Errors::V3::ApiError.new_from_details('InternalServerError', 'Failed to decrypt credentials')
                     end
