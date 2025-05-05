@@ -138,8 +138,8 @@ Rails/DangerousColumnNames: # Disabled, in comparison to active_record we need t
 Rails/SkipsModelValidations: # We don`t want any model at all in migrations and migration specs
   Enabled: true
   Exclude:
-    - db/migrations/*
-    - spec/migrations/*
+    - db/migrations/**/*
+    - spec/migrations/**/*
 
 #### ENABLED SECTION
 Gemspec/DeprecatedAttributeAssignment:

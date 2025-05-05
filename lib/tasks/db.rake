@@ -177,6 +177,21 @@ namespace :db do
     end
   end
 
+  desc 'Backfill id_bigint column for a given table'
+  task :bigint_backfill, %i[table batch_size iterations] => :environment do |_t, args|
+    args.with_defaults(batch_size: 10_000, iterations: -1)
+    raise ArgumentError.new("argument 'table' is required") if args.table.nil?
+
+    RakeConfig.context = :migrate
+
+    require 'database/bigint_migration'
+    logging_output
+    logger = Steno.logger('cc.db.bigint_backfill')
+    RakeConfig.config.load_db_encryption_key
+    db = VCAP::CloudController::DB.connect(RakeConfig.config.get(:db), logger)
+    VCAP::BigintMigration.backfill(logger, db, args.table.to_sym, batch_size: args.batch_size.to_i, iterations: args.iterations.to_i)
+  end
+
   namespace :dev do
     desc 'Migrate the database set in spec/support/bootstrap/db_config'
     task migrate: :environment do
