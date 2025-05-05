@@ -135,12 +135,9 @@ class ServiceCredentialBindingsController < ApplicationController
                   else
                     begin
                       service_credential_binding.credentials
-                    rescue StandardError => e
+                    rescue VCAP::CloudController::Encryptor::EncryptorError => e
                       logger.error("Failed to decrypt credentials: #{e.message}")
-                      raise CloudController::Errors::ApiError.new_from_details('UnprocessableEntity',
-                                                                               "Cannot read credentials for \
-                                                                                      service_credential_binding \
-                                                                                      with guid: #{service_credential_binding.guid}")
+                      raise CloudController::Errors::V3::ApiError.new_from_details('InternalServerError', 'Failed to decrypt credentials')
                     end
                   end
 

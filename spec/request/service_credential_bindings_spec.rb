@@ -631,17 +631,17 @@ RSpec.describe 'v3 service credential bindings' do
           foo: 'fooencryptionkey',
           death: 'headbangingdeathmetalkey', 'invalid-key-label': 'fakekey'
         }
+        allow_any_instance_of(ErrorPresenter).to receive(:raise_500?).and_return(false)
       end
 
       it 'fails to decrypt the credentials and returns a 500 error' do
         app_binding.class.db[:service_bindings].where(id: app_binding.id).update(encryption_key_label: 'invalid-key-label')
 
-        allow(VCAP::CloudController::Encryptor).to receive(:decrypt_raw).and_raise(StandardError.new('Decryption failed'))
-
+        allow(VCAP::CloudController::Encryptor).to receive(:run_cipher).and_raise(VCAP::CloudController::Encryptor::EncryptorError)
         api_call.call(admin_headers)
 
-        expect(last_response).to have_status_code(422)
-        expect(parsed_response['errors'].first['detail']).to match(/Cannot read credentials/i)
+        expect(last_response).to have_status_code(500)
+        expect(parsed_response['errors'].first['detail']).to match(/Failed/i)
       end
     end
 

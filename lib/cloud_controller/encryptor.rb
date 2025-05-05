@@ -8,7 +8,7 @@ require 'base64'
 module VCAP::CloudController
   module Encryptor
     ENCRYPTION_ITERATIONS = 2048
-
+    class EncryptorError < StandardError; end
     class << self
       ALGORITHM = 'AES-128-CBC'.freeze
 
@@ -47,11 +47,8 @@ module VCAP::CloudController
         return unless encrypted_input
 
         key = key_to_use(label)
-        begin
-          decrypt_raw(encrypted_input, key, salt, iterations:)
-        rescue OpenSSL::Cipher::CipherError, StandardError => e
-          raise StandardError.new("Decryption failed: #{e.message}")
-        end
+
+        decrypt_raw(encrypted_input, key, salt, iterations:)
       end
 
       def decrypt_raw(encrypted_input, key, salt, iterations:)
@@ -88,9 +85,9 @@ module VCAP::CloudController
         else
           begin
             cipher.key = OpenSSL::PKCS5.pbkdf2_hmac(key, salt, iterations, 16, OpenSSL::Digest.new('SHA256'))
-          rescue StandardError => e
+          rescue OpenSSL::Cipher::CipherError => e
             logger.error("Failed to derive cipher key due to missing key for encryption_key_label=#{current_encryption_key_label}: #{e.class}: #{e.message}") if key.nil?
-            raise
+            raise EncryptorError
           end
           cipher.iv = salt
         end
