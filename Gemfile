@@ -83,7 +83,7 @@ group :test do
   gem 'rspec-its'
   gem 'rspec-rails', '~> 8.0.0'
   gem 'rspec-wait'
-  gem 'rubocop', '~> 1.75.4'
+  gem 'rubocop', '~> 1.75.5'
   gem 'rubocop-capybara'
   gem 'rubocop-factory_bot'
   gem 'rubocop-rails', '~> 2.31'
