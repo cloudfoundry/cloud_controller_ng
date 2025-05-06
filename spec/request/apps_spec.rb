@@ -3398,6 +3398,38 @@ RSpec.describe 'Apps' do
         end
       end
     end
+
+    context 'when the encryption_key_label is invalid' do
+      let(:instance) { VCAP::CloudController::ManagedServiceInstance.make(space:) }
+      let(:app_binding) do
+        VCAP::CloudController::ServiceBinding.make(
+          app: app_model,
+          service_instance_guid: instance.guid,
+          credentials: { key: 'value' },
+          syslog_drain_url: 'syslog-url',
+          volume_mounts: %w[volume1 volume2]
+        )
+      end
+
+      before do
+        VCAP::CloudController::Encryptor.database_encryption_keys = {
+          encryption_key_0: 'somevalidkeyvalue',
+          foo: 'fooencryptionkey',
+          death: 'headbangingdeathmetalkey', 'invalid-key-label': 'fakekey'
+        }
+        allow_any_instance_of(ErrorPresenter).to receive(:raise_500?).and_return(false)
+      end
+
+      it 'fails to decrypt the environment variables and returns a 500 error' do
+        app_binding.class.db[:service_bindings].where(id: app_binding.id).update(encryption_key_label: 'invalid-key-label')
+
+        allow(VCAP::CloudController::Encryptor).to receive(:run_cipher).and_raise(OpenSSL::Cipher::CipherError)
+        api_call.call(admin_headers)
+
+        expect(last_response).to have_status_code(500)
+        expect(parsed_response['errors'].first['detail']).to match(/Failed/i)
+      end
+    end
   end
 
   describe 'GET /v3/apps/:guid/permissions' do
