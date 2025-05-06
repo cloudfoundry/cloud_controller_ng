@@ -8,7 +8,9 @@ on:
 jobs:
   update-protos:
     runs-on: ubuntu-latest
-
+    permissions:
+      contents: read
+      pull-requests: write
     steps:
       - uses: hmarr/debug-action@v3
       - name: Checkout ccng
