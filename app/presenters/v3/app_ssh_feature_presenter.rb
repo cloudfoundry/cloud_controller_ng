@@ -4,7 +4,7 @@ module VCAP::CloudController::Presenters::V3
   class AppSshFeaturePresenter < BasePresenter
     def to_hash
       {
-        name: 'ssh',
+        name: VCAP::CloudController::AppFeatures::SSH_FEATURE,
         description: 'Enable SSHing into the app.',
         enabled: app.enable_ssh
       }

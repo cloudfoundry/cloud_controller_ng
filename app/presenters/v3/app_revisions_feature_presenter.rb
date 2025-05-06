@@ -4,7 +4,7 @@ module VCAP::CloudController::Presenters::V3
   class AppRevisionsFeaturePresenter < BasePresenter
     def to_hash
       {
-        name: 'revisions',
+        name: VCAP::CloudController::AppFeatures::REVISIONS_FEATURE,
         description: 'Enable versioning of an application',
         enabled: app.revisions_enabled
       }
