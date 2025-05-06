@@ -133,12 +133,7 @@ class ServiceCredentialBindingsController < ApplicationController
     credentials = if service_credential_binding.is_a?(ServiceKey) && service_credential_binding.credhub_reference?
                     fetch_credentials_value(service_credential_binding.credhub_reference)
                   else
-                    begin
-                      service_credential_binding.credentials
-                    rescue VCAP::CloudController::Encryptor::KeyDerivationError => e
-                      logger.error("Failed to decrypt credentials: #{e.message}")
-                      raise CloudController::Errors::V3::ApiError.new_from_details('InternalServerError', 'Failed to decrypt credentials')
-                    end
+                    service_credential_binding.credentials
                   end
 
     details = Presenters::V3::ServiceCredentialBindingDetailsPresenter.new(

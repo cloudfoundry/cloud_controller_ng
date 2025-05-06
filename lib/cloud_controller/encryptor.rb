@@ -8,7 +8,7 @@ require 'base64'
 module VCAP::CloudController
   module Encryptor
     ENCRYPTION_ITERATIONS = 2048
-    class KeyDerivationError < StandardError; end
+
     class << self
       ALGORITHM = 'AES-128-CBC'.freeze
 
@@ -83,12 +83,7 @@ module VCAP::CloudController
         if deprecated_short_salt?(salt)
           cipher.pkcs5_keyivgen(key, salt)
         else
-          begin
-            cipher.key = OpenSSL::PKCS5.pbkdf2_hmac(key, salt, iterations, 16, OpenSSL::Digest.new('SHA256'))
-          rescue OpenSSL::Cipher::CipherError => e
-            logger.error("Failed to derive cipher key due to missing key for encryption_key_label=#{current_encryption_key_label}: #{e.class}: #{e.message}") if key.nil?
-            raise KeyDerivationError
-          end
+          cipher.key = OpenSSL::PKCS5.pbkdf2_hmac(key, salt, iterations, 16, OpenSSL::Digest.new('SHA256'))
           cipher.iv = salt
         end
         cipher.update(input) << cipher.final

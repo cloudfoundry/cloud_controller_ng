@@ -637,7 +637,7 @@ RSpec.describe 'v3 service credential bindings' do
       it 'fails to decrypt the credentials and returns a 500 error' do
         app_binding.class.db[:service_bindings].where(id: app_binding.id).update(encryption_key_label: 'invalid-key-label')
 
-        allow(VCAP::CloudController::Encryptor).to receive(:run_cipher).and_raise(VCAP::CloudController::Encryptor::KeyDerivationError)
+        allow(VCAP::CloudController::Encryptor).to receive(:run_cipher).and_raise(OpenSSL::Cipher::CipherError)
         api_call.call(admin_headers)
 
         expect(last_response).to have_status_code(500)
