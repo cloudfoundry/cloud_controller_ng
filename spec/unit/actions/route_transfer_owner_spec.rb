@@ -52,7 +52,7 @@ module VCAP::CloudController
       context 'target space has the same name as the owning space' do
         it 'makes the target space with the same name the new owner' do
           RouteTransferOwner.transfer(route, target_space_dup_name, user_audit_info)
-          expect(route.space.id).to eq target_space.id
+          expect(route.space.id).to eq target_space_dup_name.id
         end
       end
 
