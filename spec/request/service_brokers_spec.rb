@@ -899,6 +899,39 @@ RSpec.describe 'V3 service brokers' do
         expect(response).to include('detail' => 'Service broker not found')
       end
     end
+
+    context 'when updating credentials and the encryption_key_label is invalid' do
+      let(:broker) { VCAP::CloudController::ServiceBroker.make }
+      let(:api_call) do
+        lambda { |headers|
+          patch "/v3/service_brokers/#{broker.guid}", { authentication: {
+            type: 'basic',
+            credentials: {
+              username: 'your-username',
+              password: 'your-password'
+            }
+          } }.to_json, headers
+        }
+      end
+
+      before do
+        VCAP::CloudController::Encryptor.database_encryption_keys = {
+          encryption_key_0: 'somevalidkeyvalue',
+          foo: 'fooencryptionkey',
+          death: 'headbangingdeathmetalkey', 'invalid-key-label': 'fakekey'
+        }
+        broker.class.db[:service_brokers].where(id: broker.id).update(encryption_key_label: 'invalid-key-label')
+        allow(VCAP::CloudController::Encryptor).to receive(:run_cipher).and_raise(OpenSSL::Cipher::CipherError)
+        allow_any_instance_of(ErrorPresenter).to receive(:raise_500?).and_return(false)
+      end
+
+      it 'fails to decrypt the broker data and returns a 500 error' do
+        api_call.call(admin_headers)
+
+        expect(last_response).to have_status_code(500)
+        expect(parsed_response['errors'].first['detail']).to match(/Failed/i)
+      end
+    end
   end
 
   describe 'POST /v3/service_brokers' do
