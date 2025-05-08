@@ -47,6 +47,10 @@ module Logcache
     private
 
     def get_container_metrics(start_time:, end_time:, source_guid:)
+      promql_metrics = @logcache_client.fetch_memory_metrics([source_guid])
+
+      logger.info("PromQL metrics for source_id #{source_guid}: #{promql_metrics}")
+
       @logcache_client.container_metrics(
         start_time: start_time,
         end_time: end_time,
