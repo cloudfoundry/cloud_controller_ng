@@ -13,6 +13,8 @@ module VCAP::CloudController
 
       def stats_for_app(process)
         logger.debug('stats_for_app.fetching_container_metrics', process_guid: process.guid)
+        # desired_lrp used for isolation segment (which should be retrievable through spaces table)
+        # also used for metric_tags['process_id'] which filters for the process_id and uses app_guid as source_id -> also not needed when using promql
         desired_lrp = bbs_instances_client.desired_lrp_instance(process)
 
         log_cache_errors, stats, quota_stats, isolation_segment = get_stats(desired_lrp, process)
