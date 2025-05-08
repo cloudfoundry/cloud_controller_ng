@@ -104,6 +104,34 @@ module VCAP::CloudController
         end
       end
 
+      context 'when secondary_default_order_by is configured' do
+        before do
+          pagination_options.secondary_default_order_by = 'id'
+          pagination_options.default_order_by = 'something'
+        end
+
+        context 'when order_by is not configured by the user' do
+          it 'secondary_order_by returns the secondary_default_order_by' do
+            pagination_options.order_by = nil
+            expect(pagination_options.secondary_order_by).to eq('id')
+          end
+        end
+
+        context 'when order_by is configured by the user' do
+          it 'secondary_order_by returns nil' do
+            pagination_options.order_by = 'first_name'
+            expect(pagination_options.secondary_order_by).to be_nil
+          end
+        end
+
+        context 'when order_by is configured by the user to be the same as the default' do
+          it 'secondary_order_by returns the secondary_default_order_b' do
+            pagination_options.order_by = 'something'
+            expect(pagination_options.secondary_order_by).to eq('id')
+          end
+        end
+      end
+
       context 'order_direction' do
         context 'when the order_direction is nil' do
           let(:order_direction) { nil }

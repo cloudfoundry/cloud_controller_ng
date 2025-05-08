@@ -16,6 +16,7 @@ class SpaceManifestsController < ApplicationController
     can_write_space(space)
 
     messages = parsed_app_manifests.map { |app_manifest| AppManifestMessage.create_from_yml(app_manifest) }
+
     errors = messages.each_with_index.flat_map { |message, i| errors_for_message(message, i) }
     compound_error!(errors) unless errors.empty?
 

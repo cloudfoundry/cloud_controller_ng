@@ -123,16 +123,32 @@ module VCAP::CloudController
     end
 
     def app_lifecycle_hash
-      lifecycle_data = if requested?(:lifecycle) && @lifecycle == 'cnb'
-                         cnb_lifecycle_data
+      lifecycle_type = if requested?(:lifecycle) && @lifecycle == 'cnb'
+                         Lifecycles::CNB
+                       elsif requested?(:lifecycle) && @lifecycle == 'buildpack'
+                         Lifecycles::BUILDPACK
                        elsif requested?(:docker)
-                         docker_lifecycle_data
-                       elsif requested?(:buildpacks) || requested?(:buildpack) || requested?(:stack)
-                         buildpacks_lifecycle_data
+                         Lifecycles::DOCKER
                        end
 
+      data = {
+        buildpacks: requested_buildpacks,
+        stack: @stack,
+        credentials: @cnb_credentials
+      }.compact
+
+      if lifecycle_type == Lifecycles::DOCKER
+        lifecycle = {
+          type: Lifecycles::DOCKER
+        }
+      elsif lifecycle_type || data.present?
+        lifecycle = {}
+        lifecycle[:type] = lifecycle_type if lifecycle_type.present?
+        lifecycle[:data] = data if data.present?
+      end
+
       {
-        lifecycle: lifecycle_data,
+        lifecycle: lifecycle,
         metadata: requested?(:metadata) ? metadata : nil
       }.compact
     end
@@ -277,31 +293,6 @@ module VCAP::CloudController
       mapping = {}
       mapping[:services] = services if requested?(:services)
       mapping
-    end
-
-    def docker_lifecycle_data
-      { type: Lifecycles::DOCKER }
-    end
-
-    def cnb_lifecycle_data
-      {
-        type: Lifecycles::CNB,
-        data: {
-          buildpacks: requested_buildpacks,
-          stack: @stack,
-          credentials: @cnb_credentials
-        }.compact
-      }
-    end
-
-    def buildpacks_lifecycle_data
-      {
-        type: Lifecycles::BUILDPACK,
-        data: {
-          buildpacks: requested_buildpacks,
-          stack: @stack
-        }.compact
-      }
     end
 
     def should_autodetect?(buildpack)

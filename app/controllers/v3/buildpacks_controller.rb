@@ -77,7 +77,7 @@ class BuildpacksController < ApplicationController
 
     unauthorized! unless permission_queryer.can_write_globally?
 
-    message = BuildpackUploadMessage.create_from_params(hashed_params[:body])
+    message = BuildpackUploadMessage.create_from_params(hashed_params[:body], buildpack.lifecycle)
     combine_messages(message.errors.full_messages) unless message.valid?
 
     unprocessable!('Buildpack is locked') if buildpack.locked

@@ -3,6 +3,7 @@ require 'messages/base_message'
 module VCAP::CloudController
   GZIP_MIME = Regexp.new("\x1F\x8B\x08".force_encoding('binary'))
   ZIP_MIME = Regexp.new("PK\x03\x04".force_encoding('binary'))
+  CNB_MIME = Regexp.new("\x75\x73\x74\x61\x72\x00\x30\x30".force_encoding('binary'))
 
   class BuildpackUploadMessage < BaseMessage
     class MissingFilePathError < StandardError; end
@@ -16,8 +17,15 @@ module VCAP::CloudController
     validate :is_not_empty
     validate :missing_file_path
 
-    def self.create_from_params(params)
-      BuildpackUploadMessage.new(params.dup.symbolize_keys)
+    attr_reader :lifecycle
+
+    def initialize(params, lifecycle)
+      @lifecycle = lifecycle
+      super(params)
+    end
+
+    def self.create_from_params(params, lifecycle)
+      BuildpackUploadMessage.new(params.dup.symbolize_keys, lifecycle)
     end
 
     def nginx_fields
@@ -51,9 +59,18 @@ module VCAP::CloudController
 
       mime_bits = File.read(bits_path, 4)
 
-      return if mime_bits =~ /^#{VCAP::CloudController::GZIP_MIME}/ || mime_bits =~ /^#{VCAP::CloudController::ZIP_MIME}/
+      if lifecycle == VCAP::CloudController::Lifecycles::BUILDPACK
+        return if mime_bits =~ /^#{VCAP::CloudController::ZIP_MIME}/
 
-      errors.add(:base, "#{bits_name} is not a zip or gzip archive")
+        errors.add(:base, "#{bits_name} is not a zip file. Buildpacks of lifecycle \"#{lifecycle}\" must be valid zip files.")
+      elsif lifecycle == VCAP::CloudController::Lifecycles::CNB
+        return if mime_bits =~ /^#{VCAP::CloudController::GZIP_MIME}/
+
+        mime_bits_at_offset = File.read(bits_path, 8, 257)
+        return if mime_bits_at_offset =~ /^#{VCAP::CloudController::CNB_MIME}/
+
+        errors.add(:base, "#{bits_name} is not a gzip archive or cnb file. Buildpacks of lifecycle \"#{lifecycle}\" must be valid gzip archives or cnb files.")
+      end
     end
 
     def missing_file_path

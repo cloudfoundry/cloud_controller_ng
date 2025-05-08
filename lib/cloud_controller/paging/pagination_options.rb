@@ -12,7 +12,7 @@ module VCAP::CloudController
     DIRECTION_DEFAULT = 'asc'.freeze
     VALID_DIRECTIONS  = %w[asc desc].freeze
 
-    attr_writer :order_by, :order_direction, :default_order_by
+    attr_writer :order_by, :order_direction, :default_order_by, :secondary_default_order_by
     attr_accessor :page, :per_page
 
     def initialize(params)
@@ -36,6 +36,12 @@ module VCAP::CloudController
 
     def order_direction
       @order_direction || DIRECTION_DEFAULT
+    end
+
+    def secondary_order_by
+      return if @order_by && @order_by.to_s != default_order_by.to_s
+
+      @secondary_default_order_by
     end
 
     def keys

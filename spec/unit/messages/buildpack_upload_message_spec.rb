@@ -5,6 +5,8 @@ module VCAP::CloudController
   RSpec.describe BuildpackUploadMessage do
     before { TestConfig.override(directories: { tmpdir: '/tmp/' }) }
 
+    let(:lifecycle) { VCAP::CloudController::Lifecycles::BUILDPACK }
+
     describe 'validations' do
       let(:stat_double) { instance_double(File::Stat, size: 2) }
 
@@ -19,7 +21,7 @@ module VCAP::CloudController
         let(:opts) { { '<ngx_upload_module_dummy>' => '', bits_path: '/tmp/foobar', bits_name: 'buildpack.zip' } }
 
         it 'is invalid' do
-          upload_message = BuildpackUploadMessage.new(opts)
+          upload_message = BuildpackUploadMessage.new(opts, lifecycle)
           expect(upload_message).not_to be_valid
           expect(upload_message.errors[:base]).to include('Uploaded bits are not a valid buildpack file')
         end
@@ -29,7 +31,7 @@ module VCAP::CloudController
         let(:opts) { { bits_path: '/tmp/foobar', bits_name: 'buildpack.zip' } }
 
         it 'is valid' do
-          upload_message = BuildpackUploadMessage.new(opts)
+          upload_message = BuildpackUploadMessage.new(opts, lifecycle)
           expect(upload_message).to be_valid
         end
       end
@@ -38,7 +40,7 @@ module VCAP::CloudController
         let(:opts) { { bits_path: '../tmp/mango/pear', bits_name: 'buildpack.zip' } }
 
         it 'is valid' do
-          upload_message = BuildpackUploadMessage.new(opts)
+          upload_message = BuildpackUploadMessage.new(opts, lifecycle)
           expect(upload_message).to be_valid
         end
       end
@@ -47,7 +49,7 @@ module VCAP::CloudController
         let(:opts) { { bits_path: '../tmp-not!/mango/pear' } }
 
         it 'is not valid' do
-          upload_message = BuildpackUploadMessage.new(opts)
+          upload_message = BuildpackUploadMessage.new(opts, lifecycle)
           expect(upload_message).not_to be_valid
           expect(upload_message.errors[:bits_path]).to include('is invalid')
         end
@@ -57,7 +59,7 @@ module VCAP::CloudController
         let(:opts) { {} }
 
         it 'is not valid' do
-          upload_message = BuildpackUploadMessage.new(opts)
+          upload_message = BuildpackUploadMessage.new(opts, lifecycle)
           expect(upload_message).not_to be_valid
           expect(upload_message.errors[:base]).to include('A buildpack zip file must be uploaded as \'bits\'')
         end
@@ -67,7 +69,7 @@ module VCAP::CloudController
         let(:opts) { { bits_path: '/tmp/bar', unexpected: 'foo' } }
 
         it 'is not valid' do
-          message = BuildpackUploadMessage.new(opts)
+          message = BuildpackUploadMessage.new(opts, lifecycle)
 
           expect(message).not_to be_valid
           expect(message.errors.full_messages[0]).to include("Unknown field(s): 'unexpected'")
@@ -78,7 +80,7 @@ module VCAP::CloudController
         let(:opts) { { bits_path: '/secret/file', bits_name: 'buildpack.zip' } }
 
         it 'is not valid' do
-          message = BuildpackUploadMessage.new(opts)
+          message = BuildpackUploadMessage.new(opts, lifecycle)
 
           expect(message).not_to be_valid
           expect(message.errors.full_messages[0]).to include('Bits path is invalid')
@@ -89,7 +91,7 @@ module VCAP::CloudController
         let(:opts) { { bits_path: '/tmp/bar' } }
 
         it 'is not valid' do
-          upload_message = BuildpackUploadMessage.new(opts)
+          upload_message = BuildpackUploadMessage.new(opts, lifecycle)
           expect(upload_message).not_to be_valid
           expect(upload_message.errors[:base]).to include('A buildpack zip file must be uploaded as \'bits\'')
         end
@@ -100,19 +102,85 @@ module VCAP::CloudController
 
         it 'is not valid' do
           allow(File).to receive(:read).and_return("PX\x03\x04".force_encoding('binary'))
-          upload_message = BuildpackUploadMessage.new(opts)
+          upload_message = BuildpackUploadMessage.new(opts, lifecycle)
           expect(upload_message).not_to be_valid
-          expect(upload_message.errors.full_messages[0]).to include('buildpack.abcd is not a zip or gzip')
+          expect(upload_message.errors.full_messages[0]).to include('buildpack.abcd is not a zip file. Buildpacks of lifecycle "buildpack" must be valid zip files.')
         end
       end
 
-      context 'when the file is a tgz' do
-        let(:opts) { { bits_path: '/tmp/bar', bits_name: 'buildpack.tgz' } }
+      context 'buildpacks' do
+        let(:lifecycle) { VCAP::CloudController::Lifecycles::BUILDPACK }
 
-        it 'is not valid' do
-          allow(File).to receive(:read).and_return("\x1F\x8B\x08".force_encoding('binary'))
-          upload_message = BuildpackUploadMessage.new(opts)
-          expect(upload_message).to be_valid
+        context 'when the file is a zip' do
+          let(:opts) { { bits_path: '/tmp/bar', bits_name: 'buildpack.zip' } }
+
+          it 'is valid' do
+            allow(File).to receive(:read).and_return("PK\x03\x04".force_encoding('binary'))
+            upload_message = BuildpackUploadMessage.new(opts, lifecycle)
+            expect(upload_message).to be_valid
+          end
+        end
+
+        context 'when the file is a tgz' do
+          let(:opts) { { bits_path: '/tmp/bar', bits_name: 'buildpack.tgz' } }
+
+          it 'is not valid' do
+            allow(File).to receive(:read).and_return("\x1F\x8B\x08".force_encoding('binary'))
+            upload_message = BuildpackUploadMessage.new(opts, lifecycle)
+            expect(upload_message).not_to be_valid
+            expect(upload_message.errors.full_messages[0]).to include('buildpack.tgz is not a zip file. Buildpacks of lifecycle "buildpack" must be valid zip files.')
+          end
+        end
+
+        context 'when the file is a cnb/tar' do
+          let(:opts) { { bits_path: '/tmp/bar', bits_name: 'buildpack.cnb' } }
+
+          it 'is not valid' do
+            values = ["\x0".force_encoding('binary'), "\x75\x73\x74\x61\x72\x00\x30\x30".force_encoding('binary')]
+            allow(File).to receive(:read).and_return(*values)
+            upload_message = BuildpackUploadMessage.new(opts, lifecycle)
+            expect(upload_message).not_to be_valid
+            expect(upload_message.errors.full_messages[0]).to include('buildpack.cnb is not a zip file. Buildpacks of lifecycle "buildpack" must be valid zip files.')
+          end
+        end
+      end
+
+      context 'cloud native buildpacks (cnb)' do
+        let(:lifecycle) { VCAP::CloudController::Lifecycles::CNB }
+
+        context 'buildpacks' do
+          context 'when the file is a zip' do
+            let(:opts) { { bits_path: '/tmp/bar', bits_name: 'buildpack.zip' } }
+
+            it 'is valid' do
+              allow(File).to receive(:read).and_return("PK\x03\x04".force_encoding('binary'))
+              upload_message = BuildpackUploadMessage.new(opts, lifecycle)
+              expect(upload_message).not_to be_valid
+              expect(upload_message.errors.full_messages[0]).
+                to include('buildpack.zip is not a gzip archive or cnb file. Buildpacks of lifecycle "cnb" must be valid gzip archives or cnb files.')
+            end
+          end
+
+          context 'when the file is a tgz' do
+            let(:opts) { { bits_path: '/tmp/bar', bits_name: 'buildpack.tgz' } }
+
+            it 'is valid' do
+              allow(File).to receive(:read).and_return("\x1F\x8B\x08".force_encoding('binary'))
+              upload_message = BuildpackUploadMessage.new(opts, lifecycle)
+              expect(upload_message).to be_valid
+            end
+          end
+
+          context 'when the file is a cnb/tar' do
+            let(:opts) { { bits_path: '/tmp/bar', bits_name: 'buildpack.cnb' } }
+
+            it 'is valid' do
+              values = ["\x0".force_encoding('binary'), "\x75\x73\x74\x61\x72\x00\x30\x30".force_encoding('binary')]
+              allow(File).to receive(:read).and_return(*values)
+              upload_message = BuildpackUploadMessage.new(opts, lifecycle)
+              expect(upload_message).to be_valid
+            end
+          end
         end
       end
 
@@ -121,7 +189,7 @@ module VCAP::CloudController
         let(:stat_double) { instance_double(File::Stat, size: 0) }
 
         it 'is not valid' do
-          upload_message = BuildpackUploadMessage.new(opts)
+          upload_message = BuildpackUploadMessage.new(opts, lifecycle)
           expect(upload_message).not_to be_valid
           expect(upload_message.errors.full_messages[0]).to include('buildpack.zip cannot be empty')
         end
@@ -129,7 +197,7 @@ module VCAP::CloudController
     end
 
     describe '#bits_path=' do
-      subject(:upload_message) { BuildpackUploadMessage.new(bits_path: 'not-nil') }
+      subject(:upload_message) { BuildpackUploadMessage.new({ bits_path: 'not-nil' }, lifecycle) }
 
       context 'when the bits_path is relative' do
         it 'makes it absolute (within the tmpdir)' do
@@ -151,7 +219,7 @@ module VCAP::CloudController
       let(:params) { { 'bits_path' => '/tmp/foobar', 'bits_name' => 'buildpack.zip' } }
 
       it 'returns the correct BuildpackUploadMessage' do
-        message = BuildpackUploadMessage.create_from_params(params)
+        message = BuildpackUploadMessage.create_from_params(params, lifecycle)
 
         expect(message).to be_a(BuildpackUploadMessage)
         expect(message.bits_path).to eq('/tmp/foobar')
@@ -159,7 +227,7 @@ module VCAP::CloudController
       end
 
       it 'converts requested keys to symbols' do
-        message = BuildpackUploadMessage.create_from_params(params)
+        message = BuildpackUploadMessage.create_from_params(params, lifecycle)
 
         expect(message).to be_requested(:bits_path)
         expect(message).to be_requested(:bits_name)

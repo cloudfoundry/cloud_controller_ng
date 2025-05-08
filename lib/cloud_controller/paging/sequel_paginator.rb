@@ -13,6 +13,8 @@ module VCAP::CloudController
       order_type = Sequel.send(order_direction, Sequel.qualify(table_name, order_by))
       dataset = dataset.order(order_type)
 
+      secondary_order_by = pagination_options.secondary_order_by
+      dataset = dataset.order_append(Sequel.send(order_direction, Sequel.qualify(table_name, secondary_order_by))) if secondary_order_by
       dataset = dataset.order_append(Sequel.send(order_direction, Sequel.qualify(table_name, :guid))) if order_by != 'id' && has_guid_column
 
       distinct_opt = dataset.opts[:distinct]
