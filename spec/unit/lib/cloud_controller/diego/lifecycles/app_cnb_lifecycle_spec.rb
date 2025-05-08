@@ -43,7 +43,7 @@ module VCAP::CloudController
           let(:lifecycle_request_data) { { buildpacks: ['docker://nodejs', 'http://buildpack.com', 'http://other.com'] } }
 
           before do
-            Buildpack.make(name: 'custom-bp')
+            Buildpack.make(name: 'custom-bp', lifecycle: 'cnb')
           end
 
           it 'uses all of the buildpacks' do
@@ -96,11 +96,24 @@ module VCAP::CloudController
     end
 
     describe '#validation' do
-      context 'with no buildpacks' do
-        let(:lifecycle_request_data) { {} }
+      context 'with unknown admin buildpack' do
+        let(:lifecycle_request_data) { { buildpacks: %w[foo] } }
 
         it 'invalid' do
           expect(lifecycle.valid?).to be(false)
+        end
+      end
+
+      context 'with buildpacks' do
+        before do
+          Buildpack.make(name: 'foo', lifecycle: 'cnb')
+          Buildpack.make(name: 'bar', lifecycle: 'cnb')
+        end
+
+        let(:lifecycle_request_data) { { buildpacks: ['foo', 'bar', 'docker://nodejs:latest'] } }
+
+        it 'valid' do
+          expect(lifecycle.valid?).to be(true)
         end
 
         context 'during an update' do
@@ -109,14 +122,6 @@ module VCAP::CloudController
           it 'valid' do
             expect(lifecycle.valid?).to be(true)
           end
-        end
-      end
-
-      context 'with buildpacks' do
-        let(:lifecycle_request_data) { { buildpacks: %w[foo bar] } }
-
-        it 'valid' do
-          expect(lifecycle.valid?).to be(true)
         end
       end
     end

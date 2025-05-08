@@ -46,13 +46,13 @@ module VCAP::CloudController
           let(:buildpack2_file) { 'abuildpack2.zip' }
 
           let(:buildpack1a_fields) do
-            { name: 'buildpack1', file: buildpack1a_file, stack: 'cflinuxfs11', options: {} }
+            { name: 'buildpack1', file: buildpack1a_file, stack: 'cflinuxfs11', options: { lifecycle: Lifecycles::BUILDPACK } }
           end
           let(:buildpack1b_fields) do
-            { name: 'buildpack1', file: buildpack1b_file, stack: 'cflinuxfs12', options: {} }
+            { name: 'buildpack1', file: buildpack1b_file, stack: 'cflinuxfs12', options: { lifecycle: Lifecycles::BUILDPACK } }
           end
           let(:buildpack2_fields) do
-            { name: 'buildpack2', file: buildpack2_file, stack: nil, options: {} }
+            { name: 'buildpack2', file: buildpack2_file, stack: nil, options: { lifecycle: Lifecycles::BUILDPACK } }
           end
 
           before do
@@ -153,7 +153,7 @@ module VCAP::CloudController
           # call install
           # verify that job_factory.plan was called with the right file
           expect(File).to receive(:file?).with('another.zip').and_return(true)
-          expect(job_factory).to receive(:plan).with('buildpack1', [{ name: 'buildpack1', file: 'another.zip', stack: nil, options: {} }])
+          expect(job_factory).to receive(:plan).with('buildpack1', [{ name: 'buildpack1', file: 'another.zip', stack: nil, options: { lifecycle: Lifecycles::BUILDPACK } }])
 
           installer.install(TestConfig.config_instance.get(:install_buildpacks))
         end
@@ -167,7 +167,7 @@ module VCAP::CloudController
         it 'succeeds when no package is specified' do
           TestConfig.config[:install_buildpacks][0].delete('package')
           expect(File).to receive(:file?).with('another.zip').and_return(true)
-          expect(job_factory).to receive(:plan).with('buildpack1', [{ name: 'buildpack1', file: 'another.zip', stack: nil, options: {} }])
+          expect(job_factory).to receive(:plan).with('buildpack1', [{ name: 'buildpack1', file: 'another.zip', stack: nil, options: { lifecycle: Lifecycles::BUILDPACK } }])
 
           installer.install(TestConfig.config_instance.get(:install_buildpacks))
         end
@@ -225,6 +225,7 @@ module VCAP::CloudController
                     stack: nil,
                     options: {
                       enabled: true,
+                      lifecycle: Lifecycles::BUILDPACK,
                       locked: false,
                       position: 5
                     } }])

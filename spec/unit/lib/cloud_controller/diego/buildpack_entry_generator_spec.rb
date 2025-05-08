@@ -4,7 +4,7 @@ require 'cloud_controller/diego/buildpack_entry_generator'
 module VCAP::CloudController
   module Diego
     RSpec.describe BuildpackEntryGenerator do
-      subject(:buildpack_entry_generator) { BuildpackEntryGenerator.new(blobstore_url_generator) }
+      subject(:buildpack_entry_generator) { BuildpackEntryGenerator.new(blobstore_url_generator, Lifecycles::BUILDPACK) }
 
       let(:admin_buildpack_download_url) { 'http://admin-buildpack.example.com' }
       let(:app_package_download_url) { 'http://app-package.example.com' }

@@ -9,7 +9,10 @@ module VCAP::CloudController
       let(:stat_double) { instance_double(File::Stat, size: 2) }
 
       before do
-        allow(File).to receive(:stat).and_return(stat_double)
+        allow(File).to receive_messages(
+          stat: stat_double,
+          read: "PK\x03\x04".force_encoding('binary')
+        )
       end
 
       context 'when the <ngnix_upload_module_dummy> param is set' do
@@ -93,12 +96,23 @@ module VCAP::CloudController
       end
 
       context 'when the file is not a zip' do
+        let(:opts) { { bits_path: '/tmp/bar', bits_name: 'buildpack.abcd' } }
+
+        it 'is not valid' do
+          allow(File).to receive(:read).and_return("PX\x03\x04".force_encoding('binary'))
+          upload_message = BuildpackUploadMessage.new(opts)
+          expect(upload_message).not_to be_valid
+          expect(upload_message.errors.full_messages[0]).to include('buildpack.abcd is not a zip or gzip')
+        end
+      end
+
+      context 'when the file is a tgz' do
         let(:opts) { { bits_path: '/tmp/bar', bits_name: 'buildpack.tgz' } }
 
         it 'is not valid' do
+          allow(File).to receive(:read).and_return("\x1F\x8B\x08".force_encoding('binary'))
           upload_message = BuildpackUploadMessage.new(opts)
-          expect(upload_message).not_to be_valid
-          expect(upload_message.errors.full_messages[0]).to include('buildpack.tgz is not a zip')
+          expect(upload_message).to be_valid
         end
       end
 

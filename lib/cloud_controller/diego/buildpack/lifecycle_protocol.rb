@@ -23,6 +23,10 @@ module VCAP
           def new_lifecycle_data(_)
             LifecycleData.new
           end
+
+          def type
+            VCAP::CloudController::Lifecycles::BUILDPACK
+          end
         end
       end
     end

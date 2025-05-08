@@ -1114,22 +1114,6 @@ module VCAP::CloudController
           expect(message.errors.full_messages).to match_array(error_messages)
         end
       end
-
-      context 'when cnb: true and no buildpacks provided' do
-        before do
-          FeatureFlag.make(name: 'diego_cnb', enabled: true, error_message: nil)
-        end
-
-        let(:params_from_yaml) { { name: 'eugene', lifecycle: 'cnb' } }
-
-        it 'is not valid' do
-          message = AppManifestMessage.create_from_yml(params_from_yaml)
-
-          expect(message).not_to be_valid
-          expect(message.errors).to have(1).items
-          expect(message.errors.full_messages).to include('Buildpack(s) must be specified when using Cloud Native Buildpacks')
-        end
-      end
     end
 
     describe '.create_from_yml' do

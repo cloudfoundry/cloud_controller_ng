@@ -16,8 +16,13 @@ module VCAP::CloudController
       context 'when the user specifies buildpacks' do
         let(:request_data) do
           {
-            buildpacks: %w[docker://cool-buildpack docker://rad-buildpack]
+            buildpacks: %w[docker://nodejs cool-buildpack]
           }
+        end
+
+        before do
+          Buildpack.make(name: 'cool-buildpack', lifecycle: 'cnb')
+          Buildpack.make(name: 'rad-buildpack')
         end
 
         it 'uses the buildpacks from the user' do
@@ -29,7 +34,7 @@ module VCAP::CloudController
 
           data_model = VCAP::CloudController::CNBLifecycleDataModel.last
 
-          expect(data_model.buildpacks).to eq(%w[docker://cool-buildpack docker://rad-buildpack])
+          expect(data_model.buildpacks).to eq(%w[docker://nodejs cool-buildpack])
           expect(data_model.build).to eq(build)
         end
       end
@@ -166,15 +171,18 @@ module VCAP::CloudController
       let(:stubbed_data) { { stack: app.lifecycle_data.stack, buildpack_infos: [instance_double(BuildpackInfo)] } }
       let(:request_data) do
         {
-          buildpacks: %w[docker://cool-buildpack docker://rad-buildpack]
+          buildpacks: %w[cool-buildpack docker://rad-buildpack]
         }
       end
 
-      it 'returns the expected value' do
-        expect(cnb_lifecycle.buildpack_infos).to have(2).items
+      before do
+        allow(BuildpackLifecycleFetcher).to receive(:fetch).and_return(stubbed_data)
+      end
 
-        expect(cnb_lifecycle.buildpack_infos[0].buildpack_url).to eq('docker://cool-buildpack')
-        expect(cnb_lifecycle.buildpack_infos[1].buildpack_url).to eq('docker://rad-buildpack')
+      it 'returns the expected value' do
+        expect(cnb_lifecycle.buildpack_infos).to eq(stubbed_data[:buildpack_infos])
+
+        expect(BuildpackLifecycleFetcher).to have_received(:fetch).with(%w[cool-buildpack docker://rad-buildpack], app.lifecycle_data.stack, 'cnb')
       end
     end
   end

@@ -77,6 +77,16 @@ module VCAP
               end
             end
 
+            context 'when buildpack_infos is empty' do
+              let(:buildpack_infos) { [] }
+
+              it 'sets auto_detect: true' do
+                lifecycle_data = lifecycle_protocol.lifecycle_data(staging_details)
+
+                expect(lifecycle_data[:auto_detect]).to be true
+              end
+            end
+
             context 'when the generated message has invalid data' do
               let(:buildpack_infos) { [] }
 
