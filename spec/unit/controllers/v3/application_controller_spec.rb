@@ -337,7 +337,7 @@ RSpec.describe ApplicationController, type: :controller do
     it 'rescues from OpenSSL::Cipher::CipherError and renders an error presenter' do
       get :key_derivation_error
       expect(response).to have_http_status(:internal_server_error)
-      expect(response).to have_error_message(/Failed to decrypt credentials/)
+      expect(response).to have_error_message(/Error while processing encrypted data/)
     end
   end
 

@@ -915,21 +915,16 @@ RSpec.describe 'V3 service brokers' do
       end
 
       before do
-        VCAP::CloudController::Encryptor.database_encryption_keys = {
-          encryption_key_0: 'somevalidkeyvalue',
-          foo: 'fooencryptionkey',
-          death: 'headbangingdeathmetalkey', 'invalid-key-label': 'fakekey'
-        }
-        broker.class.db[:service_brokers].where(id: broker.id).update(encryption_key_label: 'invalid-key-label')
-        allow(VCAP::CloudController::Encryptor).to receive(:run_cipher).and_raise(OpenSSL::Cipher::CipherError)
         allow_any_instance_of(ErrorPresenter).to receive(:raise_500?).and_return(false)
       end
 
       it 'fails to decrypt the broker data and returns a 500 error' do
+        broker # ensure the broker is created before run_cipher is mocked to throw an error
+        allow(VCAP::CloudController::Encryptor).to receive(:run_cipher).and_raise(OpenSSL::Cipher::CipherError)
         api_call.call(admin_headers)
 
         expect(last_response).to have_status_code(500)
-        expect(parsed_response['errors'].first['detail']).to match(/Failed/i)
+        expect(parsed_response['errors'].first['detail']).to match(/Error while processing encrypted data/i)
       end
     end
   end

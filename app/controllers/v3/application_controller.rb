@@ -221,7 +221,7 @@ class ApplicationController < ActionController::Base
   end
 
   def handle_key_derivation_error(_)
-    error = CloudController::Errors::V3::ApiError.new_from_details('InternalServerError', 'Failed to decrypt credentials')
+    error = CloudController::Errors::V3::ApiError.new_from_details('InternalServerError', 'Error while processing encrypted data')
     handle_api_error(error)
   end
 
