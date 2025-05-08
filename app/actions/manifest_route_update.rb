@@ -90,8 +90,12 @@ module VCAP::CloudController
               domain: existing_domain,
               manifest_triggered: true
             )
-          elsif route.space.guid != app.space_guid
-            raise InvalidRoute.new('Routes cannot be mapped to destinations in different spaces')
+          elsif route.space.guid != app.space_guid  
+            # check if route is shared with space
+            spaces = route.shared_spaces
+            if (spaces.blank?) || (!spaces.any? { |space| space.values[:id] == app.space.id })
+              raise InvalidRoute.new('Routes cannot be mapped to destinations in different spaces')
+            end
           end
 
           return route
