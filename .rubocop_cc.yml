@@ -1,12 +1,14 @@
 # Cloud Controller Specific Rubocop Config
 
-require:
+plugins:
   - rubocop-sequel
   - rubocop-rails
   - rubocop-capybara
   - rubocop-factory_bot
   - rubocop-rspec
   - rubocop-rspec_rails
+
+require:
   - ./spec/linters/migration/add_constraint_name.rb
   - ./spec/linters/migration/include_string_size.rb
   - ./spec/linters/migration/require_primary_key.rb
@@ -77,10 +79,10 @@ Sequel/ConcurrentIndex: # Exclude for old Migrations
     - !ruby/regexp /db/migrations/202([0-2]|30[0-7]).+\.rb$/
     - spec/**/*
 
-Sequel/ColumnDefault: # Exclude for old Migrations
+Sequel/IrreversibleMigration: # Exclude for old Migrations
   Exclude:
     - !ruby/regexp /db/migrations/201([0-9]).+\.rb$/
-    - !ruby/regexp /db/migrations/202([0-2]).+\.rb$/
+    - !ruby/regexp /db/migrations/202([0-3]).+\.rb$/
     - spec/**/*
 
 Rails/HttpPositionalArguments: # Breaks Code for specs as it`s not rails used there it`s a test framework(racktest)
@@ -136,8 +138,8 @@ Rails/DangerousColumnNames: # Disabled, in comparison to active_record we need t
 Rails/SkipsModelValidations: # We don`t want any model at all in migrations and migration specs
   Enabled: true
   Exclude:
-    - db/migrations/*
-    - spec/migrations/*
+    - db/migrations/**/*
+    - spec/migrations/**/*
 
 #### ENABLED SECTION
 Gemspec/DeprecatedAttributeAssignment:
@@ -160,7 +162,13 @@ Lint/AmbiguousOperatorPrecedence:
   Enabled: true
 Lint/AmbiguousRange:
   Enabled: true
+Lint/ArrayLiteralInRegexp:
+  Enabled: true
 Lint/ConstantOverwrittenInRescue:
+  Enabled: true
+Lint/ConstantReassignment:
+  Enabled: true
+Lint/CopDirectiveSyntax:
   Enabled: true
 Lint/DeprecatedConstants:
   Enabled: true
@@ -172,11 +180,15 @@ Lint/DuplicateMatchPattern:
   Enabled: true
 Lint/DuplicateRegexpCharacterClassElement:
   Enabled: true
+Lint/DuplicateSetElement:
+  Enabled: true
 Lint/EmptyBlock:
   Enabled: true
 Lint/EmptyClass:
   Enabled: true
 Lint/EmptyInPattern:
+  Enabled: true
+Lint/HashNewWithKeywordArgumentsAsDefault:
   Enabled: true
 Lint/IncompatibleIoSelectWithFiberScheduler:
   Enabled: true
@@ -194,11 +206,15 @@ Lint/NonAtomicFileOperation:
   Enabled: true
 Lint/NumberedParameterAssignment:
   Enabled: true
+Lint/NumericOperationWithConstantResult:
+  Enabled: true
 Lint/OrAssignmentToConstant:
   Enabled: true
 Lint/RedundantDirGlobSort:
   Enabled: true
 Lint/RedundantRegexpQuantifiers:
+  Enabled: true
+Lint/RedundantTypeConversion:
   Enabled: true
 Lint/RefinementImportMethods:
   Enabled: true
@@ -206,15 +222,23 @@ Lint/RequireRangeParentheses:
   Enabled: true
 Lint/RequireRelativeSelfPath:
   Enabled: true
+Lint/SharedMutableDefault:
+  Enabled: true
+Lint/SuppressedExceptionInNumberConversion:
+  Enabled: true
 Lint/SymbolConversion:
   Enabled: true
 Lint/ToEnumArguments:
   Enabled: true
 Lint/TripleQuotes:
   Enabled: true
+Lint/UnescapedBracketInRegexp:
+  Enabled: true
 Lint/UnexpectedBlockArity:
   Enabled: true
 Lint/UnmodifiedReduceAccumulator:
+  Enabled: true
+Lint/UselessDefined:
   Enabled: true
 Lint/UselessRescue:
   Enabled: true
@@ -228,17 +252,27 @@ Security/CompoundHash:
   Enabled: true
 Security/IoMethods:
   Enabled: true
+Style/AmbiguousEndlessMethodDefinition:
+  Enabled: true
 Style/ArgumentsForwarding:
   Enabled: true
 Style/ArrayIntersect:
   Enabled: true
+Style/BitwisePredicate:
+  Enabled: true
 Style/CollectionCompact:
+  Enabled: true
+Style/CombinableDefined:
+  Enabled: true
+Style/ComparableBetween:
   Enabled: true
 Style/ComparableClamp:
   Enabled: true
 Style/ConcatArrayLiterals:
   Enabled: true
 Style/DataInheritance:
+  Enabled: true
+Style/DigChain:
   Enabled: true
 Style/DirEmpty:
   Enabled: true
@@ -256,7 +290,11 @@ Style/FetchEnvVar:
   Enabled: true
 Style/FileEmpty:
   Enabled: true
+Style/FileNull:
+  Enabled: true
 Style/FileRead:
+  Enabled: true
+Style/FileTouch:
   Enabled: true
 Style/FileWrite:
   Enabled: true
@@ -264,9 +302,17 @@ Style/HashConversion:
   Enabled: true
 Style/HashExcept:
   Enabled: true
+Style/HashFetchChain:
+  Enabled: true
 Style/IfWithBooleanLiteralBranches:
   Enabled: true
 Style/InPatternThen:
+  Enabled: true
+Style/ItAssignment:
+  Enabled: true
+Style/ItBlockParameter:
+  Enabled: true
+Style/KeywordArgumentsMerging:
   Enabled: true
 Style/MagicCommentFormat:
   Enabled: true
@@ -312,6 +358,8 @@ Style/RedundantEach:
   Enabled: true
 Style/RedundantFilterChain:
   Enabled: true
+Style/RedundantFormat:
+  Enabled: true
 Style/RedundantHeredocDelimiterQuotes:
   Enabled: true
 Style/RedundantInitialize:
@@ -327,6 +375,8 @@ Style/RedundantSelfAssignmentBranch:
 Style/RedundantStringEscape:
   Enabled: true
 Style/ReturnNilInPredicateMethodDefinition:
+  Enabled: true
+Style/SafeNavigationChainLength:
   Enabled: true
 Style/SelectByRegexp:
   Enabled: true
@@ -392,6 +442,8 @@ Rails/MatchRoute:
   Enabled: true
 Rails/MigrationClassName:
   Enabled: true
+Rails/MultipleRoutePaths:
+  Enabled: true
 Rails/NegateInclude:
   Enabled: true
 Rails/Pluck:
@@ -422,6 +474,8 @@ Rails/SquishedSQLHeredocs:
   Enabled: true
 Rails/StripHeredoc:
   Enabled: true
+Rails/StrongParametersExpect:
+  Enabled: true
 Rails/ThreeStateBooleanColumn:
   Enabled: true
 Rails/TimeZoneAssignment:
@@ -450,10 +504,14 @@ Rails/WhereNotWithMultipleConditions:
   Enabled: true
 Capybara/ClickLinkOrButtonStyle:
   Enabled: false
+Capybara/FindAllFirst:
+  Enabled: true
 Capybara/MatchStyle:
   Enabled: false
 Capybara/NegationMatcher:
   Enabled: false
+Capybara/NegationMatcherAfterVisit:
+  Enabled: true
 Capybara/RedundantWithinFind:
   Enabled: true
 Capybara/SpecificActions:

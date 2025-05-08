@@ -60,11 +60,12 @@ module VCAP::CloudController
               oauth_client: config.get(:info, :app_ssh_oauth_client)
             }
           }
-
         }
       }
 
       response[:links].merge!(cloud_controller_v2(api_url_builder)) if config.get(:temporary_enable_v2)
+
+      response[:links].merge!(custom_links(config.get(:custom_root_links))) if config.get(:custom_root_links)
 
       [200, Oj.dump(response, mode: :compat)]
     end
@@ -97,6 +98,15 @@ module VCAP::CloudController
             }
           }
       }
+    end
+
+    def custom_links(links)
+      result = {}
+      links.each do |value|
+        value = ActiveSupport::HashWithIndifferentAccess.new(value)
+        result[value['name']] = { href: value['href'] }
+      end
+      result
     end
   end
 end

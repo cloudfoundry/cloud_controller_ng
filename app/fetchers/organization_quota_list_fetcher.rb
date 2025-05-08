@@ -23,7 +23,7 @@ module VCAP::CloudController
         if message.requested? :organization_guids
           dataset = dataset.
                     join(:organizations, quota_definition_id: :id).
-                    where(organizations__guid: message.organization_guids).distinct.
+                    where(organizations__guid: message.organization_guids).distinct(:id).
                     qualify(:quota_definitions)
 
           dataset = dataset.where(organizations__guid: readable_org_guids_query) if readable_org_guids_query

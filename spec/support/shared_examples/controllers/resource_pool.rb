@@ -1,4 +1,4 @@
-shared_context 'resource pool' do
+RSpec.shared_context 'resource pool' do
   before(:all) do
     @max_file_size = 1098 # this is arbitrary
     num_dirs = 3

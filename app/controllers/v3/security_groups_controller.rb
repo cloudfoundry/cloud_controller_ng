@@ -157,7 +157,7 @@ class SecurityGroupsController < ApplicationController
     delete_action = SecurityGroupDeleteAction.new
 
     deletion_job = VCAP::CloudController::Jobs::DeleteActionJob.new(SecurityGroup, security_group.guid, delete_action)
-    pollable_job = Jobs::Enqueuer.new(deletion_job, queue: Jobs::Queues.generic).enqueue_pollable
+    pollable_job = Jobs::Enqueuer.new(queue: Jobs::Queues.generic).enqueue_pollable(deletion_job)
 
     head :accepted, 'Location' => url_builder.build_url(path: "/v3/jobs/#{pollable_job.guid}")
   end

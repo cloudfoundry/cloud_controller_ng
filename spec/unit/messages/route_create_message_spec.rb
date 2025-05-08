@@ -19,6 +19,9 @@ module VCAP::CloudController
             metadata: {
               labels: { potato: 'yam' },
               annotations: { style: 'mashed' }
+            },
+            options: {
+              loadbalancing: 'round-robin'
             }
           }
         end
@@ -351,6 +354,146 @@ module VCAP::CloudController
           it 'is not valid' do
             expect(subject).not_to be_valid
             expect(subject.errors[:relationships]).to include("Unknown field(s): 'other'")
+          end
+        end
+      end
+
+      context 'options' do
+        context 'when not provided' do
+          let(:params) do
+            {
+              host: 'some-host',
+              relationships: {
+                space: { data: { guid: 'space-guid' } },
+                domain: { data: { guid: 'domain-guid' } }
+              }
+            }
+          end
+
+          it 'is valid' do
+            expect(subject).to be_valid
+          end
+        end
+
+        context 'when empty' do
+          let(:params) do
+            {
+              host: 'some-host',
+              relationships: {
+                space: { data: { guid: 'space-guid' } },
+                domain: { data: { guid: 'domain-guid' } }
+              },
+              options: {}
+            }
+          end
+
+          it 'is valid' do
+            expect(subject).to be_valid
+          end
+        end
+
+        context 'when nil' do
+          let(:params) do
+            {
+              host: 'some-host',
+              relationships: {
+                space: { data: { guid: 'space-guid' } },
+                domain: { data: { guid: 'domain-guid' } }
+              },
+              options: nil
+            }
+          end
+
+          it 'is not valid' do
+            expect(subject).not_to be_valid
+            expect(subject.errors[:options]).to include("'options' is not a valid object")
+          end
+        end
+
+        context 'when options has invalid key' do
+          let(:params) do
+            {
+              host: 'some-host',
+              relationships: {
+                space: { data: { guid: 'space-guid' } },
+                domain: { data: { guid: 'domain-guid' } }
+              },
+              options: { foobar: 'baz' }
+            }
+          end
+
+          it 'is not valid' do
+            expect(subject).not_to be_valid
+            expect(subject.errors[:options]).to include("Unknown field(s): 'foobar'")
+          end
+        end
+
+        context 'when loadbalancing has value round-robin' do
+          let(:params) do
+            {
+              host: 'some-host',
+              relationships: {
+                space: { data: { guid: 'space-guid' } },
+                domain: { data: { guid: 'domain-guid' } }
+              },
+              options: { loadbalancing: 'round-robin' }
+            }
+          end
+
+          it 'is valid' do
+            expect(subject).to be_valid
+          end
+
+          context 'when loadbalancing has value least-connection' do
+            let(:params) do
+              {
+                host: 'some-host',
+                relationships: {
+                  space: { data: { guid: 'space-guid' } },
+                  domain: { data: { guid: 'domain-guid' } }
+                },
+                options: { loadbalancing: 'least-connection' }
+              }
+            end
+
+            it 'is valid' do
+              expect(subject).to be_valid
+            end
+          end
+
+          context 'when loadbalancing is nil' do
+            let(:params) do
+              {
+                host: 'some-host',
+                relationships: {
+                  space: { data: { guid: 'space-guid' } },
+                  domain: { data: { guid: 'domain-guid' } }
+                },
+                options: { loadbalancing: nil }
+              }
+            end
+
+            it 'is valid' do
+              expect(subject).to be_valid
+            end
+          end
+
+          context 'when loadbalancing has invalid value' do
+            let(:params) do
+              {
+                host: 'some-host',
+                relationships: {
+                  space: { data: { guid: 'space-guid' } },
+                  domain: { data: { guid: 'domain-guid' } }
+                },
+                options: { loadbalancing: 'random' }
+              }
+            end
+
+            it 'is not valid' do
+              expect(subject).not_to be_valid
+              expect(subject.errors[:options]).to include("Loadbalancing must be one of 'round-robin, least-connection' if present")
+            end
           end
         end
       end

@@ -21,7 +21,6 @@ module CloudController
         min_size: nil,
         max_size: nil
       )
-
         @directory_key = directory_key
         @min_size      = min_size || 0
         @max_size      = max_size

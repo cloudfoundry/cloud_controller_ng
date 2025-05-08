@@ -23,7 +23,7 @@ RSpec.describe 'V3 service offerings' do
       let(:api_call) { ->(user_headers) { get '/v3/service_offerings/does-not-exist-guid', nil, user_headers } }
 
       let(:expected_codes_and_responses) do
-        Hash.new(code: 404)
+        Hash.new({ code: 404 }.freeze)
       end
 
       it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS + UNAUTHENTICATED
@@ -34,7 +34,7 @@ RSpec.describe 'V3 service offerings' do
       let(:service_offering) { service_plan.service }
 
       let(:expected_codes_and_responses) do
-        h = Hash.new(code: 404)
+        h = Hash.new({ code: 404 }.freeze)
         h['admin'] = successful_response
         h['admin_read_only'] = successful_response
         h['global_auditor'] = successful_response
@@ -127,7 +127,7 @@ RSpec.describe 'V3 service offerings' do
         let(:space) { VCAP::CloudController::Space.make(organization: org) }
 
         let(:expected_codes_and_responses) do
-          h = Hash.new(code: 404)
+          h = Hash.new({ code: 404 }.freeze)
           h['admin'] = successful_response
           h['admin_read_only'] = successful_response
           h['global_auditor'] = successful_response
@@ -283,10 +283,10 @@ RSpec.describe 'V3 service offerings' do
 
       let(:expected_codes_and_responses) do
         Hash.new(
-          code: 200,
-          response_objects: [
-            create_offering_json(public_service_offering)
-          ]
+          { code: 200,
+            response_objects: [
+              create_offering_json(public_service_offering)
+            ] }.freeze
         ).tap do |h|
           h['admin'] = all_offerings_response
           h['admin_read_only'] = all_offerings_response
@@ -654,7 +654,7 @@ RSpec.describe 'V3 service offerings' do
       let(:guid) { 'non-existing-guid' }
 
       let(:expected_codes_and_responses) do
-        Hash.new(code: 404).tap do |h|
+        Hash.new({ code: 404 }.freeze).tap do |h|
           h['unauthenticated'] = { code: 401 }
         end
       end
@@ -667,7 +667,7 @@ RSpec.describe 'V3 service offerings' do
       let(:guid) { service_offering.guid }
 
       let(:expected_codes_and_responses) do
-        Hash.new(code: 404).tap do |h|
+        Hash.new({ code: 404 }.freeze).tap do |h|
           h['admin'] = { code: 204 }
           h['admin_read_only'] = { code: 403 }
           h['global_auditor'] = { code: 403 }
@@ -692,7 +692,7 @@ RSpec.describe 'V3 service offerings' do
       let(:guid) { service_offering.guid }
 
       let(:expected_codes_and_responses) do
-        Hash.new(code: 403).tap do |h|
+        Hash.new({ code: 403 }.freeze).tap do |h|
           h['admin'] = { code: 422 }
           h['unauthenticated'] = { code: 401 }
         end
@@ -711,7 +711,7 @@ RSpec.describe 'V3 service offerings' do
       end
 
       let(:expected_codes_and_responses) do
-        Hash.new(code: 403).tap do |h|
+        Hash.new({ code: 403 }.freeze).tap do |h|
           h['admin'] = { code: 422 }
           h['no_role'] = { code: 404 }
           h['unauthenticated'] = { code: 401 }
@@ -737,7 +737,7 @@ RSpec.describe 'V3 service offerings' do
       end
 
       let(:expected_codes_and_responses) do
-        Hash.new(code: 404).tap do |h|
+        Hash.new({ code: 404 }.freeze).tap do |h|
           h['admin'] = { code: 204 }
           h['admin_read_only'] = { code: 403 }
           h['global_auditor'] = { code: 403 }
@@ -892,7 +892,7 @@ RSpec.describe 'V3 service offerings' do
         let!(:service_offering) { VCAP::CloudController::Service.make(active: true) }
 
         let(:expected_codes_and_responses) do
-          Hash.new(code: 404).tap do |h|
+          Hash.new({ code: 404 }.freeze).tap do |h|
             h['admin'] = {
               code: 200,
               response_object: create_offering_json(service_offering, labels:, annotations:)
@@ -910,7 +910,7 @@ RSpec.describe 'V3 service offerings' do
         let!(:service_offering) { VCAP::CloudController::ServicePlan.make(public: true, active: true).service }
 
         let(:expected_codes_and_responses) do
-          Hash.new(code: 403).tap do |h|
+          Hash.new({ code: 403 }.freeze).tap do |h|
             h['admin'] = {
               code: 200,
               response_object: create_offering_json(service_offering, labels:, annotations:)
@@ -931,7 +931,7 @@ RSpec.describe 'V3 service offerings' do
         end
 
         let(:expected_codes_and_responses) do
-          Hash.new(code: 403).tap do |h|
+          Hash.new({ code: 403 }.freeze).tap do |h|
             h['admin'] = {
               code: 200,
               response_object: create_offering_json(service_offering, labels:, annotations:)
@@ -957,7 +957,7 @@ RSpec.describe 'V3 service offerings' do
         end
 
         let(:expected_codes_and_responses) do
-          Hash.new(code: 404).tap do |h|
+          Hash.new({ code: 404 }.freeze).tap do |h|
             h['admin'] = {
               code: 200,
               response_object: create_offering_json(service_offering, labels:, annotations:)

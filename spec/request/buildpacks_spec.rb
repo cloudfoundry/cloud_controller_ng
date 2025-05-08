@@ -282,7 +282,7 @@ RSpec.describe 'buildpacks' do
       let(:org) { VCAP::CloudController::Organization.make }
       let(:space) { VCAP::CloudController::Space.make(organization: org) }
       let(:api_call) { ->(user_headers) { get '/v3/buildpacks', nil, user_headers } }
-      let(:expected_codes_and_responses) { Hash.new(code: 200) }
+      let(:expected_codes_and_responses) { Hash.new({ code: 200 }.freeze) }
 
       before do
         space.organization.add_user(user)
@@ -460,7 +460,7 @@ RSpec.describe 'buildpacks' do
       context 'the buildpack does not exist' do
         let(:api_call) { ->(user_headers) { get '/v3/buildpacks/does-not-exist', nil, user_headers } }
 
-        let(:expected_codes_and_responses) { Hash.new(code: 404) }
+        let(:expected_codes_and_responses) { Hash.new({ code: 404 }.freeze) }
 
         it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS
       end
@@ -492,7 +492,7 @@ RSpec.describe 'buildpacks' do
           }
         end
 
-        let(:expected_codes_and_responses) { Hash.new(code: 200, response_object: buildpack_response) }
+        let(:expected_codes_and_responses) { Hash.new({ code: 200, response_object: buildpack_response }.freeze) }
 
         it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS
       end

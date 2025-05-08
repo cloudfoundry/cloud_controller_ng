@@ -516,7 +516,7 @@ RSpec.describe 'ServiceInstances' do
           VCAP::CloudController::UserAuditInfo.new(user_guid: user.guid, user_email: 'test@example.org'),
           {}
         )
-        VCAP::CloudController::Jobs::Enqueuer.new(job).enqueue
+        VCAP::CloudController::Jobs::Enqueuer.new.enqueue(job)
 
         allow(broker_client).to receive(:fetch_service_instance_last_operation).and_return(
           last_operation: {

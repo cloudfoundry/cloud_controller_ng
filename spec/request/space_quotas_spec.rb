@@ -14,7 +14,7 @@ module VCAP::CloudController
 
       context 'when the space quota is applied to the space where the current user has a role' do
         let(:expected_codes_and_responses) do
-          h = Hash.new(code: 404)
+          h = Hash.new({ code: 404 }.freeze)
           expected_response = make_space_quota_json(space_quota)
           h['admin'] = { code: 200, response_object: expected_response }
           h['admin_read_only'] = { code: 200, response_object: expected_response }
@@ -35,7 +35,7 @@ module VCAP::CloudController
         let(:unapplied_space_quota) { VCAP::CloudController::SpaceQuotaDefinition.make(organization: org) }
 
         let(:expected_codes_and_responses) do
-          h = Hash.new(code: 404)
+          h = Hash.new({ code: 404 }.freeze)
           h['admin'] = { code: 200, response_object: make_space_quota_json(unapplied_space_quota) }
           h['admin_read_only'] = { code: 200, response_object: make_space_quota_json(unapplied_space_quota) }
           h['global_auditor'] = { code: 200, response_object: make_space_quota_json(unapplied_space_quota) }
@@ -52,7 +52,7 @@ module VCAP::CloudController
         let(:other_space_quota) { VCAP::CloudController::SpaceQuotaDefinition.make(organization: other_org) }
 
         let(:expected_codes_and_responses) do
-          h = Hash.new(code: 404)
+          h = Hash.new({ code: 404 }.freeze)
           h['admin'] = { code: 200, response_object: make_space_quota_json(other_space_quota) }
           h['admin_read_only'] = { code: 200, response_object: make_space_quota_json(other_space_quota) }
           h['global_auditor'] = { code: 200, response_object: make_space_quota_json(other_space_quota) }
@@ -143,7 +143,7 @@ module VCAP::CloudController
       context 'permissions' do
         let(:api_call) { ->(user_headers) { patch "/v3/space_quotas/#{space_quota.guid}", params.to_json, user_headers } }
         let(:expected_codes_and_responses) do
-          h = Hash.new(code: 403, errors: CF_NOT_AUTHORIZED)
+          h = Hash.new({ code: 403, errors: CF_NOT_AUTHORIZED }.freeze)
           h['admin'] = { code: 200, response_object: updated_space_quota_json }
           h['org_manager'] = { code: 200, response_object: updated_space_quota_json }
           h['org_auditor'] = { code: 404 }
@@ -295,7 +295,7 @@ module VCAP::CloudController
         let!(:other_space_quota) { VCAP::CloudController::SpaceQuotaDefinition.make(organization: other_org, guid: 'other-space-quota') }
 
         let(:expected_codes_and_responses) do
-          h = Hash.new(code: 200, response_objects: [])
+          h = Hash.new({ code: 200, response_objects: [] }.freeze)
           h['admin'] = {
             code: 200,
             response_objects: contain_exactly(
@@ -453,7 +453,7 @@ module VCAP::CloudController
         end
 
         let(:expected_codes_and_responses) do
-          h = Hash.new(code: 403, errors: CF_NOT_AUTHORIZED)
+          h = Hash.new({ code: 403, errors: CF_NOT_AUTHORIZED }.freeze)
           h['admin'] = {
             code: 201,
             response_object: space_quota_json
@@ -542,7 +542,7 @@ module VCAP::CloudController
 
         let(:expected_codes_and_responses) do
           h = Hash.new(
-            code: 403
+            { code: 403 }.freeze
           )
           h['admin'] = {
             code: 201,
@@ -762,7 +762,7 @@ module VCAP::CloudController
         end
 
         let(:expected_codes_and_responses) do
-          h = Hash.new(code: 403, errors: CF_NOT_AUTHORIZED)
+          h = Hash.new({ code: 403, errors: CF_NOT_AUTHORIZED }.freeze)
           h['admin'] = { code: 200, response_object: data_json }
           h['org_manager'] = { code: 200, response_object: data_json }
           h['org_auditor'] = { code: 404 }
@@ -843,7 +843,7 @@ module VCAP::CloudController
 
       context 'when removing a space quota from a space' do
         let(:expected_codes_and_responses) do
-          h = Hash.new(code: 403, errors: CF_NOT_AUTHORIZED)
+          h = Hash.new({ code: 403, errors: CF_NOT_AUTHORIZED }.freeze)
           h['admin'] = { code: 204 }
           h['org_manager'] = { code: 204 }
           h['org_auditor'] = { code: 404 }
@@ -905,7 +905,7 @@ module VCAP::CloudController
         let!(:unapplied_space_quota) { VCAP::CloudController::SpaceQuotaDefinition.make(organization: org, guid: 'unapplied-space-quota') }
 
         let(:expected_codes_and_responses) do
-          h = Hash.new(code: 404)
+          h = Hash.new({ code: 404 }.freeze)
           h['admin'] = { code: 202 }
           h['org_manager'] = { code: 202 }
           %w[admin_read_only global_auditor].each { |r| h[r] = { code: 403, errors: CF_NOT_AUTHORIZED } }
@@ -963,7 +963,7 @@ module VCAP::CloudController
         let(:api_call) { ->(user_headers) { delete "/v3/space_quotas/#{space_quota.guid}", {}, user_headers } }
 
         let(:expected_codes_and_responses) do
-          h = Hash.new(code: 403)
+          h = Hash.new({ code: 403 }.freeze)
           h['admin'] = { code: 422 }
           h['org_manager'] = { code: 422 }
           h['org_auditor'] = { code: 404 }

@@ -4,6 +4,8 @@ require 'cloud_controller/paging/pagination_options'
 
 module VCAP::CloudController
   RSpec.describe SequelPaginator do
+    class TableWithoutGuid < Sequel::Model(:table_without_guid); end
+
     let(:paginator) { SequelPaginator.new }
 
     describe '#get_page' do
@@ -153,15 +155,16 @@ module VCAP::CloudController
       end
 
       it 'does not order by GUID when the table has no GUID' do
-        options = { page:, per_page: }
+        options = { page: page, per_page: 2, order_by: 'created_at', order_direction: 'asc' }
+
         pagination_options = PaginationOptions.new(options)
-        orphaned_blob_dataset = OrphanedBlob.dataset
-        OrphanedBlob.make.save
-        paginated_result = nil
+        ds = TableWithoutGuid.dataset
         expect do
-          paginated_result = paginator.get_page(orphaned_blob_dataset, pagination_options)
-        end.not_to raise_error
-        expect(paginated_result.total).to be 1
+          paginator.get_page(ds, pagination_options)
+        end.to have_queried_db_times(/ORDER BY .\w*.\..created_at. ASC LIMIT/i, 1)
+        expect do
+          paginator.get_page(ds, pagination_options)
+        end.to have_queried_db_times(/ORDER BY .\w*.\..created_at. ASC, .\w*.\..guid. ASC LIMIT/i, 0)
       end
 
       it 'does not order by GUID when the primary order is by ID' do
@@ -174,6 +177,40 @@ module VCAP::CloudController
         expect do
           paginator.get_page(dataset, pagination_options)
         end.to have_queried_db_times(/ORDER BY .\w*.\..id. ASC, .\w*.\..guid. ASC LIMIT/i, 0)
+      end
+
+      context 'when a DISTINCT ON clause is used' do # MySQL uses GROUP BY instead
+        let(:distinct_dataset) { dataset.distinct(:id) }
+
+        context 'when ordered by ID' do
+          let(:pagination_options) { PaginationOptions.new({ order_by: 'id' }) }
+
+          it 'uses column ID for DISTINCT ON clause' do
+            expect do
+              paginator.get_page(distinct_dataset, pagination_options)
+            end.to have_queried_db_times(/(select distinct on \(.*id.*\) .* from)|(group by)/i, paginator.can_paginate_with_window_function?(dataset) ? 1 : 2)
+          end
+        end
+
+        context 'when ordered by other column' do
+          let(:pagination_options) { PaginationOptions.new({ order_by: 'created_at' }) }
+
+          it 'uses other column and GUID for DISTINCT ON clause' do
+            expect do
+              paginator.get_page(distinct_dataset, pagination_options)
+            end.to have_queried_db_times(/(select distinct on \(.*created_at.*,.*guid.*\) .* from)|(group by)/i, paginator.can_paginate_with_window_function?(dataset) ? 1 : 2)
+          end
+
+          context 'when table has no GUID column' do
+            let(:dataset) { TableWithoutGuid.dataset }
+
+            it 'uses a DISTINCT clause instead' do
+              expect do
+                paginator.get_page(distinct_dataset, pagination_options)
+              end.to have_queried_db_times(/(select distinct (?!on).* from)|(group by)/i, paginator.can_paginate_with_window_function?(dataset) ? 1 : 2)
+            end
+          end
+        end
       end
 
       it 'produces a descending order which is exactly the reverse order of the ascending ordering' do

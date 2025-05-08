@@ -55,33 +55,7 @@ RSpec.describe 'stack_check' do
       end
 
       it 'validates stacks' do
-        expect_any_instance_of(VCAP::CloudController::CheckStacks).to receive(:validate_stacks).and_call_original
-        Rake::Task['stacks:stack_check'].execute
-      end
-    end
-  end
-
-  context 'buildpack_lifecycle_data' do
-    context 'when buildpack_lifecycle_data table doesnt exist' do
-      before do
-        allow(db_double).to receive(:table_exists?).with(:buildpack_lifecycle_data).and_return false
-        allow(VCAP::CloudController::DB).to receive(:connect).and_return(db_double)
-      end
-
-      it 'does nothing' do
-        expect_any_instance_of(VCAP::CloudController::CheckStacks).not_to receive(:validate_stacks)
-        Rake::Task['stacks:stack_check'].execute
-      end
-    end
-
-    context 'when buildpack_lifecycle_data table does exist' do
-      before do
-        allow(double).to receive(:table_exists?).with(:buildpack_lifecycle_data).and_return true
-        allow(VCAP::CloudController::DB).to receive(:connect).and_return(db_double)
-      end
-
-      it 'validates stacks' do
-        expect_any_instance_of(VCAP::CloudController::CheckStacks).to receive(:validate_stacks).and_call_original
+        expect_any_instance_of(VCAP::CloudController::CheckStacks).to receive(:validate_stacks)
         Rake::Task['stacks:stack_check'].execute
       end
     end

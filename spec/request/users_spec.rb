@@ -157,10 +157,10 @@ RSpec.describe 'Users Request' do
       context 'when there are no other users in your space or org' do
         let(:expected_codes_and_responses) do
           h = Hash.new(
-            code: 200,
-            response_objects: [
-              current_user_json
-            ]
+            { code: 200,
+              response_objects: [
+                current_user_json
+              ] }.freeze
           )
           h['admin'] = {
             code: 200,
@@ -202,11 +202,11 @@ RSpec.describe 'Users Request' do
 
         let(:expected_codes_and_responses) do
           h = Hash.new(
-            code: 200,
-            response_objects: [
-              actee_json,
-              current_user_json
-            ]
+            { code: 200,
+              response_objects: [
+                actee_json,
+                current_user_json
+              ] }.freeze
           )
           h['admin'] = {
             code: 200,
@@ -252,10 +252,10 @@ RSpec.describe 'Users Request' do
 
         let(:expected_codes_and_responses) do
           h = Hash.new(
-            code: 200,
-            response_objects: [
-              current_user_json
-            ]
+            { code: 200,
+              response_objects: [
+                current_user_json
+              ] }.freeze
           )
           h
         end
@@ -288,10 +288,10 @@ RSpec.describe 'Users Request' do
 
         let(:expected_codes_and_responses) do
           h = Hash.new(
-            code: 200,
-            response_objects: [
-              current_user_json
-            ]
+            { code: 200,
+              response_objects: [
+                current_user_json
+              ] }.freeze
           )
           h
         end
@@ -316,10 +316,10 @@ RSpec.describe 'Users Request' do
         let(:api_call) { ->(user_headers) { get endpoint, nil, user_headers } }
         let(:expected_codes_and_responses) do
           h = Hash.new(
-            code: 200,
-            response_objects: [
-              current_user_json
-            ]
+            { code: 200,
+              response_objects: [
+                current_user_json
+              ] }.freeze
           )
           h
         end
@@ -464,7 +464,7 @@ RSpec.describe 'Users Request' do
     context 'when the actee is not in an org or space' do
       let(:expected_codes_and_responses) do
         h = Hash.new(
-          code: 404
+          { code: 404 }.freeze
         )
         h['admin'] = {
           code: 200,
@@ -487,8 +487,8 @@ RSpec.describe 'Users Request' do
     context 'when the actee has an org or space role' do
       let(:expected_codes_and_responses) do
         h = Hash.new(
-          code: 200,
-          response_object: client_json
+          { code: 200,
+            response_object: client_json }.freeze
         )
         h['no_role'] = {
           code: 404,
@@ -652,7 +652,7 @@ RSpec.describe 'Users Request' do
 
       let(:expected_codes_and_responses) do
         h = Hash.new(
-          code: 403
+          { code: 403 }.freeze
         )
         h['admin'] = {
           code: 201,
@@ -662,6 +662,55 @@ RSpec.describe 'Users Request' do
       end
 
       it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS
+
+      context 'using username and origin' do
+        let(:params) do
+          {
+            username: 'some-user',
+            origin: 'idp.local'
+          }
+        end
+
+        let(:user_guid) { 'new-user-guid' }
+
+        let(:api_call) { ->(user_headers) { post '/v3/users', params.to_json, user_headers } }
+
+        let(:user_json) do
+          {
+            guid: user_guid,
+            created_at: iso8601,
+            updated_at: iso8601,
+            username: params[:username],
+            presentation_name: params[:username],
+            origin: params[:origin],
+            metadata: {
+              labels: {},
+              annotations: {}
+            },
+            links: {
+              self: { href: %r{#{Regexp.escape(link_prefix)}/v3/users/#{user_guid}} }
+            }
+          }
+        end
+
+        let(:expected_codes_and_responses) do
+          h = Hash.new(
+            { code: 403 }.freeze
+          )
+          h['admin'] = {
+            code: 201,
+            response_object: user_json
+          }
+          h
+        end
+
+        before do
+          allow(CloudController::DependencyLocator.instance).to receive_messages(uaa_shadow_user_creation_client: uaa_client, uaa_username_lookup_client: uaa_client)
+          allow(uaa_client).to receive_messages(create_shadow_user: { 'id' => user_guid }, ids_for_usernames_and_origins: [])
+        end
+
+        it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS
+      end
     end
 
     describe 'when creating a user that exists in uaa' do
@@ -699,7 +748,7 @@ RSpec.describe 'Users Request' do
 
         let(:expected_codes_and_responses) do
           h = Hash.new(
-            code: 403
+            { code: 403 }.freeze
           )
           h['admin'] = {
             code: 201,
@@ -720,7 +769,7 @@ RSpec.describe 'Users Request' do
         let(:uaa_client_id) { 'cc_routing' }
 
         before do
-          allow(uaa_client).to receive_messages(users_for_ids: {}, get_clients: [{ client_id: uaa_client_id }])
+          allow(uaa_client).to receive_messages(users_for_ids: {})
         end
 
         let(:api_call) { ->(user_headers) { post '/v3/users', params.to_json, user_headers } }
@@ -745,7 +794,7 @@ RSpec.describe 'Users Request' do
 
         let(:expected_codes_and_responses) do
           h = Hash.new(
-            code: 403
+            { code: 403 }.freeze
           )
           h['admin'] = {
             code: 201,
@@ -814,6 +863,191 @@ RSpec.describe 'Users Request' do
         end
       end
     end
+
+    context 'when "allow_user_creation_by_org_manager" is enabled' do
+      before do
+        TestConfig.override(allow_user_creation_by_org_manager: true)
+        allow(CloudController::DependencyLocator.instance).to receive_messages(uaa_shadow_user_creation_client: uaa_client, uaa_username_lookup_client: uaa_client)
+      end
+
+      describe 'when creating a user by guid' do
+        before do
+          allow(uaa_client).to receive(:users_for_ids).and_return({})
+        end
+
+        let(:api_call) { ->(user_headers) { post '/v3/users', params.to_json, user_headers } }
+
+        let(:user_json) do
+          {
+            guid: params[:guid],
+            created_at: iso8601,
+            updated_at: iso8601,
+            username: nil,
+            presentation_name: params[:guid],
+            origin: nil,
+            metadata: {
+              labels: {},
+              annotations: {}
+            },
+            links: {
+              self: { href: %r{#{Regexp.escape(link_prefix)}/v3/users/#{params[:guid]}} }
+            }
+          }
+        end
+
+        let(:expected_codes_and_responses) do
+          h = Hash.new(
+            { code: 403 }.freeze
+          )
+          h['admin'] = {
+            code: 201,
+            response_object: user_json
+          }
+          h
+        end
+
+        it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS
+      end
+
+      describe 'when creating a user by username and origin' do
+        let(:params) do
+          {
+            username: 'some-user',
+            origin: 'idp.local'
+          }
+        end
+        let(:user_guid) { 'new-user-guid' }
+
+        let(:api_call) { ->(user_headers) { post '/v3/users', params.to_json, user_headers } }
+
+        let(:user_json) do
+          {
+            guid: user_guid,
+            created_at: iso8601,
+            updated_at: iso8601,
+            username: params[:username],
+            presentation_name: params[:username],
+            origin: params[:origin],
+            metadata: {
+              labels: {},
+              annotations: {}
+            },
+            links: {
+              self: { href: %r{#{Regexp.escape(link_prefix)}/v3/users/#{user_guid}} }
+            }
+          }
+        end
+
+        let(:expected_codes_and_responses) do
+          h = Hash.new(
+            { code: 403 }.freeze
+          )
+          h['admin'] = {
+            code: 201,
+            response_object: user_json
+          }
+          h['org_manager'] = {
+            code: 201,
+            response_object: user_json
+          }
+          h
+        end
+
+        before do
+          allow(uaa_client).to receive_messages(create_shadow_user: { 'id' => user_guid }, ids_for_usernames_and_origins: [])
+        end
+
+        it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS
+
+        it 'constructs the response with the given information without calling the UAA again' do
+          post '/v3/users', params.to_json, admin_header
+
+          expect(last_response).to have_status_code(201)
+          expect(parsed_response).to match_json_response(user_json)
+
+          expect(uaa_client).not_to have_received(:users_for_ids)
+        end
+
+        context 'when UAA is rate limited' do
+          before do
+            allow(uaa_client).to receive(:create_shadow_user).and_raise(VCAP::CloudController::UaaRateLimited)
+          end
+
+          it 'raises a 429 with a helpful message and Retry-After header' do
+            post '/v3/users', params.to_json, admin_header
+
+            expect(last_response).to have_status_code(429)
+            expect(last_response).to have_error_message(
+              'The UAA is currently rate limited. Please try again later'
+            )
+            expect(last_response.headers).to include('Retry-After')
+          end
+        end
+
+        context 'when user already exists in UAA' do
+          before do
+            allow(uaa_client).to receive(:ids_for_usernames_and_origins).and_return([user_guid])
+          end
+
+          it 'does not try to create a shadow user' do
+            post '/v3/users', params.to_json, admin_header
+
+            expect(last_response).to have_status_code(201)
+            expect(parsed_response).to match_json_response(user_json)
+
+            expect(uaa_client).not_to have_received(:create_shadow_user)
+          end
+        end
+      end
+
+      context 'when parameters are invalid' do
+        let(:params) do
+          {
+            guid: user_guid,
+            username: 'some-user',
+            origin: 'idp.local'
+          }
+        end
+        let(:user_guid) { 'new-user-guid' }
+
+        let(:api_call) { ->(user_headers) { post '/v3/users', params.to_json, user_headers } }
+
+        let(:user_json) do
+          {
+            guid: user_guid,
+            created_at: iso8601,
+            updated_at: iso8601,
+            username: params[:username],
+            presentation_name: params[:username],
+            origin: params[:origin],
+            metadata: {
+              labels: {},
+              annotations: {}
+            },
+            links: {
+              self: { href: %r{#{Regexp.escape(link_prefix)}/v3/users/#{user_guid}} }
+            }
+          }
+        end
+
+        let(:expected_codes_and_responses) do
+          h = Hash.new(
+            { code: 403 }.freeze
+          )
+          h['admin'] = {
+            code: 422,
+            response_object: user_json
+          }
+          h['org_manager'] = {
+            code: 422,
+            response_object: user_json
+          }
+          h
+        end
+
+        it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS
+      end
+    end
   end
 
   describe 'PATCH /v3/users/:guid' do
@@ -864,7 +1098,7 @@ RSpec.describe 'Users Request' do
       context 'when the actee is not associated with any org or space' do
         let(:expected_codes_and_responses) do
           h = Hash.new(
-            code: 404
+            { code: 404 }.freeze
           )
           h['admin'] = {
             code: 200,
@@ -886,7 +1120,7 @@ RSpec.describe 'Users Request' do
       context 'when the actee has an org or space role' do
         let(:expected_codes_and_responses) do
           h = Hash.new(
-            code: 403
+            { code: 403 }.freeze
           )
           h['admin'] = {
             code: 200,
@@ -946,7 +1180,7 @@ RSpec.describe 'Users Request' do
 
     context 'when the actee is not associated with any org or space' do
       let(:expected_codes_and_responses) do
-        h = Hash.new(code: 404)
+        h = Hash.new({ code: 404 }.freeze)
 
         h['admin_read_only'] = { code: 403 }
         h['global_auditor'] = { code: 403 }
@@ -963,7 +1197,7 @@ RSpec.describe 'Users Request' do
       end
 
       let(:expected_codes_and_responses) do
-        h = Hash.new(code: 403)
+        h = Hash.new({ code: 403 }.freeze)
         h['admin'] = { code: 202 }
         h['no_role'] = { code: 404 }
         h
@@ -1020,7 +1254,7 @@ RSpec.describe 'Users Request' do
     context 'permissions' do
       it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS do
         let(:expected_codes_and_responses) do
-          h = Hash.new(code: 404)
+          h = Hash.new({ code: 404 }.freeze)
           h['admin'] = { code: 202 }
           h['admin_read_only'] = { code: 403 }
           h['global_auditor'] = { code: 403 }

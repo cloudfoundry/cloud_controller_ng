@@ -30,10 +30,12 @@ module VCAP::CloudController
       expect(BitsExpiration.new(changed_config).packages_storage_count).to eq(10)
     end
 
-    context 'with an app with few droplets / packages' do
+    context 'with an app with few droplets / packages and one failed droplet / package' do
       it 'does not mark any as expired' do
         3.times { DropletModel.make(state: DropletModel::STAGED_STATE, app_guid: app.guid) }
         3.times { PackageModel.make(state: PackageModel::READY_STATE, app_guid: app.guid) }
+        DropletModel.make(state: DropletModel::FAILED_STATE, app_guid: app.guid)
+        PackageModel.make(state: PackageModel::FAILED_STATE, app_guid: app.guid)
         BitsExpiration.new.expire_droplets!(app)
         BitsExpiration.new.expire_packages!(app)
         expect(DropletModel.where(state: DropletModel::EXPIRED_STATE).count).to eq(0)
@@ -77,10 +79,19 @@ module VCAP::CloudController
         )
         app.update(droplet: @current)
 
-        10.times do |i|
+        2.times do |i|
           DropletModel.make(
             app_guid: app.guid,
             created_at: t + i,
+            droplet_hash: nil,
+            state: DropletModel::FAILED_STATE
+          )
+        end
+
+        10.times do |i|
+          DropletModel.make(
+            app_guid: app.guid,
+            created_at: t + i + 2,
             droplet_hash: 'current_droplet_hash'
           )
         end
@@ -133,24 +144,29 @@ module VCAP::CloudController
         )
         app.update(droplet: @current)
 
+        2.times do |i|
+          PackageModel.make(package_hash: nil,
+                            state: PackageModel::FAILED_STATE,
+                            app_guid: app.guid,
+                            created_at: t + i)
+        end
+
         10.times do |i|
           PackageModel.make(package_hash: 'real hash!',
                             state: PackageModel::READY_STATE,
                             app_guid: app.guid,
-                            created_at: t + i)
+                            created_at: t + i + 2)
         end
       end
 
       it 'expires old packages' do
         expiration = BitsExpiration.new
-        expiration.expire_packages!(app)
         num_of_packages_to_keep = expiration.packages_storage_count + 1
         remaining_packages      = PackageModel.where(state: PackageModel::READY_STATE, app_guid: app.guid)
         expect(remaining_packages.count).to eq(num_of_packages_to_keep)
       end
 
       it 'does not delete the package related to the current droplet' do
-        BitsExpiration.new.expire_packages!(app)
         app.reload && @current_package.reload
         expect(@current_package.state).to eq(PackageModel::READY_STATE)
       end
@@ -163,7 +179,7 @@ module VCAP::CloudController
       end
 
       it 'enqueues a job to delete the blob' do
-        expect { BitsExpiration.new.expire_packages!(app) }.to change(Delayed::Job, :count).from(0).to(5)
+        expect(Delayed::Job.count).to eq(5)
         expect(Delayed::Job).to(be_all { |j| j.handler.include?('DeleteExpiredPackageBlob') })
       end
     end

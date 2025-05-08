@@ -90,7 +90,7 @@ class SpacesV3Controller < ApplicationController
     service_event_repository = VCAP::CloudController::Repositories::ServiceEventRepository.new(user_audit_info)
     delete_action = SpaceDelete.new(user_audit_info, service_event_repository)
     deletion_job = VCAP::CloudController::Jobs::DeleteActionJob.new(Space, space.guid, delete_action)
-    pollable_job = Jobs::Enqueuer.new(deletion_job, queue: Jobs::Queues.generic).enqueue_pollable
+    pollable_job = Jobs::Enqueuer.new(queue: Jobs::Queues.generic).enqueue_pollable(deletion_job)
 
     head :accepted, 'Location' => url_builder.build_url(path: "/v3/jobs/#{pollable_job.guid}")
   end
@@ -144,7 +144,7 @@ class SpacesV3Controller < ApplicationController
     suspended! unless permission_queryer.is_space_active?(space.id)
 
     deletion_job = VCAP::CloudController::Jobs::V3::SpaceDeleteUnmappedRoutesJob.new(space)
-    pollable_job = Jobs::Enqueuer.new(deletion_job, queue: Jobs::Queues.generic).enqueue_pollable
+    pollable_job = Jobs::Enqueuer.new(queue: Jobs::Queues.generic).enqueue_pollable(deletion_job)
 
     head :accepted, 'Location' => url_builder.build_url(path: "/v3/jobs/#{pollable_job.guid}")
   end
@@ -228,13 +228,13 @@ class SpacesV3Controller < ApplicationController
   def fetch_running_security_group_guids(space)
     space_level_groups = SecurityGroup.where(spaces: space)
     global_groups = SecurityGroup.where(running_default: true)
-    space_level_groups.union(global_groups).map(&:guid)
+    space_level_groups.union(global_groups).select_map(:guid)
   end
 
   def fetch_staging_security_group_guids(space)
     space_level_groups = SecurityGroup.where(staging_spaces: space)
     global_groups = SecurityGroup.where(staging_default: true)
-    space_level_groups.union(global_groups).distinct.map(&:guid)
+    space_level_groups.union(global_groups).distinct.select_map(:guid)
   end
 
   def space_not_found!

@@ -11,7 +11,7 @@ readiness_port:
 
 external_protocol: http
 external_domain: api2.vcap.me
-temporary_disable_deployments: true
+temporary_disable_deployments: false
 deployment_updater:
   update_frequency_in_seconds: 30
   lock_key: 'cf-deployment-updater'
@@ -33,6 +33,7 @@ system_hostnames:
 jobs:
   global:
     timeout_in_seconds: 14400
+    worker_sleep_delay_in_seconds: 5
   queues: {}
 
 app_usage_events:
@@ -70,6 +71,7 @@ max_retained_revisions_per_app: 100
 broker_client_default_async_poll_interval_seconds: 60
 broker_client_max_async_poll_duration_minutes: 10080
 broker_client_async_poll_exponential_backoff_rate: 1.0
+broker_client_max_async_poll_interval_seconds: 86400
 
 broker_client_response_parser:
   log_errors: true

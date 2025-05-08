@@ -72,7 +72,7 @@ module VCAP::CloudController
                   staging_env_json: EnvironmentVariableGroup.staging.environment_json,
                   running_env_json: EnvironmentVariableGroup.running.environment_json,
                   environment_json: process.app.environment_variables,
-                  system_env_json: SystemEnvPresenter.new(process.service_bindings).system_env,
+                  system_env_json: SystemEnvPresenter.new(process).system_env,
                   application_env_json: { 'VCAP_APPLICATION' => vcap_application }
                 }, mode: :compat)
       ]
@@ -197,7 +197,7 @@ module VCAP::CloudController
         BuildpackLifecycleDataModel.create(droplet:)
 
         droplet_upload_job = Jobs::V2::UploadDropletFromUser.new(droplet_path, droplet.guid)
-        enqueued_job       = Jobs::Enqueuer.new(droplet_upload_job, queue: Jobs::Queues.local(config)).enqueue
+        enqueued_job       = Jobs::Enqueuer.new(queue: Jobs::Queues.local(config)).enqueue(droplet_upload_job)
       end
 
       [HTTP::CREATED, JobPresenter.new(enqueued_job).to_json]

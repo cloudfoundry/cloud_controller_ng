@@ -17,7 +17,7 @@ require 'prometheus/client/data_stores/direct_file_store'
 
 module VCAP::CloudController
   class Runner
-    attr_reader :config, :config_file, :insert_seed_data, :secrets_file
+    attr_reader :config, :config_file, :secrets_file
 
     def initialize(argv)
       @argv = argv
@@ -64,10 +64,6 @@ module VCAP::CloudController
           @secrets_file = opt
         end
       end
-    end
-
-    def deprecation_warning(message)
-      Rails.logger.warn message
     end
 
     def parse_options!

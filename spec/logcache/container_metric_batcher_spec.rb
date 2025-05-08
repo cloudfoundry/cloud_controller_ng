@@ -512,7 +512,7 @@ RSpec.describe Logcache::ContainerMetricBatcher do
           Timecop.freeze do
             subject
 
-            start_time = TimeUtils.to_nanoseconds((Time.now - lookback_window))
+            start_time = TimeUtils.to_nanoseconds(Time.now - lookback_window)
             end_time = TimeUtils.to_nanoseconds(Time.now)
             expect(wrapped_logcache_client).to have_received(:container_metrics).
               with(hash_including(start_time:, end_time:))
@@ -545,7 +545,7 @@ RSpec.describe Logcache::ContainerMetricBatcher do
           Timecop.freeze(call_time) do
             expect(subject).to have(2001).items
 
-            start_time = TimeUtils.to_nanoseconds((call_time - lookback_window))
+            start_time = TimeUtils.to_nanoseconds(call_time - lookback_window)
             expect(wrapped_logcache_client).to have_received(:container_metrics).
               with(hash_including(start_time: start_time, end_time: call_time_ns))
 

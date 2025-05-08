@@ -50,11 +50,16 @@ module CloudController
         return true if parse_ip(address_list.first)
 
       elsif address_list.length == 2
-        ipv4s = parse_ip(address_list)
-        return false if ipv4s.nil?
+        ips = parse_ip(address_list)
+        return false if ips.nil?
 
-        sorted_ipv4s = NetAddr.sort_IPv4(ipv4s)
-        return true if ipv4s.first == sorted_ipv4s.first
+        sorted_ips = if ips.first.is_a?(NetAddr::IPv4)
+                       NetAddr.sort_IPv4(ips)
+                     else
+                       NetAddr.sort_IPv6(ips)
+                     end
+
+        return true if ips.first == sorted_ips.first
       end
 
       false
@@ -65,19 +70,14 @@ module CloudController
     end
 
     def self.parse_ip(val)
-      if val.is_a?(Array)
-        val.map do |ip|
-          NetAddr::IPv4.parse(ip)
-        end
-      else
-        NetAddr::IPv4Net.parse(val)
-      end
-    rescue NetAddr::ValidationError
-      nil
+      ipv4 = parse_ipv4(val)
+
+      ipv6 = parse_ipv6(val) if !ipv4 && config.get(:enable_ipv6)
+
+      ipv4 || ipv6
     end
 
     def self.comma_delimited_destinations_enabled?
-      config = VCAP::CloudController::Config.config
       config.get(:security_groups, :enable_comma_delimited_destinations)
     end
 
@@ -92,7 +92,17 @@ module CloudController
       no_zeros
     end
 
+    private_class_method def self.config
+      VCAP::CloudController::Config.config
+    end
+
     private_class_method def self.no_leading_zeros_in_address(address)
+      return no_leading_zeros_in_ipv4_address(address) if address.include?('.')
+
+      no_leading_zeros_in_ipv6_address(address) if address.include?(':')
+    end
+
+    private_class_method def self.no_leading_zeros_in_ipv4_address(address)
       address.split('.') do |octet|
         if octet.start_with?('0') && octet.length > 1
           octet_parts = octet.split('/')
@@ -103,6 +113,43 @@ module CloudController
       end
 
       true
+    end
+
+    private_class_method def self.no_leading_zeros_in_ipv6_address(address)
+      address.split(':').each do |segment|
+        next unless segment.start_with?('0') && segment.length > 1
+
+        segment_parts = segment.split('/')
+        return false if segment_parts.length < 2
+
+        return false if segment_parts[0].length > 1 && segment_parts[0].start_with?('0')
+      end
+
+      true
+    end
+
+    private_class_method def self.parse_ipv4(val)
+      if val.is_a?(Array)
+        val.map do |ip|
+          NetAddr::IPv4.parse(ip)
+        end
+      else
+        NetAddr::IPv4Net.parse(val)
+      end
+    rescue NetAddr::ValidationError
+      nil
+    end
+
+    private_class_method def self.parse_ipv6(val)
+      if val.is_a?(Array)
+        val.map do |ip|
+          NetAddr::IPv6.parse(ip)
+        end
+      else
+        NetAddr::IPv6Net.parse(val)
+      end
+    rescue NetAddr::ValidationError
+      nil
     end
   end
 end

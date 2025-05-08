@@ -9,6 +9,13 @@ module VCAP::CloudController
         expect(AsgLatestUpdate.last_update).to be > 1.minute.ago
       end
 
+      it 'upates with microsecond precision' do
+        AsgLatestUpdate.renew
+        last_update = AsgLatestUpdate.last_update
+        AsgLatestUpdate.renew
+        expect(AsgLatestUpdate.last_update).to be > last_update
+      end
+
       context 'when there is no previous update' do
         it 'creates an asgLatestUpdate' do
           last_update = AsgLatestUpdate.last_update

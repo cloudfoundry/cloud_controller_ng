@@ -252,6 +252,16 @@ module VCAP::CloudController
       uaa_username_lookup_client.users_for_ids(user_guids)
     end
 
+    def self.get_user_id_by_username_and_origin(username, origin)
+      uaa_username_lookup_client = CloudController::DependencyLocator.instance.uaa_username_lookup_client
+      uaa_username_lookup_client.ids_for_usernames_and_origins([username], [origin]).first
+    end
+
+    def self.create_uaa_shadow_user(username, origin)
+      uaa_shadow_user_creation_client = CloudController::DependencyLocator.instance.uaa_shadow_user_creation_client
+      uaa_shadow_user_creation_client.create_shadow_user(username, origin)
+    end
+
     def self.user_visibility_filter(_)
       full_dataset_filter
     end

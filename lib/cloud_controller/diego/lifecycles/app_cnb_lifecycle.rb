@@ -16,7 +16,7 @@ module VCAP::CloudController
     end
 
     def valid?
-      !buildpacks.empty?
+      message.is_a?(AppUpdateMessage) || !buildpacks.empty?
     end
 
     def errors

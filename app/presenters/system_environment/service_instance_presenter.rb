@@ -7,9 +7,7 @@ class ServiceInstancePresenter
                  end
   end
 
-  def to_hash
-    @presenter.to_hash
-  end
+  delegate :to_hash, to: :@presenter
 
   class ProvidedPresenter
     def initialize(service_instance)
