@@ -127,7 +127,7 @@ module VCAP::CloudController
             let!(:outside_app) { AppModel.make }
             let!(:shared_route) { route_share.create(route, [outside_app.space], user_audit_info) }
 
-             it 'succeeds after route share' do
+            it 'succeeds after route share' do
               expect do
                 ManifestRouteUpdate.update(outside_app.guid, message, user_audit_info)
               end.not_to raise_error
