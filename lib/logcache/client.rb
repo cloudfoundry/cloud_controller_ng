@@ -1,5 +1,7 @@
 require 'logcache/egress_services_pb'
 require 'loggregator-api/v2/envelope_pb'
+require 'logcache/promql_pb'
+require 'logcache/promql_services_pb'
 
 module Logcache
   class Client
@@ -11,6 +13,13 @@ module Logcache
         client_ca = IO.read(client_ca_path)
         client_key = IO.read(client_key_path)
         client_cert = IO.read(client_cert_path)
+
+        @promql_service = Logcache::V1::PromQLQuerier::Stub.new(
+          "#{host}:#{port}",
+          GRPC::Core::ChannelCredentials.new(client_ca, client_key, client_cert),
+          channel_args: { GRPC::Core::Channel::SSL_TARGET => tls_subject_name },
+          timeout: 10
+        )
 
         @service = Logcache::V1::Egress::Stub.new(
           "#{host}:#{port}",
@@ -25,6 +34,16 @@ module Logcache
           timeout: 10
         )
       end
+    end
+
+    # Fetches the "memory" metric for the given source_ids
+    # @param source_ids [Array<String>] List of source IDs
+    # @param time [String] The time for the instant query (e.g., "now" or a specific timestamp)
+    # @return [Logcache::V1::PromQL::InstantQueryResult] The result of the query
+    def fetch_memory_metrics(source_ids, time=Time.now.utc.to_i.to_s)
+      query = build_query(source_ids)
+      request = Logcache::V1::PromQL::InstantQueryRequest.new(query:, time:)
+      promql_service.instant_query(request)
     end
 
     def container_metrics(source_guid:, start_time:, end_time:, envelope_limit: DEFAULT_LIMIT)
@@ -43,6 +62,14 @@ module Logcache
     end
 
     private
+
+    # Builds the PromQL query string for the "memory" metric
+    # @param source_ids [Array<String>] List of source IDs
+    # @return [String] The PromQL query string
+    def build_query(source_ids)
+      source_id_filter = source_ids.join('|')
+      "memory{source_id=~\"#{source_id_filter}\"}"
+    end
 
     def with_request_error_handling(source_guid)
       tries ||= 3
@@ -69,7 +96,7 @@ module Logcache
       @logger ||= Steno.logger('cc.logcache.client')
     end
 
-    attr_reader :service
+    attr_reader :service, :promql_service
   end
 
   class EmptyEnvelope
