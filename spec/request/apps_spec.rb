@@ -3400,8 +3400,6 @@ RSpec.describe 'Apps' do
     end
 
     context 'when the encryption_key_label is invalid' do
-      let(:instance) { VCAP::CloudController::ManagedServiceInstance.make(space:) }
-
       before do
         allow_any_instance_of(ErrorPresenter).to receive(:raise_500?).and_return(false)
       end
