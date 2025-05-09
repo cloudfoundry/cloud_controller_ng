@@ -31,7 +31,7 @@ module VCAP::CloudController
 
         # Ignore errors if the target resource has already been deleted (e.g., by a parallel job)
         quoted_table_name = @model_class.db.quote_identifier(@model_class.table_name)
-        errors.reject! { |err| err.is_a?(Sequel::NoExistingObject) && err.message.include?("DELETE FROM #{quoted_table_name}") }
+        errors.reject! { |err| err.is_a?(Sequel::NoExistingObject) && err.message.include?("DELETE FROM #{quoted_table_name}") } unless errors.frozen?
 
         raise errors.first unless errors&.empty?
 
