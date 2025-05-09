@@ -1574,7 +1574,7 @@ module VCAP::CloudController
     describe 'app spaces and route shared spaces' do
       let!(:domain) { SharedDomain.make }
 
-      context 'when app and route space  not shared' do
+      context 'when app and route space not shared' do
         let!(:app) { AppModel.make }
         let!(:route) { Route.make(host: 'potato', domain: domain, path: '/some-path') }
 
