@@ -1570,5 +1570,35 @@ module VCAP::CloudController
         end
       end
     end
+
+    describe 'app spaces and route shared spaces' do
+      let!(:domain) { SharedDomain.make }
+
+      context 'when app and route space  not shared' do
+        let!(:app) { AppModel.make }
+        let!(:route) { Route.make(host: 'potato', domain: domain, path: '/some-path') }
+
+        it 'no space match and not shared and returns true' do
+          expect(route.app_spaces_no_match?(app)).to be(true)
+        end
+
+        it 'match space and returns false' do
+          route.space = app.space
+          expect(route.app_spaces_no_match?(app)).to be(false)
+        end
+      end
+
+      context 'when app and route space shared' do
+        let!(:app) { AppModel.make }
+        let!(:route_share) { RouteShare.new }
+        let(:user_audit_info) { instance_double(UserAuditInfo).as_null_object }
+        let!(:route) { Route.make(host: 'potato', domain: domain, path: '/some-path') }
+        let!(:shared_route) { route_share.create(route, [app.space], user_audit_info) }
+
+        it 'shared space match and returns false' do
+          expect(route.app_spaces_no_match?(app)).to be(false)
+        end
+      end
+    end
   end
 end

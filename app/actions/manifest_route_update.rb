@@ -92,10 +92,8 @@ module VCAP::CloudController
               domain: existing_domain,
               manifest_triggered: true
             )
-          elsif route.space.guid != app.space_guid
-            # check if route is shared with space
-            spaces = route.shared_spaces
-            raise InvalidRoute.new('Routes cannot be mapped to destinations in different spaces') if spaces.blank? || spaces.none? { |space| space.values[:id] == app.space.id }
+          elsif route.app_spaces_no_match?(app)
+            raise InvalidRoute.new('Routes cannot be mapped to destinations in different spaces')
           elsif manifest_route[:options] && route[:options] != manifest_route[:options]
             # remove nil values from options
             manifest_route[:options] = manifest_route[:options].compact
