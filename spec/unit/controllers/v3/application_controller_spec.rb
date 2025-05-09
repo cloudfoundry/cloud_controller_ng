@@ -38,12 +38,16 @@ RSpec.describe ApplicationController, type: :controller do
       raise CloudController::Errors::NotFound.new_from_details('NotFound')
     end
 
-    def db_connection_error
-      raise Sequel::DatabaseConnectionError.new
+    def key_derivation_error
+      raise OpenSSL::Cipher::CipherError
     end
 
     def db_disconnect_error
       raise Sequel::DatabaseDisconnectError.new
+    end
+
+    def db_connection_error
+      raise Sequel::DatabaseConnectionError.new
     end
 
     def warnings_is_nil
@@ -317,6 +321,23 @@ RSpec.describe ApplicationController, type: :controller do
       get :db_disconnect_error
       expect(response).to have_http_status(:service_unavailable)
       expect(response).to have_error_message(/Database connection failure/)
+    end
+  end
+
+  describe '#handle_key_derivation_error' do
+    let!(:user) { set_current_user(VCAP::CloudController::User.make) }
+
+    before do
+      allow_any_instance_of(ErrorPresenter).to receive(:raise_500?).and_return(false)
+      routes.draw do
+        get 'key_derivation_error' => 'anonymous#key_derivation_error'
+      end
+    end
+
+    it 'rescues from OpenSSL::Cipher::CipherError and renders an error presenter' do
+      get :key_derivation_error
+      expect(response).to have_http_status(:internal_server_error)
+      expect(response).to have_error_message(/Error while processing encrypted data/)
     end
   end
 

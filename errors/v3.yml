@@ -17,3 +17,8 @@
   name: UaaRateLimited
   http_code: 429
   message: "The UAA is currently rate limited. Please try again later"
+
+10001:
+  name: InternalServerError
+  http_code: 500
+  message: "%s"
