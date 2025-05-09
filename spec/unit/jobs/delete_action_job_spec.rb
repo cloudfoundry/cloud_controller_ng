@@ -2,6 +2,19 @@ require 'spec_helper'
 
 module VCAP::CloudController
   module Jobs
+    RSpec.shared_examples 'a delete action handling external deletion' do
+      before do
+        allow_any_instance_of(resource.class).to receive(:destroy).and_wrap_original do |original_method, *args|
+          Sequel::Model.db.run("DELETE FROM #{resource.class.table_name} WHERE id = #{resource.id}") # Simulate external deletion
+          original_method.call(*args)
+        end
+      end
+
+      it 'still attempts to delete the resource even if it was already deleted externally' do
+        expect { delete_job.perform }.not_to raise_error
+      end
+    end
+
     RSpec.describe DeleteActionJob, job_context: :worker do
       let(:user) { User.make(admin: true) }
       let(:delete_action) { instance_double(SpaceDelete, delete: []) }
@@ -125,6 +138,32 @@ module VCAP::CloudController
       describe '#resource_guid' do
         it 'returns the given resource guid' do
           expect(job.resource_guid).to eq(space.guid)
+        end
+      end
+
+      context 'when the resource is deleted externally before destroy' do
+        it_behaves_like 'a delete action handling external deletion' do
+          let(:resource) { PackageModel.make }
+          let(:delete_action) { PackageDelete.new(nil) }
+          let(:delete_job) { DeleteActionJob.new(PackageModel, resource.guid, delete_action) }
+        end
+
+        it_behaves_like 'a delete action handling external deletion' do
+          let(:resource) { Space.make }
+          let(:delete_action) { SpaceDelete.new(nil, nil) }
+          let(:delete_job) { DeleteActionJob.new(Space, resource.guid, delete_action) }
+        end
+
+        it_behaves_like 'a delete action handling external deletion' do
+          let(:resource) { Route.make }
+          let(:delete_action) { RouteDeleteAction.new(nil) }
+          let(:delete_job) { DeleteActionJob.new(Route, resource.guid, delete_action) }
+        end
+
+        it_behaves_like 'a delete action handling external deletion' do
+          let(:resource) { User.make }
+          let(:delete_action) { UserDeleteAction.new }
+          let(:delete_job) { DeleteActionJob.new(User, resource.guid, delete_action) }
         end
       end
     end

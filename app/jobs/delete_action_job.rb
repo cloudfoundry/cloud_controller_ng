@@ -17,11 +17,21 @@ module VCAP::CloudController
         logger.info("Deleting model class '#{model_class}' with guid '#{resource_guid}'")
 
         dataset = model_class.where(guid: resource_guid)
-        if delete_action_can_return_warnings?
-          errors, warnings = delete_action.delete(dataset)
-        else
-          errors = delete_action.delete(dataset)
+        errors = []
+
+        begin
+          if delete_action_can_return_warnings?
+            errors, warnings = delete_action.delete(dataset)
+          else
+            errors = delete_action.delete(dataset)
+          end
+        rescue StandardError => e
+          errors << e
         end
+
+        # Ignore errors if the target resource has already been deleted (e.g., by a parallel job)
+        quoted_table_name = @model_class.db.quote_identifier(@model_class.table_name)
+        errors.reject! { |err| err.is_a?(Sequel::NoExistingObject) && err.message.include?("DELETE FROM #{quoted_table_name}") }
 
         raise errors.first unless errors&.empty?
 
