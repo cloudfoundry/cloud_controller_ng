@@ -52,6 +52,8 @@ module VCAP::CloudController
         end
         logger.info("Deleted app: #{app.guid}")
       end
+
+      []
     end
 
     def delete_without_event(apps)
