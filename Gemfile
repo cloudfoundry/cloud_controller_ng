@@ -41,13 +41,14 @@ gem 'statsd-ruby', '~> 1.5.0'
 gem 'steno'
 gem 'talentbox-delayed_job_sequel', '~> 4.3.0'
 gem 'thin'
+gem 'uri', '~> 0.13'
 gem 'vmstat', '~> 2.3'
 
 # Rails Components
-gem 'actionpack', '~> 7.2.2'
-gem 'actionview', '~> 7.2.1'
-gem 'activemodel', '~> 7.2.2'
-gem 'railties', '~> 7.2.1'
+gem 'actionpack', '~> 8.0.1'
+gem 'actionview', '~> 8.0.1'
+gem 'activemodel', '~> 8.0.1'
+gem 'railties', '~> 8.0.1'
 
 gem 'azure-storage-blob', git: 'https://github.com/sethboyles/azure-storage-ruby.git', branch: 'x-ms-blob-content-type-fix-1.1'
 
