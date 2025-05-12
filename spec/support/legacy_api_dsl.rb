@@ -213,7 +213,7 @@ module LegacyApiDsl
         query_parameter_description += 'Format queries as &lt;filter&gt;&lt;op&gt;&lt;value&gt;<br/>'
         query_parameter_description += ' Valid ops: : &gt;= &lt;= &lt; &gt; IN<br/>'
         query_parameter_description += " Valid filters: #{query_parameters.to_a.join(', ')}"
-        if outer_model && query_parameters.include?((outer_model.to_s + '_guid'))
+        if outer_model && query_parameters.include?(outer_model.to_s + '_guid')
           query_parameter_description += "<br/> (Note that filtering on #{outer_model}_guid will return an empty list " \
                                          'if you specify anything other than the guid included in the path.)'
         end

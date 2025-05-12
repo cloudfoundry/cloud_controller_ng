@@ -1,6 +1,12 @@
 require 'delayed_job/threaded_worker'
+require 'rack'
+require 'puma'
+require 'prometheus/middleware/exporter'
 
 class CloudController::DelayedWorker
+  DEFAULT_READ_AHEAD_POSTGRES = 0
+  DEFAULT_READ_AHEAD_MYSQL = Delayed::Worker::DEFAULT_READ_AHEAD
+
   def initialize(options)
     @queue_options = {
       min_priority: ENV.fetch('MIN_PRIORITY', nil),
@@ -9,6 +15,8 @@ class CloudController::DelayedWorker
       worker_name: options[:name],
       quiet: true
     }
+
+    @publish_metrics = options.fetch(:publish_metrics, false)
     return unless options[:num_threads] && options[:num_threads].to_i > 0
 
     @queue_options[:num_threads] = options[:num_threads].to_i
@@ -17,6 +25,7 @@ class CloudController::DelayedWorker
 
   def start_working
     config = RakeConfig.config
+    setup_metrics(config) if @publish_metrics
     BackgroundJobEnvironment.new(config).setup_environment(readiness_port)
 
     logger = Steno.logger('cc-worker')
@@ -50,6 +59,16 @@ class CloudController::DelayedWorker
     Delayed::Worker.max_run_time = config.get(:jobs, :global, :timeout_in_seconds) + 1
     Delayed::Worker.sleep_delay = config.get(:jobs, :global, :worker_sleep_delay_in_seconds)
     Delayed::Worker.logger = logger
+    if ::Sequel::Model.db.database_type == :mysql
+      read_ahead = config.get(:jobs, :read_ahead) || DEFAULT_READ_AHEAD_MYSQL
+      # lock for update is not configurable for mysql
+      read_ahead = DEFAULT_READ_AHEAD_MYSQL if read_ahead <= 0
+    else
+      # read_ahead 0 = lock for update (default for postgres)
+      read_ahead = config.get(:jobs, :read_ahead) || DEFAULT_READ_AHEAD_POSTGRES
+      read_ahead = DEFAULT_READ_AHEAD_POSTGRES if read_ahead < 0
+    end
+    Delayed::Worker.read_ahead = read_ahead
 
     unless @queue_options[:num_threads].nil?
       # Dynamically alias Delayed::Worker to ThreadedWorker to ensure plugins etc are working correctly
@@ -91,5 +110,48 @@ class CloudController::DelayedWorker
 
   def is_first_generic_worker_on_machine?
     RakeConfig.context != :api && ENV['INDEX']&.to_i == 1
+  end
+
+  def setup_metrics(config)
+    prometheus_dir = File.join(config.get(:directories, :tmpdir), 'prometheus')
+    Prometheus::Client.config.data_store = Prometheus::Client::DataStores::DirectFileStore.new(dir: prometheus_dir)
+
+    setup_webserver(config, prometheus_dir) if is_first_generic_worker_on_machine?
+
+    # initialize metric with 0 for discoverability, because it likely won't get updated on healthy systems
+    CloudController::DependencyLocator.instance.cc_worker_prometheus_updater.update_gauge_metric(:cc_db_connection_pool_timeouts_total, 0, labels: { process_type: 'cc-worker' })
+  end
+
+  def setup_webserver(config, prometheus_dir)
+    FileUtils.mkdir_p(prometheus_dir)
+
+    # Resetting metrics on startup
+    Dir["#{prometheus_dir}/*.bin"].each do |file_path|
+      File.unlink(file_path)
+    end
+
+    metrics_app = Rack::Builder.new do
+      use Prometheus::Middleware::Exporter, path: '/metrics'
+
+      map '/' do
+        run lambda { |_env|
+          # Return 404 for any other request
+          ['404', { 'Content-Type' => 'text/plain' }, ['Not Found']]
+        }
+      end
+    end
+
+    Thread.new do
+      server = Puma::Server.new(metrics_app)
+
+      context = Puma::MiniSSL::Context.new
+      context.cert        = '/var/vcap/jobs/cloud_controller_worker/config/certs/scrape.crt'
+      context.key         = '/var/vcap/jobs/cloud_controller_worker/config/certs/scrape.key'
+      context.ca          = '/var/vcap/jobs/cloud_controller_worker/config/certs/scrape_ca.crt'
+      context.verify_mode = Puma::MiniSSL::VERIFY_PEER | Puma::MiniSSL::VERIFY_FAIL_IF_NO_PEER_CERT
+
+      server.add_ssl_listener('127.0.0.1', config.get(:prometheus_port) || 9394, context)
+      server.run
+    end
   end
 end

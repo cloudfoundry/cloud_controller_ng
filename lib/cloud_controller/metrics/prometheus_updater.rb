@@ -1,4 +1,5 @@
 require 'prometheus/client'
+require 'prometheus/client/data_stores/direct_file_store'
 
 module VCAP::CloudController::Metrics
   class PrometheusUpdater
@@ -17,6 +18,7 @@ module VCAP::CloudController::Metrics
 
     DURATION_BUCKETS = [5, 10, 30, 60, 300, 600, 890].freeze
     CONNECTION_DURATION_BUCKETS = [0.001, 0.005, 0.01, 0.05, 0.1, 0.5, 1, 5, 10].freeze
+    DELAYED_JOB_METRIC_BUCKETS = [0.01, 0.05, 0.1, 0.5, 1, 2, 5, 10, 30, 60, 120, 300, 600].freeze
 
     METRICS = [
       { type: :gauge, name: :cc_job_queues_length_total, docstring: 'Job queues length of worker processes', labels: [:queue], aggregation: :most_recent },
@@ -36,15 +38,7 @@ module VCAP::CloudController::Metrics
       { type: :gauge, name: :cc_running_tasks_total, docstring: 'Total running tasks', aggregation: :most_recent },
       { type: :gauge, name: :cc_running_tasks_memory_bytes, docstring: 'Total memory consumed by running tasks', aggregation: :most_recent },
       { type: :gauge, name: :cc_users_total, docstring: 'Number of users', aggregation: :most_recent },
-      { type: :gauge, name: :cc_deployments_in_progress_total, docstring: 'Number of in progress deployments', aggregation: :most_recent },
-      { type: :gauge, name: :cc_acquired_db_connections_total, labels: %i[process_type], docstring: 'Number of acquired DB connections' },
-      { type: :histogram, name: :cc_db_connection_hold_duration_seconds, docstring: 'The time threads were holding DB connections', buckets: CONNECTION_DURATION_BUCKETS },
-      # cc_connection_pool_timeouts_total must be a gauge metric, because otherwise we cannot match them with processes
-      { type: :gauge, name: :cc_db_connection_pool_timeouts_total, labels: %i[process_type],
-        docstring: 'Number of threads which failed to acquire a free DB connection from the pool within the timeout' },
-      { type: :gauge, name: :cc_open_db_connections_total, labels: %i[process_type], docstring: 'Number of open DB connections (acquired + available)' },
-      { type: :histogram, name: :cc_db_connection_wait_duration_seconds, docstring: 'The time threads were waiting for an available DB connection',
-        buckets: CONNECTION_DURATION_BUCKETS }
+      { type: :gauge, name: :cc_deployments_in_progress_total, docstring: 'Number of in progress deployments', aggregation: :most_recent }
     ].freeze
 
     THIN_METRICS = [
@@ -63,12 +57,33 @@ module VCAP::CloudController::Metrics
       { type: :gauge, name: :cc_puma_worker_backlog, docstring: 'Puma worker: backlog', labels: %i[index pid], aggregation: :most_recent }
     ].freeze
 
-    def initialize(registry=Prometheus::Client.registry)
+    DB_CONNECTION_POOL_METRICS = [
+      { type: :gauge, name: :cc_acquired_db_connections_total, labels: %i[process_type], docstring: 'Number of acquired DB connections' },
+      { type: :histogram, name: :cc_db_connection_hold_duration_seconds, docstring: 'The time threads were holding DB connections', buckets: CONNECTION_DURATION_BUCKETS },
+      # cc_connection_pool_timeouts_total must be a gauge metric, because otherwise we cannot match them with processes
+      { type: :gauge, name: :cc_db_connection_pool_timeouts_total, labels: %i[process_type],
+        docstring: 'Number of threads which failed to acquire a free DB connection from the pool within the timeout' },
+      { type: :gauge, name: :cc_open_db_connections_total, labels: %i[process_type], docstring: 'Number of open DB connections (acquired + available)' },
+      { type: :histogram, name: :cc_db_connection_wait_duration_seconds, docstring: 'The time threads were waiting for an available DB connection',
+        buckets: CONNECTION_DURATION_BUCKETS }
+    ].freeze
+
+    DELAYED_JOB_METRICS = [
+      { type: :histogram, name: :cc_job_pickup_delay_seconds, docstring: 'Job pickup time (from enqueue to start)', labels: %i[queue worker], buckets: DELAYED_JOB_METRIC_BUCKETS },
+      { type: :histogram, name: :cc_job_duration_seconds, docstring: 'Job processing time (start to finish)', labels: %i[queue worker], buckets: DELAYED_JOB_METRIC_BUCKETS }
+    ].freeze
+
+    def initialize(registry: Prometheus::Client.registry, cc_worker: false)
       self.class.allow_pid_label
 
       @registry = registry
 
       # Register all metrics, to initialize them for discoverability
+      DB_CONNECTION_POOL_METRICS.each { |metric| register(metric) }
+      DELAYED_JOB_METRICS.each { |metric| register(metric) }
+
+      return if cc_worker
+
       METRICS.each { |metric| register(metric) }
       THIN_METRICS.each { |metric| register(metric) } if VCAP::CloudController::Config.config&.get(:webserver) == 'thin'
       PUMA_METRICS.each { |metric| register(metric) } if VCAP::CloudController::Config.config&.get(:webserver) == 'puma'
@@ -90,8 +105,8 @@ module VCAP::CloudController::Metrics
       @registry.get(metric).increment
     end
 
-    def update_histogram_metric(metric, value)
-      @registry.get(metric).observe(value)
+    def update_histogram_metric(metric, value, labels: {})
+      @registry.get(metric).observe(value, labels:)
     end
 
     def update_summary_metric(metric, value)

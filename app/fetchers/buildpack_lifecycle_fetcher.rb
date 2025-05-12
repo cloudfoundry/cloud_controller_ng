@@ -1,17 +1,19 @@
+require 'cloud_controller/diego/lifecycles/lifecycles'
+
 module VCAP::CloudController
   class BuildpackLifecycleFetcher
     class << self
-      def fetch(buildpack_names, stack_name)
+      def fetch(buildpack_names, stack_name, lifecycle=Config.config.get(:default_app_lifecycle))
         {
           stack: Stack.find(name: stack_name),
-          buildpack_infos: ordered_buildpacks(buildpack_names, stack_name)
+          buildpack_infos: ordered_buildpacks(buildpack_names, stack_name, lifecycle)
         }
       end
 
       private
 
-      def ordered_buildpacks(buildpack_names, stack_name)
-        buildpacks_with_stacks, buildpacks_without_stacks = Buildpack.list_admin_buildpacks(stack_name).partition(&:stack)
+      def ordered_buildpacks(buildpack_names, stack_name, lifecycle)
+        buildpacks_with_stacks, buildpacks_without_stacks = Buildpack.list_admin_buildpacks(stack_name, lifecycle).partition(&:stack)
 
         buildpack_names.map do |buildpack_name|
           buildpack_record = buildpacks_with_stacks.find { |b| b.name == buildpack_name } || buildpacks_without_stacks.find { |b| b.name == buildpack_name }

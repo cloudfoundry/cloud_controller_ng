@@ -40,31 +40,99 @@ module VCAP::CloudController
           end
         end
 
+        context 'when a cnb buildpack is specified' do
+          let(:file) { 'buildpack.cnb' }
+          let(:buildpack_fields) do
+            { name: 'cnb_buildpack', file: file, stack: nil, options: { lifecycle: Lifecycles::CNB } }
+          end
+
+          let(:install_buildpack_config) do
+            {
+              install_buildpacks: [
+                {
+                  'name' => 'cnb_buildpack',
+                  'package' => 'cnb-buildpack-package',
+                  'lifecycle' => 'cnb'
+                }
+              ]
+            }
+          end
+
+          before do
+            expect(Dir).to receive(:[]).with('/var/vcap/packages/cnb-buildpack-package/*[.zip|.cnb|.tgz|.tar.gz]').
+              and_return([file])
+            expect(File).to receive(:file?).with(file).
+              and_return(true)
+            allow(job_factory).to receive(:plan).with('cnb_buildpack', [buildpack_fields]).and_return([enqueued_job1])
+            allow(Jobs::Enqueuer).to receive(:new).and_return(enqueuer)
+          end
+
+          it 'succeeds' do
+            installer.install(TestConfig.config_instance.get(:install_buildpacks))
+
+            expect(job_factory).to have_received(:plan).with('cnb_buildpack', [buildpack_fields])
+          end
+        end
+
+        context 'when a cnb buildpack is specified with .tgz extension' do
+          let(:file) { 'buildpack.tgz' }
+          let(:buildpack_fields) do
+            { name: 'cnb_buildpack', file: file, stack: nil, options: { lifecycle: Lifecycles::CNB } }
+          end
+
+          let(:install_buildpack_config) do
+            {
+              install_buildpacks: [
+                {
+                  'name' => 'cnb_buildpack',
+                  'package' => 'cnb-buildpack-package',
+                  'lifecycle' => 'cnb'
+                }
+              ]
+            }
+          end
+
+          before do
+            expect(Dir).to receive(:[]).with('/var/vcap/packages/cnb-buildpack-package/*[.zip|.cnb|.tgz|.tar.gz]').
+              and_return([file])
+            expect(File).to receive(:file?).with(file).
+              and_return(true)
+            allow(job_factory).to receive(:plan).with('cnb_buildpack', [buildpack_fields]).and_return([enqueued_job1])
+            allow(Jobs::Enqueuer).to receive(:new).and_return(enqueuer)
+          end
+
+          it 'succeeds' do
+            installer.install(TestConfig.config_instance.get(:install_buildpacks))
+
+            expect(job_factory).to have_received(:plan).with('cnb_buildpack', [buildpack_fields])
+          end
+        end
+
         context 'when there are multiple buildpacks' do
           let(:buildpack1a_file) { 'abuildpacka.zip' }
           let(:buildpack1b_file) { 'abuildpackb.zip' }
           let(:buildpack2_file) { 'abuildpack2.zip' }
 
           let(:buildpack1a_fields) do
-            { name: 'buildpack1', file: buildpack1a_file, stack: 'cflinuxfs11', options: {} }
+            { name: 'buildpack1', file: buildpack1a_file, stack: 'cflinuxfs11', options: { lifecycle: Lifecycles::BUILDPACK } }
           end
           let(:buildpack1b_fields) do
-            { name: 'buildpack1', file: buildpack1b_file, stack: 'cflinuxfs12', options: {} }
+            { name: 'buildpack1', file: buildpack1b_file, stack: 'cflinuxfs12', options: { lifecycle: Lifecycles::BUILDPACK } }
           end
           let(:buildpack2_fields) do
-            { name: 'buildpack2', file: buildpack2_file, stack: nil, options: {} }
+            { name: 'buildpack2', file: buildpack2_file, stack: nil, options: { lifecycle: Lifecycles::BUILDPACK } }
           end
 
           before do
-            expect(Dir).to receive(:[]).with('/var/vcap/packages/mybuildpackpkg/*.zip').
+            expect(Dir).to receive(:[]).with('/var/vcap/packages/mybuildpackpkg/*[.zip|.cnb|.tgz|.tar.gz]').
               and_return([buildpack1a_file])
             expect(File).to receive(:file?).with(buildpack1a_file).
               and_return(true)
-            expect(Dir).to receive(:[]).with('/var/vcap/packages/myotherpkg/*.zip').
+            expect(Dir).to receive(:[]).with('/var/vcap/packages/myotherpkg/*[.zip|.cnb|.tgz|.tar.gz]').
               and_return([buildpack1b_file])
             expect(File).to receive(:file?).with(buildpack1b_file).
               and_return(true)
-            expect(Dir).to receive(:[]).with('/var/vcap/packages/myotherpkg2/*.zip').
+            expect(Dir).to receive(:[]).with('/var/vcap/packages/myotherpkg2/*[.zip|.cnb|.tgz|.tar.gz]').
               and_return([buildpack2_file])
             expect(File).to receive(:file?).with(buildpack2_file).
               and_return(true)
@@ -99,10 +167,11 @@ module VCAP::CloudController
             it 'enqueues the rest of the buildpack install jobs' do
               allow(canary_job).to receive(:perform)
 
-              expect(Jobs::Enqueuer).to receive(:new).with(enqueued_job1, queue: 'cc-api-0').ordered.and_return(enqueuer)
-              expect(Jobs::Enqueuer).to receive(:new).with(enqueued_job2, queue: 'cc-api-0').ordered.and_return(enqueuer)
+              expect(Jobs::Enqueuer).to receive(:new).with(queue: 'cc-api-0').ordered.and_return(enqueuer)
+              expect(Jobs::Enqueuer).to receive(:new).with(queue: 'cc-api-0').ordered.and_return(enqueuer)
 
-              expect(enqueuer).to receive(:enqueue).twice
+              expect(enqueuer).to receive(:enqueue).with(enqueued_job1).once
+              expect(enqueuer).to receive(:enqueue).with(enqueued_job2).once
 
               installer.install(TestConfig.config_instance.get(:install_buildpacks))
             end
@@ -123,7 +192,7 @@ module VCAP::CloudController
       end
 
       it 'logs an error when no buildpack zip file is found' do
-        expect(Dir).to receive(:[]).with('/var/vcap/packages/mybuildpackpkg/*.zip').and_return([])
+        expect(Dir).to receive(:[]).with('/var/vcap/packages/mybuildpackpkg/*[.zip|.cnb|.tgz|.tar.gz]').and_return([])
         expect(installer.logger).to receive(:error).with(/No file found for the buildpack/)
 
         installer.install(TestConfig.config_instance.get(:install_buildpacks))
@@ -152,7 +221,7 @@ module VCAP::CloudController
           # call install
           # verify that job_factory.plan was called with the right file
           expect(File).to receive(:file?).with('another.zip').and_return(true)
-          expect(job_factory).to receive(:plan).with('buildpack1', [{ name: 'buildpack1', file: 'another.zip', stack: nil, options: {} }])
+          expect(job_factory).to receive(:plan).with('buildpack1', [{ name: 'buildpack1', file: 'another.zip', stack: nil, options: { lifecycle: Lifecycles::BUILDPACK } }])
 
           installer.install(TestConfig.config_instance.get(:install_buildpacks))
         end
@@ -166,7 +235,7 @@ module VCAP::CloudController
         it 'succeeds when no package is specified' do
           TestConfig.config[:install_buildpacks][0].delete('package')
           expect(File).to receive(:file?).with('another.zip').and_return(true)
-          expect(job_factory).to receive(:plan).with('buildpack1', [{ name: 'buildpack1', file: 'another.zip', stack: nil, options: {} }])
+          expect(job_factory).to receive(:plan).with('buildpack1', [{ name: 'buildpack1', file: 'another.zip', stack: nil, options: { lifecycle: Lifecycles::BUILDPACK } }])
 
           installer.install(TestConfig.config_instance.get(:install_buildpacks))
         end
@@ -211,7 +280,7 @@ module VCAP::CloudController
 
         it 'passes optional attributes to the job factory' do
           expect(Dir).to receive(:[]).
-            with('/var/vcap/packages/mybuildpackpkg/*.zip').
+            with('/var/vcap/packages/mybuildpackpkg/*[.zip|.cnb|.tgz|.tar.gz]').
             and_return(['abuildpack.zip'])
           expect(File).to receive(:file?).
             with('abuildpack.zip').
@@ -224,6 +293,7 @@ module VCAP::CloudController
                     stack: nil,
                     options: {
                       enabled: true,
+                      lifecycle: Lifecycles::BUILDPACK,
                       locked: false,
                       position: 5
                     } }])

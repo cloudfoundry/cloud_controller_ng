@@ -30,10 +30,10 @@ class RulesValidator < ActiveModel::Validator
       add_rule_error("protocol must be 'tcp', 'udp', 'icmp', or 'all'", record, index) unless valid_protocol(rule[:protocol])
 
       if valid_destination_type(rule[:destination], record, index)
-        rules = rule[:destination].split(',', -1)
-        add_rule_error("maximum destinations per rule exceeded - must be under #{MAX_DESTINATIONS_PER_RULE}", record, index) unless rules.length <= MAX_DESTINATIONS_PER_RULE
+        destinations = rule[:destination].split(',', -1)
+        add_rule_error("maximum destinations per rule exceeded - must be under #{MAX_DESTINATIONS_PER_RULE}", record, index) unless destinations.length <= MAX_DESTINATIONS_PER_RULE
 
-        rules.each do |d|
+        destinations.each do |d|
           validate_destination(d, record, index)
         end
       end
@@ -142,12 +142,17 @@ class RulesValidator < ActiveModel::Validator
       add_rule_error(error_message, record, index) unless CloudController::RuleValidator.parse_ip(address_list.first)
 
     elsif address_list.length == 2
-      ipv4s = CloudController::RuleValidator.parse_ip(address_list)
-      return add_rule_error('destination IP address range is invalid', record, index) unless ipv4s
+      ips = CloudController::RuleValidator.parse_ip(address_list)
+      return add_rule_error('destination IP address range is invalid', record, index) unless ips
 
-      sorted_ipv4s = NetAddr.sort_IPv4(ipv4s)
+      sorted_ips = if ips.first.is_a?(NetAddr::IPv4)
+                     NetAddr.sort_IPv4(ips)
+                   else
+                     NetAddr.sort_IPv6(ips)
+                   end
+
       reversed_range_error = 'beginning of IP address range is numerically greater than the end of its range (range endpoints are inverted)'
-      add_rule_error(reversed_range_error, record, index) unless ipv4s.first == sorted_ipv4s.first
+      add_rule_error(reversed_range_error, record, index) unless ips.first == sorted_ips.first
 
     else
       add_rule_error(error_message, record, index)

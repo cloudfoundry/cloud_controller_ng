@@ -15,9 +15,7 @@ module VCAP::CloudController
         VCAP::CloudController::SecurityContext.admin? || VCAP::CloudController::SecurityContext.admin_read_only? || VCAP::CloudController::SecurityContext.global_auditor?
       end
 
-      def roles
-        VCAP::CloudController::SecurityContext.roles
-      end
+      delegate :roles, to: :'VCAP::CloudController::SecurityContext'
 
       def user_email
         VCAP::CloudController::SecurityContext.current_user_email

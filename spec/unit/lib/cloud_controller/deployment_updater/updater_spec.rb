@@ -24,7 +24,7 @@ module VCAP::CloudController
         instances: current_deploying_instances,
         guid: 'guid-final',
         revision: revision,
-        state: ProcessModel::STOPPED
+        state: ProcessModel::STARTED
       )
     end
     let(:revision) { RevisionModel.make(app: app, droplet: droplet, version: 300) }
@@ -42,11 +42,14 @@ module VCAP::CloudController
         deploying_web_process: deploying_web_process,
         state: state,
         original_web_process_instance_count: original_web_process_instance_count,
-        max_in_flight: 1
+        max_in_flight: max_in_flight,
+        web_instances: web_instances
       )
     end
 
-    let(:diego_instances_reporter) { instance_double(Diego::InstancesReporter) }
+    let(:web_instances) { nil }
+    let(:max_in_flight) { 1 }
+
     let(:all_instances_results) do
       {
         0 => { state: 'RUNNING', uptime: 50, since: 2, routable: true },
@@ -54,15 +57,104 @@ module VCAP::CloudController
         2 => { state: 'RUNNING', uptime: 50, since: 2, routable: true }
       }
     end
-    let(:instances_reporters) { double(:instance_reporters) }
     let(:logger) { instance_double(Steno::Logger, info: nil, error: nil) }
 
+    let(:diego_reporter) { Diego::InstancesReporter.new(nil) }
+
     before do
-      allow(CloudController::DependencyLocator.instance).to receive(:instances_reporters).and_return(instances_reporters)
-      allow(instances_reporters).to receive(:all_instances_for_app).and_return(all_instances_results)
+      allow_any_instance_of(VCAP::CloudController::InstancesReporters).to receive(:diego_reporter).and_return(diego_reporter)
+      allow(diego_reporter).to receive(:all_instances_for_app).and_return(all_instances_results)
     end
 
     describe '#scale' do
+      context 'when the deployment process has reached original_web_process_instance_count' do
+        let(:droplet) do
+          DropletModel.make(
+            process_types: {
+              'clock' => 'droplet_clock_command',
+              'worker' => 'droplet_worker_command'
+            }
+          )
+        end
+
+        let(:all_instances_results) do
+          {
+            0 => { state: 'RUNNING', uptime: 50, since: 2, routable: true },
+            1 => { state: 'RUNNING', uptime: 50, since: 2, routable: true },
+            2 => { state: 'RUNNING', uptime: 50, since: 2, routable: true },
+            3 => { state: 'RUNNING', uptime: 50, since: 2, routable: true },
+            4 => { state: 'RUNNING', uptime: 50, since: 2, routable: true },
+            5 => { state: 'RUNNING', uptime: 50, since: 2, routable: true }
+          }
+        end
+
+        let(:current_deploying_instances) { 6 }
+
+        before do
+          allow(ProcessRestart).to receive(:restart)
+          RevisionProcessCommandModel.where(
+            process_type: 'worker',
+            revision_guid: revision.guid
+          ).update(process_command: 'revision-non-web-1-command')
+        end
+
+        it 'finalizes the deployment' do
+          subject.scale
+          deployment.reload
+          expect(deployment.state).to eq(DeploymentModel::DEPLOYED_STATE)
+          expect(deployment.status_value).to eq(DeploymentModel::FINALIZED_STATUS_VALUE)
+          expect(deployment.status_reason).to eq(DeploymentModel::DEPLOYED_STATUS_REASON)
+
+          after_web_process = deployment.app.web_processes.first
+          expect(after_web_process.guid).to eq(deploying_web_process.guid)
+          expect(after_web_process.instances).to eq(6)
+        end
+
+        context 'but one instance is failing' do
+          let(:all_instances_results) do
+            {
+              0 => { state: 'RUNNING', uptime: 50, since: 2, routable: true },
+              1 => { state: 'RUNNING', uptime: 50, since: 2, routable: true },
+              2 => { state: 'RUNNING', uptime: 50, since: 2, routable: true },
+              3 => { state: 'RUNNING', uptime: 50, since: 2, routable: true },
+              4 => { state: 'RUNNING', uptime: 50, since: 2, routable: true },
+              5 => { state: 'FAILING', uptime: 50, since: 2, routable: false }
+            }
+          end
+
+          it 'doesn\'t finalize the deployment' do
+            skip 'Seems like we shouldn\'t finalize if there is a failing instance, but that is the current behavior'
+            subject.scale
+            deployment.reload
+            expect(deployment.state).to eq(DeploymentModel::DEPLOYING_STATE)
+          end
+        end
+      end
+
+      context 'when deployment has web_instances' do
+        let(:web_instances) { 10 }
+        let(:max_in_flight) { 100 }
+
+        it 'scales to web_instances instead of original_web_process_instance_count' do
+          subject.scale
+          deployment.reload
+
+          expect(deployment.deploying_web_process.instances).to eq(10)
+        end
+      end
+
+      context 'when deployment does not have web_instances' do
+        let(:web_instances) { nil }
+        let(:max_in_flight) { 100 }
+
+        it 'scales to original_web_process_instance_count' do
+          subject.scale
+          deployment.reload
+
+          expect(deployment.deploying_web_process.instances).to eq(6)
+        end
+      end
+
       context 'when an error occurs while scaling a deployment' do
         let(:failing_process) { ProcessModel.make(app: web_process.app, type: 'failing', instances: 5) }
         let(:deployment) { DeploymentModel.make(app: web_process.app, deploying_web_process: failing_process, state: 'DEPLOYING') }
@@ -91,6 +183,8 @@ module VCAP::CloudController
           expect do
             subject.scale
           end.not_to raise_error
+
+          expect(deployment.error).to eq 'An unexpected error has occurred.'
         end
       end
     end
@@ -98,12 +192,118 @@ module VCAP::CloudController
     describe '#canary' do
       let(:state) { DeploymentModel::PREPAUSED_STATE }
       let(:current_deploying_instances) { 1 }
+      let(:deployment) do
+        DeploymentModel.make(
+          app: web_process.app,
+          deploying_web_process: deploying_web_process,
+          state: state,
+          strategy: 'canary',
+          original_web_process_instance_count: original_web_process_instance_count,
+          max_in_flight: 1
+        )
+      end
+
+      describe 'canary steps' do
+        let(:max_in_flight) { 1 }
+        let(:original_web_process_instance_count) { 10 }
+        let(:deployment) do
+          DeploymentModel.make(
+            app: web_process.app,
+            deploying_web_process: deploying_web_process,
+            strategy: 'canary',
+            droplet: droplet,
+            state: state,
+            max_in_flight: max_in_flight,
+            original_web_process_instance_count: 10,
+            canary_steps: [{ instance_weight: 50 }, { instance_weight: 80 }],
+            canary_current_step: 1
+          )
+        end
+
+        context 'when the current step instance count has been reached' do
+          let(:current_deploying_instances) { 5 }
+          let(:current_web_instances) { 8 }
+          let(:all_instances_results) do
+            {
+              0 => { state: 'RUNNING', uptime: 50, since: 2, routable: true },
+              1 => { state: 'RUNNING', uptime: 50, since: 2, routable: true },
+              2 => { state: 'RUNNING', uptime: 50, since: 2, routable: true },
+              3 => { state: 'RUNNING', uptime: 50, since: 2, routable: true },
+              4 => { state: 'RUNNING', uptime: 50, since: 2, routable: true }
+            }
+          end
+
+          it 'transitions state to paused' do
+            subject.canary
+            expect(deployment.state).to eq(DeploymentModel::PAUSED_STATE)
+            expect(web_process.reload.instances).to eq(6)
+            expect(deploying_web_process.instances).to eq(5)
+          end
+        end
+
+        context 'when the current step instance count has not been reached' do
+          let(:current_deploying_instances) { 4 }
+          let(:all_instances_results) do
+            {
+              0 => { state: 'RUNNING', uptime: 50, since: 2, routable: true },
+              1 => { state: 'RUNNING', uptime: 50, since: 2, routable: true },
+              2 => { state: 'RUNNING', uptime: 50, since: 2, routable: true },
+              3 => { state: 'RUNNING', uptime: 50, since: 2, routable: true }
+            }
+          end
+
+          it 'does not transition to paused' do
+            subject.canary
+            expect(deployment.state).not_to eq(DeploymentModel::PAUSED_STATE)
+          end
+        end
+
+        context 'when there is a single unhealthy instance' do
+          let(:current_deploying_instances) { 5 }
+          let(:all_instances_results) do
+            {
+              0 => { state: 'RUNNING', uptime: 50, since: 2, routable: true },
+              1 => { state: 'RUNNING', uptime: 50, since: 2, routable: true },
+              2 => { state: 'RUNNING', uptime: 50, since: 2, routable: true },
+              3 => { state: 'RUNNING', uptime: 50, since: 2, routable: false },
+              4 => { state: 'RUNNING', uptime: 50, since: 2, routable: true }
+            }
+          end
+
+          it 'does not transition to paused' do
+            subject.canary
+            expect(deployment.state).not_to eq(DeploymentModel::PAUSED_STATE)
+          end
+        end
+
+        context 'when there are not enough actual instances' do
+          let(:current_deploying_instances) { 5 }
+          let(:all_instances_results) do
+            {
+              0 => { state: 'RUNNING', uptime: 50, since: 2, routable: true },
+              1 => { state: 'RUNNING', uptime: 50, since: 2, routable: true },
+              2 => { state: 'RUNNING', uptime: 50, since: 2, routable: true },
+              3 => { state: 'RUNNING', uptime: 50, since: 2, routable: true }
+            }
+          end
+
+          it 'does not transition to paused' do
+            subject.canary
+            expect(deployment.state).not_to eq(DeploymentModel::PAUSED_STATE)
+          end
+        end
+      end
 
       context 'when the canary instance starts succesfully' do
         let(:all_instances_results) do
           {
             0 => { state: 'RUNNING', uptime: 50, since: 2, routable: true }
           }
+        end
+
+        it 'transitions state to paused' do
+          subject.canary
+          expect(deployment.state).to eq(DeploymentModel::PAUSED_STATE)
         end
 
         it 'logs the canary is paused' do
@@ -118,6 +318,59 @@ module VCAP::CloudController
           expect(logger).to have_received(:info).with(
             "ran-canarying-deployment-for-#{deployment.guid}"
           )
+        end
+      end
+
+      context 'when the canary is not routable' do
+        let(:all_instances_results) do
+          {
+            0 => { state: 'RUNNING', uptime: 50, since: 2, routable: false }
+          }
+        end
+
+        it 'does not transition state to paused' do
+          subject.canary
+          expect(deployment.state).to eq(DeploymentModel::PREPAUSED_STATE)
+          expect(deployment.status_value).to eq(DeploymentModel::ACTIVE_STATUS_VALUE)
+          expect(deployment.status_reason).to eq(DeploymentModel::DEPLOYING_STATUS_REASON)
+        end
+      end
+
+      context 'while the canary instance is still starting' do
+        let(:all_instances_results) do
+          {
+            0 => { state: 'STARTING', uptime: 50, since: 2, routable: true }
+          }
+        end
+
+        it 'skips the deployment update' do
+          subject.canary
+          expect(deployment.state).to eq(DeploymentModel::PREPAUSED_STATE)
+          expect(deployment.status_value).to eq(DeploymentModel::ACTIVE_STATUS_VALUE)
+          expect(deployment.status_reason).to eq(DeploymentModel::DEPLOYING_STATUS_REASON)
+        end
+      end
+
+      context 'when the canary instance is failing' do
+        let(:all_instances_results) do
+          {
+            0 => { state: 'FAILING', uptime: 50, since: 2, routable: true }
+          }
+        end
+
+        it 'does not update the deployments last_healthy_at' do
+          Timecop.travel(Time.now + 1.minute) do
+            expect do
+              subject.canary
+            end.not_to(change { deployment.reload.last_healthy_at })
+          end
+        end
+
+        it 'skips the deployment update' do
+          subject.canary
+          expect(deployment.state).to eq(DeploymentModel::PREPAUSED_STATE)
+          expect(deployment.status_value).to eq(DeploymentModel::ACTIVE_STATUS_VALUE)
+          expect(deployment.status_reason).to eq(DeploymentModel::DEPLOYING_STATUS_REASON)
         end
       end
 
@@ -142,6 +395,8 @@ module VCAP::CloudController
           expect do
             subject.canary
           end.not_to raise_error
+
+          expect(deployment.error).to eq 'An unexpected error has occurred.'
         end
       end
     end
@@ -173,6 +428,118 @@ module VCAP::CloudController
           expect do
             subject.cancel
           end.not_to raise_error
+
+          expect(deployment.error).to eq 'An unexpected error has occurred.'
+        end
+      end
+    end
+
+    describe 'error handling' do
+      context 'when saving the error to the deployment model' do
+        context 'when the error is a quota error' do
+          let(:web_instances) { nil }
+          let(:max_in_flight) { 100 }
+          let!(:quota_definition) { QuotaDefinition.make(memory_limit: 1) }
+
+          before do
+            org = app.organization
+            org.quota_definition = quota_definition
+            org.save
+          end
+
+          it 'saves the quota error to the model' do
+            subject.scale
+            expect(deployment.error).to eq 'memory quota_exceeded'
+          end
+        end
+
+        context 'when the error is not an approved error' do
+          before do
+            allow(deployment).to receive(:app).and_raise(StandardError.new('unrecognized error'))
+          end
+
+          it 'provides a helpful error on the deployment model' do
+            subject.scale
+            expect(deployment.error).to eq 'An unexpected error has occurred.'
+          end
+        end
+
+        context 'when the error is a SequelValidation error' do
+          before do
+            allow(deployment).to receive(:app).and_raise(Sequel::ValidationFailed.new('Something bad happened with model validation'))
+          end
+
+          it 'provides a helpful error on the deployment model' do
+            subject.scale
+            expect(deployment.error).to eq 'Something bad happened with model validation'
+          end
+        end
+
+        context 'when the error is a CloudController::Errors::ApiError error' do
+          before do
+            allow(deployment).to receive(:app).and_raise(CloudController::Errors::ApiError.new_from_details('RunnerError', 'some error'))
+          end
+
+          it 'provides a helpful error on the deployment model' do
+            subject.scale
+            expect(deployment.error).to eq 'Runner error: some error'
+          end
+        end
+
+        context 'when there is a problem saving the error column' do
+          before do
+            # too long for db column
+            allow(deployment).to receive(:app).and_raise(CloudController::Errors::ApiError.new_from_details('RunnerError', 'a' * 5000))
+          end
+
+          it 'logs the issue and continues' do
+            subject.scale
+
+            expect(logger).to have_received(:error).with(
+              'error-saving-deployment-error',
+              deployment_guid: deployment.guid,
+              error: 'Sequel::DatabaseError',
+              error_message: anything,
+              backtrace: anything
+            )
+          end
+        end
+
+        context 'when there was a prior error, but the error no longer occurs' do
+          describe '#scale' do
+            before do
+              deployment.error = 'old error'
+              deployment.save
+            end
+
+            it 'clears the error' do
+              subject.scale
+              expect(deployment.error).to be_nil
+            end
+          end
+
+          describe '#cancel' do
+            before do
+              deployment.update(state: 'CANCELING', error: 'old error')
+              allow_any_instance_of(VCAP::CloudController::Diego::Runner).to receive(:stop)
+            end
+
+            it 'clears the error' do
+              subject.cancel
+              expect(deployment.error).to be_nil
+            end
+          end
+
+          describe '#canary' do
+            before do
+              deployment.update(strategy: 'canary', error: 'old error')
+            end
+
+            it 'clears the error' do
+              subject.canary
+              expect(deployment.error).to be_nil
+            end
+          end
         end
       end
     end

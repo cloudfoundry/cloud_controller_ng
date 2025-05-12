@@ -5,16 +5,20 @@ module VCAP::CloudController
     end
 
     def fetch_orgs(service_plan_guids:)
-      orgs_query(service_plan_guids:).all
+      base_query(service_plan_guids:).
+        select_all(:organizations).
+        distinct(:organizations__id).
+        order_by(:id).
+        all
     end
 
     def any_orgs?(service_plan_guids:)
-      orgs_query(service_plan_guids:).any?
+      base_query(service_plan_guids:).any?
     end
 
     private
 
-    def orgs_query(service_plan_guids:)
+    def base_query(service_plan_guids:)
       dataset = Organization.dataset.
                 join(:service_plan_visibilities, organization_id: :organizations__id).
                 join(:service_plans, id: :service_plan_visibilities__service_plan_id).
@@ -22,10 +26,7 @@ module VCAP::CloudController
 
       dataset = dataset.where(organizations__guid: @permission_queryer.readable_org_guids_query) unless @permission_queryer.can_read_globally?
 
-      dataset.
-        select_all(:organizations).
-        distinct(:organizations__id).
-        order_by(:id)
+      dataset
     end
   end
 end

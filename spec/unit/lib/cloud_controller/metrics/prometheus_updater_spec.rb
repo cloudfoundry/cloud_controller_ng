@@ -3,7 +3,7 @@ require 'cloud_controller/metrics/prometheus_updater'
 
 module VCAP::CloudController::Metrics
   RSpec.describe PrometheusUpdater do
-    let(:updater) { PrometheusUpdater.new(prom_client) }
+    let(:updater) { PrometheusUpdater.new(registry: prom_client) }
     let(:tmpdir) { Dir.mktmpdir }
     let(:prom_client) do
       Prometheus::Client.config.data_store = Prometheus::Client::DataStores::DirectFileStore.new(dir: tmpdir)

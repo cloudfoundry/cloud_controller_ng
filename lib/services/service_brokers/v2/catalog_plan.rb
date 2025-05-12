@@ -14,7 +14,7 @@ module VCAP::Services::ServiceBrokers::V2
       @name               = attrs['name']
       @description        = attrs['description']
       @errors             = VCAP::Services::ValidationErrors.new
-      @free               = attrs['free'].nil? ? true : attrs['free']
+      @free               = attrs['free'].nil? || attrs['free']
       @bindable           = attrs['bindable']
       @plan_updateable    = attrs['plan_updateable']
       @maximum_polling_duration = attrs['maximum_polling_duration']

@@ -6,7 +6,8 @@ module VCAP::CloudController
   module Diego
     class InstancesReporter
       include ReporterMixins
-
+      InstanceCountSummary = Struct.new(:starting_instances_count, :routable_instances_count, :healthy_instances_count, :unhealthy_instances_count)
+      HEALTHY_STATES = [VCAP::CloudController::Diego::LRP_RUNNING, VCAP::CloudController::Diego::LRP_STARTING].freeze
       UNKNOWN_INSTANCE_COUNT = -1
 
       def initialize(bbs_instances_client)
@@ -103,6 +104,17 @@ module VCAP::CloudController
 
         logger.error('crashed_instances_for_app.error', error: e.to_s)
         raise CloudController::Errors::InstancesUnavailable.new(e)
+      end
+
+      def instance_count_summary(process)
+        instances = all_instances_for_app(process)
+
+        healthy_instances = instances.select { |_, val| HEALTHY_STATES.include?(val[:state]) }
+        unhealthy_instances = instances.reject { |_, val| HEALTHY_STATES.include?(val[:state]) }
+        starting_instances =  healthy_instances.reject { |_, val| val[:state] == VCAP::CloudController::Diego::LRP_RUNNING && val[:routable] }
+        routable_instances = instances.select { |_, val| val[:state] == VCAP::CloudController::Diego::LRP_RUNNING && val[:routable] }
+
+        InstanceCountSummary.new(starting_instances.count, routable_instances.count, healthy_instances.count, unhealthy_instances.count)
       end
 
       private

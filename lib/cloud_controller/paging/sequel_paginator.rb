@@ -13,6 +13,8 @@ module VCAP::CloudController
       order_type = Sequel.send(order_direction, Sequel.qualify(table_name, order_by))
       dataset = dataset.order(order_type)
 
+      secondary_order_by = pagination_options.secondary_order_by
+      dataset = dataset.order_append(Sequel.send(order_direction, Sequel.qualify(table_name, secondary_order_by))) if secondary_order_by
       dataset = dataset.order_append(Sequel.send(order_direction, Sequel.qualify(table_name, :guid))) if order_by != 'id' && has_guid_column
 
       distinct_opt = dataset.opts[:distinct]
@@ -37,7 +39,7 @@ module VCAP::CloudController
     end
 
     def can_paginate_with_window_function?(dataset)
-      enable_paginate_window = Config.config.get(:db, :enable_paginate_window).nil? ? true : Config.config.get(:db, :enable_paginate_window)
+      enable_paginate_window = Config.config.get(:db, :enable_paginate_window).nil? || Config.config.get(:db, :enable_paginate_window)
 
       enable_paginate_window && dataset.supports_window_functions? && (!dataset.opts[:distinct] || !dataset.requires_unique_column_names_in_subquery_select_list?)
     end

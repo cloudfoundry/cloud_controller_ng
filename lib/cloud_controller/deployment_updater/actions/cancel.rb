@@ -21,14 +21,15 @@ module VCAP::CloudController
             prior_web_process = find_interim_web_process || app.oldest_web_process
             prior_web_process.lock!
 
-            prior_web_process.update(instances: deployment.original_web_process_instance_count)
-
             app.web_processes.reject { |p| p.guid == prior_web_process.guid }.map(&:destroy)
+
+            prior_web_process.update(instances: deployment.original_web_process_instance_count)
 
             deployment.update(
               state: DeploymentModel::CANCELED_STATE,
               status_value: DeploymentModel::FINALIZED_STATUS_VALUE,
-              status_reason: DeploymentModel::CANCELED_STATUS_REASON
+              status_reason: DeploymentModel::CANCELED_STATUS_REASON,
+              error: nil
             )
           end
         end

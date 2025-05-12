@@ -56,7 +56,7 @@ module VCAP::CloudController
         result = service_instance_deleter.delete
         unless result[:finished]
           polling_job = V3::DeleteServiceInstanceJob.new(service_instance.guid, @services_event_repository.user_audit_info)
-          Jobs::Enqueuer.new(polling_job, queue: Jobs::Queues.generic).enqueue_pollable
+          Jobs::GenericEnqueuer.shared.enqueue_pollable(polling_job)
           errors << CloudController::Errors::ApiError.new_from_details('AsyncServiceInstanceOperationInProgress', service_instance.name)
         end
       rescue StandardError => e

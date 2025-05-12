@@ -66,7 +66,7 @@ class BuildpacksController < ApplicationController
 
     delete_action = BuildpackDelete.new
     deletion_job = VCAP::CloudController::Jobs::DeleteActionJob.new(Buildpack, buildpack.guid, delete_action)
-    pollable_job = Jobs::Enqueuer.new(deletion_job, queue: Jobs::Queues.generic).enqueue_pollable
+    pollable_job = Jobs::Enqueuer.new(queue: Jobs::Queues.generic).enqueue_pollable(deletion_job)
 
     head :accepted, 'Location' => url_builder.build_url(path: "/v3/jobs/#{pollable_job.guid}")
   end
@@ -77,7 +77,7 @@ class BuildpacksController < ApplicationController
 
     unauthorized! unless permission_queryer.can_write_globally?
 
-    message = BuildpackUploadMessage.create_from_params(hashed_params[:body])
+    message = BuildpackUploadMessage.create_from_params(hashed_params[:body], buildpack.lifecycle)
     combine_messages(message.errors.full_messages) unless message.valid?
 
     unprocessable!('Buildpack is locked') if buildpack.locked

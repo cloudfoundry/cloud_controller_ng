@@ -1601,6 +1601,34 @@ RSpec.describe 'Apps' do
       end
 
       it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS
+
+      context 'when k8s service bindings are enabled' do
+        let(:app_model_response_object) do
+          r = super()
+          r[:system_env_json] = { SERVICE_BINDING_ROOT: '/etc/cf-service-bindings' }
+          r
+        end
+
+        before do
+          app_model.update(service_binding_k8s_enabled: true)
+        end
+
+        it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS
+      end
+
+      context 'when file-based VCAP service bindings are enabled' do
+        let(:app_model_response_object) do
+          r = super()
+          r[:system_env_json] = { VCAP_SERVICES_FILE_PATH: '/etc/cf-service-bindings/vcap_services' }
+          r
+        end
+
+        before do
+          app_model.update(file_based_vcap_services_enabled: true)
+        end
+
+        it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS
+      end
     end
 
     context 'when VCAP_SERVICES contains potentially sensitive information' do
@@ -3368,6 +3396,21 @@ RSpec.describe 'Apps' do
           }
           h
         end
+      end
+    end
+
+    context 'when the encryption_key_label is invalid' do
+      before do
+        allow_any_instance_of(ErrorPresenter).to receive(:raise_500?).and_return(false)
+      end
+
+      it 'fails to decrypt the environment variables and returns a 500 error' do
+        app_model # ensure that app model is created before run_cipher is mocked to throw an error
+        allow(VCAP::CloudController::Encryptor).to receive(:run_cipher).and_raise(OpenSSL::Cipher::CipherError)
+        api_call.call(admin_headers)
+
+        expect(last_response).to have_status_code(500)
+        expect(parsed_response['errors'].first['detail']).to match(/Error while processing encrypted data/i)
       end
     end
   end

@@ -143,6 +143,50 @@ module VCAP::CloudController
         expect(paginated_result.records.first.keys).to match_array(AppModel.columns)
       end
 
+      it 'orders by secondary_default_order_by if using default order_by' do
+        Space.make(guid: '1')
+        Space.make(guid: '2')
+        Space.make(guid: '3')
+        Space.make(guid: '4')
+        options = { page: page, per_page: 4, order_direction: 'asc' }
+        app_model1.update(guid: '1', space_guid: '2', name: 'yourapp')
+        app_model2.update(guid: '2', space_guid: '1', name: 'yourapp')
+        app_model3.update(guid: '3', space_guid: '3', name: 'myapp')
+        app_model4.update(guid: '4', space_guid: '4', name: 'myapp')
+        pagination_options = PaginationOptions.new(options)
+        pagination_options.default_order_by = 'name'
+        pagination_options.secondary_default_order_by = 'space_guid'
+
+        paginated_result = paginator.get_page(dataset, pagination_options)
+
+        expect(paginated_result.records[0].guid).to eq(app_model3.guid)
+        expect(paginated_result.records[1].guid).to eq(app_model4.guid)
+        expect(paginated_result.records[2].guid).to eq(app_model2.guid)
+        expect(paginated_result.records[3].guid).to eq(app_model1.guid)
+      end
+
+      it 'does not order by secondary_default_order_by if order_by is set' do
+        Space.make(guid: '1')
+        Space.make(guid: '2')
+        Space.make(guid: '3')
+        Space.make(guid: '4')
+        options = { page: page, order_by: 'name', per_page: 4, order_direction: 'asc' }
+        app_model1.update(guid: '1', space_guid: '2', name: 'yourapp')
+        app_model2.update(guid: '2', space_guid: '1', name: 'yourapp')
+        app_model3.update(guid: '3', space_guid: '3', name: 'myapp')
+        app_model4.update(guid: '4', space_guid: '4', name: 'myapp')
+        pagination_options = PaginationOptions.new(options)
+        pagination_options.default_order_by = 'guid'
+        pagination_options.secondary_default_order_by = 'space_guid'
+
+        paginated_result = paginator.get_page(dataset, pagination_options)
+
+        expect(paginated_result.records[0].guid).to eq(app_model3.guid)
+        expect(paginated_result.records[1].guid).to eq(app_model4.guid)
+        expect(paginated_result.records[2].guid).to eq(app_model1.guid)
+        expect(paginated_result.records[3].guid).to eq(app_model2.guid)
+      end
+
       it 'orders by GUID as a secondary field when available' do
         options = { page: page, per_page: 2, order_by: 'created_at', order_direction: 'asc' }
         app_model1.update(guid: '1', created_at: '2019-12-25T13:00:00Z')

@@ -46,7 +46,7 @@ module VCAP::CloudController::Jobs
         end
 
         ::VCAP::Request.current_id = request_id
-        Enqueuer.new(wrapped_job, opts).public_send(method_name)
+        Enqueuer.new(opts).public_send(method_name, wrapped_job)
       end
 
       it 'uses the JobTimeoutCalculator' do
@@ -56,7 +56,7 @@ module VCAP::CloudController::Jobs
           expect(enqueued_job.handler.timeout).to eq(job_timeout)
           original_enqueue.call(enqueued_job, opts)
         end
-        Enqueuer.new(wrapped_job, opts).public_send(method_name)
+        Enqueuer.new(opts).public_send(method_name, wrapped_job)
         expect(timeout_calculator).to have_received(:calculate).with(wrapped_job.job_name_in_configuration, 'my-queue')
       end
 
@@ -66,7 +66,7 @@ module VCAP::CloudController::Jobs
           expect(opts).not_to include(:priority)
           original_enqueue.call(enqueued_job, opts)
         end
-        Enqueuer.new(wrapped_job, opts).public_send(method_name)
+        Enqueuer.new(opts).public_send(method_name, wrapped_job)
       end
     end
 
@@ -88,7 +88,32 @@ module VCAP::CloudController::Jobs
           expect(enqueued_job.handler.handler).to be wrapped_job
           original_enqueue.call(enqueued_job, opts)
         end
-        Enqueuer.new(wrapped_job, opts).enqueue
+        Enqueuer.new(opts).enqueue(wrapped_job)
+      end
+
+      context 'when run_at is provided' do
+        it 'enqueues the job with the specified run_at time' do
+          original_enqueue = Delayed::Job.method(:enqueue)
+          wrapped_job = Runtime::ModelDeletion.new('one', 'two')
+          future_time = Time.now + 1.month
+          expect(Delayed::Job).to(receive(:enqueue)) do |enqueued_job, opts|
+            expect(opts[:run_at]).to eq(future_time)
+            original_enqueue.call(enqueued_job, opts)
+          end
+          Enqueuer.new({ queue: 'my-queue', run_at: Time.now + 1.hour }).enqueue(wrapped_job, run_at: future_time)
+        end
+      end
+
+      context 'when priority_increment is provided' do
+        it 'adds the priority_increment to the base priority' do
+          original_enqueue = Delayed::Job.method(:enqueue)
+          expect(Delayed::Job).to receive(:enqueue) do |enqueued_job, opts|
+            expect(opts[:priority]).to eq(17)
+            original_enqueue.call(enqueued_job, opts)
+          end
+          opts[:priority] = 10
+          Enqueuer.new(opts).enqueue(wrapped_job, priority_increment: 7)
+        end
       end
     end
 
@@ -111,11 +136,11 @@ module VCAP::CloudController::Jobs
           expect(enqueued_job.handler.handler.handler).to be wrapped_job
           original_enqueue.call(enqueued_job, opts)
         end
-        Enqueuer.new(wrapped_job, opts).enqueue_pollable
+        Enqueuer.new(opts).enqueue_pollable(wrapped_job)
       end
 
       it 'returns the PollableJobModel' do
-        result = Enqueuer.new(wrapped_job, opts).enqueue_pollable
+        result = Enqueuer.new(opts).enqueue_pollable(wrapped_job)
         latest_job = VCAP::CloudController::PollableJobModel.last
         expect(result).to eq(latest_job)
       end
@@ -129,7 +154,7 @@ module VCAP::CloudController::Jobs
             original_enqueue.call(enqueued_job, opts)
           end
 
-          Enqueuer.new(wrapped_job, opts).enqueue_pollable do |pollable_job|
+          Enqueuer.new(opts).enqueue_pollable(wrapped_job) do |pollable_job|
             ErrorTranslatorJob.new(pollable_job)
           end
         end
@@ -141,7 +166,7 @@ module VCAP::CloudController::Jobs
           expect(opts).not_to include(:priority)
           original_enqueue.call(enqueued_job, opts)
         end
-        Enqueuer.new(wrapped_job, opts).enqueue_pollable
+        Enqueuer.new(opts).enqueue_pollable(wrapped_job)
       end
 
       context 'priority from config' do
@@ -154,7 +179,7 @@ module VCAP::CloudController::Jobs
               expect(opts).to include({ priority: 1899 })
               original_enqueue.call(enqueued_job, opts)
             end
-            Enqueuer.new(wrapped_job, opts).enqueue_pollable
+            Enqueuer.new(opts).enqueue_pollable(wrapped_job)
           end
         end
 
@@ -167,7 +192,7 @@ module VCAP::CloudController::Jobs
               expect(opts).to include({ priority: 1900 })
               original_enqueue.call(enqueued_job, opts)
             end
-            Enqueuer.new(wrapped_job, opts).enqueue_pollable
+            Enqueuer.new(opts).enqueue_pollable(wrapped_job)
           end
         end
 
@@ -180,7 +205,7 @@ module VCAP::CloudController::Jobs
               expect(opts).to include({ priority: 1901 })
               original_enqueue.call(enqueued_job, opts)
             end
-            Enqueuer.new(wrapped_job, opts).enqueue_pollable
+            Enqueuer.new(opts).enqueue_pollable(wrapped_job)
           end
         end
 
@@ -192,8 +217,76 @@ module VCAP::CloudController::Jobs
               original_enqueue.call(enqueued_job, opts)
             end
             opts[:priority] = 2000
-            Enqueuer.new(wrapped_job, opts).enqueue_pollable
+            Enqueuer.new(opts).enqueue_pollable(wrapped_job)
           end
+        end
+      end
+
+      context 'when run_at is provided' do
+        it 'enqueues the job with the specified run_at time' do
+          future_time = Time.now + 1.month
+          original_enqueue = Delayed::Job.method(:enqueue)
+          expect(Delayed::Job).to(receive(:enqueue)) do |enqueued_job, opts|
+            expect(opts[:run_at]).to eq(future_time)
+            original_enqueue.call(enqueued_job, opts)
+          end
+          Enqueuer.new(opts).enqueue_pollable(wrapped_job, run_at: future_time)
+        end
+      end
+
+      context 'when priority_increment is provided' do
+        it 'enqueues the job with the specified priority_increment' do
+          original_enqueue = Delayed::Job.method(:enqueue)
+          expect(Delayed::Job).to receive(:enqueue) do |enqueued_job, opts|
+            expect(opts[:priority]).to eq(3)
+            original_enqueue.call(enqueued_job, opts)
+          end
+          Enqueuer.new(opts).enqueue_pollable(wrapped_job, priority_increment: 3)
+        end
+
+        it 'adds the priority_increment to the base priority' do
+          original_enqueue = Delayed::Job.method(:enqueue)
+          expect(Delayed::Job).to receive(:enqueue) do |enqueued_job, opts|
+            expect(opts[:priority]).to eq(17)
+            original_enqueue.call(enqueued_job, opts)
+          end
+          opts[:priority] = 10
+          Enqueuer.new(opts).enqueue_pollable(wrapped_job, priority_increment: 7)
+        end
+
+        it 'ignores negative priority_increment values' do
+          original_enqueue = Delayed::Job.method(:enqueue)
+          expect(Delayed::Job).to receive(:enqueue) do |enqueued_job, opts|
+            expect(opts[:priority]).to eq(3)
+            original_enqueue.call(enqueued_job, opts)
+          end
+          opts[:priority] = 3
+          Enqueuer.new(opts).enqueue_pollable(wrapped_job, priority_increment: -8)
+        end
+
+        it 'adds the priority_increment to the configured priority' do
+          original_enqueue = Delayed::Job.method(:enqueue)
+          allow_any_instance_of(Enqueuer).to receive(:get_overwritten_job_priority_from_config).and_return(1899)
+
+          expect(Delayed::Job).to receive(:enqueue) do |enqueued_job, opts|
+            expect(opts[:priority]).to eq(1903)
+            original_enqueue.call(enqueued_job, opts)
+          end
+          Enqueuer.new(opts).enqueue_pollable(wrapped_job, priority_increment: 4)
+        end
+      end
+
+      context 'when preserve_priority is true' do
+        it 'does not modify the priority even if a configured priority is present or a priority_increment is provided' do
+          original_enqueue = Delayed::Job.method(:enqueue)
+          allow_any_instance_of(Enqueuer).to receive(:get_overwritten_job_priority_from_config).and_return(1899)
+
+          expect(Delayed::Job).to receive(:enqueue) do |enqueued_job, opts|
+            expect(opts[:priority]).to eq(1901)
+            original_enqueue.call(enqueued_job, opts)
+          end
+          opts[:priority] = 1901
+          Enqueuer.new(opts).enqueue_pollable(wrapped_job, preserve_priority: true, priority_increment: 4)
         end
       end
     end
@@ -208,7 +301,7 @@ module VCAP::CloudController::Jobs
         end
 
         expect(Delayed::Worker.delay_jobs).to be(true)
-        Enqueuer.new(wrapped_job, opts).run_inline
+        Enqueuer.new(opts).run_inline(wrapped_job)
         expect(Delayed::Worker.delay_jobs).to be(true)
       end
 
@@ -217,7 +310,7 @@ module VCAP::CloudController::Jobs
           expect(enqueued_job).to be_a TimeoutJob
           expect(enqueued_job.timeout).to eq(global_timeout)
         end
-        Enqueuer.new(wrapped_job, opts).run_inline
+        Enqueuer.new(opts).run_inline(wrapped_job)
       end
 
       context 'when executing the job fails' do
@@ -225,7 +318,7 @@ module VCAP::CloudController::Jobs
           expect(Delayed::Job).to receive(:enqueue).and_raise('Boom!')
           expect(Delayed::Worker.delay_jobs).to be(true)
           expect do
-            Enqueuer.new(wrapped_job, opts).run_inline
+            Enqueuer.new(opts).run_inline(wrapped_job)
           end.to raise_error(/Boom!/)
           expect(Delayed::Worker.delay_jobs).to be(true)
         end

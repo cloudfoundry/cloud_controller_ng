@@ -580,6 +580,12 @@ RSpec.describe 'Deployments' do
       let(:create_request) do
         {
           strategy: 'canary',
+          options: {
+            max_in_flight: 10,
+            canary: {
+              steps: [{ instance_weight: 1 }, { instance_weight: 2 }]
+            }
+          },
           relationships: {
             app: {
               data: {
@@ -593,6 +599,13 @@ RSpec.describe 'Deployments' do
         {
           revision: {
             guid: revision.guid
+          },
+          strategy: 'canary',
+          options: {
+            max_in_flight: 10,
+            canary: {
+              steps: [{ instance_weight: 1 }, { instance_weight: 2 }]
+            }
           },
           relationships: {
             app: {
@@ -612,6 +625,8 @@ RSpec.describe 'Deployments' do
             'create-deployment' => {
               'api-version' => 'v3',
               'strategy' => 'canary',
+              'max-in-flight' => 10,
+              'canary-steps' => [{ 'instance_weight' => 1 }, { 'instance_weight' => 2 }],
               'app-id' => OpenSSL::Digest::SHA256.hexdigest(app_model.guid),
               'user-id' => OpenSSL::Digest::SHA256.hexdigest(user.guid)
             }
@@ -632,6 +647,8 @@ RSpec.describe 'Deployments' do
             'rolled-back-app' => {
               'api-version' => 'v3',
               'strategy' => 'canary',
+              'max-in-flight' => 10,
+              'canary-steps' => [{ 'instance_weight' => 1 }, { 'instance_weight' => 2 }],
               'app-id' => OpenSSL::Digest::SHA256.hexdigest(app_model.guid),
               'user-id' => OpenSSL::Digest::SHA256.hexdigest(user.guid),
               'revision-id' => OpenSSL::Digest::SHA256.hexdigest(revision.guid)
@@ -816,7 +833,14 @@ RSpec.describe 'Deployments' do
                                                             'details' => {
                                                               'last_successful_healthcheck' => iso8601,
                                                               'last_status_change' => iso8601
-                                                            }
+                                                            },
+                                                            'canary' =>
+                                                              {
+                                                                'steps' => {
+                                                                  'current' => 1,
+                                                                  'total' => 1
+                                                                }
+                                                              }
                                                           },
                                                           'strategy' => 'canary',
                                                           'droplet' => {
@@ -1024,6 +1048,382 @@ RSpec.describe 'Deployments' do
                                                             }
                                                           })
           end
+        end
+      end
+    end
+
+    context 'canary steps' do
+      let(:user) { make_developer_for_space(space) }
+      let(:create_request) do
+        {
+          strategy: strategy,
+          options: {
+            canary: {
+              steps: [
+                { instance_weight: 20 },
+                { instance_weight: 40 },
+                { instance_weight: 60 },
+                { instance_weight: 80 }
+              ]
+            }
+          },
+          relationships: {
+            app: {
+              data: {
+                guid: app_model.guid
+              }
+            }
+          }
+        }
+      end
+
+      context 'when deployment type is "rolling"' do
+        let(:strategy) { 'rolling' }
+
+        it 'returns a 422' do
+          post '/v3/deployments', create_request.to_json, user_header
+          expect(last_response.status).to eq(422), last_response.body
+          expect(parsed_response['errors'][0]['detail']).to match('Options canary are only valid for Canary deployments')
+        end
+      end
+
+      context 'when deployment type is "canary"' do
+        let(:strategy) { 'canary' }
+
+        it 'succeeds and returns the canary steps in the response' do
+          post '/v3/deployments', create_request.to_json, user_header
+          expect(last_response.status).to eq(201), last_response.body
+
+          deployment = VCAP::CloudController::DeploymentModel.last
+
+          expect(parsed_response).to be_a_response_like({
+                                                          'guid' => deployment.guid,
+                                                          'status' => {
+                                                            'value' => VCAP::CloudController::DeploymentModel::ACTIVE_STATUS_VALUE,
+                                                            'reason' => VCAP::CloudController::DeploymentModel::DEPLOYING_STATUS_REASON,
+                                                            'details' => {
+                                                              'last_successful_healthcheck' => iso8601,
+                                                              'last_status_change' => iso8601
+                                                            },
+                                                            'canary' =>
+                                                            {
+                                                              'steps' => {
+                                                                'current' => 1,
+                                                                'total' => 4
+                                                              }
+                                                            }
+                                                          },
+                                                          'strategy' => 'canary',
+                                                          'options' => {
+                                                            'max_in_flight' => 1,
+                                                            'canary' => {
+                                                              'steps' => [
+                                                                { 'instance_weight' => 20 },
+                                                                { 'instance_weight' => 40 },
+                                                                { 'instance_weight' => 60 },
+                                                                { 'instance_weight' => 80 }
+                                                              ]
+                                                            }
+                                                          },
+                                                          'droplet' => {
+                                                            'guid' => droplet.guid
+                                                          },
+                                                          'revision' => {
+                                                            'guid' => app_model.latest_revision.guid,
+                                                            'version' => app_model.latest_revision.version
+                                                          },
+                                                          'previous_droplet' => {
+                                                            'guid' => droplet.guid
+                                                          },
+                                                          'new_processes' => [{
+                                                            'guid' => deployment.deploying_web_process.guid,
+                                                            'type' => deployment.deploying_web_process.type
+                                                          }],
+                                                          'created_at' => iso8601,
+                                                          'updated_at' => iso8601,
+                                                          'metadata' => metadata,
+                                                          'relationships' => {
+                                                            'app' => {
+                                                              'data' => {
+                                                                'guid' => app_model.guid
+                                                              }
+                                                            }
+                                                          },
+                                                          'links' => {
+                                                            'self' => {
+                                                              'href' => "#{link_prefix}/v3/deployments/#{deployment.guid}"
+                                                            },
+                                                            'app' => {
+                                                              'href' => "#{link_prefix}/v3/apps/#{app_model.guid}"
+                                                            },
+                                                            'cancel' => {
+                                                              'href' => "#{link_prefix}/v3/deployments/#{deployment.guid}/actions/cancel",
+                                                              'method' => 'POST'
+                                                            }
+                                                          }
+                                                        })
+        end
+      end
+    end
+
+    context 'memory_in_mb' do
+      let!(:process_model) { VCAP::CloudController::ProcessModel.make(app: app_model, instances: 10) }
+      let(:user) { make_developer_for_space(space) }
+      let(:memory_in_mb) { 500 }
+      let(:create_request) do
+        {
+          options: {
+            memory_in_mb:
+          },
+          relationships: {
+            app: {
+              data: {
+                guid: app_model.guid
+              }
+            }
+          }
+        }
+      end
+
+      context 'when memory_in_mb is provided' do
+        it 'is set on the resource' do
+          post '/v3/deployments', create_request.to_json, user_header
+          expect(last_response.status).to eq(201), last_response.body
+
+          expect(parsed_response['options']['memory_in_mb']).to eq(500)
+        end
+      end
+
+      context 'when memory_in_mb violates a quota' do
+        let(:memory_in_mb) { 1001 }
+        let(:quota) { VCAP::CloudController::QuotaDefinition.make(memory_limit: 10_000) }
+
+        before do
+          org.quota_definition = quota
+          org.save
+        end
+
+        it 'is set on the resource' do
+          post '/v3/deployments', create_request.to_json, user_header
+          expect(last_response.status).to eq(422), last_response.body
+          expect(parsed_response['errors'][0]['detail']).to match('memory quota_exceeded')
+        end
+      end
+
+      context 'when memory_in_mb is not provided' do
+        let(:create_request) do
+          {
+            relationships: {
+              app: {
+                data: {
+                  guid: app_model.guid
+                }
+              }
+            }
+          }
+        end
+
+        it 'is not returned as part of the deployment options' do
+          post '/v3/deployments', create_request.to_json, user_header
+          expect(last_response.status).to eq(201), last_response.body
+
+          expect(parsed_response['options'].key?('memory_in_mb')).to be false
+        end
+      end
+    end
+
+    context 'disk_in_mb' do
+      let!(:process_model) { VCAP::CloudController::ProcessModel.make(app: app_model, instances: 10) }
+      let(:user) { make_developer_for_space(space) }
+      let(:disk_in_mb) { 500 }
+      let(:create_request) do
+        {
+          options: {
+            disk_in_mb:
+          },
+          relationships: {
+            app: {
+              data: {
+                guid: app_model.guid
+              }
+            }
+          }
+        }
+      end
+
+      context 'when disk_in_mb is provided' do
+        it 'is set on the resource' do
+          post '/v3/deployments', create_request.to_json, user_header
+          expect(last_response.status).to eq(201), last_response.body
+
+          expect(parsed_response['options']['disk_in_mb']).to eq(500)
+        end
+      end
+
+      context 'when disk_in_mb violates a quota' do
+        let(:disk_in_mb) { 1001 }
+
+        before do
+          TestConfig.override(maximum_app_disk_in_mb: 1000)
+        end
+
+        it 'is set on the resource' do
+          post '/v3/deployments', create_request.to_json, user_header
+          expect(last_response.status).to eq(422), last_response.body
+          expect(parsed_response['errors'][0]['detail']).to match('disk_quota too much disk requested (requested 1024 MB - must be less than 1000 MB)')
+        end
+      end
+
+      context 'when disk_in_mb is not provided' do
+        let(:create_request) do
+          {
+            relationships: {
+              app: {
+                data: {
+                  guid: app_model.guid
+                }
+              }
+            }
+          }
+        end
+
+        it 'is not returned as part of the deployment options' do
+          post '/v3/deployments', create_request.to_json, user_header
+          expect(last_response.status).to eq(201), last_response.body
+
+          expect(parsed_response['options'].key?('disk_in_mb')).to be false
+        end
+      end
+    end
+
+    context 'log_rate_limit_in_bytes_per_second' do
+      let!(:process_model) { VCAP::CloudController::ProcessModel.make(app: app_model, instances: 10) }
+      let(:user) { make_developer_for_space(space) }
+      let(:log_rate_limit_in_bytes_per_second) { 500 }
+      let(:create_request) do
+        {
+          options: {
+            log_rate_limit_in_bytes_per_second:
+          },
+          relationships: {
+            app: {
+              data: {
+                guid: app_model.guid
+              }
+            }
+          }
+        }
+      end
+
+      context 'when log_rate_limit_in_bytes_per_second is provided' do
+        it 'is set on the resource' do
+          post '/v3/deployments', create_request.to_json, user_header
+          expect(last_response.status).to eq(201), last_response.body
+
+          expect(parsed_response['options']['log_rate_limit_in_bytes_per_second']).to eq(500)
+        end
+      end
+
+      context 'when log_rate_limit_in_bytes_per_second violates a quota' do
+        let(:log_rate_limit_in_bytes_per_second) { 1001 }
+        let(:quota) { VCAP::CloudController::QuotaDefinition.make(log_rate_limit: 1000) }
+
+        before do
+          org.quota_definition = quota
+          org.save
+        end
+
+        it 'is set on the resource' do
+          post '/v3/deployments', create_request.to_json, user_header
+          expect(last_response.status).to eq(422), last_response.body
+          expect(parsed_response['errors'][0]['detail']).to match('log_rate_limit exceeds organization log rate quota')
+        end
+      end
+
+      context 'when log_rate_limit_in_bytes_per_second is not provided' do
+        let(:create_request) do
+          {
+            relationships: {
+              app: {
+                data: {
+                  guid: app_model.guid
+                }
+              }
+            }
+          }
+        end
+
+        it 'is not returned as part of the deployment options' do
+          post '/v3/deployments', create_request.to_json, user_header
+          expect(last_response.status).to eq(201), last_response.body
+
+          expect(parsed_response['options'].key?('log_rate_limit_in_bytes_per_second')).to be false
+        end
+      end
+    end
+
+    context 'web_instances' do
+      let!(:process_model) { VCAP::CloudController::ProcessModel.make(app: app_model, instances: 10) }
+      let(:user) { make_developer_for_space(space) }
+      let(:web_instances) { 5 }
+      let(:create_request) do
+        {
+          options: {
+            web_instances:
+          },
+          relationships: {
+            app: {
+              data: {
+                guid: app_model.guid
+              }
+            }
+          }
+        }
+      end
+
+      context 'when web_instances is provided' do
+        it 'is set on the resource' do
+          post '/v3/deployments', create_request.to_json, user_header
+          expect(last_response.status).to eq(201), last_response.body
+
+          expect(parsed_response['options']['web_instances']).to eq(5)
+        end
+      end
+
+      context 'when web_instances violates a quota' do
+        let(:web_instances) { 100_000 }
+        let(:quota) { VCAP::CloudController::QuotaDefinition.make(memory_limit: 1000) }
+
+        before do
+          org.quota_definition = quota
+          org.save
+        end
+
+        it 'is set on the resource' do
+          post '/v3/deployments', create_request.to_json, user_header
+          expect(last_response.status).to eq(422), last_response.body
+          expect(parsed_response['errors'][0]['detail']).to match('memory quota_exceeded')
+        end
+      end
+
+      context 'when web_instances is not provided' do
+        let(:create_request) do
+          {
+            relationships: {
+              app: {
+                data: {
+                  guid: app_model.guid
+                }
+              }
+            }
+          }
+        end
+
+        it 'is not set' do
+          post '/v3/deployments', create_request.to_json, user_header
+          expect(last_response.status).to eq(201), last_response.body
+
+          expect(parsed_response['options'].key?('web_instances')).to be false
         end
       end
     end
@@ -1265,6 +1665,24 @@ RSpec.describe 'Deployments' do
       end
     end
 
+    context 'when a deployment has had an error' do
+      let(:user) { make_developer_for_space(space) }
+      let(:deployment) do
+        VCAP::CloudController::DeploymentModelTestFactory.make(
+          app: app_model,
+          droplet: droplet,
+          previous_droplet: old_droplet,
+          error: 'Quota error'
+        )
+      end
+
+      it 'includes the error as part of the status details' do
+        get "/v3/deployments/#{deployment.guid}", nil, user_header
+        parsed_response = Oj.load(last_response.body)
+        expect(parsed_response['status']['details']['error']).to eq('Quota error')
+      end
+    end
+
     it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS
   end
 
@@ -1347,18 +1765,9 @@ RSpec.describe 'Deployments' do
       def json_for_deployment(deployment, app_model, droplet, status_value, status_reason, cancel_link=true)
         {
           guid: deployment.guid,
-          status: {
-            value: status_value,
-            reason: status_reason,
-            details: {
-              last_successful_healthcheck: iso8601,
-              last_status_change: iso8601
-            }
-          },
+          status: json_for_status(deployment, status_value, status_reason),
           strategy: deployment.strategy,
-          options: {
-            max_in_flight: 1
-          },
+          options: json_for_options(deployment),
           droplet: {
             guid: droplet.guid
           },
@@ -1400,6 +1809,39 @@ RSpec.describe 'Deployments' do
             }
           end
         end
+      end
+
+      def json_for_status(deployment, status_value, status_reason)
+        status = {
+          value: status_value,
+          reason: status_reason,
+          details: {
+            last_successful_healthcheck: iso8601,
+            last_status_change: iso8601
+          }
+        }
+        if deployment.strategy == 'canary'
+          status[:canary] = {
+            steps: {
+              current: deployment.canary_current_step || 1,
+              total: deployment.canary_steps&.length || 1
+            }
+          }
+        end
+        status
+      end
+
+      def json_for_options(deployment)
+        options = {
+          max_in_flight: deployment.max_in_flight
+        }
+        options[:web_instances] = deployment.web_instances if deployment.web_instances
+        if deployment.canary_steps
+          options[:canary] = {
+            steps: deployment.canary_steps
+          }
+        end
+        options
       end
 
       it 'lists all deployments' do

@@ -30,6 +30,7 @@ module VCAP::CloudController
               optional(:app_ssh_host_key_fingerprint) => String,
               optional(:custom) => Hash
             },
+            optional(:custom_root_links) => Array,
 
             system_domain: String,
             optional(:system_domain_organization) => enum(String, NilClass),
@@ -99,6 +100,7 @@ module VCAP::CloudController
             optional(:max_migration_statement_runtime_in_seconds) => Integer,
             optional(:migration_psql_concurrent_statement_timeout_in_seconds) => Integer,
             optional(:migration_psql_worker_memory_kb) => Integer,
+            optional(:skip_bigint_id_migration) => bool,
             db: {
               optional(:database) => Hash, # db connection hash for sequel
               max_connections: Integer, # max connections in the connection pool
@@ -207,6 +209,7 @@ module VCAP::CloudController
             broker_client_default_async_poll_interval_seconds: Integer,
             broker_client_max_async_poll_duration_minutes: Integer,
             broker_client_async_poll_exponential_backoff_rate: Numeric,
+            broker_client_max_async_poll_interval_seconds: Integer,
             optional(:broker_client_response_parser) => {
               log_errors: bool,
               log_validators: bool,
@@ -352,6 +355,7 @@ module VCAP::CloudController
               queues: {
                 optional(:cc_generic) => { timeout_in_seconds: Integer }
               },
+              optional(:read_ahead) => Integer,
               optional(:enable_dynamic_job_priorities) => bool,
               optional(:app_usage_events_cleanup) => { timeout_in_seconds: Integer },
               optional(:blobstore_delete) => { timeout_in_seconds: Integer },
@@ -376,7 +380,7 @@ module VCAP::CloudController
 
             internal_route_vip_range: String,
 
-            default_app_lifecycle: String,
+            default_app_lifecycle: enum('buildpack', 'cnb'),
             custom_metric_tag_prefix_list: Array,
 
             optional(:cc_service_key_client_name) => String,
@@ -388,7 +392,9 @@ module VCAP::CloudController
             },
 
             update_metric_tags_on_rename: bool,
-            app_instance_stopping_state: bool
+            app_instance_stopping_state: bool,
+
+            optional(:enable_ipv6) => bool
           }
         end
         # rubocop:enable Metrics/BlockLength
