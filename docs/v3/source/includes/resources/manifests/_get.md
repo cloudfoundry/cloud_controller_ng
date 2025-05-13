@@ -22,6 +22,11 @@ Content-Type: application/x-yaml
 applications:
 - name: my-app
   stack: cflinuxfs4
+  features:
+    ssh: true
+    revisions: true
+    service-binding-k8s: false
+    file-based-vcap-services: false
   services:
   - my-service
   routes:

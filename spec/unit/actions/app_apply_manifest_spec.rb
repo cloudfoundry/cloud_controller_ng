@@ -14,6 +14,7 @@ module VCAP::CloudController
       let(:process_create) { instance_double(ProcessCreate) }
       let(:service_cred_binding_create) { instance_double(V3::ServiceCredentialBindingAppCreate) }
       let(:random_route_generator) { instance_double(RandomRouteGenerator, route: 'spiffy/donut') }
+      let(:app_feature_update) { instance_double(AppFeatureUpdate) }
 
       describe '#apply' do
         before do
@@ -52,6 +53,8 @@ module VCAP::CloudController
           allow(AppPatchEnvironmentVariables).
             to receive(:new).and_return(app_patch_env)
           allow(app_patch_env).to receive(:patch)
+
+          allow(AppFeatureUpdate).to receive(:bulk_update)
         end
 
         describe 'scaling a process' do
@@ -1385,6 +1388,23 @@ module VCAP::CloudController
             expect do
               app_apply_manifest.apply(app_guid, message)
             end.to raise_error(CloudController::Errors::NotFound, "App with guid '#{app_guid}' not found")
+          end
+        end
+
+        describe 'updating app features' do
+          let(:message) { AppManifestMessage.create_from_yml({ features: { ssh: true } }) }
+          let(:manifest_features_update_message) { message.manifest_features_update_message }
+          let(:app) { AppModel.make }
+
+          it 'returns the app' do
+            expect(
+              app_apply_manifest.apply(app.guid, message)
+            ).to eq(app)
+          end
+
+          it 'calls AppFeatureUpdate.bulk_update with the correct arguments' do
+            app_apply_manifest.apply(app.guid, message)
+            expect(AppFeatureUpdate).to have_received(:bulk_update).with(app, manifest_features_update_message)
           end
         end
       end
