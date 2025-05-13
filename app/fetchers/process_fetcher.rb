@@ -9,6 +9,13 @@ module VCAP::CloudController
         [process, app, app.space]
       end
 
+      # Fetches all processes and their spaces for a list of process_guids
+      # @param process_guids [Array<String>] List of process GUIDs
+      # @return [Array<[ProcessModel, SpaceModel]>] Array of [process, space] pairs
+      def fetch_multiple(process_guids:)
+        ProcessModel.where(guid: process_guids).all.map { |process| [process, process.space] }
+      end
+
       def fetch(process_guid:)
         process = ProcessModel.where(guid: process_guid).first
         return nil unless process

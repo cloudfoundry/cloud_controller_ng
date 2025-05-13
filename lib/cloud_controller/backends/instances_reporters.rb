@@ -28,6 +28,7 @@ module VCAP::CloudController
     end
 
     delegate :number_of_starting_and_running_instances_for_processes, :instance_count_summary, to: :diego_reporter
+    delegate :stats_for_processes, to: :diego_stats_reporter
 
     private
 

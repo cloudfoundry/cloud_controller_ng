@@ -1,6 +1,7 @@
 require 'presenters/v3/paginated_list_presenter'
 require 'presenters/v3/process_presenter'
 require 'presenters/v3/process_stats_presenter'
+require 'presenters/v3/processes_stats_presenter'
 require 'cloud_controller/paging/pagination_options'
 require 'actions/process_delete'
 require 'fetchers/process_list_fetcher'
@@ -17,7 +18,7 @@ require 'cloud_controller/strategies/non_manifest_strategy'
 class ProcessesController < ApplicationController
   include AppSubResource
 
-  before_action :find_process_and_space, except: :index
+  before_action :find_process_and_space, except: %i[index bulk_stats]
   before_action :ensure_can_write, only: %i[update terminate scale]
 
   def index
@@ -104,6 +105,29 @@ class ProcessesController < ApplicationController
     add_warning_headers(warnings)
 
     render status: :ok, json: Presenters::V3::ProcessStatsPresenter.new(@process.type, process_stats)
+  end
+
+  def bulk_stats
+    process_guids = params[:process_guids].split(',')
+    return unprocessable!(['process_guids required']) if process_guids.blank?
+
+    logger.info("Bulk stats for processes: #{process_guids}")
+
+    # Fetch all processes and their spaces in one call
+    process_space_pairs = ProcessFetcher.fetch_multiple(process_guids:)
+    processes = process_space_pairs.select { |process, space| process && permission_queryer.can_read_from_space?(space.id, space.organization_id) }.map(&:first)
+
+    process_stats_results = instances_reporters.stats_for_processes(processes)
+
+    # Add warnings as headers for each process
+    process_stats_results.each_value do |(_stats, warnings)|
+      add_warning_headers(warnings)
+    end
+
+    # Prepare [process, stats] pairs directly
+    process_stats_pairs = process_stats_results.map { |process, (stats, _warnings)| [process, stats] }
+
+    render status: :ok, json: VCAP::CloudController::Presenters::V3::ProcessesStatsPresenter.new(process_stats_pairs).to_hash
   end
 
   private
