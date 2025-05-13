@@ -35,6 +35,8 @@ module VCAP::CloudController
           Repositories::OrganizationEventRepository.new.record_organization_delete_request(org, @user_audit_info, { recursive: true })
         end
       end
+
+      []
     end
 
     def timeout_error(dataset)

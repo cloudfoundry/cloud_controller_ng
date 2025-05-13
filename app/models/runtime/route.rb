@@ -263,6 +263,10 @@ module VCAP::CloudController
 
     def destroy_route_bindings
       errors = RouteBindingDelete.new.delete(route_binding_dataset)
+
+      quoted_table_name = RouteBinding.db.quote_identifier(RouteBinding.table_name)
+      errors.reject! { |e| e.is_a?(Sequel::NoExistingObject) && e.message.include?("DELETE FROM #{quoted_table_name}") }
+
       raise errors.first unless errors.empty?
     end
 
