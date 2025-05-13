@@ -585,7 +585,7 @@ GEM
     unicode-display_width (3.1.4)
       unicode-emoji (~> 4.0, >= 4.0.4)
     unicode-emoji (4.0.4)
-    uri (0.13.1)
+    uri (0.13.2)
     useragent (0.16.11)
     vhd (0.0.4)
       bit-struct
