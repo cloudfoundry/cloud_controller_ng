@@ -31,6 +31,142 @@ module VCAP::CloudController
         raise exception
       end
 
+      # Fetch stats for multiple processes, fetching desired_lrps, actual_lrps, and metrics in parallel
+      # @param processes [Array<Process>] List of process objects
+      # @return [Hash{Process=>[result, warnings]}] Hash mapping each process to its stats and warnings
+      def stats_for_processes(processes)
+        desired_lrps = nil
+        actual_lrps = nil
+        metrics_results = nil
+
+        logger.info('stats_for_processes.fetching_data.start')
+
+        threads = []
+        threads << Thread.new do
+          start_time = Time.now
+          desired_lrps = fetch_desired_lrps_parallel(processes)
+          logger.info('stats_for_processes.fetch_desired_lrps_parallel.time', duration: Time.now - start_time)
+        end
+        threads << Thread.new do
+          start_time = Time.now
+          actual_lrps = fetch_actual_lrps_parallel(processes)
+          logger.info('stats_for_processes.fetch_actual_lrps_parallel.time', duration: Time.now - start_time)
+        end
+        threads << Thread.new do
+          start_time = Time.now
+          metrics_results = fetch_metrics_for_processes(processes)
+          logger.info('stats_for_processes.fetch_metrics_for_processes.time', duration: Time.now - start_time)
+        end
+        threads.each(&:join)
+
+        logger.info('stats_for_processes.fetching_data.finished')
+
+        results = {}
+        processes.each do |process|
+          desired_lrp = desired_lrps[process.guid]
+          actual_lrp_list = actual_lrps[process.guid]
+          process_metrics = metrics_results[process.guid] || {}
+          warnings = []
+
+          # Prepare stats and quota_stats using formatted_process_stats and formatted_quota_stats
+          formatted_current_time = Time.now.to_datetime.rfc3339
+          log_cache_data = process_metrics.values # instance_id => ContainerMetricBatch
+
+          stats = formatted_process_stats(log_cache_data, formatted_current_time)
+          quota_stats = formatted_quota_stats(log_cache_data)
+          isolation_segment = desired_lrp.is_a?(Exception) ? nil : desired_lrp.PlacementTags.first
+
+          instance_stats = {}
+          lrp_instances = {}
+
+          if actual_lrp_list.is_a?(Exception)
+            warnings << actual_lrp_list.message
+            actual_lrp_list = []
+          end
+
+          actual_lrp_list.each do |actual_lrp|
+            idx = actual_lrp.actual_lrp_key.index
+
+            # if an LRP already exists with the same index use the one with the latest since value
+            if lrp_instances.include?(idx)
+              existing_lrp = lrp_instances[idx]
+              next if actual_lrp.since < existing_lrp.since
+            end
+
+            # Use build_info to construct the stats hash for this instance
+            lrp_state = LrpStateTranslator.translate_lrp_state(actual_lrp)
+            info = build_info(lrp_state, actual_lrp, process, stats, quota_stats, nil)
+            info[:isolation_segment] = isolation_segment unless isolation_segment.nil?
+            instance_stats[idx] = info
+            lrp_instances[idx] = actual_lrp
+          end
+
+          fill_unreported_instances_with_down_instances(instance_stats, process, flat: false)
+
+          results[process] = [instance_stats, warnings]
+        end
+
+        logger.info('stats_for_processes.success', results:)
+
+        results
+      end
+
+      # Fetch desired_lrps for a list of processes in parallel
+      # @param processes [Array<Process>] List of process objects
+      # @return [Hash{String=>DesiredLRP}] Hash mapping process.guid to desired_lrp or exception
+      def fetch_desired_lrps_parallel(processes)
+        desired_lrp_threads = {}
+        desired_lrps = {}
+        processes.each do |process|
+          desired_lrp_threads[process.guid] = Thread.new do
+            desired_lrps[process.guid] = bbs_instances_client.desired_lrp_instance(process)
+          rescue StandardError => e
+            desired_lrps[process.guid] = e
+          end
+        end
+        desired_lrp_threads.each_value(&:join)
+        desired_lrps
+      end
+
+      # Fetch actual_lrps for a list of processes in parallel
+      # @param processes [Array<Process>] List of process objects
+      # @return [Hash{String=>Array<ActualLRP>|Exception}] Hash mapping process.guid to actual_lrps or exception
+      def fetch_actual_lrps_parallel(processes)
+        actual_lrp_threads = {}
+        actual_lrps = {}
+        processes.each do |process|
+          actual_lrp_threads[process.guid] = Thread.new do
+            actual_lrps[process.guid] = bbs_instances_client.lrp_instances(process)
+          rescue StandardError => e
+            actual_lrps[process.guid] = e
+          end
+        end
+        actual_lrp_threads.each_value(&:join)
+        actual_lrps
+      end
+
+      # Fetches all metrics in parallel for a list of processes using app_guids as source_ids, then filters for the requested processes
+      # @param processes [Array<Process>] List of process objects
+      # @param time [String] The time for the instant query (must be a unix timestamp)
+      # @return [Hash{String=>Hash{String=>ContainerMetricBatch}}] Hash: process_id => instance_id => batch, filtered for requested processes
+      def fetch_metrics_for_processes(processes)
+        app_guids = processes.map(&:app_guid).uniq
+        process_guids = processes.map(&:guid)
+        # Get all metrics for the relevant app_guids
+        all_metrics = @logstats_client.container_metrics_from_promql(source_ids: app_guids)
+        # Merge all instance_hashes for each process_id across all source_ids
+        processes_metrics = {}
+        all_metrics.each_value do |process_hash|
+          process_hash.each do |process_id, instance_hash|
+            next unless process_guids.include?(process_id)
+
+            processes_metrics[process_id] ||= {}
+            processes_metrics[process_id].merge!(instance_hash)
+          end
+        end
+        processes_metrics
+      end
+
       private
 
       attr_reader :bbs_instances_client

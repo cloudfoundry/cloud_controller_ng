@@ -44,12 +44,61 @@ module Logcache
         map { |envelopes_by_instance| batch_metrics(source_guid, envelopes_by_instance) }
     end
 
+    # Alternative to container_metrics: fetches metrics using PromQL and returns a nested hash
+    # @param source_ids [Array<String>] The app GUIDs (source_ids)
+    # @return [Hash{String=>Hash{String=>Hash{String=>ContainerMetricBatch}}}]
+    #         Hash of metric batches: source_id => process_id => instance_id => batch
+    def container_metrics_from_promql(source_ids:)
+      start_time = Time.now
+      promql_response = @logcache_client.fetch_all_metrics_parallel(source_ids)
+      logger.info('container_metrics_from_promql', duration: Time.now - start_time)
+      # Structure: { source_id => { process_id => { instance_id => batch } } }
+      batches = Hash.new { |h, k| h[k] = Hash.new { |h2, k2| h2[k2] = {} } }
+
+      promql_response.each do |metric_name, result|
+        next unless result.respond_to?(:vector) && result.vector.respond_to?(:samples)
+
+        result.vector.samples.each do |sample|
+          source_id = sample.metric['source_id']
+          process_id = sample.metric['process_id']
+          instance_id = sample.metric['instance_id']
+          next unless source_id && process_id && instance_id
+
+          batches[source_id][process_id][instance_id] ||= ContainerMetricBatch.new
+          batch = batches[source_id][process_id][instance_id]
+          batch.instance_index = instance_id.to_i
+
+          value = sample.point.value
+          case metric_name
+          when 'cpu'
+            batch.cpu_percentage = value
+          when 'cpu_entitlement'
+            batch.cpu_entitlement_percentage = value
+          when 'memory'
+            batch.memory_bytes = value.to_i
+          when 'disk'
+            batch.disk_bytes = value.to_i
+          when 'log_rate'
+            batch.log_rate = value.to_i
+          when 'disk_quota'
+            batch.disk_bytes_quota = value.to_i
+          when 'memory_quota'
+            batch.memory_bytes_quota = value.to_i
+          when 'log_rate_limit'
+            batch.log_rate_limit = value.to_i
+          end
+        end
+      end
+
+      batches
+    end
+
     private
 
     def get_container_metrics(start_time:, end_time:, source_guid:)
-      promql_metrics = @logcache_client.fetch_memory_metrics([source_guid])
+      # promql_response = @logcache_client.fetch_all_metrics_parallel([source_guid])
 
-      logger.info("PromQL metrics for source_id #{source_guid}: #{promql_metrics}")
+      # logger.info("PromQL metrics for source_id #{source_guid}: #{promql_response}")
 
       @logcache_client.container_metrics(
         start_time: start_time,
