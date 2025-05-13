@@ -2200,5 +2200,43 @@ module VCAP::CloudController
         end
       end
     end
+
+    describe '#manifest_features_update_message' do
+      context 'when no features are specified' do
+        let(:parsed_yaml) do
+          { name: 'app' }
+        end
+
+        it 'does not set the features in the message' do
+          message = AppManifestMessage.create_from_yml(parsed_yaml)
+          expect(message).to be_valid
+          expect(message.manifest_features_update_message).not_to be_requested(:features)
+        end
+      end
+
+      context 'when features are specified' do
+        let(:parsed_yaml) do
+          { name: 'app', features: { ssh: true, 'service-binding-k8s': false } }
+        end
+
+        it 'returns a ManifestFeaturesUpdateMessage containing the features' do
+          message = AppManifestMessage.create_from_yml(parsed_yaml)
+          expect(message).to be_valid
+          expect(message.manifest_features_update_message.features).to eq({ ssh: true, 'service-binding-k8s': false })
+        end
+      end
+
+      context 'when an invalid feature is specified' do
+        let(:parsed_yaml) do
+          { features: { invalid_feature: true } }
+        end
+
+        it 'is invalid and contains the correct error message' do
+          message = AppManifestMessage.create_from_yml(parsed_yaml)
+          expect(message).not_to be_valid
+          expect(message.errors[:base]).to include('Features must be a map of valid feature names to booleans (true = enabled, false = disabled)')
+        end
+      end
+    end
   end
 end

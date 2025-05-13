@@ -4,6 +4,7 @@ require 'messages/manifest_process_update_message'
 require 'messages/manifest_buildpack_message'
 require 'messages/manifest_service_binding_create_message'
 require 'messages/manifest_routes_update_message'
+require 'messages/manifest_features_update_message'
 require 'messages/validators/metadata_validator'
 require 'cloud_controller/app_manifest/byte_converter'
 require 'models/helpers/health_check_types'
@@ -43,6 +44,7 @@ module VCAP::CloudController
       stack
       timeout
       cnb_credentials
+      features
     ]
 
     HEALTH_CHECK_TYPE_MAPPING = { HealthCheckTypes::NONE => HealthCheckTypes::PROCESS }.freeze
@@ -82,6 +84,7 @@ module VCAP::CloudController
         record.requested?(:random_route) ||
         record.requested?(:default_route)
     }
+    validate :validate_features!, if: ->(record) { record.requested?(:features) }
 
     def initialize(original_yaml, attrs={})
       super(attrs)
@@ -114,6 +117,10 @@ module VCAP::CloudController
 
     def manifest_routes_update_message
       @manifest_routes_update_message ||= ManifestRoutesUpdateMessage.new(routes_attribute_mapping)
+    end
+
+    def manifest_features_update_message
+      @manifest_features_update_message ||= ManifestFeaturesUpdateMessage.new(features_attribute_mapping)
     end
 
     def audit_hash
@@ -295,6 +302,12 @@ module VCAP::CloudController
       mapping
     end
 
+    def features_attribute_mapping
+      mapping = {}
+      mapping[:features] = features if requested?(:features)
+      mapping
+    end
+
     def should_autodetect?(buildpack)
       buildpack == 'default' || buildpack == 'null' || buildpack.nil?
     end
@@ -462,6 +475,13 @@ module VCAP::CloudController
       return unless requested?(:docker) && (requested?(:buildpack) || requested?(:buildpacks))
 
       errors.add(:base, 'Cannot specify both buildpack(s) and docker keys')
+    end
+
+    def validate_features!
+      manifest_features_update_message.valid?
+      manifest_features_update_message.errors.full_messages.each do |error_message|
+        errors.add(:base, error_message)
+      end
     end
 
     def add_process_error!(error_message, type)
