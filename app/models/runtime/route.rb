@@ -194,8 +194,8 @@ module VCAP::CloudController
       }
     end
 
-    def app_spaces_no_match?(app)
-      app.space != space && shared_spaces.exclude?(app.space)
+    def available_in_space?(other_space)
+      other_space == space || shared_spaces.include?(other_space)
     end
 
     delegate :in_suspended_org?, to: :space

@@ -1578,13 +1578,13 @@ module VCAP::CloudController
         let!(:app) { AppModel.make }
         let!(:route) { Route.make(host: 'potato', domain: domain, path: '/some-path') }
 
-        it 'no space match and not shared and returns true' do
-          expect(route.app_spaces_no_match?(app)).to be(true)
+        it 'no space match and not shared and returns false' do
+          expect(route.available_in_space?(app.space)).to be(false)
         end
 
-        it 'match space and returns false' do
+        it 'match space and returns true' do
           route.space = app.space
-          expect(route.app_spaces_no_match?(app)).to be(false)
+          expect(route.available_in_space?(app.space)).to be(true)
         end
       end
 
@@ -1595,8 +1595,8 @@ module VCAP::CloudController
         let!(:route) { Route.make(host: 'potato', domain: domain, path: '/some-path') }
         let!(:shared_route) { route_share.create(route, [app.space], user_audit_info) }
 
-        it 'shared space match and returns false' do
-          expect(route.app_spaces_no_match?(app)).to be(false)
+        it 'shared space match and returns true' do
+          expect(route.available_in_space?(app.space)).to be(true)
         end
       end
     end

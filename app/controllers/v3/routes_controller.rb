@@ -362,7 +362,7 @@ class RoutesController < ApplicationController
   end
 
   def validate_app_spaces!(apps_hash, route)
-    return unless apps_hash.values.any? { |app| route.app_spaces_no_match?(app) }
+    return unless apps_hash.values.any? { |app| !route.available_in_space?(app.space) }
 
     unprocessable!("Routes destinations must be in either the route's space or the route's shared spaces")
   end
