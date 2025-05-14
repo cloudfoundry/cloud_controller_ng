@@ -92,7 +92,7 @@ module VCAP::CloudController
               domain: existing_domain,
               manifest_triggered: true
             )
-          elsif route.space.guid != app.space_guid
+          elsif !route.available_in_space?(app.space)
             raise InvalidRoute.new('Routes cannot be mapped to destinations in different spaces')
           elsif manifest_route[:options] && route[:options] != manifest_route[:options]
             # remove nil values from options
