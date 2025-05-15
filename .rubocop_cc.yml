@@ -21,7 +21,8 @@ AllCops:
     - errors/**/*
     - lib/diego/bbs/models/**/*
     - lib/locket/**/*
-    - lib/loggregator-api/v2/**/*
+    - lib/loggregator-api/**/*
+    - lib/logcache/*_pb.rb
     - vendor/bundle/**/*
 Layout/DotPosition:
   EnforcedStyle: trailing
