@@ -1,5 +1,5 @@
-require 'logcache/logcache_egress_services_pb'
-require 'logcache/v2/envelope_pb'
+require 'logcache/egress_services_pb'
+require 'loggregator-api/v2/envelope_pb'
 
 module Logcache
   class Client
