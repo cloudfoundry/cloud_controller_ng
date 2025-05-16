@@ -4,7 +4,7 @@ module VCAP::CloudController::Presenters::V3
   class AppServiceBindingK8sFeaturePresenter < BasePresenter
     def to_hash
       {
-        name: AppFeaturesController::SERVICE_BINDING_K8S_FEATURE,
+        name: VCAP::CloudController::AppFeatures::SERVICE_BINDING_K8S_FEATURE,
         description: 'Enable k8s service bindings for the app',
         enabled: app.service_binding_k8s_enabled
       }
