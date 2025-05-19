@@ -175,6 +175,15 @@ module VCAP::CloudController
 
               expect(result).not_to eq(unencrypted_string)
             end
+
+            it 'raises an EncryptorError' do
+              allow(Encryptor).to receive(:current_encryption_key_label).and_return('foo')
+              encrypted_string = Encryptor.encrypt(unencrypted_string, salt)
+
+              expect do
+                Encryptor.decrypt(encrypted_string, salt, label: 'bar', iterations: encryption_iterations)
+              end.to raise_error(VCAP::CloudController::Encryptor::EncryptorError, %r{Encryption/Decryption failed: })
+            end
           end
         end
       end
