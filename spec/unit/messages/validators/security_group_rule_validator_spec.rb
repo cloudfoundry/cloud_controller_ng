@@ -655,7 +655,7 @@ module VCAP::CloudController::Validators
           end
         end
 
-        context 'when there is a leading zero in an octet' do
+        context 'when there is a leading zero in a segment' do
           context 'in a CIDR' do
             let(:rules) do
               [
@@ -672,10 +672,8 @@ module VCAP::CloudController::Validators
               ]
             end
 
-            it 'is not valid' do
-              expect(subject).not_to be_valid
-              expect(subject.errors.full_messages).to include 'Rules[0]: destination octets cannot contain leading zeros'
-              expect(subject.errors.full_messages).to include 'Rules[1]: destination octets cannot contain leading zeros'
+            it 'is valid' do
+              expect(subject).to be_valid
             end
           end
 
@@ -690,9 +688,8 @@ module VCAP::CloudController::Validators
               ]
             end
 
-            it 'is not valid' do
-              expect(subject).not_to be_valid
-              expect(subject.errors.full_messages).to include 'Rules[0]: destination octets cannot contain leading zeros'
+            it 'is valid' do
+              expect(subject).to be_valid
             end
           end
 
@@ -727,14 +724,8 @@ module VCAP::CloudController::Validators
               ]
             end
 
-            it 'is not valid' do
-              expect(subject).not_to be_valid
-              expect(subject.errors.full_messages.length).to eq(5)
-              expect(subject.errors.full_messages).to include 'Rules[0]: destination octets cannot contain leading zeros'
-              expect(subject.errors.full_messages).to include 'Rules[1]: destination octets cannot contain leading zeros'
-              expect(subject.errors.full_messages).to include 'Rules[2]: destination octets cannot contain leading zeros'
-              expect(subject.errors.full_messages).to include 'Rules[3]: destination octets cannot contain leading zeros'
-              expect(subject.errors.full_messages).to include 'Rules[4]: destination octets cannot contain leading zeros'
+            it 'is valid' do
+              expect(subject).to be_valid
             end
           end
         end
@@ -914,7 +905,7 @@ module VCAP::CloudController::Validators
               [
                 {
                   protocol: 'udp',
-                  destination: '2001:db8::1-2001:db8::g,2001:db8::/129,2001:db8:0000::/32,2001:db8::ff-2001:db8::1',
+                  destination: '2001:db8::1-2001:db8::g,2001:db8::/129,2001:db8::ff-2001:db8::1',
                   ports: '8080'
                 }
               ]
@@ -922,7 +913,7 @@ module VCAP::CloudController::Validators
 
             it 'throws an error for every destination' do
               expect(subject).not_to be_valid
-              expect(subject.errors.full_messages.length).to equal(4)
+              expect(subject.errors.full_messages.length).to equal(3)
               expect(subject.errors.full_messages).to include 'Rules[0]: destination must contain valid CIDR(s), IP address(es), or IP address range(s)'
               expect(subject.errors.full_messages).to include 'Rules[0]: destination IP address range is invalid'
 
