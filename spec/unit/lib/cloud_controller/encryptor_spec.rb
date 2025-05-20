@@ -155,7 +155,7 @@ module VCAP::CloudController
 
               result = begin
                 Encryptor.decrypt(encrypted_string, salt, iterations: encryption_iterations)
-              rescue OpenSSL::Cipher::CipherError => e
+              rescue VCAP::CloudController::Encryptor::EncryptorError => e
                 e.message
               end
 
@@ -169,7 +169,7 @@ module VCAP::CloudController
 
               result = begin
                 Encryptor.decrypt(encrypted_string, salt, label: 'death', iterations: encryption_iterations)
-              rescue OpenSSL::Cipher::CipherError => e
+              rescue VCAP::CloudController::Encryptor::EncryptorError => e
                 e.message
               end
 
