@@ -378,7 +378,7 @@ GEM
     puma (6.6.0)
       nio4r (~> 2.0)
     racc (1.8.1)
-    rack (2.2.14)
+    rack (2.2.15)
     rack-protection (3.2.0)
       base64 (>= 0.1.0)
       rack (~> 2.2, >= 2.2.4)
@@ -489,12 +489,12 @@ GEM
     rubocop-factory_bot (2.27.1)
       lint_roller (~> 1.1)
       rubocop (~> 1.72, >= 1.72.1)
-    rubocop-rails (2.31.0)
+    rubocop-rails (2.32.0)
       activesupport (>= 4.2.0)
       lint_roller (~> 1.1)
       rack (>= 1.1)
       rubocop (>= 1.75.0, < 2.0)
-      rubocop-ast (>= 1.38.0, < 2.0)
+      rubocop-ast (>= 1.44.0, < 2.0)
     rubocop-rspec (3.6.0)
       lint_roller (~> 1.1)
       rubocop (~> 1.72, >= 1.72.1)
@@ -675,7 +675,7 @@ DEPENDENCIES
   rubocop (~> 1.75.6)
   rubocop-capybara
   rubocop-factory_bot
-  rubocop-rails (~> 2.31)
+  rubocop-rails (~> 2.32)
   rubocop-rspec (~> 3.6)
   rubocop-rspec_rails
   rubocop-sequel (~> 0.4.1)
