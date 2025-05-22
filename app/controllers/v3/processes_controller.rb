@@ -111,8 +111,6 @@ class ProcessesController < ApplicationController
     process_guids = params[:process_guids].split(',')
     return unprocessable!(['process_guids required']) if process_guids.blank?
 
-    logger.info("Bulk stats for processes: #{process_guids}")
-
     # Fetch all processes and their spaces in one call
     process_space_pairs = ProcessFetcher.fetch_multiple(process_guids:)
     processes = process_space_pairs.select { |process, space| process && permission_queryer.can_read_from_space?(space.id, space.organization_id) }.map(&:first)

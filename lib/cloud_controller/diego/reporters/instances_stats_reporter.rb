@@ -44,8 +44,12 @@ module VCAP::CloudController
         threads = []
         threads << Thread.new do
           start_time = Time.now
-          desired_lrps = fetch_desired_lrps_parallel(processes)
-          logger.info('stats_for_processes.fetch_desired_lrps_parallel.time', duration: Time.now - start_time)
+          desired_lrps_list = bbs_instances_client.desired_lrp_instances_for_processes(processes)
+          logger.info('stats_for_processes.fetch_desired_lrps.time', duration: Time.now - start_time)
+          desired_lrps = {}
+          desired_lrps_list.each do |dlrp|
+            desired_lrps[ProcessGuid.cc_process_guid(dlrp.process_guid)] = dlrp
+          end
         end
         threads << Thread.new do
           start_time = Time.now
@@ -74,7 +78,7 @@ module VCAP::CloudController
 
           stats = formatted_process_stats(log_cache_data, formatted_current_time)
           quota_stats = formatted_quota_stats(log_cache_data)
-          isolation_segment = desired_lrp.is_a?(Exception) ? nil : desired_lrp.PlacementTags.first
+          isolation_segment = desired_lrp.nil? ? nil : desired_lrp.PlacementTags.first
 
           instance_stats = {}
           lrp_instances = {}
@@ -109,23 +113,6 @@ module VCAP::CloudController
         logger.info('stats_for_processes.success', results:)
 
         results
-      end
-
-      # Fetch desired_lrps for a list of processes in parallel
-      # @param processes [Array<Process>] List of process objects
-      # @return [Hash{String=>DesiredLRP}] Hash mapping process.guid to desired_lrp or exception
-      def fetch_desired_lrps_parallel(processes)
-        desired_lrp_threads = {}
-        desired_lrps = {}
-        processes.each do |process|
-          desired_lrp_threads[process.guid] = Thread.new do
-            desired_lrps[process.guid] = bbs_instances_client.desired_lrp_instance(process)
-          rescue StandardError => e
-            desired_lrps[process.guid] = e
-          end
-        end
-        desired_lrp_threads.each_value(&:join)
-        desired_lrps
       end
 
       # Fetch actual_lrps for a list of processes in parallel

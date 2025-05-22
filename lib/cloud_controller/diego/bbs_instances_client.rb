@@ -28,6 +28,12 @@ module VCAP::CloudController
         response.desired_lrp
       end
 
+      def desired_lrp_instances_for_processes(processes)
+        process_guids = processes.map { |process| ProcessGuid.from_process(process) }
+        response = @client.desired_lrps_by_process_guids(process_guids)
+        response.desired_lrps
+      end
+
       private
 
       def handle_diego_errors(process_guid)

@@ -7,6 +7,7 @@ module Diego
     LIST_TASKS                   = '/v1/tasks/list.r2'.freeze
     TASK_BY_GUID                 = '/v1/tasks/get_by_task_guid.r2'.freeze
     DESIRE_LRP                   = '/v1/desired_lrp/desire.r2'.freeze
+    DESIRED_LRPS                 = '/v1/desired_lrps/list.r3'.freeze
     DESIRED_LRP_BY_PROCESS_GUID  = '/v1/desired_lrps/get_by_process_guid.r2'.freeze
     DESIRED_LRP_SCHEDULING_INFOS = '/v1/desired_lrp_scheduling_infos/list'.freeze
     UPDATE_DESIRED_LRP           = '/v1/desired_lrp/update'.freeze
