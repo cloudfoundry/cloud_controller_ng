@@ -97,6 +97,17 @@ module Diego
       protobuf_decode!(response.body, Bbs::Models::DesiredLRPResponse)
     end
 
+    def desired_lrps_by_process_guids(process_guids)
+      request = protobuf_encode!({ process_guids: }, Bbs::Models::DesiredLRPsRequest)
+
+      response = with_request_error_handling do
+        client.post(Routes::DESIRED_LRPS, request, headers)
+      end
+
+      validate_status_200!(response)
+      protobuf_decode!(response.body, Bbs::Models::DesiredLRPsResponse)
+    end
+
     def update_desired_lrp(process_guid, lrp_update)
       request = protobuf_encode!({ process_guid: process_guid, update: lrp_update }, Bbs::Models::UpdateDesiredLRPRequest)
 
