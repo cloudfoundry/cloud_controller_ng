@@ -26,7 +26,8 @@ module VCAP::CloudController
                AppApplyManifest::ServiceBindingError,
                SidecarCreate::InvalidSidecar,
                SidecarUpdate::InvalidSidecar,
-               ProcessScale::SidecarMemoryLessThanProcessMemory => e
+               ProcessScale::SidecarMemoryLessThanProcessMemory,
+               AppFeatureUpdate::InvalidCombination => e
 
           app_name = AppModel.find(guid: app_guid)&.name
           error_message = app_name ? "For application '#{app_name}': #{e.message}" : e.message

@@ -93,6 +93,12 @@ RSpec.describe 'App Manifests' do
               'lifecycle' => 'buildpack',
               'buildpacks' => [buildpack.name, buildpack2.name],
               'stack' => buildpack.stack,
+              'features' => {
+                'ssh' => true,
+                'revisions' => true,
+                'service-binding-k8s' => false,
+                'file-based-vcap-services' => false
+              },
               'services' => [service_binding.service_instance_name, service_binding2.service_instance_name],
               'routes' => [
                 {
@@ -199,6 +205,12 @@ RSpec.describe 'App Manifests' do
                 'image' => docker_package.image,
                 'username' => 'xXxMyL1ttlePwnyxXx'
               },
+              'features' => {
+                'ssh' => true,
+                'revisions' => true,
+                'service-binding-k8s' => false,
+                'file-based-vcap-services' => false
+              },
               'services' => [service_binding.service_instance_name, service_binding2.service_instance_name],
               'routes' => [
                 {
@@ -274,6 +286,12 @@ RSpec.describe 'App Manifests' do
               'name' => simple_app.name,
               'lifecycle' => 'buildpack',
               'stack' => 'itaewon_class_best_kdrama',
+              'features' => {
+                'ssh' => true,
+                'revisions' => true,
+                'service-binding-k8s' => false,
+                'file-based-vcap-services' => false
+              },
               'routes' => [
                 {
                   'route' => "#{route.host}.#{route.domain.name}",

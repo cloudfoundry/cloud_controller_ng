@@ -16,7 +16,13 @@ RSpec.describe AppManifestsController, type: :controller do
           {
             'name' => app_model.name,
             'lifecycle' => 'buildpack',
-            'stack' => app_model.lifecycle_data.stack
+            'stack' => app_model.lifecycle_data.stack,
+            'features' => {
+              'ssh' => true,
+              'revisions' => true,
+              'service-binding-k8s' => false,
+              'file-based-vcap-services' => false
+            }
           }
         ]
       }.to_yaml
