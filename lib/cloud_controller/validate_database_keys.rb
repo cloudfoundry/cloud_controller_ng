@@ -56,7 +56,8 @@ module VCAP::CloudController
               iterations: sentinel_model.encryption_iterations
             )
           # A failed decryption occasionally results in a CipherError: bad decrypt instead of a garbled string
-          rescue OpenSSL::Cipher::CipherError
+          # This is now caught inside Encryptor and re-raised as EncryptorError
+          rescue VCAP::CloudController::Encryptor::EncryptorError
             labels_with_changed_keys << label_string
             next
           end

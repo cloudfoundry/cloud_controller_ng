@@ -3406,7 +3406,7 @@ RSpec.describe 'Apps' do
 
       it 'fails to decrypt the environment variables and returns a 500 error' do
         app_model # ensure that app model is created before run_cipher is mocked to throw an error
-        allow(VCAP::CloudController::Encryptor).to receive(:run_cipher).and_raise(OpenSSL::Cipher::CipherError)
+        allow(VCAP::CloudController::Encryptor).to receive(:run_cipher).and_raise(VCAP::CloudController::Encryptor::EncryptorError)
         api_call.call(admin_headers)
 
         expect(last_response).to have_status_code(500)

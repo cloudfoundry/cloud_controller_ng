@@ -39,7 +39,7 @@ RSpec.describe ApplicationController, type: :controller do
     end
 
     def key_derivation_error
-      raise OpenSSL::Cipher::CipherError
+      raise VCAP::CloudController::Encryptor::EncryptorError
     end
 
     def db_disconnect_error
@@ -334,7 +334,7 @@ RSpec.describe ApplicationController, type: :controller do
       end
     end
 
-    it 'rescues from OpenSSL::Cipher::CipherError and renders an error presenter' do
+    it 'rescues from EncryptorError and renders an error presenter' do
       get :key_derivation_error
       expect(response).to have_http_status(:internal_server_error)
       expect(response).to have_error_message(/Error while processing encrypted data/)
