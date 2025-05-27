@@ -38,10 +38,12 @@ jobs:
 
 app_usage_events:
   cutoff_age_in_days: 31
+  keep_unprocessed_records: false
   threshold_for_keeping_unprocessed_records: 5000000
 
 service_usage_events:
   cutoff_age_in_days: 31
+  keep_unprocessed_records: false
   threshold_for_keeping_unprocessed_records: 5000000
 
 audit_events:

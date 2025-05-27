@@ -18,6 +18,7 @@ module VCAP::CloudController
           },
           app_usage_events: {
             cutoff_age_in_days: 1,
+            keep_unprocessed_records: true,
             threshold_for_keeping_unprocessed_records: 5_000_000
           },
           audit_events: { cutoff_age_in_days: 3 },
@@ -26,6 +27,7 @@ module VCAP::CloudController
           service_operations_initial_cleanup: { frequency_in_seconds: 600 },
           service_usage_events: {
             cutoff_age_in_days: 5,
+            keep_unprocessed_records: true,
             threshold_for_keeping_unprocessed_records: 5_000_000
           },
           completed_tasks: { cutoff_age_in_days: 6 },
@@ -67,7 +69,7 @@ module VCAP::CloudController
 
         expect(clock).to receive(:schedule_daily_job) do |args, &block|
           expect(args).to eql(name: 'app_usage_events', at: '18:00', priority: 0)
-          expect(Jobs::Runtime::AppUsageEventsCleanup).to receive(:new).with(1, 5_000_000).and_call_original
+          expect(Jobs::Runtime::AppUsageEventsCleanup).to receive(:new).with(1, true, 5_000_000).and_call_original
           expect(block.call).to be_instance_of(Jobs::Runtime::AppUsageEventsCleanup)
         end
 
@@ -79,7 +81,7 @@ module VCAP::CloudController
 
         expect(clock).to receive(:schedule_daily_job) do |args, &block|
           expect(args).to eql(name: 'service_usage_events', at: '22:00', priority: 0)
-          expect(Jobs::Services::ServiceUsageEventsCleanup).to receive(:new).with(5, 5_000_000).and_call_original
+          expect(Jobs::Services::ServiceUsageEventsCleanup).to receive(:new).with(5, true, 5_000_000).and_call_original
           expect(block.call).to be_instance_of(Jobs::Services::ServiceUsageEventsCleanup)
         end
 
