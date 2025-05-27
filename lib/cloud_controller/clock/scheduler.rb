@@ -6,10 +6,12 @@ module VCAP::CloudController
   class Scheduler
     CLEANUPS = [
       { name: 'app_usage_events', class: Jobs::Runtime::AppUsageEventsCleanup, time: '18:00',
-        arg_from_config: [%i[app_usage_events cutoff_age_in_days], %i[app_usage_events threshold_for_keeping_unprocessed_records]] },
+        arg_from_config: [%i[app_usage_events cutoff_age_in_days], %i[app_usage_events keep_unprocessed_records],
+                          %i[app_usage_events threshold_for_keeping_unprocessed_records]] },
       { name: 'audit_events', class: Jobs::Runtime::EventsCleanup, time: '20:00', arg_from_config: %i[audit_events cutoff_age_in_days] },
       { name: 'service_usage_events', class: Jobs::Services::ServiceUsageEventsCleanup, time: '22:00',
-        arg_from_config: [%i[service_usage_events cutoff_age_in_days], %i[service_usage_events threshold_for_keeping_unprocessed_records]] },
+        arg_from_config: [%i[service_usage_events cutoff_age_in_days], %i[service_usage_events keep_unprocessed_records],
+                          %i[service_usage_events threshold_for_keeping_unprocessed_records]] },
       { name: 'completed_tasks', class: Jobs::Runtime::PruneCompletedTasks, time: '23:00', arg_from_config: %i[completed_tasks cutoff_age_in_days] },
       { name: 'expired_blob_cleanup', class: Jobs::Runtime::ExpiredBlobCleanup, time: '00:00' },
       { name: 'expired_resource_cleanup', class: Jobs::Runtime::ExpiredResourceCleanup, time: '00:30' },

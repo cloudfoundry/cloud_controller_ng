@@ -157,6 +157,7 @@ module VCAP::CloudController
       describe '#delete_events_older_than' do
         let!(:service_instance) { ManagedServiceInstance.make }
         let(:cutoff_age_in_days) { 1 }
+        let(:keep_unprocessed_records) { true }
         let(:threshold_for_keeping_unprocessed_records) { 5_000_000 }
 
         before do
@@ -175,7 +176,7 @@ module VCAP::CloudController
           new_event = repository.create_from_service_instance(service_instance, 'SOME-STATE')
 
           expect do
-            repository.delete_events_older_than(cutoff_age_in_days, threshold_for_keeping_unprocessed_records)
+            repository.delete_events_older_than(cutoff_age_in_days, keep_unprocessed_records, threshold_for_keeping_unprocessed_records)
           end.to change(ServiceUsageEvent, :count).to(1)
 
           expect(ServiceUsageEvent.last).to eq(new_event.reload)
@@ -183,7 +184,7 @@ module VCAP::CloudController
 
         it 'keeps the last record even if before the cutoff age' do
           expect do
-            repository.delete_events_older_than(cutoff_age_in_days, threshold_for_keeping_unprocessed_records)
+            repository.delete_events_older_than(cutoff_age_in_days, keep_unprocessed_records, threshold_for_keeping_unprocessed_records)
           end.to change(ServiceUsageEvent, :count).to(1)
 
           expect(ServiceUsageEvent.last.created_at).to be < cutoff_age_in_days.days.ago

@@ -17,6 +17,7 @@ module VCAP::CloudController
             },
             app_usage_events: {
               cutoff_age_in_days: Integer,
+              keep_unprocessed_records: bool,
               threshold_for_keeping_unprocessed_records: Integer
             },
             audit_events: {
@@ -172,6 +173,7 @@ module VCAP::CloudController
 
             service_usage_events: {
               cutoff_age_in_days: Integer,
+              keep_unprocessed_records: bool,
               threshold_for_keeping_unprocessed_records: Integer
             },
             default_app_ssh_access: bool,
