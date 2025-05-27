@@ -36,12 +36,20 @@ module Logcache
         end
       end
 
+      grouped_batches = Hash.new { |h, k| h[k] = [] }
+
       final_envelopes.
-        select { |e| has_container_metrics_fields?(e) && logcache_filter.call(e) }.
-        uniq { |e| e.gauge.metrics.keys << e.instance_id }.
-        sort_by(&:instance_id).
-        chunk(&:instance_id).
-        map { |envelopes_by_instance| batch_metrics(source_guid, envelopes_by_instance) }
+        select { |e| has_container_metrics_fields?(e) && logcache_filter.call(e) && e.tags['process_id'] }.
+        sort_by { |e| [e.tags['process_id'], e.instance_id] }.
+        chunk { |e| [e.tags['process_id'], e.instance_id] }.
+        each do |(process_id, _instance_id), envelopes_by_instance|
+          # Ensure envelopes are sorted by timestamp so the most recent value is last
+          sorted_envelopes = envelopes_by_instance.sort_by(&:timestamp)
+          batch = batch_metrics(source_guid, sorted_envelopes)
+          grouped_batches[process_id] << batch
+        end
+
+      grouped_batches
     end
 
     # Alternative to container_metrics: fetches metrics using PromQL and returns a nested hash
@@ -129,9 +137,9 @@ module Logcache
 
     def batch_metrics(_source_guid, envelopes_by_instance)
       metric_batch = ContainerMetricBatch.new
-      metric_batch.instance_index = envelopes_by_instance.first.to_i
+      metric_batch.instance_index = envelopes_by_instance.first.instance_id.to_i
 
-      envelopes_by_instance.second.each do |e|
+      envelopes_by_instance.each do |e|
         # rubocop seems to think that there is a 'key?' method
         # on envelope.gauge.metrics - but it does not
         # rubocop:disable Style/PreferredHashMethods
