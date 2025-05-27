@@ -35,7 +35,6 @@ module VCAP::CloudController
       # @param processes [Array<Process>] List of process objects
       # @return [Hash{Process=>[result, warnings]}] Hash mapping each process to its stats and warnings
       def stats_for_processes(processes)
-        desired_lrps = nil
         actual_lrps = nil
         metrics_results = nil
 
@@ -44,41 +43,33 @@ module VCAP::CloudController
         threads = []
         threads << Thread.new do
           start_time = Time.now
-          desired_lrps_list = bbs_instances_client.desired_lrp_instances_for_processes(processes)
-          logger.info('stats_for_processes.fetch_desired_lrps.time', duration: Time.now - start_time)
-          desired_lrps = {}
-          desired_lrps_list.each do |dlrp|
-            desired_lrps[ProcessGuid.cc_process_guid(dlrp.process_guid)] = dlrp
-          end
-        end
-        threads << Thread.new do
-          start_time = Time.now
           actual_lrps = fetch_actual_lrps_parallel(processes)
           logger.info('stats_for_processes.fetch_actual_lrps_parallel.time', duration: Time.now - start_time)
         end
         threads << Thread.new do
           start_time = Time.now
-          metrics_results = fetch_metrics_for_processes(processes)
+          metrics_results = envelopes_for_app(processes.first.app_guid)
           logger.info('stats_for_processes.fetch_metrics_for_processes.time', duration: Time.now - start_time)
         end
         threads.each(&:join)
 
         logger.info('stats_for_processes.fetching_data.finished')
 
+        # Unpack the result of envelopes_for_app
+        log_cache_data, log_cache_errors = metrics_results
+
         results = {}
         processes.each do |process|
-          desired_lrp = desired_lrps[process.guid]
           actual_lrp_list = actual_lrps[process.guid]
-          process_metrics = metrics_results[process.guid] || {}
+          process_metrics = log_cache_data[process.guid] || []
           warnings = []
 
           # Prepare stats and quota_stats using formatted_process_stats and formatted_quota_stats
           formatted_current_time = Time.now.to_datetime.rfc3339
-          log_cache_data = process_metrics.values # instance_id => ContainerMetricBatch
 
-          stats = formatted_process_stats(log_cache_data, formatted_current_time)
-          quota_stats = formatted_quota_stats(log_cache_data)
-          isolation_segment = desired_lrp.nil? ? nil : desired_lrp.PlacementTags.first
+          stats = formatted_process_stats(process_metrics, formatted_current_time)
+          quota_stats = formatted_quota_stats(process_metrics)
+          isolation_segment = IsolationSegmentSelector.for_space(process.space)
 
           instance_stats = {}
           lrp_instances = {}
@@ -99,7 +90,7 @@ module VCAP::CloudController
 
             # Use build_info to construct the stats hash for this instance
             lrp_state = LrpStateTranslator.translate_lrp_state(actual_lrp)
-            info = build_info(lrp_state, actual_lrp, process, stats, quota_stats, nil)
+            info = build_info(lrp_state, actual_lrp, process, stats, quota_stats, log_cache_errors)
             info[:isolation_segment] = isolation_segment unless isolation_segment.nil?
             instance_stats[idx] = info
             lrp_instances[idx] = actual_lrp
@@ -160,8 +151,8 @@ module VCAP::CloudController
 
       def get_stats(desired_lrp, process)
         log_cache_data, log_cache_errors = envelopes(desired_lrp, process)
-        stats = formatted_process_stats(log_cache_data, Time.now.to_datetime.rfc3339)
-        quota_stats = formatted_quota_stats(log_cache_data)
+        stats = formatted_process_stats(log_cache_data[process.guid], Time.now.to_datetime.rfc3339)
+        quota_stats = formatted_quota_stats(log_cache_data[process.guid])
         isolation_segment = desired_lrp.PlacementTags.first
         [log_cache_errors, stats, quota_stats, isolation_segment]
       end
@@ -285,6 +276,27 @@ module VCAP::CloudController
         [@logstats_client.container_metrics(
           source_guid: source_guid,
           logcache_filter: filter
+        ), nil]
+      rescue GRPC::BadStatus, CloudController::Errors::ApiError => e
+        logger.error('stats_for_app.error', error: e.message, backtrace: e.backtrace.join("\n"))
+        [[], 'Stats server temporarily unavailable.']
+      end
+
+      # Returns a hash mapping process_id to an array of ContainerMetricBatch objects for each instance of the process.
+      # Example return value:
+      # {
+      #   "process_id_1" => [
+      #     #<ContainerMetricBatch:0x... @instance_index=0, @cpu_percentage=..., ...>,
+      #     #<ContainerMetricBatch:0x... @instance_index=1, @cpu_percentage=..., ...>
+      #   ],
+      #   "process_id_2" => [
+      #     #<ContainerMetricBatch:0x... @instance_index=0, @cpu_percentage=..., ...>
+      #   ]
+      # }
+      def envelopes_for_app(app_guid)
+        [@logstats_client.container_metrics(
+          source_guid: app_guid,
+          logcache_filter: ->(_) { true }
         ), nil]
       rescue GRPC::BadStatus, CloudController::Errors::ApiError => e
         logger.error('stats_for_app.error', error: e.message, backtrace: e.backtrace.join("\n"))
