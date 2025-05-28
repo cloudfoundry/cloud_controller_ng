@@ -441,15 +441,15 @@ GEM
     rexml (3.4.1)
     roodi (5.0.0)
       ruby_parser (~> 3.2, >= 3.2.2)
-    rspec (3.13.0)
+    rspec (3.13.1)
       rspec-core (~> 3.13.0)
       rspec-expectations (~> 3.13.0)
       rspec-mocks (~> 3.13.0)
     rspec-collection_matchers (1.2.1)
       rspec-expectations (>= 2.99.0.beta1)
-    rspec-core (3.13.3)
+    rspec-core (3.13.4)
       rspec-support (~> 3.13.0)
-    rspec-expectations (3.13.4)
+    rspec-expectations (3.13.5)
       diff-lcs (>= 1.2.0, < 2.0)
       rspec-support (~> 3.13.0)
     rspec-instafail (1.0.0)
@@ -457,7 +457,7 @@ GEM
     rspec-its (2.0.0)
       rspec-core (>= 3.13.0)
       rspec-expectations (>= 3.13.0)
-    rspec-mocks (3.13.3)
+    rspec-mocks (3.13.5)
       diff-lcs (>= 1.2.0, < 2.0)
       rspec-support (~> 3.13.0)
     rspec-rails (8.0.0)
@@ -468,7 +468,7 @@ GEM
       rspec-expectations (~> 3.13)
       rspec-mocks (~> 3.13)
       rspec-support (~> 3.13)
-    rspec-support (3.13.3)
+    rspec-support (3.13.4)
     rspec-wait (1.0.1)
       rspec (>= 3.4)
     rspec_api_documentation (6.1.0)
@@ -671,7 +671,7 @@ DEPENDENCIES
   rake
   redis
   roodi
-  rspec (~> 3.13.0)
+  rspec (~> 3.13.1)
   rspec-collection_matchers
   rspec-instafail
   rspec-its
