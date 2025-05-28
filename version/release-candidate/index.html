@@ -19551,7 +19551,7 @@ and unweighted destinations for a route is not allowed.</p>
 </tbody></table>
 <h3 id="update-a-destination-protocol-for-a-route">Update a destination protocol for a route</h3>
 <div class="highlight"><pre class="highlight plaintext"><code>Example Request
-</code></pre></div><div class="highlight"><pre class="highlight shell"><code>curl <span class="s2">"https://api.example.org/v3/routes/[guid]/destinations/[guid]"</span> <span class="se">\</span>
+</code></pre></div><div class="highlight"><pre class="highlight shell"><code>curl <span class="s2">"https://api.example.org/v3/routes/[guid]/destinations/[destination_guid]"</span> <span class="se">\</span>
   <span class="nt">-X</span> PATCH <span class="se">\</span>
   <span class="nt">-H</span> <span class="s2">"Authorization: bearer [token]"</span>
   <span class="nt">-d</span> <span class="s1">'{"protocol": "http2"}'</span>
@@ -19584,7 +19584,7 @@ and unweighted destinations for a route is not allowed.</p>
 
 <h4 id="definition">Definition</h4>
 
-<p><code class="prettyprint">PATCH /v3/routes/:guid/destinations/:guid</code></p>
+<p><code class="prettyprint">PATCH /v3/routes/:guid/destinations/:destination_guid</code></p>
 
 <h4 id="optional-parameters">Optional parameters</h4>
 
