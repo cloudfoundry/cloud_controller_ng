@@ -60,7 +60,8 @@ module VCAP::CloudController
           routes[SSH_ROUTES_KEY] = Oj.dump({
                                              container_port: DEFAULT_SSH_PORT,
                                              private_key: ssh_key.private_key,
-                                             host_fingerprint: ssh_key.fingerprint
+                                             host_fingerprint: ssh_key.fingerprint,
+                                             host_256_fingerprint: ssh_key.sha256_fingerprint
                                            })
         end
 
