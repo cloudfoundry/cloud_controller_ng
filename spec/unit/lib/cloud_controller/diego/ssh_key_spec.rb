@@ -43,7 +43,7 @@ module VCAP::CloudController
       describe '#fingerprint 256' do
         it 'returns an sha256 fingerprint' do
           ssh_key = SSHKey.new(1024)
-          expect(ssh_key.sha256_fingerprint).to match(/[a-zA-Z0-9+\/=]{44}/)
+          expect(ssh_key.sha256_fingerprint).to match(%r{[a-zA-Z0-9+/=]{44}})
         end
       end
     end
