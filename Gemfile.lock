@@ -364,7 +364,7 @@ GEM
     puma (6.4.3)
       nio4r (~> 2.0)
     racc (1.8.1)
-    rack (2.2.10)
+    rack (2.2.16)
     rack-protection (3.2.0)
       base64 (>= 0.1.0)
       rack (~> 2.2, >= 2.2.4)
@@ -592,6 +592,7 @@ DEPENDENCIES
   debug (~> 1.9)
   digest-xxhash
   eventmachine (~> 1.2.7)
+  ffi (>= 1.9.24)
   fluent-logger
   fog-aliyun
   fog-aws
@@ -628,10 +629,12 @@ DEPENDENCIES
   pry-byebug
   public_suffix
   puma
+  rack (~> 2.2.14)
   rack-test
   railties (~> 7.2.1)
   rake
   redis
+  rexml (~> 3.3.6)
   roodi
   rspec (~> 3.13.0)
   rspec-collection_matchers
