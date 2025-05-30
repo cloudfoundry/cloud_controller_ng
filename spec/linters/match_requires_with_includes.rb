@@ -1,6 +1,6 @@
 module RuboCop
   module Cop
-    class MatchRequiresWithIncludes < RuboCop::Cop::Cop
+    class MatchRequiresWithIncludes < RuboCop::Cop::Base
       REQ_FOR_INCLUDES = {
         'VCAP::CloudController::Presenters::Mixins::MetadataPresentationHelpers' =>
           'presenters/mixins/metadata_presentation_helpers',
@@ -25,7 +25,7 @@ module RuboCop
         req = REQ_FOR_INCLUDES[included_module]
         return unless req && !@requires.member?(req)
 
-        add_offense(node, location: :expression, message: "Included '#{included_module}' but need to require '#{req}'")
+        add_offense(node.loc.expression, message: "Included '#{included_module}' but need to require '#{req}'")
       end
 
       private

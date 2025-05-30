@@ -32,7 +32,6 @@ module VCAP::CloudController
                    disk_limit_calculator: StagingDiskCalculator.new,
                    log_rate_limit_calculator: QuotaValidatingStagingLogRateLimitCalculator.new,
                    environment_presenter: StagingEnvironmentBuilder.new)
-
       @user_audit_info         = user_audit_info
       @memory_limit_calculator = memory_limit_calculator
       @disk_limit_calculator   = disk_limit_calculator
@@ -96,7 +95,6 @@ module VCAP::CloudController
 
     def requested_buildpacks_disabled!(lifecycle)
       return if lifecycle.type == Lifecycles::DOCKER
-      return if lifecycle.type == Lifecycles::CNB
 
       admin_buildpack_records = lifecycle.buildpack_infos.map(&:buildpack_record).compact
       disabled_buildpacks = admin_buildpack_records.reject(&:enabled)

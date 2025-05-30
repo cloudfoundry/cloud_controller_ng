@@ -5,9 +5,7 @@ module CloudController
         @wrapped_exception = wrapped_exception
       end
 
-      def to_s
-        @wrapped_exception.to_s
-      end
+      delegate :to_s, to: :@wrapped_exception
     end
   end
 end

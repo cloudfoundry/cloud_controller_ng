@@ -151,7 +151,7 @@ class AppsV3Controller < ApplicationController
     delete_action = AppDelete.new(user_audit_info)
     deletion_job  = VCAP::CloudController::Jobs::DeleteActionJob.new(AppModel, app.guid, delete_action)
 
-    job = Jobs::Enqueuer.new(deletion_job, queue: Jobs::Queues.generic).enqueue_pollable do |pollable_job|
+    job = Jobs::Enqueuer.new(queue: Jobs::Queues.generic).enqueue_pollable(deletion_job) do |pollable_job|
       DeleteAppErrorTranslatorJob.new(pollable_job)
     end
     VCAP::AppLogEmitter.emit(app.guid, "Enqueued job to delete app with guid #{app.guid}")
@@ -234,7 +234,7 @@ class AppsV3Controller < ApplicationController
     suspended! unless permission_queryer.is_space_active?(space.id)
 
     delete_job = Jobs::V3::BuildpackCacheDelete.new(app.guid)
-    job = Jobs::Enqueuer.new(delete_job, queue: Jobs::Queues.generic).enqueue_pollable
+    job = Jobs::Enqueuer.new(queue: Jobs::Queues.generic).enqueue_pollable(delete_job)
 
     VCAP::AppLogEmitter.emit(app.guid, "Enqueued job to delete app buildpack cache with app guid #{app.guid}")
 

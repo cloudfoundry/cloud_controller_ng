@@ -16,6 +16,14 @@ class InfoController < ApplicationController
     info.version = config.get(:info, :version) || 0
     info.support_address = config.get(:info, :support_address) || ''
 
+    osbapi_version_file = Rails.root.join('config/osbapi_version').to_s
+    if File.exist?(osbapi_version_file)
+      info.osbapi_version = File.read(osbapi_version_file).strip
+    else
+      info.osbapi_version = ''
+      Rails.logger.warn("OSBAPI version file not found at #{osbapi_version_file}")
+    end
+
     render status: :ok, json: VCAP::CloudController::Presenters::V3::InfoPresenter.new(info)
   end
 
@@ -29,5 +37,5 @@ class InfoController < ApplicationController
 end
 
 class Info
-  attr_accessor :build, :min_cli_version, :min_recommended_cli_version, :custom, :description, :name, :version, :support_address
+  attr_accessor :build, :min_cli_version, :min_recommended_cli_version, :custom, :description, :name, :version, :support_address, :osbapi_version
 end

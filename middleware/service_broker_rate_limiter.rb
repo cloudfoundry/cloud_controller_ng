@@ -3,6 +3,13 @@ require 'redis'
 
 module CloudFoundry
   module Middleware
+    RateLimitEndpoint = Struct.new(:endpoint_pattern, :request_methods)
+
+    RATE_LIMITED_ENDPOINTS = [
+      RateLimitEndpoint.new(%r{\A/v2/(service_instances|service_bindings|service_keys)}, %w[PUT POST DELETE]),
+      RateLimitEndpoint.new(%r{\A/v3/(service_instances|service_credential_bindings|service_route_bindings)/.+/parameters\z}, %w[GET])
+    ].freeze
+
     class ConcurrentRequestCounter
       def initialize(key_prefix, redis_connection_pool_size: nil)
         @key_prefix = key_prefix
@@ -106,26 +113,17 @@ module CloudFoundry
 
       def apply_rate_limiting?(env)
         request = ActionDispatch::Request.new(env)
-        !admin? && is_service_request?(request) && rate_limit_method?(request)
+        !admin? && is_rate_limited_service_request?(request)
       end
 
       def admin?
         VCAP::CloudController::SecurityContext.admin? || VCAP::CloudController::SecurityContext.admin_read_only?
       end
 
-      def is_service_request?(request)
-        [
-          %r{\A/v2/service_instances},
-          %r{\A/v2/service_bindings},
-          %r{\A/v2/service_keys},
-          %r{\A/v3/service_instances},
-          %r{\A/v3/service_credential_bindings},
-          %r{\A/v3/service_route_bindings}
-        ].any? { |re| request.fullpath.match(re) }
-      end
-
-      def rate_limit_method?(request)
-        %w[PATCH PUT POST DELETE].include?(request.method)
+      def is_rate_limited_service_request?(request)
+        RATE_LIMITED_ENDPOINTS.any? do |endpoint|
+          endpoint.endpoint_pattern.match?(request.fullpath) && endpoint.request_methods.include?(request.method)
+        end
       end
 
       def suggested_retry_after

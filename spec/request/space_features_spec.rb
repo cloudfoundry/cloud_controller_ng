@@ -73,7 +73,7 @@ RSpec.describe 'Space Features' do
 
     context 'permissions' do
       let(:expected_codes_and_responses) do
-        h = Hash.new(code: 403, errors: CF_NOT_AUTHORIZED)
+        h = Hash.new({ code: 403, errors: CF_NOT_AUTHORIZED }.freeze)
         h['admin'] = { code: 200, response_object: space_ssh_feature_json }
         h['space_manager'] = { code: 200, response_object: space_ssh_feature_json }
         h['org_manager'] = { code: 200, response_object: space_ssh_feature_json }

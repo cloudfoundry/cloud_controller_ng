@@ -11,111 +11,106 @@ RSpec.describe RuboCop::Cop::Migration::AddConstraintName do
 
   RSpec.shared_examples 'a cop that validates explicit names are added to the index' do |method_name|
     it 'registers an offense if index is called without a name' do
-      inspect_source(<<~RUBY)
+      result = inspect_source(<<~RUBY)
         create_table :jobs do
           #{method_name} :foo
         end
       RUBY
 
-      expect(cop.offenses.size).to eq(1)
-      expect(cop.messages).to eq(['Please explicitly name your index or constraint.'])
+      expect(result.size).to eq(1)
+      expect(result.map(&:message)).to eq(['Please explicitly name your index or constraint.'])
     end
 
     it 'does not register an offense if index is called with a name' do
-      inspect_source(<<~RUBY)
+      result = inspect_source(<<~RUBY)
         create_table :jobs do
           #{method_name} :foo, name: :bar
         end
       RUBY
 
-      expect(cop.offenses.size).to eq(0)
-      expect(cop.messages).to be_empty
+      expect(result.size).to eq(0)
     end
   end
 
   RSpec.shared_examples 'a cop that validates explicit names are used when adding a column with an index' do |method_name|
     context 'and the column is adding an index' do
       it 'registers an offense if index is called without a name' do
-        inspect_source(<<~RUBY)
+        result = inspect_source(<<~RUBY)
           create_table :jobs do
             #{method_name} :foo, :index
           end
         RUBY
 
-        expect(cop.offenses.size).to eq(1)
-        expect(cop.messages).to eq(['Please explicitly name your index or constraint.'])
+        expect(result.size).to eq(1)
+        expect(result.map(&:message)).to eq(['Please explicitly name your index or constraint.'])
       end
 
       it 'does not register an offense if index is called with a name' do
-        inspect_source(<<~RUBY)
+        result = inspect_source(<<~RUBY)
           create_table :jobs do
             #{method_name} :foo, index: {name: 'foo'}
           end
         RUBY
 
-        expect(cop.offenses.size).to eq(0)
-        expect(cop.messages).to be_empty
+        expect(result.size).to eq(0)
       end
     end
 
     context 'and the column is adding a unique constraint' do
       it 'registers an offense if unique is called without a unique_constraint_name' do
-        inspect_source(<<~RUBY)
+        result = inspect_source(<<~RUBY)
           create_table :jobs do
             #{method_name} :foo, unique: true
           end
         RUBY
 
-        expect(cop.offenses.size).to eq(1)
-        expect(cop.messages).to eq(['Please explicitly name your index or constraint.'])
+        expect(result.size).to eq(1)
+        expect(result.map(&:message)).to eq(['Please explicitly name your index or constraint.'])
       end
 
       it 'does not register an offense if unique is called with a unique_constraint_name' do
-        inspect_source(<<~RUBY)
+        result = inspect_source(<<~RUBY)
           create_table :jobs do
             #{method_name} :foo, unique: true, unique_constraint_name: 'something_real_unique'
           end
         RUBY
 
-        expect(cop.offenses.size).to eq(0)
-        expect(cop.messages).to be_empty
+        expect(result.size).to eq(0)
       end
     end
 
     context 'and the column is adding a primary_key constraint' do
       it 'registers an offense if unique is called without a primary_key_constraint_name' do
-        inspect_source(<<~RUBY)
+        result = inspect_source(<<~RUBY)
           create_table :jobs do
             #{method_name} :foo, primary_key: true
           end
         RUBY
 
-        expect(cop.offenses.size).to eq(1)
-        expect(cop.messages).to eq(['Please explicitly name your index or constraint.'])
+        expect(result.size).to eq(1)
+        expect(result.map(&:message)).to eq(['Please explicitly name your index or constraint.'])
       end
 
       it 'does not register an offense if primary_key is called with a primary_key_constraint_name' do
-        inspect_source(<<~RUBY)
+        result = inspect_source(<<~RUBY)
           create_table :jobs do
             #{method_name} :foo, primary_key: true, primary_key_constraint_name: 'something_real_unique'
           end
         RUBY
 
-        expect(cop.offenses.size).to eq(0)
-        expect(cop.messages).to be_empty
+        expect(result.size).to eq(0)
       end
     end
 
     context 'and the column is not adding any index or constraint' do
       it 'does not register an offense' do
-        inspect_source(<<~RUBY)
+        result = inspect_source(<<~RUBY)
           create_table :jobs do
             #{method_name} :foo
           end
         RUBY
 
-        expect(cop.offenses.size).to eq(0)
-        expect(cop.messages).to be_empty
+        expect(result.size).to eq(0)
       end
     end
   end

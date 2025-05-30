@@ -13,7 +13,6 @@ module VCAP::CloudController
           show_secrets: false,
           censored_message: Censorship::REDACTED_CREDENTIAL
         )
-
           super
         end
 

@@ -37,7 +37,7 @@ RSpec.resource 'Jobs', type: %i[api legacy_api] do
     end
 
     describe 'When a job has failed with a known failure from v2.yml' do
-      before { VCAP::CloudController::Jobs::Enqueuer.new(KnownFailingJob.new).enqueue }
+      before { VCAP::CloudController::Jobs::Enqueuer.new.enqueue(KnownFailingJob.new) }
 
       example 'Retrieve Job with known failure' do
         guid = Delayed::Job.last.guid
@@ -67,7 +67,7 @@ RSpec.resource 'Jobs', type: %i[api legacy_api] do
         end
       end
 
-      before { VCAP::CloudController::Jobs::Enqueuer.new(UnknownFailingJob.new).enqueue }
+      before { VCAP::CloudController::Jobs::Enqueuer.new.enqueue(UnknownFailingJob.new) }
 
       example 'Retrieve Job with unknown failure' do
         job_last = Delayed::Job.last
@@ -94,7 +94,7 @@ RSpec.resource 'Jobs', type: %i[api legacy_api] do
     describe 'For a queued job' do
       class SuccessfulJob < FakeJob; end
 
-      before { VCAP::CloudController::Jobs::Enqueuer.new(SuccessfulJob.new).enqueue }
+      before { VCAP::CloudController::Jobs::Enqueuer.new.enqueue(SuccessfulJob.new) }
 
       example 'Retrieve Job that is queued' do
         guid = Delayed::Job.last.guid
@@ -110,7 +110,7 @@ RSpec.resource 'Jobs', type: %i[api legacy_api] do
     describe 'For a successfully executed job' do
       class SuccessfulJob < FakeJob; end
 
-      before { VCAP::CloudController::Jobs::Enqueuer.new(SuccessfulJob.new).enqueue }
+      before { VCAP::CloudController::Jobs::Enqueuer.new.enqueue(SuccessfulJob.new) }
 
       example 'Retrieve Job that was successful' do
         guid = Delayed::Job.last.guid

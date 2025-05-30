@@ -70,7 +70,7 @@ RSpec.describe 'Droplets' do
       end
 
       let(:expected_codes_and_responses) do
-        h = Hash.new(code: 403, errors: CF_NOT_AUTHORIZED)
+        h = Hash.new({ code: 403, errors: CF_NOT_AUTHORIZED }.freeze)
         h['org_auditor'] = {
           code: 422
         }
@@ -260,7 +260,7 @@ RSpec.describe 'Droplets' do
       end
       let(:api_call) { ->(user_headers) { get "/v3/droplets/#{guid}", nil, user_headers } }
       let(:expected_codes_and_responses) do
-        h = Hash.new(code: 200, response_object: droplet_model_json)
+        h = Hash.new({ code: 200, response_object: droplet_model_json }.freeze)
         h['global_auditor'] = { code: 200, response_object: redacted_droplet_model_json }
         h['org_manager'] = { code: 200, response_object: redacted_droplet_model_json }
         h['space_manager'] = { code: 200, response_object: redacted_droplet_model_json }
@@ -330,7 +330,7 @@ RSpec.describe 'Droplets' do
       end
       let(:api_call) { ->(user_headers) { get "/v3/droplets/#{guid}", nil, user_headers } }
       let(:expected_codes_and_responses) do
-        h = Hash.new(code: 200, response_object: droplet_model_json)
+        h = Hash.new({ code: 200, response_object: droplet_model_json }.freeze)
         h['global_auditor'] = { code: 200, response_object: redacted_droplet_model_json }
         h['org_manager'] = { code: 200, response_object: redacted_droplet_model_json }
         h['space_manager'] = { code: 200, response_object: redacted_droplet_model_json }
@@ -377,7 +377,7 @@ RSpec.describe 'Droplets' do
       let(:api_call) { ->(user_headers) { get "/v3/droplets/#{guid}/download", nil, user_headers } }
       let(:expected_codes_and_responses) do
         h = Hash.new(
-          code: 302
+          { code: 302 }.freeze
         )
         h['space_supporter'] = {
           code: 403
@@ -718,8 +718,8 @@ RSpec.describe 'Droplets' do
 
       let(:expected_codes_and_responses) do
         h = Hash.new(
-          code: 200,
-          response_objects: [droplet1_json, droplet2_json]
+          { code: 200,
+            response_objects: [droplet1_json, droplet2_json] }.freeze
         )
 
         h['admin'] = { code: 200, response_objects: [droplet1_json, droplet2_json, droplet_in_other_space_json] }
@@ -1036,7 +1036,7 @@ RSpec.describe 'Droplets' do
       end
     end
     let(:expected_codes_and_responses) do
-      h = Hash.new(code: 403, errors: CF_NOT_AUTHORIZED)
+      h = Hash.new({ code: 403, errors: CF_NOT_AUTHORIZED }.freeze)
       h['admin'] = { code: 202 }
       h['org_auditor'] = { code: 404 }
       h['org_billing_manager'] = { code: 404 }
@@ -1320,7 +1320,7 @@ RSpec.describe 'Droplets' do
         }
       end
       let(:expected_codes_and_responses) do
-        h = Hash.new(code: 200, response_object: app_droplet_json)
+        h = Hash.new({ code: 200, response_object: app_droplet_json }.freeze)
         h['org_billing_manager'] = { code: 404 }
         h['org_auditor'] = { code: 404 }
         h['no_role'] = { code: 404 }
@@ -1516,7 +1516,7 @@ RSpec.describe 'Droplets' do
         }
       end
       let(:expected_codes_and_responses) do
-        h = Hash.new(code: 200, response_object: package_droplet_json)
+        h = Hash.new({ code: 200, response_object: package_droplet_json }.freeze)
         h['org_billing_manager'] = { code: 404 }
         h['org_auditor'] = { code: 404 }
         h['no_role'] = { code: 404 }
@@ -1586,7 +1586,7 @@ RSpec.describe 'Droplets' do
       }
     end
     let(:expected_codes_and_responses) do
-      h = Hash.new(code: 403, errors: CF_NOT_AUTHORIZED)
+      h = Hash.new({ code: 403, errors: CF_NOT_AUTHORIZED }.freeze)
       h['admin'] = { code: 201, response_object: expected_copied_response }
       h['org_auditor'] = { code: 404 }
       h['org_billing_manager'] = { code: 404 }
@@ -1660,7 +1660,7 @@ RSpec.describe 'Droplets' do
     end
 
     let(:expected_codes_and_responses) do
-      h = Hash.new(code: 403, errors: CF_NOT_AUTHORIZED)
+      h = Hash.new({ code: 403, errors: CF_NOT_AUTHORIZED }.freeze)
       h['admin'] = {
         code: 202,
         response_object: droplet_json
@@ -1864,7 +1864,7 @@ RSpec.describe 'Droplets' do
         }
       end
       let(:expected_codes_and_responses) do
-        h = Hash.new(code: 403, errors: CF_NOT_AUTHORIZED)
+        h = Hash.new({ code: 403, errors: CF_NOT_AUTHORIZED }.freeze)
         h['admin'] = { code: 200, response_object: droplet_json }
         h['space_developer'] = { code: 200, response_object: droplet_json }
         h['org_auditor'] = { code: 404 }

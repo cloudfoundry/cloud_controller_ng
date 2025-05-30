@@ -40,4 +40,5 @@ Title | Code | HTTP Status | Description
 `CF-NotAuthorized` | 10003 | 403 | The authenticated user does not have permission to perform this operation
 `CF-ResourceNotFound` | 10010 | 404 | The specified resource does not exist, or the authenticated user cannot read it
 `CF-UnprocessableEntity` | 10008 | 422 | Catch-all error when an operation fails to complete; the `detail` field will contain more information
+`CF-UaaRateLimited` | 20008 | 429 | Too many requests were made to the UAA instance. The request can be retried after the period stated in the `Retry-After` header
 `UnknownError` | 10001 | 500 | An unexpected, uncaught error occurred; the CC logs will contain more information

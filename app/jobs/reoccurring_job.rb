@@ -13,7 +13,7 @@ module VCAP::CloudController
         elsif next_enqueue_would_exceed_maximum_duration?
           expire!
         else
-          enqueue_next_job(pollable_job, current_delayed_job.priority)
+          enqueue_next_job(pollable_job)
         end
       end
 
@@ -30,12 +30,12 @@ module VCAP::CloudController
       end
 
       def polling_interval_seconds
-        [@polling_interval || 0, default_polling_interval_seconds].max
+        @polling_interval || 0
       end
 
       def polling_interval_seconds=(interval)
         interval = interval.to_i if interval.is_a? String
-        @polling_interval = interval.clamp(default_polling_interval_seconds, 24.hours)
+        @polling_interval = interval.clamp(default_polling_interval_seconds, maximum_polling_interval)
       end
 
       private
@@ -58,8 +58,16 @@ module VCAP::CloudController
         Config.config.get(:broker_client_async_poll_exponential_backoff_rate)
       end
 
+      def maximum_polling_interval
+        Config.config.get(:broker_client_max_async_poll_interval_seconds)
+      end
+
       def next_execution_in
-        polling_interval_seconds * (default_polling_exponential_backoff**retry_number)
+        # use larger polling_interval. Either from job or calculated.
+        polling_interval = [polling_interval_seconds, default_polling_interval_seconds * (default_polling_exponential_backoff**retry_number)].max
+
+        # cap polling interval at maximum_polling_interval
+        [polling_interval, maximum_polling_interval].min
       end
 
       def next_enqueue_would_exceed_maximum_duration?
@@ -75,15 +83,10 @@ module VCAP::CloudController
         raise CloudController::Errors::ApiError.new_from_details('JobTimeout')
       end
 
-      def enqueue_next_job(pollable_job, priority)
-        opts = {
-          queue: Jobs::Queues.generic,
-          run_at: Delayed::Job.db_time_now + next_execution_in,
-          priority: priority
-        }
-
+      def enqueue_next_job(pollable_job)
+        run_at = Delayed::Job.db_time_now + next_execution_in
         @retry_number += 1
-        Jobs::Enqueuer.new(self, opts).enqueue_pollable(existing_guid: pollable_job.guid)
+        Jobs::GenericEnqueuer.shared.enqueue_pollable(self, existing_guid: pollable_job.guid, run_at: run_at, preserve_priority: true)
       end
     end
   end

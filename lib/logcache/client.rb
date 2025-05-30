@@ -1,5 +1,5 @@
-require 'logcache/logcache_egress_services_pb'
-require 'logcache/v2/envelope_pb'
+require 'logcache/egress_services_pb'
+require 'loggregator-api/v2/envelope_pb'
 
 module Logcache
   class Client
@@ -16,13 +16,13 @@ module Logcache
           "#{host}:#{port}",
           GRPC::Core::ChannelCredentials.new(client_ca, client_key, client_cert),
           channel_args: { GRPC::Core::Channel::SSL_TARGET => tls_subject_name },
-          timeout: 250
+          timeout: 10
         )
       else
         @service = Logcache::V1::Egress::Stub.new(
           "#{host}:#{port}",
           :this_channel_is_insecure,
-          timeout: 250
+          timeout: 10
         )
       end
     end
@@ -44,9 +44,16 @@ module Logcache
 
     private
 
-    def with_request_error_handling(_source_guid)
+    def with_request_error_handling(source_guid)
       tries ||= 3
-      yield
+      start_time = Time.now
+
+      result = yield
+      time_taken_in_ms = ((Time.now - start_time) * 1000).to_i # convert to milliseconds to get more precise information
+      logger.info('logcache.response',
+                  { source_id: source_guid,
+                    time_taken_in_ms: time_taken_in_ms })
+      result
     rescue StandardError => e
       raise CloudController::Errors::ApiError.new_from_details('ServiceUnavailable', 'Connection to Log Cache timed out') if e.is_a?(GRPC::DeadlineExceeded)
 

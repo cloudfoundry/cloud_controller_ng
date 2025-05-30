@@ -21,6 +21,7 @@ module VCAP::CloudController
             org.destroy
           end
         end
+        []
       end
 
       def timeout_error(dataset)

@@ -72,7 +72,6 @@ module VCAP::CloudController
     validate :validate_buildpack_and_buildpacks_combination!
     validate :validate_docker_enabled!
     validate :validate_cnb_enabled!
-    validate :validate_cnb_buildpacks!
     validate :validate_docker_buildpacks_combination!
     validate :validate_service_bindings_message!, if: ->(record) { record.requested?(:services) }
     validate :validate_env_update_message!,       if: ->(record) { record.requested?(:env) }
@@ -124,16 +123,32 @@ module VCAP::CloudController
     end
 
     def app_lifecycle_hash
-      lifecycle_data = if requested?(:lifecycle) && @lifecycle == 'cnb'
-                         cnb_lifecycle_data
+      lifecycle_type = if requested?(:lifecycle) && @lifecycle == 'cnb'
+                         Lifecycles::CNB
+                       elsif requested?(:lifecycle) && @lifecycle == 'buildpack'
+                         Lifecycles::BUILDPACK
                        elsif requested?(:docker)
-                         docker_lifecycle_data
-                       else
-                         buildpacks_lifecycle_data
+                         Lifecycles::DOCKER
                        end
 
+      data = {
+        buildpacks: requested_buildpacks,
+        stack: @stack,
+        credentials: @cnb_credentials
+      }.compact
+
+      if lifecycle_type == Lifecycles::DOCKER
+        lifecycle = {
+          type: Lifecycles::DOCKER
+        }
+      elsif lifecycle_type || data.present?
+        lifecycle = {}
+        lifecycle[:type] = lifecycle_type if lifecycle_type.present?
+        lifecycle[:data] = data if data.present?
+      end
+
       {
-        lifecycle: lifecycle_data,
+        lifecycle: lifecycle,
         metadata: requested?(:metadata) ? metadata : nil
       }.compact
     end
@@ -280,48 +295,6 @@ module VCAP::CloudController
       mapping
     end
 
-    def docker_lifecycle_data
-      { type: Lifecycles::DOCKER }
-    end
-
-    def cnb_lifecycle_data
-      return unless requested?(:buildpacks) || requested?(:buildpack) || requested?(:stack)
-
-      if requested?(:buildpacks)
-        requested_buildpacks = @buildpacks
-      elsif requested?(:buildpack)
-        requested_buildpacks = []
-        requested_buildpacks.push(@buildpack)
-      end
-
-      {
-        type: Lifecycles::CNB,
-        data: {
-          buildpacks: requested_buildpacks,
-          stack: @stack,
-          credentials: @cnb_credentials
-        }.compact
-      }
-    end
-
-    def buildpacks_lifecycle_data
-      return unless requested?(:buildpacks) || requested?(:buildpack) || requested?(:stack)
-
-      if requested?(:buildpacks)
-        requested_buildpacks = @buildpacks
-      elsif requested?(:buildpack)
-        requested_buildpacks = []
-        requested_buildpacks.push(@buildpack) unless should_autodetect?(@buildpack)
-      end
-
-      {
-        data: {
-          buildpacks: requested_buildpacks,
-          stack: @stack
-        }.compact
-      }
-    end
-
     def should_autodetect?(buildpack)
       buildpack == 'default' || buildpack == 'null' || buildpack.nil?
     end
@@ -347,7 +320,7 @@ module VCAP::CloudController
     end
 
     def validate_byte_format(human_readable_byte_value, attribute_name, allow_unlimited: false)
-      byte_converter.convert_to_mb(human_readable_byte_value) unless allow_unlimited && (human_readable_byte_value.to_s == '-1' || human_readable_byte_value.to_s == '0')
+      byte_converter.convert_to_mb(human_readable_byte_value) unless allow_unlimited && ['-1', '0'].include?(human_readable_byte_value.to_s)
 
       nil
     rescue ByteConverter::InvalidUnitsError
@@ -485,13 +458,6 @@ module VCAP::CloudController
       errors.add(:base, e.message)
     end
 
-    def validate_cnb_buildpacks!
-      return unless @lifecycle == 'cnb'
-      return if requested?(:lifecycle) && (requested?(:buildpack) || requested?(:buildpacks))
-
-      errors.add(:base, 'Buildpack(s) must be specified when using Cloud Native Buildpacks')
-    end
-
     def validate_docker_buildpacks_combination!
       return unless requested?(:docker) && (requested?(:buildpack) || requested?(:buildpacks))
 
@@ -500,6 +466,16 @@ module VCAP::CloudController
 
     def add_process_error!(error_message, type)
       errors.add(:base, %(Process "#{type}": #{error_message}))
+    end
+
+    def requested_buildpacks
+      return nil unless requested?(:buildpacks) || requested?(:buildpack)
+      return @buildpacks if requested?(:buildpacks)
+
+      buildpacks = []
+      buildpacks.push(@buildpack) if requested?(:buildpack) && !should_autodetect?(@buildpack)
+
+      buildpacks
     end
   end
 end

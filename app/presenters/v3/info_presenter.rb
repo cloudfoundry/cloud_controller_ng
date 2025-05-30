@@ -15,6 +15,7 @@ module VCAP::CloudController::Presenters::V3
         description: info.description,
         name: info.name,
         version: info.version,
+        osbapi_version: info.osbapi_version,
         links: {
           self: { href: build_self },
           support: { href: info.support_address }

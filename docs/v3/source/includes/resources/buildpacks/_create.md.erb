@@ -44,6 +44,7 @@ Name         | Type      | Description                                          
 -----------  | --------  | -----------------------------------------------------------------------------  | -------
 **stack**    | _string_  | The name of the stack that the buildpack will use                             | null
 **position** | _integer_ | The order in which the buildpacks are checked during buildpack auto-detection | 1
+**lifecycle**| _string_  | The version of buildpack the buildpack will use. `buildpack` indicates [Classic Buildpacks](https://docs.cloudfoundry.org/buildpacks/classic.html). `cnb` indicates [Cloud Native Buildpacks](https://docs.cloudfoundry.org/buildpacks/cnb/) | buildpack
 **enabled**  | _boolean_ | Whether or not the buildpack will be used for staging                          | true
 **locked**   | _boolean_ | Whether or not the buildpack is locked to prevent updating the bits            | false
 **metadata.labels** | [_label object_](#labels) | Labels applied to the buildpack

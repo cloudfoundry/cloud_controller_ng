@@ -174,6 +174,27 @@ module VCAP::CloudController
           }
         )
       end
+
+      describe 'custom links' do
+        context 'custom links are configured' do
+          it 'returns a link' do
+            TestConfig.override(custom_root_links: [{ name: 'custom_link_1', href: 'custom_link_1.com' }, { name: 'custom_link_2', href: 'custom_link_2.com' }])
+            get '/'
+            hash = Oj.load(last_response.body)
+            expect(hash['links']['custom_link_1']['href']).to eq('custom_link_1.com')
+            expect(hash['links']['custom_link_2']['href']).to eq('custom_link_2.com')
+          end
+        end
+
+        context 'custom links overrides an existing link' do
+          it 'returns the custom link' do
+            TestConfig.override(custom_root_links: [{ name: 'uaa', href: 'my_new_uaa.com' }])
+            get '/'
+            hash = Oj.load(last_response.body)
+            expect(hash['links']['uaa']['href']).to eq('my_new_uaa.com')
+          end
+        end
+      end
     end
   end
 end

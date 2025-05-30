@@ -65,7 +65,7 @@ RSpec.describe 'Revisions' do
       }
     end
     let(:expected_codes_and_responses) do
-      h = Hash.new(code: 200, response_object: revision_model_response_object)
+      h = Hash.new({ code: 200, response_object: revision_model_response_object }.freeze)
       h['org_auditor'] = { code: 404 }
       h['org_billing_manager'] = { code: 404 }
       h['no_role'] = { code: 404 }
@@ -160,7 +160,7 @@ RSpec.describe 'Revisions' do
         let(:message) { VCAP::CloudController::AppRevisionsListMessage }
 
         let(:expected_codes_and_responses) do
-          h = Hash.new(code: 200, response_objects: revision_response_objects)
+          h = Hash.new({ code: 200, response_objects: revision_response_objects }.freeze)
           h['org_auditor'] = { code: 404 }
           h['org_billing_manager'] = { code: 404 }
           h['no_role'] = { code: 404 }
@@ -508,7 +508,7 @@ RSpec.describe 'Revisions' do
     context 'permissions' do
       let(:api_call) { ->(user_headers) { patch "/v3/revisions/#{revision.guid}", update_request, user_headers } }
       let(:expected_codes_and_responses) do
-        h = Hash.new(code: 403, errors: CF_NOT_AUTHORIZED)
+        h = Hash.new({ code: 403, errors: CF_NOT_AUTHORIZED }.freeze)
         %w[no_role org_auditor org_billing_manager].each { |r| h[r] = { code: 404 } }
         %w[admin space_developer].each { |r| h[r] = { code: 200 } }
         h
@@ -658,7 +658,7 @@ RSpec.describe 'Revisions' do
       end
 
       let(:expected_codes_and_responses) do
-        h = Hash.new(code: 200, response_objects: revision_response_objects)
+        h = Hash.new({ code: 200, response_objects: revision_response_objects }.freeze)
         h['org_auditor'] = { code: 404 }
         h['org_billing_manager'] = { code: 404 }
         h['no_role'] = { code: 404 }

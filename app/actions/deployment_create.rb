@@ -13,6 +13,9 @@ module VCAP::CloudController
         DeploymentModel.db.transaction do
           app.lock!
 
+          # Stopped apps will have quota validated since we scale their process up immediately later
+          validate_quota!(message, app) unless app.stopped?
+
           message.strategy ||= DeploymentModel::ROLLING_STRATEGY
 
           target_state = DeploymentTargetState.new(app, message)
@@ -22,47 +25,52 @@ module VCAP::CloudController
 
           if target_state.rollback_target_revision
             revision = RevisionResolver.rollback_app_revision(app, target_state.rollback_target_revision, user_audit_info)
-            log_rollback_event(app.guid, user_audit_info.user_guid, target_state.rollback_target_revision.guid, message.strategy)
+            log_rollback_event(app.guid, user_audit_info.user_guid, target_state.rollback_target_revision.guid, message.strategy, message.max_in_flight, message.canary_steps)
           else
             revision = RevisionResolver.update_app_revision(app, user_audit_info)
           end
 
           previous_deployment = DeploymentModel.find(app: app, status_value: DeploymentModel::ACTIVE_STATUS_VALUE)
 
+          deployment = create_deployment(
+            app,
+            message,
+            previous_deployment,
+            previous_droplet,
+            revision,
+            target_state,
+            user_audit_info
+          )
+
           if app.stopped?
-            return deployment_for_stopped_app(
-              app,
-              message,
-              previous_deployment,
-              previous_droplet,
-              revision,
-              target_state,
-              user_audit_info
-            )
+            process = app.newest_web_process
+          else
+            process_instances = starting_process_instances(deployment, desired_instances(app.oldest_web_process, previous_deployment))
+            process = create_deployment_process(app, deployment.guid, revision, process_instances)
           end
 
-          desired_instances = desired_instances(app.oldest_web_process, previous_deployment)
+          process.memory = message.memory_in_mb if message.memory_in_mb
+          process.disk_quota = message.disk_in_mb if message.disk_in_mb
+          process.log_rate_limit = message.log_rate_limit_in_bytes_per_second if message.log_rate_limit_in_bytes_per_second
 
-          deployment = DeploymentModel.create(
-            app: app,
-            state: starting_state(message),
-            status_value: DeploymentModel::ACTIVE_STATUS_VALUE,
-            status_reason: DeploymentModel::DEPLOYING_STATUS_REASON,
-            droplet: target_state.droplet,
-            previous_droplet: previous_droplet,
-            original_web_process_instance_count: desired_instances,
-            revision_guid: revision&.guid,
-            revision_version: revision&.version,
-            strategy: message.strategy,
-            max_in_flight: message.max_in_flight
-          )
-          MetadataUpdate.update(deployment, message)
+          if app.stopped?
+            process.instances = message.web_instances if message.web_instances
+
+            process.save_changes
+
+            # Do not create a revision here because AppStart will not handle the rollback case
+            AppStart.start(app: app, user_audit_info: user_audit_info, create_revision: false)
+            deployment.update(state: DeploymentModel::DEPLOYED_STATE,
+                              status_value: DeploymentModel::FINALIZED_STATUS_VALUE,
+                              status_reason: DeploymentModel::DEPLOYED_STATUS_REASON)
+            record_audit_event(deployment, target_state.droplet, user_audit_info, message)
+            return deployment
+          end
+
+          process.save
 
           supersede_deployment(previous_deployment)
 
-          process_instances = starting_process_instances(message, desired_instances)
-
-          process = create_deployment_process(app, deployment.guid, revision, process_instances)
           # Need to transition from STOPPED to STARTED to engage the ProcessObserver to desire the LRP.
           # It'd be better to do this via Diego::Runner.new(process, config).start,
           # but it is nontrivial to get that working in test.
@@ -99,7 +107,6 @@ module VCAP::CloudController
                   else
                     web_process.command
                   end
-
         ProcessModel.create(
           app: app,
           type: ProcessTypes::WEB,
@@ -161,28 +168,43 @@ module VCAP::CloudController
 
       private
 
-      def deployment_for_stopped_app(app, message, previous_deployment, previous_droplet, revision, target_state, user_audit_info)
-        # Do not create a revision here because AppStart will not handle the rollback case
-        AppStart.start(app: app, user_audit_info: user_audit_info, create_revision: false)
+      def validate_quota!(message, app)
+        return if message.web_instances.blank? && message.memory_in_mb.blank? && message.log_rate_limit_in_bytes_per_second.blank?
 
+        current_web_process = app.newest_web_process
+        current_web_process.instances = message.web_instances if message.web_instances
+        current_web_process.memory = message.memory_in_mb if message.memory_in_mb
+        current_web_process.disk_quota = message.disk_in_mb if message.disk_in_mb
+        current_web_process.log_rate_limit = message.log_rate_limit_in_bytes_per_second if message.log_rate_limit_in_bytes_per_second
+        # Quotas wont get checked unless the process is started
+        current_web_process.state = ProcessModel::STARTED
+        current_web_process.validate
+
+        raise Sequel::ValidationFailed.new(current_web_process) unless current_web_process.valid?
+
+        current_web_process.reload
+      end
+
+      def create_deployment(app, message, previous_deployment, previous_droplet, revision, target_state, _user_audit_info)
         deployment = DeploymentModel.create(
           app: app,
-          state: DeploymentModel::DEPLOYED_STATE,
-          status_value: DeploymentModel::FINALIZED_STATUS_VALUE,
-          status_reason: DeploymentModel::DEPLOYED_STATUS_REASON,
+          state: starting_state(message),
+          status_value: DeploymentModel::ACTIVE_STATUS_VALUE,
+          status_reason: DeploymentModel::DEPLOYING_STATUS_REASON,
           droplet: target_state.droplet,
           previous_droplet: previous_droplet,
           original_web_process_instance_count: desired_instances(app.oldest_web_process, previous_deployment),
           revision_guid: revision&.guid,
           revision_version: revision&.version,
           strategy: message.strategy,
-          max_in_flight: message.max_in_flight
+          max_in_flight: message.max_in_flight,
+          memory_in_mb: message.memory_in_mb,
+          disk_in_mb: message.disk_in_mb,
+          log_rate_limit_in_bytes_per_second: message.log_rate_limit_in_bytes_per_second,
+          canary_steps: message.canary_steps,
+          web_instances: message.web_instances
         )
-
         MetadataUpdate.update(deployment, message)
-
-        record_audit_event(deployment, target_state.droplet, user_audit_info, message)
-
         deployment
       end
 
@@ -217,15 +239,19 @@ module VCAP::CloudController
         end
       end
 
-      def starting_process_instances(message, desired_instances)
-        if message.strategy == DeploymentModel::CANARY_STRATEGY
-          1
-        else
-          [message.max_in_flight, desired_instances].min
-        end
+      def starting_process_instances(deployment, desired_instances)
+        starting_process_count = if deployment.strategy == DeploymentModel::CANARY_STRATEGY
+                                   deployment.canary_step[:canary]
+                                 elsif deployment.web_instances
+                                   deployment.web_instances
+                                 else
+                                   desired_instances
+                                 end
+
+        [deployment.max_in_flight, starting_process_count].min
       end
 
-      def log_rollback_event(app_guid, user_id, revision_id, strategy)
+      def log_rollback_event(app_guid, user_id, revision_id, strategy, max_in_flight, canary_steps)
         TelemetryLogger.v3_emit(
           'rolled-back-app',
           {
@@ -233,7 +259,11 @@ module VCAP::CloudController
             'user-id' => user_id,
             'revision-id' => revision_id
           },
-          { 'strategy' => strategy }
+          {
+            'strategy' => strategy,
+            'max-in-flight' => max_in_flight,
+            'canary-steps' => canary_steps
+          }
         )
       end
     end

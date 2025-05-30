@@ -16,7 +16,7 @@ RSpec.describe 'V3 service instances' do
       let(:guid) { 'no-such-guid' }
 
       let(:expected_codes_and_responses) do
-        Hash.new(code: 404)
+        Hash.new({ code: 404 }.freeze)
       end
 
       it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS
@@ -248,8 +248,8 @@ RSpec.describe 'V3 service instances' do
 
         let(:expected_codes_and_responses) do
           h = Hash.new(
-            code: 200,
-            response_objects: []
+            { code: 200,
+              response_objects: [] }.freeze
           )
 
           h['admin'] = all_instances
@@ -527,8 +527,8 @@ RSpec.describe 'V3 service instances' do
 
       let(:expected_codes_and_responses) do
         h = Hash.new(
-          code: 200,
-          response_object: credentials
+          { code: 200,
+            response_object: credentials }.freeze
         )
 
         h['global_auditor'] = h['space_supporter'] = h['space_manager'] = h['space_auditor'] = h['org_manager'] = { code: 403 }
@@ -594,8 +594,8 @@ RSpec.describe 'V3 service instances' do
 
       let(:expected_codes_and_responses) do
         h = Hash.new(
-          code: 200,
-          response_object: parameters
+          { code: 200,
+            response_object: parameters }.freeze
         )
 
         h['org_auditor'] = { code: 404 }
@@ -703,8 +703,8 @@ RSpec.describe 'V3 service instances' do
 
         let(:expected_codes_and_responses) do
           h = Hash.new(
-            code: 200,
-            response_object: parameters
+            { code: 200,
+              response_object: parameters }.freeze
           )
 
           h['space_supporter'] = h['space_developer'] = h['space_manager'] = h['space_auditor'] = h['org_manager'] = { code: 403 }
@@ -1260,7 +1260,10 @@ RSpec.describe 'V3 service instances' do
             expect(last_response).to have_status_code(422)
             expect(parsed_response['errors']).to include(
               include({
-                        'detail' => 'Invalid service plan. Ensure that the service plan exists, is available, and you have access to it.',
+                        'detail' => 'Invalid service plan. This could be due to a space-scoped broker which is offering the service plan ' \
+                                    "'#{service_plan.name}' with guid '#{service_plan.guid}' in another space or that the plan " \
+                                    'is not enabled in this organization. Ensure that the service plan is visible in your current space ' \
+                                    "'#{space.name}' with guid '#{space.guid}'.",
                         'title' => 'CF-UnprocessableEntity',
                         'code' => 10_008
                       })
@@ -1276,7 +1279,9 @@ RSpec.describe 'V3 service instances' do
             expect(last_response).to have_status_code(422)
             expect(parsed_response['errors']).to include(
               include({
-                        'detail' => 'Invalid service plan. Ensure that the service plan exists, is available, and you have access to it.',
+                        'detail' => "Invalid service plan. The service plan '#{service_plan.name}' with guid '#{service_plan.guid}' " \
+                                    "has been removed from the service broker's catalog. " \
+                                    'It is not possible to create new service instances using this plan.',
                         'title' => 'CF-UnprocessableEntity',
                         'code' => 10_008
                       })
@@ -2404,6 +2409,26 @@ RSpec.describe 'V3 service instances' do
           end
         end
 
+        context 'not enabled in that org' do
+          let(:service_plan) { VCAP::CloudController::ServicePlan.make(public: false, active: true) }
+          let(:service_plan_guid) { service_plan.guid }
+
+          it 'fails saying the plan is invalid' do
+            api_call.call(admin_headers)
+            expect(last_response).to have_status_code(422)
+            expect(parsed_response['errors']).to include(
+              include({
+                        'detail' => 'Invalid service plan. This could be due to a space-scoped broker which is offering the service plan ' \
+                                    "'#{service_plan.name}' with guid '#{service_plan.guid}' in another space or that the plan " \
+                                    'is not enabled in this organization. Ensure that the service plan is visible in your current space ' \
+                                    "'#{space.name}' with guid '#{space.guid}'.",
+                        'title' => 'CF-UnprocessableEntity',
+                        'code' => 10_008
+                      })
+            )
+          end
+        end
+
         context 'not available' do
           let(:service_plan) { VCAP::CloudController::ServicePlan.make(public: true, active: false) }
           let(:service_plan_guid) { service_plan.guid }
@@ -2413,7 +2438,9 @@ RSpec.describe 'V3 service instances' do
             expect(last_response).to have_status_code(422)
             expect(parsed_response['errors']).to include(
               include({
-                        'detail' => 'Invalid service plan. Ensure that the service plan exists, is available, and you have access to it.',
+                        'detail' => "Invalid service plan. The service plan '#{service_plan.name}' with guid '#{service_plan.guid}' " \
+                                    "has been removed from the service broker's catalog. " \
+                                    'It is not possible to create new service instances using this plan.',
                         'title' => 'CF-UnprocessableEntity',
                         'code' => 10_008
                       })
@@ -4237,7 +4264,7 @@ RSpec.describe 'V3 service instances' do
       let(:guid) { 'no-such-guid' }
 
       let(:expected_codes_and_responses) do
-        h = Hash.new(code: 404)
+        h = Hash.new({ code: 404 }.freeze)
         h['unauthenticated'] = { code: 401 }
         h
       end
@@ -4250,7 +4277,7 @@ RSpec.describe 'V3 service instances' do
       let(:guid) { instance.guid }
 
       let(:expected_codes_and_responses) do
-        h = Hash.new(code: 404)
+        h = Hash.new({ code: 404 }.freeze)
         %w[admin space_developer].each { |r| h[r] = READ_AND_WRITE }
         %w[admin_read_only global_auditor org_manager space_manager space_auditor space_supporter].each { |r| h[r] = READ_ONLY }
         %w[org_billing_manager org_auditor no_role service_permissions_reader].each { |r| h[r] = NO_PERMISSIONS }
@@ -4299,7 +4326,7 @@ RSpec.describe 'V3 service instances' do
       let(:guid) { instance.guid }
 
       let(:expected_codes_and_responses) do
-        h = Hash.new(code: 404)
+        h = Hash.new({ code: 404 }.freeze)
         h['admin'] = READ_AND_WRITE
         %w[admin_read_only global_auditor].each { |r| h[r] = READ_ONLY }
         %w[org_billing_manager org_auditor org_manager space_manager space_auditor space_developer space_supporter no_role service_permissions_reader].each do |r|

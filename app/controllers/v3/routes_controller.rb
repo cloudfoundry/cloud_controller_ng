@@ -119,7 +119,7 @@ class RoutesController < ApplicationController
 
     delete_action = RouteDeleteAction.new(user_audit_info)
     deletion_job = VCAP::CloudController::Jobs::DeleteActionJob.new(Route, route.guid, delete_action)
-    pollable_job = Jobs::Enqueuer.new(deletion_job, queue: Jobs::Queues.generic).enqueue_pollable
+    pollable_job = Jobs::Enqueuer.new(queue: Jobs::Queues.generic).enqueue_pollable(deletion_job)
 
     head :accepted, 'Location' => url_builder.build_url(path: "/v3/jobs/#{pollable_job.guid}")
   end
@@ -362,7 +362,7 @@ class RoutesController < ApplicationController
   end
 
   def validate_app_spaces!(apps_hash, route)
-    return unless apps_hash.values.any? { |app| app.space != route.space && route.shared_spaces.exclude?(app.space) }
+    return unless apps_hash.values.any? { |app| !route.available_in_space?(app.space) }
 
     unprocessable!("Routes destinations must be in either the route's space or the route's shared spaces")
   end

@@ -120,13 +120,13 @@ module VCAP::CloudController
           end
         end
 
-        it 'raises a human-friendly error when name and stack conflict' do
+        it 'raises a human-friendly error when name, stack and lifecycle conflict' do
           expect(buildpack1.stack).to eq buildpack2.stack
           message = BuildpackUpdateMessage.new(name: buildpack1.name)
 
           expect do
             BuildpackUpdate.new.update(buildpack2, message)
-          end.to raise_error(BuildpackUpdate::Error, "Buildpack with name '#{buildpack1.name}' and stack '#{buildpack1.stack}' already exists")
+          end.to raise_error(BuildpackUpdate::Error, "Buildpack with name '#{buildpack1.name}', stack '#{buildpack1.stack}' and lifecycle '#{buildpack1.lifecycle}' already exists")
         end
 
         it 're-raises when there is an unknown error' do

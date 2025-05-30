@@ -71,6 +71,22 @@ module VCAP::CloudController
           expect { unbound_and_unmapped_route.refresh }.to raise_error Sequel::Error, 'Record not found'
         end
       end
+
+      context 'when the unmapped routes have labels and annotations' do
+        let!(:unmapped_route_1) { Route.make(domain: domain, space: space, host: 'unmapped1') }
+        let!(:label_1) { RouteLabelModel.make(key_name: 'k1', value: 'v1', resource_guid: unmapped_route_1.guid) }
+        let!(:annot_1) { RouteAnnotationModel.make(key_name: 'k1', value: 'v1', resource_guid: unmapped_route_1.guid) }
+
+        it 'deletes the labels, annotations and routes' do
+          expect do
+            subject.delete(space)
+          end.to change(VCAP::CloudController::Route, :count).by(-1)
+
+          expect { unmapped_route_1.refresh }.to raise_error Sequel::Error, 'Record not found'
+          expect { label_1.refresh }.to raise_error Sequel::Error, 'Record not found'
+          expect { annot_1.refresh }.to raise_error Sequel::Error, 'Record not found'
+        end
+      end
     end
   end
 end

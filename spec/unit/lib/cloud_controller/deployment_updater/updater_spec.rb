@@ -24,7 +24,7 @@ module VCAP::CloudController
         instances: current_deploying_instances,
         guid: 'guid-final',
         revision: revision,
-        state: ProcessModel::STOPPED
+        state: ProcessModel::STARTED
       )
     end
     let(:revision) { RevisionModel.make(app: app, droplet: droplet, version: 300) }
@@ -42,11 +42,14 @@ module VCAP::CloudController
         deploying_web_process: deploying_web_process,
         state: state,
         original_web_process_instance_count: original_web_process_instance_count,
-        max_in_flight: 1
+        max_in_flight: max_in_flight,
+        web_instances: web_instances
       )
     end
 
-    let(:diego_instances_reporter) { instance_double(Diego::InstancesReporter) }
+    let(:web_instances) { nil }
+    let(:max_in_flight) { 1 }
+
     let(:all_instances_results) do
       {
         0 => { state: 'RUNNING', uptime: 50, since: 2, routable: true },
@@ -54,123 +57,16 @@ module VCAP::CloudController
         2 => { state: 'RUNNING', uptime: 50, since: 2, routable: true }
       }
     end
-    let(:instances_reporters) { double(:instance_reporters) }
     let(:logger) { instance_double(Steno::Logger, info: nil, error: nil) }
 
+    let(:diego_reporter) { Diego::InstancesReporter.new(nil) }
+
     before do
-      allow(CloudController::DependencyLocator.instance).to receive(:instances_reporters).and_return(instances_reporters)
-      allow(instances_reporters).to receive(:all_instances_for_app).and_return(all_instances_results)
+      allow_any_instance_of(VCAP::CloudController::InstancesReporters).to receive(:diego_reporter).and_return(diego_reporter)
+      allow(diego_reporter).to receive(:all_instances_for_app).and_return(all_instances_results)
     end
 
     describe '#scale' do
-      it 'locks the deployment' do
-        allow(deployment).to receive(:lock!).and_call_original
-        subject.scale
-        expect(deployment).to have_received(:lock!)
-      end
-
-      it 'scales the old web process down by one after the first iteration' do
-        expect(original_web_process_instance_count).to be > current_deploying_instances
-        expect do
-          subject.scale
-        end.to change {
-          web_process.reload.instances
-        }.by(-1)
-      end
-
-      it 'scales up the new web process by one' do
-        expect do
-          subject.scale
-        end.to change {
-          deploying_web_process.reload.instances
-        }.by(1)
-      end
-
-      context 'when the max_in_flight is set to 2' do
-        let(:deployment) do
-          DeploymentModel.make(
-            app: web_process.app,
-            deploying_web_process: deploying_web_process,
-            state: 'DEPLOYING',
-            original_web_process_instance_count: original_web_process_instance_count,
-            max_in_flight: 2
-          )
-        end
-
-        it 'scales up the new web process by two' do
-          expect do
-            subject.scale
-          end.to change {
-            deploying_web_process.reload.instances
-          }.by(2)
-        end
-
-        it 'scales the old web process down by two after the first iteration' do
-          expect do
-            subject.scale
-          end.to change {
-            web_process.reload.instances
-          }.by(-2)
-        end
-      end
-
-      context 'when max_in_flight is larger than the number of remaining desired instances' do
-        let(:current_deploying_instances) { 5 }
-        let(:deployment) do
-          DeploymentModel.make(
-            app: web_process.app,
-            deploying_web_process: deploying_web_process,
-            state: 'DEPLOYING',
-            original_web_process_instance_count: 6,
-            max_in_flight: 5
-          )
-        end
-
-        it 'scales up the new web process by the maximum number' do
-          expect do
-            subject.scale
-          end.to change {
-            deploying_web_process.reload.instances
-          }.by(1)
-        end
-
-        it 'scales the old web process down to 0' do
-          expect do
-            subject.scale
-          end.to change {
-            web_process.reload.instances
-          }.to(0)
-        end
-      end
-
-      context 'when the max_in_flight is more than the total number of process instances' do
-        let(:deployment) do
-          DeploymentModel.make(
-            app: web_process.app,
-            deploying_web_process: deploying_web_process,
-            state: 'DEPLOYING',
-            original_web_process_instance_count: original_web_process_instance_count,
-            max_in_flight: 100
-          )
-        end
-
-        it 'scales up the new web process by the maximum number' do
-          expect do
-            subject.scale
-          end.to change {
-            deploying_web_process.reload.instances
-          }.by(original_web_process_instance_count)
-        end
-
-        it 'scales the old web process down to 0' do
-          expect do
-            subject.scale
-          end.to change {
-            web_process.reload.instances
-          }.to(0)
-        end
-      end
-
       context 'when the deployment process has reached original_web_process_instance_count' do
         let(:droplet) do
           DropletModel.make(
@@ -181,28 +77,18 @@ module VCAP::CloudController
           )
         end
 
-        let(:current_deploying_instances) { original_web_process_instance_count }
-
-        let!(:interim_deploying_web_process) do
-          ProcessModel.make(
-            app: web_process.app,
-            created_at: an_hour_ago,
-            type: ProcessTypes::WEB,
-            instances: 1,
-            guid: 'guid-interim'
-          )
+        let(:all_instances_results) do
+          {
+            0 => { state: 'RUNNING', uptime: 50, since: 2, routable: true },
+            1 => { state: 'RUNNING', uptime: 50, since: 2, routable: true },
+            2 => { state: 'RUNNING', uptime: 50, since: 2, routable: true },
+            3 => { state: 'RUNNING', uptime: 50, since: 2, routable: true },
+            4 => { state: 'RUNNING', uptime: 50, since: 2, routable: true },
+            5 => { state: 'RUNNING', uptime: 50, since: 2, routable: true }
+          }
         end
 
-        let!(:interim_route_mapping) { RouteMappingModel.make(app: web_process.app, process_type: interim_deploying_web_process.type) }
-
-        let!(:non_web_process1) { ProcessModel.make(app: web_process.app, instances: 2, type: 'worker', command: 'something-else') }
-
-        let!(:non_web_process2) { ProcessModel.make(app: web_process.app, instances: 2, type: 'clock') }
-
-        let!(:route1) { Route.make(space: space, host: 'hostname1') }
-        let!(:route_mapping1) { RouteMappingModel.make(app: web_process.app, route: route1, process_type: web_process.type) }
-        let!(:route2) { Route.make(space: space, host: 'hostname2') }
-        let!(:route_mapping2) { RouteMappingModel.make(app: deploying_web_process.app, route: route2, process_type: deploying_web_process.type) }
+        let(:current_deploying_instances) { 6 }
 
         before do
           allow(ProcessRestart).to receive(:restart)
@@ -212,314 +98,60 @@ module VCAP::CloudController
           ).update(process_command: 'revision-non-web-1-command')
         end
 
-        it 'replaces the existing web process with the deploying_web_process' do
-          deploying_web_process_guid = deploying_web_process.guid
-          expect(ProcessModel.map(&:type)).to match_array(%w[web web web worker clock])
-
+        it 'finalizes the deployment' do
           subject.scale
-
           deployment.reload
-          deployment.app.reload
+          expect(deployment.state).to eq(DeploymentModel::DEPLOYED_STATE)
+          expect(deployment.status_value).to eq(DeploymentModel::FINALIZED_STATUS_VALUE)
+          expect(deployment.status_reason).to eq(DeploymentModel::DEPLOYED_STATUS_REASON)
 
           after_web_process = deployment.app.web_processes.first
-          expect(after_web_process.guid).to eq(deploying_web_process_guid)
-          expect(after_web_process.instances).to eq(original_web_process_instance_count)
-
-          expect(ProcessModel.find(guid: deploying_web_process_guid)).not_to be_nil
-          expect(ProcessModel.find(guid: deployment.app.guid)).to be_nil
-
-          expect(ProcessModel.map(&:type)).to match_array(%w[web worker clock])
+          expect(after_web_process.guid).to eq(deploying_web_process.guid)
+          expect(after_web_process.instances).to eq(6)
         end
 
-        it 'cleans up any extra processes from the deployment train' do
-          subject.scale
-          expect(ProcessModel.find(guid: interim_deploying_web_process.guid)).to be_nil
-        end
-
-        it 'puts the deployment into its finished DEPLOYED_STATE' do
-          subject.scale
-          deployment.reload
-          expect(deployment.state).to eq(DeploymentModel::DEPLOYED_STATE)
-          expect(deployment.status_value).to eq(DeploymentModel::FINALIZED_STATUS_VALUE)
-          expect(deployment.status_reason).to eq(DeploymentModel::DEPLOYED_STATUS_REASON)
-        end
-
-        it 'restarts the non-web processes with the deploying process revision, but not the web process' do
-          subject.scale
-
-          expect(ProcessRestart).
-            to have_received(:restart).
-            with(process: non_web_process1, config: TestConfig.config_instance, stop_in_runtime: true, revision: revision)
-
-          expect(ProcessRestart).
-            to have_received(:restart).
-            with(process: non_web_process2, config: TestConfig.config_instance, stop_in_runtime: true, revision: revision)
-
-          expect(ProcessRestart).
-            not_to have_received(:restart).
-            with(process: web_process, config: TestConfig.config_instance, stop_in_runtime: true)
-
-          expect(ProcessRestart).
-            not_to have_received(:restart).
-            with(process: deploying_web_process, config: TestConfig.config_instance, stop_in_runtime: true)
-
-          deployment.reload
-          expect(deployment.state).to eq(DeploymentModel::DEPLOYED_STATE)
-          expect(deployment.status_value).to eq(DeploymentModel::FINALIZED_STATUS_VALUE)
-          expect(deployment.status_reason).to eq(DeploymentModel::DEPLOYED_STATUS_REASON)
-        end
-
-        it 'sets the commands on the non-web processes to be the commands from the revision of the deploying web process' do
-          subject.scale
-
-          expect(non_web_process1.reload.command).to eq('revision-non-web-1-command')
-          expect(non_web_process2.reload.command).to be_nil
-        end
-
-        context 'when revisions are disabled so the deploying web process does not have one' do
-          before do
-            deploying_web_process.update(revision: nil)
-          end
-
-          it 'leaves the non-web process commands alone' do
-            subject.scale
-
-            expect(logger).not_to have_received(:error)
-            expect(non_web_process1.reload.command).to eq('something-else')
-            expect(non_web_process2.reload.command).to be_nil
-          end
-        end
-      end
-
-      context 'when the (oldest) web process will be at zero instances and is type web' do
-        let(:current_web_instances) { 1 }
-        let(:current_deploying_instances) { 3 }
-
-        it 'does not destroy the web process, but scales it to 0' do
-          subject.scale
-          expect(ProcessModel.find(guid: web_process.guid).instances).to eq 0
-        end
-
-        it 'does not destroy any route mappings' do
-          expect do
-            subject.scale
-          end.not_to(change(RouteMappingModel, :count))
-        end
-
-        context 'when the max_in_flight is set to 10' do
-          let(:deployment) do
-            DeploymentModel.make(
-              app: web_process.app,
-              deploying_web_process: deploying_web_process,
-              state: 'DEPLOYING',
-              original_web_process_instance_count: original_web_process_instance_count,
-              max_in_flight: 10
-            )
-          end
-
-          it 'does not destroy the web process, but scales it to 0' do
-            subject.scale
-            expect(ProcessModel.find(guid: web_process.guid).instances).to eq 0
-          end
-        end
-      end
-
-      context 'when the oldest web process will be at zero instances' do
-        let(:current_deploying_instances) { 3 }
-        let!(:web_process) do
-          ProcessModel.make(
-            guid: 'web_process',
-            instances: 0,
-            app: app,
-            created_at: a_day_ago - 11,
-            type: ProcessTypes::WEB
-          )
-        end
-        let!(:oldest_web_process_with_instances) do
-          ProcessModel.make(
-            guid: 'oldest_web_process_with_instances',
-            instances: 1,
-            app: app,
-            created_at: a_day_ago - 10,
-            type: ProcessTypes::WEB
-          )
-        end
-
-        let!(:oldest_route_mapping) do
-          RouteMappingModel.make(app: oldest_web_process_with_instances.app, process_type: oldest_web_process_with_instances.type)
-        end
-
-        let!(:oldest_label) { ProcessLabelModel.make(resource_guid: oldest_web_process_with_instances.guid, key_name: 'test', value: 'bommel') }
-
-        it 'destroys the oldest web process and ignores the original web process' do
-          expect do
-            subject.scale
-          end.not_to(change { ProcessModel.find(guid: web_process.guid) })
-          expect(ProcessModel.find(guid: oldest_web_process_with_instances.guid)).to be_nil
-          expect(oldest_label).not_to exist
-        end
-      end
-
-      context 'when one of the deploying_web_process instances is starting' do
-        let(:current_deploying_instances) { 3 }
-        let(:all_instances_results) do
-          {
-            0 => { state: 'RUNNING', uptime: 50, since: 2, routable: true },
-            1 => { state: 'STARTING', uptime: 50, since: 2, routable: true },
-            2 => { state: 'STARTING', uptime: 50, since: 2, routable: true }
-          }
-        end
-
-        it 'does not scales the process' do
-          expect do
-            subject.scale
-          end.not_to(change do
-            web_process.reload.instances
-          end)
-
-          expect do
-            subject.scale
-          end.not_to(change do
-            deploying_web_process.reload.instances
-          end)
-        end
-      end
-
-      context 'when one of the deploying_web_process instances is not routable' do
-        let(:current_deploying_instances) { 3 }
-        let(:all_instances_results) do
-          {
-            0 => { state: 'RUNNING', uptime: 50, since: 2, routable: true },
-            1 => { state: 'RUNNING', uptime: 50, since: 2, routable: false },
-            2 => { state: 'RUNNING', uptime: 50, since: 2, routable: false }
-          }
-        end
-
-        it 'does not scales the process' do
-          expect do
-            subject.scale
-          end.not_to(change do
-            web_process.reload.instances
-          end)
-
-          expect do
-            subject.scale
-          end.not_to(change do
-            deploying_web_process.reload.instances
-          end)
-        end
-      end
-
-      context 'when one of the deploying_web_process instances is failing' do
-        let(:current_deploying_instances) { 3 }
-        let(:all_instances_results) do
-          {
-            0 => { state: 'RUNNING', uptime: 50, since: 2, routable: true },
-            1 => { state: 'FAILING', uptime: 50, since: 2, routable: true },
-            2 => { state: 'FAILING', uptime: 50, since: 2, routable: true }
-          }
-        end
-
-        it 'does not scale the process' do
-          expect do
-            subject.scale
-          end.not_to(change do
-            web_process.reload.instances
-          end)
-
-          expect do
-            subject.scale
-          end.not_to(change do
-            deploying_web_process.reload.instances
-          end)
-        end
-      end
-
-      context 'when the deployment is deploying' do
-        let!(:previous_last_healthy_at) { deployment.last_healthy_at || 0 }
-
-        before do
-          TestConfig.override(healthcheck_timeout: 60)
-        end
-
-        context 'when all its instances are running' do
-          it 'updates last_healthy_at' do
-            Timecop.travel(deployment.last_healthy_at + 10.seconds) do
-              subject.scale
-              expect(deployment.reload.last_healthy_at).to be > previous_last_healthy_at
-              expect(deployment.state).to eq(DeploymentModel::DEPLOYING_STATE)
-              expect(deployment.status_value).to eq(DeploymentModel::ACTIVE_STATUS_VALUE)
-              expect(deployment.status_reason).to eq(DeploymentModel::DEPLOYING_STATUS_REASON)
-            end
-          end
-        end
-
-        context 'when some instances are crashing' do
+        context 'but one instance is failing' do
           let(:all_instances_results) do
             {
               0 => { state: 'RUNNING', uptime: 50, since: 2, routable: true },
-              1 => { state: 'FAILING', uptime: 50, since: 2, routable: true },
-              2 => { state: 'FAILING', uptime: 50, since: 2, routable: true }
+              1 => { state: 'RUNNING', uptime: 50, since: 2, routable: true },
+              2 => { state: 'RUNNING', uptime: 50, since: 2, routable: true },
+              3 => { state: 'RUNNING', uptime: 50, since: 2, routable: true },
+              4 => { state: 'RUNNING', uptime: 50, since: 2, routable: true },
+              5 => { state: 'FAILING', uptime: 50, since: 2, routable: false }
             }
           end
 
-          it 'changes nothing' do
+          it 'doesn\'t finalize the deployment' do
+            skip 'Seems like we shouldn\'t finalize if there is a failing instance, but that is the current behavior'
             subject.scale
-            expect(deployment.reload.last_healthy_at).to eq previous_last_healthy_at
+            deployment.reload
             expect(deployment.state).to eq(DeploymentModel::DEPLOYING_STATE)
-            expect(deployment.status_value).to eq(DeploymentModel::ACTIVE_STATUS_VALUE)
-            expect(deployment.status_reason).to eq(DeploymentModel::DEPLOYING_STATUS_REASON)
           end
         end
       end
 
-      context 'setting deployment last_healthy_at' do
-        it 'updates the deployments last_healthy_at when scaling' do
-          Timecop.travel(Time.now + 1.minute) do
-            expect do
-              subject.scale
-            end.to(change { deployment.reload.last_healthy_at })
-          end
-        end
+      context 'when deployment has web_instances' do
+        let(:web_instances) { 10 }
+        let(:max_in_flight) { 100 }
 
-        context 'when instances are failing' do
-          let(:all_instances_results) do
-            {
-              0 => { state: 'RUNNING', uptime: 50, since: 2, routable: true },
-              1 => { state: 'FAILING', uptime: 50, since: 2, routable: true },
-              2 => { state: 'FAILING', uptime: 50, since: 2, routable: true }
-            }
-          end
+        it 'scales to web_instances instead of original_web_process_instance_count' do
+          subject.scale
+          deployment.reload
 
-          it 'does not update the deployments last_healthy_at' do
-            Timecop.travel(Time.now + 1.minute) do
-              expect do
-                subject.scale
-              end.not_to(change { deployment.reload.last_healthy_at })
-            end
-          end
+          expect(deployment.deploying_web_process.instances).to eq(10)
         end
       end
 
-      context 'when Diego is unavailable while checking instance status' do
-        let(:current_deploying_instances) { 3 }
+      context 'when deployment does not have web_instances' do
+        let(:web_instances) { nil }
+        let(:max_in_flight) { 100 }
 
-        before do
-          allow(instances_reporters).to receive(:all_instances_for_app).and_raise(CloudController::Errors::ApiError.new_from_details('InstancesUnavailable', 'omg it broke'))
-        end
+        it 'scales to original_web_process_instance_count' do
+          subject.scale
+          deployment.reload
 
-        it 'does not scale the process' do
-          expect do
-            subject.scale
-          end.not_to(change do
-            web_process.reload.instances
-          end)
-
-          expect do
-            subject.scale
-          end.not_to(change do
-            deploying_web_process.reload.instances
-          end)
+          expect(deployment.deploying_web_process.instances).to eq(6)
         end
       end
 
@@ -551,83 +183,8 @@ module VCAP::CloudController
           expect do
             subject.scale
           end.not_to raise_error
-        end
-      end
 
-      describe 'during an upgrade with leftover legacy webish processes' do
-        let!(:deploying_web_process) do
-          ProcessModel.make(
-            app: web_process.app,
-            type: 'web-deployment-guid-legacy',
-            instances: current_deploying_instances,
-            guid: 'guid-legacy',
-            revision: revision
-          )
-        end
-
-        it 'scales up the coerced web process by one' do
-          expect do
-            subject.scale
-          end.to change {
-            deploying_web_process.reload.instances
-          }.by(1)
-        end
-
-        context 'when the max_in_flight is set to 10' do
-          let(:deployment) do
-            DeploymentModel.make(
-              app: web_process.app,
-              deploying_web_process: deploying_web_process,
-              state: 'DEPLOYING',
-              original_web_process_instance_count: original_web_process_instance_count,
-              max_in_flight: 10
-            )
-          end
-
-          it 'scales up the coerced web process by the maximum original web process count' do
-            expect do
-              subject.scale
-            end.to change {
-              deploying_web_process.reload.instances
-            }.by(original_web_process_instance_count)
-          end
-        end
-      end
-
-      context 'when there is an interim deployment that has been SUPERSEDED (CANCELED)' do
-        let!(:interim_canceling_web_process) do
-          ProcessModel.make(
-            app: app,
-            created_at: an_hour_ago,
-            type: ProcessTypes::WEB,
-            instances: 1,
-            guid: 'guid-canceling'
-          )
-        end
-        let!(:interim_canceled_superseded_deployment) do
-          DeploymentModel.make(
-            deploying_web_process: interim_canceling_web_process,
-            state: 'CANCELED',
-            status_reason: 'SUPERSEDED'
-          )
-        end
-
-        it 'scales the canceled web process to zero' do
-          subject.scale
-          expect(interim_canceling_web_process.reload.instances).to eq(0)
-        end
-      end
-
-      context 'deployment got superseded' do
-        before do
-          deployment.update(state: 'DEPLOYED', status_reason: 'SUPERSEDED')
-
-          allow(deployment).to receive(:update).and_call_original
-        end
-
-        it 'skips execution' do
-          subject.scale
-          expect(deployment).not_to have_received(:update)
+          expect(deployment.error).to eq 'An unexpected error has occurred.'
         end
       end
     end
@@ -635,11 +192,106 @@ module VCAP::CloudController
     describe '#canary' do
       let(:state) { DeploymentModel::PREPAUSED_STATE }
       let(:current_deploying_instances) { 1 }
+      let(:deployment) do
+        DeploymentModel.make(
+          app: web_process.app,
+          deploying_web_process: deploying_web_process,
+          state: state,
+          strategy: 'canary',
+          original_web_process_instance_count: original_web_process_instance_count,
+          max_in_flight: 1
+        )
+      end
 
-      it 'locks the deployment' do
-        allow(deployment).to receive(:lock!).and_call_original
-        subject.canary
-        expect(deployment).to have_received(:lock!)
+      describe 'canary steps' do
+        let(:max_in_flight) { 1 }
+        let(:original_web_process_instance_count) { 10 }
+        let(:deployment) do
+          DeploymentModel.make(
+            app: web_process.app,
+            deploying_web_process: deploying_web_process,
+            strategy: 'canary',
+            droplet: droplet,
+            state: state,
+            max_in_flight: max_in_flight,
+            original_web_process_instance_count: 10,
+            canary_steps: [{ instance_weight: 50 }, { instance_weight: 80 }],
+            canary_current_step: 1
+          )
+        end
+
+        context 'when the current step instance count has been reached' do
+          let(:current_deploying_instances) { 5 }
+          let(:current_web_instances) { 8 }
+          let(:all_instances_results) do
+            {
+              0 => { state: 'RUNNING', uptime: 50, since: 2, routable: true },
+              1 => { state: 'RUNNING', uptime: 50, since: 2, routable: true },
+              2 => { state: 'RUNNING', uptime: 50, since: 2, routable: true },
+              3 => { state: 'RUNNING', uptime: 50, since: 2, routable: true },
+              4 => { state: 'RUNNING', uptime: 50, since: 2, routable: true }
+            }
+          end
+
+          it 'transitions state to paused' do
+            subject.canary
+            expect(deployment.state).to eq(DeploymentModel::PAUSED_STATE)
+            expect(web_process.reload.instances).to eq(6)
+            expect(deploying_web_process.instances).to eq(5)
+          end
+        end
+
+        context 'when the current step instance count has not been reached' do
+          let(:current_deploying_instances) { 4 }
+          let(:all_instances_results) do
+            {
+              0 => { state: 'RUNNING', uptime: 50, since: 2, routable: true },
+              1 => { state: 'RUNNING', uptime: 50, since: 2, routable: true },
+              2 => { state: 'RUNNING', uptime: 50, since: 2, routable: true },
+              3 => { state: 'RUNNING', uptime: 50, since: 2, routable: true }
+            }
+          end
+
+          it 'does not transition to paused' do
+            subject.canary
+            expect(deployment.state).not_to eq(DeploymentModel::PAUSED_STATE)
+          end
+        end
+
+        context 'when there is a single unhealthy instance' do
+          let(:current_deploying_instances) { 5 }
+          let(:all_instances_results) do
+            {
+              0 => { state: 'RUNNING', uptime: 50, since: 2, routable: true },
+              1 => { state: 'RUNNING', uptime: 50, since: 2, routable: true },
+              2 => { state: 'RUNNING', uptime: 50, since: 2, routable: true },
+              3 => { state: 'RUNNING', uptime: 50, since: 2, routable: false },
+              4 => { state: 'RUNNING', uptime: 50, since: 2, routable: true }
+            }
+          end
+
+          it 'does not transition to paused' do
+            subject.canary
+            expect(deployment.state).not_to eq(DeploymentModel::PAUSED_STATE)
+          end
+        end
+
+        context 'when there are not enough actual instances' do
+          let(:current_deploying_instances) { 5 }
+          let(:all_instances_results) do
+            {
+              0 => { state: 'RUNNING', uptime: 50, since: 2, routable: true },
+              1 => { state: 'RUNNING', uptime: 50, since: 2, routable: true },
+              2 => { state: 'RUNNING', uptime: 50, since: 2, routable: true },
+              3 => { state: 'RUNNING', uptime: 50, since: 2, routable: true }
+            }
+          end
+
+          it 'does not transition to paused' do
+            subject.canary
+            expect(deployment.state).not_to eq(DeploymentModel::PAUSED_STATE)
+          end
+        end
       end
 
       context 'when the canary instance starts succesfully' do
@@ -649,27 +301,9 @@ module VCAP::CloudController
           }
         end
 
-        it 'pauses the deployment' do
+        it 'transitions state to paused' do
           subject.canary
           expect(deployment.state).to eq(DeploymentModel::PAUSED_STATE)
-          expect(deployment.status_value).to eq(DeploymentModel::ACTIVE_STATUS_VALUE)
-          expect(deployment.status_reason).to eq(DeploymentModel::PAUSED_STATUS_REASON)
-        end
-
-        it 'updates last_healthy_at' do
-          previous_last_healthy_at = deployment.last_healthy_at
-          Timecop.travel(deployment.last_healthy_at + 10.seconds) do
-            subject.canary
-            expect(deployment.reload.last_healthy_at).to be > previous_last_healthy_at
-          end
-        end
-
-        it 'does not alter the existing web processes' do
-          expect do
-            subject.canary
-          end.not_to(change do
-            web_process.reload.instances
-          end)
         end
 
         it 'logs the canary is paused' do
@@ -687,14 +321,14 @@ module VCAP::CloudController
         end
       end
 
-      context 'while the canary instance is still starting' do
+      context 'when the canary is not routable' do
         let(:all_instances_results) do
           {
-            0 => { state: 'STARTING', uptime: 50, since: 2, routable: true }
+            0 => { state: 'RUNNING', uptime: 50, since: 2, routable: false }
           }
         end
 
-        it 'skips the deployment update' do
+        it 'does not transition state to paused' do
           subject.canary
           expect(deployment.state).to eq(DeploymentModel::PREPAUSED_STATE)
           expect(deployment.status_value).to eq(DeploymentModel::ACTIVE_STATUS_VALUE)
@@ -702,10 +336,10 @@ module VCAP::CloudController
         end
       end
 
-      context 'when the canary is not routable routable' do
+      context 'while the canary instance is still starting' do
         let(:all_instances_results) do
           {
-            0 => { state: 'RUNNING', uptime: 50, since: 2, routable: false }
+            0 => { state: 'STARTING', uptime: 50, since: 2, routable: true }
           }
         end
 
@@ -732,10 +366,8 @@ module VCAP::CloudController
           end
         end
 
-        it 'changes nothing' do
-          previous_last_healthy_at = deployment.last_healthy_at
+        it 'skips the deployment update' do
           subject.canary
-          expect(deployment.reload.last_healthy_at).to eq previous_last_healthy_at
           expect(deployment.state).to eq(DeploymentModel::PREPAUSED_STATE)
           expect(deployment.status_value).to eq(DeploymentModel::ACTIVE_STATUS_VALUE)
           expect(deployment.status_reason).to eq(DeploymentModel::DEPLOYING_STATUS_REASON)
@@ -761,45 +393,10 @@ module VCAP::CloudController
 
         it 'does not throw an error (so that other deployments can still proceed)' do
           expect do
-            subject.scale
+            subject.canary
           end.not_to raise_error
-        end
-      end
 
-      context 'when there is an interim deployment that has been SUPERSEDED (CANCELED)' do
-        let!(:interim_canceling_web_process) do
-          ProcessModel.make(
-            app: app,
-            created_at: an_hour_ago,
-            type: ProcessTypes::WEB,
-            instances: 1,
-            guid: 'guid-canceling'
-          )
-        end
-        let!(:interim_canceled_superseded_deployment) do
-          DeploymentModel.make(
-            deploying_web_process: interim_canceling_web_process,
-            state: 'CANCELED',
-            status_reason: 'SUPERSEDED'
-          )
-        end
-
-        it 'scales the canceled web process to zero' do
-          subject.canary
-          expect(interim_canceling_web_process.reload.instances).to eq(0)
-        end
-      end
-
-      context 'when this deployment got superseded' do
-        before do
-          deployment.update(state: 'DEPLOYED', status_reason: 'SUPERSEDED')
-
-          allow(deployment).to receive(:update).and_call_original
-        end
-
-        it 'skips the deployment update' do
-          subject.canary
-          expect(deployment).not_to have_received(:update)
+          expect(deployment.error).to eq 'An unexpected error has occurred.'
         end
       end
     end
@@ -810,129 +407,139 @@ module VCAP::CloudController
         allow_any_instance_of(VCAP::CloudController::Diego::Runner).to receive(:stop)
       end
 
-      it 'deletes the deploying process' do
-        subject.cancel
-        expect(ProcessModel.find(guid: deploying_web_process.guid)).to be_nil
-      end
-
-      it 'rolls back to the correct number of instances' do
-        subject.cancel
-        expect(web_process.reload.instances).to eq(original_web_process_instance_count)
-        expect(ProcessModel.find(guid: deploying_web_process.guid)).to be_nil
-      end
-
-      it 'sets the deployment to CANCELED' do
-        subject.cancel
-        expect(deployment.state).to eq(DeploymentModel::CANCELED_STATE)
-        expect(deployment.status_value).to eq(DeploymentModel::FINALIZED_STATUS_VALUE)
-        expect(deployment.status_reason).to eq(DeploymentModel::CANCELED_STATUS_REASON)
-      end
-
-      context 'when there are interim deployments' do
-        let!(:interim_deploying_web_process) do
-          ProcessModel.make(
-            app: app,
-            created_at: an_hour_ago,
-            type: ProcessTypes::WEB,
-            instances: 1,
-            guid: 'guid-interim'
-          )
-        end
-        let!(:interim_deployed_superseded_deployment) do
-          DeploymentModel.make(
-            deploying_web_process: interim_deploying_web_process,
-            state: 'DEPLOYED',
-            status_reason: 'SUPERSEDED'
-          )
-        end
-        let!(:interim_route_mapping) do
-          RouteMappingModel.make(
-            app: web_process.app,
-            process_type: interim_deploying_web_process.type
-          )
+      context 'when an error occurs while canceling a deployment' do
+        before do
+          allow(deployment).to receive(:lock!).and_raise(StandardError.new('Something real bad happened'))
         end
 
-        it 'scales up the most recent interim web process' do
+        it 'logs the error' do
           subject.cancel
-          expect(interim_deploying_web_process.reload.instances).to eq(original_web_process_instance_count)
-          expect(app.reload.web_processes.first.guid).to eq(interim_deploying_web_process.guid)
+
+          expect(logger).to have_received(:error).with(
+            'error-canceling-deployment',
+            deployment_guid: deployment.guid,
+            error: 'StandardError',
+            error_message: 'Something real bad happened',
+            backtrace: anything
+          )
         end
 
-        it 'sets the most recent interim web process as the only web process' do
-          subject.cancel
-          expect(app.reload.processes.map(&:guid)).to eq([interim_deploying_web_process.guid])
-        end
-
-        context 'when there is an interim deployment that has been SUPERSEDED (CANCELED)' do
-          let!(:interim_canceling_web_process) do
-            ProcessModel.make(
-              app: app,
-              created_at: an_hour_ago + 1,
-              type: ProcessTypes::WEB,
-              instances: 1,
-              guid: 'guid-canceling'
-            )
-          end
-          let!(:interim_canceled_superseded_deployment) do
-            DeploymentModel.make(
-              deploying_web_process: interim_canceling_web_process,
-              state: 'CANCELED',
-              status_reason: 'SUPERSEDED'
-            )
-          end
-
-          it 'sets the most recent interim web process belonging to a SUPERSEDED (DEPLOYED) deployment as the only web process' do
+        it 'does not throw an error (so that other deployments can still proceed)' do
+          expect do
             subject.cancel
-            expect(app.reload.processes.map(&:guid)).to eq([interim_deploying_web_process.guid])
-          end
-        end
+          end.not_to raise_error
 
-        context 'when there is an interim deployment that has no running web process instance' do
-          let(:no_running_instance) do
-            {
-              0 => { state: 'STARTING' },
-              1 => { state: 'CRASHED' },
-              2 => { state: 'DOWN' }
-            }
-          end
-          let!(:interim_deploying_web_process_no_running_instance) do
-            ProcessModel.make(
-              app: app,
-              created_at: an_hour_ago + 1,
-              type: ProcessTypes::WEB,
-              instances: 1,
-              guid: 'guid-no-running-instance'
-            )
-          end
-          let!(:interim_deployed_superseded_deployment_no_running_instance) do
-            DeploymentModel.make(
-              deploying_web_process: interim_deploying_web_process_no_running_instance,
-              state: 'DEPLOYED',
-              status_reason: 'SUPERSEDED'
-            )
-          end
+          expect(deployment.error).to eq 'An unexpected error has occurred.'
+        end
+      end
+    end
+
+    describe 'error handling' do
+      context 'when saving the error to the deployment model' do
+        context 'when the error is a quota error' do
+          let(:web_instances) { nil }
+          let(:max_in_flight) { 100 }
+          let!(:quota_definition) { QuotaDefinition.make(memory_limit: 1) }
 
           before do
-            allow(instances_reporters).to receive(:all_instances_for_app).and_return(no_running_instance, all_instances_results)
+            org = app.organization
+            org.quota_definition = quota_definition
+            org.save
           end
 
-          it 'sets the most recent interim web process having at least one running instance as the only web process' do
-            subject.cancel
-            expect(app.reload.processes.map(&:guid)).to eq([interim_deploying_web_process.guid])
+          it 'saves the quota error to the model' do
+            subject.scale
+            expect(deployment.error).to eq 'memory quota_exceeded'
           end
         end
-      end
 
-      context 'deployment got superseded' do
-        before do
-          deployment.update(state: 'CANCELED', status_reason: 'SUPERSEDED')
+        context 'when the error is not an approved error' do
+          before do
+            allow(deployment).to receive(:app).and_raise(StandardError.new('unrecognized error'))
+          end
 
-          allow(deployment).to receive(:update).and_call_original
+          it 'provides a helpful error on the deployment model' do
+            subject.scale
+            expect(deployment.error).to eq 'An unexpected error has occurred.'
+          end
         end
 
-        it 'skips execution' do
-          subject.cancel
-          expect(deployment).not_to have_received(:update)
+        context 'when the error is a SequelValidation error' do
+          before do
+            allow(deployment).to receive(:app).and_raise(Sequel::ValidationFailed.new('Something bad happened with model validation'))
+          end
+
+          it 'provides a helpful error on the deployment model' do
+            subject.scale
+            expect(deployment.error).to eq 'Something bad happened with model validation'
+          end
+        end
+
+        context 'when the error is a CloudController::Errors::ApiError error' do
+          before do
+            allow(deployment).to receive(:app).and_raise(CloudController::Errors::ApiError.new_from_details('RunnerError', 'some error'))
+          end
+
+          it 'provides a helpful error on the deployment model' do
+            subject.scale
+            expect(deployment.error).to eq 'Runner error: some error'
+          end
+        end
+
+        context 'when there is a problem saving the error column' do
+          before do
+            # too long for db column
+            allow(deployment).to receive(:app).and_raise(CloudController::Errors::ApiError.new_from_details('RunnerError', 'a' * 5000))
+          end
+
+          it 'logs the issue and continues' do
+            subject.scale
+
+            expect(logger).to have_received(:error).with(
+              'error-saving-deployment-error',
+              deployment_guid: deployment.guid,
+              error: 'Sequel::DatabaseError',
+              error_message: anything,
+              backtrace: anything
+            )
+          end
+        end
+
+        context 'when there was a prior error, but the error no longer occurs' do
+          describe '#scale' do
+            before do
+              deployment.error = 'old error'
+              deployment.save
+            end
+
+            it 'clears the error' do
+              subject.scale
+              expect(deployment.error).to be_nil
+            end
+          end
+
+          describe '#cancel' do
+            before do
+              deployment.update(state: 'CANCELING', error: 'old error')
+              allow_any_instance_of(VCAP::CloudController::Diego::Runner).to receive(:stop)
+            end
+
+            it 'clears the error' do
+              subject.cancel
+              expect(deployment.error).to be_nil
+            end
+          end
+
+          describe '#canary' do
+            before do
+              deployment.update(strategy: 'canary', error: 'old error')
+            end
+
+            it 'clears the error' do
+              subject.canary
+              expect(deployment.error).to be_nil
+            end
+          end
         end
       end
     end

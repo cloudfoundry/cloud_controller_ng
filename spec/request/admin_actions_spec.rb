@@ -12,7 +12,7 @@ RSpec.describe 'admin actions' do
 
     let(:expected_codes_and_responses) do
       h = Hash.new(
-        code: 403
+        { code: 403 }.freeze
       )
       h['admin'] = {
         code: 202

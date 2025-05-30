@@ -4,7 +4,7 @@ module VCAP::CloudController
   class RouteTransferOwner
     class << self
       def transfer(route, target_space, user_audit_info)
-        return route if target_space.name == route.space.name
+        return route if target_space.id == route.space.id
 
         original_space = route.space
         Route.db.transaction do

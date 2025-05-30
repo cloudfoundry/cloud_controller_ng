@@ -85,6 +85,9 @@ For a user to be assigned a space role, the user must already have an organizati
 
 If the associated user is valid but does not exist in Cloud Controller's database, a user resource will be created automatically.
 
+If CAPI property `cc.allow_user_creation_by_org_manager` is enabled, the organization role is being created by username + origin and the user does not exist in UAA yet, the user will be created.
+The origin must be different from `uaa` in this case.
+
 #### Definition
 `POST /v3/roles`
 

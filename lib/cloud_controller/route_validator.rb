@@ -4,6 +4,7 @@ module VCAP::CloudController
     class DomainInvalid < ValidationError; end
     class RouteInvalid < ValidationError; end
     class RoutePortTaken < ValidationError; end
+    class InvalidRouteOptions < ValidationError; end
 
     attr_reader :route
 

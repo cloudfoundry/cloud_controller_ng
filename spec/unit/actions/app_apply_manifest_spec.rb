@@ -119,6 +119,7 @@ module VCAP::CloudController
             end
 
             describe 'using cnb type' do
+              let(:message) { AppManifestMessage.create_from_yml({ name: 'blah', buildpack: buildpack.name, lifecycle: 'cnb' }) }
               let(:app) { AppModel.make(:cnb) }
 
               it 'calls AppUpdate with the correct arguments' do
@@ -142,6 +143,98 @@ module VCAP::CloudController
               expect do
                 app_apply_manifest.apply(app.guid, message)
               end.to raise_error(AppUpdate::InvalidApp, 'invalid app')
+            end
+          end
+        end
+
+        context 'cnb apps' do
+          let(:buildpack) { VCAP::CloudController::Buildpack.make }
+          let(:message) { AppManifestMessage.create_from_yml({ name: 'blah' }) }
+          let(:app_update_message) { message.app_update_message }
+          let(:app) { AppModel.make(:cnb) }
+
+          before do
+            TestConfig.override(default_app_lifecycle: 'cnb')
+          end
+
+          context 'when the default_app_lifecycle is set and the the lifecycle is not specified' do
+            it 'preserves the lifecycle' do
+              app_apply_manifest.apply(app.guid, message)
+              expect(AppUpdate).to have_received(:new).with(user_audit_info, manifest_triggered: true)
+              expect(app_update).to have_received(:update).
+                with(app, app_update_message, instance_of(AppCNBLifecycle))
+              expect(app.reload.lifecycle_type).to eq('cnb')
+            end
+          end
+
+          context 'when buildpack is specified' do
+            let(:message) { AppManifestMessage.create_from_yml({ name: 'blah', buildpack: buildpack.name }) }
+
+            it 'preserves the lifecycle' do
+              app_apply_manifest.apply(app.guid, message)
+              expect(AppUpdate).to have_received(:new).with(user_audit_info, manifest_triggered: true)
+              expect(app_update).to have_received(:update).
+                with(app, app_update_message, instance_of(AppCNBLifecycle))
+              expect(app.reload.lifecycle_type).to eq('cnb')
+            end
+          end
+
+          context 'when the default differs from what is already set on the app' do
+            let(:message) { AppManifestMessage.create_from_yml({ name: 'blah', buildpack: buildpack.name }) }
+            let(:app) { AppModel.make(:buildpack) }
+
+            it 'preserves the apps lifecycle' do
+              app_apply_manifest.apply(app.guid, message)
+              expect(AppUpdate).to have_received(:new).with(user_audit_info, manifest_triggered: true)
+              expect(app_update).to have_received(:update).
+                with(app, app_update_message, instance_of(AppBuildpackLifecycle))
+              expect(app.reload.lifecycle_type).to eq('buildpack')
+            end
+          end
+        end
+
+        context 'buildpack apps' do
+          let(:buildpack) { VCAP::CloudController::Buildpack.make }
+          let(:message) { AppManifestMessage.create_from_yml({ name: 'blah' }) }
+          let(:app_update_message) { message.app_update_message }
+          let(:app) { AppModel.make(:buildpack) }
+
+          before do
+            TestConfig.override(default_app_lifecycle: 'buildpack')
+          end
+
+          context 'when the default_app_lifecycle is set and the the lifecycle is not specified' do
+            it 'preserves the lifecycle' do
+              app_apply_manifest.apply(app.guid, message)
+              expect(AppUpdate).to have_received(:new).with(user_audit_info, manifest_triggered: true)
+              expect(app_update).to have_received(:update).
+                with(app, app_update_message, instance_of(AppBuildpackLifecycle))
+              expect(app.reload.lifecycle_type).to eq('buildpack')
+            end
+          end
+
+          context 'when buildpack is specified' do
+            let(:message) { AppManifestMessage.create_from_yml({ name: 'blah', buildpack: buildpack.name }) }
+
+            it 'preserves the lifecycle' do
+              app_apply_manifest.apply(app.guid, message)
+              expect(AppUpdate).to have_received(:new).with(user_audit_info, manifest_triggered: true)
+              expect(app_update).to have_received(:update).
+                with(app, app_update_message, instance_of(AppBuildpackLifecycle))
+              expect(app.reload.lifecycle_type).to eq('buildpack')
+            end
+          end
+
+          context 'when the default differs from what is already set on the app' do
+            let(:message) { AppManifestMessage.create_from_yml({ name: 'blah', buildpack: buildpack.name }) }
+            let(:app) { AppModel.make(:cnb) }
+
+            it 'preserves the apps lifecycle' do
+              app_apply_manifest.apply(app.guid, message)
+              expect(AppUpdate).to have_received(:new).with(user_audit_info, manifest_triggered: true)
+              expect(app_update).to have_received(:update).
+                with(app, app_update_message, instance_of(AppCNBLifecycle))
+              expect(app.reload.lifecycle_type).to eq('cnb')
             end
           end
         end

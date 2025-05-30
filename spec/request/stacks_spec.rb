@@ -56,7 +56,7 @@ RSpec.describe 'Stacks Request' do
         end
 
         let(:expected_codes_and_responses) do
-          Hash.new(code: 200, response_objects: stacks_response_objects)
+          Hash.new({ code: 200, response_objects: stacks_response_objects }.freeze)
         end
         let!(:stack1) { VCAP::CloudController::Stack.make }
         let!(:stack2) { VCAP::CloudController::Stack.make(name: default_stack_name) }
@@ -335,7 +335,7 @@ RSpec.describe 'Stacks Request' do
       }
     end
     let(:expected_codes_and_responses) do
-      Hash.new(code: 200, response_object: stacks_response_object)
+      Hash.new({ code: 200, response_object: stacks_response_object }.freeze)
     end
 
     it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS
@@ -548,7 +548,7 @@ RSpec.describe 'Stacks Request' do
       let(:api_call) { ->(user_headers) { get "/v3/stacks/#{stack.guid}/apps", nil, user_headers } }
 
       let(:expected_codes_and_responses) do
-        h = Hash.new(code: 200, response_guids: [app_model1.guid, app_model2.guid])
+        h = Hash.new({ code: 200, response_guids: [app_model1.guid, app_model2.guid] }.freeze)
 
         h['org_auditor'] = {
           code: 200,

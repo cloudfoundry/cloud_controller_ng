@@ -1,5 +1,3 @@
-require 'vcap/services/api'
-
 module VCAP::CloudController
   class ServiceUsageEventsController < RestController::ModelController
     query_parameters :service_instance_type, :service_guid

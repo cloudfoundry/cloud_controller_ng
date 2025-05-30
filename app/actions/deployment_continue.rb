@@ -12,11 +12,21 @@ module VCAP::CloudController
           reject_invalid_state!(deployment) unless deployment.continuable?
 
           record_audit_event(deployment, user_audit_info)
-          deployment.update(
-            state: DeploymentModel::DEPLOYING_STATE,
-            status_value: DeploymentModel::ACTIVE_STATUS_VALUE,
-            status_reason: DeploymentModel::DEPLOYING_STATUS_REASON
-          )
+
+          if deployment.canary_steps && deployment.canary_current_step < deployment.canary_steps.length
+            deployment.update(
+              state: DeploymentModel::PREPAUSED_STATE,
+              status_value: DeploymentModel::ACTIVE_STATUS_VALUE,
+              status_reason: DeploymentModel::DEPLOYING_STATUS_REASON,
+              canary_current_step: deployment.canary_current_step + 1
+            )
+          else
+            deployment.update(
+              state: DeploymentModel::DEPLOYING_STATE,
+              status_value: DeploymentModel::ACTIVE_STATUS_VALUE,
+              status_reason: DeploymentModel::DEPLOYING_STATUS_REASON
+            )
+          end
         end
       end
 

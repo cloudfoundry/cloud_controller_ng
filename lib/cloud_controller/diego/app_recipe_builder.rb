@@ -6,6 +6,7 @@ require 'cloud_controller/diego/docker/desired_lrp_builder'
 require 'cloud_controller/diego/cnb/desired_lrp_builder'
 require 'cloud_controller/diego/process_guid'
 require 'cloud_controller/diego/ssh_key'
+require 'cloud_controller/diego/service_binding_files_builder'
 require 'credhub/config_helpers'
 require 'models/helpers/health_check_types'
 require 'cloud_controller/diego/main_lrp_action_builder'
@@ -100,7 +101,8 @@ module VCAP::CloudController
             organizational_unit: ["organization:#{process.organization.guid}", "space:#{process.space.guid}", "app:#{process.app_guid}"]
           ),
           image_username: process.desired_droplet.docker_receipt_username,
-          image_password: process.desired_droplet.docker_receipt_password
+          image_password: process.desired_droplet.docker_receipt_password,
+          volume_mounted_files: ServiceBindingFilesBuilder.build(process)
         }.compact
       end
 
@@ -151,19 +153,21 @@ module VCAP::CloudController
 
       def generate_routes(info)
         http_routes = (info['http_routes'] || []).map do |i|
-          {
+          http_route = {
             hostnames: [i['hostname']],
             port: i['port'],
             route_service_url: i['route_service_url'],
             isolation_segment: IsolationSegmentSelector.for_space(process.space),
             protocol: i['protocol']
           }
+          http_route[:options] = i['options'] if i['options']
+          http_route
         end
 
         {
           CF_ROUTES_KEY => Oj.dump(http_routes),
-          TCP_ROUTES_KEY => Oj.dump((info['tcp_routes'] || [])),
-          INTERNAL_ROUTES_KEY => Oj.dump((info['internal_routes'] || []))
+          TCP_ROUTES_KEY => Oj.dump(info['tcp_routes'] || []),
+          INTERNAL_ROUTES_KEY => Oj.dump(info['internal_routes'] || [])
         }
       end
 
