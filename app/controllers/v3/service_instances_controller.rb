@@ -270,6 +270,26 @@ class ServiceInstancesV3Controller < ApplicationController
         audit_hash: message.audit_hash
       )
 
+      result = VCAP::CloudController::ServicePlan.
+               join(:services, id: :service_id).
+               join(:service_brokers, id: Sequel[:services][:service_broker_id]).
+               where(Sequel[:service_plans][:id] => service_plan.id).
+               select(
+                 Sequel[:services][:label].as(:service_name),
+                 Sequel[:service_brokers][:name].as(:broker_name)
+               ).
+               first
+
+      service_name = result[:service_name]
+      broker_name = result[:broker_name]
+
+      logger.info(
+        "Creating managed service instance with name '#{instance.name}' " \
+        "using service plan '#{service_plan.name}' " \
+        "from service offering '#{service_name}' " \
+        "provided by broker '#{broker_name}'."
+      )
+
       pollable_job = Jobs::Enqueuer.new(queue: Jobs::Queues.generic).enqueue_pollable(provision_job)
 
       head :accepted, 'Location' => url_builder.build_url(path: "/v3/jobs/#{pollable_job.guid}")
@@ -297,6 +317,35 @@ class ServiceInstancesV3Controller < ApplicationController
     action = V3::ServiceInstanceUpdateManaged.new(service_instance, message, user_audit_info, message.audit_hash)
     action.preflight!
     if action.update_broker_needed?
+
+      plan_scope = if message.service_plan_guid
+                     { Sequel[:service_plans][:guid] => message.service_plan_guid }
+                   else
+                     { Sequel[:service_plans][:id] => service_instance.service_plan_id }
+                   end
+
+      result = VCAP::CloudController::ServicePlan.
+               join(:services, id: :service_id).
+               join(:service_brokers, id: Sequel[:services][:service_broker_id]).
+               where(plan_scope).
+               select(
+                 Sequel[:service_plans][:name].as(:plan_name),
+                 Sequel[:services][:label].as(:service_name),
+                 Sequel[:service_brokers][:name].as(:broker_name)
+               ).
+               first
+
+      plan_name     = result[:plan_name]
+      service_name  = result[:service_name]
+      broker_name   = result[:broker_name]
+
+      logger.info(
+        "Updating managed service instance with name '#{service_instance.name}' " \
+        "using service plan '#{plan_name}' " \
+        "from service offering '#{service_name}' " \
+        "provided by broker '#{broker_name}'."
+      )
+
       update_job = action.enqueue_update
       head :accepted, 'Location' => url_builder.build_url(path: "/v3/jobs/#{update_job.guid}")
     else
@@ -352,6 +401,29 @@ class ServiceInstancesV3Controller < ApplicationController
 
   def enqueue_delete_job(service_instance)
     delete_job = V3::DeleteServiceInstanceJob.new(service_instance.guid, user_audit_info)
+
+    result = VCAP::CloudController::ServicePlan.
+             join(:services, id: :service_id).
+             join(:service_brokers, id: Sequel[:services][:service_broker_id]).
+             where(Sequel[:service_plans][:id] => service_instance.service_plan_id).
+             select(
+               Sequel[:service_plans][:name].as(:plan_name),
+               Sequel[:services][:label].as(:service_name),
+               Sequel[:service_brokers][:name].as(:broker_name)
+             ).
+             first
+
+    plan_name     = result[:plan_name]
+    service_name  = result[:service_name]
+    broker_name   = result[:broker_name]
+
+    logger.info(
+      "Deleting managed service instance with name '#{service_instance.name}' " \
+      "using service plan '#{plan_name}' " \
+      "from service offering '#{service_name}' " \
+      "provided by broker '#{broker_name}'."
+    )
+
     pollable_job = Jobs::Enqueuer.new(queue: Jobs::Queues.generic).enqueue_pollable(delete_job)
     pollable_job.guid
   end
