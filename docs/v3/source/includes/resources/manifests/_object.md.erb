@@ -19,6 +19,11 @@ applications:
   env:
     VAR1: value1
     VAR2: value2
+  features:
+    ssh: true
+    revisions: true
+    service-binding-k8s: false
+    file-based-vcap-services: false
   routes:
   - route: route.example.com
   - route: another-route.example.com
@@ -94,6 +99,7 @@ Name | Type | Description
 **buildpacks** | _list of strings_ | a) An empty array, which will automatically select the appropriate default buildpack according to the coding language (incompatible with **lifecycle: cnb**) <br>b) An array of one or more URLs pointing to buildpacks <br>c) An array of one or more installed buildpack names <br>Replaces the legacy `buildpack` field
 **docker** | _object_ | If present, the created app will have Docker lifecycle type; the value of this key is ignored by the API but may be used by clients to source the registry address of the image and credentials, if needed; the [generate manifest endpoint](#generate-a-manifest-for-an-app) will return the registry address of the image and username provided with this key
 **env** | _object_ | A key-value mapping of environment variables to be used for the app when running
+**features** | _object_ | A key-value mapping of feature names to booleans (true = enabled, false = disabled)
 **no-route** | _boolean_ | When set to `true`, any routes specified with the `routes` attribute will be ignored and any existing routes will be removed
 **processes** | _array of [process configurations](#space-manifest-process-level-configuration)_ | List of configurations for individual process types
 **random-route** | _boolean_ | Creates a random route for the app if `true`; if `routes` is specified, if the app already has routes, or if `no-route` is specified, this field is ignored regardless of its value

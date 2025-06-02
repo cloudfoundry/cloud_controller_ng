@@ -503,6 +503,28 @@ module VCAP::CloudController
           end
         end
       end
+
+      context 'when the given manifest contains features' do
+        before do
+          default_manifest['applications'][0]['features'] = {
+            'ssh' => true,                 # unchanged
+            'service-binding-k8s' => true  # changed
+          }
+        end
+
+        it 'does not show unchanged features' do
+          expect(subject).not_to include(hash_including('path' => '/applications/0/features/ssh'))
+        end
+
+        it 'shows changed features' do
+          expect(subject).to include({ 'op' => 'replace', 'path' => '/applications/0/features/service-binding-k8s', 'value' => true, 'was' => false })
+        end
+
+        it 'does not show unspecified features' do
+          expect(subject).not_to include(hash_including('path' => '/applications/0/features/revisions'))
+          expect(subject).not_to include(hash_including('path' => '/applications/0/features/file-based-vcap-services'))
+        end
+      end
     end
   end
 end
