@@ -629,12 +629,12 @@ DEPENDENCIES
   pry-byebug
   public_suffix
   puma
-  rack (~> 2.2.14)
+  rack (~> 2.2.16)
   rack-test
   railties (~> 7.2.1)
   rake
   redis
-  rexml (~> 3.3.6)
+  rexml (~> 3.3.9)
   roodi
   rspec (~> 3.13.0)
   rspec-collection_matchers
