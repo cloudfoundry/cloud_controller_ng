@@ -51,6 +51,20 @@ module VCAP::CloudController
             expect(client).to have_received(:get_app).exactly(2).times
           end
         end
+
+        context 'when some other type of APIError occurs' do
+          let(:desired_lrp_update) { double(:desired_lrp_update) }
+          let(:get_app_response) { nil }
+
+          before do
+            allow(client).to receive(:update_app)
+            allow(client).to receive(:desire_app).and_raise CloudController::Errors::ApiError.new_from_details('SomeError', 'who knows')
+          end
+
+          it 'catches the error and updates the app' do
+            expect { DesireAppHandler.create_or_update_app(process, client) }.to raise_error
+          end
+        end
       end
     end
   end
