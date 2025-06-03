@@ -93,7 +93,7 @@ class ApplicationController < ActionController::Base
   rescue_from CloudController::Errors::CompoundError, with: :handle_compound_error
   rescue_from ActionDispatch::Http::Parameters::ParseError, with: :handle_invalid_request_body
   rescue_from Sequel::DatabaseConnectionError, Sequel::DatabaseDisconnectError, with: :handle_db_connection_error
-  rescue_from OpenSSL::Cipher::CipherError, with: :handle_key_derivation_error
+  rescue_from VCAP::CloudController::Encryptor::EncryptorError, with: :handle_key_derivation_error
 
   def configuration
     Config.config
