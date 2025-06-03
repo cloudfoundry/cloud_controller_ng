@@ -11038,6 +11038,11 @@ In the case where the specified isolation segment is the system-wide shared segm
   <span class="na">env</span><span class="pi">:</span>
     <span class="na">VAR1</span><span class="pi">:</span> <span class="s">value1</span>
     <span class="na">VAR2</span><span class="pi">:</span> <span class="s">value2</span>
+  <span class="na">features</span><span class="pi">:</span>
+    <span class="na">ssh</span><span class="pi">:</span> <span class="no">true</span>
+    <span class="na">revisions</span><span class="pi">:</span> <span class="no">true</span>
+    <span class="na">service-binding-k8s</span><span class="pi">:</span> <span class="no">false</span>
+    <span class="na">file-based-vcap-services</span><span class="pi">:</span> <span class="no">false</span>
   <span class="na">routes</span><span class="pi">:</span>
   <span class="pi">-</span> <span class="na">route</span><span class="pi">:</span> <span class="s">route.example.com</span>
   <span class="pi">-</span> <span class="na">route</span><span class="pi">:</span> <span class="s">another-route.example.com</span>
@@ -11151,6 +11156,11 @@ In the case where the specified isolation segment is the system-wide shared segm
 <td><strong>env</strong></td>
 <td><em>object</em></td>
 <td>A key-value mapping of environment variables to be used for the app when running</td>
+</tr>
+<tr>
+<td><strong>features</strong></td>
+<td><em>object</em></td>
+<td>A key-value mapping of feature names to booleans (true = enabled, false = disabled)</td>
 </tr>
 <tr>
 <td><strong>no-route</strong></td>
@@ -11378,7 +11388,7 @@ take either an array of service instance name strings or an array of the followi
 <p>Apply changes specified in a manifest to the named apps and their underlying
 processes. The apps must reside in the space. These changes are additive
 and will not modify any unspecified properties or remove any existing
-environment variables, routes, or services.</p>
+environment variables, app features, routes, or services.</p>
 
 <aside class="notice">
 Apply manifest will only trigger an immediate update for the &ldquo;instances&rdquo; property or routing changes. All other properties require an app restart to take effect.
@@ -11415,6 +11425,11 @@ Apply manifest will only trigger an immediate update for the &ldquo;instances&rd
 applications:
 - name: my-app
   stack: cflinuxfs4
+  features:
+    ssh: true
+    revisions: true
+    service-binding-k8s: false
+    file-based-vcap-services: false
   services:
   - my-service
   routes:
