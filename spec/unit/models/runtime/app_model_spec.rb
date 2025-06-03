@@ -408,6 +408,61 @@ module VCAP::CloudController
       end
     end
 
+    describe '#windows_gmsa_credential_refs' do
+      let(:parent_app) { AppModel.make(space:) }
+      let(:gmsa_credhub_ref) { 'some-gmsa-credhub-reference' }
+
+      context 'when there are windows-gmsa-credential services' do
+        before do
+          gmsa_service_plan = ServicePlan.make(service: Service.make(label: 'windows-gmsa'))
+          gmsa_service_instance = ManagedServiceInstance.make(space: space, service_plan: gmsa_service_plan, name: 'windows-gmsa-creds')
+          ServiceBinding.make(app: parent_app, service_instance: gmsa_service_instance, credentials: { 'credhub-windows-gmsa-credential-ref' => gmsa_credhub_ref })
+
+          non_gmsa_service_plan = ServicePlan.make(service: Service.make(label: 'incom-test-service'))
+          non_gmsa_service_instance = ManagedServiceInstance.make(space: space, service_plan: non_gmsa_service_plan, name: 't65-b-test-instance')
+          ServiceBinding.make(app: parent_app, service_instance: non_gmsa_service_instance, credentials: { 'something' => 'else' })
+        end
+
+        it 'returns the credential reference' do
+          expect(parent_app.reload.windows_gmsa_credential_refs).to eq([gmsa_credhub_ref])
+        end
+      end
+
+      context 'when there are only non-gmsa-credential services' do
+        before do
+          non_gmsa_service_plan = ServicePlan.make(service: Service.make(label: 'incom-test-service'))
+          non_gmsa_service_instance = ManagedServiceInstance.make(space: space, service_plan: non_gmsa_service_plan, name: 't65-b-test-instance')
+          ServiceBinding.make(app: parent_app, service_instance: non_gmsa_service_instance, credentials: { 'something' => 'else' })
+
+          uncredentialed_service_plan = ServicePlan.make(service: Service.make(label: 'mysterious-n/a'))
+          uncredentialed_service_instance = ManagedServiceInstance.make(space: space, service_plan: uncredentialed_service_plan, name: 'mysterious-mystery')
+          ServiceBinding.make(app: parent_app, service_instance: uncredentialed_service_instance, credentials: {})
+        end
+
+        it 'returns an empty array' do
+          expect(parent_app.reload.windows_gmsa_credential_refs).to eq([])
+        end
+      end
+
+      context 'when there are no services' do
+        it 'returns an empty array' do
+          expect(parent_app.reload.windows_gmsa_credential_refs).to eq([])
+        end
+      end
+
+      context 'when the service binding credentials is nil' do
+        before do
+          uncredentialed_service_plan = ServicePlan.make(service: Service.make(label: 'mysterious-n/a'))
+          uncredentialed_service_instance = ManagedServiceInstance.make(space: space, service_plan: uncredentialed_service_plan, name: 'mysterious-mystery')
+          ServiceBinding.make(app: parent_app, service_instance: uncredentialed_service_instance, credentials: nil)
+        end
+
+        it 'returns an empty array' do
+          expect(parent_app.reload.windows_gmsa_credential_refs).to eq([])
+        end
+      end
+    end
+
     describe 'default enable_ssh' do
       context 'when enable_ssh is set explicitly' do
         it 'does not overwrite it with the default' do

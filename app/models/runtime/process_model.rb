@@ -453,6 +453,8 @@ module VCAP::CloudController
       DatabaseUriGenerator.new(service_binding_uris).database_uri
     end
 
+    delegate :windows_gmsa_credential_refs, to: :app
+
     def max_app_disk_in_mb
       VCAP::CloudController::Config.config.get(:maximum_app_disk_in_mb)
     end
