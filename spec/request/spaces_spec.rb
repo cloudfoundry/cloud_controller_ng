@@ -72,7 +72,7 @@ RSpec.describe 'Spaces' do
       let(:space) { nil }
       let(:api_call) { ->(user_headers) { post '/v3/spaces', request_body, user_headers } }
       let(:expected_codes_and_responses) do
-        h = Hash.new(code: 403, errors: CF_NOT_AUTHORIZED)
+        h = Hash.new({ code: 403, errors: CF_NOT_AUTHORIZED }.freeze)
         %w[admin org_manager].each { |r| h[r] = { code: 201 } }
         h['no_role'] = { code: 422 }
         h
@@ -228,7 +228,7 @@ RSpec.describe 'Spaces' do
       let(:api_call) { ->(user_headers) { get "/v3/spaces/#{space.guid}", nil, user_headers } }
 
       let(:expected_codes_and_responses) do
-        h = Hash.new(code: 200, response_guid: space.guid)
+        h = Hash.new({ code: 200, response_guid: space.guid }.freeze)
 
         h['org_auditor']         = { code: 404, response_guid: nil }
         h['org_billing_manager'] = { code: 404, response_guid: nil }
@@ -483,7 +483,7 @@ RSpec.describe 'Spaces' do
       let(:api_call) { ->(user_headers) { get '/v3/spaces', nil, user_headers } }
 
       let(:expected_codes_and_responses) do
-        h = Hash.new(code: 200, response_guids: [space1.guid, space2.guid, space3.guid])
+        h = Hash.new({ code: 200, response_guids: [space1.guid, space2.guid, space3.guid] }.freeze)
 
         h['org_auditor']         = { code: 200, response_guids: [] }
         h['org_billing_manager'] = { code: 200, response_guids: [] }
@@ -637,7 +637,7 @@ RSpec.describe 'Spaces' do
       let(:global_sec_group) { VCAP::CloudController::SecurityGroup.make staging_default: true, name: 'global' }
 
       let(:expected_codes_and_responses) do
-        h = Hash.new(code: 404)
+        h = Hash.new({ code: 404 }.freeze)
         h['admin'] = { code: 200, response_objects: response_object }
         h['admin_read_only'] = { code: 200, response_objects: response_object }
         h['global_auditor'] = { code: 200, response_objects: response_object }
@@ -789,7 +789,7 @@ RSpec.describe 'Spaces' do
       let(:unaffiliated_sec_group) { VCAP::CloudController::SecurityGroup.make }
       let(:global_sec_group) { VCAP::CloudController::SecurityGroup.make running_default: true, name: 'global' }
       let(:expected_codes_and_responses) do
-        h = Hash.new(code: 404)
+        h = Hash.new({ code: 404 }.freeze)
         h['admin'] = { code: 200, response_objects: response_object }
         h['admin_read_only'] = { code: 200, response_objects: response_object }
         h['global_auditor'] = { code: 200, response_objects: response_object }
@@ -863,7 +863,7 @@ RSpec.describe 'Spaces' do
       let(:api_call) { ->(user_headers) { patch "/v3/spaces/#{space.guid}", request_body, user_headers } }
 
       let(:expected_codes_and_responses) do
-        h = Hash.new(code: 403, errors: CF_NOT_AUTHORIZED)
+        h = Hash.new({ code: 403, errors: CF_NOT_AUTHORIZED }.freeze)
 
         h['org_billing_manager'] = { code: 404 }
         h['org_auditor'] = { code: 404 }
@@ -1055,7 +1055,7 @@ RSpec.describe 'Spaces' do
 
     context 'when the user is a member in the spaces org' do
       let(:expected_codes_and_responses) do
-        h = Hash.new(code: 403, errors: CF_NOT_AUTHORIZED)
+        h = Hash.new({ code: 403, errors: CF_NOT_AUTHORIZED }.freeze)
 
         h['org_billing_manager'] = { code: 404 }
         h['org_auditor'] = { code: 404 }
@@ -1130,7 +1130,7 @@ RSpec.describe 'Spaces' do
 
     context 'when the user is a member in the spaces org' do
       let(:expected_codes_and_responses) do
-        h = Hash.new(code: 403, errors: CF_NOT_AUTHORIZED)
+        h = Hash.new({ code: 403, errors: CF_NOT_AUTHORIZED }.freeze)
 
         h['org_billing_manager'] = { code: 404 }
         h['org_auditor'] = { code: 404 }
@@ -1219,7 +1219,7 @@ RSpec.describe 'Spaces' do
       end
 
       let(:expected_codes_and_responses) do
-        h = Hash.new(code: 200, response_object: expected_response)
+        h = Hash.new({ code: 200, response_object: expected_response }.freeze)
 
         h['org_auditor']         = { code: 404, response_guid: nil }
         h['org_billing_manager'] = { code: 404, response_guid: nil }
@@ -1252,7 +1252,7 @@ RSpec.describe 'Spaces' do
       end
 
       let(:expected_codes_and_responses) do
-        h = Hash.new(code: 403)
+        h = Hash.new({ code: 403 }.freeze)
         h['no_role']             = { code: 404 }
         h['org_auditor']         = { code: 404 }
         h['org_billing_manager'] = { code: 404 }
@@ -1510,11 +1510,11 @@ RSpec.describe 'Spaces' do
 
       let(:expected_codes_and_responses) do
         h = Hash.new(
-          code: 200,
-          response_objects: [
-            client_json,
-            current_user_json
-          ]
+          { code: 200,
+            response_objects: [
+              client_json,
+              current_user_json
+            ] }.freeze
         )
         h['no_role'] = {
           code: 404

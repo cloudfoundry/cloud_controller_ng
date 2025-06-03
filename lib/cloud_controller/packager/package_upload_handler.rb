@@ -21,8 +21,6 @@ module CloudController
         end
 
         package.succeed_upload!(checksums)
-
-        VCAP::CloudController::BitsExpiration.new.expire_packages!(package.app)
       ensure
         FileUtils.rm_f(@uploaded_files_path) if @uploaded_files_path
       end

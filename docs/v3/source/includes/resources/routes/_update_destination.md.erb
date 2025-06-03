@@ -5,7 +5,7 @@ Example Request
 ```
 
 ```shell
-curl "https://api.example.org/v3/routes/[guid]/destinations/[guid]" \
+curl "https://api.example.org/v3/routes/[guid]/destinations/[destination_guid]" \
   -X PATCH \
   -H "Authorization: bearer [token]"
   -d '{"protocol": "http2"}'
@@ -44,7 +44,7 @@ Content-Type: application/json
 This endpoint updates the protocol of a route destination (app, port and weight cannot be updated)
 
 #### Definition
-`PATCH /v3/routes/:guid/destinations/:guid`
+`PATCH /v3/routes/:guid/destinations/:destination_guid`
 
 #### Optional parameters
 

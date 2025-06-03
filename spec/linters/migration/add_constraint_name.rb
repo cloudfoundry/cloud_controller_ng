@@ -1,7 +1,7 @@
 module RuboCop
   module Cop
     module Migration
-      class AddConstraintName < RuboCop::Cop::Cop
+      class AddConstraintName < RuboCop::Cop::Base
         # Postgres and MySQL have different naming conventions, so if we need to remove them we cannot predict accurately what the constraint name would be.
         MSG = 'Please explicitly name your index or constraint.'.freeze
         CONSTRAINT_METHODS = %i[
@@ -28,7 +28,7 @@ module RuboCop
               end
             end
 
-            add_offense(send_node, location: :expression) if missing_named_constraint
+            add_offense(send_node.loc.expression) if missing_named_constraint
           end
         end
 

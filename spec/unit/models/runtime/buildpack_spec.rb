@@ -9,7 +9,7 @@ module VCAP::CloudController
     it { is_expected.to have_timestamp_columns }
 
     describe 'Validations' do
-      it { is_expected.to validate_uniqueness %i[name stack] }
+      it { is_expected.to validate_uniqueness %i[name stack lifecycle] }
 
       describe 'stack' do
         let(:stack) {  Stack.make(name: 'happy') }
@@ -74,11 +74,21 @@ module VCAP::CloudController
           end
         end
       end
+
+      describe 'lifecycle' do
+        it 'cannot be changed once it is set' do
+          buildpack = Buildpack.create(name: 'test', lifecycle: 'cnb')
+          buildpack.lifecycle = 'buildpack'
+
+          expect(buildpack).not_to be_valid
+          expect(buildpack.errors.on(:lifecycle)).to include(:buildpack_cant_change_lifecycle)
+        end
+      end
     end
 
     describe 'Serialization' do
-      it { is_expected.to export_attributes :name, :stack, :position, :enabled, :locked, :filename }
-      it { is_expected.to import_attributes :name, :stack, :position, :enabled, :locked, :filename, :key }
+      it { is_expected.to export_attributes :name, :stack, :position, :enabled, :locked, :filename, :lifecycle }
+      it { is_expected.to import_attributes :name, :stack, :position, :enabled, :locked, :filename, :lifecycle, :key }
 
       it 'does not string mung(e)?' do
         expect(Buildpack.new(name: "my_custom_buildpack\r\n").to_json).to eq '"my_custom_buildpack\r\n"'
@@ -91,6 +101,7 @@ module VCAP::CloudController
       let(:buildpack_file_1) { Tempfile.new('admin buildpack 1') }
       let(:buildpack_file_2) { Tempfile.new('admin buildpack 2') }
       let(:buildpack_file_3) { Tempfile.new('admin buildpack 3') }
+      let(:buildpack_file_cnb) { Tempfile.new('admin buildpack cnb') }
 
       let(:buildpack_blobstore) { CloudController::DependencyLocator.instance.buildpack_blobstore }
 
@@ -103,12 +114,17 @@ module VCAP::CloudController
         Timecop.return
       end
 
+      let(:cnb_buildpacks) { Buildpack.list_admin_buildpacks(nil, 'cnb') }
+
       subject(:all_buildpacks) { Buildpack.list_admin_buildpacks }
 
       context 'with prioritized buildpacks' do
         before do
           buildpack_blobstore.cp_to_blobstore(buildpack_file_1.path, 'a key')
           Buildpack.make(key: 'a key', position: 2)
+
+          buildpack_blobstore.cp_to_blobstore(buildpack_file_cnb.path, 'cnb key')
+          @cnb_buildpack = Buildpack.make(key: 'cnb key', position: 1, lifecycle: 'cnb')
 
           buildpack_blobstore.cp_to_blobstore(buildpack_file_2.path, 'b key')
           Buildpack.make(key: 'b key', position: 1)
@@ -131,11 +147,22 @@ module VCAP::CloudController
           expect(all_buildpacks).to have(2).items
         end
 
+        it 'returns the list of cnb buildpacks' do
+          expect(cnb_buildpacks.collect(&:key)).to eq(['cnb key'])
+        end
+
         it 'randomly orders any buildpacks with the same position (for now we did not want to make clever logic of shifting stuff around: up to the user to get it all correct)' do
           @another_buildpack.position = 1
           @another_buildpack.save
 
           expect(all_buildpacks[2].key).to eq('a key')
+        end
+
+        it 'does not reorder cnb buildpacks when classical buildpacks change position)' do
+          @cnb_buildpack.position = 1
+          @cnb_buildpack.save
+
+          expect(cnb_buildpacks[0].key).to eq('cnb key')
         end
 
         context 'and there are buildpacks with null keys' do
@@ -175,6 +202,7 @@ module VCAP::CloudController
       end
 
       context 'with a stack' do
+        let(:cnb_buildpacks) { Buildpack.list_admin_buildpacks('stack2', 'cnb') }
         subject(:all_buildpacks) { Buildpack.list_admin_buildpacks('stack1') }
         let!(:stack1) { Stack.make(name: 'stack1') }
         let!(:stack2) { Stack.make(name: 'stack2') }
@@ -186,6 +214,9 @@ module VCAP::CloudController
           buildpack_blobstore.cp_to_blobstore(buildpack_file_2.path, 'b key')
           Buildpack.make(key: 'b key', position: 1, stack: 'stack2')
 
+          buildpack_blobstore.cp_to_blobstore(buildpack_file_cnb.path, 'cnb key')
+          Buildpack.make(key: 'cnb key', position: 1, stack: 'stack2', lifecycle: 'cnb')
+
           buildpack_blobstore.cp_to_blobstore(buildpack_file_3.path, 'c key')
           @another_buildpack = Buildpack.make(key: 'c key', position: 3, stack: nil)
         end
@@ -194,6 +225,10 @@ module VCAP::CloudController
 
         it 'returns the list in position order, including buildpacks with null stack or matching stacks' do
           expect(all_buildpacks.collect(&:key)).to eq(['a key', 'c key'])
+        end
+
+        it 'returns the list of cnb buildpacks' do
+          expect(cnb_buildpacks.collect(&:key)).to eq(['cnb key'])
         end
       end
     end

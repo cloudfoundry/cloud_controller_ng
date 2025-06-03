@@ -28,7 +28,7 @@ module VCAP::CloudController
       TestConfig.override(stacks_file: file.path)
     end
 
-    let(:stack_checker) { CheckStacks.new(TestConfig.config_instance) }
+    let(:stack_checker) { CheckStacks.new(TestConfig.config_instance, DbConfig.new.connection) }
 
     describe 'the deprecated stacks is nil' do
       let(:stack_file_contents) do

@@ -16,6 +16,7 @@ module VCAP::CloudController
           data.buildpack_cache_checksum           = 'bp-cache-checksum'
           data.app_bits_checksum                  = { type: 'sha256', value: 'package-checksum' }
           data.credentials                        = '{"registry":{"username":"password"}}'
+          data.auto_detect                        = false
           data
         end
 
@@ -29,7 +30,8 @@ module VCAP::CloudController
             stack: 'stack',
             buildpack_cache_checksum: 'bp-cache-checksum',
             app_bits_checksum: { type: 'sha256', value: 'package-checksum' },
-            credentials: '{"registry":{"username":"password"}}'
+            credentials: '{"registry":{"username":"password"}}',
+            auto_detect: false
           }
         end
 
@@ -98,7 +100,7 @@ module VCAP::CloudController
                 expect do
                   data.message
                 end.to raise_error(
-                  Membrane::SchemaValidationError, /{ #{key} => Expected instance of (String|Array|Hash), given an instance of NilClass }/
+                  Membrane::SchemaValidationError, /{ #{key} => Expected instance of (String|Array|Hash|true or false), given .*}/
                 )
               end
             end

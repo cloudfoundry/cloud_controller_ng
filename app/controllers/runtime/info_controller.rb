@@ -28,6 +28,11 @@ module VCAP::CloudController
 
       info[:user] = user.guid if user
 
+      unless @config.get(:temporary_enable_v2)
+        info[:support] = 'CF API v2 is disabled'
+        info[:api_version] = ''
+      end
+
       Oj.dump(info, mode: :compat)
     end
   end

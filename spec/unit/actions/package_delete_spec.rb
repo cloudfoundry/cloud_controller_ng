@@ -19,17 +19,28 @@ module VCAP::CloudController
           expect { package.refresh }.to raise_error Sequel::Error, 'Record not found'
         end
 
-        it 'schedules a job to the delete the blobstore item' do
-          expect do
-            package_delete.delete(package)
-          end.to change(Delayed::Job, :count).by(1)
+        context 'when the package is not of type docker' do
+          it 'schedules a job to the delete the blobstore item' do
+            expect do
+              package_delete.delete(package)
+            end.to change(Delayed::Job, :count).by(1)
 
-          job = Delayed::Job.last
-          expect(job.handler).to include('VCAP::CloudController::Jobs::Runtime::BlobstoreDelete')
-          expect(job.handler).to match(/key: ['"]?#{package.guid}/)
-          expect(job.handler).to include('package_blobstore')
-          expect(job.queue).to eq(Jobs::Queues.generic)
-          expect(job.guid).not_to be_nil
+            job = Delayed::Job.last
+            expect(job.handler).to include('VCAP::CloudController::Jobs::Runtime::BlobstoreDelete')
+            expect(job.handler).to match(/key: ['"]?#{package.guid}/)
+            expect(job.handler).to include('package_blobstore')
+            expect(job.queue).to eq(Jobs::Queues.generic)
+            expect(job.guid).not_to be_nil
+          end
+        end
+
+        context 'when the package is of type docker' do
+          it 'does not schedule a delayed job' do
+            package.type = PackageModel::DOCKER_TYPE
+            expect do
+              package_delete.delete(package)
+            end.not_to change(Delayed::Job, :count)
+          end
         end
 
         it 'creates an v3 audit event' do

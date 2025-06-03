@@ -37,7 +37,7 @@ module VCAP::CloudController
         end
 
         def run_job(job)
-          Jobs::Enqueuer.new(job, { queue: Jobs::Queues.generic, run_at: Delayed::Job.db_time_now }).enqueue
+          Jobs::Enqueuer.new({ queue: Jobs::Queues.generic, run_at: Delayed::Job.db_time_now }).enqueue(job)
           execute_all_jobs(expected_successes: 1, expected_failures: 0)
         end
 
@@ -620,7 +620,7 @@ module VCAP::CloudController
             let(:last_operation_response) { {} }
 
             before do
-              Jobs::Enqueuer.new(job, { queue: Jobs::Queues.generic, run_at: Delayed::Job.db_time_now }).enqueue
+              Jobs::Enqueuer.new({ queue: Jobs::Queues.generic, run_at: Delayed::Job.db_time_now }).enqueue(job)
               Delayed::Worker.new.work_off
             end
 
@@ -773,7 +773,7 @@ module VCAP::CloudController
               job
               TestConfig.override(broker_client_default_async_poll_interval_seconds: new_polling_interval)
 
-              Jobs::Enqueuer.new(job, { queue: Jobs::Queues.generic, run_at: first_run_time }).enqueue
+              Jobs::Enqueuer.new({ queue: Jobs::Queues.generic, run_at: first_run_time }).enqueue(job)
               execute_all_jobs(expected_successes: 1, expected_failures: 0)
               expect(Delayed::Job.count).to eq(1)
 

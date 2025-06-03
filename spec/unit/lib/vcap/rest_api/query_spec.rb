@@ -447,7 +447,7 @@ module VCAP::RestAPI
                                                         @queryable_attributes, q:)
 
           expected = Author.all.select do |a|
-            a.str_val == 'str 1' || a.str_val == 'str 2'
+            ['str 1', 'str 2'].include?(a.str_val)
           end
 
           expect(ds.all).to match_array(expected)

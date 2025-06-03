@@ -2,9 +2,27 @@ require 'messages/metadata_base_message'
 
 module VCAP::CloudController
   class UserCreateMessage < MetadataBaseMessage
-    register_allowed_keys [:guid]
+    register_allowed_keys %i[guid origin username]
+
+    class UserCreateValidator < ActiveModel::Validator
+      def validate(record)
+        if record.guid
+          record.errors.add(:username, message: "cannot be provided with 'guid'") if record.username
+          record.errors.add(:origin, message: "cannot be provided with 'guid'") if record.origin
+        elsif record.username || record.origin
+          record.errors.add(:origin, message: "can only be provided together with 'username'") unless record.username
+          record.errors.add(:username, message: "can only be provided together with 'origin'") unless record.origin
+          record.errors.add(:origin, message: "cannot be 'uaa' when creating a user by username") unless record.origin != 'uaa'
+        else
+          record.errors.add(:guid, message: "or 'username' and 'origin' must be provided")
+        end
+      end
+    end
 
     validates_with NoAdditionalKeysValidator
-    validates :guid, guid: true
+    validates :guid, guid: true, allow_nil: true
+    validates :origin, string: true, allow_nil: true
+    validates :username, string: true, allow_nil: true
+    validates_with UserCreateValidator
   end
 end

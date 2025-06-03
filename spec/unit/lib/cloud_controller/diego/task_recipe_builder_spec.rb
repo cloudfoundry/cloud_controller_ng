@@ -177,6 +177,8 @@ module VCAP::CloudController
             expect(result.placement_tags).to eq(['potato-segment'])
             expect(result.max_pids).to eq(100)
             expect(result.certificate_properties).to eq(certificate_properties)
+
+            expect(result.volume_mounted_files).to be_empty
           end
 
           it 'gives the task a TrustedSystemCertificatesPath' do
@@ -196,6 +198,33 @@ module VCAP::CloudController
               result = task_recipe_builder.build_staging_task(config, staging_details)
 
               expect(result.placement_tags).to eq([])
+            end
+          end
+
+          context 'when k8s service bindings are enabled' do
+            before do
+              app = staging_details.package.app
+              app.update(service_binding_k8s_enabled: true)
+              VCAP::CloudController::ServiceBinding.make(service_instance: ManagedServiceInstance.make(space: app.space), app: app)
+            end
+
+            it 'includes volume mounted files' do
+              result = task_recipe_builder.build_staging_task(config, staging_details)
+              expect(result.volume_mounted_files.size).to be > 1
+            end
+          end
+
+          context 'when file-based VCAP service bindings are enabled' do
+            before do
+              app = staging_details.package.app
+              app.update(file_based_vcap_services_enabled: true)
+              VCAP::CloudController::ServiceBinding.make(service_instance: ManagedServiceInstance.make(space: app.space), app: app)
+            end
+
+            it 'includes volume mounted files' do
+              result = task_recipe_builder.build_staging_task(config, staging_details)
+              expect(result.volume_mounted_files.size).to eq(1)
+              expect(result.volume_mounted_files[0].path).to eq('vcap_services')
             end
           end
         end
@@ -505,6 +534,8 @@ module VCAP::CloudController
             expect(result.metric_tags['organization_name'].static).to eq('MyOrg')
             expect(result.metric_tags['space_name'].static).to eq('MySpace')
             expect(result.metric_tags['app_name'].static).to eq('MyApp')
+
+            expect(result.volume_mounted_files).to be_empty
           end
 
           context 'when a volume mount is provided' do
@@ -581,6 +612,33 @@ module VCAP::CloudController
             it 'configures no placement tags' do
               result = task_recipe_builder.build_app_task(config, task)
               expect(result.placement_tags).to eq([])
+            end
+          end
+
+          context 'when k8s service bindings are enabled' do
+            before do
+              app = task.app
+              app.update(service_binding_k8s_enabled: true)
+              VCAP::CloudController::ServiceBinding.make(service_instance: ManagedServiceInstance.make(space: app.space), app: app)
+            end
+
+            it 'includes volume mounted files' do
+              result = task_recipe_builder.build_app_task(config, task)
+              expect(result.volume_mounted_files.size).to be > 1
+            end
+          end
+
+          context 'when file-based VCAP service bindings are enabled' do
+            before do
+              app = task.app
+              app.update(file_based_vcap_services_enabled: true)
+              VCAP::CloudController::ServiceBinding.make(service_instance: ManagedServiceInstance.make(space: app.space), app: app)
+            end
+
+            it 'includes volume mounted files' do
+              result = task_recipe_builder.build_app_task(config, task)
+              expect(result.volume_mounted_files.size).to eq(1)
+              expect(result.volume_mounted_files[0].path).to eq('vcap_services')
             end
           end
         end
@@ -658,6 +716,8 @@ module VCAP::CloudController
 
             expect(result.image_username).to eq('dockerusername')
             expect(result.image_password).to eq('dockerpassword')
+
+            expect(result.volume_mounted_files).to be_empty
           end
 
           context 'when a volume mount is provided' do
@@ -734,6 +794,33 @@ module VCAP::CloudController
             it 'configures no placement tags' do
               result = task_recipe_builder.build_app_task(config, task)
               expect(result.placement_tags).to eq([])
+            end
+          end
+
+          context 'when k8s service bindings are enabled' do
+            before do
+              app = task.app
+              app.update(service_binding_k8s_enabled: true)
+              VCAP::CloudController::ServiceBinding.make(service_instance: ManagedServiceInstance.make(space: app.space), app: app)
+            end
+
+            it 'includes volume mounted files' do
+              result = task_recipe_builder.build_app_task(config, task)
+              expect(result.volume_mounted_files.size).to be > 1
+            end
+          end
+
+          context 'when file-based VCAP service bindings are enabled' do
+            before do
+              app = task.app
+              app.update(file_based_vcap_services_enabled: true)
+              VCAP::CloudController::ServiceBinding.make(service_instance: ManagedServiceInstance.make(space: app.space), app: app)
+            end
+
+            it 'includes volume mounted files' do
+              result = task_recipe_builder.build_app_task(config, task)
+              expect(result.volume_mounted_files.size).to eq(1)
+              expect(result.volume_mounted_files[0].path).to eq('vcap_services')
             end
           end
         end

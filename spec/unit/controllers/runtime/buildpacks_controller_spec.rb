@@ -25,7 +25,8 @@ module VCAP::CloudController
                                                                                            stack: { type: 'string' },
                                                                                            position: { type: 'integer', default: 0 },
                                                                                            enabled: { type: 'bool', default: true },
-                                                                                           locked: { type: 'bool', default: false }
+                                                                                           locked: { type: 'bool', default: false },
+                                                                                           lifecycle: { type: 'string' }
                                                                                          })
       end
 

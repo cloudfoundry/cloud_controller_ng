@@ -27,17 +27,11 @@ module CloudController
         end
       end
 
-      def storage_size
-        @fingerprints.inject(0) do |sum, fingerprint|
-          sum + fingerprint['size']
-        end
-      end
-
       private
 
       def parse_mode(raw_mode, filename)
         mode = raw_mode ? raw_mode.to_i(8) : DEFAULT_FILE_MODE
-        unless (mode & 0o600) == 0o600
+        unless mode.allbits?(0o600)
           raise CloudController::Errors::ApiError.new_from_details('AppResourcesFileModeInvalid',
                                                                    "File mode '#{raw_mode}' with path '#{filename}' is invalid. Minimum file mode is '0600'")
         end

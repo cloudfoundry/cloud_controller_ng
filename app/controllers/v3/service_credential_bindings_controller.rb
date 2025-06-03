@@ -255,7 +255,7 @@ class ServiceCredentialBindingsController < ApplicationController
       audit_hash: message.audit_hash,
       parameters: message.parameters
     )
-    pollable_job = Jobs::Enqueuer.new(bind_job, queue: Jobs::Queues.generic).enqueue_pollable
+    pollable_job = Jobs::Enqueuer.new(queue: Jobs::Queues.generic).enqueue_pollable(bind_job)
     pollable_job.guid
   end
 
@@ -265,7 +265,7 @@ class ServiceCredentialBindingsController < ApplicationController
       binding_guid,
       user_audit_info:
     )
-    pollable_job = Jobs::Enqueuer.new(bind_job, queue: Jobs::Queues.generic).enqueue_pollable
+    pollable_job = Jobs::Enqueuer.new(queue: Jobs::Queues.generic).enqueue_pollable(bind_job)
     pollable_job.guid
   end
 

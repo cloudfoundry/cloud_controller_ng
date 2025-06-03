@@ -72,7 +72,7 @@ RSpec.describe 'Security_Groups Request' do
       end
 
       let(:expected_codes_and_responses) do
-        h = Hash.new(code: 403)
+        h = Hash.new({ code: 403 }.freeze)
         h['admin'] = {
           code: 201,
           response_object: expected_response
@@ -227,7 +227,7 @@ RSpec.describe 'Security_Groups Request' do
         end
 
         let(:expected_codes_and_responses) do
-          h = Hash.new(code: 404)
+          h = Hash.new({ code: 404 }.freeze)
           h['admin'] = {
             code: 200,
             response_object: expected_response
@@ -270,7 +270,7 @@ RSpec.describe 'Security_Groups Request' do
         end
 
         let(:expected_codes_and_responses) do
-          h = Hash.new(code: 403, errors: CF_NOT_AUTHORIZED)
+          h = Hash.new({ code: 403, errors: CF_NOT_AUTHORIZED }.freeze)
           h['admin'] = h['space_manager'] = h['org_manager'] = {
             code: 200,
             response_object: expected_response
@@ -325,7 +325,7 @@ RSpec.describe 'Security_Groups Request' do
         end
 
         let(:expected_codes_and_responses) do
-          h = Hash.new(code: 403)
+          h = Hash.new({ code: 403 }.freeze)
           h['admin'] = h['space_manager'] = h['org_manager'] = {
             code: 200,
             response_object: expected_response
@@ -392,7 +392,7 @@ RSpec.describe 'Security_Groups Request' do
         end
 
         let(:expected_codes_and_responses) do
-          h = Hash.new(code: 404)
+          h = Hash.new({ code: 404 }.freeze)
           h['admin'] = {
             code: 200,
             response_object: expected_response
@@ -435,7 +435,7 @@ RSpec.describe 'Security_Groups Request' do
         end
 
         let(:expected_codes_and_responses) do
-          h = Hash.new(code: 403, errors: CF_NOT_AUTHORIZED)
+          h = Hash.new({ code: 403, errors: CF_NOT_AUTHORIZED }.freeze)
           h['admin'] = h['space_manager'] = h['org_manager'] = {
             code: 200,
             response_object: expected_response
@@ -490,7 +490,7 @@ RSpec.describe 'Security_Groups Request' do
         end
 
         let(:expected_codes_and_responses) do
-          h = Hash.new(code: 403)
+          h = Hash.new({ code: 403 }.freeze)
           h['admin'] = h['space_manager'] = h['org_manager'] = {
             code: 200,
             response_object: expected_response
@@ -676,7 +676,7 @@ RSpec.describe 'Security_Groups Request' do
       end
 
       let(:expected_codes_and_responses) do
-        h = Hash.new(code: 200, response_objects: [])
+        h = Hash.new({ code: 200, response_objects: [] }.freeze)
         h['admin'] = {
           code: 200,
           response_objects: contain_exactly(expected_response_1, expected_response_2, expected_response_3, expected_response_dummy_1, expected_response_dummy_2)
@@ -832,7 +832,7 @@ RSpec.describe 'Security_Groups Request' do
       end
 
       let(:expected_codes_and_responses) do
-        h = Hash.new(code: 404)
+        h = Hash.new({ code: 404 }.freeze)
         h['admin'] = {
           code: 200,
           response_object: expected_response
@@ -884,7 +884,7 @@ RSpec.describe 'Security_Groups Request' do
       end
 
       let(:expected_codes_and_responses) do
-        h = Hash.new(code: 404)
+        h = Hash.new({ code: 404 }.freeze)
         h['admin'] = {
           code: 200,
           response_object: expected_response
@@ -952,7 +952,7 @@ RSpec.describe 'Security_Groups Request' do
       end
 
       let(:expected_codes_and_responses) do
-        Hash.new(code: 200, response_object: expected_response)
+        Hash.new({ code: 200, response_object: expected_response }.freeze)
       end
 
       it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS
@@ -1031,7 +1031,7 @@ RSpec.describe 'Security_Groups Request' do
       end
 
       let(:expected_codes_and_responses) do
-        h = Hash.new(code: 403)
+        h = Hash.new({ code: 403 }.freeze)
         h['admin'] = {
           code: 200,
           response_object: expected_response
@@ -1075,7 +1075,7 @@ RSpec.describe 'Security_Groups Request' do
       end
 
       let(:expected_codes_and_responses) do
-        h = Hash.new(code: 403)
+        h = Hash.new({ code: 403 }.freeze)
         h['admin'] = {
           code: 200,
           response_object: expected_response
@@ -1126,7 +1126,7 @@ RSpec.describe 'Security_Groups Request' do
       end
 
       let(:expected_codes_and_responses) do
-        h = Hash.new(code: 404)
+        h = Hash.new({ code: 404 }.freeze)
         h['admin'] = {
           code: 200,
           response_object: expected_response
@@ -1238,7 +1238,7 @@ RSpec.describe 'Security_Groups Request' do
     context 'unbinding a running security group from a space' do
       context 'when the security group is NOT globally enabled NOR associated with any spaces' do
         let(:expected_codes_and_responses) do
-          h = Hash.new(code: 404)
+          h = Hash.new({ code: 404 }.freeze)
           h['admin'] = { code: 422 }
           h['admin_read_only'] = { code: 403 }
           h['global_auditor'] = { code: 403 }
@@ -1260,7 +1260,7 @@ RSpec.describe 'Security_Groups Request' do
         end
 
         let(:expected_codes_and_responses) do
-          h = Hash.new(code: 403)
+          h = Hash.new({ code: 403 }.freeze)
           h['admin'] = { code: 204 }
           h['space_manager'] = { code: 204 }
           h['org_manager'] = { code: 204 }
@@ -1286,7 +1286,7 @@ RSpec.describe 'Security_Groups Request' do
         end
 
         let(:expected_codes_and_responses) do
-          h = Hash.new(code: 403, errors: CF_NOT_AUTHORIZED)
+          h = Hash.new({ code: 403, errors: CF_NOT_AUTHORIZED }.freeze)
           h['admin'] = { code: 204 }
           h['space_manager'] = { code: 204 }
           h['org_manager'] = { code: 204 }
@@ -1337,7 +1337,7 @@ RSpec.describe 'Security_Groups Request' do
     context 'unbinding a staging security group from a space' do
       context 'when the security group is NOT globally enabled NOR associated with any spaces' do
         let(:expected_codes_and_responses) do
-          h = Hash.new(code: 404)
+          h = Hash.new({ code: 404 }.freeze)
           h['admin'] = { code: 422 }
           h['admin_read_only'] = { code: 403 }
           h['global_auditor'] = { code: 403 }
@@ -1359,7 +1359,7 @@ RSpec.describe 'Security_Groups Request' do
         end
 
         let(:expected_codes_and_responses) do
-          h = Hash.new(code: 403)
+          h = Hash.new({ code: 403 }.freeze)
           h['admin'] = { code: 204 }
           h['space_manager'] = { code: 204 }
           h['org_manager'] = { code: 204 }
@@ -1385,7 +1385,7 @@ RSpec.describe 'Security_Groups Request' do
         end
 
         let(:expected_codes_and_responses) do
-          h = Hash.new(code: 403, errors: CF_NOT_AUTHORIZED)
+          h = Hash.new({ code: 403, errors: CF_NOT_AUTHORIZED }.freeze)
           h['admin'] = { code: 204 }
           h['space_manager'] = { code: 204 }
           h['org_manager'] = { code: 204 }
@@ -1453,7 +1453,7 @@ RSpec.describe 'Security_Groups Request' do
       let(:security_group) { VCAP::CloudController::SecurityGroup.make(running_default: true) }
 
       let(:expected_codes_and_responses) do
-        h = Hash.new(code: 403)
+        h = Hash.new({ code: 403 }.freeze)
         h['admin'] = { code: 202 }
         h
       end
@@ -1465,7 +1465,7 @@ RSpec.describe 'Security_Groups Request' do
       let(:security_group) { VCAP::CloudController::SecurityGroup.make }
 
       let(:expected_codes_and_responses) do
-        h = Hash.new(code: 403)
+        h = Hash.new({ code: 403 }.freeze)
         h['admin'] = { code: 202 }
         h['org_auditor'] = { code: 404 }
         h['org_billing_manager'] = { code: 404 }
@@ -1484,7 +1484,7 @@ RSpec.describe 'Security_Groups Request' do
       let(:security_group) { VCAP::CloudController::SecurityGroup.make }
 
       let(:expected_codes_and_responses) do
-        h = Hash.new(code: 404)
+        h = Hash.new({ code: 404 }.freeze)
         h['admin'] = { code: 202 }
         h['global_auditor'] = { code: 403 }
         h['admin_read_only'] = { code: 403 }

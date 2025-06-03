@@ -15,7 +15,7 @@ module VCAP::CloudController
     let(:dependency_locator) { instance_spy(CloudController::DependencyLocator) }
     let(:prometheus_updater) { spy(VCAP::CloudController::Metrics::PrometheusUpdater) }
 
-    subject do
+    let(:test_config) do
       TestConfig.override(
         external_port: port,
         nginx: {
@@ -27,7 +27,10 @@ module VCAP::CloudController
           max_threads: max_threads
         }
       )
-      PumaRunner.new(TestConfig.config_instance, app, logger, periodic_updater, request_logs)
+    end
+
+    subject do
+      PumaRunner.new(test_config, app, logger, periodic_updater, request_logs)
     end
 
     before do
@@ -88,6 +91,52 @@ module VCAP::CloudController
           subject
 
           expect(puma_launcher.config.final_options[:workers]).to eq(1)
+          expect(puma_launcher.config.final_options[:min_threads]).to eq(1)
+          expect(puma_launcher.config.final_options[:max_threads]).to eq(1)
+        end
+      end
+
+      context 'when setting "automatic_worker_count" to false' do
+        let(:test_config) do
+          TestConfig.override(
+            puma: {
+              workers: 1,
+              automatic_worker_count: false
+            }
+          )
+        end
+
+        before do
+          allow(::Concurrent).to receive(:available_processor_count).and_return 8
+        end
+
+        it 'configures number of workers to the detected number of cores' do
+          subject
+
+          expect(puma_launcher.config.final_options[:workers]).to eq(1)
+          expect(puma_launcher.config.final_options[:min_threads]).to eq(1)
+          expect(puma_launcher.config.final_options[:max_threads]).to eq(1)
+        end
+      end
+
+      context 'when setting "automatic_worker_count" to true' do
+        let(:test_config) do
+          TestConfig.override(
+            puma: {
+              workers: 1,
+              automatic_worker_count: true
+            }
+          )
+        end
+
+        before do
+          allow(::Concurrent).to receive(:available_processor_count).and_return 8
+        end
+
+        it 'configures number of workers the specified number of workers' do
+          subject
+
+          expect(puma_launcher.config.final_options[:workers]).to eq(8)
           expect(puma_launcher.config.final_options[:min_threads]).to eq(1)
           expect(puma_launcher.config.final_options[:max_threads]).to eq(1)
         end

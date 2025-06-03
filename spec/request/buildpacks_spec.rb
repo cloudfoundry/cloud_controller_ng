@@ -28,6 +28,7 @@ RSpec.describe 'buildpacks' do
           order_by: 'updated_at',
           names: 'foo',
           stacks: 'cf',
+          lifecycle: 'buildpack',
           label_selector: 'foo,bar',
           guids: 'foo,bar',
           created_ats: "#{Time.now.utc.iso8601},#{Time.now.utc.iso8601}",
@@ -92,23 +93,26 @@ RSpec.describe 'buildpacks' do
       let!(:stack2) { VCAP::CloudController::Stack.make }
       let!(:stack3) { VCAP::CloudController::Stack.make }
 
+      let!(:buildpack4) { VCAP::CloudController::Buildpack.make(stack: stack1.name, position: 2, lifecycle: 'cnb') }
+      let!(:buildpack5) { VCAP::CloudController::Buildpack.make(stack: stack1.name, position: 1, lifecycle: 'cnb') }
+
       let!(:buildpack1) { VCAP::CloudController::Buildpack.make(stack: stack1.name, position: 1) }
       let!(:buildpack2) { VCAP::CloudController::Buildpack.make(stack: stack2.name, position: 3) }
       let!(:buildpack3) { VCAP::CloudController::Buildpack.make(stack: stack3.name, position: 2) }
 
-      it 'returns a paginated list of buildpacks, sorted by position' do
+      it 'returns a paginated list of buildpacks, sorted by lifecycle and position' do
         get '/v3/buildpacks?page=1&per_page=2', nil, headers
 
         expect(parsed_response).to be_a_response_like(
           {
             'pagination' => {
-              'total_results' => 3,
-              'total_pages' => 2,
+              'total_results' => 5,
+              'total_pages' => 3,
               'first' => {
                 'href' => "#{link_prefix}/v3/buildpacks?page=1&per_page=2"
               },
               'last' => {
-                'href' => "#{link_prefix}/v3/buildpacks?page=2&per_page=2"
+                'href' => "#{link_prefix}/v3/buildpacks?page=3&per_page=2"
               },
               'next' => {
                 'href' => "#{link_prefix}/v3/buildpacks?page=2&per_page=2"
@@ -118,6 +122,7 @@ RSpec.describe 'buildpacks' do
             'resources' => [
               {
                 'guid' => buildpack1.guid,
+                'lifecycle' => 'buildpack',
                 'created_at' => iso8601,
                 'updated_at' => iso8601,
                 'name' => buildpack1.name,
@@ -140,6 +145,7 @@ RSpec.describe 'buildpacks' do
               },
               {
                 'guid' => buildpack3.guid,
+                'lifecycle' => 'buildpack',
                 'created_at' => iso8601,
                 'updated_at' => iso8601,
                 'name' => buildpack3.name,
@@ -156,6 +162,144 @@ RSpec.describe 'buildpacks' do
                   },
                   'upload' => {
                     'href' => "#{link_prefix}/v3/buildpacks/#{buildpack3.guid}/upload",
+                    'method' => 'POST'
+                  }
+                }
+              }
+            ]
+          }
+        )
+      end
+
+      it 'with no filters, returns a list of buildpacks, sorted by lifecycle and position' do
+        get '/v3/buildpacks', nil, headers
+
+        expect(parsed_response).to be_a_response_like(
+          {
+            'pagination' => {
+              'total_results' => 5,
+              'total_pages' => 1,
+              'first' => {
+                'href' => "#{link_prefix}/v3/buildpacks?page=1&per_page=50"
+              },
+              'last' => {
+                'href' => "#{link_prefix}/v3/buildpacks?page=1&per_page=50"
+              },
+              'next' => nil,
+              'previous' => nil
+            },
+            'resources' => [
+              {
+                'guid' => buildpack1.guid,
+                'lifecycle' => 'buildpack',
+                'created_at' => iso8601,
+                'updated_at' => iso8601,
+                'name' => buildpack1.name,
+                'state' => buildpack1.state,
+                'filename' => buildpack1.filename,
+                'stack' => buildpack1.stack,
+                'position' => 1,
+                'enabled' => true,
+                'locked' => false,
+                'metadata' => { 'labels' => {}, 'annotations' => {} },
+                'links' => {
+                  'self' => {
+                    'href' => "#{link_prefix}/v3/buildpacks/#{buildpack1.guid}"
+                  },
+                  'upload' => {
+                    'href' => "#{link_prefix}/v3/buildpacks/#{buildpack1.guid}/upload",
+                    'method' => 'POST'
+                  }
+                }
+              },
+              {
+                'guid' => buildpack3.guid,
+                'lifecycle' => 'buildpack',
+                'created_at' => iso8601,
+                'updated_at' => iso8601,
+                'name' => buildpack3.name,
+                'state' => buildpack3.state,
+                'filename' => buildpack3.filename,
+                'stack' => buildpack3.stack,
+                'position' => 2,
+                'enabled' => true,
+                'locked' => false,
+                'metadata' => { 'labels' => {}, 'annotations' => {} },
+                'links' => {
+                  'self' => {
+                    'href' => "#{link_prefix}/v3/buildpacks/#{buildpack3.guid}"
+                  },
+                  'upload' => {
+                    'href' => "#{link_prefix}/v3/buildpacks/#{buildpack3.guid}/upload",
+                    'method' => 'POST'
+                  }
+                }
+              },
+              {
+                'guid' => buildpack2.guid,
+                'lifecycle' => 'buildpack',
+                'created_at' => iso8601,
+                'updated_at' => iso8601,
+                'name' => buildpack2.name,
+                'state' => buildpack2.state,
+                'filename' => buildpack2.filename,
+                'stack' => buildpack2.stack,
+                'position' => 3,
+                'enabled' => true,
+                'locked' => false,
+                'metadata' => { 'labels' => {}, 'annotations' => {} },
+                'links' => {
+                  'self' => {
+                    'href' => "#{link_prefix}/v3/buildpacks/#{buildpack2.guid}"
+                  },
+                  'upload' => {
+                    'href' => "#{link_prefix}/v3/buildpacks/#{buildpack2.guid}/upload",
+                    'method' => 'POST'
+                  }
+                }
+              },
+              {
+                'guid' => buildpack5.guid,
+                'lifecycle' => 'cnb',
+                'created_at' => iso8601,
+                'updated_at' => iso8601,
+                'name' => buildpack5.name,
+                'state' => buildpack5.state,
+                'filename' => buildpack5.filename,
+                'stack' => buildpack5.stack,
+                'position' => 1,
+                'enabled' => true,
+                'locked' => false,
+                'metadata' => { 'labels' => {}, 'annotations' => {} },
+                'links' => {
+                  'self' => {
+                    'href' => "#{link_prefix}/v3/buildpacks/#{buildpack5.guid}"
+                  },
+                  'upload' => {
+                    'href' => "#{link_prefix}/v3/buildpacks/#{buildpack5.guid}/upload",
+                    'method' => 'POST'
+                  }
+                }
+              },
+              {
+                'guid' => buildpack4.guid,
+                'lifecycle' => 'cnb',
+                'created_at' => iso8601,
+                'updated_at' => iso8601,
+                'name' => buildpack4.name,
+                'state' => buildpack4.state,
+                'filename' => buildpack4.filename,
+                'stack' => buildpack4.stack,
+                'position' => 2,
+                'enabled' => true,
+                'locked' => false,
+                'metadata' => { 'labels' => {}, 'annotations' => {} },
+                'links' => {
+                  'self' => {
+                    'href' => "#{link_prefix}/v3/buildpacks/#{buildpack4.guid}"
+                  },
+                  'upload' => {
+                    'href' => "#{link_prefix}/v3/buildpacks/#{buildpack4.guid}/upload",
                     'method' => 'POST'
                   }
                 }
@@ -185,6 +329,7 @@ RSpec.describe 'buildpacks' do
             'resources' => [
               {
                 'guid' => buildpack1.guid,
+                'lifecycle' => 'buildpack',
                 'created_at' => iso8601,
                 'updated_at' => iso8601,
                 'name' => buildpack1.name,
@@ -201,6 +346,146 @@ RSpec.describe 'buildpacks' do
                   },
                   'upload' => {
                     'href' => "#{link_prefix}/v3/buildpacks/#{buildpack1.guid}/upload",
+                    'method' => 'POST'
+                  }
+                }
+              }
+            ]
+          }
+        )
+      end
+
+      it 'returns a paginated list of buildpacks filtered by lifecycle' do
+        get '/v3/buildpacks?lifecycle=buildpack&per_page=2', nil, headers
+
+        expect(parsed_response).to be_a_response_like(
+          {
+            'pagination' => {
+              'total_results' => 3,
+              'total_pages' => 2,
+              'first' => {
+                'href' => "#{link_prefix}/v3/buildpacks?lifecycle=buildpack&page=1&per_page=2"
+              },
+              'last' => {
+                'href' => "#{link_prefix}/v3/buildpacks?lifecycle=buildpack&page=2&per_page=2"
+              },
+              'next' => {
+                'href' => "#{link_prefix}/v3/buildpacks?lifecycle=buildpack&page=2&per_page=2"
+              },
+              'previous' => nil
+            },
+            'resources' => [
+              {
+                'guid' => buildpack1.guid,
+                'lifecycle' => 'buildpack',
+                'created_at' => iso8601,
+                'updated_at' => iso8601,
+                'name' => buildpack1.name,
+                'state' => buildpack1.state,
+                'filename' => buildpack1.filename,
+                'stack' => buildpack1.stack,
+                'position' => 1,
+                'enabled' => true,
+                'locked' => false,
+                'metadata' => { 'labels' => {}, 'annotations' => {} },
+                'links' => {
+                  'self' => {
+                    'href' => "#{link_prefix}/v3/buildpacks/#{buildpack1.guid}"
+                  },
+                  'upload' => {
+                    'href' => "#{link_prefix}/v3/buildpacks/#{buildpack1.guid}/upload",
+                    'method' => 'POST'
+                  }
+                }
+              },
+              {
+                'guid' => buildpack3.guid,
+                'lifecycle' => 'buildpack',
+                'created_at' => iso8601,
+                'updated_at' => iso8601,
+                'name' => buildpack3.name,
+                'state' => buildpack3.state,
+                'filename' => buildpack3.filename,
+                'stack' => buildpack3.stack,
+                'position' => 2,
+                'enabled' => true,
+                'locked' => false,
+                'metadata' => { 'labels' => {}, 'annotations' => {} },
+                'links' => {
+                  'self' => {
+                    'href' => "#{link_prefix}/v3/buildpacks/#{buildpack3.guid}"
+                  },
+                  'upload' => {
+                    'href' => "#{link_prefix}/v3/buildpacks/#{buildpack3.guid}/upload",
+                    'method' => 'POST'
+                  }
+                }
+              }
+            ]
+          }
+        )
+      end
+
+      it 'returns a list of buildpacks filtered by lifecycle' do
+        get '/v3/buildpacks?lifecycle=cnb', nil, headers
+
+        expect(parsed_response).to be_a_response_like(
+          {
+            'pagination' => {
+              'total_results' => 2,
+              'total_pages' => 1,
+              'first' => {
+                'href' => "#{link_prefix}/v3/buildpacks?lifecycle=cnb&page=1&per_page=50"
+              },
+              'last' => {
+                'href' => "#{link_prefix}/v3/buildpacks?lifecycle=cnb&page=1&per_page=50"
+              },
+              'next' => nil,
+              'previous' => nil
+            },
+            'resources' => [
+              {
+                'guid' => buildpack5.guid,
+                'lifecycle' => 'cnb',
+                'created_at' => iso8601,
+                'updated_at' => iso8601,
+                'name' => buildpack5.name,
+                'state' => buildpack5.state,
+                'filename' => buildpack5.filename,
+                'stack' => buildpack5.stack,
+                'position' => 1,
+                'enabled' => true,
+                'locked' => false,
+                'metadata' => { 'labels' => {}, 'annotations' => {} },
+                'links' => {
+                  'self' => {
+                    'href' => "#{link_prefix}/v3/buildpacks/#{buildpack5.guid}"
+                  },
+                  'upload' => {
+                    'href' => "#{link_prefix}/v3/buildpacks/#{buildpack5.guid}/upload",
+                    'method' => 'POST'
+                  }
+                }
+              },
+              {
+                'guid' => buildpack4.guid,
+                'lifecycle' => 'cnb',
+                'created_at' => iso8601,
+                'updated_at' => iso8601,
+                'name' => buildpack4.name,
+                'state' => buildpack4.state,
+                'filename' => buildpack4.filename,
+                'stack' => buildpack4.stack,
+                'position' => 2,
+                'enabled' => true,
+                'locked' => false,
+                'metadata' => { 'labels' => {}, 'annotations' => {} },
+                'links' => {
+                  'self' => {
+                    'href' => "#{link_prefix}/v3/buildpacks/#{buildpack4.guid}"
+                  },
+                  'upload' => {
+                    'href' => "#{link_prefix}/v3/buildpacks/#{buildpack4.guid}/upload",
                     'method' => 'POST'
                   }
                 }
@@ -230,6 +515,7 @@ RSpec.describe 'buildpacks' do
             'resources' => [
               {
                 'guid' => buildpack3.guid,
+                'lifecycle' => 'buildpack',
                 'created_at' => iso8601,
                 'updated_at' => iso8601,
                 'name' => buildpack3.name,
@@ -252,6 +538,7 @@ RSpec.describe 'buildpacks' do
               },
               {
                 'guid' => buildpack1.guid,
+                'lifecycle' => 'buildpack',
                 'created_at' => iso8601,
                 'updated_at' => iso8601,
                 'name' => buildpack1.name,
@@ -276,13 +563,152 @@ RSpec.describe 'buildpacks' do
           }
         )
       end
+
+      it 'reverse orders by lifecycle (with position as secondary)' do
+        get '/v3/buildpacks?order_by=-lifecycle', nil, headers
+
+        expect(parsed_response).to(be_a_response_like(
+                                     {
+                                       'pagination' => {
+                                         'total_results' => 5,
+                                         'total_pages' => 1,
+                                         'first' => {
+                                           'href' => "#{link_prefix}/v3/buildpacks?order_by=-lifecycle&page=1&per_page=50"
+                                         },
+                                         'last' => {
+                                           'href' => "#{link_prefix}/v3/buildpacks?order_by=-lifecycle&page=1&per_page=50"
+                                         },
+                                         'next' => nil,
+                                         'previous' => nil
+                                       },
+                                       'resources' => [
+                                         {
+                                           'guid' => buildpack4.guid,
+                                           'lifecycle' => 'cnb',
+                                           'created_at' => iso8601,
+                                           'updated_at' => iso8601,
+                                           'name' => buildpack4.name,
+                                           'state' => buildpack4.state,
+                                           'filename' => buildpack4.filename,
+                                           'stack' => buildpack4.stack,
+                                           'position' => 2,
+                                           'enabled' => true,
+                                           'locked' => false,
+                                           'metadata' => { 'labels' => {}, 'annotations' => {} },
+                                           'links' => {
+                                             'self' => {
+                                               'href' => "#{link_prefix}/v3/buildpacks/#{buildpack4.guid}"
+                                             },
+                                             'upload' => {
+                                               'href' => "#{link_prefix}/v3/buildpacks/#{buildpack4.guid}/upload",
+                                               'method' => 'POST'
+                                             }
+                                           }
+                                         },
+                                         {
+                                           'guid' => buildpack5.guid,
+                                           'lifecycle' => 'cnb',
+                                           'created_at' => iso8601,
+                                           'updated_at' => iso8601,
+                                           'name' => buildpack5.name,
+                                           'state' => buildpack5.state,
+                                           'filename' => buildpack5.filename,
+                                           'stack' => buildpack5.stack,
+                                           'position' => 1,
+                                           'enabled' => true,
+                                           'locked' => false,
+                                           'metadata' => { 'labels' => {}, 'annotations' => {} },
+                                           'links' => {
+                                             'self' => {
+                                               'href' => "#{link_prefix}/v3/buildpacks/#{buildpack5.guid}"
+                                             },
+                                             'upload' => {
+                                               'href' => "#{link_prefix}/v3/buildpacks/#{buildpack5.guid}/upload",
+                                               'method' => 'POST'
+                                             }
+                                           }
+                                         },
+                                         {
+                                           'guid' => buildpack2.guid,
+                                           'lifecycle' => 'buildpack',
+                                           'created_at' => iso8601,
+                                           'updated_at' => iso8601,
+                                           'name' => buildpack2.name,
+                                           'state' => buildpack2.state,
+                                           'filename' => buildpack2.filename,
+                                           'stack' => buildpack2.stack,
+                                           'position' => 3,
+                                           'enabled' => true,
+                                           'locked' => false,
+                                           'metadata' => { 'labels' => {}, 'annotations' => {} },
+                                           'links' => {
+                                             'self' => {
+                                               'href' => "#{link_prefix}/v3/buildpacks/#{buildpack2.guid}"
+                                             },
+                                             'upload' => {
+                                               'href' => "#{link_prefix}/v3/buildpacks/#{buildpack2.guid}/upload",
+                                               'method' => 'POST'
+                                             }
+                                           }
+                                         },
+                                         {
+                                           'guid' => buildpack3.guid,
+                                           'lifecycle' => 'buildpack',
+                                           'created_at' => iso8601,
+                                           'updated_at' => iso8601,
+                                           'name' => buildpack3.name,
+                                           'state' => buildpack3.state,
+                                           'filename' => buildpack3.filename,
+                                           'stack' => buildpack3.stack,
+                                           'position' => 2,
+                                           'enabled' => true,
+                                           'locked' => false,
+                                           'metadata' => { 'labels' => {}, 'annotations' => {} },
+                                           'links' => {
+                                             'self' => {
+                                               'href' => "#{link_prefix}/v3/buildpacks/#{buildpack3.guid}"
+                                             },
+                                             'upload' => {
+                                               'href' => "#{link_prefix}/v3/buildpacks/#{buildpack3.guid}/upload",
+                                               'method' => 'POST'
+                                             }
+                                           }
+                                         },
+                                         {
+                                           'guid' => buildpack1.guid,
+                                           'lifecycle' => 'buildpack',
+                                           'created_at' => iso8601,
+                                           'updated_at' => iso8601,
+                                           'name' => buildpack1.name,
+                                           'state' => buildpack1.state,
+                                           'filename' => buildpack1.filename,
+                                           'stack' => buildpack1.stack,
+                                           'position' => 1,
+                                           'enabled' => true,
+                                           'locked' => false,
+                                           'metadata' => { 'labels' => {}, 'annotations' => {} },
+                                           'links' => {
+                                             'self' => {
+                                               'href' => "#{link_prefix}/v3/buildpacks/#{buildpack1.guid}"
+                                             },
+                                             'upload' => {
+                                               'href' => "#{link_prefix}/v3/buildpacks/#{buildpack1.guid}/upload",
+                                               'method' => 'POST'
+                                             }
+                                           }
+                                         }
+
+                                       ]
+                                     }
+                                   ))
+      end
     end
 
     context 'permissions' do
       let(:org) { VCAP::CloudController::Organization.make }
       let(:space) { VCAP::CloudController::Space.make(organization: org) }
       let(:api_call) { ->(user_headers) { get '/v3/buildpacks', nil, user_headers } }
-      let(:expected_codes_and_responses) { Hash.new(code: 200) }
+      let(:expected_codes_and_responses) { Hash.new({ code: 200 }.freeze) }
 
       before do
         space.organization.add_user(user)
@@ -360,6 +786,7 @@ RSpec.describe 'buildpacks' do
               'enabled' => params[:enabled],
               'locked' => params[:locked],
               'guid' => buildpack.guid,
+              'lifecycle' => 'buildpack',
               'created_at' => iso8601,
               'updated_at' => iso8601,
               'metadata' => {
@@ -460,7 +887,7 @@ RSpec.describe 'buildpacks' do
       context 'the buildpack does not exist' do
         let(:api_call) { ->(user_headers) { get '/v3/buildpacks/does-not-exist', nil, user_headers } }
 
-        let(:expected_codes_and_responses) { Hash.new(code: 404) }
+        let(:expected_codes_and_responses) { Hash.new({ code: 404 }.freeze) }
 
         it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS
       end
@@ -477,6 +904,7 @@ RSpec.describe 'buildpacks' do
             'enabled' => buildpack.enabled,
             'locked' => buildpack.locked,
             'guid' => buildpack.guid,
+            'lifecycle' => 'buildpack',
             'created_at' => iso8601,
             'updated_at' => iso8601,
             'metadata' => { 'labels' => {}, 'annotations' => {} },
@@ -492,7 +920,7 @@ RSpec.describe 'buildpacks' do
           }
         end
 
-        let(:expected_codes_and_responses) { Hash.new(code: 200, response_object: buildpack_response) }
+        let(:expected_codes_and_responses) { Hash.new({ code: 200, response_object: buildpack_response }.freeze) }
 
         it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS
       end

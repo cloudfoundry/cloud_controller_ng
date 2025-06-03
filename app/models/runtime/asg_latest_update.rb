@@ -8,9 +8,9 @@ module VCAP::CloudController
     def self.renew
       old_update = AsgTimestamp.first
       if old_update
-        old_update.update(last_update: Sequel::CURRENT_TIMESTAMP)
+        old_update.update(last_update: Time.now.utc)
       else
-        AsgTimestamp.create(last_update: Sequel::CURRENT_TIMESTAMP)
+        AsgTimestamp.create(last_update: Time.now.utc)
       end
     end
 

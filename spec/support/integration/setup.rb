@@ -58,8 +58,8 @@ module IntegrationSetupHelpers
 
       raise "`#{cmd}` exited with #{child_status} #{coredump_text(child_status)}\n#{failure_output(stdout, stderr)}" unless child_status.success? || opts[:continue_on_failure]
     else
-      spawn_opts[:out] = opts[:debug] ? :out : '/dev/null'
-      spawn_opts[:err] = opts[:debug] ? :out : '/dev/null'
+      spawn_opts[:out] = opts[:debug] ? :out : File::NULL
+      spawn_opts[:err] = opts[:debug] ? :out : File::NULL
 
       pid = Process.spawn(opts[:env], cmd, spawn_opts)
     end

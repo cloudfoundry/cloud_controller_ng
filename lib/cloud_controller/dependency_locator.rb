@@ -74,6 +74,10 @@ module CloudController
       @dependencies[:prometheus_updater] || register(:prometheus_updater, VCAP::CloudController::Metrics::PrometheusUpdater.new)
     end
 
+    def cc_worker_prometheus_updater
+      @dependencies[:cc_worker_prometheus_updater] || register(:cc_worker_prometheus_updater, VCAP::CloudController::Metrics::PrometheusUpdater.new(cc_worker: true))
+    end
+
     def statsd_updater
       @dependencies[:statsd_updater] || register(:statsd_updater, VCAP::CloudController::Metrics::StatsdUpdater.new(statsd_client))
     end
@@ -284,6 +288,19 @@ module CloudController
         uaa_target: config.get(:uaa, :internal_url),
         client_id: config.get(:cloud_controller_username_lookup_client_name),
         secret: config.get(:cloud_controller_username_lookup_client_secret),
+        ca_file: config.get(:uaa, :ca_file)
+      )
+    end
+
+    def uaa_shadow_user_creation_client
+      client = config.get(:uaa, :clients)&.find { |client_config| client_config['name'] == 'cloud_controller_shadow_user_creation' }
+
+      return unless client
+
+      UaaClient.new(
+        uaa_target: config.get(:uaa, :internal_url),
+        client_id: client['id'],
+        secret: client['secret'],
         ca_file: config.get(:uaa, :ca_file)
       )
     end

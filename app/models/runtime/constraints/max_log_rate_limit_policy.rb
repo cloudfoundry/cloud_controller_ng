@@ -50,7 +50,7 @@ class AppMaxLogRateLimitPolicy < BaseMaxLogRateLimitPolicy
 
   def additional_checks
     resource.started? &&
-      (resource.column_changed?(:state) || resource.column_changed?(:instances))
+      (resource.column_changed?(:state) || resource.column_changed?(:instances) || resource.column_changed?(:log_rate_limit))
   end
 
   def requested_log_rate_limit

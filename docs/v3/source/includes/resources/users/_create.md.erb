@@ -5,6 +5,11 @@ Controller database.
 
 Generally, the GUID should match the GUID of an already-created user in the
 UAA database, though this is not required.
+Creating a user by guid is only permitted by admins.
+
+If CAPI property `cc.allow_user_creation_by_org_manager` is enabled, a UAA user will be automatically created if it does not exist yet.
+The UAA user will be only created when `username` and `origin` have been provided instead of a guid. Additionally `origin` must be different from `uaa`.
+Admins and OrgManagers can make use of the UAA user creation.
 
 ```
 Example Request
@@ -31,19 +36,48 @@ Content-Type: application/json
 <%= yield_content :single_user %>
 ```
 
+```
+Example Request (by username and origin)
+```
+
+```shell
+curl "https://api.example.org/v3/users" \
+  -X POST \
+  -H "Authorization: bearer [token]" \
+  -H "Content-type: application/json" \
+  -d '{
+    "username": "some-user",
+    "origin": "some-origin"
+  }'
+```
+
+```
+Example Response
+```
+
+```http
+HTTP/1.1 201 Created
+Content-Type: application/json
+
+<%= yield_content :single_user_with_custom_origin %>
+```
+
 #### Definition
 `POST /v3/users`
 
 #### Required parameters
 
 Name     | Type     | Description
--------  | -------  | -----------
-**guid** | _string_ | Unique identifier for the user. For UAA users this will match the user ID of an existing UAA user's GUID; in the case of UAA clients, this will match the UAA client ID                                                                                             |
-**metadata.labels**   | [_label object_](#links) | Labels applied to the user                                                                                                 |
-**metadata.annotations** | [_annotation object_](#links) | Annotations added to the user                                                                                      |
+-------  | -------  |-------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+**guid** | _string_ | Unique identifier for the user. For UAA users this will match the user ID of an existing UAA user's GUID; in the case of UAA clients, this will match the UAA client ID |
+**username** | _string_ | Username of the user to be created. This can only be provided together with `origin`.                                                                                   |
+**origin** | _string_ | Origin of the user to be created. This can only be provided together with `username` and cannot be `uaa`.                                                               |
+**metadata.labels**   | [_label object_](#links) | Labels applied to the user                                                                                                                                              |
+**metadata.annotations** | [_annotation object_](#links) | Annotations added to the user                                                                                                                                           |
 
 #### Permitted roles
 
- |
------ |
-Admin |
+Role | Notes
+----- |----------------------------------------------------------------------------------------------------------------------------
+Admin |                                                                                                                            |
+OrgManager | can only create users by `username` and `origin` and when CAPI property `cc.allow_user_creation_by_org_manager` is enabled |

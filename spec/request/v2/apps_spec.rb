@@ -1649,7 +1649,7 @@ RSpec.describe 'Apps' do
       TestConfig.config[:directories][:tmpdir] = File.dirname(valid_zip.path)
       upload_params = {
         application: valid_zip,
-        resources: [{ fn: 'a/b/c', size: 1, sha1: 'sha' }].to_json
+        resources: [{ fn: 'a/b/c', size: 1, sha1: 'da39a3ee5e6b4b0d3255bfef95601890afd80709' }].to_json
       }
       put "/v2/apps/#{process.guid}/bits", upload_params, headers_for(user)
     end

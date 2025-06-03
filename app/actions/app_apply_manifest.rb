@@ -59,6 +59,7 @@ module VCAP::CloudController
 
       app_update_message = message.app_update_message
       lifecycle = AppLifecycleProvider.provide_for_update(app_update_message, app)
+
       AppUpdate.new(@user_audit_info, manifest_triggered: true).update(app, app_update_message, lifecycle)
 
       update_routes(app, message)

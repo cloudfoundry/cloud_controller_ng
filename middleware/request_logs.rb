@@ -9,10 +9,13 @@ module CloudFoundry
       def call(env)
         request_id = env['cf.request_id']
         @request_logs.start_request(request_id, env)
+        start_time = Time.now
 
         status, headers, body = @app.call(env)
-
-        @request_logs.complete_request(request_id, status)
+        # convert to milliseconds
+        time_taken = (Time.now - start_time) * 1000
+        time_taken = time_taken.to_i
+        @request_logs.complete_request(request_id, status, env, time_taken)
 
         [status, headers, body]
       end
