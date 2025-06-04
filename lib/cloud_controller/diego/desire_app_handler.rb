@@ -12,8 +12,6 @@ module VCAP::CloudController
               if e.name == 'RunnerError' && e.message['the requested resource already exists']
                 existing_lrp = client.get_app(process)
                 client.update_app(process, existing_lrp)
-              else
-                raise e
               end
             end
           end
