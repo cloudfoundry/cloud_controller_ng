@@ -312,22 +312,9 @@ class ServiceInstancesV3Controller < ApplicationController
     action.preflight!
     if action.update_broker_needed?
 
-      service_plan_relations = if message.service_plan_guid
-                                 { Sequel[:service_plans][:guid] => message.service_plan_guid }
-                                 ServicePlan.eager_graph(service: :service_broker).
-                                   where(Sequel[:service_plans][:guid] => message.service_plan_guid).
-                                   all
-                               else
-                                 { Sequel[:service_plans][:id] => service_instance.service_plan_id }
-                                 ServicePlan.eager_graph(service: :service_broker).
-                                   where(Sequel[:service_plans][:id] => service_instance.service_plan_id).
-                                   all
-                               end
-
-      service_plan = service_plan_relations[0]
-      plan_name = service_plan.name
-      service_name = service_plan.service.name
-      broker_name = service_plan.service.service_broker.name
+      plan_name = service_instance.service_plan.name
+      service_name = service_instance.service_plan.service.label
+      broker_name = service_instance.service_plan.service.service_broker.name
 
       logger.info(
         "Updating managed service instance with name '#{service_instance.name}' " \
