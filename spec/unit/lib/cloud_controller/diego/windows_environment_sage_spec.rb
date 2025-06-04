@@ -37,8 +37,13 @@ module VCAP::CloudController::Diego
             ]
           end
 
-          it 'raises an error' do
-            expect { WindowsEnvironmentSage.ponder(parent_app) }.to raise_error(InvalidWindowsGMSACredentials)
+          it 'creates an env var using the first credential' do
+            expect(WindowsEnvironmentSage.ponder(parent_app)).to eq([
+              ::Diego::Bbs::Models::EnvironmentVariable.new(
+                name: 'WINDOWS_GMSA_CREDENTIAL_REF',
+                value: '/credhub-windows-gmsa-service-broker/credhub-windows-gmsa/18292699-e63d-4d76-8a2e-8cba5e3f1760/credentials'
+              )
+            ])
           end
         end
       end

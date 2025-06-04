@@ -126,7 +126,7 @@ module VCAP::CloudController
     end
 
     def windows_gmsa_credential_refs
-      service_bindings.map do |binding|
+      service_bindings.sort_by(&:id).map do |binding|
         binding.credentials['credhub-windows-gmsa-credential-ref'] if binding.credentials.present?
       end.compact
     end
