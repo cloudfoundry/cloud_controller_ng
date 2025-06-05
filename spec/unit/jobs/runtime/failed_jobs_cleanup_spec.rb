@@ -73,6 +73,41 @@ module VCAP::CloudController
                 Delayed::Job.find(id: @delayed_job.id)
               }.from(@delayed_job).to(nil)
             end
+
+            context 'when job is orphaned' do
+              it 'does not remove the job if it is not older than 2 times the cut-off' do
+                # Simulate a job that is orphaned but not older than 2 times the cut-off
+                Sequel::Model.db[:delayed_jobs].where(id: @delayed_job.id).update(failed_at: nil, locked_by: nil)
+                puts @delayed_job.inspect
+                expect do
+                  cleanup_job.perform
+                end.not_to(change { Delayed::Job.find(id: @delayed_job.id) })
+              end
+            end
+          end
+
+          context 'when a job is orphaned and older than 2 times the cut-off' do
+            let(:run_at) { Time.now.utc - 5.days }
+
+            it 'removes the job even if it is not failed and regardless of locked_by' do
+              # Simulate a job that is not failed but still locked
+              Sequel::Model.db[:delayed_jobs].where(id: @delayed_job.id).update(failed_at: nil, locked_by: 'some-worker', locked_at: Time.now.utc - 4.days)
+              expect do
+                cleanup_job.perform
+              end.to change {
+                Delayed::Job.find(id: @delayed_job.id)
+              }.from(@delayed_job).to(nil)
+            end
+
+            it 'removes the job even if it is not failed and locked_by is nil' do
+              # Simulate a job that is not failed and not locked
+              Sequel::Model.db[:delayed_jobs].where(id: @delayed_job.id).update(failed_at: nil, locked_by: nil)
+              expect do
+                cleanup_job.perform
+              end.to change {
+                Delayed::Job.find(id: @delayed_job.id)
+              }.from(@delayed_job).to(nil)
+            end
           end
 
           context 'when the number of delayed jobs exceeds max_number_of_failed_delayed_jobs' do
