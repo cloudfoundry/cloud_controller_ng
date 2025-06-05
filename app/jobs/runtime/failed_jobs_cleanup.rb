@@ -20,6 +20,18 @@ module VCAP::CloudController
 
           old_delayed_jobs.delete
 
+          # There were some very old jobs in the table which did not get cleaned up
+          # This deletes those orphaned jobs, which were scheduled to run before the cutoff age + 1 day
+          force_delete_after = cutoff_age_in_days.to_i + 1
+          orphaned_delayed_jobs = Delayed::Job.
+                                  where(Sequel.lit("run_at < CURRENT_TIMESTAMP - INTERVAL '?' DAY", force_delete_after))
+
+          unless orphaned_delayed_jobs.count.zero?
+            logger.info("Deleting #{orphaned_delayed_jobs.count} orphaned Delayed Jobs older than #{force_delete_after} days")
+
+            orphaned_delayed_jobs.delete
+          end
+
           return if max_number_of_failed_delayed_jobs.nil?
 
           ids_exceeding_limit = Delayed::Job.
