@@ -1509,6 +1509,30 @@ module VCAP::CloudController
           end
         end
 
+        context 'when the strategy is recreate' do
+          let(:strategy) { 'recreate' }
+
+          it 'creates the deployment with the recreate strategy' do
+            deployment = nil
+
+            expect do
+              deployment = DeploymentCreate.create(app:, message:, user_audit_info:)
+            end.to change(DeploymentModel, :count).by(1)
+
+            expect(deployment.strategy).to eq(DeploymentModel::RECREATE_STRATEGY)
+          end
+
+          it 'sets the deployment state to DEPLOYING' do
+            deployment = nil
+
+            expect do
+              deployment = DeploymentCreate.create(app:, message:, user_audit_info:)
+            end.to change(DeploymentModel, :count).by(1)
+
+            expect(deployment.state).to eq(DeploymentModel::DEPLOYING_STATE)
+          end
+        end
+
         context 'when the strategy is nil' do
           let(:strategy) { nil }
 
