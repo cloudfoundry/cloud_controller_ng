@@ -379,15 +379,20 @@ class ServiceInstancesV3Controller < ApplicationController
   def enqueue_delete_job(service_instance)
     delete_job = V3::DeleteServiceInstanceJob.new(service_instance.guid, user_audit_info)
 
-    service_plan_relations = ServicePlan.eager_graph(service: :service_broker).
-                             where(Sequel[:service_plans][:id] => service_instance.service_plan_id).
-                             all
+    result = VCAP::CloudController::ServicePlan.
+             join(:services, id: :service_id).
+             join(:service_brokers, id: Sequel[:services][:service_broker_id]).
+             where(Sequel[:service_plans][:id] => service_instance.service_plan_id).
+             select(
+               Sequel[:service_plans][:name].as(:plan_name),
+               Sequel[:services][:label].as(:service_name),
+               Sequel[:service_brokers][:name].as(:broker_name)
+             ).
+             first
 
-    service_plan = service_plan_relations[0]
-
-    plan_name = service_plan.name
-    service_name = service_plan.service.name
-    broker_name = service_plan.service.service_broker.name
+    plan_name     = result[:plan_name]
+    service_name  = result[:service_name]
+    broker_name   = result[:broker_name]
 
     logger.info(
       "Deleting managed service instance with name '#{service_instance.name}' " \
