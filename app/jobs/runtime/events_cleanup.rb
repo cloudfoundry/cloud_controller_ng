@@ -9,7 +9,7 @@ module VCAP::CloudController
         end
 
         def perform
-          Database::OldRecordCleanup.new(Event, cutoff_age_in_days).delete
+          Database::OldRecordCleanup.new(Event, cutoff_age_in_days:).delete
         end
 
         def job_name_in_configuration
