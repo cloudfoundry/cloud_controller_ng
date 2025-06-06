@@ -4,6 +4,7 @@ require 'cloud_controller/blobstore/fog/fog_client'
 require 'cloud_controller/blobstore/fog/error_handling_client'
 require 'cloud_controller/blobstore/webdav/dav_client'
 require 'cloud_controller/blobstore/safe_delete_client'
+require 'cloud_controller/blobstore/cli/azure_cli_client'
 require 'google/apis/errors'
 
 module CloudController
@@ -12,6 +13,8 @@ module CloudController
       def self.provide(options:, directory_key:, root_dir: nil, resource_type: nil)
         if options[:blobstore_type].blank? || (options[:blobstore_type] == 'fog')
           provide_fog(options, directory_key, root_dir)
+        elsif options[:blobstore_type] == 'cli'
+          provide_azure_cli(options, directory_key, root_dir)
         else
           provide_webdav(options, directory_key, root_dir)
         end
@@ -62,6 +65,22 @@ module CloudController
           logger = Steno.logger('cc.blobstore.dav_client')
           errors = [StandardError]
           retryable_client = RetryableClient.new(client:, errors:, logger:)
+
+          Client.new(SafeDeleteClient.new(retryable_client, root_dir))
+        end
+
+        def provide_azure_cli(options, directory_key, root_dir)
+
+          client = AzureCliClient.new(fog_connection: options.fetch(:fog_connection),
+                                      directory_key: directory_key,
+                                      root_dir: root_dir,
+                                      min_size: options[:minimum_size],
+                                      max_size: options[:maximum_size],
+                                      )
+
+          logger = Steno.logger('cc.blobstore.azure_cli')
+          errors = [StandardError]
+          retryable_client = RetryableClient.new(client: client, errors: errors, logger: logger)
 
           Client.new(SafeDeleteClient.new(retryable_client, root_dir))
         end
