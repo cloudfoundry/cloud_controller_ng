@@ -213,7 +213,8 @@ module VCAP
                 process_guid: ProcessGuid.from_process(process),
                 checksum_algorithm: 'sha256',
                 checksum_value: droplet.sha256_checksum,
-                start_command: 'go go go'
+                start_command: 'go go go',
+                additional_container_env_vars: []
               }
             end
 

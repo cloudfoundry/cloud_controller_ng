@@ -10,7 +10,8 @@ module VCAP::CloudController
             ports: ports,
             docker_image: 'user/repo:tag',
             execution_metadata: execution_metadata,
-            start_command: 'dd if=/dev/random of=/dev/null'
+            start_command: 'dd if=/dev/random of=/dev/null',
+            additional_container_env_vars: additional_env_vars
           }
         end
         let(:config) do
@@ -24,6 +25,7 @@ module VCAP::CloudController
                      })
         end
         let(:ports) { [] }
+        let(:additional_env_vars) { [] }
         let(:execution_metadata) { '{}' }
         let(:enable_declarative_asset_downloads) { false }
 
@@ -95,8 +97,23 @@ module VCAP::CloudController
         end
 
         describe '#global_environment_variables' do
-          it 'returns an empty list' do
-            expect(builder.global_environment_variables).to be_empty
+          context 'when there are additional container-level env vars provided' do
+            let(:additional_env_vars) do
+              BbsEnvironmentBuilder.build('WINDOWS_GMSA_CREDENTIAL_REF' => 'some-credhub-ref', 'OTHER_ENV_VAR' => 'some-other-value')
+            end
+
+            it 'includes them along with the default container-level env vars' do
+              expect(builder.global_environment_variables).to contain_exactly(
+                ::Diego::Bbs::Models::EnvironmentVariable.new(name: 'WINDOWS_GMSA_CREDENTIAL_REF', value: 'some-credhub-ref'),
+                ::Diego::Bbs::Models::EnvironmentVariable.new(name: 'OTHER_ENV_VAR', value: 'some-other-value')
+              )
+            end
+          end
+
+          context 'when there are NOT additional container-level env vars provided' do
+            it 'returns the default container-level env vars' do
+              expect(builder.global_environment_variables).to be_empty
+            end
           end
         end
 
