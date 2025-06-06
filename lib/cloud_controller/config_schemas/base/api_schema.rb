@@ -134,7 +134,8 @@ module VCAP::CloudController
 
             nginx: {
               use_nginx: bool,
-              instance_socket: String
+              instance_socket: String,
+              optional(:metrics_socket) => String
             },
 
             quota_definitions: Hash,
