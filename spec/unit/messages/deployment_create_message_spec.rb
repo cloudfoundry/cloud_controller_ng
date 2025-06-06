@@ -29,6 +29,12 @@ module VCAP::CloudController
           expect(message).to be_valid
         end
 
+        it 'can be recreate' do
+          body['strategy'] = 'recreate'
+          message = DeploymentCreateMessage.new(body)
+          expect(message).to be_valid
+        end
+
         it 'is valid with nil strategy' do
           body['strategy'] = nil
           message = DeploymentCreateMessage.new(body)
@@ -123,6 +129,15 @@ module VCAP::CloudController
           it 'succeeds' do
             message = DeploymentCreateMessage.new(body)
             expect(message).to be_valid
+          end
+        end
+
+        context 'when set with recreate strategy'
+          it 'is not valid' do
+            body['strategy'] = 'recreate'
+            message = DeploymentCreateMessage.new(body)
+            expect(message).not_to be_valid
+            expect(message.errors.full_messages).to include('Max in flight is not a supported option for recreate deployment strategy')
           end
         end
       end
@@ -372,6 +387,14 @@ module VCAP::CloudController
           expect(message.errors[:'options.canary']).to include('are only valid for Canary deployments')
         end
 
+        it 'errors when strategy is set to recreate' do
+          body['options'] = { canary: {} }
+          body['strategy'] = 'recreate'
+          message = DeploymentCreateMessage.new(body)
+          expect(message).not_to be_valid
+          expect(message.errors[:'options.canary']).to include('are only valid for Canary deployments')
+        end
+
         it 'errors when there is an unknown option' do
           body['options'] = { foo: 'bar', baz: 'boo' }
           message = DeploymentCreateMessage.new(body)
@@ -484,6 +507,10 @@ module VCAP::CloudController
             end
           end
         end
+      end
+
+      describe 'recreate options' do
+        
       end
 
       describe 'metadata' do

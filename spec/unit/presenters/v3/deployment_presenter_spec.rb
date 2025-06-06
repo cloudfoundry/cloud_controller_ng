@@ -200,6 +200,16 @@ module VCAP::CloudController::Presenters::V3
             end
           end
         end
+        context 'when the strategy is recreate' do
+          before do
+            deployment.strategy = VCAP::CloudController::DeploymentModel::RECREATE_STRATEGY
+          end
+
+          it 'shows no canary status' do
+            result = DeploymentPresenter.new(deployment).to_hash
+            expect(result[:status][:canary]).to be_nil
+          end
+        end
       end
 
       describe 'options' do
