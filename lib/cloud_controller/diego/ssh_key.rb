@@ -26,6 +26,10 @@ module VCAP
           @fingerprint ||= ::SSHKey.new(key.to_der).sha1_fingerprint
         end
 
+        def sha256_fingerprint
+          @sha256_fingerprint ||= ::SSHKey.new(key.to_der).sha256_fingerprint
+        end
+
         private
 
         def key
