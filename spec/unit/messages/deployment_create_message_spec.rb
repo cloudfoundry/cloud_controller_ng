@@ -132,12 +132,16 @@ module VCAP::CloudController
           end
         end
 
-        context 'when set with recreate strategy'
+        context 'when set with recreate strategy' do
+          before do
+            body['options'] = { max_in_flight: 2 }
+          end
+
           it 'is not valid' do
             body['strategy'] = 'recreate'
             message = DeploymentCreateMessage.new(body)
             expect(message).not_to be_valid
-            expect(message.errors.full_messages).to include('Max in flight is not a supported option for recreate deployment strategy')
+            expect(message.errors.full_messages).to include('Options max in flight is not a supported option for recreate deployment strategy')
           end
         end
       end
