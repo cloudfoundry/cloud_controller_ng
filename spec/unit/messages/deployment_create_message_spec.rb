@@ -513,10 +513,6 @@ module VCAP::CloudController
         end
       end
 
-      describe 'recreate options' do
-        
-      end
-
       describe 'metadata' do
         context 'when the annotations params are valid' do
           let(:params) do

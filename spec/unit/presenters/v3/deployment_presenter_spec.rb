@@ -200,6 +200,7 @@ module VCAP::CloudController::Presenters::V3
             end
           end
         end
+
         context 'when the strategy is recreate' do
           before do
             deployment.strategy = VCAP::CloudController::DeploymentModel::RECREATE_STRATEGY
