@@ -91,7 +91,9 @@ module VCAP::CloudController
             expect { service_instance_unshare.unshare(service_instance, target_space, user_audit_info) }.
               to raise_error(VCAP::CloudController::ServiceInstanceUnshare::Error)
 
-            expect(VCAP::CloudController::PollableJobModel.count).to eq(3)
+            binding_guids = [service_binding_1.guid, service_binding_2.guid, service_binding_3.guid]
+            jobs = VCAP::CloudController::PollableJobModel.where(resource_guid: binding_guids)
+            expect(jobs.count).to eq(3)
           end
         end
 
