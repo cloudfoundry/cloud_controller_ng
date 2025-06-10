@@ -56,3 +56,15 @@ RSpec::Matchers.define :have_table_with_unpopulated_column do |table, column|
     db[table].where(column => nil).any?
   end
 end
+
+RSpec::Matchers.define :have_table_with_check_constraint do |table|
+  match do |db|
+    db.check_constraints(table).include?(:check_id_bigint_matches_id)
+  end
+end
+
+RSpec::Matchers.define :have_table_with_primary_key do |table, column|
+  match do |db|
+    db.primary_key(table).to_sym == column
+  end
+end
