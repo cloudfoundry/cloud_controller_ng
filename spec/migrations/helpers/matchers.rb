@@ -3,7 +3,7 @@ RSpec::Matchers.define :add_index_options do
 
   match do |passed_options|
     options = passed_options.keys
-    !options.delete(:name).nil? && (options - %i[where if_not_exists concurrently]).empty?
+    !options.delete(:name).nil? && (options - %i[where if_not_exists concurrently unique]).empty?
   end
 end
 
@@ -54,5 +54,33 @@ end
 RSpec::Matchers.define :have_table_with_unpopulated_column do |table, column|
   match do |db|
     db[table].where(column => nil).any?
+  end
+end
+
+RSpec::Matchers.define :have_table_with_check_constraint do |table|
+  match do |db|
+    constraint_name = :"#{table}_check_id_bigint_matches_id"
+
+    db.check_constraints(table).include?(constraint_name)
+  end
+end
+
+RSpec::Matchers.define :have_table_with_primary_key do |table, column|
+  match do |db|
+    db.primary_key(table).to_sym == column
+  end
+end
+
+RSpec::Matchers.define :have_table_with_column_and_attribute do |table, column, attribute, value|
+  match do |db|
+    expect(db).to have_table_with_column(table, column)
+
+    db.schema(table).find { |col, _| col == column }&.dig(1, attribute) == value
+  end
+end
+
+RSpec::Matchers.define :have_table_with_index_on_columns do |table, columns|
+  match do |db|
+    db.indexes(table).any? { |_, index| index[:columns] == columns }
   end
 end
