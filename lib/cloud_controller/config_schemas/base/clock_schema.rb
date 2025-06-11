@@ -157,6 +157,7 @@ module VCAP::CloudController
             max_retained_deployments_per_app: Integer,
             max_retained_builds_per_app: Integer,
             max_retained_revisions_per_app: Integer,
+            optional(:additional_allowed_process_users) => Array,
 
             diego_sync: { frequency_in_seconds: Integer },
 

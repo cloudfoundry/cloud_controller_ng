@@ -181,6 +181,7 @@ module VCAP::CloudController
             expect(deploying_web_process.state).to eq(ProcessModel::STARTED)
             expect(deploying_web_process.instances).to eq(1)
             expect(deploying_web_process.command).to eq(web_process.command)
+            expect(deploying_web_process.user).to eq(web_process.user)
             expect(deploying_web_process.memory).to eq(web_process.memory)
             expect(deploying_web_process.file_descriptors).to eq(web_process.file_descriptors)
             expect(deploying_web_process.disk_quota).to eq(web_process.disk_quota)

@@ -113,6 +113,7 @@ module VCAP::CloudController
           state: ProcessModel::STOPPED,
           instances: process_instances,
           command: command,
+          user: web_process.user,
           memory: web_process.memory,
           file_descriptors: web_process.file_descriptors,
           disk_quota: web_process.disk_quota,
