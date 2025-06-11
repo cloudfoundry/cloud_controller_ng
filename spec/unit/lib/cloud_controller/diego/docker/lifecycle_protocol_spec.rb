@@ -64,13 +64,14 @@ module VCAP
                                   execution_metadata: 'foobar'
                                 })
             end
-            let(:process) { ProcessModel.make(app: app, diego: true, command: 'go go go', metadata: {}) }
+            let(:process) { ProcessModel.make(app: app, diego: true, command: 'go go go', user: 'ContainerUser', metadata: {}) }
             let(:builder_opts) do
               {
                 ports: [8080],
                 docker_image: 'the-image',
                 execution_metadata: 'foobar',
                 start_command: 'go go go',
+                action_user: 'ContainerUser',
                 additional_container_env_vars: []
               }
             end

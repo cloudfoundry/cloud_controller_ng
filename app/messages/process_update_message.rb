@@ -3,7 +3,7 @@ require 'models/helpers/health_check_types'
 
 module VCAP::CloudController
   class ProcessUpdateMessage < MetadataBaseMessage
-    register_allowed_keys %i[command health_check readiness_health_check]
+    register_allowed_keys %i[command user health_check readiness_health_check]
 
     # rubocop:disable Metrics/CyclomaticComplexity
     def initialize(params={})
@@ -25,6 +25,10 @@ module VCAP::CloudController
       @command_requested ||= proc { |a| a.requested?(:command) }
     end
 
+    def self.user_requested?
+      @user_requested ||= proc { |a| a.requested?(:user) }
+    end
+
     validates_with NoAdditionalKeysValidator
 
     validates :command,
@@ -32,6 +36,12 @@ module VCAP::CloudController
               length: { in: 1..4096, message: 'must be between 1 and 4096 characters' },
               allow_nil: true,
               if: command_requested?
+
+    validates :user,
+              string: true,
+              length: { in: 1..255, message: 'must be between 1 and 255 characters' },
+              allow_nil: true,
+              if: user_requested?
 
     validates :health_check_type,
               inclusion: {
