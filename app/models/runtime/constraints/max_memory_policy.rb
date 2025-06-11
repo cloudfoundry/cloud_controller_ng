@@ -13,7 +13,8 @@ class BaseMaxMemoryPolicy
 
     return if policy_target.has_remaining_memory(requested_memory)
 
-    resource.errors.add(field, error_name)
+    resource.errors.add(field, "exceeded for space #{policy_target.name}. This space's quota may not be large enough to support rolling deployments or your configured max-in-flight")
+
   end
 
   private
