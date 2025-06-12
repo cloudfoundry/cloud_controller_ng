@@ -2,6 +2,13 @@ module VCAP::CloudController
   class AppUsageEvent < Sequel::Model
     plugin :serialization
 
+    one_to_many :consumers,
+                class: 'VCAP::CloudController::AppUsageConsumer',
+                key: :last_processed_guid,
+                primary_key: :guid
+
+    add_association_dependencies consumers: :destroy
+
     export_attributes :state, :previous_state,
                       :memory_in_mb_per_instance, :previous_memory_in_mb_per_instance,
                       :instance_count, :previous_instance_count,
