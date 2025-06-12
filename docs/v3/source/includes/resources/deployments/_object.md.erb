@@ -19,7 +19,7 @@ Name | Type | Description
 **status.details.error** | _string_ | Brief description of error encountered while deploying, if any. This field is cleared once the deployment progresses successfully.
 **status.canary.steps.current** | _integer_ | The current canary step. Only available for deployments with strategy 'canary'. (experimental)
 **status.canary.steps.total** | _integer_ |  The total number of canary steps. Only available for deployments with strategy 'canary'. (experimental)
-**strategy** | _string_ | Strategy used for the deployment; supported strategies are `rolling` and `canary` (experimental)
+**strategy** | _string_ | Strategy used for the deployment; supported strategies are `rolling`, `canary` and `recreate` (experimental)
 **options.max_in_flight** | _integer_ | The maximum number of new instances to deploy simultaneously
 **options.web_instances** | _integer_ | The number of web instances the deployment will scale to
 **options.memory_in_mb** |  _integer_ | The amount of memory in megabytes to allocate per web process instance.  If `null`, the amount allocated will be taken from the previous web process.
