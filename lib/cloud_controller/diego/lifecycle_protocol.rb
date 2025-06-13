@@ -1,3 +1,5 @@
+require 'cloud_controller/diego/windows_environment_sage'
+
 module VCAP::CloudController
   module Diego
     module LifecycleProtocol
@@ -63,7 +65,8 @@ module VCAP::CloudController
           stack: process.app.lifecycle_data.stack,
           checksum_algorithm: checksum_info['type'],
           checksum_value: checksum_info['value'],
-          start_command: process.started_command
+          start_command: process.started_command,
+          additional_container_env_vars: container_env_vars_for_process(process)
         }
       end
 
@@ -79,6 +82,11 @@ module VCAP::CloudController
         raise InvalidDownloadUri.new("Failed to get blobstore download url for droplet #{task.droplet_guid}") unless download_url
 
         download_url
+      end
+
+      def container_env_vars_for_process(process)
+        additional_env = []
+        additional_env + WindowsEnvironmentSage.ponder(process.app)
       end
 
       def logger

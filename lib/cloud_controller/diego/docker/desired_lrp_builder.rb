@@ -10,6 +10,7 @@ module VCAP::CloudController
           @execution_metadata = opts[:execution_metadata]
           @ports = opts[:ports]
           @start_command = opts[:start_command]
+          @additional_container_env_vars = opts[:additional_container_env_vars]
         end
 
         def cached_dependencies
@@ -43,7 +44,7 @@ module VCAP::CloudController
         end
 
         def global_environment_variables
-          []
+          [] + @additional_container_env_vars
         end
 
         def ports

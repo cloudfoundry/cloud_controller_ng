@@ -17,6 +17,7 @@ module VCAP::CloudController
           @checksum_algorithm = opts[:checksum_algorithm]
           @checksum_value = opts[:checksum_value]
           @start_command = opts[:start_command]
+          @additional_container_env_vars = opts[:additional_container_env_vars]
         end
 
         def cached_dependencies
@@ -94,7 +95,7 @@ module VCAP::CloudController
         end
 
         def global_environment_variables
-          [::Diego::Bbs::Models::EnvironmentVariable.new(name: 'LANG', value: DEFAULT_LANG)]
+          [::Diego::Bbs::Models::EnvironmentVariable.new(name: 'LANG', value: DEFAULT_LANG)] + @additional_container_env_vars
         end
 
         def ports

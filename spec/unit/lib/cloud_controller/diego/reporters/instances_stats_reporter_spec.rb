@@ -78,6 +78,17 @@ module VCAP::CloudController
           [container_metric_batch]
         end
 
+        let(:expected_lrp_1_net_info) do
+          {
+            address: 'lrp-host',
+            instance_address: '',
+            ports: [
+              { container_port: DEFAULT_APP_PORT, container_tls_proxy_port: 0, host_port: 2222, host_tls_proxy_port: 0 },
+              { container_port: 1111, container_tls_proxy_port: 0, host_port: 0, host_tls_proxy_port: 0 }
+            ],
+            preferred_address: :UNKNOWN
+          }
+        end
         let(:expected_stats_response) do
           {
             0 => {
@@ -90,7 +101,7 @@ module VCAP::CloudController
                 host: 'lrp-host',
                 instance_guid: 'instance-a',
                 port: 2222,
-                net_info: lrp_1_net_info.to_h,
+                net_info: expected_lrp_1_net_info,
                 uptime: two_days_in_seconds,
                 mem_quota: 1234,
                 disk_quota: 10_234,
@@ -217,7 +228,7 @@ module VCAP::CloudController
                   host: 'lrp-host',
                   instance_guid: 'instance-a',
                   port: 2222,
-                  net_info: lrp_1_net_info.to_h,
+                  net_info: expected_lrp_1_net_info,
                   uptime: two_days_in_seconds,
                   mem_quota: nil,
                   disk_quota: nil,
@@ -272,7 +283,7 @@ module VCAP::CloudController
                     host: 'lrp-host',
                     instance_guid: 'instance-a',
                     port: 2222,
-                    net_info: lrp_1_net_info.to_h,
+                    net_info: expected_lrp_1_net_info,
                     uptime: two_days_in_seconds,
                     mem_quota: nil,
                     disk_quota: nil,
@@ -519,7 +530,7 @@ module VCAP::CloudController
                   host: 'lrp-host',
                   instance_guid: 'instance-a',
                   port: 2222,
-                  net_info: lrp_1_net_info.to_h,
+                  net_info: expected_lrp_1_net_info,
                   uptime: two_days_in_seconds,
                   mem_quota: nil,
                   disk_quota: nil,
@@ -653,7 +664,7 @@ module VCAP::CloudController
                   host: 'lrp-host',
                   instance_guid: 'instance-a',
                   port: 2222,
-                  net_info: lrp_1_net_info.to_h,
+                  net_info: expected_lrp_1_net_info,
                   uptime: two_days_in_seconds,
                   mem_quota: nil,
                   disk_quota: nil,

@@ -70,7 +70,8 @@ module VCAP
                 ports: [8080],
                 docker_image: 'the-image',
                 execution_metadata: 'foobar',
-                start_command: 'go go go'
+                start_command: 'go go go',
+                additional_container_env_vars: []
               }
             end
 
