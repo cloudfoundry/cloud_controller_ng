@@ -66,6 +66,7 @@ module VCAP::CloudController
           checksum_algorithm: checksum_info['type'],
           checksum_value: checksum_info['value'],
           start_command: process.started_command,
+          action_user: process.run_action_user,
           additional_container_env_vars: container_env_vars_for_process(process)
         }
       end

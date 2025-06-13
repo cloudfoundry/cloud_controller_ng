@@ -37,6 +37,7 @@ module VCAP
               docker_image: process.actual_droplet.docker_receipt_image,
               execution_metadata: process.execution_metadata,
               start_command: process.command,
+              action_user: process.run_action_user,
               additional_container_env_vars: container_env_vars_for_process(process)
             }
           end
