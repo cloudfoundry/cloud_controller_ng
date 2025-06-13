@@ -934,7 +934,8 @@ module VCAP::CloudController
               expect(lrp.routes.routes['diego-ssh']).to eq(Oj.dump({
                                                                      container_port: 2222,
                                                                      private_key: ssh_key.private_key,
-                                                                     host_fingerprint: ssh_key.fingerprint
+                                                                     host_fingerprint: ssh_key.fingerprint,
+                                                                     host_256_fingerprint: ssh_key.sha256_fingerprint
                                                                    }))
             end
           end
@@ -1037,7 +1038,8 @@ module VCAP::CloudController
               expect(lrp.routes.routes['diego-ssh']).to eq(Oj.dump({
                                                                      container_port: 2222,
                                                                      private_key: ssh_key.private_key,
-                                                                     host_fingerprint: ssh_key.fingerprint
+                                                                     host_fingerprint: ssh_key.fingerprint,
+                                                                     host_256_fingerprint: ssh_key.sha256_fingerprint
                                                                    }))
             end
           end
@@ -1383,7 +1385,8 @@ module VCAP::CloudController
               expect(lrp.routes.routes['diego-ssh']).to eq(Oj.dump({
                                                                      container_port: 2222,
                                                                      private_key: ssh_key.private_key,
-                                                                     host_fingerprint: ssh_key.fingerprint
+                                                                     host_fingerprint: ssh_key.fingerprint,
+                                                                     host_256_fingerprint: ssh_key.sha256_fingerprint
                                                                    }))
             end
           end
