@@ -311,16 +311,11 @@ class ServiceInstancesV3Controller < ApplicationController
     action = V3::ServiceInstanceUpdateManaged.new(service_instance, message, user_audit_info, message.audit_hash)
     action.preflight!
     if action.update_broker_needed?
-
-      plan_name = service_instance.service_plan.name
-      service_name = service_instance.service_plan.service.label
-      broker_name = service_instance.service_plan.service.service_broker.name
-
       logger.info(
         "Updating managed service instance with name '#{service_instance.name}' " \
-        "using service plan '#{plan_name}' " \
-        "from service offering '#{service_name}' " \
-        "provided by broker '#{broker_name}'."
+        "using service plan '#{service_instance.service_plan.name}' " \
+        "from service offering '#{service_instance.service_plan.service.label}' " \
+        "provided by broker '#{service_instance.service_plan.service.service_broker.name}'."
       )
 
       update_job = action.enqueue_update
@@ -368,7 +363,10 @@ class ServiceInstancesV3Controller < ApplicationController
   end
 
   def fetch_writable_service_instance(guid)
-    service_instance = ServiceInstance.first(guid:)
+    service_instances = ManagedServiceInstance.eager_graph(service_plan: { service: :service_broker }).where(Sequel[:service_instances][:guid] => guid).all
+    service_instance = service_instances[0] unless service_instances.empty?
+    service_instance = UserProvidedServiceInstance.first(guid:) if service_instance.nil?
+
     service_instance_not_found! unless service_instance && can_read_service_instance?(service_instance)
     unauthorized! unless can_write_to_active_space?(service_instance.space)
     suspended! unless is_space_active?(service_instance.space)
@@ -379,26 +377,15 @@ class ServiceInstancesV3Controller < ApplicationController
   def enqueue_delete_job(service_instance)
     delete_job = V3::DeleteServiceInstanceJob.new(service_instance.guid, user_audit_info)
 
-    result = VCAP::CloudController::ServicePlan.
-             join(:services, id: :service_id).
-             join(:service_brokers, id: Sequel[:services][:service_broker_id]).
-             where(Sequel[:service_plans][:id] => service_instance.service_plan_id).
-             select(
-               Sequel[:service_plans][:name].as(:plan_name),
-               Sequel[:services][:label].as(:service_name),
-               Sequel[:service_brokers][:name].as(:broker_name)
-             ).
-             first
-
-    plan_name     = result[:plan_name]
-    service_name  = result[:service_name]
-    broker_name   = result[:broker_name]
+    plan = service_instance.service_plan
+    service = plan.service
+    broker = service.service_broker
 
     logger.info(
       "Deleting managed service instance with name '#{service_instance.name}' " \
-      "using service plan '#{plan_name}' " \
-      "from service offering '#{service_name}' " \
-      "provided by broker '#{broker_name}'."
+      "using service plan '#{plan.name}' " \
+      "from service offering '#{service.label}' " \
+      "provided by broker '#{broker.name}'."
     )
 
     pollable_job = Jobs::Enqueuer.new(queue: Jobs::Queues.generic).enqueue_pollable(delete_job)
