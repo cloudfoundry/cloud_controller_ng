@@ -1,8 +1,8 @@
 require 'spec_helper'
 
 RSpec.describe 'max memory policies' do
-  let(:org_or_space) { double(:org_or_space, has_remaining_memory: false, name: 'space1') }
-  let(:error_name) { "exceeded for space space1. This space's quota may not be large enough to support rolling deployments or your configured max-in-flight" }
+  let(:org_or_space) { double(:org_or_space, has_remaining_memory: false) }
+  let(:error_name) { :random_memory_error }
 
   describe AppMaxMemoryPolicy do
     subject(:validator) { AppMaxMemoryPolicy.new(process, org_or_space, error_name) }
