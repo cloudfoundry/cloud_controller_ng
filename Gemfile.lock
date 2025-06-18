@@ -131,7 +131,7 @@ GEM
     crass (1.0.6)
     daemons (1.4.1)
     date (3.4.1)
-    debug (1.10.0)
+    debug (1.11.0)
       irb (~> 1.10)
       reline (>= 0.3.8)
     declarative (0.0.20)
@@ -142,6 +142,7 @@ GEM
     docile (1.1.5)
     domain_name (0.6.20240107)
     drb (2.2.1)
+    erb (5.0.1)
     erubi (1.13.1)
     eventmachine (1.2.7)
     excon (0.112.0)
@@ -377,7 +378,7 @@ GEM
     pry-byebug (3.11.0)
       byebug (~> 12.0)
       pry (>= 0.13, < 0.16)
-    psych (5.2.4)
+    psych (5.2.6)
       date
       stringio
     public_suffix (6.0.2)
@@ -417,7 +418,8 @@ GEM
       ffi (~> 1.0)
     rbs (3.9.4)
       logger
-    rdoc (6.11.0)
+    rdoc (6.14.1)
+      erb
       psych (>= 4.0.0)
     redis (5.4.0)
       redis-client (>= 0.22.0)
@@ -627,7 +629,7 @@ DEPENDENCIES
   cloudfront-signer
   codeclimate-test-reporter (>= 1.0.8)
   concurrent-ruby
-  debug (~> 1.10)
+  debug (~> 1.11)
   digest-xxhash
   eventmachine (~> 1.2.7)
   fluent-logger
