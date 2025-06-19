@@ -602,11 +602,9 @@ module VCAP::CloudController
               end
 
               it 'raises a DeploymentCreate::Error' do
-                expect do
-                  DeploymentCreate.create(app:, message:,
-                                          user_audit_info:)
-                end.to raise_error(DeploymentCreate::Error,
-                                   "memory space_quota_exceeded for space #{app.space.name}. This space's quota may not be large enough to support rolling deployments or your configured max-in-flight.")
+                error_msg_1 = "memory space_quota_exceeded for space #{app.space.name}. "
+                error_msg_2 = "This space's quota may not be large enough to support rolling deployments or your configured max-in-flight."
+                expect { DeploymentCreate.create(app:, message:, user_audit_info:) }.to raise_error(DeploymentCreate::Error, error_msg_1 + error_msg_2)
               end
             end
           end
