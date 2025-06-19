@@ -596,7 +596,7 @@ module VCAP::CloudController
               end
             end
 
-            context 'when the app fails to start' do
+            context 'when the app fails to start due to space errors' do
               before do
                 allow(VCAP::CloudController::AppStart).to receive(:start).and_raise(VCAP::CloudController::AppStart::InvalidApp.new('memory space_quota_exceeded'))
               end
@@ -604,6 +604,18 @@ module VCAP::CloudController
               it 'raises a DeploymentCreate::Error' do
                 error_msg_1 = "memory space_quota_exceeded for space #{app.space.name}. "
                 error_msg_2 = "This space's quota may not be large enough to support rolling deployments or your configured max-in-flight."
+                expect { DeploymentCreate.create(app:, message:, user_audit_info:) }.to raise_error(DeploymentCreate::Error, error_msg_1 + error_msg_2)
+              end
+            end
+
+            context 'when the app fails to start due to org errors' do
+              before do
+                allow(VCAP::CloudController::AppStart).to receive(:start).and_raise(VCAP::CloudController::AppStart::InvalidApp.new('memory quota_exceeded'))
+              end
+
+              it 'raises a DeploymentCreate::Error' do
+                error_msg_1 = "memory quota_exceeded for organization #{app.organization.name}. "
+                error_msg_2 = "This organization's quota may not be large enough to support rolling deployments or your configured max-in-flight."
                 expect { DeploymentCreate.create(app:, message:, user_audit_info:) }.to raise_error(DeploymentCreate::Error, error_msg_1 + error_msg_2)
               end
             end
