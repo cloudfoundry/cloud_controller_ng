@@ -16,6 +16,7 @@ module VCAP::CloudController
               'disk_quota' => add_units(process.disk_quota),
               'log-rate-limit-per-second' => add_units_log_rate_limit(process.log_rate_limit),
               'command' => process.command,
+              'user' => process.user,
               'health-check-type' => process.health_check_type,
               'health-check-http-endpoint' => process.health_check_http_endpoint,
               'health-check-invocation-timeout' => process.health_check_invocation_timeout,

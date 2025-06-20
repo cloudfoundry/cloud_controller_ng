@@ -262,6 +262,7 @@ module VCAP::CloudController
     def process_update_attributes_from_process(params)
       mapping = {}
       mapping[:command] = params[:command] || 'null' if params.key?(:command)
+      mapping[:user] = params[:user] if params.key?(:user)
       mapping[:health_check_http_endpoint] = params[:health_check_http_endpoint] if params.key?(:health_check_http_endpoint)
       mapping[:health_check_timeout] = params[:health_check_timeout] if params.key?(:health_check_timeout)
       mapping[:health_check_invocation_timeout] = params[:health_check_invocation_timeout] if params.key?(:health_check_invocation_timeout)

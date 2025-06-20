@@ -5,6 +5,7 @@ module VCAP::CloudController
   class ManifestProcessUpdateMessage < BaseMessage
     register_allowed_keys %i[
       command
+      user
       health_check_http_endpoint
       health_check_invocation_timeout
       health_check_type
@@ -33,6 +34,12 @@ module VCAP::CloudController
               string: true,
               length: { in: 1..4096, message: 'must be between 1 and 4096 characters' },
               if: proc { |a| a.requested?(:command) }
+
+    validates :user,
+              string: true,
+              allow_nil: true,
+              length: { in: 1..255, message: 'must be between 1 and 255 characters' },
+              if: proc { |a| a.requested?(:user) }
 
     validates :health_check_type,
               inclusion: {

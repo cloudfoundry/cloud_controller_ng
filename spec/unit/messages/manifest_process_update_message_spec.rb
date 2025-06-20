@@ -62,6 +62,59 @@ module VCAP::CloudController
             expect(message.errors[:command]).to include('must be between 1 and 4096 characters')
           end
         end
+
+        context 'when command is just right' do
+          let(:params) { { command: './start.sh' } }
+
+          it 'is valid' do
+            expect(message).to be_valid
+          end
+        end
+      end
+
+      describe 'user' do
+        context 'when user is not a string' do
+          let(:params) { { user: 32.77 } }
+
+          it 'is valid' do
+            expect(message).not_to be_valid
+            expect(message.errors[:user]).to include('must be a string')
+          end
+        end
+
+        context 'when user is nil' do
+          let(:params) { { user: nil } }
+
+          it 'is not valid' do
+            expect(message).to be_valid
+          end
+        end
+
+        context 'when user is too long' do
+          let(:params) { { user: 'a' * 256 } }
+
+          it 'is not valid' do
+            expect(message).not_to be_valid
+            expect(message.errors[:user]).to include('must be between 1 and 255 characters')
+          end
+        end
+
+        context 'when user is empty' do
+          let(:params) { { user: '' } }
+
+          it 'is not valid' do
+            expect(message).not_to be_valid
+            expect(message.errors[:user]).to include('must be between 1 and 255 characters')
+          end
+        end
+
+        context 'when user is just right' do
+          let(:params) { { command: 'vcap' } }
+
+          it 'is valid' do
+            expect(message).to be_valid
+          end
+        end
       end
 
       describe 'health_check_type' do
