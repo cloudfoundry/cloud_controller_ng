@@ -62,6 +62,56 @@ module VCAP::BigintMigration
       logger.info("finished bigint backfill on table '#{table}'")
     end
 
+    def migration_completed?(db, table)
+      column_type(db, table, :id) == 'bigint'
+    end
+
+    def migration_skipped?(db, table)
+      !column_exists?(db, table, :id_bigint)
+    end
+
+    def add_check_constraint(db, table)
+      return if check_constraint_exists?(db, table, :check_id_bigint_matches_id)
+
+      db.alter_table(table) do
+        add_constraint(:check_id_bigint_matches_id) do
+          Sequel.lit('id_bigint IS NOT NULL AND id_bigint = id')
+        end
+      end
+    end
+
+    def drop_check_constraint(db, table)
+      return unless check_constraint_exists?(db, table, :check_id_bigint_matches_id)
+
+      db.alter_table(table) do
+        drop_constraint(:check_id_bigint_matches_id)
+      end
+    end
+
+    def drop_pk_id_column(db, table)
+      db.drop_column(table, :id, if_exists: true)
+    end
+
+    def add_pk_id_column(db, table)
+      return if column_exists?(db, table, :id)
+
+      db.alter_table(table) do
+        add_primary_key(:id)
+      end
+    end
+
+    def backfill_id(db, table)
+      batch_size = 10_000
+      loop do
+        updated_rows = db.
+                       from(table, :batch).
+                       with(:batch, db[table].select(:id_bigint).where(id: nil).order(:id_bigint).limit(batch_size).for_update.skip_locked).
+                       where(Sequel.qualify(table, :id_bigint) => :batch__id_bigint).
+                       update(id: :batch__id_bigint)
+        break if updated_rows < batch_size
+      end
+    end
+
     private
 
     def column_type(db, table, column)
@@ -78,6 +128,18 @@ module VCAP::BigintMigration
 
     def column_exists?(db, table, column)
       db[table].columns.include?(column)
+    end
+
+    def check_constraint_exists?(db, table, constraint_name)
+      db.check_constraints(table).include?(constraint_name)
+    end
+
+    def backfill_batch(db, table, from_column, to_column, batch_size)
+      db.
+        from(table, :batch).
+        with(:batch, db[table].select(from_column).where(to_column => nil).order(from_column).limit(batch_size).for_update.skip_locked).
+        where(Sequel.qualify(table, from_column) => :"batch__#{from_column}").
+        update(to_column => :"batch__#{from_column}")
     end
   end
 end
