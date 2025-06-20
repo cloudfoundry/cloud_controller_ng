@@ -42,6 +42,15 @@ module VCAP::CloudController
                                   })
     end
 
+    let(:recreate_message) do
+      DeploymentCreateMessage.new({
+                                    relationships: { app: { data: { guid: app.guid } } },
+                                    droplet: { guid: next_droplet.guid },
+                                    strategy: 'recreate',
+                                    options: { web_instances:, memory_in_mb:, disk_in_mb:, log_rate_limit_in_bytes_per_second: }
+                                  })
+    end
+
     before do
       app.update(droplet: original_droplet)
     end
@@ -348,6 +357,32 @@ module VCAP::CloudController
             expect(
               deployment.historical_related_processes.map(&:process_type)
             ).to contain_exactly(deployment.deploying_web_process.type)
+          end
+
+          it 'when the strategy is recreate' do
+            deployment = DeploymentCreate.create(app: app, message: recreate_message, user_audit_info: user_audit_info)
+            event = VCAP::CloudController::Event.find(type: 'audit.app.deployment.create')
+            expect(event).not_to be_nil
+            expect(event.actor).to eq('123')
+            expect(event.actor_type).to eq('user')
+            expect(event.actor_name).to eq('connor@example.com')
+            expect(event.actor_username).to eq('braa')
+            expect(event.actee).to eq(app.guid)
+            expect(event.actee_type).to eq('app')
+            expect(event.actee_name).to eq(app.name)
+            expect(event.timestamp).to be
+            expect(event.space_guid).to eq(app.space_guid)
+            expect(event.organization_guid).to eq(app.space.organization.guid)
+            expect(event.metadata).to eq({
+                                           'droplet_guid' => next_droplet.guid,
+                                           'deployment_guid' => deployment.guid,
+                                           'type' => nil,
+                                           'revision_guid' => app.latest_revision.guid,
+                                           'request' => message.audit_hash,
+                                           'strategy' => 'recreate'
+                                         })
+
+            expect(deployment.deploying_web_process.instances).to eq(2)
           end
 
           context 'when the app does not have a droplet set' do

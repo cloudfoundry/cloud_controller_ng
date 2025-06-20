@@ -247,8 +247,11 @@ module VCAP::CloudController
                                  else
                                    desired_instances
                                  end
-
-        [deployment.max_in_flight, starting_process_count].min
+        if deployment.strategy == DeploymentModel::RECREATE_STRATEGY
+          starting_process_count
+        else
+          [deployment.max_in_flight, starting_process_count].min
+        end
       end
 
       def log_rollback_event(app_guid, user_id, revision_id, strategy, max_in_flight, canary_steps)
