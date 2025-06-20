@@ -28,6 +28,7 @@ module VCAP::CloudController
             version: process.version,
             type: process.type,
             command: redact(process.specified_or_detected_command),
+            user: process.run_action_user,
             instances: process.instances,
             memory_in_mb: process.memory,
             disk_in_mb: process.disk_quota,

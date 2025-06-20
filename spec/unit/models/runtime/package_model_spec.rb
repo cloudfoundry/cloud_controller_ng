@@ -2,6 +2,10 @@ require 'spec_helper'
 
 module VCAP::CloudController
   RSpec.describe PackageModel do
+    before do
+      allow_any_instance_of(BitsExpiration).to receive(:expire_packages!)
+    end
+
     describe 'validations' do
       it { is_expected.to validates_includes PackageModel::PACKAGE_STATES, :state, allow_missing: true }
 

@@ -821,6 +821,13 @@ module VCAP::CloudController
     end
   end
 
+  RevisionModel.blueprint(:no_commands) do
+    app { AppModel.make }
+    droplet { DropletModel.make(app:) }
+    process_command_guids { [] }
+    description { 'blank' }
+  end
+
   RevisionModel.blueprint(:custom_web_command) do
     app { AppModel.make }
     droplet { DropletModel.make(app:) }

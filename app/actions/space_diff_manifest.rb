@@ -51,6 +51,8 @@ module VCAP::CloudController
 
             remove_default_missing_fields(existing_value, key, value) if nested_attribute_exists
 
+            remove_unspecified_app_features(existing_value, key, value)
+
             # To preserve backwards compability, we've decided to skip diffs that satisfy this conditon
             next if !nested_attribute_exists && %w[disk_quota disk-quota memory].include?(key)
 
@@ -210,6 +212,11 @@ module VCAP::CloudController
             end
           end
         end
+      end
+
+      def remove_unspecified_app_features(existing_value, key, value)
+        # Only show the diff for features that are specified in the manifest
+        existing_value.slice!(*value.keys) if key == 'features'
       end
     end
   end

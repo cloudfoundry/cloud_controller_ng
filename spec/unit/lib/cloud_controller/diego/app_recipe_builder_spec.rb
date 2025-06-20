@@ -52,6 +52,39 @@ module VCAP::CloudController
           expect(lrp.trusted_system_certificates_path).to eq(RUNNING_TRUSTED_SYSTEM_CERT_PATH)
           expect(lrp.PlacementTags).to eq(['placement-tag'])
           expect(lrp.certificate_properties).to eq(expected_certificate_properties)
+
+          expect(lrp.volume_mounted_files).to be_empty
+        end
+      end
+
+      shared_examples 'k8s service bindings' do
+        context 'when k8s service bindings are enabled' do
+          before do
+            app = process.app
+            app.update(service_binding_k8s_enabled: true)
+            VCAP::CloudController::ServiceBinding.make(service_instance: ManagedServiceInstance.make(space: app.space), app: app)
+          end
+
+          it 'includes volume mounted files' do
+            lrp = builder.build_app_lrp
+            expect(lrp.volume_mounted_files.size).to be > 1
+          end
+        end
+      end
+
+      shared_examples 'file-based VCAP service bindings' do
+        context 'when file-based VCAP service bindings are enabled' do
+          before do
+            app = process.app
+            app.update(file_based_vcap_services_enabled: true)
+            VCAP::CloudController::ServiceBinding.make(service_instance: ManagedServiceInstance.make(space: app.space), app: app)
+          end
+
+          it 'includes the vcap_services file' do
+            lrp = builder.build_app_lrp
+            expect(lrp.volume_mounted_files.size).to eq(1)
+            expect(lrp.volume_mounted_files[0].path).to eq('vcap_services')
+          end
         end
       end
 
@@ -901,7 +934,8 @@ module VCAP::CloudController
               expect(lrp.routes.routes['diego-ssh']).to eq(Oj.dump({
                                                                      container_port: 2222,
                                                                      private_key: ssh_key.private_key,
-                                                                     host_fingerprint: ssh_key.fingerprint
+                                                                     host_fingerprint: ssh_key.fingerprint,
+                                                                     host_256_fingerprint: ssh_key.sha256_fingerprint
                                                                    }))
             end
           end
@@ -914,6 +948,9 @@ module VCAP::CloudController
               expect(lrp2.action).to eq(expected_action)
             end
           end
+
+          include_examples 'k8s service bindings'
+          include_examples 'file-based VCAP service bindings'
         end
 
         context 'when the lifecycle_type is "cnb"' do
@@ -1001,10 +1038,14 @@ module VCAP::CloudController
               expect(lrp.routes.routes['diego-ssh']).to eq(Oj.dump({
                                                                      container_port: 2222,
                                                                      private_key: ssh_key.private_key,
-                                                                     host_fingerprint: ssh_key.fingerprint
+                                                                     host_fingerprint: ssh_key.fingerprint,
+                                                                     host_256_fingerprint: ssh_key.sha256_fingerprint
                                                                    }))
             end
           end
+
+          include_examples 'k8s service bindings'
+          include_examples 'file-based VCAP service bindings'
         end
 
         context 'when the lifecycle_type is "docker"' do
@@ -1344,10 +1385,14 @@ module VCAP::CloudController
               expect(lrp.routes.routes['diego-ssh']).to eq(Oj.dump({
                                                                      container_port: 2222,
                                                                      private_key: ssh_key.private_key,
-                                                                     host_fingerprint: ssh_key.fingerprint
+                                                                     host_fingerprint: ssh_key.fingerprint,
+                                                                     host_256_fingerprint: ssh_key.sha256_fingerprint
                                                                    }))
             end
           end
+
+          include_examples 'k8s service bindings'
+          include_examples 'file-based VCAP service bindings'
         end
       end
 

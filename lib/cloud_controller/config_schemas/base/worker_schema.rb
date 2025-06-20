@@ -37,6 +37,10 @@ module VCAP::CloudController
 
             log_audit_events: bool,
 
+            directories: {
+              tmpdir: String
+            },
+
             stacks_file: String,
             newrelic_enabled: bool,
 
@@ -83,6 +87,7 @@ module VCAP::CloudController
 
             packages: {
               max_package_size: Integer,
+              max_valid_packages_stored: Integer,
               app_package_directory_key: String,
               fog_connection: Hash,
               fog_aws_storage_options: Hash,
@@ -110,6 +115,7 @@ module VCAP::CloudController
             broker_client_default_async_poll_interval_seconds: Integer,
             broker_client_max_async_poll_duration_minutes: Integer,
             broker_client_async_poll_exponential_backoff_rate: Numeric,
+            broker_client_max_async_poll_interval_seconds: Integer,
             optional(:broker_client_response_parser) => {
               log_errors: bool,
               log_validators: bool,
@@ -138,6 +144,9 @@ module VCAP::CloudController
               optional(:port) => Integer
             },
 
+            optional(:publish_metrics) => bool,
+            optional(:prometheus_port) => Integer,
+
             skip_cert_verify: bool,
 
             optional(:routing_api) => {
@@ -158,12 +167,17 @@ module VCAP::CloudController
             maximum_app_disk_in_mb: Integer,
             default_app_log_rate_limit_in_bytes_per_second: Integer,
             default_app_ssh_access: bool,
+            optional(:additional_allowed_process_users) => Array,
 
             jobs: {
-              global: { timeout_in_seconds: Integer },
+              global: {
+                timeout_in_seconds: Integer,
+                worker_sleep_delay_in_seconds: Integer
+              },
               queues: {
                 optional(:cc_generic) => { timeout_in_seconds: Integer }
               },
+              optional(:read_ahead) => Integer,
               optional(:enable_dynamic_job_priorities) => bool,
               optional(:app_usage_events_cleanup) => { timeout_in_seconds: Integer },
               optional(:blobstore_delete) => { timeout_in_seconds: Integer },
@@ -179,7 +193,8 @@ module VCAP::CloudController
             max_labels_per_resource: Integer,
             max_annotations_per_resource: Integer,
             internal_route_vip_range: String,
-            custom_metric_tag_prefix_list: Array
+            custom_metric_tag_prefix_list: Array,
+            default_app_lifecycle: enum('buildpack', 'cnb')
           }
         end
         # rubocop:enable Metrics/BlockLength

@@ -169,7 +169,7 @@ module VCAP::CloudController
       it 'returns the expected value' do
         expect(buildpack_lifecycle.buildpack_infos).to eq(stubbed_data[:buildpack_infos])
 
-        expect(BuildpackLifecycleFetcher).to have_received(:fetch).with(%w[cool-buildpack rad-buildpack], Stack.default.name)
+        expect(BuildpackLifecycleFetcher).to have_received(:fetch).with(%w[cool-buildpack rad-buildpack], Stack.default.name, 'buildpack')
       end
     end
 

@@ -116,6 +116,7 @@ RSpec.describe 'Processes' do
             },
             'type' => 'web',
             'command' => '[PRIVATE DATA HIDDEN IN LISTS]',
+            'user' => 'vcap',
             'instances' => 2,
             'memory_in_mb' => 1024,
             'disk_in_mb' => 1024,
@@ -155,6 +156,7 @@ RSpec.describe 'Processes' do
             },
             'type' => 'worker',
             'command' => '[PRIVATE DATA HIDDEN IN LISTS]',
+            'user' => 'vcap',
             'instances' => 1,
             'memory_in_mb' => 100,
             'disk_in_mb' => 200,
@@ -386,7 +388,7 @@ RSpec.describe 'Processes' do
       let(:api_call) { ->(user_headers) { get '/v3/processes', nil, user_headers } }
 
       let(:expected_codes_and_responses) do
-        h = Hash.new(code: 200, response_guids: [web_process.guid, worker_process.guid])
+        h = Hash.new({ code: 200, response_guids: [web_process.guid, worker_process.guid] }.freeze)
         h['org_auditor'] = { code: 200, response_guids: [] }
         h['org_billing_manager'] = { code: 200, response_guids: [] }
         h['no_role'] = { code: 200, response_objects: [] }
@@ -421,6 +423,7 @@ RSpec.describe 'Processes' do
           'revision' => { 'data' => { 'guid' => revision.guid } }
         },
         'command' => 'rackup',
+        'user' => 'vcap',
         'instances' => 2,
         'memory_in_mb' => 1024,
         'disk_in_mb' => 1024,
@@ -480,7 +483,7 @@ RSpec.describe 'Processes' do
       let(:api_call) { ->(user_headers) { get "/v3/processes/#{process.guid}", nil, user_headers } }
 
       let(:expected_codes_and_responses) do
-        h = Hash.new(code: 200, response_object: expected_response.merge({ 'command' => '[PRIVATE DATA HIDDEN]' }))
+        h = Hash.new({ code: 200, response_object: expected_response.merge({ 'command' => '[PRIVATE DATA HIDDEN]' }) }.freeze)
         h['space_developer'] = { code: 200, response_object: expected_response }
         h['admin'] = { code: 200, response_object: expected_response }
         h['admin_read_only'] = { code: 200, response_object: expected_response }
@@ -528,6 +531,7 @@ RSpec.describe 'Processes' do
             name: process.name,
             uris: process.uris,
             host: 'toast',
+            instance_guid: 'some-diego-instance-id',
             net_info: net_info_1,
             uptime: 12_345,
             mem_quota: process[:memory] * 1024 * 1024,
@@ -556,6 +560,7 @@ RSpec.describe 'Processes' do
           'type' => 'worker',
           'index' => 0,
           'state' => 'RUNNING',
+          'instance_guid' => 'some-diego-instance-id',
           'routable' => true,
           'isolation_segment' => 'very-isolated',
           'details' => 'some-details',
@@ -640,7 +645,7 @@ RSpec.describe 'Processes' do
       let(:api_call) { ->(user_headers) { get "/v3/processes/#{process.guid}/stats", nil, user_headers } }
 
       let(:expected_codes_and_responses) do
-        h = Hash.new(code: 200, response_object: expected_response)
+        h = Hash.new({ code: 200, response_object: expected_response }.freeze)
         h['org_auditor'] = { code: 404 }
         h['org_billing_manager'] = { code: 404, response_object: [] }
         h['no_role'] = { code: 404, response_object: [] }
@@ -702,6 +707,7 @@ RSpec.describe 'Processes' do
         },
         'type' => 'web',
         'command' => 'new command',
+        'user' => 'vcap',
         'instances' => 2,
         'memory_in_mb' => 1024,
         'disk_in_mb' => 1024,
@@ -745,7 +751,7 @@ RSpec.describe 'Processes' do
       let(:api_call) { ->(user_headers) { patch "/v3/processes/#{process.guid}", update_request, user_headers } }
 
       let(:expected_codes_and_responses) do
-        h = Hash.new(code: 403, errors: CF_NOT_AUTHORIZED)
+        h = Hash.new({ code: 403, errors: CF_NOT_AUTHORIZED }.freeze)
         h['admin'] = { code: 200, response_object: expected_response }
         h['space_developer'] = { code: 200, response_object: expected_response }
         h['space_supporter'] = { code: 200, response_object: expected_response }
@@ -863,6 +869,7 @@ RSpec.describe 'Processes' do
           'revision' => nil
         },
         'command' => 'rackup',
+        'user' => 'vcap',
         'instances' => 5,
         'memory_in_mb' => 10,
         'disk_in_mb' => 20,
@@ -940,7 +947,7 @@ RSpec.describe 'Processes' do
       let(:api_call) { ->(user_headers) { post "/v3/processes/#{process.guid}/actions/scale", scale_request.to_json, user_headers } }
 
       let(:expected_codes_and_responses) do
-        h = Hash.new(code: 403, errors: CF_NOT_AUTHORIZED)
+        h = Hash.new({ code: 403, errors: CF_NOT_AUTHORIZED }.freeze)
         h['admin'] = { code: 202, response_object: expected_response }
         h['space_developer'] = { code: 202, response_object: expected_response }
         h['space_supporter'] = { code: 202, response_object: expected_response }
@@ -1131,7 +1138,7 @@ RSpec.describe 'Processes' do
       let(:api_call) { ->(user_headers) { delete "/v3/processes/#{process.guid}/instances/0", nil, user_headers } }
 
       let(:expected_codes_and_responses) do
-        h = Hash.new(code: 403, errors: CF_NOT_AUTHORIZED)
+        h = Hash.new({ code: 403, errors: CF_NOT_AUTHORIZED }.freeze)
         h['admin'] = { code: 204 }
         h['space_developer'] = { code: 204 }
         h['space_supporter'] = { code: 204 }
@@ -1228,6 +1235,7 @@ RSpec.describe 'Processes' do
             },
             'type' => 'web',
             'command' => '[PRIVATE DATA HIDDEN IN LISTS]',
+            'user' => 'vcap',
             'instances' => 2,
             'memory_in_mb' => 1024,
             'disk_in_mb' => 1024,
@@ -1271,6 +1279,7 @@ RSpec.describe 'Processes' do
             },
             'type' => 'worker',
             'command' => '[PRIVATE DATA HIDDEN IN LISTS]',
+            'user' => 'vcap',
             'instances' => 1,
             'memory_in_mb' => 100,
             'disk_in_mb' => 200,
@@ -1364,7 +1373,7 @@ RSpec.describe 'Processes' do
       let(:expected_guids) { [process1.guid, process2.guid, process3.guid, deployment_process.guid] }
 
       let(:expected_codes_and_responses) do
-        h = Hash.new(code: 200, response_guids: expected_guids)
+        h = Hash.new({ code: 200, response_guids: expected_guids }.freeze)
         h['org_auditor'] = { code: 404 }
         h['org_billing_manager'] = { code: 404, response_guids: nil }
         h['no_role'] = { code: 404, response_guids: nil }
@@ -1399,6 +1408,7 @@ RSpec.describe 'Processes' do
         },
         'type' => 'web',
         'command' => 'rackup',
+        'user' => 'vcap',
         'instances' => 2,
         'memory_in_mb' => 1024,
         'disk_in_mb' => 1024,
@@ -1460,7 +1470,7 @@ RSpec.describe 'Processes' do
       let(:api_call) { ->(user_headers) { get "/v3/apps/#{app_model.guid}/processes/web", nil, user_headers } }
 
       let(:expected_codes_and_responses) do
-        h = Hash.new(code: 200, response_object: expected_response.merge({ 'command' => '[PRIVATE DATA HIDDEN]' }))
+        h = Hash.new({ code: 200, response_object: expected_response.merge({ 'command' => '[PRIVATE DATA HIDDEN]' }) }.freeze)
         h['space_developer'] = { code: 200, response_object: expected_response }
         h['admin'] = { code: 200, response_object: expected_response }
         h['admin_read_only'] = { code: 200, response_object: expected_response }
@@ -1493,6 +1503,7 @@ RSpec.describe 'Processes' do
 
       update_request = {
         command: 'new command',
+        user: 'containeruser',
         health_check: {
           type: 'http',
           data: {
@@ -1521,6 +1532,7 @@ RSpec.describe 'Processes' do
         },
         'type' => 'web',
         'command' => 'new command',
+        'user' => 'containeruser',
         'instances' => 2,
         'memory_in_mb' => 1024,
         'disk_in_mb' => 1024,
@@ -1568,6 +1580,7 @@ RSpec.describe 'Processes' do
 
       process.reload
       expect(process.command).to eq('new command')
+      expect(process.user).to eq('containeruser')
       expect(process.health_check_type).to eq('http')
       expect(process.health_check_timeout).to eq(20)
       expect(process.health_check_http_endpoint).to eq('/healthcheck')
@@ -1589,6 +1602,7 @@ RSpec.describe 'Processes' do
                                      'process_type' => 'web',
                                      'request' => {
                                        'command' => '[PRIVATE DATA HIDDEN]',
+                                       'user' => 'containeruser',
                                        'health_check' => {
                                          'type' => 'http',
                                          'data' => {
@@ -1650,6 +1664,7 @@ RSpec.describe 'Processes' do
           'revision' => nil
         },
         'command' => 'rackup',
+        'user' => 'vcap',
         'instances' => 5,
         'memory_in_mb' => 10,
         'disk_in_mb' => 20,
@@ -1829,7 +1844,7 @@ RSpec.describe 'Processes' do
       let(:api_call) { ->(user_headers) { delete "/v3/apps/#{app_model.guid}/processes/web/instances/0", nil, user_headers } }
 
       let(:expected_codes_and_responses) do
-        h = Hash.new(code: 403)
+        h = Hash.new({ code: 403 }.freeze)
         h['admin'] = { code: 204 }
         h['space_developer'] = { code: 204 }
         h['space_supporter'] = { code: 204 }

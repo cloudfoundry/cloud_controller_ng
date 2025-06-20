@@ -12,3 +12,13 @@
   name: ServiceBrokerGone
   http_code: 422
   message: "The service broker was removed before the synchronization completed"
+
+20008:
+  name: UaaRateLimited
+  http_code: 429
+  message: "The UAA is currently rate limited. Please try again later"
+
+10081:
+  name: InternalServerError
+  http_code: 500
+  message: "%s"

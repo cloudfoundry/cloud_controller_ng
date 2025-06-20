@@ -1,6 +1,7 @@
 require 'cloud_controller/diego/docker/lifecycle_data'
 require 'cloud_controller/diego/docker/staging_action_builder'
 require 'cloud_controller/diego/docker/task_action_builder'
+require 'cloud_controller/diego/windows_environment_sage'
 
 module VCAP
   module CloudController
@@ -35,8 +36,15 @@ module VCAP
               ports: process.open_ports,
               docker_image: process.actual_droplet.docker_receipt_image,
               execution_metadata: process.execution_metadata,
-              start_command: process.command
+              start_command: process.command,
+              action_user: process.run_action_user,
+              additional_container_env_vars: container_env_vars_for_process(process)
             }
+          end
+
+          def container_env_vars_for_process(process)
+            additional_env = []
+            additional_env + WindowsEnvironmentSage.ponder(process.app)
           end
         end
       end

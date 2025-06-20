@@ -1,6 +1,6 @@
 module RuboCop
   module Cop
-    class PreferOjOverOtherJsonLibraries < RuboCop::Cop::Cop
+    class PreferOjOverOtherJsonLibraries < RuboCop::Cop::Base
       MSG = 'Avoid using `%s`, prefer `Oj` instead'.freeze
 
       def_node_matcher :other_json_lib?, <<-PATTERN

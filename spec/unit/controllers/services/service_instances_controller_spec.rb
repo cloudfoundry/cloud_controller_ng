@@ -1123,6 +1123,28 @@ module VCAP::CloudController
       end
     end
 
+    describe 'GET', '/v2/managed_service_instances' do
+      let(:service_instance) { ManagedServiceInstance.make(gateway_name: Sham.name) }
+      let(:space) { service_instance.space }
+      let(:developer) { make_developer_for_space(space) }
+
+      it 'is deprecated' do
+        set_current_user(developer)
+        get '/v2/managed_service_instances'
+        expect(last_response).to be_a_deprecated_response
+      end
+
+      it 'behaves the same as /v2/service_instances/' do
+        set_current_user(developer)
+        get '/v2/managed_service_instances'
+        deprecated_response = last_response
+        expect(deprecated_response).to have_status_code(200)
+        get '/v2/service_instances'
+        new_response = last_response
+        expect(new_response.body).to eq(deprecated_response.body)
+      end
+    end
+
     describe 'GET /v2/service_instances' do
       context 'dashboard_url' do
         let(:service_instance) { ManagedServiceInstance.make(gateway_name: Sham.name) }
@@ -1532,6 +1554,29 @@ module VCAP::CloudController
             expect(result['prev_url']).to include("q=organization_guid:#{org1.guid}"), result['prev_url']
           end
         end
+      end
+    end
+
+    describe 'GET', '/v2/managed_service_instances/:guid' do
+      let(:space) { Space.make }
+      let(:developer) { make_developer_for_space(space) }
+      let(:service_instance) { ManagedServiceInstance.make(space:) }
+      let(:service_plan) { ServicePlan.make(active: false) }
+
+      it 'is deprecated' do
+        set_current_user(developer)
+        get "v2/managed_service_instances/#{service_instance.guid}"
+        expect(last_response).to be_a_deprecated_response
+      end
+
+      it 'behaves the same as /v2/service_instances/:guid' do
+        set_current_user(developer)
+        get "v2/managed_service_instances/#{service_instance.guid}"
+        deprecated_response = last_response
+        expect(deprecated_response).to have_status_code(200)
+        get "v2/service_instances/#{service_instance.guid}"
+        new_response = last_response
+        expect(new_response.body).to eq(deprecated_response.body)
       end
     end
 

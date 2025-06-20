@@ -70,7 +70,7 @@ RSpec.describe 'Jobs' do
   describe 'running a pollable job that emits warnings' do
     it 'contains these warnings in the job representation' do
       job = TestJob.new(user.guid)
-      pollable_job = VCAP::CloudController::Jobs::Enqueuer.new(job, queue: VCAP::CloudController::Jobs::Queues.generic).enqueue_pollable
+      pollable_job = VCAP::CloudController::Jobs::Enqueuer.new(queue: VCAP::CloudController::Jobs::Queues.generic).enqueue_pollable(job)
       job_guid = pollable_job.guid
 
       execute_all_jobs(expected_successes: 1, expected_failures: 0)
@@ -167,7 +167,7 @@ RSpec.describe 'Jobs' do
 
     context 'when the user has a global scope or a local role' do
       let(:api_call) { ->(user_headers) { get "/v3/jobs/#{job.guid}", nil, user_headers } }
-      let(:expected_codes_and_responses) { Hash.new(code: 200) }
+      let(:expected_codes_and_responses) { Hash.new({ code: 200 }.freeze) }
 
       before do
         space.organization.add_user(user)

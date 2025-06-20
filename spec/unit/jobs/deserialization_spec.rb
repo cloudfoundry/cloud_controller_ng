@@ -82,7 +82,7 @@ module VCAP::CloudController
         end
 
         it 'equals dumped job yaml' do
-          VCAP::CloudController::Jobs::Enqueuer.new(job).enqueue_pollable
+          VCAP::CloudController::Jobs::Enqueuer.new.enqueue_pollable(job)
           jobs_in_db = Sequel::Model.db.fetch('SELECT handler FROM delayed_jobs').all
           expect(jobs_in_db.size).to eq(1)
 
@@ -156,7 +156,8 @@ module VCAP::CloudController
                       - :route: app.bommel
                       :buildpack: ruby
                       :stack: cflinuxfs4
-                    validation_context:#{' '}
+                    context_for_validation: !ruby/object:ActiveModel::ValidationContext
+                      context:#{' '}
                     errors: !ruby/object:ActiveModel::Errors
                       base: *1
                       errors: []
@@ -168,7 +169,8 @@ module VCAP::CloudController
                       extra_keys: []
                       instances: 4
                       type: web
-                      validation_context:#{' '}
+                      context_for_validation: !ruby/object:ActiveModel::ValidationContext
+                        context:#{' '}
                       errors: !ruby/object:ActiveModel::Errors
                         base: *2
                         errors: []
@@ -182,7 +184,8 @@ module VCAP::CloudController
                           :buildpacks:
                           - ruby
                           :stack: cflinuxfs4
-                      validation_context:#{' '}
+                      context_for_validation: !ruby/object:ActiveModel::ValidationContext
+                        context:#{' '}
                       errors: !ruby/object:ActiveModel::Errors
                         base: *3
                         errors: []
@@ -191,7 +194,8 @@ module VCAP::CloudController
                       - :buildpack
                       extra_keys: []
                       buildpack: ruby
-                      validation_context:#{' '}
+                      context_for_validation: !ruby/object:ActiveModel::ValidationContext
+                        context:#{' '}
                       errors: !ruby/object:ActiveModel::Errors
                         base: *4
                         errors: []
@@ -201,7 +205,8 @@ module VCAP::CloudController
                       extra_keys: []
                       routes:
                       - :route: app.bommel
-                      validation_context:#{' '}
+                      context_for_validation: !ruby/object:ActiveModel::ValidationContext
+                        context:#{' '}
                       errors: !ruby/object:ActiveModel::Errors
                         base: *5
                         errors: []
@@ -217,6 +222,7 @@ module VCAP::CloudController
                             :query:#{' '}
                             :fragment:#{' '}
                             :full_route: app.bommel
+                            :options: {}
                         :protocol:#{' '}
                 apply_manifest_action: !ruby/object:VCAP::CloudController::AppApplyManifest
                   user_audit_info: &6 !ruby/object:VCAP::CloudController::UserAuditInfo
@@ -230,13 +236,14 @@ module VCAP::CloudController
         end
 
         it 'equals dumped job yaml' do
-          VCAP::CloudController::Jobs::Enqueuer.new(job).enqueue
+          VCAP::CloudController::Jobs::Enqueuer.new.enqueue(job)
           jobs_in_db = Sequel::Model.db.fetch('SELECT handler FROM delayed_jobs').all
           expect(jobs_in_db.size).to eq(1)
 
           # We are not interested in minor differences like ordering of nodes. Therefore comparing it as hash.
-          permitted_classes = [ActiveModel::Errors, Time, Symbol, UserAuditInfo, AppApplyManifest, ManifestRoute, ManifestRoutesUpdateMessage, ManifestBuildpackMessage,
-                               AppUpdateMessage, ManifestProcessScaleMessage, AppManifestMessage, Space, SpaceApplyManifestActionJob, TimeoutJob, LoggingContextJob]
+          permitted_classes = [ActiveModel::Errors, ActiveModel::ValidationContext, Time, Symbol, UserAuditInfo, AppApplyManifest, ManifestRoute, ManifestRoutesUpdateMessage,
+                               ManifestBuildpackMessage, AppUpdateMessage, ManifestProcessScaleMessage, AppManifestMessage, Space, SpaceApplyManifestActionJob, TimeoutJob,
+                               LoggingContextJob]
           db_job = YAML.safe_load(jobs_in_db[0][:handler], permitted_classes: permitted_classes, aliases: true).as_json
           dumped_job = YAML.safe_load(serialized_job, permitted_classes: permitted_classes, aliases: true).as_json
           expect(db_job).to eq(dumped_job)

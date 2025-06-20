@@ -92,7 +92,7 @@ RSpec.describe 'Apps' do
       end
 
       let(:expected_codes_and_responses) do
-        h = Hash.new(code: 403, errors: CF_NOT_AUTHORIZED)
+        h = Hash.new({ code: 403, errors: CF_NOT_AUTHORIZED }.freeze)
         h['org_billing_manager'] = { code: 422 }
         h['org_auditor'] = { code: 422 }
         h['no_role'] = { code: 422 }
@@ -453,7 +453,7 @@ RSpec.describe 'Apps' do
       end
 
       let(:expected_codes_and_responses) do
-        h = Hash.new(code: 200, response_objects: [app_model1_response_object, app_model2_response_object])
+        h = Hash.new({ code: 200, response_objects: [app_model1_response_object, app_model2_response_object] }.freeze)
 
         h['org_auditor'] = {
           code: 200,
@@ -1359,7 +1359,7 @@ RSpec.describe 'Apps' do
       end
 
       let(:expected_codes_and_responses) do
-        h = Hash.new(code: 200, response_object: app_model_response_object)
+        h = Hash.new({ code: 200, response_object: app_model_response_object }.freeze)
         h['org_auditor'] = { code: 404 }
         h['org_billing_manager'] = { code: 404 }
         h['no_role'] = { code: 404 }
@@ -1593,7 +1593,7 @@ RSpec.describe 'Apps' do
       end
 
       let(:expected_codes_and_responses) do
-        h = Hash.new(code: 200, response_object: app_model_response_object)
+        h = Hash.new({ code: 200, response_object: app_model_response_object }.freeze)
         h['space_supporter'] = { code: 200, response_object: app_model_empty_system_env_response_object }
         h['global_auditor'] = h['org_manager'] = h['space_manager'] = h['space_auditor'] = { code: 403 }
         h['org_auditor'] = h['org_billing_manager'] = h['no_role'] = { code: 404 }
@@ -1601,6 +1601,34 @@ RSpec.describe 'Apps' do
       end
 
       it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS
+
+      context 'when k8s service bindings are enabled' do
+        let(:app_model_response_object) do
+          r = super()
+          r[:system_env_json] = { SERVICE_BINDING_ROOT: '/etc/cf-service-bindings' }
+          r
+        end
+
+        before do
+          app_model.update(service_binding_k8s_enabled: true)
+        end
+
+        it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS
+      end
+
+      context 'when file-based VCAP service bindings are enabled' do
+        let(:app_model_response_object) do
+          r = super()
+          r[:system_env_json] = { VCAP_SERVICES_FILE_PATH: '/etc/cf-service-bindings/vcap_services' }
+          r
+        end
+
+        before do
+          app_model.update(file_based_vcap_services_enabled: true)
+        end
+
+        it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS
+      end
     end
 
     context 'when VCAP_SERVICES contains potentially sensitive information' do
@@ -1725,7 +1753,7 @@ RSpec.describe 'Apps' do
       end
 
       let(:expected_codes_and_responses) do
-        h = Hash.new(code: 403)
+        h = Hash.new({ code: 403 }.freeze)
         h['admin'] = h['admin_read_only'] = h['space_developer'] = { code: 200, response_object: expected_response }
         h['space_supporter'] = { code: 200, response_object: expected_response_system_env_redacted }
         h['org_auditor'] = h['org_billing_manager'] = h['no_role'] = { code: 404 }
@@ -1741,7 +1769,7 @@ RSpec.describe 'Apps' do
 
         it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS do
           let(:expected_codes_and_responses) do
-            h = Hash.new(code: 403)
+            h = Hash.new({ code: 403 }.freeze)
             h['admin'] = h['admin_read_only'] = { code: 200, response_object: expected_response }
             h['org_auditor'] = h['org_billing_manager'] = h['no_role'] = { code: 404 }
             h
@@ -1810,7 +1838,7 @@ RSpec.describe 'Apps' do
         ->(headers) { get "/v3/apps/#{app_model.guid}/builds", nil, headers }
       end
       let(:expected_codes_and_responses) do
-        h = Hash.new(code: 200, response_guids: [build.guid, second_build.guid])
+        h = Hash.new({ code: 200, response_guids: [build.guid, second_build.guid] }.freeze)
         h['org_auditor'] = { code: 404 }
         h['org_billing_manager'] = { code: 404 }
         h['no_role'] = { code: 404 }
@@ -1952,7 +1980,7 @@ RSpec.describe 'Apps' do
       end
 
       let(:expected_codes_and_responses) do
-        h = Hash.new(code: 200)
+        h = Hash.new({ code: 200 }.freeze)
         h['org_auditor'] = { code: 404 }
         h['org_billing_manager'] = { code: 404 }
         h['no_role'] = { code: 404 }
@@ -2005,7 +2033,7 @@ RSpec.describe 'Apps' do
     context 'permissions for deleting an app' do
       let(:api_call) { ->(user_headers) { delete "/v3/apps/#{app_model.guid}", nil, user_headers } }
       let(:expected_codes_and_responses) do
-        h = Hash.new(code: 202)
+        h = Hash.new({ code: 202 }.freeze)
         %w[admin_read_only global_auditor org_manager space_auditor space_manager space_supporter].each do |r|
           h[r] = { code: 403, errors: CF_NOT_AUTHORIZED }
         end
@@ -2229,7 +2257,7 @@ RSpec.describe 'Apps' do
     context 'permissions for updating an app' do
       let(:api_call) { ->(user_headers) { patch "/v3/apps/#{app_model.guid}", update_request.to_json, user_headers } }
       let(:expected_codes_and_responses) do
-        h = Hash.new(code: 200, response_object: expected_response_object)
+        h = Hash.new({ code: 200, response_object: expected_response_object }.freeze)
         %w[admin_read_only global_auditor org_manager space_auditor space_manager space_supporter].each do |r|
           h[r] = { code: 403, errors: CF_NOT_AUTHORIZED }
         end
@@ -2359,7 +2387,7 @@ RSpec.describe 'Apps' do
         end
 
         let(:expected_codes_and_responses) do
-          h = Hash.new(code: 403, errors: CF_NOT_AUTHORIZED)
+          h = Hash.new({ code: 403, errors: CF_NOT_AUTHORIZED }.freeze)
           h['no_role'] = { code: 404 }
           h['org_auditor'] = { code: 404 }
           h['org_billing_manager'] = { code: 404 }
@@ -2699,7 +2727,7 @@ RSpec.describe 'Apps' do
       end
 
       let(:expected_codes_and_responses) do
-        h = Hash.new(code: 403, errors: CF_NOT_AUTHORIZED)
+        h = Hash.new({ code: 403, errors: CF_NOT_AUTHORIZED }.freeze)
         h['no_role'] = { code: 404 }
         h['org_auditor'] = { code: 404 }
         h['org_billing_manager'] = { code: 404 }
@@ -2868,7 +2896,7 @@ RSpec.describe 'Apps' do
         end
 
         let(:expected_codes_and_responses) do
-          h = Hash.new(code: 403, errors: CF_NOT_AUTHORIZED)
+          h = Hash.new({ code: 403, errors: CF_NOT_AUTHORIZED }.freeze)
           h['no_role'] = { code: 404 }
           h['org_auditor'] = { code: 404 }
           h['org_billing_manager'] = { code: 404 }
@@ -2953,7 +2981,7 @@ RSpec.describe 'Apps' do
     end
 
     let(:expected_codes_and_responses) do
-      h = Hash.new(code: 200, response_object: expected_response)
+      h = Hash.new({ code: 200, response_object: expected_response }.freeze)
       h['no_role'] = { code: 404 }
       h['org_billing_manager'] = { code: 404 }
       h['org_auditor'] = { code: 404 }
@@ -3016,7 +3044,7 @@ RSpec.describe 'Apps' do
       }
     end
     let(:expected_codes_and_responses) do
-      h = Hash.new(code: 200, response_object: expected_response)
+      h = Hash.new({ code: 200, response_object: expected_response }.freeze)
       h['no_role'] = { code: 404 }
       h['org_billing_manager'] = { code: 404 }
       h['org_auditor'] = { code: 404 }
@@ -3074,7 +3102,7 @@ RSpec.describe 'Apps' do
       end
 
       let(:expected_codes_and_responses) do
-        h = Hash.new(code: 403, errors: CF_NOT_AUTHORIZED)
+        h = Hash.new({ code: 403, errors: CF_NOT_AUTHORIZED }.freeze)
         h['no_role'] = { code: 404 }
         h['org_auditor'] = { code: 404 }
         h['org_billing_manager'] = { code: 404 }
@@ -3294,7 +3322,7 @@ RSpec.describe 'Apps' do
       }
     end
     let(:expected_codes_and_responses) do
-      h = Hash.new(code: 404)
+      h = Hash.new({ code: 404 }.freeze)
       %w[global_auditor admin_read_only org_manager space_auditor space_manager].each do |r|
         h[r] = { code: 403, errors: CF_NOT_AUTHORIZED }
       end
@@ -3343,7 +3371,7 @@ RSpec.describe 'Apps' do
 
     it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS do
       let(:expected_codes_and_responses) do
-        h = Hash.new(code: 404)
+        h = Hash.new({ code: 404 }.freeze)
         h['global_auditor'] = h['org_manager'] = h['space_auditor'] = h['space_manager'] = { code: 403 }
         h['admin'] = h['admin_read_only'] = h['space_developer'] = h['space_supporter'] = {
           code: 200,
@@ -3360,7 +3388,7 @@ RSpec.describe 'Apps' do
 
       it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS do
         let(:expected_codes_and_responses) do
-          h = Hash.new(code: 404)
+          h = Hash.new({ code: 404 }.freeze)
           h['global_auditor'] = h['org_manager'] = h['space_auditor'] = h['space_manager'] = h['space_developer'] = h['space_supporter'] = { code: 403 }
           h['admin'] = h['admin_read_only'] = {
             code: 200,
@@ -3368,6 +3396,21 @@ RSpec.describe 'Apps' do
           }
           h
         end
+      end
+    end
+
+    context 'when the encryption_key_label is invalid' do
+      before do
+        allow_any_instance_of(ErrorPresenter).to receive(:raise_500?).and_return(false)
+      end
+
+      it 'fails to decrypt the environment variables and returns a 500 error' do
+        app_model # ensure that app model is created before run_cipher is mocked to throw an error
+        allow(VCAP::CloudController::Encryptor).to receive(:run_cipher).and_raise(VCAP::CloudController::Encryptor::EncryptorError)
+        api_call.call(admin_headers)
+
+        expect(last_response).to have_status_code(500)
+        expect(parsed_response['errors'].first['detail']).to match(/Error while processing encrypted data/i)
       end
     end
   end
@@ -3393,7 +3436,7 @@ RSpec.describe 'Apps' do
     end
 
     let(:expected_codes_and_responses) do
-      h = Hash.new(code: 404)
+      h = Hash.new({ code: 404 }.freeze)
       h['admin'] = { code: 200, response_object: read_all_response }
       h['admin_read_only'] = { code: 200, response_object: read_all_response }
       h['global_auditor'] = { code: 200, response_object: read_basic_response }

@@ -132,8 +132,8 @@ RSpec.describe 'V3 service brokers' do
     describe 'empty response' do
       let(:expected_codes_and_responses) do
         h = Hash.new(
-          code: 200,
-          response_objects: []
+          { code: 200,
+            response_objects: [] }.freeze
         )
 
         h
@@ -201,8 +201,8 @@ RSpec.describe 'V3 service brokers' do
 
       let(:expected_codes_and_responses) do
         h = Hash.new(
-          code: 200,
-          response_objects: []
+          { code: 200,
+            response_objects: [] }.freeze
         )
 
         h['admin'] = { code: 200, response_objects: [broker_created_with_v3_json, broker_created_with_v2_json] }
@@ -243,8 +243,8 @@ RSpec.describe 'V3 service brokers' do
       end
       let(:expected_codes_and_responses) do
         h = Hash.new(
-          code: 200,
-          response_objects: []
+          { code: 200,
+            response_objects: [] }.freeze
         )
 
         h['admin'] = {
@@ -381,7 +381,7 @@ RSpec.describe 'V3 service brokers' do
       end
 
       let(:expected_codes_and_responses) do
-        h = Hash.new(code: 404)
+        h = Hash.new({ code: 404 }.freeze)
 
         h['admin'] = {
           code: 200,
@@ -431,7 +431,7 @@ RSpec.describe 'V3 service brokers' do
         }
       end
       let(:expected_codes_and_responses) do
-        h = Hash.new(code: 404)
+        h = Hash.new({ code: 404 }.freeze)
 
         h['admin'] = {
           code: 200,
@@ -494,7 +494,7 @@ RSpec.describe 'V3 service brokers' do
         it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS do
           let(:api_call) { ->(user_headers) { patch "/v3/service_brokers/#{broker.guid}", update_request_body.to_json, user_headers } }
           let(:expected_codes_and_responses) do
-            Hash.new(code: 404).tap do |h|
+            Hash.new({ code: 404 }.freeze).tap do |h|
               h['admin'] = { code: 202 }
               h['admin_read_only'] = { code: 403 }
               h['global_auditor'] = { code: 403 }
@@ -899,6 +899,34 @@ RSpec.describe 'V3 service brokers' do
         expect(response).to include('detail' => 'Service broker not found')
       end
     end
+
+    context 'when updating credentials and the encryption_key_label is invalid' do
+      let(:broker) { VCAP::CloudController::ServiceBroker.make }
+      let(:api_call) do
+        lambda { |headers|
+          patch "/v3/service_brokers/#{broker.guid}", { authentication: {
+            type: 'basic',
+            credentials: {
+              username: 'your-username',
+              password: 'your-password'
+            }
+          } }.to_json, headers
+        }
+      end
+
+      before do
+        allow_any_instance_of(ErrorPresenter).to receive(:raise_500?).and_return(false)
+      end
+
+      it 'fails to decrypt the broker data and returns a 500 error' do
+        broker # ensure the broker is created before run_cipher is mocked to throw an error
+        allow(VCAP::CloudController::Encryptor).to receive(:run_cipher).and_raise(VCAP::CloudController::Encryptor::EncryptorError)
+        api_call.call(admin_headers)
+
+        expect(last_response).to have_status_code(500)
+        expect(parsed_response['errors'].first['detail']).to match(/Error while processing encrypted data/i)
+      end
+    end
   end
 
   describe 'POST /v3/service_brokers' do
@@ -1028,7 +1056,7 @@ RSpec.describe 'V3 service brokers' do
       it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS do
         let(:api_call) { ->(user_headers) { post '/v3/service_brokers', global_broker_request_body.to_json, user_headers } }
         let(:expected_codes_and_responses) do
-          Hash.new(code: 403).tap do |h|
+          Hash.new({ code: 403 }.freeze).tap do |h|
             h['admin'] = { code: 202 }
           end
         end
@@ -1466,7 +1494,7 @@ RSpec.describe 'V3 service brokers' do
 
           it_behaves_like 'permissions for delete endpoint', ALL_PERMISSIONS do
             let(:expected_codes_and_responses) do
-              Hash.new(code: 404).tap do |h|
+              Hash.new({ code: 404 }.freeze).tap do |h|
                 h['admin'] = { code: 202 }
                 h['admin_read_only'] = { code: 403 }
                 h['global_auditor'] = { code: 403 }

@@ -7,7 +7,7 @@ module VCAP::CloudController
 
     describe '#upload_async' do
       let!(:buildpack) { VCAP::CloudController::Buildpack.create_from_hash({ name: 'upload_binary_buildpack', stack: nil, position: 0 }) }
-      let(:message) { BuildpackUploadMessage.new({ 'bits_path' => '/tmp/path', 'bits_name' => 'buildpack.zip' }) }
+      let(:message) { BuildpackUploadMessage.new({ 'bits_path' => '/tmp/path', 'bits_name' => 'buildpack.zip' }, VCAP::CloudController::Lifecycles::BUILDPACK) }
       let(:config) { Config.new({ name: 'local', index: '1' }) }
 
       before do

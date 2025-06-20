@@ -5,18 +5,24 @@ module VCAP::CloudController
     register_allowed_keys %i[
       stacks
       names
+      lifecycle
       page
       per_page
     ]
 
     validates :names, array: true, allow_nil: true
     validates :stacks, array: true, allow_nil: true
+    validates :lifecycle,
+              string: true,
+              allow_nil: true,
+              inclusion: { in: [VCAP::CloudController::Lifecycles::BUILDPACK, VCAP::CloudController::Lifecycles::CNB], message: 'must be either "buildpack" or "cnb"' }
 
     validates_with NoAdditionalParamsValidator
 
     def initialize(params={})
       super
-      pagination_options.default_order_by = :position
+      pagination_options.default_order_by = :lifecycle
+      pagination_options.secondary_default_order_by = :position
     end
 
     def self.from_params(params)
@@ -28,7 +34,7 @@ module VCAP::CloudController
     end
 
     def valid_order_by_values
-      super << :position
+      super + %i[position lifecycle]
     end
   end
 

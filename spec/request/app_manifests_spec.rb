@@ -58,7 +58,7 @@ RSpec.describe 'App Manifests' do
     context 'permissions' do
       let(:api_call) { ->(user_headers) { get "/v3/apps/#{app_model.guid}/manifest", nil, user_headers } }
       let(:expected_codes_and_responses) do
-        h = Hash.new(code: 403)
+        h = Hash.new({ code: 403 }.freeze)
         h['no_role'] = { code: 404 }
         h['org_auditor'] = { code: 404 }
         h['org_billing_manager'] = { code: 404 }
@@ -93,15 +93,23 @@ RSpec.describe 'App Manifests' do
               'lifecycle' => 'buildpack',
               'buildpacks' => [buildpack.name, buildpack2.name],
               'stack' => buildpack.stack,
+              'features' => {
+                'ssh' => true,
+                'revisions' => true,
+                'service-binding-k8s' => false,
+                'file-based-vcap-services' => false
+              },
               'services' => [service_binding.service_instance_name, service_binding2.service_instance_name],
               'routes' => [
                 {
                   'route' => "#{route.host}.#{route.domain.name}",
-                  'protocol' => 'http1'
+                  'protocol' => 'http1',
+                  'options' => {}
                 },
                 {
                   'route' => "#{second_route.host}.#{second_route.domain.name}/path",
-                  'protocol' => 'http1'
+                  'protocol' => 'http1',
+                  'options' => {}
                 }
               ],
               'metadata' => { 'labels' => { 'potato' => 'idaho' }, 'annotations' => { 'style' => 'mashed' } },
@@ -197,15 +205,23 @@ RSpec.describe 'App Manifests' do
                 'image' => docker_package.image,
                 'username' => 'xXxMyL1ttlePwnyxXx'
               },
+              'features' => {
+                'ssh' => true,
+                'revisions' => true,
+                'service-binding-k8s' => false,
+                'file-based-vcap-services' => false
+              },
               'services' => [service_binding.service_instance_name, service_binding2.service_instance_name],
               'routes' => [
                 {
                   'route' => "#{route.host}.#{route.domain.name}",
-                  'protocol' => 'http1'
+                  'protocol' => 'http1',
+                  'options' => {}
                 },
                 {
                   'route' => "#{second_route.host}.#{second_route.domain.name}/path",
-                  'protocol' => 'http1'
+                  'protocol' => 'http1',
+                  'options' => {}
                 }
               ],
               'metadata' => { 'labels' => { 'potato' => 'idaho' }, 'annotations' => { 'style' => 'mashed' } },
@@ -270,14 +286,22 @@ RSpec.describe 'App Manifests' do
               'name' => simple_app.name,
               'lifecycle' => 'buildpack',
               'stack' => 'itaewon_class_best_kdrama',
+              'features' => {
+                'ssh' => true,
+                'revisions' => true,
+                'service-binding-k8s' => false,
+                'file-based-vcap-services' => false
+              },
               'routes' => [
                 {
                   'route' => "#{route.host}.#{route.domain.name}",
-                  'protocol' => 'http2'
+                  'protocol' => 'http2',
+                  'options' => {}
                 },
                 {
                   'route' => "#{second_route.host}.#{second_route.domain.name}/path",
-                  'protocol' => 'http1'
+                  'protocol' => 'http1',
+                  'options' => {}
                 }
               ]
             }

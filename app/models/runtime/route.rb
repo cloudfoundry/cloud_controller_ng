@@ -40,8 +40,8 @@ module VCAP::CloudController
 
     add_association_dependencies route_mappings: :destroy
 
-    export_attributes :host, :path, :domain_guid, :space_guid, :service_instance_guid, :port
-    import_attributes :host, :path, :domain_guid, :space_guid, :app_guids, :port
+    export_attributes :host, :path, :domain_guid, :space_guid, :service_instance_guid, :port, :options
+    import_attributes :host, :path, :domain_guid, :space_guid, :app_guids, :port, :options
 
     add_association_dependencies labels: :destroy
     add_association_dependencies annotations: :destroy
@@ -70,6 +70,23 @@ module VCAP::CloudController
         }
       }
     end
+
+    def options_with_serialization=(opts)
+      self.options_without_serialization = Oj.dump(opts)
+    end
+
+    alias_method :options_without_serialization=, :options=
+    alias_method :options=, :options_with_serialization=
+
+    def options_with_serialization
+      string = options_without_serialization
+      return nil if string.blank?
+
+      Oj.load(string)
+    end
+
+    alias_method :options_without_serialization, :options
+    alias_method :options, :options_with_serialization
 
     alias_method :old_path, :path
     def path
@@ -177,6 +194,10 @@ module VCAP::CloudController
       }
     end
 
+    def available_in_space?(other_space)
+      other_space == space || shared_spaces.include?(other_space)
+    end
+
     delegate :in_suspended_org?, to: :space
 
     def tcp?
@@ -246,6 +267,10 @@ module VCAP::CloudController
 
     def destroy_route_bindings
       errors = RouteBindingDelete.new.delete(route_binding_dataset)
+
+      quoted_table_name = RouteBinding.db.quote_identifier(RouteBinding.table_name)
+      errors.reject! { |e| e.is_a?(Sequel::NoExistingObject) && e.message.include?("DELETE FROM #{quoted_table_name}") }
+
       raise errors.first unless errors.empty?
     end
 

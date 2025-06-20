@@ -96,6 +96,25 @@ module VCAP::CloudController
       raise UaaUnavailable
     end
 
+    def create_shadow_user(username, origin)
+      with_cache_retry { scim.add(:user, { username: username, origin: origin, emails: [{ primary: true, value: username }] }) }
+    rescue CF::UAA::TargetError => e
+      raise e unless e.info['error'] == 'scim_resource_already_exists'
+
+      { 'id' => e.info['user_id'] }
+    rescue CF::UAA::BadResponse => e
+      unless e.message == 'invalid status response: 429'
+        logger.error("UAA request for creating a user failed: #{e.inspect}")
+        raise UaaUnavailable
+      end
+
+      logger.warn("UAA request for creating a user ran into rate limits: #{e.inspect}")
+      raise UaaRateLimited
+    rescue CF::UAA::UAAError => e
+      logger.error("UAA request for creating a user failed: #{e.inspect}")
+      raise UaaUnavailable
+    end
+
     def info
       CF::UAA::Info.new(uaa_target, uaa_connection_opts)
     end

@@ -125,6 +125,12 @@ module VCAP::CloudController
       DatabaseUriGenerator.new(service_binding_uris).database_uri
     end
 
+    def windows_gmsa_credential_refs
+      service_bindings.sort_by(&:id).map do |binding|
+        binding.credentials['credhub-windows-gmsa-credential-ref'] if binding.credentials.present?
+      end.compact
+    end
+
     def staging_in_progress?
       builds_dataset.where(state: BuildModel::STAGING_STATE).any?
     end

@@ -157,6 +157,7 @@ module VCAP::CloudController
             max_retained_deployments_per_app: Integer,
             max_retained_builds_per_app: Integer,
             max_retained_revisions_per_app: Integer,
+            optional(:additional_allowed_process_users) => Array,
 
             diego_sync: { frequency_in_seconds: Integer },
 
@@ -174,6 +175,7 @@ module VCAP::CloudController
             allow_app_ssh_access: bool,
             jobs: {
               global: { timeout_in_seconds: Integer },
+              optional(:read_ahead) => Integer,
               optional(:app_usage_events_cleanup) => { timeout_in_seconds: Integer },
               optional(:blobstore_delete) => { timeout_in_seconds: Integer },
               optional(:diego_sync) => { timeout_in_seconds: Integer },

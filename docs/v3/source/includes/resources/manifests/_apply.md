@@ -24,7 +24,7 @@ Location: https://api.example.org/v3/jobs/[guid]
 Apply changes specified in a manifest to the named apps and their underlying
 processes. The apps must reside in the space. These changes are additive
 and will not modify any unspecified properties or remove any existing
-environment variables, routes, or services.
+environment variables, app features, routes, or services.
 
 <aside class="notice">
 Apply manifest will only trigger an immediate update for the "instances" property or routing changes. All other properties require an app restart to take effect.

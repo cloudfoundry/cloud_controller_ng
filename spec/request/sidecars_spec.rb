@@ -140,7 +140,7 @@ RSpec.describe 'Sidecars' do
       end
 
       let(:expected_codes_and_responses) do
-        h = Hash.new(code: 403, errors: CF_NOT_AUTHORIZED)
+        h = Hash.new({ code: 403, errors: CF_NOT_AUTHORIZED }.freeze)
         %w[no_role org_auditor org_billing_manager].each { |r| h[r] = { code: 404 } }
         %w[admin space_developer].each { |r| h[r] = { code: 201 } }
         h
@@ -339,7 +339,7 @@ RSpec.describe 'Sidecars' do
       end
 
       let(:expected_codes_and_responses) do
-        h = Hash.new(code: 403, errors: CF_NOT_AUTHORIZED)
+        h = Hash.new({ code: 403, errors: CF_NOT_AUTHORIZED }.freeze)
         %w[no_role org_auditor org_billing_manager].each { |r| h[r] = { code: 404 } }
         %w[admin space_developer].each { |r| h[r] = { code: 200 } }
         h
@@ -407,7 +407,7 @@ RSpec.describe 'Sidecars' do
       let(:space) { app_model.space }
 
       let(:expected_codes_and_responses) do
-        h = Hash.new(code: 200, response_guid: sidecar.guid)
+        h = Hash.new({ code: 200, response_guid: sidecar.guid }.freeze)
         h['no_role'] = {
           code: 404
         }
@@ -578,7 +578,7 @@ RSpec.describe 'Sidecars' do
       let(:space) { app_model.space }
 
       let(:expected_codes_and_responses) do
-        h = Hash.new(code: 404)
+        h = Hash.new({ code: 404 }.freeze)
         h['admin'] = {
           code: 200
         }
@@ -708,7 +708,7 @@ RSpec.describe 'Sidecars' do
       let(:space) { app_model.space }
 
       let(:expected_codes_and_responses) do
-        h = Hash.new(code: 404)
+        h = Hash.new({ code: 404 }.freeze)
         h['admin'] = {
           code: 200
         }
@@ -767,7 +767,7 @@ RSpec.describe 'Sidecars' do
       end
 
       let(:expected_codes_and_responses) do
-        h = Hash.new(code: 403, errors: CF_NOT_AUTHORIZED)
+        h = Hash.new({ code: 403, errors: CF_NOT_AUTHORIZED }.freeze)
         %w[no_role org_auditor org_billing_manager].each { |r| h[r] = { code: 404 } }
         %w[admin space_developer].each { |r| h[r] = { code: 204 } }
         h

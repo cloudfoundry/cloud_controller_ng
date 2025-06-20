@@ -14,10 +14,11 @@ require 'cloud_controller/secrets_fetcher'
 require 'cloud_controller/runners/thin_runner'
 require 'cloud_controller/runners/puma_runner'
 require 'prometheus/client/data_stores/direct_file_store'
+require 'prometheus/middleware/exporter'
 
 module VCAP::CloudController
   class Runner
-    attr_reader :config, :config_file, :insert_seed_data, :secrets_file
+    attr_reader :config, :config_file, :secrets_file
 
     def initialize(argv)
       @argv = argv
@@ -64,10 +65,6 @@ module VCAP::CloudController
           @secrets_file = opt
         end
       end
-    end
-
-    def deprecation_warning(message)
-      Rails.logger.warn message
     end
 
     def parse_options!
@@ -135,6 +132,35 @@ module VCAP::CloudController
       end
 
       Prometheus::Client.config.data_store = Prometheus::Client::DataStores::DirectFileStore.new(dir: prometheus_dir)
+
+      setup_metrics_webserver
+    end
+
+    # The webserver runs in the main process and serves only the metrics endpoint.
+    # This makes it possible to retrieve metrics even if all Puma workers of the main app are busy.
+    def setup_metrics_webserver
+      metrics_app = Rack::Builder.new do
+        use Prometheus::Middleware::Exporter, path: '/internal/v4/metrics'
+
+        map '/' do
+          run lambda { |_env|
+            # Return 404 for any other request
+            ['404', { 'Content-Type' => 'text/plain' }, ['Not Found']]
+          }
+        end
+      end
+
+      Thread.new do
+        server = Puma::Server.new(metrics_app)
+
+        if config.get(:nginx, :metrics_socket).nil? || config.get(:nginx, :metrics_socket).empty?
+          server.add_tcp_listener('127.0.0.1', 9395)
+        else
+          server.add_unix_listener(@config.get(:nginx, :metrics_socket))
+        end
+
+        server.run
+      end
     end
 
     def setup_logging

@@ -7,6 +7,7 @@ module VCAP::CloudController
     let(:periodic_updater) { instance_double(VCAP::CloudController::Metrics::PeriodicUpdater) }
     let(:request_metrics) { instance_double(VCAP::CloudController::Metrics::RequestMetrics) }
     let(:routing_api_client) { instance_double(VCAP::CloudController::RoutingApi::Client, router_group_guid: '') }
+    let(:puma_server_double) { instance_double(Puma::Server, add_tcp_listener: nil, add_unix_listener: nil, run: nil) }
 
     let(:argv) { [] }
 
@@ -19,6 +20,7 @@ module VCAP::CloudController
       allow(periodic_updater).to receive(:setup_updates)
       allow(VCAP::PidFile).to receive(:new) { double(:pidfile, unlink_at_exit: nil) }
       allow_any_instance_of(VCAP::CloudController::ThinRunner).to receive(:start!)
+      allow(Puma::Server).to receive(:new).and_return(puma_server_double)
     end
 
     subject do
@@ -43,10 +45,6 @@ module VCAP::CloudController
     end
 
     describe '#initialize' do
-      before do
-        allow_any_instance_of(Runner).to receive(:deprecation_warning)
-      end
-
       describe 'web server selection' do
         context 'when thin is specifed' do
           it 'chooses ThinRunner as the web server' do
@@ -277,6 +275,51 @@ module VCAP::CloudController
                 expect(subject.config.get(:cloud_controller_username_lookup_client_secret)).to eq('some-password')
               end
             end
+          end
+        end
+      end
+
+      describe 'separate webserver for metrics' do
+        let(:test_config_overrides) { {} }
+
+        before do
+          TestConfig.override(**test_config_overrides)
+          allow(Config).to receive(:load_from_file).and_return(TestConfig.config_instance)
+        end
+
+        context 'when the webserver is puma' do
+          let(:test_config_overrides) { super().merge(webserver: 'puma') }
+
+          it 'sets up a separate webserver for metrics' do
+            subject
+
+            expect(Puma::Server).to have_received(:new).once
+          end
+
+          it 'listens on the specified metrics port' do
+            subject
+
+            expect(puma_server_double).to have_received(:add_tcp_listener).with('127.0.0.1', 9395)
+          end
+
+          context 'metrics_socket is configured' do
+            let(:test_config_overrides) { super().merge(nginx: { metrics_socket: '/tmp/metrics_socket.sock' }) }
+
+            it 'listens on the specified metrics socket' do
+              subject
+
+              expect(puma_server_double).to have_received(:add_unix_listener).with('/tmp/metrics_socket.sock')
+            end
+          end
+        end
+
+        context 'when the webserver is not puma' do
+          let(:test_config_overrides) { super().merge(webserver: 'thin') }
+
+          it 'does not set up the webserver' do
+            subject
+
+            expect(Puma::Server).not_to have_received(:new)
           end
         end
       end

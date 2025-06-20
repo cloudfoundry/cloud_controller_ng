@@ -64,9 +64,40 @@ module VCAP::CloudController
           end
 
           context 'when older than specified cut-off' do
-            let(:run_at) { Time.now.utc - 3.days }
+            let(:run_at) { Time.now.utc - 50.hours }
 
             it 'removes the job' do
+              expect do
+                cleanup_job.perform
+              end.to change {
+                Delayed::Job.find(id: @delayed_job.id)
+              }.from(@delayed_job).to(nil)
+            end
+
+            context 'when job is orphaned' do
+              it 'does not remove the job if it is not older than cut-off + 1 day' do
+                Sequel::Model.db[:delayed_jobs].where(id: @delayed_job.id).update(failed_at: nil, locked_by: nil)
+                expect do
+                  cleanup_job.perform
+                end.not_to(change { Delayed::Job.find(id: @delayed_job.id) })
+              end
+            end
+          end
+
+          context 'when a job is orphaned and older than the cut-off + 1 day' do
+            let(:run_at) { Time.now.utc - 73.hours }
+
+            it 'removes the job even if it is not failed and regardless of locked_by' do
+              Sequel::Model.db[:delayed_jobs].where(id: @delayed_job.id).update(failed_at: nil, locked_by: 'some-worker', locked_at: Time.now.utc - 2.days)
+              expect do
+                cleanup_job.perform
+              end.to change {
+                Delayed::Job.find(id: @delayed_job.id)
+              }.from(@delayed_job).to(nil)
+            end
+
+            it 'removes the job even if it is not failed and locked_by is nil' do
+              Sequel::Model.db[:delayed_jobs].where(id: @delayed_job.id).update(failed_at: nil, locked_by: nil)
               expect do
                 cleanup_job.perform
               end.to change {

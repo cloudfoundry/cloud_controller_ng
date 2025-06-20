@@ -16,6 +16,7 @@ class SpaceManifestsController < ApplicationController
     can_write_space(space)
 
     messages = parsed_app_manifests.map { |app_manifest| AppManifestMessage.create_from_yml(app_manifest) }
+
     errors = messages.each_with_index.flat_map { |message, i| errors_for_message(message, i) }
     compound_error!(errors) unless errors.empty?
 
@@ -36,7 +37,7 @@ class SpaceManifestsController < ApplicationController
     apply_manifest_job = Jobs::SpaceApplyManifestActionJob.new(space, app_guid_message_hash, apply_manifest_action, user_audit_info)
 
     app_guid_message_hash.each { |app_guid, message| record_apply_manifest_audit_event(AppModel.find(guid: app_guid), message, space) }
-    job = Jobs::Enqueuer.new(apply_manifest_job, queue: Jobs::Queues.generic).enqueue_pollable
+    job = Jobs::Enqueuer.new(queue: Jobs::Queues.generic).enqueue_pollable(apply_manifest_job)
 
     url_builder = Presenters::ApiUrlBuilder
     head HTTP::ACCEPTED, 'Location' => url_builder.build_url(path: "/v3/jobs/#{job.guid}")

@@ -14,8 +14,9 @@ module Credhub
     describe '#client' do
       describe 'ssl_config' do
         it 'uses the configured credhub_ca.crt' do
-          expect(subject.send(:client).ssl_config.cert_store_items).
-            to include(TestConfig.config_instance.get(:credhub_api, :ca_cert_path))
+          expect_any_instance_of(OpenSSL::X509::Store).to receive(:add_file).with(TestConfig.config_instance.get(:credhub_api, :ca_cert_path)).exactly(:once)
+
+          subject.send(:build_client)
         end
       end
     end

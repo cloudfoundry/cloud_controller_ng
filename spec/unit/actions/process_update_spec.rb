@@ -25,6 +25,7 @@ module VCAP::CloudController
     let(:message) do
       ProcessUpdateMessage.new(
         command: 'new',
+        user: 'vcap',
         health_check: health_check,
         readiness_health_check: readiness_health_check,
         metadata: {
@@ -44,6 +45,7 @@ module VCAP::CloudController
         :process,
         type: 'web',
         command: 'initial command',
+        user: nil,
         health_check_type: 'port',
         health_check_timeout: 10,
         health_check_interval: 5,
@@ -63,6 +65,7 @@ module VCAP::CloudController
 
         process.reload
         expect(process.command).to eq('new')
+        expect(process.user).to eq('vcap')
         expect(process.health_check_type).to eq('process')
         expect(process.health_check_timeout).to eq(20)
         expect(process.health_check_interval).to eq(7)
@@ -373,6 +376,7 @@ module VCAP::CloudController
             user_audit_info,
             {
               'command' => 'new',
+              'user' => 'vcap',
               'health_check' => {
                 'type' => 'process',
                 'data' => { 'timeout' => 20, 'interval' => 7 }
@@ -398,6 +402,7 @@ module VCAP::CloudController
               user_audit_info,
               {
                 'command' => 'new',
+                'user' => 'vcap',
                 'health_check' => {
                   'type' => 'process',
                   'data' => { 'timeout' => 20, 'interval' => 7 }

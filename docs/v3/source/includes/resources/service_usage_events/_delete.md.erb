@@ -21,7 +21,6 @@ Content-Type: application/json
 
 Destroys all existing events. Populates new usage events, one for each existing service instance. All populated events will have a `created_at` value of current time. There is the potential race condition if service instances are currently being created or deleted. The seeded usage events will have the same guid as the service instance.
 #### Definition
-
 `POST /v3/service_usage_events/actions/destructively_purge_all_and_reseed`
 
 #### Permitted roles

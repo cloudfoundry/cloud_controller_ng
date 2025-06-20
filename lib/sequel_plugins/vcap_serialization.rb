@@ -37,9 +37,7 @@ module Sequel::Plugins::VcapSerialization
       self.class.export_attrs || []
     end
 
-    def export_attrs_from_methods
-      self.class.export_attrs_from_methods
-    end
+    delegate :export_attrs_from_methods, to: :class
 
     # Update the model instance from the supplied json string.  Only update
     # attributes specified by import_attributes.

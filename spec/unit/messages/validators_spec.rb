@@ -1,4 +1,3 @@
-require 'spec_helper'
 require 'lightweight_spec_helper'
 require 'messages/validators'
 require 'messages/base_message'
@@ -8,6 +7,7 @@ require 'cloud_controller/diego/lifecycles/app_docker_lifecycle'
 require 'cloud_controller/diego/lifecycles/app_buildpack_lifecycle'
 require 'cloud_controller/diego/lifecycles/lifecycles'
 require 'rspec/collection_matchers'
+require 'pry'
 
 module VCAP::CloudController::Validators
   RSpec.describe 'Validators' do
@@ -526,6 +526,62 @@ module VCAP::CloudController::Validators
         message = RelationshipMessage.new({ relationships: 'not an object' })
         expect(message).not_to be_valid
         expect(message.errors_on(:relationships)).to include("'relationships' is not an object")
+      end
+    end
+
+    describe 'OptionsValidator' do
+      class OptionsMessage < VCAP::CloudController::BaseMessage
+        register_allowed_keys [:options]
+
+        def options_message
+          VCAP::CloudController::RouteOptionsMessage.new(options&.deep_symbolize_keys)
+        end
+
+        validates_with OptionsValidator
+      end
+
+      it 'successfully validates round-robin load-balancing algorithm' do
+        message = OptionsMessage.new({ options: { loadbalancing: 'round-robin' } })
+        expect(message).to be_valid
+      end
+
+      it 'successfully validates least-connection load-balancing algorithm' do
+        message = OptionsMessage.new({ options: { loadbalancing: 'least-connection' } })
+        expect(message).to be_valid
+      end
+
+      it 'successfully validates empty options' do
+        message = OptionsMessage.new({ options: {} })
+        expect(message).to be_valid
+      end
+
+      it 'adds invalid options message when options is null' do
+        message = OptionsMessage.new({ options: nil })
+        expect(message).not_to be_valid
+        expect(message.errors_on(:options)).to include("'options' is not a valid object")
+      end
+
+      it 'successfully validates empty load balancer' do
+        message = OptionsMessage.new({ options: { loadbalancing: nil } })
+        expect(message).to be_valid
+      end
+
+      it 'adds invalid object error message when options is not an object' do
+        message = OptionsMessage.new({ options: 'cheesecake' })
+        expect(message).not_to be_valid
+        expect(message.errors_on(:options)).to include("'options' is not a valid object")
+      end
+
+      it 'adds invalid load balancer error message to the base class' do
+        message = OptionsMessage.new({ options: { loadbalancing: 'donuts' } })
+        expect(message).not_to be_valid
+        expect(message.errors_on(:options)).to include("Loadbalancing must be one of 'round-robin, least-connection' if present")
+      end
+
+      it 'adds invalid field error message to the base class' do
+        message = OptionsMessage.new({ options: { cookies: 'round-robin' } })
+        expect(message).not_to be_valid
+        expect(message.errors_on(:options)).to include('Unknown field(s): \'cookies\'')
       end
     end
 

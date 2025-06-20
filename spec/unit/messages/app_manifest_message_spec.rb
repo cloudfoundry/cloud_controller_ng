@@ -1064,6 +1064,7 @@ module VCAP::CloudController
             message = AppManifestMessage.create_from_yml(params_from_yaml)
 
             expect(message).not_to be_valid
+
             expect(message.errors).to have(1).items
             expect(message.errors.full_messages).to include('Cannot specify both buildpack(s) and docker keys')
           end
@@ -1112,22 +1113,6 @@ module VCAP::CloudController
                             'Stack must be a string',
                             'Env must be an object of keys and values']
           expect(message.errors.full_messages).to match_array(error_messages)
-        end
-      end
-
-      context 'when cnb: true and no buildpacks provided' do
-        before do
-          FeatureFlag.make(name: 'diego_cnb', enabled: true, error_message: nil)
-        end
-
-        let(:params_from_yaml) { { name: 'eugene', lifecycle: 'cnb' } }
-
-        it 'is not valid' do
-          message = AppManifestMessage.create_from_yml(params_from_yaml)
-
-          expect(message).not_to be_valid
-          expect(message.errors).to have(1).items
-          expect(message.errors.full_messages).to include('Buildpack(s) must be specified when using Cloud Native Buildpacks')
         end
       end
     end
@@ -2011,7 +1996,6 @@ module VCAP::CloudController
 
             it 'does not forward missing attributes to the AppUpdateMessage' do
               message = AppManifestMessage.create_from_yml(parsed_yaml)
-
               expect(message.app_update_message.requested?(:lifecycle)).to be false
             end
           end
@@ -2121,6 +2105,42 @@ module VCAP::CloudController
           end
         end
 
+        context 'when buildpack is the default_app_lifecycle but lifecycle is not set' do
+          before do
+            TestConfig.override(default_app_lifecycle: 'buildpack')
+          end
+
+          let(:parsed_yaml) { { name: 'cnb', buildpacks: %w[nodejs java], stack: stack.name } }
+
+          it 'sets the app lifecycle to nil' do
+            message = AppManifestMessage.create_from_yml(parsed_yaml)
+
+            expect(message).to be_valid
+            expect(message.app_update_message.lifecycle_type).to be_nil
+            expect(message.app_update_message.buildpack_data.buildpacks).to eq(%w[nodejs java])
+            expect(message.app_update_message.buildpack_data.stack).to eq(stack.name)
+            expect(message.app_update_message.buildpack_data.credentials).to be_nil
+          end
+        end
+
+        context 'when cnb is the default_app_lifecycle but lifecycle is not set' do
+          before do
+            TestConfig.override(default_app_lifecycle: 'cnb')
+          end
+
+          let(:parsed_yaml) { { name: 'cnb', buildpacks: %w[nodejs java], stack: stack.name } }
+
+          it 'sets the app lifecycle to cnb' do
+            message = AppManifestMessage.create_from_yml(parsed_yaml)
+
+            expect(message).to be_valid
+            expect(message.app_update_message.lifecycle_type).to be_nil
+            expect(message.app_update_message.buildpack_data.buildpacks).to eq(%w[nodejs java])
+            expect(message.app_update_message.buildpack_data.stack).to eq(stack.name)
+            expect(message.app_update_message.buildpack_data.credentials).to be_nil
+          end
+        end
+
         context 'when cnb is disabled' do
           before do
             FeatureFlag.make(name: 'diego_cnb', enabled: false, error_message: 'I am a banana')
@@ -2177,6 +2197,44 @@ module VCAP::CloudController
           message = AppManifestMessage.create_from_yml(parsed_yaml)
           expect(message).to be_valid
           expect(message.manifest_routes_update_message).not_to be_requested(:routes)
+        end
+      end
+    end
+
+    describe '#manifest_features_update_message' do
+      context 'when no features are specified' do
+        let(:parsed_yaml) do
+          { name: 'app' }
+        end
+
+        it 'does not set the features in the message' do
+          message = AppManifestMessage.create_from_yml(parsed_yaml)
+          expect(message).to be_valid
+          expect(message.manifest_features_update_message).not_to be_requested(:features)
+        end
+      end
+
+      context 'when features are specified' do
+        let(:parsed_yaml) do
+          { name: 'app', features: { ssh: true, 'service-binding-k8s': false } }
+        end
+
+        it 'returns a ManifestFeaturesUpdateMessage containing the features' do
+          message = AppManifestMessage.create_from_yml(parsed_yaml)
+          expect(message).to be_valid
+          expect(message.manifest_features_update_message.features).to eq({ ssh: true, 'service-binding-k8s': false })
+        end
+      end
+
+      context 'when an invalid feature is specified' do
+        let(:parsed_yaml) do
+          { features: { invalid_feature: true } }
+        end
+
+        it 'is invalid and contains the correct error message' do
+          message = AppManifestMessage.create_from_yml(parsed_yaml)
+          expect(message).not_to be_valid
+          expect(message.errors[:base]).to include('Features must be a map of valid feature names to booleans (true = enabled, false = disabled)')
         end
       end
     end

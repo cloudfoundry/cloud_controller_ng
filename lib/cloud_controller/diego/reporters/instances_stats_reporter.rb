@@ -45,14 +45,22 @@ module VCAP::CloudController
       def actual_lrp_info(process, stats=nil, quota_stats=nil, log_cache_errors=nil, isolation_segment=nil, state=nil)
         # rubocop:enable Metrics/ParameterLists
         result = {}
+        lrp_instances = {}
+
         bbs_instances_client.lrp_instances(process).each do |actual_lrp|
           next unless actual_lrp.actual_lrp_key.index < process.instances
 
-          lrp_state = state || LrpStateTranslator.translate_lrp_state(actual_lrp)
+          # if an LRP already exists with the same index use the one with the latest since value
+          if lrp_instances.include?(actual_lrp.actual_lrp_key.index)
+            existing_lrp = lrp_instances[actual_lrp.actual_lrp_key.index]
+            next if actual_lrp.since < existing_lrp.since
+          end
 
+          lrp_state = state || LrpStateTranslator.translate_lrp_state(actual_lrp)
           info = build_info(lrp_state, actual_lrp, process, stats, quota_stats, log_cache_errors)
           info[:isolation_segment] = isolation_segment unless isolation_segment.nil?
           result[actual_lrp.actual_lrp_key.index] = info
+          lrp_instances[actual_lrp.actual_lrp_key.index] = actual_lrp
         end
 
         fill_unreported_instances_with_down_instances(result, process, flat: false)
@@ -68,8 +76,9 @@ module VCAP::CloudController
             name: process.name,
             uris: process.uris,
             host: actual_lrp.actual_lrp_net_info.address,
+            instance_guid: actual_lrp.actual_lrp_instance_key.instance_guid,
             port: get_default_port(actual_lrp.actual_lrp_net_info),
-            net_info: actual_lrp.actual_lrp_net_info.to_h,
+            net_info: actual_lrp_net_info_to_hash(actual_lrp.actual_lrp_net_info),
             uptime: nanoseconds_to_seconds((Time.now.to_f * 1e9) - actual_lrp.since),
             fds_quota: process.file_descriptors
           }.merge(metrics_data_for_instance(stats, quota_stats, log_cache_errors, Time.now.to_datetime.rfc3339, actual_lrp.actual_lrp_key.index))
@@ -188,6 +197,22 @@ module VCAP::CloudController
         end
 
         0
+      end
+
+      def actual_lrp_net_info_to_hash(net_info)
+        %i[address instance_address ports preferred_address].index_with do |field_name|
+          if field_name == :ports
+            net_info.ports.map(&method(:port_mapping_to_hash))
+          else
+            net_info.send(field_name)
+          end
+        end
+      end
+
+      def port_mapping_to_hash(port_mapping)
+        %i[container_port container_tls_proxy_port host_port host_tls_proxy_port].index_with do |field_name|
+          port_mapping.send(field_name)
+        end
       end
     end
   end

@@ -5,6 +5,7 @@ require 'cloud_controller/diego/docker/task_action_builder'
 require 'cloud_controller/diego/bbs_environment_builder'
 require 'cloud_controller/diego/task_completion_callback_generator'
 require 'cloud_controller/diego/task_cpu_weight_calculator'
+require 'cloud_controller/diego/service_binding_files_builder'
 
 module VCAP::CloudController
   module Diego
@@ -52,7 +53,8 @@ module VCAP::CloudController
             ]
           ),
           image_username: task.droplet.docker_receipt_username,
-          image_password: task.droplet.docker_receipt_password
+          image_password: task.droplet.docker_receipt_password,
+          volume_mounted_files: ServiceBindingFilesBuilder.build(task.app)
         }.compact)
       end
 
@@ -90,7 +92,8 @@ module VCAP::CloudController
             ]
           ),
           image_username: staging_details.package.docker_username,
-          image_password: staging_details.package.docker_password
+          image_password: staging_details.package.docker_password,
+          volume_mounted_files: ServiceBindingFilesBuilder.build(staging_details.package.app)
         }.compact)
       end
 

@@ -250,7 +250,7 @@ module VCAP::CloudController
             before_updated_at = existing_domain.updated_at
 
             expect do
-              SharedDomain.find_or_create(**attrs.merge(internal: false))
+              SharedDomain.find_or_create(**attrs, internal: false)
             end.not_to(change(existing_domain, :reload))
             expect(fake_logger).to have_received(:warn).
               with("Domain '#{domain_name}' already exists. Skipping updates of internal status")
@@ -268,7 +268,7 @@ module VCAP::CloudController
             before_updated_at = existing_domain.updated_at
 
             expect do
-              SharedDomain.find_or_create(**attrs.merge(internal: true))
+              SharedDomain.find_or_create(**attrs, internal: true)
             end.not_to(change(existing_domain, :reload))
             expect(fake_logger).to have_received(:warn).
               with("Domain '#{domain_name}' already exists. Skipping updates of internal status")
@@ -284,7 +284,7 @@ module VCAP::CloudController
           before_updated_at = existing_domain.updated_at
 
           expect do
-            SharedDomain.find_or_create(**attrs.merge(router_group_guid: 'new rgg'))
+            SharedDomain.find_or_create(**attrs, router_group_guid: 'new rgg')
           end.not_to(change(existing_domain, :reload))
           expect(fake_logger).to have_received(:warn).
             with("Domain '#{domain_name}' already exists. Skipping updates of router_group_guid")

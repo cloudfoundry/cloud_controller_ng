@@ -568,4 +568,46 @@ RSpec.describe CloudController::DependencyLocator do
       locator.bbs_task_client
     end
   end
+
+  describe 'uaa_shadow_user_creation_client' do
+    before do
+      TestConfig.override(
+        uaa: {
+          internal_url: 'https:/uaa.local',
+          ca_file: '/var/vcap/uaa.cert',
+          clients: [
+            {
+              'name' => 'cloud_controller_shadow_user_creation',
+              'id' => 'shadow_user_creation_client_id',
+              'secret' => 'shadow_user_creation_client_secret'
+            }
+          ]
+        }
+      )
+    end
+
+    it 'creates a new UAA client' do
+      client = locator.uaa_shadow_user_creation_client
+      expect(client).to be_an_instance_of(VCAP::CloudController::UaaClient)
+      expect(client.uaa_target).to eq('https:/uaa.local')
+      expect(client.ca_file).to eq('/var/vcap/uaa.cert')
+      expect(client.client_id).to eq('shadow_user_creation_client_id')
+      expect(client.secret).to eq('shadow_user_creation_client_secret')
+    end
+
+    context 'when the client does not exist in config' do
+      before do
+        TestConfig.override(
+          uaa: {
+            internal_url: 'https:/uaa.local',
+            ca_file: '/var/vcap/uaa.cert'
+          }
+        )
+      end
+
+      it 'returns nil' do
+        expect(locator.uaa_shadow_user_creation_client).to be_nil
+      end
+    end
+  end
 end

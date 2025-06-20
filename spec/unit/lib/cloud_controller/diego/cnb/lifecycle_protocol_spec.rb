@@ -77,6 +77,16 @@ module VCAP
               end
             end
 
+            context 'when buildpack_infos is empty' do
+              let(:buildpack_infos) { [] }
+
+              it 'sets auto_detect: true' do
+                lifecycle_data = lifecycle_protocol.lifecycle_data(staging_details)
+
+                expect(lifecycle_data[:auto_detect]).to be true
+              end
+            end
+
             context 'when the generated message has invalid data' do
               let(:buildpack_infos) { [] }
 
@@ -203,14 +213,13 @@ module VCAP
                 process_guid: ProcessGuid.from_process(process),
                 checksum_algorithm: 'sha256',
                 checksum_value: droplet.sha256_checksum,
-                start_command: 'go go go'
+                start_command: 'go go go',
+                action_user: 'vcap',
+                additional_container_env_vars: []
               }
             end
 
             it 'creates a diego DesiredLrpBuilder' do
-              puts 'hello'
-              puts 'world!'
-
               expect(VCAP::CloudController::Diego::CNB::DesiredLrpBuilder).to receive(:new).with(
                 config,
                 builder_opts

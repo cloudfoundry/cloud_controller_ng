@@ -7,7 +7,7 @@ module VCAP::CloudController
         space.routes_dataset.
           exclude(guid: RouteMappingModel.select(:route_guid)).
           exclude(id: RouteBinding.select(:route_id)).
-          delete
+          destroy
       end
     end
   end

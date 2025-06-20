@@ -5,7 +5,7 @@ module VCAP::CloudController
         include ::Diego::ActionBuilder
         class InvalidStack < StandardError; end
 
-        attr_reader :start_command
+        attr_reader :start_command, :action_user
 
         def initialize(config, opts)
           @config = config
@@ -17,6 +17,8 @@ module VCAP::CloudController
           @checksum_algorithm = opts[:checksum_algorithm]
           @checksum_value = opts[:checksum_value]
           @start_command = opts[:start_command]
+          @action_user = opts[:action_user]
+          @additional_container_env_vars = opts[:additional_container_env_vars]
         end
 
         def cached_dependencies
@@ -94,11 +96,7 @@ module VCAP::CloudController
         end
 
         def global_environment_variables
-          [
-            ::Diego::Bbs::Models::EnvironmentVariable.new(name: 'LANG', value: DEFAULT_LANG),
-            ::Diego::Bbs::Models::EnvironmentVariable.new(name: 'CNB_LAYERS_DIR', value: '/home/vcap/layers'),
-            ::Diego::Bbs::Models::EnvironmentVariable.new(name: 'CNB_APP_DIR', value: '/home/vcap/workspace')
-          ]
+          default_container_env + @additional_container_env_vars
         end
 
         def ports
@@ -117,8 +115,14 @@ module VCAP::CloudController
           @config.get(:diego, :use_privileged_containers_for_running)
         end
 
-        def action_user
-          'vcap'
+        private
+
+        def default_container_env
+          [
+            ::Diego::Bbs::Models::EnvironmentVariable.new(name: 'LANG', value: DEFAULT_LANG),
+            ::Diego::Bbs::Models::EnvironmentVariable.new(name: 'CNB_LAYERS_DIR', value: '/home/vcap/layers'),
+            ::Diego::Bbs::Models::EnvironmentVariable.new(name: 'CNB_APP_DIR', value: '/home/vcap/workspace')
+          ]
         end
       end
     end

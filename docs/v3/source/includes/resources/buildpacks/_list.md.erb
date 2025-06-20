@@ -34,7 +34,8 @@ Name | Type | Description
 **per_page** | _integer_ | Number of results per page; <br>valid values are 1 through 5000
 **names** | _list of strings_ | Comma-delimited list of buildpack names to filter by
 **stacks**| _list of strings_ | Comma-delimited list of stack names to filter by
-**order_by** | _string_ | Value to sort by; defaults to ascending. Prepend with `-` to sort descending. <br>Valid values are `created_at`, `updated_at`, and `position`
+**lifecycle**| _string_ | Type of buildpack. Valid values are `buildpack` and `cnb`
+**order_by** | _string_ | Value to sort by; defaults to ascending. Prepend with `-` to sort descending. <br>Valid values are `created_at`, `updated_at`, `lifecycle`, and `position`
 **label_selector** | _string_ | A query string containing a list of [label selector](#labels-and-selectors) requirements
 **created_ats** | _[timestamp](#timestamps)_ | Timestamp to filter by. When filtering on equality, several comma-delimited timestamps may be passed. Also supports filtering with [relational operators](#relational-operators)
 **updated_ats** | _[timestamp](#timestamps)_ | Timestamp to filter by. When filtering on equality, several comma-delimited timestamps may be passed. Also supports filtering with [relational operators](#relational-operators)

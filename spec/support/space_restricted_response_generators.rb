@@ -50,7 +50,7 @@ module SpaceRestrictedResponseGenerators
   def responses_for_space_restricted_single_endpoint(response_object, permitted_roles: nil)
     permitted_roles ||= SpaceRestrictedResponseGenerators.default_permitted_roles
 
-    Hash.new(code: 404).tap do |h|
+    Hash.new({ code: 404 }.freeze).tap do |h|
       permitted_roles.each do |role|
         h[role] = { code: 200, response_object: response_object }
       end
@@ -60,7 +60,7 @@ module SpaceRestrictedResponseGenerators
   def responses_for_space_restricted_create_endpoint(success_code:, permitted_roles: nil)
     permitted_roles ||= SpaceRestrictedResponseGenerators.default_write_permitted_roles
 
-    Hash.new(code: 403, errors: SpaceRestrictedResponseGenerators.forbidden_response).tap do |h|
+    Hash.new({ code: 403, errors: SpaceRestrictedResponseGenerators.forbidden_response }.freeze).tap do |h|
       permitted_roles.each do |role|
         h[role] = { code: success_code }
       end
@@ -73,7 +73,7 @@ module SpaceRestrictedResponseGenerators
   def responses_for_space_restricted_update_endpoint(success_code:, success_body: nil)
     permitted_roles = SpaceRestrictedResponseGenerators.default_write_permitted_roles
 
-    Hash.new(code: 403, errors: SpaceRestrictedResponseGenerators.forbidden_response).tap do |h|
+    Hash.new({ code: 403, errors: SpaceRestrictedResponseGenerators.forbidden_response }.freeze).tap do |h|
       permitted_roles.each do |role|
         h[role] = { code: success_code, response_object: success_body }
       end
@@ -87,7 +87,7 @@ module SpaceRestrictedResponseGenerators
     permitted_roles = SpaceRestrictedResponseGenerators.org_suspended_permitted_roles
     suspended_roles ||= SpaceRestrictedResponseGenerators.default_suspended_roles
 
-    Hash.new(code: 403, errors: SpaceRestrictedResponseGenerators.forbidden_response).tap do |h|
+    Hash.new({ code: 403, errors: SpaceRestrictedResponseGenerators.forbidden_response }.freeze).tap do |h|
       permitted_roles.each do |role|
         h[role] = { code: success_code }
       end
@@ -104,7 +104,7 @@ module SpaceRestrictedResponseGenerators
     permitted_roles = SpaceRestrictedResponseGenerators.org_suspended_permitted_roles
     suspended_roles = SpaceRestrictedResponseGenerators.default_suspended_roles
 
-    Hash.new(code: 403, errors: SpaceRestrictedResponseGenerators.forbidden_response).tap do |h|
+    Hash.new({ code: 403, errors: SpaceRestrictedResponseGenerators.forbidden_response }.freeze).tap do |h|
       permitted_roles.each do |role|
         h[role] = { code: success_code }
       end
@@ -121,7 +121,7 @@ module SpaceRestrictedResponseGenerators
     permitted_roles = SpaceRestrictedResponseGenerators.org_suspended_permitted_roles
     suspended_roles ||= SpaceRestrictedResponseGenerators.default_suspended_roles
 
-    Hash.new(code: 403, errors: SpaceRestrictedResponseGenerators.forbidden_response).tap do |h|
+    Hash.new({ code: 403, errors: SpaceRestrictedResponseGenerators.forbidden_response }.freeze).tap do |h|
       permitted_roles.each do |role|
         h[role] = { code: success_code }
       end
@@ -137,7 +137,7 @@ module SpaceRestrictedResponseGenerators
   def responses_for_space_restricted_delete_endpoint(permitted_roles: nil)
     permitted_roles ||= SpaceRestrictedResponseGenerators.default_write_permitted_roles
 
-    Hash.new(code: 403).tap do |h|
+    Hash.new({ code: 403 }.freeze).tap do |h|
       permitted_roles.each do |role|
         h[role] = { code: 204 }
       end
@@ -150,7 +150,7 @@ module SpaceRestrictedResponseGenerators
   def responses_for_space_restricted_async_delete_endpoint(permitted_roles: nil)
     permitted_roles ||= SpaceRestrictedResponseGenerators.default_write_permitted_roles
 
-    Hash.new(code: 403).tap do |h|
+    Hash.new({ code: 403 }.freeze).tap do |h|
       permitted_roles.each do |role|
         h[role] = { code: 202 }
       end

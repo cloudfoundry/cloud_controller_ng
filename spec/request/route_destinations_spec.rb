@@ -158,8 +158,8 @@ RSpec.describe 'Route Destinations Request' do
     context 'when the user is a member in the routes org' do
       let(:expected_codes_and_responses) do
         h = Hash.new(
-          code: 200,
-          response_object: response_json
+          { code: 200,
+            response_object: response_json }.freeze
         )
 
         h['org_billing_manager'] = { code: 404 }
@@ -291,7 +291,7 @@ RSpec.describe 'Route Destinations Request' do
       end
 
       let(:expected_codes_and_responses) do
-        h = Hash.new(code: 403, errors: CF_NOT_AUTHORIZED)
+        h = Hash.new({ code: 403, errors: CF_NOT_AUTHORIZED }.freeze)
         h['admin'] = { code: 200, response_object: response_json }
         h['space_developer'] = { code: 200, response_object: response_json }
         h['space_supporter'] = { code: 200, response_object: response_json }
@@ -801,7 +801,7 @@ RSpec.describe 'Route Destinations Request' do
         }
       end
       let(:expected_codes_and_responses) do
-        h = Hash.new(code: 403, errors: CF_NOT_AUTHORIZED)
+        h = Hash.new({ code: 403, errors: CF_NOT_AUTHORIZED }.freeze)
         h['admin'] = { code: 200, response_object: response_json }
         h['space_developer'] = { code: 200, response_object: response_json }
         h['space_supporter'] = { code: 200, response_object: response_json }
@@ -1244,7 +1244,7 @@ RSpec.describe 'Route Destinations Request' do
       end
 
       let(:expected_codes_and_responses) do
-        h = Hash.new(code: 403, errors: CF_NOT_AUTHORIZED)
+        h = Hash.new({ code: 403, errors: CF_NOT_AUTHORIZED }.freeze)
         h['admin'] = { code: 200 }
         h['space_developer'] = { code: 200 }
         h['space_supporter'] = { code: 200 }
@@ -1367,7 +1367,7 @@ RSpec.describe 'Route Destinations Request' do
       end
 
       let(:expected_codes_and_responses) do
-        h = Hash.new(code: 403, errors: CF_NOT_AUTHORIZED)
+        h = Hash.new({ code: 403, errors: CF_NOT_AUTHORIZED }.freeze)
         h['admin'] = { code: 204 }
         h['space_developer'] = { code: 204 }
         h['space_supporter'] = { code: 204 }

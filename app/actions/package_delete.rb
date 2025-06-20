@@ -1,3 +1,5 @@
+require 'jobs/generic_enqueuer'
+
 module VCAP::CloudController
   class PackageDelete
     def initialize(user_audit_info)
@@ -8,8 +10,11 @@ module VCAP::CloudController
       packages = Array(packages)
 
       packages.each do |package|
-        package_src_delete_job = create_package_source_deletion_job(package)
-        Jobs::Enqueuer.new(package_src_delete_job, queue: Jobs::Queues.generic).enqueue if package_src_delete_job
+        unless package.docker?
+          package_src_delete_job = create_package_source_deletion_job(package)
+          Jobs::GenericEnqueuer.shared.enqueue(package_src_delete_job, priority_increment: Jobs::REDUCED_PRIORITY) if package_src_delete_job
+        end
+
         package.destroy
 
         Repositories::PackageEventRepository.record_app_package_delete(

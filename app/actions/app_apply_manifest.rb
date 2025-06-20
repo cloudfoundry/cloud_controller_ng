@@ -28,6 +28,8 @@ module VCAP::CloudController
       app = AppModel.first(guid: app_guid)
       app_instance_not_found!(app_guid) unless app
 
+      AppFeatureUpdate.bulk_update(app, message.manifest_features_update_message)
+
       message.manifest_process_update_messages.each do |manifest_process_update_msg|
         if manifest_process_update_msg.requested_keys == [:type] && manifest_process_update_msg.type == 'web'
           # ignore trivial messages, most likely from manifest
@@ -59,6 +61,7 @@ module VCAP::CloudController
 
       app_update_message = message.app_update_message
       lifecycle = AppLifecycleProvider.provide_for_update(app_update_message, app)
+
       AppUpdate.new(@user_audit_info, manifest_triggered: true).update(app, app_update_message, lifecycle)
 
       update_routes(app, message)

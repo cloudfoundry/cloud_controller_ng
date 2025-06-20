@@ -25,8 +25,13 @@ module VCAP
           def new_lifecycle_data(staging_details)
             lifecycle_data = LifecycleData.new
             lifecycle_data.credentials = staging_details.lifecycle.credentials
+            lifecycle_data.auto_detect = staging_details.lifecycle.buildpack_infos.empty?
 
             lifecycle_data
+          end
+
+          def type
+            VCAP::CloudController::Lifecycles::CNB
           end
         end
       end

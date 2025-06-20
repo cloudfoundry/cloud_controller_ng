@@ -9,6 +9,8 @@ module VCAP::CloudController
   module Encryptor
     ENCRYPTION_ITERATIONS = 2048
 
+    class EncryptorError < StandardError; end
+
     class << self
       ALGORITHM = 'AES-128-CBC'.freeze
 
@@ -87,6 +89,8 @@ module VCAP::CloudController
           cipher.iv = salt
         end
         cipher.update(input) << cipher.final
+      rescue OpenSSL::Cipher::CipherError, TypeError => e
+        raise EncryptorError.new("Encryption/Decryption failed: #{e.message}")
       end
 
       def deprecated_short_salt?(salt)
