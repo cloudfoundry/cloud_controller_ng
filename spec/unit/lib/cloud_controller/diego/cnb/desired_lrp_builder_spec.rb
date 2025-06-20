@@ -21,6 +21,7 @@ module VCAP::CloudController
             checksum_algorithm: 'checksum-algorithm',
             checksum_value: 'checksum-value',
             start_command: 'dd if=/dev/random of=/dev/null',
+            action_user: 'vcap',
             additional_container_env_vars: additional_env_vars
           }
         end

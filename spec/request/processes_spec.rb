@@ -116,6 +116,7 @@ RSpec.describe 'Processes' do
             },
             'type' => 'web',
             'command' => '[PRIVATE DATA HIDDEN IN LISTS]',
+            'user' => 'vcap',
             'instances' => 2,
             'memory_in_mb' => 1024,
             'disk_in_mb' => 1024,
@@ -155,6 +156,7 @@ RSpec.describe 'Processes' do
             },
             'type' => 'worker',
             'command' => '[PRIVATE DATA HIDDEN IN LISTS]',
+            'user' => 'vcap',
             'instances' => 1,
             'memory_in_mb' => 100,
             'disk_in_mb' => 200,
@@ -421,6 +423,7 @@ RSpec.describe 'Processes' do
           'revision' => { 'data' => { 'guid' => revision.guid } }
         },
         'command' => 'rackup',
+        'user' => 'vcap',
         'instances' => 2,
         'memory_in_mb' => 1024,
         'disk_in_mb' => 1024,
@@ -704,6 +707,7 @@ RSpec.describe 'Processes' do
         },
         'type' => 'web',
         'command' => 'new command',
+        'user' => 'vcap',
         'instances' => 2,
         'memory_in_mb' => 1024,
         'disk_in_mb' => 1024,
@@ -865,6 +869,7 @@ RSpec.describe 'Processes' do
           'revision' => nil
         },
         'command' => 'rackup',
+        'user' => 'vcap',
         'instances' => 5,
         'memory_in_mb' => 10,
         'disk_in_mb' => 20,
@@ -1230,6 +1235,7 @@ RSpec.describe 'Processes' do
             },
             'type' => 'web',
             'command' => '[PRIVATE DATA HIDDEN IN LISTS]',
+            'user' => 'vcap',
             'instances' => 2,
             'memory_in_mb' => 1024,
             'disk_in_mb' => 1024,
@@ -1273,6 +1279,7 @@ RSpec.describe 'Processes' do
             },
             'type' => 'worker',
             'command' => '[PRIVATE DATA HIDDEN IN LISTS]',
+            'user' => 'vcap',
             'instances' => 1,
             'memory_in_mb' => 100,
             'disk_in_mb' => 200,
@@ -1401,6 +1408,7 @@ RSpec.describe 'Processes' do
         },
         'type' => 'web',
         'command' => 'rackup',
+        'user' => 'vcap',
         'instances' => 2,
         'memory_in_mb' => 1024,
         'disk_in_mb' => 1024,
@@ -1495,6 +1503,7 @@ RSpec.describe 'Processes' do
 
       update_request = {
         command: 'new command',
+        user: 'containeruser',
         health_check: {
           type: 'http',
           data: {
@@ -1523,6 +1532,7 @@ RSpec.describe 'Processes' do
         },
         'type' => 'web',
         'command' => 'new command',
+        'user' => 'containeruser',
         'instances' => 2,
         'memory_in_mb' => 1024,
         'disk_in_mb' => 1024,
@@ -1570,6 +1580,7 @@ RSpec.describe 'Processes' do
 
       process.reload
       expect(process.command).to eq('new command')
+      expect(process.user).to eq('containeruser')
       expect(process.health_check_type).to eq('http')
       expect(process.health_check_timeout).to eq(20)
       expect(process.health_check_http_endpoint).to eq('/healthcheck')
@@ -1591,6 +1602,7 @@ RSpec.describe 'Processes' do
                                      'process_type' => 'web',
                                      'request' => {
                                        'command' => '[PRIVATE DATA HIDDEN]',
+                                       'user' => 'containeruser',
                                        'health_check' => {
                                          'type' => 'http',
                                          'data' => {
@@ -1652,6 +1664,7 @@ RSpec.describe 'Processes' do
           'revision' => nil
         },
         'command' => 'rackup',
+        'user' => 'vcap',
         'instances' => 5,
         'memory_in_mb' => 10,
         'disk_in_mb' => 20,

@@ -13,7 +13,7 @@ require 'cloud_controller/integer_array_serializer'
 require_relative 'buildpack'
 
 module VCAP::CloudController
-  class ProcessModel < Sequel::Model(:processes)
+  class ProcessModel < Sequel::Model(:processes) # rubocop:disable Metrics/ClassLength
     include Serializer
 
     plugin :serialization
@@ -34,7 +34,8 @@ module VCAP::CloudController
     NO_APP_PORT_SPECIFIED = -1
     DEFAULT_HTTP_PORT     = 8080
     DEFAULT_PORTS         = [DEFAULT_HTTP_PORT].freeze
-    UNLIMITED_LOG_RATE    = -1
+    DEFAULT_USER = 'vcap'.freeze
+    UNLIMITED_LOG_RATE = -1
 
     many_to_one :app, class: 'VCAP::CloudController::AppModel', key: :app_guid, primary_key: :guid, without_guid_generation: true
     many_to_one :revision, class: 'VCAP::CloudController::RevisionModel', key: :revision_guid, primary_key: :guid, without_guid_generation: true
@@ -267,7 +268,8 @@ module VCAP::CloudController
         ReadinessHealthCheckPolicy.new(self, readiness_health_check_invocation_timeout, readiness_health_check_type, readiness_health_check_http_endpoint,
                                        readiness_health_check_interval),
         DockerPolicy.new(self),
-        PortsPolicy.new(self)
+        PortsPolicy.new(self),
+        ProcessUserPolicy.new(self, permitted_users)
       ]
     end
 
@@ -391,6 +393,12 @@ module VCAP::CloudController
       specified_commands[type] || revision.droplet&.process_start_command(type) || ''
     end
 
+    def run_action_user
+      return user if user.present?
+
+      docker? ? docker_run_action_user : DEFAULT_USER
+    end
+
     def specified_or_detected_command
       command.presence || detected_start_command
     end
@@ -446,14 +454,14 @@ module VCAP::CloudController
 
     delegate :cnb?, to: :app
 
+    delegate :windows_gmsa_credential_refs, to: :app
+
     def database_uri
       service_binding_uris = service_bindings.map do |binding|
         binding.credentials['uri'] if binding.credentials.present?
       end.compact
       DatabaseUriGenerator.new(service_binding_uris).database_uri
     end
-
-    delegate :windows_gmsa_credential_refs, to: :app
 
     def max_app_disk_in_mb
       VCAP::CloudController::Config.config.get(:maximum_app_disk_in_mb)
@@ -563,6 +571,18 @@ module VCAP::CloudController
     end
 
     private
+
+    def permitted_users
+      Set.new([DEFAULT_USER]) + Config.config.get(:additional_allowed_process_users)
+    end
+
+    def docker_run_action_user
+      return DEFAULT_USER unless docker?
+
+      docker_exec_metadata = Oj.load(execution_metadata)
+      container_user = docker_exec_metadata['user']
+      container_user.presence || 'root'
+    end
 
     def non_unique_process_types
       return [] unless app

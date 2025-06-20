@@ -11,6 +11,7 @@ module VCAP::CloudController
             docker_image: 'user/repo:tag',
             execution_metadata: execution_metadata,
             start_command: 'dd if=/dev/random of=/dev/null',
+            action_user: 'my-action-user',
             additional_container_env_vars: additional_env_vars
           }
         end
@@ -170,16 +171,8 @@ module VCAP::CloudController
         end
 
         describe '#action_user' do
-          it 'returns "root"' do
-            expect(builder.action_user).to eq('root')
-          end
-
-          context 'when the execution metadata has a specified user' do
-            let(:execution_metadata) { { user: 'foobar' }.to_json }
-
-            it 'uses the user from the execution metadata' do
-              expect(builder.action_user).to eq('foobar')
-            end
+          it 'returns the passed in action user' do
+            expect(builder.action_user).to eq('my-action-user')
           end
         end
 
