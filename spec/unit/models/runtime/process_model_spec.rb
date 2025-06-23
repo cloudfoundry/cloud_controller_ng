@@ -708,6 +708,30 @@ module VCAP::CloudController
             expect(process.run_action_user).to eq('root')
           end
         end
+
+        context 'when the droplet execution metadata is an empty string' do
+          let(:droplet_execution_metadata) { '' }
+
+          it 'defaults the user to root' do
+            expect(process.run_action_user).to eq('root')
+          end
+        end
+
+        context 'when the droplet execution metadata is nil' do
+          let(:droplet_execution_metadata) { nil }
+
+          it 'defaults the user to root' do
+            expect(process.run_action_user).to eq('root')
+          end
+        end
+
+        context 'when the droplet execution metadata has invalid json' do
+          let(:droplet_execution_metadata) { '{' }
+
+          it 'defaults the user to root' do
+            expect(process.run_action_user).to eq('root')
+          end
+        end
       end
 
       context 'when the process DOES NOT belong to a Docker lifecycle app' do
