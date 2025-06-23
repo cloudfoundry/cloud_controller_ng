@@ -579,8 +579,16 @@ module VCAP::CloudController
     def docker_run_action_user
       return DEFAULT_USER unless docker?
 
-      docker_exec_metadata = Oj.load(execution_metadata)
-      container_user = docker_exec_metadata['user']
+      container_user = ''
+      if execution_metadata.present?
+        begin
+          docker_exec_metadata = Oj.load(execution_metadata)
+          container_user = docker_exec_metadata['user']
+        rescue EncodingError
+          container_user = ''
+        end
+      end
+
       container_user.presence || 'root'
     end
 
