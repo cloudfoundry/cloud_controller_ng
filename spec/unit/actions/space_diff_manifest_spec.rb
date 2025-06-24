@@ -84,14 +84,16 @@ module VCAP::CloudController
       end
 
       context 'processes' do
-        context 'when processes are added' do
+        context 'when processes are updated' do
           before do
             default_manifest['applications'][0]['processes'][0]['memory'] = '2048M'
+            default_manifest['applications'][0]['processes'][0]['user'] = 'ContainerUser'
           end
 
           it 'returns the correct diff' do
             expect(subject).to contain_exactly(
-              { 'op' => 'replace', 'path' => '/applications/0/processes/0/memory', 'was' => "#{process1.memory}M", 'value' => '2048M' }
+              { 'op' => 'replace', 'path' => '/applications/0/processes/0/memory', 'was' => "#{process1.memory}M", 'value' => '2048M' },
+              { 'op' => 'add', 'path' => '/applications/0/processes/0/user', 'value' => 'ContainerUser' }
             )
           end
         end

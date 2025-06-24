@@ -67,6 +67,60 @@ module VCAP::CloudController::Presenters::V3::AppManifestPresenters
                              'timeout' => 30
                            })
       end
+
+      context 'nullable fields' do
+        context 'when command is present' do
+          let(:process) do
+            VCAP::CloudController::ProcessModel.make(
+              command: './start-command'
+            )
+          end
+
+          it 'includes command in the hash' do
+            hash = subject.process_hash(process)
+            expect(hash).to include('command' => './start-command')
+          end
+        end
+
+        context 'when command is not present' do
+          let(:process) do
+            VCAP::CloudController::ProcessModel.make(
+              command: nil
+            )
+          end
+
+          it 'does not include command in the hash' do
+            hash = subject.process_hash(process)
+            expect(hash).not_to include('command')
+          end
+        end
+
+        context 'when user is present' do
+          let(:process) do
+            VCAP::CloudController::ProcessModel.make(
+              user: 'ContainerUser'
+            )
+          end
+
+          it 'includes user in the hash' do
+            hash = subject.process_hash(process)
+            expect(hash).to include('user' => 'ContainerUser')
+          end
+        end
+
+        context 'when user is not present' do
+          let(:process) do
+            VCAP::CloudController::ProcessModel.make(
+              user: nil
+            )
+          end
+
+          it 'does not include user in the hash' do
+            hash = subject.process_hash(process)
+            expect(hash).not_to include('user')
+          end
+        end
+      end
     end
 
     describe '#add_units_log_rate_limit' do

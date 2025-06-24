@@ -98,6 +98,7 @@ module VCAP::CloudController
             hash.slice(
               'type',
               'command',
+              'user',
               'disk_quota',
               'log-rate-limit-per-second',
               'health-check-http-endpoint',
