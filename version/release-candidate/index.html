@@ -14775,6 +14775,7 @@ Processes for an app are defined by the buildpack used to stage the app and can 
   </span><span class="nl">"guid"</span><span class="p">:</span><span class="w"> </span><span class="s2">"6a901b7c-9417-4dc1-8189-d3234aa0ab82"</span><span class="p">,</span><span class="w">
   </span><span class="nl">"type"</span><span class="p">:</span><span class="w"> </span><span class="s2">"web"</span><span class="p">,</span><span class="w">
   </span><span class="nl">"command"</span><span class="p">:</span><span class="w"> </span><span class="s2">"rackup"</span><span class="p">,</span><span class="w">
+  </span><span class="nl">"user"</span><span class="p">:</span><span class="w"> </span><span class="s2">"vcap"</span><span class="p">,</span><span class="w">
   </span><span class="nl">"instances"</span><span class="p">:</span><span class="w"> </span><span class="mi">5</span><span class="p">,</span><span class="w">
   </span><span class="nl">"memory_in_mb"</span><span class="p">:</span><span class="w"> </span><span class="mi">256</span><span class="p">,</span><span class="w">
   </span><span class="nl">"disk_in_mb"</span><span class="p">:</span><span class="w"> </span><span class="mi">1024</span><span class="p">,</span><span class="w">
@@ -14867,6 +14868,11 @@ Processes for an app are defined by the buildpack used to stage the app and can 
 <td><strong>command</strong></td>
 <td><em>string</em> or <em>null</em></td>
 <td>The command used to start the process; use <em>null</em> to revert to the buildpack-detected or procfile-provided start command</td>
+</tr>
+<tr>
+<td><strong>user</strong></td>
+<td><em>string</em> or <em>null</em></td>
+<td>The user used to run the process; use <em>null</em> to revert to the docker-detected or default &lsquo;vcap&rsquo; user</td>
 </tr>
 <tr>
 <td><strong>instances</strong></td>
@@ -15166,6 +15172,7 @@ Processes for an app are defined by the buildpack used to stage the app and can 
   </span><span class="nl">"guid"</span><span class="p">:</span><span class="w"> </span><span class="s2">"6a901b7c-9417-4dc1-8189-d3234aa0ab82"</span><span class="p">,</span><span class="w">
   </span><span class="nl">"type"</span><span class="p">:</span><span class="w"> </span><span class="s2">"web"</span><span class="p">,</span><span class="w">
   </span><span class="nl">"command"</span><span class="p">:</span><span class="w"> </span><span class="s2">"rackup"</span><span class="p">,</span><span class="w">
+  </span><span class="nl">"user"</span><span class="p">:</span><span class="w"> </span><span class="s2">"vcap"</span><span class="p">,</span><span class="w">
   </span><span class="nl">"instances"</span><span class="p">:</span><span class="w"> </span><span class="mi">5</span><span class="p">,</span><span class="w">
   </span><span class="nl">"memory_in_mb"</span><span class="p">:</span><span class="w"> </span><span class="mi">256</span><span class="p">,</span><span class="w">
   </span><span class="nl">"disk_in_mb"</span><span class="p">:</span><span class="w"> </span><span class="mi">1024</span><span class="p">,</span><span class="w">
@@ -15414,6 +15421,7 @@ Processes for an app are defined by the buildpack used to stage the app and can 
       </span><span class="nl">"guid"</span><span class="p">:</span><span class="w"> </span><span class="s2">"6a901b7c-9417-4dc1-8189-d3234aa0ab82"</span><span class="p">,</span><span class="w">
       </span><span class="nl">"type"</span><span class="p">:</span><span class="w"> </span><span class="s2">"web"</span><span class="p">,</span><span class="w">
       </span><span class="nl">"command"</span><span class="p">:</span><span class="w"> </span><span class="s2">"[PRIVATE DATA HIDDEN IN LISTS]"</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"user"</span><span class="p">:</span><span class="w"> </span><span class="s2">"vcap"</span><span class="p">,</span><span class="w">
       </span><span class="nl">"instances"</span><span class="p">:</span><span class="w"> </span><span class="mi">5</span><span class="p">,</span><span class="w">
       </span><span class="nl">"memory_in_mb"</span><span class="p">:</span><span class="w"> </span><span class="mi">256</span><span class="p">,</span><span class="w">
       </span><span class="nl">"disk_in_mb"</span><span class="p">:</span><span class="w"> </span><span class="mi">1024</span><span class="p">,</span><span class="w">
@@ -15475,6 +15483,7 @@ Processes for an app are defined by the buildpack used to stage the app and can 
       </span><span class="nl">"guid"</span><span class="p">:</span><span class="w"> </span><span class="s2">"3fccacd9-4b02-4b96-8d02-8e865865e9eb"</span><span class="p">,</span><span class="w">
       </span><span class="nl">"type"</span><span class="p">:</span><span class="w"> </span><span class="s2">"worker"</span><span class="p">,</span><span class="w">
       </span><span class="nl">"command"</span><span class="p">:</span><span class="w"> </span><span class="s2">"[PRIVATE DATA HIDDEN IN LISTS]"</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"user"</span><span class="p">:</span><span class="w"> </span><span class="s2">"vcap"</span><span class="p">,</span><span class="w">
       </span><span class="nl">"instances"</span><span class="p">:</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span><span class="w">
       </span><span class="nl">"memory_in_mb"</span><span class="p">:</span><span class="w"> </span><span class="mi">256</span><span class="p">,</span><span class="w">
       </span><span class="nl">"disk_in_mb"</span><span class="p">:</span><span class="w"> </span><span class="mi">1024</span><span class="p">,</span><span class="w">
@@ -15644,6 +15653,7 @@ Processes for an app are defined by the buildpack used to stage the app and can 
       </span><span class="nl">"guid"</span><span class="p">:</span><span class="w"> </span><span class="s2">"6a901b7c-9417-4dc1-8189-d3234aa0ab82"</span><span class="p">,</span><span class="w">
       </span><span class="nl">"type"</span><span class="p">:</span><span class="w"> </span><span class="s2">"web"</span><span class="p">,</span><span class="w">
       </span><span class="nl">"command"</span><span class="p">:</span><span class="w"> </span><span class="s2">"[PRIVATE DATA HIDDEN IN LISTS]"</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"user"</span><span class="p">:</span><span class="w"> </span><span class="s2">"vcap"</span><span class="p">,</span><span class="w">
       </span><span class="nl">"instances"</span><span class="p">:</span><span class="w"> </span><span class="mi">5</span><span class="p">,</span><span class="w">
       </span><span class="nl">"memory_in_mb"</span><span class="p">:</span><span class="w"> </span><span class="mi">256</span><span class="p">,</span><span class="w">
       </span><span class="nl">"disk_in_mb"</span><span class="p">:</span><span class="w"> </span><span class="mi">1024</span><span class="p">,</span><span class="w">
@@ -15705,6 +15715,7 @@ Processes for an app are defined by the buildpack used to stage the app and can 
       </span><span class="nl">"guid"</span><span class="p">:</span><span class="w"> </span><span class="s2">"3fccacd9-4b02-4b96-8d02-8e865865e9eb"</span><span class="p">,</span><span class="w">
       </span><span class="nl">"type"</span><span class="p">:</span><span class="w"> </span><span class="s2">"worker"</span><span class="p">,</span><span class="w">
       </span><span class="nl">"command"</span><span class="p">:</span><span class="w"> </span><span class="s2">"[PRIVATE DATA HIDDEN IN LISTS]"</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"user"</span><span class="p">:</span><span class="w"> </span><span class="s2">"vcap"</span><span class="p">,</span><span class="w">
       </span><span class="nl">"instances"</span><span class="p">:</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span><span class="w">
       </span><span class="nl">"memory_in_mb"</span><span class="p">:</span><span class="w"> </span><span class="mi">256</span><span class="p">,</span><span class="w">
       </span><span class="nl">"disk_in_mb"</span><span class="p">:</span><span class="w"> </span><span class="mi">1024</span><span class="p">,</span><span class="w">
@@ -15876,6 +15887,7 @@ Processes for an app are defined by the buildpack used to stage the app and can 
   </span><span class="nl">"guid"</span><span class="p">:</span><span class="w"> </span><span class="s2">"6a901b7c-9417-4dc1-8189-d3234aa0ab82"</span><span class="p">,</span><span class="w">
   </span><span class="nl">"type"</span><span class="p">:</span><span class="w"> </span><span class="s2">"web"</span><span class="p">,</span><span class="w">
   </span><span class="nl">"command"</span><span class="p">:</span><span class="w"> </span><span class="s2">"rackup"</span><span class="p">,</span><span class="w">
+  </span><span class="nl">"user"</span><span class="p">:</span><span class="w"> </span><span class="s2">"vcap"</span><span class="p">,</span><span class="w">
   </span><span class="nl">"instances"</span><span class="p">:</span><span class="w"> </span><span class="mi">5</span><span class="p">,</span><span class="w">
   </span><span class="nl">"memory_in_mb"</span><span class="p">:</span><span class="w"> </span><span class="mi">256</span><span class="p">,</span><span class="w">
   </span><span class="nl">"disk_in_mb"</span><span class="p">:</span><span class="w"> </span><span class="mi">1024</span><span class="p">,</span><span class="w">
@@ -16009,6 +16021,7 @@ Processes for an app are defined by the buildpack used to stage the app and can 
   </span><span class="nl">"guid"</span><span class="p">:</span><span class="w"> </span><span class="s2">"6a901b7c-9417-4dc1-8189-d3234aa0ab82"</span><span class="p">,</span><span class="w">
   </span><span class="nl">"type"</span><span class="p">:</span><span class="w"> </span><span class="s2">"web"</span><span class="p">,</span><span class="w">
   </span><span class="nl">"command"</span><span class="p">:</span><span class="w"> </span><span class="s2">"rackup"</span><span class="p">,</span><span class="w">
+  </span><span class="nl">"user"</span><span class="p">:</span><span class="w"> </span><span class="s2">"vcap"</span><span class="p">,</span><span class="w">
   </span><span class="nl">"instances"</span><span class="p">:</span><span class="w"> </span><span class="mi">5</span><span class="p">,</span><span class="w">
   </span><span class="nl">"memory_in_mb"</span><span class="p">:</span><span class="w"> </span><span class="mi">256</span><span class="p">,</span><span class="w">
   </span><span class="nl">"disk_in_mb"</span><span class="p">:</span><span class="w"> </span><span class="mi">1024</span><span class="p">,</span><span class="w">
