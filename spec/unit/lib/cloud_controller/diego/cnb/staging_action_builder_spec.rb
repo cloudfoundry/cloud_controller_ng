@@ -123,16 +123,16 @@ module VCAP::CloudController
             ::Diego::Bbs::Models::RunAction.new(
               path: '/tmp/lifecycle/builder',
               user: 'vcap',
-              args: ['--cache-dir', '/tmp/cache', '--cache-output', '/tmp/cache-output.tgz', '--buildpack', 'gcr.io/paketo-buildpacks/node-start', '--buildpack',
-                     'gcr.io/paketo-buildpacks/node-engine', '--pass-env-var', 'FOO', '--pass-env-var', 'BAR'],
+              args: ['--cache-dir', '/tmp/cache', '--cache-output', '/tmp/cache-output.tgz', '--buildpack', 'docker.io/paketobuildpacks/node-start', '--buildpack',
+                     'docker.io/paketobuildpacks/node-engine', '--pass-env-var', 'FOO', '--pass-env-var', 'BAR'],
               env: bbs_env
             )
           end
 
           let(:buildpacks) do
             [
-              { name: 'custom', url: 'gcr.io/paketo-buildpacks/node-start', skip_detect: false },
-              { name: 'custom', url: 'gcr.io/paketo-buildpacks/node-engine', skip_detect: false }
+              { name: 'custom', url: 'docker.io/paketobuildpacks/node-start', skip_detect: false },
+              { name: 'custom', url: 'docker.io/paketobuildpacks/node-engine', skip_detect: false }
             ]
           end
 

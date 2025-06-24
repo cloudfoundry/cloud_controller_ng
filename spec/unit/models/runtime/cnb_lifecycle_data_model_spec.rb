@@ -96,7 +96,7 @@ module VCAP::CloudController
       context 'when using a custom buildpack' do
         context 'when using multiple buildpacks' do
           subject(:lifecycle_data) do
-            CNBLifecycleDataModel.new(buildpacks: ['https://github.com/buildpacks/the-best', 'gcr.io/paketo-buildpacks/nodejs'])
+            CNBLifecycleDataModel.new(buildpacks: ['https://github.com/buildpacks/the-best', 'docker.io/paketobuildpacks/nodejs'])
           end
 
           it 'returns true' do
@@ -125,7 +125,7 @@ module VCAP::CloudController
         { buildpacks: buildpacks || [], stack: 'cflinuxfs4' }
       end
       let(:buildpacks) { [buildpack] }
-      let(:buildpack) { 'http://gcr.io/paketo-buildpacks/nodejs' }
+      let(:buildpack) { 'http://docker.io/paketobuildpacks/nodejs' }
       let(:stack) { 'cflinuxfs4' }
 
       before do

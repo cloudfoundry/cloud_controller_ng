@@ -11,7 +11,7 @@ module VCAP::CloudController
           data.build_artifacts_cache_download_uri = 'build_artifact_download'
           data.build_artifacts_cache_upload_uri   = 'build_artifact_upload'
           data.droplet_upload_uri                 = 'droplet_upload'
-          data.buildpacks                         = ['docker://gcr.io/paketo-buildpacks/nodejs']
+          data.buildpacks                         = ['docker://docker.io/paketobuildpacks/nodejs']
           data.stack                              = 'stack'
           data.buildpack_cache_checksum           = 'bp-cache-checksum'
           data.app_bits_checksum                  = { type: 'sha256', value: 'package-checksum' }
@@ -26,7 +26,7 @@ module VCAP::CloudController
             build_artifacts_cache_download_uri: 'build_artifact_download',
             build_artifacts_cache_upload_uri: 'build_artifact_upload',
             droplet_upload_uri: 'droplet_upload',
-            buildpacks: ['docker://gcr.io/paketo-buildpacks/nodejs'],
+            buildpacks: ['docker://docker.io/paketobuildpacks/nodejs'],
             stack: 'stack',
             buildpack_cache_checksum: 'bp-cache-checksum',
             app_bits_checksum: { type: 'sha256', value: 'package-checksum' },
