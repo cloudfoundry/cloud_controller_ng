@@ -15127,7 +15127,7 @@ Processes for an app are defined by the buildpack used to stage the app and can 
 <tr>
 <td><strong>instance_ports</strong></td>
 <td><em>object</em></td>
-<td>JSON array of port mappings between the network-exposed port used to communicate with the app (<code class="prettyprint">external</code>) and port opened to the running process that it can listen on (<code class="prettyprint">internal</code>)</td>
+<td>JSON array of port mappings between the network-exposed port used to communicate with the app (<code class="prettyprint">external</code>) and port opened to the running process that it can listen on (<code class="prettyprint">internal</code>). Clients shall interprete <code class="prettyprint">0</code> and <code class="prettyprint">null</code> as non-existing port.</td>
 </tr>
 <tr>
 <td><strong>uptime</strong></td>
