@@ -125,6 +125,23 @@ module CloudController
           expect(DavClient).to have_received(:new)
         end
       end
+
+      context 'when storage-cli is requested' do
+        let(:blobstore_type) { 'storage-cli' }
+        let(:directory_key) { 'some-bucket' }
+        let(:root_dir) { 'some-root-dir' }
+        let(:storage_cli_client_mock) { class_double(CloudController::Blobstore::StorageCliClient) }
+
+        before do
+          options.merge!(fog_connection: {}, minimum_size: 100, maximum_size: 1000)
+        end
+
+        it 'provides a storage-cli client' do
+          allow(StorageCliClient).to receive(:build).and_return(storage_cli_client_mock)
+          ClientProvider.provide(options:, directory_key:, root_dir:)
+          expect(StorageCliClient).to have_received(:build).with(fog_connection: {}, directory_key: directory_key, root_dir: root_dir, min_size: 100, max_size: 1000, fork: false)
+        end
+      end
     end
   end
 end
