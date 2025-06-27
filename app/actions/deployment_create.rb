@@ -103,7 +103,7 @@ module VCAP::CloudController
 
         error = DeploymentCreate::Error.new(error_message)    
         error.set_backtrace(e.backtrace)
-        error
+        raise error
       end
 
       def create_deployment_process(app, deployment_guid, revision, process_instances)
