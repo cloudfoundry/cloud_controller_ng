@@ -87,8 +87,8 @@ module VCAP::CloudController
       end
 
       def handle_deployment_create_error(e, app)
-        space_quota_errors = %w(space_quota_exceeded space_app_instance_limit_exceeded)
-        org_quota_errors = %w(quota_exceeded app_instance_limit_exceeded)
+        space_quota_errors = %w[space_quota_exceeded space_app_instance_limit_exceeded]
+        org_quota_errors = %w[quota_exceeded app_instance_limit_exceeded]
         space_error_msg = " for space #{app.space.name}. This space's quota may not be large enough to support rolling deployments or your configured max-in-flight."
         org_error_msg_1 = " for organization #{app.organization.name}. "
         org_error_msg_2 = "This organization's quota may not be large enough to support rolling deployments or your configured max-in-flight."
@@ -101,7 +101,7 @@ module VCAP::CloudController
           error_message += org_error_msg
         end
 
-        error = DeploymentCreate::Error.new(error_message)    
+        error = DeploymentCreate::Error.new(error_message)
         error.set_backtrace(e.backtrace)
         raise error
       end
