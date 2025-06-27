@@ -1,10 +1,10 @@
 require 'cloud_controller/blobstore/client'
 require 'cloud_controller/blobstore/retryable_client'
 require 'cloud_controller/blobstore/fog/fog_client'
-require 'cloud_controller/blobstore/fog/error_handling_client'
+require 'cloud_controller/blobstore/error_handling_client'
 require 'cloud_controller/blobstore/webdav/dav_client'
 require 'cloud_controller/blobstore/safe_delete_client'
-require 'cloud_controller/blobstore/cli/azure_cli_client'
+require 'cloud_controller/blobstore/storage_cli/storage_cli_client'
 require 'google/apis/errors'
 
 module CloudController
@@ -13,8 +13,11 @@ module CloudController
       def self.provide(options:, directory_key:, root_dir: nil, resource_type: nil)
         if options[:blobstore_type].blank? || (options[:blobstore_type] == 'fog')
           provide_fog(options, directory_key, root_dir)
-        elsif options[:blobstore_type] == 'cli'
-          provide_azure_cli(options, directory_key, root_dir)
+        elsif options[:blobstore_type] == 'storage-cli'
+          provide_storage_cli(options, directory_key, root_dir)
+        elsif options[:blobstore_type] == 'storage-cli-fork'
+          # Just for testing not yet merged features in bosh-azure-cli
+          provide_storage_cli(options, directory_key, root_dir, fork: true)
         else
           provide_webdav(options, directory_key, root_dir)
         end
@@ -69,18 +72,17 @@ module CloudController
           Client.new(SafeDeleteClient.new(retryable_client, root_dir))
         end
 
-        def provide_azure_cli(options, directory_key, root_dir)
+        def provide_storage_cli(options, directory_key, root_dir, fork: false)
+          client = StorageCliClient.build(fog_connection: options.fetch(:fog_connection),
+                                          directory_key: directory_key,
+                                          root_dir: root_dir,
+                                          min_size: options[:minimum_size],
+                                          max_size: options[:maximum_size],
+                                          fork: fork)
 
-          client = AzureCliClient.new(fog_connection: options.fetch(:fog_connection),
-                                      directory_key: directory_key,
-                                      root_dir: root_dir,
-                                      min_size: options[:minimum_size],
-                                      max_size: options[:maximum_size],
-                                      )
-
-          logger = Steno.logger('cc.blobstore.azure_cli')
+          logger = Steno.logger('cc.blobstore.storage_cli_client')
           errors = [StandardError]
-          retryable_client = RetryableClient.new(client: client, errors: errors, logger: logger)
+          retryable_client = RetryableClient.new(client:, errors:, logger:)
 
           Client.new(SafeDeleteClient.new(retryable_client, root_dir))
         end
