@@ -13,8 +13,8 @@ module CloudController
       def self.provide(options:, directory_key:, root_dir: nil, resource_type: nil)
         if options[:blobstore_type].blank? || (options[:blobstore_type] == 'fog')
           provide_fog(options, directory_key, root_dir)
-        elsif options[:blobstore_type] == 'cli'
-          provide_azure_cli(options, directory_key, root_dir)
+        elsif options[:blobstore_type] == 'storage-cli'
+          provide_storage_cli(options, directory_key, root_dir)
         else
           provide_webdav(options, directory_key, root_dir)
         end
@@ -69,18 +69,16 @@ module CloudController
           Client.new(SafeDeleteClient.new(retryable_client, root_dir))
         end
 
-        def provide_azure_cli(options, directory_key, root_dir)
+        def provide_storage_cli(options, directory_key, root_dir)
+          client = StorageCliClient.build(fog_connection: options.fetch(:fog_connection),
+                                          directory_key: directory_key,
+                                          root_dir: root_dir,
+                                          min_size: options[:minimum_size],
+                                          max_size: options[:maximum_size])
 
-          client = AzureCliClient.new(fog_connection: options.fetch(:fog_connection),
-                                      directory_key: directory_key,
-                                      root_dir: root_dir,
-                                      min_size: options[:minimum_size],
-                                      max_size: options[:maximum_size],
-                                      )
-
-          logger = Steno.logger('cc.blobstore.azure_cli')
+          logger = Steno.logger('cc.blobstore.storage_cli_client')
           errors = [StandardError]
-          retryable_client = RetryableClient.new(client: client, errors: errors, logger: logger)
+          retryable_client = RetryableClient.new(client:, errors:, logger:)
 
           Client.new(SafeDeleteClient.new(retryable_client, root_dir))
         end
