@@ -83,10 +83,10 @@ module VCAP::CloudController
 
         deployment
       rescue RevisionResolver::NoUpdateRollback, Sequel::ValidationFailed, AppStart::InvalidApp => e
-        raise handle_deployment_create_error(e, app)
+        raise enhanced_deployment_create_error(e, app)
       end
 
-      def handle_deployment_create_error(e, app)
+      def enhanced_deployment_create_error(e, app)
         space_quota_errors = %w[space_quota_exceeded space_app_instance_limit_exceeded]
         org_quota_errors = %w[quota_exceeded app_instance_limit_exceeded]
         space_error_msg = " for space #{app.space.name}. This space's quota may not be large enough to support rolling deployments or your configured max-in-flight."
@@ -103,7 +103,7 @@ module VCAP::CloudController
 
         error = DeploymentCreate::Error.new(error_message)
         error.set_backtrace(e.backtrace)
-        raise error
+        error
       end
 
       def create_deployment_process(app, deployment_guid, revision, process_instances)
