@@ -54,7 +54,10 @@ module VCAP::CloudController::Metrics
       { type: :gauge, name: :cc_puma_worker_count, docstring: 'Puma worker count', aggregation: :most_recent },
       { type: :gauge, name: :cc_puma_worker_started_at, docstring: 'Puma worker: started_at', labels: %i[index pid], aggregation: :most_recent },
       { type: :gauge, name: :cc_puma_worker_thread_count, docstring: 'Puma worker: thread count', labels: %i[index pid], aggregation: :most_recent },
-      { type: :gauge, name: :cc_puma_worker_backlog, docstring: 'Puma worker: backlog', labels: %i[index pid], aggregation: :most_recent }
+      { type: :gauge, name: :cc_puma_worker_backlog, docstring: 'Puma worker: backlog', labels: %i[index pid], aggregation: :most_recent },
+      { type: :gauge, name: :cc_puma_worker_pool_capacity, docstring: 'Puma worker: pool capacity', labels: %i[index pid], aggregation: :most_recent },
+      { type: :gauge, name: :cc_puma_worker_requests_count, docstring: 'Puma worker: requests count', labels: %i[index pid], aggregation: :most_recent },
+      { type: :gauge, name: :cc_puma_worker_busy_threads, docstring: 'Puma worker: busy threads', labels: %i[index pid], aggregation: :most_recent }
     ].freeze
 
     DB_CONNECTION_POOL_METRICS = [

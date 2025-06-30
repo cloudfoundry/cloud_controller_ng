@@ -165,7 +165,10 @@ module VCAP::CloudController::Metrics
           index: worker_status[:index],
           pid: worker_status[:pid],
           thread_count: worker_status[:last_status][:running],
-          backlog: worker_status[:last_status][:backlog]
+          backlog: worker_status[:last_status][:backlog],
+          pool_capacity: worker_status[:last_status][:pool_capacity],
+          busy_threads: worker_status[:last_status][:busy_threads],
+          requests_count: worker_status[:last_status][:requests_count]
         }
       end
       @prometheus_updater.update_webserver_stats_puma(worker_count, worker_stats)

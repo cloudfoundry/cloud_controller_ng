@@ -206,8 +206,8 @@ module VCAP::CloudController::Metrics
       it 'contains Puma stats' do
         worker_count = 2
         worker_stats = [
-          { started_at: 1_701_263_705, index: 0, pid: 123, thread_count: 1, backlog: 0 },
-          { started_at: 1_701_263_710, index: 1, pid: 234, thread_count: 2, backlog: 1 }
+          { started_at: 1_701_263_705, index: 0, pid: 123, thread_count: 1, backlog: 0, busy_threads: 0, pool_capacity: 1, requests_count: 9 },
+          { started_at: 1_701_263_710, index: 1, pid: 234, thread_count: 2, backlog: 1, busy_threads: 1, pool_capacity: 2, requests_count: 10 }
         ]
 
         updater.update_webserver_stats_puma(worker_count, worker_stats)
@@ -224,6 +224,18 @@ module VCAP::CloudController::Metrics
         expect(metric.get(labels: { index: 1, pid: 234 })).to eq(2)
 
         metric = prom_client.metrics.find { |m| m.name == :cc_puma_worker_backlog }
+        expect(metric.get(labels: { index: 0, pid: 123 })).to eq(0)
+        expect(metric.get(labels: { index: 1, pid: 234 })).to eq(1)
+
+        metric = prom_client.metrics.find { |m| m.name == :cc_puma_worker_pool_capacity }
+        expect(metric.get(labels: { index: 0, pid: 123 })).to eq(1)
+        expect(metric.get(labels: { index: 1, pid: 234 })).to eq(2)
+
+        metric = prom_client.metrics.find { |m| m.name == :cc_puma_worker_requests_count }
+        expect(metric.get(labels: { index: 0, pid: 123 })).to eq(9)
+        expect(metric.get(labels: { index: 1, pid: 234 })).to eq(10)
+
+        metric = prom_client.metrics.find { |m| m.name == :cc_puma_worker_busy_threads }
         expect(metric.get(labels: { index: 0, pid: 123 })).to eq(0)
         expect(metric.get(labels: { index: 1, pid: 234 })).to eq(1)
       end
