@@ -44,7 +44,23 @@ module VCAP::CloudController
       create_stop_event unless terminal_state?
     end
 
+    def run_action_user
+      return user if user.present?
+
+      docker? ? docker_run_action_user : AppModel::DEFAULT_USER
+    end
+
+    delegate :docker?, to: :droplet
+
     private
+
+    def permitted_users
+      Set.new([AppModel::DEFAULT_USER]) + Config.config.get(:additional_allowed_process_users)
+    end
+
+    def docker_run_action_user
+      droplet.docker_user.presence || AppModel::DEFAULT_USER
+    end
 
     def running_state?
       state == RUNNING_STATE
@@ -68,6 +84,7 @@ module VCAP::CloudController
       validate_org_quotas
       validate_space_quotas
 
+      ProcessUserPolicy.new(self, permitted_users).validate
       MinLogRateLimitPolicy.new(self).validate
     end
 

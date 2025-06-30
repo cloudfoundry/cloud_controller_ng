@@ -13,7 +13,7 @@ module VCAP
           end
 
           def task_action_builder(config, task)
-            TaskActionBuilder.new(config, task, task_lifecycle_data(task), 'vcap', ['app', task.command, ''], 'buildpack')
+            TaskActionBuilder.new(config, task, task_lifecycle_data(task), task.run_action_user, ['app', task.command, ''], 'buildpack')
           end
 
           def desired_lrp_builder(config, process)

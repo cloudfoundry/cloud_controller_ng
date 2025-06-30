@@ -73,6 +73,7 @@ module VCAP::CloudController
     name { Sham.name }
     space { Space.make }
     buildpack_lifecycle_data { nil.tap { |_| object.save } }
+    cnb_lifecycle_data { nil.tap { |_| object.save } }
   end
 
   BuildModel.blueprint do
@@ -209,6 +210,19 @@ module VCAP::CloudController
     app { AppModel.make }
     name { Sham.name }
     droplet { DropletModel.make(app:) }
+    command { 'bundle exec rake' }
+    state { VCAP::CloudController::TaskModel::RUNNING_STATE }
+    memory_in_mb { 256 }
+    disk_in_mb {}
+    sequence_id { Sham.sequence_id }
+    failure_reason {}
+  end
+
+  TaskModel.blueprint(:docker) do
+    guid { Sham.guid }
+    app { AppModel.make(:docker) }
+    name { Sham.name }
+    droplet { DropletModel.make(:docker, app:) }
     command { 'bundle exec rake' }
     state { VCAP::CloudController::TaskModel::RUNNING_STATE }
     memory_in_mb { 256 }

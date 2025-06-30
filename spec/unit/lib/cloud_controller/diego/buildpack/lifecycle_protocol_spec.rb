@@ -166,7 +166,7 @@ module VCAP
           end
 
           describe '#task_action_builder' do
-            let(:task) { TaskModel.make }
+            let(:task) { TaskModel.make(user: 'ContainerUser') }
             let(:config) { Config.new({ some: 'config' }) }
 
             it 'returns a TaskActionBuilder' do
@@ -181,7 +181,7 @@ module VCAP
                                                                       droplet_uri: 'droplet-download-url',
                                                                       stack: 'potato-stack'
                                                                     },
-                                                                    'vcap',
+                                                                    'ContainerUser',
                                                                     ['app', task.command, ''],
                                                                     'buildpack')
             end

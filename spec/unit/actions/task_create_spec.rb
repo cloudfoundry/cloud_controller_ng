@@ -296,6 +296,38 @@ module VCAP::CloudController
       describe 'process templates' do
         let(:process) { VCAP::CloudController::ProcessModel.make(app: app, command: 'start') }
 
+        describe 'users' do
+          context 'when there is a template and no user provided' do
+            let(:process) { VCAP::CloudController::ProcessModel.make(app: app, user: 'ContainerUser') }
+            let(:message) { TaskCreateMessage.new name: name, disk_in_mb: 2048, memory_in_mb: 1024, template: { process: { guid: process.guid } } }
+
+            it 'uses the user from the template' do
+              task = task_create_action.create(app, message, user_audit_info)
+              expect(task.user).to eq('ContainerUser')
+            end
+          end
+
+          context 'when there is a template and a user provided' do
+            let(:process) { VCAP::CloudController::ProcessModel.make(app: app, user: 'ContainerUser') }
+            let(:message) { TaskCreateMessage.new name: name, user: 'vcap', template: { process: { guid: process.guid } } }
+
+            it 'uses the user from the message' do
+              task = task_create_action.create(app, message, user_audit_info)
+              expect(task.user).to eq('vcap')
+            end
+          end
+
+          context 'when there is a template without a user and no user is provided' do
+            let(:process) { VCAP::CloudController::ProcessModel.make(app:) }
+            let(:message) { TaskCreateMessage.new name: name, template: { process: { guid: process.guid } } }
+
+            it 'uses the user from the message' do
+              task = task_create_action.create(app, message, user_audit_info)
+              expect(task.user).to be_nil
+            end
+          end
+        end
+
         describe 'commands' do
           context 'when there is a template and no command provided' do
             let(:message) { TaskCreateMessage.new name: name, disk_in_mb: 2048, memory_in_mb: 1024, template: { process: { guid: process.guid } } }

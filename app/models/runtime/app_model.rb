@@ -7,6 +7,7 @@ module VCAP::CloudController
   class AppModel < Sequel::Model(:apps)
     include Serializer
     APP_NAME_REGEX = /\A[[:alnum:][:punct:][:print:]]+\Z/
+    DEFAULT_USER = 'vcap'.freeze
 
     many_to_many :routes, join_table: :route_mappings, left_key: :app_guid, left_primary_key: :guid, right_primary_key: :guid, right_key: :route_guid
     one_to_many :route_mappings, class: 'VCAP::CloudController::RouteMappingModel', key: :app_guid, primary_key: :guid

@@ -61,6 +61,7 @@ module VCAP::CloudController::Presenters::V3
         expect(result[:guid]).to eq(task.guid)
         expect(result[:name]).to eq(task.name)
         expect(result[:command]).to eq(task.command)
+        expect(result[:user]).to eq(task.run_action_user)
         expect(result[:state]).to eq(task.state)
         expect(result[:result][:failure_reason]).to eq 'sup dawg'
         expect(result[:memory_in_mb]).to eq(task.memory_in_mb)

@@ -125,6 +125,22 @@ module VCAP::CloudController
       exposed_ports
     end
 
+    def docker_user
+      return '' unless docker?
+
+      container_user = ''
+      if execution_metadata.present?
+        begin
+          docker_exec_metadata = Oj.load(execution_metadata)
+          container_user = docker_exec_metadata['user']
+        rescue EncodingError
+          # ignore
+        end
+      end
+
+      container_user.presence || 'root'
+    end
+
     def staging?
       state == STAGING_STATE
     end

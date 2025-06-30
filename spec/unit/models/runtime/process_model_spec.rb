@@ -369,7 +369,7 @@ module VCAP::CloudController
         context 'when user is not permitted' do
           let(:process_user) { 'some-random-user' }
 
-          it 'does raises an error' do
+          it 'raises an error' do
             expect { process.save }.to raise_error(/user invalid/)
           end
         end
@@ -683,6 +683,8 @@ module VCAP::CloudController
 
         before do
           process.desired_droplet.update(execution_metadata: droplet_execution_metadata)
+          process.desired_droplet.buildpack_lifecycle_data.delete
+          process.desired_droplet.reload
         end
 
         context 'when the process has a user specified' do
