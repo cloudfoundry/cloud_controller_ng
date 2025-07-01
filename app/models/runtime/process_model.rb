@@ -395,7 +395,7 @@ module VCAP::CloudController
     def run_action_user
       return user if user.present?
 
-      docker? ? docker_run_action_user : AppModel::DEFAULT_USER
+      docker? ? docker_run_action_user : AppModel::DEFAULT_CONTAINER_USER
     end
 
     def specified_or_detected_command
@@ -572,11 +572,11 @@ module VCAP::CloudController
     private
 
     def permitted_users
-      Set.new([AppModel::DEFAULT_USER]) + Config.config.get(:additional_allowed_process_users)
+      Set.new([AppModel::DEFAULT_CONTAINER_USER]) + Config.config.get(:additional_allowed_process_users)
     end
 
     def docker_run_action_user
-      desired_droplet.docker_user.presence || AppModel::DEFAULT_USER
+      desired_droplet.docker_user.presence || AppModel::DEFAULT_CONTAINER_USER
     end
 
     def non_unique_process_types

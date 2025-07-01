@@ -356,7 +356,7 @@ module VCAP::CloudController
       end
 
       context 'when the droplet belongs to a Docker lifecycle app' do
-        let(:droplet_execution_metadata) { '{"entrypoint":["/cnb/lifecycle/launcher"],"user":"cnb"}' }
+        let(:droplet_execution_metadata) { '{"entrypoint":["/image-entrypoint.sh"],"user":"cnb"}' }
         let(:droplet_model) { DropletModel.make(:docker, execution_metadata: droplet_execution_metadata) }
 
         context 'when the droplet execution metadata specifies a user' do
@@ -366,7 +366,7 @@ module VCAP::CloudController
         end
 
         context 'when the droplet execution metadata DOES NOT specify a user' do
-          let(:droplet_execution_metadata) { '{"entrypoint":["/cnb/lifecycle/launcher"]}' }
+          let(:droplet_execution_metadata) { '{"entrypoint":["/image-entrypoint.sh"]}' }
 
           it 'defaults the user to root' do
             expect(droplet_model.docker_user).to eq('root')
