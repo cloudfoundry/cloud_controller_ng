@@ -15,7 +15,7 @@ module VCAP
           end
 
           def task_action_builder(config, task)
-            VCAP::CloudController::Diego::Buildpack::TaskActionBuilder.new(config, task, task_lifecycle_data(task), 'root', ['--', task.command], 'cnb')
+            VCAP::CloudController::Diego::Buildpack::TaskActionBuilder.new(config, task, task_lifecycle_data(task), task.run_action_user, ['--', task.command], 'cnb')
           end
 
           def desired_lrp_builder(config, process)

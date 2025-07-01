@@ -138,7 +138,7 @@ module VCAP::CloudController
         end
       end
 
-      container_user.presence || 'root'
+      container_user.presence || AppModel::DEFAULT_DOCKER_CONTAINER_USER
     end
 
     def staging?

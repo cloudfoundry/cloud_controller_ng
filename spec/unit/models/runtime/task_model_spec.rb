@@ -168,6 +168,32 @@ module VCAP::CloudController
       let(:task) { TaskModel.make(app: parent_app, droplet: droplet, state: TaskModel::SUCCEEDED_STATE) }
       let(:droplet) { DropletModel.make }
 
+      context 'when the task belongs to a CNB lifecycle app' do
+        let(:parent_app) { AppModel.make(:cnb) }
+        let(:task) { TaskModel.make(app: parent_app, droplet: droplet, state: TaskModel::SUCCEEDED_STATE) }
+        let(:droplet) { DropletModel.make(:cnb) }
+
+        context 'when the task has a user specified' do
+          before do
+            task.update(user: 'TestUser')
+          end
+
+          it 'returns the user' do
+            expect(task.run_action_user).to eq('TestUser')
+          end
+        end
+
+        context 'when the task does not have a user specified' do
+          before do
+            task.update(user: nil)
+          end
+
+          it 'defaults the user to root' do
+            expect(task.run_action_user).to eq('root')
+          end
+        end
+      end
+
       context 'when the task belongs to a Docker lifecycle app' do
         let(:parent_app) { AppModel.make(:docker) }
         let(:task) { TaskModel.make(app: parent_app, droplet: droplet, state: TaskModel::SUCCEEDED_STATE) }

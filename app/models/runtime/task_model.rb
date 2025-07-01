@@ -47,10 +47,17 @@ module VCAP::CloudController
     def run_action_user
       return user if user.present?
 
-      docker? ? docker_run_action_user : AppModel::DEFAULT_CONTAINER_USER
+      if docker?
+        docker_run_action_user
+      elsif cnb?
+        'root' # TODO: Why do CNB tasks default to this user instead of vcap?
+      else
+        AppModel::DEFAULT_CONTAINER_USER
+      end
     end
 
     delegate :docker?, to: :droplet
+    delegate :cnb?, to: :droplet
 
     private
 
