@@ -29,37 +29,26 @@ class RulesValidator < ActiveModel::Validator
 
       add_rule_error("protocol must be 'tcp', 'udp', 'icmp', 'icmpv6' or 'all'", record, index) unless valid_protocol(rule[:protocol])
 
-      if rule[:protocol] == 'icmp'
-        allowed_ip_version = NetAddr::IPv4Net
-      elsif rule[:protocol] == 'icmpv6'
-        allowed_ip_version = NetAddr::IPv6Net
-      else
-        allowed_ip_version = nil
-      end
-
       if valid_destination_type(rule[:destination], record, index)
         destinations = rule[:destination].split(',', -1)
         add_rule_error("maximum destinations per rule exceeded - must be under #{MAX_DESTINATIONS_PER_RULE}", record, index) unless destinations.length <= MAX_DESTINATIONS_PER_RULE
 
         destinations.each do |d|
-          validate_destination(d, rule[:protocol], allowed_ip_version, record, index)
+          validate_destination(d, rule[:protocol], get_allowed_ip_version(rule), record, index)
         end
       end
 
       validate_description(rule, record, index)
       validate_log(rule, record, index)
+      validate_protocol(rule, record, index)
+    end
+  end
 
-      case rule[:protocol]
-      when 'tcp', 'udp'
-        validate_tcp_udp_protocol(rule, record, index)
-      when 'icmp'
-        validate_icmp_protocol(rule, record, index)
-      when 'icmpv6'
-        add_rule_error("icmpv6 cannot be used if enable_ipv6 is false", record, index) unless CloudController::RuleValidator.ipv6_enabled?
-        validate_icmp_protocol(rule, record, index)
-      when 'all'
-        add_rule_error('ports are not allowed for protocols of type all', record, index) if rule[:ports]
-      end
+  def get_allowed_ip_version(rule)
+    if rule[:protocol] == 'icmp'
+      NetAddr::IPv4Net
+    elsif rule[:protocol] == 'icmpv6'
+      NetAddr::IPv6Net
     end
   end
 
@@ -82,6 +71,20 @@ class RulesValidator < ActiveModel::Validator
 
   def validate_log(rule, record, index)
     add_rule_error('log must be a boolean', record, index) if rule[:log] && !boolean?(rule[:log])
+  end
+
+  def validate_protocol(rule, record, index)
+    case rule[:protocol]
+    when 'tcp', 'udp'
+      validate_tcp_udp_protocol(rule, record, index)
+    when 'icmp'
+      validate_icmp_protocol(rule, record, index)
+    when 'icmpv6'
+      add_rule_error('icmpv6 cannot be used if enable_ipv6 is false', record, index) unless CloudController::RuleValidator.ipv6_enabled?
+      validate_icmp_protocol(rule, record, index)
+    when 'all'
+      add_rule_error('ports are not allowed for protocols of type all', record, index) if rule[:ports]
+    end
   end
 
   def validate_tcp_udp_protocol(rule, record, index)
@@ -148,11 +151,11 @@ class RulesValidator < ActiveModel::Validator
 
     zeros_error_message = 'destination octets cannot contain leading zeros'
     add_rule_error(zeros_error_message, record, index) unless CloudController::RuleValidator.no_leading_zeros(address_list)
-
     if address_list.length == 1
       parsed_ip = CloudController::RuleValidator.parse_ip(address_list.first)
       add_rule_error(error_message, record, index) unless parsed_ip
-      add_rule_error("for protocol \"#{protocol}\" you cannot use IPv#{parsed_ip.version} addresses", record, index) unless parsed_ip.nil? || allowed_ip_version.nil? || parsed_ip.is_a?(allowed_ip_version)
+      add_rule_error("for protocol \"#{protocol}\" you cannot use IPv#{parsed_ip.version} addresses", record, index) \
+        unless valid_ip_version?(allowed_ip_version, parsed_ip)
     elsif address_list.length == 2
       ips = CloudController::RuleValidator.parse_ip(address_list)
       return add_rule_error('destination IP address range is invalid', record, index) unless ips
@@ -165,11 +168,15 @@ class RulesValidator < ActiveModel::Validator
 
       reversed_range_error = 'beginning of IP address range is numerically greater than the end of its range (range endpoints are inverted)'
       add_rule_error(reversed_range_error, record, index) unless ips.first == sorted_ips.first
-      add_rule_error("for protocol \"#{protocol}\" you cannot use IPv#{ips.first.version} addresses", record, index) unless ips.first.nil? || allowed_ip_version.nil? || ips.first.is_a?(allowed_ip_version)
-
+      add_rule_error("for protocol \"#{protocol}\" you cannot use IPv#{ips.first.version} addresses", record, index) \
+        unless valid_ip_version?(allowed_ip_version, ips.first)
     else
       add_rule_error(error_message, record, index)
     end
+  end
+
+  def valid_ip_version?(allowed_ip_version, parsed_ip)
+    parsed_ip.nil? || allowed_ip_version.nil? || parsed_ip.is_a?(allowed_ip_version)
   end
 
   def add_rule_error(message, record, index)

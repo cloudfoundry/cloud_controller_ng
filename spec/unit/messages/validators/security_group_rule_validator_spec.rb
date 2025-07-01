@@ -1503,7 +1503,6 @@ module VCAP::CloudController::Validators
             expect(subject.errors.full_messages).to include 'Rules[0]: code is required for protocols of type ICMP'
           end
         end
-
       end
     end
   end
