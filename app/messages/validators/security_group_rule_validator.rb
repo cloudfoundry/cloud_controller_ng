@@ -27,14 +27,22 @@ class RulesValidator < ActiveModel::Validator
 
       validate_allowed_keys(rule, record, index)
 
-      add_rule_error("protocol must be 'tcp', 'udp', 'icmp', or 'all'", record, index) unless valid_protocol(rule[:protocol])
+      add_rule_error("protocol must be 'tcp', 'udp', 'icmp', 'icmpv6' or 'all'", record, index) unless valid_protocol(rule[:protocol])
+
+      if rule[:protocol] == 'icmp'
+        allowed_ip_version = NetAddr::IPv4Net
+      elsif rule[:protocol] == 'icmpv6'
+        allowed_ip_version = NetAddr::IPv6Net
+      else
+        allowed_ip_version = nil
+      end
 
       if valid_destination_type(rule[:destination], record, index)
         destinations = rule[:destination].split(',', -1)
         add_rule_error("maximum destinations per rule exceeded - must be under #{MAX_DESTINATIONS_PER_RULE}", record, index) unless destinations.length <= MAX_DESTINATIONS_PER_RULE
 
         destinations.each do |d|
-          validate_destination(d, record, index)
+          validate_destination(d, rule[:protocol], allowed_ip_version, record, index)
         end
       end
 
@@ -45,6 +53,9 @@ class RulesValidator < ActiveModel::Validator
       when 'tcp', 'udp'
         validate_tcp_udp_protocol(rule, record, index)
       when 'icmp'
+        validate_icmp_protocol(rule, record, index)
+      when 'icmpv6'
+        add_rule_error("icmpv6 cannot be used if enable_ipv6 is false", record, index) unless CloudController::RuleValidator.ipv6_enabled?
         validate_icmp_protocol(rule, record, index)
       when 'all'
         add_rule_error('ports are not allowed for protocols of type all', record, index) if rule[:ports]
@@ -57,7 +68,7 @@ class RulesValidator < ActiveModel::Validator
   end
 
   def valid_protocol(protocol)
-    protocol.is_a?(String) && %w[tcp udp icmp all].include?(protocol)
+    protocol.is_a?(String) && %w[tcp udp icmp icmpv6 all].include?(protocol)
   end
 
   def validate_allowed_keys(rule, record, index)
@@ -128,7 +139,7 @@ class RulesValidator < ActiveModel::Validator
     true
   end
 
-  def validate_destination(destination, record, index)
+  def validate_destination(destination, protocol, allowed_ip_version, record, index)
     error_message = 'destination must be a valid CIDR, IP address, or IP address range'
     error_message = 'destination must contain valid CIDR(s), IP address(es), or IP address range(s)' if CloudController::RuleValidator.comma_delimited_destinations_enabled?
     add_rule_error('empty destination specified in comma-delimited list', record, index) if destination.empty?
@@ -139,8 +150,9 @@ class RulesValidator < ActiveModel::Validator
     add_rule_error(zeros_error_message, record, index) unless CloudController::RuleValidator.no_leading_zeros(address_list)
 
     if address_list.length == 1
-      add_rule_error(error_message, record, index) unless CloudController::RuleValidator.parse_ip(address_list.first)
-
+      parsed_ip = CloudController::RuleValidator.parse_ip(address_list.first)
+      add_rule_error(error_message, record, index) unless parsed_ip
+      add_rule_error("for protocol \"#{protocol}\" you cannot use IPv#{parsed_ip.version} addresses", record, index) unless parsed_ip.nil? || allowed_ip_version.nil? || parsed_ip.is_a?(allowed_ip_version)
     elsif address_list.length == 2
       ips = CloudController::RuleValidator.parse_ip(address_list)
       return add_rule_error('destination IP address range is invalid', record, index) unless ips
@@ -153,6 +165,7 @@ class RulesValidator < ActiveModel::Validator
 
       reversed_range_error = 'beginning of IP address range is numerically greater than the end of its range (range endpoints are inverted)'
       add_rule_error(reversed_range_error, record, index) unless ips.first == sorted_ips.first
+      add_rule_error("for protocol \"#{protocol}\" you cannot use IPv#{ips.first.version} addresses", record, index) unless ips.first.nil? || allowed_ip_version.nil? || ips.first.is_a?(allowed_ip_version)
 
     else
       add_rule_error(error_message, record, index)
