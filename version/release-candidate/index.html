@@ -31271,6 +31271,7 @@ An application will automatically use buildpacks associated with the application
   </span><span class="nl">"sequence_id"</span><span class="p">:</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span><span class="w">
   </span><span class="nl">"name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"migrate"</span><span class="p">,</span><span class="w">
   </span><span class="nl">"command"</span><span class="p">:</span><span class="w"> </span><span class="s2">"rake db:migrate"</span><span class="p">,</span><span class="w">
+  </span><span class="nl">"user"</span><span class="p">:</span><span class="w"> </span><span class="s2">"vcap"</span><span class="p">,</span><span class="w">
   </span><span class="nl">"state"</span><span class="p">:</span><span class="w"> </span><span class="s2">"RUNNING"</span><span class="p">,</span><span class="w">
   </span><span class="nl">"memory_in_mb"</span><span class="p">:</span><span class="w"> </span><span class="mi">512</span><span class="p">,</span><span class="w">
   </span><span class="nl">"disk_in_mb"</span><span class="p">:</span><span class="w"> </span><span class="mi">1024</span><span class="p">,</span><span class="w">
@@ -31346,6 +31347,11 @@ An application will automatically use buildpacks associated with the application
 <td><strong>command</strong></td>
 <td><em>string</em></td>
 <td>Command that will be executed; this field may be excluded based on a user&rsquo;s role</td>
+</tr>
+<tr>
+<td><strong>user</strong></td>
+<td><em>string</em> or <em>null</em></td>
+<td>The OS user used to run the task in the runtime</td>
 </tr>
 <tr>
 <td><strong>state</strong></td>
@@ -31425,6 +31431,7 @@ An application will automatically use buildpacks associated with the application
   </span><span class="nl">"sequence_id"</span><span class="p">:</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span><span class="w">
   </span><span class="nl">"name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"migrate"</span><span class="p">,</span><span class="w">
   </span><span class="nl">"command"</span><span class="p">:</span><span class="w"> </span><span class="s2">"rake db:migrate"</span><span class="p">,</span><span class="w">
+  </span><span class="nl">"user"</span><span class="p">:</span><span class="w"> </span><span class="s2">"vcap"</span><span class="p">,</span><span class="w">
   </span><span class="nl">"state"</span><span class="p">:</span><span class="w"> </span><span class="s2">"RUNNING"</span><span class="p">,</span><span class="w">
   </span><span class="nl">"memory_in_mb"</span><span class="p">:</span><span class="w"> </span><span class="mi">512</span><span class="p">,</span><span class="w">
   </span><span class="nl">"disk_in_mb"</span><span class="p">:</span><span class="w"> </span><span class="mi">1024</span><span class="p">,</span><span class="w">
@@ -31501,6 +31508,12 @@ An application will automatically use buildpacks associated with the application
 <td>auto-generated</td>
 </tr>
 <tr>
+<td><strong>user</strong></td>
+<td><em>string</em></td>
+<td>OS user used to run the task in the runtime</td>
+<td>&ldquo;vcap&rdquo;</td>
+</tr>
+<tr>
 <td><strong>disk_in_mb</strong><sup>[1]</sup></td>
 <td><em>integer</em></td>
 <td>Amount of disk to allocate for the task in MB</td>
@@ -31574,6 +31587,7 @@ An application will automatically use buildpacks associated with the application
   </span><span class="nl">"sequence_id"</span><span class="p">:</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span><span class="w">
   </span><span class="nl">"name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"migrate"</span><span class="p">,</span><span class="w">
   </span><span class="nl">"command"</span><span class="p">:</span><span class="w"> </span><span class="s2">"rake db:migrate"</span><span class="p">,</span><span class="w">
+  </span><span class="nl">"user"</span><span class="p">:</span><span class="w"> </span><span class="s2">"vcap"</span><span class="p">,</span><span class="w">
   </span><span class="nl">"state"</span><span class="p">:</span><span class="w"> </span><span class="s2">"RUNNING"</span><span class="p">,</span><span class="w">
   </span><span class="nl">"memory_in_mb"</span><span class="p">:</span><span class="w"> </span><span class="mi">512</span><span class="p">,</span><span class="w">
   </span><span class="nl">"disk_in_mb"</span><span class="p">:</span><span class="w"> </span><span class="mi">1024</span><span class="p">,</span><span class="w">
@@ -31690,6 +31704,7 @@ in the response based on the user&rsquo;s role.</p>
       </span><span class="nl">"guid"</span><span class="p">:</span><span class="w"> </span><span class="s2">"d5cc22ec-99a3-4e6a-af91-a44b4ab7b6fa"</span><span class="p">,</span><span class="w">
       </span><span class="nl">"sequence_id"</span><span class="p">:</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span><span class="w">
       </span><span class="nl">"name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"hello"</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"user"</span><span class="p">:</span><span class="w"> </span><span class="s2">"vcap"</span><span class="p">,</span><span class="w">
       </span><span class="nl">"state"</span><span class="p">:</span><span class="w"> </span><span class="s2">"SUCCEEDED"</span><span class="p">,</span><span class="w">
       </span><span class="nl">"memory_in_mb"</span><span class="p">:</span><span class="w"> </span><span class="mi">512</span><span class="p">,</span><span class="w">
       </span><span class="nl">"disk_in_mb"</span><span class="p">:</span><span class="w"> </span><span class="mi">1024</span><span class="p">,</span><span class="w">
@@ -31731,6 +31746,7 @@ in the response based on the user&rsquo;s role.</p>
       </span><span class="nl">"guid"</span><span class="p">:</span><span class="w"> </span><span class="s2">"63b4cd89-fd8b-4bf1-a311-7174fcc907d6"</span><span class="p">,</span><span class="w">
       </span><span class="nl">"sequence_id"</span><span class="p">:</span><span class="w"> </span><span class="mi">2</span><span class="p">,</span><span class="w">
       </span><span class="nl">"name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"migrate"</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"user"</span><span class="p">:</span><span class="w"> </span><span class="s2">"vcap"</span><span class="p">,</span><span class="w">
       </span><span class="nl">"state"</span><span class="p">:</span><span class="w"> </span><span class="s2">"FAILED"</span><span class="p">,</span><span class="w">
       </span><span class="nl">"memory_in_mb"</span><span class="p">:</span><span class="w"> </span><span class="mi">512</span><span class="p">,</span><span class="w">
       </span><span class="nl">"disk_in_mb"</span><span class="p">:</span><span class="w"> </span><span class="mi">1024</span><span class="p">,</span><span class="w">
@@ -31889,6 +31905,7 @@ in the response based on the user&rsquo;s role.</p>
       </span><span class="nl">"guid"</span><span class="p">:</span><span class="w"> </span><span class="s2">"d5cc22ec-99a3-4e6a-af91-a44b4ab7b6fa"</span><span class="p">,</span><span class="w">
       </span><span class="nl">"sequence_id"</span><span class="p">:</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span><span class="w">
       </span><span class="nl">"name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"hello"</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"user"</span><span class="p">:</span><span class="w"> </span><span class="s2">"vcap"</span><span class="p">,</span><span class="w">
       </span><span class="nl">"state"</span><span class="p">:</span><span class="w"> </span><span class="s2">"SUCCEEDED"</span><span class="p">,</span><span class="w">
       </span><span class="nl">"memory_in_mb"</span><span class="p">:</span><span class="w"> </span><span class="mi">512</span><span class="p">,</span><span class="w">
       </span><span class="nl">"disk_in_mb"</span><span class="p">:</span><span class="w"> </span><span class="mi">1024</span><span class="p">,</span><span class="w">
@@ -31930,6 +31947,7 @@ in the response based on the user&rsquo;s role.</p>
       </span><span class="nl">"guid"</span><span class="p">:</span><span class="w"> </span><span class="s2">"63b4cd89-fd8b-4bf1-a311-7174fcc907d6"</span><span class="p">,</span><span class="w">
       </span><span class="nl">"sequence_id"</span><span class="p">:</span><span class="w"> </span><span class="mi">2</span><span class="p">,</span><span class="w">
       </span><span class="nl">"name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"migrate"</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"user"</span><span class="p">:</span><span class="w"> </span><span class="s2">"vcap"</span><span class="p">,</span><span class="w">
       </span><span class="nl">"state"</span><span class="p">:</span><span class="w"> </span><span class="s2">"FAILED"</span><span class="p">,</span><span class="w">
       </span><span class="nl">"memory_in_mb"</span><span class="p">:</span><span class="w"> </span><span class="mi">512</span><span class="p">,</span><span class="w">
       </span><span class="nl">"disk_in_mb"</span><span class="p">:</span><span class="w"> </span><span class="mi">1024</span><span class="p">,</span><span class="w">
@@ -32097,6 +32115,7 @@ excluded in the response based on the user&rsquo;s role.</p>
   </span><span class="nl">"sequence_id"</span><span class="p">:</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span><span class="w">
   </span><span class="nl">"name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"migrate"</span><span class="p">,</span><span class="w">
   </span><span class="nl">"command"</span><span class="p">:</span><span class="w"> </span><span class="s2">"rake db:migrate"</span><span class="p">,</span><span class="w">
+  </span><span class="nl">"user"</span><span class="p">:</span><span class="w"> </span><span class="s2">"vcap"</span><span class="p">,</span><span class="w">
   </span><span class="nl">"state"</span><span class="p">:</span><span class="w"> </span><span class="s2">"RUNNING"</span><span class="p">,</span><span class="w">
   </span><span class="nl">"memory_in_mb"</span><span class="p">:</span><span class="w"> </span><span class="mi">512</span><span class="p">,</span><span class="w">
   </span><span class="nl">"disk_in_mb"</span><span class="p">:</span><span class="w"> </span><span class="mi">1024</span><span class="p">,</span><span class="w">
@@ -32189,6 +32208,7 @@ excluded in the response based on the user&rsquo;s role.</p>
   </span><span class="nl">"sequence_id"</span><span class="p">:</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span><span class="w">
   </span><span class="nl">"name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"migrate"</span><span class="p">,</span><span class="w">
   </span><span class="nl">"command"</span><span class="p">:</span><span class="w"> </span><span class="s2">"rake db:migrate"</span><span class="p">,</span><span class="w">
+  </span><span class="nl">"user"</span><span class="p">:</span><span class="w"> </span><span class="s2">"vcap"</span><span class="p">,</span><span class="w">
   </span><span class="nl">"state"</span><span class="p">:</span><span class="w"> </span><span class="s2">"CANCELING"</span><span class="p">,</span><span class="w">
   </span><span class="nl">"memory_in_mb"</span><span class="p">:</span><span class="w"> </span><span class="mi">512</span><span class="p">,</span><span class="w">
   </span><span class="nl">"disk_in_mb"</span><span class="p">:</span><span class="w"> </span><span class="mi">1024</span><span class="p">,</span><span class="w">
