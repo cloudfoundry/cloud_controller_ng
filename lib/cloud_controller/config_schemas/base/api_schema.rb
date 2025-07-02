@@ -45,7 +45,7 @@ module VCAP::CloudController
             maximum_app_disk_in_mb: Integer,
             default_health_check_timeout: Integer,
             maximum_health_check_timeout: Integer,
-            optional(:additional_allowed_process_users) => Array,
+            additional_allowed_process_users: Array,
 
             instance_file_descriptor_limit: Integer,
 

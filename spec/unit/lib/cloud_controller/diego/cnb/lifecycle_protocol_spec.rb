@@ -175,6 +175,31 @@ module VCAP
                                                                                'cnb')
             end
 
+            context 'when the task has a user specified' do
+              let(:task) { TaskModel.make(:cnb, user: 'TestUser') }
+
+              it 'sets the appropriate user' do
+                task.app.update(cnb_lifecycle_data: CNBLifecycleDataModel.make(stack: 'potato-stack'))
+
+                task_action_builder = instance_double(Buildpack::TaskActionBuilder)
+                allow(Buildpack::TaskActionBuilder).to receive(:new).and_return task_action_builder
+
+                expect(lifecycle_protocol.task_action_builder(config, task)).to be task_action_builder
+
+                expect(Buildpack::TaskActionBuilder).to have_received(:new).with(
+                  config,
+                  task,
+                  {
+                    droplet_uri: 'droplet-download-url',
+                    stack: 'potato-stack'
+                  },
+                  'TestUser',
+                  ['--', task.command],
+                  'cnb'
+                )
+              end
+            end
+
             context 'when the blobstore_url_generator returns nil' do
               let(:droplet_download_url) { nil }
 

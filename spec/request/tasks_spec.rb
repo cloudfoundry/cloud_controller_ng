@@ -103,6 +103,7 @@ RSpec.describe 'Tasks' do
         task1 = VCAP::CloudController::TaskModel.make(
           name: 'task one',
           command: 'echo task',
+          user: 'TestUser',
           app_guid: app_model.guid,
           droplet: app_model.droplet,
           memory_in_mb: 5,
@@ -142,6 +143,7 @@ RSpec.describe 'Tasks' do
                                                             'guid' => task1.guid,
                                                             'sequence_id' => task1.sequence_id,
                                                             'name' => 'task one',
+                                                            'user' => 'TestUser',
                                                             'state' => 'RUNNING',
                                                             'memory_in_mb' => 5,
                                                             'disk_in_mb' => 10,
@@ -174,6 +176,7 @@ RSpec.describe 'Tasks' do
                                                             'guid' => task2.guid,
                                                             'sequence_id' => task2.sequence_id,
                                                             'name' => 'task two',
+                                                            'user' => 'vcap',
                                                             'state' => 'RUNNING',
                                                             'memory_in_mb' => 100,
                                                             'disk_in_mb' => 500,
@@ -213,6 +216,7 @@ RSpec.describe 'Tasks' do
         VCAP::CloudController::TaskModel.make(
           name: 'task one',
           command: 'echo task',
+          user: 'TestUser',
           app_guid: app_model.guid,
           droplet: app_model.droplet
         )
@@ -236,6 +240,7 @@ RSpec.describe 'Tasks' do
             'guid' => task1.guid,
             'sequence_id' => task1.sequence_id,
             'name' => 'task one',
+            'user' => 'TestUser',
             'state' => 'RUNNING',
             'memory_in_mb' => 256,
             'disk_in_mb' => nil,
@@ -268,6 +273,7 @@ RSpec.describe 'Tasks' do
             'guid' => task2.guid,
             'sequence_id' => task2.sequence_id,
             'name' => 'task two',
+            'user' => 'vcap',
             'state' => 'RUNNING',
             'memory_in_mb' => 5,
             'disk_in_mb' => 10,
@@ -429,6 +435,7 @@ RSpec.describe 'Tasks' do
           'guid' => task.guid,
           'sequence_id' => task.sequence_id,
           'name' => 'task',
+          'user' => 'vcap',
           'state' => 'RUNNING',
           'memory_in_mb' => 5,
           'disk_in_mb' => 50,
@@ -543,6 +550,7 @@ RSpec.describe 'Tasks' do
         'sequence_id' => task.sequence_id,
         'name' => 'task',
         'command' => 'echo task',
+        'user' => 'vcap',
         'state' => 'RUNNING',
         'memory_in_mb' => 5,
         'disk_in_mb' => 50,
@@ -621,6 +629,7 @@ RSpec.describe 'Tasks' do
         sequence_id: task.sequence_id,
         name: 'task',
         command: 'echo task',
+        user: 'vcap',
         state: 'CANCELING',
         memory_in_mb: 256,
         disk_in_mb: nil,
@@ -737,6 +746,7 @@ RSpec.describe 'Tasks' do
                 'sequence_id' => task1.sequence_id,
                 'name' => 'task one',
                 'command' => 'echo task',
+                'user' => 'vcap',
                 'state' => 'RUNNING',
                 'memory_in_mb' => 5,
                 'disk_in_mb' => 50,
@@ -770,6 +780,7 @@ RSpec.describe 'Tasks' do
                 'sequence_id' => task2.sequence_id,
                 'name' => 'task two',
                 'command' => 'echo task',
+                'user' => 'vcap',
                 'state' => 'RUNNING',
                 'memory_in_mb' => 100,
                 'disk_in_mb' => 500,
@@ -836,6 +847,7 @@ RSpec.describe 'Tasks' do
             'guid' => task1.guid,
             'sequence_id' => task1.sequence_id,
             'name' => 'task one',
+            'user' => 'vcap',
             'state' => 'RUNNING',
             'memory_in_mb' => 256,
             'disk_in_mb' => nil,
@@ -868,6 +880,7 @@ RSpec.describe 'Tasks' do
             'guid' => task2.guid,
             'sequence_id' => task2.sequence_id,
             'name' => 'task two',
+            'user' => 'vcap',
             'state' => 'RUNNING',
             'memory_in_mb' => 5,
             'disk_in_mb' => 10,
@@ -1023,6 +1036,7 @@ RSpec.describe 'Tasks' do
       {
         name: 'best task ever',
         command: 'be rake && true',
+        user: 'TestUser',
         memory_in_mb: 1234,
         disk_in_mb: 1000,
         log_rate_limit_in_bytes_per_second: task_log_rate_limit_in_bytes_per_second,
@@ -1056,6 +1070,7 @@ RSpec.describe 'Tasks' do
         'sequence_id' => sequence_id,
         'name' => 'best task ever',
         'command' => 'be rake && true',
+        'user' => 'TestUser',
         'state' => 'RUNNING',
         'memory_in_mb' => 1234,
         'disk_in_mb' => 1000,
@@ -1207,7 +1222,7 @@ RSpec.describe 'Tasks' do
     end
 
     context 'when the client specifies a template' do
-      let(:process) { VCAP::CloudController::ProcessModel.make(app: app_model, command: 'start') }
+      let(:process) { VCAP::CloudController::ProcessModel.make(app: app_model, command: 'start', user: 'TestUser') }
 
       it 'uses the command from the template process' do
         body = {
@@ -1231,6 +1246,7 @@ RSpec.describe 'Tasks' do
           'sequence_id' => sequence_id,
           'name' => 'best task ever',
           'command' => process.command,
+          'user' => 'TestUser',
           'state' => 'RUNNING',
           'memory_in_mb' => 1234,
           'disk_in_mb' => 1000,

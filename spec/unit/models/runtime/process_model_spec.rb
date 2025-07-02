@@ -369,7 +369,7 @@ module VCAP::CloudController
         context 'when user is not permitted' do
           let(:process_user) { 'some-random-user' }
 
-          it 'does raises an error' do
+          it 'raises an error' do
             expect { process.save }.to raise_error(/user invalid/)
           end
         end
@@ -679,10 +679,12 @@ module VCAP::CloudController
 
       context 'when the process belongs to a Docker lifecycle app' do
         subject(:process) { ProcessModelFactory.make({ docker_image: 'example.com/image' }) }
-        let(:droplet_execution_metadata) { '{"entrypoint":["/cnb/lifecycle/launcher"],"user":"cnb"}' }
+        let(:droplet_execution_metadata) { '{"entrypoint":["/image-entrypoint.sh"],"user":"some-user"}' }
 
         before do
           process.desired_droplet.update(execution_metadata: droplet_execution_metadata)
+          process.desired_droplet.buildpack_lifecycle_data.delete
+          process.desired_droplet.reload
         end
 
         context 'when the process has a user specified' do
@@ -697,12 +699,12 @@ module VCAP::CloudController
 
         context 'when the droplet execution metadata specifies a user' do
           it 'returns the specified user' do
-            expect(process.run_action_user).to eq('cnb')
+            expect(process.run_action_user).to eq('some-user')
           end
         end
 
         context 'when the droplet execution metadata DOES NOT specify a user' do
-          let(:droplet_execution_metadata) { '{"entrypoint":["/cnb/lifecycle/launcher"]}' }
+          let(:droplet_execution_metadata) { '{"entrypoint":["/image-entrypoint.sh"]}' }
 
           it 'defaults the user to root' do
             expect(process.run_action_user).to eq('root')
@@ -727,6 +729,17 @@ module VCAP::CloudController
 
         context 'when the droplet execution metadata has invalid json' do
           let(:droplet_execution_metadata) { '{' }
+
+          it 'defaults the user to root' do
+            expect(process.run_action_user).to eq('root')
+          end
+        end
+
+        context 'when the app does not have a droplet assigned' do
+          before do
+            process.app.update(droplet: nil)
+            process.reload
+          end
 
           it 'defaults the user to root' do
             expect(process.run_action_user).to eq('root')

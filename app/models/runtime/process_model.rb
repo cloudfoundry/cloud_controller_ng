@@ -34,7 +34,6 @@ module VCAP::CloudController
     NO_APP_PORT_SPECIFIED = -1
     DEFAULT_HTTP_PORT     = 8080
     DEFAULT_PORTS         = [DEFAULT_HTTP_PORT].freeze
-    DEFAULT_USER = 'vcap'.freeze
     UNLIMITED_LOG_RATE = -1
 
     many_to_one :app, class: 'VCAP::CloudController::AppModel', key: :app_guid, primary_key: :guid, without_guid_generation: true
@@ -396,7 +395,7 @@ module VCAP::CloudController
     def run_action_user
       return user if user.present?
 
-      docker? ? docker_run_action_user : DEFAULT_USER
+      docker? ? docker_run_action_user : AppModel::DEFAULT_CONTAINER_USER
     end
 
     def specified_or_detected_command
@@ -573,23 +572,13 @@ module VCAP::CloudController
     private
 
     def permitted_users
-      Set.new([DEFAULT_USER]) + Config.config.get(:additional_allowed_process_users)
+      Set.new([AppModel::DEFAULT_CONTAINER_USER]) + Config.config.get(:additional_allowed_process_users)
     end
 
     def docker_run_action_user
-      return DEFAULT_USER unless docker?
+      return AppModel::DEFAULT_CONTAINER_USER unless docker?
 
-      container_user = ''
-      if execution_metadata.present?
-        begin
-          docker_exec_metadata = Oj.load(execution_metadata)
-          container_user = docker_exec_metadata['user']
-        rescue EncodingError
-          container_user = ''
-        end
-      end
-
-      container_user.presence || 'root'
+      desired_droplet&.docker_user.presence || AppModel::DEFAULT_DOCKER_CONTAINER_USER
     end
 
     def non_unique_process_types

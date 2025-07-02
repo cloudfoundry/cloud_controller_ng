@@ -18,7 +18,7 @@ module VCAP::CloudController
 
           ::Diego::ActionBuilder.action(
             ::Diego::Bbs::Models::RunAction.new(
-              user: 'root',
+              user: task.run_action_user,
               path: '/tmp/lifecycle/launcher',
               args: launcher_args,
               log_source: "APP/TASK/#{task.name}",

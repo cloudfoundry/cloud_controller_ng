@@ -345,5 +345,58 @@ module VCAP::CloudController
         expect(droplet.annotations.first.value).to eq('asparagus')
       end
     end
+
+    describe '#docker_user' do
+      let(:droplet_model) { DropletModel.make }
+
+      context 'when the droplet DOES NOT belong to a Docker lifecycle app' do
+        it 'returns an empty string' do
+          expect(droplet_model.docker_user).to eq('')
+        end
+      end
+
+      context 'when the droplet belongs to a Docker lifecycle app' do
+        let(:droplet_execution_metadata) { '{"entrypoint":["/image-entrypoint.sh"],"user":"cnb"}' }
+        let(:droplet_model) { DropletModel.make(:docker, execution_metadata: droplet_execution_metadata) }
+
+        context 'when the droplet execution metadata specifies a user' do
+          it 'returns the specified user' do
+            expect(droplet_model.docker_user).to eq('cnb')
+          end
+        end
+
+        context 'when the droplet execution metadata DOES NOT specify a user' do
+          let(:droplet_execution_metadata) { '{"entrypoint":["/image-entrypoint.sh"]}' }
+
+          it 'defaults the user to root' do
+            expect(droplet_model.docker_user).to eq('root')
+          end
+        end
+
+        context 'when the droplet execution metadata is an empty string' do
+          let(:droplet_execution_metadata) { '' }
+
+          it 'defaults the user to root' do
+            expect(droplet_model.docker_user).to eq('root')
+          end
+        end
+
+        context 'when the droplet execution metadata is nil' do
+          let(:droplet_execution_metadata) { nil }
+
+          it 'defaults the user to root' do
+            expect(droplet_model.docker_user).to eq('root')
+          end
+        end
+
+        context 'when the droplet execution metadata has invalid json' do
+          let(:droplet_execution_metadata) { '{' }
+
+          it 'defaults the user to root' do
+            expect(droplet_model.docker_user).to eq('root')
+          end
+        end
+      end
+    end
   end
 end
