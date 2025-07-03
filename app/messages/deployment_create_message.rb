@@ -26,7 +26,7 @@ module VCAP::CloudController
 
     validates_with NoAdditionalKeysValidator
     validates :strategy,
-              inclusion: { in: %w[rolling canary], message: "'%<value>s' is not a supported deployment strategy" },
+              inclusion: { in: %w[rolling canary recreate], message: "'%<value>s' is not a supported deployment strategy" },
               allow_nil: true
     validate :mutually_exclusive_droplet_sources
 
@@ -113,6 +113,10 @@ module VCAP::CloudController
 
     def validate_max_in_flight
       max_in_flight = options[:max_in_flight]
+      if max_in_flight && strategy == 'recreate'
+        errors.add(:'options.max_in_flight', 'is not a supported option for recreate deployment strategy')
+        return
+      end
 
       return unless !max_in_flight.is_a?(Integer) || max_in_flight < 1
 
