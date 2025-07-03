@@ -705,8 +705,8 @@ module VCAP::CloudController::Metrics
           stats_hash = {
             booted_workers: 2,
             worker_status: [
-              { started_at: '2023-11-29T13:15:05Z', index: 0, pid: 123, last_status: { running: 1, backlog: 0 } },
-              { started_at: '2023-11-29T13:15:10Z', index: 1, pid: 234, last_status: { running: 2, backlog: 1 } }
+              { started_at: '2023-11-29T13:15:05Z', index: 0, pid: 123, last_status: { running: 1, backlog: 0, busy_threads: 0, pool_capacity: 1, requests_count: 9 } },
+              { started_at: '2023-11-29T13:15:10Z', index: 1, pid: 234, last_status: { running: 2, backlog: 1, busy_threads: 1, pool_capacity: 2, requests_count: 10 } }
             ]
           }
           allow(Puma).to receive(:stats_hash).and_return(stats_hash)
@@ -715,8 +715,8 @@ module VCAP::CloudController::Metrics
 
           expected_worker_count = 2
           expected_worker_stats = [
-            { started_at: 1_701_263_705, index: 0, pid: 123, thread_count: 1, backlog: 0 },
-            { started_at: 1_701_263_710, index: 1, pid: 234, thread_count: 2, backlog: 1 }
+            { started_at: 1_701_263_705, index: 0, pid: 123, thread_count: 1, backlog: 0, busy_threads: 0, pool_capacity: 1, requests_count: 9 },
+            { started_at: 1_701_263_710, index: 1, pid: 234, thread_count: 2, backlog: 1, busy_threads: 1, pool_capacity: 2, requests_count: 10 }
           ]
           expect(prometheus_updater).to have_received(:update_webserver_stats_puma).with(expected_worker_count, expected_worker_stats)
         end
