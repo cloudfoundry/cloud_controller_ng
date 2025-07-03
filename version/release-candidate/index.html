@@ -11047,6 +11047,9 @@ In the case where the specified isolation segment is the system-wide shared segm
   <span class="pi">-</span> <span class="na">route</span><span class="pi">:</span> <span class="s">route.example.com</span>
   <span class="pi">-</span> <span class="na">route</span><span class="pi">:</span> <span class="s">another-route.example.com</span>
     <span class="na">protocol</span><span class="pi">:</span> <span class="s">http2</span>
+  <span class="pi">-</span> <span class="na">route</span><span class="pi">:</span> <span class="s">route-with-options.example.com</span>
+    <span class="na">options</span><span class="pi">:</span>
+      <span class="na">loadbalancing</span><span class="pi">:</span> <span class="s">least-connection</span>
   <span class="na">services</span><span class="pi">:</span>
   <span class="pi">-</span> <span class="s">my-service1</span>
   <span class="pi">-</span> <span class="s">my-service2</span>
@@ -11315,7 +11318,30 @@ will be updated for any existing route mapping.</p>
 <tr>
 <td><strong>protocol</strong></td>
 <td><em>string</em></td>
-<td>Protocol to use for this route. Valid protocols are <code class="prettyprint">http1</code>, <code class="prettyprint">http2</code>, and <code class="prettyprint">tcp</code>.</td>
+<td>Protocol to use for this route. Valid protocols are <code class="prettyprint">http1</code>, <code class="prettyprint">http2</code>, and <code class="prettyprint">tcp</code></td>
+</tr>
+<tr>
+<td><strong>options</strong></td>
+<td><em>object</em></td>
+<td>A key-value mapping of configuration <a href="#space-manifest-per-route-options-level-configuration">options</a> to be applied to the specific application route</td>
+</tr>
+</tbody></table>
+
+<h4 id="per-route-options-level-configuration"><a name="space-manifest-per-route-options-level-configuration"></a> Per-Route Options-level configuration</h4>
+
+<p>This configuration allows additional key-value options for the specific application route.</p>
+
+<table><thead>
+<tr>
+<th>Name</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead><tbody>
+<tr>
+<td><strong>loadbalancing</strong></td>
+<td><em>string</em></td>
+<td>The load-balancer associated with this route. Valid values are <code class="prettyprint">round-robin</code> and <code class="prettyprint">least-connection</code></td>
 </tr>
 </tbody></table>
 
