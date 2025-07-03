@@ -1821,6 +1821,7 @@ RSpec.describe 'V3 service instances' do
         let(:original_maintenance_info) { { version: '1.1.0' } }
         let!(:service_instance) do
           si = VCAP::CloudController::ManagedServiceInstance.make(
+            name: 'new-name',
             guid: 'bommel',
             tags: %w[foo bar],
             space: space,
@@ -1865,10 +1866,17 @@ RSpec.describe 'V3 service instances' do
         end
         let(:job) { VCAP::CloudController::PollableJobModel.last }
         let(:mock_logger) { instance_double(Steno::Logger, info: nil) }
+        let(:broker_url) { service_instance.service_broker.broker_url }
+        let(:expected_patch_url) { "#{broker_url}/v2/service_instances/#{service_instance.guid}" }
 
         before do
           allow(Steno).to receive(:logger).and_call_original
-          allow(Steno).to receive(:logger).with('cc.api').and_return(mock_logger)
+          allow(Steno).to receive(:logger).with('cc.action.service_instance_update_managed').and_return(mock_logger)
+          stub_request(:patch, expected_patch_url).
+            with(
+              query: { 'accepts_incomplete' => true }
+            ).
+            to_return(status: 200, body: { dashboard_url: 'http://updated-url.com' }.to_json)
         end
 
         it 'responds with a pollable job' do
@@ -1908,12 +1916,12 @@ RSpec.describe 'V3 service instances' do
 
         it 'logs the correct names when updating a managed service instance' do
           api_call.call(space_dev_headers)
-
+          execute_all_jobs(expected_successes: 1, expected_failures: 0)
           expect(mock_logger).to have_received(:info).with(
             "Updating managed service instance with name '#{service_instance.name}' " \
-            "using service plan '#{original_service_plan.name}' " \
+            "using service plan '#{new_service_plan.name}' (old service plan: '#{original_service_plan.name}')" \
             "from service offering '#{service_offering.name}' " \
-            "provided by broker '#{original_service_plan.service.service_broker.name}'."
+            "provided by broker '#{new_service_plan.service.service_broker.name}'."
           )
         end
 

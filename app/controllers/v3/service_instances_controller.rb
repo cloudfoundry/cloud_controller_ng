@@ -105,7 +105,7 @@ class ServiceInstancesV3Controller < ApplicationController
   end
 
   def destroy
-    service_instance = fetch_writable_service_instance(hashed_params[:guid])
+    service_instance = fetch_writable_service_instance(hashed_params[:guid], eager: true)
     purge = params['purge'] == 'true'
 
     if purge
@@ -311,12 +311,6 @@ class ServiceInstancesV3Controller < ApplicationController
     action = V3::ServiceInstanceUpdateManaged.new(service_instance, message, user_audit_info, message.audit_hash)
     action.preflight!
     if action.update_broker_needed?
-      logger.info(
-        "Updating managed service instance with name '#{service_instance.name}' " \
-        "using service plan '#{service_instance.service_plan.name}' " \
-        "from service offering '#{service_instance.service_plan.service.label}' " \
-        "provided by broker '#{service_instance.service_plan.service.service_broker.name}'."
-      )
 
       update_job = action.enqueue_update
       head :accepted, 'Location' => url_builder.build_url(path: "/v3/jobs/#{update_job.guid}")
@@ -362,10 +356,18 @@ class ServiceInstancesV3Controller < ApplicationController
     specific_message
   end
 
-  def fetch_writable_service_instance(guid)
-    service_instances = ManagedServiceInstance.eager_graph(service_plan: { service: :service_broker }).where(Sequel[:service_instances][:guid] => guid).all
-    service_instance = service_instances[0] unless service_instances.empty?
-    service_instance = UserProvidedServiceInstance.first(guid:) if service_instance.nil?
+  def fetch_writable_service_instance(guid, eager: false)
+    service_instance = if eager
+                         results = ManagedServiceInstance.
+                                   eager_graph(service_plan: { service: :service_broker }).
+                                   where(Sequel[:service_instances][:guid] => guid).
+                                   all
+                         results[0]
+                       else
+                         ManagedServiceInstance.first(guid:)
+                       end
+
+    service_instance ||= UserProvidedServiceInstance.first(guid:)
 
     service_instance_not_found! unless service_instance && can_read_service_instance?(service_instance)
     unauthorized! unless can_write_to_active_space?(service_instance.space)
