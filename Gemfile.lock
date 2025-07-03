@@ -106,7 +106,7 @@ GEM
     base64 (0.2.0)
     beefcake (1.0.0)
     benchmark (0.4.1)
-    bigdecimal (3.2.1)
+    bigdecimal (3.2.2)
     bit-struct (0.17)
     builder (3.3.0)
     byebug (12.0.0)
@@ -519,7 +519,7 @@ GEM
       sexp_processor (~> 4.1)
     rubyzip (2.4.1)
     securerandom (0.4.1)
-    sequel (5.93.0)
+    sequel (5.94.0)
       bigdecimal
     sequel_pg (1.17.2)
       pg (>= 0.18.0, != 1.2.0)
@@ -690,7 +690,7 @@ DEPENDENCIES
   rubocop-rspec_rails
   rubocop-sequel (~> 0.4.1)
   rubyzip (>= 1.3.0)
-  sequel (~> 5.93)
+  sequel (~> 5.94)
   sequel_pg
   sinatra (~> 3.2)
   sinatra-contrib
