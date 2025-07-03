@@ -28,6 +28,9 @@ applications:
   - route: route.example.com
   - route: another-route.example.com
     protocol: http2
+  - route: route-with-options.example.com
+    options:
+      loadbalancing: least-connection
   services:
   - my-service1
   - my-service2
@@ -141,7 +144,16 @@ will be updated for any existing route mapping.
 Name | Type | Description
 ---- | ---- | -----------
 **route** | _string_ | **(Required)** The route URI. Example: `host.domain.com`
-**protocol** | _string_ | Protocol to use for this route. Valid protocols are `http1`, `http2`, and `tcp`.
+**protocol** | _string_ | Protocol to use for this route. Valid protocols are `http1`, `http2`, and `tcp`
+**options** | _object_ | A key-value mapping of configuration [options](#space-manifest-per-route-options-level-configuration) to be applied to the specific application route
+
+####  <a name="space-manifest-per-route-options-level-configuration"></a> Per-Route Options-level configuration
+This configuration allows additional key-value options for the specific application route.
+
+Name | Type | Description
+---- | ---- | -----------
+ **loadbalancing** | _string_ | The load-balancer associated with this route. Valid values are `round-robin` and `least-connection`
+
 
 ####  <a name="space-manifest-service-level-configuration"></a> Service-level configuration
 This configuration is _creating_ new service bindings between the app and a service instance. The `services` field can
