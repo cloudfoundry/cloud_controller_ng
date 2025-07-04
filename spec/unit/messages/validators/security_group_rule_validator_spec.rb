@@ -1251,6 +1251,23 @@ module VCAP::CloudController::Validators
         end
       end
 
+      context 'icmp protocol contains an IPv4 destination range' do
+        let(:rules) do
+          [
+            {
+              protocol: 'icmp',
+              destination: '1.0.0.1-1.0.0.200',
+              type: -1,
+              code: 255
+            }
+          ]
+        end
+
+        it 'is valid' do
+          expect(subject).to be_valid
+        end
+      end
+
       context 'the icmp rules are not provided when the protocol is icmp' do
         let(:rules) do
           [
