@@ -105,7 +105,7 @@ class ServiceInstancesV3Controller < ApplicationController
   end
 
   def destroy
-    service_instance = fetch_writable_service_instance(hashed_params[:guid])
+    service_instance = fetch_writable_service_instance(hashed_params[:guid], eager: true)
     purge = params['purge'] == 'true'
 
     if purge
@@ -253,7 +253,11 @@ class ServiceInstancesV3Controller < ApplicationController
   end
 
   def create_managed(message, space:)
-    service_plan = ServicePlan.first(guid: message.service_plan_guid)
+    service_plan_relations = ServicePlan.eager_graph(service: :service_broker).
+                             where(Sequel[:service_plans][:guid] => message.service_plan_guid).
+                             all
+    service_plan = service_plan_relations[0]
+
     service_plan_does_not_exist! unless service_plan
     service_plan_not_visible_to_user!(service_plan) unless visible_to_current_user?(plan: service_plan)
     unavailable_service_plan!(service_plan) unless service_plan_active?(service_plan)
@@ -268,6 +272,16 @@ class ServiceInstancesV3Controller < ApplicationController
         arbitrary_parameters: message.parameters,
         user_audit_info: user_audit_info,
         audit_hash: message.audit_hash
+      )
+
+      service_name = service_plan.service.name
+      broker_name = service_plan.service.service_broker.name
+
+      logger.info(
+        "Creating managed service instance with name '#{instance.name}' " \
+        "using service plan '#{service_plan.name}' " \
+        "from service offering '#{service_name}' " \
+        "provided by broker '#{broker_name}'."
       )
 
       pollable_job = Jobs::Enqueuer.new(queue: Jobs::Queues.generic).enqueue_pollable(provision_job)
@@ -297,6 +311,7 @@ class ServiceInstancesV3Controller < ApplicationController
     action = V3::ServiceInstanceUpdateManaged.new(service_instance, message, user_audit_info, message.audit_hash)
     action.preflight!
     if action.update_broker_needed?
+
       update_job = action.enqueue_update
       head :accepted, 'Location' => url_builder.build_url(path: "/v3/jobs/#{update_job.guid}")
     else
@@ -341,8 +356,19 @@ class ServiceInstancesV3Controller < ApplicationController
     specific_message
   end
 
-  def fetch_writable_service_instance(guid)
-    service_instance = ServiceInstance.first(guid:)
+  def fetch_writable_service_instance(guid, eager: false)
+    service_instance = if eager
+                         results = ManagedServiceInstance.
+                                   eager_graph(service_plan: { service: :service_broker }).
+                                   where(Sequel[:service_instances][:guid] => guid).
+                                   all
+                         results[0]
+                       else
+                         ManagedServiceInstance.first(guid:)
+                       end
+
+    service_instance ||= UserProvidedServiceInstance.first(guid:)
+
     service_instance_not_found! unless service_instance && can_read_service_instance?(service_instance)
     unauthorized! unless can_write_to_active_space?(service_instance.space)
     suspended! unless is_space_active?(service_instance.space)
@@ -352,6 +378,18 @@ class ServiceInstancesV3Controller < ApplicationController
 
   def enqueue_delete_job(service_instance)
     delete_job = V3::DeleteServiceInstanceJob.new(service_instance.guid, user_audit_info)
+
+    plan = service_instance.service_plan
+    service = plan.service
+    broker = service.service_broker
+
+    logger.info(
+      "Deleting managed service instance with name '#{service_instance.name}' " \
+      "using service plan '#{plan.name}' " \
+      "from service offering '#{service.label}' " \
+      "provided by broker '#{broker.name}'."
+    )
+
     pollable_job = Jobs::Enqueuer.new(queue: Jobs::Queues.generic).enqueue_pollable(delete_job)
     pollable_job.guid
   end

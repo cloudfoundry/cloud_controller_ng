@@ -895,6 +895,15 @@ module VCAP::CloudController
               }
             }
           end
+          let(:logger) { instance_double(Steno::Logger, info: nil) }
+          let(:message) { ServiceInstanceUpdateManagedMessage.new(body) }
+          let(:action) { described_class.new(original_instance, message, user_audit_info, audit_hash) }
+
+          before do
+            allow(client).to receive(:update).and_return([update_response, nil])
+            allow(VCAP::Services::ServiceClientProvider).to receive(:provide).with(instance: original_instance).and_return(client)
+            allow(Steno).to receive(:logger).with('cc.action.service_instance_update_managed').and_return(logger)
+          end
 
           it 'saves the updated instance' do
             action.update(accepts_incomplete: true)
@@ -924,6 +933,16 @@ module VCAP::CloudController
               :update,
               instance_of(ManagedServiceInstance),
               audit_hash
+            )
+          end
+
+          it 'logs the plan change with old and new plan names' do
+            action.update(accepts_incomplete: true)
+
+            expect(logger).to have_received(:info).with(
+              a_string_matching("Updating managed service instance with name '#{original_instance.name}'").
+                and(include("using service plan '#{new_plan.name}'")).
+                and(include("old service plan: '#{original_service_plan.name}'"))
             )
           end
 
@@ -1170,6 +1189,21 @@ module VCAP::CloudController
               }
             }
           end
+          let(:logger) { instance_double(Steno::Logger, info: nil) }
+
+          before do
+            fetch_instance_response = {}
+            poll_response = {
+              last_operation: {
+                state: 'succeeded',
+                description: 'Plan updated successfully'
+              }
+            }
+
+            allow(client).to receive_messages(fetch_service_instance_last_operation: poll_response, fetch_service_instance: fetch_instance_response)
+            allow(VCAP::Services::ServiceClientProvider).to receive(:provide).with(instance: original_instance).and_return(client)
+            allow(Steno).to receive(:logger).with('cc.action.service_instance_update_managed').and_return(logger)
+          end
 
           it 'saves the updated instance last operation' do
             action.update(accepts_incomplete: true)
@@ -1194,6 +1228,20 @@ module VCAP::CloudController
               :start_update,
               instance_of(ManagedServiceInstance),
               audit_hash
+            )
+          end
+
+          it 'logs the plan change with old and new plan names' do
+            old_plan = original_instance.service_plan
+            new_plan = ServicePlan.make(service: old_plan.service)
+            body[:relationships][:service_plan] = { data: { guid: new_plan.guid } }
+
+            action.poll
+
+            expect(logger).to have_received(:info).with(
+              a_string_matching("Updating managed service instance with name '#{original_instance.name}'").
+                and(include("using service plan '#{new_plan.name}'")).
+                and(include("old service plan: '#{old_plan.name}'"))
             )
           end
 

@@ -21,6 +21,7 @@ module VCAP::CloudController
         @message = message
         @user_audit_info = user_audit_info
         @audit_hash = audit_hash
+        @original_plan_guid = instance.service_plan_guid
       end
 
       def preflight!
@@ -170,6 +171,17 @@ module VCAP::CloudController
         end
 
         event_repository.record_service_instance_event(:update, instance, @audit_hash)
+
+        old_plan = ServicePlan.first(guid: @original_plan_guid)
+
+        logger = Steno.logger('cc.action.service_instance_update_managed')
+
+        logger.info(
+          "Updating managed service instance with name '#{instance.name}' " \
+          "using service plan '#{service_plan.name}' (old service plan: '#{old_plan.name}')" \
+          "from service offering '#{service_plan.service.label}' " \
+          "provided by broker '#{service_plan.service.service_broker.name}'."
+        )
       end
 
       def save_incomplete_instance(instance, broker_response)
