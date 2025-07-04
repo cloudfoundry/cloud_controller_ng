@@ -9,7 +9,7 @@ module VCAP::CloudController
     end
 
     def to_s
-      "#<MetadataError is_valid:#{is_valid?} message:#{message}"
+      "#<MetadataError is_valid:#{is_valid?} message:#{message}>"
     end
   end
 end
