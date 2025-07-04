@@ -1408,6 +1408,23 @@ module VCAP::CloudController::Validators
           end
         end
 
+        context 'icmpv6 protocol contains an IPv6 destination range' do
+          let(:rules) do
+            [
+              {
+                protocol: 'icmpv6',
+                destination: '2001:0db8::1-2001:0db8::ff',
+                type: -1,
+                code: 255
+              }
+            ]
+          end
+
+          it 'is valid' do
+            expect(subject).to be_valid
+          end
+        end
+
         context 'icmpv6 protocol contains a comma-delimited list of IPv6 destinations' do
           before do
             TestConfig.config[:security_groups][:enable_comma_delimited_destinations] = true

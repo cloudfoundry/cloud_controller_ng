@@ -26,7 +26,6 @@ class RulesValidator < ActiveModel::Validator
       end
 
       validate_allowed_keys(rule, record, index)
-
       add_rule_error("protocol must be 'tcp', 'udp', 'icmp', 'icmpv6' or 'all'", record, index) unless valid_protocol(rule[:protocol])
 
       if valid_destination_type(rule[:destination], record, index)
@@ -46,9 +45,9 @@ class RulesValidator < ActiveModel::Validator
 
   def get_allowed_ip_version(rule)
     if rule[:protocol] == 'icmp'
-      NetAddr::IPv4Net
+      4
     elsif rule[:protocol] == 'icmpv6'
-      NetAddr::IPv6Net
+      6
     end
   end
 
@@ -158,6 +157,7 @@ class RulesValidator < ActiveModel::Validator
         unless valid_ip_version?(allowed_ip_version, parsed_ip)
     elsif address_list.length == 2
       ips = CloudController::RuleValidator.parse_ip(address_list)
+
       return add_rule_error('destination IP address range is invalid', record, index) unless ips
 
       sorted_ips = if ips.first.is_a?(NetAddr::IPv4)
@@ -169,14 +169,14 @@ class RulesValidator < ActiveModel::Validator
       reversed_range_error = 'beginning of IP address range is numerically greater than the end of its range (range endpoints are inverted)'
       add_rule_error(reversed_range_error, record, index) unless ips.first == sorted_ips.first
       add_rule_error("for protocol \"#{protocol}\" you cannot use IPv#{ips.first.version} addresses", record, index) \
-        unless valid_ip_version?(allowed_ip_version, ips.first)
+        unless valid_ip_version?(allowed_ip_version, sorted_ips.first)
     else
       add_rule_error(error_message, record, index)
     end
   end
 
   def valid_ip_version?(allowed_ip_version, parsed_ip)
-    parsed_ip.nil? || allowed_ip_version.nil? || parsed_ip.is_a?(allowed_ip_version)
+    parsed_ip.nil? || allowed_ip_version.nil? || parsed_ip.version == allowed_ip_version
   end
 
   def add_rule_error(message, record, index)
