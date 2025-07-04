@@ -11,6 +11,20 @@ class ServiceUsageEventsController < ApplicationController
 
     service_usage_events = ServiceUsageEventListFetcher.fetch_all(message, ServiceUsageEvent.dataset) if permission_queryer.can_read_globally?
 
+    if message.consumer_guid && message.after_guid&.first && permission_queryer.can_write_globally?
+      begin
+        consumer = ServiceUsageConsumer.find_or_create(consumer_guid: message.consumer_guid) do |c|
+          c.last_processed_guid = message.after_guid.first
+        end
+
+        consumer.update(last_processed_guid: message.after_guid.first) if !consumer.new? && consumer.last_processed_guid != message.after_guid.first
+      rescue Sequel::ValidationFailed => e
+        unprocessable!(e.message)
+      rescue Sequel::Error
+        error!('Failed to update consumer tracking', 500)
+      end
+    end
+
     render status: :ok, json: Presenters::V3::PaginatedListPresenter.new(
       presenter: Presenters::V3::ServiceUsageEventPresenter,
       paginated_result: SequelPaginator.new.get_page(service_usage_events, message.try(:pagination_options)),
