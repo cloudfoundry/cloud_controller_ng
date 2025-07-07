@@ -22,6 +22,13 @@
       "description": "Allow ping requests to private services"
     },
     {
+      "protocol": "icmpv6",
+      "destination": "::/0",
+      "type": -1,
+      "code": -1,
+      "description": "Allow all ICMPv6 traffic"
+    },
+    {
       "protocol": "tcp",
       "destination": "1.1.1.1,2.2.2.2/24,10.0.0.0-10.0.0.255",
       "ports": "80,443,8080",
