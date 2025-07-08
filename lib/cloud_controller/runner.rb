@@ -136,11 +136,16 @@ module VCAP::CloudController
       setup_metrics_webserver
     end
 
-    # The webserver runs in the main process and serves only the metrics endpoint.
-    # This makes it possible to retrieve metrics even if all Puma workers of the main app are busy.
+    # The webserver runs in the main process and serves only the metrics and status endpoint.
+    # This makes it possible to retrieve both even if all Puma workers of the main app are busy.
     def setup_metrics_webserver
+      readiness_status_proc = method(:status)
       metrics_app = Rack::Builder.new do
         use Prometheus::Middleware::Exporter, path: '/internal/v4/metrics'
+
+        map '/internal/v4/status' do
+          run ->(_env) { readiness_status_proc.call }
+        end
 
         map '/' do
           run lambda { |_env|
@@ -160,6 +165,52 @@ module VCAP::CloudController
         end
 
         server.run
+      end
+    end
+
+    # Persist state for status endpoint
+    @previous_requests_count_sum = nil
+    @last_requests_count_increase_time = nil
+
+    def status
+      stats = Puma.stats_hash
+      worker_statuses = stats[:worker_status]
+      all_busy = all_workers_busy?(worker_statuses)
+      current_requests_count_sum = worker_requests_count_sum(worker_statuses)
+
+      now = Time.now
+      prev = @previous_requests_count_sum
+
+      # Track when requests_count_sum increases
+      @last_requests_count_increase_time = now if prev.nil? || current_requests_count_sum > prev
+      @previous_requests_count_sum = current_requests_count_sum
+
+      unhealthy = false
+      if all_busy && @last_requests_count_increase_time && (now - @last_requests_count_increase_time) > 60
+        # If requests_count_sum hasn't increased in 60 seconds, unhealthy
+        unhealthy = true
+      end
+
+      if all_busy && unhealthy
+        [503, { 'Content-Type' => 'text/plain' }, ['UNHEALTHY']]
+      elsif all_busy
+        [429, { 'Content-Type' => 'text/plain' }, ['BUSY']]
+      else
+        [200, { 'Content-Type' => 'text/plain' }, ['OK']]
+      end
+    rescue StandardError => e
+      [500, { 'Content-Type' => 'text/plain' }, ["Readiness check error: #{e}"]]
+    end
+
+    def all_workers_busy?(worker_statuses)
+      worker_statuses.all? do |worker|
+        worker[:last_status][:busy_threads] == worker[:last_status][:running]
+      end
+    end
+
+    def worker_requests_count_sum(worker_statuses)
+      worker_statuses.sum do |worker|
+        worker[:last_status][:requests_count] || 0
       end
     end
 
