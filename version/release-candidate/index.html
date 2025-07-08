@@ -19776,6 +19776,13 @@ and unweighted destinations for a route is not allowed.</p>
       </span><span class="nl">"description"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Allow ping requests to private services"</span><span class="w">
     </span><span class="p">},</span><span class="w">
     </span><span class="p">{</span><span class="w">
+      </span><span class="nl">"protocol"</span><span class="p">:</span><span class="w"> </span><span class="s2">"icmpv6"</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"destination"</span><span class="p">:</span><span class="w"> </span><span class="s2">"::/0"</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"type"</span><span class="p">:</span><span class="w"> </span><span class="mi">-1</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"code"</span><span class="p">:</span><span class="w"> </span><span class="mi">-1</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"description"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Allow all ICMPv6 traffic"</span><span class="w">
+    </span><span class="p">},</span><span class="w">
+    </span><span class="p">{</span><span class="w">
       </span><span class="nl">"protocol"</span><span class="p">:</span><span class="w"> </span><span class="s2">"tcp"</span><span class="p">,</span><span class="w">
       </span><span class="nl">"destination"</span><span class="p">:</span><span class="w"> </span><span class="s2">"1.1.1.1,2.2.2.2/24,10.0.0.0-10.0.0.255"</span><span class="p">,</span><span class="w">
       </span><span class="nl">"ports"</span><span class="p">:</span><span class="w"> </span><span class="s2">"80,443,8080"</span><span class="p">,</span><span class="w">
@@ -19879,14 +19886,14 @@ and unweighted destinations for a route is not allowed.</p>
 <tr>
 <td><strong>protocol</strong></td>
 <td><em>string</em></td>
-<td>Protocol type Valid values are <code class="prettyprint">tcp</code>, <code class="prettyprint">udp</code>, <code class="prettyprint">icmp</code>, or <code class="prettyprint">all</code></td>
+<td>Protocol type Valid values are <code class="prettyprint">tcp</code>, <code class="prettyprint">udp</code>, <code class="prettyprint">icmp</code>, <code class="prettyprint">icmpv6</code> or <code class="prettyprint">all</code></td>
 <td>yes</td>
 <td>N/A</td>
 </tr>
 <tr>
 <td><strong>destination</strong></td>
 <td><em>string</em></td>
-<td>The destination where the rule applies. Must be a singular Valid CIDR, IP address, or IP address range unless <code class="prettyprint">cc.security_groups.enable_comma_delimited_destinations</code> is enabled. Then, the destination can be a comma-delimited string of CIDRs, IP addresses, or IP address ranges. Octets within destinations cannot contain leading zeros; eg. <code class="prettyprint">10.0.0.0/24</code> is valid, but <code class="prettyprint">010.00.000.0/24</code> is <em>not</em>.</td>
+<td>The destination where the rule applies. Must be a singular valid CIDR, IP address, or IP address range unless <code class="prettyprint">cc.security_groups.enable_comma_delimited_destinations</code> is enabled. Then, the destination can be a comma-delimited string of CIDRs, IP addresses, or IP address ranges. Octets within destinations cannot contain leading zeros; eg. <code class="prettyprint">10.0.0.0/24</code> is valid, but <code class="prettyprint">010.00.000.0/24</code> is <em>not</em>. For <code class="prettyprint">icmp</code>, only IPv4 addresses are allowed and for <code class="prettyprint">icmpv6</code> only IPv6 addresses.</td>
 <td>yes</td>
 <td>N/A</td>
 </tr>
@@ -19974,6 +19981,13 @@ and unweighted destinations for a route is not allowed.</p>
       </span><span class="nl">"type"</span><span class="p">:</span><span class="w"> </span><span class="mi">8</span><span class="p">,</span><span class="w">
       </span><span class="nl">"code"</span><span class="p">:</span><span class="w"> </span><span class="mi">0</span><span class="p">,</span><span class="w">
       </span><span class="nl">"description"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Allow ping requests to private services"</span><span class="w">
+    </span><span class="p">},</span><span class="w">
+    </span><span class="p">{</span><span class="w">
+      </span><span class="nl">"protocol"</span><span class="p">:</span><span class="w"> </span><span class="s2">"icmpv6"</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"destination"</span><span class="p">:</span><span class="w"> </span><span class="s2">"::/0"</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"type"</span><span class="p">:</span><span class="w"> </span><span class="mi">-1</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"code"</span><span class="p">:</span><span class="w"> </span><span class="mi">-1</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"description"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Allow all ICMPv6 traffic"</span><span class="w">
     </span><span class="p">},</span><span class="w">
     </span><span class="p">{</span><span class="w">
       </span><span class="nl">"protocol"</span><span class="p">:</span><span class="w"> </span><span class="s2">"tcp"</span><span class="p">,</span><span class="w">
@@ -20103,6 +20117,13 @@ and unweighted destinations for a route is not allowed.</p>
       </span><span class="nl">"type"</span><span class="p">:</span><span class="w"> </span><span class="mi">8</span><span class="p">,</span><span class="w">
       </span><span class="nl">"code"</span><span class="p">:</span><span class="w"> </span><span class="mi">0</span><span class="p">,</span><span class="w">
       </span><span class="nl">"description"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Allow ping requests to private services"</span><span class="w">
+    </span><span class="p">},</span><span class="w">
+    </span><span class="p">{</span><span class="w">
+      </span><span class="nl">"protocol"</span><span class="p">:</span><span class="w"> </span><span class="s2">"icmpv6"</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"destination"</span><span class="p">:</span><span class="w"> </span><span class="s2">"::/0"</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"type"</span><span class="p">:</span><span class="w"> </span><span class="mi">-1</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"code"</span><span class="p">:</span><span class="w"> </span><span class="mi">-1</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"description"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Allow all ICMPv6 traffic"</span><span class="w">
     </span><span class="p">},</span><span class="w">
     </span><span class="p">{</span><span class="w">
       </span><span class="nl">"protocol"</span><span class="p">:</span><span class="w"> </span><span class="s2">"tcp"</span><span class="p">,</span><span class="w">
@@ -20444,6 +20465,13 @@ and unweighted destinations for a route is not allowed.</p>
       </span><span class="nl">"type"</span><span class="p">:</span><span class="w"> </span><span class="mi">8</span><span class="p">,</span><span class="w">
       </span><span class="nl">"code"</span><span class="p">:</span><span class="w"> </span><span class="mi">0</span><span class="p">,</span><span class="w">
       </span><span class="nl">"description"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Allow ping requests to private services"</span><span class="w">
+    </span><span class="p">},</span><span class="w">
+    </span><span class="p">{</span><span class="w">
+      </span><span class="nl">"protocol"</span><span class="p">:</span><span class="w"> </span><span class="s2">"icmpv6"</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"destination"</span><span class="p">:</span><span class="w"> </span><span class="s2">"::/0"</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"type"</span><span class="p">:</span><span class="w"> </span><span class="mi">-1</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"code"</span><span class="p">:</span><span class="w"> </span><span class="mi">-1</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"description"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Allow all ICMPv6 traffic"</span><span class="w">
     </span><span class="p">},</span><span class="w">
     </span><span class="p">{</span><span class="w">
       </span><span class="nl">"protocol"</span><span class="p">:</span><span class="w"> </span><span class="s2">"tcp"</span><span class="p">,</span><span class="w">
