@@ -1906,15 +1906,39 @@ RSpec.describe 'V3 service instances' do
           )
         end
 
-        it 'logs the correct names when updating a managed service instance' do
-          api_call.call(space_dev_headers)
+        describe 'logging of updates' do
+          it 'logs info including the change of service plans' do
+            api_call.call(space_dev_headers)
 
-          expect(mock_logger).to have_received(:info).with(
-            "Updating managed service instance with name '#{service_instance.name}' " \
-            "using service plan '#{original_service_plan.name}' " \
-            "from service offering '#{service_offering.name}' " \
-            "provided by broker '#{original_service_plan.service.service_broker.name}'."
-          )
+            expect(mock_logger).to have_received(:info).with(
+              "Updating managed service instance with name '#{service_instance.name}' " \
+              "changing plan from '#{original_service_plan.name}' to '#{new_service_plan.name}' " \
+              "from service offering '#{service_offering.name}' " \
+              "provided by broker '#{original_service_plan.service.service_broker.name}'."
+            )
+          end
+
+          context 'when service plan does not change' do
+            let(:request_body) do
+              {
+                parameters: {
+                  foo: 'bar',
+                  baz: 'qux'
+                }
+              }
+            end
+
+            it 'logs info accordingly' do
+              api_call.call(space_dev_headers)
+
+              expect(mock_logger).to have_received(:info).with(
+                "Updating managed service instance with name '#{service_instance.name}' " \
+                "using service plan '#{original_service_plan.name}' " \
+                "from service offering '#{service_offering.name}' " \
+                "provided by broker '#{original_service_plan.service.service_broker.name}'."
+              )
+            end
+          end
         end
 
         describe 'the pollable job' do

@@ -310,15 +310,10 @@ class ServiceInstancesV3Controller < ApplicationController
 
     action = V3::ServiceInstanceUpdateManaged.new(service_instance, message, user_audit_info, message.audit_hash)
     action.preflight!
-    if action.update_broker_needed?
-      logger.info(
-        "Updating managed service instance with name '#{service_instance.name}' " \
-        "using service plan '#{service_instance.service_plan.name}' " \
-        "from service offering '#{service_instance.service_plan.service.label}' " \
-        "provided by broker '#{service_instance.service_plan.service.service_broker.name}'."
-      )
 
+    if action.update_broker_needed?
       update_job = action.enqueue_update
+      log_service_instance_update(message, service_instance)
       head :accepted, 'Location' => url_builder.build_url(path: "/v3/jobs/#{update_job.guid}")
     else
       service_instance = action.update_sync
@@ -328,6 +323,26 @@ class ServiceInstancesV3Controller < ApplicationController
     unprocessable!(e.message)
   rescue LockCheck::ServiceBindingLockedError => e
     raise CloudController::Errors::ApiError.new_from_details('AsyncServiceBindingOperationInProgress', e.service_binding.app.name, e.service_binding.service_instance.name)
+  end
+
+  def log_service_instance_update(message, service_instance)
+    if message.service_plan_guid && message.service_plan_guid != service_instance.service_plan.guid
+      new_service_plan_name = ServicePlan.first(guid: message.service_plan_guid).name
+
+      logger.info(
+        "Updating managed service instance with name '#{service_instance.name}' " \
+        "changing plan from '#{service_instance.service_plan.name}' to '#{new_service_plan_name}' " \
+        "from service offering '#{service_instance.service_plan.service.label}' " \
+        "provided by broker '#{service_instance.service_plan.service.service_broker.name}'."
+      )
+    else
+      logger.info(
+        "Updating managed service instance with name '#{service_instance.name}' " \
+        "using service plan '#{service_instance.service_plan.name}' " \
+        "from service offering '#{service_instance.service_plan.service.label}' " \
+        "provided by broker '#{service_instance.service_plan.service.service_broker.name}'."
+      )
+    end
   end
 
   def check_spaces_exist_and_are_writeable!(service_instance, request_guids, found_spaces)
