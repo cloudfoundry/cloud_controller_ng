@@ -71,7 +71,7 @@ module VCAP::CloudController
     end
 
     def docker_run_action_user
-      droplet.docker_user.presence || AppModel::DEFAULT_CONTAINER_USER
+      droplet&.docker_user.presence || (Config.config.get(:allow_process_root_user) ? AppModel::DEFAULT_DOCKER_CONTAINER_USER : AppModel::DEFAULT_CONTAINER_USER)
     end
 
     def running_state?
