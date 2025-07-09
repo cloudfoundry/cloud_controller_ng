@@ -52,6 +52,23 @@ The `bosh-azure-storage-cli` needs to be extended with the following commands:
 Other providers (AWS, GCP, Alibaba Cloud) will follow. Each will require equivalent blobstore clients and support for the above commands.
 This will eventually allow us to remove all fog related gems from Cloud Controller.
 
+## Tasks
+
+- [ ] Align with foundational infrastructure working group on proposed CLI usage and extensions
+- [ ] Accept this ADR based on shared agreement
+- [ ] Extend `bosh-azure-storage-cli` with:
+  - [ ] `copy`
+  - [ ] `list`
+  - [ ] `properties`
+  - [ ] `ensure-bucket-exists`
+- [ ] Implement `bosh-azure-storage-cli` based blobstore client in Cloud Controller with extensibility for other providers in mind
+- [ ] Add `bosh-azure-storage-cli` package to capi-release
+- [ ] Add support for AWS
+- [ ] Add support for GCP
+- [ ] Add support for Alibaba Cloud
+- [ ] Deprecate/Remove fog once all providers are covered
+
+
 ## Consequences
 
 * Enables the removal of `fog-azure-rm` and all other fog related gems
