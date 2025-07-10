@@ -55,6 +55,19 @@ module VCAP
       def b3_span_id
         Thread.current[:b3_span_id]
       end
+
+      def db_query_count
+        Thread.current[:db_query_count]
+      end
+
+      def increment_db_query_count
+        Thread.current[:db_query_count] ||= 0
+        Thread.current[:db_query_count] += 1
+      end
+
+      def reset_db_query_count
+        Thread.current[:db_query_count] = 0
+      end
     end
   end
 end

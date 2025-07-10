@@ -15,7 +15,8 @@ module CloudFoundry
         # convert to milliseconds
         time_taken = (Time.now - start_time) * 1000
         time_taken = time_taken.to_i
-        @request_logs.complete_request(request_id, status, env, time_taken)
+        query_count = ::VCAP::Request.db_query_count
+        @request_logs.complete_request(request_id, status, env, time_taken, query_count)
 
         [status, headers, body]
       end
