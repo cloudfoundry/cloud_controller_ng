@@ -7,6 +7,7 @@ module CloudFoundry
       end
 
       def call(env)
+        ::VCAP::Request.reset_db_query_metrics
         @request_metrics.start_request
 
         status, headers, body = @app.call(env)

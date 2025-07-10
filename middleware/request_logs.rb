@@ -9,15 +9,20 @@ module CloudFoundry
       def call(env)
         request_id = env['cf.request_id']
         @request_logs.start_request(request_id, env)
-        start_time = Time.now
+        start_timer = timer
 
         status, headers, body = @app.call(env)
-        # convert to milliseconds
-        time_taken = (Time.now - start_time) * 1000
-        time_taken = time_taken.to_i
-        @request_logs.complete_request(request_id, status, env, time_taken)
+        time_taken_ms = timer - start_timer
+        db_query_metrics = ::VCAP::Request.db_query_metrics
+        @request_logs.complete_request(request_id, status, env, time_taken_ms, db_query_metrics.total_query_time_us, db_query_metrics.query_count)
 
         [status, headers, body]
+      end
+
+      private
+
+      def timer
+        Process.clock_gettime(Process::CLOCK_MONOTONIC, :millisecond)
       end
     end
   end

@@ -21,7 +21,7 @@ module CloudFoundry
 
         it 'calls complete request on request logs after the request' do
           middleware.call(env)
-          expect(request_logs).to have_received(:complete_request).with('ID', 200, { 'cf.request_id' => 'ID' }, be_a(Numeric))
+          expect(request_logs).to have_received(:complete_request).with('ID', 200, { 'cf.request_id' => 'ID' }, be_a(Numeric), be_a(Numeric), be_a(Numeric))
         end
       end
     end
