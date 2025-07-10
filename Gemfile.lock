@@ -471,7 +471,7 @@ GEM
       rspec-mocks (~> 3.13)
       rspec-support (~> 3.13)
     rspec-support (3.13.4)
-    rspec-wait (1.0.1)
+    rspec-wait (1.0.2)
       rspec (>= 3.4)
     rspec_api_documentation (6.1.0)
       activesupport (>= 3.0.0)
