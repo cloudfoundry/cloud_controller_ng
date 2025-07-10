@@ -312,8 +312,10 @@ class ServiceInstancesV3Controller < ApplicationController
     action.preflight!
 
     if action.update_broker_needed?
+      # enqueue_update will reload the service instance and we loose the eagerly loaded associations
+      service_instance_with_eager_load = service_instance.dup
       update_job = action.enqueue_update
-      log_service_instance_update(message, service_instance)
+      log_service_instance_update(message, service_instance_with_eager_load)
       head :accepted, 'Location' => url_builder.build_url(path: "/v3/jobs/#{update_job.guid}")
     else
       service_instance = action.update_sync
