@@ -3,6 +3,7 @@ require 'cloud_controller/db_migrator'
 require 'cloud_controller/db_connection/options_factory'
 require 'cloud_controller/db_connection/finalizer'
 require 'sequel/extensions/query_length_logging'
+require 'sequel/extensions/request_query_counter'
 
 module VCAP::CloudController
   class DB
@@ -25,6 +26,7 @@ module VCAP::CloudController
       connection_options = VCAP::CloudController::DbConnection::OptionsFactory.build(opts)
 
       db = get_connection(opts, connection_options)
+      db.extension(:request_query_counter)
 
       if opts[:log_db_queries]
         db.logger = logger
