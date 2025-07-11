@@ -253,7 +253,11 @@ class ServiceInstancesV3Controller < ApplicationController
   end
 
   def create_managed(message, space:)
-    service_plan = ServicePlan.first(guid: message.service_plan_guid)
+    service_plan_relations = ServicePlan.eager_graph(service: :service_broker).
+                             where(Sequel[:service_plans][:guid] => message.service_plan_guid).
+                             all
+    service_plan = service_plan_relations[0]
+
     service_plan_does_not_exist! unless service_plan
     service_plan_not_visible_to_user!(service_plan) unless visible_to_current_user?(plan: service_plan)
     unavailable_service_plan!(service_plan) unless service_plan_active?(service_plan)
@@ -268,6 +272,16 @@ class ServiceInstancesV3Controller < ApplicationController
         arbitrary_parameters: message.parameters,
         user_audit_info: user_audit_info,
         audit_hash: message.audit_hash
+      )
+
+      service_name = service_plan.service.name
+      broker_name = service_plan.service.service_broker.name
+
+      logger.info(
+        "Creating managed service instance with name '#{instance.name}' " \
+        "using service plan '#{service_plan.name}' " \
+        "from service offering '#{service_name}' " \
+        "provided by broker '#{broker_name}'."
       )
 
       pollable_job = Jobs::Enqueuer.new(queue: Jobs::Queues.generic).enqueue_pollable(provision_job)
@@ -296,8 +310,12 @@ class ServiceInstancesV3Controller < ApplicationController
 
     action = V3::ServiceInstanceUpdateManaged.new(service_instance, message, user_audit_info, message.audit_hash)
     action.preflight!
+
     if action.update_broker_needed?
+      # enqueue_update will reload the service instance and we loose the eagerly loaded associations
+      service_instance_with_eager_load = service_instance.dup
       update_job = action.enqueue_update
+      log_service_instance_update(message, service_instance_with_eager_load)
       head :accepted, 'Location' => url_builder.build_url(path: "/v3/jobs/#{update_job.guid}")
     else
       service_instance = action.update_sync
@@ -307,6 +325,26 @@ class ServiceInstancesV3Controller < ApplicationController
     unprocessable!(e.message)
   rescue LockCheck::ServiceBindingLockedError => e
     raise CloudController::Errors::ApiError.new_from_details('AsyncServiceBindingOperationInProgress', e.service_binding.app.name, e.service_binding.service_instance.name)
+  end
+
+  def log_service_instance_update(message, service_instance)
+    if message.service_plan_guid && message.service_plan_guid != service_instance.service_plan.guid
+      new_service_plan_name = ServicePlan.first(guid: message.service_plan_guid).name
+
+      logger.info(
+        "Updating managed service instance with name '#{service_instance.name}' " \
+        "changing plan from '#{service_instance.service_plan.name}' to '#{new_service_plan_name}' " \
+        "from service offering '#{service_instance.service_plan.service.label}' " \
+        "provided by broker '#{service_instance.service_plan.service.service_broker.name}'."
+      )
+    else
+      logger.info(
+        "Updating managed service instance with name '#{service_instance.name}' " \
+        "using service plan '#{service_instance.service_plan.name}' " \
+        "from service offering '#{service_instance.service_plan.service.label}' " \
+        "provided by broker '#{service_instance.service_plan.service.service_broker.name}'."
+      )
+    end
   end
 
   def check_spaces_exist_and_are_writeable!(service_instance, request_guids, found_spaces)
@@ -342,7 +380,10 @@ class ServiceInstancesV3Controller < ApplicationController
   end
 
   def fetch_writable_service_instance(guid)
-    service_instance = ServiceInstance.first(guid:)
+    service_instances = ManagedServiceInstance.eager_graph(service_plan: { service: :service_broker }).where(Sequel[:service_instances][:guid] => guid).all
+    service_instance = service_instances[0] unless service_instances.empty?
+    service_instance = UserProvidedServiceInstance.first(guid:) if service_instance.nil?
+
     service_instance_not_found! unless service_instance && can_read_service_instance?(service_instance)
     unauthorized! unless can_write_to_active_space?(service_instance.space)
     suspended! unless is_space_active?(service_instance.space)
@@ -352,6 +393,18 @@ class ServiceInstancesV3Controller < ApplicationController
 
   def enqueue_delete_job(service_instance)
     delete_job = V3::DeleteServiceInstanceJob.new(service_instance.guid, user_audit_info)
+
+    plan = service_instance.service_plan
+    service = plan.service
+    broker = service.service_broker
+
+    logger.info(
+      "Deleting managed service instance with name '#{service_instance.name}' " \
+      "using service plan '#{plan.name}' " \
+      "from service offering '#{service.label}' " \
+      "provided by broker '#{broker.name}'."
+    )
+
     pollable_job = Jobs::Enqueuer.new(queue: Jobs::Queues.generic).enqueue_pollable(delete_job)
     pollable_job.guid
   end

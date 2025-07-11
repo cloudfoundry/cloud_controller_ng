@@ -268,11 +268,12 @@ module VCAP::CloudController
       def raise_if_invalid_update!
         return unless message.updates.any?
 
-        service_instance.set(message.updates)
-        return service_instance.reload if service_instance.valid?
+        service_instance_copy = service_instance.dup
+        service_instance_copy.set(message.updates)
+        return if service_instance_copy.valid?
 
-        service_instance_name_errors = service_instance.errors.on(:name).to_a
-        service_plan_errors = service_instance.errors.on(:service_plan).to_a
+        service_instance_name_errors = service_instance_copy.errors.on(:name).to_a
+        service_plan_errors = service_instance_copy.errors.on(:service_plan).to_a
 
         if service_instance_name_errors.include?(:unique)
           raise UnprocessableUpdate.new_from_details('ServiceInstanceNameTaken', message.name)
@@ -282,7 +283,7 @@ module VCAP::CloudController
           raise UnprocessableUpdate.new_from_details('ServiceInstanceServicePlanNotAllowed')
         end
 
-        raise Sequel::ValidationFailed.new(service_instance)
+        raise Sequel::ValidationFailed.new(service_instance_copy)
       end
 
       def raise_if_renaming_shared_service_instance!

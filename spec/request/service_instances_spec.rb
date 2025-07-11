@@ -1080,6 +1080,12 @@ RSpec.describe 'V3 service instances' do
       end
       let(:instance) { VCAP::CloudController::ServiceInstance.last }
       let(:job) { VCAP::CloudController::PollableJobModel.last }
+      let(:mock_logger) { instance_double(Steno::Logger, info: nil) }
+
+      before do
+        allow(Steno).to receive(:logger).and_call_original
+        allow(Steno).to receive(:logger).with('cc.api').and_return(mock_logger)
+      end
 
       it 'creates a service instance in the database' do
         api_call.call(space_dev_headers)
@@ -1105,6 +1111,17 @@ RSpec.describe 'V3 service instances' do
         expect(job.operation).to eq('service_instance.create')
         expect(job.resource_guid).to eq(instance.guid)
         expect(job.resource_type).to eq('service_instances')
+      end
+
+      it 'logs the correct names when creating a managed service instance' do
+        api_call.call(space_dev_headers)
+
+        expect(mock_logger).to have_received(:info).with(
+          "Creating managed service instance with name '#{instance.name}' " \
+          "using service plan '#{service_plan.name}' " \
+          "from service offering '#{service_plan.service.name}' " \
+          "provided by broker '#{service_plan.service.service_broker.name}'."
+        )
       end
 
       context 'when the name has already been taken' do
@@ -1847,6 +1864,12 @@ RSpec.describe 'V3 service instances' do
           }
         end
         let(:job) { VCAP::CloudController::PollableJobModel.last }
+        let(:mock_logger) { instance_double(Steno::Logger, info: nil) }
+
+        before do
+          allow(Steno).to receive(:logger).and_call_original
+          allow(Steno).to receive(:logger).with('cc.api').and_return(mock_logger)
+        end
 
         it 'responds with a pollable job' do
           api_call.call(space_dev_headers)
@@ -1881,6 +1904,41 @@ RSpec.describe 'V3 service instances' do
             { prefix: 'pre.fix', key_name: 'to_delete', value: 'value' },
             { prefix: 'pre.fix', key_name: 'tail', value: 'fluffy' }
           )
+        end
+
+        describe 'logging of updates' do
+          it 'logs info including the change of service plans' do
+            api_call.call(space_dev_headers)
+
+            expect(mock_logger).to have_received(:info).with(
+              "Updating managed service instance with name '#{service_instance.name}' " \
+              "changing plan from '#{original_service_plan.name}' to '#{new_service_plan.name}' " \
+              "from service offering '#{service_offering.name}' " \
+              "provided by broker '#{original_service_plan.service.service_broker.name}'."
+            )
+          end
+
+          context 'when service plan does not change' do
+            let(:request_body) do
+              {
+                parameters: {
+                  foo: 'bar',
+                  baz: 'qux'
+                }
+              }
+            end
+
+            it 'logs info accordingly' do
+              api_call.call(space_dev_headers)
+
+              expect(mock_logger).to have_received(:info).with(
+                "Updating managed service instance with name '#{service_instance.name}' " \
+                "using service plan '#{original_service_plan.name}' " \
+                "from service offering '#{service_offering.name}' " \
+                "provided by broker '#{original_service_plan.service.service_broker.name}'."
+              )
+            end
+          end
         end
 
         describe 'the pollable job' do
@@ -2970,6 +3028,12 @@ RSpec.describe 'V3 service instances' do
                }).
           to_return(status: broker_status_code, body: broker_response.to_json, headers: {})
       end
+      let(:mock_logger) { instance_double(Steno::Logger, info: nil) }
+
+      before do
+        allow(Steno).to receive(:logger).and_call_original
+        allow(Steno).to receive(:logger).with('cc.api').and_return(mock_logger)
+      end
 
       it 'responds with job resource' do
         api_call.call(admin_headers)
@@ -2982,6 +3046,17 @@ RSpec.describe 'V3 service instances' do
         expect(job.operation).to eq('service_instance.delete')
         expect(job.resource_guid).to eq(instance.guid)
         expect(job.resource_type).to eq('service_instance')
+      end
+
+      it 'logs the correct names when deleting a managed service instance' do
+        api_call.call(admin_headers)
+
+        expect(mock_logger).to have_received(:info).with(
+          "Deleting managed service instance with name '#{instance.name}' " \
+          "using service plan '#{instance.service_plan.name}' " \
+          "from service offering '#{instance.service_plan.service.name}' " \
+          "provided by broker '#{instance.service_plan.service.service_broker.name}'."
+        )
       end
 
       describe 'the pollable job' do

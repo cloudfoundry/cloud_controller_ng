@@ -75,6 +75,28 @@ module VCAP::CloudController
       end
 
       describe '#preflight!' do
+        context 'when changes were requested' do
+          let(:body) do
+            {
+              name: 'new-name',
+              relationships: {
+                service_plan: {
+                  data: {
+                    guid: new_plan.guid
+                  }
+                }
+              }
+            }
+          end
+
+          let(:new_plan) { ServicePlan.make(service: original_service_offering) }
+
+          it 'does not change the original service instance object' do
+            action.preflight!
+            expect(original_instance.changed_columns).not_to be_any
+          end
+        end
+
         describe 'invalid name updates' do
           context 'when the new name is already taken' do
             let(:instance_in_same_space) { ServiceInstance.make(space: original_instance.space) }
