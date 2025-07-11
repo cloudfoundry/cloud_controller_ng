@@ -71,7 +71,7 @@ module VCAP::CloudController
         validation_errors = case protocol
                             when 'tcp', 'udp'
                               CloudController::TransportRuleValidator.validate(stringified_rule)
-                            when 'icmp'
+                            when 'icmp', 'icmpv6'
                               CloudController::ICMPRuleValidator.validate(stringified_rule)
                             when 'all'
                               CloudController::RuleValidator.validate(stringified_rule)
