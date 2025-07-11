@@ -66,7 +66,7 @@ module UriUtils
     end
 
     path = 'library/' + path if (official_docker_registry(name_parts[0]) || missing_registry(name_parts)) && path.exclude?('/')
-    path, tag_digest = parse_docker_tag_or_digest_from_path(path)
+    path, tag_digest = parse_docker_tag_digest_from_path(path)
 
     raise InvalidDockerURI.new "Invalid image name [#{path}]" unless DOCKER_PATH_REGEX =~ path
     raise InvalidDockerURI.new "Invalid image tag [#{tag_digest}]" if tag_digest && !(DOCKER_TAG_DIGEST_REGEX =~ tag_digest)
@@ -92,10 +92,30 @@ module UriUtils
       (host.exclude?('.') && host.exclude?(':') && host != 'localhost')
   end
 
-  private_class_method def self.parse_docker_tag_or_digest_from_path(path)
-    path, tag_digest = path.split(/@|:/, 2)
-    return [path, tag_digest] unless tag_digest && tag_digest.include?('/')
+  private_class_method def self.parse_docker_tag_digest_from_path(path)
+    # Split path into base path and digest if digest is present (after '@')
+    base_path, digest = path.split('@', 2)
 
-    [path, 'latest']
+    if digest
+      # If digest is present and base_path contains a tag (':'), split it
+      if base_path.include?(':')
+        base_path, tag = base_path.split(':', 2)
+        # Return path and combined tag@digest
+        return [base_path, "#{tag}@#{digest}"]
+      end
+
+      # Return path and digest if no tag present
+      return [base_path, digest]
+    end
+
+    # No digest present, check for tag
+    base_path, tag = base_path.split(':', 2)
+
+    # If tag is present but looks like a path segment (contains '/'), treat as no tag
+    return [base_path, 'latest'] if tag&.include?('/')
+
+    # Return path and tag (or nil if no tag)
+    [base_path, tag]
+
   end
 end
