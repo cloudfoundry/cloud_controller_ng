@@ -73,9 +73,9 @@ module UriUtils
 
     # if only sha256 presented, we add hash value as fragment to the uri,
     # since the ruby uri parser confuses because of second ':' in uri's path part.
-    if tag_digest && tag_digest.start_with?("sha256:")
-      hash_algo, hash_value = tag_digest.split(":")
-      path = path + "@sha256"
+    if tag_digest && tag_digest.start_with?('sha256:')
+      hash_algo, hash_value = tag_digest.split(':')
+      path = path + '@sha256'
       tag_digest = hash_value
     end
 
