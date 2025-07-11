@@ -77,6 +77,10 @@ module CloudController
       ipv4 || ipv6
     end
 
+    def self.ipv6_enabled?
+      config.get(:enable_ipv6)
+    end
+
     def self.comma_delimited_destinations_enabled?
       config.get(:security_groups, :enable_comma_delimited_destinations)
     end
