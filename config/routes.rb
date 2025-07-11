@@ -323,14 +323,24 @@ Rails.application.routes.draw do
   get '/audit_events/:guid', to: 'events#show'
 
   # app usage events
-  get '/app_usage_events/:guid', to: 'app_usage_events#show'
   get '/app_usage_events', to: 'app_usage_events#index'
+  get '/app_usage_events/:guid', to: 'app_usage_events#show'
   post '/app_usage_events/actions/destructively_purge_all_and_reseed', to: 'app_usage_events#destructively_purge_all_and_reseed'
 
   # service usage events
-  get '/service_usage_events/:guid', to: 'service_usage_events#show'
   get '/service_usage_events', to: 'service_usage_events#index'
+  get '/service_usage_events/:guid', to: 'service_usage_events#show'
   post '/service_usage_events/actions/destructively_purge_all_and_reseed', to: 'service_usage_events#destructively_purge_all_and_reseed'
+
+  # app usage consumers
+  get '/app_usage_consumers', to: 'app_usage_consumers#index'
+  get '/app_usage_consumers/:guid', to: 'app_usage_consumers#show'
+  delete '/app_usage_consumers/:guid', to: 'app_usage_consumers#destroy'
+
+  # service usage consumers
+  get '/service_usage_consumers', to: 'service_usage_consumers#index'
+  get '/service_usage_consumers/:guid', to: 'service_usage_consumers#show'
+  delete '/service_usage_consumers/:guid', to: 'service_usage_consumers#destroy'
 
   # environment variable groups
   get '/environment_variable_groups/:name', to: 'environment_variable_groups#show'
