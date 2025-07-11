@@ -40,7 +40,22 @@ Cloud Controller will introduce support for CLI based blobstore clients, startin
 Specifically, we will:
 * Add a new blobstore client using `bosh-azure-storage-cli`
 * Shell out from Cloud Controller to perform blobstore operations
-* Allow opt-in via configuration parameter
+* Allow opt-in via `blobstore_type` configuration parameter and reusing of the existing configuration parameters:
+  * Example diff:
+    ```YAML
+      packages:
+              app_package_directory_key: app-packages
+    -          blobstore_type: storage-cli
+    +          blobstore_type: fog
+              fog_connection:
+                azure_storage_access_key: <access_key>
+                azure_storage_account_name: <account_name>
+                container_name: app-packages
+                environment: AzureCloud
+                provider: AzureRM
+              max_package_size: 1610612736
+    ```
+  * Parameters like `fog_connection` may be renamed after the transition period.       
 * Keep the `fog-azure-rm` backend during the transition
 
 The `bosh-azure-storage-cli` needs to be extended with the following commands:
@@ -75,11 +90,16 @@ This will eventually allow us to remove all fog related gems from Cloud Controll
 * Reduces long-term maintenance burden and potential security issues
 * Allows providers to be migrated independently
 * Increases initial complexity during migration phase
+* More maintainers/contributors for the Bosh storage CLIs
+
+
 * With more consumers, interface changes in the Bosh storage CLIs may require more coordination
 
 ## Alternatives Considered
 
-* Replace fog with newer Ruby gems → Maintenance risk persists and only a short-term solution
+* Replace fog with newer Ruby gems
+  *  → Maintenance risk persists and only a short-term solution
+  *  → Not possible for Azure because the used [azure-sdk-for-ruby](https://github.com/Azure/azure-sdk-for-ruby) is archived
 * Implement own blobstore client in Ruby → High development and testing effort
 
 
