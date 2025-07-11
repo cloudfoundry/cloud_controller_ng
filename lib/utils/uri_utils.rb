@@ -4,6 +4,11 @@ module UriUtils
   SSH_REGEX = %r{ \A (?:ssh://)? git@ .+? : .+? \.git \z }x
   GIT_REGEX = %r{ \A git:// .+? : .+? \.git \z }x
   DOCKER_INDEX_SERVER = 'docker.io'.freeze
+  DOCKER_PATH_REGEX = %r{\A[a-z0-9_\-\.\/]{2,255}\Z}
+  DOCKER_TAG_REGEX = /[a-zA-Z0-9_\-\.]{1,128}/
+  DOCKER_DIGEST_REGEX = /sha256:[a-z0-9]{64}/
+  DOCKER_TAG_DIGEST_REGEX = Regexp.new("\\A(#{DOCKER_TAG_REGEX.source} |
+(#{DOCKER_TAG_REGEX.source}@#{DOCKER_DIGEST_REGEX.source}) | #{DOCKER_DIGEST_REGEX.source})\\Z", Regexp::EXTENDED)
 
   class InvalidDockerURI < StandardError; end
 
@@ -62,13 +67,20 @@ module UriUtils
     end
 
     path = 'library/' + path if (official_docker_registry(name_parts[0]) || missing_registry(name_parts)) && path.exclude?('/')
+    path, tag_digest = parse_docker_tag_digest_from_path(path)
 
-    path, tag = parse_docker_repository_tag(path)
+    raise InvalidDockerURI.new "Invalid image name [#{path}]" unless DOCKER_PATH_REGEX =~ path
+    raise InvalidDockerURI.new "Invalid image tag [#{tag_digest}]" if tag_digest && DOCKER_TAG_DIGEST_REGEX !~ tag_digest
 
-    raise InvalidDockerURI.new "Invalid image name [#{path}]" unless %r{\A[a-z0-9_\-\.\/]{2,255}\Z} =~ path
-    raise InvalidDockerURI.new "Invalid image tag [#{tag}]" if tag && !(/\A(([a-zA-Z0-9_\-\.]{1,128})|(([a-zA-Z0-9_\-\.]{0,128})(@sha256:[a-z0-9]{64})))\Z/ =~ tag)
+    # if only sha256 presented, we add hash value as fragment to the uri,
+    # since the ruby uri parser confuses because of second ':' in uri's path part.
+    if tag_digest && tag_digest.start_with?('sha256:')
+      _, hash_value = tag_digest.split(':')
+      path += '@sha256'
+      tag_digest = hash_value
+    end
 
-    [host, path, tag]
+    [host, path, tag_digest]
   end
 
   private_class_method def self.official_docker_registry(host)
@@ -81,11 +93,29 @@ module UriUtils
     (host.exclude?('.') && host.exclude?(':') && host != 'localhost')
   end
 
-  private_class_method def self.parse_docker_repository_tag(path)
-    path, tag = path.split(/(?=@)|:/, 2)
+  private_class_method def self.parse_docker_tag_digest_from_path(path)
+    # Split path into base path and digest if digest is present (after '@')
+    base_path, digest = path.split('@', 2)
 
-    return [path, tag] unless tag && tag.include?('/')
+    if digest
+      # If digest is present and base_path contains a tag (':'), split it
+      if base_path.include?(':')
+        base_path, tag = base_path.split(':', 2)
+        # Return path and combined tag@digest
+        return [base_path, "#{tag}@#{digest}"]
+      end
 
-    [path, 'latest']
+      # Return path and digest if no tag present
+      return [base_path, digest]
+    end
+
+    # No digest present, check for tag
+    base_path, tag = base_path.split(':', 2)
+
+    # If tag is present but looks like a path segment (contains '/'), treat as no tag
+    return [base_path, 'latest'] if tag&.include?('/')
+
+    # Return path and tag (or nil if no tag)
+    [base_path, tag]
   end
 end
