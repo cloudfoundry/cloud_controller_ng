@@ -5,9 +5,10 @@ module UriUtils
   GIT_REGEX = %r{ \A git:// .+? : .+? \.git \z }x
   DOCKER_INDEX_SERVER = 'docker.io'.freeze
   DOCKER_PATH_REGEX = %r{\A[a-z0-9_\-\.\/]{2,255}\Z}
-  DOCKER_TAG_REGEX = %r{[a-zA-Z0-9_\-\.]{1,128}}
-  DOCKER_DIGEST_REGEX = %r{sha256:[a-z0-9]{64}}
-  DOCKER_TAG_DIGEST_REGEX = Regexp.new("\\A(#{DOCKER_TAG_REGEX.source} | (#{DOCKER_TAG_REGEX.source}@#{DOCKER_DIGEST_REGEX.source}) | #{DOCKER_DIGEST_REGEX.source})\\Z", Regexp::EXTENDED)
+  DOCKER_TAG_REGEX = /[a-zA-Z0-9_\-\.]{1,128}/
+  DOCKER_DIGEST_REGEX = /sha256:[a-z0-9]{64}/
+  DOCKER_TAG_DIGEST_REGEX = Regexp.new("\\A(#{DOCKER_TAG_REGEX.source} |
+(#{DOCKER_TAG_REGEX.source}@#{DOCKER_DIGEST_REGEX.source}) | #{DOCKER_DIGEST_REGEX.source})\\Z", Regexp::EXTENDED)
 
   class InvalidDockerURI < StandardError; end
 
@@ -69,13 +70,13 @@ module UriUtils
     path, tag_digest = parse_docker_tag_digest_from_path(path)
 
     raise InvalidDockerURI.new "Invalid image name [#{path}]" unless DOCKER_PATH_REGEX =~ path
-    raise InvalidDockerURI.new "Invalid image tag [#{tag_digest}]" if tag_digest && !(DOCKER_TAG_DIGEST_REGEX =~ tag_digest)
+    raise InvalidDockerURI.new "Invalid image tag [#{tag_digest}]" if tag_digest && DOCKER_TAG_DIGEST_REGEX !~ tag_digest
 
     # if only sha256 presented, we add hash value as fragment to the uri,
     # since the ruby uri parser confuses because of second ':' in uri's path part.
     if tag_digest && tag_digest.start_with?('sha256:')
-      hash_algo, hash_value = tag_digest.split(':')
-      path = path + '@sha256'
+      _, hash_value = tag_digest.split(':')
+      path += '@sha256'
       tag_digest = hash_value
     end
 
@@ -89,7 +90,7 @@ module UriUtils
   private_class_method def self.missing_registry(name_parts)
     host = name_parts[0]
     name_parts.length == 1 ||
-      (host.exclude?('.') && host.exclude?(':') && host != 'localhost')
+    (host.exclude?('.') && host.exclude?(':') && host != 'localhost')
   end
 
   private_class_method def self.parse_docker_tag_digest_from_path(path)
@@ -116,6 +117,5 @@ module UriUtils
 
     # Return path and tag (or nil if no tag)
     [base_path, tag]
-
   end
 end
