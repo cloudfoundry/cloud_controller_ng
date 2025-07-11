@@ -4,8 +4,25 @@ import gulp from 'gulp';
 import express from 'express';
 import { glob } from 'glob';
 import { LinkChecker } from 'linkinator';
-
 import * as cheerio from 'cheerio';
+import { instance as gaxios } from 'gaxios';
+
+const githubToken = process.env.GITHUB_TOKEN;
+console.log('GITHUB_TOKEN is', githubToken ? 'SET' : 'NOT SET');
+
+// Add an interceptor to gaxios to include the GitHub token in the headers for requests to GitHub
+gaxios.interceptors.request.add({
+  resolved: (config) => {
+    if (githubToken && config.url?.includes('github.com')) {
+      config.headers = {
+        ...(config.headers || {}),
+        authorization: `Bearer ${githubToken}`,
+      };
+    }
+    return config;
+  },
+  rejected: (error) => Promise.reject(error),
+});
 
 function displayErrors(err, stdout, stderr) {
   if (err) {
@@ -91,6 +108,8 @@ async function checkPathAndExit(path, options, done) {
     recurse: options.recurse,
     silent: options.silent,
     markdown: options.markdown,
+    concurrency: 1,
+    retry: true,
   };
 
   try {
