@@ -1,6 +1,7 @@
 require 'presenters/v3/paginated_list_presenter'
 require 'presenters/v3/process_presenter'
 require 'presenters/v3/process_stats_presenter'
+require 'presenters/v3/processes_state_presenter'
 require 'cloud_controller/paging/pagination_options'
 require 'actions/process_delete'
 require 'fetchers/process_list_fetcher'
@@ -17,7 +18,7 @@ require 'cloud_controller/strategies/non_manifest_strategy'
 class ProcessesController < ApplicationController
   include AppSubResource
 
-  before_action :find_process_and_space, except: :index
+  before_action :find_process_and_space, except: %i[index state]
   before_action :ensure_can_write, only: %i[update terminate scale]
 
   def index
@@ -104,6 +105,23 @@ class ProcessesController < ApplicationController
     add_warning_headers(warnings)
 
     render status: :ok, json: Presenters::V3::ProcessStatsPresenter.new(@process.type, process_stats)
+  end
+
+  def state
+    space_guid = params[:space_guid]
+    return unprocessable!(['space_guid required']) if space_guid.blank?
+
+    # Fetch all processes in the given space
+    processes = ProcessFetcher.fetch_for_space(space_guid: space_guid)
+
+    # Call state_for_processes on instances_reporters
+    process_states, warnings = instances_reporters.state_for_processes(processes)
+
+    # Add warning headers
+    add_warning_headers(warnings)
+
+    # Render the result using ProcessesStatePresenter
+    render status: :ok, json: VCAP::CloudController::Presenters::V3::ProcessesStatePresenter.new(process_states).to_hash
   end
 
   private

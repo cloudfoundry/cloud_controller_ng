@@ -29,6 +29,51 @@ module VCAP::CloudController
         raise exception
       end
 
+      def state_for_processes(processes)
+        logger.debug('state_for_processes.fetching_actual_lrps')
+
+        # Fetch actual_lrps for all processes
+        actual_lrps = bbs_instances_client.actual_lrps_by_processes(processes)
+
+        results = {}
+        warnings = []
+
+        processes.each do |process|
+          actual_lrp_list = actual_lrps[process.guid] || []
+          instance_states = {}
+          lrp_instances = {}
+
+          actual_lrp_list.each do |actual_lrp|
+            idx = actual_lrp.index
+
+            # Ensure only the newest LRP is reported for the same index
+            if lrp_instances.include?(idx)
+              existing_lrp = lrp_instances[idx]
+              next if actual_lrp.since < existing_lrp.since
+            end
+
+            lrp_instances[idx] = actual_lrp
+
+            instance_states[idx] = {
+              state: actual_lrp.state,
+              instance_guid: actual_lrp.instance_guid,
+              routable: actual_lrp.routable,
+              host: actual_lrp.host,
+              instance_internal_ip: actual_lrp.net_info[:instance_address],
+              uptime: actual_lrp.uptime,
+              isolation_segment: IsolationSegmentSelector.for_space(process.space),
+              details: actual_lrp.details
+            }
+          end
+
+          fill_unreported_instances_with_down_instances(instance_states, process, flat: false)
+
+          results[process] = instance_states
+        end
+
+        [results, warnings]
+      end
+
       private
 
       attr_reader :bbs_instances_client
