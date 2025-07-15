@@ -13,5 +13,6 @@ module Diego
     REMOVE_DESIRED_LRP           = '/v1/desired_lrp/remove'.freeze
     RETIRE_ACTUAL_LRP            = '/v1/actual_lrps/retire'.freeze
     ACTUAL_LRPS                  = '/v1/actual_lrps/list'.freeze
+    ACTUAL_LRPS_BY_PROCESS_GUIDS = '/v1/actual_lrps/list_by_process_guids'.freeze
   end
 end

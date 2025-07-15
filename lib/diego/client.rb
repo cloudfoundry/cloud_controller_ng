@@ -152,6 +152,17 @@ module Diego
       protobuf_decode!(response.body, Bbs::Models::ActualLRPsResponse)
     end
 
+    def actual_lrps_by_process_guids(process_guids)
+      request = protobuf_encode!({ process_guids: }, Bbs::Models::ActualLRPsByProcessGuidsRequest)
+
+      response = with_request_error_handling do
+        client.post(Routes::ACTUAL_LRPS_BY_PROCESS_GUIDS, request, headers)
+      end
+
+      validate_status_200!(response)
+      protobuf_decode!(response.body, Bbs::Models::ActualLRPsByProcessGuidsResponse)
+    end
+
     def with_request_error_handling
       delay = 0.25
       max_delay = 5
