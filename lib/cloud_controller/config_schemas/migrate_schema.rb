@@ -2,7 +2,6 @@ require 'vcap/config'
 
 module VCAP::CloudController
   module ConfigSchemas
-    module Base
       class MigrateSchema < VCAP::Config
         define_schema do
           {
@@ -47,4 +46,3 @@ module VCAP::CloudController
       end
     end
   end
-end

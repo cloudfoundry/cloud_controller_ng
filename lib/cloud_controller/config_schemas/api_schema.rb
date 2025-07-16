@@ -3,7 +3,6 @@ require 'cloud_controller/resource_pool'
 
 module VCAP::CloudController
   module ConfigSchemas
-    module Base
       class ApiSchema < VCAP::Config
         # rubocop:disable Metrics/BlockLength
         define_schema do
@@ -122,12 +121,41 @@ module VCAP::CloudController
             },
 
             staging: {
+              auth: {
+                user: String,
+                password: String
+              },
               optional(:legacy_md5_buildpack_paths_enabled) => bool,
               timeout_in_seconds: Integer,
               minimum_staging_memory_mb: Integer,
               minimum_staging_disk_mb: Integer,
               minimum_staging_file_descriptor_limit: Integer
             },
+
+            diego: {
+              bbs: {
+                url: String,
+                ca_file: String,
+                cert_file: String,
+                key_file: String,
+                connect_timeout: Integer,
+                send_timeout: Integer,
+                receive_timeout: Integer
+              },
+              cc_uploader_url: String,
+              file_server_url: String,
+              lifecycle_bundles: Hash,
+              droplet_destinations: Hash,
+              pid_limit: Integer,
+              use_privileged_containers_for_running: bool,
+              use_privileged_containers_for_staging: bool,
+              insecure_docker_registry_list: [String],
+              docker_staging_stack: String,
+              optional(:temporary_oci_buildpack_mode) => enum('oci-phase-1', NilClass),
+              enable_declarative_asset_downloads: bool
+            },
+
+            app_log_revision: bool,
 
             index: Integer, # Component index (cc-0, cc-1, etc)
             name: String, # Component name (api_z1, api_z2)
@@ -412,4 +440,3 @@ module VCAP::CloudController
       end
     end
   end
-end

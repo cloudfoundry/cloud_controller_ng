@@ -2,7 +2,6 @@ require 'vcap/config'
 
 module VCAP::CloudController
   module ConfigSchemas
-    module Base
       class WorkerSchema < VCAP::Config
         # rubocop:disable Metrics/BlockLength
         define_schema do
@@ -57,8 +56,35 @@ module VCAP::CloudController
             },
 
             staging: {
+              auth: {
+                user: String,
+                password: String
+              },
               timeout_in_seconds: Integer
             },
+
+            diego: {
+              bbs: {
+                url: String,
+                ca_file: String,
+                cert_file: String,
+                key_file: String,
+                connect_timeout: Integer,
+                send_timeout: Integer,
+                receive_timeout: Integer
+              },
+              cc_uploader_url: String,
+              file_server_url: String,
+              lifecycle_bundles: Hash,
+              droplet_destinations: Hash,
+              pid_limit: Integer,
+              use_privileged_containers_for_running: bool,
+              use_privileged_containers_for_staging: bool,
+              optional(:temporary_oci_buildpack_mode) => enum('oci-phase-1', NilClass),
+              enable_declarative_asset_downloads: bool
+            },
+
+            app_log_revision: bool,
 
             index: Integer, # Component index (cc-0, cc-1, etc)
             name: String, # Component name (api_z1, api_z2)
@@ -208,4 +234,3 @@ module VCAP::CloudController
       end
     end
   end
-end

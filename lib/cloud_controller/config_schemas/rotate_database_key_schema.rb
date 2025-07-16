@@ -2,7 +2,6 @@ require 'vcap/config'
 
 module VCAP::CloudController
   module ConfigSchemas
-    module Vms
       class RotateDatabaseKeySchema < VCAP::Config
         define_schema do
           {
@@ -48,4 +47,3 @@ module VCAP::CloudController
       end
     end
   end
-end
