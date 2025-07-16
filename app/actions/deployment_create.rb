@@ -281,7 +281,11 @@ module VCAP::CloudController
           {
             'strategy' => strategy,
             'max-in-flight' => max_in_flight,
-            'canary-steps' => canary_steps
+            'canary-steps' => canary_steps,
+            'instances' => deployment.web_instances,
+            'memory' => deployment.memory_in_mb,
+            'disk' => deployment.disk_in_mb,
+            'log-rate' => deployment.log_rate_limit_in_bytes_per_second
           }
         )
       end
