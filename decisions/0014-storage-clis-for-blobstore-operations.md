@@ -40,14 +40,13 @@ Cloud Controller will introduce support for CLI based blobstore clients, startin
 Specifically, we will:
 * Add a new blobstore client using `bosh-azure-storage-cli`
 * Shell out from Cloud Controller to perform blobstore operations
-* Allow opt-in via `blobstore_type` configuration parameter and reusing of the existing configuration parameters:
-  * Example diff:
+* Allow opt-in via `blobstore_type` configuration parameter
+  * Desired configuration format:
     ```YAML
       packages:
               app_package_directory_key: app-packages
-    -          blobstore_type: storage-cli
-    +          blobstore_type: fog
-              fog_connection:
+              blobstore_type: storage-cli
+              connection_config:
                 azure_storage_access_key: <access_key>
                 azure_storage_account_name: <account_name>
                 container_name: app-packages
@@ -55,7 +54,10 @@ Specifically, we will:
                 provider: AzureRM
               max_package_size: 1610612736
     ```
-  * Parameters like `fog_connection` may be renamed after the transition period.       
+* Field `provider` will be used to determine the corresponding storage CLI blobstore client class (same approach is used for fog)
+* The `fog_connection` field will be renamed to `connection_config` to make it independent
+* Values from `connection_config` are used to generate the corresponding config file for the Bosh storage CLIs
+* During the transition phase existing parameters like `fog_connection` may be reused and/or supported in parallel    
 * Keep the `fog-azure-rm` backend during the transition
 
 The `bosh-azure-storage-cli` needs to be extended with the following commands:
@@ -78,6 +80,7 @@ This will eventually allow us to remove all fog related gems from Cloud Controll
   - [ ] `ensure-bucket-exists`
 - [ ] Implement `bosh-azure-storage-cli` based blobstore client in Cloud Controller with extensibility for other providers in mind
 - [ ] Add `bosh-azure-storage-cli` package to capi-release
+- [ ] Add ops file in cf-deployment to allow opt-in
 - [ ] Add support for AWS
 - [ ] Add support for GCP
 - [ ] Add support for Alibaba Cloud
