@@ -28,6 +28,7 @@ module VCAP::CloudController
       def config
         @instance
       end
+
       def schema_class_for_context(context, _config)
         const_get("VCAP::CloudController::ConfigSchemas::#{context.to_s.camelize}Schema")
       end
