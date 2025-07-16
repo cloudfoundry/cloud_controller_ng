@@ -5,13 +5,13 @@ require 'cloud_controller/backends/runners'
 require 'cloud_controller/index_stopper'
 require 'cloud_controller/backends/instances_reporters'
 require 'repositories/service_event_repository'
-require 'cloud_controller/config_schemas/vms/api_schema'
-require 'cloud_controller/config_schemas/vms/clock_schema'
-require 'cloud_controller/config_schemas/vms/migrate_schema'
-require 'cloud_controller/config_schemas/vms/route_syncer_schema'
-require 'cloud_controller/config_schemas/vms/worker_schema'
-require 'cloud_controller/config_schemas/vms/deployment_updater_schema'
-require 'cloud_controller/config_schemas/vms/rotate_database_key_schema'
+require 'cloud_controller/config_schemas/api_schema'
+require 'cloud_controller/config_schemas/clock_schema'
+require 'cloud_controller/config_schemas/migrate_schema'
+require 'cloud_controller/config_schemas/route_syncer_schema'
+require 'cloud_controller/config_schemas/worker_schema'
+require 'cloud_controller/config_schemas/deployment_updater_schema'
+require 'cloud_controller/config_schemas/rotate_database_key_schema'
 require 'utils/hash_utils'
 
 module VCAP::CloudController
@@ -30,8 +30,7 @@ module VCAP::CloudController
       end
 
       def schema_class_for_context(context, _config)
-        module_name = 'Vms'
-        const_get("VCAP::CloudController::ConfigSchemas::#{module_name}::#{context.to_s.camelize}Schema")
+        const_get("VCAP::CloudController::ConfigSchemas::#{context.to_s.camelize}Schema")
       end
 
       def read_file(file_name)
