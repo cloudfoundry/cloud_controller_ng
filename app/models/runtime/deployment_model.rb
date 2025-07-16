@@ -27,7 +27,8 @@ module VCAP::CloudController
 
     DEPLOYMENT_STRATEGIES = [
       ROLLING_STRATEGY = 'rolling'.freeze,
-      CANARY_STRATEGY = 'canary'.freeze
+      CANARY_STRATEGY = 'canary'.freeze,
+      RECREATE_STRATEGY = 'recreate'.freeze
     ].freeze
 
     PROGRESSING_STATES = [
