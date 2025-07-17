@@ -204,111 +204,36 @@ module VCAP::CloudController
           task.droplet.update(execution_metadata: droplet_execution_metadata)
         end
 
-        context 'when root user is allowed' do
+        context 'when the task has a user specified' do
           before do
-            TestConfig.override(allow_docker_root_user: true)
+            task.update(user: 'ContainerUser')
           end
 
-          context 'when the task has a user specified' do
+          it 'returns the user' do
+            expect(task.run_action_user).to eq('ContainerUser')
+          end
+        end
+
+        context 'when the task DOES NOT have a user specified' do
+          context 'when there is a droplet and it has the docker lifecycle' do
             before do
-              task.update(user: 'ContainerUser')
+              allow(task.droplet).to(receive(:docker_user).and_return('DropletDockerUser'))
             end
 
-            it 'returns the user' do
-              expect(task.run_action_user).to eq('ContainerUser')
-            end
-          end
-
-          context 'when the droplet execution metadata specifies a user' do
-            it 'returns the specified user' do
-              expect(task.run_action_user).to eq('some-user')
-            end
-          end
-
-          context 'when the droplet execution metadata DOES NOT specify a user' do
-            let(:droplet_execution_metadata) { '{"entrypoint":["/image-entrypoint.sh"]}' }
-
-            it 'defaults the user to root' do
-              expect(task.run_action_user).to eq('root')
-            end
-          end
-
-          context 'when the droplet execution metadata is an empty string' do
-            let(:droplet_execution_metadata) { '' }
-
-            it 'defaults the user to root' do
-              expect(task.run_action_user).to eq('root')
-            end
-          end
-
-          context 'when the droplet execution metadata is nil' do
-            let(:droplet_execution_metadata) { nil }
-
-            it 'defaults the user to root' do
-              expect(task.run_action_user).to eq('root')
-            end
-          end
-
-          context 'when the droplet execution metadata has invalid json' do
-            let(:droplet_execution_metadata) { '{' }
-
-            it 'defaults the user to root' do
-              expect(task.run_action_user).to eq('root')
+            it 'returns the docker_user from the droplet' do
+              expect(task.run_action_user).to eq('DropletDockerUser')
             end
           end
         end
 
-        context 'when root user is not allowed' do
+        context 'when there is no droplet for the task' do
           before do
-            TestConfig.override(allow_docker_root_user: false)
+            task.droplet.delete
+            task.reload
           end
 
-          context 'when the task has a user specified' do
-            before do
-              task.update(user: 'ContainerUser')
-            end
-
-            it 'returns the user' do
-              expect(task.run_action_user).to eq('ContainerUser')
-            end
-          end
-
-          context 'when the droplet execution metadata specifies a user' do
-            it 'returns the specified user' do
-              expect(task.run_action_user).to eq('some-user')
-            end
-          end
-
-          context 'when the droplet execution metadata DOES NOT specify a user' do
-            let(:droplet_execution_metadata) { '{"entrypoint":["/image-entrypoint.sh"]}' }
-
-            it 'defaults the user to vcap' do
-              expect(task.run_action_user).to eq('vcap')
-            end
-          end
-
-          context 'when the droplet execution metadata is an empty string' do
-            let(:droplet_execution_metadata) { '' }
-
-            it 'defaults the user to vcap' do
-              expect(task.run_action_user).to eq('vcap')
-            end
-          end
-
-          context 'when the droplet execution metadata is nil' do
-            let(:droplet_execution_metadata) { nil }
-
-            it 'defaults the user to vcap' do
-              expect(task.run_action_user).to eq('vcap')
-            end
-          end
-
-          context 'when the droplet execution metadata has invalid json' do
-            let(:droplet_execution_metadata) { '{' }
-
-            it 'defaults the user to vcap' do
-              expect(task.run_action_user).to eq('vcap')
-            end
+          it 'returns the default "vcap" user' do
+            expect(task.run_action_user).to eq('vcap')
           end
         end
       end
