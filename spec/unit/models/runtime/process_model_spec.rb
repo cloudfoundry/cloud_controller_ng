@@ -678,7 +678,7 @@ module VCAP::CloudController
       subject(:process) { ProcessModelFactory.make }
 
       context 'when the process belongs to a Docker lifecycle app' do
-        subject(:process) { ProcessModelFactory.make({ docker_image: 'example.com/image' }) }
+        subject(:process) { ProcessModelFactory.make(:docker, { docker_image: 'example.com/image' }) }
         let(:droplet_execution_metadata) { '{"entrypoint":["/image-entrypoint.sh"],"user":"some-user"}' }
 
         before do
@@ -687,121 +687,25 @@ module VCAP::CloudController
           process.desired_droplet.reload
         end
 
-        context 'when root user is allowed' do
+        context 'when the process has a user specified' do
           before do
-            TestConfig.override(allow_process_root_user: true)
+            process.update(user: 'ContainerUser')
           end
 
-          context 'when the process has a user specified' do
-            before do
-              process.update(user: 'ContainerUser')
-            end
-
-            it 'returns the user' do
-              expect(process.run_action_user).to eq('ContainerUser')
-            end
-          end
-
-          context 'when the droplet execution metadata specifies a user' do
-            it 'returns the specified user' do
-              expect(process.run_action_user).to eq('some-user')
-            end
-          end
-
-          context 'when the droplet execution metadata DOES NOT specify a user' do
-            let(:droplet_execution_metadata) { '{"entrypoint":["/image-entrypoint.sh"]}' }
-
-            it 'returns the default "root" user' do
-              expect(process.run_action_user).to eq('root')
-            end
-          end
-
-          context 'when the droplet execution metadata is an empty string' do
-            let(:droplet_execution_metadata) { '' }
-
-            it 'returns the default "root" user' do
-              expect(process.run_action_user).to eq('root')
-            end
-          end
-
-          context 'when the droplet execution metadata is nil' do
-            let(:droplet_execution_metadata) { nil }
-
-            it 'returns the default "root" user' do
-              expect(process.run_action_user).to eq('root')
-            end
-          end
-
-          context 'when the droplet execution metadata has invalid json' do
-            let(:droplet_execution_metadata) { '{' }
-
-            it 'returns the default "root" user' do
-              expect(process.run_action_user).to eq('root')
-            end
-          end
-
-          context 'when the app does not have a droplet assigned' do
-            before do
-              process.app.update(droplet: nil)
-              process.reload
-            end
-
-            it 'returns the default "root" user' do
-              expect(process.run_action_user).to eq('root')
-            end
+          it 'returns the user' do
+            expect(process.run_action_user).to eq('ContainerUser')
           end
         end
 
-        context 'when root user is not allowed' do
-          before do
-            TestConfig.override(allow_process_root_user: false)
-          end
-
-          context 'when the process has a user specified' do
+        context 'when the process DOES NOT have a user specified' do
+          context 'when the process has a droplet' do
             before do
-              process.update(user: 'ContainerUser')
+              # TODO: do we need to handle the distinction between desired and actual droplet?
+              allow(process.actual_droplet).to(receive(:docker_user)).and_return('ActualDropletDockerUser')
             end
 
-            it 'returns the user' do
-              expect(process.run_action_user).to eq('ContainerUser')
-            end
-          end
-
-          context 'when the droplet execution metadata specifies a user' do
-            it 'returns the specified user' do
-              expect(process.run_action_user).to eq('some-user')
-            end
-          end
-
-          context 'when the droplet execution metadata DOES NOT specify a user' do
-            let(:droplet_execution_metadata) { '{"entrypoint":["/image-entrypoint.sh"]}' }
-
-            it 'returns the default "vcap" user' do
-              expect(process.run_action_user).to eq('vcap')
-            end
-          end
-
-          context 'when the droplet execution metadata is an empty string' do
-            let(:droplet_execution_metadata) { '' }
-
-            it 'returns the default "vcap" user' do
-              expect(process.run_action_user).to eq('vcap')
-            end
-          end
-
-          context 'when the droplet execution metadata is nil' do
-            let(:droplet_execution_metadata) { nil }
-
-            it 'returns the default "vcap" user' do
-              expect(process.run_action_user).to eq('vcap')
-            end
-          end
-
-          context 'when the droplet execution metadata has invalid json' do
-            let(:droplet_execution_metadata) { '{' }
-
-            it 'returns the default "vcap" user' do
-              expect(process.run_action_user).to eq('vcap')
+            it 'returns the docker_user from the desired_droplet' do
+              expect(process.run_action_user).to eq('ActualDropletDockerUser')
             end
           end
 
@@ -811,8 +715,24 @@ module VCAP::CloudController
               process.reload
             end
 
-            it 'returns the default "vcap" user' do
-              expect(process.run_action_user).to eq('vcap')
+            context 'when root user is allowed' do
+              before do
+                TestConfig.override(allow_process_root_user: true)
+              end
+
+              it 'returns the default "root" user' do
+                expect(process.run_action_user).to eq('root')
+              end
+            end
+
+            context 'when root user IS NOT allowed' do
+              before do
+                TestConfig.override(allow_process_root_user: false)
+              end
+
+              it 'returns the default "vcap" user' do
+                expect(process.run_action_user).to eq('vcap')
+              end
             end
           end
         end
