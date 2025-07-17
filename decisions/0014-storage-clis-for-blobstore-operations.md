@@ -71,7 +71,8 @@ This will eventually allow us to remove all fog related gems from Cloud Controll
 
 ## Tasks
 
-- [ ] Align with foundational infrastructure working group on proposed CLI usage and extensions
+- [x] Align with foundational infrastructure working group on proposed CLI usage and extensions
+- [ ] Create RFC in community repository
 - [ ] Accept this ADR based on shared agreement
 - [ ] Extend `bosh-azure-storage-cli` with:
   - [ ] `copy`
