@@ -1,5 +1,4 @@
 # Copyright (c) 2009-2012 VMware, Inc.
-# rubocop:disable Lint/ShadowingOuterLocalVariable
 
 def rename_foreign_key_internal(db, alter_table, table, current_name, new_name, &block)
   processed = false
@@ -149,5 +148,4 @@ Sequel.migration do
   end
 end
 
-# rubocop:enable Lint/ShadowingOuterLocalVariable
 # rubocop:enable Style/ArrayCoercion
