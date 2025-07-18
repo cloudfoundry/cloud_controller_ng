@@ -290,36 +290,21 @@ module VCAP::CloudController
         context 'when the webserver is puma' do
           let(:test_config_overrides) { super().merge(webserver: 'puma') }
 
-          it 'sets up a separate webserver for metrics' do
+          it 'starts the MetricsWebserver' do
+            expect(MetricsWebserver).to receive(:new).and_call_original
+            expect_any_instance_of(MetricsWebserver).to receive(:start)
+
             subject
-
-            expect(Puma::Server).to have_received(:new).once
-          end
-
-          it 'listens on the specified metrics port' do
-            subject
-
-            expect(puma_server_double).to have_received(:add_tcp_listener).with('127.0.0.1', 9395)
-          end
-
-          context 'metrics_socket is configured' do
-            let(:test_config_overrides) { super().merge(nginx: { metrics_socket: '/tmp/metrics_socket.sock' }) }
-
-            it 'listens on the specified metrics socket' do
-              subject
-
-              expect(puma_server_double).to have_received(:add_unix_listener).with('/tmp/metrics_socket.sock')
-            end
           end
         end
 
         context 'when the webserver is not puma' do
           let(:test_config_overrides) { super().merge(webserver: 'thin') }
 
-          it 'does not set up the webserver' do
-            subject
+          it 'does not start the MetricsWebserver' do
+            expect(MetricsWebserver).not_to receive(:new)
 
-            expect(Puma::Server).not_to have_received(:new)
+            subject
           end
         end
       end
