@@ -48,9 +48,9 @@ module VCAP::CloudController::Validators
 
       it 'returns indexed errors corresponding to each invalid rule' do
         expect(subject).not_to be_valid
-        expect(subject.errors.full_messages).to include "Rules[0]: protocol must be 'tcp', 'udp', 'icmp', or 'all'"
+        expect(subject.errors.full_messages).to include "Rules[0]: protocol must be 'tcp', 'udp', 'icmp', 'icmpv6' or 'all'"
         expect(subject.errors.full_messages).to include 'Rules[0]: destination must be a valid CIDR, IP address, or IP address range'
-        expect(subject.errors.full_messages).to include "Rules[1]: protocol must be 'tcp', 'udp', 'icmp', or 'all'"
+        expect(subject.errors.full_messages).to include "Rules[1]: protocol must be 'tcp', 'udp', 'icmp', 'icmpv6' or 'all'"
         expect(subject.errors.full_messages).to include 'Rules[1]: destination must be a valid CIDR, IP address, or IP address range'
       end
     end
@@ -655,7 +655,7 @@ module VCAP::CloudController::Validators
           end
         end
 
-        context 'when there is a leading zero in an octet' do
+        context 'when there is a leading zero in a segment' do
           context 'in a CIDR' do
             let(:rules) do
               [
@@ -672,10 +672,8 @@ module VCAP::CloudController::Validators
               ]
             end
 
-            it 'is not valid' do
-              expect(subject).not_to be_valid
-              expect(subject.errors.full_messages).to include 'Rules[0]: destination octets cannot contain leading zeros'
-              expect(subject.errors.full_messages).to include 'Rules[1]: destination octets cannot contain leading zeros'
+            it 'is valid' do
+              expect(subject).to be_valid
             end
           end
 
@@ -690,9 +688,8 @@ module VCAP::CloudController::Validators
               ]
             end
 
-            it 'is not valid' do
-              expect(subject).not_to be_valid
-              expect(subject.errors.full_messages).to include 'Rules[0]: destination octets cannot contain leading zeros'
+            it 'is valid' do
+              expect(subject).to be_valid
             end
           end
 
@@ -727,14 +724,8 @@ module VCAP::CloudController::Validators
               ]
             end
 
-            it 'is not valid' do
-              expect(subject).not_to be_valid
-              expect(subject.errors.full_messages.length).to eq(5)
-              expect(subject.errors.full_messages).to include 'Rules[0]: destination octets cannot contain leading zeros'
-              expect(subject.errors.full_messages).to include 'Rules[1]: destination octets cannot contain leading zeros'
-              expect(subject.errors.full_messages).to include 'Rules[2]: destination octets cannot contain leading zeros'
-              expect(subject.errors.full_messages).to include 'Rules[3]: destination octets cannot contain leading zeros'
-              expect(subject.errors.full_messages).to include 'Rules[4]: destination octets cannot contain leading zeros'
+            it 'is valid' do
+              expect(subject).to be_valid
             end
           end
         end
@@ -914,7 +905,7 @@ module VCAP::CloudController::Validators
               [
                 {
                   protocol: 'udp',
-                  destination: '2001:db8::1-2001:db8::g,2001:db8::/129,2001:db8:0000::/32,2001:db8::ff-2001:db8::1',
+                  destination: '2001:db8::1-2001:db8::g,2001:db8::/129,2001:db8::ff-2001:db8::1',
                   ports: '8080'
                 }
               ]
@@ -922,7 +913,7 @@ module VCAP::CloudController::Validators
 
             it 'throws an error for every destination' do
               expect(subject).not_to be_valid
-              expect(subject.errors.full_messages.length).to equal(4)
+              expect(subject.errors.full_messages.length).to equal(3)
               expect(subject.errors.full_messages).to include 'Rules[0]: destination must contain valid CIDR(s), IP address(es), or IP address range(s)'
               expect(subject.errors.full_messages).to include 'Rules[0]: destination IP address range is invalid'
 
@@ -1073,7 +1064,7 @@ module VCAP::CloudController::Validators
 
         it 'adds an error' do
           expect(subject).not_to be_valid
-          expect(subject.errors.full_messages).to include "Rules[0]: protocol must be 'tcp', 'udp', 'icmp', or 'all'"
+          expect(subject.errors.full_messages).to include "Rules[0]: protocol must be 'tcp', 'udp', 'icmp', 'icmpv6' or 'all'"
         end
       end
 
@@ -1082,7 +1073,7 @@ module VCAP::CloudController::Validators
 
         it 'is not valid' do
           expect(subject).not_to be_valid
-          expect(subject.errors.full_messages).to include "Rules[0]: protocol must be 'tcp', 'udp', 'icmp', or 'all'"
+          expect(subject.errors.full_messages).to include "Rules[0]: protocol must be 'tcp', 'udp', 'icmp', 'icmpv6' or 'all'"
         end
       end
 
@@ -1091,7 +1082,7 @@ module VCAP::CloudController::Validators
 
         it 'adds an error' do
           expect(subject).not_to be_valid
-          expect(subject.errors.full_messages).to include "Rules[0]: protocol must be 'tcp', 'udp', 'icmp', or 'all'"
+          expect(subject.errors.full_messages).to include "Rules[0]: protocol must be 'tcp', 'udp', 'icmp', 'icmpv6' or 'all'"
         end
       end
 
@@ -1260,6 +1251,23 @@ module VCAP::CloudController::Validators
         end
       end
 
+      context 'icmp protocol contains an IPv4 destination range' do
+        let(:rules) do
+          [
+            {
+              protocol: 'icmp',
+              destination: '1.0.0.1-1.0.0.200',
+              type: -1,
+              code: 255
+            }
+          ]
+        end
+
+        it 'is valid' do
+          expect(subject).to be_valid
+        end
+      end
+
       context 'the icmp rules are not provided when the protocol is icmp' do
         let(:rules) do
           [
@@ -1310,6 +1318,224 @@ module VCAP::CloudController::Validators
           expect(subject).not_to be_valid
           expect(subject.errors.full_messages).to include 'Rules[0]: type must be an integer between -1 and 255 (inclusive)'
           expect(subject.errors.full_messages).to include 'Rules[0]: code must be an integer between -1 and 255 (inclusive)'
+        end
+      end
+
+      context 'ipv6 is disabled' do
+        before do
+          TestConfig.config[:enable_ipv6] = false
+        end
+
+        context 'icmpv6 protocol in a rule' do
+          let(:rules) do
+            [
+              {
+                protocol: 'icmpv6',
+                destination: '2001:db8::/32',
+                type: -1,
+                code: 255
+              }
+            ]
+          end
+
+          it 'is not valid' do
+            expect(subject).not_to be_valid
+            expect(subject.errors.full_messages).to include 'Rules[0]: icmpv6 cannot be used if enable_ipv6 is false'
+          end
+        end
+      end
+
+      context 'ipv6 is enabled' do
+        before do
+          TestConfig.config[:enable_ipv6] = true
+        end
+
+        context 'icmp protocol contains an IPv6 destination' do
+          let(:rules) do
+            [
+              {
+                protocol: 'icmp',
+                destination: '2001:db8::/32',
+                type: -1,
+                code: 255
+              }
+            ]
+          end
+
+          it 'is invalid' do
+            expect(subject).not_to be_valid
+            expect(subject.errors.full_messages).to include 'Rules[0]: for protocol "icmp" you cannot use IPv6 addresses'
+          end
+        end
+
+        context 'icmp protocol contains an IPv6 destination range' do
+          let(:rules) do
+            [
+              {
+                protocol: 'icmp',
+                destination: '2001:0db8::1-2001:0db8::ff',
+                type: -1,
+                code: 255
+              }
+            ]
+          end
+
+          it 'is invalid' do
+            expect(subject).not_to be_valid
+            expect(subject.errors.full_messages).to include 'Rules[0]: for protocol "icmp" you cannot use IPv6 addresses'
+          end
+        end
+
+        context 'icmp protocol contains a comma-delimited list of IPv6 destinations' do
+          before do
+            TestConfig.config[:security_groups][:enable_comma_delimited_destinations] = true
+          end
+
+          let(:rules) do
+            [
+              {
+                protocol: 'icmp',
+                destination: '2001:db8::/32,2001:db8:85a3::/64',
+                type: -1,
+                code: 255
+              }
+            ]
+          end
+
+          it 'is invalid' do
+            expect(subject).not_to be_valid
+            expect(subject.errors.full_messages).to include 'Rules[0]: for protocol "icmp" you cannot use IPv6 addresses'
+          end
+        end
+
+        context 'icmpv6 protocol contains an IPv6 destination' do
+          let(:rules) do
+            [
+              {
+                protocol: 'icmpv6',
+                destination: '2001:db8::/32',
+                type: -1,
+                code: 255
+              }
+            ]
+          end
+
+          it 'is valid' do
+            expect(subject).to be_valid
+          end
+        end
+
+        context 'icmpv6 protocol contains an IPv6 destination range' do
+          let(:rules) do
+            [
+              {
+                protocol: 'icmpv6',
+                destination: '2001:0db8::1-2001:0db8::ff',
+                type: -1,
+                code: 255
+              }
+            ]
+          end
+
+          it 'is valid' do
+            expect(subject).to be_valid
+          end
+        end
+
+        context 'icmpv6 protocol contains a comma-delimited list of IPv6 destinations' do
+          before do
+            TestConfig.config[:security_groups][:enable_comma_delimited_destinations] = true
+          end
+
+          let(:rules) do
+            [
+              {
+                protocol: 'icmpv6',
+                destination: '2001:db8::/32,2001:db8:85a3::/64',
+                type: -1,
+                code: 255
+              }
+            ]
+          end
+
+          it 'is valid' do
+            expect(subject).to be_valid
+          end
+        end
+
+        context 'icmpv6 protocol contains an IPv4 destination' do
+          let(:rules) do
+            [
+              {
+                protocol: 'icmpv6',
+                destination: '10.0.0.0/8',
+                type: -1,
+                code: 255
+              }
+            ]
+          end
+
+          it 'is invalid' do
+            expect(subject).not_to be_valid
+            expect(subject.errors.full_messages).to include 'Rules[0]: for protocol "icmpv6" you cannot use IPv4 addresses'
+          end
+        end
+
+        context 'icmpv6 protocol contains an IPv4 destination range' do
+          let(:rules) do
+            [
+              {
+                protocol: 'icmpv6',
+                destination: '1.0.0.000-1.0.0.200',
+                type: -1,
+                code: 255
+              }
+            ]
+          end
+
+          it 'is invalid' do
+            expect(subject).not_to be_valid
+            expect(subject.errors.full_messages).to include 'Rules[0]: for protocol "icmpv6" you cannot use IPv4 addresses'
+          end
+        end
+
+        context 'icmpv6 protocol contains a comma-delimited list of IPv4/IPv6 destinations' do
+          before do
+            TestConfig.config[:security_groups][:enable_comma_delimited_destinations] = true
+          end
+
+          let(:rules) do
+            [
+              {
+                protocol: 'icmpv6',
+                destination: '10.0.0.0/8,2001:db8::/32',
+                type: -1,
+                code: 255
+              }
+            ]
+          end
+
+          it 'is invalid' do
+            expect(subject).not_to be_valid
+            expect(subject.errors.full_messages).to include 'Rules[0]: for protocol "icmpv6" you cannot use IPv4 addresses'
+          end
+        end
+
+        context 'the icmp rules are not provided when the protocol is icmpv6' do
+          let(:rules) do
+            [
+              {
+                protocol: 'icmpv6',
+                destination: '2001:db8::/32'
+              }
+            ]
+          end
+
+          it 'is invalid' do
+            expect(subject).not_to be_valid
+            expect(subject.errors.full_messages).to include 'Rules[0]: type is required for protocols of type ICMP'
+            expect(subject.errors.full_messages).to include 'Rules[0]: code is required for protocols of type ICMP'
+          end
         end
       end
     end

@@ -2,7 +2,7 @@ module VCAP::CloudController
   module Diego
     module Docker
       class DesiredLrpBuilder
-        attr_reader :start_command
+        attr_reader :start_command, :action_user
 
         def initialize(config, opts)
           @config = config
@@ -10,6 +10,8 @@ module VCAP::CloudController
           @execution_metadata = opts[:execution_metadata]
           @ports = opts[:ports]
           @start_command = opts[:start_command]
+          @action_user = opts[:action_user]
+          @additional_container_env_vars = opts[:additional_container_env_vars]
         end
 
         def cached_dependencies
@@ -43,7 +45,7 @@ module VCAP::CloudController
         end
 
         def global_environment_variables
-          []
+          [] + @additional_container_env_vars
         end
 
         def ports
@@ -66,16 +68,6 @@ module VCAP::CloudController
 
         def privileged?
           false
-        end
-
-        def action_user
-          execution_metadata = Oj.load(@execution_metadata)
-          user = execution_metadata['user']
-          if user.nil? || user.empty?
-            'root'
-          else
-            user
-          end
         end
       end
     end

@@ -164,6 +164,114 @@ module VCAP::CloudController
       end
     end
 
+    describe '#run_action_user' do
+      let(:task) { TaskModel.make(app: parent_app, droplet: droplet, state: TaskModel::SUCCEEDED_STATE) }
+      let(:droplet) { DropletModel.make }
+
+      context 'when the task belongs to a CNB lifecycle app' do
+        let(:parent_app) { AppModel.make(:cnb) }
+        let(:task) { TaskModel.make(app: parent_app, droplet: droplet, state: TaskModel::SUCCEEDED_STATE) }
+        let(:droplet) { DropletModel.make(:cnb) }
+
+        context 'when the task has a user specified' do
+          before do
+            task.update(user: 'TestUser')
+          end
+
+          it 'returns the user' do
+            expect(task.run_action_user).to eq('TestUser')
+          end
+        end
+
+        context 'when the task does not have a user specified' do
+          before do
+            task.update(user: nil)
+          end
+
+          it 'defaults the user to root' do
+            expect(task.run_action_user).to eq('root')
+          end
+        end
+      end
+
+      context 'when the task belongs to a Docker lifecycle app' do
+        let(:parent_app) { AppModel.make(:docker) }
+        let(:task) { TaskModel.make(app: parent_app, droplet: droplet, state: TaskModel::SUCCEEDED_STATE) }
+        let(:droplet) { DropletModel.make(:docker) }
+        let(:droplet_execution_metadata) { '{"entrypoint":["/image-entrypoint.sh"],"user":"cnb"}' }
+
+        before do
+          task.droplet.update(execution_metadata: droplet_execution_metadata)
+        end
+
+        context 'when the task has a user specified' do
+          before do
+            task.update(user: 'ContainerUser')
+          end
+
+          it 'returns the user' do
+            expect(task.run_action_user).to eq('ContainerUser')
+          end
+        end
+
+        context 'when the droplet execution metadata specifies a user' do
+          it 'returns the specified user' do
+            expect(task.run_action_user).to eq('cnb')
+          end
+        end
+
+        context 'when the droplet execution metadata DOES NOT specify a user' do
+          let(:droplet_execution_metadata) { '{"entrypoint":["/image-entrypoint.sh"]}' }
+
+          it 'defaults the user to root' do
+            expect(task.run_action_user).to eq('root')
+          end
+        end
+
+        context 'when the droplet execution metadata is an empty string' do
+          let(:droplet_execution_metadata) { '' }
+
+          it 'defaults the user to root' do
+            expect(task.run_action_user).to eq('root')
+          end
+        end
+
+        context 'when the droplet execution metadata is nil' do
+          let(:droplet_execution_metadata) { nil }
+
+          it 'defaults the user to root' do
+            expect(task.run_action_user).to eq('root')
+          end
+        end
+
+        context 'when the droplet execution metadata has invalid json' do
+          let(:droplet_execution_metadata) { '{' }
+
+          it 'defaults the user to root' do
+            expect(task.run_action_user).to eq('root')
+          end
+        end
+      end
+
+      context 'when the task DOES NOT belong to a Docker lifecycle app' do
+        context 'when the task has a user specified' do
+          before do
+            task.update(user: 'ContainerUser')
+          end
+
+          it 'returns the user' do
+            expect(task.run_action_user).to eq('ContainerUser')
+          end
+        end
+
+        context 'when the task DOES NOT have a user specified' do
+          it 'returns the default "vcap" user' do
+            expect(task.run_action_user).to eq('vcap')
+          end
+        end
+      end
+    end
+
     describe 'validations' do
       let(:task) { TaskModel.make }
       let(:org) { Organization.make }
@@ -495,6 +603,49 @@ module VCAP::CloudController
                     app: app
                   )
                 end.not_to raise_error
+              end
+            end
+          end
+
+          describe 'user' do
+            subject(:task) { TaskModel.make(user: task_user) }
+            let(:task_user) { 'vcap' }
+
+            before do
+              TestConfig.override(additional_allowed_process_users: %w[some_user some_other_user])
+            end
+
+            context 'when user is vcap' do
+              before do
+                TestConfig.override(additional_allowed_process_users: [])
+              end
+
+              it 'is always permitted' do
+                expect { task.save }.not_to raise_error
+              end
+            end
+
+            context 'when user is a permitted user' do
+              let(:task_user) { 'some_user' }
+
+              it 'does not raise an error' do
+                expect { task.save }.not_to raise_error
+              end
+            end
+
+            context 'when user is nil' do
+              let(:task_user) { nil }
+
+              it 'does not raise an error' do
+                expect { task.save }.not_to raise_error
+              end
+            end
+
+            context 'when user is not permitted' do
+              let(:task_user) { 'some-random-user' }
+
+              it 'raises an error' do
+                expect { task.save }.to raise_error(/user invalid/)
               end
             end
           end

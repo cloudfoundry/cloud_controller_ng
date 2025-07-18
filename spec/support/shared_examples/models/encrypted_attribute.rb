@@ -53,7 +53,7 @@ module VCAP::CloudController
 
       begin
         decrypted_value = Encryptor.decrypt(saved_attribute, model.send(attr_salt), label: model.encryption_key_label, iterations: model.encryption_iterations)
-      rescue OpenSSL::Cipher::CipherError
+      rescue VCAP::CloudController::Encryptor::EncryptorError
         errored = true
       end
 

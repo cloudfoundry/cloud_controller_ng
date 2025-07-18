@@ -721,6 +721,7 @@ module VCAP::CloudController
                 'readiness_health_check_http_endpoint' => 'potato potahto',
                 'readiness_health_check_interval' => 'yucca',
                 'command' => '',
+                'user' => '',
                 'timeout' => 'yam'
               }
             end
@@ -738,6 +739,7 @@ module VCAP::CloudController
                 'readiness_health_check_invocation_timeout' => 'cat-jicima',
                 'readiness_health_check_interval' => -1,
                 'command' => '',
+                'user' => '',
                 'timeout' => 'yam'
               }
             end
@@ -751,10 +753,11 @@ module VCAP::CloudController
             it 'includes the type of the process in the error message' do
               message = AppManifestMessage.create_from_yml(params_from_yaml)
               expect(message).not_to be_valid
-              expect(message.errors).to have(27).items
+              expect(message.errors).to have(29).items
 
               expected_errors = [
                 'Process "type1": Command must be between 1 and 4096 characters',
+                'Process "type1": User must be between 1 and 255 characters',
                 'Process "type1": Disk quota must use a supported unit: B, K, KB, M, MB, G, GB, T, or TB',
                 'Process "type1": Log rate limit per second is not a number',
                 'Process "type1": Instances must be greater than or equal to 0',
@@ -770,6 +773,7 @@ module VCAP::CloudController
                 'Process "type1": Readiness health check http endpoint must be a valid URI path',
                 'Process "type1": Readiness health check type must be "http" to set a health check HTTP endpoint',
                 'Process "type2": Command must be between 1 and 4096 characters',
+                'Process "type2": User must be between 1 and 255 characters',
                 'Process "type2": Disk quota must use a supported unit: B, K, KB, M, MB, G, GB, T, or TB',
                 'Process "type2": Log rate limit per second must use a supported unit: B, K, KB, M, MB, G, GB, T, or TB',
                 'Process "type2": Instances is not a number',
@@ -2197,6 +2201,44 @@ module VCAP::CloudController
           message = AppManifestMessage.create_from_yml(parsed_yaml)
           expect(message).to be_valid
           expect(message.manifest_routes_update_message).not_to be_requested(:routes)
+        end
+      end
+    end
+
+    describe '#manifest_features_update_message' do
+      context 'when no features are specified' do
+        let(:parsed_yaml) do
+          { name: 'app' }
+        end
+
+        it 'does not set the features in the message' do
+          message = AppManifestMessage.create_from_yml(parsed_yaml)
+          expect(message).to be_valid
+          expect(message.manifest_features_update_message).not_to be_requested(:features)
+        end
+      end
+
+      context 'when features are specified' do
+        let(:parsed_yaml) do
+          { name: 'app', features: { ssh: true, 'service-binding-k8s': false } }
+        end
+
+        it 'returns a ManifestFeaturesUpdateMessage containing the features' do
+          message = AppManifestMessage.create_from_yml(parsed_yaml)
+          expect(message).to be_valid
+          expect(message.manifest_features_update_message.features).to eq({ ssh: true, 'service-binding-k8s': false })
+        end
+      end
+
+      context 'when an invalid feature is specified' do
+        let(:parsed_yaml) do
+          { features: { invalid_feature: true } }
+        end
+
+        it 'is invalid and contains the correct error message' do
+          message = AppManifestMessage.create_from_yml(parsed_yaml)
+          expect(message).not_to be_valid
+          expect(message.errors[:base]).to include('Features must be a map of valid feature names to booleans (true = enabled, false = disabled)')
         end
       end
     end

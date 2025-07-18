@@ -15,6 +15,7 @@ Name | Type | Description
 **sequence_id** | _integer_ | User-facing id of the task; this number is unique for every task associated with a given app
 **name** | _string_ | Name of the task
 **command** | _string_ | Command that will be executed; this field may be excluded based on a user's role
+**user** | _string_ or _null_ | The OS user used to run the task in the runtime
 **state** | _string_ | State of the task Possible states are `PENDING`, `RUNNING`, `SUCCEEDED`, `CANCELING`, and `FAILED`
 **memory_in_mb** | _integer_ | Amount of memory to allocate for the task in MB
 **disk_in_mb** | _integer_ | Amount of disk to allocate for the task in MB

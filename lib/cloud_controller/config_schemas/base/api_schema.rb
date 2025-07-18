@@ -45,6 +45,7 @@ module VCAP::CloudController
             maximum_app_disk_in_mb: Integer,
             default_health_check_timeout: Integer,
             maximum_health_check_timeout: Integer,
+            additional_allowed_process_users: Array,
 
             instance_file_descriptor_limit: Integer,
 
@@ -134,7 +135,8 @@ module VCAP::CloudController
 
             nginx: {
               use_nginx: bool,
-              instance_socket: String
+              instance_socket: String,
+              optional(:metrics_socket) => String
             },
 
             quota_definitions: Hash,

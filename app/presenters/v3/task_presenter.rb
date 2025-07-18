@@ -15,6 +15,7 @@ module VCAP::CloudController
                          sequence_id: task.sequence_id,
                          name: task.name,
                          command: task.command,
+                         user: task.run_action_user,
                          state: task.state,
                          memory_in_mb: task.memory_in_mb,
                          disk_in_mb: task.disk_in_mb,

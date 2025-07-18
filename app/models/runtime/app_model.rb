@@ -7,6 +7,8 @@ module VCAP::CloudController
   class AppModel < Sequel::Model(:apps)
     include Serializer
     APP_NAME_REGEX = /\A[[:alnum:][:punct:][:print:]]+\Z/
+    DEFAULT_CONTAINER_USER = 'vcap'.freeze
+    DEFAULT_DOCKER_CONTAINER_USER = 'root'.freeze
 
     many_to_many :routes, join_table: :route_mappings, left_key: :app_guid, left_primary_key: :guid, right_primary_key: :guid, right_key: :route_guid
     one_to_many :route_mappings, class: 'VCAP::CloudController::RouteMappingModel', key: :app_guid, primary_key: :guid
@@ -123,6 +125,12 @@ module VCAP::CloudController
         binding.credentials['uri'] if binding.credentials.present?
       end.compact
       DatabaseUriGenerator.new(service_binding_uris).database_uri
+    end
+
+    def windows_gmsa_credential_refs
+      service_bindings.sort_by(&:id).map do |binding|
+        binding.credentials['credhub-windows-gmsa-credential-ref'] if binding.credentials.present?
+      end.compact
     end
 
     def staging_in_progress?

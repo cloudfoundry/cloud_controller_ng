@@ -39,11 +39,11 @@ jobs:
 
   Test-Postgres:
     runs-on: ubuntu-latest
-    timeout-minutes: 30
+    timeout-minutes: 60
     strategy:
       fail-fast: false
       matrix:
-        image: ["postgres:13", "postgres:15", "postgres:16"]
+        image: ["postgres:13", "postgres:15", "postgres:17"]
     services:
       postgres:
         image: ${{ matrix.image }}
@@ -72,7 +72,7 @@ jobs:
 
   Test-Mysql:
     runs-on: ubuntu-latest
-    timeout-minutes: 30
+    timeout-minutes: 60
     strategy:
       fail-fast: false
       matrix:

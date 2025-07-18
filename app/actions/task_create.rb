@@ -27,6 +27,7 @@ module VCAP::CloudController
           state: TaskModel::PENDING_STATE,
           droplet: droplet,
           command: command(message, template_process),
+          user: user(message, template_process),
           disk_in_mb: disk_in_mb(message, template_process),
           memory_in_mb: memory_in_mb(message, template_process),
           log_rate_limit: log_rate_limit(message, template_process),
@@ -68,6 +69,13 @@ module VCAP::CloudController
       return message.command if message.requested?(:command)
 
       template_process.specified_or_detected_command
+    end
+
+    def user(message, template_process)
+      return message.user if message.requested?(:user)
+      return template_process.user if message.template_requested?
+
+      nil
     end
 
     def memory_in_mb(message, template_process)

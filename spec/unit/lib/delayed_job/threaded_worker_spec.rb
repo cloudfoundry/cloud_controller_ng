@@ -64,7 +64,8 @@ RSpec.describe Delayed::ThreadedWorker do
     end
 
     it 'sets the worker name in the Steno context' do
-      steno_data_spy = spy('data')
+      steno_data_spy = {}
+      allow(steno_data_spy).to receive(:[]=).and_call_original
       allow(Steno.config.context).to receive(:data).and_return(steno_data_spy)
 
       worker.start

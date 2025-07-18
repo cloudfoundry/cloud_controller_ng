@@ -130,6 +130,28 @@ module VCAP::CloudController::Presenters::V3
         end
       end
 
+      describe 'user' do
+        let(:custom_user) { nil }
+
+        before do
+          process.update(user: custom_user)
+        end
+
+        context 'when the process has a user set' do
+          let(:custom_user) { 'ContainerUser' }
+
+          it 'displays the user' do
+            expect(result[:user]).to eq('ContainerUser')
+          end
+        end
+
+        context 'when the process does not have a user set' do
+          it 'displays the default "vcap" user' do
+            expect(result[:user]).to eq('vcap')
+          end
+        end
+      end
+
       describe '#revisions' do
         context('when the process has a revision') do
           let(:revision) { VCAP::CloudController::RevisionModel.make }

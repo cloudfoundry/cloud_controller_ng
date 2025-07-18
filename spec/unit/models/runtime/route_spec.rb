@@ -1284,6 +1284,23 @@ module VCAP::CloudController
             expect(process.reload.routes[0]).to eq route
           end
         end
+
+        context 'when route_binding is deleted externally before destroy' do
+          before do
+            allow_any_instance_of(ServiceKeyDelete).to receive(:delete_service_binding).and_wrap_original do |original_method, *args|
+              service_binding = args.first
+              service_binding.destroy
+              original_method.call(*args)
+            end
+          end
+
+          it 'does not raise a Sequel::NoExistingObject error' do
+            route_binding = RouteBinding.make
+            route = route_binding.route
+            stub_unbind(route_binding)
+            expect { route.destroy }.not_to raise_error
+          end
+        end
       end
     end
 
@@ -1567,6 +1584,36 @@ module VCAP::CloudController
 
         it 'returns false' do
           expect(route.wildcard_host?).to be(false)
+        end
+      end
+    end
+
+    describe 'app spaces and route shared spaces' do
+      let!(:domain) { SharedDomain.make }
+
+      context 'when app and route space not shared' do
+        let!(:app) { AppModel.make }
+        let!(:route) { Route.make(host: 'potato', domain: domain, path: '/some-path') }
+
+        it 'no space match and not shared and returns false' do
+          expect(route.available_in_space?(app.space)).to be(false)
+        end
+
+        it 'match space and returns true' do
+          route.space = app.space
+          expect(route.available_in_space?(app.space)).to be(true)
+        end
+      end
+
+      context 'when app and route space shared' do
+        let!(:app) { AppModel.make }
+        let!(:route_share) { RouteShare.new }
+        let(:user_audit_info) { instance_double(UserAuditInfo).as_null_object }
+        let!(:route) { Route.make(host: 'potato', domain: domain, path: '/some-path') }
+        let!(:shared_route) { route_share.create(route, [app.space], user_audit_info) }
+
+        it 'shared space match and returns true' do
+          expect(route.available_in_space?(app.space)).to be(true)
         end
       end
     end

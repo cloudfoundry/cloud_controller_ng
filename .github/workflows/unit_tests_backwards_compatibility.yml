@@ -28,12 +28,12 @@ permissions:
 jobs:
   Test-Postgres-Backwards-Compatibillity:
     runs-on: ubuntu-latest
-    timeout-minutes: 30
+    timeout-minutes: 60
     strategy:
       fail-fast: false
       max-parallel: 3
       matrix:
-        image: ["postgres:13", "postgres:15", "postgres:16"]
+        image: ["postgres:13", "postgres:15", "postgres:17"]
     services:
       postgres:
         image: ${{ matrix.image }}
@@ -80,7 +80,7 @@ jobs:
 
   Test-Mysql-Backwards-Compatibillity:
     runs-on: ubuntu-latest
-    timeout-minutes: 30
+    timeout-minutes: 60
     strategy:
       fail-fast: false
       max-parallel: 3

@@ -44,7 +44,30 @@ module VCAP::CloudController
       create_stop_event unless terminal_state?
     end
 
+    def run_action_user
+      return user if user.present?
+
+      if docker?
+        docker_run_action_user
+      elsif cnb?
+        'root' # TODO: Why do CNB tasks default to this user instead of vcap?
+      else
+        AppModel::DEFAULT_CONTAINER_USER
+      end
+    end
+
+    delegate :docker?, to: :droplet
+    delegate :cnb?, to: :droplet
+
     private
+
+    def permitted_users
+      Set.new([AppModel::DEFAULT_CONTAINER_USER]) + Config.config.get(:additional_allowed_process_users)
+    end
+
+    def docker_run_action_user
+      droplet.docker_user.presence || AppModel::DEFAULT_CONTAINER_USER
+    end
 
     def running_state?
       state == RUNNING_STATE
@@ -68,6 +91,7 @@ module VCAP::CloudController
       validate_org_quotas
       validate_space_quotas
 
+      ProcessUserPolicy.new(self, permitted_users).validate
       MinLogRateLimitPolicy.new(self).validate
     end
 

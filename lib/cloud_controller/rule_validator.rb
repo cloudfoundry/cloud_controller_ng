@@ -77,6 +77,10 @@ module CloudController
       ipv4 || ipv6
     end
 
+    def self.ipv6_enabled?
+      config.get(:enable_ipv6)
+    end
+
     def self.comma_delimited_destinations_enabled?
       config.get(:security_groups, :enable_comma_delimited_destinations)
     end
@@ -99,7 +103,8 @@ module CloudController
     private_class_method def self.no_leading_zeros_in_address(address)
       return no_leading_zeros_in_ipv4_address(address) if address.include?('.')
 
-      no_leading_zeros_in_ipv6_address(address) if address.include?(':')
+      # return true for IPv6 addresses, as leading zeros are allowed
+      true
     end
 
     private_class_method def self.no_leading_zeros_in_ipv4_address(address)
@@ -110,19 +115,6 @@ module CloudController
 
           return false if octet_parts[0].length > 1 && octet_parts[0].start_with?('0')
         end
-      end
-
-      true
-    end
-
-    private_class_method def self.no_leading_zeros_in_ipv6_address(address)
-      address.split(':').each do |segment|
-        next unless segment.start_with?('0') && segment.length > 1
-
-        segment_parts = segment.split('/')
-        return false if segment_parts.length < 2
-
-        return false if segment_parts[0].length > 1 && segment_parts[0].start_with?('0')
       end
 
       true

@@ -19,6 +19,15 @@ module VCAP::CloudController
       }.merge(attrs)
     end
 
+    def build_icmpv6_rule(attrs={})
+      {
+        'protocol' => 'icmpv6',
+        'type' => 0,
+        'code' => 0,
+        'destination' => '::/0'
+      }.merge(attrs)
+    end
+
     def build_all_rule(attrs={})
       {
         'protocol' => 'all',
@@ -601,8 +610,32 @@ module VCAP::CloudController
                   end
                 end
 
+                context 'when it is a valid IPv6 CIDR' do
+                  before do
+                    TestConfig.config[:enable_ipv6] = true
+                  end
+
+                  let(:rule) { build_icmpv6_rule('destination' => '2001:db8::/32') }
+
+                  it 'is valid' do
+                    expect(subject).to be_valid
+                  end
+                end
+
                 context 'when it is a valid range' do
                   let(:rule) { build_icmp_rule('destination' => '1.1.1.1-2.2.2.2') }
+
+                  it 'is valid' do
+                    expect(subject).to be_valid
+                  end
+                end
+
+                context 'when it is a valid IPv6 range' do
+                  before do
+                    TestConfig.config[:enable_ipv6] = true
+                  end
+
+                  let(:rule) { build_icmpv6_rule('destination' => '2001:0db8::1-2001:0db8::ff') }
 
                   it 'is valid' do
                     expect(subject).to be_valid

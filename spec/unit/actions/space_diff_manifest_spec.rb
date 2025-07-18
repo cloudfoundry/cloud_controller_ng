@@ -84,14 +84,16 @@ module VCAP::CloudController
       end
 
       context 'processes' do
-        context 'when processes are added' do
+        context 'when processes are updated' do
           before do
             default_manifest['applications'][0]['processes'][0]['memory'] = '2048M'
+            default_manifest['applications'][0]['processes'][0]['user'] = 'ContainerUser'
           end
 
           it 'returns the correct diff' do
             expect(subject).to contain_exactly(
-              { 'op' => 'replace', 'path' => '/applications/0/processes/0/memory', 'was' => "#{process1.memory}M", 'value' => '2048M' }
+              { 'op' => 'replace', 'path' => '/applications/0/processes/0/memory', 'was' => "#{process1.memory}M", 'value' => '2048M' },
+              { 'op' => 'add', 'path' => '/applications/0/processes/0/user', 'value' => 'ContainerUser' }
             )
           end
         end
@@ -501,6 +503,28 @@ module VCAP::CloudController
           it 'returns an empty diff if the field is equivalent' do
             expect(subject).to contain_exactly({ 'op' => 'replace', 'path' => '/applications/0/routes/0/protocol', 'was' => 'http1', 'value' => 'http2' })
           end
+        end
+      end
+
+      context 'when the given manifest contains features' do
+        before do
+          default_manifest['applications'][0]['features'] = {
+            'ssh' => true,                 # unchanged
+            'service-binding-k8s' => true  # changed
+          }
+        end
+
+        it 'does not show unchanged features' do
+          expect(subject).not_to include(hash_including('path' => '/applications/0/features/ssh'))
+        end
+
+        it 'shows changed features' do
+          expect(subject).to include({ 'op' => 'replace', 'path' => '/applications/0/features/service-binding-k8s', 'value' => true, 'was' => false })
+        end
+
+        it 'does not show unspecified features' do
+          expect(subject).not_to include(hash_including('path' => '/applications/0/features/revisions'))
+          expect(subject).not_to include(hash_including('path' => '/applications/0/features/file-based-vcap-services'))
         end
       end
     end

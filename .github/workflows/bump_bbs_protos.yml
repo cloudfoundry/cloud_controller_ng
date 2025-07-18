@@ -9,7 +9,7 @@ jobs:
   update-protos:
     runs-on: ubuntu-latest
     permissions:
-      contents: read
+      contents: write
       pull-requests: write
     steps:
       - uses: hmarr/debug-action@v3
@@ -26,28 +26,22 @@ jobs:
 
       - name: Install protoc
         run: |
-          wget -q -O /tmp/protoc.zip https://github.com/protocolbuffers/protobuf/releases/download/v3.6.1/protoc-3.6.1-linux-x86_64.zip
-          sudo unzip -q /tmp/protoc.zip -d /usr/local
+          wget -q -O /tmp/protoc.zip https://github.com/protocolbuffers/protobuf/releases/download/v30.2/protoc-30.2-linux-x86_64.zip
+          unzip -q /tmp/protoc.zip -d /tmp/protoc
           rm /tmp/protoc.zip
-          wget -q -O /tmp/protobuf.zip https://github.com/protocolbuffers/protobuf/archive/v3.6.1.zip
-          unzip -q /tmp/protobuf.zip -d /tmp
-          sudo cp -r /tmp/protobuf-3.6.1/src/google /usr/local/include/
-          sudo chmod -R 755 /usr/local/include/google
-          rm -rf /tmp/protobuf.zip /tmp/protobuf-3.6.1
-          export PATH=$PATH:/usr/local/bin
 
-      - name: Clone gogo/protobuf
-        run: |
-          PROTO_SRC=$(mktemp -d)
-          git clone https://github.com/gogo/protobuf.git "$PROTO_SRC/github.com/gogo/protobuf"
-          echo "PROTO_SRC=$PROTO_SRC" >> $GITHUB_ENV
+          sudo mv /tmp/protoc/bin/protoc /usr/local/bin/protoc
+          sudo cp -r /tmp/protoc/include/google /usr/local/include/
+          sudo chmod -R 755 /usr/local/include/google
+          rm -rf /tmp/protoc
+          export PATH=$PATH:/usr/local/bin
 
       - name: Generate Ruby files from protos
         run: |
           RUBY_OUT=$(mktemp -d)
           pushd bbs > /dev/null
-            sed -i'' -e 's/package models/package diego.bbs.models/' models/*.proto
-            protoc --proto_path="$PROTO_SRC":models --ruby_out="$RUBY_OUT" models/*.proto
+            sed -i'' -E '/import.*gogoproto/d; /option.*gogoproto/d; s/\(gogoproto.*, //g; s/, \(gogoproto[^]]+//g;  s/\[\(gogoproto[^]]*\]//g; s/package models/package diego.bbs.models/' models/*.proto
+            protoc --proto_path=models --ruby_out="$RUBY_OUT" models/*.proto
           popd > /dev/null
           cp -r "$RUBY_OUT/." cloud_controller_ng/lib/diego/bbs/models
 

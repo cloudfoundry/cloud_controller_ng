@@ -194,6 +194,10 @@ module VCAP::CloudController
       }
     end
 
+    def available_in_space?(other_space)
+      other_space == space || shared_spaces.include?(other_space)
+    end
+
     delegate :in_suspended_org?, to: :space
 
     def tcp?
@@ -263,6 +267,10 @@ module VCAP::CloudController
 
     def destroy_route_bindings
       errors = RouteBindingDelete.new.delete(route_binding_dataset)
+
+      quoted_table_name = RouteBinding.db.quote_identifier(RouteBinding.table_name)
+      errors.reject! { |e| e.is_a?(Sequel::NoExistingObject) && e.message.include?("DELETE FROM #{quoted_table_name}") }
+
       raise errors.first unless errors.empty?
     end
 

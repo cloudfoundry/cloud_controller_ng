@@ -19,10 +19,18 @@ applications:
   env:
     VAR1: value1
     VAR2: value2
+  features:
+    ssh: true
+    revisions: true
+    service-binding-k8s: false
+    file-based-vcap-services: false
   routes:
   - route: route.example.com
   - route: another-route.example.com
     protocol: http2
+  - route: route-with-options.example.com
+    options:
+      loadbalancing: least-connection
   services:
   - my-service1
   - my-service2
@@ -49,6 +57,7 @@ applications:
     memory: 500M
     log-rate-limit-per-second: 1KB
     timeout: 10
+    user: vcap
   - type: worker
     command: start-worker.sh
     disk_quota: 1G
@@ -94,6 +103,7 @@ Name | Type | Description
 **buildpacks** | _list of strings_ | a) An empty array, which will automatically select the appropriate default buildpack according to the coding language (incompatible with **lifecycle: cnb**) <br>b) An array of one or more URLs pointing to buildpacks <br>c) An array of one or more installed buildpack names <br>Replaces the legacy `buildpack` field
 **docker** | _object_ | If present, the created app will have Docker lifecycle type; the value of this key is ignored by the API but may be used by clients to source the registry address of the image and credentials, if needed; the [generate manifest endpoint](#generate-a-manifest-for-an-app) will return the registry address of the image and username provided with this key
 **env** | _object_ | A key-value mapping of environment variables to be used for the app when running
+**features** | _object_ | A key-value mapping of feature names to booleans (true = enabled, false = disabled)
 **no-route** | _boolean_ | When set to `true`, any routes specified with the `routes` attribute will be ignored and any existing routes will be removed
 **processes** | _array of [process configurations](#space-manifest-process-level-configuration)_ | List of configurations for individual process types
 **random-route** | _boolean_ | Creates a random route for the app if `true`; if `routes` is specified, if the app already has routes, or if `no-route` is specified, this field is ignored regardless of its value
@@ -116,6 +126,7 @@ Name | Type | Description
 ---- | ---- | -----------
 **type** | _string_ | **(Required)** The identifier for the processes to be configured
 **command** | _string_ | The command used to start the process; this overrides start commands from [Procfiles](#procfiles) and buildpacks
+**user** | _string_ | The user under which the process runs
 **disk_quota** | _string_ | The disk limit for all instances of the web process; <br>this attribute requires a unit of measurement: `B`, `K`, `KB`, `M`, `MB`, `G`, `GB`, `T`, or `TB` in upper case or lower case
 **health-check-http-endpoint** | _string_ | Endpoint called to determine if the app is healthy
 **health-check-interval** | _integer_ | The interval in seconds between health check requests
@@ -133,7 +144,16 @@ will be updated for any existing route mapping.
 Name | Type | Description
 ---- | ---- | -----------
 **route** | _string_ | **(Required)** The route URI. Example: `host.domain.com`
-**protocol** | _string_ | Protocol to use for this route. Valid protocols are `http1`, `http2`, and `tcp`.
+**protocol** | _string_ | Protocol to use for this route. Valid protocols are `http1`, `http2`, and `tcp`
+**options** | _object_ | A key-value mapping of configuration [options](#space-manifest-per-route-options-level-configuration) to be applied to the specific application route
+
+####  <a name="space-manifest-per-route-options-level-configuration"></a> Per-Route Options-level configuration
+This configuration allows additional key-value options for the specific application route.
+
+Name | Type | Description
+---- | ---- | -----------
+ **loadbalancing** | _string_ | The load-balancer associated with this route. Valid values are `round-robin` and `least-connection`
+
 
 ####  <a name="space-manifest-service-level-configuration"></a> Service-level configuration
 This configuration is _creating_ new service bindings between the app and a service instance. The `services` field can

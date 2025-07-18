@@ -281,6 +281,59 @@ module VCAP::CloudController
           end
         end
       end
+
+      context 'when user is not a string' do
+        let(:params) { { user: 32.77 } }
+
+        it 'is not valid' do
+          message = ProcessUpdateMessage.new(params)
+
+          expect(message).not_to be_valid
+          expect(message.errors[:user]).to include('must be a string')
+        end
+      end
+
+      context 'when user is nil' do
+        let(:params) { { user: nil } }
+
+        it 'is valid' do
+          message = ProcessUpdateMessage.new(params)
+
+          expect(message).to be_valid
+        end
+      end
+
+      context 'when user is too long' do
+        let(:params) { { user: 'a' * 256 } }
+
+        it 'is not valid' do
+          message = ProcessUpdateMessage.new(params)
+
+          expect(message).not_to be_valid
+          expect(message.errors[:user]).to include('must be between 1 and 255 characters')
+        end
+      end
+
+      context 'when user is empty' do
+        let(:params) { { user: '' } }
+
+        it 'is not valid' do
+          message = ProcessUpdateMessage.new(params)
+
+          expect(message).not_to be_valid
+          expect(message.errors[:user]).to include('must be between 1 and 255 characters')
+        end
+      end
+
+      context 'when user is just right' do
+        let(:params) { { user: 'vcap' } }
+
+        it 'is not valid' do
+          message = ProcessUpdateMessage.new(params)
+
+          expect(message).to be_valid
+        end
+      end
     end
   end
 end

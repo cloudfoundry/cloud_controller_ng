@@ -2,12 +2,16 @@ require 'messages/metadata_base_message'
 
 module VCAP::CloudController
   class TaskCreateMessage < MetadataBaseMessage
-    register_allowed_keys %i[name command disk_in_mb memory_in_mb log_rate_limit_in_bytes_per_second droplet_guid template]
+    register_allowed_keys %i[name command disk_in_mb memory_in_mb log_rate_limit_in_bytes_per_second droplet_guid template user]
 
     validates_with NoAdditionalKeysValidator
 
     def self.validate_template?
       @validate_template ||= proc { |a| a.template_requested? }
+    end
+
+    def self.user_requested?
+      @user_requested ||= proc { |a| a.requested?(:user) }
     end
 
     validates :disk_in_mb, numericality: { only_integer: true, greater_than: 0 }, allow_nil: true
@@ -16,6 +20,11 @@ module VCAP::CloudController
     validates :droplet_guid, guid: true, allow_nil: true
     validates :template_process_guid, guid: true, if: validate_template?
     validate :has_command
+    validates :user,
+              string: true,
+              length: { in: 1..255, message: 'must be between 1 and 255 characters' },
+              allow_nil: true,
+              if: user_requested?
 
     def template_process_guid
       return unless template_requested?

@@ -58,7 +58,8 @@ module VCAP::CloudController
         AppApplyManifest::ServiceBindingError,
         SidecarCreate::InvalidSidecar,
         SidecarUpdate::InvalidSidecar,
-        ProcessScale::SidecarMemoryLessThanProcessMemory
+        ProcessScale::SidecarMemoryLessThanProcessMemory,
+        AppFeatureUpdate::InvalidCombination
       ].each do |klass|
         it "wraps a #{klass} in an ApiError" do
           allow(apply_manifest_action).to receive(:apply).
