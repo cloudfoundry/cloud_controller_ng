@@ -9,6 +9,9 @@ class ProcessUserPolicy
 
   def validate
     return if @process.user.blank?
+
+    return if @process.docker? && @process.user.downcase == 'root' && VCAP::CloudController::Config.config.get(:allow_process_root_user)
+
     return if @allowed_users.map(&:downcase).include?(@process.user.downcase)
 
     @errors.add(:user, sprintf(ERROR_MSG, requested_user: quote_user(@process.user), allowed_users: formatted_users_for_error))
