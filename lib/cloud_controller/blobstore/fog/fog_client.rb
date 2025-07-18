@@ -146,7 +146,7 @@ module CloudController
           opts['x-amz-server-side-encryption'] = encrypt_opt
           opts
 
-        elsif [Fog::Storage::GoogleJSON, Fog::Storage::GoogleXML].include?(connection.service)
+        elsif [Fog::Google::StorageJSON, Fog::Google::StorageXML].include?(connection.service)
           return {} unless @gcp_storage_options
 
           @gcp_storage_options
