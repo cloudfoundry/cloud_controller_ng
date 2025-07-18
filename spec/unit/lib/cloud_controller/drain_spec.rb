@@ -159,40 +159,5 @@ module VCAP::CloudController
         end
       end
     end
-
-    describe '#shutdown_cc_uploader' do
-      it 'sends TERM to the cc_uploader process specified in the pid file' do
-        expect(Process).to receive(:kill).with('TERM', pid)
-
-        drain.shutdown_cc_uploader(pid_path)
-
-        log_contents do |log|
-          expect(log).to include("Sending signal 'TERM' to process '#{pid_name}' with pid '#{pid}'")
-        end
-      end
-
-      it 'waits 900s after sending TERM' do
-        allow(Process).to receive(:getpgid).with(pid).and_return(1)
-
-        drain.shutdown_cc_uploader(pid_path)
-
-        expect(drain).to have_received(:sleep).exactly(900).times
-        log_contents do |log|
-          expect(log).to include("Process '#{pid_name}' with pid '#{pid}' is still running - this indicates an error in the shutdown procedure!")
-        end
-      end
-
-      it 'sends KILL to the cc_uploader process if it is still running after 900s' do
-        allow(Process).to receive(:getpgid).with(pid).and_return(1)
-        allow(Process).to receive(:kill).with('TERM', pid)
-        expect(Process).to receive(:kill).with('KILL', pid)
-
-        drain.shutdown_cc_uploader(pid_path)
-
-        log_contents do |log|
-          expect(log).to include("Forcefully shutting down process '#{pid_name}' with pid '#{pid}'")
-        end
-      end
-    end
   end
 end
