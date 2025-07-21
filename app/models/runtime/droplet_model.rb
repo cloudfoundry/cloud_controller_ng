@@ -138,7 +138,7 @@ module VCAP::CloudController
         end
       end
 
-      container_user.presence || (Config.config.get(:allow_docker_root_user) ? AppModel::DEFAULT_DOCKER_CONTAINER_USER : AppModel::DEFAULT_CONTAINER_USER)
+      container_user.presence || (Config.config.get(:allow_docker_root_user) ? AppModel::DOCKER_CONTAINER_ROOT_USER : AppModel::DEFAULT_CONTAINER_USER)
     end
 
     def staging?
