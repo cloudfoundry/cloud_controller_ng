@@ -145,7 +145,9 @@ RSpec.describe 'Route Destinations Request' do
             },
             weight: nil,
             port: 8080,
-            protocol: 'http1'
+            protocol: 'http1',
+            created_at: destination.created_at.iso8601,
+            updated_at: destination.updated_at.iso8601
           }
         ],
         links: {
@@ -268,7 +270,9 @@ RSpec.describe 'Route Destinations Request' do
               },
               weight: nil,
               port: 8080,
-              protocol: 'http1'
+              protocol: 'http1',
+              created_at: existing_destination.created_at.iso8601,
+              updated_at: existing_destination.updated_at.iso8601
             },
             {
               guid: UUID_REGEX,
@@ -280,7 +284,9 @@ RSpec.describe 'Route Destinations Request' do
               },
               weight: nil,
               port: 8080,
-              protocol: 'http2'
+              protocol: 'http2',
+              created_at: iso8601,
+              updated_at: iso8601
             }
           ],
           links: {
@@ -791,7 +797,9 @@ RSpec.describe 'Route Destinations Request' do
               },
               weight: nil,
               port: 8080,
-              protocol: 'http2'
+              protocol: 'http2',
+              created_at: iso8601,
+              updated_at: iso8601
             }
           ],
           links: {

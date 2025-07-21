@@ -64,7 +64,9 @@ RSpec.describe 'Routes Request' do
                                         },
                                         weight: route_in_org_dest_web.weight,
                                         port: route_in_org_dest_web.presented_port,
-                                        protocol: 'http1'
+                                        protocol: 'http1',
+                                        created_at: iso8601,
+                                        updated_at: iso8601
                                       }, {
                                         guid: route_in_org_dest_worker.guid,
                                         app: {
@@ -75,7 +77,9 @@ RSpec.describe 'Routes Request' do
                                         },
                                         weight: route_in_org_dest_worker.weight,
                                         port: route_in_org_dest_worker.presented_port,
-                                        protocol: 'http1'
+                                        protocol: 'http1',
+                                        created_at: iso8601,
+                                        updated_at: iso8601
                                       }),
         relationships: {
           space: {
@@ -3607,7 +3611,9 @@ RSpec.describe 'Routes Request' do
                                         },
                                         weight: route_mapping1.weight,
                                         port: route_mapping1.presented_port,
-                                        protocol: 'http1'
+                                        protocol: 'http1',
+                                        created_at: iso8601,
+                                        updated_at: iso8601
                                       }),
         relationships: {
           space: {
@@ -3651,7 +3657,9 @@ RSpec.describe 'Routes Request' do
                                         },
                                         weight: route_mapping2.weight,
                                         port: route_mapping2.presented_port,
-                                        protocol: 'http1'
+                                        protocol: 'http1',
+                                        created_at: iso8601,
+                                        updated_at: iso8601
                                       }),
         relationships: {
           space: {
