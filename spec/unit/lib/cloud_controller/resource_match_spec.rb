@@ -62,13 +62,12 @@ module VCAP::CloudController
         let(:maximum_file_size) { 500.megabytes } # this is arbitrary
         let(:minimum_file_size) { 3.kilobytes }
 
-        it 'correctly calculates and logs the time for each file size range' do
-          Timecop.freeze
-          allow(ResourcePool.instance).to receive(:resource_known?) do
-            Timecop.freeze(2.seconds.from_now)
-            true
-          end
-          expect(Steno.logger('cc.resource_pool')).to receive(:info).once.with('starting resource matching', {
+          it 'correctly calculates and logs the time for each file size range' do
+            Timecop.freeze do
+              allow(ResourcePool.instance).to receive(:resource_known?) do
+                Timecop.freeze(2.seconds.from_now) { true }
+              end
+              expect(Steno.logger('cc.resource_pool')).to receive(:info).once.with('starting resource matching', {
                                                                                  total_resources_to_match: 6,
                                                                                  resource_count_by_size: {
                                                                                    '1KB or less': 0,
@@ -80,7 +79,7 @@ module VCAP::CloudController
                                                                                  }
                                                                                })
 
-          expect(Steno.logger('cc.resource_pool')).to receive(:info).once.with('done matching resources', {
+              expect(Steno.logger('cc.resource_pool')).to receive(:info).once.with('done matching resources', {
                                                                                  total_resources_to_match: 6,
                                                                                  total_resource_match_time: '12.0 seconds',
                                                                                  resource_count_by_size: {
@@ -100,8 +99,10 @@ module VCAP::CloudController
                                                                                    '1GB or more': '0.0 seconds'
                                                                                  }
                                                                                })
-          ResourceMatch.new(descriptors).match_resources
-        end
+              ResourceMatch.new(descriptors).match_resources
+            end
+
+        after { Timecop.return }
       end
     end
 
