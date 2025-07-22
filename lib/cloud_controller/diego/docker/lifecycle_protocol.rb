@@ -8,6 +8,8 @@ module VCAP
     module Diego
       module Docker
         class LifecycleProtocol
+          ROOT_USERS = %w[root 0].freeze
+
           def lifecycle_data(staging_details)
             lifecycle_data              = Diego::Docker::LifecycleData.new
             lifecycle_data.docker_image = staging_details.package.image
@@ -22,10 +24,18 @@ module VCAP
           end
 
           def task_action_builder(config, task)
+            if task.docker? && !docker_run_action_user_permitted?(task.run_action_user)
+              raise ::CloudController::Errors::ApiError.new_from_details('UnprocessableEntity', 'Attempting to run task as root user, which is not permitted.')
+            end
+
             TaskActionBuilder.new(config, task, { droplet_path: task.droplet.docker_receipt_image })
           end
 
           def desired_lrp_builder(config, process)
+            if process.docker? && !docker_run_action_user_permitted?(process.run_action_user)
+              raise ::CloudController::Errors::ApiError.new_from_details('UnprocessableEntity', 'Attempting to run process as root user, which is not permitted.')
+            end
+
             DesiredLrpBuilder.new(config, builder_opts(process))
           end
 
@@ -45,6 +55,10 @@ module VCAP
           def container_env_vars_for_process(process)
             additional_env = []
             additional_env + WindowsEnvironmentSage.ponder(process.app)
+          end
+
+          def docker_run_action_user_permitted?(run_action_user)
+            Config.config.get(:allow_docker_root_user) || ROOT_USERS.exclude?(run_action_user)
           end
         end
       end
