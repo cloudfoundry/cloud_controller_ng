@@ -269,6 +269,14 @@ module VCAP::CloudController
       (shared | source).first
     end
 
+    def number_service_instances
+      service_instances_dataset.count
+    end
+
+    def number_service_keys
+      ServiceKey.where(service_instance_id: service_instances_dataset.select(:id)).count
+    end
+
     def self.user_visibility_filter(user)
       {
         spaces__id: user.space_developer_space_ids.
@@ -328,6 +336,14 @@ module VCAP::CloudController
       User.dataset.where(id: Role.where(space_id: id).distinct.select(:user_id))
     end
 
+    def memory_used
+      started_app_memory + running_task_memory
+    end
+
+    def running_and_pending_tasks_count
+      tasks_dataset.where(state: [TaskModel::PENDING_STATE, TaskModel::RUNNING_STATE]).count
+    end
+
     private
 
     def has_manager?(user)
@@ -339,7 +355,6 @@ module VCAP::CloudController
     end
 
     def memory_remaining
-      memory_used = started_app_memory + running_task_memory
       space_quota_definition.memory_limit - memory_used
     end
 
@@ -361,10 +376,6 @@ module VCAP::CloudController
 
     def started_app_log_rate_limit
       processes_dataset.where(state: ProcessModel::STARTED).sum(Sequel.*(:log_rate_limit, :instances)) || 0
-    end
-
-    def running_and_pending_tasks_count
-      tasks_dataset.where(state: [TaskModel::PENDING_STATE, TaskModel::RUNNING_STATE]).count
     end
 
     def validate_isolation_segment_set(isolation_segment_model)
