@@ -4,9 +4,11 @@ require 'presenters/v3/task_presenter'
 module VCAP::CloudController::Presenters::V3
   RSpec.describe TaskPresenter do
     subject(:presenter) { TaskPresenter.new(task) }
+    let(:task_user) { nil }
     let(:task) do
       task = VCAP::CloudController::TaskModel.make(
         failure_reason: 'sup dawg',
+        user: task_user,
         memory_in_mb: 2048,
         disk_in_mb: 4048,
         log_rate_limit: 1024,
@@ -81,6 +83,27 @@ module VCAP::CloudController::Presenters::V3
 
         it 'excludes command' do
           expect(result).not_to have_key(:command)
+        end
+      end
+
+      describe 'user' do
+        context 'when the droplet for the task has been deleted' do
+          before do
+            task.droplet.delete
+            task.reload
+          end
+
+          it 'returns the user as nil' do
+            expect(result[:user]).to be_nil
+          end
+
+          context 'when the task has an explicit user set' do
+            let(:task_user) { 'TestUser' }
+
+            it 'returns the user' do
+              expect(result[:user]).to eq('TestUser')
+            end
+          end
         end
       end
     end
