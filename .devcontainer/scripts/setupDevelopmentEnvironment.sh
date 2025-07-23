@@ -1,5 +1,5 @@
 #!/bin/bash
-set -Eeuo pipefail
+set -Eeuxo pipefail
 # shellcheck disable=SC2064
 trap "pkill -P $$" EXIT
 

@@ -4,12 +4,7 @@ set -Eeuo pipefail
 trap "pkill -P $$" EXIT
 
 setupAptPackages () {
-  # CF CLI is not available for aarch64 :(
-  if [[ $(uname -m) == aarch64 ]]; then
-    PACKAGES="postgresql-client postgresql-client-common mariadb-client ruby-dev"
-  else
-    PACKAGES="cf8-cli postgresql-client postgresql-client-common mariadb-client ruby-dev"
-  fi
+  PACKAGES="cf8-cli postgresql-client postgresql-client-common mariadb-client"
 
   wget -q -O - https://packages.cloudfoundry.org/debian/cli.cloudfoundry.org.key | sudo apt-key add -
   echo "deb https://packages.cloudfoundry.org/debian stable main" | sudo tee /etc/apt/sources.list.d/cloudfoundry-cli.list
@@ -18,26 +13,69 @@ setupAptPackages () {
   sudo apt-get install -o Dpkg::Options::="--force-overwrite" $PACKAGES -y
 }
 
-setupRuby () {
-  rbenv install $(cat /tmp/.ruby-version)
-  rbenv global $(cat /tmp/.ruby-version)
-}
-
 setupRubyGems () {
   gem install cf-uaac
 }
 
 setupCredhubCli () {
   set -x
-  wget "$(curl -s https://api.github.com/repos/cloudfoundry/credhub-cli/releases/latest |
-  jq -r '.assets[] | select(.name|match("credhub-linux.*")) | .browser_download_url')" -O /tmp/credhub.tar.gz
+  local arch_pattern
+  case "$(uname -m)" in
+    "x86_64")
+      arch_pattern="credhub-linux-amd64.*"
+      ;;
+    "aarch64" | "arm64")
+      arch_pattern="credhub-linux-arm64.*"
+      ;;
+    *)
+      echo "Unsupported architecture for credhub-cli: $(uname -m)"
+      exit 1
+      ;;
+  esac
+
+  local download_url
+  download_url=$(curl -s https://api.github.com/repos/cloudfoundry/credhub-cli/releases/latest | jq -r ".assets[] | select(.name|test(\"$arch_pattern\")) | .browser_download_url" | head -n 1)
+
+  if [ -z "$download_url" ]; then
+    echo "No arm64 release found, trying amd64..."
+    arch_pattern="credhub-linux-amd64.*"
+    download_url=$(curl -s https://api.github.com/repos/cloudfoundry/credhub-cli/releases/latest | jq -r ".assets[] | select(.name|test(\"$arch_pattern\")) | .browser_download_url" | head -n 1)
+  fi
+
+  if [ -z "$download_url" ]; then
+    echo "Failed to get credhub-cli download URL for $(uname -m)"
+    exit 1
+  fi
+
+  wget "$download_url" -O /tmp/credhub.tar.gz
   cd /tmp
   sudo tar -xzf /tmp/credhub.tar.gz && sudo rm -f /tmp/credhub.tar.gz && sudo mv /tmp/credhub /usr/bin
 }
 
 setupYqCli () {
-  sudo wget "$(curl -s https://api.github.com/repos/mikefarah/yq/releases/latest |
-  jq -r '.assets[] | select(.name|match("linux_amd64$")) | .browser_download_url')" -O /usr/bin/yq
+  local arch_pattern
+  case "$(uname -m)" in
+    "x86_64")
+      arch_pattern="linux_amd64$"
+      ;;
+    "aarch64" | "arm64")
+      arch_pattern="linux_arm64$"
+      ;;
+    *)
+      echo "Unsupported architecture for yq: $(uname -m)"
+      exit 1
+      ;;
+  esac
+
+  local download_url
+  download_url=$(curl -s https://api.github.com/repos/mikefarah/yq/releases/latest | jq -r ".assets[] | select(.name|test(\"$arch_pattern\")) | .browser_download_url" | head -n 1)
+
+  if [ -z "$download_url" ]; then
+    echo "Failed to get yq download URL for $(uname -m)"
+    exit 1
+  fi
+
+  sudo wget "$download_url" -O /usr/bin/yq
   sudo chmod +x /usr/bin/yq
 }
 
@@ -47,7 +85,6 @@ export DOCKER_BUILDKIT=1
 """ > ~/.bashrc
 
 setupAptPackages
-setupRuby
 setupRubyGems
 setupCredhubCli
 setupYqCli
@@ -55,5 +92,6 @@ setupYqCli
 # Setup User Permissions
 sudo groupadd docker
 sudo usermod -aG docker "vscode"
+sudo chown -R vscode:vscode /usr/local/rvm/gems
 
 trap "" EXIT
