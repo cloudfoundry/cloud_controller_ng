@@ -192,7 +192,6 @@ module VCAP::CloudController
 
             max_labels_per_resource: Integer,
             max_annotations_per_resource: Integer,
-            internal_route_vip_range: String,
             custom_metric_tag_prefix_list: Array,
             default_app_lifecycle: enum('buildpack', 'cnb')
           }
