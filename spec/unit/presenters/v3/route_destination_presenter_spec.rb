@@ -13,7 +13,8 @@ module VCAP::CloudController::Presenters::V3
         app_port: 1234,
         route: route,
         process_type: 'web',
-        weight: 55
+        weight: 55,
+        created_at: Time.at(1)
       )
     end
 
@@ -37,7 +38,9 @@ module VCAP::CloudController::Presenters::V3
             route: {
               href: "http://api2.vcap.me/v3/routes/#{route.guid}"
             }
-          }
+          },
+          created_at: Time.at(1),
+          updated_at: route_mapping.updated_at
         )
       end
     end
@@ -54,7 +57,9 @@ module VCAP::CloudController::Presenters::V3
           },
           weight: route_mapping.weight,
           port: route_mapping.presented_port,
-          protocol: route_mapping.protocol
+          protocol: route_mapping.protocol,
+          created_at: Time.at(1),
+          updated_at: route_mapping.updated_at
         )
       end
     end

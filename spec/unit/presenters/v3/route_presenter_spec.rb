@@ -86,7 +86,9 @@ module VCAP::CloudController::Presenters::V3
             },
             weight: destination.weight,
             port: destination.presented_port,
-            protocol: destination.protocol
+            protocol: destination.protocol,
+            created_at: destination.created_at,
+            updated_at: destination.updated_at
           },
           {
             guid: destination2.guid,
@@ -98,7 +100,9 @@ module VCAP::CloudController::Presenters::V3
             },
             weight: destination2.weight,
             port: destination2.presented_port,
-            protocol: destination2.protocol
+            protocol: destination2.protocol,
+            created_at: destination.created_at,
+            updated_at: destination.updated_at
           }
         ]
         expect(subject[:destinations]).to match_array(expected_destinations)
