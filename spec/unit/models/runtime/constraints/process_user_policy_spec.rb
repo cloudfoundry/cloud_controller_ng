@@ -44,6 +44,38 @@ RSpec.describe ProcessUserPolicy do
     end
   end
 
+  context 'when process belongs to a Docker lifecycle app' do
+    let(:process) { VCAP::CloudController::ProcessModelFactory.make({ docker_image: 'example.com/image' }) }
+
+    context 'when root user is allowed' do
+      before do
+        TestConfig.override(allow_process_root_user: true)
+      end
+
+      context 'when the process specifies the root user' do
+        let(:process_user) { 'root' }
+
+        it 'is valid' do
+          expect(validator).to validate_without_error(process)
+        end
+      end
+    end
+
+    context 'when root user is not allowed' do
+      before do
+        TestConfig.override(allow_process_root_user: false)
+      end
+
+      context 'when the process specifies the root user' do
+        let(:process_user) { 'root' }
+
+        it 'is not valid' do
+          expect(validator).to validate_with_error(process, :user, sprintf(ProcessUserPolicy::ERROR_MSG, requested_user: "'root'", allowed_users: "'vcap', 'ContainerUser'"))
+        end
+      end
+    end
+  end
+
   describe 'case insensitivity' do
     context 'when user is allowed, but does not match case' do
       let(:process_user) { 'vCaP' }

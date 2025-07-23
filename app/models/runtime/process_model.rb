@@ -576,9 +576,7 @@ module VCAP::CloudController
     end
 
     def docker_run_action_user
-      return AppModel::DEFAULT_CONTAINER_USER unless docker?
-
-      desired_droplet&.docker_user.presence || AppModel::DEFAULT_DOCKER_CONTAINER_USER
+      actual_droplet&.docker_user.presence || (Config.config.get(:allow_process_root_user) ? AppModel::DOCKER_CONTAINER_ROOT_USER : AppModel::DEFAULT_CONTAINER_USER)
     end
 
     def non_unique_process_types
