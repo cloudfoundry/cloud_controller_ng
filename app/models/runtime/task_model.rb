@@ -56,8 +56,13 @@ module VCAP::CloudController
       end
     end
 
-    delegate :docker?, to: :droplet
-    delegate :cnb?, to: :droplet
+    def docker?
+      !!droplet&.docker?
+    end
+
+    def cnb?
+      !!droplet&.cnb?
+    end
 
     private
 

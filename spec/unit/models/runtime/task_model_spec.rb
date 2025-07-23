@@ -166,12 +166,12 @@ module VCAP::CloudController
 
     describe '#run_action_user' do
       let(:task) { TaskModel.make(app: parent_app, droplet: droplet, state: TaskModel::SUCCEEDED_STATE) }
-      let(:droplet) { DropletModel.make }
+      let(:droplet) { DropletModel.make(app: parent_app) }
 
       context 'when the task belongs to a CNB lifecycle app' do
         let(:parent_app) { AppModel.make(:cnb) }
         let(:task) { TaskModel.make(app: parent_app, droplet: droplet, state: TaskModel::SUCCEEDED_STATE) }
-        let(:droplet) { DropletModel.make(:cnb) }
+        let(:droplet) { DropletModel.make(:cnb, app: parent_app) }
 
         context 'when the task has a user specified' do
           before do
@@ -197,8 +197,8 @@ module VCAP::CloudController
       context 'when the task belongs to a Docker lifecycle app' do
         let(:parent_app) { AppModel.make(:docker) }
         let(:task) { TaskModel.make(app: parent_app, droplet: droplet, state: TaskModel::SUCCEEDED_STATE) }
-        let(:droplet) { DropletModel.make(:docker) }
-        let(:droplet_execution_metadata) { '{"entrypoint":["/image-entrypoint.sh"],"user":"cnb"}' }
+        let(:droplet) { DropletModel.make(:docker, app: parent_app) }
+        let(:droplet_execution_metadata) { '{"entrypoint":["/image-entrypoint.sh"],"user":"some-user"}' }
 
         before do
           task.droplet.update(execution_metadata: droplet_execution_metadata)
@@ -216,7 +216,7 @@ module VCAP::CloudController
 
         context 'when the droplet execution metadata specifies a user' do
           it 'returns the specified user' do
-            expect(task.run_action_user).to eq('cnb')
+            expect(task.run_action_user).to eq('some-user')
           end
         end
 
@@ -268,6 +268,91 @@ module VCAP::CloudController
           it 'returns the default "vcap" user' do
             expect(task.run_action_user).to eq('vcap')
           end
+
+          context 'when there is no droplet for the task' do
+            before do
+              task.droplet.delete
+              task.reload
+            end
+
+            it 'returns vcap' do
+              expect(task.run_action_user).to eq('vcap')
+            end
+          end
+        end
+      end
+    end
+
+    describe 'docker?' do
+      context 'when there is a droplet and it has the docker lifecycle' do
+        let(:parent_app) { AppModel.make(:docker) }
+        let(:task) { TaskModel.make(app: parent_app, droplet: droplet, state: TaskModel::SUCCEEDED_STATE) }
+        let(:droplet) { DropletModel.make(:docker, app: parent_app) }
+
+        it 'returns true' do
+          expect(task.docker?).to be(true)
+        end
+      end
+
+      context 'when there is a droplet and it does not have the docker lifecycle' do
+        let(:parent_app) { AppModel.make(:docker) }
+        let(:task) { TaskModel.make(app: parent_app, droplet: droplet, state: TaskModel::SUCCEEDED_STATE) }
+        let(:droplet) { DropletModel.make(:buildpack, app: parent_app) }
+
+        it 'returns false' do
+          expect(task.docker?).to be(false)
+        end
+      end
+
+      context 'when there is not a droplet for the task' do
+        let(:parent_app) { AppModel.make(:docker) }
+        let(:task) { TaskModel.make(app: parent_app, droplet: droplet, state: TaskModel::SUCCEEDED_STATE) }
+        let(:droplet) { DropletModel.make(:docker, app: parent_app) }
+
+        before do
+          task.droplet.delete
+          task.reload
+        end
+
+        it 'returns false' do
+          expect(task.docker?).to be(false)
+        end
+      end
+    end
+
+    describe 'cnb?' do
+      context 'when there is a droplet and it has the cnb lifecycle' do
+        let(:parent_app) { AppModel.make(:cnb) }
+        let(:task) { TaskModel.make(app: parent_app, droplet: droplet, state: TaskModel::SUCCEEDED_STATE) }
+        let(:droplet) { DropletModel.make(:cnb, app: parent_app) }
+
+        it 'returns true' do
+          expect(task.cnb?).to be(true)
+        end
+      end
+
+      context 'when there is a droplet and it does not have the cnb lifecycle' do
+        let(:parent_app) { AppModel.make(:cnb) }
+        let(:task) { TaskModel.make(app: parent_app, droplet: droplet, state: TaskModel::SUCCEEDED_STATE) }
+        let(:droplet) { DropletModel.make(:buildpack, app: parent_app) }
+
+        it 'returns false' do
+          expect(task.cnb?).to be(false)
+        end
+      end
+
+      context 'when there is not a droplet for the task' do
+        let(:parent_app) { AppModel.make(:cnb) }
+        let(:task) { TaskModel.make(app: parent_app, droplet: droplet, state: TaskModel::SUCCEEDED_STATE) }
+        let(:droplet) { DropletModel.make(:cnb, app: parent_app) }
+
+        before do
+          task.droplet.delete
+          task.reload
+        end
+
+        it 'returns false' do
+          expect(task.cnb?).to be(false)
         end
       end
     end
