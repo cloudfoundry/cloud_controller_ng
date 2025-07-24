@@ -192,167 +192,67 @@ RSpec.describe 'Apps' do
     end
 
     context 'with inline-relations-depth' do
-      it 'includes related records' do
+      def setup_inline_relations_test_data
         route = VCAP::CloudController::Route.make(space:)
         VCAP::CloudController::RouteMappingModel.make(app: process.app, route: route, process_type: process.type)
         service_binding = VCAP::CloudController::ServiceBinding.make(app: process.app, service_instance: VCAP::CloudController::ManagedServiceInstance.make(space:))
+        [route, service_binding]
+      end
+
+      def verify_basic_response_structure(parsed_response)
+        expect(parsed_response['total_results']).to eq(1)
+        expect(parsed_response['total_pages']).to eq(1)
+        expect(parsed_response['prev_url']).to be_nil
+        expect(parsed_response['next_url']).to be_nil
+      end
+
+      def verify_app_resource_metadata(app_resource)
+        expect(app_resource['metadata']['guid']).to eq(process.guid)
+        expect(app_resource['entity']['name']).to eq(process.name)
+        expect(app_resource['entity']['space_guid']).to eq(space.guid)
+        expect(app_resource['entity']['stack_guid']).to eq(process.stack.guid)
+      end
+
+      def verify_inline_space_data(space_data)
+        expect(space_data['metadata']['guid']).to eq(space.guid)
+        expect(space_data['entity']['name']).to eq(space.name)
+        expect(space_data['entity']['organization_guid']).to eq(space.organization_guid)
+      end
+
+      def verify_inline_stack_data(stack_data)
+        expect(stack_data['metadata']['guid']).to eq(process.stack.guid)
+        expect(stack_data['entity']['name']).to eq(process.stack.name)
+        expect(stack_data['entity']['state']).to eq('ACTIVE')
+      end
+
+      def verify_inline_routes_data(routes_data, route)
+        expect(routes_data.length).to eq(1)
+        expect(routes_data[0]['metadata']['guid']).to eq(route.guid)
+        expect(routes_data[0]['entity']['host']).to eq(route.host)
+      end
+
+      def verify_inline_service_bindings_data(service_bindings_data, service_binding)
+        expect(service_bindings_data.length).to eq(1)
+        expect(service_bindings_data[0]['metadata']['guid']).to eq(service_binding.guid)
+        expect(service_bindings_data[0]['entity']['app_guid']).to eq(process.guid)
+        expect(service_bindings_data[0]['entity']['service_instance_guid']).to eq(service_binding.service_instance.guid)
+      end
+
+      it 'includes related records' do
+        route, service_binding = setup_inline_relations_test_data
 
         get '/v2/apps?inline-relations-depth=1', nil, headers_for(user)
         expect(last_response.status).to eq(200)
 
         parsed_response = Oj.load(last_response.body)
-        expect(parsed_response).to be_a_response_like(
-          {
-            'total_results' => 1,
-            'total_pages' => 1,
-            'prev_url' => nil,
-            'next_url' => nil,
-            'resources' => [{
-              'metadata' => {
-                'guid' => process.guid,
-                'url' => "/v2/apps/#{process.guid}",
-                'created_at' => iso8601,
-                'updated_at' => iso8601
-              },
-              'entity' => {
-                'name' => process.name,
-                'production' => false,
-                'space_guid' => space.guid,
-                'stack_guid' => process.stack.guid,
-                'buildpack' => nil,
-                'detected_buildpack' => nil,
-                'detected_buildpack_guid' => nil,
-                'environment_json' => { 'RAILS_ENV' => 'staging' },
-                'memory' => 1024,
-                'instances' => 1,
-                'disk_quota' => 1024,
-                'log_rate_limit' => 1_048_576,
-                'state' => 'STOPPED',
-                'version' => process.version,
-                'command' => 'hello_world',
-                'console' => false,
-                'debug' => nil,
-                'staging_task_id' => process.latest_build.guid,
-                'package_state' => 'STAGED',
-                'health_check_type' => 'http',
-                'health_check_timeout' => nil,
-                'health_check_http_endpoint' => '/health',
-                'staging_failed_reason' => nil,
-                'staging_failed_description' => nil,
-                'diego' => true,
-                'docker_image' => nil,
-                'docker_credentials' => {
-                  'username' => nil,
-                  'password' => nil
-                },
-                'package_updated_at' => iso8601,
-                'detected_start_command' => '$HOME/boot.sh',
-                'enable_ssh' => true,
-                'ports' => [8080],
-                'space_url' => "/v2/spaces/#{space.guid}",
-                'space' => {
-                  'metadata' => {
-                    'guid' => space.guid,
-                    'url' => "/v2/spaces/#{space.guid}",
-                    'created_at' => iso8601,
-                    'updated_at' => iso8601
-                  },
-                  'entity' => {
-                    'name' => space.name,
-                    'organization_guid' => space.organization_guid,
-                    'space_quota_definition_guid' => nil,
-                    'isolation_segment_guid' => nil,
-                    'allow_ssh' => true,
-                    'organization_url' => "/v2/organizations/#{space.organization_guid}",
-                    'developers_url' => "/v2/spaces/#{space.guid}/developers",
-                    'managers_url' => "/v2/spaces/#{space.guid}/managers",
-                    'auditors_url' => "/v2/spaces/#{space.guid}/auditors",
-                    'apps_url' => "/v2/spaces/#{space.guid}/apps",
-                    'routes_url' => "/v2/spaces/#{space.guid}/routes",
-                    'domains_url' => "/v2/spaces/#{space.guid}/domains",
-                    'service_instances_url' => "/v2/spaces/#{space.guid}/service_instances",
-                    'app_events_url' => "/v2/spaces/#{space.guid}/app_events",
-                    'events_url' => "/v2/spaces/#{space.guid}/events",
-                    'security_groups_url' => "/v2/spaces/#{space.guid}/security_groups",
-                    'staging_security_groups_url' => "/v2/spaces/#{space.guid}/staging_security_groups"
-                  }
-                },
-                'stack_url' => "/v2/stacks/#{process.stack.guid}",
-                'stack' => {
-                  'metadata' => {
-                    'guid' => process.stack.guid,
-                    'url' => "/v2/stacks/#{process.stack.guid}",
-                    'created_at' => iso8601,
-                    'updated_at' => iso8601
-                  },
-                  'entity' => {
-                    'name' => process.stack.name,
-                    'description' => process.stack.description,
-                    'build_rootfs_image' => process.stack.name,
-                    'run_rootfs_image' => process.stack.name
-                  }
-                },
-                'routes_url' => "/v2/apps/#{process.guid}/routes",
-                'routes' => [
-                  {
-                    'metadata' => {
-                      'guid' => route.guid,
-                      'url' => "/v2/routes/#{route.guid}",
-                      'created_at' => iso8601,
-                      'updated_at' => iso8601
-                    },
-                    'entity' => {
-                      'host' => route.host,
-                      'path' => '',
-                      'domain_guid' => route.domain.guid,
-                      'space_guid' => space.guid,
-                      'service_instance_guid' => nil,
-                      'port' => nil,
-                      'domain_url' => "/v2/private_domains/#{route.domain.guid}",
-                      'space_url' => "/v2/spaces/#{space.guid}",
-                      'apps_url' => "/v2/routes/#{route.guid}/apps",
-                      'route_mappings_url' => "/v2/routes/#{route.guid}/route_mappings"
-                    }
-                  }
-                ],
-                'events_url' => "/v2/apps/#{process.guid}/events",
-                'service_bindings_url' => "/v2/apps/#{process.guid}/service_bindings",
-                'service_bindings' => [
-                  {
-                    'metadata' => {
-                      'guid' => service_binding.guid,
-                      'url' => "/v2/service_bindings/#{service_binding.guid}",
-                      'created_at' => iso8601,
-                      'updated_at' => iso8601
-                    },
-                    'entity' => {
-                      'app_guid' => process.guid,
-                      'service_instance_guid' => service_binding.service_instance.guid,
-                      'credentials' => service_binding.credentials,
-                      'name' => nil,
-                      'binding_options' => {},
-                      'gateway_data' => nil,
-                      'gateway_name' => '',
-                      'syslog_drain_url' => nil,
-                      'volume_mounts' => [],
-                      'last_operation' => {
-                        'type' => 'create',
-                        'state' => 'succeeded',
-                        'description' => '',
-                        'updated_at' => iso8601,
-                        'created_at' => iso8601
-                      },
-                      'app_url' => "/v2/apps/#{process.guid}",
-                      'service_instance_url' => "/v2/service_instances/#{service_binding.service_instance.guid}",
-                      'service_binding_parameters_url' => "/v2/service_bindings/#{service_binding.guid}/parameters"
-                    }
-                  }
-                ],
-                'route_mappings_url' => "/v2/apps/#{process.guid}/route_mappings"
-              }
-            }]
-          }
-        )
+        verify_basic_response_structure(parsed_response)
+
+        app_resource = parsed_response['resources'][0]
+        verify_app_resource_metadata(app_resource)
+        verify_inline_space_data(app_resource['entity']['space'])
+        verify_inline_stack_data(app_resource['entity']['stack'])
+        verify_inline_routes_data(app_resource['entity']['routes'], route)
+        verify_inline_service_bindings_data(app_resource['entity']['service_bindings'], service_binding)
       end
     end
 

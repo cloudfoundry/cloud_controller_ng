@@ -45,6 +45,7 @@ module VCAP::CloudController
       raise InvalidPackage.new('Cannot stage package whose state is not ready.') if package.state != PackageModel::READY_STATE
 
       requested_buildpacks_disabled!(lifecycle)
+      validate_stack!(lifecycle, package)
 
       staging_details                     = get_staging_details(package, lifecycle)
       staging_details.start_after_staging = start_after_staging
@@ -74,11 +75,13 @@ module VCAP::CloudController
 
         Repositories::AppUsageEventRepository.new.create_from_build(build, 'STAGING_STARTED')
         app = package.app
-        Repositories::BuildEventRepository.record_build_create(build,
-                                                               @user_audit_info,
-                                                               app.name,
-                                                               app.space_guid,
-                                                               app.organization_guid)
+        Repositories::BuildEventRepository.record_build_create(
+          build,
+          @user_audit_info,
+          app.name,
+          app.space_guid,
+          app.organization_guid
+        )
       end
 
       logger.info("build created: #{build.guid}")
@@ -92,6 +95,24 @@ module VCAP::CloudController
     alias_method :create_and_stage_without_event, :create_and_stage
 
     private
+
+    def validate_stack!(lifecycle, package)
+      return unless lifecycle.type == Lifecycles::BUILDPACK
+
+      stack = Stack.find(name: lifecycle.staging_stack)
+      return unless stack
+
+      case stack.state
+      when 'DEPRECATED'
+        logger.warn("Stack '#{stack.name}' is deprecated. #{stack.description}")
+      when 'LOCKED'
+        # Check if this is a new app (no existing processes) vs an existing app being updated
+        has_existing_processes = ProcessModel.where(app_guid: package.app.guid).count > 0
+        raise CloudController::Errors::ApiError.new_from_details('StackLocked', stack.name, stack.description) unless has_existing_processes
+      when 'DISABLED'
+        raise CloudController::Errors::ApiError.new_from_details('StackDisabled', stack.name, stack.description)
+      end
+    end
 
     def requested_buildpacks_disabled!(lifecycle)
       return if lifecycle.type == Lifecycles::DOCKER

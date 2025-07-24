@@ -171,6 +171,65 @@ module VCAP::CloudController
         end
       end
 
+      context 'when a stack is specified' do
+        let(:lifecycle_data) do
+          {
+            stack: 'cflinuxfs3',
+            buildpacks: [buildpack_git_url]
+          }
+        end
+
+        context 'when the stack is deprecated' do
+          let!(:stack) { Stack.make(name: 'cflinuxfs3', state: 'DEPRECATED', description: 'use the new stack') }
+
+          it 'logs a warning' do
+            spy_logger = spy('logger')
+            allow(Steno).to receive(:logger).and_return(spy_logger)
+
+            action.create_and_stage(package:, lifecycle:)
+            expect(spy_logger).to have_received(:warn).with("Stack 'cflinuxfs3' is deprecated. use the new stack")
+          end
+        end
+
+        context 'when the stack is locked' do
+          let!(:stack) { Stack.make(name: 'cflinuxfs3', state: 'LOCKED', description: 'this stack is locked') }
+
+          context 'and the app is new' do
+            before do
+              app.processes.each(&:destroy)
+            end
+
+            it 'raises an error' do
+              expect do
+                action.create_and_stage(package:, lifecycle:)
+              end.to raise_error(CloudController::Errors::ApiError, /Cannot stage new app, stack 'cflinuxfs3' is locked. this stack is locked/)
+            end
+          end
+
+          context 'and the app already exists' do
+            before do
+              ProcessModel.make(app: app, type: ProcessTypes::WEB)
+            end
+
+            it 'does not raise an error' do
+              expect do
+                action.create_and_stage(package:, lifecycle:)
+              end.not_to raise_error
+            end
+          end
+        end
+
+        context 'when the stack is disabled' do
+          let!(:stack) { Stack.make(name: 'cflinuxfs3', state: 'DISABLED', description: 'this stack is disabled') }
+
+          it 'raises an error' do
+            expect do
+              action.create_and_stage(package:, lifecycle:)
+            end.to raise_error(CloudController::Errors::ApiError, /Cannot stage app, stack 'cflinuxfs3' is disabled. this stack is disabled/)
+          end
+        end
+      end
+
       context 'creating a build for type cnb' do
         let(:request_lifecycle) do
           {

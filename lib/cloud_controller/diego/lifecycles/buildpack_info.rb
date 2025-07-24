@@ -25,5 +25,9 @@ module VCAP::CloudController
         buildpack_record.nil? ? nil : buildpack_record.name
       end
     end
+
+    def key
+      buildpack_record.try(:key) || buildpack_url
+    end
   end
 end
