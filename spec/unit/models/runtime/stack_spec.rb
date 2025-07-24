@@ -29,8 +29,8 @@ module VCAP::CloudController
     end
 
     describe 'Serialization' do
-      it { is_expected.to export_attributes :name, :description, :build_rootfs_image, :run_rootfs_image }
-      it { is_expected.to import_attributes :name, :description, :build_rootfs_image, :run_rootfs_image }
+      it { is_expected.to export_attributes :name, :description, :build_rootfs_image, :run_rootfs_image, :deprecated_at, :locked_at, :disabled_at }
+      it { is_expected.to import_attributes :name, :description, :build_rootfs_image, :run_rootfs_image, :deprecated_at, :locked_at, :disabled_at }
     end
 
     describe '.configure' do

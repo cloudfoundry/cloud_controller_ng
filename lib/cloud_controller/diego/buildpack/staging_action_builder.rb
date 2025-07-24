@@ -17,16 +17,33 @@ module VCAP::CloudController
 
         private
 
+        def lifecycle
+          staging_details.lifecycle
+        end
+
         def stage_action
           staging_details_env = BbsEnvironmentBuilder.build(staging_details.environment_variables)
+
+          # Stack deprecation warning will be handled by the build_create action
+          buildpack_keys = if lifecycle&.respond_to?(:buildpack_infos)
+                             lifecycle.buildpack_infos.map(&:key)
+                           else
+                             lifecycle_data[:buildpacks]&.map { |bp| bp[:key] } || []
+                           end
+
+          skip_detect = if lifecycle&.respond_to?(:skip_detect?)
+                          lifecycle.skip_detect?
+                        else
+                          lifecycle_data[:buildpacks]&.any? { |bp| bp[:skip_detect] } || false
+                        end
 
           ::Diego::Bbs::Models::RunAction.new(
             path: '/tmp/lifecycle/builder',
             user: 'vcap',
             args: [
-              "-buildpackOrder=#{lifecycle_data[:buildpacks].pluck(:key).join(',')}",
+              "-buildpackOrder=#{buildpack_keys.join(',')}",
               "-skipCertVerify=#{config.get(:skip_cert_verify)}",
-              "-skipDetect=#{skip_detect?}",
+              "-skipDetect=#{skip_detect}",
               '-buildDir=/tmp/app',
               '-outputDroplet=/tmp/droplet',
               '-outputMetadata=/tmp/result.json',
