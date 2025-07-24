@@ -9,6 +9,7 @@ module VCAP::CloudController
         message = VCAP::CloudController::StackCreateMessage.new(
           name: 'the-name',
           description: 'the-description',
+          state: 'ACTIVE',
           metadata: {
             labels: {
               release: 'stable',
@@ -68,7 +69,7 @@ module VCAP::CloudController
         let(:name) { 'Gaby' }
 
         it 'ensures one creation is successful and the other fails due to name conflict' do
-          message = VCAP::CloudController::StackCreateMessage.new(name:)
+          message = VCAP::CloudController::StackCreateMessage.new(name: name, state: 'ACTIVE')
           # First request, should succeed
           expect do
             StackCreate.new.create(message)
