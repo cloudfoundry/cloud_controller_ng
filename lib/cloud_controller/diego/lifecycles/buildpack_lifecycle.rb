@@ -23,6 +23,10 @@ module VCAP::CloudController
       }
     end
 
+    def skip_detect?
+      buildpack_infos.any? { |info| info.buildpack_record&.skip_detect }
+    end
+
     private
 
     def app_stack

@@ -14,6 +14,7 @@ module VCAP::CloudController::Presenters::V3
         description: stack.description,
         run_rootfs_image: stack.run_rootfs_image,
         build_rootfs_image: stack.build_rootfs_image,
+        state: stack.state,
         default: stack.default?,
         metadata: {
           labels: hashified_labels(stack.labels),
