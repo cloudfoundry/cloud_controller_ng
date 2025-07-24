@@ -17893,7 +17893,9 @@ The origin must be different from <code class="prettyprint">uaa</code> in this c
       </span><span class="p">},</span><span class="w">
       </span><span class="nl">"weight"</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="p">,</span><span class="w">
       </span><span class="nl">"port"</span><span class="p">:</span><span class="w"> </span><span class="mi">8080</span><span class="p">,</span><span class="w">
-      </span><span class="nl">"protocol"</span><span class="p">:</span><span class="w"> </span><span class="s2">"tcp"</span><span class="w">
+      </span><span class="nl">"protocol"</span><span class="p">:</span><span class="w"> </span><span class="s2">"tcp"</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"created_at"</span><span class="p">:</span><span class="w"> </span><span class="s2">"2019-05-10T17:17:48Z"</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"updated_at"</span><span class="p">:</span><span class="w"> </span><span class="s2">"2019-05-10T17:17:48Z"</span><span class="w">
     </span><span class="p">},</span><span class="w">
     </span><span class="p">{</span><span class="w">
       </span><span class="nl">"guid"</span><span class="p">:</span><span class="w"> </span><span class="s2">"27e96a3b-5bcf-49ed-8048-351e0be23e6f"</span><span class="p">,</span><span class="w">
@@ -17905,7 +17907,9 @@ The origin must be different from <code class="prettyprint">uaa</code> in this c
       </span><span class="p">},</span><span class="w">
       </span><span class="nl">"weight"</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="p">,</span><span class="w">
       </span><span class="nl">"port"</span><span class="p">:</span><span class="w"> </span><span class="mi">8080</span><span class="p">,</span><span class="w">
-      </span><span class="nl">"protocol"</span><span class="p">:</span><span class="w"> </span><span class="s2">"tcp"</span><span class="w">
+      </span><span class="nl">"protocol"</span><span class="p">:</span><span class="w"> </span><span class="s2">"tcp"</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"created_at"</span><span class="p">:</span><span class="w"> </span><span class="s2">"2019-05-10T17:17:48Z"</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"updated_at"</span><span class="p">:</span><span class="w"> </span><span class="s2">"2019-05-10T17:17:48Z"</span><span class="w">
     </span><span class="p">}</span><span class="w">
  </span><span class="p">],</span><span class="w">
   </span><span class="nl">"options"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
@@ -18039,7 +18043,9 @@ The origin must be different from <code class="prettyprint">uaa</code> in this c
   </span><span class="p">},</span><span class="w">
   </span><span class="nl">"weight"</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="p">,</span><span class="w">
   </span><span class="nl">"port"</span><span class="p">:</span><span class="w"> </span><span class="mi">8080</span><span class="p">,</span><span class="w">
-  </span><span class="nl">"protocol"</span><span class="p">:</span><span class="w"> </span><span class="s2">"http2"</span><span class="w">
+  </span><span class="nl">"protocol"</span><span class="p">:</span><span class="w"> </span><span class="s2">"http2"</span><span class="p">,</span><span class="w">
+  </span><span class="nl">"created_at"</span><span class="p">:</span><span class="w"> </span><span class="s2">"2019-05-10T17:17:48Z"</span><span class="p">,</span><span class="w">
+  </span><span class="nl">"updated_at"</span><span class="p">:</span><span class="w"> </span><span class="s2">"2019-05-10T17:17:48Z"</span><span class="w">
 </span><span class="p">}</span><span class="w">
 
 </span></code></pre></div>
@@ -18089,6 +18095,16 @@ The origin must be different from <code class="prettyprint">uaa</code> in this c
 <td><strong>protocol</strong></td>
 <td><em>string</em> or <code class="prettyprint">null</code></td>
 <td>Protocol to use for this destination. Valid protocols are <code class="prettyprint">http1</code> or <code class="prettyprint">http2</code> if route protocol is <code class="prettyprint">http</code>, <code class="prettyprint">tcp</code> if route protocol is <code class="prettyprint">tcp</code>. A <code class="prettyprint">null</code> value will set it either <code class="prettyprint">http1</code> or <code class="prettyprint">tcp</code> based on the route protocol; <em>this feature is only available if you turn it on in routing release</em></td>
+</tr>
+<tr>
+<td><strong>created_at</strong></td>
+<td><em><a href="#timestamps">timestamp</a></em></td>
+<td>The time with zone when the object was created</td>
+</tr>
+<tr>
+<td><strong>updated_at</strong></td>
+<td><em><a href="#timestamps">timestamp</a></em></td>
+<td>The time with zone when the object was last updated</td>
 </tr>
 </tbody></table>
 <h3 id="the-route-options-object">The route options object</h3>
@@ -18161,7 +18177,9 @@ The origin must be different from <code class="prettyprint">uaa</code> in this c
       </span><span class="p">},</span><span class="w">
       </span><span class="nl">"weight"</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="p">,</span><span class="w">
       </span><span class="nl">"port"</span><span class="p">:</span><span class="w"> </span><span class="mi">8080</span><span class="p">,</span><span class="w">
-      </span><span class="nl">"protocol"</span><span class="p">:</span><span class="w"> </span><span class="s2">"tcp"</span><span class="w">
+      </span><span class="nl">"protocol"</span><span class="p">:</span><span class="w"> </span><span class="s2">"tcp"</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"created_at"</span><span class="p">:</span><span class="w"> </span><span class="s2">"2019-05-10T17:17:48Z"</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"updated_at"</span><span class="p">:</span><span class="w"> </span><span class="s2">"2019-05-10T17:17:48Z"</span><span class="w">
     </span><span class="p">},</span><span class="w">
     </span><span class="p">{</span><span class="w">
       </span><span class="nl">"guid"</span><span class="p">:</span><span class="w"> </span><span class="s2">"27e96a3b-5bcf-49ed-8048-351e0be23e6f"</span><span class="p">,</span><span class="w">
@@ -18173,7 +18191,9 @@ The origin must be different from <code class="prettyprint">uaa</code> in this c
       </span><span class="p">},</span><span class="w">
       </span><span class="nl">"weight"</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="p">,</span><span class="w">
       </span><span class="nl">"port"</span><span class="p">:</span><span class="w"> </span><span class="mi">8080</span><span class="p">,</span><span class="w">
-      </span><span class="nl">"protocol"</span><span class="p">:</span><span class="w"> </span><span class="s2">"tcp"</span><span class="w">
+      </span><span class="nl">"protocol"</span><span class="p">:</span><span class="w"> </span><span class="s2">"tcp"</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"created_at"</span><span class="p">:</span><span class="w"> </span><span class="s2">"2019-05-10T17:17:48Z"</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"updated_at"</span><span class="p">:</span><span class="w"> </span><span class="s2">"2019-05-10T17:17:48Z"</span><span class="w">
     </span><span class="p">}</span><span class="w">
  </span><span class="p">],</span><span class="w">
   </span><span class="nl">"options"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
@@ -18324,7 +18344,9 @@ The origin must be different from <code class="prettyprint">uaa</code> in this c
       </span><span class="p">},</span><span class="w">
       </span><span class="nl">"weight"</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="p">,</span><span class="w">
       </span><span class="nl">"port"</span><span class="p">:</span><span class="w"> </span><span class="mi">8080</span><span class="p">,</span><span class="w">
-      </span><span class="nl">"protocol"</span><span class="p">:</span><span class="w"> </span><span class="s2">"tcp"</span><span class="w">
+      </span><span class="nl">"protocol"</span><span class="p">:</span><span class="w"> </span><span class="s2">"tcp"</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"created_at"</span><span class="p">:</span><span class="w"> </span><span class="s2">"2019-05-10T17:17:48Z"</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"updated_at"</span><span class="p">:</span><span class="w"> </span><span class="s2">"2019-05-10T17:17:48Z"</span><span class="w">
     </span><span class="p">},</span><span class="w">
     </span><span class="p">{</span><span class="w">
       </span><span class="nl">"guid"</span><span class="p">:</span><span class="w"> </span><span class="s2">"27e96a3b-5bcf-49ed-8048-351e0be23e6f"</span><span class="p">,</span><span class="w">
@@ -18336,7 +18358,9 @@ The origin must be different from <code class="prettyprint">uaa</code> in this c
       </span><span class="p">},</span><span class="w">
       </span><span class="nl">"weight"</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="p">,</span><span class="w">
       </span><span class="nl">"port"</span><span class="p">:</span><span class="w"> </span><span class="mi">8080</span><span class="p">,</span><span class="w">
-      </span><span class="nl">"protocol"</span><span class="p">:</span><span class="w"> </span><span class="s2">"tcp"</span><span class="w">
+      </span><span class="nl">"protocol"</span><span class="p">:</span><span class="w"> </span><span class="s2">"tcp"</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"created_at"</span><span class="p">:</span><span class="w"> </span><span class="s2">"2019-05-10T17:17:48Z"</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"updated_at"</span><span class="p">:</span><span class="w"> </span><span class="s2">"2019-05-10T17:17:48Z"</span><span class="w">
     </span><span class="p">}</span><span class="w">
  </span><span class="p">],</span><span class="w">
   </span><span class="nl">"options"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
@@ -18474,7 +18498,9 @@ The origin must be different from <code class="prettyprint">uaa</code> in this c
           </span><span class="p">},</span><span class="w">
           </span><span class="nl">"weight"</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="p">,</span><span class="w">
           </span><span class="nl">"port"</span><span class="p">:</span><span class="w"> </span><span class="mi">8080</span><span class="p">,</span><span class="w">
-          </span><span class="nl">"protocol"</span><span class="p">:</span><span class="w"> </span><span class="s2">"http1"</span><span class="w">
+          </span><span class="nl">"protocol"</span><span class="p">:</span><span class="w"> </span><span class="s2">"http1"</span><span class="p">,</span><span class="w">
+          </span><span class="nl">"created_at"</span><span class="p">:</span><span class="w"> </span><span class="s2">"2019-05-10T17:17:48Z"</span><span class="p">,</span><span class="w">
+          </span><span class="nl">"updated_at"</span><span class="p">:</span><span class="w"> </span><span class="s2">"2019-05-10T17:17:48Z"</span><span class="w">
         </span><span class="p">},</span><span class="w">
         </span><span class="p">{</span><span class="w">
           </span><span class="nl">"guid"</span><span class="p">:</span><span class="w"> </span><span class="s2">"27e96a3b-5bcf-49ed-8048-351e0be23e6f"</span><span class="p">,</span><span class="w">
@@ -18486,7 +18512,9 @@ The origin must be different from <code class="prettyprint">uaa</code> in this c
           </span><span class="p">},</span><span class="w">
           </span><span class="nl">"weight"</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="p">,</span><span class="w">
           </span><span class="nl">"port"</span><span class="p">:</span><span class="w"> </span><span class="mi">8080</span><span class="p">,</span><span class="w">
-          </span><span class="nl">"protocol"</span><span class="p">:</span><span class="w"> </span><span class="s2">"http1"</span><span class="w">
+          </span><span class="nl">"protocol"</span><span class="p">:</span><span class="w"> </span><span class="s2">"http1"</span><span class="p">,</span><span class="w">
+          </span><span class="nl">"created_at"</span><span class="p">:</span><span class="w"> </span><span class="s2">"2019-05-10T17:17:48Z"</span><span class="p">,</span><span class="w">
+          </span><span class="nl">"updated_at"</span><span class="p">:</span><span class="w"> </span><span class="s2">"2019-05-10T17:17:48Z"</span><span class="w">
         </span><span class="p">}</span><span class="w">
       </span><span class="p">],</span><span class="w">
       </span><span class="nl">"options"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
@@ -18674,7 +18702,9 @@ The origin must be different from <code class="prettyprint">uaa</code> in this c
           </span><span class="p">},</span><span class="w">
           </span><span class="nl">"weight"</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="p">,</span><span class="w">
           </span><span class="nl">"port"</span><span class="p">:</span><span class="w"> </span><span class="mi">8080</span><span class="p">,</span><span class="w">
-          </span><span class="nl">"protocol"</span><span class="p">:</span><span class="w"> </span><span class="s2">"http1"</span><span class="w">
+          </span><span class="nl">"protocol"</span><span class="p">:</span><span class="w"> </span><span class="s2">"http1"</span><span class="p">,</span><span class="w">
+          </span><span class="nl">"created_at"</span><span class="p">:</span><span class="w"> </span><span class="s2">"2019-05-10T17:17:48Z"</span><span class="p">,</span><span class="w">
+          </span><span class="nl">"updated_at"</span><span class="p">:</span><span class="w"> </span><span class="s2">"2019-05-10T17:17:48Z"</span><span class="w">
         </span><span class="p">},</span><span class="w">
         </span><span class="p">{</span><span class="w">
           </span><span class="nl">"guid"</span><span class="p">:</span><span class="w"> </span><span class="s2">"27e96a3b-5bcf-49ed-8048-351e0be23e6f"</span><span class="p">,</span><span class="w">
@@ -18686,7 +18716,9 @@ The origin must be different from <code class="prettyprint">uaa</code> in this c
           </span><span class="p">},</span><span class="w">
           </span><span class="nl">"weight"</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="p">,</span><span class="w">
           </span><span class="nl">"port"</span><span class="p">:</span><span class="w"> </span><span class="mi">8080</span><span class="p">,</span><span class="w">
-          </span><span class="nl">"protocol"</span><span class="p">:</span><span class="w"> </span><span class="s2">"http1"</span><span class="w">
+          </span><span class="nl">"protocol"</span><span class="p">:</span><span class="w"> </span><span class="s2">"http1"</span><span class="p">,</span><span class="w">
+          </span><span class="nl">"created_at"</span><span class="p">:</span><span class="w"> </span><span class="s2">"2019-05-10T17:17:48Z"</span><span class="p">,</span><span class="w">
+          </span><span class="nl">"updated_at"</span><span class="p">:</span><span class="w"> </span><span class="s2">"2019-05-10T17:17:48Z"</span><span class="w">
         </span><span class="p">}</span><span class="w">
       </span><span class="p">],</span><span class="w">
       </span><span class="nl">"options"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
@@ -18865,7 +18897,9 @@ The origin must be different from <code class="prettyprint">uaa</code> in this c
       </span><span class="p">},</span><span class="w">
       </span><span class="nl">"weight"</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="p">,</span><span class="w">
       </span><span class="nl">"port"</span><span class="p">:</span><span class="w"> </span><span class="mi">8080</span><span class="p">,</span><span class="w">
-      </span><span class="nl">"protocol"</span><span class="p">:</span><span class="w"> </span><span class="s2">"tcp"</span><span class="w">
+      </span><span class="nl">"protocol"</span><span class="p">:</span><span class="w"> </span><span class="s2">"tcp"</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"created_at"</span><span class="p">:</span><span class="w"> </span><span class="s2">"2019-05-10T17:17:48Z"</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"updated_at"</span><span class="p">:</span><span class="w"> </span><span class="s2">"2019-05-10T17:17:48Z"</span><span class="w">
     </span><span class="p">},</span><span class="w">
     </span><span class="p">{</span><span class="w">
       </span><span class="nl">"guid"</span><span class="p">:</span><span class="w"> </span><span class="s2">"27e96a3b-5bcf-49ed-8048-351e0be23e6f"</span><span class="p">,</span><span class="w">
@@ -18877,7 +18911,9 @@ The origin must be different from <code class="prettyprint">uaa</code> in this c
       </span><span class="p">},</span><span class="w">
       </span><span class="nl">"weight"</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="p">,</span><span class="w">
       </span><span class="nl">"port"</span><span class="p">:</span><span class="w"> </span><span class="mi">8080</span><span class="p">,</span><span class="w">
-      </span><span class="nl">"protocol"</span><span class="p">:</span><span class="w"> </span><span class="s2">"tcp"</span><span class="w">
+      </span><span class="nl">"protocol"</span><span class="p">:</span><span class="w"> </span><span class="s2">"tcp"</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"created_at"</span><span class="p">:</span><span class="w"> </span><span class="s2">"2019-05-10T17:17:48Z"</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"updated_at"</span><span class="p">:</span><span class="w"> </span><span class="s2">"2019-05-10T17:17:48Z"</span><span class="w">
     </span><span class="p">}</span><span class="w">
  </span><span class="p">],</span><span class="w">
   </span><span class="nl">"options"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
@@ -19300,7 +19336,9 @@ To completely remove a space from a route, users will have to use <a href="#unsh
         </span><span class="p">},</span><span class="w">
         </span><span class="nl">"weight"</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="p">,</span><span class="w">
         </span><span class="nl">"port"</span><span class="p">:</span><span class="w"> </span><span class="mi">8080</span><span class="p">,</span><span class="w">
-        </span><span class="nl">"protocol"</span><span class="p">:</span><span class="w"> </span><span class="s2">"http2"</span><span class="w">
+        </span><span class="nl">"protocol"</span><span class="p">:</span><span class="w"> </span><span class="s2">"http2"</span><span class="p">,</span><span class="w">
+        </span><span class="nl">"created_at"</span><span class="p">:</span><span class="w"> </span><span class="s2">"2019-05-10T17:17:48Z"</span><span class="p">,</span><span class="w">
+        </span><span class="nl">"updated_at"</span><span class="p">:</span><span class="w"> </span><span class="s2">"2019-05-10T17:17:48Z"</span><span class="w">
       </span><span class="p">},</span><span class="w">
       </span><span class="p">{</span><span class="w">
         </span><span class="nl">"guid"</span><span class="p">:</span><span class="w"> </span><span class="s2">"fbef10a2-8ee7-11e9-aa2d-abeeaf7b83c5"</span><span class="p">,</span><span class="w">
@@ -19312,7 +19350,9 @@ To completely remove a space from a route, users will have to use <a href="#unsh
         </span><span class="p">},</span><span class="w">
         </span><span class="nl">"weight"</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="p">,</span><span class="w">
         </span><span class="nl">"port"</span><span class="p">:</span><span class="w"> </span><span class="mi">9000</span><span class="p">,</span><span class="w">
-        </span><span class="nl">"protocol"</span><span class="p">:</span><span class="w"> </span><span class="s2">"http1"</span><span class="w">
+        </span><span class="nl">"protocol"</span><span class="p">:</span><span class="w"> </span><span class="s2">"http1"</span><span class="p">,</span><span class="w">
+        </span><span class="nl">"created_at"</span><span class="p">:</span><span class="w"> </span><span class="s2">"2019-05-10T17:17:48Z"</span><span class="p">,</span><span class="w">
+        </span><span class="nl">"updated_at"</span><span class="p">:</span><span class="w"> </span><span class="s2">"2019-05-10T17:17:48Z"</span><span class="w">
       </span><span class="p">}</span><span class="w">
     </span><span class="p">],</span><span class="w">
     </span><span class="nl">"links"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
@@ -19429,7 +19469,9 @@ To completely remove a space from a route, users will have to use <a href="#unsh
         </span><span class="p">},</span><span class="w">
         </span><span class="nl">"weight"</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="p">,</span><span class="w">
         </span><span class="nl">"port"</span><span class="p">:</span><span class="w"> </span><span class="mi">8080</span><span class="p">,</span><span class="w">
-        </span><span class="nl">"protocol"</span><span class="p">:</span><span class="w"> </span><span class="s2">"http2"</span><span class="w">
+        </span><span class="nl">"protocol"</span><span class="p">:</span><span class="w"> </span><span class="s2">"http2"</span><span class="p">,</span><span class="w">
+        </span><span class="nl">"created_at"</span><span class="p">:</span><span class="w"> </span><span class="s2">"2019-05-10T17:17:48Z"</span><span class="p">,</span><span class="w">
+        </span><span class="nl">"updated_at"</span><span class="p">:</span><span class="w"> </span><span class="s2">"2019-05-10T17:17:48Z"</span><span class="w">
       </span><span class="p">},</span><span class="w">
       </span><span class="p">{</span><span class="w">
         </span><span class="nl">"guid"</span><span class="p">:</span><span class="w"> </span><span class="s2">"fbef10a2-8ee7-11e9-aa2d-abeeaf7b83c5"</span><span class="p">,</span><span class="w">
@@ -19441,7 +19483,9 @@ To completely remove a space from a route, users will have to use <a href="#unsh
         </span><span class="p">},</span><span class="w">
         </span><span class="nl">"weight"</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="p">,</span><span class="w">
         </span><span class="nl">"port"</span><span class="p">:</span><span class="w"> </span><span class="mi">9000</span><span class="p">,</span><span class="w">
-        </span><span class="nl">"protocol"</span><span class="p">:</span><span class="w"> </span><span class="s2">"http1"</span><span class="w">
+        </span><span class="nl">"protocol"</span><span class="p">:</span><span class="w"> </span><span class="s2">"http1"</span><span class="p">,</span><span class="w">
+        </span><span class="nl">"created_at"</span><span class="p">:</span><span class="w"> </span><span class="s2">"2019-05-10T17:17:48Z"</span><span class="p">,</span><span class="w">
+        </span><span class="nl">"updated_at"</span><span class="p">:</span><span class="w"> </span><span class="s2">"2019-05-10T17:17:48Z"</span><span class="w">
       </span><span class="p">}</span><span class="w">
     </span><span class="p">],</span><span class="w">
     </span><span class="nl">"links"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
