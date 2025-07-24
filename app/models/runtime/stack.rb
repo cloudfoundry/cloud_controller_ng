@@ -26,8 +26,8 @@ module VCAP::CloudController
 
     plugin :serialization
 
-    export_attributes :name, :description, :build_rootfs_image, :run_rootfs_image
-    import_attributes :name, :description, :build_rootfs_image, :run_rootfs_image
+    export_attributes :name, :description, :build_rootfs_image, :run_rootfs_image, :deprecated_at, :locked_at, :disabled_at
+    import_attributes :name, :description, :build_rootfs_image, :run_rootfs_image, :deprecated_at, :locked_at, :disabled_at
 
     strip_attributes :name
 
@@ -43,6 +43,19 @@ module VCAP::CloudController
     def validate
       validates_presence :name
       validates_unique :name
+      validate_timestamp_ordering
+    end
+
+    def deprecated?
+      deprecated_at && deprecated_at <= Time.now
+    end
+
+    def locked?
+      locked_at && locked_at <= Time.now
+    end
+
+    def disabled?
+      disabled_at && disabled_at <= Time.now
     end
 
     def before_destroy
@@ -95,8 +108,20 @@ module VCAP::CloudController
         stack.set(hash)
         Steno.logger('cc.stack').warn('stack.populate.collision', hash) if stack.modified?
       else
-        create(hash.slice('name', 'description', 'build_rootfs_image', 'run_rootfs_image'))
+        create(hash.slice('name', 'description', 'build_rootfs_image', 'run_rootfs_image', 'deprecated_at', 'locked_at', 'disabled_at'))
       end
+    end
+
+    private
+
+    def validate_timestamp_ordering
+      return unless [deprecated_at, locked_at, disabled_at].any?
+
+      errors.add(:deprecated_at, 'must be before locked_at') if deprecated_at && locked_at && deprecated_at > locked_at
+
+      return unless locked_at && disabled_at && locked_at > disabled_at
+
+      errors.add(:locked_at, 'must be before disabled_at')
     end
   end
 end

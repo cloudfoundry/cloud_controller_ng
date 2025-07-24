@@ -15,6 +15,9 @@ module VCAP::CloudController::Presenters::V3
         run_rootfs_image: stack.run_rootfs_image,
         build_rootfs_image: stack.build_rootfs_image,
         default: stack.default?,
+        deprecated_at: stack.deprecated_at,
+        locked_at: stack.locked_at,
+        disabled_at: stack.disabled_at,
         metadata: {
           labels: hashified_labels(stack.labels),
           annotations: hashified_annotations(stack.annotations)

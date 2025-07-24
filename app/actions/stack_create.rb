@@ -6,7 +6,10 @@ module VCAP::CloudController
     def create(message)
       stack = VCAP::CloudController::Stack.create(
         name: message.name,
-        description: message.description
+        description: message.description,
+        deprecated_at: message.deprecated_at,
+        locked_at: message.locked_at,
+        disabled_at: message.disabled_at
       )
 
       MetadataUpdate.update(stack, message)
