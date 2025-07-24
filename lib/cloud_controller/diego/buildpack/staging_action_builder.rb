@@ -20,7 +20,19 @@ module VCAP::CloudController
         def stage_action
           staging_details_env = BbsEnvironmentBuilder.build(staging_details.environment_variables)
 
-          ::Diego::Bbs::Models::RunAction.new(
+          actions = []
+          stack = Stack.find(name: staging_details.lifecycle.staging_stack)
+          if stack&.deprecated?
+            message = "Stack '#{stack.name}' is deprecated."
+            message += " It will be locked at #{stack.locked_at}." if stack.locked_at
+            message += " It will be disabled at #{stack.disabled_at}." if stack.disabled_at
+            actions << ::Diego::Bbs::Models::LogAction.new(
+              message: "\e[31m#{message}\e[0m",
+              timestamp: Time.now.to_i
+            )
+          end
+
+          actions << ::Diego::Bbs::Models::RunAction.new(
             path: '/tmp/lifecycle/builder',
             user: 'vcap',
             args: [
@@ -37,6 +49,8 @@ module VCAP::CloudController
             resource_limits: ::Diego::Bbs::Models::ResourceLimits.new(nofile: config.get(:staging, :minimum_staging_file_descriptor_limit)),
             env: staging_details_env + platform_options_env
           )
+
+          ::Diego::Bbs::Models::CodependentAction.new(actions:)
         end
 
         def platform_options_env
