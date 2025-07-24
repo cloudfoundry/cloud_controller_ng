@@ -269,12 +269,8 @@ module VCAP::CloudController
       (shared | source).first
     end
 
-    def number_service_instances
-      service_instances_dataset.count
-    end
-
     def number_service_keys
-      ServiceKey.where(service_instance_id: service_instances_dataset.select(:id)).count
+      ServiceKey.join(:service_instances, id: :service_instance_id).where(service_instances__space_id: id).count
     end
 
     def self.user_visibility_filter(user)

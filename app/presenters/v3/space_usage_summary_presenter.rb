@@ -8,7 +8,7 @@ module VCAP::CloudController::Presenters::V3
           started_instances: started_instances,
           memory_in_mb: space.memory_used,
           routes: space.routes_dataset.count,
-          service_instances: space.number_service_instances,
+          service_instances: space.service_instances_dataset.count,
           reserved_ports: VCAP::CloudController::SpaceReservedRoutePorts.new(space).count,
           domains: space.organization.owned_private_domains_dataset.count,
           per_app_tasks: space.running_and_pending_tasks_count,

@@ -962,7 +962,7 @@ RSpec.describe SpacesV3Controller, type: :controller do
     context 'when the user has permissions to read from the space' do
       before { allow_user_read_access_for(user, orgs: [org], spaces: [space]) }
 
-      it 'throws ResourceNotFound error' do
+      it 'succeeds' do
         get :show_usage_summary, params: { guid: space.guid }
 
         expect(response).to have_http_status(:ok)
