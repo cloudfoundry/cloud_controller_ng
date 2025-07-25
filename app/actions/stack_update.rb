@@ -9,6 +9,8 @@ module VCAP::CloudController
 
     def update(stack, message)
       stack.db.transaction do
+        stack.set(message.to_h)
+        stack.save
         MetadataUpdate.update(stack, message)
       end
       @logger.info("Finished updating metadata on stack #{stack.guid}")
