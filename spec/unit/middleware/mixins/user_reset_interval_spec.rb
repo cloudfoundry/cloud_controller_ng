@@ -10,6 +10,10 @@ module CloudFoundry
       let(:reset_interval_in_minutes) { 60 }
       let(:user_guid_offset) { 592.seconds }
 
+      it 'produces the expected XXH64 hash' do
+        expect(Digest::XXH64.idigest(user_guid)).to eq(16_213_529_883_637_274_992)
+      end
+
       context "time is set to beginning of hour + the user's offset" do
         before { Timecop.freeze Time.now.beginning_of_hour + user_guid_offset }
         after { Timecop.return }
