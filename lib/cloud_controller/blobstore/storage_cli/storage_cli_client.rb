@@ -1,5 +1,6 @@
 require 'open3'
 require 'tempfile'
+require 'tmpdir'
 require 'fileutils'
 require 'cloud_controller/blobstore/base_client'
 require 'cloud_controller/blobstore/storage_cli/storage_cli_blob'
@@ -16,27 +17,26 @@ module CloudController
           @registry[provider] = klass
         end
 
-        def build(fog_connection:, directory_key:, root_dir:, min_size: nil, max_size: nil, fork: false)
-          provider = fog_connection[:provider]
-          raise 'Missing fog_connection[:provider]' if provider.nil?
+        def build(connection_config:, directory_key:, root_dir:, min_size: nil, max_size: nil)
+          provider = connection_config[:provider]
+          raise 'Missing connection_config[:provider]' if provider.nil?
 
           impl_class = @registry[provider]
           raise "No storage CLI client registered for provider #{provider}" unless impl_class
 
-          impl_class.new(fog_connection:, directory_key:, root_dir:, min_size:, max_size:, fork:)
+          impl_class.new(connection_config:, directory_key:, root_dir:, min_size:, max_size:, fork:)
         end
       end
 
-      def initialize(fog_connection:, directory_key:, root_dir:, min_size: nil, max_size: nil, fork: false)
+      def initialize(connection_config:, directory_key:, root_dir:, min_size: nil, max_size: nil)
         @cli_path = cli_path
         @directory_key = directory_key
         @root_dir = root_dir
         @min_size = min_size || 0
         @max_size = max_size
-        @fork = fork
-
-        config = build_config(fog_connection)
+        config = build_config(connection_config)
         @config_file = write_config_file(config)
+        @fork = connection_config.fetch(:fork, false)
       end
 
       def local?
@@ -142,9 +142,9 @@ module CloudController
       end
 
       def ensure_bucket_exists
-        pass unless @fork
+        return unless @fork
 
-        run_cli('ensure-bucket-exists', @directory_key)
+        run_cli('ensure-bucket-exists')
       end
 
       private
@@ -188,23 +188,27 @@ module CloudController
         raise NotImplementedError
       end
 
-      def build_config(fog_connection)
+      def build_config(connection_config)
         raise NotImplementedError
       end
 
       def write_config_file(config)
+        # TODO: Consider to move the config generation into capi-release
         config_dir = File.join(tmpdir, 'blobstore-configs')
         FileUtils.mkdir_p(config_dir)
 
         config_file_path = File.join(config_dir, "#{@directory_key}.json")
         File.open(config_file_path, 'w', 0o600) do |f|
-          f.write(Oj.dump(config))
+          f.write(Oj.dump(config.transform_keys(&:to_s)))
         end
         config_file_path
       end
 
       def tmpdir
         VCAP::CloudController::Config.config.get(:directories, :tmpdir)
+      rescue StandardError
+        # Fallback to a temporary directory if the config is not set (e.g. for cc-deployment-updater
+        Dir.mktmpdir('cc_blobstore')
       end
 
       def logger

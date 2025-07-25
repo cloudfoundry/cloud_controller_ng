@@ -14,10 +14,8 @@ module CloudController
         if options[:blobstore_type].blank? || (options[:blobstore_type] == 'fog')
           provide_fog(options, directory_key, root_dir)
         elsif options[:blobstore_type] == 'storage-cli'
+          # storage-cli is an experimental feature and not yet fully implemented. !!! DO NOT USE IN PRODUCTION !!!
           provide_storage_cli(options, directory_key, root_dir)
-        elsif options[:blobstore_type] == 'storage-cli-fork'
-          # Just for testing not yet merged features in bosh-azure-cli
-          provide_storage_cli(options, directory_key, root_dir, fork: true)
         else
           provide_webdav(options, directory_key, root_dir)
         end
@@ -72,13 +70,14 @@ module CloudController
           Client.new(SafeDeleteClient.new(retryable_client, root_dir))
         end
 
-        def provide_storage_cli(options, directory_key, root_dir, fork: false)
-          client = StorageCliClient.build(fog_connection: options.fetch(:fog_connection),
+        def provide_storage_cli(options, directory_key, root_dir)
+          raise BlobstoreError.new('connection_config for storage-cli is not provided') unless options[:connection_config]
+
+          client = StorageCliClient.build(connection_config: options.fetch(:connection_config),
                                           directory_key: directory_key,
                                           root_dir: root_dir,
                                           min_size: options[:minimum_size],
-                                          max_size: options[:maximum_size],
-                                          fork: fork)
+                                          max_size: options[:maximum_size])
 
           logger = Steno.logger('cc.blobstore.storage_cli_client')
           errors = [StandardError]

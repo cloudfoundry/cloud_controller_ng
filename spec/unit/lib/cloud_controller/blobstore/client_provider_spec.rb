@@ -133,13 +133,18 @@ module CloudController
         let(:storage_cli_client_mock) { class_double(CloudController::Blobstore::StorageCliClient) }
 
         before do
-          options.merge!(fog_connection: {}, minimum_size: 100, maximum_size: 1000)
+          options.merge!(connection_config: {}, minimum_size: 100, maximum_size: 1000)
         end
 
         it 'provides a storage-cli client' do
           allow(StorageCliClient).to receive(:build).and_return(storage_cli_client_mock)
           ClientProvider.provide(options:, directory_key:, root_dir:)
-          expect(StorageCliClient).to have_received(:build).with(fog_connection: {}, directory_key: directory_key, root_dir: root_dir, min_size: 100, max_size: 1000, fork: false)
+          expect(StorageCliClient).to have_received(:build).with(connection_config: {}, directory_key: directory_key, root_dir: root_dir, min_size: 100, max_size: 1000)
+        end
+
+        it 'raises an error if connection_config is not provided' do
+          options.delete(:connection_config)
+          expect { ClientProvider.provide(options:, directory_key:, root_dir:) }.to raise_error(BlobstoreError, 'connection_config for storage-cli is not provided')
         end
       end
     end
