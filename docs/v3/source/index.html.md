@@ -354,6 +354,7 @@ includes:
   - resources/spaces/update
   - resources/spaces/delete
   - resources/spaces/get_assigned_isolation_segment
+  - resources/spaces/get_usage_summary
   - resources/spaces/manage_isolation_segment
   - resources/spaces/list_users
   - resources/space_features/header

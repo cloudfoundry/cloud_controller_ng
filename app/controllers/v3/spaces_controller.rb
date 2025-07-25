@@ -1,5 +1,6 @@
 require 'presenters/v3/paginated_list_presenter'
 require 'presenters/v3/space_presenter'
+require 'presenters/v3/space_usage_summary_presenter'
 require 'messages/space_create_message'
 require 'messages/space_delete_unmapped_routes_message'
 require 'messages/space_update_message'
@@ -209,6 +210,14 @@ class SpacesV3Controller < ApplicationController
     )
   rescue VCAP::CloudController::UaaUnavailable
     raise CloudController::Errors::ApiError.new_from_details('UaaUnavailable')
+  end
+
+  def show_usage_summary
+    space = fetch_space(hashed_params[:guid])
+    space_not_found! unless space
+    space_not_found! unless permission_queryer.can_read_from_space?(space.id, space.organization_id)
+
+    render status: :ok, json: Presenters::V3::SpaceUsageSummaryPresenter.new(space)
   end
 
   private
