@@ -61,7 +61,11 @@ class DeploymentsController < ApplicationController
         {
           'strategy' => deployment.strategy,
           'max-in-flight' => deployment.max_in_flight,
-          'canary-steps' => deployment.canary_steps
+          'canary-steps' => deployment.canary_steps,
+          'instances' => deployment.web_instances,
+          'memory' => deployment.memory_in_mb,
+          'disk' => deployment.disk_in_mb,
+          'log-rate' => deployment.log_rate_limit_in_bytes_per_second
         }
       )
     rescue DeploymentCreate::Error => e
