@@ -10,6 +10,7 @@ module VCAP::CloudController::Logs
     let(:fake_request) { double('request', request_method: 'request_method', ip: fake_ip, filtered_path: 'filtered_path', fullpath: fake_fullpath) }
     let(:request_id) { 'ID' }
     let(:time_taken) { 30 }
+    let(:query_count) { 5 }
     let(:env) { { 'cf.user_guid' => 'user-guid' } }
     let(:status) { 200 }
 
@@ -46,10 +47,11 @@ module VCAP::CloudController::Logs
           end
 
           it 'logs the completion of the request' do
-            request_logs.complete_request(request_id, status, env, time_taken)
+            request_logs.complete_request(request_id, status, env, time_taken, query_count)
             expect(logger).to have_received(:info).with(
               /\ACompleted 200 vcap-request-id: ID/,
               time_taken_in_ms: 30,
+              db_query_count: 5,
               request_method: 'request_method',
               request_fullpath: 'filtered_path',
               status_code: 200
@@ -59,7 +61,7 @@ module VCAP::CloudController::Logs
 
         context 'without a matching start request' do
           it 'does not log the completion of the request' do
-            request_logs.complete_request(request_id, status, env, time_taken)
+            request_logs.complete_request(request_id, status, env, time_taken, query_count)
             expect(logger).not_to have_received(:info)
           end
         end
