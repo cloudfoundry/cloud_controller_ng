@@ -6,15 +6,16 @@ require 'cloud_controller/blobstore/storage_cli/storage_cli_blob'
 module CloudController
   module Blobstore
     RSpec.describe AzureStorageCliClient do
-      subject(:client) { AzureStorageCliClient.new(fog_connection: fog_connection, directory_key: directory_key, root_dir: 'bommel', fork: true) }
+      subject(:client) { AzureStorageCliClient.new(connection_config: connection_config, directory_key: directory_key, root_dir: 'bommel') }
       let(:directory_key) { 'my-bucket' }
-      let(:fog_connection) do
+      let(:connection_config) do
         {
           azure_storage_access_key: 'some-access-key',
           azure_storage_account_name: 'some-account-name',
           container_name: directory_key,
           environment: 'AzureCloud',
-          provider: 'AzureRM'
+          provider: 'AzureRM',
+          fork: true
         }
       end
       let(:downloaded_file) do
@@ -39,7 +40,7 @@ module CloudController
           allow(client).to receive(:run_cli).with('delete', anything).and_return([nil, instance_double(Process::Status, exitstatus: 0)])
           allow(client).to receive(:run_cli).with('delete-recursive', anything).and_return([nil, instance_double(Process::Status, exitstatus: 0)])
           allow(client).to receive(:run_cli).with('list', anything).and_return(["aa/bb/blob1\ncc/dd/blob2\n", instance_double(Process::Status, exitstatus: 0)])
-          allow(client).to receive(:run_cli).with('ensure-bucket-exists', anything).and_return([nil, instance_double(Process::Status, exitstatus: 0)])
+          allow(client).to receive(:run_cli).with('ensure-bucket-exists').and_return([nil, instance_double(Process::Status, exitstatus: 0)])
           allow(client).to receive(:run_cli).with('properties', anything).and_return(['{"dummy": "json"}', instance_double(Process::Status, exitstatus: 0)])
           allow(client).to receive(:run_cli).with('sign', anything, 'get', '3600s').and_return(['some-url', instance_double(Process::Status, exitstatus: 0)])
         end
