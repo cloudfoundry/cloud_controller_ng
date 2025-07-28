@@ -1,19 +1,13 @@
 require 'spec_helper'
-require_relative '../client_shared'
+require 'cloud_controller/blobstore/storage_cli/azure_storage_cli_client'
 
 module CloudController
   module Blobstore
     RSpec.describe StorageCliClient do
       describe 'registry build and lookup' do
-        class DummyClient < StorageCliClient
-          def initialize(*); end
-        end
-
-        before { StorageCliClient.register('DummyProvider', DummyClient) }
-
         it 'builds the correct client' do
-          client_from_registry = StorageCliClient.build(connection_config: { provider: 'DummyProvider' }, directory_key: 'dummy-key', root_dir: 'dummy-root')
-          expect(client_from_registry).to be_a(DummyClient)
+          client_from_registry = StorageCliClient.build(connection_config: { provider: 'AzureRM' }, directory_key: 'dummy-key', root_dir: 'dummy-root')
+          expect(client_from_registry).to be_a(AzureStorageCliClient)
         end
 
         it 'raises an error for an unregistered provider' do

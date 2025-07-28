@@ -13,18 +13,20 @@ module CloudController
       @registry = {}
 
       class << self
+        attr_reader :registry
+
         def register(provider, klass)
-          @registry[provider] = klass
+          registry[provider] = klass
         end
 
         def build(connection_config:, directory_key:, root_dir:, min_size: nil, max_size: nil)
           provider = connection_config[:provider]
           raise 'Missing connection_config[:provider]' if provider.nil?
 
-          impl_class = @registry[provider]
+          impl_class = registry[provider]
           raise "No storage CLI client registered for provider #{provider}" unless impl_class
 
-          impl_class.new(connection_config:, directory_key:, root_dir:, min_size:, max_size:, fork:)
+          impl_class.new(connection_config:, directory_key:, root_dir:, min_size:, max_size:)
         end
       end
 
