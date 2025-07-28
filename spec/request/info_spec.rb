@@ -87,7 +87,13 @@ RSpec.describe 'Info Request' do
       {
         usage_summary: {
           started_instances: 21,
-          memory_in_mb: 2200
+          memory_in_mb: 2200,
+          domains: 1,
+          per_app_tasks: 1,
+          reserved_ports: 0,
+          routes: 0,
+          service_instances: 0,
+          service_keys: 0
         },
         links: {
           self: { href: "#{link_prefix}/v3/info/usage_summary" }
