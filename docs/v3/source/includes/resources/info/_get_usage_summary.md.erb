@@ -27,10 +27,16 @@ This endpoint retrieves a high-level summary of usage across the entire Cloud Fo
 
 #### Usage summary object
 
-| Name | Type | Description |
-| ---- | ---- | ----------- |
-| **started_instances** | _integer_ | Total number of process instances in the `STARTED` state |
-| **memory_in_mb** | _integer_ | Sum of memory usage of all tasks in the `RUNNING` state and all process instances in the `STARTED` state |
+| Name                  | Type      | Description                                                                                              |
+|-----------------------|-----------|----------------------------------------------------------------------------------------------------------|
+| **started_instances** | _integer_ | Total number of process instances in the `STARTED` state                                                 |
+| **memory_in_mb**      | _integer_ | Sum of memory usage of all tasks in the `RUNNING` state and all process instances in the `STARTED` state |
+| **routes**            | _integer_ | Total number of routes                                                                                   |
+| **service_instances** | _integer_ | Total number of service instances                                                                        |
+| **reserved_ports**    | _integer_ | Total number of reserved ports                                                                           |
+| **domains**           | _integer_ | Total number of private domains                                                                          |
+| **per_app_tasks**     | _integer_ | Total number of running tasks                                                                            |
+| **service_keys**      | _integer_ | Total number of service keys                                                                             |
 
 #### Permitted roles
 
