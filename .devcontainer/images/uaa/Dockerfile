@@ -20,7 +20,7 @@ RUN yq  e '.issuer.uri = "http://localhost:8080"' -i /uaa.yml \
   && yq e '.uaa.url = .issuer.uri' -i /uaa.yml
 
 # Runtime image
-FROM tomcat:9-jdk21
+FROM tomcat:10-jdk21
 
 # Copy config file from yq image
 COPY --from=yq /uaa.yml /uaa.yml
