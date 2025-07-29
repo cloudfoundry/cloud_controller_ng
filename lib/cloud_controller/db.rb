@@ -3,6 +3,7 @@ require 'cloud_controller/db_migrator'
 require 'cloud_controller/db_connection/options_factory'
 require 'cloud_controller/db_connection/finalizer'
 require 'sequel/extensions/query_length_logging'
+require 'sequel/extensions/request_query_metrics'
 
 module VCAP::CloudController
   class DB
@@ -30,12 +31,13 @@ module VCAP::CloudController
         db.logger = logger
         db.sql_log_level = opts[:log_level]
         db.extension :caller_logging
-        db.caller_logging_ignore = /sequel_paginator|query_length_logging|sequel_pg|paginated_collection_renderer/
+        db.caller_logging_ignore = /sequel_paginator|query_length_logging|sequel_pg|paginated_collection_renderer|request_query_metrics/
         db.caller_logging_formatter = lambda do |caller|
           "(#{caller.sub(%r{^.*/cloud_controller_ng/}, '')})"
         end
 
         db.extension(:query_length_logging)
+        db.extension(:request_query_metrics)
         db.opts[:query_size_log_threshold] = opts[:query_size_log_threshold]
       end
       db.default_collate = 'utf8_bin' if db.database_type == :mysql

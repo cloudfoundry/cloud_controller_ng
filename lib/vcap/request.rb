@@ -55,6 +55,29 @@ module VCAP
       def b3_span_id
         Thread.current[:b3_span_id]
       end
+
+      def db_query_metrics
+        init_db_query_metrics
+
+        Thread.current[:db_query_metrics]
+      end
+
+      def record_db_query(duration)
+        init_db_query_metrics
+
+        Thread.current[:db_query_metrics].total_query_time_us += duration
+        Thread.current[:db_query_metrics].query_count += 1
+      end
+
+      def reset_db_query_metrics
+        Thread.current[:db_query_metrics] = Struct.new(:total_query_time_us, :query_count).new(0, 0)
+      end
+
+      private
+
+      def init_db_query_metrics
+        reset_db_query_metrics if Thread.current[:db_query_metrics].nil?
+      end
     end
   end
 end
