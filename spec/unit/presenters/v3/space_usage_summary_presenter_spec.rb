@@ -42,8 +42,9 @@ module VCAP::CloudController::Presenters::V3
       let(:broker) { VCAP::CloudController::ServiceBroker.make }
       let(:service) { VCAP::CloudController::Service.make(service_broker: broker) }
       let(:service_plan) { VCAP::CloudController::ServicePlan.make(service: service, public: true) }
-      let(:service_instance) { VCAP::CloudController::ManagedServiceInstance.make(space:, service_plan:) }
-      let!(:service_key) { VCAP::CloudController::ServiceKey.make(service_instance:) }
+      let!(:user_provided_service_instance) { VCAP::CloudController::UserProvidedServiceInstance.make(space:) }
+      let(:managed_service_instance) { VCAP::CloudController::ManagedServiceInstance.make(space:, service_plan:) }
+      let!(:service_key) { VCAP::CloudController::ServiceKey.make(service_instance: managed_service_instance) }
 
       describe '#to_hash' do
         let(:result) { SpaceUsageSummaryPresenter.new(space).to_hash }
