@@ -22,6 +22,7 @@ module VCAP::CloudController
       let!(:process2) { ProcessModelFactory.make(instances: 5, state: 'STARTED', memory: 100) }
       let!(:service_instance1) { ServiceInstance.make(is_gateway_service: false) }
       let!(:service_instance2) { ServiceInstance.make(is_gateway_service: true) }
+      let!(:service_instance3) { ServiceInstance.make(is_gateway_service: true) }
       let!(:service_key1) { VCAP::CloudController::ServiceKey.make(service_instance: service_instance1) }
       let!(:service_key2) { VCAP::CloudController::ServiceKey.make(service_instance: service_instance2) }
       let!(:shared_domain_with_router_group) { SharedDomain.make(router_group_guid: 'rg-123') }
@@ -36,7 +37,7 @@ module VCAP::CloudController
         expect(summary.started_instances).to eq(21)
         expect(summary.memory_in_mb).to eq(2200)
         expect(summary.routes).to eq(2)
-        expect(summary.service_instances).to eq(1)
+        expect(summary.service_instances).to eq(2)
         expect(summary.reserved_ports).to eq(1)
         expect(summary.domains).to eq(2) # system domain "vcap.me" plus :private_domain_without_router_group
         expect(summary.per_app_tasks).to eq(1)

@@ -27,7 +27,7 @@ module VCAP::CloudController
 
         summary.service_instances = ServiceInstance.
                                     dataset.
-                                    where(is_gateway_service: false).
+                                    where(is_gateway_service: true).
                                     count
 
         summary.reserved_ports = Route.
