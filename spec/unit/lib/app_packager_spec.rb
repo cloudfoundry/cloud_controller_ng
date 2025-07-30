@@ -216,7 +216,7 @@ RSpec.describe AppPackager do
         app_packager.fix_subdir_permissions(@tmpdir, "#{@tmpdir}/application_contents")
 
         has_dirs = Zip::File.open(input_zip) do |in_zip|
-          in_zip.any?(&:directory?)
+          in_zip.entries.any?(&:directory?)
         end
 
         expect(has_dirs).to be_falsey
