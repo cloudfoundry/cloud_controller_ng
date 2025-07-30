@@ -59,7 +59,7 @@ class AppPackager
 
   def get_dirs_from_zip(zip_path)
     Zip::File.open(zip_path) do |in_zip|
-      in_zip.select(&:directory?)
+      in_zip.entries.select(&:directory?).map(&:name)
     end
   end
 
