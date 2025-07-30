@@ -118,6 +118,34 @@ module VCAP
                 end
               end
             end
+
+            context 'when root user not allowed' do
+              before do
+                TestConfig.override(allow_process_root_user: false)
+              end
+
+              context 'and the process does not set a user' do
+                let(:app) { AppModel.make(:docker, { droplet: }) }
+                let(:process) { ProcessModel.make(:docker, { app: }) }
+
+                context 'and the droplet docker execution metadata sets the root user' do
+                  let(:droplet_execution_metadata) { '{"entrypoint":["/image-entrypoint.sh"],"user":"root"}' }
+                  let(:droplet) do
+                    DropletModel.make(:docker, {
+                                        state: DropletModel::STAGED_STATE,
+                                        docker_receipt_image: 'the-image',
+                                        execution_metadata: droplet_execution_metadata
+                                      })
+                  end
+
+                  it 'raises an error' do
+                    expect do
+                      lifecycle_protocol.desired_lrp_builder(config, process)
+                    end.to raise_error(::CloudController::Errors::ApiError, /'root' user not permitted/)
+                  end
+                end
+              end
+            end
           end
 
           describe '#task_action_builder' do
@@ -137,6 +165,34 @@ module VCAP
                 lifecycle_data
               )
               lifecycle_protocol.task_action_builder(config, task)
+            end
+
+            context 'when root user not allowed' do
+              before do
+                TestConfig.override(allow_process_root_user: false)
+              end
+
+              context 'and the task does not set a user' do
+                let(:app) { AppModel.make(:docker, { droplet: }) }
+                let(:task) { TaskModel.make(:docker, { droplet:, app: }) }
+
+                context 'and the droplet docker execution metadata sets the root user' do
+                  let(:droplet_execution_metadata) { '{"entrypoint":["/image-entrypoint.sh"],"user":"root"}' }
+                  let(:droplet) do
+                    DropletModel.make(:docker, {
+                                        state: DropletModel::STAGED_STATE,
+                                        docker_receipt_image: 'the-image',
+                                        execution_metadata: droplet_execution_metadata
+                                      })
+                  end
+
+                  it 'raises an error' do
+                    expect do
+                      lifecycle_protocol.task_action_builder(config, task)
+                    end.to raise_error(::CloudController::Errors::ApiError, /'root' user not permitted/)
+                  end
+                end
+              end
             end
           end
         end

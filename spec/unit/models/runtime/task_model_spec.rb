@@ -214,41 +214,26 @@ module VCAP::CloudController
           end
         end
 
-        context 'when the droplet execution metadata specifies a user' do
-          it 'returns the specified user' do
-            expect(task.run_action_user).to eq('some-user')
+        context 'when the task DOES NOT have a user specified' do
+          context 'when there is a droplet and it has the docker lifecycle' do
+            before do
+              allow(task.droplet).to(receive(:docker_user).and_return('DropletDockerUser'))
+            end
+
+            it 'returns the docker_user from the droplet' do
+              expect(task.run_action_user).to eq('DropletDockerUser')
+            end
           end
         end
 
-        context 'when the droplet execution metadata DOES NOT specify a user' do
-          let(:droplet_execution_metadata) { '{"entrypoint":["/image-entrypoint.sh"]}' }
-
-          it 'defaults the user to root' do
-            expect(task.run_action_user).to eq('root')
+        context 'when there is no droplet for the task' do
+          before do
+            task.droplet.delete
+            task.reload
           end
-        end
 
-        context 'when the droplet execution metadata is an empty string' do
-          let(:droplet_execution_metadata) { '' }
-
-          it 'defaults the user to root' do
-            expect(task.run_action_user).to eq('root')
-          end
-        end
-
-        context 'when the droplet execution metadata is nil' do
-          let(:droplet_execution_metadata) { nil }
-
-          it 'defaults the user to root' do
-            expect(task.run_action_user).to eq('root')
-          end
-        end
-
-        context 'when the droplet execution metadata has invalid json' do
-          let(:droplet_execution_metadata) { '{' }
-
-          it 'defaults the user to root' do
-            expect(task.run_action_user).to eq('root')
+          it 'returns the default "vcap" user' do
+            expect(task.run_action_user).to eq('vcap')
           end
         end
       end

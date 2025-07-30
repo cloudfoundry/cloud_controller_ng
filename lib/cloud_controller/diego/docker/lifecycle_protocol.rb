@@ -22,10 +22,18 @@ module VCAP
           end
 
           def task_action_builder(config, task)
+            if task.run_action_user == 'root' && !Config.config.get(:allow_process_root_user)
+              raise ::CloudController::Errors::ApiError.new_from_details('RunnerError', "'root' user not permitted.")
+            end
+
             TaskActionBuilder.new(config, task, { droplet_path: task.droplet.docker_receipt_image })
           end
 
           def desired_lrp_builder(config, process)
+            if process.run_action_user == 'root' && !Config.config.get(:allow_process_root_user)
+              raise ::CloudController::Errors::ApiError.new_from_details('RunnerError', "'root' user not permitted.")
+            end
+
             DesiredLrpBuilder.new(config, builder_opts(process))
           end
 

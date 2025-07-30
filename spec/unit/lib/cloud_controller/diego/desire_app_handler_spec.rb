@@ -51,6 +51,17 @@ module VCAP::CloudController
             expect(client).to have_received(:get_app).exactly(2).times
           end
         end
+
+        context 'when root user is not permitted' do
+          it 'raises a CloudController::Errors::ApiError' do
+            allow(client).to receive(:desire_app).and_raise(CloudController::Errors::ApiError.new_from_details('RunnerError', "'root' user not permitted"))
+            expect { DesireAppHandler.create_or_update_app(process, client) }.to(raise_error do |error|
+              expect(error).to be_a(CloudController::Errors::ApiError)
+              expect(error.name).to eq('RunnerError')
+              expect(error.message).to include(/'root' user not permitted/)
+            end)
+          end
+        end
       end
     end
   end
