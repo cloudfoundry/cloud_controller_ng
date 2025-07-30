@@ -9,7 +9,6 @@ module VCAP
       NGINX_FINAL_TIMEOUT = 10
       CCNG_FINAL_TIMEOUT = 20
       SLEEP_INTERVAL = 1
-      CC_UPLOADER_FINAL_TIMEOUT_SECONDS = 900
 
       def initialize(log_path)
         @log_path = log_path
