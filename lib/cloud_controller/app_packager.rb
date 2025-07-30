@@ -49,7 +49,7 @@ class AppPackager
 
   def size
     Zip::File.open(@path) do |in_zip|
-      in_zip.reduce(0) { |memo, entry| memo + entry.size }
+      in_zip.entries.sum(&:size)
     end
   rescue Zip::Error
     invalid_zip!
