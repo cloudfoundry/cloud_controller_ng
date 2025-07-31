@@ -107,7 +107,7 @@ module VCAP::CloudController
 
       def zip_resources(resource_dir, output_dir)
         zip_file = File.join(output_dir, 'zipped_package')
-        Zip::File.open(zip_file, Zip::File::CREATE) do |zipfile|
+        Zip::File.open(zip_file, create: true) do |zipfile|
           Find.find(resource_dir).
             select { |f| File.file?(f) }.
             each do |file|
