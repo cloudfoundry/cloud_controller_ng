@@ -53,7 +53,7 @@ RSpec.shared_context 'bigint migration step1' do
           it 'fails with a proper error message' do
             expect do
               VCAP::BigintMigration.backfill(logger, db, table)
-            end.to raise_error(RuntimeError, /table 'events' does not contain column 'id_bigint'/)
+            end.to raise_error(RuntimeError, /table '#{table}' does not contain column 'id_bigint'/)
           end
         end
       end
