@@ -171,6 +171,63 @@ module VCAP::CloudController
         end
       end
 
+      context 'when a stack is specified' do
+        let(:lifecycle_data) do
+          {
+            stack: 'cflinuxfs3',
+            buildpacks: [buildpack_git_url]
+          }
+        end
+
+        context 'when the stack is deprecated' do
+          let!(:stack) { Stack.make(name: 'cflinuxfs3', deprecated_at: Time.now - 1.day, locked_at: Time.now + 1.day, disabled_at: Time.now + 2.days) }
+
+          it 'does not raise an error' do
+            expect do
+              action.create_and_stage(package:, lifecycle:)
+            end.not_to raise_error
+          end
+        end
+
+        context 'when the stack is locked' do
+          let!(:stack) { Stack.make(name: 'cflinuxfs3', locked_at: Time.now - 1.day) }
+
+          context 'and the app is new' do
+            before do
+              app.processes.each(&:destroy)
+            end
+
+            it 'raises an error' do
+              expect do
+                action.create_and_stage(package:, lifecycle:)
+              end.to raise_error(CloudController::Errors::ApiError, /Cannot stage new app, stack 'cflinuxfs3' is locked./)
+            end
+          end
+
+          context 'and the app already exists' do
+            before do
+              ProcessModel.make(app: app, type: ProcessTypes::WEB)
+            end
+
+            it 'does not raise an error' do
+              expect do
+                action.create_and_stage(package:, lifecycle:)
+              end.not_to raise_error
+            end
+          end
+        end
+
+        context 'when the stack is disabled' do
+          let!(:stack) { Stack.make(name: 'cflinuxfs3', disabled_at: Time.now - 1.day) }
+
+          it 'raises an error' do
+            expect do
+              action.create_and_stage(package:, lifecycle:)
+            end.to raise_error(CloudController::Errors::ApiError, /Cannot stage app, stack 'cflinuxfs3' is disabled./)
+          end
+        end
+      end
+
       context 'creating a build for type cnb' do
         let(:request_lifecycle) do
           {

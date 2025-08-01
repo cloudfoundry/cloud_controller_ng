@@ -289,7 +289,10 @@ RSpec.describe 'Apps' do
                     'name' => process.stack.name,
                     'description' => process.stack.description,
                     'build_rootfs_image' => process.stack.name,
-                    'run_rootfs_image' => process.stack.name
+                    'run_rootfs_image' => process.stack.name,
+                    'deprecated_at' => nil,
+                    'locked_at' => nil,
+                    'disabled_at' => nil
                   }
                 },
                 'routes_url' => "/v2/apps/#{process.guid}/routes",
