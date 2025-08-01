@@ -2,7 +2,9 @@ desc 'Runs all specs'
 task spec: 'spec:all'
 
 namespace :spec do
-  task all: ['db:pick', 'db:parallel:recreate'] do
+  task all: ['db:pick'] do
+    ENV['PARALLEL_TEST_PROCESSORS'] = (Etc.nprocessors * (ENV['PARALLEL_TEST_PROCESSORS_MULTIPLE'] || 0.8).to_f).ceil.to_s
+    Rake::Task['db:parallel:recreate'].invoke
     if ARGV[1]
       run_specs(ARGV[1])
     else
@@ -44,6 +46,7 @@ namespace :spec do
   def run_specs_parallel(path, env_vars='')
     command = <<~CMD
       #{env_vars} bundle exec parallel_rspec \
+      -n `ruby -e 'require "etc"; puts (Etc.nprocessors * (ENV["PARALLEL_TEST_PROCESSORS_MULTIPLE"] || 0.8).to_f).ceil'` \
       --test-options '--order rand' \
       --single spec/integration/ \
       --single spec/acceptance/ \

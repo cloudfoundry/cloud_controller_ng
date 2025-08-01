@@ -20,7 +20,7 @@
         "nginx"
     ],
     "workspaceFolder": "/workspace",
-    "onCreateCommand": "bash .devcontainer/scripts/codespaces_start.sh",
+    "onCreateCommand": "bash .devcontainer/scripts/startup.sh",
     "customizations": {
         // Configure properties specific to VS Code.
         "vscode": {

@@ -19,6 +19,7 @@ setupPostgres () {
     echo "Postgres is up."
 
     # Parallel Test DBs
+    export PARALLEL_TEST_PROCESSORS=`ruby -e 'require "etc"; puts (Etc.nprocessors * (ENV["PARALLEL_TEST_PROCESSORS_MULTIPLE"] || 0.8).to_f).ceil'`
     DB="postgres" POSTGRES_CONNECTION_PREFIX="postgres://postgres:supersecret@localhost:5432" bundle exec rake db:pick db:parallel:recreate
     # Sequential Test DBs
     export PGPASSWORD=supersecret
@@ -37,6 +38,7 @@ setupMariadb () {
     echo "MySQL is up."
 
     # Parallel Test DBs
+    export PARALLEL_TEST_PROCESSORS=`ruby -e 'require "etc"; puts (Etc.nprocessors * (ENV["PARALLEL_TEST_PROCESSORS_MULTIPLE"] || 0.8).to_f).ceil'`
     DB="mysql" MYSQL_CONNECTION_PREFIX="mysql2://root:supersecret@127.0.0.1:3306" bundle exec rake db:pick db:parallel:recreate
     # Sequential Test DBs
     mysql -h 127.0.0.1 -u root -psupersecret -e "CREATE DATABASE IF NOT EXISTS cc_test; CREATE DATABASE IF NOT EXISTS diego; CREATE DATABASE IF NOT EXISTS locket;"
@@ -53,9 +55,6 @@ setupPostgres &
 POSTGRES_PID=$!
 setupMariadb &
 MARIADB_PID=$!
-
-wait $POSTGRES_PID
-wait $MARIADB_PID
 
 # CC config
 mkdir -p tmp
@@ -120,4 +119,5 @@ yq -i e '.diego.bbs.ca_file="spec/fixtures/certs/bbs_ca.crt"' tmp/cloud_controll
 
 yq -i e '.packages.max_package_size=2147483648' tmp/cloud_controller.yml
 
-# Exit if any error happened
+wait $POSTGRES_PID
+wait $MARIADB_PID
