@@ -8,7 +8,13 @@ module VCAP::CloudController::Presenters::V3
       {
         usage_summary: {
           started_instances: usage_summary.started_instances,
-          memory_in_mb: usage_summary.memory_in_mb
+          memory_in_mb: usage_summary.memory_in_mb,
+          routes: usage_summary.routes,
+          service_instances: usage_summary.service_instances,
+          reserved_ports: usage_summary.reserved_ports,
+          domains: usage_summary.domains,
+          per_app_tasks: usage_summary.per_app_tasks,
+          service_keys: usage_summary.service_keys
         },
         links: {
           self: { href: build_self }
