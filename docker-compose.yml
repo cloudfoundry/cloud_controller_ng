@@ -7,10 +7,17 @@ services:
     environment:
       POSTGRES_PASSWORD: supersecret
     command:
-      # logs every statement sent to the server. Slow, but helpful. Fills up disk Quickly !
       - "postgres"
-      # - "-c"
-      # - "log_statement=all"
+      - "-c"
+      - "fsync=off"
+      - "-c"
+      - "synchronous_commit=off"
+      - "-c"
+      - "full_page_writes=off"
+      - "-c"
+      - "log_statement=all"
+    tmpfs:
+      - /var/lib/postgresql/data
     ports:
       - "127.0.0.1:5432:5432"
     networks:
@@ -28,6 +35,12 @@ services:
     image: mysql:8.2
     environment:
       MYSQL_ROOT_PASSWORD: supersecret
+    command:
+      - "--innodb-flush-method=nosync"
+      - "--innodb-flush-log-at-trx-commit=0"
+      - "--innodb-doublewrite=0"
+    tmpfs:
+      - /var/lib/mysql
     ports:
       - "127.0.0.1:3306:3306"
     healthcheck:
