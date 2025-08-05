@@ -37,9 +37,9 @@ module VCAP::CloudController
         end
 
         db.extension(:query_length_logging)
-        db.extension(:request_query_metrics)
         db.opts[:query_size_log_threshold] = opts[:query_size_log_threshold]
       end
+      db.extension(:request_query_metrics)
       db.default_collate = 'utf8_bin' if db.database_type == :mysql
       add_connection_expiration_extension(db, opts)
       add_connection_validator_extension(db, opts)
