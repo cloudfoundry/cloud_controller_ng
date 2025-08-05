@@ -25,7 +25,8 @@ module VCAP::CloudController
 
           if target_state.rollback_target_revision
             revision = RevisionResolver.rollback_app_revision(app, target_state.rollback_target_revision, user_audit_info)
-            log_rollback_event(app.guid, user_audit_info.user_guid, target_state.rollback_target_revision.guid, message.strategy, message.max_in_flight, message.canary_steps)
+            log_rollback_event(app.guid, user_audit_info.user_guid, target_state.rollback_target_revision.guid, message.strategy, message.max_in_flight, message.canary_steps,
+                               message.web_instances, message.memory_in_mb, message.disk_in_mb, message.log_rate_limit_in_bytes_per_second)
           else
             revision = RevisionResolver.update_app_revision(app, user_audit_info)
           end
@@ -270,7 +271,7 @@ module VCAP::CloudController
         [deployment.max_in_flight, starting_process_count].min
       end
 
-      def log_rollback_event(app_guid, user_id, revision_id, strategy, max_in_flight, canary_steps)
+      def log_rollback_event(app_guid, user_id, revision_id, strategy, max_in_flight, canary_steps, instances, memory, disk, log_rate)
         TelemetryLogger.v3_emit(
           'rolled-back-app',
           {
@@ -282,10 +283,10 @@ module VCAP::CloudController
             'strategy' => strategy,
             'max-in-flight' => max_in_flight,
             'canary-steps' => canary_steps,
-            'instances' => deployment.web_instances,
-            'memory' => deployment.memory_in_mb,
-            'disk' => deployment.disk_in_mb,
-            'log-rate' => deployment.log_rate_limit_in_bytes_per_second
+            'instances' => instances,
+            'memory' => memory,
+            'disk' => disk,
+            'log-rate' => log_rate
           }
         )
       end
