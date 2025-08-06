@@ -1,7 +1,9 @@
 #!/bin/bash
-set -Eeuo pipefail
-# shellcheck disable=SC2064
-trap "pkill -P $$" EXIT
+set -Eeuxo pipefail
+
+# Setup IDEs
+cp -a -f .devcontainer/configs/vscode/.vscode .
+cp -a -f .devcontainer/configs/intellij/.idea .
 
 # Database Information
 POSTGRES_CONNECTION_PREFIX="postgres://postgres:supersecret@localhost:5432"
@@ -10,39 +12,49 @@ MYSQL_CONNECTION_PREFIX="mysql2://root:supersecret@127.0.0.1:3306"
 SCRIPT_DIR=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
 
 setupPostgres () {
-    export DB="postgres"
+    echo "Waiting for postgres..."
+    while ! pg_isready -h localhost -p 5432 -q -U postgres; do
+      sleep 1
+    done
+    echo "Postgres is up."
+
     # Parallel Test DBs
-    export POSTGRES_CONNECTION_PREFIX
-    bundle exec rake db:pick db:parallel:recreate
+    export PARALLEL_TEST_PROCESSORS=`ruby -e 'require "etc"; puts (Etc.nprocessors * (ENV["PARALLEL_TEST_PROCESSORS_MULTIPLE"] || 0.8).to_f).ceil'`
+    DB="postgres" POSTGRES_CONNECTION_PREFIX="postgres://postgres:supersecret@localhost:5432" bundle exec rake db:pick db:parallel:recreate
     # Sequential Test DBs
     export PGPASSWORD=supersecret
     psql -U postgres -h localhost -tc "SELECT 1 FROM pg_database WHERE datname = 'cc_test'" | grep -q 1 || psql -U postgres -h localhost -c "CREATE DATABASE cc_test"
     psql -U postgres -h localhost -tc "SELECT 1 FROM pg_database WHERE datname = 'diego'" | grep -q 1 || psql -U postgres -h localhost -c "CREATE DATABASE diego"
     psql -U postgres -h localhost -tc "SELECT 1 FROM pg_database WHERE datname = 'locket'" | grep -q 1 || psql -U postgres -h localhost -c "CREATE DATABASE locket"
     # Main DB
-    export DB_CONNECTION_STRING="${POSTGRES_CONNECTION_PREFIX}/ccdb"
-    bundle exec rake db:recreate db:migrate db:seed
+    DB="postgres" DB_CONNECTION_STRING="postgres://postgres:supersecret@localhost:5432/ccdb" bundle exec rake db:recreate db:migrate db:seed
 }
 
 setupMariadb () {
-    export DB="mysql"
+    echo "Waiting for mysql..."
+    while ! mysqladmin ping -h 127.0.0.1 -u root -psupersecret --silent; do
+        sleep 1
+    done
+    echo "MySQL is up."
+
     # Parallel Test DBs
-    export MYSQL_CONNECTION_PREFIX
-    bundle exec rake db:pick db:parallel:recreate
+    export PARALLEL_TEST_PROCESSORS=`ruby -e 'require "etc"; puts (Etc.nprocessors * (ENV["PARALLEL_TEST_PROCESSORS_MULTIPLE"] || 0.8).to_f).ceil'`
+    DB="mysql" MYSQL_CONNECTION_PREFIX="mysql2://root:supersecret@127.0.0.1:3306" bundle exec rake db:pick db:parallel:recreate
     # Sequential Test DBs
     mysql -h 127.0.0.1 -u root -psupersecret -e "CREATE DATABASE IF NOT EXISTS cc_test; CREATE DATABASE IF NOT EXISTS diego; CREATE DATABASE IF NOT EXISTS locket;"
     # Main DB
-    export DB_CONNECTION_STRING="${MYSQL_CONNECTION_PREFIX}/ccdb"
-    bundle exec rake db:recreate db:migrate db:seed
+    DB="mysql" DB_CONNECTION_STRING="mysql2://root:supersecret@127.0.0.1:3306/ccdb" bundle exec rake db:recreate db:migrate db:seed
 }
 
 # Install packages
 bundle config set --local with 'debug'
-bundle install
+bundle install -j"$(nproc)"
 
 # Setup Containers
-setupPostgres || tee tmp/fail &
-setupMariadb || tee tmp/fail &
+setupPostgres &
+POSTGRES_PID=$!
+setupMariadb &
+MARIADB_PID=$!
 
 # CC config
 mkdir -p tmp
@@ -107,9 +119,5 @@ yq -i e '.diego.bbs.ca_file="spec/fixtures/certs/bbs_ca.crt"' tmp/cloud_controll
 
 yq -i e '.packages.max_package_size=2147483648' tmp/cloud_controller.yml
 
-# Wait for background jobs and exit 1 if any error happened
-# shellcheck disable=SC2046
-wait $(jobs -p)
-test -f tmp/fail && rm tmp/fail && exit 1
-
-trap "" EXIT
+wait $POSTGRES_PID
+wait $MARIADB_PID
