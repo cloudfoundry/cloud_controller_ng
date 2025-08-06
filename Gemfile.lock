@@ -522,7 +522,7 @@ GEM
       sexp_processor (~> 4.1)
     rubyzip (3.0.0)
     securerandom (0.4.1)
-    sequel (5.95.0)
+    sequel (5.95.1)
       bigdecimal
     sequel_pg (1.17.2)
       pg (>= 0.18.0, != 1.2.0)
