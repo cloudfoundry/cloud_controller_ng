@@ -582,6 +582,10 @@ RSpec.describe 'Deployments' do
           strategy: 'canary',
           options: {
             max_in_flight: 10,
+            web_instances: 5,
+            memory_in_mb: 1024,
+            disk_in_mb: 1024,
+            log_rate_limit_in_bytes_per_second: -1,
             canary: {
               steps: [{ instance_weight: 1 }, { instance_weight: 2 }]
             }
@@ -603,6 +607,10 @@ RSpec.describe 'Deployments' do
           strategy: 'canary',
           options: {
             max_in_flight: 10,
+            web_instances: 6,
+            memory_in_mb: 1024,
+            disk_in_mb: 1024,
+            log_rate_limit_in_bytes_per_second: -1,
             canary: {
               steps: [{ instance_weight: 1 }, { instance_weight: 2 }]
             }
@@ -627,6 +635,10 @@ RSpec.describe 'Deployments' do
               'strategy' => 'canary',
               'max-in-flight' => 10,
               'canary-steps' => [{ 'instance_weight' => 1 }, { 'instance_weight' => 2 }],
+              'instances' => 5,
+              'memory' => 1024,
+              'disk' => 1024,
+              'log-rate' => -1,
               'app-id' => OpenSSL::Digest::SHA256.hexdigest(app_model.guid),
               'user-id' => OpenSSL::Digest::SHA256.hexdigest(user.guid)
             }
@@ -649,6 +661,10 @@ RSpec.describe 'Deployments' do
               'strategy' => 'canary',
               'max-in-flight' => 10,
               'canary-steps' => [{ 'instance_weight' => 1 }, { 'instance_weight' => 2 }],
+              'instances' => 6,
+              'memory' => 1024,
+              'disk' => 1024,
+              'log-rate' => -1,
               'app-id' => OpenSSL::Digest::SHA256.hexdigest(app_model.guid),
               'user-id' => OpenSSL::Digest::SHA256.hexdigest(user.guid),
               'revision-id' => OpenSSL::Digest::SHA256.hexdigest(revision.guid)
