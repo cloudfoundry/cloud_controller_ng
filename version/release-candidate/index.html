@@ -10166,7 +10166,13 @@ Environment variable names may not start with VCAP_. PORT is not a valid environ
 <span class="p">{</span><span class="w">
   </span><span class="nl">"usage_summary"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
     </span><span class="nl">"started_instances"</span><span class="p">:</span><span class="w"> </span><span class="mi">294</span><span class="p">,</span><span class="w">
-    </span><span class="nl">"memory_in_mb"</span><span class="p">:</span><span class="w"> </span><span class="mi">123945</span><span class="w">
+    </span><span class="nl">"memory_in_mb"</span><span class="p">:</span><span class="w"> </span><span class="mi">123945</span><span class="p">,</span><span class="w">
+    </span><span class="nl">"routes"</span><span class="p">:</span><span class="w"> </span><span class="mi">300</span><span class="p">,</span><span class="w">
+    </span><span class="nl">"service_instances"</span><span class="p">:</span><span class="w"> </span><span class="mi">50</span><span class="p">,</span><span class="w">
+    </span><span class="nl">"reserved_ports"</span><span class="p">:</span><span class="w"> </span><span class="mi">10</span><span class="p">,</span><span class="w">
+    </span><span class="nl">"domains"</span><span class="p">:</span><span class="w"> </span><span class="mi">5</span><span class="p">,</span><span class="w">
+    </span><span class="nl">"per_app_tasks"</span><span class="p">:</span><span class="w"> </span><span class="mi">0</span><span class="p">,</span><span class="w">
+    </span><span class="nl">"service_keys"</span><span class="p">:</span><span class="w"> </span><span class="mi">20</span><span class="w">
   </span><span class="p">},</span><span class="w">
   </span><span class="nl">"links"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
     </span><span class="nl">"self"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nl">"href"</span><span class="p">:</span><span class="w"> </span><span class="s2">"http://api.example.com/v3/info/usage_summary"</span><span class="w"> </span><span class="p">}</span><span class="w">
@@ -10198,6 +10204,36 @@ Environment variable names may not start with VCAP_. PORT is not a valid environ
 <td><strong>memory_in_mb</strong></td>
 <td><em>integer</em></td>
 <td>Sum of memory usage of all tasks in the <code class="prettyprint">RUNNING</code> state and all process instances in the <code class="prettyprint">STARTED</code> state</td>
+</tr>
+<tr>
+<td><strong>routes</strong></td>
+<td><em>integer</em></td>
+<td>Total number of routes</td>
+</tr>
+<tr>
+<td><strong>service_instances</strong></td>
+<td><em>integer</em></td>
+<td>Total number of managed service instances</td>
+</tr>
+<tr>
+<td><strong>reserved_ports</strong></td>
+<td><em>integer</em></td>
+<td>Total number of reserved ports</td>
+</tr>
+<tr>
+<td><strong>domains</strong></td>
+<td><em>integer</em></td>
+<td>Total number of private domains</td>
+</tr>
+<tr>
+<td><strong>per_app_tasks</strong></td>
+<td><em>integer</em></td>
+<td>Total number of running tasks</td>
+</tr>
+<tr>
+<td><strong>service_keys</strong></td>
+<td><em>integer</em></td>
+<td>Total number of service keys</td>
 </tr>
 </tbody></table>
 
