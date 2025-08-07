@@ -13,8 +13,13 @@ module CloudFoundry
 
         status, headers, body = @app.call(env)
         time_taken_ms = timer - start_timer
-        db_query_metrics = ::VCAP::Request.db_query_metrics
-        @request_logs.complete_request(request_id, status, env, time_taken_ms, db_query_metrics.total_query_time_us, db_query_metrics.query_count)
+
+        args = [request_id, status, env, time_taken_ms]
+        if VCAP::CloudController::Config.config.get(:db, :log_db_queries)
+          db_query_metrics = ::VCAP::Request.db_query_metrics
+          args += [db_query_metrics.total_query_time_us, db_query_metrics.query_count]
+        end
+        @request_logs.complete_request(*args)
 
         [status, headers, body]
       end

@@ -26,17 +26,21 @@ module VCAP::CloudController
         @incomplete_requests.store(request_id, env)
       end
 
-      def complete_request(request_id, status, env, time_taken_ms, total_db_query_time_us, db_query_count)
+      def complete_request(request_id, status, env, time_taken_ms, total_db_query_time_us=nil, db_query_count=nil)
         return if @incomplete_requests.delete(request_id).nil?
 
         request = ActionDispatch::Request.new(env)
-        @logger.info("Completed #{status} vcap-request-id: #{request_id}",
-                     { status_code: status,
-                       time_taken_in_ms: time_taken_ms,
-                       total_db_query_time_in_ms: (total_db_query_time_us.to_f / 1_000),
-                       db_query_count: db_query_count,
-                       request_method: request.request_method,
-                       request_fullpath: request.filtered_path })
+
+        log_fields = {
+          status_code: status,
+          time_taken_in_ms: time_taken_ms,
+          request_method: request.request_method,
+          request_fullpath: request.filtered_path
+        }
+        log_fields[:total_db_query_time_in_ms] = (total_db_query_time_us.to_f / 1_000) unless total_db_query_time_us.nil?
+        log_fields[:db_query_count] = db_query_count unless db_query_count.nil?
+
+        @logger.info("Completed #{status} vcap-request-id: #{request_id}", log_fields)
       end
 
       def log_incomplete_requests
