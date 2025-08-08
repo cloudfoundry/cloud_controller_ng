@@ -130,6 +130,16 @@ module VCAP::CloudController
           end
         end
 
+        context 'when there are multiple service bindings for the same service instance' do
+
+          it 'includes only the latest binding' do
+            newer_binding = ServiceBinding.make(app: app, service_instance: service_instance, syslog_drain_url: 'logs.go-here.com', created_at: Time.now.utc + 10.seconds)
+
+            binding = system_env_presenter.system_env[:VCAP_SERVICES][service.label.to_sym].first.to_hash
+            expect(binding[:binding_guid]).to eq(newer_binding.guid)
+          end
+        end
+
         describe 'volume mounts' do
           context 'when the service binding has volume mounts' do
             let!(:service_binding) do

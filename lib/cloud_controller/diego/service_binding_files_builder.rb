@@ -34,7 +34,13 @@ module VCAP::CloudController
         names = Set.new # to check for duplicate binding names
         total_bytesize = 0 # to check the total bytesize
 
-        @service_bindings.select(&:create_succeeded?).each do |service_binding|
+        latest_bindings = @service_bindings.
+                          select(&:create_succeeded?).
+                          group_by(&:service_instance_guid).
+                          values.
+                          map { |list| list.max_by(&:created_at) }
+
+        latest_bindings.each do |service_binding|
           sb_hash = ServiceBindingPresenter.new(service_binding, include_instance: true).to_hash
           name = sb_hash[:name]
           raise IncompatibleBindings.new("Invalid binding name: '#{name}'. Name must match #{binding_naming_convention.inspect}") unless valid_name?(name)
