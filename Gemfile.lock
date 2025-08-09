@@ -569,7 +569,7 @@ GEM
       tilt (~> 2.0)
       yard (~> 0.9, >= 0.9.24)
       yard-solargraph (~> 0.1)
-    spring (4.3.0)
+    spring (4.4.0)
     spring-commands-rspec (1.0.4)
       spring (>= 0.9.1)
     sshkey (3.0.0)
