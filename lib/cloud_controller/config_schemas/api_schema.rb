@@ -45,6 +45,7 @@ module VCAP::CloudController
           default_health_check_timeout: Integer,
           maximum_health_check_timeout: Integer,
           additional_allowed_process_users: Array,
+          allow_docker_root_user: bool,
 
           instance_file_descriptor_limit: Integer,
 
