@@ -428,7 +428,7 @@ GEM
       redis-client (>= 0.22.0)
     redis-client (0.25.1)
       connection_pool
-    regexp_parser (2.10.0)
+    regexp_parser (2.11.1)
     reline (0.6.1)
       io-console (~> 0.5)
     representable (3.2.0)
@@ -500,7 +500,7 @@ GEM
     rubocop-factory_bot (2.27.1)
       lint_roller (~> 1.1)
       rubocop (~> 1.72, >= 1.72.1)
-    rubocop-rails (2.32.0)
+    rubocop-rails (2.33.0)
       activesupport (>= 4.2.0)
       lint_roller (~> 1.1)
       rack (>= 1.1)
@@ -688,7 +688,7 @@ DEPENDENCIES
   rubocop (~> 1.79.1)
   rubocop-capybara
   rubocop-factory_bot
-  rubocop-rails (~> 2.32)
+  rubocop-rails (~> 2.33)
   rubocop-rspec (~> 3.6)
   rubocop-rspec_rails
   rubocop-sequel (~> 0.4.1)
