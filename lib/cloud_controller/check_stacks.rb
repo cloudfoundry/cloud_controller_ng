@@ -19,7 +19,7 @@ module VCAP::CloudController
 
     def validate_stack(deprecated_stack)
       configured_stacks = @stack_config.stacks
-      deprecated_stack_in_config = (configured_stacks.find { |stack| stack['name'] == deprecated_stack }).present?
+      deprecated_stack_in_config = configured_stacks.find { |stack| stack['name'] == deprecated_stack }.present?
       return if deprecated_stack_in_config
 
       no_deprecated_stack_in_db = @db.fetch('SELECT 1 FROM stacks WHERE name LIKE ? ', deprecated_stack).empty?

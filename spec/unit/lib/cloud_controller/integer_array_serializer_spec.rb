@@ -11,15 +11,15 @@ module VCAP::CloudController
       let(:serializer) { IntegerArraySerializer.serializer }
 
       it 'raises an error when not passed an array' do
-        (expect { serializer.call('hello') }).to raise_error(ArgumentError, 'Integer array columns must be passed an array')
+        expect { serializer.call('hello') }.to raise_error(ArgumentError, 'Integer array columns must be passed an array')
       end
 
       it 'raises an error when not passed an array of integers' do
-        (expect { serializer.call([1, 2, 'derp']) }).to raise_error(ArgumentError, 'All members of the array must be integers')
+        expect { serializer.call([1, 2, 'derp']) }.to raise_error(ArgumentError, 'All members of the array must be integers')
       end
 
       it 'does not raise an error if passed nil' do
-        (expect { serializer.call(nil) }).not_to raise_error
+        expect { serializer.call(nil) }.not_to raise_error
       end
 
       it 'munges arrays to be in an expected comma-separated format' do
