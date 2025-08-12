@@ -12,6 +12,7 @@ RSpec.shared_context 'bigint migration step1' do
     skip unless db.database_type == :postgres
 
     allow_any_instance_of(VCAP::CloudController::Config).to receive(:get).with(:skip_bigint_id_migration).and_return(skip_bigint_id_migration)
+    allow_any_instance_of(VCAP::CloudController::Config).to receive(:get).with(:migration_psql_concurrent_statement_timeout_in_seconds).and_return(300)
   end
 
   describe 'up' do
@@ -52,13 +53,17 @@ RSpec.shared_context 'bigint migration step1' do
           it 'fails with a proper error message' do
             expect do
               VCAP::BigintMigration.backfill(logger, db, table)
-            end.to raise_error(RuntimeError, /table 'events' does not contain column 'id_bigint'/)
+            end.to raise_error(RuntimeError, /table '#{table}' does not contain column 'id_bigint'/)
           end
         end
       end
 
       context 'when the table is not empty' do
         let!(:old_id) { insert.call(db) }
+
+        after do
+          db[table].delete # Necessary to successfully run subsequent migrations in the after block of the migration shared context...
+        end
 
         it "does not change the id column's type" do
           expect(db).to have_table_with_column_and_type(table, :id, 'integer')
@@ -184,6 +189,10 @@ RSpec.shared_context 'bigint migration step1' do
       before do
         insert.call(db)
         run_migration
+      end
+
+      after do
+        db[table].delete # Necessary to successfully run subsequent migrations in the after block of the migration shared context...
       end
 
       it 'drops the id_bigint column' do

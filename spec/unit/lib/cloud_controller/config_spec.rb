@@ -155,7 +155,7 @@ module VCAP::CloudController
               it "can't handle an unescaped @" do
                 expect do
                   DatabasePartsParser.database_parts_from_connection(uri)
-                end.to raise_error(URI::InvalidURIError, "bad URI(is not URI?): \"#{uri}\"")
+                end.to raise_error(URI::InvalidURIError, "bad URI (is not URI?): \"#{uri}\"")
               end
             end
 
@@ -317,11 +317,11 @@ module VCAP::CloudController
             end
 
             it 'validates a symbolized version of the config file contents with the correct schema file' do
-              allow(VCAP::CloudController::ConfigSchemas::Vms::WorkerSchema).to receive(:validate)
+              allow(VCAP::CloudController::ConfigSchemas::WorkerSchema).to receive(:validate)
 
               Config.load_from_file(cc_config_file.path, context: :worker).config_hash
 
-              expect(VCAP::CloudController::ConfigSchemas::Vms::WorkerSchema).to have_received(:validate).with(
+              expect(VCAP::CloudController::ConfigSchemas::WorkerSchema).to have_received(:validate).with(
                 some_key: 'some-value',
                 database_encryption: {
                   keys: {
@@ -347,11 +347,11 @@ module VCAP::CloudController
               end
 
               it 'merges the secrets hash into the file contents and validates with the correct schema' do
-                allow(VCAP::CloudController::ConfigSchemas::Vms::WorkerSchema).to receive(:validate)
+                allow(VCAP::CloudController::ConfigSchemas::WorkerSchema).to receive(:validate)
 
                 Config.load_from_file(cc_config_file.path, context: :worker, secrets_hash: secrets_hash).config_hash
 
-                expect(VCAP::CloudController::ConfigSchemas::Vms::WorkerSchema).to have_received(:validate).with(
+                expect(VCAP::CloudController::ConfigSchemas::WorkerSchema).to have_received(:validate).with(
                   some_key: 'some-value',
                   some_secret: 'shhhhh!',
                   database_encryption: {
@@ -373,10 +373,10 @@ module VCAP::CloudController
               end
 
               it 'uses the Vms schema to validate the config' do
-                allow(VCAP::CloudController::ConfigSchemas::Vms::ApiSchema).to receive(:validate)
+                allow(VCAP::CloudController::ConfigSchemas::ApiSchema).to receive(:validate)
                 Config.load_from_file(cc_config_file.path, context: :api).config_hash
 
-                expect(VCAP::CloudController::ConfigSchemas::Vms::ApiSchema).to have_received(:validate)
+                expect(VCAP::CloudController::ConfigSchemas::ApiSchema).to have_received(:validate)
               end
             end
           end

@@ -71,5 +71,5 @@ in the response body.
 #### Usage summary endpoints
 
 There are still a couple of endpoints in V3 that provide a basic summary of
-instance and memory usage. See the [org summary](#get-usage-summary) and
+instance and memory usage. See the [org summary](#get-usage-summary), [space summary](#get-space-usage-summary) and
 [platform summary](#get-platform-usage-summary) endpoints.

@@ -115,6 +115,19 @@ module VCAP::CloudController
         end
       end
 
+      describe 'dataset managed_service_instances' do
+        subject(:space) { Space.make }
+
+        it 'includes managed service instances and no user provided service instances' do
+          managed_service_instance = ManagedServiceInstance.make(space:)
+          user_provided_service_instance = UserProvidedServiceInstance.make(space:)
+
+          managed_instances = space.managed_service_instances
+          expect(managed_instances).to include(managed_service_instance)
+          expect(managed_instances).not_to include(user_provided_service_instance)
+        end
+      end
+
       describe 'domains' do
         subject(:space) { Space.make(organization:) }
         let(:organization) { Organization.make }

@@ -1,6 +1,6 @@
 require 'spec_helper'
-require_relative '../client_shared'
-require 'cloud_controller/blobstore/fog/error_handling_client'
+require_relative 'client_shared'
+require 'cloud_controller/blobstore/error_handling_client'
 require 'cloud_controller/blobstore/null_client'
 
 module CloudController

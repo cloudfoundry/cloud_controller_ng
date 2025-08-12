@@ -48,7 +48,7 @@ module VCAP::CloudController
             --- !ruby/object:VCAP::CloudController::Jobs::LoggingContextJob
             handler: !ruby/object:VCAP::CloudController::Jobs::TimeoutJob
               handler: !ruby/object:VCAP::CloudController::Jobs::PollableJobWrapper
-                existing_guid: #{''}
+                existing_guid: null
                 handler: !ruby/object:VCAP::CloudController::V3::CreateServiceInstanceJob
                   start_time: #{job.start_time}
                   finished: false
@@ -76,7 +76,7 @@ module VCAP::CloudController
                     parts:
                       :minutes: 10080
               timeout: 14400
-            request_id: #{''}
+            request_id: null
 
           EOS
         end

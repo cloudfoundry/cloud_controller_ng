@@ -145,3 +145,26 @@
   ]
 }
 <% end %>
+
+<% content_for :space_usage_summary do %>
+{
+  "usage_summary": {
+    "started_instances": 3,
+    "memory_in_mb": 3072,
+    "routes": 3,
+    "service_instances": 2,
+    "reserved_ports": 1,
+    "domains": 1,
+    "per_app_tasks": 0,
+    "service_keys": 1
+  },
+  "links": {
+    "self": {
+      "href": "https://api.example.org/v3/spaces/f47ac10b-58cc-4372-a567-0e02b2c3d479/usage_summary"
+    },
+    "organization": {
+      "href": "https://api.example.org/v3/spaces/f47ac10b-58cc-4372-a567-0e02b2c3d479"
+    }
+  }
+}
+<% end %>

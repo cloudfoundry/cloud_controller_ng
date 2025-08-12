@@ -9,7 +9,8 @@ module CloudFoundry
       let(:request_metrics) { instance_double(VCAP::CloudController::Metrics::RequestMetrics, start_request: nil, complete_request: nil) }
 
       describe 'handling the request' do
-        it 'calls start request on request metrics before the request' do
+        it 'resets the db query count and calls start request on request metrics before the request' do
+          expect(VCAP::Request).to receive(:reset_db_query_metrics)
           middleware.call({})
           expect(request_metrics).to have_received(:start_request)
         end

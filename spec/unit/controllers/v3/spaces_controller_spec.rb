@@ -952,4 +952,34 @@ RSpec.describe SpacesV3Controller, type: :controller do
       end
     end
   end
+
+  describe '#show_usage_summary' do
+    let(:user) { set_current_user(VCAP::CloudController::User.make) }
+
+    let!(:org) { VCAP::CloudController::Organization.make(name: 'Lyle\'s Farm') }
+    let!(:space) { VCAP::CloudController::Space.make(name: 'Chicken', organization: org) }
+
+    context 'when the user has permissions to read from the space' do
+      before { allow_user_read_access_for(user, orgs: [org], spaces: [space]) }
+
+      it 'succeeds' do
+        get :show_usage_summary, params: { guid: space.guid }
+
+        expect(response).to have_http_status(:ok)
+        expect(response.body).to include 'usage_summary'
+      end
+    end
+
+    context 'when the user does not have permissions to read from the space' do
+      before { allow_user_read_access_for(user, orgs: [], spaces: []) }
+
+      it 'throws ResourceNotFound error' do
+        get :show_usage_summary, params: { guid: space.guid }
+
+        expect(response).to have_http_status(:not_found)
+        expect(response.body).to include 'ResourceNotFound'
+        expect(response.body).to include 'Space not found'
+      end
+    end
+  end
 end
