@@ -16,6 +16,11 @@ module VCAP::CloudController::Presenters::V3
         name: info.name,
         version: info.version,
         osbapi_version: info.osbapi_version,
+        rate_limits: {
+          enabled: info.request_rate_limiter_enabled,
+          general_limit: info.request_rate_limiter_general_limit,
+          reset_interval_in_minutes: info.request_rate_limiter_reset_interval_in_mins
+        },
         links: {
           self: { href: build_self },
           support: { href: info.support_address }

@@ -15,6 +15,9 @@ class InfoController < ApplicationController
     info.name = config.get(:info, :name) || ''
     info.version = config.get(:info, :version) || 0
     info.support_address = config.get(:info, :support_address) || ''
+    info.request_rate_limiter_enabled = config.get(:rate_limiter, :enabled) || false
+    info.request_rate_limiter_general_limit = config.get(:rate_limiter, :per_process_general_limit) || ''
+    info.request_rate_limiter_reset_interval_in_mins = config.get(:rate_limiter, :reset_interval_in_minutes) || ''
 
     osbapi_version_file = Rails.root.join('config/osbapi_version').to_s
     if File.exist?(osbapi_version_file)
@@ -37,5 +40,6 @@ class InfoController < ApplicationController
 end
 
 class Info
-  attr_accessor :build, :min_cli_version, :min_recommended_cli_version, :custom, :description, :name, :version, :support_address, :osbapi_version
+  attr_accessor :build, :min_cli_version, :min_recommended_cli_version, :custom, :description, :name, :version, :support_address, :osbapi_version, :request_rate_limiter_enabled,
+                :request_rate_limiter_general_limit, :request_rate_limiter_reset_interval_in_mins
 end
