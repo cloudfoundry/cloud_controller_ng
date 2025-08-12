@@ -42,7 +42,6 @@ class InfoController < ApplicationController
     info.request_rate_limiter_general_limit = config.get(:rate_limiter, :per_process_general_limit) || ''
     info.request_rate_limiter_reset_interval_in_mins = config.get(:rate_limiter, :reset_interval_in_minutes) || ''
   end
-
 end
 
 class Info
