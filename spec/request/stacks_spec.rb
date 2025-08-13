@@ -27,6 +27,9 @@ RSpec.describe 'Stacks Request' do
               'build_rootfs_image' => stack1.build_rootfs_image,
               'guid' => stack1.guid,
               'default' => false,
+              'deprecated_at' => nil,
+              'locked_at' => nil,
+              'disabled_at' => nil,
               'metadata' => { 'labels' => {}, 'annotations' => {} },
               'created_at' => iso8601,
               'updated_at' => iso8601,
@@ -43,6 +46,9 @@ RSpec.describe 'Stacks Request' do
               'build_rootfs_image' => stack2.build_rootfs_image,
               'guid' => stack2.guid,
               'default' => true,
+              'deprecated_at' => nil,
+              'locked_at' => nil,
+              'disabled_at' => nil,
               'metadata' => { 'labels' => {}, 'annotations' => {} },
               'created_at' => iso8601,
               'updated_at' => iso8601,
@@ -123,6 +129,9 @@ RSpec.describe 'Stacks Request' do
                   'build_rootfs_image' => stack1.build_rootfs_image,
                   'guid' => stack1.guid,
                   'default' => false,
+                  'deprecated_at' => nil,
+                  'locked_at' => nil,
+                  'disabled_at' => nil,
                   'metadata' => { 'labels' => {}, 'annotations' => {} },
                   'created_at' => iso8601,
                   'updated_at' => iso8601,
@@ -139,6 +148,9 @@ RSpec.describe 'Stacks Request' do
                   'build_rootfs_image' => stack2.build_rootfs_image,
                   'guid' => stack2.guid,
                   'default' => true,
+                  'deprecated_at' => nil,
+                  'locked_at' => nil,
+                  'disabled_at' => nil,
                   'metadata' => { 'labels' => {}, 'annotations' => {} },
                   'created_at' => iso8601,
                   'updated_at' => iso8601,
@@ -178,6 +190,9 @@ RSpec.describe 'Stacks Request' do
                   'build_rootfs_image' => stack1.build_rootfs_image,
                   'guid' => stack1.guid,
                   'default' => false,
+                  'deprecated_at' => nil,
+                  'locked_at' => nil,
+                  'disabled_at' => nil,
                   'metadata' => { 'labels' => {}, 'annotations' => {} },
                   'created_at' => iso8601,
                   'updated_at' => iso8601,
@@ -194,6 +209,9 @@ RSpec.describe 'Stacks Request' do
                   'build_rootfs_image' => stack3.build_rootfs_image,
                   'guid' => stack3.guid,
                   'default' => false,
+                  'deprecated_at' => nil,
+                  'locked_at' => nil,
+                  'disabled_at' => nil,
                   'metadata' => { 'labels' => {}, 'annotations' => {} },
                   'created_at' => iso8601,
                   'updated_at' => iso8601,
@@ -233,6 +251,9 @@ RSpec.describe 'Stacks Request' do
                   'build_rootfs_image' => stack2.build_rootfs_image,
                   'guid' => stack2.guid,
                   'default' => true,
+                  'deprecated_at' => nil,
+                  'locked_at' => nil,
+                  'disabled_at' => nil,
                   'metadata' => { 'labels' => {}, 'annotations' => {} },
                   'created_at' => iso8601,
                   'updated_at' => iso8601,
@@ -288,6 +309,9 @@ RSpec.describe 'Stacks Request' do
                     'build_rootfs_image' => stack1.build_rootfs_image,
                     'guid' => stack1.guid,
                     'default' => false,
+                    'deprecated_at' => nil,
+                    'locked_at' => nil,
+                    'disabled_at' => nil,
                     'metadata' => {
                       'labels' => {
                         'release' => 'stable'
@@ -307,6 +331,28 @@ RSpec.describe 'Stacks Request' do
             )
           end
         end
+
+        context 'when stacks have lifecycle timestamps' do
+          let(:deprecated_time) { Time.now.utc + 1.day }
+          let(:locked_time) { Time.now.utc + 2.days }
+          let(:disabled_time) { Time.now.utc + 3.days }
+          let!(:stack_with_timestamps) do
+            VCAP::CloudController::Stack.make(
+              deprecated_at: deprecated_time,
+              locked_at: locked_time,
+              disabled_at: disabled_time
+            )
+          end
+
+          it 'returns stacks with lifecycle timestamps in the list' do
+            get '/v3/stacks', nil, user_header
+
+            stack_response = parsed_response['resources'].find { |s| s['guid'] == stack_with_timestamps.guid }
+            expect(stack_response['deprecated_at']).to eq(deprecated_time.iso8601)
+            expect(stack_response['locked_at']).to eq(locked_time.iso8601)
+            expect(stack_response['disabled_at']).to eq(disabled_time.iso8601)
+          end
+        end
       end
     end
   end
@@ -324,6 +370,9 @@ RSpec.describe 'Stacks Request' do
         'build_rootfs_image' => stack.build_rootfs_image,
         'guid' => stack.guid,
         'default' => false,
+        'deprecated_at' => nil,
+        'locked_at' => nil,
+        'disabled_at' => nil,
         'metadata' => { 'labels' => {}, 'annotations' => {} },
         'created_at' => iso8601,
         'updated_at' => iso8601,
@@ -339,6 +388,62 @@ RSpec.describe 'Stacks Request' do
     end
 
     it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS
+
+    context 'when stack has lifecycle timestamps' do
+      let(:deprecated_time) { Time.now.utc + 1.day }
+      let(:locked_time) { Time.now.utc + 2.days }
+      let(:disabled_time) { Time.now.utc + 3.days }
+      let!(:stack_with_timestamps) do
+        VCAP::CloudController::Stack.make(
+          deprecated_at: deprecated_time,
+          locked_at: locked_time,
+          disabled_at: disabled_time
+        )
+      end
+
+      it 'returns the stack with lifecycle timestamps' do
+        get "/v3/stacks/#{stack_with_timestamps.guid}", nil, user_header
+
+        expect(last_response.status).to eq(200)
+        expect(parsed_response).to be_a_response_like(
+          {
+            'name' => stack_with_timestamps.name,
+            'description' => stack_with_timestamps.description,
+            'run_rootfs_image' => stack_with_timestamps.run_rootfs_image,
+            'build_rootfs_image' => stack_with_timestamps.build_rootfs_image,
+            'guid' => stack_with_timestamps.guid,
+            'default' => false,
+            'deprecated_at' => deprecated_time.iso8601,
+            'locked_at' => locked_time.iso8601,
+            'disabled_at' => disabled_time.iso8601,
+            'metadata' => { 'labels' => {}, 'annotations' => {} },
+            'created_at' => iso8601,
+            'updated_at' => iso8601,
+            'links' => {
+              'self' => {
+                'href' => "#{link_prefix}/v3/stacks/#{stack_with_timestamps.guid}"
+              }
+            }
+          }
+        )
+      end
+    end
+
+    context 'when stack has partial lifecycle timestamps' do
+      let(:deprecated_time) { Time.now.utc + 1.day }
+      let!(:stack_deprecated_only) do
+        VCAP::CloudController::Stack.make(deprecated_at: deprecated_time)
+      end
+
+      it 'returns the stack with only deprecated_at set' do
+        get "/v3/stacks/#{stack_deprecated_only.guid}", nil, user_header
+
+        expect(last_response.status).to eq(200)
+        expect(parsed_response['deprecated_at']).to eq(deprecated_time.iso8601)
+        expect(parsed_response['locked_at']).to be_nil
+        expect(parsed_response['disabled_at']).to be_nil
+      end
+    end
   end
 
   describe 'GET /v3/stacks/:guid/apps' do
@@ -661,6 +766,9 @@ RSpec.describe 'Stacks Request' do
           'run_rootfs_image' => created_stack.run_rootfs_image,
           'build_rootfs_image' => created_stack.build_rootfs_image,
           'default' => false,
+          'deprecated_at' => nil,
+          'locked_at' => nil,
+          'disabled_at' => nil,
           'metadata' => {
             'labels' => {
               'potato' => 'yam'
@@ -679,6 +787,84 @@ RSpec.describe 'Stacks Request' do
           }
         }
       )
+    end
+
+    context 'when creating a stack with lifecycle timestamps' do
+      let(:deprecated_time) { Time.now.utc + 1.day }
+      let(:locked_time) { Time.now.utc + 2.days }
+      let(:disabled_time) { Time.now.utc + 3.days }
+      let(:request_body_with_timestamps) do
+        {
+          name: 'lifecycle-stack',
+          description: 'stack with lifecycle timestamps',
+          deprecated_at: deprecated_time.iso8601,
+          locked_at: locked_time.iso8601,
+          disabled_at: disabled_time.iso8601
+        }.to_json
+      end
+
+      it 'creates a stack with the specified lifecycle timestamps' do
+        expect do
+          post '/v3/stacks', request_body_with_timestamps, headers
+        end.to change(VCAP::CloudController::Stack, :count).by 1
+
+        created_stack = VCAP::CloudController::Stack.last
+
+        expect(last_response.status).to eq(201)
+        expect(parsed_response).to be_a_response_like(
+          {
+            'name' => 'lifecycle-stack',
+            'description' => 'stack with lifecycle timestamps',
+            'run_rootfs_image' => created_stack.run_rootfs_image,
+            'build_rootfs_image' => created_stack.build_rootfs_image,
+            'default' => false,
+            'deprecated_at' => deprecated_time.iso8601,
+            'locked_at' => locked_time.iso8601,
+            'disabled_at' => disabled_time.iso8601,
+            'metadata' => { 'labels' => {}, 'annotations' => {} },
+            'guid' => created_stack.guid,
+            'created_at' => iso8601,
+            'updated_at' => iso8601,
+            'links' => {
+              'self' => {
+                'href' => "#{link_prefix}/v3/stacks/#{created_stack.guid}"
+              }
+            }
+          }
+        )
+      end
+    end
+
+    context 'when creating a stack with invalid timestamp ordering' do
+      let(:request_body_invalid_order) do
+        {
+          name: 'invalid-stack',
+          deprecated_at: (Time.now.utc + 3.days).iso8601,
+          locked_at: (Time.now.utc + 1.day).iso8601,
+          disabled_at: (Time.now.utc + 2.days).iso8601
+        }.to_json
+      end
+
+      it 'responds with 422 for invalid timestamp ordering' do
+        post '/v3/stacks', request_body_invalid_order, headers
+        expect(last_response.status).to eq(422)
+        expect(last_response).to have_error_message('deprecated_at must be before locked_at')
+      end
+    end
+
+    context 'when creating a stack with invalid timestamp format' do
+      let(:request_body_invalid_timestamp) do
+        {
+          name: 'invalid-timestamp-stack',
+          deprecated_at: 'not-a-timestamp'
+        }.to_json
+      end
+
+      it 'responds with 422 for invalid timestamp format' do
+        post '/v3/stacks', request_body_invalid_timestamp, headers
+        expect(last_response.status).to eq(422)
+        expect(last_response).to have_error_message("Deprecated at has an invalid timestamp format. Timestamps should be formatted as 'YYYY-MM-DDThh:mm:ssZ'")
+      end
     end
 
     context 'when there is a model validation failure' do
@@ -725,6 +911,9 @@ RSpec.describe 'Stacks Request' do
           'run_rootfs_image' => stack.run_rootfs_image,
           'build_rootfs_image' => stack.build_rootfs_image,
           'default' => false,
+          'deprecated_at' => nil,
+          'locked_at' => nil,
+          'disabled_at' => nil,
           'metadata' => {
             'labels' => {
               'potato' => 'yam'
@@ -743,6 +932,139 @@ RSpec.describe 'Stacks Request' do
           }
         }
       )
+    end
+
+    context 'when updating stack lifecycle timestamps' do
+      let(:deprecated_time) { Time.now.utc + 1.day }
+      let(:locked_time) { Time.now.utc + 2.days }
+      let(:disabled_time) { Time.now.utc + 3.days }
+      let(:request_body_with_timestamps) do
+        {
+          deprecated_at: deprecated_time.iso8601,
+          locked_at: locked_time.iso8601,
+          disabled_at: disabled_time.iso8601
+        }.to_json
+      end
+
+      it 'updates the stack with the specified lifecycle timestamps' do
+        patch "/v3/stacks/#{stack.guid}", request_body_with_timestamps, headers
+
+        expect(last_response.status).to eq(200)
+        expect(parsed_response).to be_a_response_like(
+          {
+            'name' => stack.name,
+            'description' => stack.description,
+            'run_rootfs_image' => stack.run_rootfs_image,
+            'build_rootfs_image' => stack.build_rootfs_image,
+            'default' => false,
+            'deprecated_at' => deprecated_time.iso8601,
+            'locked_at' => locked_time.iso8601,
+            'disabled_at' => disabled_time.iso8601,
+            'metadata' => { 'labels' => {}, 'annotations' => {} },
+            'guid' => stack.guid,
+            'created_at' => iso8601,
+            'updated_at' => iso8601,
+            'links' => {
+              'self' => {
+                'href' => "#{link_prefix}/v3/stacks/#{stack.guid}"
+              }
+            }
+          }
+        )
+      end
+    end
+
+    context 'when updating individual lifecycle timestamps' do
+      it 'updates only the deprecated_at timestamp' do
+        deprecated_time = Time.now.utc + 1.day
+        request_body = { deprecated_at: deprecated_time.iso8601 }.to_json
+
+        patch "/v3/stacks/#{stack.guid}", request_body, headers
+
+        expect(last_response.status).to eq(200)
+        expect(parsed_response['deprecated_at']).to eq(deprecated_time.iso8601)
+        expect(parsed_response['locked_at']).to be_nil
+        expect(parsed_response['disabled_at']).to be_nil
+      end
+
+      it 'updates only the locked_at timestamp' do
+        locked_time = Time.now.utc + 2.days
+        request_body = { locked_at: locked_time.iso8601 }.to_json
+
+        patch "/v3/stacks/#{stack.guid}", request_body, headers
+
+        expect(last_response.status).to eq(200)
+        expect(parsed_response['deprecated_at']).to be_nil
+        expect(parsed_response['locked_at']).to eq(locked_time.iso8601)
+        expect(parsed_response['disabled_at']).to be_nil
+      end
+
+      it 'updates only the disabled_at timestamp' do
+        disabled_time = Time.now.utc + 3.days
+        request_body = { disabled_at: disabled_time.iso8601 }.to_json
+
+        patch "/v3/stacks/#{stack.guid}", request_body, headers
+
+        expect(last_response.status).to eq(200)
+        expect(parsed_response['deprecated_at']).to be_nil
+        expect(parsed_response['locked_at']).to be_nil
+        expect(parsed_response['disabled_at']).to eq(disabled_time.iso8601)
+      end
+    end
+
+    context 'when updating with invalid timestamp ordering' do
+      let(:request_body_invalid_order) do
+        {
+          deprecated_at: (Time.now.utc + 3.days).iso8601,
+          locked_at: (Time.now.utc + 1.day).iso8601,
+          disabled_at: (Time.now.utc + 2.days).iso8601
+        }.to_json
+      end
+
+      it 'responds with 422 for invalid timestamp ordering' do
+        patch "/v3/stacks/#{stack.guid}", request_body_invalid_order, headers
+        expect(last_response.status).to eq(422)
+        expect(last_response).to have_error_message('deprecated_at must be before locked_at')
+      end
+    end
+
+    context 'when updating with invalid timestamp format' do
+      let(:request_body_invalid_timestamp) do
+        {
+          deprecated_at: 'not-a-timestamp'
+        }.to_json
+      end
+
+      it 'responds with 422 for invalid timestamp format' do
+        patch "/v3/stacks/#{stack.guid}", request_body_invalid_timestamp, headers
+        expect(last_response.status).to eq(422)
+        expect(last_response).to have_error_message("Deprecated at has an invalid timestamp format. Timestamps should be formatted as 'YYYY-MM-DDThh:mm:ssZ'")
+      end
+    end
+
+    context 'when clearing lifecycle timestamps' do
+      let!(:stack_with_timestamps) do
+        VCAP::CloudController::Stack.make(
+          deprecated_at: Time.now.utc + 1.day,
+          locked_at: Time.now.utc + 2.days,
+          disabled_at: Time.now.utc + 3.days
+        )
+      end
+
+      it 'clears timestamps when set to null' do
+        request_body = {
+          deprecated_at: nil,
+          locked_at: nil,
+          disabled_at: nil
+        }.to_json
+
+        patch "/v3/stacks/#{stack_with_timestamps.guid}", request_body, headers
+
+        expect(last_response.status).to eq(200)
+        expect(parsed_response['deprecated_at']).to be_nil
+        expect(parsed_response['locked_at']).to be_nil
+        expect(parsed_response['disabled_at']).to be_nil
+      end
     end
   end
 

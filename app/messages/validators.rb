@@ -341,7 +341,28 @@ module VCAP::CloudController::Validators
     end
   end
 
+  module TimestampValidationHelper
+    private
+
+    def opinionated_iso_8601(timestamp, record, attribute)
+      return if timestamp.nil?
+      return unless /\A\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}Z\Z/ !~ timestamp.to_s
+
+      record.errors.add(attribute, message: "has an invalid timestamp format. Timestamps should be formatted as 'YYYY-MM-DDThh:mm:ssZ'")
+    end
+  end
+
+  class SimpleTimestampValidator < ActiveModel::EachValidator
+    include TimestampValidationHelper
+
+    def validate_each(record, attribute, value)
+      opinionated_iso_8601(value, record, attribute)
+    end
+  end
+
   class TimestampValidator < ActiveModel::EachValidator
+    include TimestampValidationHelper
+
     def validate_each(record, attribute, values)
       if values.is_a?(Array)
         values.each do |timestamp|
@@ -371,14 +392,6 @@ module VCAP::CloudController::Validators
           opinionated_iso_8601(timestamp, record, attribute)
         end
       end
-    end
-
-    private
-
-    def opinionated_iso_8601(timestamp, record, attribute)
-      return unless /\A\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}Z\Z/ !~ timestamp.to_s
-
-      record.errors.add(attribute, message: "has an invalid timestamp format. Timestamps should be formatted as 'YYYY-MM-DDThh:mm:ssZ'")
     end
   end
 
