@@ -2,7 +2,7 @@
 
 ## Status
 
-🔄 **Under Discussion** - This ADR proposes a shared direction for replacing fog-based blobstore implementations.
+📝 **Accepted** - This ADR defines a shared direction for replacing fog-based blobstore implementations.
 
 | Provider     | Status                    | Notes                                                                                                   |
 |--------------|---------------------------|---------------------------------------------------------------------------------------------------------|
@@ -41,7 +41,7 @@ Specifically, we will:
 * Add a new blobstore client using `bosh-azure-storage-cli`
 * Shell out from Cloud Controller to perform blobstore operations
 * Allow opt-in via `blobstore_type` configuration parameter
-  * Desired configuration format:
+  * Desired configuration format (capi-release perspective):
     ```YAML
       packages:
               app_package_directory_key: app-packages
@@ -57,8 +57,11 @@ Specifically, we will:
 * Field `provider` will be used to determine the corresponding storage CLI blobstore client class (same approach is used for fog)
 * The `fog_connection` field will be renamed to `connection_config` to make it independent
 * Values from `connection_config` are used to generate the corresponding config file for the Bosh storage CLIs
+    * Config generation could be moved away from ccng into capi-release to avoid duplication 
 * During the transition phase existing parameters like `fog_connection` may be reused and/or supported in parallel    
 * Keep the `fog-azure-rm` backend during the transition
+
+* Algin with Foundational Infrastructure WG - [RFC-0043](https://github.com/cloudfoundry/community/blob/main/toc/rfc/rfc-0043-cc-blobstore-storage-cli.md)
 
 The `bosh-azure-storage-cli` needs to be extended with the following commands:
 * `copy`
@@ -68,24 +71,6 @@ The `bosh-azure-storage-cli` needs to be extended with the following commands:
 
 Other providers (AWS, GCP, Alibaba Cloud) will follow. Each will require equivalent blobstore clients and support for the above commands.
 This will eventually allow us to remove all fog related gems from Cloud Controller.
-
-## Tasks
-
-- [x] Align with foundational infrastructure working group on proposed CLI usage and extensions
-- [ ] Create RFC in community repository
-- [ ] Accept this ADR based on shared agreement
-- [ ] Extend `bosh-azure-storage-cli` with:
-  - [ ] `copy`
-  - [ ] `list`
-  - [ ] `properties`
-  - [ ] `ensure-bucket-exists`
-- [ ] Implement `bosh-azure-storage-cli` based blobstore client in Cloud Controller with extensibility for other providers in mind
-- [ ] Add `bosh-azure-storage-cli` package to capi-release
-- [ ] Add ops file in cf-deployment to allow opt-in
-- [ ] Add support for AWS
-- [ ] Add support for GCP
-- [ ] Add support for Alibaba Cloud
-- [ ] Deprecate/Remove fog once all providers are covered
 
 
 ## Consequences
