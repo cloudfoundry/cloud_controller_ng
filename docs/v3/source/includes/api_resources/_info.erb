@@ -12,6 +12,11 @@
   "name": "Cloud Foundry",
   "version": 123,
   "osbapi_version": "2.15",
+  "rate_limits": {
+    "enabled": true,
+    "general_limit": 2000,
+    "reset_interval_in_minutes": 30
+  },
   "links": {
     "self": { "href": "http://api.example.com/v3/info" } ,
     "support": { "href": "http://support.example.com" }
@@ -31,6 +36,11 @@
   "name": "",
   "version": 0,
   "osbapi_version": "",
+  "rate_limits": {
+    "enabled": false,
+    "general_limit": 2000,
+    "reset_interval_in_minutes": 30
+  },
   "links": {
     "self": { "href": "http://api.example.com/v3/info" } ,
     "support": { "href": "" }

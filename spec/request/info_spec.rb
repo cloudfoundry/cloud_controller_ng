@@ -15,6 +15,11 @@ RSpec.describe 'Info Request' do
         name: TestConfig.config[:info][:name],
         version: TestConfig.config[:info][:version],
         osbapi_version: TestConfig.config[:info][:osbapi_version],
+        rate_limits: {
+          enabled: TestConfig.config[:rate_limiter][:enabled],
+          general_limit: TestConfig.config[:rate_limiter][:per_process_general_limit],
+          reset_interval_in_minutes: TestConfig.config[:rate_limiter][:reset_interval_in_minutes]
+        },
         links: {
           self: { href: "#{link_prefix}/v3/info" },
           support: { href: TestConfig.config[:info][:support_address] }
@@ -48,6 +53,11 @@ RSpec.describe 'Info Request' do
           name: '',
           version: 0,
           osbapi_version: '',
+          rate_limits: {
+            enabled: false,
+            general_limit: '',
+            reset_interval_in_minutes: ''
+          },
           links: {
             self: { href: "#{link_prefix}/v3/info" },
             support: { href: '' }
@@ -56,13 +66,59 @@ RSpec.describe 'Info Request' do
       end
 
       before do
-        TestConfig.override(info: nil)
+        TestConfig.override(info: nil, rate_limiter: nil)
         allow(File).to receive(:exist?).with(Rails.root.join('config/osbapi_version').to_s).and_return(false)
       end
 
       it 'includes has proper empty values' do
         get '/v3/info'
         expect(Oj.load(last_response.body)).to match_json_response(return_info_json)
+      end
+    end
+
+    context 'when rate limiter is enabled' do
+      let(:user) { make_user }
+      let(:user_headers) { headers_for(user, email: 'some_email@example.com', user_name: 'Mr. Freeze') }
+
+      before do
+        TestConfig.override(
+          rate_limiter: {
+            enabled: true,
+            per_process_general_limit: 1000,
+            global_general_limit: 2000,
+            reset_interval_in_minutes: 15
+          }
+        )
+      end
+
+      it 'includes rate limiter configuration' do
+        get '/v3/info', nil, user_headers
+        response_json = Oj.load(last_response.body)
+
+        expect(response_json['rate_limits']['enabled']).to be true
+        expect(response_json['rate_limits']['general_limit']).to eq(1000)
+        expect(response_json['rate_limits']['reset_interval_in_minutes']).to eq(15)
+      end
+    end
+
+    context 'when rate limiter is disabled' do
+      before do
+        TestConfig.override(
+          rate_limiter: {
+            enabled: false,
+            per_process_general_limit: 0,
+            reset_interval_in_minutes: 0
+          }
+        )
+      end
+
+      it 'includes disabled rate limiter configuration' do
+        get '/v3/info'
+        response_json = Oj.load(last_response.body)
+
+        expect(response_json['rate_limits']['enabled']).to be false
+        expect(response_json['rate_limits']['general_limit']).to eq(0)
+        expect(response_json['rate_limits']['reset_interval_in_minutes']).to eq(0)
       end
     end
   end
