@@ -1,4 +1,4 @@
-require 'db_spec_helper'
+require 'spec_helper'
 require 'support/shared_examples/jobs/delayed_job'
 require 'jobs/v3/delete_service_route_binding_job_actor'
 

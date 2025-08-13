@@ -1,4 +1,4 @@
-require 'db_spec_helper'
+require 'spec_helper'
 require 'jobs/v3/create_service_binding_job_factory'
 
 module VCAP::CloudController
