@@ -4,7 +4,6 @@ concurrency:
   cancel-in-progress: true
 on:
   workflow_dispatch:
-    description: "This action tests backwards compatibility when db migrations are introduced. It tests database schema at new code(old_cc_ref) with unittests running old code(new_cc_ref) "
     inputs:
       old_cc_ref:
         description: 'Old Version of CC_NG that the backwards compatibility should be checked against'
@@ -44,6 +43,8 @@ jobs:
           --health-interval 10s
           --health-timeout 5s
           --health-retries 5
+          --tmpfs /var/lib/postgresql/data
+          --shm-size=256m
         ports:
           - 5432:5432
     steps:
@@ -63,6 +64,16 @@ jobs:
             )}}
       - name: Setup Environment
         uses: ./.github/workflows/composite/setup
+      - name: Configure PostgreSQL for performance
+        run: |
+          sudo apt-get update && sudo apt-get install -y postgresql-client
+          PGPASSWORD=rootpassword psql -h localhost -U postgres -c "ALTER SYSTEM SET fsync = off;"
+          PGPASSWORD=rootpassword psql -h localhost -U postgres -c "ALTER SYSTEM SET synchronous_commit = off;"
+          PGPASSWORD=rootpassword psql -h localhost -U postgres -c "ALTER SYSTEM SET full_page_writes = off;"
+          PGPASSWORD=rootpassword psql -h localhost -U postgres -c "ALTER SYSTEM SET checkpoint_completion_target = 0.9;"
+          PGPASSWORD=rootpassword psql -h localhost -U postgres -c "ALTER SYSTEM SET wal_buffers = '16MB';"
+          PGPASSWORD=rootpassword psql -h localhost -U postgres -c "ALTER SYSTEM SET shared_buffers = '256MB';"
+          PGPASSWORD=rootpassword psql -h localhost -U postgres -c "SELECT pg_reload_conf();"
       - name: Migrate Database
         run: DB=postgres POSTGRES_CONNECTION_PREFIX="postgres://postgres:rootpassword@localhost:5432" bundle exec rake db:parallel:recreate db:parallel:migrate
       - name: Checkout code to run the unit tests with
@@ -92,7 +103,13 @@ jobs:
         env:
           MYSQL_DATABASE: cc_test
           MYSQL_ROOT_PASSWORD: password
-        options: --health-cmd="mysqladmin ping" --health-interval=10s --health-timeout=5s --health-retries=3
+        options: >-
+          --health-cmd="mysqladmin ping"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=3
+          --tmpfs /var/lib/mysql
+          --tmpfs /tmp
         ports:
           - 3306:3306
     steps:
@@ -112,6 +129,11 @@ jobs:
             )}}
       - name: Setup Environment
         uses: ./.github/workflows/composite/setup
+      - name: Configure MySQL for performance
+        run: |
+          sudo apt-get update && sudo apt-get install -y mysql-client
+          mysql -h 127.0.0.1 -u root -ppassword -e "SET GLOBAL innodb_flush_log_at_trx_commit = 0;"
+          mysql -h 127.0.0.1 -u root -ppassword -e "SET GLOBAL innodb_buffer_pool_size = 268435456;"
       - name: Migrate Database
         run: DB=mysql MYSQL_CONNECTION_PREFIX="mysql2://root:password@127.0.0.1:3306" bundle exec rake db:parallel:recreate db:parallel:migrate
       - name: Checkout code to run the unit tests with

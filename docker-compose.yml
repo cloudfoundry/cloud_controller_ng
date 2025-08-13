@@ -1,4 +1,3 @@
-version: "3.3"
 services:
 
   # Postgres
@@ -7,10 +6,27 @@ services:
     image: postgres:16-alpine
     environment:
       POSTGRES_PASSWORD: supersecret
-    command: # logs every statement sent to the server. Slow, but helpful. Fills up disk Quickly !
+    command:
       - "postgres"
       - "-c"
+      - "fsync=off"
+      - "-c"
+      - "synchronous_commit=off"
+      - "-c"
+      - "full_page_writes=off"
+      - "-c"
       - "log_statement=all"
+      - "-c"
+      - "checkpoint_segments=32"
+      - "-c"
+      - "checkpoint_completion_target=0.9"
+      - "-c"
+      - "wal_buffers=16MB"
+      - "-c"
+      - "shared_buffers=256MB"
+    tmpfs:
+      - /var/lib/postgresql/data
+    shm_size: 256m
     ports:
       - "127.0.0.1:5432:5432"
     networks:
@@ -28,6 +44,18 @@ services:
     image: mysql:8.2
     environment:
       MYSQL_ROOT_PASSWORD: supersecret
+    command:
+      - "--innodb-flush-method=nosync"
+      - "--innodb-flush-log-at-trx-commit=0"
+      - "--innodb-doublewrite=0"
+      - "--innodb-buffer-pool-size=256M"
+      - "--innodb-log-buffer-size=16M"
+      - "--innodb-log-file-size=64M"
+      - "--skip-innodb-checksums"
+      - "--skip-sync-frm"
+    tmpfs:
+      - /var/lib/mysql
+      - /tmp
     ports:
       - "127.0.0.1:3306:3306"
     healthcheck:
@@ -100,13 +128,7 @@ services:
     environment:
       MC_HOST_custom: http://localhost:9001
     healthcheck:
-      test:
-        [
-          "CMD",
-          "mc",
-          "ready",
-          "custom"
-        ]
+      test: [ "CMD", "mc", "ready", "custom" ]
       interval: 30s
       timeout: 20s
       retries: 3
@@ -124,13 +146,7 @@ services:
       - "127.0.0.1:9292:9292"
       - "127.0.0.1:9393:80"
     healthcheck:
-      test:
-        [
-          "CMD",
-          "curl",
-          "-f",
-          "http://localhost:9292/v2/catalog"
-        ]
+      test: [ "CMD", "curl", "-f", "http://localhost:9292/v2/catalog" ]
       interval: 30s
       timeout: 20s
       retries: 3
@@ -152,12 +168,10 @@ services:
       - cc-net
     volumes:
       - .devcontainer/images/nginx/conf:/usr/local/nginx/conf:ro
-      - ./tmp:/tmp
     cap_add:
       - NET_BIND_SERVICE
     extra_hosts:
       - "host.docker.internal:host-gateway"
     restart: unless-stopped
-
 networks:
   cc-net:
