@@ -73,6 +73,7 @@ end
 
 group :test do
   gem 'codeclimate-test-reporter', '>= 1.0.8', require: false
+  gem 'factory_bot_rails', require: false
   gem 'machinist', '~> 1.0.6'
   gem 'mock_redis'
   gem 'parallel_tests'
@@ -84,6 +85,7 @@ group :test do
   gem 'rspec-its'
   gem 'rspec-rails', '~> 8.0.1'
   gem 'rspec-wait'
+  gem 'rswag-specs'
   gem 'rubocop', '~> 1.79.1'
   gem 'rubocop-capybara'
   gem 'rubocop-factory_bot'
