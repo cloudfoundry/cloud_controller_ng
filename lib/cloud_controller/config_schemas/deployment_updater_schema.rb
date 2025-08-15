@@ -58,6 +58,7 @@ module VCAP::CloudController
           maximum_app_disk_in_mb: Integer,
           instance_file_descriptor_limit: Integer,
           additional_allowed_process_users: Array,
+          allow_docker_root_user: bool,
 
           deployment_updater: {
             update_frequency_in_seconds: Integer,

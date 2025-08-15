@@ -198,6 +198,7 @@ module VCAP::CloudController
           default_app_log_rate_limit_in_bytes_per_second: Integer,
           default_app_ssh_access: bool,
           additional_allowed_process_users: Array,
+          allow_docker_root_user: bool,
 
           jobs: {
             global: {

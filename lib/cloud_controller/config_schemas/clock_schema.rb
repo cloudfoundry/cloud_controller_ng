@@ -188,6 +188,7 @@ module VCAP::CloudController
           max_retained_builds_per_app: Integer,
           max_retained_revisions_per_app: Integer,
           additional_allowed_process_users: Array,
+          allow_docker_root_user: bool,
 
           diego_sync: { frequency_in_seconds: Integer },
 

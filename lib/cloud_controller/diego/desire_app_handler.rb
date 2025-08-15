@@ -12,6 +12,8 @@ module VCAP::CloudController
               if e.name == 'RunnerError' && e.message['the requested resource already exists']
                 existing_lrp = client.get_app(process)
                 client.update_app(process, existing_lrp)
+              elsif e.name == 'UnprocessableEntity'
+                raise
               end
             end
           end
