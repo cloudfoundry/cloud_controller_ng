@@ -206,6 +206,20 @@ module VCAP::CloudController
             end
           end
 
+          context 'app guid name uniqueness validation without name' do
+            let(:name) { nil }
+            let(:binding_1) { ServiceBinding.make(service_instance: service_instance, app: app, name: nil) }
+
+            before do
+              TestConfig.override(max_service_credential_bindings_per_app_service_instance: 1)
+              binding_1.save_with_attributes_and_new_operation({}, { type: 'create', state: 'succeeded' })
+            end
+
+            it 'does not raise an error' do
+              expect { action.precursor(other_service_instance, app:, message:) }.not_to raise_error
+            end
+          end
+
           it 'raises an error when the app and the instance are in different spaces' do
             another_space = Space.make
             another_app = AppModel.make(space: another_space)

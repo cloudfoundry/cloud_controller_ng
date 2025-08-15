@@ -86,12 +86,12 @@ module VCAP::CloudController
       end
 
       def validate_app_guid_name_uniqueness!(target_app_guid, desired_binding_name, target_service_instance_guid)
+        return if desired_binding_name.nil?
+
         dataset = ServiceBinding.where(app_guid: target_app_guid, name: desired_binding_name)
 
         name_uniqueness_violation!(desired_binding_name) if max_bindings_per_app_service_instance == 1 && dataset.first
-
-        # Check if there is an existing binding for the same app but a different service instance with the same name (skip nil or empty names)
-        name_uniqueness_violation!(desired_binding_name) if desired_binding_name && dataset.exclude(service_instance_guid: target_service_instance_guid).first
+        name_uniqueness_violation!(desired_binding_name) if dataset.exclude(service_instance_guid: target_service_instance_guid).first
       end
 
       def permitted_binding_attributes
@@ -136,7 +136,7 @@ module VCAP::CloudController
 
       def name_uniqueness_violation!(name)
         msg = 'The binding name is invalid. Binding names must be unique for a given service instance and app.'
-        msg += " The app already has a binding with name '#{name}'." unless name.nil? && name.empty?
+        msg += " The app already has a binding with name '#{name}'." unless name.nil? || name.empty?
 
         raise UnprocessableCreate.new(msg)
       end
