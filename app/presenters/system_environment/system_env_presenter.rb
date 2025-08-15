@@ -22,12 +22,19 @@ class SystemEnvPresenter
   private
 
   def service_binding_env_variables
+    latest_bindings = @service_bindings.
+                      select(&:create_succeeded?).
+                      group_by(&:service_instance_guid).
+                      values.
+                      map { |list| list.max_by(&:created_at) }
+
     services_hash = {}
-    @service_bindings.select(&:create_succeeded?).each do |service_binding|
+    latest_bindings.each do |service_binding|
       service_name = service_binding_label(service_binding)
       services_hash[service_name.to_sym] ||= []
       services_hash[service_name.to_sym] << service_binding_env_values(service_binding)
     end
+
     services_hash
   end
 
