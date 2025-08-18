@@ -16,6 +16,29 @@ module VCAP::CloudController::Diego
       expect(service_binding_files.find { |f| f.path == "#{directory}/name" }).to have_attributes(content: name || 'binding-name')
       expect(service_binding_files.find { |f| f.path == "#{directory}/binding-name" }).to have_attributes(content: 'binding-name') if name.nil?
     end
+
+    context 'when there are multiple bindings with the same name for the same app and service instance' do
+      let(:newer_binding_created_at) { Time.now.utc - 2.minutes }
+
+      let!(:newer_binding) do
+        # Create binding eagerly to ensure it exists when ServiceBindingFilesBuilder queries app.service_bindings
+        VCAP::CloudController::ServiceBinding.make(
+          name: binding_name,
+          app: app,
+          credentials: credentials,
+          service_instance: instance,
+          syslog_drain_url: syslog_drain_url,
+          volume_mounts: volume_mounts,
+          created_at: newer_binding_created_at
+        )
+      end
+
+      it 'uses the most recent binding' do
+        expect(service_binding_files.find { |f| f.path == "#{directory}/binding-guid" }).to have_attributes(content: newer_binding.guid)
+        expect(service_binding_files.find { |f| f.path == "#{directory}/name" }).to have_attributes(content: name || 'binding-name')
+        expect(service_binding_files.find { |f| f.path == "#{directory}/binding-name" }).to have_attributes(content: 'binding-name') if name.nil?
+      end
+    end
   end
 
   RSpec.shared_examples 'mapping of instance metadata' do |instance_name|
@@ -67,10 +90,13 @@ module VCAP::CloudController::Diego
   end
 
   RSpec.describe ServiceBindingFilesBuilder do
+    let(:space) { VCAP::CloudController::Space.make }
+    let(:app) { VCAP::CloudController::AppModel.make(space:) }
     let(:service) { VCAP::CloudController::Service.make(label: 'service-name', tags: %w[a-service-tag another-service-tag]) }
     let(:plan) { VCAP::CloudController::ServicePlan.make(name: 'plan-name', service: service) }
-    let(:instance) { VCAP::CloudController::ManagedServiceInstance.make(name: 'instance-name', tags: %w[an-instance-tag another-instance-tag], service_plan: plan) }
+    let(:instance) { VCAP::CloudController::ManagedServiceInstance.make(name: 'instance-name', space: space, tags: %w[an-instance-tag another-instance-tag], service_plan: plan) }
     let(:binding_name) { 'binding-name' }
+    let(:binding_created_at) { Time.now.utc - 3.minutes }
     let(:credentials) do
       {
         string: 'a string',
@@ -84,20 +110,25 @@ module VCAP::CloudController::Diego
     end
     let(:syslog_drain_url) { nil }
     let(:volume_mounts) { nil }
-    let(:binding) do
+    let!(:binding) do
+      # Create binding eagerly to ensure it exists when ServiceBindingFilesBuilder queries app.service_bindings
       VCAP::CloudController::ServiceBinding.make(
         name: binding_name,
+        app: app,
         credentials: credentials,
         service_instance: instance,
         syslog_drain_url: syslog_drain_url,
-        volume_mounts: volume_mounts
+        volume_mounts: volume_mounts,
+        created_at: binding_created_at
       )
     end
-    let(:app) { binding.app }
+
     let(:directory) { 'binding-name' }
 
     describe '#build' do
-      subject(:build) { ServiceBindingFilesBuilder.build(app) }
+      subject(:build) do
+        ServiceBindingFilesBuilder.build(app)
+      end
 
       context 'when service-binding-k8s feature is enabled' do
         before do
@@ -197,7 +228,7 @@ module VCAP::CloudController::Diego
           end
 
           context 'when the instance is user-provided' do
-            let(:instance) { VCAP::CloudController::UserProvidedServiceInstance.make(name: 'upsi', tags: %w[an-upsi-tag another-upsi-tag]) }
+            let(:instance) { VCAP::CloudController::UserProvidedServiceInstance.make(name: 'upsi', space: space, tags: %w[an-upsi-tag another-upsi-tag]) }
 
             include_examples 'mapping of type and provider', 'user-provided'
             include_examples 'mapping of binding metadata'

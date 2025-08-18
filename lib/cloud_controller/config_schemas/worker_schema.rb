@@ -219,6 +219,7 @@ module VCAP::CloudController
           route_services_enabled: bool,
 
           max_manifest_service_binding_poll_duration_in_seconds: Integer,
+          max_service_credential_bindings_per_app_service_instance: Integer,
 
           max_labels_per_resource: Integer,
           max_annotations_per_resource: Integer,
