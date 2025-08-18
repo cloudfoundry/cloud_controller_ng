@@ -116,15 +116,17 @@ module VCAP::CloudController
       end
 
       describe 'dataset managed_service_instances' do
-        subject(:space) { Space.make }
+        let(:space)        { Space.make }
+        let(:other_space)  { Space.make }
 
-        it 'includes managed service instances and no user provided service instances' do
-          managed_service_instance = ManagedServiceInstance.make(space:)
-          user_provided_service_instance = UserProvidedServiceInstance.make(space:)
+        it 'includes only managed instances from the same space' do
+          mine   = ManagedServiceInstance.make(space:)
+          other  = ManagedServiceInstance.make(space: other_space)
+          upsi   = UserProvidedServiceInstance.make(space:)
 
-          managed_instances = space.managed_service_instances
-          expect(managed_instances).to include(managed_service_instance)
-          expect(managed_instances).not_to include(user_provided_service_instance)
+          expect(space.managed_service_instances).to include(mine)
+          expect(space.managed_service_instances).not_to include(other)
+          expect(space.managed_service_instances).not_to include(upsi)
         end
       end
 

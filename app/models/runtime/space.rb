@@ -51,7 +51,7 @@ module VCAP::CloudController
     one_to_many :events, primary_key: :guid, key: :space_guid
     one_to_many :service_instances
     one_to_many :managed_service_instances,
-                dataset: -> { VCAP::CloudController::ServiceInstance.filter(is_gateway_service: true) }
+                dataset: -> { VCAP::CloudController::ServiceInstance.filter(space_id: id, is_gateway_service: true) }
     many_to_many :service_instances_shared_from_other_spaces,
                  left_key: :target_space_guid,
                  left_primary_key: :guid,
