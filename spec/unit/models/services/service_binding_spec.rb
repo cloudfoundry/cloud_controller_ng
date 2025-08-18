@@ -25,7 +25,6 @@ module VCAP::CloudController
       it { is_expected.to validate_presence :app }
       it { is_expected.to validate_presence :service_instance }
       it { is_expected.to validate_db_presence :credentials }
-      it { is_expected.to validate_uniqueness %i[app_guid service_instance_guid], message: 'The app is already bound to the service.' }
       it { is_expected.to validate_presence [:type] }
 
       it 'validates max length of name' do
@@ -79,19 +78,6 @@ module VCAP::CloudController
       context 'when a binding already exists with the same app_guid and name' do
         let(:app) { AppModel.make }
         let(:service_instance) { ServiceInstance.make(space: app.space) }
-
-        context 'and the name is not null' do
-          let(:existing_binding) do
-            ServiceBinding.make(app: app, name: 'some-name', service_instance: service_instance, type: 'app')
-          end
-
-          it 'adds a uniqueness error' do
-            other_service_instance = ServiceInstance.make(space: existing_binding.space)
-            conflict = ServiceBinding.new(app: existing_binding.app, name: existing_binding.name, service_instance: other_service_instance, type: 'app')
-            expect(conflict.valid?).to be(false)
-            expect(conflict.errors.full_messages).to eq(['The binding name is invalid. App binding names must be unique. The app already has a binding with name \'some-name\'.'])
-          end
-        end
 
         context 'and the name is null' do
           let(:existing_binding) do

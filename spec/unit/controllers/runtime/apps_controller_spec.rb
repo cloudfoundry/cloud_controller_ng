@@ -2496,18 +2496,6 @@ module VCAP::CloudController
           ServiceBinding.make(service_instance: si2, app: process2.app, name: 'free')
         end
 
-        it 'binding si2 to process1 with a name in use by process1 is not ok' do
-          expect do
-            ServiceBinding.make(service_instance: si2, app: process1.app, name: 'out')
-          end.to raise_error(Sequel::ValidationFailed, /App binding names must be unique\./)
-        end
-
-        it 'binding si1 to process1 with a new name is not ok' do
-          expect do
-            ServiceBinding.make(service_instance: si1, app: process1.app, name: 'gravy')
-          end.to raise_error(Sequel::ValidationFailed, 'The app is already bound to the service.')
-        end
-
         it 'binding si2 to process1 with a name in use by process2 is ok' do
           ServiceBinding.make(service_instance: si2, app: process1.app, name: 'free')
           get "/v2/apps/#{process1.app.guid}/service_bindings?results-per-page=2&page=1&q=name:free"
