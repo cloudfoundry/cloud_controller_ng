@@ -426,7 +426,8 @@ module VCAP::CloudController
           update_metric_tags_on_rename: bool,
           app_instance_stopping_state: bool,
 
-          optional(:enable_ipv6) => bool
+          optional(:enable_ipv6) => bool,
+          optional(:feature_flag_overrides) => Hash
         }
       end
       # rubocop:enable Metrics/BlockLength

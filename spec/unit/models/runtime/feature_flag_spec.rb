@@ -225,5 +225,126 @@ module VCAP::CloudController
         end
       end
     end
+
+    describe 'default flag override in config' do
+      let(:key) { :diego_docker }
+      let(:default_value) { FeatureFlag::DEFAULT_FLAGS[key] }
+
+      context 'when there was no previously set conflicting value' do
+        let(:config_value) { !default_value }
+
+        before do
+          FeatureFlag.override_default_flags({ key => config_value })
+        end
+
+        after do
+          FeatureFlag.find(name: key.to_s)&.destroy
+        end
+
+        context 'and the value is not changed by admin' do
+          it 'returns the config-set value' do
+            expect(FeatureFlag.enabled?(key)).to be config_value
+          end
+        end
+
+        context 'and the value is changed by admin' do
+          let(:admin_value) { !config_value }
+          let(:admin_override) do
+            flag = FeatureFlag.find(name: key.to_s)
+            flag.enabled = admin_value
+            flag.save
+          end
+
+          before do
+            admin_override
+          end
+
+          after do
+            admin_override.destroy
+          end
+
+          it 'returns the admin-set value' do
+            expect(FeatureFlag.enabled?(key)).to be admin_value
+          end
+        end
+      end
+
+      context 'when there was previously set conflicting value' do
+        let(:admin_value) { !default_value }
+
+        before do
+          FeatureFlag.make(name: key.to_s, enabled: admin_value)
+        end
+
+        after do
+          FeatureFlag.find(name: key.to_s)&.destroy
+        end
+
+        it 'overwrites the existing admin-set value' do
+          expect(FeatureFlag.enabled?(key)).to be admin_value
+          FeatureFlag.override_default_flags({ key => !admin_value })
+          expect(FeatureFlag.enabled?(key)).to be !admin_value
+        end
+      end
+    end
+
+    describe '.update_default_flags' do
+      context 'with invalid flags' do
+        it 'raises an error for the one and only invalid name' do
+          expect do
+            FeatureFlag.override_default_flags({ an_invalid_name: true })
+          end.to raise_error(/Invalid feature flag name\(s\)/)
+        end
+
+        it 'raises an error for a mix of valid and invalid names' do
+          expect do
+            FeatureFlag.override_default_flags({ diego_docker: true, an_invalid_name: true })
+          end.to raise_error(/Invalid feature flag name\(s\)/)
+        end
+
+        it 'raises an error for all invalid names' do
+          expect do
+            FeatureFlag.override_default_flags({ invalid_name1: true, invalid_name2: false })
+          end.to raise_error(/Invalid feature flag name\(s\)/)
+        end
+
+        it 'raises an error for invalid values' do
+          expect do
+            FeatureFlag.override_default_flags({ diego_docker: 'an invalid value', user_org_creation: false })
+          end.to raise_error(/Invalid feature flag value\(s\)/)
+        end
+      end
+
+      context 'with valid flags' do
+        let(:default_diego_docker_value) { FeatureFlag::DEFAULT_FLAGS[:diego_docker] }
+        let(:default_user_org_creation_value) { FeatureFlag::DEFAULT_FLAGS[:user_org_creation] }
+
+        before do
+          expect do
+            FeatureFlag.override_default_flags({ diego_docker: !default_diego_docker_value, user_org_creation: !default_user_org_creation_value })
+          end.not_to raise_error
+        end
+
+        after do
+          %i[diego_docker user_org_creation].each do |flag_key|
+            FeatureFlag.find(name: flag_key.to_s)&.destroy
+          end
+        end
+
+        it 'updates values' do
+          expect(FeatureFlag.enabled?(:diego_docker)).to be !default_diego_docker_value
+          expect(FeatureFlag.enabled?(:user_org_creation)).to be !default_user_org_creation_value
+        end
+      end
+
+      context 'with empty flags' do
+        it 'no effect' do
+          FeatureFlag.override_default_flags({})
+          FeatureFlag::DEFAULT_FLAGS.each do |key, value|
+            expect(FeatureFlag.enabled?(key)).to eq value
+          end
+        end
+      end
+    end
   end
 end

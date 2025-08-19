@@ -86,6 +86,23 @@ module VCAP::CloudController
       VCAP::CloudController::SecurityContext.admin_read_only?
     end
 
+    def self.override_default_flags(feature_flag_overrides)
+      raise "Invalid feature flag name(s): #{feature_flag_overrides}" unless feature_flag_overrides.keys.to_set <= DEFAULT_FLAGS.keys.to_set
+      raise "Invalid feature flag value(s): #{feature_flag_overrides}" unless feature_flag_overrides.values.all? { |item| item.is_a?(TrueClass) || item.is_a?(FalseClass) }
+
+      feature_flag_overrides.each do |flag_name, flag_value|
+        feature_flag = FeatureFlag.find(name: flag_name.to_s)
+        if feature_flag
+          next if feature_flag.enabled == flag_value
+        else
+          feature_flag = FeatureFlag.new(name: flag_name.to_s)
+        end
+
+        feature_flag.enabled = flag_value
+        feature_flag.save
+      end
+    end
+
     private_class_method :admin?
   end
 end
