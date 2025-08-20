@@ -67,7 +67,6 @@ module VCAP::CloudController
 
         self.polling_interval_seconds = polling_status[:retry_after] if polling_status[:retry_after].present?
       rescue CloudController::Errors::ApiError => e
-        save_failure(e.message)
         raise e
       rescue OperationCancelled => e
         raise CloudController::Errors::ApiError.new_from_details('UnableToPerform', operation_type, e.message)
