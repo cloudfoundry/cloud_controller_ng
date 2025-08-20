@@ -274,6 +274,14 @@ module VCAP::CloudController::Diego
               expect { service_binding_files }.to raise_error(ServiceBindingFilesBuilder::IncompatibleBindings, 'Invalid file name: ../secret')
             end
           end
+
+          context 'when credential keys contain underscores' do
+            let(:credentials) { { some_secret: 'hidden' } }
+
+            it 'does not return an error' do
+              expect { service_binding_files }.not_to raise_error
+            end
+          end
         end
       end
 

@@ -37,7 +37,7 @@ module VCAP::CloudController
         @service_bindings.select(&:create_succeeded?).each do |service_binding|
           sb_hash = ServiceBindingPresenter.new(service_binding, include_instance: true).to_hash
           name = sb_hash[:name]
-          raise IncompatibleBindings.new("Invalid binding name: '#{name}'. Name must match #{binding_naming_convention.inspect}") unless valid_name?(name)
+          raise IncompatibleBindings.new("Invalid binding name: '#{name}'. Name must match #{binding_naming_convention.inspect}") unless valid_binding_name?(name)
           raise IncompatibleBindings.new("Duplicate binding name: #{name}") if names.add?(name).nil?
 
           # add the credentials first
@@ -72,13 +72,17 @@ module VCAP::CloudController
         /^[a-z0-9\-.]{1,253}$/
       end
 
+      def file_naming_convention
+        /^[a-z0-9\-._]{1,253}$/
+      end
+
       # - adds a Diego::Bbs::Models::File object to the service_binding_files hash
       # - binding name is used as the directory name, key is used as the file name
       # - returns the bytesize of the path and content
       # - skips (and returns 0) if the value is nil or an empty array or hash
       # - serializes the value to JSON if it is a non-string object
       def add_file(service_binding_files, name, key, value)
-        raise IncompatibleBindings.new("Invalid file name: #{key}") unless valid_name?(key)
+        raise IncompatibleBindings.new("Invalid file name: #{key}") unless valid_file_name?(key)
 
         path = "#{name}/#{key}"
         content = if value.nil?
@@ -95,8 +99,12 @@ module VCAP::CloudController
         path.bytesize + content.bytesize
       end
 
-      def valid_name?(name)
+      def valid_binding_name?(name)
         name.match?(binding_naming_convention)
+      end
+
+      def valid_file_name?(name)
+        name.match?(file_naming_convention)
       end
 
       def transform_vcap_services_attribute(name)
