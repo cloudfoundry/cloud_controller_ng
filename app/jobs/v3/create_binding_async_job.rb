@@ -70,8 +70,6 @@ module VCAP::CloudController
         raise e
       rescue OperationCancelled => e
         raise CloudController::Errors::ApiError.new_from_details('UnableToPerform', operation_type, e.message)
-      rescue BindingNotFound => e
-        raise e
       rescue ServiceBindingCreate::BindingNotRetrievable
         raise CloudController::Errors::ApiError.new_from_details('ServiceBindingInvalid', 'The broker responded asynchronously but does not support fetching binding data')
       rescue StandardError => e
