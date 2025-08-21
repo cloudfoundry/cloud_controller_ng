@@ -103,7 +103,7 @@ module CloudFoundry
         rate_limit_headers = RateLimitHeaders.new(@header_suffix)
 
         if apply_rate_limiting?(env)
-          user_guid = user_token?(env) ? env['cf.user_guid'] : client_ip(ActionDispatch::Request.new(env))
+          user_guid = get_user_id(env)
 
           count, expires_in = @expiring_request_counter.increment(user_guid, @reset_interval, @logger)
 
@@ -116,6 +116,10 @@ module CloudFoundry
 
         status, headers, body = @app.call(env)
         [status, headers.merge(rate_limit_headers.to_hash), body]
+      end
+
+      def get_user_id(env)
+        user_token?(env) ? env['cf.user_guid'] : client_ip(ActionDispatch::Request.new(env))
       end
 
       private
