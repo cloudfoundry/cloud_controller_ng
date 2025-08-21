@@ -131,6 +131,11 @@ module VCAP::CloudController
         end
 
         context 'when there are multiple service bindings for the same service instance' do
+          before do
+            # TODO: Remove skip when the service bindings unique constraints are removed
+            skip 'this test can be enabled when the service bindings unique constraints are removed and max_bindings_per_app_service_instance can be configured'
+          end
+
           it 'includes only the latest binding' do
             newer_binding = ServiceBinding.make(app: app, service_instance: service_instance, syslog_drain_url: 'logs.go-here.com', created_at: Time.now.utc + 10.seconds)
 

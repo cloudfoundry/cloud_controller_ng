@@ -18,6 +18,11 @@ module VCAP::CloudController::Diego
     end
 
     context 'when there are multiple bindings with the same name for the same app and service instance' do
+      before do
+        # TODO: Remove skip when the service bindings unique constraints are removed
+        skip 'this test can be enabled when the service bindings unique constraints are removed and max_bindings_per_app_service_instance can be configured'
+      end
+
       let(:newer_binding_created_at) { Time.now.utc - 2.minutes }
 
       let!(:newer_binding) do

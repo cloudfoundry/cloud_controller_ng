@@ -235,7 +235,9 @@ module VCAP::CloudController
 
           context 'when multiple bindings are allowed' do
             before do
+              # TODO: Remove skip when the service bindings unique constraints are removed
               skip 'this test can be enabled when the service bindings unique constraints are removed and max_bindings_per_app_service_instance can be configured'
+
               binding_1 = ServiceBinding.make(service_instance:, app:, name:)
               binding_2 = ServiceBinding.make(service_instance:, app:, name:)
               binding_1.save_with_attributes_and_new_operation({}, { type: 'create', state: 'succeeded' })
