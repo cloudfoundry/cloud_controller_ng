@@ -409,8 +409,6 @@ module VCAP::CloudController
             optional(:query_raise_on_mismatch) => bool
           },
 
-          max_service_credential_bindings_per_app_service_instance: Integer,
-
           max_labels_per_resource: Integer,
           max_annotations_per_resource: Integer,
 

@@ -1276,8 +1276,6 @@ RSpec.describe 'v3 service credential bindings' do
 
         context 'when only one binding per app and service instance is allowed' do
           before do
-            TestConfig.override(max_service_credential_bindings_per_app_service_instance: 1)
-
             it 'returns 422 when the binding already exists' do
               api_call.call admin_headers
               expect(last_response.status).to eq(201).or eq(202)

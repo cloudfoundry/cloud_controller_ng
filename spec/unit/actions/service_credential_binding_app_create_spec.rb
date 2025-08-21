@@ -69,7 +69,8 @@ module VCAP::CloudController
           context 'when a binding already exists' do
             let!(:binding) { ServiceBinding.make(service_instance:, app:) }
 
-            before { TestConfig.override(max_service_credential_bindings_per_app_service_instance: 1) }
+            # TODO: Once the unique constraints to allow multiple bindings are removed, this needs to be set to 1
+            # before { TestConfig.override(max_service_credential_bindings_per_app_service_instance: 1) }
 
             context 'when no last binding operation exists' do
               it 'raises an error' do
@@ -160,7 +161,8 @@ module VCAP::CloudController
             end
             let(:service_instance2) { ManagedServiceInstance.make(**si_details) }
 
-            before { TestConfig.override(max_service_credential_bindings_per_app_service_instance: 1) }
+            # TODO: Once the unique constraints to allow multiple bindings are removed, this needs to be set to 1
+            # before { TestConfig.override(max_service_credential_bindings_per_app_service_instance: 1) }
 
             it 'raises an error when the binding name already exists' do
               # First request, should succeed
@@ -186,7 +188,8 @@ module VCAP::CloudController
               )
             end
 
-            before { TestConfig.override(max_service_credential_bindings_per_app_service_instance: 1) }
+            # TODO: Once the unique constraints to allow multiple bindings are removed, this needs to be set to 1
+            # before { TestConfig.override(max_service_credential_bindings_per_app_service_instance: 1) }
 
             it 'raises an error when the app is already bound to the service instance' do
               # First request, should succeed
@@ -211,7 +214,8 @@ module VCAP::CloudController
             let(:binding_1) { ServiceBinding.make(service_instance: service_instance, app: app, name: nil) }
 
             before do
-              TestConfig.override(max_service_credential_bindings_per_app_service_instance: 1)
+              # TODO: Once the unique constraints to allow multiple bindings are removed, this needs to be set to 1
+              # TestConfig.override(max_service_credential_bindings_per_app_service_instance: 1)
               binding_1.save_with_attributes_and_new_operation({}, { type: 'create', state: 'succeeded' })
             end
 
@@ -230,10 +234,10 @@ module VCAP::CloudController
           end
 
           context 'when multiple bindings are allowed' do
-            let!(:binding_1) { ServiceBinding.make(service_instance:, app:, name:) }
-            let!(:binding_2) { ServiceBinding.make(service_instance:, app:, name:) }
-
             before do
+              skip 'this test can be enabled when the service bindings unique constraints are removed and max_bindings_per_app_service_instance can be configured'
+              binding_1 = ServiceBinding.make(service_instance:, app:, name:)
+              binding_2 = ServiceBinding.make(service_instance:, app:, name:)
               binding_1.save_with_attributes_and_new_operation({}, { type: 'create', state: 'succeeded' })
               binding_2.save_with_attributes_and_new_operation({}, { type: 'create', state: 'succeeded' })
             end
