@@ -392,7 +392,6 @@ default_app_lifecycle: buildpack
 custom_metric_tag_prefix_list: ["metric.tag.cloudfoundry.org"]
 
 max_manifest_service_binding_poll_duration_in_seconds: 60
-max_service_credential_bindings_per_app_service_instance: 5
 update_metric_tags_on_rename: true
 
 app_log_revision: true
