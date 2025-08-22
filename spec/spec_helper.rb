@@ -111,6 +111,7 @@ each_run_block = proc do
     rspec_config.include LinkHelpers
     rspec_config.include BackgroundJobHelpers
     rspec_config.include LogHelpers
+    rspec_config.include RequestCaptureHelper::RackTestInterceptor
 
     rspec_config.include ServiceBrokerHelpers
     rspec_config.include UserHelpers
@@ -163,6 +164,11 @@ each_run_block = proc do
       # calling this more than once will load tasks again and 'invoke' or 'execute' calls
       # will call rake tasks multiple times
       Application.load_tasks
+      
+      # Enable request capture for request specs
+      if ENV['CAPTURE_REQUESTS'] == 'true'
+        RequestCaptureHelper.enable_capture
+      end
     end
 
     rspec_config.before do
@@ -206,6 +212,14 @@ each_run_block = proc do
 
     rspec_config.after :all do
       TmpdirCleaner.clean
+    end
+
+    rspec_config.after :suite do
+      # Finalize captured requests file
+      if ENV['CAPTURE_REQUESTS'] == 'true' && RequestCaptureHelper.capture_enabled?
+        RequestCaptureHelper.disable_capture
+        puts "\nCaptured #{RequestCaptureHelper.request_count} requests to out/request_capture.json"
+      end
     end
 
     rspec_config.after do
