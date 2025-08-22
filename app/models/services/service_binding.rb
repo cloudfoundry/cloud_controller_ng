@@ -35,27 +35,10 @@ module VCAP::CloudController
 
     delegate :service, :service_plan, to: :service_instance
 
-    def around_save
-      yield
-    rescue Sequel::UniqueConstraintViolation => e
-      if e.message.include?('unique_service_binding_app_guid_name')
-        errors.add(%i[app_guid name], :unique)
-        raise validation_failed_error
-      elsif e.message.include?('unique_service_binding_service_instance_guid_app_guid')
-        errors.add(%i[service_instance_guid app_guid], :unique)
-        raise validation_failed_error
-      else
-        raise e
-      end
-    end
-
     def validate
       validates_presence :app
       validates_presence :service_instance
       validates_presence :type
-
-      validates_unique %i[app_guid service_instance_guid], message: Sequel.lit('The app is already bound to the service.')
-      validates_unique %i[app_guid name], message: Sequel.lit("The binding name is invalid. App binding names must be unique. The app already has a binding with name '#{name}'.")
 
       validate_space_match
       validate_cannot_change_binding
