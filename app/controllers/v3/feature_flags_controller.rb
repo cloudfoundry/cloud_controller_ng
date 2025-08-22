@@ -6,6 +6,8 @@ require 'cloud_controller/paging/list_paginator'
 require 'fetchers/feature_flag_list_fetcher'
 
 class FeatureFlagsController < ApplicationController
+  OVERRIDE_IN_MANIFEST_MSG = 'The feature flag has an override configured in the bosh manifest and can be overwritten when the deployment is updated.'.freeze
+
   def index
     message = FeatureFlagsListMessage.from_params(query_params)
     invalid_param!(message.errors.full_messages) unless message.valid?
@@ -38,6 +40,7 @@ class FeatureFlagsController < ApplicationController
     unprocessable!(message.errors.full_messages) unless message.valid?
 
     flag = VCAP::CloudController::FeatureFlagUpdate.new.update(flag, message)
+    add_warning_headers([OVERRIDE_IN_MANIFEST_MSG]) if VCAP::CloudController::FeatureFlag.config_overridden?(hashed_params[:name])
     render status: :ok, json: Presenters::V3::FeatureFlagPresenter.new(flag)
   rescue FeatureFlagUpdate::Error => e
     unprocessable!(e)

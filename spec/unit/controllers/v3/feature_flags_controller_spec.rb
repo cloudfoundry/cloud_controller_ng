@@ -230,6 +230,51 @@ RSpec.describe FeatureFlagsController, type: :controller do
           expect(parsed_body['custom_error_message']).to be_nil
         end
       end
+
+      context 'when there are overrides in configuration' do
+        before do
+          stub_const('VCAP::CloudController::FeatureFlag::DEFAULT_FLAGS', {
+                       flag1: false, flag2: true, flag3: true, flag4: false
+                     })
+          VCAP::CloudController::FeatureFlag.override_default_flags({ flag1: false, flag4: true })
+        end
+
+        it 'returns a warning message for the overridden flags' do
+          patch :update, params: {
+            name: 'flag1',
+            enabled: false
+          }, as: :json
+
+          expect(response).to have_http_status :ok
+          expect(response).to have_warning_message FeatureFlagsController::OVERRIDE_IN_MANIFEST_MSG
+
+          patch :update, params: {
+            name: 'flag4',
+            enabled: false
+          }, as: :json
+
+          expect(response).to have_http_status :ok
+          expect(response).to have_warning_message FeatureFlagsController::OVERRIDE_IN_MANIFEST_MSG
+        end
+
+        it 'returns no warning message for not overridden flags' do
+          patch :update, params: {
+            name: 'flag2',
+            enabled: false
+          }, as: :json
+
+          expect(response).to have_http_status :ok
+          expect(response.headers['X-Cf-Warnings']).to be_nil
+
+          patch :update, params: {
+            name: 'flag3',
+            enabled: false
+          }, as: :json
+
+          expect(response).to have_http_status :ok
+          expect(response.headers['X-Cf-Warnings']).to be_nil
+        end
+      end
     end
   end
 end
