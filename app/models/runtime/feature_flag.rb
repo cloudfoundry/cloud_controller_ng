@@ -37,6 +37,8 @@ module VCAP::CloudController
 
     ADMIN_READ_ONLY_SKIPPABLE = [:space_developer_env_var_visibility].freeze
 
+    @feature_flag_overrides = nil
+
     export_attributes :name, :enabled, :error_message
     import_attributes :name, :enabled, :error_message
 
@@ -104,6 +106,12 @@ module VCAP::CloudController
         feature_flag.enabled = flag_value
         feature_flag.save
       end
+
+      @feature_flag_overrides = feature_flag_overrides
+    end
+
+    def self.config_overridden?(feature_flag_name)
+      @feature_flag_overrides && @feature_flag_overrides.keys.include?(feature_flag_name.to_sym)
     end
 
     private_class_method :admin?
