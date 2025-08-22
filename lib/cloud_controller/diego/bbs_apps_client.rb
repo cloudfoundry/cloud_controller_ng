@@ -16,7 +16,7 @@ module VCAP::CloudController
           logger.info('desire.app.response', process_guid: lrp.process_guid, error: response.error)
 
           runner_invalid_request!(response.error.message) if response.error&.type == ::Diego::Bbs::ErrorTypes::InvalidRequest
-          return response if response.error&.type == ::Diego::Bbs::ErrorTypes::ResourceConflict
+          return response if [::Diego::Bbs::ErrorTypes::ResourceConflict, ::Diego::Bbs::ErrorTypes::ResourceExists].include?(response.error&.type)
 
           response
         end

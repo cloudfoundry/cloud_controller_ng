@@ -51,6 +51,14 @@ module VCAP::CloudController::Diego
           end
         end
 
+        context 'when the bbs response contains a resource exists error' do
+          let(:lifecycle_error) { ::Diego::Bbs::Models::Error.new(type: ::Diego::Bbs::Models::Error::Type::ResourceExists) }
+
+          it 'does not raise error' do
+            expect { client.desire_app(process) }.not_to raise_error
+          end
+        end
+
         context 'when the bbs response contains an invalid request error' do
           let(:lifecycle_error) { ::Diego::Bbs::Models::Error.new(type: ::Diego::Bbs::Models::Error::Type::InvalidRequest, message: 'bad request') }
 
