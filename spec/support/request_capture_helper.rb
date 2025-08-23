@@ -3,9 +3,9 @@ require 'fileutils'
 
 module RequestCaptureHelper
   # Configuration options
-  @capture_enabled = ENV['CAPTURE_REQUESTS'] == 'true'
-  @strip_test_mode_info = ENV['CAPTURE_STRIP_TEST_MODE_INFO'] != 'false' 
-  @strip_v2_api = ENV['CAPTURE_STRIP_V2_API'] != 'false'
+  @capture_enabled = ENV['CAPTURE_REQUESTS'] == 'true'  # Default: false
+  @strip_test_mode_info = ENV['CAPTURE_STRIP_TEST_MODE_INFO'] != 'false'  # Default: true
+  @capture_v3_only = ENV['CAPTURE_V3_ONLY'] != 'false'  # Default: true
   @output_file = nil
   @request_count = 0
   @file_mutex = Mutex.new
@@ -22,12 +22,12 @@ module RequestCaptureHelper
     @strip_test_mode_info = value
   end
 
-  def self.strip_v2_api?
-    @strip_v2_api
+  def self.capture_v3_only?
+    @capture_v3_only
   end
 
-  def self.strip_v2_api=(value)
-    @strip_v2_api = value
+  def self.capture_v3_only=(value)
+    @capture_v3_only = value
   end
 
   def self.enable_capture
@@ -87,18 +87,18 @@ module RequestCaptureHelper
     cleaned_body
   end
 
-  def self.is_v2_api_request?(path)
-    return false unless @strip_v2_api
+  def self.is_allowed_path?(path)
+    return true unless @capture_v3_only
     
-    # Check if the path starts with /v2/ 
-    path.start_with?('/v2/')
+    # Allow root path, /v3/, and /v3/* paths only
+    path == '/' || path.start_with?('/v3/') || path.start_with?('/v3')
   end
 
   def self.capture_request(method, path, body, headers, response)
     return unless @capture_enabled && @output_file
     
-    # Skip v2 API requests if configured to strip them
-    return if is_v2_api_request?(path)
+    # Skip requests that are not allowed paths when v3-only mode is enabled
+    return unless is_allowed_path?(path)
 
     # Clean up headers - remove internal rack/test headers and normalize
     clean_headers = {}
