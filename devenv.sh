@@ -18,27 +18,27 @@ help_command() {
 
 # Create a clean development environment
 create_command(){
-  docker-compose -p "" down
+  docker compose -p "" down
   docker buildx bake -f docker-compose.yml &
-  docker-compose -p "" pull &
+  docker compose -p "" pull &
   wait $(jobs -p)
-  docker-compose -p "" up -d --build
+  docker compose -p "" up -d --build
   ./.devcontainer/scripts/setupDevelopmentEnvironment.sh
 }
 
 # Start containers
 start_command(){
-  docker-compose -p "" start
+  docker compose -p "" start
 }
 
 # Stop containers
 stop_command(){
-  docker-compose -p "" stop
+  docker compose -p "" stop
 }
 
 # Remove containers
 destroy_command(){
-  docker-compose -p "" down
+  docker compose -p "" down
 }
 
 # Call Setup IDEs Script
@@ -72,7 +72,7 @@ fi
 # Check Prerequisites
 export should_exit=0
 # Check Path Exists
-for p in docker docker-compose ruby bundle mysql psql yq; do
+for p in docker ruby bundle mysql psql yq; do
     if ! command -v "${p}" >/dev/null 2>&1; then
       echo "Error: Dependency \"$p\" is not installed" && export should_exit=1
     fi

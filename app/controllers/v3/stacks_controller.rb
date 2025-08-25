@@ -55,6 +55,8 @@ class StacksController < ApplicationController
     stack = StackUpdate.new.update(stack, message)
 
     render status: :ok, json: Presenters::V3::StackPresenter.new(stack)
+  rescue StackUpdate::InvalidStack => e
+    unprocessable! e
   end
 
   def show_apps
