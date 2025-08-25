@@ -168,6 +168,13 @@ module VCAP::CloudController
           end
         end
       end
+
+      context 'when the diego_custom_stacks feature flag is not overridden' do
+        it 'returns the default value' do
+          expect(FeatureFlag.enabled?(:diego_custom_stacks)).to be(false)
+          expect(FeatureFlag.disabled?(:diego_custom_stacks)).to be(true)
+        end
+      end
     end
 
     describe '.raise_unless_enabled!' do
