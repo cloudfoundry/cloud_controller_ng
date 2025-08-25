@@ -60,7 +60,7 @@ module VCAP::CloudController
           raise LastOperationFailedState
         end
       rescue LastOperationFailedState => e
-        raise e
+        raise CloudController::Errors::ApiError.new_from_details('UnableToPerform', 'delete', e.message)
       rescue StandardError => e
         update_last_operation(binding, state: 'failed', description: e.message)
         raise e

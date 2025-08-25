@@ -1522,7 +1522,7 @@ module VCAP::CloudController
           it 'raises and updates the last operation description' do
             expect do
               action.poll
-            end.to raise_error(VCAP::CloudController::V3::ServiceInstanceUpdateManaged::LastOperationFailedState)
+            end.to raise_error(CloudController::Errors::ApiError)
 
             expect(ServiceInstance.first.last_operation.type).to eq('update')
             expect(ServiceInstance.first.last_operation.state).to eq('failed')

@@ -1,4 +1,4 @@
-require 'db_spec_helper'
+require 'spec_helper'
 require 'services/service_brokers/v2/errors/service_broker_bad_response'
 require 'services/service_brokers/v2/errors/service_broker_request_rejected'
 require 'cloud_controller/http_request_error'
@@ -207,7 +207,7 @@ RSpec.shared_examples 'polling service binding creation' do
       let(:state) { 'failed' }
 
       it 'updates the last operation' do
-        expect { action.poll(binding) }.to raise_error(VCAP::CloudController::V3::LastOperationFailedState)
+        expect { action.poll(binding) }.to raise_error(CloudController::Errors::ApiError)
 
         binding.reload
         expect(binding.last_operation.state).to eq('failed')
@@ -371,7 +371,7 @@ RSpec.shared_examples 'polling service credential binding creation' do
         let(:state) { 'failed' }
 
         it 'does not create an audit event' do
-          expect { action.poll(binding) }.to raise_error(VCAP::CloudController::V3::LastOperationFailedState)
+          expect { action.poll(binding) }.to raise_error(CloudController::Errors::ApiError)
 
           expect(binding_event_repo).not_to have_received(:record_create)
         end

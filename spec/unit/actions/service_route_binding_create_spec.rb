@@ -450,7 +450,7 @@ module VCAP::CloudController
             let(:state) { 'failed' }
 
             it 'does not notify diego or create an audit event' do
-              expect { action.poll(binding) }.to raise_error(VCAP::CloudController::V3::LastOperationFailedState)
+              expect { action.poll(binding) }.to raise_error(CloudController::Errors::ApiError)
 
               expect(messenger).not_to have_received(:send_desire_request)
               expect(binding_event_repo).not_to have_received(:record_create)
