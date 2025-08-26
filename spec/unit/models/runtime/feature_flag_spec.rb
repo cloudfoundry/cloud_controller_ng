@@ -288,7 +288,7 @@ module VCAP::CloudController
       end
     end
 
-    describe '.update_default_flags' do
+    describe '.override_default_flags' do
       context 'with invalid flags' do
         it 'raises an error for the one and only invalid name' do
           expect do
