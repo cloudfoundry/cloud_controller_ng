@@ -7,8 +7,9 @@ module VCAP::CloudController::Diego
 
     describe '#desire_app' do
       let(:bbs_client) { instance_double(::Diego::Client, desire_lrp: lrp_response) }
-      let(:lrp) { ::Diego::Bbs::Models::DesiredLRP.new }
+      let(:lrp) { ::Diego::Bbs::Models::DesiredLRP.new process_guid: lrp_process_guid }
       let(:process) { VCAP::CloudController::ProcessModel.make }
+      let(:lrp_process_guid) { ProcessGuid.from_process process }
       let(:lrp_response) { ::Diego::Bbs::Models::DesiredLRPLifecycleResponse.new(error: lifecycle_error) }
       let(:lifecycle_error) { nil }
 
@@ -81,6 +82,24 @@ module VCAP::CloudController::Diego
               expect(e.name).to eq('RunnerError')
             end
           end
+
+          it 'logs the error' do
+            tail_logs do |logs|
+              expect { client.desire_app(process) }.to raise_error(CloudController::Errors::ApiError)
+
+              expect(
+                logs.read.find { |l| l['message'] == 'desire.app.response' }
+              ).to match(
+                hash_including(
+                  'message' => 'desire.app.response',
+                  'data' => {
+                    'error' => /error message/,
+                    'process_guid' => lrp_process_guid
+                  }
+                )
+              )
+            end
+          end
         end
       end
 
@@ -142,6 +161,24 @@ module VCAP::CloudController::Diego
             expect(e.name).to eq('RunnerError')
           end
         end
+
+        it 'logs the error' do
+          tail_logs do |logs|
+            expect { client.stop_app(process_guid) }.to raise_error(CloudController::Errors::ApiError)
+
+            expect(
+              logs.read.find { |l| l['message'] == 'stop.app.response' }
+            ).to match(
+              hash_including(
+                'message' => 'stop.app.response',
+                'data' => {
+                  'error' => /error message/,
+                  'process_guid' => process_guid
+                }
+              )
+            )
+          end
+        end
       end
 
       context 'when bbs client errors' do
@@ -194,6 +231,25 @@ module VCAP::CloudController::Diego
             expect(e.name).to eq('RunnerError')
           end
         end
+
+        it 'logs the error' do
+          tail_logs do |logs|
+            expect { client.stop_index(process_guid, index) }.to raise_error(CloudController::Errors::ApiError)
+
+            expect(
+              logs.read.find { |l| l['message'] == 'stop.index.response' }
+            ).to match(
+              hash_including(
+                'message' => 'stop.index.response',
+                'data' => {
+                  'error' => /error message/,
+                  'process_guid' => process_guid,
+                  'index' => index
+                }
+              )
+            )
+          end
+        end
       end
 
       context 'when bbs client errors' do
@@ -243,6 +299,24 @@ module VCAP::CloudController::Diego
             client.get_app(process)
           end.to raise_error(CloudController::Errors::ApiError, /error message/) do |e|
             expect(e.name).to eq('RunnerError')
+          end
+        end
+
+        it 'logs the error' do
+          tail_logs do |logs|
+            expect { client.get_app(process) }.to raise_error(CloudController::Errors::ApiError)
+
+            expect(
+              logs.read.find { |l| l['message'] == 'get.app.response' }
+            ).to match(
+              hash_including(
+                'message' => 'get.app.response',
+                'data' => {
+                  'error' => /error message/,
+                  'process_guid' => 'process-guid'
+                }
+              )
+            )
           end
         end
       end
@@ -320,6 +394,24 @@ module VCAP::CloudController::Diego
             expect(e.name).to eq('RunnerError')
           end
         end
+
+        it 'logs the error' do
+          tail_logs do |logs|
+            expect { client.update_app(process, existing_lrp) }.to raise_error(CloudController::Errors::ApiError)
+
+            expect(
+              logs.read.find { |l| l['message'] == 'update.app.response' }
+            ).to match(
+              hash_including(
+                'message' => 'update.app.response',
+                'data' => {
+                  'error' => /error message/,
+                  'process_guid' => process_guid
+                }
+              )
+            )
+          end
+        end
       end
 
       context 'when bbs client errors' do
@@ -362,6 +454,23 @@ module VCAP::CloudController::Diego
             expect(e.name).to eq('RunnerError')
           end
         end
+
+        it 'logs the error' do
+          tail_logs do |logs|
+            expect { client.fetch_scheduling_infos }.to raise_error(CloudController::Errors::ApiError)
+
+            expect(
+              logs.read.find { |l| l['message'] == 'fetch.scheduling.infos.response' }
+            ).to match(
+              hash_including(
+                'message' => 'fetch.scheduling.infos.response',
+                'data' => {
+                  'error' => /error message/
+                }
+              )
+            )
+          end
+        end
       end
 
       context 'when bbs client errors' do
@@ -401,6 +510,23 @@ module VCAP::CloudController::Diego
             client.bump_freshness
           end.to raise_error(CloudController::Errors::ApiError, /error message/) do |e|
             expect(e.name).to eq('RunnerError')
+          end
+        end
+
+        it 'logs the error' do
+          tail_logs do |logs|
+            expect { client.bump_freshness }.to raise_error(CloudController::Errors::ApiError)
+
+            expect(
+              logs.read.find { |l| l['message'] == 'bump.freshness.response' }
+            ).to match(
+              hash_including(
+                'message' => 'bump.freshness.response',
+                'data' => {
+                  'error' => /error message/
+                }
+              )
+            )
           end
         end
       end
