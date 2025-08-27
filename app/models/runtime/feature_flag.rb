@@ -90,7 +90,7 @@ module VCAP::CloudController
       invalid_keys = feature_flag_overrides.keys.to_set - FeatureFlag::DEFAULT_FLAGS.keys.to_set
       raise "Invalid feature flag name(s): #{invalid_keys.to_a}" if invalid_keys.any?
 
-      invalid_values = feature_flag_overrides.select { |k,v| !v.in? [true,false] }
+      invalid_values = feature_flag_overrides.reject { |_, v| v.is_a?(TrueClass) || v.is_a?(FalseClass) }
       raise "Invalid feature flag value(s): #{invalid_values}" if invalid_values.any?
 
       feature_flag_overrides.each do |flag_name, flag_value|

@@ -294,28 +294,28 @@ module VCAP::CloudController
           feature_flag_overrides = { an_invalid_name: true }
           expect do
             FeatureFlag.override_default_flags(feature_flag_overrides)
-          end.to raise_error("Invalid feature flag name(s): [:an_invalid_name]")
+          end.to raise_error('Invalid feature flag name(s): [:an_invalid_name]')
         end
 
         it 'raises an error for a mix of valid and invalid names' do
           feature_flag_overrides = { diego_docker: true, an_invalid_name: true }
           expect do
             FeatureFlag.override_default_flags(feature_flag_overrides)
-          end.to raise_error("Invalid feature flag name(s): [:an_invalid_name]")
+          end.to raise_error('Invalid feature flag name(s): [:an_invalid_name]')
         end
 
         it 'raises an error for all invalid names' do
           feature_flag_overrides = { invalid_name1: true, invalid_name2: false }
           expect do
             FeatureFlag.override_default_flags(feature_flag_overrides)
-          end.to raise_error("Invalid feature flag name(s): [:invalid_name1, :invalid_name2]")
+          end.to raise_error('Invalid feature flag name(s): [:invalid_name1, :invalid_name2]')
         end
 
         it 'raises an error for invalid values' do
           feature_flag_overrides = { diego_docker: 'an invalid value', user_org_creation: false }
           expect do
             FeatureFlag.override_default_flags(feature_flag_overrides)
-          end.to raise_error("Invalid feature flag value(s): {:diego_docker=>\"an invalid value\"}")
+          end.to raise_error('Invalid feature flag value(s): {:diego_docker=>"an invalid value"}')
         end
       end
 
