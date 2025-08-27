@@ -28,7 +28,7 @@ module CloudFoundry
         request_id = env['HTTP_X_VCAP_REQUEST_ID'].presence || env['HTTP_X_REQUEST_ID'].presence
         return unless request_id
 
-        "#{request_id.gsub(/[^\w\-]/, '').first(255)}::#{SecureRandom.uuid}"
+        "#{request_id.gsub(/[^\w-]/, '').first(255)}::#{SecureRandom.uuid}"
       end
 
       def internal_request_id
