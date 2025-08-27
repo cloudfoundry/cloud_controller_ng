@@ -237,10 +237,6 @@ module VCAP::CloudController
           FeatureFlag.override_default_flags({ key => config_value })
         end
 
-        after do
-          FeatureFlag.find(name: key.to_s)&.destroy
-        end
-
         context 'and the value is not changed by admin' do
           it 'returns the config-set value' do
             expect(FeatureFlag.enabled?(key)).to be config_value
@@ -259,10 +255,6 @@ module VCAP::CloudController
             admin_override
           end
 
-          after do
-            admin_override.destroy
-          end
-
           it 'returns the admin-set value' do
             expect(FeatureFlag.enabled?(key)).to be admin_value
           end
@@ -274,10 +266,6 @@ module VCAP::CloudController
 
         before do
           FeatureFlag.make(name: key.to_s, enabled: admin_value)
-        end
-
-        after do
-          FeatureFlag.find(name: key.to_s)&.destroy
         end
 
         it 'overwrites the existing admin-set value' do
@@ -327,12 +315,6 @@ module VCAP::CloudController
           expect do
             FeatureFlag.override_default_flags({ diego_docker: !default_diego_docker_value, user_org_creation: !default_user_org_creation_value })
           end.not_to raise_error
-        end
-
-        after do
-          %i[diego_docker user_org_creation].each do |flag_key|
-            FeatureFlag.find(name: flag_key.to_s)&.destroy
-          end
         end
 
         it 'updates values' do
