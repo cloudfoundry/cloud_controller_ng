@@ -5,3 +5,5 @@ Security groups are collections of egress traffic rules that can be applied to t
 Security groups can either be applied globally or at the space-level.
 
 Security groups can only allow (whitelist) traffic. They cannot be used to disallow (blacklist) traffic.
+
+IPv6 security groups can be configured if `cc.enable_ipv6` is set to `true`.
