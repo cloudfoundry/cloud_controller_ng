@@ -40,7 +40,7 @@ class FeatureFlagsController < ApplicationController
     unprocessable!(message.errors.full_messages) unless message.valid?
 
     flag = VCAP::CloudController::FeatureFlagUpdate.new.update(flag, message)
-    add_warning_headers([OVERRIDE_IN_MANIFEST_MSG]) if VCAP::CloudController::FeatureFlag.config_overridden?(hashed_params[:name])
+    add_warning_headers([OVERRIDE_IN_MANIFEST_MSG]) if VCAP::CloudController::FeatureFlag.config_overridden?(hashed_params[:name].to_sym)
     render status: :ok, json: Presenters::V3::FeatureFlagPresenter.new(flag)
   rescue FeatureFlagUpdate::Error => e
     unprocessable!(e)

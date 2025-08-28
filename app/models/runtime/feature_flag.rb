@@ -111,7 +111,7 @@ module VCAP::CloudController
     end
 
     def self.config_overridden?(feature_flag_name)
-      @feature_flag_overrides && @feature_flag_overrides.keys.include?(feature_flag_name.to_sym)
+      @feature_flag_overrides && @feature_flag_overrides.keys.include?(feature_flag_name)
     end
 
     private_class_method :admin?

@@ -332,5 +332,33 @@ module VCAP::CloudController
         end
       end
     end
+
+    describe '.config_overridden?' do
+      context 'when overrides have not been set yet' do
+        before do
+          FeatureFlag.instance_variable_set(:@feature_flag_overrides, nil)
+        end
+
+        it 'returns nil' do
+          expect(FeatureFlag.config_overridden?(:diego_docker)).to be_nil
+        end
+      end
+
+      context 'when overrides have been set' do
+        let(:default_diego_docker_value) { FeatureFlag::DEFAULT_FLAGS[:diego_docker] }
+
+        before do
+          FeatureFlag.override_default_flags({ diego_docker: !default_diego_docker_value })
+        end
+
+        it 'return true for the overriden flag' do
+          expect(FeatureFlag.config_overridden?(:diego_docker)).to be true
+        end
+
+        it 'return false for other flags' do
+          expect(FeatureFlag.config_overridden?(:potato)).to be false
+        end
+      end
+    end
   end
 end
