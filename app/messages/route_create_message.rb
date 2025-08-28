@@ -25,7 +25,7 @@ module VCAP::CloudController
                 maximum: MAXIMUM_DOMAIN_LABEL_LENGTH
               },
               format: {
-                with: /\A([\w\-]+|\*)?\z/,
+                with: /\A([\w-]+|\*)?\z/,
                 message: 'must be either "*" or contain only alphanumeric characters, "_", or "-"'
               }
 

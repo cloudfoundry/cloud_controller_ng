@@ -45,7 +45,7 @@ module VCAP::CloudController
 
     validates :name,
               format: {
-                with: /\A^([^\.]{0,63}\.)*[^\.]{0,63}$\Z/,
+                with: /\A^([^.]{0,63}\.)*[^.]{0,63}$\Z/,
                 message: 'subdomains must each be at most 63 characters'
               }
 
@@ -74,7 +74,7 @@ module VCAP::CloudController
     private
 
     def alpha_numeric
-      return unless /[^a-z0-9\-\.]/i.match?(name.to_s)
+      return unless /[^a-z0-9\-.]/i.match?(name.to_s)
 
       errors.add(:name, 'must consist of alphanumeric characters and hyphens')
     end

@@ -2,7 +2,7 @@ module VCAP::CloudController
   class MetadataHelpers
     KEY_SEPARATOR = '/'.freeze
     REQUIREMENT_SPLITTER = /(?:\(.*?\)|[^,])+/
-    KEY_CHARACTERS = %r{[\w\-\.\_\/]+}
+    KEY_CHARACTERS = %r{[\w\-._/]+}
 
     IN_PATTERN = /\A(?<key>.*?) in \((?<values>.*)\)\z/                     # foo in (bar,baz)
     NOT_IN_PATTERN = /\A(?<key>.*?) notin \((?<values>.*)\)\z/              # funky notin (uptown,downtown)

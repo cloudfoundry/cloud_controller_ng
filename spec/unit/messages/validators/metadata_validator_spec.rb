@@ -82,7 +82,7 @@ module VCAP::CloudController::Validators
       describe 'invalid keys' do
         context 'when the key contains one invalid character' do
           # for the 32nd-126th characters, excluding the ones inside of the %r()
-          (32.chr..126.chr).to_a.reject { |c| %r{[\w\-\.\_\/\s]}.match(c) }.each do |c|
+          (32.chr..126.chr).to_a.reject { |c| %r{[\w\-._/\s]}.match(c) }.each do |c|
             it "is invalid for character '#{c}'" do
               metadata = {
                 labels: {
@@ -247,7 +247,7 @@ module VCAP::CloudController::Validators
 
       describe 'invalid labels value error' do
         context 'when the values contains one invalid character' do
-          (32.chr..126.chr).to_a.reject { |c| /[\w\-\.\_]/.match(c) }.each do |c|
+          (32.chr..126.chr).to_a.reject { |c| /[\w\-._]/.match(c) }.each do |c|
             it "is invalid for character '#{c}'" do
               metadata = {
                 labels: {

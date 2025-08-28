@@ -4,8 +4,8 @@ module UriUtils
   SSH_REGEX = %r{ \A (?:ssh://)? git@ .+? : .+? \.git \z }x
   GIT_REGEX = %r{ \A git:// .+? : .+? \.git \z }x
   DOCKER_INDEX_SERVER = 'docker.io'.freeze
-  DOCKER_PATH_REGEX = %r{\A[a-z0-9_\-\.\/]{2,255}\Z}
-  DOCKER_TAG_REGEX = /[a-zA-Z0-9_\-\.]{1,128}/
+  DOCKER_PATH_REGEX = %r{\A[a-z0-9_\-./]{2,255}\Z}
+  DOCKER_TAG_REGEX = /[a-zA-Z0-9_\-.]{1,128}/
   DOCKER_DIGEST_REGEX = /sha256:[a-z0-9]{64}/
   DOCKER_TAG_DIGEST_REGEX = Regexp.new("\\A(#{DOCKER_TAG_REGEX.source} |
 (#{DOCKER_TAG_REGEX.source}@#{DOCKER_DIGEST_REGEX.source}) | #{DOCKER_DIGEST_REGEX.source})\\Z", Regexp::EXTENDED)
@@ -36,7 +36,7 @@ module UriUtils
   end
 
   def self.is_uri_path?(candidate)
-    !!(candidate.is_a?(String) && candidate =~ %r{^(?:/|/([^\s/][\S]*)?)$})
+    !!(candidate.is_a?(String) && candidate =~ %r{^(?:/|/([^\s/]\S*)?)$})
   end
 
   # This escapes only the values in queries.

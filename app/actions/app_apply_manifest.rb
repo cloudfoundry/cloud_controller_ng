@@ -136,7 +136,7 @@ module VCAP::CloudController
 
       error!(prefix + ' Host cannot exceed 63 characters') if name.present? && name.length > 63
 
-      return if name&.match(/\A[\w\-]+\z/)
+      return if name&.match(/\A[\w-]+\z/)
 
       error!(prefix + ' Host must be either "*" or contain only alphanumeric characters, "_", or "-"')
     end
