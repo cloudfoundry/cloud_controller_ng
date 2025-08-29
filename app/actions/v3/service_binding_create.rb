@@ -53,7 +53,7 @@ module VCAP::CloudController
           raise LastOperationFailedState
         end
       rescue LastOperationFailedState => e
-        raise e
+        raise CloudController::Errors::ApiError.new_from_details('UnableToPerform', 'create', e.message)
       rescue StandardError => e
         save_failed_state(binding, e)
         raise e

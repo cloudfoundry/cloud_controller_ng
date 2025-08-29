@@ -113,7 +113,6 @@ module VCAP::CloudController
         end
       rescue StandardError => e
         save_failed_state(service_instance, e)
-
         raise e
       end
 
@@ -140,7 +139,7 @@ module VCAP::CloudController
           raise LastOperationFailedState.new(details[:last_operation][:description])
         end
       rescue LastOperationFailedState => e
-        raise e
+        raise CloudController::Errors::ApiError.new_from_details('UnableToPerform', 'update', e.message)
       rescue StandardError => e
         save_failed_state(service_instance, e)
         raise e
