@@ -173,6 +173,34 @@ module VCAP::CloudController
             let(:expected_credhub_arg) do
               { 'VCAP_PLATFORM_OPTIONS' => { 'credhub-uri' => credhub_url } }
             end
+
+            context 'when credhub url is present' do
+              context 'when the interpolation of service bindings is enabled' do
+                before do
+                  TestConfig.override(credential_references: { interpolate_service_bindings: true })
+                end
+
+                it 'sends the credhub_url in the environment variables' do
+                  result = builder.action
+                  actions = result.serial_action.actions
+
+                  expect(actions[1].run_action.env).to eq(bbs_env + expected_platform_options)
+                end
+              end
+
+              context 'when the interpolation of service bindings is disabled' do
+                before do
+                  TestConfig.override(credential_references: { interpolate_service_bindings: false })
+                end
+
+                it 'does not send the credhub_url in the environment variables' do
+                  result = builder.action
+                  actions = result.serial_action.actions
+
+                  expect(actions[1].run_action.env).to eq(bbs_env)
+                end
+              end
+            end
           end
 
           context 'when there is no buildpack cache' do
