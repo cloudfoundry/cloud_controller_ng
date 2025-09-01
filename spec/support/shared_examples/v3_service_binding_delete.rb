@@ -255,7 +255,7 @@ RSpec.shared_examples 'polling service binding deletion' do
       let(:state) { 'failed' }
 
       it 'updates the last operation' do
-        expect { action.poll(binding) }.to raise_error(VCAP::CloudController::V3::LastOperationFailedState)
+        expect { action.poll(binding) }.to raise_error(CloudController::Errors::ApiError)
 
         binding.reload
         expect(binding.last_operation.state).to eq('failed')
