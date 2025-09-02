@@ -44,8 +44,7 @@ module VCAP::CloudController
           sb_hash.delete(:credentials)&.each { |k, v| total_bytesize += add_file(service_binding_files, name, k.to_s, v) }
 
           # add the rest of the hash; already existing credential keys are overwritten
-          # VCAP_SERVICES attribute names are transformed (e.g. binding_guid -> binding-guid)
-          sb_hash.each { |k, v| total_bytesize += add_file(service_binding_files, name, transform_vcap_services_attribute(k.to_s), v) }
+          sb_hash.each { |k, v| total_bytesize += add_file(service_binding_files, name, k.to_s, v) }
 
           # add the type and provider
           label = sb_hash[:label]
@@ -105,14 +104,6 @@ module VCAP::CloudController
 
       def valid_file_name?(name)
         name.match?(file_naming_convention)
-      end
-
-      def transform_vcap_services_attribute(name)
-        if %w[binding_guid binding_name instance_guid instance_name syslog_drain_url volume_mounts].include?(name)
-          name.tr('_', '-')
-        else
-          name
-        end
       end
     end
   end
