@@ -609,6 +609,7 @@ DEPENDENCIES
   addressable
   allowy (>= 2.1.0)
   azure-storage-blob!
+  bundler (= 2.4.10)
   byebug
   cf-uaa-lib (~> 4.0.9)
   clockwork
@@ -686,6 +687,9 @@ DEPENDENCIES
   uri (~> 1.1)
   vmstat (~> 2.3)
   webmock (> 2.3.1)
+
+RUBY VERSION
+   ruby 3.2.6p234
 
 BUNDLED WITH
    2.4.19
