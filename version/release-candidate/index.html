@@ -19845,6 +19845,8 @@ and unweighted destinations for a route is not allowed.</p>
 <p>Security groups can either be applied globally or at the space-level.</p>
 
 <p>Security groups can only allow (whitelist) traffic. They cannot be used to disallow (blacklist) traffic.</p>
+
+<p>IPv6 security groups can be configured if <code class="prettyprint">cc.enable_ipv6</code> is set to <code class="prettyprint">true</code>.</p>
 <h3 id="the-security-group-object">The security group object</h3>
 <div class="highlight"><pre class="highlight plaintext"><code>Example Security Group object
 </code></pre></div><div class="highlight"><pre class="highlight json"><code><span class="p">{</span><span class="w">
@@ -19987,7 +19989,7 @@ and unweighted destinations for a route is not allowed.</p>
 <tr>
 <td><strong>destination</strong></td>
 <td><em>string</em></td>
-<td>The destination where the rule applies. Must be a singular valid CIDR, IP address, or IP address range unless <code class="prettyprint">cc.security_groups.enable_comma_delimited_destinations</code> is enabled. Then, the destination can be a comma-delimited string of CIDRs, IP addresses, or IP address ranges. Octets within destinations cannot contain leading zeros; eg. <code class="prettyprint">10.0.0.0/24</code> is valid, but <code class="prettyprint">010.00.000.0/24</code> is <em>not</em>. For <code class="prettyprint">icmp</code>, only IPv4 addresses are allowed and for <code class="prettyprint">icmpv6</code> only IPv6 addresses.</td>
+<td>The destination where the rule applies. Must be a singular valid CIDR, IP address, or IP address range unless <code class="prettyprint">cc.security_groups.enable_comma_delimited_destinations</code> is enabled. Then, the destination can be a comma-delimited string of CIDRs, IP addresses, or IP address ranges. Octets within IPv4 destinations cannot contain leading zeros; eg. <code class="prettyprint">10.0.0.0/24</code> is valid, but <code class="prettyprint">010.00.000.0/24</code> is <em>not</em>. For <code class="prettyprint">icmp</code>, only IPv4 addresses are allowed and for <code class="prettyprint">icmpv6</code> only IPv6 addresses.</td>
 <td>yes</td>
 <td>N/A</td>
 </tr>
