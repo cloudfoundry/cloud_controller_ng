@@ -30,7 +30,10 @@ module VCAP::CloudController
 
         ServiceBinding.new.tap do |new_binding|
           ServiceBinding.db.transaction do
-            validate_app_guid_name_uniqueness!(app.guid, message.name, service_instance.guid) # if max_bindings_per_app_service_instance == 1
+            # Lock the service instance to prevent multiple bindings being created when not allowed
+            service_instance.lock! if max_bindings_per_app_service_instance == 1
+
+            validate_app_guid_name_uniqueness!(app.guid, message.name, service_instance.guid)
 
             num_valid_bindings = 0
             existing_bindings = ServiceBinding.where(service_instance:, app:)

@@ -197,11 +197,6 @@ module VCAP::CloudController
                 action.precursor(service_instance, app:, message:)
               end.not_to raise_error
 
-              # Mock the validation for the second request to simulate the race condition and trigger a
-              # unique constraint violation on service_instance_guid + app_guid
-              allow_any_instance_of(ServiceBinding).to receive(:validate).and_return(true)
-              allow(ServiceBinding).to receive(:first).with(service_instance:, app:).and_return(nil)
-
               # Second request, should fail with correct error
               expect do
                 action.precursor(service_instance, app: app, message: message2)
@@ -231,6 +226,29 @@ module VCAP::CloudController
               ServiceCredentialBindingAppCreate::UnprocessableCreate,
               'The service instance and the app are in different spaces'
             )
+          end
+
+          context 'concurrent credential binding creation' do
+            let(:name) { nil }
+
+            # TODO: Once the unique constraints to allow multiple bindings are removed, this needs to be set to 1
+            # before { TestConfig.override(max_service_credential_bindings_per_app_service_instance: 1) }
+
+            def attempt_precursor
+              action.precursor(service_instance, app:, message:)
+              :ok
+            rescue StandardError => e
+              e
+            end
+
+            it 'allows only one binding when two creates run in parallel' do
+              results = [Thread.new { attempt_precursor }, Thread.new { attempt_precursor }].map(&:value)
+
+              expect(ServiceBinding.where(app:, service_instance:).count).to eq(1)
+              expect(results.count(:ok)).to eq(1)
+              expect(results.count { |r| r.is_a?(VCAP::CloudController::V3::ServiceBindingCreate::UnprocessableCreate) }).to eq(1)
+              expect(results.grep(Exception).map(&:message)).to include('The app is already bound to the service instance')
+            end
           end
 
           context 'when multiple bindings are allowed' do
