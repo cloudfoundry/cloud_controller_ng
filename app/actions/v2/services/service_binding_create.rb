@@ -29,6 +29,7 @@ module VCAP::CloudController
       raise SpaceMismatch unless bindable_in_space?(service_instance, app.space)
 
       raise_if_instance_locked(service_instance)
+      raise_if_binding_already_exists(service_instance, app)
 
       binding = ServiceBinding.new(
         service_instance: service_instance,
@@ -80,6 +81,12 @@ module VCAP::CloudController
 
     def bindable_in_space?(service_instance, app_space)
       service_instance.space == app_space || service_instance.shared_spaces.include?(app_space)
+    end
+
+    def raise_if_binding_already_exists(service_instance, app)
+      return unless ServiceBinding.where(service_instance:, app:).any?
+
+      raise CloudController::Errors::ApiError.new_from_details('ServiceBindingAppServiceTaken', 'The app is already bound to the service.')
     end
 
     def logger

@@ -1274,18 +1274,22 @@ RSpec.describe 'v3 service credential bindings' do
                                                                }))
         end
 
-        it 'returns 422 when the binding already exists' do
-          api_call.call admin_headers
-          expect(last_response.status).to eq(201).or eq(202)
+        context 'when only one binding per app and service instance is allowed' do
+          before do
+            it 'returns 422 when the binding already exists' do
+              api_call.call admin_headers
+              expect(last_response.status).to eq(201).or eq(202)
 
-          api_call.call admin_headers
+              api_call.call admin_headers
 
-          expect(last_response).to have_status_code(422)
-          expect(parsed_response['errors']).to include(include({
-                                                                 'detail' => include('The app is already bound to the service instance'),
-                                                                 'title' => 'CF-UnprocessableEntity',
-                                                                 'code' => 10_008
-                                                               }))
+              expect(last_response).to have_status_code(422)
+              expect(parsed_response['errors']).to include(include({
+                                                                     'detail' => include('The app is already bound to the service instance'),
+                                                                     'title' => 'CF-UnprocessableEntity',
+                                                                     'code' => 10_008
+                                                                   }))
+            end
+          end
         end
 
         context 'when the service instance does not exist' do

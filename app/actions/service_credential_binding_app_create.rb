@@ -19,10 +19,8 @@ module VCAP::CloudController
 
       def precursor(service_instance, message:, app: nil, volume_mount_services_enabled: false)
         validate_service_instance!(app, service_instance, volume_mount_services_enabled)
-        binding = ServiceBinding.first(service_instance:, app:)
-        validate_binding!(binding)
 
-        binding_details = {
+        new_binding_details = {
           service_instance: service_instance,
           name: message.name,
           app: app,
@@ -30,26 +28,38 @@ module VCAP::CloudController
           credentials: {}
         }
 
-        ServiceBinding.new.tap do |b|
+        ServiceBinding.new.tap do |new_binding|
           ServiceBinding.db.transaction do
-            if binding
-              binding.destroy
-              VCAP::Services::ServiceBrokers::V2::OrphanMitigator.new.cleanup_failed_bind(binding)
+            # Lock the service instance to prevent multiple bindings being created when not allowed
+            service_instance.lock! if max_bindings_per_app_service_instance == 1
+
+            validate_app_guid_name_uniqueness!(app.guid, message.name, service_instance.guid)
+
+            num_valid_bindings = 0
+            existing_bindings = ServiceBinding.where(service_instance:, app:)
+            existing_bindings.each do |binding|
+              binding.lock!
+
+              if binding.create_failed?
+                binding.destroy
+                VCAP::Services::ServiceBrokers::V2::OrphanMitigator.new.cleanup_failed_bind(binding)
+                next
+              end
+
+              validate_binding!(binding, desired_binding_name: message.name)
+              num_valid_bindings += 1
             end
-            b.save_with_attributes_and_new_operation(
-              binding_details,
+
+            validate_number_of_bindings!(num_valid_bindings)
+
+            new_binding.save_with_attributes_and_new_operation(
+              new_binding_details,
               CREATE_INITIAL_OPERATION
             )
-            MetadataUpdate.update(b, message)
+            MetadataUpdate.update(new_binding, message)
           end
         end
       rescue Sequel::ValidationFailed => e
-        if e.message.include?('app_guid and name unique')
-          raise UnprocessableCreate.new("The binding name is invalid. App binding names must be unique. The app already has a binding with name '#{message.name}'.")
-        elsif e.message.include?('service_instance_guid and app_guid unique')
-          raise UnprocessableCreate.new('The app is already bound to the service instance.')
-        end
-
         raise UnprocessableCreate.new(e.full_message)
       end
 
@@ -66,11 +76,25 @@ module VCAP::CloudController
         operation_in_progress! if service_instance.operation_in_progress?
       end
 
-      def validate_binding!(binding)
-        return unless binding
+      def validate_binding!(binding, desired_binding_name:)
+        already_bound! if (max_bindings_per_app_service_instance == 1) && (binding.create_succeeded? || binding.create_in_progress?)
+        binding_in_progress!(binding.guid) if binding.create_in_progress?
+        incomplete_deletion! if binding.delete_in_progress? || binding.delete_failed?
 
-        already_bound! if binding.create_succeeded? || binding.create_in_progress?
-        incomplete_deletion! if binding.delete_failed? || binding.delete_in_progress?
+        name_cannot_be_changed! if binding.name != desired_binding_name
+      end
+
+      def validate_number_of_bindings!(number_of_bindings)
+        too_many_bindings! if number_of_bindings >= max_bindings_per_app_service_instance
+      end
+
+      def validate_app_guid_name_uniqueness!(target_app_guid, desired_binding_name, target_service_instance_guid)
+        return if desired_binding_name.nil?
+
+        dataset = ServiceBinding.where(app_guid: target_app_guid, name: desired_binding_name)
+
+        name_uniqueness_violation!(desired_binding_name) if max_bindings_per_app_service_instance == 1 && dataset.first
+        name_uniqueness_violation!(desired_binding_name) if dataset.exclude(service_instance_guid: target_service_instance_guid).first
       end
 
       def permitted_binding_attributes
@@ -87,12 +111,42 @@ module VCAP::CloudController
         )
       end
 
+      def max_bindings_per_app_service_instance
+        1
+        # NOTE: This is hard-coded to 1 for now to preserve the old uniqueness behavior.
+        # TODO: Once the DB migration that drops the unique constraints for service bindings has been released,
+        #       this should be switched to read from config:
+        #       VCAP::CloudController::Config.config.get(:max_service_credential_bindings_per_app_service_instance)
+        # TODO: Also remove skips in related specs.
+      end
+
       def app_is_required!
         raise UnprocessableCreate.new('No app was specified')
       end
 
       def not_supported!
         raise Unimplemented.new('Cannot create credential bindings for managed service instances')
+      end
+
+      def binding_in_progress!(binding_guid)
+        raise UnprocessableCreate.new("There is already a binding in progress for this service instance and app (binding guid: #{binding_guid})")
+      end
+
+      def too_many_bindings!
+        raise UnprocessableCreate.new(
+          "The app has too many bindings to this service instance (limit: #{max_bindings_per_app_service_instance}). Consider deleting existing/orphaned bindings."
+        )
+      end
+
+      def name_cannot_be_changed!
+        raise UnprocessableCreate.new('The binding name cannot be changed for the same app and service instance')
+      end
+
+      def name_uniqueness_violation!(name)
+        msg = 'The binding name is invalid. Binding names must be unique for a given service instance and app.'
+        msg += " The app already has a binding with name '#{name}'." unless name.nil? || name.empty?
+
+        raise UnprocessableCreate.new(msg)
       end
 
       def already_bound!
