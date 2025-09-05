@@ -5,6 +5,7 @@ require 'cloud_controller/blobstore/error_handling_client'
 require 'cloud_controller/blobstore/webdav/dav_client'
 require 'cloud_controller/blobstore/safe_delete_client'
 require 'cloud_controller/blobstore/storage_cli/storage_cli_client'
+require 'cloud_controller/blobstore/storage_cli/azure_storage_cli_client'
 require 'google/apis/errors'
 
 module CloudController
