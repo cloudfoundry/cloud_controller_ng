@@ -5,12 +5,14 @@ module VCAP::CloudController
     class RoleDeleteError < StandardError
     end
 
-    def initialize(user_audit_info, role_owner)
+    def initialize(user_audit_info, role_owner, username)
       @user_audit_info = user_audit_info
       @role_owner = role_owner
+      @username = username
     end
 
     def delete(roles)
+      @role_owner.username = @username if @username.present?
       roles.each do |role|
         Role.db.transaction do
           record_event(role)

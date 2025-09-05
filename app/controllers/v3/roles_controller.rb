@@ -84,7 +84,7 @@ class RolesController < ApplicationController
     end
 
     role_owner = fetch_role_owner_with_name(role)
-    delete_action = RoleDeleteAction.new(user_audit_info, role_owner)
+    delete_action = RoleDeleteAction.new(user_audit_info, role_owner, role_owner.username)
     deletion_job = VCAP::CloudController::Jobs::DeleteActionJob.new(Role, role.guid, delete_action)
     pollable_job = Jobs::Enqueuer.new(queue: Jobs::Queues.generic).enqueue_pollable(deletion_job)
 
