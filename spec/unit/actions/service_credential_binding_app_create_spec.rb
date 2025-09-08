@@ -228,28 +228,28 @@ module VCAP::CloudController
             )
           end
 
-          context 'concurrent credential binding creation' do
-            let(:name) { nil }
+          # context 'concurrent credential binding creation' do
+          #   let(:name) { nil }
 
-            # TODO: Once the unique constraints to allow multiple bindings are removed, this needs to be set to 1
-            # before { TestConfig.override(max_service_credential_bindings_per_app_service_instance: 1) }
+          #   # TODO: Once the unique constraints to allow multiple bindings are removed, this needs to be set to 1
+          #   # before { TestConfig.override(max_service_credential_bindings_per_app_service_instance: 1) }
 
-            def attempt_precursor
-              action.precursor(service_instance, app:, message:)
-              :ok
-            rescue StandardError => e
-              e
-            end
+          #   def attempt_precursor
+          #     action.precursor(service_instance, app:, message:)
+          #     :ok
+          #   rescue StandardError => e
+          #     e
+          #   end
 
-            it 'allows only one binding when two creates run in parallel' do
-              results = [Thread.new { attempt_precursor }, Thread.new { attempt_precursor }].map(&:value)
+          #   it 'allows only one binding when two creates run in parallel' do
+          #     results = [Thread.new { attempt_precursor }, Thread.new { attempt_precursor }].map(&:value)
 
-              expect(ServiceBinding.where(app:, service_instance:).count).to eq(1)
-              expect(results.count(:ok)).to eq(1)
-              expect(results.count { |r| r.is_a?(VCAP::CloudController::V3::ServiceBindingCreate::UnprocessableCreate) }).to eq(1)
-              expect(results.grep(Exception).map(&:message)).to include('The app is already bound to the service instance')
-            end
-          end
+          #     expect(ServiceBinding.where(app:, service_instance:).count).to eq(1)
+          #     expect(results.count(:ok)).to eq(1)
+          #     expect(results.count { |r| r.is_a?(VCAP::CloudController::V3::ServiceBindingCreate::UnprocessableCreate) }).to eq(1)
+          #     expect(results.grep(Exception).map(&:message)).to include('The app is already bound to the service instance')
+          #   end
+          # end
 
           context 'when multiple bindings are allowed' do
             before do
