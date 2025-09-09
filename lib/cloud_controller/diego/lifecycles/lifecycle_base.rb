@@ -17,7 +17,13 @@ module VCAP::CloudController
     delegate :valid?, :errors, to: :validator
 
     def staging_stack
-      requested_stack || app_stack || VCAP::CloudController::Stack.default.name
+      stack = requested_stack || app_stack || VCAP::CloudController::Stack.default.name
+      FeatureFlag.raise_unless_enabled!(:diego_custom_stacks) if stack.is_a?(String) && stack.include?('docker://')
+      stack
+    end
+
+    def credentials
+      staging_message.lifecycle_data[:credentials]
     end
 
     private

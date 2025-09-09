@@ -40,7 +40,14 @@ module VCAP::CloudController
     def credentials_content
       return unless credentials.is_a?(Hash)
 
-      errors.add(:credentials, 'credentials value must be a hash') if credentials.any? { |_, v| !v.is_a?(Hash) }
+      credentials.each do |registry, creds|
+        unless creds.is_a?(Hash)
+          errors.add(:credentials, "for registry '#{registry}' must be a hash")
+          next
+        end
+
+        errors.add(:credentials, "for registry '#{registry}' must include 'username' and 'password'") unless creds.key?('username') && creds.key?('password')
+      end
     end
   end
 end
