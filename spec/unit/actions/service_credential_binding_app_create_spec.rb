@@ -234,20 +234,19 @@ module VCAP::CloudController
             # TODO: Once the unique constraints to allow multiple bindings are removed, this needs to be set to 1
             # before { TestConfig.override(max_service_credential_bindings_per_app_service_instance: 1) }
 
-            def attempt_precursor
-              action.precursor(service_instance, app:, message:)
-              :ok
-            rescue StandardError => e
-              e
-            end
-
             it 'allows only one binding when two creates run in parallel' do
-              results = [Thread.new { attempt_precursor }, Thread.new { attempt_precursor }].map(&:value)
+              # This test simulates a race condition for concurrent binding creation using a spy on `service_instance`.
+              # We mock that a second binding is created after the first one acquires a lock and expect an `UnprocessableCreate` error.
+              allow(service_instance).to receive(:lock!).and_wrap_original do |m, *args, &block|
+                m.call(*args, &block)
+                ServiceBinding.make(service_instance:, app:)
+              end
 
-              expect(ServiceBinding.where(app:, service_instance:).count).to eq(1)
-              expect(results.count(:ok)).to eq(1)
-              expect(results.count { |r| r.is_a?(VCAP::CloudController::V3::ServiceBindingCreate::UnprocessableCreate) }).to eq(1)
-              expect(results.grep(Exception).map(&:message)).to include('The app is already bound to the service instance')
+              expect do
+                action.precursor(service_instance, app:, message:)
+              end.to raise_error(ServiceCredentialBindingAppCreate::UnprocessableCreate, 'The app is already bound to the service instance')
+
+              expect(service_instance).to have_received(:lock!)
             end
           end
 
