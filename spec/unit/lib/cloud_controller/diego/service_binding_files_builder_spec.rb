@@ -12,9 +12,9 @@ module VCAP::CloudController::Diego
 
   RSpec.shared_examples 'mapping of binding metadata' do |name|
     it 'maps service binding metadata attributes to files' do
-      expect(service_binding_files.find { |f| f.path == "#{directory}/binding-guid" }).to have_attributes(content: binding.guid)
+      expect(service_binding_files.find { |f| f.path == "#{directory}/binding_guid" }).to have_attributes(content: binding.guid)
       expect(service_binding_files.find { |f| f.path == "#{directory}/name" }).to have_attributes(content: name || 'binding-name')
-      expect(service_binding_files.find { |f| f.path == "#{directory}/binding-name" }).to have_attributes(content: 'binding-name') if name.nil?
+      expect(service_binding_files.find { |f| f.path == "#{directory}/binding_name" }).to have_attributes(content: 'binding-name') if name.nil?
     end
 
     context 'when there are multiple bindings with the same name for the same app and service instance' do
@@ -48,8 +48,8 @@ module VCAP::CloudController::Diego
 
   RSpec.shared_examples 'mapping of instance metadata' do |instance_name|
     it 'maps service instance metadata attributes to files' do
-      expect(service_binding_files.find { |f| f.path == "#{directory}/instance-guid" }).to have_attributes(content: instance.guid)
-      expect(service_binding_files.find { |f| f.path == "#{directory}/instance-name" }).to have_attributes(content: instance_name || 'instance-name')
+      expect(service_binding_files.find { |f| f.path == "#{directory}/instance_guid" }).to have_attributes(content: instance.guid)
+      expect(service_binding_files.find { |f| f.path == "#{directory}/instance_name" }).to have_attributes(content: instance_name || 'instance-name')
     end
   end
 
@@ -166,7 +166,7 @@ module VCAP::CloudController::Diego
             expect(service_binding_files).not_to include(have_attributes(path: 'binding-name/volume_mounts'))
           end
 
-          include_examples 'expected files', %w[type provider label binding-guid name binding-name instance-guid instance-name plan tags string number boolean array hash]
+          include_examples 'expected files', %w[type provider label binding_guid name binding_name instance_guid instance_name plan tags string number boolean array hash]
 
           context 'when binding_name is nil' do
             let(:binding_name) { nil }
@@ -179,14 +179,14 @@ module VCAP::CloudController::Diego
             include_examples 'mapping of tags'
             include_examples 'mapping of credentials'
 
-            include_examples 'expected files', %w[type provider label binding-guid name instance-guid instance-name plan tags string number boolean array hash]
+            include_examples 'expected files', %w[type provider label binding_guid name instance_guid instance_name plan tags string number boolean array hash]
           end
 
           context 'when syslog_drain_url is set' do
             let(:syslog_drain_url) { 'https://syslog.drain' }
 
             it 'maps the attribute to a file' do
-              expect(service_binding_files.find { |f| f.path == 'binding-name/syslog-drain-url' }).to have_attributes(content: 'https://syslog.drain')
+              expect(service_binding_files.find { |f| f.path == 'binding-name/syslog_drain_url' }).to have_attributes(content: 'https://syslog.drain')
             end
 
             include_examples 'mapping of type and provider'
@@ -197,7 +197,7 @@ module VCAP::CloudController::Diego
             include_examples 'mapping of credentials'
 
             include_examples 'expected files',
-                             %w[type provider label binding-guid name binding-name instance-guid instance-name plan tags string number boolean array hash syslog-drain-url]
+                             %w[type provider label binding_guid name binding_name instance_guid instance_name plan tags string number boolean array hash syslog_drain_url]
           end
 
           context 'when volume_mounts is set' do
@@ -217,7 +217,7 @@ module VCAP::CloudController::Diego
 
             it 'maps the attribute to a file' do
               expect(service_binding_files.find do |f|
-                f.path == 'binding-name/volume-mounts'
+                f.path == 'binding-name/volume_mounts'
               end).to have_attributes(content: '[{"container_dir":"dir1","device_type":"type1","mode":"mode1"},{"container_dir":"dir2","device_type":"type2","mode":"mode2"}]')
             end
 
@@ -229,7 +229,7 @@ module VCAP::CloudController::Diego
             include_examples 'mapping of credentials'
 
             include_examples 'expected files',
-                             %w[type provider label binding-guid name binding-name instance-guid instance-name plan tags string number boolean array hash volume-mounts]
+                             %w[type provider label binding_guid name binding_name instance_guid instance_name plan tags string number boolean array hash volume_mounts]
           end
 
           context 'when the instance is user-provided' do
@@ -241,7 +241,7 @@ module VCAP::CloudController::Diego
             include_examples 'mapping of tags', '["an-upsi-tag","another-upsi-tag"]'
             include_examples 'mapping of credentials'
 
-            include_examples 'expected files', %w[type provider label binding-guid name binding-name instance-guid instance-name tags string number boolean array hash]
+            include_examples 'expected files', %w[type provider label binding_guid name binding_name instance_guid instance_name tags string number boolean array hash]
           end
 
           context 'when there are duplicate keys at different levels' do
@@ -254,7 +254,7 @@ module VCAP::CloudController::Diego
             include_examples 'mapping of tags'
             include_examples 'mapping of credentials', { credentials: '{"password":"secret"}' }
 
-            include_examples 'expected files', %w[type provider label binding-guid name binding-name instance-guid instance-name plan tags credentials]
+            include_examples 'expected files', %w[type provider label binding_guid name binding_name instance_guid instance_name plan tags credentials]
           end
 
           context 'when there are duplicate binding names' do
