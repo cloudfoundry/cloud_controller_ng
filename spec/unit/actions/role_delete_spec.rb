@@ -12,7 +12,7 @@ module VCAP::CloudController
       allow(user_with_role).to receive(:username).and_return('kiwi')
     end
 
-    subject { RoleDeleteAction.new(user_audit_info, user_with_role) }
+    subject { RoleDeleteAction.new(user_audit_info, user_with_role, user_with_role.username) }
 
     describe '#delete' do
       shared_examples 'deletion' do |opts|
