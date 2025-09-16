@@ -89,7 +89,14 @@ RSpec.describe CloudController::DelayedWorker do
   describe '#start_working' do
     let(:cc_delayed_worker) { CloudController::DelayedWorker.new(options) }
 
-    before { allow(delayed_worker).to receive(:name).and_return(options[:name]) }
+    before do
+      @steno_config_backup = Steno.config
+      allow(delayed_worker).to receive(:name).and_return(options[:name])
+    end
+
+    after do
+      Steno.init(@steno_config_backup)
+    end
 
     it 'sets up the environment and starts the worker' do
       expect(environment).to receive(:setup_environment).with(nil)
