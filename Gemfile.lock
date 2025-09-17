@@ -444,7 +444,7 @@ GEM
     retriable (3.1.2)
     reverse_markdown (3.0.0)
       nokogiri
-    rexml (3.4.1)
+    rexml (3.4.2)
     roodi (5.0.0)
       ruby_parser (~> 3.2, >= 3.2.2)
     rspec (3.13.1)
