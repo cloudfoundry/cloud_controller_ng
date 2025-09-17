@@ -3,9 +3,9 @@ require 'presenters/system_environment/service_binding_presenter'
 
 class SystemEnvPresenter
   def initialize(app_or_process)
+    @app_or_process = app_or_process
     @service_binding_k8s_enabled = app_or_process.service_binding_k8s_enabled
     @file_based_vcap_services_enabled = app_or_process.file_based_vcap_services_enabled
-    @service_bindings = app_or_process.service_bindings
   end
 
   def system_env
@@ -22,14 +22,8 @@ class SystemEnvPresenter
   private
 
   def service_binding_env_variables
-    latest_bindings = @service_bindings.
-                      select(&:create_succeeded?).
-                      group_by(&:service_instance_guid).
-                      values.
-                      map { |list| list.max_by(&:created_at) }
-
     services_hash = {}
-    latest_bindings.each do |service_binding|
+    @app_or_process.service_bindings_dataset.active_per_instance.each do |service_binding|
       service_name = service_binding_label(service_binding)
       services_hash[service_name.to_sym] ||= []
       services_hash[service_name.to_sym] << service_binding_env_values(service_binding)

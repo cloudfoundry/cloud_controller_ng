@@ -1,5 +1,9 @@
 module VCAP::CloudController
   module ServiceOperationMixin
+    CREATE = 'create'.freeze
+    UPDATE = 'update'.freeze
+    DELETE = 'delete'.freeze
+
     INITIAL = 'initial'.freeze
     IN_PROGRESS = 'in progress'.freeze
     SUCCEEDED = 'succeeded'.freeze
@@ -56,15 +60,15 @@ module VCAP::CloudController
     end
 
     def create?
-      last_operation&.type == 'create'
+      last_operation&.type == CREATE
     end
 
     def update?
-      last_operation&.type == 'update'
+      last_operation&.type == UPDATE
     end
 
     def delete?
-      last_operation&.type == 'delete'
+      last_operation&.type == DELETE
     end
 
     def initial?
@@ -81,6 +85,20 @@ module VCAP::CloudController
 
     def failed?
       last_operation&.state == FAILED
+    end
+  end
+
+  module ServiceOperationDatasetMixin
+    def create_succeeded
+      last_operation_table = Sequel[last_operation_association]
+
+      no_operation = Sequel.expr(last_operation_table[:id] => nil)
+      create_and_succeeded = Sequel.expr(last_operation_table[:type] => ServiceOperationMixin::CREATE) &
+                             Sequel.expr(last_operation_table[:state] => ServiceOperationMixin::SUCCEEDED)
+
+      association_left_join(last_operation_association).
+        where(no_operation | create_and_succeeded).
+        select_all(first_source_alias)
     end
   end
 end
