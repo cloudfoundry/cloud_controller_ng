@@ -17,6 +17,10 @@ module VCAP::CloudController
 
         private
 
+        def lifecycle
+          staging_details.lifecycle
+        end
+
         def stage_action
           staging_details_env = BbsEnvironmentBuilder.build(staging_details.environment_variables)
 
@@ -24,9 +28,9 @@ module VCAP::CloudController
             path: '/tmp/lifecycle/builder',
             user: 'vcap',
             args: [
-              "-buildpackOrder=#{lifecycle_data[:buildpacks].pluck(:key).join(',')}",
+              "-buildpackOrder=#{lifecycle.buildpack_infos.map(&:key).join(',')}",
               "-skipCertVerify=#{config.get(:skip_cert_verify)}",
-              "-skipDetect=#{skip_detect?}",
+              "-skipDetect=#{lifecycle.skip_detect?}",
               '-buildDir=/tmp/app',
               '-outputDroplet=/tmp/droplet',
               '-outputMetadata=/tmp/result.json',
