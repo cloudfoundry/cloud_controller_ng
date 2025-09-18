@@ -104,7 +104,7 @@ module VCAP::CloudController
     end
 
     def app_update_message
-      @app_update_message ||= AppUpdateMessage.new(app_lifecycle_hash)
+      @app_update_message ||= AppUpdateMessage.new(lifecycle: lifecycle_message)
     end
 
     def app_update_environment_variables_message

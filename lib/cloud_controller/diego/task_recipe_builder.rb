@@ -91,10 +91,34 @@ module VCAP::CloudController
               "app:#{staging_details.package.app_guid}"
             ]
           ),
-          image_username: staging_details.package.docker_username,
-          image_password: staging_details.package.docker_password,
+          image_username: image_username(staging_details),
+          image_password: image_password(staging_details),
           volume_mounted_files: ServiceBindingFilesBuilder.build(staging_details.package.app)
         }.compact)
+      end
+
+      def image_username(staging_details)
+        return staging_details.package.docker_username if staging_details.package.docker_username.present?
+        return unless staging_details.lifecycle.respond_to?(:credentials) && staging_details.lifecycle.credentials.present?
+
+        cred = get_credentials_for_stack(staging_details)
+        cred ? cred['user'] : nil
+      end
+
+      def image_password(staging_details)
+        return staging_details.package.docker_password if staging_details.package.docker_password.present?
+        return unless staging_details.lifecycle.respond_to?(:credentials) && staging_details.lifecycle.credentials.present?
+
+        cred = get_credentials_for_stack(staging_details)
+        cred ? cred['password'] : nil
+      end
+
+      def get_credentials_for_stack(staging_details)
+        return nil unless staging_details.lifecycle.staging_stack.include?('docker://')
+
+        stack_uri = URI.parse(staging_details.lifecycle.staging_stack)
+        host = stack_uri.host
+        staging_details.lifecycle.credentials[host]
       end
 
       private
