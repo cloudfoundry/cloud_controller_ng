@@ -112,7 +112,8 @@ module VCAP::CloudController
       end
 
       def max_bindings_per_app_service_instance
-        1
+        # TODO: revert !!!
+        2
         # NOTE: This is hard-coded to 1 for now to preserve the old uniqueness behavior.
         # TODO: Once the DB migration that drops the unique constraints for service bindings has been released,
         #       this should be switched to read from config:

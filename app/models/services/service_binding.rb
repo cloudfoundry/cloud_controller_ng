@@ -130,5 +130,26 @@ module VCAP::CloudController
         service_binding_operation(reload: true)
       end
     end
+
+    dataset_module ServiceOperationDatasetMixin
+
+    dataset_module do
+      def last_operation_association
+        :service_binding_operation
+      end
+
+      # 'active' means latest in state 'create succeeded' (or without any operation)
+      def active_per_instance
+        create_succeeded.
+          from_self.
+          select_append do
+            row_number.function.over(
+              partition: :service_instance_guid,
+              order: [Sequel.desc(:created_at), Sequel.desc(:id)]
+            ).as(:_rn)
+          end.
+          from_self.where(_rn: 1)
+      end
+    end
   end
 end
