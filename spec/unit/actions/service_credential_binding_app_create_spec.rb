@@ -194,9 +194,6 @@ module VCAP::CloudController
             let(:binding_2) { ServiceBinding.make(service_instance:, app:, name:) }
 
             before do
-              # TODO: Remove skip when the service bindings unique constraints are removed
-              skip 'this test can be enabled when the service bindings unique constraints are removed and max_bindings_per_app_service_instance can be configured'
-
               TestConfig.override(max_service_credential_bindings_per_app_service_instance: 3)
               binding_1.save_with_attributes_and_new_operation({}, { type: 'create', state: 'succeeded' })
               binding_2.save_with_attributes_and_new_operation({}, { type: 'create', state: 'succeeded' })
