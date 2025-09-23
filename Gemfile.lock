@@ -340,7 +340,8 @@ GEM
     mustermann (3.0.0)
       ruby2_keywords (~> 0.0.1)
     mutex_m (0.3.0)
-    mysql2 (0.5.6)
+    mysql2 (0.5.7)
+      bigdecimal
     net-ssh (7.3.0)
     netaddr (2.0.6)
     netrc (0.11.0)
@@ -663,7 +664,7 @@ DEPENDENCIES
   mime-types (~> 3.7)
   mock_redis
   multipart-parser
-  mysql2 (~> 0.5.6)
+  mysql2 (~> 0.5.7)
   net-ssh
   netaddr (>= 2.0.4)
   newrelic_rpm
