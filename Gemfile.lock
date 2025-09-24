@@ -628,7 +628,7 @@ PLATFORMS
   x86_64-linux
 
 DEPENDENCIES
-  actionpack (~> 8.0.2)
+  actionpack (~> 8.0.3)
   actionview (~> 8.0.1)
   activemodel (~> 8.0.2)
   addressable

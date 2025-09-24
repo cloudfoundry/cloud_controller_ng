@@ -45,7 +45,7 @@ gem 'uri', '~> 1.0'
 gem 'vmstat', '~> 2.3'
 
 # Rails Components
-gem 'actionpack', '~> 8.0.2'
+gem 'actionpack', '~> 8.0.3'
 gem 'actionview', '~> 8.0.1'
 gem 'activemodel', '~> 8.0.2'
 gem 'railties', '~> 8.0.3'
