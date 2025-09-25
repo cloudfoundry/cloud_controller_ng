@@ -7,8 +7,8 @@ module VCAP::CloudController
       allowed: {
         'space' => %w[name guid],
         'space.organization' => %w[name guid],
-        'service_plan' => %w[name guid],
-        'service_plan.service_offering' => %w[name guid description tags documentation_url],
+        'service_plan' => %w[name guid broker_catalog.id],
+        'service_plan.service_offering' => %w[name guid description tags documentation_url broker_catalog.id],
         'service_plan.service_offering.service_broker' => %w[name guid]
       }
     }
