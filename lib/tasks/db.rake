@@ -318,7 +318,7 @@ namespace :db do
         host = "-h #{uri.host}"
         port = "-P #{uri.port}" if uri.port
         user = "-u #{uri.user}" if uri.user
-        pass = "--password=#{uri.password}" if uri.password
+        pass = "--password=#{uri.password || ''}"
       end
     end
     [host, port, user, pass, passenv]
