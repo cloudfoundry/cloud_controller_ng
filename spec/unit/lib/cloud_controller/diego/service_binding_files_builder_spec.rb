@@ -39,9 +39,19 @@ module VCAP::CloudController::Diego
       end
 
       it 'uses the most recent binding' do
-        expect(service_binding_files.find { |f| f.path == "#{directory}/binding-guid" }).to have_attributes(content: newer_binding.guid)
+        expect(service_binding_files.find { |f| f.path == "#{directory}/binding_guid" }).to have_attributes(content: newer_binding.guid)
         expect(service_binding_files.find { |f| f.path == "#{directory}/name" }).to have_attributes(content: name || 'binding-name')
-        expect(service_binding_files.find { |f| f.path == "#{directory}/binding-name" }).to have_attributes(content: 'binding-name') if name.nil?
+        expect(service_binding_files.find { |f| f.path == "#{directory}/binding_name" }).to have_attributes(content: 'binding-name') if name.nil?
+      end
+
+      context 'when the bindings have the same created_at timestamp' do
+        let(:newer_binding_created_at) { binding_created_at }
+
+        it 'uses the most recent binding determined by highest id' do
+          expect(service_binding_files.find { |f| f.path == "#{directory}/binding_guid" }).to have_attributes(content: newer_binding.guid)
+          expect(service_binding_files.find { |f| f.path == "#{directory}/name" }).to have_attributes(content: name || 'binding-name')
+          expect(service_binding_files.find { |f| f.path == "#{directory}/binding_name" }).to have_attributes(content: 'binding-name') if name.nil?
+        end
       end
     end
   end
