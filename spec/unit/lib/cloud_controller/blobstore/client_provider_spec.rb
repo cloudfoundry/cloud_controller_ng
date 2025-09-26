@@ -129,6 +129,7 @@ module CloudController
       context 'when storage-cli is requested' do
         let(:blobstore_type) { 'storage-cli' }
         let(:directory_key) { 'some-bucket' }
+        let(:resource_type) { 'some-resource-type' }
         let(:root_dir) { 'some-root-dir' }
         let(:storage_cli_client_mock) { class_double(CloudController::Blobstore::StorageCliClient) }
 
@@ -138,8 +139,8 @@ module CloudController
 
         it 'provides a storage-cli client' do
           allow(StorageCliClient).to receive(:build).and_return(storage_cli_client_mock)
-          ClientProvider.provide(options:, directory_key:, root_dir:)
-          expect(StorageCliClient).to have_received(:build).with(connection_config: {}, directory_key: directory_key, root_dir: root_dir, min_size: 100, max_size: 1000)
+          ClientProvider.provide(options:, directory_key:, root_dir:, resource_type:)
+          expect(StorageCliClient).to have_received(:build).with(connection_config: {}, directory_key: directory_key, resource_type: resource_type, root_dir: root_dir, min_size: 100, max_size: 1000)
         end
 
         it 'raises an error if connection_config is not provided' do

@@ -320,6 +320,12 @@ directories:
   diagnostics: /tmp
 
 stacks_file: config/stacks.yml
+
+storage_cli_config_file_droplets: config/storage_cli_config_droplets.json
+storage_cli_config_file_packages: config/storage_cli_config_packages.json
+storage_cli_config_file_buildpacks: config/storage_cli_config_buildpacks.json
+storage_cli_config_file_resource_pool: config/storage_cli_config_resource_pool.json
+
 newrelic_enabled: false
 
 max_annotations_per_resource: 200

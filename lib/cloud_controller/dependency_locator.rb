@@ -167,7 +167,8 @@ module CloudController
 
       Blobstore::ClientProvider.provide(
         options: options,
-        directory_key: options.fetch(:resource_directory_key)
+        directory_key: options.fetch(:resource_directory_key),
+        resource_type: :resource_pool
       )
     end
 
@@ -177,7 +178,8 @@ module CloudController
       Blobstore::ClientProvider.provide(
         options: options,
         directory_key: options.fetch(:resource_directory_key),
-        root_dir: RESOURCE_POOL_DIR
+        root_dir: RESOURCE_POOL_DIR,
+        resource_type: :resource_pool
       )
     end
 

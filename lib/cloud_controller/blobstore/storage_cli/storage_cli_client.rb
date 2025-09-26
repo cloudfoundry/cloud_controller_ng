@@ -19,26 +19,53 @@ module CloudController
           registry[provider] = klass
         end
 
-        def build(connection_config:, directory_key:, root_dir:, min_size: nil, max_size: nil)
+        def build(connection_config:, directory_key:, root_dir:, resource_type: nil, min_size: nil, max_size: nil)
           provider = connection_config[:provider]
           raise 'Missing connection_config[:provider]' if provider.nil?
+          raise 'Missing resource_type' if resource_type.nil?
 
           impl_class = registry[provider]
           raise "No storage CLI client registered for provider #{provider}" unless impl_class
 
-          impl_class.new(connection_config:, directory_key:, root_dir:, min_size:, max_size:)
+          impl_class.new(connection_config:, directory_key:, root_dir:, resource_type:, min_size:, max_size:)
         end
       end
 
-      def initialize(connection_config:, directory_key:, root_dir:, min_size: nil, max_size: nil)
+      def initialize(connection_config:, directory_key:, resource_type:, root_dir:, min_size: nil, max_size: nil)
         @cli_path = cli_path
         @directory_key = directory_key
+        @resource_type = resource_type.to_s
         @root_dir = root_dir
         @min_size = min_size || 0
         @max_size = max_size
-        config = build_config(connection_config)
-        @config_file = write_config_file(config)
         @fork = connection_config.fetch(:fork, false)
+
+        file_path = case @resource_type
+                    when 'droplets', 'buildpack_cache'
+                      VCAP::CloudController::Config.config.get(:storage_cli_config_file_droplets)
+                    when 'buildpacks'
+                      VCAP::CloudController::Config.config.get(:storage_cli_config_file_buildpacks)
+                    when 'packages'
+                      VCAP::CloudController::Config.config.get(:storage_cli_config_file_packages)
+                    when 'resource_pool'
+                      VCAP::CloudController::Config.config.get(:storage_cli_config_file_resource_pool)
+                    else
+                      raise BlobstoreError.new("Unknown resource_type: #{@resource_type}")
+                    end
+
+        unless file_path && File.file?(file_path) && File.readable?(file_path)
+          raise BlobstoreError.new("storage-cli config file not found or not readable at: #{file_path.inspect}")
+        end
+
+        begin
+          VCAP::CloudController::YAMLConfig.safe_load_file(file_path)
+        rescue => e
+          raise BlobstoreError.new("Failed to load storage-cli config at #{file_path}: #{e.message}")
+        end
+
+        @config_file = file_path
+        logger.info('storage_cli_config_selected', resource_type: @resource_type, path: @config_file)
+
       end
 
       def local?
