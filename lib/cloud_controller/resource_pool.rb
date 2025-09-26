@@ -25,7 +25,8 @@ class VCAP::CloudController::ResourcePool
     @blobstore = CloudController::Blobstore::ClientProvider.provide(
       options: options,
       directory_key: options.fetch(:resource_directory_key),
-      root_dir: CloudController::DependencyLocator::RESOURCE_POOL_DIR
+      root_dir: CloudController::DependencyLocator::RESOURCE_POOL_DIR,
+      resource_type: 'resource_pool'
     )
 
     @minimum_size = options[:minimum_size] || 0 # TODO: move default into config object?
