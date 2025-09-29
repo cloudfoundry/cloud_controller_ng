@@ -387,7 +387,7 @@ GEM
       date
       stringio
     public_suffix (6.0.2)
-    puma (6.6.1)
+    puma (7.0.4)
       nio4r (~> 2.0)
     racc (1.8.1)
     rack (2.2.17)
@@ -624,7 +624,7 @@ GEM
     zeitwerk (2.7.3)
 
 PLATFORMS
-  ruby
+  arm64-darwin-24
   x86_64-darwin
   x86_64-linux
 
@@ -679,7 +679,7 @@ DEPENDENCIES
   prometheus-client
   pry-byebug
   public_suffix
-  puma
+  puma (~> 7.0)
   rack-test
   railties (~> 8.0.3)
   rake

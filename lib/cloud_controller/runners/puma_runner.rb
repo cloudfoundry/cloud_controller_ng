@@ -33,32 +33,33 @@ module VCAP::CloudController
         # Reduce the thread shutdown timeout to 10 seconds (4 [force_shutdown_after] + 5 [SHUTDOWN_GRACE_TIME] + 1)
         conf.force_shutdown_after(4)
 
+        # replace PidFormatter as we already have the pid in the Steno log record
+        formatter = Puma::LogWriter::DefaultFormatter.new
+        conf.log_formatter { |str| formatter.call(str) }
+
         conf.app app
         conf.before_fork do
           Sequel::Model.db.disconnect
         end
-        conf.on_worker_boot do
+        conf.before_worker_boot do
           ENV['PROCESS_TYPE'] = 'puma_worker'
           prometheus_updater.update_gauge_metric(:cc_db_connection_pool_timeouts_total, 0, labels: { process_type: 'puma_worker' })
         end
-        conf.on_worker_shutdown do
+        conf.before_worker_shutdown do
           request_logs.log_incomplete_requests if request_logs
         end
       end
 
       log_writer = Puma::LogWriter.new(StenoIO.new(logger, :info), StenoIO.new(logger, :error))
 
-      # replace PidFormatter as we already have the pid in the Steno log record
-      puma_config.options[:log_formatter] = Puma::LogWriter::DefaultFormatter.new
-
       events = Puma::Events.new
-      events.on_booted do
+      events.after_booted do
         prometheus_updater.update_gauge_metric(:cc_db_connection_pool_timeouts_total, 0, labels: { process_type: 'main' })
         Thread.new do
           EM.run { periodic_updater.setup_updates }
         end
       end
-      events.on_stopped do
+      events.after_stopped do
         EM.stop
       end
 
