@@ -20,6 +20,10 @@ module VCAP::CloudController
           conf.bind "tcp://0.0.0.0:#{config.get(:external_port)}"
         end
 
+        # Keep Puma 6 defaults (25/20s) to avoid surprises with Nginx. Puma 7 defaults may be revisited for performance later.
+        conf.max_keep_alive(25)
+        conf.persistent_timeout(20)
+
         conf.workers(config.get(:puma, :workers) || 1) unless config.get(:puma, :automatic_worker_count)
         num_threads = config.get(:puma, :max_threads) || 1
         conf.threads(num_threads, num_threads)
