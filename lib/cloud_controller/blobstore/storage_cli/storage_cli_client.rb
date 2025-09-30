@@ -59,13 +59,12 @@ module CloudController
 
         begin
           VCAP::CloudController::YAMLConfig.safe_load_file(file_path)
-        rescue => e
+        rescue StandardError => e
           raise BlobstoreError.new("Failed to load storage-cli config at #{file_path}: #{e.message}")
         end
 
         @config_file = file_path
         logger.info('storage_cli_config_selected', resource_type: @resource_type, path: @config_file)
-
       end
 
       def local?

@@ -5,7 +5,6 @@ module CloudController
   module Blobstore
     RSpec.describe StorageCliClient do
       describe 'registry build and lookup' do
-
         it 'builds the correct client' do
           droplets_cfg = Tempfile.new(['droplets', '.json'])
           droplets_cfg.write({ connection_config: { provider: 'AzureRM' } }.to_json)
@@ -57,8 +56,6 @@ module CloudController
             when :storage_cli_config_file_buildpacks    then buildpacks_cfg.path
             when :storage_cli_config_file_packages      then packages_cfg.path
             when :storage_cli_config_file_resource_pool then resource_pool_cfg.path
-            else
-              nil
             end
           end
 
@@ -70,12 +67,12 @@ module CloudController
           [droplets_cfg, buildpacks_cfg, packages_cfg, resource_pool_cfg].each(&:close!)
         end
 
-        def build_client(rt)
+        def build_client(resource_type)
           StorageCliClient.build(
             connection_config: { provider: 'AzureRM' },
             directory_key: 'dir-key',
             root_dir: 'root',
-            resource_type: rt
+            resource_type: resource_type
           )
         end
 
@@ -110,23 +107,23 @@ module CloudController
         end
 
         it 'raises for unknown resource_type' do
-          expect {
+          expect do
             build_client('nope')
-          }.to raise_error(CloudController::Blobstore::BlobstoreError, /Unknown resource_type: nope/)
+          end.to raise_error(CloudController::Blobstore::BlobstoreError, /Unknown resource_type: nope/)
         end
 
         it 'raises when file missing/unreadable' do
           allow(config_double).to receive(:get).with(:storage_cli_config_file_packages).and_return('/no/such/file.json')
-          expect {
+          expect do
             build_client('packages')
-          }.to raise_error(CloudController::Blobstore::BlobstoreError, /not found or not readable/)
+          end.to raise_error(CloudController::Blobstore::BlobstoreError, /not found or not readable/)
         end
 
         it 'raises when YAML load fails' do
-          File.write(packages_cfg.path, "{ this is: [not, valid }")
-          expect {
+          File.write(packages_cfg.path, '{ this is: [not, valid }')
+          expect do
             build_client('packages')
-          }.to raise_error(CloudController::Blobstore::BlobstoreError, /Failed to load storage-cli config/)
+          end.to raise_error(CloudController::Blobstore::BlobstoreError, /Failed to load storage-cli config/)
         end
       end
 
@@ -157,30 +154,29 @@ module CloudController
         end
 
         it 'returns true on exitstatus 0' do
-          expect(Open3).to receive(:capture3)
-                             .with(kind_of(String), '-c', droplets_cfg.path, 'exists', kind_of(String))
-                             .and_return(['', '', instance_double(Process::Status, success?: true, exitstatus: 0)])
+          expect(Open3).to receive(:capture3).
+            with(kind_of(String), '-c', droplets_cfg.path, 'exists', kind_of(String)).
+            and_return(['', '', instance_double(Process::Status, success?: true, exitstatus: 0)])
 
           expect(client.exists?('key')).to be true
         end
 
         it 'returns false on exitstatus 3' do
-          expect(Open3).to receive(:capture3)
-                             .with(kind_of(String), '-c', droplets_cfg.path, 'exists', kind_of(String))
-                             .and_return(['', '', instance_double(Process::Status, success?: false, exitstatus: 3)])
+          expect(Open3).to receive(:capture3).
+            with(kind_of(String), '-c', droplets_cfg.path, 'exists', kind_of(String)).
+            and_return(['', '', instance_double(Process::Status, success?: false, exitstatus: 3)])
 
           expect(client.exists?('key')).to be false
         end
 
         it 'raises for other non-zero exit codes' do
-          expect(Open3).to receive(:capture3)
-                             .with(kind_of(String), '-c', droplets_cfg.path, 'exists', kind_of(String))
-                             .and_return(['', 'boom', instance_double(Process::Status, success?: false, exitstatus: 2)])
+          expect(Open3).to receive(:capture3).
+            with(kind_of(String), '-c', droplets_cfg.path, 'exists', kind_of(String)).
+            and_return(['', 'boom', instance_double(Process::Status, success?: false, exitstatus: 2)])
 
           expect { client.exists?('key') }.to raise_error(/storage-cli exists failed/)
         end
       end
-
     end
   end
 end
