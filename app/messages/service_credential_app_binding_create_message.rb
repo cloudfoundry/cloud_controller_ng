@@ -1,5 +1,10 @@
 module VCAP::CloudController
   class ServiceCredentialAppBindingCreateMessage < ServiceCredentialBindingCreateMessage
+    validates :strategy, allow_blank: false, allow_nil: true, inclusion: {
+      in: %w[single multiple],
+      message: "must be 'single' or 'multiple'"
+    }
+
     def relationships_message
       @relationships_message ||= Relationships.new(relationships&.deep_symbolize_keys)
     end

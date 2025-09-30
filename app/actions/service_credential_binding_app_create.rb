@@ -48,7 +48,7 @@ module VCAP::CloudController
               num_valid_bindings += 1
             end
 
-            validate_number_of_bindings!(num_valid_bindings)
+            validate_number_of_bindings!(num_valid_bindings, strategy: message.strategy)
             validate_app_guid_name_uniqueness!(app.guid, message.name, service_instance.guid)
 
             new_binding.save_with_attributes_and_new_operation(
@@ -82,8 +82,12 @@ module VCAP::CloudController
         name_cannot_be_changed! if binding.name != desired_binding_name
       end
 
-      def validate_number_of_bindings!(number_of_bindings)
-        too_many_bindings! if number_of_bindings >= max_bindings_per_app_service_instance
+      def validate_number_of_bindings!(number_of_bindings, strategy:)
+        if strategy == 'multiple'
+          too_many_bindings! if number_of_bindings >= max_bindings_per_app_service_instance
+        elsif number_of_bindings >= 1
+          already_bound!
+        end
       end
 
       def validate_app_guid_name_uniqueness!(target_app_guid, desired_binding_name, target_service_instance_guid)
