@@ -153,27 +153,27 @@ module VCAP::CloudController
         subject
 
         expect(Sequel::Model.db).to receive(:disconnect)
-        puma_launcher.config.final_options[:before_fork].first.call
+        puma_launcher.config.final_options[:before_fork].first[:block].call
       end
 
-      it 'logs incomplete requests on worker shutdown' do
+      it 'logs incomplete requests before worker shutdown' do
         subject
 
         expect(request_logs).to receive(:log_incomplete_requests)
-        puma_launcher.config.final_options[:before_worker_shutdown].first.call
+        puma_launcher.config.final_options[:before_worker_shutdown].first[:block].call
       end
 
-      it 'initializes the cc_db_connection_pool_timeouts_total for the worker on worker boot' do
+      it 'initializes the cc_db_connection_pool_timeouts_total for the worker before worker boot' do
         subject
 
         expect(prometheus_updater).to receive(:update_gauge_metric).with(:cc_db_connection_pool_timeouts_total, 0, labels: { process_type: 'puma_worker' })
-        puma_launcher.config.final_options[:before_worker_boot].first.call
+        puma_launcher.config.final_options[:before_worker_boot].first[:block].call
       end
 
       it 'sets environment variable `PROCESS_TYPE` to `puma_worker`' do
         subject
 
-        puma_launcher.config.final_options[:before_worker_boot].first.call
+        puma_launcher.config.final_options[:before_worker_boot].first[:block].call
         expect(ENV.fetch('PROCESS_TYPE')).to eq('puma_worker')
       end
     end
@@ -194,22 +194,22 @@ module VCAP::CloudController
     end
 
     describe 'Events' do
-      describe 'on_booted' do
+      describe 'after_booted' do
         it 'sets up periodic metrics updater with EM and initializes cc_db_connection_pool_timeouts_total for the main process' do
           expect(Thread).to receive(:new).and_yield
           expect(EM).to receive(:run).and_yield
           expect(periodic_updater).to receive(:setup_updates)
           expect(prometheus_updater).to receive(:update_gauge_metric).with(:cc_db_connection_pool_timeouts_total, 0, labels: { process_type: 'main' })
 
-          puma_launcher.events.fire(:on_booted)
+          puma_launcher.events.fire(:after_booted)
         end
       end
 
-      describe 'on_stopped' do
+      describe 'after_stopped' do
         it 'stops EM and logs incomplete requests' do
           expect(EM).to receive(:stop)
 
-          puma_launcher.events.fire(:on_stopped)
+          puma_launcher.events.fire(:after_stopped)
         end
       end
     end
