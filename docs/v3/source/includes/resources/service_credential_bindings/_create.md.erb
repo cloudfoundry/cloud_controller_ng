@@ -116,6 +116,7 @@ Name | Type | Description
 Name | Type | Description |
 ---- | ---- | ----------- |
 **relationships.app** | [_to-one relationship_](#to-one-relationships) | The app to be bound. Required when type is `app`
+**strategy** | string | Strategy for creating the service credential binding. Valid values are `single` (default) and `multiple` (experimental). Only valid when type is `app`.
 **parameters** | _object_ | A JSON object that is passed to the service broker
 **metadata.labels** | [_label object_](#labels) | Labels applied to the service credential binding
 **metadata.annotations**  | [_annotation object_](#annotations) | Annotations applied to the service credential binding

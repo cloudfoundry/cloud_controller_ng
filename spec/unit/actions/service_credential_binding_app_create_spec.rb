@@ -190,6 +190,7 @@ module VCAP::CloudController
           end
 
           context 'when multiple bindings are allowed' do
+            let(:message) { VCAP::CloudController::ServiceCredentialAppBindingCreateMessage.new({ name: name, strategy: 'multiple' }) }
             let(:binding_1) { ServiceBinding.make(service_instance:, app:, name:) }
             let(:binding_2) { ServiceBinding.make(service_instance:, app:, name:) }
 
@@ -274,6 +275,16 @@ module VCAP::CloudController
                   action.precursor(service_instance, app:, message:)
                 end.to raise_error(ServiceCredentialBindingAppCreate::UnprocessableCreate,
                                    'The app has too many bindings to this service instance (limit: 2). Consider deleting existing/orphaned bindings.')
+              end
+            end
+
+            context "when the strategy = 'multiple' parameter is omitted" do
+              let(:message) { VCAP::CloudController::ServiceCredentialAppBindingCreateMessage.new({ name: }) }
+
+              it 'raises an error' do
+                expect do
+                  action.precursor(service_instance, app:, message:)
+                end.to raise_error(ServiceCredentialBindingAppCreate::UnprocessableCreate, 'The app is already bound to the service instance')
               end
             end
           end
