@@ -50,6 +50,11 @@ module VCAP::CloudController
 
           pid_filename: String, # Pid filename to use
 
+          optional(:storage_cli_config_file_buildpacks) => String,
+          optional(:storage_cli_config_file_packages) => String,
+          optional(:storage_cli_config_file_resource_pool) => String,
+          optional(:storage_cli_config_file_droplets) => String,
+
           newrelic_enabled: bool,
 
           optional(:max_migration_duration_in_minutes) => Integer,
