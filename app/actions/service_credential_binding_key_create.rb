@@ -92,10 +92,6 @@ module VCAP::CloudController
         raise UnprocessableCreate.new('Service plan does not allow bindings.')
       end
 
-      def service_not_available!
-        raise UnprocessableCreate.new('Service plan is not available.')
-      end
-
       def volume_mount_not_enabled!
         raise UnprocessableCreate.new('Support for volume mount services is disabled.')
       end

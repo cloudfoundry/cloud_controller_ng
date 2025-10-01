@@ -8,6 +8,7 @@ module VCAP::CloudController
     let(:params) do
       {
         type: 'app',
+        strategy: 'single',
         name: 'some-name',
         parameters: {
           some_param: 'very important',
@@ -26,6 +27,7 @@ module VCAP::CloudController
       it 'builds a valid ServiceCredentialBindingCreateMessage' do
         expect(message).to be_valid
         expect(message.type).to eq('app')
+        expect(message.strategy).to eq('single')
         expect(message.name).to eq('some-name')
         expect(message.service_instance_guid).to eq('some-instance-guid')
         expect(message.app_guid).to eq('some-app-guid')
@@ -54,6 +56,20 @@ module VCAP::CloudController
 
         it 'is invalid with any other value' do
           params[:type] = 'test'
+          expect(subject.new(params)).not_to be_valid
+        end
+      end
+
+      context 'strategy' do
+        it 'accepts single and multiple' do
+          %w[single multiple].each do |strategy|
+            params[:strategy] = strategy
+            expect(subject.new(params)).to be_valid
+          end
+        end
+
+        it 'is invalid with any other value' do
+          params[:strategy] = 'test'
           expect(subject.new(params)).not_to be_valid
         end
       end
