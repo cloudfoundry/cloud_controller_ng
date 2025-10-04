@@ -6,6 +6,7 @@ module VCAP::CloudController::Validators
     let(:class_with_authentication) do
       Class.new do
         include ActiveModel::Model
+
         validates_with AuthenticationValidator
 
         attr_accessor :authentication

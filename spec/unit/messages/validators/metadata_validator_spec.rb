@@ -6,6 +6,7 @@ module VCAP::CloudController::Validators
     let(:class_with_metadata) do
       Class.new do
         include ActiveModel::Model
+
         validates_with MetadataValidator
 
         attr_accessor :metadata

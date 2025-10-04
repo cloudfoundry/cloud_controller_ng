@@ -3,6 +3,7 @@ require 'spec_helper'
 RSpec.describe 'Service Broker API integration' do
   describe 'v2.14' do
     include VCAP::CloudController::BrokerApiHelper
+
     let(:catalog) { default_catalog }
 
     before do

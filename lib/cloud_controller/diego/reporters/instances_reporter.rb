@@ -6,6 +6,7 @@ module VCAP::CloudController
   module Diego
     class InstancesReporter
       include ReporterMixins
+
       InstanceCountSummary = Struct.new(:starting_instances_count, :routable_instances_count, :healthy_instances_count, :unhealthy_instances_count)
       HEALTHY_STATES = [VCAP::CloudController::Diego::LRP_RUNNING, VCAP::CloudController::Diego::LRP_STARTING].freeze
       UNKNOWN_INSTANCE_COUNT = -1

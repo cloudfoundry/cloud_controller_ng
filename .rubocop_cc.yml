@@ -151,6 +151,8 @@ Gemspec/DevelopmentDependencies:
   Enabled: true
 Gemspec/RequireMFA:
   Enabled: true
+Layout/EmptyLinesAfterModuleInclusion:
+  Enabled: true
 Layout/LineContinuationLeadingSpace:
   Enabled: true
 Layout/LineContinuationSpacing:

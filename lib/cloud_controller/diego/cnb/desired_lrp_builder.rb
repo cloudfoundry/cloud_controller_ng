@@ -3,6 +3,7 @@ module VCAP::CloudController
     module CNB
       class DesiredLrpBuilder
         include ::Diego::ActionBuilder
+
         class InvalidStack < StandardError; end
 
         attr_reader :start_command, :action_user

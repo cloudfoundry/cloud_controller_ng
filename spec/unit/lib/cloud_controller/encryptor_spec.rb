@@ -203,6 +203,7 @@ module VCAP::CloudController
     let(:base_class) do
       Class.new do
         include VCAP::CloudController::Encryptor::FieldEncryptor
+
         def self.columns
           raise '<dynamic class>.columns: not implemented'
         end

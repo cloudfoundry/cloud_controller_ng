@@ -3,6 +3,7 @@ require 'repositories/service_instance_share_event_repository'
 module VCAP::CloudController
   class ServiceInstanceRead
     include VCAP::CloudController::LockCheck
+
     class NotSupportedError < ::StandardError
     end
 
