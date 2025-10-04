@@ -143,6 +143,8 @@ Rails/SkipsModelValidations: # We don`t want any model at all in migrations and 
     - spec/migrations/**/*
 
 #### ENABLED SECTION
+Gemspec/AttributeAssignment:
+  Enabled: true
 Gemspec/DeprecatedAttributeAssignment:
   Enabled: true
 Gemspec/DevelopmentDependencies:
@@ -239,7 +241,11 @@ Lint/UnexpectedBlockArity:
   Enabled: true
 Lint/UnmodifiedReduceAccumulator:
   Enabled: true
+Lint/UselessDefaultValueArgument:
+  Enabled: true
 Lint/UselessDefined:
+  Enabled: true
+Lint/UselessOr:
   Enabled: true
 Lint/UselessRescue:
   Enabled: true
@@ -258,6 +264,8 @@ Style/AmbiguousEndlessMethodDefinition:
 Style/ArgumentsForwarding:
   Enabled: true
 Style/ArrayIntersect:
+  Enabled: true
+Style/ArrayIntersectWithSingleElement:
   Enabled: true
 Style/BitwisePredicate:
   Enabled: true
@@ -280,6 +288,8 @@ Style/DirEmpty:
 Style/DocumentDynamicEvalDefinition:
   Enabled: true
 Style/EmptyHeredoc:
+  Enabled: true
+Style/EmptyStringInsideInterpolation:
   Enabled: true
 Style/EndlessMethod:
   Enabled: true
@@ -348,6 +358,8 @@ Style/QuotedSymbols:
 Style/RedundantArgument:
   Enabled: true
 Style/RedundantArrayConstructor:
+  Enabled: true
+Style/RedundantArrayFlatten:
   Enabled: true
 Style/RedundantConstantBase:
   Enabled: true
@@ -425,6 +437,8 @@ Rails/ExpandedDateRange:
   Enabled: true
 Rails/FindById:
   Enabled: true
+Rails/FindByOrAssignmentMemoization:
+  Enabled: true
 Rails/FreezeTime:
   Enabled: true
 Rails/I18nLazyLookup:
@@ -446,6 +460,8 @@ Rails/MigrationClassName:
 Rails/MultipleRoutePaths:
   Enabled: true
 Rails/NegateInclude:
+  Enabled: true
+Rails/OrderArguments:
   Enabled: true
 Rails/Pluck:
   Enabled: true
