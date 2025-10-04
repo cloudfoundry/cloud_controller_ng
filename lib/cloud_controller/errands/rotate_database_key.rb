@@ -32,7 +32,7 @@ module VCAP::CloudController
           rows = rows_needing_rotation.
                  limit(batch_size).
                  all
-          break if rows.count == 0
+          break if rows.none?
 
           klass.instance_exec do
             @allow_manual_timestamp_update = true

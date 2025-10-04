@@ -271,6 +271,8 @@ Style/ArrayIntersectWithSingleElement:
   Enabled: true
 Style/BitwisePredicate:
   Enabled: true
+Style/CollectionQuerying:
+  Enabled: true
 Style/CollectionCompact:
   Enabled: true
 Style/CombinableDefined:
