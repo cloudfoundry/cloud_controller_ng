@@ -92,10 +92,10 @@ module VCAP::CloudController::Diego
               ).to match(
                 hash_including(
                   'message' => 'desire.app.response',
-                  'data' => {
+                  'data' => hash_including(
                     'error' => /error message/,
                     'process_guid' => lrp_process_guid
-                  }
+                  )
                 )
               )
             end
@@ -171,10 +171,10 @@ module VCAP::CloudController::Diego
             ).to match(
               hash_including(
                 'message' => 'stop.app.response',
-                'data' => {
+                'data' => hash_including(
                   'error' => /error message/,
                   'process_guid' => process_guid
-                }
+                )
               )
             )
           end
@@ -241,11 +241,11 @@ module VCAP::CloudController::Diego
             ).to match(
               hash_including(
                 'message' => 'stop.index.response',
-                'data' => {
+                'data' => hash_including(
                   'error' => /error message/,
                   'process_guid' => process_guid,
                   'index' => index
-                }
+                )
               )
             )
           end
@@ -311,10 +311,10 @@ module VCAP::CloudController::Diego
             ).to match(
               hash_including(
                 'message' => 'get.app.response',
-                'data' => {
+                'data' => hash_including(
                   'error' => /error message/,
                   'process_guid' => 'process-guid'
-                }
+                )
               )
             )
           end
@@ -404,10 +404,10 @@ module VCAP::CloudController::Diego
             ).to match(
               hash_including(
                 'message' => 'update.app.response',
-                'data' => {
+                'data' => hash_including(
                   'error' => /error message/,
                   'process_guid' => process_guid
-                }
+                )
               )
             )
           end
@@ -464,9 +464,9 @@ module VCAP::CloudController::Diego
             ).to match(
               hash_including(
                 'message' => 'fetch.scheduling.infos.response',
-                'data' => {
+                'data' => hash_including(
                   'error' => /error message/
-                }
+                )
               )
             )
           end
@@ -522,9 +522,9 @@ module VCAP::CloudController::Diego
             ).to match(
               hash_including(
                 'message' => 'bump.freshness.response',
-                'data' => {
+                'data' => hash_including(
                   'error' => /error message/
-                }
+                )
               )
             )
           end
