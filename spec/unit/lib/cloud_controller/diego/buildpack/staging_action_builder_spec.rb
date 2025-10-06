@@ -31,7 +31,17 @@ module VCAP::CloudController
           StagingDetails.new.tap do |details|
             details.staging_guid          = droplet.guid
             details.environment_variables = env
+            details.lifecycle             = lifecycle
           end
+        end
+        let(:lifecycle) do
+          instance_double(BuildpackLifecycle,
+                          buildpack_infos: lifecycle_data[:buildpacks].map do |b|
+                            buildpack_record = instance_double(VCAP::CloudController::Buildpack, key: b[:key])
+                            VCAP::CloudController::BuildpackInfo.new(b[:name], buildpack_record)
+                          end,
+                          skip_detect?: lifecycle_data[:buildpacks].any? { |b| b[:skip_detect] },
+                          staging_stack: stack)
         end
         let(:env) { double(:env) }
         let(:stack) { 'buildpack-stack' }

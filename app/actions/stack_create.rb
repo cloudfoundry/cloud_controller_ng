@@ -6,7 +6,8 @@ module VCAP::CloudController
     def create(message)
       stack = VCAP::CloudController::Stack.create(
         name: message.name,
-        description: message.description
+        description: message.description,
+        state: message.state
       )
 
       MetadataUpdate.update(stack, message)
