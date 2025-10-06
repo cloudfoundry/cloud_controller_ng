@@ -26,6 +26,14 @@ module VCAP::CloudController
 
           lifecycle_bundle_key = :"cnb/#{@stack}"
           lifecycle_bundle = @config.get(:diego, :lifecycle_bundles)[lifecycle_bundle_key]
+
+          # If custom stack doesn't have a bundle, use the default stack's bundle
+          if !lifecycle_bundle && @stack.is_a?(String) && is_custom_stack?(@stack)
+            default_stack = Stack.default.name
+            lifecycle_bundle_key = :"cnb/#{default_stack}"
+            lifecycle_bundle = @config.get(:diego, :lifecycle_bundles)[lifecycle_bundle_key]
+          end
+
           raise InvalidStack.new("no compiler defined for requested stack '#{@stack}'") unless lifecycle_bundle
 
           [
@@ -38,6 +46,11 @@ module VCAP::CloudController
         end
 
         def root_fs
+          # Handle custom stacks (docker:// URLs)
+          if @stack.is_a?(String) && is_custom_stack?(@stack)
+            return normalize_stack_url(@stack)
+          end
+
           @stack_obj ||= Stack.find(name: @stack)
           raise CloudController::Errors::ApiError.new_from_details('StackNotFound', @stack) unless @stack_obj
 
@@ -65,9 +78,22 @@ module VCAP::CloudController
 
           lifecycle_bundle_key = :"cnb/#{@stack}"
           lifecycle_bundle = @config.get(:diego, :lifecycle_bundles)[lifecycle_bundle_key]
+
+          # If custom stack doesn't have a bundle, use the default stack's bundle
+          if !lifecycle_bundle && @stack.is_a?(String) && is_custom_stack?(@stack)
+            default_stack = Stack.default.name
+            lifecycle_bundle_key = :"cnb/#{default_stack}"
+            lifecycle_bundle = @config.get(:diego, :lifecycle_bundles)[lifecycle_bundle_key]
+          end
+
           raise InvalidStack.new("no compiler defined for requested stack '#{@stack}'") unless lifecycle_bundle
 
           destination = @config.get(:diego, :droplet_destinations)[@stack.to_sym]
+          # For custom stacks, use a default destination if not configured
+          if !destination && @stack.is_a?(String) && is_custom_stack?(@stack)
+            default_stack = Stack.default.name
+            destination = @config.get(:diego, :droplet_destinations)[default_stack.to_sym]
+          end
           raise InvalidStack.new("no droplet destination defined for requested stack '#{@stack}'") unless destination
 
           layers = [
@@ -123,6 +149,23 @@ module VCAP::CloudController
             ::Diego::Bbs::Models::EnvironmentVariable.new(name: 'CNB_LAYERS_DIR', value: '/home/vcap/layers'),
             ::Diego::Bbs::Models::EnvironmentVariable.new(name: 'CNB_APP_DIR', value: '/home/vcap/workspace')
           ]
+        end
+
+        private
+
+        def is_custom_stack?(stack_name)
+          # Check for various container registry URL formats
+          return true if stack_name.include?('docker://')
+          return true if stack_name.match?(%r{^https?://})  # Any https/http URL
+          return true if stack_name.include?('.')  # Any string with a dot (likely a registry)
+          false
+        end
+
+        def normalize_stack_url(stack_url)
+          return stack_url if stack_url.start_with?('docker://')
+          return stack_url.sub(/^https?:\/\//, 'docker://') if stack_url.match?(%r{^https?://})
+          return "docker://#{stack_url}" if stack_url.include?('.')
+          stack_url
         end
       end
     end

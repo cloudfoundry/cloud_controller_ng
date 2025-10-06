@@ -138,9 +138,17 @@ module VCAP::CloudController
                          Lifecycles::DOCKER
                        end
 
+      # Use docker image as custom stack when lifecycle is explicitly buildpack
+      stack_value = if requested?(:lifecycle) && @lifecycle == 'buildpack' && requested?(:docker) && docker
+                      docker_image = docker[:image] || docker['image']
+                      docker_image ? "docker://#{docker_image}" : @stack
+                    else
+                      @stack
+                    end
+
       data = {
         buildpacks: requested_buildpacks,
-        stack: @stack,
+        stack: stack_value,
         credentials: @cnb_credentials
       }.compact
 
@@ -474,6 +482,9 @@ module VCAP::CloudController
 
     def validate_docker_buildpacks_combination!
       return unless requested?(:docker) && (requested?(:buildpack) || requested?(:buildpacks))
+
+      # Allow docker + buildpacks when lifecycle is explicitly set to buildpack (custom stack usage)
+      return if requested?(:lifecycle) && @lifecycle == 'buildpack'
 
       errors.add(:base, 'Cannot specify both buildpack(s) and docker keys')
     end
