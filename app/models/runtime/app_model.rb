@@ -6,6 +6,7 @@ require 'hashdiff'
 module VCAP::CloudController
   class AppModel < Sequel::Model(:apps)
     include Serializer
+
     APP_NAME_REGEX = /\A[[:alnum:][:punct:][:print:]]+\Z/
     DEFAULT_CONTAINER_USER = 'vcap'.freeze
     DEFAULT_DOCKER_CONTAINER_USER = 'root'.freeze

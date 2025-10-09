@@ -16,6 +16,7 @@ end
 
 class CustomSampler
   extend Honeycomb::DeterministicSampler
+
   def self.sample(fields)
     sample_rate = 1
     # Remove this if you want a closer look at our DB calls

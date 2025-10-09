@@ -9,6 +9,7 @@ require 'utils/hash_utils'
 module VCAP::CloudController
   class ServiceBrokerCreateMessage < MetadataBaseMessage
     include AuthenticationMessageMixin
+
     register_allowed_keys %i[name url authentication relationships]
 
     def self.relationships_requested?

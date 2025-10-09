@@ -3,6 +3,7 @@ module VCAP::CloudController
     SHARED_ISOLATION_SEGMENT_GUID = '933b4c58-120b-499a-b85d-4b6fc9e2903b'.freeze
 
     include Serializer
+
     ISOLATION_SEGMENT_MODEL_REGEX = /\A[[:print:]]+\Z/
 
     one_to_many :spaces, key: :isolation_segment_guid, primary_key: :guid

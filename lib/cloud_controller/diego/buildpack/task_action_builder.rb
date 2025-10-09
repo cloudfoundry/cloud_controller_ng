@@ -7,6 +7,7 @@ module VCAP::CloudController
     module Buildpack
       class TaskActionBuilder
         include ::Diego::ActionBuilder
+
         class InvalidStack < StandardError; end
 
         def initialize(config, task, lifecycle_data, run_user, launcher_args, prefix)
