@@ -51,7 +51,7 @@ RSpec.shared_context 'bigint migration step3a' do
           it 'fails ...' do
             expect do
               run_migration_step3a
-            end.to raise_error(/Failed to add check constraint on 'events' table!/)
+            end.to raise_error(/Failed to add check constraint on '#{table}' table!/)
           end
         end
       end
@@ -178,11 +178,14 @@ RSpec.shared_context 'bigint migration step3b' do
       end
 
       it 'has an index on timestamp + (bigint) id column' do
-        expect(db).to have_table_with_index_on_columns(table, %i[timestamp id])
+        if db.schema(table).any? { |col| col[0] == :timestamp }
 
-        run_migration_step3b
+          expect(db).to have_table_with_index_on_columns(table, %i[timestamp id])
 
-        expect(db).to have_table_with_index_on_columns(table, %i[timestamp id])
+          run_migration_step3b
+
+          expect(db).to have_table_with_index_on_columns(table, %i[timestamp id])
+        end
       end
 
       it 'uses an identity with correct start value for the (bigint) id column' do
@@ -218,12 +221,15 @@ RSpec.shared_context 'bigint migration step3b' do
       end
 
       it 'has an index on timestamp + (integer) id column' do
-        expect(db).to have_table_with_index_on_columns(table, %i[timestamp id])
+        if db.schema(table).any? { |col| col[0] == :timestamp }
 
-        run_rollback_step3b
+          expect(db).to have_table_with_index_on_columns(table, %i[timestamp id])
 
-        expect(db).to have_table_with_index_on_columns(table, %i[timestamp id])
-        expect(db).not_to have_table_with_index_on_columns(table, %i[timestamp id_bigint])
+          run_rollback_step3b
+
+          expect(db).to have_table_with_index_on_columns(table, %i[timestamp id])
+          expect(db).not_to have_table_with_index_on_columns(table, %i[timestamp id_bigint])
+        end
       end
 
       it 'uses the (integer) id column as primary key' do
