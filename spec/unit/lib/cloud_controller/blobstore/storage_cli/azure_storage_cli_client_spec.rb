@@ -1,4 +1,6 @@
 require 'spec_helper'
+require 'tempfile'
+require 'json'
 require_relative '../client_shared'
 require 'cloud_controller/blobstore/storage_cli/azure_storage_cli_client'
 require 'cloud_controller/blobstore/storage_cli/storage_cli_blob'
@@ -6,8 +8,37 @@ require 'cloud_controller/blobstore/storage_cli/storage_cli_blob'
 module CloudController
   module Blobstore
     RSpec.describe AzureStorageCliClient do
-      subject(:client) { AzureStorageCliClient.new(connection_config: connection_config, directory_key: directory_key, root_dir: 'bommel') }
+      let!(:tmp_cfg) do
+        f = Tempfile.new(['storage_cli_config', '.json'])
+        f.write({ provider: 'AzureRM',
+                  account_name: 'some-account-name',
+                  account_key: 'some-access-key',
+                  container_name: directory_key,
+                  environment: 'AzureCloud' }.to_json)
+        f.flush
+        f
+      end
+
+      before do
+        cc_cfg = instance_double(VCAP::CloudController::Config)
+        allow(VCAP::CloudController::Config).to receive(:config).and_return(cc_cfg)
+
+        allow(cc_cfg).to receive(:get) do |key, *_|
+          case key
+          when :storage_cli_config_file_droplets,
+            :storage_cli_config_file_buildpacks,
+            :storage_cli_config_file_packages,
+            :storage_cli_config_file_resource_pool
+            tmp_cfg.path
+          end
+        end
+      end
+
+      after { tmp_cfg.close! }
+
+      subject(:client) { AzureStorageCliClient.new(connection_config: connection_config, directory_key: directory_key, resource_type: resource_type, root_dir: 'bommel') }
       let(:directory_key) { 'my-bucket' }
+      let(:resource_type) { 'resource_pool' }
       let(:connection_config) do
         {
           azure_storage_access_key: 'some-access-key',
@@ -59,7 +90,7 @@ module CloudController
           expect(client.instance_variable_get(:@config_file)).to be_a(String)
           expect(File.exist?(client.instance_variable_get(:@config_file))).to be true
           expect(File.read(client.instance_variable_get(:@config_file))).to eq(
-            '{"account_name":"some-account-name","account_key":"some-access-key","container_name":"my-bucket","environment":"AzureCloud"}'
+            '{"provider":"AzureRM","account_name":"some-account-name","account_key":"some-access-key","container_name":"my-bucket","environment":"AzureCloud"}'
           )
         end
       end
