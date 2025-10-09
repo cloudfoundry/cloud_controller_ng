@@ -26,7 +26,7 @@ module VCAP::CloudController
           orphaned_delayed_jobs = Delayed::Job.
                                   where(Sequel.lit("run_at < CURRENT_TIMESTAMP - INTERVAL '?' DAY", force_delete_after))
 
-          unless orphaned_delayed_jobs.none?
+          unless orphaned_delayed_jobs.count.zero?
             logger.info("Deleting #{orphaned_delayed_jobs.count} orphaned Delayed Jobs older than #{force_delete_after} days")
 
             orphaned_delayed_jobs.delete

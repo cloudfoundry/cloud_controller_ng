@@ -124,7 +124,7 @@ module VCAP::CloudController
       end
 
       def create_seed_security_groups(config)
-        return unless config.get(:security_group_definitions) && SecurityGroup.none?
+        return unless config.get(:security_group_definitions) && SecurityGroup.count == 0
 
         config.get(:security_group_definitions).each do |security_group|
           seed_security_group = security_group.dup

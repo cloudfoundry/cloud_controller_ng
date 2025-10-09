@@ -17,7 +17,7 @@ module VCAP::CloudController
             "-dockerRef=#{staging_details.package.image}"
           ]
 
-          if config.get(:diego, :insecure_docker_registry_list).any?
+          if config.get(:diego, :insecure_docker_registry_list).count > 0
             insecure_registries = "-insecureDockerRegistries=#{config.get(:diego, :insecure_docker_registry_list).join(',')}"
             run_args << insecure_registries
           end
