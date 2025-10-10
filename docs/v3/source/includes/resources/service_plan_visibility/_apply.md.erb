@@ -28,7 +28,7 @@ Content-Type: application/json
 <%= yield_content :service_plan_visibility_response %>
 ```
 
-This endpoint applies a service plan visibility. It behaves similar to the [PATCH service plan visibility endpoint](#update-a-service-plan-visibility) but this endpoint will append to the existing list of organizations when the service plan is `organization` visible.
+This endpoint appends to the existing list of organizations. See [PATCH service plan visibility endpoint](#update-a-service-plan-visibility) to replace the existing list or change the visibility `type`.
 
 #### Definition
 `POST /v3/service_plans/:guid/visibility`
@@ -37,8 +37,8 @@ This endpoint applies a service plan visibility. It behaves similar to the [PATC
 
 Name | Type | Description
 ---- | ---- | -----------
-**type** | _string_ | Denotes the visibility of the plan; can be `public`, `admin`, `organization`, see [_list of visibility types_](#list-of-visibility-types)
-**organizations** | _array of objects_ | Desired list of organizations GUIDs where the plan will be accessible; required if `type` is `organization`
+**type** | _string_ | Denotes the visibility of the plan; must be `organization`, see [_list of visibility types_](#list-of-visibility-types)
+**organizations** | _array of objects_ | Desired list of organizations GUIDs where the plan will be accessible; required.
 
 #### Permitted roles
  |
