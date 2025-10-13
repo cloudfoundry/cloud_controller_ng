@@ -72,14 +72,13 @@ module CloudController
         end
 
         def provide_storage_cli(options, directory_key, root_dir, resource_type)
-          raise BlobstoreError.new('connection_config for storage-cli is not provided') unless options[:connection_config]
-
-          client = StorageCliClient.build(connection_config: options.fetch(:connection_config),
-                                          directory_key: directory_key,
-                                          resource_type: resource_type,
-                                          root_dir: root_dir,
-                                          min_size: options[:minimum_size],
-                                          max_size: options[:maximum_size])
+          client = StorageCliClient.build(
+            directory_key: directory_key,
+            resource_type: resource_type,
+            root_dir: root_dir,
+            min_size: options[:minimum_size],
+            max_size: options[:maximum_size]
+          )
 
           logger = Steno.logger('cc.blobstore.storage_cli_client')
           errors = [StandardError]

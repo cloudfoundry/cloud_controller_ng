@@ -32,23 +32,14 @@ module CloudController
             tmp_cfg.path
           end
         end
+        allow(Steno).to receive(:logger).and_return(double(info: nil, error: nil))
       end
 
       after { tmp_cfg.close! }
 
-      subject(:client) { AzureStorageCliClient.new(connection_config: connection_config, directory_key: directory_key, resource_type: resource_type, root_dir: 'bommel') }
+      subject(:client) { AzureStorageCliClient.new(provider: 'AzureRM', directory_key: directory_key, resource_type: resource_type, root_dir: 'bommel') }
       let(:directory_key) { 'my-bucket' }
       let(:resource_type) { 'resource_pool' }
-      let(:connection_config) do
-        {
-          azure_storage_access_key: 'some-access-key',
-          azure_storage_account_name: 'some-account-name',
-          container_name: directory_key,
-          environment: 'AzureCloud',
-          provider: 'AzureRM',
-          fork: true
-        }
-      end
       let(:downloaded_file) do
         Tempfile.open('') do |tmpfile|
           tmpfile.write('downloaded file content')
