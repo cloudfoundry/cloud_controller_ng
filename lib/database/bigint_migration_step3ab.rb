@@ -1,4 +1,4 @@
-require 'database/bigint_migration'
+require_relative 'bigint_migration'
 
 module VCAP::BigintMigration
   class << self
