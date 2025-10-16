@@ -388,7 +388,7 @@ GEM
     puma (6.6.1)
       nio4r (~> 2.0)
     racc (1.8.1)
-    rack (2.2.17)
+    rack (2.2.20)
     rack-protection (3.2.0)
       base64 (>= 0.1.0)
       rack (~> 2.2, >= 2.2.4)
@@ -673,6 +673,7 @@ DEPENDENCIES
   pry-byebug
   public_suffix
   puma
+  rack (~> 2.2.20)
   rack-test
   railties (~> 8.0.1)
   rake
