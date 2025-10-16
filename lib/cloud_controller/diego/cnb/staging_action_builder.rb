@@ -45,7 +45,7 @@ module VCAP::CloudController
             path: '/tmp/lifecycle/builder',
             user: 'vcap',
             args: args,
-            env: env_vars
+            env: env_vars + platform_options_env
           )
         end
       end

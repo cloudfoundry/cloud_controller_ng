@@ -33,7 +33,7 @@ gem 'rack', '~> 2.2.20'
 gem 'rake'
 gem 'redis'
 gem 'rubyzip', '>= 1.3.0'
-gem 'sequel', '~> 5.95'
+gem 'sequel', '~> 5.97'
 gem 'sequel_pg', require: 'sequel'
 gem 'sinatra', '~> 3.2'
 gem 'sinatra-contrib'
@@ -46,10 +46,10 @@ gem 'uri', '~> 1.0'
 gem 'vmstat', '~> 2.3'
 
 # Rails Components
-gem 'actionpack', '~> 8.0.2'
+gem 'actionpack', '~> 8.0.3'
 gem 'actionview', '~> 8.0.1'
 gem 'activemodel', '~> 8.0.2'
-gem 'railties', '~> 8.0.1'
+gem 'railties', '~> 8.0.3'
 
 gem 'azure-storage-blob', git: 'https://github.com/sethboyles/azure-storage-ruby.git', branch: 'x-ms-blob-content-type-fix-1.1'
 
@@ -57,14 +57,14 @@ gem 'fog-aliyun'
 gem 'fog-aws'
 gem 'fog-azure-rm', git: 'https://github.com/fog/fog-azure-rm.git', branch: 'fog-arm-cf'
 gem 'fog-core', '~> 2.6.0'
-gem 'fog-google', '~> 1.25.0'
+gem 'fog-google', '~> 1.26.0'
 gem 'fog-local'
 gem 'fog-openstack'
 
 gem 'cf-uaa-lib', '~> 4.0.9'
 
 group :db do
-  gem 'mysql2', '~> 0.5.6'
+  gem 'mysql2', '~> 0.5.7'
   gem 'pg'
 end
 
@@ -85,11 +85,11 @@ group :test do
   gem 'rspec-its'
   gem 'rspec-rails', '~> 8.0.2'
   gem 'rspec-wait'
-  gem 'rubocop', '~> 1.80.0'
+  gem 'rubocop', '~> 1.81.1'
   gem 'rubocop-capybara'
   gem 'rubocop-factory_bot'
   gem 'rubocop-rails', '~> 2.33'
-  gem 'rubocop-rspec', '~> 3.6'
+  gem 'rubocop-rspec', '~> 3.7'
   gem 'rubocop-rspec_rails'
   gem 'rubocop-sequel', '~> 0.4.1'
   gem 'timecop'

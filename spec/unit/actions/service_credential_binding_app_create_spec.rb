@@ -43,6 +43,8 @@ module VCAP::CloudController
 
       describe '#precursor' do
         RSpec.shared_examples 'the credential binding precursor' do
+          before { TestConfig.override(max_service_credential_bindings_per_app_service_instance: 1) }
+
           it 'returns a service credential binding precursor' do
             binding = action.precursor(service_instance, app:, message:)
 
@@ -60,24 +62,19 @@ module VCAP::CloudController
           end
 
           it 'raises an error when no app is specified' do
-            expect { action.precursor(service_instance, message:) }.to raise_error(
-              ServiceCredentialBindingAppCreate::UnprocessableCreate,
-              'No app was specified'
-            )
+            expect do
+              action.precursor(service_instance, message:)
+            end.to raise_error(ServiceCredentialBindingAppCreate::UnprocessableCreate, 'No app was specified')
           end
 
           context 'when a binding already exists' do
             let!(:binding) { ServiceBinding.make(service_instance:, app:) }
 
-            # TODO: Once the unique constraints to allow multiple bindings are removed, this needs to be set to 1
-            # before { TestConfig.override(max_service_credential_bindings_per_app_service_instance: 1) }
-
             context 'when no last binding operation exists' do
               it 'raises an error' do
-                expect { action.precursor(service_instance, app:, message:) }.to raise_error(
-                  ServiceCredentialBindingAppCreate::UnprocessableCreate,
-                  'The app is already bound to the service instance'
-                )
+                expect do
+                  action.precursor(service_instance, app:, message:)
+                end.to raise_error(ServiceCredentialBindingAppCreate::UnprocessableCreate, 'The app is already bound to the service instance')
               end
             end
 
@@ -101,230 +98,186 @@ module VCAP::CloudController
             end
 
             context "when the last binding operation is in 'create in progress' state" do
-              before do
-                binding.save_with_attributes_and_new_operation({}, { type: 'create', state: 'in progress' })
-              end
+              before { binding.save_with_attributes_and_new_operation({}, { type: 'create', state: 'in progress' }) }
 
               it 'raises an error' do
-                expect { action.precursor(service_instance, app:, message:) }.to raise_error(
-                  ServiceCredentialBindingAppCreate::UnprocessableCreate,
-                  'The app is already bound to the service instance'
-                )
+                expect do
+                  action.precursor(service_instance, app:, message:)
+                end.to raise_error(ServiceCredentialBindingAppCreate::UnprocessableCreate, 'The app is already bound to the service instance')
               end
             end
 
             context "when the last binding operation is in 'create succeeded' state" do
-              before do
-                binding.save_with_attributes_and_new_operation({}, { type: 'create', state: 'succeeded' })
-              end
+              before { binding.save_with_attributes_and_new_operation({}, { type: 'create', state: 'succeeded' }) }
 
               it 'raises an error' do
-                expect { action.precursor(service_instance, app:, message:) }.to raise_error(
-                  ServiceCredentialBindingAppCreate::UnprocessableCreate,
-                  'The app is already bound to the service instance'
-                )
+                expect do
+                  action.precursor(service_instance, app:, message:)
+                end.to raise_error(ServiceCredentialBindingAppCreate::UnprocessableCreate, 'The app is already bound to the service instance')
               end
             end
 
             context "when the last binding operation is in 'delete failed' state" do
-              before do
-                binding.save_with_attributes_and_new_operation({}, { type: 'delete', state: 'failed' })
-              end
+              before { binding.save_with_attributes_and_new_operation({}, { type: 'delete', state: 'failed' }) }
 
               it 'raises an error' do
-                expect { action.precursor(service_instance, app:, message:) }.to raise_error(
-                  ServiceCredentialBindingAppCreate::UnprocessableCreate,
-                  'The binding is getting deleted or its deletion failed'
-                )
+                expect do
+                  action.precursor(service_instance, app:, message:)
+                end.to raise_error(ServiceCredentialBindingAppCreate::UnprocessableCreate, 'The binding is getting deleted or its deletion failed')
               end
             end
 
             context "when the last binding operation is in 'delete in progress' state" do
-              before do
-                binding.save_with_attributes_and_new_operation({}, { type: 'delete', state: 'in progress' })
-              end
+              before { binding.save_with_attributes_and_new_operation({}, { type: 'delete', state: 'in progress' }) }
 
               it 'raises an error' do
-                expect { action.precursor(service_instance, app:, message:) }.to raise_error(
-                  ServiceCredentialBindingAppCreate::UnprocessableCreate,
-                  'The binding is getting deleted or its deletion failed'
-                )
+                expect do
+                  action.precursor(service_instance, app:, message:)
+                end.to raise_error(ServiceCredentialBindingAppCreate::UnprocessableCreate, 'The binding is getting deleted or its deletion failed')
               end
             end
           end
 
-          context 'when creating bindings with the same binding name concurrently' do
-            let(:si_details) do
-              {
-                space:
-              }
+          context 'app_guid + name uniqueness validation' do
+            let!(:other_binding) { ServiceBinding.make(service_instance: other_service_instance, app: app, name: name) }
+
+            context 'two bindings with the same binding name' do
+              it 'raises an error' do
+                expect do
+                  action.precursor(service_instance, app:, message:)
+                end.to raise_error(ServiceBindingCreate::UnprocessableCreate,
+                                   "The binding name is invalid. Binding names must be unique for a given service instance and app. The app already has a binding with name 'foo'.")
+              end
             end
-            let(:service_instance2) { ManagedServiceInstance.make(**si_details) }
 
-            # TODO: Once the unique constraints to allow multiple bindings are removed, this needs to be set to 1
-            # before { TestConfig.override(max_service_credential_bindings_per_app_service_instance: 1) }
+            context 'two bindings without binding name' do
+              let(:name) { nil }
 
-            it 'raises an error when the binding name already exists' do
-              # First request, should succeed
+              it 'does not raise an error' do
+                expect do
+                  action.precursor(service_instance, app:, message:)
+                end.not_to raise_error
+              end
+            end
+          end
+
+          context 'when app and service instance are in different spaces' do
+            let(:different_space) { Space.make }
+            let(:app) { AppModel.make(space: different_space) }
+
+            it 'raises an error' do
               expect do
                 action.precursor(service_instance, app:, message:)
-              end.not_to raise_error
-
-              # Second request, should fail with correct error
-              expect do
-                action.precursor(service_instance2, app:, message:)
-              end.to raise_error(ServiceBindingCreate::UnprocessableCreate,
-                                 "The binding name is invalid. Binding names must be unique for a given service instance and app. The app already has a binding with name 'foo'.")
+              end.to raise_error(ServiceCredentialBindingAppCreate::UnprocessableCreate, 'The service instance and the app are in different spaces')
             end
-          end
-
-          context 'when creating bindings with the same service instance concurrently' do
-            let(:name2) { 'foo2' }
-            let(:message2) do
-              VCAP::CloudController::ServiceCredentialAppBindingCreateMessage.new(
-                {
-                  name: name2
-                }
-              )
-            end
-
-            # TODO: Once the unique constraints to allow multiple bindings are removed, this needs to be set to 1
-            # before { TestConfig.override(max_service_credential_bindings_per_app_service_instance: 1) }
-
-            it 'raises an error when the app is already bound to the service instance' do
-              # First request, should succeed
-              expect do
-                action.precursor(service_instance, app:, message:)
-              end.not_to raise_error
-
-              # Second request, should fail with correct error
-              expect do
-                action.precursor(service_instance, app: app, message: message2)
-              end.to raise_error(ServiceBindingCreate::UnprocessableCreate, 'The app is already bound to the service instance')
-            end
-          end
-
-          context 'app guid name uniqueness validation without name' do
-            let(:name) { nil }
-            let(:binding_1) { ServiceBinding.make(service_instance: service_instance, app: app, name: nil) }
-
-            before do
-              # TODO: Once the unique constraints to allow multiple bindings are removed, this needs to be set to 1
-              # TestConfig.override(max_service_credential_bindings_per_app_service_instance: 1)
-              binding_1.save_with_attributes_and_new_operation({}, { type: 'create', state: 'succeeded' })
-            end
-
-            it 'does not raise an error' do
-              expect { action.precursor(other_service_instance, app:, message:) }.not_to raise_error
-            end
-          end
-
-          it 'raises an error when the app and the instance are in different spaces' do
-            another_space = Space.make
-            another_app = AppModel.make(space: another_space)
-            expect { action.precursor(service_instance, app: another_app, message: message) }.to raise_error(
-              ServiceCredentialBindingAppCreate::UnprocessableCreate,
-              'The service instance and the app are in different spaces'
-            )
           end
 
           context 'concurrent credential binding creation' do
-            let(:name) { nil }
-
-            # TODO: Once the unique constraints to allow multiple bindings are removed, this needs to be set to 1
-            # before { TestConfig.override(max_service_credential_bindings_per_app_service_instance: 1) }
-
-            def attempt_precursor
-              action.precursor(service_instance, app:, message:)
-              :ok
-            rescue StandardError => e
-              e
-            end
-
             it 'allows only one binding when two creates run in parallel' do
-              results = [Thread.new { attempt_precursor }, Thread.new { attempt_precursor }].map(&:value)
+              # This test simulates a race condition for concurrent binding creation using a spy on `app`.
+              # We mock that a second binding is created after the first one acquires a lock and expect an `UnprocessableCreate` error.
+              allow(app).to receive(:lock!).and_wrap_original do |m, *args, &block|
+                m.call(*args, &block)
+                ServiceBinding.make(service_instance:, app:)
+              end
 
-              expect(ServiceBinding.where(app:, service_instance:).count).to eq(1)
-              expect(results.count(:ok)).to eq(1)
-              expect(results.count { |r| r.is_a?(VCAP::CloudController::V3::ServiceBindingCreate::UnprocessableCreate) }).to eq(1)
-              expect(results.grep(Exception).map(&:message)).to include('The app is already bound to the service instance')
+              expect do
+                action.precursor(service_instance, app:, message:)
+              end.to raise_error(ServiceCredentialBindingAppCreate::UnprocessableCreate, 'The app is already bound to the service instance')
+
+              expect(app).to have_received(:lock!)
             end
           end
 
           context 'when multiple bindings are allowed' do
+            let(:binding_1) { ServiceBinding.make(service_instance:, app:, name:) }
+            let(:binding_2) { ServiceBinding.make(service_instance:, app:, name:) }
+
             before do
               # TODO: Remove skip when the service bindings unique constraints are removed
               skip 'this test can be enabled when the service bindings unique constraints are removed and max_bindings_per_app_service_instance can be configured'
 
-              binding_1 = ServiceBinding.make(service_instance:, app:, name:)
-              binding_2 = ServiceBinding.make(service_instance:, app:, name:)
+              TestConfig.override(max_service_credential_bindings_per_app_service_instance: 3)
               binding_1.save_with_attributes_and_new_operation({}, { type: 'create', state: 'succeeded' })
               binding_2.save_with_attributes_and_new_operation({}, { type: 'create', state: 'succeeded' })
             end
 
             it 'creates multiple bindings for the same app and service instance' do
-              expect { action.precursor(service_instance, app:, message:) }.not_to raise_error
-              expect(ServiceBinding.where(app:, service_instance:).count).to eq(3)
-            end
-
-            it 'raises an error if there are too many bindings' do
-              TestConfig.override(max_service_credential_bindings_per_app_service_instance: 2)
-
-              expect { action.precursor(service_instance, app:, message:) }.to raise_error(
-                ServiceCredentialBindingAppCreate::UnprocessableCreate,
-                'The app has too many bindings to this service instance (limit: 2). Consider deleting existing/orphaned bindings.'
-              )
-            end
-
-            it 'raises an error if one of the bindings is in a failed state' do
-              TestConfig.override(max_service_credential_bindings_per_app_service_instance: 2)
-
-              ServiceBinding.make(service_instance:, app:, name:).save_with_attributes_and_new_operation({}, { type: 'create', state: 'succeeded' })
-              ServiceBinding.make(service_instance:, app:, name:).save_with_attributes_and_new_operation({}, { type: 'delete', state: 'failed' })
-
               expect do
                 action.precursor(service_instance, app:, message:)
-              end.to raise_error(ServiceCredentialBindingAppCreate::UnprocessableCreate, 'The binding is getting deleted or its deletion failed')
+              end.to change { ServiceBinding.where(app:, service_instance:).count }.from(2).to(3)
             end
 
-            it 'raises an error if the binding name changes' do
-              new_message = VCAP::CloudController::ServiceCredentialAppBindingCreateMessage.new({ name: 'new_name' })
-              expect { action.precursor(service_instance, app: app, message: new_message) }.to raise_error(
-                ServiceCredentialBindingAppCreate::UnprocessableCreate,
-                'The binding name cannot be changed for the same app and service instance'
-              )
+            context "when an existing binding is in 'create failed' state" do
+              let(:fake_orphan_mitigator) { instance_double(VCAP::Services::ServiceBrokers::V2::OrphanMitigator) }
+
+              before do
+                binding_1.save_with_attributes_and_new_operation({}, { type: 'create', state: 'failed' })
+                allow(VCAP::Services::ServiceBrokers::V2::OrphanMitigator).to receive(:new).and_return(fake_orphan_mitigator)
+                allow(fake_orphan_mitigator).to receive(:cleanup_failed_bind).with(binding_1)
+              end
+
+              it 'deletes the failed binding, does not change other existing bindings and creates a new one' do
+                b = action.precursor(service_instance, app:, message:)
+
+                expect(b.guid).not_to eq(binding_1.guid)
+                expect(b).to be_create_in_progress
+                expect { binding_1.reload }.to raise_error Sequel::NoExistingObject
+                expect(fake_orphan_mitigator).to have_received(:cleanup_failed_bind).with(binding_1)
+                expect(binding_2.reload).to be_create_succeeded
+              end
             end
 
-            it 'raises an error if a previous binding is in progress' do
-              binding_1.save_with_attributes_and_new_operation({}, { type: 'create', state: 'in progress' })
+            context "when an existing binding is in 'create in progress' state" do
+              before { binding_1.save_with_attributes_and_new_operation({}, { type: 'create', state: 'in progress' }) }
 
-              expect { action.precursor(service_instance, app:, message:) }.to raise_error(
-                ServiceCredentialBindingAppCreate::UnprocessableCreate,
-                "There is already a binding in progress for this service instance and app (binding guid: #{binding_1.guid})"
-              )
+              it 'raises an error' do
+                expect do
+                  action.precursor(service_instance, app:, message:)
+                end.to raise_error(ServiceCredentialBindingAppCreate::UnprocessableCreate,
+                                   "There is already a binding in progress for this service instance and app (binding guid: #{binding_1.guid})")
+              end
             end
 
-            it 'raises an error if an existing binding has a different name' do
-              TestConfig.override(max_service_credential_bindings_per_app_service_instance: 4)
+            context "when an existing binding is in 'delete failed' state" do
+              before { binding_1.save_with_attributes_and_new_operation({}, { type: 'delete', state: 'failed' }) }
 
-              ServiceBinding.make(service_instance: service_instance, app: app, name: 'other-name').
-                save_with_attributes_and_new_operation({}, { type: 'create', state: 'succeeded' })
-
-              expect do
-                action.precursor(service_instance, app:, message:) # uses 'foo'
-              end.to raise_error(
-                ServiceCredentialBindingAppCreate::UnprocessableCreate,
-                'The binding name cannot be changed for the same app and service instance'
-              )
+              it 'raises an error' do
+                expect do
+                  action.precursor(service_instance, app:, message:)
+                end.to raise_error(ServiceCredentialBindingAppCreate::UnprocessableCreate, 'A binding for this service instance and app is getting deleted or its deletion failed')
+              end
             end
 
-            it 'raises an error if a binding for the same app but a different service instance exists with the same name' do
-              expect do
-                action.precursor(other_service_instance, app:, message:)
-              end.to raise_error(
-                ServiceCredentialBindingAppCreate::UnprocessableCreate,
-                "The binding name is invalid. Binding names must be unique for a given service instance and app. The app already has a binding with name 'foo'."
-              )
+            context "when an existing binding is in 'delete in progress' state" do
+              before { binding_1.save_with_attributes_and_new_operation({}, { type: 'delete', state: 'in progress' }) }
+
+              it 'raises an error' do
+                expect do
+                  action.precursor(service_instance, app:, message:)
+                end.to raise_error(ServiceCredentialBindingAppCreate::UnprocessableCreate, 'A binding for this service instance and app is getting deleted or its deletion failed')
+              end
+            end
+
+            context 'when changing the binding name' do
+              let(:message) { VCAP::CloudController::ServiceCredentialAppBindingCreateMessage.new({ name: 'bar' }) }
+
+              it 'raises an error' do
+                expect do
+                  action.precursor(service_instance, app:, message:)
+                end.to raise_error(ServiceCredentialBindingAppCreate::UnprocessableCreate, 'The binding name cannot be changed for the same app and service instance')
+              end
+            end
+
+            context 'when the bindings limit per app and service instance is reached' do
+              before { TestConfig.override(max_service_credential_bindings_per_app_service_instance: 2) }
+
+              it 'raises an error' do
+                expect do
+                  action.precursor(service_instance, app:, message:)
+                end.to raise_error(ServiceCredentialBindingAppCreate::UnprocessableCreate,
+                                   'The app has too many bindings to this service instance (limit: 2). Consider deleting existing/orphaned bindings.')
+              end
             end
           end
         end
@@ -348,35 +301,42 @@ module VCAP::CloudController
         context 'managed service instance' do
           let(:si_details) do
             {
-              space:
+              space: space,
+              name: 'instance_name'
             }
           end
 
           let(:service_instance) { ManagedServiceInstance.make(**si_details) }
-          let(:other_service_instance) { ManagedServiceInstance.make(**si_details, name: 'other_service_instance') }
+          let(:other_service_instance) { ManagedServiceInstance.make(**si_details, name: 'other_instance_name') }
+
+          it_behaves_like 'the credential binding precursor'
+
+          context 'when binding from an app in a shared space' do
+            let(:other_space) { Space.make }
+            let(:service_instance) { ManagedServiceInstance.make(**si_details, space: other_space) }
+
+            before { service_instance.add_shared_space(space) }
+
+            it_behaves_like 'the credential binding precursor'
+          end
 
           context 'validations' do
             context 'when plan is not bindable' do
-              before do
-                service_instance.service_plan.update(bindable: false)
-              end
+              before { service_instance.service_plan.update(bindable: false) }
 
               it 'raises an error' do
-                expect { action.precursor(service_instance, app:, message:) }.to raise_error(
-                  ServiceCredentialBindingAppCreate::UnprocessableCreate,
-                  'Service plan does not allow bindings'
-                )
+                expect do
+                  action.precursor(service_instance, app:, message:)
+                end.to raise_error(ServiceCredentialBindingAppCreate::UnprocessableCreate, 'Service plan does not allow bindings')
               end
             end
 
             context 'when plan is not available' do
-              before do
-                service_instance.service_plan.update(active: false)
-              end
+              before { service_instance.service_plan.update(active: false) }
 
               it 'does not raise an error' do
                 expect do
-                  action.precursor(service_instance, app: app, volume_mount_services_enabled: true, message: message)
+                  action.precursor(service_instance, app:, message:)
                 end.not_to raise_error
               end
             end
@@ -386,37 +346,8 @@ module VCAP::CloudController
 
               it 'raises an error' do
                 expect do
-                  action.precursor(service_instance, app: app, volume_mount_services_enabled: false, message: message)
-                end.to raise_error(
-                  ServiceCredentialBindingAppCreate::UnprocessableCreate,
-                  'Support for volume mount services is disabled'
-                )
-              end
-            end
-
-            context 'when there is an operation in progress for the service instance' do
-              it 'raises an error' do
-                service_instance.save_with_new_operation({}, { type: 'tacos', state: 'in progress' })
-
-                expect do
-                  action.precursor(service_instance, app: app, volume_mount_services_enabled: false, message: message)
-                end.to raise_error(
-                  ServiceCredentialBindingAppCreate::UnprocessableCreate,
-                  'There is an operation in progress for the service instance'
-                )
-              end
-            end
-
-            context "when the service instance is in state 'create failed'" do
-              it 'raises an error' do
-                service_instance.save_with_new_operation({}, { type: 'create', state: 'failed' })
-
-                expect do
-                  action.precursor(service_instance, app: app, volume_mount_services_enabled: false, message: message)
-                end.to raise_error(
-                  ServiceCredentialBindingAppCreate::UnprocessableCreate,
-                  'Service instance not found'
-                )
+                  action.precursor(service_instance, app: app, message: message, volume_mount_services_enabled: false)
+                end.to raise_error(ServiceCredentialBindingAppCreate::UnprocessableCreate, 'Support for volume mount services is disabled')
               end
             end
 
@@ -425,27 +356,30 @@ module VCAP::CloudController
 
               it 'does not raise an error' do
                 expect do
-                  action.precursor(service_instance, app: app, volume_mount_services_enabled: true, message: message)
+                  action.precursor(service_instance, app: app, message: message, volume_mount_services_enabled: true)
                 end.not_to raise_error
               end
             end
 
-            context 'when binding from an app in a shared space' do
-              let(:other_space) { Space.make }
-              let(:service_instance) do
-                ManagedServiceInstance.make(space: other_space).tap do |si|
-                  si.add_shared_space(space)
-                end
+            context 'when there is an operation in progress for the service instance' do
+              before { service_instance.save_with_new_operation({}, { type: 'tacos', state: 'in progress' }) }
+
+              it 'raises an error' do
+                expect do
+                  action.precursor(service_instance, app:, message:)
+                end.to raise_error(ServiceCredentialBindingAppCreate::UnprocessableCreate, 'There is an operation in progress for the service instance')
               end
-
-              let(:other_service_instance) { ManagedServiceInstance.make(space: space, name: 'other_service_instance') }
-
-              it_behaves_like 'the credential binding precursor'
             end
-          end
 
-          context 'when successful' do
-            it_behaves_like 'the credential binding precursor'
+            context "when the service instance is in state 'create failed'" do
+              before { service_instance.save_with_new_operation({}, { type: 'create', state: 'failed' }) }
+
+              it 'raises an error' do
+                expect do
+                  action.precursor(service_instance, app:, message:)
+                end.to raise_error(ServiceCredentialBindingAppCreate::UnprocessableCreate, 'Service instance not found')
+              end
+            end
           end
         end
       end

@@ -187,6 +187,7 @@ module VCAP
       timestamps(migration, table_key)
     end
 
+    # DEPRECATED: This migration utility function is out of date and should only be used by legacy migrations.
     def self.labels_common(migration, table_key, foreign_resource_table_key)
       migration.String :resource_guid, size: 255
       migration.String :key_prefix, size: 253
@@ -198,6 +199,7 @@ module VCAP
       migration.index %i[key_prefix key_name value], name: :"#{table_key}_compound_index"
     end
 
+    # DEPRECATED: This migration utility function is out of date and should only be used by legacy migrations.
     def self.annotations_common(migration, table_key, foreign_resource_table_key)
       migration.String :resource_guid, size: 255
       migration.String :key_prefix, size: 253

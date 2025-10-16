@@ -5,6 +5,7 @@ require 'presenters/helpers/censorship'
 module VCAP::CloudController::Presenters::V3
   class DomainPresenter < BasePresenter
     include VCAP::CloudController::Presenters::Mixins::MetadataPresentationHelpers
+
     def initialize(
       resource,
       show_secrets: false,

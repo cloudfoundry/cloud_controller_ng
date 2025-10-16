@@ -6,6 +6,7 @@ module VCAP::CloudController::Validators
     let(:class_with_rules) do
       Class.new do
         include ActiveModel::Model
+
         validates_with RulesValidator
 
         def self.name

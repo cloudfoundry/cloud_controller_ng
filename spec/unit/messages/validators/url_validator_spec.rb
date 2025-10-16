@@ -6,6 +6,7 @@ module VCAP::CloudController::Validators
     let(:class_with_url) do
       Class.new do
         include ActiveModel::Model
+
         validates_with UrlValidator
 
         attr_accessor :url

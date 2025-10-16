@@ -13,7 +13,6 @@ module VCAP::CloudController
         @app_or_process = app_or_process
         @service_binding_k8s_enabled = app_or_process.service_binding_k8s_enabled
         @file_based_vcap_services = app_or_process.file_based_vcap_services_enabled
-        @service_bindings = app_or_process.service_bindings
       end
 
       def build
@@ -27,7 +26,6 @@ module VCAP::CloudController
 
       private
 
-      # rubocop:disable Metrics/CyclomaticComplexity
       def build_service_binding_k8s
         return nil unless @service_binding_k8s_enabled
 
@@ -35,13 +33,7 @@ module VCAP::CloudController
         names = Set.new # to check for duplicate binding names
         total_bytesize = 0 # to check the total bytesize
 
-        latest_bindings = @service_bindings.
-                          select(&:create_succeeded?).
-                          group_by(&:service_instance_guid).
-                          values.
-                          map { |list| list.max_by(&:created_at) }
-
-        latest_bindings.each do |service_binding|
+        @app_or_process.service_bindings_dataset.active_per_instance.each do |service_binding|
           sb_hash = ServiceBindingPresenter.new(service_binding, include_instance: true).to_hash
           name = sb_hash[:name]
           raise IncompatibleBindings.new("Invalid binding name: '#{name}'. Name must match #{binding_naming_convention.inspect}") unless valid_binding_name?(name)
@@ -51,16 +43,13 @@ module VCAP::CloudController
           sb_hash.delete(:credentials)&.each { |k, v| total_bytesize += add_file(service_binding_files, name, k.to_s, v) }
 
           # add the rest of the hash; already existing credential keys are overwritten
-          # VCAP_SERVICES attribute names are transformed (e.g. binding_guid -> binding-guid)
-          sb_hash.each { |k, v| total_bytesize += add_file(service_binding_files, name, transform_vcap_services_attribute(k.to_s), v) }
+          sb_hash.each { |k, v| total_bytesize += add_file(service_binding_files, name, k.to_s, v) }
 
           # add the type and provider
           label = sb_hash[:label]
           total_bytesize += add_file(service_binding_files, name, 'type', label)
           total_bytesize += add_file(service_binding_files, name, 'provider', label)
         end
-        # rubocop:enable Metrics/CyclomaticComplexity
-
         raise IncompatibleBindings.new("Bindings exceed the maximum allowed bytesize of #{MAX_ALLOWED_BYTESIZE}: #{total_bytesize}") if total_bytesize > MAX_ALLOWED_BYTESIZE
 
         service_binding_files.values
@@ -113,14 +102,6 @@ module VCAP::CloudController
 
       def valid_file_name?(name)
         name.match?(file_naming_convention)
-      end
-
-      def transform_vcap_services_attribute(name)
-        if %w[binding_guid binding_name instance_guid instance_name syslog_drain_url volume_mounts].include?(name)
-          name.tr('_', '-')
-        else
-          name
-        end
       end
     end
   end
