@@ -65,10 +65,17 @@ module Sequel::Plugins::VcapRelations
         # sequel is not capable of merging adds to a many_to_many association
         # like it is for a one_to_many and nds up throwing a db exception,
         # so lets squash the add
-        if other.is_a?(Integer)
-          super(other) unless send(ids_attr).include? other
-        else
-          super(other) unless send(name).include? other
+        db.transaction(savepoint: true) do
+          if other.is_a?(Integer)
+            super(other) unless send(ids_attr).include? other
+          else
+            super(other) unless send(name).include? other
+          end
+        rescue Sequel::UniqueConstraintViolation => e
+          # ignore the error and rollback the inner transaction
+          raise Sequel::Rollback if opts[:ignored_unique_constraint_violation_errors]&.any? { |pattern| e.message.include?(pattern) }
+
+          raise e
         end
       end
 

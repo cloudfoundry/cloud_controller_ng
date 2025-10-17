@@ -17,7 +17,8 @@ module VCAP::CloudController
                  class: 'VCAP::CloudController::Space',
                  join_table: 'staging_security_groups_spaces',
                  right_key: :staging_space_id,
-                 left_key: :staging_security_group_id
+                 left_key: :staging_security_group_id,
+                 ignored_unique_constraint_violation_errors: %w[staging_security_groups_spaces_ids]
 
     add_association_dependencies spaces: :nullify, staging_spaces: :nullify
 
