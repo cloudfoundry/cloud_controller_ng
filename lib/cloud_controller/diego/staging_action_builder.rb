@@ -39,11 +39,22 @@ module VCAP::CloudController
       def cached_dependencies
         return nil if @config.get(:diego, :enable_declarative_asset_downloads)
 
+        # For custom stacks, use a default lifecycle bundle since they won't be in config
+        bundle_key = lifecycle_bundle_key
+        lifecycle_bundle = config.get(:diego, :lifecycle_bundles)[bundle_key]
+
+        # If custom stack doesn't have a bundle, use the default stack's bundle
+        if !lifecycle_bundle && lifecycle_stack.is_a?(String) && is_custom_stack?(lifecycle_stack)
+          default_stack = Stack.default.name
+          bundle_key = :"#{@prefix}/#{default_stack}"
+          lifecycle_bundle = config.get(:diego, :lifecycle_bundles)[bundle_key]
+        end
+
         dependencies = [
           ::Diego::Bbs::Models::CachedDependency.new(
-            from: LifecycleBundleUriGenerator.uri(config.get(:diego, :lifecycle_bundles)[lifecycle_bundle_key]),
+            from: LifecycleBundleUriGenerator.uri(lifecycle_bundle),
             to: '/tmp/lifecycle',
-            cache_key: "#{@prefix}-#{lifecycle_stack}-lifecycle"
+            cache_key: "#{@prefix}-#{normalize_stack_for_cache_key(lifecycle_stack)}-lifecycle"
           )
         ]
 
@@ -90,10 +101,21 @@ module VCAP::CloudController
       def image_layers
         return [] unless @config.get(:diego, :enable_declarative_asset_downloads)
 
+        # For custom stacks, use a default lifecycle bundle since they won't be in config
+        bundle_key = lifecycle_bundle_key
+        lifecycle_bundle = config.get(:diego, :lifecycle_bundles)[bundle_key]
+
+        # If custom stack doesn't have a bundle, use the default stack's bundle
+        if !lifecycle_bundle && lifecycle_stack.is_a?(String) && is_custom_stack?(lifecycle_stack)
+          default_stack = Stack.default.name
+          bundle_key = :"#{@prefix}/#{default_stack}"
+          lifecycle_bundle = config.get(:diego, :lifecycle_bundles)[bundle_key]
+        end
+
         layers = [
           ::Diego::Bbs::Models::ImageLayer.new(
             name: "#{@prefix}-#{lifecycle_stack}-lifecycle",
-            url: LifecycleBundleUriGenerator.uri(config.get(:diego, :lifecycle_bundles)[lifecycle_bundle_key]),
+            url: LifecycleBundleUriGenerator.uri(lifecycle_bundle),
             destination_path: '/tmp/lifecycle',
             layer_type: ::Diego::Bbs::Models::ImageLayer::Type::SHARED,
             media_type: ::Diego::Bbs::Models::ImageLayer::MediaType::TGZ
@@ -130,6 +152,11 @@ module VCAP::CloudController
       end
 
       def stack
+        # Handle custom stacks (docker:// URLs)
+        if lifecycle_stack.is_a?(String) && is_custom_stack?(lifecycle_stack)
+          return normalize_stack_url(lifecycle_stack)
+        end
+
         @stack ||= Stack.find(name: lifecycle_stack)
         raise CloudController::Errors::ApiError.new_from_details('StackNotFound', lifecycle_stack) unless @stack
 
@@ -230,6 +257,40 @@ module VCAP::CloudController
         else
           "/tmp/buildpacks/#{Digest::XXH64.hexdigest(buildpack_key)}"
         end
+      end
+
+      def normalize_stack_for_cache_key(stack_name)
+        return stack_name unless stack_name.is_a?(String) && is_custom_stack?(stack_name)
+
+        # Extract the image name from the Docker URL for cache key compatibility
+        # Examples:
+        # https://docker.io/cloudfoundry/cflinuxfs4 -> cflinuxfs4
+        # docker://cloudfoundry/cflinuxfs3 -> cflinuxfs3
+        # docker.io/cloudfoundry/cflinuxfs4 -> cflinuxfs4
+        normalized_url = stack_name.gsub(%r{^(https?://|docker://)}, '')
+        if normalized_url.include?('/')
+          # Extract the last part of the path
+          parts = normalized_url.split('/')
+          parts.last
+        else
+          # If no path, use as-is
+          normalized_url
+        end
+      end
+
+      def is_custom_stack?(stack_name)
+        # Check for various container registry URL formats
+        return true if stack_name.include?('docker://')
+        return true if stack_name.match?(%r{^https?://})  # Any https/http URL
+        return true if stack_name.include?('.')  # Any string with a dot (likely a registry)
+        false
+      end
+
+      def normalize_stack_url(stack_url)
+        return stack_url if stack_url.start_with?('docker://')
+        return stack_url.sub(%r{^https?://}, 'docker://') if stack_url.match?(%r{^https?://})
+        return "docker://#{stack_url}" if stack_url.include?('.')
+        stack_url
       end
     end
   end
