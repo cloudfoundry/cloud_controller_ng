@@ -129,22 +129,37 @@ module CloudController
       context 'when storage-cli is requested' do
         let(:blobstore_type) { 'storage-cli' }
         let(:directory_key) { 'some-bucket' }
+        let(:resource_type) { 'droplets' }
         let(:root_dir) { 'some-root-dir' }
         let(:storage_cli_client_mock) { class_double(CloudController::Blobstore::StorageCliClient) }
+        let(:tmpdir)         { Dir.mktmpdir('storage_cli_spec') }
+        let(:config_path)    { File.join(tmpdir, 'storage_cli_config_droplets.json') }
 
         before do
-          options.merge!(connection_config: {}, minimum_size: 100, maximum_size: 1000)
+          File.write(config_path, '{"provider": "AzureRM",
+                  "account_name": "some-account-name",
+                  "account_key": "some-access-key",
+                  "container_name": "directory_key",
+                  "environment": "AzureCloud" }')
+          allow(VCAP::CloudController::Config.config).to receive(:get).with(:storage_cli_config_file_droplets).and_return(config_path)
+          options.merge!(provider: 'AzureRM', minimum_size: 100, maximum_size: 1000)
         end
 
         it 'provides a storage-cli client' do
           allow(StorageCliClient).to receive(:build).and_return(storage_cli_client_mock)
-          ClientProvider.provide(options:, directory_key:, root_dir:)
-          expect(StorageCliClient).to have_received(:build).with(connection_config: {}, directory_key: directory_key, root_dir: root_dir, min_size: 100, max_size: 1000)
+          ClientProvider.provide(options:, directory_key:, root_dir:, resource_type:)
+          expect(StorageCliClient).to have_received(:build).with(directory_key: directory_key, resource_type: resource_type, root_dir: root_dir,
+                                                                 min_size: 100, max_size: 1000)
         end
 
-        it 'raises an error if connection_config is not provided' do
-          options.delete(:connection_config)
-          expect { ClientProvider.provide(options:, directory_key:, root_dir:) }.to raise_error(BlobstoreError, 'connection_config for storage-cli is not provided')
+        it 'raises an error if provider is not provided' do
+          config_path = VCAP::CloudController::Config.config.get(:storage_cli_config_file_droplets)
+          File.write(config_path,
+                     '{"provider": "", "account_name": "some-account-name", "account_key": "some-access-key", "container_name": "directory_key", "environment": "AzureCloud" }')
+          expect { ClientProvider.provide(options:, directory_key:, root_dir:, resource_type:) }.to raise_error(BlobstoreError) { |e|
+            expect(e.message).to include('No provider specified in config file:')
+            expect(e.message).to include(File.basename(config_path))
+          }
         end
       end
     end
