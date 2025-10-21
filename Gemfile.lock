@@ -282,7 +282,7 @@ GEM
       rdoc (>= 4.0.0)
       reline (>= 0.4.2)
     jaro_winkler (1.6.1)
-    json (2.15.0)
+    json (2.15.1)
     json-diff (0.4.1)
     json-schema (6.0.0)
       addressable (~> 2.8)
@@ -375,7 +375,7 @@ GEM
     pp (0.6.2)
       prettyprint
     prettyprint (0.2.0)
-    prism (1.5.1)
+    prism (1.6.0)
     prometheus-client (4.2.5)
       base64
     pry (0.14.1)
@@ -484,7 +484,7 @@ GEM
       activesupport (>= 3.0.0)
       mustache (~> 1.0, >= 0.99.4)
       rspec (~> 3.0)
-    rubocop (1.81.1)
+    rubocop (1.81.6)
       json (~> 2.3)
       language_server-protocol (~> 3.17.0.2)
       lint_roller (~> 1.1.0)
@@ -693,7 +693,7 @@ DEPENDENCIES
   rspec-rails (~> 8.0.2)
   rspec-wait
   rspec_api_documentation (>= 6.1.0)
-  rubocop (~> 1.81.1)
+  rubocop (~> 1.81.6)
   rubocop-capybara
   rubocop-factory_bot
   rubocop-rails (~> 2.33)
