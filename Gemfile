@@ -77,7 +77,7 @@ group :test do
   gem 'mock_redis'
   gem 'parallel_tests'
   gem 'rack-test'
-  gem 'rspec', '~> 3.13.1'
+  gem 'rspec', '~> 3.13.2'
   gem 'rspec_api_documentation', '>= 6.1.0'
   gem 'rspec-collection_matchers'
   gem 'rspec-instafail'
