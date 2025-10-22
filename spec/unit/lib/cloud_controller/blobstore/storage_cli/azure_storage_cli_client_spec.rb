@@ -10,7 +10,7 @@ module CloudController
     RSpec.describe AzureStorageCliClient do
       let!(:tmp_cfg) do
         f = Tempfile.new(['storage_cli_config', '.json'])
-        f.write({ provider: 'AzureRM',
+        f.write({ provider: 'azure',
                   account_name: 'some-account-name',
                   account_key: 'some-access-key',
                   container_name: directory_key,
@@ -37,7 +37,7 @@ module CloudController
 
       after { tmp_cfg.close! }
 
-      subject(:client) { AzureStorageCliClient.new(provider: 'AzureRM', directory_key: directory_key, resource_type: resource_type, root_dir: 'bommel') }
+      subject(:client) { AzureStorageCliClient.new(provider: 'AzureRM', directory_key: directory_key, resource_type: resource_type, root_dir: 'bommel', config_path: 'path') }
       let(:directory_key) { 'my-bucket' }
       let(:resource_type) { 'resource_pool' }
       let(:downloaded_file) do
@@ -73,16 +73,6 @@ module CloudController
       describe '#local?' do
         it 'returns false' do
           expect(client.local?).to be false
-        end
-      end
-
-      describe 'config file' do
-        it 'builds a valid config file' do
-          expect(client.instance_variable_get(:@config_file)).to be_a(String)
-          expect(File.exist?(client.instance_variable_get(:@config_file))).to be true
-          expect(File.read(client.instance_variable_get(:@config_file))).to eq(
-            '{"provider":"AzureRM","account_name":"some-account-name","account_key":"some-access-key","container_name":"my-bucket","environment":"AzureCloud"}'
-          )
         end
       end
 

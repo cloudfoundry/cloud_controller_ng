@@ -170,23 +170,30 @@ module CloudController
           )
         end
 
-        it 'raises when YAML load fails' do
-          File.write(packages_cfg.path, { provider: 'AzureRM',
-                                          account_key: 'bommelkey',
-                                          account_name: 'bommel',
-                                          container_name: 'bommelcontainer',
-                                          environment: 'BommelCloud' }.to_json)
-
-          expect(VCAP::CloudController::YAMLConfig).to receive(:safe_load_file).
-            with(packages_cfg.path).
-            and_raise(StandardError.new('parse blew up'))
-
+        it 'raises BlobstoreError on invalid JSON' do
+          File.write(droplets_cfg.path, '{not json')
           expect do
-            build_client('packages')
-          end.to raise_error(
-            CloudController::Blobstore::BlobstoreError,
-            /Failed to load storage-cli config/
-          )
+            StorageCliClient.build(directory_key: 'dir', root_dir: 'root', resource_type: 'droplets')
+          end.to raise_error(CloudController::Blobstore::BlobstoreError, /Failed to parse storage-cli JSON/)
+        end
+
+        it 'raises when JSON is not an object' do
+          File.write(droplets_cfg.path, '[]')
+          expect do
+            StorageCliClient.build(directory_key: 'dir', root_dir: 'root', resource_type: 'droplets')
+          end.to raise_error(CloudController::Blobstore::BlobstoreError, /must be a JSON object/)
+        end
+
+        %w[account_key account_name container_name environment].each do |k|
+          it "raises when #{k} missing" do
+            cfg = { 'provider' => 'AzureRM', 'account_key' => 'a', 'account_name' => 'b',
+                    'container_name' => 'c', 'environment' => 'd' }
+            cfg.delete(k)
+            File.write(droplets_cfg.path, cfg.to_json)
+            expect do
+              StorageCliClient.build(directory_key: 'dir', root_dir: 'root', resource_type: 'droplets')
+            end.to raise_error(CloudController::Blobstore::BlobstoreError, /Missing required keys.*#{k}/)
+          end
         end
       end
 

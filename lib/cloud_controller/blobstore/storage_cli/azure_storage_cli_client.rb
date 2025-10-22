@@ -5,7 +5,7 @@ module CloudController
         ENV['AZURE_STORAGE_CLI_PATH'] || '/var/vcap/packages/azure-storage-cli/bin/azure-storage-cli'
       end
 
-      CloudController::Blobstore::StorageCliClient.register('AzureRM', AzureStorageCliClient)
+      CloudController::Blobstore::StorageCliClient.register('azure', AzureStorageCliClient)
     end
   end
 end
