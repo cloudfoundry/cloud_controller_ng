@@ -297,6 +297,63 @@ RSpec.describe 'Sequel::Plugins::VcapRelations' do
     it 'raises an error using the remove_<relation>_by_guid' do
       expect { @d1.remove_name_by_guid('bogus-guid') }.to raise_error(CloudController::Errors::ApiError, /Could not find/)
     end
+
+    context 'concurrent insert statements' do
+      let(:db_connection) { DbConfig.new.connection }
+
+      before do
+        allow(@d1).to receive(:add_associated_object).and_wrap_original do |original_add_associated_object, *args, &block|
+          # rubocop:disable Rails/SkipsModelValidations
+          db_connection[:dogs_names].insert(dog_id: @d1.id, name_id: @n1.id) # Simulate concurrent insert from a different thread/connection
+          # rubocop:enable Rails/SkipsModelValidations
+          expect(db_connection[:dogs_names].count).to eq(1)
+          original_add_associated_object.call(*args, &block) # this will raise the UniqueConstraintViolation error
+        end
+      end
+
+      it 'raises an UniqueConstraintViolation error' do
+        expect { @d1.add_name(@n1) }.to raise_error(Sequel::UniqueConstraintViolation)
+      end
+
+      it 'does not catch other errors accidentally' do
+        allow(@d1).to receive(:add_associated_object).and_raise(Sequel::DatabaseError.new('some other error'))
+        expect { @d1.add_name(@n1) }.to raise_error(Sequel::DatabaseError, /some other error/)
+      end
+
+      context 'with ignored_unique_constraint_violation_errors option' do
+        before { dog_klass.many_to_many :names, ignored_unique_constraint_violation_errors: %w[dog_id_name_id_idx] }
+
+        it('catches the error and makes the insert idempotent when called with an object') do
+          expect { @d1.add_name(@n1) }.not_to raise_error
+        end
+
+        it 'catches the error and makes the insert idempotent when called with an id' do
+          expect { @d1.add_name(@n1.id) }.not_to raise_error
+        end
+
+        it 'does not rollback or modify other entries in the join table' do
+          db_connection[:dogs_names].db.transaction do
+            expect { @d1.add_name(@n2) }.not_to raise_error
+            expect(db_connection[:dogs_names].count).to eq(2)
+            expect(@d1.names).to include(@n2)
+          end
+        end
+      end
+
+      context 'when the join table does not have a unique constraint' do
+        # This test proves that without a unique constraint or combined primary key duplicate entries can be created
+        # Join tables should always have a unique constraint or combined primary key
+        before do
+          skip unless db_connection.database_type == :postgres # mysql does not allow dropping foreign key connected indexes easily
+          db_connection.run('DROP INDEX IF EXISTS dog_id_name_id_idx')
+        end
+
+        it 'creates duplicate entries' do
+          expect { @d1.add_name(@n1) }.not_to raise_error
+          expect(db_connection[:dogs_names].count).to eq(2)
+        end
+      end
+    end
   end
 
   describe '#has_one_to_many?' do
