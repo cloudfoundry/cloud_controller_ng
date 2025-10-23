@@ -156,8 +156,8 @@ module CloudController
 
         it 'raises when provider is missing from config file' do
           File.write(packages_cfg.path, {
-            azure_storage_access_key: 'bommelkey',
-            azure_storage_account_name: 'bommel',
+            AzureRM_storage_access_key: 'bommelkey',
+            AzureRM_storage_account_name: 'bommel',
             container_name: 'bommelcontainer',
             environment: 'BommelCloud'
           }.to_json)

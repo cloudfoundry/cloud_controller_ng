@@ -10,7 +10,7 @@ module CloudController
     RSpec.describe AzureStorageCliClient do
       let!(:tmp_cfg) do
         f = Tempfile.new(['storage_cli_config', '.json'])
-        f.write({ provider: 'azure',
+        f.write({ provider: 'AzureRM',
                   account_name: 'some-account-name',
                   account_key: 'some-access-key',
                   container_name: directory_key,
@@ -82,8 +82,8 @@ module CloudController
         end
 
         it 'can be overridden by an environment variable' do
-          allow(ENV).to receive(:[]).with('AZURE_STORAGE_CLI_PATH').and_return('/custom/path/to/azure-storage-cli')
-          expect(client.cli_path).to eq('/custom/path/to/azure-storage-cli')
+          allow(ENV).to receive(:[]).with('AZURE_STORAGE_CLI_PATH').and_return('/custom/path/to/AzureRM-storage-cli')
+          expect(client.cli_path).to eq('/custom/path/to/AzureRM-storage-cli')
         end
       end
 
