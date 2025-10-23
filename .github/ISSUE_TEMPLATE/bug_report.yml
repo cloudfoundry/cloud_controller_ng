@@ -1,0 +1,46 @@
+name: Bug Report
+description: Use this template to report bugs in cloud_controller_ng
+title: "<short description>"
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for submitting an issue to `cloud_controller_ng`. We are always trying to improve! To help us, please fill out the following template.
+  - type: textarea
+    id: issue
+    attributes:
+      label: Issue
+      description: Provide quick introduction so this issue can be triaged.
+      placeholder: "..."
+    validations:
+      required: true
+  - type: textarea
+    id: context
+    attributes:
+      label: Context
+      description: Provide more detailed introduction.
+      placeholder: "..."
+  - type: textarea
+    id: steps-to-reproduce
+    attributes:
+      label: Steps to Reproduce
+      description: Ordered list the process to finding and recreating the issue, example below.
+      placeholder: "..."
+  - type: textarea
+    id: expected-result
+    attributes:
+      label: Expected Result
+      description: Describe what you would expect to have resulted from this process.
+      placeholder: "..."
+  - type: textarea
+    id: current-result
+    attributes:
+      label: Current Result
+      description: Describe what you are currently experiencing from this process, and thereby explain the bug. Include relevant logs. If relevant, include a screenshot.
+      placeholder: "..."
+  - type: input
+    id: possible-fix
+    attributes:
+      label: Possible Fix
+      description: Not obligatory, but suggest fixes or reasons for the bug.
+      placeholder: "..."
