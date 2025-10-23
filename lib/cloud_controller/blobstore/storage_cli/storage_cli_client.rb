@@ -16,29 +16,88 @@ module CloudController
         attr_reader :registry
 
         def register(provider, klass)
-          registry[provider] = klass
+          registry[provider.to_s] = klass
         end
 
-        def build(connection_config:, directory_key:, root_dir:, min_size: nil, max_size: nil)
-          provider = connection_config[:provider]
-          raise 'Missing connection_config[:provider]' if provider.nil?
+        def build(directory_key:, root_dir:, resource_type: nil, min_size: nil, max_size: nil)
+          raise 'Missing resource_type' if resource_type.nil?
 
-          impl_class = registry[provider]
+          cfg = fetch_config(resource_type)
+          provider = cfg['provider']
+
+          key        = provider.to_s
+          impl_class = registry[key] || registry[key.downcase] || registry[key.upcase]
           raise "No storage CLI client registered for provider #{provider}" unless impl_class
 
-          impl_class.new(connection_config:, directory_key:, root_dir:, min_size:, max_size:)
+          impl_class.new(provider: provider, directory_key: directory_key, root_dir: root_dir, resource_type: resource_type, min_size: min_size, max_size: max_size,
+                         config_path: config_path_for(resource_type))
+        end
+
+        RESOURCE_TYPE_KEYS = {
+          'droplets' => :storage_cli_config_file_droplets,
+          'buildpack_cache' => :storage_cli_config_file_droplets,
+          'buildpacks' => :storage_cli_config_file_buildpacks,
+          'packages' => :storage_cli_config_file_packages,
+          'resource_pool' => :storage_cli_config_file_resource_pool
+        }.freeze
+
+        def fetch_config(resource_type)
+          path = config_path_for(resource_type)
+          validate_config_path!(path)
+
+          json = fetch_json(path)
+          validate_json_object!(json, path)
+          validate_required_keys!(json, path)
+
+          json
+        end
+
+        def config_path_for(resource_type)
+          normalized = resource_type.to_s
+          key = RESOURCE_TYPE_KEYS.fetch(normalized) do
+            raise BlobstoreError.new("Unknown resource_type: #{resource_type}")
+          end
+          VCAP::CloudController::Config.config.get(key)
+        end
+
+        def fetch_json(path)
+          Oj.load(File.read(path))
+        rescue Oj::ParseError, EncodingError => e
+          raise BlobstoreError.new("Failed to parse storage-cli JSON at #{path}: #{e.message}")
+        end
+
+        def validate_config_path!(path)
+          return if path && File.file?(path) && File.readable?(path)
+
+          raise BlobstoreError.new("Storage-cli config file not found or not readable at: #{path.inspect}")
+        end
+
+        def validate_json_object!(json, path)
+          raise BlobstoreError.new("Config at #{path} must be a JSON object") unless json.is_a?(Hash)
+        end
+
+        def validate_required_keys!(json, path)
+          provider = json['provider'].to_s.strip
+          raise BlobstoreError.new("No provider specified in config file: #{path.inspect}") if provider.empty?
+
+          required = %w[account_key account_name container_name environment]
+          missing = required.reject { |k| json.key?(k) && !json[k].to_s.strip.empty? }
+          return if missing.empty?
+
+          raise BlobstoreError.new("Missing required keys in #{path}: #{missing.join(', ')}")
         end
       end
 
-      def initialize(connection_config:, directory_key:, root_dir:, min_size: nil, max_size: nil)
+      def initialize(provider:, directory_key:, resource_type:, root_dir:, config_path:, min_size: nil, max_size: nil)
         @cli_path = cli_path
         @directory_key = directory_key
+        @resource_type = resource_type.to_s
         @root_dir = root_dir
         @min_size = min_size || 0
         @max_size = max_size
-        config = build_config(connection_config)
-        @config_file = write_config_file(config)
-        @fork = connection_config.fetch(:fork, false)
+        @provider = provider
+        @config_file = config_path
+        logger.info('storage_cli_config_selected', resource_type: @resource_type, path: @config_file)
       end
 
       def local?
@@ -88,28 +147,16 @@ module CloudController
       end
 
       def cp_file_between_keys(source_key, destination_key)
-        if @fork
-          run_cli('copy', partitioned_key(source_key), partitioned_key(destination_key))
-        else
-          # Azure CLI doesn't support server-side copy yet, so fallback to local copy
-          Tempfile.create('blob-copy') do |tmp|
-            download_from_blobstore(source_key, tmp.path)
-            cp_to_blobstore(tmp.path, destination_key)
-          end
-        end
+        run_cli('copy', partitioned_key(source_key), partitioned_key(destination_key))
       end
 
       def delete_all(_=nil)
         # page_size is currently not considered. Azure SDK / API has a limit of 5000
-        pass unless @fork
-
         # Currently, storage-cli does not support bulk deletion.
         run_cli('delete-recursive', @root_dir)
       end
 
       def delete_all_in_path(path)
-        pass unless @fork
-
         # Currently, storage-cli does not support bulk deletion.
         run_cli('delete-recursive', partitioned_key(path))
       end
@@ -123,29 +170,19 @@ module CloudController
       end
 
       def blob(key)
-        if @fork
-          properties = properties(key)
-          return nil if properties.nil? || properties.empty?
+        properties = properties(key)
+        return nil if properties.nil? || properties.empty?
 
-          signed_url = sign_url(partitioned_key(key), verb: 'get', expires_in_seconds: 3600)
-          StorageCliBlob.new(key, properties:, signed_url:)
-        elsif exists?(key)
-          # Azure CLI does not support getting blob properties directly, so fallback to local check
-          signed_url = sign_url(partitioned_key(key), verb: 'get', expires_in_seconds: 3600)
-          StorageCliBlob.new(key, signed_url:)
-        end
+        signed_url = sign_url(partitioned_key(key), verb: 'get', expires_in_seconds: 3600)
+        StorageCliBlob.new(key, properties:, signed_url:)
       end
 
       def files_for(prefix, _ignored_directory_prefixes=[])
-        return nil unless @fork
-
         files, _status = run_cli('list', prefix)
         files.split("\n").map(&:strip).reject(&:empty?).map { |file| StorageCliBlob.new(file) }
       end
 
       def ensure_bucket_exists
-        return unless @fork
-
         run_cli('ensure-bucket-exists')
       end
 
@@ -192,18 +229,6 @@ module CloudController
 
       def build_config(connection_config)
         raise NotImplementedError
-      end
-
-      def write_config_file(config)
-        # TODO: Consider to move the config generation into capi-release
-        config_dir = File.join(tmpdir, 'blobstore-configs')
-        FileUtils.mkdir_p(config_dir)
-
-        config_file_path = File.join(config_dir, "#{@directory_key}.json")
-        File.open(config_file_path, 'w', 0o600) do |f|
-          f.write(Oj.dump(config.transform_keys(&:to_s)))
-        end
-        config_file_path
       end
 
       def tmpdir
