@@ -56,7 +56,8 @@ module VCAP::Services::ServiceBrokers::V2
       return_values = {
         instance: {
           credentials: {},
-          dashboard_url: parsed_response['dashboard_url']
+          dashboard_url: parsed_response['dashboard_url'],
+          broker_metadata: parsed_response['metadata']
         },
         last_operation: {
           type: 'create',
@@ -203,6 +204,7 @@ module VCAP::Services::ServiceBrokers::V2
       }
 
       attributes[:dashboard_url] = dashboard_url if dashboard_url
+      attributes[:broker_metadata] = parsed_response['metadata'] if parsed_response['metadata']
 
       if state == 'in progress'
         proposed_changes = { service_plan_guid: plan.guid }

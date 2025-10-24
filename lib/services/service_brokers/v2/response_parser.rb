@@ -263,6 +263,17 @@ module VCAP::Services
               'operation' => {
                 'type' => 'string',
                 'maxLength' => 10_000
+              },
+              'metadata' => {
+                'type' => 'object',
+                'properties' => {
+                  'labels' => {
+                    'type' => 'object'
+                  },
+                  'attributes' => {
+                    'type' => 'object'
+                  }
+                }
               }
             }
           }]
@@ -292,6 +303,17 @@ module VCAP::Services
               'operation' => {
                 'type' => 'string',
                 'maxLength' => 10_000
+              },
+              'metadata' => {
+                'type' => 'object',
+                'properties' => {
+                  'labels' => {
+                    'type' => 'object'
+                  },
+                  'attributes' => {
+                    'type' => 'object'
+                  }
+                }
               }
             }
           }]

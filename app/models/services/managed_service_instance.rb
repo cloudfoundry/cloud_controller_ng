@@ -12,16 +12,16 @@ module VCAP::CloudController
 
     export_attributes :name, :credentials, :service_plan_guid,
                       :space_guid, :gateway_data, :dashboard_url, :type, :last_operation,
-                      :tags, :maintenance_info
+                      :tags, :maintenance_info, :broker_metadata
 
     import_attributes :name, :service_plan_guid,
-                      :space_guid, :gateway_data, :maintenance_info
+                      :space_guid, :gateway_data, :maintenance_info, :broker_metadata
 
     strip_attributes :name
 
     plugin :after_initialize
 
-    serialize_attributes :json, :maintenance_info
+    serialize_attributes :json, :maintenance_info, :broker_metadata
 
     def validation_policies
       if space

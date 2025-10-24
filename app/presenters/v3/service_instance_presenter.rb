@@ -50,7 +50,7 @@ module VCAP::CloudController
               }
             },
             metadata: {
-              labels: hashified_labels(service_instance.labels),
+              labels: merged_labels,
               annotations: hashified_annotations(service_instance.annotations)
             },
             links: {
@@ -77,7 +77,7 @@ module VCAP::CloudController
         end
 
         def hash_additions_managed
-          {
+          hash = {
             type: 'managed',
             maintenance_info: maintenance_info,
             upgrade_available: upgrade_available,
@@ -101,6 +101,13 @@ module VCAP::CloudController
               }
             }
           }
+          
+          # Add broker metadata if present
+          if service_instance.broker_metadata.present?
+            hash[:broker_metadata] = service_instance.broker_metadata
+          end
+          
+          hash
         end
 
         def hash_additions_user_provided
@@ -144,6 +151,21 @@ module VCAP::CloudController
           return {} if service_instance.last_operation.nil?
 
           service_instance.last_operation.to_hash({})
+        end
+
+        def merged_labels
+          # Start with existing CF labels
+          cf_labels = hashified_labels(service_instance.labels)
+          
+          # Get broker metadata labels if they exist (only for managed service instances)
+          broker_labels = {}
+          if service_instance.is_a?(ManagedServiceInstance) && service_instance.broker_metadata.present?
+            broker_metadata_labels = service_instance.broker_metadata.dig('labels')
+            broker_labels = broker_metadata_labels if broker_metadata_labels.is_a?(Hash)
+          end
+          
+          # Merge broker labels into CF labels (broker labels take precedence for conflicts)
+          cf_labels.merge(broker_labels)
         end
       end
     end
