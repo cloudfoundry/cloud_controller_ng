@@ -34,7 +34,6 @@ module VCAP::CloudController
 
     def validate
       validates_presence [:app_port]
-      validates_unique %i[app_guid route_guid process_type app_port]
 
       validate_weight
     end
@@ -58,6 +57,15 @@ module VCAP::CloudController
 
     def has_app_port_specified?
       app_port != ProcessModel::NO_APP_PORT_SPECIFIED
+    end
+
+    def around_save
+      yield
+    rescue Sequel::UniqueConstraintViolation => e
+      raise e unless e.message.include?('route_mappings_app_guid_route_guid_process_type_app_port_key')
+
+      errors.add(%i[app_guid route_guid process_type app_port], :unique)
+      raise validation_failed_error
     end
 
     private
