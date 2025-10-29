@@ -53,6 +53,35 @@ module VCAP::CloudController
         binding.valid?
         expect(binding.errors[:service_instance]).to eq [:space_mismatch]
       end
+
+      context 'when a unique constraint violation occurs' do
+        let(:space) { Space.make }
+        let(:service_offering) { Service.make(requires: ['route_forwarding']) }
+        let(:service_plan) { ServicePlan.make(service: service_offering) }
+        let(:service_instance) { ManagedServiceInstance.make(space:, service_plan:) }
+        let(:route) { Route.make(space:) }
+
+        before { RouteBinding.create(service_instance:, route:) }
+
+        it 'raises a Sequel::ValidationFailed error when route_id and service_instance_id are not unique' do
+          duplicate_binding = RouteBinding.new(service_instance:, route:)
+          expect do
+            duplicate_binding.save
+          end.to raise_error(Sequel::ValidationFailed, /unique/) do |e|
+            expect(e.errors.on(%i[route_id service_instance_id])).to include(:unique)
+          end
+        end
+
+        it 'raises other unique constraint violations normally' do
+          another_route = Route.make(space:)
+          binding_with_duplicate_guid = RouteBinding.new(
+            guid: RouteBinding.first.guid,
+            service_instance: service_instance,
+            route: another_route
+          )
+          expect { binding_with_duplicate_guid.save }.to raise_error(Sequel::UniqueConstraintViolation)
+        end
+      end
     end
 
     describe '#save_with_new_operation' do

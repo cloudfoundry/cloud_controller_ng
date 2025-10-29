@@ -164,6 +164,30 @@ module VCAP::CloudController
             end
           end
 
+          context 'ValidationFailed error handling' do
+            it 'raises a RouteBindingAlreadyExists error for concurrent creation' do
+              allow_any_instance_of(RouteBinding).to receive(:save_with_attributes_and_new_operation).and_raise(
+                Sequel::ValidationFailed.new(RouteBinding.new.tap do |b|
+                  b.errors.add(%i[route_id service_instance_id], :unique)
+                end)
+              )
+
+              expect do
+                action.precursor(service_instance, route, message:)
+              end.to raise_error(ServiceRouteBindingCreate::RouteBindingAlreadyExists)
+            end
+
+            it 'does not rescue other ValidationFailed errors' do
+              allow_any_instance_of(RouteBinding).to receive(:save_with_attributes_and_new_operation).and_raise(
+                Sequel::ValidationFailed.new(RouteBinding.new.tap { |b| b.errors.add(:some_field, :some_error) })
+              )
+
+              expect do
+                action.precursor(service_instance, route, message:)
+              end.to raise_error(Sequel::ValidationFailed)
+            end
+          end
+
           context 'route already bound to a different service instance' do
             it 'raises an error' do
               other_instance = UserProvidedServiceInstance.make(space:, route_service_url:)
