@@ -67,6 +67,15 @@ module VCAP::CloudController
       self
     end
 
+    def around_save
+      yield
+    rescue Sequel::UniqueConstraintViolation => e
+      raise e unless e.message.include?('route_bindings_route_id_service_instance_id_index')
+
+      errors.add(%i[route_id service_instance_id], :unique)
+      raise validation_failed_error
+    end
+
     private
 
     def validate_routing_service
