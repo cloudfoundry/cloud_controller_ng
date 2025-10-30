@@ -36,5 +36,28 @@ module VCAP::CloudController
                                       })
       end
     end
+
+    describe 'sidecar_process_types: #around_save' do
+      let(:sidecar) { SidecarModel.make }
+      let(:app) { AppModel.make }
+
+      it 'raises validation error on unique constraint violation for sidecar_process_types' do
+        SidecarProcessTypeModel.create(sidecar: sidecar, type: 'web', app_guid: app.guid, guid: SecureRandom.uuid)
+
+        expect do
+          SidecarProcessTypeModel.create(sidecar: sidecar, type: 'web', app_guid: app.guid, guid: SecureRandom.uuid)
+        end.to raise_error(Sequel::ValidationFailed) { |error|
+          expect(error.message).to include('Sidecar is already associated with process type web')
+        }
+      end
+
+      it 'raises original error on other unique constraint violations' do
+        same_guid = SecureRandom.uuid
+        SidecarProcessTypeModel.create(sidecar: sidecar, type: 'web', app_guid: app.guid, guid: same_guid)
+        expect do
+          SidecarProcessTypeModel.create(sidecar: sidecar, type: 'worker', app_guid: app.guid, guid: same_guid)
+        end.to raise_error(Sequel::UniqueConstraintViolation)
+      end
+    end
   end
 end
