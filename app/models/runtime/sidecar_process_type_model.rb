@@ -6,6 +6,15 @@ module VCAP::CloudController
                 key: :sidecar_guid,
                 without_guid_generation: true
 
+    def around_save
+      yield
+    rescue Sequel::UniqueConstraintViolation => e
+      raise e unless e.message.include?('sidecar_process_types_sidecar_guid_type_index')
+
+      errors.add(%i[sidecar_guid type], "Sidecar is already associated with process type #{type}")
+      raise Sequel::ValidationFailed.new(self)
+    end
+
     def validate
       super
       validates_presence [:type]
