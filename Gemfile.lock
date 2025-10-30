@@ -525,7 +525,7 @@ GEM
     ruby2_keywords (0.0.5)
     ruby_parser (3.8.3)
       sexp_processor (~> 4.1)
-    rubyzip (3.2.0)
+    rubyzip (3.2.1)
     securerandom (0.4.1)
     sequel (5.97.0)
       bigdecimal
