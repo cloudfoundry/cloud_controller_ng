@@ -366,7 +366,7 @@ GEM
     parallel (1.27.0)
     parallel_tests (5.4.0)
       parallel
-    parser (3.3.9.0)
+    parser (3.3.10.0)
       ast (~> 2.4.1)
       racc
     pg (1.6.2)
@@ -485,7 +485,7 @@ GEM
       activesupport (>= 3.0.0)
       mustache (~> 1.0, >= 0.99.4)
       rspec (~> 3.0)
-    rubocop (1.81.6)
+    rubocop (1.81.7)
       json (~> 2.3)
       language_server-protocol (~> 3.17.0.2)
       lint_roller (~> 1.1.0)
@@ -694,7 +694,7 @@ DEPENDENCIES
   rspec-rails (~> 8.0.2)
   rspec-wait
   rspec_api_documentation (>= 6.1.0)
-  rubocop (~> 1.81.6)
+  rubocop (~> 1.81.7)
   rubocop-capybara
   rubocop-factory_bot
   rubocop-rails (~> 2.33)
