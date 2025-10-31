@@ -605,7 +605,7 @@ GEM
     unicode-display_width (3.2.0)
       unicode-emoji (~> 4.1)
     unicode-emoji (4.1.0)
-    uri (1.0.4)
+    uri (1.1.0)
     useragent (0.16.11)
     vhd (0.0.4)
       bit-struct
@@ -716,7 +716,7 @@ DEPENDENCIES
   talentbox-delayed_job_sequel (~> 4.3.0)
   thin
   timecop
-  uri (~> 1.0)
+  uri (~> 1.1)
   vmstat (~> 2.3)
   webmock (> 2.3.1)
 
