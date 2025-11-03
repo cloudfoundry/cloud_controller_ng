@@ -9,7 +9,7 @@ RSpec.describe Database::OldRecordCleanup do
     let!(:fresh_event) { VCAP::CloudController::Event.make(created_at: 1.day.ago + 1.minute) }
 
     it 'deletes records older than specified days' do
-      record_cleanup = Database::OldRecordCleanup.new(VCAP::CloudController::Event, 1)
+      record_cleanup = Database::OldRecordCleanup.new(VCAP::CloudController::Event, cutoff_age_in_days: 1)
 
       expect do
         record_cleanup.delete
@@ -22,7 +22,7 @@ RSpec.describe Database::OldRecordCleanup do
 
     context "when there are no records at all but you're trying to keep at least one" do
       it "doesn't keep one because there aren't any to keep" do
-        record_cleanup = Database::OldRecordCleanup.new(VCAP::CloudController::ServiceUsageEvent, 1, keep_at_least_one_record: true)
+        record_cleanup = Database::OldRecordCleanup.new(VCAP::CloudController::ServiceUsageEvent, cutoff_age_in_days: 1, keep_at_least_one_record: true)
 
         expect { record_cleanup.delete }.not_to raise_error
         expect(VCAP::CloudController::ServiceUsageEvent.count).to eq(0)
@@ -31,12 +31,12 @@ RSpec.describe Database::OldRecordCleanup do
 
     it 'only retrieves the current timestamp from the database once' do
       expect(VCAP::CloudController::Event.db).to receive(:fetch).with('SELECT CURRENT_TIMESTAMP as now').once.and_call_original
-      record_cleanup = Database::OldRecordCleanup.new(VCAP::CloudController::Event, 1)
+      record_cleanup = Database::OldRecordCleanup.new(VCAP::CloudController::Event, cutoff_age_in_days: 1)
       record_cleanup.delete
     end
 
     it 'keeps the last row when :keep_at_least_one_record is true even if it is older than the cutoff date' do
-      record_cleanup = Database::OldRecordCleanup.new(VCAP::CloudController::Event, 0, keep_at_least_one_record: true)
+      record_cleanup = Database::OldRecordCleanup.new(VCAP::CloudController::Event, cutoff_age_in_days: 0, keep_at_least_one_record: true)
 
       expect do
         record_cleanup.delete
