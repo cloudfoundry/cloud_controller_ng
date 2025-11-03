@@ -37,6 +37,10 @@ module VCAP::CloudController
             MetadataUpdate.update(b, message)
           end
         end
+      rescue Sequel::ValidationFailed => e
+        raise e unless e.errors.on(%i[route_id service_instance_id])&.include?(:unique)
+
+        already_exists!
       end
 
       class RouteBindingAlreadyExists < StandardError; end
