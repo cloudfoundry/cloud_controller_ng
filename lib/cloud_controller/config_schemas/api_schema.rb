@@ -426,11 +426,6 @@ module VCAP::CloudController
           optional(:cc_service_key_client_name) => String,
           optional(:cc_service_key_client_secret) => String,
 
-          optional(:honeycomb) => {
-            write_key: String,
-            dataset: String
-          },
-
           update_metric_tags_on_rename: bool,
           app_instance_stopping_state: bool,
 
