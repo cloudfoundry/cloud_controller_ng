@@ -184,7 +184,7 @@ module VCAP::CloudController
             subject.scale
           end.not_to raise_error
 
-          expect(deployment.error).to eq 'An unexpected error has occurred.'
+          expect(deployment.error).to eq 'An unexpected error has occurred: StandardError'
         end
       end
     end
@@ -396,7 +396,7 @@ module VCAP::CloudController
             subject.canary
           end.not_to raise_error
 
-          expect(deployment.error).to eq 'An unexpected error has occurred.'
+          expect(deployment.error).to eq 'An unexpected error has occurred: StandardError'
         end
       end
     end
@@ -429,7 +429,7 @@ module VCAP::CloudController
             subject.cancel
           end.not_to raise_error
 
-          expect(deployment.error).to eq 'An unexpected error has occurred.'
+          expect(deployment.error).to eq 'An unexpected error has occurred: StandardError'
         end
       end
     end
@@ -460,7 +460,7 @@ module VCAP::CloudController
 
           it 'provides a helpful error on the deployment model' do
             subject.scale
-            expect(deployment.error).to eq 'An unexpected error has occurred.'
+            expect(deployment.error).to eq 'An unexpected error has occurred: StandardError'
           end
         end
 
