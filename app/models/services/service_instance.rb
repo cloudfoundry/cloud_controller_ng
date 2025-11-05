@@ -42,7 +42,8 @@ module VCAP::CloudController
                  right_key: :target_space_guid,
                  right_primary_key: :guid,
                  join_table: :service_instance_shares,
-                 class: VCAP::CloudController::Space
+                 class: VCAP::CloudController::Space,
+                 ignored_unique_constraint_violation_errors: %w[service_instance_shares.PRIMARY service_instance_target_space_pk]
 
     many_to_many :routes, join_table: :route_bindings
 

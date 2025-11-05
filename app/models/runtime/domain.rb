@@ -67,7 +67,8 @@ module VCAP::CloudController
       join_table: 'organizations_private_domains',
       left_key: :private_domain_id,
       right_key: :organization_id,
-      before_add: :validate_add_shared_organization
+      before_add: :validate_add_shared_organization,
+      ignored_unique_constraint_violation_errors: %w[orgs_pd_ids]
     )
 
     add_association_dependencies(
