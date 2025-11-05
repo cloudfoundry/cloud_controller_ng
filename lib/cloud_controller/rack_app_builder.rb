@@ -27,7 +27,6 @@ module VCAP::CloudController
         use CloudFoundry::Middleware::VcapRequestId
         use CloudFoundry::Middleware::BelowMinCliWarning if config.get(:warn_if_below_min_cli_version)
         use CloudFoundry::Middleware::NewRelicCustomAttributes if config.get(:newrelic_enabled)
-        use Honeycomb::Rack::Middleware, client: Honeycomb.client if config.get(:honeycomb)
         use CloudFoundry::Middleware::SecurityContextSetter, configurer
         use CloudFoundry::Middleware::Zipkin
         use CloudFoundry::Middleware::RequestLogs, request_logs
