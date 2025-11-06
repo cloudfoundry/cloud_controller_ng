@@ -149,6 +149,8 @@ module VCAP::CloudController
               UserProvidedServiceInstance.make(name: 'shared-service', space: space)
             end.to raise_error(Sequel::ValidationFailed, /name unique/)
           end
+
+          include_examples 'ignored_unique_constraint_violation_errors', ManagedServiceInstance.association_reflection(:shared_spaces), ManagedServiceInstance.db
         end
       end
     end

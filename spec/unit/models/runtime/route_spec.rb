@@ -113,6 +113,8 @@ module VCAP::CloudController
       it { is_expected.to have_associated :space, associated_instance: ->(route) { Space.make(organization: route.domain.owning_organization) } }
       it { is_expected.to have_associated :route_mappings, associated_instance: ->(route) { RouteMappingModel.make(app: AppModel.make(space: route.space), route: route) } }
 
+      include_examples 'ignored_unique_constraint_violation_errors', Route.association_reflection(:shared_spaces), Route.db
+
       describe 'apps association' do
         let(:space) { Space.make }
         let(:process) { ProcessModelFactory.make(space:) }

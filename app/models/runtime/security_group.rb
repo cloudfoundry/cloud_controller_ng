@@ -12,7 +12,7 @@ module VCAP::CloudController
 
     serialize_attributes :json, :rules
 
-    many_to_many :spaces, ignored_unique_constraint_violation_errors: %w[ignored_unique_constraint_violation_errors]
+    many_to_many :spaces, ignored_unique_constraint_violation_errors: %w[security_groups_spaces_ids]
     many_to_many :staging_spaces,
                  class: 'VCAP::CloudController::Space',
                  join_table: 'staging_security_groups_spaces',

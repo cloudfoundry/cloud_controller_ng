@@ -421,6 +421,8 @@ module VCAP::CloudController
 
           expect { security_group.destroy }.not_to raise_error
         end
+
+        include_examples 'ignored_unique_constraint_violation_errors', SecurityGroup.association_reflection(:spaces), SecurityGroup.db
       end
 
       describe 'staging_spaces' do
@@ -432,6 +434,8 @@ module VCAP::CloudController
 
           expect { security_group.destroy }.not_to raise_error
         end
+
+        include_examples 'ignored_unique_constraint_violation_errors', SecurityGroup.association_reflection(:staging_spaces), SecurityGroup.db
       end
     end
 

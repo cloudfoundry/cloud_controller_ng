@@ -36,6 +36,8 @@ module VCAP::CloudController
           expect(domain.shared_organizations).to include(org)
         end
 
+        include_examples 'ignored_unique_constraint_violation_errors', Domain.association_reflection(:shared_organizations), Domain.db
+
         context 'when the domain is a shared domain' do
           it 'fails validation' do
             domain = Domain.make(owning_organization_id: nil)
