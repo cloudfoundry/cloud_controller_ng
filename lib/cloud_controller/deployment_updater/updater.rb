@@ -59,7 +59,7 @@ module VCAP::CloudController
           if APPROVED_ERRORS.include?(e.class)
             deployment.update(error: e.message)
           else
-            deployment.update(error: 'An unexpected error has occurred.')
+            deployment.update(error: "An unexpected error has occurred: #{error_name}")
           end
         rescue StandardError => new_error
           logger.error(
