@@ -150,10 +150,7 @@ module VCAP::CloudController
             end.to raise_error(Sequel::ValidationFailed, /name unique/)
           end
 
-          it 'ignores unique constraint violation errors in the many_to_many relationship definition' do
-            index_name = DbConfig.new.connection.adapter_scheme == :postgres ? :service_instance_target_space_pk : :'service_instance_shares.PRIMARY'
-            expect(ManagedServiceInstance.association_reflection(:shared_spaces)[:ignored_unique_constraint_violation_errors]).to include(index_name.to_s)
-          end
+          include_examples 'ignored_unique_constraint_violation_errors', ManagedServiceInstance.association_reflection(:shared_spaces), ManagedServiceInstance.db
         end
       end
     end

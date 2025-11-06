@@ -36,11 +36,7 @@ module VCAP::CloudController
           expect(domain.shared_organizations).to include(org)
         end
 
-        it 'ignores unique constraint violation errors in the many_to_many relationship definition' do
-          index_name = :orgs_pd_ids
-          expect(DbConfig.new.connection.indexes(:organizations_private_domains)).to include(index_name)
-          expect(Domain.association_reflection(:shared_organizations)[:ignored_unique_constraint_violation_errors]).to include(index_name.to_s)
-        end
+        include_examples 'ignored_unique_constraint_violation_errors', Domain.association_reflection(:shared_organizations), Domain.db
 
         context 'when the domain is a shared domain' do
           it 'fails validation' do

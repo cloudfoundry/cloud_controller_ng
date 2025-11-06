@@ -113,10 +113,7 @@ module VCAP::CloudController
       it { is_expected.to have_associated :space, associated_instance: ->(route) { Space.make(organization: route.domain.owning_organization) } }
       it { is_expected.to have_associated :route_mappings, associated_instance: ->(route) { RouteMappingModel.make(app: AppModel.make(space: route.space), route: route) } }
 
-      it 'ignores unique constraint violation errors in the many_to_many relationship definition' do
-        index_name = DbConfig.new.connection.adapter_scheme == :postgres ? :route_target_space_pk : :'route_shares.PRIMARY'
-        expect(Route.association_reflection(:shared_spaces)[:ignored_unique_constraint_violation_errors]).to include(index_name.to_s)
-      end
+      include_examples 'ignored_unique_constraint_violation_errors', Route.association_reflection(:shared_spaces), Route.db
 
       describe 'apps association' do
         let(:space) { Space.make }
