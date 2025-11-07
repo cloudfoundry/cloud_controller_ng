@@ -652,24 +652,34 @@ module VCAP::CloudController
       end
 
       it 'returns true if there is enough memory remaining when processes are consuming memory' do
-        ProcessModelFactory.make(space: space, memory: 200, instances: 2, state: 'STARTED', type: 'other')
-        ProcessModelFactory.make(space: space, memory: 50, instances: 1, state: 'STARTED')
+        ProcessModelFactory.make(space: space, memory: 200, instances: 2, state: ProcessModel::STARTED, type: 'other')
+        ProcessModelFactory.make(space: space, memory: 50, instances: 1, state: ProcessModel::STARTED)
 
         expect(space.has_remaining_memory(50)).to be(true)
         expect(space.has_remaining_memory(51)).to be(false)
       end
 
       it 'includes RUNNING tasks when determining available memory' do
-        process = ProcessModelFactory.make(space: space, memory: 200, instances: 2, state: 'STARTED')
-        TaskModel.make(app: process.app, memory_in_mb: 50, state: 'RUNNING')
+        process = ProcessModelFactory.make(space: space, memory: 200, instances: 2, state: ProcessModel::STARTED)
+        TaskModel.make(app: process.app, memory_in_mb: 50, state: TaskModel::RUNNING_STATE)
+
+        expect(space.has_remaining_memory(50)).to be(true)
+        expect(space.has_remaining_memory(51)).to be(false)
+      end
+
+      it 'includes PENDING tasks when determining available memory' do
+        process = ProcessModelFactory.make(space: space, memory: 200, instances: 2, state: ProcessModel::STARTED)
+        TaskModel.make(app: process.app, memory_in_mb: 50, state: TaskModel::PENDING_STATE)
 
         expect(space.has_remaining_memory(50)).to be(true)
         expect(space.has_remaining_memory(51)).to be(false)
       end
 
       it 'does not include non-RUNNING tasks when determining available memory' do
-        process = ProcessModelFactory.make(space: space, memory: 200, instances: 2, state: 'STARTED')
-        TaskModel.make(app: process.app, memory_in_mb: 50, state: 'SUCCEEDED')
+        process = ProcessModelFactory.make(space: space, memory: 200, instances: 2, state: ProcessModel::STARTED)
+        TaskModel.make(app: process.app, memory_in_mb: 50, state: TaskModel::SUCCEEDED_STATE)
+        TaskModel.make(app: process.app, memory_in_mb: 51, state: TaskModel::FAILED_STATE)
+        TaskModel.make(app: process.app, memory_in_mb: 52, state: TaskModel::CANCELING_STATE)
 
         expect(space.has_remaining_memory(100)).to be(true)
         expect(space.has_remaining_memory(101)).to be(false)
@@ -710,11 +720,11 @@ module VCAP::CloudController
 
       context 'when something else is running' do
         it 'takes all things in the space into account' do
-          ProcessModelFactory.make(space: space, log_rate_limit: 5, state: 'STARTED')
+          ProcessModelFactory.make(space: space, log_rate_limit: 5, state: ProcessModel::STARTED)
           expect(space.has_remaining_log_rate_limit(5)).to be_truthy
           expect(space.has_remaining_log_rate_limit(6)).to be_falsey
 
-          ProcessModelFactory.make(space: space, log_rate_limit: 1, state: 'STARTED')
+          ProcessModelFactory.make(space: space, log_rate_limit: 1, state: ProcessModel::STARTED)
           expect(space.has_remaining_log_rate_limit(4)).to be_truthy
           expect(space.has_remaining_log_rate_limit(5)).to be_falsey
 
@@ -723,9 +733,22 @@ module VCAP::CloudController
           expect(space.has_remaining_log_rate_limit(4)).to be_falsey
         end
 
+        it 'considers tasks in state PENDING' do
+          TaskModel.make(app: app_model, log_rate_limit: 2, state: TaskModel::PENDING_STATE)
+          expect(space.has_remaining_log_rate_limit(8)).to be_truthy
+          expect(space.has_remaining_log_rate_limit(9)).to be_falsey
+        end
+
+        it 'does not consider tasks in other states' do
+          TaskModel.make(app: app_model, log_rate_limit: 2, state: TaskModel::SUCCEEDED_STATE)
+          TaskModel.make(app: app_model, log_rate_limit: 2, state: TaskModel::FAILED_STATE)
+          TaskModel.make(app: app_model, log_rate_limit: 2, state: TaskModel::CANCELING_STATE)
+          expect(space.has_remaining_log_rate_limit(10)).to be_truthy
+        end
+
         context 'when processes are running in another space' do
           it 'only accounts for processes running in the owning space' do
-            ProcessModelFactory.make(space: space2, log_rate_limit: 1, instances: 2, state: 'STARTED')
+            ProcessModelFactory.make(space: space2, log_rate_limit: 1, instances: 2, state: ProcessModel::STARTED)
 
             expect(space.has_remaining_log_rate_limit(10)).to be_truthy
             expect(space.has_remaining_log_rate_limit(11)).to be_falsey

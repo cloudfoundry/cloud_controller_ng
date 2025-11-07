@@ -447,13 +447,11 @@ module VCAP::CloudController
     end
 
     context 'memory quota' do
-      let(:quota) do
-        QuotaDefinition.make(memory_limit: 500)
-      end
+      let(:quota) { QuotaDefinition.make(memory_limit: 500) }
+      let(:org) { Organization.make(quota_definition: quota) }
+      let(:space) { Space.make(organization: org) }
 
       it 'returns the memory available when no processes are running' do
-        org = Organization.make(quota_definition: quota)
-        space = Space.make(organization: org)
         ProcessModelFactory.make(space: space, memory: 200, instances: 2)
 
         expect(org.has_remaining_memory(500)).to be(true)
@@ -461,21 +459,15 @@ module VCAP::CloudController
       end
 
       it 'returns the memory remaining when processes are consuming memory' do
-        org = Organization.make(quota_definition: quota)
-        space = Space.make(organization: org)
-
-        ProcessModelFactory.make(space: space, memory: 200, instances: 2, state: 'STARTED', type: 'worker')
-        ProcessModelFactory.make(space: space, memory: 50, instances: 1, state: 'STARTED')
+        ProcessModelFactory.make(space: space, memory: 200, instances: 2, state: ProcessModel::STARTED, type: 'worker')
+        ProcessModelFactory.make(space: space, memory: 50, instances: 1, state: ProcessModel::STARTED)
 
         expect(org.has_remaining_memory(50)).to be(true)
         expect(org.has_remaining_memory(51)).to be(false)
       end
 
       it 'includes RUNNING tasks when returning remaining memory' do
-        org = Organization.make(quota_definition: quota)
-        space = Space.make(organization: org)
-
-        process = ProcessModelFactory.make(space: space, memory: 250, instances: 1, state: 'STARTED', type: 'worker')
+        process = ProcessModelFactory.make(space: space, memory: 250, instances: 1, state: ProcessModel::STARTED, type: 'worker')
         TaskModel.make(app: process.app, memory_in_mb: 25, state: TaskModel::RUNNING_STATE)
         TaskModel.make(app: process.app, memory_in_mb: 25, state: TaskModel::RUNNING_STATE)
 
@@ -483,25 +475,27 @@ module VCAP::CloudController
         expect(org.has_remaining_memory(201)).to be(false)
       end
 
+      it 'includes PENDING tasks when determining available memory' do
+        process = ProcessModelFactory.make(space: space, memory: 200, instances: 2, state: ProcessModel::STARTED)
+        TaskModel.make(app: process.app, memory_in_mb: 50, state: TaskModel::PENDING_STATE)
+
+        expect(org.has_remaining_memory(50)).to be(true)
+        expect(org.has_remaining_memory(51)).to be(false)
+      end
+
       context 'when memory quota is unlimited (-1)' do
-        let(:quota) do
-          QuotaDefinition.make(memory_limit: -1)
-        end
+        let(:quota) { QuotaDefinition.make(memory_limit: -1) }
 
         it "indicates that there's more memory remaining" do
-          org = Organization.make(quota_definition: quota)
-
           expect(org.has_remaining_memory(1 << 63)).to be(true) # a very big number
         end
       end
 
       it 'does NOT include non-RUNNING tasks when returning remaining memory' do
-        org = Organization.make(quota_definition: quota)
-        space = Space.make(organization: org)
-
-        process = ProcessModelFactory.make(space: space, memory: 250, instances: 1, state: 'STARTED', type: 'worker')
-        TaskModel.make(app: process.app, memory_in_mb: 25, state: TaskModel::PENDING_STATE)
+        process = ProcessModelFactory.make(space: space, memory: 250, instances: 1, state: ProcessModel::STARTED, type: 'worker')
         TaskModel.make(app: process.app, memory_in_mb: 25, state: TaskModel::SUCCEEDED_STATE)
+        TaskModel.make(app: process.app, memory_in_mb: 25, state: TaskModel::FAILED_STATE)
+        TaskModel.make(app: process.app, memory_in_mb: 25, state: TaskModel::CANCELING_STATE)
 
         expect(org.has_remaining_memory(250)).to be(true)
         expect(org.has_remaining_memory(251)).to be(false)
@@ -546,6 +540,19 @@ module VCAP::CloudController
           TaskModel.make(app: app_model, log_rate_limit: 1, state: TaskModel::RUNNING_STATE)
           expect(org.has_remaining_log_rate_limit(3)).to be_truthy
           expect(org.has_remaining_log_rate_limit(4)).to be_falsey
+        end
+
+        it 'considers tasks in state PENDING' do
+          TaskModel.make(app: app_model, log_rate_limit: 2, state: TaskModel::PENDING_STATE)
+          expect(org.has_remaining_log_rate_limit(8)).to be_truthy
+          expect(org.has_remaining_log_rate_limit(9)).to be_falsey
+        end
+
+        it 'does not consider tasks in other states' do
+          TaskModel.make(app: app_model, log_rate_limit: 2, state: TaskModel::SUCCEEDED_STATE)
+          TaskModel.make(app: app_model, log_rate_limit: 2, state: TaskModel::FAILED_STATE)
+          TaskModel.make(app: app_model, log_rate_limit: 2, state: TaskModel::CANCELING_STATE)
+          expect(org.has_remaining_log_rate_limit(10)).to be_truthy
         end
 
         context 'when something else is running in another org' do
