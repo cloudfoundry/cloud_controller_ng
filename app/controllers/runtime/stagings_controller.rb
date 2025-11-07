@@ -134,7 +134,7 @@ module VCAP::CloudController
     end
 
     def create_droplet_from_build(build)
-      DropletCreate.new.create_buildpack_droplet(build)
+      DropletCreate.new.find_or_create_buildpack_droplet(build)
     end
 
     def upload_path
