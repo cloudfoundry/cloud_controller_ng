@@ -55,7 +55,15 @@ module VCAP::CloudController
           raise "Build #{build.id} not found for locking"
 
         existing = DropletModel.where(build_guid: build.guid).first
-        return existing if existing
+        if existing
+          if build.cnb_lifecycle?
+            existing.cnb_lifecycle_data ||= build.cnb_lifecycle_data
+          else
+            existing.buildpack_lifecycle_data ||= build.buildpack_lifecycle_data
+          end
+          existing.save_changes
+          return existing
+        end
 
         droplet = droplet_from_build(build)
         droplet.save

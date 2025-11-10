@@ -196,9 +196,9 @@ module VCAP::CloudController
         end
 
         it 'creates the droplet once and attaches lifecycle data' do
-          expect {
+          expect do
             droplet_create.find_or_create_buildpack_droplet(build)
-          }.to change { [DropletModel.count, Event.count] }.by([1, 1])
+          end.to change { [DropletModel.count, Event.count] }.by([1, 1])
 
           droplet = DropletModel.last
           expect(droplet.state).to eq(DropletModel::STAGING_STATE)
@@ -213,11 +213,10 @@ module VCAP::CloudController
         it 'is idempotent on repeated calls (no duplicate droplet, same GUID, no extra event)' do
           first = droplet_create.find_or_create_buildpack_droplet(build)
 
-          expect {
+          expect do
             second = droplet_create.find_or_create_buildpack_droplet(build)
             expect(second.guid).to eq(first.guid)
-          }.to change(DropletModel, :count).by(0)
-                                           .and change(Event, :count).by(0)
+          end.not_to(change { [DropletModel.count, Event.count] })
 
           # Ensure still only one droplet for this build
           expect(DropletModel.where(build_guid: build.guid).count).to eq(1)
@@ -235,11 +234,10 @@ module VCAP::CloudController
           )
           buildpack_lifecycle_data.update(droplet: existing)
 
-          expect {
+          expect do
             returned = droplet_create.find_or_create_buildpack_droplet(build)
             expect(returned.guid).to eq(existing.guid)
-          }.to change(DropletModel, :count).by(0)
-                                           .and change(Event, :count).by(0)
+          end.not_to(change { [DropletModel.count, Event.count] })
 
           expect(DropletModel.where(build_guid: build.guid).first.guid).to eq(existing.guid)
         end
