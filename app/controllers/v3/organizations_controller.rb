@@ -15,6 +15,9 @@ require 'models/helpers/role_types'
 require 'presenters/v3/paginated_list_presenter'
 require 'presenters/v3/organization_presenter'
 require 'presenters/v3/organization_usage_summary_presenter'
+require 'presenters/v3/organization_usage_summary_presenter'
+require 'fetchers/organization_quota_summary_fetcher'
+require 'presenters/v3/organization_quota_summary_presenter'
 require 'presenters/v3/to_one_relationship_presenter'
 
 class OrganizationsV3Controller < ApplicationController
@@ -115,6 +118,12 @@ class OrganizationsV3Controller < ApplicationController
     org_not_found! unless org && permission_queryer.can_read_from_org?(org.id)
 
     render status: :ok, json: Presenters::V3::OrganizationUsageSummaryPresenter.new(org)
+  end
+  def show_quota_summary
+    org = fetch_org(hashed_params[:guid])
+    summary = OrganizationQuotaSummaryFetcher.fetch(org)
+
+    render status: :ok, json: Presenters::V3::OrganizationQuotaSummaryPresenter.new(org, summary:)
   end
 
   def update_default_isolation_segment

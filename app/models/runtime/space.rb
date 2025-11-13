@@ -341,6 +341,18 @@ module VCAP::CloudController
       tasks_dataset.where(state: [TaskModel::PENDING_STATE, TaskModel::RUNNING_STATE]).count
     end
 
+    def log_rate_limit_used
+      started_app_log_rate_limit + running_task_log_rate_limit
+    end
+
+    def total_instances_used
+      processes_dataset.where(state: ProcessModel::STARTED).sum(:instances) || 0
+    end
+
+    def total_reserved_ports_used
+      routes.sum { |r| r.port.present? ? 1 : 0 }
+    end
+
     private
 
     def has_manager?(user)

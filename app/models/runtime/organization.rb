@@ -231,6 +231,10 @@ module VCAP::CloudController
       started_app_memory + running_task_memory
     end
 
+    def memory_available
+      memory_remaining
+    end
+
     def has_remaining_memory(mem)
       quota_definition.memory_limit == QuotaDefinition::UNLIMITED || memory_remaining >= mem
     end
@@ -291,7 +295,23 @@ module VCAP::CloudController
         count
     end
 
-    private
+    def log_rate_limit_used
+      started_app_log_rate_limit + running_task_log_rate_limit
+    end
+
+    def total_instances_used
+      processes_dataset.where(state: ProcessModel::STARTED).sum(:instances) || 0
+    end
+
+    def total_service_keys_used
+      ServiceKey.join(:service_instances, id: :service_instance_id).where(service_instances__space_id: spaces.map(&:id)).count
+    end
+
+    def total_reserved_ports_used
+      spaces.map(&:routes).flatten.select(&:port).count
+    end
+
+  private
 
     def validate_default_isolation_segment
       return if @destroying
