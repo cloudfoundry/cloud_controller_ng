@@ -51,9 +51,6 @@ module VCAP::CloudController
 
     def find_or_create_buildpack_droplet(build)
       DropletModel.db.transaction do
-        BuildModel.where(id: build.id).for_update.first or
-          raise "Build #{build.id} not found for locking"
-
         existing = DropletModel.where(build_guid: build.guid).first
         if existing
           if build.cnb_lifecycle?
@@ -79,8 +76,6 @@ module VCAP::CloudController
         record_audit_event(droplet, build.package, user_audit_info_from_build(build))
         droplet
       end
-    rescue Sequel::UniqueConstraintViolation
-      DropletModel.where(build_guid: build.guid).first
     end
 
     private
