@@ -1,3 +1,5 @@
+require 'uri'
+
 module VCAP::CloudController
   class BuildpackLifecycleDataMessage < BaseMessage
     register_allowed_keys %i[buildpacks stack credentials]
@@ -19,6 +21,7 @@ module VCAP::CloudController
 
     validate :buildpacks_content
     validate :credentials_content
+    validate :custom_stack_requires_custom_buildpack
 
     def buildpacks_content
       return unless buildpacks.is_a?(Array)
@@ -40,7 +43,44 @@ module VCAP::CloudController
     def credentials_content
       return unless credentials.is_a?(Hash)
 
-      errors.add(:credentials, 'credentials value must be a hash') if credentials.any? { |_, v| !v.is_a?(Hash) }
+      credentials.each do |registry, creds|
+        unless creds.is_a?(Hash)
+          errors.add(:credentials, "for registry '#{registry}' must be a hash")
+          next
+        end
+
+        has_username = creds.key?('username') || creds.key?(:username)
+        has_password = creds.key?('password') || creds.key?(:password)
+        errors.add(:base, "credentials for #{registry} must include 'username' and 'password'") unless has_username && has_password
+      end
+    end
+
+    def custom_stack_requires_custom_buildpack
+      return unless stack.is_a?(String) && is_custom_stack?(stack)
+      return unless FeatureFlag.enabled?(:diego_custom_stacks)
+      return unless buildpacks.is_a?(Array)
+
+      buildpacks.each do |buildpack_name|
+        # If buildpack is a URL, it's custom
+        next if buildpack_name&.match?(URI::DEFAULT_PARSER.make_regexp)
+
+        # Check if it's a system buildpack
+        system_buildpack = Buildpack.find(name: buildpack_name)
+        if system_buildpack
+          errors.add(:base, 'Buildpack must be a custom buildpack when using a custom stack')
+          break
+        end
+      end
+    end
+
+    private
+
+    def is_custom_stack?(stack_name)
+      # Check for various container registry URL formats
+      return true if stack_name.include?('docker://')
+      return true if stack_name.match?(%r{^https?://})  # Any https/http URL
+      return true if stack_name.include?('.')  # Any string with a dot (likely a registry)
+      false
     end
   end
 end
