@@ -863,6 +863,16 @@
   http_code: 404
   message: "The stack could not be found: %s"
 
+250004:
+  name: StackDisabled
+  http_code: 422
+  message: "Cannot stage app, stack '%s' is disabled. %s"
+
+250005:
+  name: StackLocked
+  http_code: 422
+  message: "Cannot stage new app, stack '%s' is locked. %s"
+
 260001:
   name: ServicePlanVisibilityInvalid
   http_code: 400
