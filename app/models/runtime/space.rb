@@ -334,7 +334,7 @@ module VCAP::CloudController
     end
 
     def memory_used
-      started_app_memory + running_task_memory
+      started_app_memory + running_task_memory + pending_task_memory
     end
 
     def running_and_pending_tasks_count
@@ -356,11 +356,15 @@ module VCAP::CloudController
     end
 
     def log_rate_limit_remaining
-      space_quota_definition.log_rate_limit - (started_app_log_rate_limit + running_task_log_rate_limit)
+      space_quota_definition.log_rate_limit - (started_app_log_rate_limit + running_task_log_rate_limit + pending_task_log_rate_limit)
     end
 
     def running_task_memory
       tasks_dataset.where(state: TaskModel::RUNNING_STATE).sum(:memory_in_mb) || 0
+    end
+
+    def pending_task_memory
+      tasks_dataset.where(state: TaskModel::PENDING_STATE).sum(:memory_in_mb) || 0
     end
 
     def started_app_memory
@@ -369,6 +373,10 @@ module VCAP::CloudController
 
     def running_task_log_rate_limit
       tasks_dataset.where(state: TaskModel::RUNNING_STATE).sum(:log_rate_limit) || 0
+    end
+
+    def pending_task_log_rate_limit
+      tasks_dataset.where(state: TaskModel::PENDING_STATE).sum(:log_rate_limit) || 0
     end
 
     def started_app_log_rate_limit

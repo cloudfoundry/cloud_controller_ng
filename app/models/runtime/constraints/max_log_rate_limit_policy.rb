@@ -69,7 +69,9 @@ class TaskMaxLogRateLimitPolicy < BaseMaxLogRateLimitPolicy
   private
 
   def additional_checks
-    IGNORED_STATES.exclude?(resource.state)
+    IGNORED_STATES.exclude?(resource.state) &&
+      # Skipping the TaskMaxLogRateLimitPolicy if the task is transitioning from PENDING to RUNNING state as it might be already running on Diego
+      resource.column_change(:state) != [VCAP::CloudController::TaskModel::PENDING_STATE, VCAP::CloudController::TaskModel::RUNNING_STATE]
   end
 
   def field

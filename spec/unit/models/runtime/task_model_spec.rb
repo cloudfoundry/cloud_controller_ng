@@ -625,27 +625,26 @@ module VCAP::CloudController
                 )
               end.to raise_error Sequel::ValidationFailed, "log_rate_limit cannot be unlimited in space '#{space.name}'."
             end
+
+            it 'considers running and pending tasks but still allows state changes' do
+              task = TaskModel.make(log_rate_limit: 200, app: app, state: TaskModel::PENDING_STATE)
+              expect do
+                TaskModel.make(log_rate_limit: 1, app: app, state: TaskModel::RUNNING_STATE)
+              end.to raise_error Sequel::ValidationFailed, 'log_rate_limit exceeds space log rate quota'
+
+              expect { task.update(state: TaskModel::RUNNING_STATE) }.not_to raise_error
+            end
           end
 
           describe 'when the quota has a memory_limit' do
             let(:quota) { SpaceQuotaDefinition.make(memory_limit: 20, organization: org) }
 
             it 'allows tasks that fit in the available space' do
-              expect do
-                TaskModel.make(
-                  memory_in_mb: 10,
-                  app: app
-                )
-              end.not_to raise_error
+              expect { TaskModel.make(memory_in_mb: 10, app: app) }.not_to raise_error
             end
 
             it 'raises an error if the task does not fit in the remaining space' do
-              expect do
-                TaskModel.make(
-                  memory_in_mb: 21,
-                  app: app
-                )
-              end.to raise_error Sequel::ValidationFailed, 'memory_in_mb exceeds space memory quota'
+              expect { TaskModel.make(memory_in_mb: 21, app: app) }.to raise_error Sequel::ValidationFailed, 'memory_in_mb exceeds space memory quota'
             end
 
             it 'does not raise errors when canceling task above quota' do
@@ -654,6 +653,15 @@ module VCAP::CloudController
 
               task.update(state: TaskModel::CANCELING_STATE)
               expect(task.reload).to be_valid
+            end
+
+            it 'considers running and pending tasks but still allows state changes' do
+              task = TaskModel.make(memory_in_mb: 20, app: app, state: TaskModel::PENDING_STATE)
+              expect do
+                TaskModel.make(memory_in_mb: 1, app: app, state: TaskModel::RUNNING_STATE)
+              end.to raise_error Sequel::ValidationFailed, 'memory_in_mb exceeds space memory quota'
+
+              expect { task.update(state: TaskModel::RUNNING_STATE) }.not_to raise_error
             end
           end
 
@@ -799,27 +807,26 @@ module VCAP::CloudController
                 )
               end.to raise_error(/log_rate_limit exceeds organization log rate/)
             end
+
+            it 'considers running and pending tasks but still allows state changes' do
+              task = TaskModel.make(log_rate_limit: 200, app: app, state: TaskModel::PENDING_STATE)
+              expect do
+                TaskModel.make(log_rate_limit: 1, app: app, state: TaskModel::RUNNING_STATE)
+              end.to raise_error Sequel::ValidationFailed, 'log_rate_limit exceeds organization log rate quota'
+
+              expect { task.update(state: TaskModel::RUNNING_STATE) }.not_to raise_error
+            end
           end
 
           describe 'when the quota has a memory_limit' do
             let(:quota) { QuotaDefinition.make(memory_limit: 20) }
 
             it 'allows tasks that fit in the available space' do
-              expect do
-                TaskModel.make(
-                  memory_in_mb: 10,
-                  app: app
-                )
-              end.not_to raise_error
+              expect { TaskModel.make(memory_in_mb: 10, app: app) }.not_to raise_error
             end
 
             it 'raises an error if the task does not fit in the remaining space' do
-              expect do
-                TaskModel.make(
-                  memory_in_mb: 21,
-                  app: app
-                )
-              end.to raise_error Sequel::ValidationFailed, 'memory_in_mb exceeds organization memory quota'
+              expect { TaskModel.make(memory_in_mb: 21, app: app) }.to raise_error Sequel::ValidationFailed, 'memory_in_mb exceeds organization memory quota'
             end
 
             it 'does not raise errors when canceling task above quota' do
@@ -828,6 +835,15 @@ module VCAP::CloudController
 
               task.update(state: TaskModel::CANCELING_STATE)
               expect(task.reload).to be_valid
+            end
+
+            it 'considers running and pending tasks but still allows state changes' do
+              task = TaskModel.make(memory_in_mb: 20, app: app, state: TaskModel::PENDING_STATE)
+              expect do
+                TaskModel.make(memory_in_mb: 1, app: app, state: TaskModel::RUNNING_STATE)
+              end.to raise_error Sequel::ValidationFailed, 'memory_in_mb exceeds organization memory quota'
+
+              expect { task.update(state: TaskModel::RUNNING_STATE) }.not_to raise_error
             end
           end
 

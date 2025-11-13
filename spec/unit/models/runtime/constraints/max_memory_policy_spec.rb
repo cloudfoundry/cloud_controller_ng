@@ -82,5 +82,12 @@ RSpec.describe 'max memory policies' do
         expect(validator).to validate_without_error(task)
       end
     end
+
+    context 'when the task state changes from PENDING to RUNNING' do
+      it 'does not register error' do
+        allow(task).to receive(:column_change).with(:state).and_return([VCAP::CloudController::TaskModel::PENDING_STATE, VCAP::CloudController::TaskModel::RUNNING_STATE])
+        expect(validator).to validate_without_error(task)
+      end
+    end
   end
 end
