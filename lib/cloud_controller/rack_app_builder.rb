@@ -1,5 +1,5 @@
 require 'syslog/logger'
-require 'vcap_request_id'
+require 'vcap_request_context_setter'
 require 'cors'
 require 'request_metrics'
 require 'request_logs'
@@ -24,7 +24,7 @@ module VCAP::CloudController
       Rack::Builder.new do
         use CloudFoundry::Middleware::RequestMetrics, request_metrics
         use CloudFoundry::Middleware::Cors, config.get(:allowed_cors_domains)
-        use CloudFoundry::Middleware::VcapRequestId
+        use CloudFoundry::Middleware::VcapRequestContextSetter
         use CloudFoundry::Middleware::BelowMinCliWarning if config.get(:warn_if_below_min_cli_version)
         use CloudFoundry::Middleware::NewRelicCustomAttributes if config.get(:newrelic_enabled)
         use CloudFoundry::Middleware::SecurityContextSetter, configurer

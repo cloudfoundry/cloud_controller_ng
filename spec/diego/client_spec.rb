@@ -19,7 +19,7 @@ module Diego
     end
 
     before do
-      # from middleware/vcap_request_id.rb
+      # from middleware/vcap_request_context_setter.rb
       ::VCAP::Request.current_id = "#{request_id}::b62be6c2-0f2c-4199-94d3-41a69e00f67d"
       allow(Steno).to receive(:logger).with('cc.diego.client').and_return(logger)
       allow(logger).to receive(:info)

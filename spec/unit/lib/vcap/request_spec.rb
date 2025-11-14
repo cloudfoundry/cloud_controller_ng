@@ -131,5 +131,25 @@ module VCAP
         expect(Steno.config.context.data.key?('user_guid')).to be false
       end
     end
+
+    describe '.user_agent' do
+      after do
+        Request.user_agent = nil
+      end
+
+      let(:user_agent) { 'cf/99.0.0-dev-961e7e2+build1070100 (go1.25.2; arm64 darwin)' }
+
+      it 'sets the new user_agent' do
+        Request.user_agent = user_agent
+
+        expect(Request.user_agent).to eq user_agent
+      end
+
+      it 'uses the :user_agent thread local' do
+        Request.user_agent = user_agent
+
+        expect(Thread.current[:user_agent]).to eq(user_agent)
+      end
+    end
   end
 end

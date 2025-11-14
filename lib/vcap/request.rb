@@ -56,6 +56,14 @@ module VCAP
         Thread.current[:b3_span_id]
       end
 
+      def user_agent=(user_agent)
+        Thread.current[:user_agent] = user_agent
+      end
+
+      def user_agent
+        Thread.current[:user_agent]
+      end
+
       def db_query_metrics
         init_db_query_metrics
 

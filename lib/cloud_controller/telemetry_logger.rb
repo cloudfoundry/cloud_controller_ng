@@ -31,6 +31,9 @@ module VCAP::CloudController
           INTEGER_FIELDS.include?(k)
         end.transform_values(&:to_i))
 
+        user_agent = ::VCAP::Request.user_agent
+        converted_entries['user-agent'] = user_agent if user_agent.present?
+
         resp = {
           'telemetry-source' => 'cloud_controller_ng',
           'telemetry-time' => Time.now.to_datetime.rfc3339,

@@ -127,5 +127,88 @@ module VCAP::CloudController
                                             })
       end
     end
+
+    describe 'user-agent tracking' do
+      context 'when user-agent is set' do
+        before do
+          ::VCAP::Request.user_agent = 'cf/8.7.0 (go1.21.4; amd64 linux)'
+        end
+
+        after do
+          ::VCAP::Request.user_agent = nil
+        end
+
+        it 'includes user-agent in v3 telemetry events' do
+          TelemetryLogger.v3_emit(
+            'some-event',
+            { 'key' => 'value' }
+          )
+
+          expect(Oj.load(file.read)).to match({
+                                                'telemetry-source' => 'cloud_controller_ng',
+                                                'telemetry-time' => rfc3339,
+                                                'some-event' => {
+                                                  'key' => OpenSSL::Digest.hexdigest('SHA256', 'value'),
+                                                  'api-version' => 'v3',
+                                                  'user-agent' => 'cf/8.7.0 (go1.21.4; amd64 linux)'
+                                                }
+                                              })
+        end
+
+        it 'includes user-agent in v2 telemetry events' do
+          TelemetryLogger.v2_emit(
+            'some-event',
+            { 'key' => 'value' }
+          )
+
+          expect(Oj.load(file.read)).to match({
+                                                'telemetry-source' => 'cloud_controller_ng',
+                                                'telemetry-time' => rfc3339,
+                                                'some-event' => {
+                                                  'key' => OpenSSL::Digest.hexdigest('SHA256', 'value'),
+                                                  'api-version' => 'v2',
+                                                  'user-agent' => 'cf/8.7.0 (go1.21.4; amd64 linux)'
+                                                }
+                                              })
+        end
+
+        it 'includes user-agent in internal telemetry events' do
+          TelemetryLogger.internal_emit(
+            'some-event',
+            { 'key' => 'value' }
+          )
+
+          expect(Oj.load(file.read)).to match({
+                                                'telemetry-source' => 'cloud_controller_ng',
+                                                'telemetry-time' => rfc3339,
+                                                'some-event' => {
+                                                  'key' => OpenSSL::Digest.hexdigest('SHA256', 'value'),
+                                                  'api-version' => 'internal',
+                                                  'user-agent' => 'cf/8.7.0 (go1.21.4; amd64 linux)'
+                                                }
+                                              })
+        end
+
+        it 'includes user-agent with other raw entries' do
+          TelemetryLogger.v3_emit(
+            'some-event',
+            { 'anonymize_key' => 'anonymize_value' },
+            { 'safe_key' => 'safe-value', 'memory-in-mb' => '2048' }
+          )
+
+          expect(Oj.load(file.read)).to match({
+                                                'telemetry-source' => 'cloud_controller_ng',
+                                                'telemetry-time' => rfc3339,
+                                                'some-event' => {
+                                                  'anonymize_key' => OpenSSL::Digest.hexdigest('SHA256', 'anonymize_value'),
+                                                  'safe_key' => 'safe-value',
+                                                  'memory-in-mb' => 2048,
+                                                  'api-version' => 'v3',
+                                                  'user-agent' => 'cf/8.7.0 (go1.21.4; amd64 linux)'
+                                                }
+                                              })
+        end
+      end
+    end
   end
 end
