@@ -1,7 +1,7 @@
 require 'presenters/v3/paginated_list_presenter'
 require 'presenters/v3/process_presenter'
 require 'presenters/v3/process_stats_presenter'
-require 'presenters/v3/processes_state_presenter'
+require 'presenters/v3/process_instances_presenter'
 require 'cloud_controller/paging/pagination_options'
 require 'actions/process_delete'
 require 'fetchers/process_list_fetcher'
@@ -12,13 +12,14 @@ require 'actions/process_update'
 require 'messages/process_scale_message'
 require 'messages/process_update_message'
 require 'messages/processes_list_message'
+require 'messages/processes_instances_list_message'
 require 'controllers/v3/mixins/app_sub_resource'
 require 'cloud_controller/strategies/non_manifest_strategy'
 
 class ProcessesController < ApplicationController
   include AppSubResource
 
-  before_action :find_process_and_space, except: %i[index state]
+  before_action :find_process_and_space, except: %i[index instances]
   before_action :ensure_can_write, only: %i[update terminate scale]
 
   def index
@@ -107,21 +108,33 @@ class ProcessesController < ApplicationController
     render status: :ok, json: Presenters::V3::ProcessStatsPresenter.new(@process.type, process_stats)
   end
 
-  def state
-    space_guid = params[:space_guid]
-    return unprocessable!(['space_guid required']) if space_guid.blank?
+  def instances
+    message = ProcessesInstancesListMessage.from_params(query_params)
+    invalid_param!(message.errors.full_messages) unless message.valid?
 
-    # Fetch all processes in the given space
-    processes = ProcessFetcher.fetch_for_space(space_guid: space_guid)
+    # Use ProcessesListMessage with :process_guids as :guids to fetch processes
+    fetch_message = ProcessesListMessage.from_params(query_params.merge(query_params[:process_guids].present? ? { guids: query_params[:process_guids] } : {}))
 
-    # Call state_for_processes on instances_reporters
-    process_states, warnings = instances_reporters.state_for_processes(processes)
+    dataset = if permission_queryer.can_read_globally?
+                ProcessListFetcher.fetch_all(fetch_message, eager_loaded_associations: Presenters::V3::ProcessInstancesPresenter.associated_resources)
+              else
+                ProcessListFetcher.fetch_for_spaces(
+                  fetch_message,
+                  space_guids: permission_queryer.readable_space_guids,
+                  eager_loaded_associations: Presenters::V3::ProcessInstancesPresenter.associated_resources
+                )
+              end
 
-    # Add warning headers
-    add_warning_headers(warnings)
+    paginated_result = SequelPaginator.new.get_page(dataset, message.try(:pagination_options))
+    instances = instances_reporters.instances_for_processes(paginated_result.records)
 
-    # Render the result using ProcessesStatePresenter
-    render status: :ok, json: VCAP::CloudController::Presenters::V3::ProcessesStatePresenter.new(process_states).to_hash
+    render status: :ok, json: Presenters::V3::PaginatedListPresenter.new(
+      presenter: Presenters::V3::ProcessInstancesPresenter,
+      paginated_result: paginated_result,
+      path: '/v3/processes/instances',
+      message: message,
+      extra_presenter_args: { instances: }
+    )
   end
 
   private

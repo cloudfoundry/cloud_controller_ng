@@ -29,49 +29,39 @@ module VCAP::CloudController
         raise exception
       end
 
-      def state_for_processes(processes)
-        logger.debug('state_for_processes.fetching_actual_lrps')
+      def instances_for_processes(processes)
+        logger.debug('instances_for_processes.fetching_actual_lrps')
 
         # Fetch actual_lrps for all processes
         actual_lrps = bbs_instances_client.actual_lrps_by_processes(processes)
 
+        lrps_by_process_guid = actual_lrps.group_by { |lrp| (pg = lrp.actual_lrp_key&.process_guid) && ProcessGuid.cc_process_guid(pg) }
+
+        current_time_since_epoch_ns = Time.now.to_f * 1e9
         results = {}
-        warnings = []
-
         processes.each do |process|
-          actual_lrp_list = actual_lrps[process.guid] || []
-          instance_states = {}
-          lrp_instances = {}
+          newest_lrp_by_index = (lrps_by_process_guid[process.guid] || []).
+                                group_by { |lrp| lrp.actual_lrp_key&.index }.
+                                transform_values { |lrps| lrps.max_by { |lrp| lrp.since || 0 } }
 
-          actual_lrp_list.each do |actual_lrp|
-            idx = actual_lrp.index
-
-            # Ensure only the newest LRP is reported for the same index
-            if lrp_instances.include?(idx)
-              existing_lrp = lrp_instances[idx]
-              next if actual_lrp.since < existing_lrp.since
-            end
-
-            lrp_instances[idx] = actual_lrp
-
-            instance_states[idx] = {
-              state: actual_lrp.state,
-              instance_guid: actual_lrp.instance_guid,
-              routable: actual_lrp.routable,
-              host: actual_lrp.host,
-              instance_internal_ip: actual_lrp.net_info[:instance_address],
-              uptime: actual_lrp.uptime,
-              isolation_segment: IsolationSegmentSelector.for_space(process.space),
-              details: actual_lrp.details
-            }
+          instances = {}
+          # Fill in the instances up to the max of desired instances and actual instances
+          [process.instances, newest_lrp_by_index.length].max.times do |idx|
+            lrp = newest_lrp_by_index[idx]
+            instances[idx] = if lrp
+                               {
+                                 state: LrpStateTranslator.translate_lrp_state(lrp),
+                                 uptime: nanoseconds_to_seconds(current_time_since_epoch_ns - lrp.since)
+                               }
+                             else
+                               { state: VCAP::CloudController::Diego::LRP_DOWN }
+                             end
           end
 
-          fill_unreported_instances_with_down_instances(instance_states, process, flat: false)
-
-          results[process] = instance_states
+          results[process.guid] = instances
         end
 
-        [results, warnings]
+        results
       end
 
       private
