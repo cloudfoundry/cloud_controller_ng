@@ -15,7 +15,7 @@ module VCAP::CloudController
       end
     end
 
-    describe 'user agent and request id handling' do 
+    describe 'user agent and request id handling' do
       let(:space) { VCAP::CloudController::Space.make }
       let(:user)  { make_developer_for_space(space) }
       let(:request_id) { 'test-request-123' }
