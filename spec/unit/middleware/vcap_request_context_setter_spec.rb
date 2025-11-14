@@ -1,15 +1,15 @@
 require 'spec_helper'
-require 'vcap_request_id'
+require 'vcap_request_context_setter'
 
 module CloudFoundry
   module Middleware
-    RSpec.describe VcapRequestId do
-      let(:middleware) { VcapRequestId.new(app) }
-      let(:app) { VcapRequestId::FakeApp.new }
+    RSpec.describe VcapRequestContextSetter do
+      let(:middleware) { VcapRequestContextSetter.new(app) }
+      let(:app) { VcapRequestContextSetter::FakeApp.new }
       let(:app_response) { [200, {}, 'a body'] }
       let(:uuid_regex) { '\w+-\w+-\w+-\w+-\w+' }
 
-      class VcapRequestId::FakeApp
+      class VcapRequestContextSetter::FakeApp
         attr_accessor :last_request_id, :last_env_input, :last_user_agent
 
         def call(env)

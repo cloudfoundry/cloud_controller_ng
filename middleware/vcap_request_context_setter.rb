@@ -3,7 +3,7 @@ require 'active_support/core_ext/string/access'
 
 module CloudFoundry
   module Middleware
-    class VcapRequestId
+    class VcapRequestContextSetter
       def initialize(app)
         @app = app
       end
