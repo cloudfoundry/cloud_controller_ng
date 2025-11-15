@@ -303,7 +303,7 @@ GEM
     mini_mime (1.1.5)
     mini_portile2 (2.8.9)
     minitest (5.26.0)
-    mock_redis (0.52.0)
+    mock_redis (0.53.0)
       redis (~> 5)
     ms_rest (0.6.4)
       concurrent-ruby (~> 1.0)
@@ -412,7 +412,7 @@ GEM
       tsort
     redis (5.4.1)
       redis-client (>= 0.22.0)
-    redis-client (0.25.2)
+    redis-client (0.26.1)
       connection_pool
     regexp_parser (2.11.3)
     reline (0.6.2)
