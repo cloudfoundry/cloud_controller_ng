@@ -196,6 +196,8 @@ module VCAP::CloudController
     describe 'Events' do
       describe 'after_booted' do
         it 'sets up periodic metrics updater with EM and initializes cc_db_connection_pool_timeouts_total for the main process' do
+          expect(Thread).to receive(:new).and_yield
+          expect(EM).to receive(:run).and_yield
           expect(periodic_updater).to receive(:setup_updates)
           expect(prometheus_updater).to receive(:update_gauge_metric).with(:cc_db_connection_pool_timeouts_total, 0, labels: { process_type: 'main' })
 
@@ -205,6 +207,8 @@ module VCAP::CloudController
 
       describe 'after_stopped' do
         it 'stops EM and logs incomplete requests' do
+          expect(EM).to receive(:stop)
+
           puma_launcher.events.fire(:after_stopped)
         end
       end

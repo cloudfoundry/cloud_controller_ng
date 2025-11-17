@@ -113,6 +113,41 @@ module VCAP::CloudController::Metrics
       end
     end
 
+    describe '#update_thread_info_thin' do
+      let(:batch) { double(:batch) }
+
+      before do
+        allow(statsd_client).to receive(:batch).and_yield(batch)
+        allow(batch).to receive(:gauge)
+      end
+
+      it 'contains EventMachine data' do
+        thread_info = {
+          thread_count: 5,
+          event_machine: {
+            connection_count: 10,
+            threadqueue: {
+              size: 19,
+              num_waiting: 2
+            },
+            resultqueue: {
+              size: 8,
+              num_waiting: 1
+            }
+          }
+        }
+
+        updater.update_thread_info_thin(thread_info)
+
+        expect(batch).to have_received(:gauge).with('cc.thread_info.thread_count', 5)
+        expect(batch).to have_received(:gauge).with('cc.thread_info.event_machine.connection_count', 10)
+        expect(batch).to have_received(:gauge).with('cc.thread_info.event_machine.threadqueue.size', 19)
+        expect(batch).to have_received(:gauge).with('cc.thread_info.event_machine.threadqueue.num_waiting', 2)
+        expect(batch).to have_received(:gauge).with('cc.thread_info.event_machine.resultqueue.size', 8)
+        expect(batch).to have_received(:gauge).with('cc.thread_info.event_machine.resultqueue.num_waiting', 1)
+      end
+    end
+
     describe '#update_vitals' do
       let(:batch) { double(:batch) }
 

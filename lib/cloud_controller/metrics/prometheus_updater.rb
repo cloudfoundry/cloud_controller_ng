@@ -41,6 +41,15 @@ module VCAP::CloudController::Metrics
       { type: :gauge, name: :cc_deployments_in_progress_total, docstring: 'Number of in progress deployments', aggregation: :most_recent }
     ].freeze
 
+    THIN_METRICS = [
+      { type: :gauge, name: :cc_thread_info_thread_count, docstring: 'Thread count' },
+      { type: :gauge, name: :cc_thread_info_event_machine_connection_count, docstring: 'EventMachine connection count' },
+      { type: :gauge, name: :cc_thread_info_event_machine_threadqueue_size, docstring: 'EventMachine thread queue size' },
+      { type: :gauge, name: :cc_thread_info_event_machine_threadqueue_num_waiting, docstring: 'EventMachine num waiting in thread' },
+      { type: :gauge, name: :cc_thread_info_event_machine_resultqueue_size, docstring: 'EventMachine queue size' },
+      { type: :gauge, name: :cc_thread_info_event_machine_resultqueue_num_waiting, docstring: 'EventMachine requests waiting in queue' }
+    ].freeze
+
     PUMA_METRICS = [
       { type: :gauge, name: :cc_puma_worker_count, docstring: 'Puma worker count', aggregation: :most_recent },
       { type: :gauge, name: :cc_puma_worker_started_at, docstring: 'Puma worker: started_at', labels: %i[index pid], aggregation: :most_recent },
@@ -79,6 +88,7 @@ module VCAP::CloudController::Metrics
       return if cc_worker
 
       METRICS.each { |metric| register(metric) }
+      THIN_METRICS.each { |metric| register(metric) } if VCAP::CloudController::Config.config&.get(:webserver) == 'thin'
       PUMA_METRICS.each { |metric| register(metric) } if VCAP::CloudController::Config.config&.get(:webserver) == 'puma'
     end
 
@@ -124,6 +134,15 @@ module VCAP::CloudController::Metrics
       update_job_queue_load.each do |key, value|
         update_gauge_metric(:cc_job_queues_load_total, value, labels: { queue: key.to_s.underscore })
       end
+    end
+
+    def update_thread_info_thin(thread_info)
+      update_gauge_metric(:cc_thread_info_thread_count, thread_info[:thread_count])
+      update_gauge_metric(:cc_thread_info_event_machine_connection_count, thread_info[:event_machine][:connection_count])
+      update_gauge_metric(:cc_thread_info_event_machine_threadqueue_size, thread_info[:event_machine][:threadqueue][:size])
+      update_gauge_metric(:cc_thread_info_event_machine_threadqueue_num_waiting, thread_info[:event_machine][:threadqueue][:num_waiting])
+      update_gauge_metric(:cc_thread_info_event_machine_resultqueue_size, thread_info[:event_machine][:resultqueue][:size])
+      update_gauge_metric(:cc_thread_info_event_machine_resultqueue_num_waiting, thread_info[:event_machine][:resultqueue][:num_waiting])
     end
 
     def update_failed_job_count(failed_jobs_by_queue)

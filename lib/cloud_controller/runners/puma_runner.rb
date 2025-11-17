@@ -59,8 +59,14 @@ module VCAP::CloudController
       events = Puma::Events.new
       events.after_booted do
         prometheus_updater.update_gauge_metric(:cc_db_connection_pool_timeouts_total, 0, labels: { process_type: 'main' })
-        periodic_updater.setup_updates
+        Thread.new do
+          EM.run { periodic_updater.setup_updates }
+        end
       end
+      events.after_stopped do
+        EM.stop
+      end
+
       @puma_launcher = Puma::Launcher.new(puma_config, log_writer:, events:)
     end
 

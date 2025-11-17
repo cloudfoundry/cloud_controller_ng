@@ -16,21 +16,23 @@ module VCAP::CloudController::Metrics
 
     def setup_updates
       update!
-      Concurrent::TimerTask.new(execution_interval: 600) { catch_error { update_user_count } }.execute
-      Concurrent::TimerTask.new(execution_interval: 30) { catch_error { update_job_queue_length } }.execute
-      Concurrent::TimerTask.new(execution_interval: 30) { catch_error { update_job_queue_load } }.execute
-      Concurrent::TimerTask.new(execution_interval: 30) { catch_error { update_failed_job_count } }.execute
-      Concurrent::TimerTask.new(execution_interval: 30) { catch_error { update_vitals } }.execute
-      Concurrent::TimerTask.new(execution_interval: 30) { catch_error { update_log_counts } }.execute
-      Concurrent::TimerTask.new(execution_interval: 30) { catch_error { update_task_stats } }.execute
-      Concurrent::TimerTask.new(execution_interval: 30) { catch_error { update_deploying_count } }.execute
-      Concurrent::TimerTask.new(execution_interval: 30) { catch_error { update_webserver_stats } }.execute
+      EM.add_periodic_timer(600) { catch_error { update_user_count } }
+      EM.add_periodic_timer(30)  { catch_error { update_job_queue_length } }
+      EM.add_periodic_timer(30)  { catch_error { update_job_queue_load } }
+      EM.add_periodic_timer(30)  { catch_error { update_thread_info } }
+      EM.add_periodic_timer(30)  { catch_error { update_failed_job_count } }
+      EM.add_periodic_timer(30)  { catch_error { update_vitals } }
+      EM.add_periodic_timer(30)  { catch_error { update_log_counts } }
+      EM.add_periodic_timer(30)  { catch_error { update_task_stats } }
+      EM.add_periodic_timer(30)  { catch_error { update_deploying_count } }
+      EM.add_periodic_timer(30)  { catch_error { update_webserver_stats } }
     end
 
     def update!
       update_user_count
       update_job_queue_length
       update_job_queue_load
+      update_thread_info
       update_failed_job_count
       update_vitals
       update_log_counts
@@ -108,6 +110,13 @@ module VCAP::CloudController::Metrics
       @prometheus_updater.update_job_queue_load(pending_job_load_by_queue)
     end
 
+    def update_thread_info
+      return unless VCAP::CloudController::Config.config.get(:webserver) == 'thin'
+
+      local_thread_info = thread_info_thin
+      [@statsd_updater, @prometheus_updater].each { |u| u.update_thread_info_thin(local_thread_info) }
+    end
+
     def update_failed_job_count
       jobs_by_queue_with_count = Delayed::Job.where(Sequel.lit('failed_at IS NOT NULL')).group_and_count(:queue)
 
@@ -163,6 +172,25 @@ module VCAP::CloudController::Metrics
         }
       end
       @prometheus_updater.update_webserver_stats_puma(worker_count, worker_stats)
+    end
+
+    def thread_info_thin
+      threadqueue = EM.instance_variable_get(:@threadqueue) || []
+      resultqueue = EM.instance_variable_get(:@resultqueue) || []
+      {
+        thread_count: Thread.list.size,
+        event_machine: {
+          connection_count: EventMachine.connection_count,
+          threadqueue: {
+            size: threadqueue.size,
+            num_waiting: threadqueue.is_a?(Array) ? 0 : threadqueue.num_waiting
+          },
+          resultqueue: {
+            size: resultqueue.size,
+            num_waiting: resultqueue.is_a?(Array) ? 0 : resultqueue.num_waiting
+          }
+        }
+      }
     end
   end
 end
