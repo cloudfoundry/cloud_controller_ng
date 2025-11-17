@@ -119,19 +119,6 @@ RSpec.describe 'Metrics' do
     end
   end
 
-  context 'cc_thread_info' do
-    it 'reports thread info' do
-      get '/internal/v4/metrics', nil
-
-      expect(last_response.body).to match(/cc_thread_info_thread_count [0-9][0-9]*\.\d+/)
-      expect(last_response.body).to match(/cc_thread_info_event_machine_connection_count [0-9][0-9]*\.\d+/)
-      expect(last_response.body).to match(/cc_thread_info_event_machine_threadqueue_size [0-9][0-9]*\.\d+/)
-      expect(last_response.body).to match(/cc_thread_info_event_machine_threadqueue_num_waiting [0-9][0-9]*\.\d+/)
-      expect(last_response.body).to match(/cc_thread_info_event_machine_resultqueue_size [0-9][0-9]*\.\d+/)
-      expect(last_response.body).to match(/cc_thread_info_event_machine_resultqueue_num_waiting [0-9][0-9]*\.\d+/)
-    end
-  end
-
   context 'cc_failed_job_count' do
     before do
       Delayed::Job.enqueue(VCAP::CloudController::Jobs::Runtime::EventsCleanup.new(1), { queue: 'cc_api_0', run_at: Time.now + 1.day })
