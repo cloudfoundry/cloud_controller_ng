@@ -3,22 +3,17 @@ require 'spec_helper'
 RSpec.describe 'Metrics' do
   let(:user) { VCAP::CloudController::User.make }
   let(:user_header) { headers_for(user) }
-  let(:threadqueue) { double(EventMachine::Queue, size: 20, num_waiting: 0) }
-  let(:resultqueue) { double(EventMachine::Queue, size: 0, num_waiting: 1) }
 
+  let(:metrics_webserver) { VCAP::CloudController::MetricsWebserver.new }
+  delegate :app, to: :metrics_webserver
+
+  # FIXME: PrometheusUpdater methods are not called -> returned values are almost all 0
   before do
-    allow(EventMachine).to receive(:connection_count).and_return(123)
+    prom_client = Prometheus::Client::Registry.new
+    Prometheus::Client.config.data_store = Prometheus::Client::DataStores::DirectFileStore.new(dir: Dir.mktmpdir)
+    VCAP::CloudController::Metrics::PrometheusUpdater.new(registry: prom_client)
 
-    allow(EventMachine).to receive(:instance_variable_get) do |instance_var|
-      case instance_var
-      when :@threadqueue
-        threadqueue
-      when :@resultqueue
-        resultqueue
-      else
-        raise "Unexpected call: #{instance_var}"
-      end
-    end
+    metrics_webserver.start(TestConfig.config_instance)
   end
 
   it 'can be called several times' do

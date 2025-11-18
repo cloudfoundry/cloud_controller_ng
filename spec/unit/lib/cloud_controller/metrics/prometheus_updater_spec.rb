@@ -160,10 +160,6 @@ module VCAP::CloudController::Metrics
     end
 
     describe '#update_webserver_stats_puma' do
-      before do
-        TestConfig.override(webserver: 'puma')
-      end
-
       it 'contains Puma stats' do
         worker_count = 2
         worker_stats = [

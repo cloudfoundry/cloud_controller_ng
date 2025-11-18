@@ -27,9 +27,6 @@ module VCAP::CloudController
       before do
         allow(blobstore_url_generator).to receive_messages(app_package_download_url: app_package_download_url, admin_buildpack_download_url: admin_buildpack_download_url,
                                                            buildpack_cache_download_url: build_artifacts_cache_download_uri)
-
-        allow(EM).to receive(:add_timer)
-        allow(EM).to receive(:defer).and_yield
       end
 
       describe '#buildpack_entries' do

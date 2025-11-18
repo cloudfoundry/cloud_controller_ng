@@ -11,7 +11,6 @@ require 'cloud_controller/metrics/request_metrics'
 require 'cloud_controller/logs/request_logs'
 require 'cloud_controller/telemetry_logger'
 require 'cloud_controller/secrets_fetcher'
-require 'cloud_controller/runners/thin_runner'
 require 'cloud_controller/runners/puma_runner'
 require 'cloud_controller/metrics_webserver'
 require 'prometheus/client/data_stores/direct_file_store'
@@ -33,7 +32,7 @@ module VCAP::CloudController
 
       # DB connection metrics have a label to determine whether the process accessing the connection is the
       # main or a worker process. We need to set this env variable before `setup_db` otherwise the main process
-      # will show up twice in the metrics as main and worker. Thin metrics will be labeled with main as well.
+      # will show up twice in the metrics as main and worker.
       ENV['PROCESS_TYPE'] = 'main'
 
       setup_cloud_controller
@@ -45,11 +44,7 @@ module VCAP::CloudController
       builder = RackAppBuilder.new
       app     = builder.build(@config, request_metrics, request_logs)
 
-      @server = if @config.get(:webserver) == 'puma'
-                  VCAP::CloudController::PumaRunner.new(@config, app, logger, periodic_updater, request_logs)
-                else
-                  VCAP::CloudController::ThinRunner.new(@config, app, logger, periodic_updater, request_logs)
-                end
+      @server = VCAP::CloudController::PumaRunner.new(@config, app, logger, periodic_updater, request_logs)
     end
 
     def logger
