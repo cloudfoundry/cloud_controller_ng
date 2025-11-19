@@ -67,6 +67,8 @@ services:
       - ./spec/fixtures/certs:/bbs/certs:ro
     ports:
       - "8889:8889"
+    depends_on:
+      - loggregator-metron
     networks:
       - cc-net
     restart: unless-stopped
@@ -85,6 +87,24 @@ services:
       DIEGO_CLIENT_KEY: /mock/certs/bbs_client.key
     volumes:
       - ./spec/fixtures/certs:/mock/certs:ro
+    networks:
+      - cc-net
+    restart: unless-stopped
+
+  # Loggregator Metron Mock
+  loggregator-metron:
+    container_name: loggregator-metron
+    build:
+      context: .devcontainer/images/loggregator-metron
+      dockerfile: Dockerfile
+    ports:
+      - "127.0.0.1:3456:3456"
+    environment:
+      METRON_CERT: /metron/certs/metron.crt
+      METRON_KEY: /metron/certs/metron.key
+      METRON_CA: /metron/certs/metron_ca.crt
+    volumes:
+      - ./spec/fixtures/certs:/metron/certs:ro
     networks:
       - cc-net
     restart: unless-stopped
