@@ -140,6 +140,24 @@ module VCAP::CloudController
           end
         end
 
+        context 'when there are multiple service bindings for the same service offering and plan' do
+          let!(:service_instance_2) { ManagedServiceInstance.make(space: space, service_plan: service_plan, name: 'instance-2') }
+          let!(:service_instance_3) { ManagedServiceInstance.make(space: space, service_plan: service_plan, name: 'instance-3') }
+          let!(:service_binding_2) { ServiceBinding.make(app: app, service_instance: service_instance_2) }
+          let!(:service_binding_3) { ServiceBinding.make(app: app, service_instance: service_instance_3) }
+
+          it 'returns bindings in natural order by id' do
+            bindings = system_env_presenter.system_env[:VCAP_SERVICES][service.label.to_sym]
+            expect(bindings).to have(3).items
+
+            actual_binding_order = bindings.map { |b| b.to_hash[:binding_guid] }
+
+            expected_binding_order = [service_binding, service_binding_2, service_binding_3].map(&:guid)
+
+            expect(actual_binding_order).to eq(expected_binding_order)
+          end
+        end
+
         describe 'volume mounts' do
           context 'when the service binding has volume mounts' do
             let!(:service_binding) do
