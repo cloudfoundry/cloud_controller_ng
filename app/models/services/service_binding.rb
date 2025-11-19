@@ -148,7 +148,8 @@ module VCAP::CloudController
               order: [Sequel.desc(:created_at), Sequel.desc(:id)]
             ).as(:_rn)
           end.
-          from_self.where(_rn: 1)
+          from_self.where(_rn: 1).
+          order_by(:id)
       end
     end
   end
