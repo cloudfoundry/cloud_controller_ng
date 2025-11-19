@@ -3,7 +3,7 @@ require 'active_support/core_ext/string/access'
 
 module CloudFoundry
   module Middleware
-    class VcapRequestId
+    class VcapRequestContextSetter
       def initialize(app)
         @app = app
       end
@@ -11,11 +11,13 @@ module CloudFoundry
       def call(env)
         env['cf.request_id'] = external_request_id(env) || internal_request_id
         ::VCAP::Request.current_id = env['cf.request_id']
+        ::VCAP::Request.user_agent = env['HTTP_USER_AGENT']
 
         begin
           status, headers, body = @app.call(env)
         ensure
           ::VCAP::Request.current_id = nil
+          ::VCAP::Request.user_agent = nil
         end
 
         headers['X-VCAP-Request-ID'] = env['cf.request_id']
