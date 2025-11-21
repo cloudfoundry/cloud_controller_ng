@@ -16,7 +16,6 @@ RSpec.describe BackgroundJobEnvironment do
   describe '#setup_environment' do
     before do
       allow(VCAP::CloudController::DB).to receive(:load_models)
-      allow(EM).to receive(:run).and_yield
       allow(VCAP::CloudController::ResourcePool).to receive(:new)
     end
 

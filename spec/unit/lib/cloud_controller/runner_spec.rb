@@ -14,12 +14,10 @@ module VCAP::CloudController
     before do
       allow(Steno).to receive(:init)
       allow(CloudController::DependencyLocator.instance).to receive(:routing_api_client).and_return(routing_api_client)
-      allow(EM).to receive(:run).and_yield
       allow(VCAP::CloudController::Metrics::PeriodicUpdater).to receive(:new).and_return(periodic_updater)
       allow(VCAP::CloudController::Metrics::RequestMetrics).to receive(:new).and_return(request_metrics)
       allow(periodic_updater).to receive(:setup_updates)
       allow(VCAP::PidFile).to receive(:new) { double(:pidfile, unlink_at_exit: nil) }
-      allow_any_instance_of(VCAP::CloudController::ThinRunner).to receive(:start!)
       allow(Puma::Server).to receive(:new).and_return(puma_server_double)
     end
 
@@ -31,13 +29,17 @@ module VCAP::CloudController
       it 'creates a pidfile' do
         expect(VCAP::PidFile).to receive(:new).with('/tmp/cloud_controller.pid')
 
+        server = double(:server)
+        allow(server).to receive(:start!)
+        expect(VCAP::CloudController::PumaRunner).to receive(:new).and_return(server)
+
         subject.run!
       end
 
       it 'starts the web server' do
         server = double(:server)
         allow(server).to receive(:start!)
-        expect(VCAP::CloudController::ThinRunner).to receive(:new).and_return(server)
+        expect(VCAP::CloudController::PumaRunner).to receive(:new).and_return(server)
 
         subject.run!
         expect(server).to have_received(:start!).once
@@ -45,25 +47,6 @@ module VCAP::CloudController
     end
 
     describe '#initialize' do
-      describe 'web server selection' do
-        context 'when thin is specifed' do
-          it 'chooses ThinRunner as the web server' do
-            expect(subject.instance_variable_get(:@server)).to be_an_instance_of(ThinRunner)
-          end
-        end
-
-        context 'when puma is specified' do
-          before do
-            TestConfig.override(webserver: 'puma')
-            allow(Config).to receive(:load_from_file).and_return(TestConfig.config_instance)
-          end
-
-          it 'chooses puma as the web server' do
-            expect(subject.instance_variable_get(:@server)).to be_an_instance_of(PumaRunner)
-          end
-        end
-      end
-
       it 'sets environment variable `PROCESS_TYPE` to `main`' do
         subject
 
@@ -149,6 +132,7 @@ module VCAP::CloudController
 
       it 'builds a rack app with request metrics and request logs handlers' do
         builder = instance_double(RackAppBuilder)
+        allow(builder).to receive(:build).and_return(double(:app))
         allow(RackAppBuilder).to receive(:new).and_return(builder)
         request_logs = double(:request_logs)
         allow(VCAP::CloudController::Logs::RequestLogs).to receive(:new).and_return(request_logs)
@@ -293,16 +277,6 @@ module VCAP::CloudController
           it 'starts the MetricsWebserver' do
             expect(MetricsWebserver).to receive(:new).and_call_original
             expect_any_instance_of(MetricsWebserver).to receive(:start)
-
-            subject
-          end
-        end
-
-        context 'when the webserver is not puma' do
-          let(:test_config_overrides) { super().merge(webserver: 'thin') }
-
-          it 'does not start the MetricsWebserver' do
-            expect(MetricsWebserver).not_to receive(:new)
 
             subject
           end

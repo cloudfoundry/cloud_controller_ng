@@ -116,7 +116,7 @@ module CloudFoundry
                 status, _, body = middleware.call(request_headers)
 
                 expect(status).to eq(200)
-                expect(body).to eq('')
+                expect(body).to eq([''])
               end
 
               it 'sets the Content-Type: text/plain header' do
