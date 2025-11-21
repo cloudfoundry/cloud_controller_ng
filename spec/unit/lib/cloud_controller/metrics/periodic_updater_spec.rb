@@ -6,26 +6,9 @@ module VCAP::CloudController::Metrics
     let(:periodic_updater) { PeriodicUpdater.new(start_time, log_counter, logger, statsd_updater, prometheus_updater) }
     let(:statsd_updater) { double(:statsd_updater) }
     let(:prometheus_updater) { double(:prometheus_updater) }
-    let(:threadqueue) { double(EventMachine::Queue, size: 20, num_waiting: 0) }
-    let(:resultqueue) { double(EventMachine::Queue, size: 0, num_waiting: 1) }
     let(:start_time) { Time.now.utc - 90 }
     let(:log_counter) { double(:log_counter, counts: {}) }
     let(:logger) { double(:logger) }
-
-    before do
-      allow(EventMachine).to receive(:connection_count).and_return(123)
-
-      allow(EventMachine).to receive(:instance_variable_get) do |instance_var|
-        case instance_var
-        when :@threadqueue
-          threadqueue
-        when :@resultqueue
-          resultqueue
-        else
-          raise "Unexpected call: #{instance_var}"
-        end
-      end
-    end
 
     describe 'task stats' do
       before do
@@ -73,7 +56,6 @@ module VCAP::CloudController::Metrics
         allow(statsd_updater).to receive(:update_user_count)
         allow(statsd_updater).to receive(:update_job_queue_length)
         allow(statsd_updater).to receive(:update_job_queue_load)
-        allow(statsd_updater).to receive(:update_thread_info_thin)
         allow(statsd_updater).to receive(:update_failed_job_count)
         allow(statsd_updater).to receive(:update_vitals)
         allow(statsd_updater).to receive(:update_log_counts)
@@ -83,14 +65,11 @@ module VCAP::CloudController::Metrics
         allow(prometheus_updater).to receive(:update_user_count)
         allow(prometheus_updater).to receive(:update_job_queue_length)
         allow(prometheus_updater).to receive(:update_job_queue_load)
-        allow(prometheus_updater).to receive(:update_thread_info_thin)
         allow(prometheus_updater).to receive(:update_failed_job_count)
         allow(prometheus_updater).to receive(:update_vitals)
         allow(prometheus_updater).to receive(:update_log_counts)
         allow(prometheus_updater).to receive(:update_task_stats)
         allow(prometheus_updater).to receive(:update_deploying_count)
-
-        allow(EventMachine).to receive(:add_periodic_timer)
       end
 
       it 'bumps the number of users and sets periodic timer' do
@@ -110,11 +89,6 @@ module VCAP::CloudController::Metrics
 
       it 'bumps the length of cc failed job queues and sets periodic timer' do
         expect(periodic_updater).to receive(:update_failed_job_count).once
-        periodic_updater.setup_updates
-      end
-
-      it 'updates thread count and event machine queues' do
-        expect(periodic_updater).to receive(:update_thread_info).once
         periodic_updater.setup_updates
       end
 
@@ -138,15 +112,16 @@ module VCAP::CloudController::Metrics
         periodic_updater.setup_updates
       end
 
-      context 'when EventMachine periodic_timer tasks are run' do
+      context 'when Concurrent::TimerTasks are run' do
         before do
           @periodic_timers = []
 
-          allow(EventMachine).to receive(:add_periodic_timer) do |interval, &block|
+          allow(Concurrent::TimerTask).to receive(:new) do |opts, &block|
             @periodic_timers << {
-              interval:,
-              block:
+              interval: opts[:execution_interval],
+              block: block
             }
+            double('TimerTask', execute: nil, shutdown: nil, kill: nil, running?: false)
           end
 
           periodic_updater.setup_updates
@@ -176,44 +151,36 @@ module VCAP::CloudController::Metrics
           @periodic_timers[2][:block].call
         end
 
-        it 'updates thread count and event machine queues' do
+        it 'bumps the length of cc failed job queues and sets periodic timer' do
           expect(periodic_updater).to receive(:catch_error).once.and_call_original
-          expect(periodic_updater).to receive(:update_thread_info).once
+          expect(periodic_updater).to receive(:update_failed_job_count).once
           expect(@periodic_timers[3][:interval]).to eq(30)
 
           @periodic_timers[3][:block].call
         end
 
-        it 'bumps the length of cc failed job queues and sets periodic timer' do
+        it 'updates the vitals' do
           expect(periodic_updater).to receive(:catch_error).once.and_call_original
-          expect(periodic_updater).to receive(:update_failed_job_count).once
+          expect(periodic_updater).to receive(:update_vitals).once
           expect(@periodic_timers[4][:interval]).to eq(30)
 
           @periodic_timers[4][:block].call
         end
 
-        it 'updates the vitals' do
+        it 'updates the log counts' do
           expect(periodic_updater).to receive(:catch_error).once.and_call_original
-          expect(periodic_updater).to receive(:update_vitals).once
+          expect(periodic_updater).to receive(:update_log_counts).once
           expect(@periodic_timers[5][:interval]).to eq(30)
 
           @periodic_timers[5][:block].call
         end
 
-        it 'updates the log counts' do
-          expect(periodic_updater).to receive(:catch_error).once.and_call_original
-          expect(periodic_updater).to receive(:update_log_counts).once
-          expect(@periodic_timers[6][:interval]).to eq(30)
-
-          @periodic_timers[6][:block].call
-        end
-
         it 'updates the task stats' do
           expect(periodic_updater).to receive(:catch_error).once.and_call_original
           expect(periodic_updater).to receive(:update_task_stats).once
-          expect(@periodic_timers[7][:interval]).to eq(30)
+          expect(@periodic_timers[6][:interval]).to eq(30)
 
-          @periodic_timers[7][:block].call
+          @periodic_timers[6][:block].call
         end
       end
     end
@@ -538,75 +505,6 @@ module VCAP::CloudController::Metrics
       end
     end
 
-    describe '#update_thread_info' do
-      before do
-        allow(statsd_updater).to receive(:update_thread_info_thin)
-        allow(prometheus_updater).to receive(:update_thread_info_thin)
-      end
-
-      it 'contains EventMachine data and send it to all updaters' do
-        expected_thread_info = {
-          thread_count: Thread.list.size,
-          event_machine: {
-            connection_count: 123,
-            threadqueue: {
-              size: 20,
-              num_waiting: 0
-            },
-            resultqueue: {
-              size: 0,
-              num_waiting: 1
-            }
-          }
-        }
-
-        periodic_updater.update_thread_info
-
-        expect(statsd_updater).to have_received(:update_thread_info_thin).with(expected_thread_info)
-        expect(prometheus_updater).to have_received(:update_thread_info_thin).with(expected_thread_info)
-      end
-
-      context 'when resultqueue and/or threadqueue is not a queue' do
-        let(:resultqueue) { [] }
-        let(:threadqueue) { nil }
-
-        it 'does not blow up' do
-          expected_thread_info = {
-            thread_count: Thread.list.size,
-            event_machine: {
-              connection_count: 123,
-              threadqueue: {
-                size: 0,
-                num_waiting: 0
-              },
-              resultqueue: {
-                size: 0,
-                num_waiting: 0
-              }
-            }
-          }
-
-          periodic_updater.update_thread_info
-
-          expect(statsd_updater).to have_received(:update_thread_info_thin).with(expected_thread_info)
-          expect(prometheus_updater).to have_received(:update_thread_info_thin).with(expected_thread_info)
-        end
-      end
-
-      context 'when Puma is configured as webserver' do
-        before do
-          TestConfig.override(webserver: 'puma')
-        end
-
-        it 'does not send EventMachine data to updaters' do
-          periodic_updater.update_thread_info
-
-          expect(statsd_updater).not_to have_received(:update_thread_info_thin)
-          expect(prometheus_updater).not_to have_received(:update_thread_info_thin)
-        end
-      end
-    end
-
     describe '#update_vitals' do
       before do
         allow(statsd_updater).to receive(:update_vitals)
@@ -736,7 +634,6 @@ module VCAP::CloudController::Metrics
         expect(periodic_updater).to receive(:update_user_count).once
         expect(periodic_updater).to receive(:update_job_queue_length).once
         expect(periodic_updater).to receive(:update_job_queue_load).once
-        expect(periodic_updater).to receive(:update_thread_info).once
         expect(periodic_updater).to receive(:update_failed_job_count).once
         expect(periodic_updater).to receive(:update_vitals).once
         expect(periodic_updater).to receive(:update_log_counts).once

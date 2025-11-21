@@ -114,45 +114,6 @@ module VCAP::CloudController::Metrics
       end
     end
 
-    describe '#update_thread_info_thin' do
-      it 'contains EventMachine data' do
-        thread_info = {
-          thread_count: 5,
-          event_machine: {
-            connection_count: 10,
-            threadqueue: {
-              size: 19,
-              num_waiting: 2
-            },
-            resultqueue: {
-              size: 8,
-              num_waiting: 1
-            }
-          }
-        }
-
-        updater.update_thread_info_thin(thread_info)
-
-        metric = prom_client.metrics.find { |m| m.name == :cc_thread_info_thread_count }
-        expect(metric.get).to eq 5
-
-        metric = prom_client.metrics.find { |m| m.name == :cc_thread_info_event_machine_connection_count }
-        expect(metric.get).to eq 10
-
-        metric = prom_client.metrics.find { |m| m.name == :cc_thread_info_event_machine_threadqueue_size }
-        expect(metric.get).to eq 19
-
-        metric = prom_client.metrics.find { |m| m.name == :cc_thread_info_event_machine_threadqueue_num_waiting }
-        expect(metric.get).to eq 2
-
-        metric = prom_client.metrics.find { |m| m.name == :cc_thread_info_event_machine_resultqueue_size }
-        expect(metric.get).to eq 8
-
-        metric = prom_client.metrics.find { |m| m.name == :cc_thread_info_event_machine_resultqueue_num_waiting }
-        expect(metric.get).to eq 1
-      end
-    end
-
     describe '#update_vitals' do
       it 'updates vitals' do
         vitals = {
