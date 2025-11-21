@@ -33,7 +33,8 @@ module CloudFoundry
                                    })
         end
 
-        return [200, preflight_headers, ''] if env['REQUEST_METHOD'] == 'OPTIONS'
+        # NOTE: The response body must be an enumerable for Puma. Returning an empty string does not work.
+        return [200, preflight_headers, ['']] if env['REQUEST_METHOD'] == 'OPTIONS'
 
         status, headers, body = call_app(env)
 

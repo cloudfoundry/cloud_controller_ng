@@ -5,7 +5,6 @@ module VCAP
   module CloudController
     class MetricsWebserver
       attr_reader :app
-      @server
 
       def initialize
         @app = build_app
