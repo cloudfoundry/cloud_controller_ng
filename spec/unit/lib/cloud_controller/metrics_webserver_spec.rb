@@ -5,6 +5,10 @@ module VCAP::CloudController
     let(:metrics_webserver) { described_class.new }
     let(:config) { double('config', get: nil) }
 
+    after do
+      metrics_webserver.stop
+    end
+
     describe '#start' do
       it 'configures and starts a Puma server' do
         allow(Puma::Server).to receive(:new).and_call_original
