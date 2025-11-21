@@ -618,6 +618,7 @@ module VCAP::CloudController
     unique_id         { SecureRandom.uuid }
     active            { true }
     maintenance_info  {}
+    unique_id { SecureRandom.uuid }
   end
 
   ServicePlan.blueprint(:routing) do
