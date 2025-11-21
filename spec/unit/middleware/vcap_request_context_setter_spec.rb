@@ -1,19 +1,20 @@
 require 'spec_helper'
-require 'vcap_request_id'
+require 'vcap_request_context_setter'
 
 module CloudFoundry
   module Middleware
-    RSpec.describe VcapRequestId do
-      let(:middleware) { VcapRequestId.new(app) }
-      let(:app) { VcapRequestId::FakeApp.new }
+    RSpec.describe VcapRequestContextSetter do
+      let(:middleware) { VcapRequestContextSetter.new(app) }
+      let(:app) { VcapRequestContextSetter::FakeApp.new }
       let(:app_response) { [200, {}, 'a body'] }
       let(:uuid_regex) { '\w+-\w+-\w+-\w+-\w+' }
 
-      class VcapRequestId::FakeApp
-        attr_accessor :last_request_id, :last_env_input
+      class VcapRequestContextSetter::FakeApp
+        attr_accessor :last_request_id, :last_env_input, :last_user_agent
 
         def call(env)
           @last_request_id = ::VCAP::Request.current_id
+          @last_user_agent = ::VCAP::Request.user_agent
           @last_env_input = env
           [200, {}, 'a body']
         end
@@ -22,13 +23,21 @@ module CloudFoundry
       describe 'handling the request' do
         context 'setting the request_id in the logger' do
           it 'has assigned it before passing the request' do
-            middleware.call('HTTP_X_VCAP_REQUEST_ID' => 'specific-request-id')
+            middleware.call(
+              'HTTP_X_VCAP_REQUEST_ID' => 'specific-request-id',
+              'HTTP_USER_AGENT' => 'cf/8.7.0 (go1.21.4; amd64 linux)'
+            )
             expect(app.last_request_id).to match(/^specific-request-id::#{uuid_regex}$/)
+            expect(app.last_user_agent).to eq('cf/8.7.0 (go1.21.4; amd64 linux)')
           end
 
           it 'nils it out after the request has been processed' do
-            middleware.call('HTTP_X_VCAP_REQUEST_ID' => 'specific-request-id')
+            middleware.call(
+              'HTTP_X_VCAP_REQUEST_ID' => 'specific-request-id',
+              'HTTP_USER_AGENT' => 'cf/8.7.0 (go1.21.4; amd64 linux)'
+            )
             expect(::VCAP::Request.current_id).to be_nil
+            expect(::VCAP::Request.user_agent).to be_nil
           end
         end
 
@@ -41,15 +50,20 @@ module CloudFoundry
             end
 
             it 'sets the request id to nil' do
-              expect { middleware.call('HTTP_X_VCAP_REQUEST_ID' => 'specific-request-id') }.to raise_error(error)
+              expect { middleware.call('HTTP_X_VCAP_REQUEST_ID' => 'specific-request-id', 'HTTP_USER_AGENT' => 'cf/8.7.0 (go1.21.4; amd64 linux)') }.to raise_error(error)
               expect(::VCAP::Request.current_id).to be_nil
+              expect(::VCAP::Request.user_agent).to be_nil
             end
           end
 
           context 'and no error is raised when the request is passed' do
             it 'sets the request id to nil' do
-              middleware.call('HTTP_X_VCAP_REQUEST_ID' => 'specific-request-id')
+              middleware.call(
+                'HTTP_X_VCAP_REQUEST_ID' => 'specific-request-id',
+                'HTTP_USER_AGENT' => 'cf/8.7.0 (go1.21.4; amd64 linux)'
+              )
               expect(::VCAP::Request.current_id).to be_nil
+              expect(::VCAP::Request.user_agent).to be_nil
             end
           end
         end
