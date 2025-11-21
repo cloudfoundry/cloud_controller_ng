@@ -14,6 +14,13 @@
   "encryption_keys": {
     "key-2016-06": "J7dy5tgYSyb5kUeKmhU944TFhVTEoq"
   },
+  "loggregator": {
+    "loggregator_ca_path": "/bbs/certs/metron_ca.crt",
+    "loggregator_cert_path": "/bbs/certs/metron.crt",
+    "loggregator_key_path": "/bbs/certs/metron.key",
+    "loggregator_api_port": 3456,
+    "loggregator_api_host": "loggregator-metron"
+  },
   "active_key_label": "key-2016-06",
   "auctioneer_address": "http://mockserver:1234",
   "ca_file": "/bbs/certs/bbs_ca.crt",

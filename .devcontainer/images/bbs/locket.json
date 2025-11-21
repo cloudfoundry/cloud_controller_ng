@@ -7,5 +7,12 @@
   "listen_address": "127.0.0.1:8891",
   "log_level": "debug",
   "database_connection_string": "postgres://postgres:supersecret@postgres:5432/locket",
-  "database_driver": "postgres"
+  "database_driver": "postgres",
+  "loggregator": {
+    "loggregator_ca_path": "/bbs/certs/metron_ca.crt",
+    "loggregator_cert_path": "/bbs/certs/metron.crt",
+    "loggregator_key_path": "/bbs/certs/metron.key",
+    "loggregator_api_port": 3456,
+    "loggregator_api_host": "loggregator-metron"
+  }
 }
