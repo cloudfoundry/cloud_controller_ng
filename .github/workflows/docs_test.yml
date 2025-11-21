@@ -24,7 +24,7 @@ jobs:
     timeout-minutes: 60
     steps:
       - uses: hmarr/debug-action@v3
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
       - name: Prepare setup
         run: cp -a .ruby-version docs/v3/.ruby-version
       - uses: ./.github/workflows/composite/setup
