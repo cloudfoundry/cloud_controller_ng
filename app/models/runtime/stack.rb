@@ -1,5 +1,6 @@
 require 'models/helpers/process_types'
 require 'models/helpers/stack_config_file'
+require 'models/helpers/stack_states'
 
 module VCAP::CloudController
   class Stack < Sequel::Model
@@ -9,18 +10,6 @@ module VCAP::CloudController
     end
     class AppsStillPresentError < StandardError
     end
-
-    STACK_ACTIVE = 'ACTIVE'.freeze
-    STACK_RESTRICTED = 'RESTRICTED'.freeze
-    STACK_DEPRECATED = 'DEPRECATED'.freeze
-    STACK_DISABLED = 'DISABLED'.freeze
-
-    VALID_STATES = [
-      STACK_ACTIVE,
-      STACK_RESTRICTED,
-      STACK_DEPRECATED,
-      STACK_DISABLED
-    ].freeze
 
     # NOTE: that "apps" here returns processes for v2 meta-reasons
     many_to_many :apps,
@@ -55,7 +44,7 @@ module VCAP::CloudController
     def validate
       validates_presence :name
       validates_unique :name
-      validates_includes VALID_STATES, :state, allow_nil: true
+      validates_includes StackStates::VALID_STATES, :state, allow_nil: true
     end
 
     def before_destroy
@@ -111,20 +100,21 @@ module VCAP::CloudController
         create(hash.slice('name', 'description', 'build_rootfs_image', 'run_rootfs_image'))
       end
     end
+
     def active?
-      state == STACK_ACTIVE
+      state == StackStates::STACK_ACTIVE
     end
 
     def deprecated?
-      state == STACK_DEPRECATED
+      state == StackStates::STACK_DEPRECATED
     end
 
     def restricted?
-      state == STACK_RESTRICTED
+      state == StackStates::STACK_RESTRICTED
     end
 
     def disabled?
-      state == STACK_DISABLED
+      state == StackStates::STACK_DISABLED
     end
 
     def can_stage_new_app?

@@ -30,7 +30,7 @@ module VCAP::CloudController
       describe 'state validation' do
         it 'accepts valid states' do
           stack = Stack.make
-          Stack::VALID_STATES.each do |valid_state|
+          StackStates::VALID_STATES.each do |valid_state|
             stack.state = valid_state
             expect(stack).to be_valid
           end
@@ -53,7 +53,7 @@ module VCAP::CloudController
 
     describe 'Serialization' do
       it { is_expected.to export_attributes :name, :description, :build_rootfs_image, :run_rootfs_image }
-      it { is_expected.to import_attributes :name, :description, :build_rootfs_image, :run_rootfs_image}
+      it { is_expected.to import_attributes :name, :description, :build_rootfs_image, :run_rootfs_image }
     end
 
     describe '.configure' do
