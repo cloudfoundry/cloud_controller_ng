@@ -39,7 +39,7 @@ RSpec.describe 'migration to add state column to stacks table', isolation: :trun
         run_migration
         %w[ACTIVE DEPRECATED RESTRICTED DISABLED].each do |state|
           expect do
-            db[:stacks].insert(guid:SecureRandom.uuid, name: "stack-#{state.downcase}", description: "A #{state} stack", state: state)
+            db[:stacks].insert(guid: SecureRandom.uuid, name: "stack-#{state.downcase}", description: "A #{state} stack", state: state)
           end.not_to raise_error
           expect(db[:stacks].first(name: "stack-#{state.downcase}")[:state]).to eq(state)
         end
