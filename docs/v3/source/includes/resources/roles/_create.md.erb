@@ -83,7 +83,7 @@ To create a space role you must be an admin, an organization manager in the pare
 
 For a user to be assigned a space role, the user must already have an organization role in the parent organization.
 
-If the associated user is valid but does not exist in Cloud Controller's database, a user resource will be created automatically.
+If the associated user does not exist in Cloud Controller's database, a user resource will be created automatically. This user may correspond to a UAA user or client. See the [user resource](#users) for more details.
 
 If CAPI property `cc.allow_user_creation_by_org_manager` is enabled, the organization role is being created by username + origin and the user does not exist in UAA yet, the user will be created.
 The origin must be different from `uaa` in this case.

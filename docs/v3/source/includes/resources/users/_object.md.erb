@@ -9,7 +9,7 @@ Example User object
 
 | Name                                      | Type                          | Description                                                                                                                   |
 | --------------                            | ------------------------      | ------------------------------------------------------                                                                        |
-| **guid**                                  | _uuid_                        | Unique identifier for the user                                                                                               |
+| **guid**                                  | _uuid_                        | Unique identifier for the user, matching either a UAA user id or client id                                                                                               |
 | **created_at**                            | _[timestamp](#timestamps)_                    | The time with zone when the object was created                                                                               |
 | **updated_at**                            | _[timestamp](#timestamps)_                    | The time with zone when the object was last updated                                                                          |
 | **username**                              | _string_                      | The name registered in UAA; will be `null` for UAA clients and non-UAA users                                                 |
