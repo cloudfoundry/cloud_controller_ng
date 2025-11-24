@@ -53,6 +53,7 @@ module VCAP::CloudController
       DropletModel.db.transaction do
         existing = DropletModel.where(build_guid: build.guid).first
         if existing
+          Steno.logger('droplet_existing').info("existing droplet found: #{existing.guid}")
           if build.cnb_lifecycle?
             existing.cnb_lifecycle_data ||= build.cnb_lifecycle_data
           else
