@@ -227,7 +227,7 @@ module CloudController
             cfg = {
               'provider' => 'aliyun',
               'access_key_id' => 'ali-id',
-              'access_key_secret' => 'ali-secret',
+              'access_key_secret' => '[redacted]',
               'endpoint' => 'oss-example.aliyuncs.com',
               'bucket_name' => 'ali-bucket'
             }
