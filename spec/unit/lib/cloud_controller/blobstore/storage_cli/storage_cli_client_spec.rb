@@ -32,12 +32,12 @@ module CloudController
         it 'builds the correct client when JSON has provider aliyun' do
           droplets_cfg = Tempfile.new(['droplets', '.json'])
           droplets_cfg.write({
-                               provider:         'aliyun',
-                               access_key_id:     'ali-id',
-                               access_key_secret: 'ali-secret',
-                               endpoint:          'oss-example.aliyuncs.com',
-                               bucket_name:       'ali-bucket'
-                             }.to_json)
+            provider: 'aliyun',
+            access_key_id: 'ali-id',
+            access_key_secret: 'ali-secret',
+            endpoint: 'oss-example.aliyuncs.com',
+            bucket_name: 'ali-bucket'
+          }.to_json)
           droplets_cfg.flush
 
           config_double = instance_double(VCAP::CloudController::Config)
@@ -46,7 +46,7 @@ module CloudController
 
           client_from_registry = StorageCliClient.build(
             directory_key: 'dummy-key',
-            root_dir:      'dummy-root',
+            root_dir: 'dummy-root',
             resource_type: 'droplets'
           )
           expect(client_from_registry).to be_a(AliStorageCliClient)
@@ -225,11 +225,11 @@ module CloudController
         %w[access_key_id access_key_secret endpoint bucket_name].each do |k|
           it "raises when #{k} missing for aliyun" do
             cfg = {
-              'provider'          => 'aliyun',
-              'access_key_id'     => 'ali-id',
+              'provider' => 'aliyun',
+              'access_key_id' => 'ali-id',
               'access_key_secret' => 'ali-secret',
-              'endpoint'          => 'oss-example.aliyuncs.com',
-              'bucket_name'       => 'ali-bucket'
+              'endpoint' => 'oss-example.aliyuncs.com',
+              'bucket_name' => 'ali-bucket'
             }
             cfg.delete(k)
             File.write(droplets_cfg.path, cfg.to_json)
@@ -237,9 +237,9 @@ module CloudController
             expect do
               StorageCliClient.build(directory_key: 'dir', root_dir: 'root', resource_type: 'droplets')
             end.to raise_error(
-                     CloudController::Blobstore::BlobstoreError,
-                     /Missing required keys.*#{k}/
-                   )
+              CloudController::Blobstore::BlobstoreError,
+              /Missing required keys.*#{k}/
+            )
           end
         end
       end
