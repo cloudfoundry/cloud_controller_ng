@@ -3,9 +3,10 @@
 Creating a user requires one value, a GUID. This creates a user in the Cloud
 Controller database.
 
-Generally, the GUID should match the GUID of an already-created user in the
-UAA database, though this is not required.
-Creating a user by guid is only permitted by admins.
+Generally, the GUID should match the ID of an already-created user in the UAA
+database, though this is not required. The GUID can also be a UAA client ID, to
+support the UAA `client_credentials` grant type. Creating a user by guid is
+only permitted by admins.
 
 If CAPI property `cc.allow_user_creation_by_org_manager` is enabled, a UAA user will be automatically created if it does not exist yet.
 The UAA user will be only created when `username` and `origin` have been provided instead of a guid. Additionally `origin` must be different from `uaa`.
@@ -69,7 +70,7 @@ Content-Type: application/json
 
 Name     | Type     | Description
 -------  | -------  |-------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-**guid** | _string_ | Unique identifier for the user. For UAA users this will match the user ID of an existing UAA user's GUID; in the case of UAA clients, this will match the UAA client ID |
+**guid** | _string_ | Unique identifier for the user. For UAA users this will match the UAA user ID; in the case of UAA clients, this will match the UAA client ID |
 **username** | _string_ | Username of the user to be created. This can only be provided together with `origin`.                                                                                   |
 **origin** | _string_ | Origin of the user to be created. This can only be provided together with `username` and cannot be `uaa`.                                                               |
 **metadata.labels**   | [_label object_](#links) | Labels applied to the user                                                                                                                                              |
