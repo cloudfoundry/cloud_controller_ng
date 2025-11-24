@@ -80,11 +80,15 @@ module CloudController
           provider = json['provider'].to_s.strip
           raise BlobstoreError.new("No provider specified in config file: #{path.inspect}") if provider.empty?
 
-          if provider == 'AzureRM'
-            required = %w[account_key account_name container_name environment]
-          elsif provider == 'aliyun'
-            required = %w[access_key_id access_key_secret endpoint bucket_name]
-          end
+          required =
+            case provider
+            when 'AzureRM'
+              %w[account_key account_name container_name environment]
+            when 'aliyun'
+              %w[access_key_id access_key_secret endpoint bucket_name]
+            else
+              []
+            end
           missing = required.reject { |k| json.key?(k) && !json[k].to_s.strip.empty? }
           return if missing.empty?
 
