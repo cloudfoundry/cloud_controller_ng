@@ -302,7 +302,7 @@ GEM
     mime-types-data (3.2025.0924)
     mini_mime (1.1.5)
     mini_portile2 (2.8.9)
-    minitest (5.26.0)
+    minitest (5.26.2)
     mock_redis (0.53.0)
       redis (~> 5)
     ms_rest (0.6.4)
@@ -372,7 +372,7 @@ GEM
     puma (7.1.0)
       nio4r (~> 2.0)
     racc (1.8.1)
-    rack (2.2.20)
+    rack (2.2.21)
     rack-protection (3.2.0)
       base64 (>= 0.1.0)
       rack (~> 2.2, >= 2.2.4)
@@ -486,7 +486,7 @@ GEM
     rubocop-factory_bot (2.28.0)
       lint_roller (~> 1.1)
       rubocop (~> 1.72, >= 1.72.1)
-    rubocop-rails (2.33.4)
+    rubocop-rails (2.34.1)
       activesupport (>= 4.2.0)
       lint_roller (~> 1.1)
       rack (>= 1.1)
@@ -676,7 +676,7 @@ DEPENDENCIES
   rubocop (~> 1.81.7)
   rubocop-capybara
   rubocop-factory_bot
-  rubocop-rails (~> 2.33)
+  rubocop-rails (~> 2.34)
   rubocop-rspec (~> 3.8)
   rubocop-rspec_rails
   rubocop-sequel (~> 0.4.1)
