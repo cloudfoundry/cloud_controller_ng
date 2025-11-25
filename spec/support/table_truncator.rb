@@ -17,6 +17,7 @@ class TableTruncator
           db.run("TRUNCATE TABLE #{table} RESTART IDENTITY CASCADE;")
         end
       when :mysql
+        puts("#{Time.now} Truncating tables")
         tables.each do |table|
           db.run("TRUNCATE TABLE #{table};")
         end

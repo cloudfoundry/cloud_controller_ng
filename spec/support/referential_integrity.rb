@@ -26,9 +26,11 @@ class ReferentialIntegrity
 
   def without_referential_integrity_mysql
     #db.disconnect
+    puts("#{Time.now} SET FOREIGN_KEY_CHECKS = 0 for db #{db.opts[:database]}")
     db.run('SET FOREIGN_KEY_CHECKS = 0;')
     yield
   ensure
+    puts("#{Time.now} SET FOREIGN_KEY_CHECKS = 1 for db #{db.opts[:database]}")
     db.run('SET FOREIGN_KEY_CHECKS = 1;')
   end
 end
