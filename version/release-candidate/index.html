@@ -17341,7 +17341,7 @@ spaces, and assign &amp; unassign roles to users.</p>
 
 <p>For a user to be assigned a space role, the user must already have an organization role in the parent organization.</p>
 
-<p>If the associated user is valid but does not exist in Cloud Controller&rsquo;s database, a user resource will be created automatically.</p>
+<p>If the associated user does not exist in Cloud Controller&rsquo;s database, a user resource will be created automatically. This user may correspond to a UAA user or client. See the <a href="#users">user resource</a> for more details.</p>
 
 <p>If CAPI property <code class="prettyprint">cc.allow_user_creation_by_org_manager</code> is enabled, the organization role is being created by username + origin and the user does not exist in UAA yet, the user will be created.
 The origin must be different from <code class="prettyprint">uaa</code> in this case.</p>
@@ -32495,11 +32495,19 @@ excluded in the response based on the user&rsquo;s role.</p>
 </tbody></table>
 <h2 id="users">Users</h2>
 
-<p>Every Cloud Foundry action (pushing an application, creating a space) requires a
-user. Each Cloud Foundry installation has one pre-installed user, admin, which
-can create subsequent users. Users can be assigned roles which give them
-privileges to perform actions. For example, the Space Developer role grants a
-user permission to manage apps and services in a space (to push apps, scale
+<p>The user resource is used to manage access to organizations, spaces, and other
+resources within Cloud Foundry. Cloud Controller is not the ultimate authority
+on the users in the Cloud Foundry system; UAA and its configured identity
+providers determine which users are able to sign in to Cloud Foundry.</p>
+
+<p>To be functional, Cloud Controller users must &ldquo;shadow&rdquo; a corresponding user or
+client in UAA. The Cloud Controller user resource&rsquo;s guid should match either a
+UAA user or a UAA client id. However, Cloud Controller does not enforce that
+a user&rsquo;s guid is a valid UAA user or client id.</p>
+
+<p>Users can be assigned roles, which give them privileges to perform actions
+within a given context. For example, the Space Developer role grants a user
+permission to manage apps and services in a space (e.g. to push apps, scale
 apps, delete apps).</p>
 <h3 id="the-user-object">The user object</h3>
 <div class="highlight"><pre class="highlight plaintext"><code>Example User object
@@ -32532,7 +32540,7 @@ apps, delete apps).</p>
 <tr>
 <td><strong>guid</strong></td>
 <td><em>uuid</em></td>
-<td>Unique identifier for the user</td>
+<td>Unique identifier for the user, matching either a UAA user id or client id</td>
 </tr>
 <tr>
 <td><strong>created_at</strong></td>
@@ -32580,9 +32588,10 @@ apps, delete apps).</p>
 <p>Creating a user requires one value, a GUID. This creates a user in the Cloud
 Controller database.</p>
 
-<p>Generally, the GUID should match the GUID of an already-created user in the
-UAA database, though this is not required.
-Creating a user by guid is only permitted by admins.</p>
+<p>Generally, the GUID should match the ID of an already-created user in the UAA
+database, though this is not required. The GUID can also be a UAA client ID, to
+support the UAA <code class="prettyprint">client_credentials</code> grant type. Creating a user by guid is
+only permitted by admins.</p>
 
 <p>If CAPI property <code class="prettyprint">cc.allow_user_creation_by_org_manager</code> is enabled, a UAA user will be automatically created if it does not exist yet.
 The UAA user will be only created when <code class="prettyprint">username</code> and <code class="prettyprint">origin</code> have been provided instead of a guid. Additionally <code class="prettyprint">origin</code> must be different from <code class="prettyprint">uaa</code>.
@@ -32665,7 +32674,7 @@ Admins and OrgManagers can make use of the UAA user creation.</p>
 <tr>
 <td><strong>guid</strong></td>
 <td><em>string</em></td>
-<td>Unique identifier for the user. For UAA users this will match the user ID of an existing UAA user&rsquo;s GUID; in the case of UAA clients, this will match the UAA client ID</td>
+<td>Unique identifier for the user. For UAA users this will match the UAA user ID; in the case of UAA clients, this will match the UAA client ID</td>
 </tr>
 <tr>
 <td><strong>username</strong></td>
