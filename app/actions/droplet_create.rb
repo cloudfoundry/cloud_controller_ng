@@ -50,6 +50,7 @@ module VCAP::CloudController
     end
 
     def find_or_create_buildpack_droplet(build)
+      droplet = nil
       DropletModel.db.transaction do
         existing = DropletModel.where(build_guid: build.guid).first
         if existing
@@ -71,12 +72,12 @@ module VCAP::CloudController
         else
           droplet.buildpack_lifecycle_data = build.buildpack_lifecycle_data
         end
-
-        droplet.reload
-        Steno.logger('build_completed').info("droplet created: #{droplet.guid}")
-        record_audit_event(droplet, build.package, user_audit_info_from_build(build))
-        droplet
       end
+
+      droplet.reload
+      Steno.logger('build_completed').info("droplet created: #{droplet.guid}")
+      record_audit_event(droplet, build.package, user_audit_info_from_build(build))
+      droplet
     end
 
     private
