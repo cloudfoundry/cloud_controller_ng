@@ -73,7 +73,7 @@ module VCAP::CloudController
       end
 
       def abort_no_db_connection!
-        abort('No database connection set (consider setting DB_CONNECTION_STRING)')
+        raise 'No database connection set (consider setting DB_CONNECTION_STRING)'
       end
 
       def sanitize(config)
