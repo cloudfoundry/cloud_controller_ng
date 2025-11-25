@@ -1,4 +1,3 @@
-require 'cloudfront-signer'
 require 'cloud_controller/blobstore/client'
 
 module VCAP::CloudController
