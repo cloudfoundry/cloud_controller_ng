@@ -82,7 +82,7 @@ jobs:
       mysql:
         image: ${{ matrix.image }}
         env:
-          MYSQL_DATABASE: cc_test_x
+          MYSQL_DATABASE: cc_test
           MYSQL_ROOT_PASSWORD: password
         options: >-
           --tmpfs /var/lib/mysql:rw,size=2g
