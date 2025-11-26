@@ -49,11 +49,24 @@ module VCAP::CloudController
       droplet
     end
 
-    def create_buildpack_droplet(build)
-      droplet = droplet_from_build(build)
-
+    def find_or_create_buildpack_droplet(build)
+      droplet = nil
       DropletModel.db.transaction do
+        existing = DropletModel.where(build_guid: build.guid).first
+        if existing
+          Steno.logger('droplet_existing').info("existing droplet found: #{existing.guid}")
+          if build.cnb_lifecycle?
+            existing.cnb_lifecycle_data ||= build.cnb_lifecycle_data
+          else
+            existing.buildpack_lifecycle_data ||= build.buildpack_lifecycle_data
+          end
+          existing.save_changes
+          return existing
+        end
+
+        droplet = droplet_from_build(build)
         droplet.save
+
         if build.cnb_lifecycle?
           droplet.cnb_lifecycle_data = build.cnb_lifecycle_data
         else
