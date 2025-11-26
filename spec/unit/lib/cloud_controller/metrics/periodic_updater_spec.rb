@@ -183,6 +183,28 @@ module VCAP::CloudController::Metrics
           @periodic_timers[6][:block].call
         end
       end
+
+      context 'when PeriodicUpdater is shut down' do
+        it 'does nothing when updates have not been setup' do
+          expect { periodic_updater.stop_updates }.not_to raise_error
+        end
+
+        it 'shuts down all timer tasks after setup_updates' do
+          timer_doubles = []
+          allow(Concurrent::TimerTask).to receive(:new) do |*|
+            dbl = double('TimerTask', execute: nil, shutdown: nil)
+            timer_doubles << dbl
+            dbl
+          end
+
+          periodic_updater.setup_updates
+
+          expect(timer_doubles.size).to eq(9)
+          expect(timer_doubles).to all(receive(:shutdown).once)
+
+          periodic_updater.stop_updates
+        end
+      end
     end
 
     describe '#update_deploying_count' do

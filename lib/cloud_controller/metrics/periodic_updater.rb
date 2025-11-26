@@ -17,15 +17,16 @@ module VCAP::CloudController::Metrics
     def setup_updates
       update!
       @update_tasks = []
-      @update_tasks << Concurrent::TimerTask.new(execution_interval: 600) { catch_error { update_user_count } }.execute
-      @update_tasks << Concurrent::TimerTask.new(execution_interval: 30) { catch_error { update_job_queue_length } }.execute
-      @update_tasks << Concurrent::TimerTask.new(execution_interval: 30) { catch_error { update_job_queue_load } }.execute
-      @update_tasks << Concurrent::TimerTask.new(execution_interval: 30) { catch_error { update_failed_job_count } }.execute
-      @update_tasks << Concurrent::TimerTask.new(execution_interval: 30) { catch_error { update_vitals } }.execute
-      @update_tasks << Concurrent::TimerTask.new(execution_interval: 30) { catch_error { update_log_counts } }.execute
-      @update_tasks << Concurrent::TimerTask.new(execution_interval: 30) { catch_error { update_task_stats } }.execute
-      @update_tasks << Concurrent::TimerTask.new(execution_interval: 30) { catch_error { update_deploying_count } }.execute
-      @update_tasks << Concurrent::TimerTask.new(execution_interval: 30) { catch_error { update_webserver_stats } }.execute
+      @update_tasks << Concurrent::TimerTask.new(execution_interval: 600) { catch_error { update_user_count } }
+      @update_tasks << Concurrent::TimerTask.new(execution_interval: 30) { catch_error { update_job_queue_length } }
+      @update_tasks << Concurrent::TimerTask.new(execution_interval: 30) { catch_error { update_job_queue_load } }
+      @update_tasks << Concurrent::TimerTask.new(execution_interval: 30) { catch_error { update_failed_job_count } }
+      @update_tasks << Concurrent::TimerTask.new(execution_interval: 30) { catch_error { update_vitals } }
+      @update_tasks << Concurrent::TimerTask.new(execution_interval: 30) { catch_error { update_log_counts } }
+      @update_tasks << Concurrent::TimerTask.new(execution_interval: 30) { catch_error { update_task_stats } }
+      @update_tasks << Concurrent::TimerTask.new(execution_interval: 30) { catch_error { update_deploying_count } }
+      @update_tasks << Concurrent::TimerTask.new(execution_interval: 30) { catch_error { update_webserver_stats } }
+      @update_tasks.each(&:execute)
     end
 
     def stop_updates
