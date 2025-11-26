@@ -1,6 +1,5 @@
 require 'spec_helper'
 require 'tempfile'
-require 'json'
 require_relative '../client_shared'
 require 'cloud_controller/blobstore/storage_cli/azure_storage_cli_client'
 require 'cloud_controller/blobstore/storage_cli/storage_cli_blob'
