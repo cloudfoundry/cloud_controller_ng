@@ -6,6 +6,7 @@ require 'cloud_controller/logs/steno_io'
 module VCAP::CloudController
   class PumaRunner
     def initialize(config, app, logger, periodic_updater, request_logs)
+      @periodic_updater = periodic_updater
       @logger = logger
 
       ENV['WEB_CONCURRENCY'] = 'auto' if config.get(:puma, :automatic_worker_count)
@@ -59,8 +60,12 @@ module VCAP::CloudController
       events = Puma::Events.new
       events.after_booted do
         prometheus_updater.update_gauge_metric(:cc_db_connection_pool_timeouts_total, 0, labels: { process_type: 'main' })
-        periodic_updater.setup_updates
+        @periodic_updater.setup_updates
       end
+      events.after_stopped do
+        @periodic_updater.stop_updates unless @periodic_updater.nil?
+      end
+
       @puma_launcher = Puma::Launcher.new(puma_config, log_writer:, events:)
     end
 

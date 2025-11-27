@@ -204,7 +204,9 @@ module VCAP::CloudController
       end
 
       describe 'after_stopped' do
-        it 'stops EM and logs incomplete requests' do
+        it 'stops the TimerTasks and logs incomplete requests' do
+          expect(periodic_updater).to receive(:stop_updates)
+
           puma_launcher.events.fire(:after_stopped)
         end
       end
