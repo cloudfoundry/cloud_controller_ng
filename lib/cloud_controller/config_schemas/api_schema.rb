@@ -318,7 +318,7 @@ module VCAP::CloudController
           threadpool_size: Integer,
           skip_cert_verify: bool,
 
-          webserver: String, # thin or puma
+          webserver: String, # currently only puma
           optional(:puma) => {
             automatic_worker_count: bool,
             workers: Integer,

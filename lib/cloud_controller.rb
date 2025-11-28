@@ -1,6 +1,5 @@
 require 'sinatra'
 require 'sequel'
-require 'thin'
 require 'oj'
 require 'delayed_job'
 
