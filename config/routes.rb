@@ -277,6 +277,7 @@ Rails.application.routes.draw do
   delete 'spaces/:guid', to: 'spaces_v3#destroy'
   delete 'spaces/:guid/routes', to: 'spaces_v3#delete_unmapped_routes'
   get '/spaces/:guid/usage_summary', to: 'spaces_v3#show_usage_summary'
+  get 'spaces/:guid/effective_quota', to: 'spaces_v3#show_effective_quota'
   get '/spaces/:guid/relationships/isolation_segment', to: 'spaces_v3#show_isolation_segment'
   patch '/spaces/:guid/relationships/isolation_segment', to: 'spaces_v3#update_isolation_segment'
   get '/spaces/:guid/users', to: 'spaces_v3#list_members'
