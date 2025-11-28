@@ -23,6 +23,10 @@ module VCAP::CloudController
       }
     end
 
+    def skip_detect?
+      !buildpack_infos.empty?
+    end
+
     private
 
     def app_stack
