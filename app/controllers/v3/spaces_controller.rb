@@ -1,6 +1,7 @@
 require 'presenters/v3/paginated_list_presenter'
 require 'presenters/v3/space_presenter'
 require 'presenters/v3/space_usage_summary_presenter'
+require 'presenters/v3/effective_space_quota_presenter'
 require 'messages/space_create_message'
 require 'messages/space_delete_unmapped_routes_message'
 require 'messages/space_update_message'
@@ -218,6 +219,16 @@ class SpacesV3Controller < ApplicationController
     space_not_found! unless permission_queryer.can_read_from_space?(space.id, space.organization_id)
 
     render status: :ok, json: Presenters::V3::SpaceUsageSummaryPresenter.new(space)
+  end
+
+  def show_effective_quota
+    space = fetch_space(hashed_params[:guid])
+    space_not_found! unless space
+    space_not_found! unless permission_queryer.can_read_from_space?(space.id, space.organization_id)
+
+    effective_quota = VCAP::CloudController::EffectiveSpaceQuotaCalculator.calculate(space)
+
+    render status: :ok, json: Presenters::V3::EffectiveSpaceQuotaPresenter.new(effective_quota, space)
   end
 
   private

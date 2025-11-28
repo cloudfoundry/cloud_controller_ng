@@ -78,6 +78,7 @@ require 'cloud_controller/controller_factory'
 require 'cloud_controller/organization_instance_usage_calculator'
 require 'cloud_controller/organization_quota_usage'
 require 'cloud_controller/url_secret_obfuscator'
+require 'cloud_controller/effective_space_quota_calculator'
 
 require 'cloud_controller/legacy_api/legacy_api_base'
 require 'cloud_controller/legacy_api/legacy_info'
