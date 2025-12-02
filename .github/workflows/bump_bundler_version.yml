@@ -45,7 +45,7 @@ jobs:
         run: |
           git config user.name "ari-wg-gitbot"
           git config user.email "app-runtime-interfaces@cloudfoundry.org"
-          git add .
+          git add Gemfile.lock
           git commit -m "Bump Bundler Version in Gemfile.lock"
       - name: Create or Update Pull Request
         if: env.changes == 'true'
@@ -53,4 +53,6 @@ jobs:
         with:
           branch: bump-bundler-version-${{ github.ref_name }}
           title: "Automated Bump of Bundler Version in Gemfile.lock"
+          body: |
+            This PR updates the Gemfile.lock to use the default Bundler version.
           labels: "needs_review"
