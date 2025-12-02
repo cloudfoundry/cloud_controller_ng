@@ -19,28 +19,42 @@ jobs:
       - uses: ./.github/workflows/composite/setup
       - name: Update BUNDLED WITH in Gemfile.lock
         run: |
+          echo "Remove all bundler versions except the default one"
+          gem uninstall bundler -a -x
+
+          ruby -v
+          bundler -v
+
+          # We are modifying the Gemfile.lock, thus have to set frozen to false.
+          bundle config set frozen false
+
           BUNDLER_VERSION=$(ruby -rbundler -e 'puts Bundler::VERSION')
+          
+          echo "Update bundler version in Gemfile.lock"
           bundle update --bundler=$BUNDLER_VERSION
-          cd docs/v3
-          bundle update --bundler=$BUNDLER_VERSION
-      - name: Check for changes
-        run: |
+
+          pushd docs/v3
+            echo "Update bundler version in docs/v3/Gemfile.lock"
+            bundle update --bundler=$BUNDLER_VERSION
+          popd
+
+          # Don't commit changes in vendor/bundle folder.
+          echo "vendor/bundle/" >> .git/info/exclude
+
           if git diff --quiet; then
             echo "changes=false" >> $GITHUB_ENV
           else
             echo "changes=true" >> $GITHUB_ENV
           fi
-      - name: Commit changes
-        if: env.changes == 'true'
-        run: |
-          git config user.name "ari-wg-gitbot"
-          git config user.email "app-runtime-interfaces@cloudfoundry.org"
-          git add .
-          git commit -m "Bump Bundler Version in Gemfile.lock"
       - name: Create or Update Pull Request
         if: env.changes == 'true'
         uses: peter-evans/create-pull-request@v7
         with:
           branch: bump-bundler-version-${{ github.ref_name }}
           title: "Automated Bump of Bundler Version in Gemfile.lock"
+          body: |
+            This PR updates Gemfile.lock and docs/v3/Gemfile.lock to use the default Bundler version.
           labels: "needs_review"
+          commit-message: "Bump Bundler Version in Gemfile.lock and docs/v3/Gemfile.lock"
+          committer: "ari-wg-gitbot <app-runtime-interfaces@cloudfoundry.org>"
+          author: "ari-wg-gitbot <app-runtime-interfaces@cloudfoundry.org>"
