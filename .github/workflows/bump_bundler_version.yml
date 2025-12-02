@@ -21,10 +21,14 @@ jobs:
         run: |
           echo "Remove all bundler versions except the default one"
           gem uninstall bundler -a -x
+
           ruby -v
           bundler -v
-          BUNDLER_VERSION=$(ruby -rbundler -e 'puts Bundler::VERSION')
+
+          # We are modifying the Gemfile.lock, thus have to set frozen to false.
           bundle config set frozen false
+
+          BUNDLER_VERSION=$(ruby -rbundler -e 'puts Bundler::VERSION')
           
           echo "Update bundler version in Gemfile.lock"
           bundle update --bundler=$BUNDLER_VERSION
@@ -34,7 +38,9 @@ jobs:
             bundle update --bundler=$BUNDLER_VERSION
           popd
 
+          # Don't commit changes in vendor/bundle folder.
           echo "vendor/bundle/" >> .git/info/exclude
+
           if git diff --quiet; then
             echo "changes=false" >> $GITHUB_ENV
           else
@@ -47,7 +53,7 @@ jobs:
           branch: bump-bundler-version-${{ github.ref_name }}
           title: "Automated Bump of Bundler Version in Gemfile.lock"
           body: |
-            This PR updates the Gemfile.lock to use the default Bundler version.
+            This PR updates Gemfile.lock and docs/v3/Gemfile.lock to use the default Bundler version.
           labels: "needs_review"
           commit-message: "Bump Bundler Version in Gemfile.lock and docs/v3/Gemfile.lock"
           committer: "ari-wg-gitbot <app-runtime-interfaces@cloudfoundry.org>"
