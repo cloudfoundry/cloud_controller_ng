@@ -28,6 +28,7 @@ jobs:
           bundler -v
           BUNDLER_VERSION=$(ruby -rbundler -e 'puts Bundler::VERSION')
           echo $BUNDLER_VERSION
+          bundle config set frozen false
           bundle update --bundler=$BUNDLER_VERSION
           # cd docs/v3
           # bundle update --bundler=$BUNDLER_VERSION
