@@ -32,21 +32,13 @@ jobs:
           echo "Update bundler version in docs/v3/Gemfile.lock"
           cd docs/v3
           bundle update --bundler=$BUNDLER_VERSION
-      - name: Check for changes
-        run: |
+
+          echo "vendor/bundle/" >> .git/info/exclude
           if git diff --quiet; then
             echo "changes=false" >> $GITHUB_ENV
           else
             echo "changes=true" >> $GITHUB_ENV
           fi
-      - name: Commit changes
-        if: env.changes == 'true'
-        run: |
-          git config user.name "ari-wg-gitbot"
-          git config user.email "app-runtime-interfaces@cloudfoundry.org"
-          git add Gemfile.lock
-          git add docs/v3/Gemfile.lock
-          git commit -m "Bump Bundler Version in Gemfile.lock and docs/v3/Gemfile.lock"
       - name: Create or Update Pull Request
         if: env.changes == 'true'
         uses: peter-evans/create-pull-request@v7
@@ -56,3 +48,6 @@ jobs:
           body: |
             This PR updates the Gemfile.lock to use the default Bundler version.
           labels: "needs_review"
+          commit-message: "Bump Bundler Version in Gemfile.lock and docs/v3/Gemfile.lock"
+          committer: "ari-wg-gitbot <app-runtime-interfaces@cloudfoundry.org>"
+          author: "ari-wg-gitbot <app-runtime-interfaces@cloudfoundry.org>"
