@@ -15,7 +15,7 @@ jobs:
       pull-requests: write
     steps:
       - uses: hmarr/debug-action@v3
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
       - uses: ./.github/workflows/composite/setup
       - name: Update BUNDLED WITH in Gemfile.lock
         run: |

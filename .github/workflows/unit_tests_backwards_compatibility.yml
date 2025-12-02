@@ -50,7 +50,7 @@ jobs:
     steps:
       - uses: hmarr/debug-action@v3
       - name: Checkout code to run the db migration with
-        uses: actions/checkout@v5
+        uses: actions/checkout@v6
         with:
           ref: ${{ (
               github.event_name == 'workflow_dispatch'
@@ -67,7 +67,7 @@ jobs:
       - name: Migrate Database
         run: DB=postgres POSTGRES_CONNECTION_PREFIX="postgres://postgres:rootpassword@localhost:5432" bundle exec rake db:parallel:recreate db:parallel:migrate
       - name: Checkout code to run the unit tests with
-        uses: actions/checkout@v5
+        uses: actions/checkout@v6
         with:
           ref: ${{ (
               github.event_name == 'workflow_dispatch'
@@ -104,7 +104,7 @@ jobs:
     steps:
       - uses: hmarr/debug-action@v3
       - name: Checkout code to run the db migration with
-        uses: actions/checkout@v5
+        uses: actions/checkout@v6
         with:
           ref: ${{ (
             github.event_name == 'workflow_dispatch'
@@ -121,7 +121,7 @@ jobs:
       - name: Migrate Database
         run: DB=mysql MYSQL_CONNECTION_PREFIX="mysql2://root:password@127.0.0.1:3306" bundle exec rake db:parallel:recreate db:parallel:migrate
       - name: Checkout code to run the unit tests with
-        uses: actions/checkout@v5
+        uses: actions/checkout@v6
         with:
           ref: ${{ (
             github.event_name == 'workflow_dispatch'
