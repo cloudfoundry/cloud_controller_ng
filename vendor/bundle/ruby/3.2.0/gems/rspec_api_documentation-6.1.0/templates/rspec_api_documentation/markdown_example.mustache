@@ -1,0 +1,82 @@
+# {{ resource_name }} API
+{{# resource_explanation }}
+
+{{{ resource_explanation }}}
+{{/ resource_explanation }}
+
+## {{ description }}
+
+### {{ http_method }} {{ route }}
+{{# explanation }}
+
+{{ explanation }}
+{{/ explanation }}
+{{# has_parameters? }}
+
+### Parameters
+
+| Name | Description | Required | Scope |
+|------|-------------|----------|-------|
+{{# parameters }}
+| {{ name }} | {{ description }} | {{ required }} | {{ scope }} |
+{{/ parameters }}
+
+{{/ has_parameters? }}
+{{# has_response_fields? }}
+
+### Response Fields
+
+| Name | Description | Scope |
+|------|-------------|-------|
+{{# response_fields }}
+| {{ name }} | {{ description }} | {{ scope }} |
+{{/ response_fields }}
+
+{{/ has_response_fields? }}
+{{# requests }}
+### Request
+
+#### Headers
+
+<pre>{{ request_headers_text }}</pre>
+
+#### Route
+
+<pre>{{ request_method }} {{ request_path }}</pre>
+{{# request_query_parameters_text }}
+
+#### Query Parameters
+
+<pre>{{ request_query_parameters_text }}</pre>
+{{/ request_query_parameters_text }}
+{{# request_body }}
+
+#### Body
+
+<pre>{{{ request_body }}}</pre>
+{{/ request_body }}
+{{# curl }}
+
+#### cURL
+
+<pre class="request">{{ curl }}</pre>
+{{/ curl }}
+
+{{# response_status }}
+### Response
+
+#### Headers
+
+<pre>{{ response_headers_text }}</pre>
+
+#### Status
+
+<pre>{{ response_status }} {{ response_status_text}}</pre>
+
+{{# response_body }}
+#### Body
+
+<pre>{{{ response_body }}}</pre>
+{{/ response_body }}
+{{/ response_status }}
+{{/ requests }}

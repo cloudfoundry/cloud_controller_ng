@@ -1,0 +1,154 @@
+Release 0.10.0 - 2025/09/04
+
+  * Add timeout option (#104)
+  * gemspec: add logger gem as runtime dependency
+
+Release 0.9.1 - 2023/12/20
+
+  * Fix invalid message polluting subsequent message
+
+Release 0.9.0 - 2020/09/04
+
+  * FluentLogger supports TLS
+
+Release 0.8.2 - 2019/08/21
+
+  * Block timeout during IO#write to avoid writing invalid bytes
+  * Fluent::Logger::EventTime#to_json returns String
+
+Release 0.8.1 - 2019/05/30
+
+  * Improve non-blocking write handling
+
+Release 0.8.0 - 2019/01/25
+
+  * Add use_nonblock and wait_writeable parameters
+
+Release 0.7.2 - 2018/01/04
+
+  * Fix EventTime for nanosecond_precision
+
+Release 0.7.1 - 2017/04/19
+
+  * Fix packer clear bug for non-msgpackable data
+
+Release 0.7.0 - 2017/04/12
+
+  * Add nanosecond_precision parameter for v0.14
+  * Update msgpack dependency to v1.0
+
+Release 0.6.3 - 2017/03/29
+
+  * Add pending_bytesize method
+
+Release 0.6.2 - 2017/01/17
+
+  * Add unix domain socket support for `in_unix`
+  * LevelFluentLogger uses standard compatible severity formatting
+
+Release 0.6.1 - 2016/11/02
+
+  * Add LevelFluentLogger: Standard Logger compatible interface
+
+Release 0.6.0 - 2016/10/15
+
+  * Relax msgpack dependency
+  * ConsoleLogger: close io if io is stdout
+
+Release 0.5.1 - 2015/11/24
+
+  * Allow injection of buffer overflow handler
+  * tag_prefix now default to nil
+  * LoggerBase.open follows README
+
+Release 0.5.0 - 2015/01/25
+
+  * Use json instead of yajl. If you pass an invalid string to post, you may get 'invalid byte sequence' error.
+  * Support JRuby environment
+
+Release 0.4.10 - 2015/01/10
+
+  * Call closed? in connect? method to check connection is closed or not
+  * Add rspec-its for spec
+
+Release 0.4.9 - 2014/04/17
+
+  * Fix the peformance regression caused by many to_json calls
+
+Release 0.4.8 - 2014/04/12
+
+  * Use at_exit for logger finalization
+  * Fix unable to construct a default logger of non-default type
+
+Release 0.4.7 - 2013/11/21
+
+  * Suppress log error message with :log_reconnect_error_threshold option
+  * Add FluentLogger#last_error method to get last exception in user code
+
+Release 0.4.6 - 2013/06/17
+
+  * Raise an ArgumentError when passes invalid argument to post method
+  * Relax msgpack gem version
+
+Release 0.4.5 - 2013/02/26
+
+  * Use https scheme for rubygems source
+  * Fix broken spec
+
+Release 0.4.4 - 2012/12/26
+
+  * Change msgpack dependency version == 0.4.7 for avoding 0.4.8 yanked issue
+
+Release 0.4.3 - 2012/04/24
+
+  * Update yajl dependency version >= 1.0 (thanks shun0102)
+
+Release 0.4.2 - 2012/03/02
+
+  * Added TestLogger#tag_queue(tag_name)
+  * Added bin/fluent-post cli command
+  * Impl default LoggerBase#close
+  * Don't change logger.level if :debug=> option is sepcified
+
+Release 0.4.1 - 2011/11/07
+
+  * added Logger#post_with_time(tag, map, time)
+  * Logger#post(tag, map, time=Time.now) -> Logger#post(tag, map)
+  * FluentLogger supports :debug=>true option to write all events to STDERR
+
+
+Release 0.4.0 - 2011/11/05
+
+  * Wait before reconnecting to fluentd to prevent burst
+  * Flush logs when process stops using finalizer
+  * Added rspec and coverage
+  * Supports objects that don't support to_msgpack by
+    JSON.load(JSON.dump(obj)).to_msgpack
+  * FluentLogger uses IO#sync=true + IO#write instead of IO#syswrite to
+    avoid unexpected blocking
+  * Logger#post(tag, map) -> Logger#post(tag, map, time=Time.now)
+  * Removed Event classes
+  * Added NullLogger
+
+
+Release 0.3.1 - 2011/08/28
+
+  * FluentLogger#initialize doesn't raise error when connection is failed.
+    Instead, it tries to reconnect.
+
+
+Release 0.3.0 - 2011/08/21
+
+  * Added 'tag' for event logs
+
+
+Release 0.2.0 - 2011/08/05
+
+  * Redesigned Event class
+  * Added TestLogger (Fluent.open(:test))
+  * Added test programs
+
+
+Release 0.1.0 - 2011/08/04
+
+  * First release

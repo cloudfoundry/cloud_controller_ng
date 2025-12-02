@@ -1,0 +1,7 @@
+require 'sonde/error.pb'
+require 'sonde/metric.pb'
+require 'sonde/log.pb'
+require 'sonde/uuid.pb'
+require 'sonde/http.pb'
+require 'sonde/envelope.pb'
+require 'sonde/sonde_extender'

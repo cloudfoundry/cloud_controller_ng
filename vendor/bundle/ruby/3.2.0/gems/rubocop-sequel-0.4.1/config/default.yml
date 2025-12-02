@@ -1,0 +1,54 @@
+# This is the default configuration file.
+
+Sequel:
+  Enabled: true
+  DocumentationBaseURL: https://github.com/rubocop/rubocop-sequel/blob/master/README.md
+
+Sequel/ConcurrentIndex:
+  Description: Encourages the creation of indexes with the `NOT VALID` option to avoid locking tables.
+  Reference: https://www.rubydoc.info/gems/rubocop-sequel/RuboCop/Cop/Sequel/ConcurrentIndex
+  Enabled: true
+  VersionAdded: 0.0.1
+  VersionChanged: 0.3.3
+
+Sequel/IrreversibleMigration:
+  Description: >-
+    Warns against using certain methods inside a migration file's `change` block that would cause the migration to become irreversible.
+  Reference: https://www.rubydoc.info/gems/rubocop-sequel/RuboCop/Cop/Sequel/IrreversibleMigration
+  Enabled: true
+  VersionAdded: 0.3.5
+  VersionChanged: 0.3.8
+
+Sequel/JSONColumn:
+  Description: >-
+    Advocates the use of the `jsonb` column type over `json` or `hstore` for performance
+    benefits and additional functionality.
+  Reference: https://www.rubydoc.info/gems/rubocop-sequel/RuboCop/Cop/Sequel/JSONColumn
+  Enabled: true
+  Safe: false
+  VersionAdded: 0.0.1
+  VersionChanged: 0.3.3
+
+Sequel/MigrationName:
+  Description: >-
+    Helps to name migration files descriptively in order to avoid the use of default or generic names.
+  Reference: https://www.rubydoc.info/gems/rubocop-sequel/RuboCop/Cop/Sequel/MigrationName
+  Enabled: true
+  VersionAdded: '0.0.1'
+  VersionChanged: '0.3.3'
+  DefaultName: new_migration
+
+Sequel/PartialConstraint:
+  Description: Advises on the correct use of partial indexes by specifying the `where' argument.
+  Reference: https://www.rubydoc.info/gems/rubocop-sequel/RuboCop/Cop/Sequel/PartialConstraint
+  Enabled: true
+  VersionAdded: '0.3.0'
+  VersionChanged: '0.3.3'
+
+Sequel/SaveChanges:
+  Description: Ensures the use of save_changes instead of save to persist changes to models.
+  Reference: https://www.rubydoc.info/gems/rubocop-sequel/RuboCop/Cop/Sequel/SaveChanges
+  Enabled: true
+  SafeAutoCorrect: false
+  VersionAdded: '0.0.1'
+  VersionChanged: '0.3.3'

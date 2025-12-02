@@ -1,0 +1,32 @@
+require 'fog/openstack/models/collection'
+require 'fog/openstack/network/models/subnet'
+
+module Fog
+  module OpenStack
+    class Network
+      class Subnets < Fog::OpenStack::Collection
+        attribute :filters
+
+        model Fog::OpenStack::Network::Subnet
+
+        def initialize(attributes)
+          self.filters ||= {}
+          super
+        end
+
+        def all(filters_arg = filters)
+          filters = filters_arg
+          load_response(service.list_subnets(filters), 'subnets')
+        end
+
+        def get(subnet_id)
+          if subnet = service.get_subnet(subnet_id).body['subnet']
+            new(subnet)
+          end
+        rescue Fog::OpenStack::Network::NotFound
+          nil
+        end
+      end
+    end
+  end
+end

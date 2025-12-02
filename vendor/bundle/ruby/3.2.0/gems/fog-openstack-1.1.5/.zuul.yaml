@@ -1,0 +1,35 @@
+- project:
+    check:
+      jobs:
+        - fog-openstack-unittest-test
+        - fog-openstack-unittest-spec
+
+- job:
+    name: fog-openstack-unittest-test
+    parent: init-test
+    description: |
+      fog-openstack unittest test tests
+    run: playbooks/fog-openstack-unittest-test/run.yaml
+    vars:
+      rvm:
+        2.3.8
+        2.4.5
+        2.5.3
+        2.6.0
+        jruby-head
+    nodeset: ubuntu-xenial
+
+- job:
+    name: fog-openstack-unittest-spec
+    parent: init-test
+    description: |
+      fog-openstack unittest spec tests
+    run: playbooks/fog-openstack-unittest-spec/run.yaml
+    vars:
+      rvm:
+        2.3.8
+        2.4.5
+        2.5.3
+        2.6.0
+        jruby-head
+    nodeset: ubuntu-xenial

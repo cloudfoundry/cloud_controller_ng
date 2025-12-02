@@ -1,0 +1,34 @@
+current directory: /home/runner/work/cloud_controller_ng/cloud_controller_ng/vendor/bundle/ruby/3.2.0/gems/thin-2.0.1/ext/thin_parser
+/opt/hostedtoolcache/Ruby/3.2.9/x64/bin/ruby extconf.rb
+checking for main() in -lc... yes
+creating Makefile
+
+current directory: /home/runner/work/cloud_controller_ng/cloud_controller_ng/vendor/bundle/ruby/3.2.0/gems/thin-2.0.1/ext/thin_parser
+make DESTDIR\= sitearchdir\=./.gem.20251112-3354-ewwbne sitelibdir\=./.gem.20251112-3354-ewwbne clean
+
+current directory: /home/runner/work/cloud_controller_ng/cloud_controller_ng/vendor/bundle/ruby/3.2.0/gems/thin-2.0.1/ext/thin_parser
+make DESTDIR\= sitearchdir\=./.gem.20251112-3354-ewwbne sitelibdir\=./.gem.20251112-3354-ewwbne
+compiling parser.c
+parser.c:31:18: warning: ‘http_parser_en_main’ defined but not used [-Wunused-const-variable=]
+   31 | static const int http_parser_en_main = 1;
+      |                  ^~~~~~~~~~~~~~~~~~~
+cc1: note: unrecognized command-line option ‘-Wno-self-assign’ may have been intended to silence earlier diagnostics
+cc1: note: unrecognized command-line option ‘-Wno-parentheses-equality’ may have been intended to silence earlier diagnostics
+cc1: note: unrecognized command-line option ‘-Wno-constant-logical-operand’ may have been intended to silence earlier diagnostics
+compiling thin.c
+thin.c: In function ‘Init_thin_parser’:
+thin.c:393:6: warning: old-style function definition [-Wold-style-definition]
+  393 | void Init_thin_parser()
+      |      ^~~~~~~~~~~~~~~~
+At top level:
+cc1: note: unrecognized command-line option ‘-Wno-self-assign’ may have been intended to silence earlier diagnostics
+cc1: note: unrecognized command-line option ‘-Wno-parentheses-equality’ may have been intended to silence earlier diagnostics
+cc1: note: unrecognized command-line option ‘-Wno-constant-logical-operand’ may have been intended to silence earlier diagnostics
+linking shared-object thin_parser.so
+
+current directory: /home/runner/work/cloud_controller_ng/cloud_controller_ng/vendor/bundle/ruby/3.2.0/gems/thin-2.0.1/ext/thin_parser
+make DESTDIR\= sitearchdir\=./.gem.20251112-3354-ewwbne sitelibdir\=./.gem.20251112-3354-ewwbne install
+/usr/bin/install -c -m 0755 thin_parser.so ./.gem.20251112-3354-ewwbne
+
+current directory: /home/runner/work/cloud_controller_ng/cloud_controller_ng/vendor/bundle/ruby/3.2.0/gems/thin-2.0.1/ext/thin_parser
+make DESTDIR\= sitearchdir\=./.gem.20251112-3354-ewwbne sitelibdir\=./.gem.20251112-3354-ewwbne clean

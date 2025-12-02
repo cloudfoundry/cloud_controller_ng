@@ -1,0 +1,28 @@
+#!/usr/bin/env ruby
+require "json"
+require "json-diff"
+
+HELP = <<-HELP
+Produce a JSON description of the difference between two JSON files.
+Usage:
+  json-diff FILE1 FILE2
+HELP
+
+if ARGV.first == "-h"
+  puts HELP
+  exit(0)
+end
+
+before_filename = ARGV.shift
+after_filename = ARGV.shift
+
+if before_filename == nil || after_filename == nil
+  puts "A file is missing to compute the difference between two files"
+  exit(1)
+end
+
+before_file = IO.read(before_filename)
+after_file = IO.read(after_filename)
+before = JSON.parse(before_file)
+after = JSON.parse(after_file)
+puts JSON.pretty_generate(JsonDiff.diff(before, after))

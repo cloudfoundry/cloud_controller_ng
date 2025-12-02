@@ -1,0 +1,5 @@
+--main README.md
+--no-private
+--title "Cloud Foundry UAA Client API"
+lib/**/*.rb - LICENSE.TXT NOTICE.TXT
+

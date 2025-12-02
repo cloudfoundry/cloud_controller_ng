@@ -1,0 +1,22 @@
+multipart-parser is a simple parser for multipart MIME messages, written in Ruby, based on felixge/node-formidable's parser.
+
+Some things to note:
+
+* Pure Ruby
+
+* Event-driven API
+
+* Only supports one level of multipart parsing. Invoke another parser if you need to handle nested messages.
+
+* Does not perform I/O.
+
+* Does not depend on any other library.
+
+Latest release: 0.1.1
+  * Fixes some issues with ruby 1.9
+
+Contributors:
+  Daniel Abrahamsson
+  Jérémy Bobbio
+  Aaron Patterson
+  Jeff Mancuso

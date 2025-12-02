@@ -1,0 +1,18 @@
+require:
+  - rubocop-rspec
+
+AllCops:
+  TargetRubyVersion: 2.7
+  NewCops: enable
+
+# Offense count: 1
+# Configuration parameters: CountComments, ExcludedMethods.
+Metrics/BlockLength:
+  Exclude:
+    - spec/**/*
+
+# Offense count: 1
+# Configuration parameters: ExpectMatchingDefinition, Regex, IgnoreExecutableScripts, AllowedAcronyms.
+Naming/FileName:
+  Exclude:
+    - 'lib/rubocop-sequel.rb'

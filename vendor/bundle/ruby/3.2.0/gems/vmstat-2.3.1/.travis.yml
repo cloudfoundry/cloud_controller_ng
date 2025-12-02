@@ -1,0 +1,7 @@
+language: ruby
+os:
+  - linux
+rvm:
+  - ruby-2.2.6
+env:
+  - TRAVIS=true

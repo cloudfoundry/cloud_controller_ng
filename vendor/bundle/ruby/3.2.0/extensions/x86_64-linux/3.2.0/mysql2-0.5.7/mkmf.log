@@ -1,0 +1,820 @@
+have_func: checking for rb_absint_size()... -------------------- yes
+
+LD_LIBRARY_PATH=.:/opt/hostedtoolcache/Ruby/3.2.9/x64/lib "gcc -o conftest -I/opt/hostedtoolcache/Ruby/3.2.9/x64/include/ruby-3.2.0/x86_64-linux -I/opt/hostedtoolcache/Ruby/3.2.9/x64/include/ruby-3.2.0/ruby/backward -I/opt/hostedtoolcache/Ruby/3.2.9/x64/include/ruby-3.2.0 -I. -DENABLE_PATH_CHECK=0   -O3 -fno-fast-math -ggdb3 -Wall -Wextra -Wdeprecated-declarations -Wdiv-by-zero -Wduplicated-cond -Wimplicit-function-declaration -Wimplicit-int -Wmisleading-indentation -Wpointer-arith -Wwrite-strings -Wold-style-definition -Wimplicit-fallthrough=0 -Wmissing-noreturn -Wno-cast-function-type -Wno-constant-logical-operand -Wno-long-long -Wno-missing-field-initializers -Wno-overlength-strings -Wno-packed-bitfield-compat -Wno-parentheses-equality -Wno-self-assign -Wno-tautological-compare -Wno-unused-parameter -Wno-unused-value -Wsuggest-attribute=format -Wsuggest-attribute=noreturn -Wunused-variable -Wundef  -fPIC conftest.c  -L. -L/opt/hostedtoolcache/Ruby/3.2.9/x64/lib -Wl,-rpath,/opt/hostedtoolcache/Ruby/3.2.9/x64/lib -L. -fstack-protector-strong -rdynamic -Wl,-export-dynamic -Wl,--no-as-needed     -Wl,-rpath,/opt/hostedtoolcache/Ruby/3.2.9/x64/lib -L/opt/hostedtoolcache/Ruby/3.2.9/x64/lib -lruby  -lm -lpthread  -lc"
+checked program was:
+/* begin */
+1: #include "ruby.h"
+2: 
+3: int main(int argc, char **argv)
+4: {
+5:   return !!argv[argc];
+6: }
+/* end */
+
+LD_LIBRARY_PATH=.:/opt/hostedtoolcache/Ruby/3.2.9/x64/lib "gcc -o conftest -I/opt/hostedtoolcache/Ruby/3.2.9/x64/include/ruby-3.2.0/x86_64-linux -I/opt/hostedtoolcache/Ruby/3.2.9/x64/include/ruby-3.2.0/ruby/backward -I/opt/hostedtoolcache/Ruby/3.2.9/x64/include/ruby-3.2.0 -I. -DENABLE_PATH_CHECK=0   -O3 -fno-fast-math -ggdb3 -Wall -Wextra -Wdeprecated-declarations -Wdiv-by-zero -Wduplicated-cond -Wimplicit-function-declaration -Wimplicit-int -Wmisleading-indentation -Wpointer-arith -Wwrite-strings -Wold-style-definition -Wimplicit-fallthrough=0 -Wmissing-noreturn -Wno-cast-function-type -Wno-constant-logical-operand -Wno-long-long -Wno-missing-field-initializers -Wno-overlength-strings -Wno-packed-bitfield-compat -Wno-parentheses-equality -Wno-self-assign -Wno-tautological-compare -Wno-unused-parameter -Wno-unused-value -Wsuggest-attribute=format -Wsuggest-attribute=noreturn -Wunused-variable -Wundef  -fPIC conftest.c  -L. -L/opt/hostedtoolcache/Ruby/3.2.9/x64/lib -Wl,-rpath,/opt/hostedtoolcache/Ruby/3.2.9/x64/lib -L. -fstack-protector-strong -rdynamic -Wl,-export-dynamic -Wl,--no-as-needed     -Wl,-rpath,/opt/hostedtoolcache/Ruby/3.2.9/x64/lib -L/opt/hostedtoolcache/Ruby/3.2.9/x64/lib -lruby  -lm -lpthread  -lc"
+checked program was:
+/* begin */
+ 1: #include "ruby.h"
+ 2: 
+ 3: /*top*/
+ 4: extern int t(void);
+ 5: int main(int argc, char **argv)
+ 6: {
+ 7:   if (argc > 1000000) {
+ 8:     int (* volatile tp)(void)=(int (*)(void))&t;
+ 9:     printf("%d", (*tp)());
+10:   }
+11: 
+12:   return !!argv[argc];
+13: }
+14: int t(void) { void ((*volatile p)()); p = (void ((*)()))rb_absint_size; return !p; }
+/* end */
+
+--------------------
+
+have_func: checking for rb_absint_singlebit_p()... -------------------- yes
+
+LD_LIBRARY_PATH=.:/opt/hostedtoolcache/Ruby/3.2.9/x64/lib "gcc -o conftest -I/opt/hostedtoolcache/Ruby/3.2.9/x64/include/ruby-3.2.0/x86_64-linux -I/opt/hostedtoolcache/Ruby/3.2.9/x64/include/ruby-3.2.0/ruby/backward -I/opt/hostedtoolcache/Ruby/3.2.9/x64/include/ruby-3.2.0 -I. -DENABLE_PATH_CHECK=0   -O3 -fno-fast-math -ggdb3 -Wall -Wextra -Wdeprecated-declarations -Wdiv-by-zero -Wduplicated-cond -Wimplicit-function-declaration -Wimplicit-int -Wmisleading-indentation -Wpointer-arith -Wwrite-strings -Wold-style-definition -Wimplicit-fallthrough=0 -Wmissing-noreturn -Wno-cast-function-type -Wno-constant-logical-operand -Wno-long-long -Wno-missing-field-initializers -Wno-overlength-strings -Wno-packed-bitfield-compat -Wno-parentheses-equality -Wno-self-assign -Wno-tautological-compare -Wno-unused-parameter -Wno-unused-value -Wsuggest-attribute=format -Wsuggest-attribute=noreturn -Wunused-variable -Wundef  -fPIC conftest.c  -L. -L/opt/hostedtoolcache/Ruby/3.2.9/x64/lib -Wl,-rpath,/opt/hostedtoolcache/Ruby/3.2.9/x64/lib -L. -fstack-protector-strong -rdynamic -Wl,-export-dynamic -Wl,--no-as-needed     -Wl,-rpath,/opt/hostedtoolcache/Ruby/3.2.9/x64/lib -L/opt/hostedtoolcache/Ruby/3.2.9/x64/lib -lruby  -lm -lpthread  -lc"
+checked program was:
+/* begin */
+ 1: #include "ruby.h"
+ 2: 
+ 3: /*top*/
+ 4: extern int t(void);
+ 5: int main(int argc, char **argv)
+ 6: {
+ 7:   if (argc > 1000000) {
+ 8:     int (* volatile tp)(void)=(int (*)(void))&t;
+ 9:     printf("%d", (*tp)());
+10:   }
+11: 
+12:   return !!argv[argc];
+13: }
+14: int t(void) { void ((*volatile p)()); p = (void ((*)()))rb_absint_singlebit_p; return !p; }
+/* end */
+
+--------------------
+
+have_func: checking for rb_gc_mark_movable()... -------------------- yes
+
+LD_LIBRARY_PATH=.:/opt/hostedtoolcache/Ruby/3.2.9/x64/lib "gcc -o conftest -I/opt/hostedtoolcache/Ruby/3.2.9/x64/include/ruby-3.2.0/x86_64-linux -I/opt/hostedtoolcache/Ruby/3.2.9/x64/include/ruby-3.2.0/ruby/backward -I/opt/hostedtoolcache/Ruby/3.2.9/x64/include/ruby-3.2.0 -I. -DENABLE_PATH_CHECK=0   -O3 -fno-fast-math -ggdb3 -Wall -Wextra -Wdeprecated-declarations -Wdiv-by-zero -Wduplicated-cond -Wimplicit-function-declaration -Wimplicit-int -Wmisleading-indentation -Wpointer-arith -Wwrite-strings -Wold-style-definition -Wimplicit-fallthrough=0 -Wmissing-noreturn -Wno-cast-function-type -Wno-constant-logical-operand -Wno-long-long -Wno-missing-field-initializers -Wno-overlength-strings -Wno-packed-bitfield-compat -Wno-parentheses-equality -Wno-self-assign -Wno-tautological-compare -Wno-unused-parameter -Wno-unused-value -Wsuggest-attribute=format -Wsuggest-attribute=noreturn -Wunused-variable -Wundef  -fPIC conftest.c  -L. -L/opt/hostedtoolcache/Ruby/3.2.9/x64/lib -Wl,-rpath,/opt/hostedtoolcache/Ruby/3.2.9/x64/lib -L. -fstack-protector-strong -rdynamic -Wl,-export-dynamic -Wl,--no-as-needed     -Wl,-rpath,/opt/hostedtoolcache/Ruby/3.2.9/x64/lib -L/opt/hostedtoolcache/Ruby/3.2.9/x64/lib -lruby  -lm -lpthread  -lc"
+checked program was:
+/* begin */
+ 1: #include "ruby.h"
+ 2: 
+ 3: /*top*/
+ 4: extern int t(void);
+ 5: int main(int argc, char **argv)
+ 6: {
+ 7:   if (argc > 1000000) {
+ 8:     int (* volatile tp)(void)=(int (*)(void))&t;
+ 9:     printf("%d", (*tp)());
+10:   }
+11: 
+12:   return !!argv[argc];
+13: }
+14: int t(void) { void ((*volatile p)()); p = (void ((*)()))rb_gc_mark_movable; return !p; }
+/* end */
+
+--------------------
+
+have_func: checking for rb_wait_for_single_fd()... -------------------- yes
+
+LD_LIBRARY_PATH=.:/opt/hostedtoolcache/Ruby/3.2.9/x64/lib "gcc -o conftest -I/opt/hostedtoolcache/Ruby/3.2.9/x64/include/ruby-3.2.0/x86_64-linux -I/opt/hostedtoolcache/Ruby/3.2.9/x64/include/ruby-3.2.0/ruby/backward -I/opt/hostedtoolcache/Ruby/3.2.9/x64/include/ruby-3.2.0 -I. -DENABLE_PATH_CHECK=0   -O3 -fno-fast-math -ggdb3 -Wall -Wextra -Wdeprecated-declarations -Wdiv-by-zero -Wduplicated-cond -Wimplicit-function-declaration -Wimplicit-int -Wmisleading-indentation -Wpointer-arith -Wwrite-strings -Wold-style-definition -Wimplicit-fallthrough=0 -Wmissing-noreturn -Wno-cast-function-type -Wno-constant-logical-operand -Wno-long-long -Wno-missing-field-initializers -Wno-overlength-strings -Wno-packed-bitfield-compat -Wno-parentheses-equality -Wno-self-assign -Wno-tautological-compare -Wno-unused-parameter -Wno-unused-value -Wsuggest-attribute=format -Wsuggest-attribute=noreturn -Wunused-variable -Wundef  -fPIC conftest.c  -L. -L/opt/hostedtoolcache/Ruby/3.2.9/x64/lib -Wl,-rpath,/opt/hostedtoolcache/Ruby/3.2.9/x64/lib -L. -fstack-protector-strong -rdynamic -Wl,-export-dynamic -Wl,--no-as-needed     -Wl,-rpath,/opt/hostedtoolcache/Ruby/3.2.9/x64/lib -L/opt/hostedtoolcache/Ruby/3.2.9/x64/lib -lruby  -lm -lpthread  -lc"
+conftest.c: In function ‘t’:
+conftest.c:14:57: error: ‘rb_wait_for_single_fd’ undeclared (first use in this function)
+   14 | int t(void) { void ((*volatile p)()); p = (void ((*)()))rb_wait_for_single_fd; return !p; }
+      |                                                         ^~~~~~~~~~~~~~~~~~~~~
+conftest.c:14:57: note: each undeclared identifier is reported only once for each function it appears in
+At top level:
+cc1: note: unrecognized command-line option ‘-Wno-self-assign’ may have been intended to silence earlier diagnostics
+cc1: note: unrecognized command-line option ‘-Wno-parentheses-equality’ may have been intended to silence earlier diagnostics
+cc1: note: unrecognized command-line option ‘-Wno-constant-logical-operand’ may have been intended to silence earlier diagnostics
+checked program was:
+/* begin */
+ 1: #include "ruby.h"
+ 2: 
+ 3: /*top*/
+ 4: extern int t(void);
+ 5: int main(int argc, char **argv)
+ 6: {
+ 7:   if (argc > 1000000) {
+ 8:     int (* volatile tp)(void)=(int (*)(void))&t;
+ 9:     printf("%d", (*tp)());
+10:   }
+11: 
+12:   return !!argv[argc];
+13: }
+14: int t(void) { void ((*volatile p)()); p = (void ((*)()))rb_wait_for_single_fd; return !p; }
+/* end */
+
+LD_LIBRARY_PATH=.:/opt/hostedtoolcache/Ruby/3.2.9/x64/lib "gcc -o conftest -I/opt/hostedtoolcache/Ruby/3.2.9/x64/include/ruby-3.2.0/x86_64-linux -I/opt/hostedtoolcache/Ruby/3.2.9/x64/include/ruby-3.2.0/ruby/backward -I/opt/hostedtoolcache/Ruby/3.2.9/x64/include/ruby-3.2.0 -I. -DENABLE_PATH_CHECK=0   -O3 -fno-fast-math -ggdb3 -Wall -Wextra -Wdeprecated-declarations -Wdiv-by-zero -Wduplicated-cond -Wimplicit-function-declaration -Wimplicit-int -Wmisleading-indentation -Wpointer-arith -Wwrite-strings -Wold-style-definition -Wimplicit-fallthrough=0 -Wmissing-noreturn -Wno-cast-function-type -Wno-constant-logical-operand -Wno-long-long -Wno-missing-field-initializers -Wno-overlength-strings -Wno-packed-bitfield-compat -Wno-parentheses-equality -Wno-self-assign -Wno-tautological-compare -Wno-unused-parameter -Wno-unused-value -Wsuggest-attribute=format -Wsuggest-attribute=noreturn -Wunused-variable -Wundef  -fPIC conftest.c  -L. -L/opt/hostedtoolcache/Ruby/3.2.9/x64/lib -Wl,-rpath,/opt/hostedtoolcache/Ruby/3.2.9/x64/lib -L. -fstack-protector-strong -rdynamic -Wl,-export-dynamic -Wl,--no-as-needed     -Wl,-rpath,/opt/hostedtoolcache/Ruby/3.2.9/x64/lib -L/opt/hostedtoolcache/Ruby/3.2.9/x64/lib -lruby  -lm -lpthread  -lc"
+checked program was:
+/* begin */
+ 1: #include "ruby.h"
+ 2: 
+ 3: /*top*/
+ 4: extern int t(void);
+ 5: int main(int argc, char **argv)
+ 6: {
+ 7:   if (argc > 1000000) {
+ 8:     int (* volatile tp)(void)=(int (*)(void))&t;
+ 9:     printf("%d", (*tp)());
+10:   }
+11: 
+12:   return !!argv[argc];
+13: }
+14: extern void rb_wait_for_single_fd();
+15: int t(void) { rb_wait_for_single_fd(); return 0; }
+/* end */
+
+--------------------
+
+have_func: checking for rb_enc_interned_str() in ruby.h... -------------------- yes
+
+LD_LIBRARY_PATH=.:/opt/hostedtoolcache/Ruby/3.2.9/x64/lib "gcc -o conftest -I/opt/hostedtoolcache/Ruby/3.2.9/x64/include/ruby-3.2.0/x86_64-linux -I/opt/hostedtoolcache/Ruby/3.2.9/x64/include/ruby-3.2.0/ruby/backward -I/opt/hostedtoolcache/Ruby/3.2.9/x64/include/ruby-3.2.0 -I. -DENABLE_PATH_CHECK=0   -O3 -fno-fast-math -ggdb3 -Wall -Wextra -Wdeprecated-declarations -Wdiv-by-zero -Wduplicated-cond -Wimplicit-function-declaration -Wimplicit-int -Wmisleading-indentation -Wpointer-arith -Wwrite-strings -Wold-style-definition -Wimplicit-fallthrough=0 -Wmissing-noreturn -Wno-cast-function-type -Wno-constant-logical-operand -Wno-long-long -Wno-missing-field-initializers -Wno-overlength-strings -Wno-packed-bitfield-compat -Wno-parentheses-equality -Wno-self-assign -Wno-tautological-compare -Wno-unused-parameter -Wno-unused-value -Wsuggest-attribute=format -Wsuggest-attribute=noreturn -Wunused-variable -Wundef  -fPIC conftest.c  -L. -L/opt/hostedtoolcache/Ruby/3.2.9/x64/lib -Wl,-rpath,/opt/hostedtoolcache/Ruby/3.2.9/x64/lib -L. -fstack-protector-strong -rdynamic -Wl,-export-dynamic -Wl,--no-as-needed     -Wl,-rpath,/opt/hostedtoolcache/Ruby/3.2.9/x64/lib -L/opt/hostedtoolcache/Ruby/3.2.9/x64/lib -lruby  -lm -lpthread  -lc"
+conftest.c: In function ‘t’:
+conftest.c:16:57: error: ‘rb_enc_interned_str’ undeclared (first use in this function); did you mean ‘rb_interned_str’?
+   16 | int t(void) { void ((*volatile p)()); p = (void ((*)()))rb_enc_interned_str; return !p; }
+      |                                                         ^~~~~~~~~~~~~~~~~~~
+      |                                                         rb_interned_str
+conftest.c:16:57: note: each undeclared identifier is reported only once for each function it appears in
+At top level:
+cc1: note: unrecognized command-line option ‘-Wno-self-assign’ may have been intended to silence earlier diagnostics
+cc1: note: unrecognized command-line option ‘-Wno-parentheses-equality’ may have been intended to silence earlier diagnostics
+cc1: note: unrecognized command-line option ‘-Wno-constant-logical-operand’ may have been intended to silence earlier diagnostics
+checked program was:
+/* begin */
+ 1: #include "ruby.h"
+ 2: 
+ 3: #include <ruby.h>
+ 4: 
+ 5: /*top*/
+ 6: extern int t(void);
+ 7: int main(int argc, char **argv)
+ 8: {
+ 9:   if (argc > 1000000) {
+10:     int (* volatile tp)(void)=(int (*)(void))&t;
+11:     printf("%d", (*tp)());
+12:   }
+13: 
+14:   return !!argv[argc];
+15: }
+16: int t(void) { void ((*volatile p)()); p = (void ((*)()))rb_enc_interned_str; return !p; }
+/* end */
+
+LD_LIBRARY_PATH=.:/opt/hostedtoolcache/Ruby/3.2.9/x64/lib "gcc -o conftest -I/opt/hostedtoolcache/Ruby/3.2.9/x64/include/ruby-3.2.0/x86_64-linux -I/opt/hostedtoolcache/Ruby/3.2.9/x64/include/ruby-3.2.0/ruby/backward -I/opt/hostedtoolcache/Ruby/3.2.9/x64/include/ruby-3.2.0 -I. -DENABLE_PATH_CHECK=0   -O3 -fno-fast-math -ggdb3 -Wall -Wextra -Wdeprecated-declarations -Wdiv-by-zero -Wduplicated-cond -Wimplicit-function-declaration -Wimplicit-int -Wmisleading-indentation -Wpointer-arith -Wwrite-strings -Wold-style-definition -Wimplicit-fallthrough=0 -Wmissing-noreturn -Wno-cast-function-type -Wno-constant-logical-operand -Wno-long-long -Wno-missing-field-initializers -Wno-overlength-strings -Wno-packed-bitfield-compat -Wno-parentheses-equality -Wno-self-assign -Wno-tautological-compare -Wno-unused-parameter -Wno-unused-value -Wsuggest-attribute=format -Wsuggest-attribute=noreturn -Wunused-variable -Wundef  -fPIC conftest.c  -L. -L/opt/hostedtoolcache/Ruby/3.2.9/x64/lib -Wl,-rpath,/opt/hostedtoolcache/Ruby/3.2.9/x64/lib -L. -fstack-protector-strong -rdynamic -Wl,-export-dynamic -Wl,--no-as-needed     -Wl,-rpath,/opt/hostedtoolcache/Ruby/3.2.9/x64/lib -L/opt/hostedtoolcache/Ruby/3.2.9/x64/lib -lruby  -lm -lpthread  -lc"
+checked program was:
+/* begin */
+ 1: #include "ruby.h"
+ 2: 
+ 3: #include <ruby.h>
+ 4: 
+ 5: /*top*/
+ 6: extern int t(void);
+ 7: int main(int argc, char **argv)
+ 8: {
+ 9:   if (argc > 1000000) {
+10:     int (* volatile tp)(void)=(int (*)(void))&t;
+11:     printf("%d", (*tp)());
+12:   }
+13: 
+14:   return !!argv[argc];
+15: }
+16: extern void rb_enc_interned_str();
+17: int t(void) { rb_enc_interned_str(); return 0; }
+/* end */
+
+--------------------
+
+have_header: checking for mysql.h... -------------------- yes
+
+LD_LIBRARY_PATH=.:/opt/hostedtoolcache/Ruby/3.2.9/x64/lib "gcc -I/opt/hostedtoolcache/Ruby/3.2.9/x64/include/ruby-3.2.0/x86_64-linux -I/opt/hostedtoolcache/Ruby/3.2.9/x64/include/ruby-3.2.0/ruby/backward -I/opt/hostedtoolcache/Ruby/3.2.9/x64/include/ruby-3.2.0 -I. -I/usr/include/mysql -DENABLE_PATH_CHECK=0   -O3 -fno-fast-math -ggdb3 -Wall -Wextra -Wdeprecated-declarations -Wdiv-by-zero -Wduplicated-cond -Wimplicit-function-declaration -Wimplicit-int -Wmisleading-indentation -Wpointer-arith -Wwrite-strings -Wold-style-definition -Wimplicit-fallthrough=0 -Wmissing-noreturn -Wno-cast-function-type -Wno-constant-logical-operand -Wno-long-long -Wno-missing-field-initializers -Wno-overlength-strings -Wno-packed-bitfield-compat -Wno-parentheses-equality -Wno-self-assign -Wno-tautological-compare -Wno-unused-parameter -Wno-unused-value -Wsuggest-attribute=format -Wsuggest-attribute=noreturn -Wunused-variable -Wundef  -fPIC   -c conftest.c"
+checked program was:
+/* begin */
+1: #include "ruby.h"
+2: 
+3: #include <mysql.h>
+/* end */
+
+--------------------
+
+have_header: checking for errmsg.h... -------------------- yes
+
+LD_LIBRARY_PATH=.:/opt/hostedtoolcache/Ruby/3.2.9/x64/lib "gcc -I/opt/hostedtoolcache/Ruby/3.2.9/x64/include/ruby-3.2.0/x86_64-linux -I/opt/hostedtoolcache/Ruby/3.2.9/x64/include/ruby-3.2.0/ruby/backward -I/opt/hostedtoolcache/Ruby/3.2.9/x64/include/ruby-3.2.0 -I. -I/usr/include/mysql -DENABLE_PATH_CHECK=0   -O3 -fno-fast-math -ggdb3 -Wall -Wextra -Wdeprecated-declarations -Wdiv-by-zero -Wduplicated-cond -Wimplicit-function-declaration -Wimplicit-int -Wmisleading-indentation -Wpointer-arith -Wwrite-strings -Wold-style-definition -Wimplicit-fallthrough=0 -Wmissing-noreturn -Wno-cast-function-type -Wno-constant-logical-operand -Wno-long-long -Wno-missing-field-initializers -Wno-overlength-strings -Wno-packed-bitfield-compat -Wno-parentheses-equality -Wno-self-assign -Wno-tautological-compare -Wno-unused-parameter -Wno-unused-value -Wsuggest-attribute=format -Wsuggest-attribute=noreturn -Wunused-variable -Wundef  -fPIC   -c conftest.c"
+checked program was:
+/* begin */
+1: #include "ruby.h"
+2: 
+3: #include <errmsg.h>
+/* end */
+
+--------------------
+
+have_const: checking for SSL_MODE_DISABLED in mysql.h... -------------------- yes
+
+LD_LIBRARY_PATH=.:/opt/hostedtoolcache/Ruby/3.2.9/x64/lib "gcc -I/opt/hostedtoolcache/Ruby/3.2.9/x64/include/ruby-3.2.0/x86_64-linux -I/opt/hostedtoolcache/Ruby/3.2.9/x64/include/ruby-3.2.0/ruby/backward -I/opt/hostedtoolcache/Ruby/3.2.9/x64/include/ruby-3.2.0 -I. -I/usr/include/mysql -DENABLE_PATH_CHECK=0   -O3 -fno-fast-math -ggdb3 -Wall -Wextra -Wdeprecated-declarations -Wdiv-by-zero -Wduplicated-cond -Wimplicit-function-declaration -Wimplicit-int -Wmisleading-indentation -Wpointer-arith -Wwrite-strings -Wold-style-definition -Wimplicit-fallthrough=0 -Wmissing-noreturn -Wno-cast-function-type -Wno-constant-logical-operand -Wno-long-long -Wno-missing-field-initializers -Wno-overlength-strings -Wno-packed-bitfield-compat -Wno-parentheses-equality -Wno-self-assign -Wno-tautological-compare -Wno-unused-parameter -Wno-unused-value -Wsuggest-attribute=format -Wsuggest-attribute=noreturn -Wunused-variable -Wundef  -fPIC   -c conftest.c"
+checked program was:
+/* begin */
+1: #include "ruby.h"
+2: 
+3: #include <mysql.h>
+4: 
+5: /*top*/
+6: typedef int conftest_type;
+7: conftest_type conftestval = (int)SSL_MODE_DISABLED;
+/* end */
+
+--------------------
+
+have_const: checking for SSL_MODE_PREFERRED in mysql.h... -------------------- yes
+
+LD_LIBRARY_PATH=.:/opt/hostedtoolcache/Ruby/3.2.9/x64/lib "gcc -I/opt/hostedtoolcache/Ruby/3.2.9/x64/include/ruby-3.2.0/x86_64-linux -I/opt/hostedtoolcache/Ruby/3.2.9/x64/include/ruby-3.2.0/ruby/backward -I/opt/hostedtoolcache/Ruby/3.2.9/x64/include/ruby-3.2.0 -I. -I/usr/include/mysql -DENABLE_PATH_CHECK=0   -O3 -fno-fast-math -ggdb3 -Wall -Wextra -Wdeprecated-declarations -Wdiv-by-zero -Wduplicated-cond -Wimplicit-function-declaration -Wimplicit-int -Wmisleading-indentation -Wpointer-arith -Wwrite-strings -Wold-style-definition -Wimplicit-fallthrough=0 -Wmissing-noreturn -Wno-cast-function-type -Wno-constant-logical-operand -Wno-long-long -Wno-missing-field-initializers -Wno-overlength-strings -Wno-packed-bitfield-compat -Wno-parentheses-equality -Wno-self-assign -Wno-tautological-compare -Wno-unused-parameter -Wno-unused-value -Wsuggest-attribute=format -Wsuggest-attribute=noreturn -Wunused-variable -Wundef  -fPIC   -c conftest.c"
+checked program was:
+/* begin */
+1: #include "ruby.h"
+2: 
+3: #include <mysql.h>
+4: 
+5: /*top*/
+6: typedef int conftest_type;
+7: conftest_type conftestval = (int)SSL_MODE_PREFERRED;
+/* end */
+
+--------------------
+
+have_const: checking for SSL_MODE_REQUIRED in mysql.h... -------------------- yes
+
+LD_LIBRARY_PATH=.:/opt/hostedtoolcache/Ruby/3.2.9/x64/lib "gcc -I/opt/hostedtoolcache/Ruby/3.2.9/x64/include/ruby-3.2.0/x86_64-linux -I/opt/hostedtoolcache/Ruby/3.2.9/x64/include/ruby-3.2.0/ruby/backward -I/opt/hostedtoolcache/Ruby/3.2.9/x64/include/ruby-3.2.0 -I. -I/usr/include/mysql -DENABLE_PATH_CHECK=0   -O3 -fno-fast-math -ggdb3 -Wall -Wextra -Wdeprecated-declarations -Wdiv-by-zero -Wduplicated-cond -Wimplicit-function-declaration -Wimplicit-int -Wmisleading-indentation -Wpointer-arith -Wwrite-strings -Wold-style-definition -Wimplicit-fallthrough=0 -Wmissing-noreturn -Wno-cast-function-type -Wno-constant-logical-operand -Wno-long-long -Wno-missing-field-initializers -Wno-overlength-strings -Wno-packed-bitfield-compat -Wno-parentheses-equality -Wno-self-assign -Wno-tautological-compare -Wno-unused-parameter -Wno-unused-value -Wsuggest-attribute=format -Wsuggest-attribute=noreturn -Wunused-variable -Wundef  -fPIC   -c conftest.c"
+checked program was:
+/* begin */
+1: #include "ruby.h"
+2: 
+3: #include <mysql.h>
+4: 
+5: /*top*/
+6: typedef int conftest_type;
+7: conftest_type conftestval = (int)SSL_MODE_REQUIRED;
+/* end */
+
+--------------------
+
+have_const: checking for SSL_MODE_VERIFY_CA in mysql.h... -------------------- yes
+
+LD_LIBRARY_PATH=.:/opt/hostedtoolcache/Ruby/3.2.9/x64/lib "gcc -I/opt/hostedtoolcache/Ruby/3.2.9/x64/include/ruby-3.2.0/x86_64-linux -I/opt/hostedtoolcache/Ruby/3.2.9/x64/include/ruby-3.2.0/ruby/backward -I/opt/hostedtoolcache/Ruby/3.2.9/x64/include/ruby-3.2.0 -I. -I/usr/include/mysql -DENABLE_PATH_CHECK=0   -O3 -fno-fast-math -ggdb3 -Wall -Wextra -Wdeprecated-declarations -Wdiv-by-zero -Wduplicated-cond -Wimplicit-function-declaration -Wimplicit-int -Wmisleading-indentation -Wpointer-arith -Wwrite-strings -Wold-style-definition -Wimplicit-fallthrough=0 -Wmissing-noreturn -Wno-cast-function-type -Wno-constant-logical-operand -Wno-long-long -Wno-missing-field-initializers -Wno-overlength-strings -Wno-packed-bitfield-compat -Wno-parentheses-equality -Wno-self-assign -Wno-tautological-compare -Wno-unused-parameter -Wno-unused-value -Wsuggest-attribute=format -Wsuggest-attribute=noreturn -Wunused-variable -Wundef  -fPIC   -c conftest.c"
+checked program was:
+/* begin */
+1: #include "ruby.h"
+2: 
+3: #include <mysql.h>
+4: 
+5: /*top*/
+6: typedef int conftest_type;
+7: conftest_type conftestval = (int)SSL_MODE_VERIFY_CA;
+/* end */
+
+--------------------
+
+have_const: checking for SSL_MODE_VERIFY_IDENTITY in mysql.h... -------------------- yes
+
+LD_LIBRARY_PATH=.:/opt/hostedtoolcache/Ruby/3.2.9/x64/lib "gcc -I/opt/hostedtoolcache/Ruby/3.2.9/x64/include/ruby-3.2.0/x86_64-linux -I/opt/hostedtoolcache/Ruby/3.2.9/x64/include/ruby-3.2.0/ruby/backward -I/opt/hostedtoolcache/Ruby/3.2.9/x64/include/ruby-3.2.0 -I. -I/usr/include/mysql -DENABLE_PATH_CHECK=0   -O3 -fno-fast-math -ggdb3 -Wall -Wextra -Wdeprecated-declarations -Wdiv-by-zero -Wduplicated-cond -Wimplicit-function-declaration -Wimplicit-int -Wmisleading-indentation -Wpointer-arith -Wwrite-strings -Wold-style-definition -Wimplicit-fallthrough=0 -Wmissing-noreturn -Wno-cast-function-type -Wno-constant-logical-operand -Wno-long-long -Wno-missing-field-initializers -Wno-overlength-strings -Wno-packed-bitfield-compat -Wno-parentheses-equality -Wno-self-assign -Wno-tautological-compare -Wno-unused-parameter -Wno-unused-value -Wsuggest-attribute=format -Wsuggest-attribute=noreturn -Wunused-variable -Wundef  -fPIC   -c conftest.c"
+checked program was:
+/* begin */
+1: #include "ruby.h"
+2: 
+3: #include <mysql.h>
+4: 
+5: /*top*/
+6: typedef int conftest_type;
+7: conftest_type conftestval = (int)SSL_MODE_VERIFY_IDENTITY;
+/* end */
+
+--------------------
+
+have_struct_member: checking for MYSQL.net.vio in mysql.h... -------------------- yes
+
+LD_LIBRARY_PATH=.:/opt/hostedtoolcache/Ruby/3.2.9/x64/lib "gcc -I/opt/hostedtoolcache/Ruby/3.2.9/x64/include/ruby-3.2.0/x86_64-linux -I/opt/hostedtoolcache/Ruby/3.2.9/x64/include/ruby-3.2.0/ruby/backward -I/opt/hostedtoolcache/Ruby/3.2.9/x64/include/ruby-3.2.0 -I. -I/usr/include/mysql -DENABLE_PATH_CHECK=0   -O3 -fno-fast-math -ggdb3 -Wall -Wextra -Wdeprecated-declarations -Wdiv-by-zero -Wduplicated-cond -Wimplicit-function-declaration -Wimplicit-int -Wmisleading-indentation -Wpointer-arith -Wwrite-strings -Wold-style-definition -Wimplicit-fallthrough=0 -Wmissing-noreturn -Wno-cast-function-type -Wno-constant-logical-operand -Wno-long-long -Wno-missing-field-initializers -Wno-overlength-strings -Wno-packed-bitfield-compat -Wno-parentheses-equality -Wno-self-assign -Wno-tautological-compare -Wno-unused-parameter -Wno-unused-value -Wsuggest-attribute=format -Wsuggest-attribute=noreturn -Wunused-variable -Wundef  -fPIC -DFULL_SSL_MODE_SUPPORT   -c conftest.c"
+checked program was:
+/* begin */
+ 1: #include "ruby.h"
+ 2: 
+ 3: #include <mysql.h>
+ 4: 
+ 5: /*top*/
+ 6: int s = (char *)&((MYSQL*)0)->net.vio - (char *)0;
+ 7: int main(int argc, char **argv)
+ 8: {
+ 9:   return !!argv[argc];
+10: }
+/* end */
+
+--------------------
+
+have_struct_member: checking for MYSQL.net.pvio in mysql.h... -------------------- no
+
+LD_LIBRARY_PATH=.:/opt/hostedtoolcache/Ruby/3.2.9/x64/lib "gcc -I/opt/hostedtoolcache/Ruby/3.2.9/x64/include/ruby-3.2.0/x86_64-linux -I/opt/hostedtoolcache/Ruby/3.2.9/x64/include/ruby-3.2.0/ruby/backward -I/opt/hostedtoolcache/Ruby/3.2.9/x64/include/ruby-3.2.0 -I. -I/usr/include/mysql -DENABLE_PATH_CHECK=0   -O3 -fno-fast-math -ggdb3 -Wall -Wextra -Wdeprecated-declarations -Wdiv-by-zero -Wduplicated-cond -Wimplicit-function-declaration -Wimplicit-int -Wmisleading-indentation -Wpointer-arith -Wwrite-strings -Wold-style-definition -Wimplicit-fallthrough=0 -Wmissing-noreturn -Wno-cast-function-type -Wno-constant-logical-operand -Wno-long-long -Wno-missing-field-initializers -Wno-overlength-strings -Wno-packed-bitfield-compat -Wno-parentheses-equality -Wno-self-assign -Wno-tautological-compare -Wno-unused-parameter -Wno-unused-value -Wsuggest-attribute=format -Wsuggest-attribute=noreturn -Wunused-variable -Wundef  -fPIC -DFULL_SSL_MODE_SUPPORT   -c conftest.c"
+conftest.c:6:35: error: ‘NET’ has no member named ‘pvio’; did you mean ‘vio’?
+    6 | int s = (char *)&((MYSQL*)0)->net.pvio - (char *)0;
+      |                                   ^~~~
+      |                                   vio
+cc1: note: unrecognized command-line option ‘-Wno-self-assign’ may have been intended to silence earlier diagnostics
+cc1: note: unrecognized command-line option ‘-Wno-parentheses-equality’ may have been intended to silence earlier diagnostics
+cc1: note: unrecognized command-line option ‘-Wno-constant-logical-operand’ may have been intended to silence earlier diagnostics
+checked program was:
+/* begin */
+ 1: #include "ruby.h"
+ 2: 
+ 3: #include <mysql.h>
+ 4: 
+ 5: /*top*/
+ 6: int s = (char *)&((MYSQL*)0)->net.pvio - (char *)0;
+ 7: int main(int argc, char **argv)
+ 8: {
+ 9:   return !!argv[argc];
+10: }
+/* end */
+
+--------------------
+
+have_const: checking for MYSQL_DEFAULT_AUTH in mysql.h... -------------------- yes
+
+LD_LIBRARY_PATH=.:/opt/hostedtoolcache/Ruby/3.2.9/x64/lib "gcc -I/opt/hostedtoolcache/Ruby/3.2.9/x64/include/ruby-3.2.0/x86_64-linux -I/opt/hostedtoolcache/Ruby/3.2.9/x64/include/ruby-3.2.0/ruby/backward -I/opt/hostedtoolcache/Ruby/3.2.9/x64/include/ruby-3.2.0 -I. -I/usr/include/mysql -DENABLE_PATH_CHECK=0   -O3 -fno-fast-math -ggdb3 -Wall -Wextra -Wdeprecated-declarations -Wdiv-by-zero -Wduplicated-cond -Wimplicit-function-declaration -Wimplicit-int -Wmisleading-indentation -Wpointer-arith -Wwrite-strings -Wold-style-definition -Wimplicit-fallthrough=0 -Wmissing-noreturn -Wno-cast-function-type -Wno-constant-logical-operand -Wno-long-long -Wno-missing-field-initializers -Wno-overlength-strings -Wno-packed-bitfield-compat -Wno-parentheses-equality -Wno-self-assign -Wno-tautological-compare -Wno-unused-parameter -Wno-unused-value -Wsuggest-attribute=format -Wsuggest-attribute=noreturn -Wunused-variable -Wundef  -fPIC -DFULL_SSL_MODE_SUPPORT   -c conftest.c"
+checked program was:
+/* begin */
+1: #include "ruby.h"
+2: 
+3: #include <mysql.h>
+4: 
+5: /*top*/
+6: typedef int conftest_type;
+7: conftest_type conftestval = (int)MYSQL_DEFAULT_AUTH;
+/* end */
+
+--------------------
+
+have_const: checking for MYSQL_ENABLE_CLEARTEXT_PLUGIN in mysql.h... -------------------- yes
+
+LD_LIBRARY_PATH=.:/opt/hostedtoolcache/Ruby/3.2.9/x64/lib "gcc -I/opt/hostedtoolcache/Ruby/3.2.9/x64/include/ruby-3.2.0/x86_64-linux -I/opt/hostedtoolcache/Ruby/3.2.9/x64/include/ruby-3.2.0/ruby/backward -I/opt/hostedtoolcache/Ruby/3.2.9/x64/include/ruby-3.2.0 -I. -I/usr/include/mysql -DENABLE_PATH_CHECK=0   -O3 -fno-fast-math -ggdb3 -Wall -Wextra -Wdeprecated-declarations -Wdiv-by-zero -Wduplicated-cond -Wimplicit-function-declaration -Wimplicit-int -Wmisleading-indentation -Wpointer-arith -Wwrite-strings -Wold-style-definition -Wimplicit-fallthrough=0 -Wmissing-noreturn -Wno-cast-function-type -Wno-constant-logical-operand -Wno-long-long -Wno-missing-field-initializers -Wno-overlength-strings -Wno-packed-bitfield-compat -Wno-parentheses-equality -Wno-self-assign -Wno-tautological-compare -Wno-unused-parameter -Wno-unused-value -Wsuggest-attribute=format -Wsuggest-attribute=noreturn -Wunused-variable -Wundef  -fPIC -DFULL_SSL_MODE_SUPPORT   -c conftest.c"
+checked program was:
+/* begin */
+1: #include "ruby.h"
+2: 
+3: #include <mysql.h>
+4: 
+5: /*top*/
+6: typedef int conftest_type;
+7: conftest_type conftestval = (int)MYSQL_ENABLE_CLEARTEXT_PLUGIN;
+/* end */
+
+--------------------
+
+have_const: checking for SERVER_QUERY_NO_GOOD_INDEX_USED in mysql.h... -------------------- yes
+
+LD_LIBRARY_PATH=.:/opt/hostedtoolcache/Ruby/3.2.9/x64/lib "gcc -I/opt/hostedtoolcache/Ruby/3.2.9/x64/include/ruby-3.2.0/x86_64-linux -I/opt/hostedtoolcache/Ruby/3.2.9/x64/include/ruby-3.2.0/ruby/backward -I/opt/hostedtoolcache/Ruby/3.2.9/x64/include/ruby-3.2.0 -I. -I/usr/include/mysql -DENABLE_PATH_CHECK=0   -O3 -fno-fast-math -ggdb3 -Wall -Wextra -Wdeprecated-declarations -Wdiv-by-zero -Wduplicated-cond -Wimplicit-function-declaration -Wimplicit-int -Wmisleading-indentation -Wpointer-arith -Wwrite-strings -Wold-style-definition -Wimplicit-fallthrough=0 -Wmissing-noreturn -Wno-cast-function-type -Wno-constant-logical-operand -Wno-long-long -Wno-missing-field-initializers -Wno-overlength-strings -Wno-packed-bitfield-compat -Wno-parentheses-equality -Wno-self-assign -Wno-tautological-compare -Wno-unused-parameter -Wno-unused-value -Wsuggest-attribute=format -Wsuggest-attribute=noreturn -Wunused-variable -Wundef  -fPIC -DFULL_SSL_MODE_SUPPORT   -c conftest.c"
+checked program was:
+/* begin */
+1: #include "ruby.h"
+2: 
+3: #include <mysql.h>
+4: 
+5: /*top*/
+6: typedef int conftest_type;
+7: conftest_type conftestval = (int)SERVER_QUERY_NO_GOOD_INDEX_USED;
+/* end */
+
+--------------------
+
+have_const: checking for SERVER_QUERY_NO_INDEX_USED in mysql.h... -------------------- yes
+
+LD_LIBRARY_PATH=.:/opt/hostedtoolcache/Ruby/3.2.9/x64/lib "gcc -I/opt/hostedtoolcache/Ruby/3.2.9/x64/include/ruby-3.2.0/x86_64-linux -I/opt/hostedtoolcache/Ruby/3.2.9/x64/include/ruby-3.2.0/ruby/backward -I/opt/hostedtoolcache/Ruby/3.2.9/x64/include/ruby-3.2.0 -I. -I/usr/include/mysql -DENABLE_PATH_CHECK=0   -O3 -fno-fast-math -ggdb3 -Wall -Wextra -Wdeprecated-declarations -Wdiv-by-zero -Wduplicated-cond -Wimplicit-function-declaration -Wimplicit-int -Wmisleading-indentation -Wpointer-arith -Wwrite-strings -Wold-style-definition -Wimplicit-fallthrough=0 -Wmissing-noreturn -Wno-cast-function-type -Wno-constant-logical-operand -Wno-long-long -Wno-missing-field-initializers -Wno-overlength-strings -Wno-packed-bitfield-compat -Wno-parentheses-equality -Wno-self-assign -Wno-tautological-compare -Wno-unused-parameter -Wno-unused-value -Wsuggest-attribute=format -Wsuggest-attribute=noreturn -Wunused-variable -Wundef  -fPIC -DFULL_SSL_MODE_SUPPORT   -c conftest.c"
+checked program was:
+/* begin */
+1: #include "ruby.h"
+2: 
+3: #include <mysql.h>
+4: 
+5: /*top*/
+6: typedef int conftest_type;
+7: conftest_type conftestval = (int)SERVER_QUERY_NO_INDEX_USED;
+/* end */
+
+--------------------
+
+have_const: checking for SERVER_QUERY_WAS_SLOW in mysql.h... -------------------- yes
+
+LD_LIBRARY_PATH=.:/opt/hostedtoolcache/Ruby/3.2.9/x64/lib "gcc -I/opt/hostedtoolcache/Ruby/3.2.9/x64/include/ruby-3.2.0/x86_64-linux -I/opt/hostedtoolcache/Ruby/3.2.9/x64/include/ruby-3.2.0/ruby/backward -I/opt/hostedtoolcache/Ruby/3.2.9/x64/include/ruby-3.2.0 -I. -I/usr/include/mysql -DENABLE_PATH_CHECK=0   -O3 -fno-fast-math -ggdb3 -Wall -Wextra -Wdeprecated-declarations -Wdiv-by-zero -Wduplicated-cond -Wimplicit-function-declaration -Wimplicit-int -Wmisleading-indentation -Wpointer-arith -Wwrite-strings -Wold-style-definition -Wimplicit-fallthrough=0 -Wmissing-noreturn -Wno-cast-function-type -Wno-constant-logical-operand -Wno-long-long -Wno-missing-field-initializers -Wno-overlength-strings -Wno-packed-bitfield-compat -Wno-parentheses-equality -Wno-self-assign -Wno-tautological-compare -Wno-unused-parameter -Wno-unused-value -Wsuggest-attribute=format -Wsuggest-attribute=noreturn -Wunused-variable -Wundef  -fPIC -DFULL_SSL_MODE_SUPPORT   -c conftest.c"
+checked program was:
+/* begin */
+1: #include "ruby.h"
+2: 
+3: #include <mysql.h>
+4: 
+5: /*top*/
+6: typedef int conftest_type;
+7: conftest_type conftestval = (int)SERVER_QUERY_WAS_SLOW;
+/* end */
+
+--------------------
+
+have_const: checking for MYSQL_OPTION_MULTI_STATEMENTS_ON in mysql.h... -------------------- yes
+
+LD_LIBRARY_PATH=.:/opt/hostedtoolcache/Ruby/3.2.9/x64/lib "gcc -I/opt/hostedtoolcache/Ruby/3.2.9/x64/include/ruby-3.2.0/x86_64-linux -I/opt/hostedtoolcache/Ruby/3.2.9/x64/include/ruby-3.2.0/ruby/backward -I/opt/hostedtoolcache/Ruby/3.2.9/x64/include/ruby-3.2.0 -I. -I/usr/include/mysql -DENABLE_PATH_CHECK=0   -O3 -fno-fast-math -ggdb3 -Wall -Wextra -Wdeprecated-declarations -Wdiv-by-zero -Wduplicated-cond -Wimplicit-function-declaration -Wimplicit-int -Wmisleading-indentation -Wpointer-arith -Wwrite-strings -Wold-style-definition -Wimplicit-fallthrough=0 -Wmissing-noreturn -Wno-cast-function-type -Wno-constant-logical-operand -Wno-long-long -Wno-missing-field-initializers -Wno-overlength-strings -Wno-packed-bitfield-compat -Wno-parentheses-equality -Wno-self-assign -Wno-tautological-compare -Wno-unused-parameter -Wno-unused-value -Wsuggest-attribute=format -Wsuggest-attribute=noreturn -Wunused-variable -Wundef  -fPIC -DFULL_SSL_MODE_SUPPORT   -c conftest.c"
+checked program was:
+/* begin */
+1: #include "ruby.h"
+2: 
+3: #include <mysql.h>
+4: 
+5: /*top*/
+6: typedef int conftest_type;
+7: conftest_type conftestval = (int)MYSQL_OPTION_MULTI_STATEMENTS_ON;
+/* end */
+
+--------------------
+
+have_const: checking for MYSQL_OPTION_MULTI_STATEMENTS_OFF in mysql.h... -------------------- yes
+
+LD_LIBRARY_PATH=.:/opt/hostedtoolcache/Ruby/3.2.9/x64/lib "gcc -I/opt/hostedtoolcache/Ruby/3.2.9/x64/include/ruby-3.2.0/x86_64-linux -I/opt/hostedtoolcache/Ruby/3.2.9/x64/include/ruby-3.2.0/ruby/backward -I/opt/hostedtoolcache/Ruby/3.2.9/x64/include/ruby-3.2.0 -I. -I/usr/include/mysql -DENABLE_PATH_CHECK=0   -O3 -fno-fast-math -ggdb3 -Wall -Wextra -Wdeprecated-declarations -Wdiv-by-zero -Wduplicated-cond -Wimplicit-function-declaration -Wimplicit-int -Wmisleading-indentation -Wpointer-arith -Wwrite-strings -Wold-style-definition -Wimplicit-fallthrough=0 -Wmissing-noreturn -Wno-cast-function-type -Wno-constant-logical-operand -Wno-long-long -Wno-missing-field-initializers -Wno-overlength-strings -Wno-packed-bitfield-compat -Wno-parentheses-equality -Wno-self-assign -Wno-tautological-compare -Wno-unused-parameter -Wno-unused-value -Wsuggest-attribute=format -Wsuggest-attribute=noreturn -Wunused-variable -Wundef  -fPIC -DFULL_SSL_MODE_SUPPORT   -c conftest.c"
+checked program was:
+/* begin */
+1: #include "ruby.h"
+2: 
+3: #include <mysql.h>
+4: 
+5: /*top*/
+6: typedef int conftest_type;
+7: conftest_type conftestval = (int)MYSQL_OPTION_MULTI_STATEMENTS_OFF;
+/* end */
+
+--------------------
+
+have_const: checking for MYSQL_OPT_GET_SERVER_PUBLIC_KEY in mysql.h... -------------------- yes
+
+LD_LIBRARY_PATH=.:/opt/hostedtoolcache/Ruby/3.2.9/x64/lib "gcc -I/opt/hostedtoolcache/Ruby/3.2.9/x64/include/ruby-3.2.0/x86_64-linux -I/opt/hostedtoolcache/Ruby/3.2.9/x64/include/ruby-3.2.0/ruby/backward -I/opt/hostedtoolcache/Ruby/3.2.9/x64/include/ruby-3.2.0 -I. -I/usr/include/mysql -DENABLE_PATH_CHECK=0   -O3 -fno-fast-math -ggdb3 -Wall -Wextra -Wdeprecated-declarations -Wdiv-by-zero -Wduplicated-cond -Wimplicit-function-declaration -Wimplicit-int -Wmisleading-indentation -Wpointer-arith -Wwrite-strings -Wold-style-definition -Wimplicit-fallthrough=0 -Wmissing-noreturn -Wno-cast-function-type -Wno-constant-logical-operand -Wno-long-long -Wno-missing-field-initializers -Wno-overlength-strings -Wno-packed-bitfield-compat -Wno-parentheses-equality -Wno-self-assign -Wno-tautological-compare -Wno-unused-parameter -Wno-unused-value -Wsuggest-attribute=format -Wsuggest-attribute=noreturn -Wunused-variable -Wundef  -fPIC -DFULL_SSL_MODE_SUPPORT   -c conftest.c"
+checked program was:
+/* begin */
+1: #include "ruby.h"
+2: 
+3: #include <mysql.h>
+4: 
+5: /*top*/
+6: typedef int conftest_type;
+7: conftest_type conftestval = (int)MYSQL_OPT_GET_SERVER_PUBLIC_KEY;
+/* end */
+
+--------------------
+
+have_type: checking for my_bool in mysql.h... -------------------- no
+
+LD_LIBRARY_PATH=.:/opt/hostedtoolcache/Ruby/3.2.9/x64/lib "gcc -I/opt/hostedtoolcache/Ruby/3.2.9/x64/include/ruby-3.2.0/x86_64-linux -I/opt/hostedtoolcache/Ruby/3.2.9/x64/include/ruby-3.2.0/ruby/backward -I/opt/hostedtoolcache/Ruby/3.2.9/x64/include/ruby-3.2.0 -I. -I/usr/include/mysql -DENABLE_PATH_CHECK=0   -O3 -fno-fast-math -ggdb3 -Wall -Wextra -Wdeprecated-declarations -Wdiv-by-zero -Wduplicated-cond -Wimplicit-function-declaration -Wimplicit-int -Wmisleading-indentation -Wpointer-arith -Wwrite-strings -Wold-style-definition -Wimplicit-fallthrough=0 -Wmissing-noreturn -Wno-cast-function-type -Wno-constant-logical-operand -Wno-long-long -Wno-missing-field-initializers -Wno-overlength-strings -Wno-packed-bitfield-compat -Wno-parentheses-equality -Wno-self-assign -Wno-tautological-compare -Wno-unused-parameter -Wno-unused-value -Wsuggest-attribute=format -Wsuggest-attribute=noreturn -Wunused-variable -Wundef  -fPIC -DFULL_SSL_MODE_SUPPORT   -c conftest.c"
+conftest.c:6:9: error: unknown type name ‘my_bool’
+    6 | typedef my_bool conftest_type;
+      |         ^~~~~~~
+cc1: note: unrecognized command-line option ‘-Wno-self-assign’ may have been intended to silence earlier diagnostics
+cc1: note: unrecognized command-line option ‘-Wno-parentheses-equality’ may have been intended to silence earlier diagnostics
+cc1: note: unrecognized command-line option ‘-Wno-constant-logical-operand’ may have been intended to silence earlier diagnostics
+checked program was:
+/* begin */
+1: #include "ruby.h"
+2: 
+3: #include <mysql.h>
+4: 
+5: /*top*/
+6: typedef my_bool conftest_type;
+7: int conftestval[sizeof(conftest_type)?1:-1];
+/* end */
+
+--------------------
+
+have_func: checking for mysql_ssl_set() in mysql.h... -------------------- yes
+
+LD_LIBRARY_PATH=.:/opt/hostedtoolcache/Ruby/3.2.9/x64/lib "gcc -o conftest -I/opt/hostedtoolcache/Ruby/3.2.9/x64/include/ruby-3.2.0/x86_64-linux -I/opt/hostedtoolcache/Ruby/3.2.9/x64/include/ruby-3.2.0/ruby/backward -I/opt/hostedtoolcache/Ruby/3.2.9/x64/include/ruby-3.2.0 -I. -I/usr/include/mysql -DENABLE_PATH_CHECK=0   -O3 -fno-fast-math -ggdb3 -Wall -Wextra -Wdeprecated-declarations -Wdiv-by-zero -Wduplicated-cond -Wimplicit-function-declaration -Wimplicit-int -Wmisleading-indentation -Wpointer-arith -Wwrite-strings -Wold-style-definition -Wimplicit-fallthrough=0 -Wmissing-noreturn -Wno-cast-function-type -Wno-constant-logical-operand -Wno-long-long -Wno-missing-field-initializers -Wno-overlength-strings -Wno-packed-bitfield-compat -Wno-parentheses-equality -Wno-self-assign -Wno-tautological-compare -Wno-unused-parameter -Wno-unused-value -Wsuggest-attribute=format -Wsuggest-attribute=noreturn -Wunused-variable -Wundef  -fPIC -DFULL_SSL_MODE_SUPPORT conftest.c  -L. -L/opt/hostedtoolcache/Ruby/3.2.9/x64/lib -Wl,-rpath,/opt/hostedtoolcache/Ruby/3.2.9/x64/lib -L. -fstack-protector-strong -rdynamic -Wl,-export-dynamic -Wl,--no-as-needed    -L/usr/lib/x86_64-linux-gnu -lmysqlclient -lz  -lzstd -lssl -lcrypto -lresolv -lm  -Wl,-rpath,/opt/hostedtoolcache/Ruby/3.2.9/x64/lib -L/opt/hostedtoolcache/Ruby/3.2.9/x64/lib -lruby -L/usr/lib/x86_64-linux-gnu -lmysqlclient -lz  -lzstd -lssl -lcrypto -lresolv -lm  -lm -lpthread  -lc"
+checked program was:
+/* begin */
+ 1: #include "ruby.h"
+ 2: 
+ 3: #include <mysql.h>
+ 4: 
+ 5: /*top*/
+ 6: extern int t(void);
+ 7: int main(int argc, char **argv)
+ 8: {
+ 9:   if (argc > 1000000) {
+10:     int (* volatile tp)(void)=(int (*)(void))&t;
+11:     printf("%d", (*tp)());
+12:   }
+13: 
+14:   return !!argv[argc];
+15: }
+16: int t(void) { void ((*volatile p)()); p = (void ((*)()))mysql_ssl_set; return !p; }
+/* end */
+
+--------------------
+
+LD_LIBRARY_PATH=.:/opt/hostedtoolcache/Ruby/3.2.9/x64/lib "gcc -o conftest -I/opt/hostedtoolcache/Ruby/3.2.9/x64/include/ruby-3.2.0/x86_64-linux -I/opt/hostedtoolcache/Ruby/3.2.9/x64/include/ruby-3.2.0/ruby/backward -I/opt/hostedtoolcache/Ruby/3.2.9/x64/include/ruby-3.2.0 -I. -I/usr/include/mysql -DENABLE_PATH_CHECK=0   -O3 -fno-fast-math -ggdb3 -Wall -Wextra -Wdeprecated-declarations -Wdiv-by-zero -Wduplicated-cond -Wimplicit-function-declaration -Wimplicit-int -Wmisleading-indentation -Wpointer-arith -Wwrite-strings -Wold-style-definition -Wimplicit-fallthrough=0 -Wmissing-noreturn -Wno-cast-function-type -Wno-constant-logical-operand -Wno-long-long -Wno-missing-field-initializers -Wno-overlength-strings -Wno-packed-bitfield-compat -Wno-parentheses-equality -Wno-self-assign -Wno-tautological-compare -Wno-unused-parameter -Wno-unused-value -Wsuggest-attribute=format -Wsuggest-attribute=noreturn -Wunused-variable -Wundef  -fPIC -DFULL_SSL_MODE_SUPPORT conftest.c  -L. -L/opt/hostedtoolcache/Ruby/3.2.9/x64/lib -Wl,-rpath,/opt/hostedtoolcache/Ruby/3.2.9/x64/lib -L. -fstack-protector-strong -rdynamic -Wl,-export-dynamic -Wl,--no-as-needed    -L/usr/lib/x86_64-linux-gnu -lmysqlclient -lz  -lzstd -lssl -lcrypto -lresolv -lm  -Wl,-rpath,/opt/hostedtoolcache/Ruby/3.2.9/x64/lib -L/opt/hostedtoolcache/Ruby/3.2.9/x64/lib -lruby -Werror -Weverything -lm -lpthread  -lc"
+gcc: error: unrecognized command-line option ‘-Weverything’
+checked program was:
+/* begin */
+1: #include "ruby.h"
+2: 
+3: int main() {return 0;}
+/* end */
+
+LD_LIBRARY_PATH=.:/opt/hostedtoolcache/Ruby/3.2.9/x64/lib "gcc -o conftest -I/opt/hostedtoolcache/Ruby/3.2.9/x64/include/ruby-3.2.0/x86_64-linux -I/opt/hostedtoolcache/Ruby/3.2.9/x64/include/ruby-3.2.0/ruby/backward -I/opt/hostedtoolcache/Ruby/3.2.9/x64/include/ruby-3.2.0 -I. -I/usr/include/mysql -DENABLE_PATH_CHECK=0   -O3 -fno-fast-math -ggdb3 -Wall -Wextra -Wdeprecated-declarations -Wdiv-by-zero -Wduplicated-cond -Wimplicit-function-declaration -Wimplicit-int -Wmisleading-indentation -Wpointer-arith -Wwrite-strings -Wold-style-definition -Wimplicit-fallthrough=0 -Wmissing-noreturn -Wno-cast-function-type -Wno-constant-logical-operand -Wno-long-long -Wno-missing-field-initializers -Wno-overlength-strings -Wno-packed-bitfield-compat -Wno-parentheses-equality -Wno-self-assign -Wno-tautological-compare -Wno-unused-parameter -Wno-unused-value -Wsuggest-attribute=format -Wsuggest-attribute=noreturn -Wunused-variable -Wundef  -fPIC -DFULL_SSL_MODE_SUPPORT conftest.c  -L. -L/opt/hostedtoolcache/Ruby/3.2.9/x64/lib -Wl,-rpath,/opt/hostedtoolcache/Ruby/3.2.9/x64/lib -L. -fstack-protector-strong -rdynamic -Wl,-export-dynamic -Wl,--no-as-needed    -L/usr/lib/x86_64-linux-gnu -lmysqlclient -lz  -lzstd -lssl -lcrypto -lresolv -lm  -Wl,-rpath,/opt/hostedtoolcache/Ruby/3.2.9/x64/lib -L/opt/hostedtoolcache/Ruby/3.2.9/x64/lib -lruby -Werror -Wno-compound-token-split-by-macro -lm -lpthread  -lc"
+conftest.c: In function ‘main’:
+conftest.c:3:5: error: old-style function definition [-Werror=old-style-definition]
+    3 | int main() {return 0;}
+      |     ^~~~
+At top level:
+cc1: note: unrecognized command-line option ‘-Wno-compound-token-split-by-macro’ may have been intended to silence earlier diagnostics
+cc1: note: unrecognized command-line option ‘-Wno-self-assign’ may have been intended to silence earlier diagnostics
+cc1: note: unrecognized command-line option ‘-Wno-parentheses-equality’ may have been intended to silence earlier diagnostics
+cc1: note: unrecognized command-line option ‘-Wno-constant-logical-operand’ may have been intended to silence earlier diagnostics
+cc1: all warnings being treated as errors
+checked program was:
+/* begin */
+1: #include "ruby.h"
+2: 
+3: int main() {return 0;}
+/* end */
+
+LD_LIBRARY_PATH=.:/opt/hostedtoolcache/Ruby/3.2.9/x64/lib "gcc -o conftest -I/opt/hostedtoolcache/Ruby/3.2.9/x64/include/ruby-3.2.0/x86_64-linux -I/opt/hostedtoolcache/Ruby/3.2.9/x64/include/ruby-3.2.0/ruby/backward -I/opt/hostedtoolcache/Ruby/3.2.9/x64/include/ruby-3.2.0 -I. -I/usr/include/mysql -DENABLE_PATH_CHECK=0   -O3 -fno-fast-math -ggdb3 -Wall -Wextra -Wdeprecated-declarations -Wdiv-by-zero -Wduplicated-cond -Wimplicit-function-declaration -Wimplicit-int -Wmisleading-indentation -Wpointer-arith -Wwrite-strings -Wold-style-definition -Wimplicit-fallthrough=0 -Wmissing-noreturn -Wno-cast-function-type -Wno-constant-logical-operand -Wno-long-long -Wno-missing-field-initializers -Wno-overlength-strings -Wno-packed-bitfield-compat -Wno-parentheses-equality -Wno-self-assign -Wno-tautological-compare -Wno-unused-parameter -Wno-unused-value -Wsuggest-attribute=format -Wsuggest-attribute=noreturn -Wunused-variable -Wundef  -fPIC -DFULL_SSL_MODE_SUPPORT conftest.c  -L. -L/opt/hostedtoolcache/Ruby/3.2.9/x64/lib -Wl,-rpath,/opt/hostedtoolcache/Ruby/3.2.9/x64/lib -L. -fstack-protector-strong -rdynamic -Wl,-export-dynamic -Wl,--no-as-needed    -L/usr/lib/x86_64-linux-gnu -lmysqlclient -lz  -lzstd -lssl -lcrypto -lresolv -lm  -Wl,-rpath,/opt/hostedtoolcache/Ruby/3.2.9/x64/lib -L/opt/hostedtoolcache/Ruby/3.2.9/x64/lib -lruby -Werror -Wno-bad-function-cast -lm -lpthread  -lc"
+conftest.c: In function ‘main’:
+conftest.c:3:5: error: old-style function definition [-Werror=old-style-definition]
+    3 | int main() {return 0;}
+      |     ^~~~
+At top level:
+cc1: note: unrecognized command-line option ‘-Wno-self-assign’ may have been intended to silence earlier diagnostics
+cc1: note: unrecognized command-line option ‘-Wno-parentheses-equality’ may have been intended to silence earlier diagnostics
+cc1: note: unrecognized command-line option ‘-Wno-constant-logical-operand’ may have been intended to silence earlier diagnostics
+cc1: all warnings being treated as errors
+checked program was:
+/* begin */
+1: #include "ruby.h"
+2: 
+3: int main() {return 0;}
+/* end */
+
+LD_LIBRARY_PATH=.:/opt/hostedtoolcache/Ruby/3.2.9/x64/lib "gcc -o conftest -I/opt/hostedtoolcache/Ruby/3.2.9/x64/include/ruby-3.2.0/x86_64-linux -I/opt/hostedtoolcache/Ruby/3.2.9/x64/include/ruby-3.2.0/ruby/backward -I/opt/hostedtoolcache/Ruby/3.2.9/x64/include/ruby-3.2.0 -I. -I/usr/include/mysql -DENABLE_PATH_CHECK=0   -O3 -fno-fast-math -ggdb3 -Wall -Wextra -Wdeprecated-declarations -Wdiv-by-zero -Wduplicated-cond -Wimplicit-function-declaration -Wimplicit-int -Wmisleading-indentation -Wpointer-arith -Wwrite-strings -Wold-style-definition -Wimplicit-fallthrough=0 -Wmissing-noreturn -Wno-cast-function-type -Wno-constant-logical-operand -Wno-long-long -Wno-missing-field-initializers -Wno-overlength-strings -Wno-packed-bitfield-compat -Wno-parentheses-equality -Wno-self-assign -Wno-tautological-compare -Wno-unused-parameter -Wno-unused-value -Wsuggest-attribute=format -Wsuggest-attribute=noreturn -Wunused-variable -Wundef  -fPIC -DFULL_SSL_MODE_SUPPORT conftest.c  -L. -L/opt/hostedtoolcache/Ruby/3.2.9/x64/lib -Wl,-rpath,/opt/hostedtoolcache/Ruby/3.2.9/x64/lib -L. -fstack-protector-strong -rdynamic -Wl,-export-dynamic -Wl,--no-as-needed    -L/usr/lib/x86_64-linux-gnu -lmysqlclient -lz  -lzstd -lssl -lcrypto -lresolv -lm  -Wl,-rpath,/opt/hostedtoolcache/Ruby/3.2.9/x64/lib -L/opt/hostedtoolcache/Ruby/3.2.9/x64/lib -lruby -Werror -Wno-conditional-uninitialized -lm -lpthread  -lc"
+conftest.c: In function ‘main’:
+conftest.c:3:5: error: old-style function definition [-Werror=old-style-definition]
+    3 | int main() {return 0;}
+      |     ^~~~
+At top level:
+cc1: note: unrecognized command-line option ‘-Wno-conditional-uninitialized’ may have been intended to silence earlier diagnostics
+cc1: note: unrecognized command-line option ‘-Wno-self-assign’ may have been intended to silence earlier diagnostics
+cc1: note: unrecognized command-line option ‘-Wno-parentheses-equality’ may have been intended to silence earlier diagnostics
+cc1: note: unrecognized command-line option ‘-Wno-constant-logical-operand’ may have been intended to silence earlier diagnostics
+cc1: all warnings being treated as errors
+checked program was:
+/* begin */
+1: #include "ruby.h"
+2: 
+3: int main() {return 0;}
+/* end */
+
+LD_LIBRARY_PATH=.:/opt/hostedtoolcache/Ruby/3.2.9/x64/lib "gcc -o conftest -I/opt/hostedtoolcache/Ruby/3.2.9/x64/include/ruby-3.2.0/x86_64-linux -I/opt/hostedtoolcache/Ruby/3.2.9/x64/include/ruby-3.2.0/ruby/backward -I/opt/hostedtoolcache/Ruby/3.2.9/x64/include/ruby-3.2.0 -I. -I/usr/include/mysql -DENABLE_PATH_CHECK=0   -O3 -fno-fast-math -ggdb3 -Wall -Wextra -Wdeprecated-declarations -Wdiv-by-zero -Wduplicated-cond -Wimplicit-function-declaration -Wimplicit-int -Wmisleading-indentation -Wpointer-arith -Wwrite-strings -Wold-style-definition -Wimplicit-fallthrough=0 -Wmissing-noreturn -Wno-cast-function-type -Wno-constant-logical-operand -Wno-long-long -Wno-missing-field-initializers -Wno-overlength-strings -Wno-packed-bitfield-compat -Wno-parentheses-equality -Wno-self-assign -Wno-tautological-compare -Wno-unused-parameter -Wno-unused-value -Wsuggest-attribute=format -Wsuggest-attribute=noreturn -Wunused-variable -Wundef  -fPIC -DFULL_SSL_MODE_SUPPORT conftest.c  -L. -L/opt/hostedtoolcache/Ruby/3.2.9/x64/lib -Wl,-rpath,/opt/hostedtoolcache/Ruby/3.2.9/x64/lib -L. -fstack-protector-strong -rdynamic -Wl,-export-dynamic -Wl,--no-as-needed    -L/usr/lib/x86_64-linux-gnu -lmysqlclient -lz  -lzstd -lssl -lcrypto -lresolv -lm  -Wl,-rpath,/opt/hostedtoolcache/Ruby/3.2.9/x64/lib -L/opt/hostedtoolcache/Ruby/3.2.9/x64/lib -lruby -Werror -Wno-covered-switch-default -lm -lpthread  -lc"
+conftest.c: In function ‘main’:
+conftest.c:3:5: error: old-style function definition [-Werror=old-style-definition]
+    3 | int main() {return 0;}
+      |     ^~~~
+At top level:
+cc1: note: unrecognized command-line option ‘-Wno-covered-switch-default’ may have been intended to silence earlier diagnostics
+cc1: note: unrecognized command-line option ‘-Wno-self-assign’ may have been intended to silence earlier diagnostics
+cc1: note: unrecognized command-line option ‘-Wno-parentheses-equality’ may have been intended to silence earlier diagnostics
+cc1: note: unrecognized command-line option ‘-Wno-constant-logical-operand’ may have been intended to silence earlier diagnostics
+cc1: all warnings being treated as errors
+checked program was:
+/* begin */
+1: #include "ruby.h"
+2: 
+3: int main() {return 0;}
+/* end */
+
+LD_LIBRARY_PATH=.:/opt/hostedtoolcache/Ruby/3.2.9/x64/lib "gcc -o conftest -I/opt/hostedtoolcache/Ruby/3.2.9/x64/include/ruby-3.2.0/x86_64-linux -I/opt/hostedtoolcache/Ruby/3.2.9/x64/include/ruby-3.2.0/ruby/backward -I/opt/hostedtoolcache/Ruby/3.2.9/x64/include/ruby-3.2.0 -I. -I/usr/include/mysql -DENABLE_PATH_CHECK=0   -O3 -fno-fast-math -ggdb3 -Wall -Wextra -Wdeprecated-declarations -Wdiv-by-zero -Wduplicated-cond -Wimplicit-function-declaration -Wimplicit-int -Wmisleading-indentation -Wpointer-arith -Wwrite-strings -Wold-style-definition -Wimplicit-fallthrough=0 -Wmissing-noreturn -Wno-cast-function-type -Wno-constant-logical-operand -Wno-long-long -Wno-missing-field-initializers -Wno-overlength-strings -Wno-packed-bitfield-compat -Wno-parentheses-equality -Wno-self-assign -Wno-tautological-compare -Wno-unused-parameter -Wno-unused-value -Wsuggest-attribute=format -Wsuggest-attribute=noreturn -Wunused-variable -Wundef  -fPIC -DFULL_SSL_MODE_SUPPORT conftest.c  -L. -L/opt/hostedtoolcache/Ruby/3.2.9/x64/lib -Wl,-rpath,/opt/hostedtoolcache/Ruby/3.2.9/x64/lib -L. -fstack-protector-strong -rdynamic -Wl,-export-dynamic -Wl,--no-as-needed    -L/usr/lib/x86_64-linux-gnu -lmysqlclient -lz  -lzstd -lssl -lcrypto -lresolv -lm  -Wl,-rpath,/opt/hostedtoolcache/Ruby/3.2.9/x64/lib -L/opt/hostedtoolcache/Ruby/3.2.9/x64/lib -lruby -Werror -Wno-declaration-after-statement -lm -lpthread  -lc"
+conftest.c: In function ‘main’:
+conftest.c:3:5: error: old-style function definition [-Werror=old-style-definition]
+    3 | int main() {return 0;}
+      |     ^~~~
+At top level:
+cc1: note: unrecognized command-line option ‘-Wno-self-assign’ may have been intended to silence earlier diagnostics
+cc1: note: unrecognized command-line option ‘-Wno-parentheses-equality’ may have been intended to silence earlier diagnostics
+cc1: note: unrecognized command-line option ‘-Wno-constant-logical-operand’ may have been intended to silence earlier diagnostics
+cc1: all warnings being treated as errors
+checked program was:
+/* begin */
+1: #include "ruby.h"
+2: 
+3: int main() {return 0;}
+/* end */
+
+LD_LIBRARY_PATH=.:/opt/hostedtoolcache/Ruby/3.2.9/x64/lib "gcc -o conftest -I/opt/hostedtoolcache/Ruby/3.2.9/x64/include/ruby-3.2.0/x86_64-linux -I/opt/hostedtoolcache/Ruby/3.2.9/x64/include/ruby-3.2.0/ruby/backward -I/opt/hostedtoolcache/Ruby/3.2.9/x64/include/ruby-3.2.0 -I. -I/usr/include/mysql -DENABLE_PATH_CHECK=0   -O3 -fno-fast-math -ggdb3 -Wall -Wextra -Wdeprecated-declarations -Wdiv-by-zero -Wduplicated-cond -Wimplicit-function-declaration -Wimplicit-int -Wmisleading-indentation -Wpointer-arith -Wwrite-strings -Wold-style-definition -Wimplicit-fallthrough=0 -Wmissing-noreturn -Wno-cast-function-type -Wno-constant-logical-operand -Wno-long-long -Wno-missing-field-initializers -Wno-overlength-strings -Wno-packed-bitfield-compat -Wno-parentheses-equality -Wno-self-assign -Wno-tautological-compare -Wno-unused-parameter -Wno-unused-value -Wsuggest-attribute=format -Wsuggest-attribute=noreturn -Wunused-variable -Wundef  -fPIC -DFULL_SSL_MODE_SUPPORT conftest.c  -L. -L/opt/hostedtoolcache/Ruby/3.2.9/x64/lib -Wl,-rpath,/opt/hostedtoolcache/Ruby/3.2.9/x64/lib -L. -fstack-protector-strong -rdynamic -Wl,-export-dynamic -Wl,--no-as-needed    -L/usr/lib/x86_64-linux-gnu -lmysqlclient -lz  -lzstd -lssl -lcrypto -lresolv -lm  -Wl,-rpath,/opt/hostedtoolcache/Ruby/3.2.9/x64/lib -L/opt/hostedtoolcache/Ruby/3.2.9/x64/lib -lruby -Werror -Wno-disabled-macro-expansion -lm -lpthread  -lc"
+conftest.c: In function ‘main’:
+conftest.c:3:5: error: old-style function definition [-Werror=old-style-definition]
+    3 | int main() {return 0;}
+      |     ^~~~
+At top level:
+cc1: note: unrecognized command-line option ‘-Wno-disabled-macro-expansion’ may have been intended to silence earlier diagnostics
+cc1: note: unrecognized command-line option ‘-Wno-self-assign’ may have been intended to silence earlier diagnostics
+cc1: note: unrecognized command-line option ‘-Wno-parentheses-equality’ may have been intended to silence earlier diagnostics
+cc1: note: unrecognized command-line option ‘-Wno-constant-logical-operand’ may have been intended to silence earlier diagnostics
+cc1: all warnings being treated as errors
+checked program was:
+/* begin */
+1: #include "ruby.h"
+2: 
+3: int main() {return 0;}
+/* end */
+
+LD_LIBRARY_PATH=.:/opt/hostedtoolcache/Ruby/3.2.9/x64/lib "gcc -o conftest -I/opt/hostedtoolcache/Ruby/3.2.9/x64/include/ruby-3.2.0/x86_64-linux -I/opt/hostedtoolcache/Ruby/3.2.9/x64/include/ruby-3.2.0/ruby/backward -I/opt/hostedtoolcache/Ruby/3.2.9/x64/include/ruby-3.2.0 -I. -I/usr/include/mysql -DENABLE_PATH_CHECK=0   -O3 -fno-fast-math -ggdb3 -Wall -Wextra -Wdeprecated-declarations -Wdiv-by-zero -Wduplicated-cond -Wimplicit-function-declaration -Wimplicit-int -Wmisleading-indentation -Wpointer-arith -Wwrite-strings -Wold-style-definition -Wimplicit-fallthrough=0 -Wmissing-noreturn -Wno-cast-function-type -Wno-constant-logical-operand -Wno-long-long -Wno-missing-field-initializers -Wno-overlength-strings -Wno-packed-bitfield-compat -Wno-parentheses-equality -Wno-self-assign -Wno-tautological-compare -Wno-unused-parameter -Wno-unused-value -Wsuggest-attribute=format -Wsuggest-attribute=noreturn -Wunused-variable -Wundef  -fPIC -DFULL_SSL_MODE_SUPPORT conftest.c  -L. -L/opt/hostedtoolcache/Ruby/3.2.9/x64/lib -Wl,-rpath,/opt/hostedtoolcache/Ruby/3.2.9/x64/lib -L. -fstack-protector-strong -rdynamic -Wl,-export-dynamic -Wl,--no-as-needed    -L/usr/lib/x86_64-linux-gnu -lmysqlclient -lz  -lzstd -lssl -lcrypto -lresolv -lm  -Wl,-rpath,/opt/hostedtoolcache/Ruby/3.2.9/x64/lib -L/opt/hostedtoolcache/Ruby/3.2.9/x64/lib -lruby -Werror -Wno-documentation-unknown-command -lm -lpthread  -lc"
+conftest.c: In function ‘main’:
+conftest.c:3:5: error: old-style function definition [-Werror=old-style-definition]
+    3 | int main() {return 0;}
+      |     ^~~~
+At top level:
+cc1: note: unrecognized command-line option ‘-Wno-documentation-unknown-command’ may have been intended to silence earlier diagnostics
+cc1: note: unrecognized command-line option ‘-Wno-self-assign’ may have been intended to silence earlier diagnostics
+cc1: note: unrecognized command-line option ‘-Wno-parentheses-equality’ may have been intended to silence earlier diagnostics
+cc1: note: unrecognized command-line option ‘-Wno-constant-logical-operand’ may have been intended to silence earlier diagnostics
+cc1: all warnings being treated as errors
+checked program was:
+/* begin */
+1: #include "ruby.h"
+2: 
+3: int main() {return 0;}
+/* end */
+
+LD_LIBRARY_PATH=.:/opt/hostedtoolcache/Ruby/3.2.9/x64/lib "gcc -o conftest -I/opt/hostedtoolcache/Ruby/3.2.9/x64/include/ruby-3.2.0/x86_64-linux -I/opt/hostedtoolcache/Ruby/3.2.9/x64/include/ruby-3.2.0/ruby/backward -I/opt/hostedtoolcache/Ruby/3.2.9/x64/include/ruby-3.2.0 -I. -I/usr/include/mysql -DENABLE_PATH_CHECK=0   -O3 -fno-fast-math -ggdb3 -Wall -Wextra -Wdeprecated-declarations -Wdiv-by-zero -Wduplicated-cond -Wimplicit-function-declaration -Wimplicit-int -Wmisleading-indentation -Wpointer-arith -Wwrite-strings -Wold-style-definition -Wimplicit-fallthrough=0 -Wmissing-noreturn -Wno-cast-function-type -Wno-constant-logical-operand -Wno-long-long -Wno-missing-field-initializers -Wno-overlength-strings -Wno-packed-bitfield-compat -Wno-parentheses-equality -Wno-self-assign -Wno-tautological-compare -Wno-unused-parameter -Wno-unused-value -Wsuggest-attribute=format -Wsuggest-attribute=noreturn -Wunused-variable -Wundef  -fPIC -DFULL_SSL_MODE_SUPPORT conftest.c  -L. -L/opt/hostedtoolcache/Ruby/3.2.9/x64/lib -Wl,-rpath,/opt/hostedtoolcache/Ruby/3.2.9/x64/lib -L. -fstack-protector-strong -rdynamic -Wl,-export-dynamic -Wl,--no-as-needed    -L/usr/lib/x86_64-linux-gnu -lmysqlclient -lz  -lzstd -lssl -lcrypto -lresolv -lm  -Wl,-rpath,/opt/hostedtoolcache/Ruby/3.2.9/x64/lib -L/opt/hostedtoolcache/Ruby/3.2.9/x64/lib -lruby -Werror -Wno-missing-field-initializers -lm -lpthread  -lc"
+conftest.c: In function ‘main’:
+conftest.c:3:5: error: old-style function definition [-Werror=old-style-definition]
+    3 | int main() {return 0;}
+      |     ^~~~
+At top level:
+cc1: note: unrecognized command-line option ‘-Wno-self-assign’ may have been intended to silence earlier diagnostics
+cc1: note: unrecognized command-line option ‘-Wno-parentheses-equality’ may have been intended to silence earlier diagnostics
+cc1: note: unrecognized command-line option ‘-Wno-constant-logical-operand’ may have been intended to silence earlier diagnostics
+cc1: all warnings being treated as errors
+checked program was:
+/* begin */
+1: #include "ruby.h"
+2: 
+3: int main() {return 0;}
+/* end */
+
+LD_LIBRARY_PATH=.:/opt/hostedtoolcache/Ruby/3.2.9/x64/lib "gcc -o conftest -I/opt/hostedtoolcache/Ruby/3.2.9/x64/include/ruby-3.2.0/x86_64-linux -I/opt/hostedtoolcache/Ruby/3.2.9/x64/include/ruby-3.2.0/ruby/backward -I/opt/hostedtoolcache/Ruby/3.2.9/x64/include/ruby-3.2.0 -I. -I/usr/include/mysql -DENABLE_PATH_CHECK=0   -O3 -fno-fast-math -ggdb3 -Wall -Wextra -Wdeprecated-declarations -Wdiv-by-zero -Wduplicated-cond -Wimplicit-function-declaration -Wimplicit-int -Wmisleading-indentation -Wpointer-arith -Wwrite-strings -Wold-style-definition -Wimplicit-fallthrough=0 -Wmissing-noreturn -Wno-cast-function-type -Wno-constant-logical-operand -Wno-long-long -Wno-missing-field-initializers -Wno-overlength-strings -Wno-packed-bitfield-compat -Wno-parentheses-equality -Wno-self-assign -Wno-tautological-compare -Wno-unused-parameter -Wno-unused-value -Wsuggest-attribute=format -Wsuggest-attribute=noreturn -Wunused-variable -Wundef  -fPIC -DFULL_SSL_MODE_SUPPORT conftest.c  -L. -L/opt/hostedtoolcache/Ruby/3.2.9/x64/lib -Wl,-rpath,/opt/hostedtoolcache/Ruby/3.2.9/x64/lib -L. -fstack-protector-strong -rdynamic -Wl,-export-dynamic -Wl,--no-as-needed    -L/usr/lib/x86_64-linux-gnu -lmysqlclient -lz  -lzstd -lssl -lcrypto -lresolv -lm  -Wl,-rpath,/opt/hostedtoolcache/Ruby/3.2.9/x64/lib -L/opt/hostedtoolcache/Ruby/3.2.9/x64/lib -lruby -Werror -Wno-missing-variable-declarations -lm -lpthread  -lc"
+conftest.c: In function ‘main’:
+conftest.c:3:5: error: old-style function definition [-Werror=old-style-definition]
+    3 | int main() {return 0;}
+      |     ^~~~
+At top level:
+cc1: note: unrecognized command-line option ‘-Wno-missing-variable-declarations’ may have been intended to silence earlier diagnostics
+cc1: note: unrecognized command-line option ‘-Wno-self-assign’ may have been intended to silence earlier diagnostics
+cc1: note: unrecognized command-line option ‘-Wno-parentheses-equality’ may have been intended to silence earlier diagnostics
+cc1: note: unrecognized command-line option ‘-Wno-constant-logical-operand’ may have been intended to silence earlier diagnostics
+cc1: all warnings being treated as errors
+checked program was:
+/* begin */
+1: #include "ruby.h"
+2: 
+3: int main() {return 0;}
+/* end */
+
+LD_LIBRARY_PATH=.:/opt/hostedtoolcache/Ruby/3.2.9/x64/lib "gcc -o conftest -I/opt/hostedtoolcache/Ruby/3.2.9/x64/include/ruby-3.2.0/x86_64-linux -I/opt/hostedtoolcache/Ruby/3.2.9/x64/include/ruby-3.2.0/ruby/backward -I/opt/hostedtoolcache/Ruby/3.2.9/x64/include/ruby-3.2.0 -I. -I/usr/include/mysql -DENABLE_PATH_CHECK=0   -O3 -fno-fast-math -ggdb3 -Wall -Wextra -Wdeprecated-declarations -Wdiv-by-zero -Wduplicated-cond -Wimplicit-function-declaration -Wimplicit-int -Wmisleading-indentation -Wpointer-arith -Wwrite-strings -Wold-style-definition -Wimplicit-fallthrough=0 -Wmissing-noreturn -Wno-cast-function-type -Wno-constant-logical-operand -Wno-long-long -Wno-missing-field-initializers -Wno-overlength-strings -Wno-packed-bitfield-compat -Wno-parentheses-equality -Wno-self-assign -Wno-tautological-compare -Wno-unused-parameter -Wno-unused-value -Wsuggest-attribute=format -Wsuggest-attribute=noreturn -Wunused-variable -Wundef  -fPIC -DFULL_SSL_MODE_SUPPORT conftest.c  -L. -L/opt/hostedtoolcache/Ruby/3.2.9/x64/lib -Wl,-rpath,/opt/hostedtoolcache/Ruby/3.2.9/x64/lib -L. -fstack-protector-strong -rdynamic -Wl,-export-dynamic -Wl,--no-as-needed    -L/usr/lib/x86_64-linux-gnu -lmysqlclient -lz  -lzstd -lssl -lcrypto -lresolv -lm  -Wl,-rpath,/opt/hostedtoolcache/Ruby/3.2.9/x64/lib -L/opt/hostedtoolcache/Ruby/3.2.9/x64/lib -lruby -Werror -Wno-padded -lm -lpthread  -lc"
+conftest.c: In function ‘main’:
+conftest.c:3:5: error: old-style function definition [-Werror=old-style-definition]
+    3 | int main() {return 0;}
+      |     ^~~~
+At top level:
+cc1: note: unrecognized command-line option ‘-Wno-self-assign’ may have been intended to silence earlier diagnostics
+cc1: note: unrecognized command-line option ‘-Wno-parentheses-equality’ may have been intended to silence earlier diagnostics
+cc1: note: unrecognized command-line option ‘-Wno-constant-logical-operand’ may have been intended to silence earlier diagnostics
+cc1: all warnings being treated as errors
+checked program was:
+/* begin */
+1: #include "ruby.h"
+2: 
+3: int main() {return 0;}
+/* end */
+
+LD_LIBRARY_PATH=.:/opt/hostedtoolcache/Ruby/3.2.9/x64/lib "gcc -o conftest -I/opt/hostedtoolcache/Ruby/3.2.9/x64/include/ruby-3.2.0/x86_64-linux -I/opt/hostedtoolcache/Ruby/3.2.9/x64/include/ruby-3.2.0/ruby/backward -I/opt/hostedtoolcache/Ruby/3.2.9/x64/include/ruby-3.2.0 -I. -I/usr/include/mysql -DENABLE_PATH_CHECK=0   -O3 -fno-fast-math -ggdb3 -Wall -Wextra -Wdeprecated-declarations -Wdiv-by-zero -Wduplicated-cond -Wimplicit-function-declaration -Wimplicit-int -Wmisleading-indentation -Wpointer-arith -Wwrite-strings -Wold-style-definition -Wimplicit-fallthrough=0 -Wmissing-noreturn -Wno-cast-function-type -Wno-constant-logical-operand -Wno-long-long -Wno-missing-field-initializers -Wno-overlength-strings -Wno-packed-bitfield-compat -Wno-parentheses-equality -Wno-self-assign -Wno-tautological-compare -Wno-unused-parameter -Wno-unused-value -Wsuggest-attribute=format -Wsuggest-attribute=noreturn -Wunused-variable -Wundef  -fPIC -DFULL_SSL_MODE_SUPPORT conftest.c  -L. -L/opt/hostedtoolcache/Ruby/3.2.9/x64/lib -Wl,-rpath,/opt/hostedtoolcache/Ruby/3.2.9/x64/lib -L. -fstack-protector-strong -rdynamic -Wl,-export-dynamic -Wl,--no-as-needed    -L/usr/lib/x86_64-linux-gnu -lmysqlclient -lz  -lzstd -lssl -lcrypto -lresolv -lm  -Wl,-rpath,/opt/hostedtoolcache/Ruby/3.2.9/x64/lib -L/opt/hostedtoolcache/Ruby/3.2.9/x64/lib -lruby -Werror -Wno-reserved-id-macro -lm -lpthread  -lc"
+conftest.c: In function ‘main’:
+conftest.c:3:5: error: old-style function definition [-Werror=old-style-definition]
+    3 | int main() {return 0;}
+      |     ^~~~
+At top level:
+cc1: note: unrecognized command-line option ‘-Wno-reserved-id-macro’ may have been intended to silence earlier diagnostics
+cc1: note: unrecognized command-line option ‘-Wno-self-assign’ may have been intended to silence earlier diagnostics
+cc1: note: unrecognized command-line option ‘-Wno-parentheses-equality’ may have been intended to silence earlier diagnostics
+cc1: note: unrecognized command-line option ‘-Wno-constant-logical-operand’ may have been intended to silence earlier diagnostics
+cc1: all warnings being treated as errors
+checked program was:
+/* begin */
+1: #include "ruby.h"
+2: 
+3: int main() {return 0;}
+/* end */
+
+LD_LIBRARY_PATH=.:/opt/hostedtoolcache/Ruby/3.2.9/x64/lib "gcc -o conftest -I/opt/hostedtoolcache/Ruby/3.2.9/x64/include/ruby-3.2.0/x86_64-linux -I/opt/hostedtoolcache/Ruby/3.2.9/x64/include/ruby-3.2.0/ruby/backward -I/opt/hostedtoolcache/Ruby/3.2.9/x64/include/ruby-3.2.0 -I. -I/usr/include/mysql -DENABLE_PATH_CHECK=0   -O3 -fno-fast-math -ggdb3 -Wall -Wextra -Wdeprecated-declarations -Wdiv-by-zero -Wduplicated-cond -Wimplicit-function-declaration -Wimplicit-int -Wmisleading-indentation -Wpointer-arith -Wwrite-strings -Wold-style-definition -Wimplicit-fallthrough=0 -Wmissing-noreturn -Wno-cast-function-type -Wno-constant-logical-operand -Wno-long-long -Wno-missing-field-initializers -Wno-overlength-strings -Wno-packed-bitfield-compat -Wno-parentheses-equality -Wno-self-assign -Wno-tautological-compare -Wno-unused-parameter -Wno-unused-value -Wsuggest-attribute=format -Wsuggest-attribute=noreturn -Wunused-variable -Wundef  -fPIC -DFULL_SSL_MODE_SUPPORT conftest.c  -L. -L/opt/hostedtoolcache/Ruby/3.2.9/x64/lib -Wl,-rpath,/opt/hostedtoolcache/Ruby/3.2.9/x64/lib -L. -fstack-protector-strong -rdynamic -Wl,-export-dynamic -Wl,--no-as-needed    -L/usr/lib/x86_64-linux-gnu -lmysqlclient -lz  -lzstd -lssl -lcrypto -lresolv -lm  -Wl,-rpath,/opt/hostedtoolcache/Ruby/3.2.9/x64/lib -L/opt/hostedtoolcache/Ruby/3.2.9/x64/lib -lruby -Werror -Wno-sign-conversion -lm -lpthread  -lc"
+conftest.c: In function ‘main’:
+conftest.c:3:5: error: old-style function definition [-Werror=old-style-definition]
+    3 | int main() {return 0;}
+      |     ^~~~
+At top level:
+cc1: note: unrecognized command-line option ‘-Wno-self-assign’ may have been intended to silence earlier diagnostics
+cc1: note: unrecognized command-line option ‘-Wno-parentheses-equality’ may have been intended to silence earlier diagnostics
+cc1: note: unrecognized command-line option ‘-Wno-constant-logical-operand’ may have been intended to silence earlier diagnostics
+cc1: all warnings being treated as errors
+checked program was:
+/* begin */
+1: #include "ruby.h"
+2: 
+3: int main() {return 0;}
+/* end */
+
+LD_LIBRARY_PATH=.:/opt/hostedtoolcache/Ruby/3.2.9/x64/lib "gcc -o conftest -I/opt/hostedtoolcache/Ruby/3.2.9/x64/include/ruby-3.2.0/x86_64-linux -I/opt/hostedtoolcache/Ruby/3.2.9/x64/include/ruby-3.2.0/ruby/backward -I/opt/hostedtoolcache/Ruby/3.2.9/x64/include/ruby-3.2.0 -I. -I/usr/include/mysql -DENABLE_PATH_CHECK=0   -O3 -fno-fast-math -ggdb3 -Wall -Wextra -Wdeprecated-declarations -Wdiv-by-zero -Wduplicated-cond -Wimplicit-function-declaration -Wimplicit-int -Wmisleading-indentation -Wpointer-arith -Wwrite-strings -Wold-style-definition -Wimplicit-fallthrough=0 -Wmissing-noreturn -Wno-cast-function-type -Wno-constant-logical-operand -Wno-long-long -Wno-missing-field-initializers -Wno-overlength-strings -Wno-packed-bitfield-compat -Wno-parentheses-equality -Wno-self-assign -Wno-tautological-compare -Wno-unused-parameter -Wno-unused-value -Wsuggest-attribute=format -Wsuggest-attribute=noreturn -Wunused-variable -Wundef  -fPIC -DFULL_SSL_MODE_SUPPORT conftest.c  -L. -L/opt/hostedtoolcache/Ruby/3.2.9/x64/lib -Wl,-rpath,/opt/hostedtoolcache/Ruby/3.2.9/x64/lib -L. -fstack-protector-strong -rdynamic -Wl,-export-dynamic -Wl,--no-as-needed    -L/usr/lib/x86_64-linux-gnu -lmysqlclient -lz  -lzstd -lssl -lcrypto -lresolv -lm  -Wl,-rpath,/opt/hostedtoolcache/Ruby/3.2.9/x64/lib -L/opt/hostedtoolcache/Ruby/3.2.9/x64/lib -lruby -Werror -Wno-static-in-inline -lm -lpthread  -lc"
+conftest.c: In function ‘main’:
+conftest.c:3:5: error: old-style function definition [-Werror=old-style-definition]
+    3 | int main() {return 0;}
+      |     ^~~~
+At top level:
+cc1: note: unrecognized command-line option ‘-Wno-static-in-inline’ may have been intended to silence earlier diagnostics
+cc1: note: unrecognized command-line option ‘-Wno-self-assign’ may have been intended to silence earlier diagnostics
+cc1: note: unrecognized command-line option ‘-Wno-parentheses-equality’ may have been intended to silence earlier diagnostics
+cc1: note: unrecognized command-line option ‘-Wno-constant-logical-operand’ may have been intended to silence earlier diagnostics
+cc1: all warnings being treated as errors
+checked program was:
+/* begin */
+1: #include "ruby.h"
+2: 
+3: int main() {return 0;}
+/* end */
+
+LD_LIBRARY_PATH=.:/opt/hostedtoolcache/Ruby/3.2.9/x64/lib "gcc -o conftest -I/opt/hostedtoolcache/Ruby/3.2.9/x64/include/ruby-3.2.0/x86_64-linux -I/opt/hostedtoolcache/Ruby/3.2.9/x64/include/ruby-3.2.0/ruby/backward -I/opt/hostedtoolcache/Ruby/3.2.9/x64/include/ruby-3.2.0 -I. -I/usr/include/mysql -DENABLE_PATH_CHECK=0   -O3 -fno-fast-math -ggdb3 -Wall -Wextra -Wdeprecated-declarations -Wdiv-by-zero -Wduplicated-cond -Wimplicit-function-declaration -Wimplicit-int -Wmisleading-indentation -Wpointer-arith -Wwrite-strings -Wold-style-definition -Wimplicit-fallthrough=0 -Wmissing-noreturn -Wno-cast-function-type -Wno-constant-logical-operand -Wno-long-long -Wno-missing-field-initializers -Wno-overlength-strings -Wno-packed-bitfield-compat -Wno-parentheses-equality -Wno-self-assign -Wno-tautological-compare -Wno-unused-parameter -Wno-unused-value -Wsuggest-attribute=format -Wsuggest-attribute=noreturn -Wunused-variable -Wundef  -fPIC -DFULL_SSL_MODE_SUPPORT conftest.c  -L. -L/opt/hostedtoolcache/Ruby/3.2.9/x64/lib -Wl,-rpath,/opt/hostedtoolcache/Ruby/3.2.9/x64/lib -L. -fstack-protector-strong -rdynamic -Wl,-export-dynamic -Wl,--no-as-needed    -L/usr/lib/x86_64-linux-gnu -lmysqlclient -lz  -lzstd -lssl -lcrypto -lresolv -lm  -Wl,-rpath,/opt/hostedtoolcache/Ruby/3.2.9/x64/lib -L/opt/hostedtoolcache/Ruby/3.2.9/x64/lib -lruby -Werror -Wno-switch-enum -lm -lpthread  -lc"
+conftest.c: In function ‘main’:
+conftest.c:3:5: error: old-style function definition [-Werror=old-style-definition]
+    3 | int main() {return 0;}
+      |     ^~~~
+At top level:
+cc1: note: unrecognized command-line option ‘-Wno-self-assign’ may have been intended to silence earlier diagnostics
+cc1: note: unrecognized command-line option ‘-Wno-parentheses-equality’ may have been intended to silence earlier diagnostics
+cc1: note: unrecognized command-line option ‘-Wno-constant-logical-operand’ may have been intended to silence earlier diagnostics
+cc1: all warnings being treated as errors
+checked program was:
+/* begin */
+1: #include "ruby.h"
+2: 
+3: int main() {return 0;}
+/* end */
+
+LD_LIBRARY_PATH=.:/opt/hostedtoolcache/Ruby/3.2.9/x64/lib "gcc -o conftest -I/opt/hostedtoolcache/Ruby/3.2.9/x64/include/ruby-3.2.0/x86_64-linux -I/opt/hostedtoolcache/Ruby/3.2.9/x64/include/ruby-3.2.0/ruby/backward -I/opt/hostedtoolcache/Ruby/3.2.9/x64/include/ruby-3.2.0 -I. -I/usr/include/mysql -DENABLE_PATH_CHECK=0   -O3 -fno-fast-math -ggdb3 -Wall -Wextra -Wdeprecated-declarations -Wdiv-by-zero -Wduplicated-cond -Wimplicit-function-declaration -Wimplicit-int -Wmisleading-indentation -Wpointer-arith -Wwrite-strings -Wold-style-definition -Wimplicit-fallthrough=0 -Wmissing-noreturn -Wno-cast-function-type -Wno-constant-logical-operand -Wno-long-long -Wno-missing-field-initializers -Wno-overlength-strings -Wno-packed-bitfield-compat -Wno-parentheses-equality -Wno-self-assign -Wno-tautological-compare -Wno-unused-parameter -Wno-unused-value -Wsuggest-attribute=format -Wsuggest-attribute=noreturn -Wunused-variable -Wundef  -fPIC -DFULL_SSL_MODE_SUPPORT conftest.c  -L. -L/opt/hostedtoolcache/Ruby/3.2.9/x64/lib -Wl,-rpath,/opt/hostedtoolcache/Ruby/3.2.9/x64/lib -L. -fstack-protector-strong -rdynamic -Wl,-export-dynamic -Wl,--no-as-needed    -L/usr/lib/x86_64-linux-gnu -lmysqlclient -lz  -lzstd -lssl -lcrypto -lresolv -lm  -Wl,-rpath,/opt/hostedtoolcache/Ruby/3.2.9/x64/lib -L/opt/hostedtoolcache/Ruby/3.2.9/x64/lib -lruby -Werror -Wno-undef -lm -lpthread  -lc"
+conftest.c: In function ‘main’:
+conftest.c:3:5: error: old-style function definition [-Werror=old-style-definition]
+    3 | int main() {return 0;}
+      |     ^~~~
+At top level:
+cc1: note: unrecognized command-line option ‘-Wno-self-assign’ may have been intended to silence earlier diagnostics
+cc1: note: unrecognized command-line option ‘-Wno-parentheses-equality’ may have been intended to silence earlier diagnostics
+cc1: note: unrecognized command-line option ‘-Wno-constant-logical-operand’ may have been intended to silence earlier diagnostics
+cc1: all warnings being treated as errors
+checked program was:
+/* begin */
+1: #include "ruby.h"
+2: 
+3: int main() {return 0;}
+/* end */
+
+LD_LIBRARY_PATH=.:/opt/hostedtoolcache/Ruby/3.2.9/x64/lib "gcc -o conftest -I/opt/hostedtoolcache/Ruby/3.2.9/x64/include/ruby-3.2.0/x86_64-linux -I/opt/hostedtoolcache/Ruby/3.2.9/x64/include/ruby-3.2.0/ruby/backward -I/opt/hostedtoolcache/Ruby/3.2.9/x64/include/ruby-3.2.0 -I. -I/usr/include/mysql -DENABLE_PATH_CHECK=0   -O3 -fno-fast-math -ggdb3 -Wall -Wextra -Wdeprecated-declarations -Wdiv-by-zero -Wduplicated-cond -Wimplicit-function-declaration -Wimplicit-int -Wmisleading-indentation -Wpointer-arith -Wwrite-strings -Wold-style-definition -Wimplicit-fallthrough=0 -Wmissing-noreturn -Wno-cast-function-type -Wno-constant-logical-operand -Wno-long-long -Wno-missing-field-initializers -Wno-overlength-strings -Wno-packed-bitfield-compat -Wno-parentheses-equality -Wno-self-assign -Wno-tautological-compare -Wno-unused-parameter -Wno-unused-value -Wsuggest-attribute=format -Wsuggest-attribute=noreturn -Wunused-variable -Wundef  -fPIC -DFULL_SSL_MODE_SUPPORT conftest.c  -L. -L/opt/hostedtoolcache/Ruby/3.2.9/x64/lib -Wl,-rpath,/opt/hostedtoolcache/Ruby/3.2.9/x64/lib -L. -fstack-protector-strong -rdynamic -Wl,-export-dynamic -Wl,--no-as-needed    -L/usr/lib/x86_64-linux-gnu -lmysqlclient -lz  -lzstd -lssl -lcrypto -lresolv -lm  -Wl,-rpath,/opt/hostedtoolcache/Ruby/3.2.9/x64/lib -L/opt/hostedtoolcache/Ruby/3.2.9/x64/lib -lruby -Werror -Wno-unreachable-code -lm -lpthread  -lc"
+conftest.c: In function ‘main’:
+conftest.c:3:5: error: old-style function definition [-Werror=old-style-definition]
+    3 | int main() {return 0;}
+      |     ^~~~
+At top level:
+cc1: note: unrecognized command-line option ‘-Wno-self-assign’ may have been intended to silence earlier diagnostics
+cc1: note: unrecognized command-line option ‘-Wno-parentheses-equality’ may have been intended to silence earlier diagnostics
+cc1: note: unrecognized command-line option ‘-Wno-constant-logical-operand’ may have been intended to silence earlier diagnostics
+cc1: all warnings being treated as errors
+checked program was:
+/* begin */
+1: #include "ruby.h"
+2: 
+3: int main() {return 0;}
+/* end */
+
+LD_LIBRARY_PATH=.:/opt/hostedtoolcache/Ruby/3.2.9/x64/lib "gcc -o conftest -I/opt/hostedtoolcache/Ruby/3.2.9/x64/include/ruby-3.2.0/x86_64-linux -I/opt/hostedtoolcache/Ruby/3.2.9/x64/include/ruby-3.2.0/ruby/backward -I/opt/hostedtoolcache/Ruby/3.2.9/x64/include/ruby-3.2.0 -I. -I/usr/include/mysql -DENABLE_PATH_CHECK=0   -O3 -fno-fast-math -ggdb3 -Wall -Wextra -Wdeprecated-declarations -Wdiv-by-zero -Wduplicated-cond -Wimplicit-function-declaration -Wimplicit-int -Wmisleading-indentation -Wpointer-arith -Wwrite-strings -Wold-style-definition -Wimplicit-fallthrough=0 -Wmissing-noreturn -Wno-cast-function-type -Wno-constant-logical-operand -Wno-long-long -Wno-missing-field-initializers -Wno-overlength-strings -Wno-packed-bitfield-compat -Wno-parentheses-equality -Wno-self-assign -Wno-tautological-compare -Wno-unused-parameter -Wno-unused-value -Wsuggest-attribute=format -Wsuggest-attribute=noreturn -Wunused-variable -Wundef  -fPIC -DFULL_SSL_MODE_SUPPORT conftest.c  -L. -L/opt/hostedtoolcache/Ruby/3.2.9/x64/lib -Wl,-rpath,/opt/hostedtoolcache/Ruby/3.2.9/x64/lib -L. -fstack-protector-strong -rdynamic -Wl,-export-dynamic -Wl,--no-as-needed    -L/usr/lib/x86_64-linux-gnu -lmysqlclient -lz  -lzstd -lssl -lcrypto -lresolv -lm  -Wl,-rpath,/opt/hostedtoolcache/Ruby/3.2.9/x64/lib -L/opt/hostedtoolcache/Ruby/3.2.9/x64/lib -lruby -Werror -Wno-used-but-marked-unused -lm -lpthread  -lc"
+conftest.c: In function ‘main’:
+conftest.c:3:5: error: old-style function definition [-Werror=old-style-definition]
+    3 | int main() {return 0;}
+      |     ^~~~
+At top level:
+cc1: note: unrecognized command-line option ‘-Wno-used-but-marked-unused’ may have been intended to silence earlier diagnostics
+cc1: note: unrecognized command-line option ‘-Wno-self-assign’ may have been intended to silence earlier diagnostics
+cc1: note: unrecognized command-line option ‘-Wno-parentheses-equality’ may have been intended to silence earlier diagnostics
+cc1: note: unrecognized command-line option ‘-Wno-constant-logical-operand’ may have been intended to silence earlier diagnostics
+cc1: all warnings being treated as errors
+checked program was:
+/* begin */
+1: #include "ruby.h"
+2: 
+3: int main() {return 0;}
+/* end */
+

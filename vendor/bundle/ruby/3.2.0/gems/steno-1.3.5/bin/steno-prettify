@@ -1,0 +1,98 @@
+#!/usr/bin/env ruby
+
+require 'optparse'
+require 'yajl'
+
+require 'steno/json_prettifier'
+
+Signal.trap('INT') { exit }
+
+def prettify_io(io, prettifier, ignore_parse_error = false)
+  lineno = 1
+  json_regex = '([^{]*)({.*})'
+
+  io.sync = true
+
+  io.each_line do |line|
+    begin
+      match_data = line.match(json_regex) || []
+      prefix = match_data[1]
+      json = match_data[2]
+
+      prettified = prettifier.prettify_line(json)
+      print prefix + prettified
+    rescue Steno::JsonPrettifier::ParseError => e
+      if ignore_parse_error
+        print line
+      else
+        warn "steno-prettify: Malformed json at line #{lineno}, '#{line.strip}'"
+      end
+    end
+
+    lineno += 1
+  end
+end
+
+def prettify_file(path, prettifier, ignore_parse_error = false)
+  begin
+    f = File.open(path, 'r')
+  rescue StandardError => e
+    warn "steno-prettify: Failed opening '#{path}', #{e}"
+    return
+  end
+
+  prettify_io(f, prettifier, ignore_parse_error)
+ensure
+  f.close if f
+end
+
+excluded_fields = []
+ignore_parse_error = false
+
+option_parser = OptionParser.new do |op|
+  op.banner = <<~EOT
+    Usage: steno-prettify [OPTS] [FILE...]
+
+    Parses json formatted log lines from FILE(s), or stdin,
+    and displays a more human friendly version of each line to stdout.
+
+    Examples (shamelessly stolen from `man cat`):
+
+      steno-prettify f - g
+        Prettify f's contents, then standard input, then g's contents.
+
+      steno-prettify
+        Prettify contents of stdin.
+
+    Options:
+  EOT
+
+  op.on('-h', '--help', 'Display help') do
+    puts op
+    exit
+  end
+
+  op.on('-a', '--align', 'Omit location and data in order to provide well-aligned logs') do
+    excluded_fields = %w[location data]
+  end
+
+  op.on('-s', '--no-messages', 'Donot complain about errors in parsing logs') do
+    ignore_parse_error = true
+  end
+end
+
+option_parser.parse!(ARGV)
+
+STDOUT.sync = true
+prettifier = Steno::JsonPrettifier.new(excluded_fields)
+
+inputs = ARGV.dup
+inputs << '-' if inputs.empty?
+
+inputs.each do |path|
+  if path == '-'
+    prettify_io(STDIN, prettifier, ignore_parse_error)
+  else
+    prettify_file(path, prettifier, ignore_parse_error)
+  end
+end

@@ -1,0 +1,11 @@
+# For more info on EditorConfig, see: http://EditorConfig.org
+
+root = true
+
+[*.gemspec,*.rb,Gemfile,Rakefile]
+indent_style = space
+indent_size = 2
+
+[*.yml,*.yaml]
+indent_style = space
+indent_size = 2

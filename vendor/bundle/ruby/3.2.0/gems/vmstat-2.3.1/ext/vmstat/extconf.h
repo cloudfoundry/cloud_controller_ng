@@ -1,0 +1,19 @@
+#ifndef EXTCONF_H
+#define EXTCONF_H
+#define HAVE_UNISTD_H 1
+#define HAVE_GETPAGESIZE 1
+#define HAVE_STDLIB_H 1
+#define HAVE_GETLOADAVG 1
+#define HAVE_SYS_PARAM_H 1
+#define HAVE_SYS_MOUNT_H 1
+#define HAVE_SYS_STATFS_H 1
+#define HAVE_STATFS 1
+#define HAVE_STRUCT_STATFS_F_TYPE 1
+#define HAVE_ST_F_TYPE 1
+#define HAVE_STATVFS 1
+#define HAVE_UNISTD_H 1
+#define HAVE_SYS_TYPES_H 1
+#define HAVE_SYS_SOCKET_H 1
+#define HAVE_NET_IF_H 1
+#define HAVE_GETLOADAVG 1
+#endif

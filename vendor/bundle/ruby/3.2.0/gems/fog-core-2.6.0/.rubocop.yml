@@ -1,0 +1,24 @@
+inherit_from: .rubocop_todo.yml
+
+AllCops:
+  TargetRubyVersion: 3.0
+  NewCops: enable
+
+require:
+  - rubocop-rake
+  - rubocop-minitest
+
+Gemspec/DevelopmentDependencies:
+  EnforcedStyle: gemspec
+
+Layout/LineLength:
+  Enabled: 120
+
+Style/HashSyntax:
+  EnforcedStyle: ruby19_no_mixed_keys
+
+Style/StringLiterals:
+  EnforcedStyle: double_quotes
+
+Style/StringLiteralsInInterpolation:
+  EnforcedStyle: single_quotes

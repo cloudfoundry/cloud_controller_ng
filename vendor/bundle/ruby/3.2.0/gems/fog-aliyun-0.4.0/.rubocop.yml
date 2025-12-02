@@ -1,0 +1,35 @@
+inherit_from: .rubocop_todo.yml
+
+Style/Documentation:
+  Enabled: false
+
+Metrics/MethodLength:
+  Enabled: false
+
+Metrics/AbcSize:
+  Enabled: false
+
+Metrics/LineLength:
+  Max: 120
+
+Metrics/BlockLength:
+  Enabled: false
+
+Layout/ExtraSpacing:
+  AllowForAlignment: false
+  ForceEqualSignAlignment: false
+
+Style/ExpandPathArguments:
+  Enabled: false
+
+Metrics/CyclomaticComplexity:
+  Enabled: false
+
+Naming/VariableName:
+  Enabled: false
+
+Lint/UnderscorePrefixedVariableName:
+  Enabled: false
+
+Metrics/LineLength:
+  Enabled: false

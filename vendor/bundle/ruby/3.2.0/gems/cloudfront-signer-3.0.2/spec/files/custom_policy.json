@@ -1,0 +1,12 @@
+{
+   "Statement": [
+      {
+         "Resource": "https://d84l721fxaaqy9.cloudfront.net/downloads/",
+         "Condition": {
+           "DateLessThan": { "AWS:EpochTime": 1255674716 },
+           "DateGreaterThan": {"AWS:EpochTime": 1241073790 },
+           "IpAddress": { "AWS:SourceIp": "216.98.35.1/32" }
+         }
+      }
+   ]
+}

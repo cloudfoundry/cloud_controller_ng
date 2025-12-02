@@ -1,0 +1,55 @@
+# SQL tests are carried own in its' own job as they're extremely heavy so there
+# is no need to run them if SQL code or deps haven't changed and you cannot
+# trigger jobs based on file changes in the same workflow.
+# See: https://github.com/actions/runner/issues/456
+name: integration-tests-storage
+
+on:
+  push:
+    branches: [ master ]
+  pull_request:
+    branches: [ master ]
+    types: [ assigned, opened, synchronize, reopened, labeled ]
+    # Only run integration tests if relevant code or deps have changed
+    paths:
+      # Module-specific paths
+      - 'lib/fog/google/storage.rb'
+      - 'lib/fog/google/storage/**'
+      - 'lib/fog/google/parsers/storage/**'
+      - 'test/integration/storage/**'
+      # Common deps & shared paths
+      - 'fog-google.gemspec'
+      - 'lib/fog/bin/google.rb'
+      - 'lib/fog/google/shared.rb'
+      - 'lib/fog/google.rb'
+      # Trigger workflow on version upgrade
+      - 'lib/fog/google/version.rb'
+      # Trigger when workflow itself is updated
+      - '.github/workflows/integration-storage.yml'
+
+# Setting hard concurrency limit for the project due to cleanup
+# TODO(fog-google#626): remove this once cleanup is fixed
+concurrency:
+  group: ${{ github.workflow }}
+  cancel-in-progress: false
+
+jobs:
+  test:
+    runs-on: fog-arc-runner
+    strategy:
+      matrix:
+        ruby-version: [ '3.0', '3.1', '3.2', '3.3', '3.4' ]
+      # Integration tests from the same task cannot run in parallel yet due to cleanup
+      max-parallel: 1
+
+    steps:
+      - uses: actions/checkout@v5
+      - name: Set up Ruby
+        uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: ${{ matrix.ruby-version }}
+          bundler-cache: true # runs 'bundle install' and caches installed gems automatically
+      - name: Run tests
+        run: >-
+          ./.github/scripts/setup_creds.sh &&
+          bundle exec rake test:storage

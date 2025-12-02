@@ -1,0 +1,19 @@
+sudo: false
+language: ruby
+rvm:
+- 2.0.0
+- 2.1.5
+- 2.2.0
+- 2.3.0
+before_install: gem install bundler -v 1.14.1
+script:
+- bundle install && bundle exec rake test:unit
+deploy:
+  provider: rubygems
+  api_key:
+    secure: EN/hvsyyZq4bOxJgJXVP8AttRsn9ajYrtsg47bVcPHtSXP52mT1r800FC50l1V1MoeNPrgjO8WjVY37rR/FerDsdt0rujakfseKOpCeosAX8hbJ2zVcyOnU16TmkNUAqKKprHkvw/8dnNEYmeyUo+VZmizxVhieur8yitKWiP08Ab1ehA8sDfcGsusnE/Las7fyiiCqMfFQJsJWJimIXNYF6pGZs+6l1YE2sH5S4wKLf09+jhP4WZ6nXcYlyUViLqieMx3US1a9jVV534QSIVYk7Z8PdP4eJm4P46UJ1YPc85DceLAZh2dno5l+Eyk16UYBgPichWEqQf3+0SaNKxNDkNYmXPkxNbajIKFLAsTs7CBwhwK3CxfgDok2P3jcB9iJg3ZlWFD6fMxr1Tca1cEkLpxj8S7peB4St0AwVeaEXfUHIDHb706PbOOoy5BOuK+aDotz0/sHQTOHSAPD4IhZ3+GKCkV4NOV2fxKTWXYK1NSx76jyBW3gnSsy9OWKhKxEXaVLB3J1i5dKUw1l4YBJuRATw2GbimMqQf0EpXukXE/fKugU4+EQUZwoIe85GrjaJrU/LXMpp8lBoh5dPZOxtEXGp6cJWcl239FUVSY17Wf/H8cTpahhNR+PNHUyavC2syPOqxrzNKmfNN3bWFm6iJkYCNI2bFxpUB/Ky+Vc=
+  gem: azure-core
+  on:
+    tags: true
+    condition: "$TRAVIS_RUBY_VERSION == 2.3.0"
+    repo: Azure/azure-ruby-asm-core

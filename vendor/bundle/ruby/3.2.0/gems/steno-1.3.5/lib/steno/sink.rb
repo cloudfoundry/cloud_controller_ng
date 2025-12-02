@@ -1,0 +1,6 @@
+require 'steno/sink/base'
+require 'steno/sink/io'
+require 'steno/sink/syslog'
+require 'steno/sink/fluentd'
+require 'steno/sink/counter'
+require 'steno/sink/eventlog'

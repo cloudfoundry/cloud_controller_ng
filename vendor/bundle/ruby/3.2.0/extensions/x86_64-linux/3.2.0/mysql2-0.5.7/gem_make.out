@@ -1,0 +1,97 @@
+current directory: /home/runner/work/cloud_controller_ng/cloud_controller_ng/vendor/bundle/ruby/3.2.0/gems/mysql2-0.5.7/ext/mysql2
+/opt/hostedtoolcache/Ruby/3.2.9/x64/bin/ruby extconf.rb
+checking for rb_absint_size()... yes
+checking for rb_absint_singlebit_p()... yes
+checking for rb_gc_mark_movable()... yes
+checking for rb_wait_for_single_fd()... yes
+checking for rb_enc_interned_str() in ruby.h... yes
+-----
+Using mysql_config at /usr/bin/mysql_config
+-----
+checking for mysql.h... yes
+checking for errmsg.h... yes
+checking for SSL_MODE_DISABLED in mysql.h... yes
+checking for SSL_MODE_PREFERRED in mysql.h... yes
+checking for SSL_MODE_REQUIRED in mysql.h... yes
+checking for SSL_MODE_VERIFY_CA in mysql.h... yes
+checking for SSL_MODE_VERIFY_IDENTITY in mysql.h... yes
+checking for MYSQL.net.vio in mysql.h... yes
+checking for MYSQL.net.pvio in mysql.h... no
+checking for MYSQL_DEFAULT_AUTH in mysql.h... yes
+checking for MYSQL_ENABLE_CLEARTEXT_PLUGIN in mysql.h... yes
+checking for SERVER_QUERY_NO_GOOD_INDEX_USED in mysql.h... yes
+checking for SERVER_QUERY_NO_INDEX_USED in mysql.h... yes
+checking for SERVER_QUERY_WAS_SLOW in mysql.h... yes
+checking for MYSQL_OPTION_MULTI_STATEMENTS_ON in mysql.h... yes
+checking for MYSQL_OPTION_MULTI_STATEMENTS_OFF in mysql.h... yes
+checking for MYSQL_OPT_GET_SERVER_PUBLIC_KEY in mysql.h... yes
+checking for my_bool in mysql.h... no
+checking for mysql_ssl_set() in mysql.h... yes
+-----
+Setting libpath to /usr/lib/x86_64-linux-gnu
+-----
+creating Makefile
+
+current directory: /home/runner/work/cloud_controller_ng/cloud_controller_ng/vendor/bundle/ruby/3.2.0/gems/mysql2-0.5.7/ext/mysql2
+make DESTDIR\= sitearchdir\=./.gem.20251112-3354-4vigym sitelibdir\=./.gem.20251112-3354-4vigym clean
+
+current directory: /home/runner/work/cloud_controller_ng/cloud_controller_ng/vendor/bundle/ruby/3.2.0/gems/mysql2-0.5.7/ext/mysql2
+make DESTDIR\= sitearchdir\=./.gem.20251112-3354-4vigym sitelibdir\=./.gem.20251112-3354-4vigym
+compiling client.c
+In file included from client.c:15:
+mysql_enc_name_to_ruby.h: In function ‘mysql2_mysql_enc_name_to_rb_hash’:
+mysql_enc_name_to_ruby.h:43:1: warning: old-style function definition [-Wold-style-definition]
+   43 | mysql2_mysql_enc_name_to_rb_hash (str, len)
+      | ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+mysql_enc_name_to_ruby.h: In function ‘mysql2_mysql_enc_name_to_rb’:
+mysql_enc_name_to_ruby.h:86:1: warning: old-style function definition [-Wold-style-definition]
+   86 | mysql2_mysql_enc_name_to_rb (str, len)
+      | ^~~~~~~~~~~~~~~~~~~~~~~~~~~
+client.c: In function ‘init_mysql2_client’:
+client.c:1567:6: warning: old-style function definition [-Wold-style-definition]
+ 1567 | void init_mysql2_client() {
+      |      ^~~~~~~~~~~~~~~~~~
+At top level:
+cc1: note: unrecognized command-line option ‘-Wno-self-assign’ may have been intended to silence earlier diagnostics
+cc1: note: unrecognized command-line option ‘-Wno-parentheses-equality’ may have been intended to silence earlier diagnostics
+cc1: note: unrecognized command-line option ‘-Wno-constant-logical-operand’ may have been intended to silence earlier diagnostics
+compiling infile.c
+compiling mysql2_ext.c
+mysql2_ext.c: In function ‘Init_mysql2’:
+mysql2_ext.c:6:6: warning: old-style function definition [-Wold-style-definition]
+    6 | void Init_mysql2() {
+      |      ^~~~~~~~~~~
+At top level:
+cc1: note: unrecognized command-line option ‘-Wno-self-assign’ may have been intended to silence earlier diagnostics
+cc1: note: unrecognized command-line option ‘-Wno-parentheses-equality’ may have been intended to silence earlier diagnostics
+cc1: note: unrecognized command-line option ‘-Wno-constant-logical-operand’ may have been intended to silence earlier diagnostics
+compiling result.c
+result.c: In function ‘rb_mysql_result_fetch_field_type’:
+result.c:389:7: warning: case value ‘242’ not in enumerated type ‘enum enum_field_types’ [-Wswitch]
+  389 |       case MYSQL_TYPE_VECTOR:       // vector
+      |       ^~~~
+result.c: In function ‘init_mysql2_result’:
+result.c:1227:6: warning: old-style function definition [-Wold-style-definition]
+ 1227 | void init_mysql2_result() {
+      |      ^~~~~~~~~~~~~~~~~~
+At top level:
+cc1: note: unrecognized command-line option ‘-Wno-self-assign’ may have been intended to silence earlier diagnostics
+cc1: note: unrecognized command-line option ‘-Wno-parentheses-equality’ may have been intended to silence earlier diagnostics
+cc1: note: unrecognized command-line option ‘-Wno-constant-logical-operand’ may have been intended to silence earlier diagnostics
+compiling statement.c
+statement.c: In function ‘init_mysql2_statement’:
+statement.c:630:6: warning: old-style function definition [-Wold-style-definition]
+  630 | void init_mysql2_statement() {
+      |      ^~~~~~~~~~~~~~~~~~~~~
+At top level:
+cc1: note: unrecognized command-line option ‘-Wno-self-assign’ may have been intended to silence earlier diagnostics
+cc1: note: unrecognized command-line option ‘-Wno-parentheses-equality’ may have been intended to silence earlier diagnostics
+cc1: note: unrecognized command-line option ‘-Wno-constant-logical-operand’ may have been intended to silence earlier diagnostics
+linking shared-object mysql2/mysql2.so
+
+current directory: /home/runner/work/cloud_controller_ng/cloud_controller_ng/vendor/bundle/ruby/3.2.0/gems/mysql2-0.5.7/ext/mysql2
+make DESTDIR\= sitearchdir\=./.gem.20251112-3354-4vigym sitelibdir\=./.gem.20251112-3354-4vigym install
+/usr/bin/install -c -m 0755 mysql2.so ./.gem.20251112-3354-4vigym/mysql2
+
+current directory: /home/runner/work/cloud_controller_ng/cloud_controller_ng/vendor/bundle/ruby/3.2.0/gems/mysql2-0.5.7/ext/mysql2
+make DESTDIR\= sitearchdir\=./.gem.20251112-3354-4vigym sitelibdir\=./.gem.20251112-3354-4vigym clean

@@ -1,0 +1,56 @@
+- hosts: all
+  become: yes
+  tasks:
+    - name: Run unittest tests
+      shell:
+        cmd: |
+          set -e
+          set -o pipefail
+          set -x
+          apt-get install ruby ruby-dev -y
+          for key in 409B6B1796C275462A1703113804BB82D39DC0E3 7D2BAF1CF37B13E2069D6956105BD0E739499BDB; do
+              gpg --keyserver keys.gnupg.net --keyserver-options timeout=5 --recv-keys "$key" || \
+              gpg --keyserver pgp.mit.edu --keyserver-options timeout=5 --recv-keys "$key" || \
+              gpg --keyserver keyserver.pgp.com --keyserver-options timeout=5 --recv-keys "$key" || \
+              gpg --keyserver ha.pool.sks-keyservers.net --keyserver-options timeout=5 --recv-keys "$key"
+          done
+          curl -L https://get.rvm.io | bash -s stable
+          source /usr/local/rvm/scripts/rvm > /dev/null 2>&1
+          for version in {{ rvm }}; do
+              if [ "$version" == "jruby-head" ]; then
+                  continue
+              fi
+              rvm install ${version} --disable-binary > /dev/null 2>&1
+              rvm use ${version} > /dev/null 2>&1
+              echo "Running tests based on Ruby ${version}..."
+              ruby --version
+              gem install bundler --version '~> 1'
+              bundle install --jobs=3 --retry=3
+              bundle exec rake test TESTOPTS="--verbose"
+          done
+        executable: /bin/bash
+        chdir: '{{ zuul.project.src_dir }}'
+      environment:
+        JRUBY_OPTS: '--debug'
+        ANSIBLE_PYTHON_INTERPRETER: /usr/bin/python3
+
+    - name: Run unittest tests for jruby-head
+      shell:
+        cmd: |
+          set -e
+          set -o pipefail
+          set -x
+          rvm install jruby-head --disable-binary
+          rvm use jruby-head
+          echo "Running tests based on Ruby jruby-head...
+          ruby --version
+          gem install bundler
+          gem update bundler
+          bundle install --jobs=3 --retry=3
+          bundle exec rake test TESTOPTS="--verbose"
+        executable: /bin/bash
+        chdir: '{{ zuul.project.src_dir }}'
+      environment:
+        JRUBY_OPTS: '--debug'
+        ANSIBLE_PYTHON_INTERPRETER: /usr/bin/python3
+      ignore_errors: true

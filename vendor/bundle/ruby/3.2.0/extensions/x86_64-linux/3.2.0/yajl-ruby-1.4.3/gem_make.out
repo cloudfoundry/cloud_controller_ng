@@ -1,0 +1,38 @@
+current directory: /home/runner/work/cloud_controller_ng/cloud_controller_ng/vendor/bundle/ruby/3.2.0/gems/yajl-ruby-1.4.3/ext/yajl
+/opt/hostedtoolcache/Ruby/3.2.9/x64/bin/ruby extconf.rb
+creating Makefile
+
+current directory: /home/runner/work/cloud_controller_ng/cloud_controller_ng/vendor/bundle/ruby/3.2.0/gems/yajl-ruby-1.4.3/ext/yajl
+make DESTDIR\= sitearchdir\=./.gem.20251112-3354-k4uj7u sitelibdir\=./.gem.20251112-3354-k4uj7u clean
+
+current directory: /home/runner/work/cloud_controller_ng/cloud_controller_ng/vendor/bundle/ruby/3.2.0/gems/yajl-ruby-1.4.3/ext/yajl
+make DESTDIR\= sitearchdir\=./.gem.20251112-3354-k4uj7u sitelibdir\=./.gem.20251112-3354-k4uj7u
+compiling yajl.c
+compiling yajl_alloc.c
+compiling yajl_buf.c
+compiling yajl_encode.c
+compiling yajl_ext.c
+yajl_ext.c: In function ‘rb_yajl_parser_parse’:
+yajl_ext.c:538:17: warning: variable ‘stat’ set but not used [-Wunused-but-set-variable]
+  538 |     yajl_status stat;
+      |                 ^~~~
+yajl_ext.c: In function ‘Init_yajl’:
+yajl_ext.c:1372:6: warning: old-style function definition [-Wold-style-definition]
+ 1372 | void Init_yajl() {
+      |      ^~~~~~~~~
+At top level:
+cc1: note: unrecognized command-line option ‘-Wno-self-assign’ may have been intended to silence earlier diagnostics
+cc1: note: unrecognized command-line option ‘-Wno-parentheses-equality’ may have been intended to silence earlier diagnostics
+cc1: note: unrecognized command-line option ‘-Wno-constant-logical-operand’ may have been intended to silence earlier diagnostics
+compiling yajl_gen.c
+compiling yajl_lex.c
+compiling yajl_parser.c
+compiling yajl_version.c
+linking shared-object yajl/yajl.so
+
+current directory: /home/runner/work/cloud_controller_ng/cloud_controller_ng/vendor/bundle/ruby/3.2.0/gems/yajl-ruby-1.4.3/ext/yajl
+make DESTDIR\= sitearchdir\=./.gem.20251112-3354-k4uj7u sitelibdir\=./.gem.20251112-3354-k4uj7u install
+/usr/bin/install -c -m 0755 yajl.so ./.gem.20251112-3354-k4uj7u/yajl
+
+current directory: /home/runner/work/cloud_controller_ng/cloud_controller_ng/vendor/bundle/ruby/3.2.0/gems/yajl-ruby-1.4.3/ext/yajl
+make DESTDIR\= sitearchdir\=./.gem.20251112-3354-k4uj7u sitelibdir\=./.gem.20251112-3354-k4uj7u clean

@@ -1,0 +1,114 @@
+# Opt-in new cops
+AllCops:
+  NewCops: enable
+#
+# Overrides
+#
+Layout/HashAlignment:
+  EnforcedHashRocketStyle: table
+  EnforcedColonStyle: table
+Layout/LineLength:
+  Max: 120
+  Severity: refactor
+Layout/SpaceInsideHashLiteralBraces:
+  EnforcedStyle: no_space
+Lint/Debugger:
+  Enabled: true
+Metrics/AbcSize:
+  Severity: refactor
+# Exclude test methods from BlockLength.
+Metrics/BlockLength:
+  IgnoredMethods:
+  - after
+  - before
+  - context
+  - describe
+  - it
+  - model_tests
+  - namespace
+  - draw
+Metrics/BlockNesting:
+  Severity: refactor
+Metrics/ClassLength:
+  Max: 150
+  Severity: refactor
+Metrics/CyclomaticComplexity:
+  Severity: refactor
+Metrics/MethodLength:
+  Max: 25
+  Severity: refactor
+Metrics/ParameterLists:
+  Severity: refactor
+Metrics/PerceivedComplexity:
+  Severity: refactor
+Style/ClassCheck:
+  EnforcedStyle: kind_of?
+Style/CollectionMethods:
+  PreferredMethods:
+    find: detect
+    find_all: select
+    map: collect
+    reduce: inject
+Style/FormatString:
+  EnforcedStyle: percent
+Style/HashSyntax:
+  EnforcedStyle: hash_rockets
+Style/RedundantReturn:
+  AllowMultipleReturnValues: true
+Style/RegexpLiteral:
+  EnforcedStyle: slashes
+  AllowInnerSlashes: true
+Style/SignalException:
+  EnforcedStyle: only_raise
+Style/SingleLineMethods:
+  AllowIfMethodIsEmpty: false
+Style/TrivialAccessors:
+  AllowPredicates: true
+#
+# Enabled/Disabled
+#
+Layout/DefEndAlignment:
+  AutoCorrect: true
+Layout/EndAlignment:
+  AutoCorrect: true
+Layout/ExtraSpacing:
+  AutoCorrect: false # https://github.com/bbatsov/rubocop/issues/2280 <= Now closed, we should remove this
+Layout/SpaceBeforeFirstArg:
+  Enabled: false
+Style/ClassAndModuleChildren:
+  Enabled: false
+Style/Documentation:
+  Enabled: false
+Style/Encoding:
+  Enabled: false
+Style/GuardClause:
+  Enabled: false
+Style/IfUnlessModifier:
+  Enabled: false
+Style/NumericLiterals:
+  AutoCorrect: false
+  MinDigits: 7
+Style/ParallelAssignment:
+  Enabled: false
+Style/PerlBackrefs:
+  Enabled: false
+Style/RescueModifier:
+  AutoCorrect: false
+Style/SingleLineBlockParams:
+  Enabled: false
+Style/SpecialGlobalVars:
+  AutoCorrect: false
+Style/FrozenStringLiteralComment:
+  Enabled: false
+Style/StringLiterals:
+  Enabled: false
+Style/StringLiteralsInInterpolation:
+  Enabled: false
+Style/TrailingCommaInArrayLiteral:
+  Enabled: false
+Style/TrailingCommaInHashLiteral:
+  Enabled: false
+Style/WhileUntilModifier:
+  Enabled: false
+Style/WordArray:
+  AutoCorrect: false

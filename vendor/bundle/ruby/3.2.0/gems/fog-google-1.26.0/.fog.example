@@ -1,0 +1,25 @@
+##################################################################
+# This is configuration snippet to configure Google Cloud Platform
+# for fog library.
+#
+# 1. Copy this file into your home dir: "~/.fog":
+#
+#    $ cat .fog.example >> ~/.fog
+#
+# 2. Follow instructions to generate a private key: 
+#    https://cloud.google.com/storage/docs/authentication#generating-a-private-key
+#
+# 3. Edit the new file accordingly.
+#
+##################################################################
+# START GOOGLE CONFIG
+my_google_credentials:
+    google_project: my-project-id
+    google_json_key_location: /path/to/my-project-xxxxxxxxxxxx.json
+    # You can also provide service account credentials with `google_json_key_string`
+    # If so, uncomment the two following lines.
+    # HMAC credentials follow a similar format:
+	#google_storage_access_key_id: GOOGXXXXXXXXXXXXXXXX
+	#google_storage_secret_access_key: XXXX+XXX/XXXXXXXX+XXXXXXXXXXXXXXXXXXXXX
+# /END GOOGLE CONFIG
+#################################################################

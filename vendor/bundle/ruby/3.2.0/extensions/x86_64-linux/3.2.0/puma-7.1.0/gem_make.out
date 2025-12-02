@@ -1,0 +1,42 @@
+current directory: /home/runner/work/cloud_controller_ng/cloud_controller_ng/vendor/bundle/ruby/3.2.0/gems/puma-7.1.0/ext/puma_http11
+/opt/hostedtoolcache/Ruby/3.2.9/x64/bin/ruby extconf.rb
+checking for BIO_read() in -llibcrypto... no
+checking for BIO_read() in -lcrypto... yes
+checking for SSL_CTX_new() in -lssl... yes
+checking for openssl/bio.h... yes
+
+──── Below are yes for 1.0.2 & later ────
+checking for DTLS_method() in openssl/ssl.h... yes
+checking for SSL_CTX_set_session_cache_mode(NULL, 0) in openssl/ssl.h... yes
+
+──── Below are yes for 1.1.0 & later ────
+checking for TLS_server_method() in openssl/ssl.h... yes
+checking for SSL_CTX_set_min_proto_version(NULL, 0) in openssl/ssl.h... yes
+
+──── Below is yes for 1.1.0 and later, but isn't documented until 3.0.0 ────
+checking for SSL_CTX_set_dh_auto(NULL, 0) in openssl/ssl.h... yes
+
+──── Below is yes for 1.1.1 & later ────
+checking for SSL_CTX_set_ciphersuites(NULL, "") in openssl/ssl.h... yes
+
+──── Below is yes for 3.0.0 & later ────
+checking for SSL_get1_peer_certificate() in openssl/ssl.h... yes
+
+creating Makefile
+
+current directory: /home/runner/work/cloud_controller_ng/cloud_controller_ng/vendor/bundle/ruby/3.2.0/gems/puma-7.1.0/ext/puma_http11
+make DESTDIR\= sitearchdir\=./.gem.20251112-3354-u3f115 sitelibdir\=./.gem.20251112-3354-u3f115 clean
+
+current directory: /home/runner/work/cloud_controller_ng/cloud_controller_ng/vendor/bundle/ruby/3.2.0/gems/puma-7.1.0/ext/puma_http11
+make DESTDIR\= sitearchdir\=./.gem.20251112-3354-u3f115 sitelibdir\=./.gem.20251112-3354-u3f115
+compiling http11_parser.c
+compiling mini_ssl.c
+compiling puma_http11.c
+linking shared-object puma/puma_http11.so
+
+current directory: /home/runner/work/cloud_controller_ng/cloud_controller_ng/vendor/bundle/ruby/3.2.0/gems/puma-7.1.0/ext/puma_http11
+make DESTDIR\= sitearchdir\=./.gem.20251112-3354-u3f115 sitelibdir\=./.gem.20251112-3354-u3f115 install
+/usr/bin/install -c -m 0755 puma_http11.so ./.gem.20251112-3354-u3f115/puma
+
+current directory: /home/runner/work/cloud_controller_ng/cloud_controller_ng/vendor/bundle/ruby/3.2.0/gems/puma-7.1.0/ext/puma_http11
+make DESTDIR\= sitearchdir\=./.gem.20251112-3354-u3f115 sitelibdir\=./.gem.20251112-3354-u3f115 clean

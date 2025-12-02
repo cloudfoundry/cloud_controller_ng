@@ -1,0 +1,44 @@
+current directory: /home/runner/work/cloud_controller_ng/cloud_controller_ng/vendor/bundle/ruby/3.2.0/gems/sequel_pg-1.17.2/ext/sequel_pg
+/opt/hostedtoolcache/Ruby/3.2.9/x64/bin/ruby extconf.rb
+checking for -lpq... yes
+checking for libpq-fe.h... yes
+checking for PQsetSingleRowMode()... yes
+checking for timegm()... yes
+creating Makefile
+
+current directory: /home/runner/work/cloud_controller_ng/cloud_controller_ng/vendor/bundle/ruby/3.2.0/gems/sequel_pg-1.17.2/ext/sequel_pg
+make DESTDIR\= sitearchdir\=./.gem.20251112-3354-7kcukn sitelibdir\=./.gem.20251112-3354-7kcukn clean
+
+current directory: /home/runner/work/cloud_controller_ng/cloud_controller_ng/vendor/bundle/ruby/3.2.0/gems/sequel_pg-1.17.2/ext/sequel_pg
+make DESTDIR\= sitearchdir\=./.gem.20251112-3354-7kcukn sitelibdir\=./.gem.20251112-3354-7kcukn
+compiling sequel_pg.c
+In function ‘spg_array_value’,
+    inlined from ‘spg__col_value’ at sequel_pg.c:1234:14:
+sequel_pg.c:952:11: warning: ‘array_type’ may be used uninitialized [-Wmaybe-uninitialized]
+  952 |   args[1] = array_type;
+      |   ~~~~~~~~^~~~~~~~~~~~
+sequel_pg.c: In function ‘spg__col_value’:
+sequel_pg.c:1019:9: note: ‘array_type’ was declared here
+ 1019 |   VALUE array_type;
+      |         ^~~~~~~~~~
+In function ‘spg_array_value’,
+    inlined from ‘spg__col_value’ at sequel_pg.c:1234:14:
+sequel_pg.c:961:13: warning: ‘scalar_oid’ may be used uninitialized [-Wmaybe-uninitialized]
+  961 |   args[0] = read_array(&index, c_pg_array_string, array_string_length, buf, converter, enc_index, oid, self);
+      |             ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+sequel_pg.c: In function ‘spg__col_value’:
+sequel_pg.c:1020:7: note: ‘scalar_oid’ was declared here
+ 1020 |   int scalar_oid;
+      |       ^~~~~~~~~~
+At top level:
+cc1: note: unrecognized command-line option ‘-Wno-self-assign’ may have been intended to silence earlier diagnostics
+cc1: note: unrecognized command-line option ‘-Wno-parentheses-equality’ may have been intended to silence earlier diagnostics
+cc1: note: unrecognized command-line option ‘-Wno-constant-logical-operand’ may have been intended to silence earlier diagnostics
+linking shared-object sequel_pg.so
+
+current directory: /home/runner/work/cloud_controller_ng/cloud_controller_ng/vendor/bundle/ruby/3.2.0/gems/sequel_pg-1.17.2/ext/sequel_pg
+make DESTDIR\= sitearchdir\=./.gem.20251112-3354-7kcukn sitelibdir\=./.gem.20251112-3354-7kcukn install
+/usr/bin/install -c -m 0755 sequel_pg.so ./.gem.20251112-3354-7kcukn
+
+current directory: /home/runner/work/cloud_controller_ng/cloud_controller_ng/vendor/bundle/ruby/3.2.0/gems/sequel_pg-1.17.2/ext/sequel_pg
+make DESTDIR\= sitearchdir\=./.gem.20251112-3354-7kcukn sitelibdir\=./.gem.20251112-3354-7kcukn clean

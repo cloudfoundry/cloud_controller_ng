@@ -1,0 +1,295 @@
+=== 1.17.2 (2025-03-14)
+
+* Add explicit arguments to PQfreemem casts to avoid compilation issues when using the C23 standard (jeremyevans) (#59)
+
+=== 1.17.1 (2023-01-05)
+
+* Modify LDFLAGS when building on MacOS to allow undefined functions (delphaber) (#53)
+
+=== 1.17.0 (2022-10-05)
+
+* Do not use pgresult_stream_any when using pg <1.4.4, to avoid double free in certain cases (larskanis) (#50)
+
+* Support new pgresult_stream_any API in pg 1.4.4 (larskanis) (#50)
+
+=== 1.16.0 (2022-08-16)
+
+* Fix memory leak when using streaming with pg 1.3.4+ (jeremyevans) (#48)
+
+* Modify LDFLAGS when building on MacOS arm64 to allow undefined functions (maxsz) (#46)
+
+* Adjust many internal C types to fix compilation warnings (jeremyevans)
+
+=== 1.15.0 (2022-03-16)
+
+* Avoid deprecation warning in the pg_streaming extension on pg 1.3+ when streaming a query with bound parameters (jeremyevans)
+
+* Use pgresult_stream_any when using pg 1.3.4+ for faster streaming (jeremyevans)
+
+* Do not use streaming by default for Dataset#paged_each in the pg_streaming extension (jeremyevans)
+
+* Avoid verbose warning if loading sequel_pg after Sequel pg_array extension (jeremyevans)
+
+=== 1.14.0 (2020-09-22)
+
+* Reduce stack memory usage for result sets with 64 or fewer columns (jeremyevans)
+
+* Support result sets with more than 256 columns by default (jeremyevans) (#39)
+
+=== 1.13.0 (2020-04-13)
+
+* Allow overriding of inet/cidr type conversion using conversion procs (beanieboi, jeremyevans) (#36, #37)
+
+=== 1.12.5 (2020-03-23)
+
+* Fix offset calculation for timestamptz types when datetime_class is DateTime and using local application timezone (jeremyevans)
+
+* Fix wrong method call when parsing timestamptz types when datetime_class is Time and using utc database timezone and local application timezone (jeremyevans)
+
+=== 1.12.4 (2020-01-02)
+
+* Work with pg 1.2.1+ (jeremyevans)
+
+=== 1.12.3 (2020-01-02)
+
+* Warn and do not load sequel_pg if pg >1.2 is used (jeremyevans)
+
+* Avoid verbose warnings on Ruby 2.7 due to tainting (jeremyevans)
+
+=== 1.12.2 (2019-06-06)
+
+* Avoid use of pkg_config as it breaks compilation in some environments (jeremyevans) (#33)
+
+=== 1.12.1 (2019-05-31)
+
+* Avoid using Proc.new without block, fixing deprecation warning on ruby 2.7+ (jeremyevans)
+
+* Use rb_gc_register_mark_object instead of rb_global_variable (jeremyevans)
+
+* Use pkg_config instead of pg_config for configuration (jeremyevans) (#31)
+
+=== 1.12.0 (2019-03-01)
+
+* Allow Dataset#paged_each to be called without a block when using streaming (jeremyevans)
+
+* Freeze ruby strings used as temporary buffers for parsing arrays (jeremyevans)
+
+=== 1.11.0 (2018-07-09)
+
+* Set encoding correctly for hash symbol keys (jeremyevans)
+
+* Slight performance improvement to float parsing (jeremyevans)
+
+=== 1.10.0 (2018-06-25)
+
+* Add native inet/cidr parsers (jeremyevans)
+
+* Don't leak memory if unable to create a Sequel::SQL::Blob string when parsing bytea (jeremyevans)
+
+* Improve performance of bytea parsing (jeremyevans)
+
+* Drop Sequel <4.38.0 support (jeremyevans)
+
+* Respect Sequel.application_timezone setting when parsing values for time and timetz columns (jeremyevans)
+
+* Respect Sequel::SQLTime.date setting when parsing values for time and timetz columns (jeremyevans)
+
+* Improve performance of time parsing (jeremyevans)
+
+* Improve performance of date parsing (jeremyevans)
+
+* Improve performance of timestamp parsing by borrowing and optimizing ruby-pg's parser (jeremyevans)
+
+=== 1.9.0 (2018-06-06)
+
+* Return arrays of common data types as PGArray instances automatically with much improved performance (jeremyevans)
+
+* Borrow pg_text_dec_integer function from ruby-pg and use it to improve performance (jeremyevans)
+
+* Borrow PG_ENCODING_SET_NOCHECK macro from ruby-pg and use it to improve performance (jeremyevans)
+
+=== 1.8.2 (2018-05-25)
+
+* Use Kernel.BigDecimal instead of BigDecimal.new to avoid verbose mode deprecation warnings (jeremyevans)
+
+=== 1.8.1 (2017-12-13)
+
+* Fix issue when using Dataset#as_hash and Dataset#to_hash_groups with the null_dataset extension (jeremyevans)
+
+=== 1.8.0 (2017-10-18)
+
+* Handle timezone offsets with seconds when parsing timestamps (jeremyevans)
+
+* Parse BC dates and timestamps correctly (jeremyevans)
+
+* Drop Sequel <4.34.0 support (jeremyevans)
+
+* Drop pg <0.18.0 support (jeremyevans)
+
+* Drop ruby <1.9.3 support (jeremyevans)
+
+=== 1.7.1 (2017-08-25)
+
+* Handle case where PGconn#get_result returns nil in single row mode (jeremyevans)
+
+* Fix RB_GC_GUARD usage to handle additional segfault (Eric Wong)
+
+=== 1.7.0 (2017-06-30)
+
+* Add Dataset#with_optimize_model_load to change optimized model loading for specific datasets (jeremyevans)
+
+* Deprecate optimize_model_load Database and Dataset accessors (jeremyevans)
+
+* Turn optimized model loading on by default, disable automatically when Model.call overridden (jeremyevans)
+
+* Override Dataset#as_hash instead of #to_hash if #as_hash is defined (jeremyevans)
+
+=== 1.6.19 (2017-06-13)
+
+* Use PG::Error instead of PGError if available, avoiding deprecation warning on pg 0.21.0+ (jeremyevans)
+
+=== 1.6.18 (2017-04-27)
+
+* Support logging of connection information in single row mode (jeremyevans)
+
+* Check Sequel compatibility before overwriting methods, supported in Sequel 4.44.0+ (jeremyevans)
+
+* Remove verbose mode warnings (jeremyevans)
+
+=== 1.6.17 (2016-04-29)
+
+* Work with upcoming 4.34.0 release, supporting the duplicate_column_handler extension (jeremyevans)
+
+=== 1.6.16 (2016-04-11)
+
+* Work with upcoming Sequel 4.34.0 release, and Sequel 4.0+ (jeremyevans) (#22)
+
+=== 1.6.15 (2016-04-11)
+
+* Work with upcoming Sequel 4.34.0 release, supporting to_hash taking the hash to insert into (jeremyevans)
+
+=== 1.6.14 (2016-01-19)
+
+* Make array parser ignore explicit bounds (jeremyevans)
+
+=== 1.6.13 (2015-06-29) 
+
+* Fix Dataset#paged_each when called with no arguments (jeremyevans)
+
+* Remove handling of int2vector type (jeremyevans)
+
+=== 1.6.12 (2015-03-23)
+
+* Fix segfault when Dataset#yield_hash_rows is passed a nil value when using ruby pg 0.18+ (jeremyevans) (#19)
+
+=== 1.6.11 (2014-11-04)
+
+* Work with ruby pg 0.18+ (currently a prerelease) (jeremyevans)
+
+=== 1.6.10 (2014-07-11)
+
+* Work correctly when the database timezone is not a named timezone but the application timezone is (jeremyevans)
+
+=== 1.6.9 (2014-03-05)
+
+* When using the streaming extension, automatically use streaming to implement paging in Dataset#paged_each (jeremyevans)
+
+=== 1.6.8 (2013-08-05)
+
+* Allow overriding maximum allowed columns in a result set via -- --with-cflags=\"-DSPG_MAX_FIELDS=1600\" (jeremyevans) (#12)
+
+=== 1.6.7 (2013-06-06)
+
+* Correctly handle fractional seconds in the time type (jeremyevans)
+
+=== 1.6.6 (2013-05-31)
+
+* Work correctly when using the named_timezones extension (jeremyevans)
+
+* Work around format-security false positive (jeremyevans) (#9)
+
+=== 1.6.5 (2013-03-06)
+
+* Handle infinite dates using Database#convert_infinite_timestamps (jeremyevans)
+
+=== 1.6.4 (2013-01-14)
+
+* Remove type conversion of int2vector and money types on PostgreSQL, since previous conversions were wrong (jeremyevans) (#8)
+
+=== 1.6.3 (2012-11-30)
+
+* Make streaming support not swallow errors when rows are not retrieved (jeremyevans)
+
+=== 1.6.2 (2012-11-16)
+
+* Make sequel_pg runnable on rubinius by fixing bad rb_global_variable call (dbussink) (#7)
+
+=== 1.6.1 (2012-10-25)
+
+* Make PostgreSQL array parser handle string encodings correctly on ruby 1.9 (jeremyevans)
+
+=== 1.6.0 (2012-09-04)
+
+* Replace PQsetRowProcessor streaming with PQsetSingleRowMode streaming introduced in PostgreSQL 9.2beta3 (jeremyevans)
+
+=== 1.5.1 (2012-08-02)
+
+* Sprinkle some RB_GC_GUARD to work around segfaults in the PostgreSQL array parser (jeremyevans)
+
+=== 1.5.0 (2012-07-02)
+
+* Add C-based PostgreSQL array parser, for major speedup in parsing arrays (Dan McClain, jeremyevans)
+
+=== 1.4.0 (2012-06-01)
+
+* Add support for streaming on PostgreSQL 9.2 using PQsetRowProcessor (jeremyevans)
+
+* Respect DEBUG environment variable when building (jeremyevans)
+
+=== 1.3.0 (2012-04-02)
+
+* Build Windows version against PostgreSQL 9.1.1, ruby 1.8.7, and ruby 1.9.2 (previously 9.0.1, 1.8.6, and 1.9.1) (jeremyevans)
+
+* Add major speedup for new Sequel 3.34.0 methods Dataset#to_hash_groups and #select_hash_groups (jeremyevans)
+
+* Handle infinite timestamp values using Database#convert_infinite_timestamps in Sequel 3.34.0 (jeremyevans)
+
+=== 1.2.2 (2012-03-09)
+
+* Get microsecond accuracy when using datetime_class = DateTime with 1.8-1.9.2 stdlib date library via Rational (jeremyevans)
+
+=== 1.2.1 (2012-02-22)
+
+* Handle NaN, Infinity, and -Infinity for double precision values correctly (jeremyevans)
+
+=== 1.2.0 (2011-11-01)
+
+* Add optimize_model_load setting to speedup loading of model objects, off by default (jeremyevans)
+
+* Add major speedup to Dataset#map, #to_hash, #select_map, #select_order_map, and #select_hash (jeremyevans)
+
+* Work with the new Database#timezone setting in Sequel 3.29.0 (jeremyevans)
+
+=== 1.1.1 (2011-09-01)
+
+* Work with new Sequel::SQLTime for time columns in Sequel 3.27.0 (jeremyevans)
+
+=== 1.1.0 (2011-06-01)
+
+* Work with new Database#conversion_procs method in Sequel 3.24.0 (jeremyevans)
+
+=== 1.0.2 (2011-03-16)
+
+* Build the Windows gem against PostgreSQL 9.0.1 to support the new default bytea serialization format (jeremyevans)
+
+* Allow use of Sequel::Postgres::PG_TYPES to add custom conversion support for types not handled by default (funny-falcon) (#2)
+
+* Fix handling of timestamps with fractional seconds and offsets (funny-falcon) (#1)
+
+=== 1.0.1 (2010-09-12)
+
+* Correctly handle timestamps with negative offsets and fractional hours (jeremyevans)
+
+=== 1.0.0 (2010-08-31)
+
+* Initial Public Release

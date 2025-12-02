@@ -1,0 +1,18 @@
+current directory: /home/runner/work/cloud_controller_ng/cloud_controller_ng/vendor/bundle/ruby/3.2.0/gems/digest-xxhash-0.2.9/ext/digest/xxhash
+/opt/hostedtoolcache/Ruby/3.2.9/x64/bin/ruby extconf.rb
+creating Makefile
+
+current directory: /home/runner/work/cloud_controller_ng/cloud_controller_ng/vendor/bundle/ruby/3.2.0/gems/digest-xxhash-0.2.9/ext/digest/xxhash
+make DESTDIR\= sitearchdir\=./.gem.20251112-3354-5nhqku sitelibdir\=./.gem.20251112-3354-5nhqku clean
+
+current directory: /home/runner/work/cloud_controller_ng/cloud_controller_ng/vendor/bundle/ruby/3.2.0/gems/digest-xxhash-0.2.9/ext/digest/xxhash
+make DESTDIR\= sitearchdir\=./.gem.20251112-3354-5nhqku sitelibdir\=./.gem.20251112-3354-5nhqku
+compiling ext.c
+linking shared-object digest/xxhash.so
+
+current directory: /home/runner/work/cloud_controller_ng/cloud_controller_ng/vendor/bundle/ruby/3.2.0/gems/digest-xxhash-0.2.9/ext/digest/xxhash
+make DESTDIR\= sitearchdir\=./.gem.20251112-3354-5nhqku sitelibdir\=./.gem.20251112-3354-5nhqku install
+/usr/bin/install -c -m 0755 xxhash.so ./.gem.20251112-3354-5nhqku/digest
+
+current directory: /home/runner/work/cloud_controller_ng/cloud_controller_ng/vendor/bundle/ruby/3.2.0/gems/digest-xxhash-0.2.9/ext/digest/xxhash
+make DESTDIR\= sitearchdir\=./.gem.20251112-3354-5nhqku sitelibdir\=./.gem.20251112-3354-5nhqku clean

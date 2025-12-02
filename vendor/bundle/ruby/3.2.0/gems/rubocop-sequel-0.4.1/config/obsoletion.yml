@@ -1,0 +1,14 @@
+#
+# Configuration for obsoletion.
+#
+# See: https://docs.rubocop.org/rubocop/extensions.html#config-obsoletions
+#
+extracted:
+  Sequel/*: ~
+
+removed:
+  Sequel/ColumnDefault:
+    reason: >-
+      ColumnDefault cop since it's mostly outdated advice.
+      Details [#33](https://github.com/rubocop/rubocop-sequel/issues/32)
+

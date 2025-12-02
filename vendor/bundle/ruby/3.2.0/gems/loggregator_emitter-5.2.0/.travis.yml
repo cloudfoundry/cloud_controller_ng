@@ -1,0 +1,18 @@
+notifications:
+  email:
+  - cf-loggregator@pivotallabs.com
+
+sudo: required
+dist: precise
+group: legacy
+language: ruby
+
+rvm:
+- 2.0.0
+- 2.3.0
+script:
+- bundle exec rake nonperformance
+- DISABLE_COVERAGE=true bundle exec rake performance
+env:
+  global:
+    secure: SqFTUY2M1pyWzBZtQTEvkHwM+H1b8viGUlXhp3YtwqCvSLD5fO7ApsBkuH1RUHOcDZaYa4UYHvulEigIQm5woywosssuJSGdIFL48Us26gqc3iC9rGzbeCyeT0yJug7LicFPKyDpB7zHz0ma1syEquS3PR9SuiLkgIY2D4VmTHY=

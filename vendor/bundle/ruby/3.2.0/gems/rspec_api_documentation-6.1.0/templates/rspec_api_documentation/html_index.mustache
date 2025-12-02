@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>{{ api_name }}</title>
+  <meta charset="utf-8">
+  <style>
+    {{ styles }}
+  </style>
+</head>
+<body>
+<div class="container">
+  <h1>{{ api_name }}</h1>
+  {{{ api_explanation }}}
+  {{# sections }}
+  <div class="article">
+    <h2>{{ resource_name }}</h2>
+    {{# resource_explanation }}
+
+      <p class="explanation">{{{ resource_explanation }}}</p>
+    {{/ resource_explanation }}
+
+    <ul>
+      {{# examples }}
+      <li>
+        <a href="{{ dirname }}/{{ filename }}">{{ description }}</a>
+      </li>
+      {{/ examples }}
+    </ul>
+  </div>
+  {{/ sections }}
+</div>
+</body>
+</html>
