@@ -23,6 +23,11 @@ jobs:
           bundler -v
           BUNDLER_VERSION=$(ruby -rbundler -e 'puts Bundler::VERSION')
           echo $BUNDLER_VERSION
+          gem uninstall bundler -a -x
+          ruby -v
+          bundler -v
+          BUNDLER_VERSION=$(ruby -rbundler -e 'puts Bundler::VERSION')
+          echo $BUNDLER_VERSION
           bundle update --bundler=$BUNDLER_VERSION
           # cd docs/v3
           # bundle update --bundler=$BUNDLER_VERSION
