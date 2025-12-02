@@ -56,6 +56,8 @@ module VCAP::CloudController
           image_password: task.droplet.docker_receipt_password,
           volume_mounted_files: ServiceBindingFilesBuilder.build(task.app)
         }.compact)
+      rescue ServiceBindingFilesBuilder::IncompatibleBindings => e
+        raise CloudController::Errors::ApiError.new_from_details('UnprocessableEntity', "Cannot build service binding files for app task - #{e.message}")
       end
 
       def build_staging_task(config, staging_details)
@@ -95,6 +97,8 @@ module VCAP::CloudController
           image_password: staging_details.package.docker_password,
           volume_mounted_files: ServiceBindingFilesBuilder.build(staging_details.package.app)
         }.compact)
+      rescue ServiceBindingFilesBuilder::IncompatibleBindings => e
+        raise CloudController::Errors::ApiError.new_from_details('UnprocessableEntity', "Cannot build service binding files for staging task - #{e.message}")
       end
 
       private
