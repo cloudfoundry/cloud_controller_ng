@@ -29,9 +29,10 @@ jobs:
           echo "Update bundler version in Gemfile.lock"
           bundle update --bundler=$BUNDLER_VERSION
 
-          echo "Update bundler version in docs/v3/Gemfile.lock"
-          cd docs/v3
-          bundle update --bundler=$BUNDLER_VERSION
+          pushd docs/v3
+            echo "Update bundler version in docs/v3/Gemfile.lock"
+            bundle update --bundler=$BUNDLER_VERSION
+          popd
 
           echo "vendor/bundle/" >> .git/info/exclude
           if git diff --quiet; then
