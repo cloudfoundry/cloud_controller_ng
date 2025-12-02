@@ -19,10 +19,13 @@ jobs:
       - uses: ./.github/workflows/composite/setup
       - name: Update BUNDLED WITH in Gemfile.lock
         run: |
+          ruby -v
+          bundler -b
           BUNDLER_VERSION=$(ruby -rbundler -e 'puts Bundler::VERSION')
+          echo $BUNDLER_VERSION
           bundle update --bundler=$BUNDLER_VERSION
-          cd docs/v3
-          bundle update --bundler=$BUNDLER_VERSION
+          # cd docs/v3
+          # bundle update --bundler=$BUNDLER_VERSION
       - name: Check for changes
         run: |
           if git diff --quiet; then
@@ -30,6 +33,7 @@ jobs:
           else
             echo "changes=true" >> $GITHUB_ENV
           fi
+          git diff
       - name: Commit changes
         if: env.changes == 'true'
         run: |
