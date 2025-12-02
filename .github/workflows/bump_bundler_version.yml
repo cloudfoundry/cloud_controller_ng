@@ -1,0 +1,46 @@
+name: Bump Bundler Version
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [ main ]
+    paths:
+      - '.ruby-version'
+
+jobs:
+  bump-bundler:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
+    steps:
+      - uses: hmarr/debug-action@v3
+      - uses: actions/checkout@v5
+      - uses: ./.github/workflows/composite/setup
+      - name: Update BUNDLED WITH in Gemfile.lock
+        run: |
+          BUNDLER_VERSION=$(ruby -rbundler -e 'puts Bundler::VERSION')
+          bundle update --bundler=$BUNDLER_VERSION
+          cd docs/v3
+          bundle update --bundler=$BUNDLER_VERSION
+      - name: Check for changes
+        run: |
+          if git diff --quiet; then
+            echo "changes=false" >> $GITHUB_ENV
+          else
+            echo "changes=true" >> $GITHUB_ENV
+          fi
+      - name: Commit changes
+        if: env.changes == 'true'
+        run: |
+          git config user.name "ari-wg-gitbot"
+          git config user.email "app-runtime-interfaces@cloudfoundry.org"
+          git add .
+          git commit -m "Bump Bundler Version in Gemfile.lock"
+      - name: Create or Update Pull Request
+        if: env.changes == 'true'
+        uses: peter-evans/create-pull-request@v7
+        with:
+          branch: bump-bundler-version-${{ github.ref_name }}
+          title: "Automated Bump of Bundler Version in Gemfile.lock"
+          labels: "needs_review"
