@@ -19,19 +19,19 @@ jobs:
       - uses: ./.github/workflows/composite/setup
       - name: Update BUNDLED WITH in Gemfile.lock
         run: |
-          ruby -v
-          bundler -v
-          BUNDLER_VERSION=$(ruby -rbundler -e 'puts Bundler::VERSION')
-          echo $BUNDLER_VERSION
+          echo "Remove all bundler versions except the default one"
           gem uninstall bundler -a -x
           ruby -v
           bundler -v
           BUNDLER_VERSION=$(ruby -rbundler -e 'puts Bundler::VERSION')
-          echo $BUNDLER_VERSION
           bundle config set frozen false
+          
+          echo "Update bundler version in Gemfile.lock"
           bundle update --bundler=$BUNDLER_VERSION
-          # cd docs/v3
-          # bundle update --bundler=$BUNDLER_VERSION
+
+          echo "Update bundler version in docs/v3/Gemfile.lock"
+          cd docs/v3
+          bundle update --bundler=$BUNDLER_VERSION
       - name: Check for changes
         run: |
           if git diff --quiet; then
@@ -39,14 +39,14 @@ jobs:
           else
             echo "changes=true" >> $GITHUB_ENV
           fi
-          git diff
       - name: Commit changes
         if: env.changes == 'true'
         run: |
           git config user.name "ari-wg-gitbot"
           git config user.email "app-runtime-interfaces@cloudfoundry.org"
           git add Gemfile.lock
-          git commit -m "Bump Bundler Version in Gemfile.lock"
+          git add docs/v3/Gemfile.lock
+          git commit -m "Bump Bundler Version in Gemfile.lock and docs/v3/Gemfile.lock"
       - name: Create or Update Pull Request
         if: env.changes == 'true'
         uses: peter-evans/create-pull-request@v7
