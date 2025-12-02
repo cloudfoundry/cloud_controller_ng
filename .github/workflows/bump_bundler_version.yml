@@ -20,7 +20,7 @@ jobs:
       - name: Update BUNDLED WITH in Gemfile.lock
         run: |
           ruby -v
-          bundler -b
+          bundler -v
           BUNDLER_VERSION=$(ruby -rbundler -e 'puts Bundler::VERSION')
           echo $BUNDLER_VERSION
           bundle update --bundler=$BUNDLER_VERSION
