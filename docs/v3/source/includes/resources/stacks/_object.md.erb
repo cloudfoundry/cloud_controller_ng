@@ -14,6 +14,7 @@ Name | Type | Description
 **updated_at** | _[timestamp](#timestamps)_ | The time with zone when the object was last updated
 **name** | _string_ | The name of the stack
 **description** | _string_ | The description of the stack
+**state** | string | The state of the stack; valid states are: `ACTIVE`, `RESTRICTED`, `DEPRECATED`, `DISABLED`
 **build_rootfs_image** | _string | The name of the stack image associated with staging/building Apps. If a stack does not have unique images, this will be the same as the stack name.
 **run_rootfs_image** | _string | The name of the stack image associated with running Apps + Tasks. If a stack does not have unique images, this will be the same as the stack name.
 **default** | _boolean_ | Whether the stack is configured to be the default stack for new applications.
