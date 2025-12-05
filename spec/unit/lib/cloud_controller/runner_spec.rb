@@ -26,21 +26,18 @@ module VCAP::CloudController
     end
 
     describe '#run!' do
+      let(:server) { double(:server, start!: nil) }
+
+      before do
+        allow(VCAP::CloudController::PumaRunner).to receive(:new).and_return(server)
+      end
+
       it 'creates a pidfile' do
         expect(VCAP::PidFile).to receive(:new).with('/tmp/cloud_controller.pid')
-
-        server = double(:server)
-        allow(server).to receive(:start!)
-        expect(VCAP::CloudController::PumaRunner).to receive(:new).and_return(server)
-
         subject.run!
       end
 
       it 'starts the web server' do
-        server = double(:server)
-        allow(server).to receive(:start!)
-        expect(VCAP::CloudController::PumaRunner).to receive(:new).and_return(server)
-
         subject.run!
         expect(server).to have_received(:start!).once
       end
