@@ -11,15 +11,19 @@ module VCAP
       end
 
       def start(config)
-        server = Puma::Server.new(@app)
+        @server = Puma::Server.new(@app)
 
         if config.get(:nginx, :metrics_socket).nil? || config.get(:nginx, :metrics_socket).empty?
-          server.add_tcp_listener('127.0.0.1', 9395)
+          @server.add_tcp_listener('127.0.0.1', 9395)
         else
-          server.add_unix_listener(config.get(:nginx, :metrics_socket))
+          @server.add_unix_listener(config.get(:nginx, :metrics_socket))
         end
 
-        server.run
+        @server.run
+      end
+
+      def stop
+        @server.stop(true)
       end
 
       private

@@ -229,5 +229,3 @@ credhub_api:
 
 credential_references:
   interpolate_service_bindings: true
-
-threadpool_size: 20

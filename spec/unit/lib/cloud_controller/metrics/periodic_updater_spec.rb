@@ -9,6 +9,19 @@ module VCAP::CloudController::Metrics
     let(:start_time) { Time.now.utc - 90 }
     let(:log_counter) { double(:log_counter, counts: {}) }
     let(:logger) { double(:logger) }
+    let(:stats_hash) do
+      {
+        booted_workers: 2,
+        worker_status: [
+          { started_at: '2023-11-29T13:15:05Z', index: 0, pid: 123, last_status: { running: 1, backlog: 0, busy_threads: 0, pool_capacity: 1, requests_count: 9 } },
+          { started_at: '2023-11-29T13:15:10Z', index: 1, pid: 234, last_status: { running: 2, backlog: 1, busy_threads: 1, pool_capacity: 2, requests_count: 10 } }
+        ]
+      }
+    end
+
+    before do
+      allow(Puma).to receive(:stats_hash).and_return(stats_hash)
+    end
 
     describe 'task stats' do
       before do
@@ -70,6 +83,7 @@ module VCAP::CloudController::Metrics
         allow(prometheus_updater).to receive(:update_log_counts)
         allow(prometheus_updater).to receive(:update_task_stats)
         allow(prometheus_updater).to receive(:update_deploying_count)
+        allow(prometheus_updater).to receive(:update_webserver_stats_puma)
       end
 
       it 'bumps the number of users and sets periodic timer' do
@@ -616,38 +630,15 @@ module VCAP::CloudController::Metrics
         allow(prometheus_updater).to receive(:update_webserver_stats_puma)
       end
 
-      context 'when Puma is configured as webserver' do
-        before do
-          TestConfig.override(webserver: 'puma')
-        end
+      it 'sends stats to the prometheus updater' do
+        periodic_updater.update_webserver_stats
 
-        it 'sends stats to the prometheus updater' do
-          stats_hash = {
-            booted_workers: 2,
-            worker_status: [
-              { started_at: '2023-11-29T13:15:05Z', index: 0, pid: 123, last_status: { running: 1, backlog: 0, busy_threads: 0, pool_capacity: 1, requests_count: 9 } },
-              { started_at: '2023-11-29T13:15:10Z', index: 1, pid: 234, last_status: { running: 2, backlog: 1, busy_threads: 1, pool_capacity: 2, requests_count: 10 } }
-            ]
-          }
-          allow(Puma).to receive(:stats_hash).and_return(stats_hash)
-
-          periodic_updater.update_webserver_stats
-
-          expected_worker_count = 2
-          expected_worker_stats = [
-            { started_at: 1_701_263_705, index: 0, pid: 123, thread_count: 1, backlog: 0, busy_threads: 0, pool_capacity: 1, requests_count: 9 },
-            { started_at: 1_701_263_710, index: 1, pid: 234, thread_count: 2, backlog: 1, busy_threads: 1, pool_capacity: 2, requests_count: 10 }
-          ]
-          expect(prometheus_updater).to have_received(:update_webserver_stats_puma).with(expected_worker_count, expected_worker_stats)
-        end
-      end
-
-      context 'when Thin is configured as webserver' do
-        it 'does not send stats to the prometheus updater' do
-          periodic_updater.update_webserver_stats
-
-          expect(prometheus_updater).not_to have_received(:update_webserver_stats_puma)
-        end
+        expected_worker_count = 2
+        expected_worker_stats = [
+          { started_at: 1_701_263_705, index: 0, pid: 123, thread_count: 1, backlog: 0, busy_threads: 0, pool_capacity: 1, requests_count: 9 },
+          { started_at: 1_701_263_710, index: 1, pid: 234, thread_count: 2, backlog: 1, busy_threads: 1, pool_capacity: 2, requests_count: 10 }
+        ]
+        expect(prometheus_updater).to have_received(:update_webserver_stats_puma).with(expected_worker_count, expected_worker_stats)
       end
     end
 

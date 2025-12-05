@@ -3,22 +3,17 @@ require 'spec_helper'
 RSpec.describe 'Metrics' do
   let(:user) { VCAP::CloudController::User.make }
   let(:user_header) { headers_for(user) }
-  let(:threadqueue) { double(EventMachine::Queue, size: 20, num_waiting: 0) }
-  let(:resultqueue) { double(EventMachine::Queue, size: 0, num_waiting: 1) }
+  let(:metrics_webserver) { VCAP::CloudController::MetricsWebserver.new }
+
+  delegate :app, to: :metrics_webserver
 
   before do
-    allow(EventMachine).to receive(:connection_count).and_return(123)
+    allow_any_instance_of(VCAP::CloudController::Metrics::PeriodicUpdater).to receive(:update_webserver_stats)
+    metrics_webserver.start(TestConfig.config_instance)
+  end
 
-    allow(EventMachine).to receive(:instance_variable_get) do |instance_var|
-      case instance_var
-      when :@threadqueue
-        threadqueue
-      when :@resultqueue
-        resultqueue
-      else
-        raise "Unexpected call: #{instance_var}"
-      end
-    end
+  after do
+    metrics_webserver.stop
   end
 
   it 'can be called several times' do
@@ -41,6 +36,7 @@ RSpec.describe 'Metrics' do
       10.times do
         VCAP::CloudController::User.make
       end
+      CloudController::DependencyLocator.instance.periodic_updater.update!
     end
 
     it 'reports the total number of users' do
@@ -54,6 +50,7 @@ RSpec.describe 'Metrics' do
 
   context 'cc_vitals' do
     it 'reports vitals' do
+      CloudController::DependencyLocator.instance.periodic_updater.update!
       get '/internal/v4/metrics', nil
 
       expect(last_response.body).to match(/cc_vitals_num_cores [1-9][0-9]*\.\d+/)
@@ -69,6 +66,8 @@ RSpec.describe 'Metrics' do
     before do
       Delayed::Job.enqueue(VCAP::CloudController::Jobs::Runtime::EventsCleanup.new(1), { queue: 'cc_api_0', run_at: Time.now + 1.day })
       Delayed::Job.enqueue(VCAP::CloudController::Jobs::Runtime::EventsCleanup.new(1), { queue: 'cc_generic', run_at: Time.now + 1.day })
+
+      CloudController::DependencyLocator.instance.periodic_updater.update!
     end
 
     after do
@@ -87,6 +86,8 @@ RSpec.describe 'Metrics' do
     before do
       Delayed::Job.enqueue(VCAP::CloudController::Jobs::Runtime::EventsCleanup.new(1), { queue: 'cc_api_0', run_at: Time.now })
       Delayed::Job.enqueue(VCAP::CloudController::Jobs::Runtime::EventsCleanup.new(1), { queue: 'cc_generic', run_at: Time.now })
+
+      CloudController::DependencyLocator.instance.periodic_updater.update!
     end
 
     after do
@@ -105,6 +106,8 @@ RSpec.describe 'Metrics' do
     before do
       Delayed::Job.enqueue(VCAP::CloudController::Jobs::Runtime::EventsCleanup.new(1), { queue: 'cc_api_0', run_at: Time.now + 1.minute })
       Delayed::Job.enqueue(VCAP::CloudController::Jobs::Runtime::EventsCleanup.new(1), { queue: 'cc_generic', run_at: Time.now + 1.minute })
+
+      CloudController::DependencyLocator.instance.periodic_updater.update!
     end
 
     after do
@@ -123,8 +126,9 @@ RSpec.describe 'Metrics' do
     before do
       Delayed::Job.enqueue(VCAP::CloudController::Jobs::Runtime::EventsCleanup.new(1), { queue: 'cc_api_0', run_at: Time.now + 1.day })
       Delayed::Job.enqueue(VCAP::CloudController::Jobs::Runtime::EventsCleanup.new(1), { queue: 'cc_generic', run_at: Time.now + 1.day })
-
       Delayed::Job.dataset.update(failed_at: Time.now.utc)
+
+      CloudController::DependencyLocator.instance.periodic_updater.update!
     end
 
     after do
