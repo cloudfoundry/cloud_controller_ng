@@ -9,6 +9,19 @@ module VCAP::CloudController::Metrics
     let(:start_time) { Time.now.utc - 90 }
     let(:log_counter) { double(:log_counter, counts: {}) }
     let(:logger) { double(:logger) }
+    let(:stats_hash) do
+      {
+        booted_workers: 2,
+        worker_status: [
+          { started_at: '2023-11-29T13:15:05Z', index: 0, pid: 123, last_status: { running: 1, backlog: 0, busy_threads: 0, pool_capacity: 1, requests_count: 9 } },
+          { started_at: '2023-11-29T13:15:10Z', index: 1, pid: 234, last_status: { running: 2, backlog: 1, busy_threads: 1, pool_capacity: 2, requests_count: 10 } }
+        ]
+      }
+    end
+
+    before do
+      allow(Puma).to receive(:stats_hash).and_return(stats_hash)
+    end
 
     describe 'task stats' do
       before do
@@ -70,15 +83,6 @@ module VCAP::CloudController::Metrics
         allow(prometheus_updater).to receive(:update_log_counts)
         allow(prometheus_updater).to receive(:update_task_stats)
         allow(prometheus_updater).to receive(:update_deploying_count)
-
-        stats_hash = {
-          booted_workers: 2,
-          worker_status: [
-            { started_at: '2023-11-29T13:15:05Z', index: 0, pid: 123, last_status: { running: 1, backlog: 0, busy_threads: 0, pool_capacity: 1, requests_count: 9 } },
-            { started_at: '2023-11-29T13:15:10Z', index: 1, pid: 234, last_status: { running: 2, backlog: 1, busy_threads: 1, pool_capacity: 2, requests_count: 10 } }
-          ]
-        }
-        allow(Puma).to receive(:stats_hash).and_return(stats_hash)
         allow(prometheus_updater).to receive(:update_webserver_stats_puma)
       end
 
@@ -605,15 +609,6 @@ module VCAP::CloudController::Metrics
       end
 
       it 'sends stats to the prometheus updater' do
-        stats_hash = {
-          booted_workers: 2,
-          worker_status: [
-            { started_at: '2023-11-29T13:15:05Z', index: 0, pid: 123, last_status: { running: 1, backlog: 0, busy_threads: 0, pool_capacity: 1, requests_count: 9 } },
-            { started_at: '2023-11-29T13:15:10Z', index: 1, pid: 234, last_status: { running: 2, backlog: 1, busy_threads: 1, pool_capacity: 2, requests_count: 10 } }
-          ]
-        }
-        allow(Puma).to receive(:stats_hash).and_return(stats_hash)
-
         periodic_updater.update_webserver_stats
 
         expected_worker_count = 2

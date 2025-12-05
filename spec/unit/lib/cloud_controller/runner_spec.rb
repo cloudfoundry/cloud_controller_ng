@@ -132,12 +132,11 @@ module VCAP::CloudController
 
       it 'builds a rack app with request metrics and request logs handlers' do
         builder = instance_double(RackAppBuilder)
-        allow(builder).to receive(:build).and_return(double(:app))
         allow(RackAppBuilder).to receive(:new).and_return(builder)
         request_logs = double(:request_logs)
         allow(VCAP::CloudController::Logs::RequestLogs).to receive(:new).and_return(request_logs)
         expect(builder).to receive(:build).with(anything, request_metrics,
-                                                request_logs)
+                                                request_logs).and_return(double(:app))
         subject
       end
 
