@@ -127,6 +127,9 @@ class SpaceManifestsController < ApplicationController
   end
 
   def incompatible_with_docker(lifecycle_type, manifest)
+    # Allow docker + buildpack when lifecycle is explicitly set to buildpack (custom stack usage)
+    return false if lifecycle_type == 'buildpack' && manifest.requested?(:lifecycle) && manifest.lifecycle == 'buildpack'
+
     lifecycle_type == 'buildpack' && manifest.docker
   end
 end
