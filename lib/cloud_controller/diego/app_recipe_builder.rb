@@ -105,6 +105,8 @@ module VCAP::CloudController
           image_password: process.desired_droplet.docker_receipt_password,
           volume_mounted_files: ServiceBindingFilesBuilder.build(process)
         }.compact
+      rescue ServiceBindingFilesBuilder::IncompatibleBindings => e
+        raise CloudController::Errors::ApiError.new_from_details('UnprocessableEntity', "Cannot build service binding files for app - #{e.message}")
       end
 
       def metric_tags(process)

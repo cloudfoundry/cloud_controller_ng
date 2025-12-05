@@ -30,8 +30,8 @@ module VCAP::CloudController
       end
 
       def check_invalid_combination!(app, flags)
-        file_based_vcap_services_enabled = flags[feature_column_name(AppFeatures::FILE_BASED_VCAP_SERVICES_FEATURE)].present? || app.file_based_vcap_services_enabled
-        service_binding_k8s_enabled = flags[feature_column_name(AppFeatures::SERVICE_BINDING_K8S_FEATURE)].present? || app.service_binding_k8s_enabled
+        file_based_vcap_services_enabled = flags.fetch(feature_column_name(AppFeatures::FILE_BASED_VCAP_SERVICES_FEATURE), app.file_based_vcap_services_enabled)
+        service_binding_k8s_enabled = flags.fetch(feature_column_name(AppFeatures::SERVICE_BINDING_K8S_FEATURE), app.service_binding_k8s_enabled)
         return unless file_based_vcap_services_enabled && service_binding_k8s_enabled
 
         msg = "'#{AppFeatures::FILE_BASED_VCAP_SERVICES_FEATURE}' and '#{AppFeatures::SERVICE_BINDING_K8S_FEATURE}' features cannot be enabled at the same time."

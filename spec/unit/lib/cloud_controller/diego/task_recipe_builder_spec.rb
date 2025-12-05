@@ -8,6 +8,53 @@ module VCAP::CloudController
       let(:space) { Space.make(name: 'MySpace', guid: 'space-guid', organization: org) }
       let(:app) { AppModel.make(name: 'MyApp', guid: 'banana-guid', space: space) }
 
+      shared_examples 'IncompatibleBindings error handling' do
+        let(:incompatible_bindings_error) { VCAP::CloudController::Diego::ServiceBindingFilesBuilder::IncompatibleBindings.new('something is wrong') }
+
+        context 'when an IncompatibleBindings error is raised' do
+          before do
+            allow_any_instance_of(VCAP::CloudController::Diego::ServiceBindingFilesBuilder).to receive(:build).and_raise(incompatible_bindings_error)
+          end
+
+          it 'results in an UnprocessableEntity error' do
+            expect { _build }.to raise_error(CloudController::Errors::ApiError, /Cannot build service binding files .* - something is wrong/)
+          end
+        end
+      end
+
+      shared_examples 'k8s service bindings' do
+        context 'when k8s service bindings are enabled' do
+          before do
+            _app.update(service_binding_k8s_enabled: true)
+            VCAP::CloudController::ServiceBinding.make(service_instance: ManagedServiceInstance.make(space: _app.space), app: _app)
+          end
+
+          it 'includes volume mounted files' do
+            result = _build
+            expect(result.volume_mounted_files.size).to be > 1
+          end
+
+          include_examples 'IncompatibleBindings error handling'
+        end
+      end
+
+      shared_examples 'file-based VCAP service bindings' do
+        context 'when file-based VCAP service bindings are enabled' do
+          before do
+            _app.update(file_based_vcap_services_enabled: true)
+            VCAP::CloudController::ServiceBinding.make(service_instance: ManagedServiceInstance.make(space: _app.space), app: _app)
+          end
+
+          it 'includes the vcap_services file' do
+            result = _build
+            expect(result.volume_mounted_files.size).to eq(1)
+            expect(result.volume_mounted_files[0].path).to eq('vcap_services')
+          end
+
+          include_examples 'IncompatibleBindings error handling'
+        end
+      end
+
       describe '#build_staging_task' do
         let(:staging_details) do
           Diego::StagingDetails.new.tap do |details|
@@ -201,31 +248,14 @@ module VCAP::CloudController
             end
           end
 
-          context 'when k8s service bindings are enabled' do
-            before do
-              app = staging_details.package.app
-              app.update(service_binding_k8s_enabled: true)
-              VCAP::CloudController::ServiceBinding.make(service_instance: ManagedServiceInstance.make(space: app.space), app: app)
-            end
-
-            it 'includes volume mounted files' do
-              result = task_recipe_builder.build_staging_task(config, staging_details)
-              expect(result.volume_mounted_files.size).to be > 1
-            end
+          include_examples 'k8s service bindings' do
+            let(:_app) { staging_details.package.app }
+            let(:_build) { task_recipe_builder.build_staging_task(config, staging_details) }
           end
 
-          context 'when file-based VCAP service bindings are enabled' do
-            before do
-              app = staging_details.package.app
-              app.update(file_based_vcap_services_enabled: true)
-              VCAP::CloudController::ServiceBinding.make(service_instance: ManagedServiceInstance.make(space: app.space), app: app)
-            end
-
-            it 'includes volume mounted files' do
-              result = task_recipe_builder.build_staging_task(config, staging_details)
-              expect(result.volume_mounted_files.size).to eq(1)
-              expect(result.volume_mounted_files[0].path).to eq('vcap_services')
-            end
+          include_examples 'file-based VCAP service bindings' do
+            let(:_app) { staging_details.package.app }
+            let(:_build) { task_recipe_builder.build_staging_task(config, staging_details) }
           end
         end
 
@@ -615,31 +645,14 @@ module VCAP::CloudController
             end
           end
 
-          context 'when k8s service bindings are enabled' do
-            before do
-              app = task.app
-              app.update(service_binding_k8s_enabled: true)
-              VCAP::CloudController::ServiceBinding.make(service_instance: ManagedServiceInstance.make(space: app.space), app: app)
-            end
-
-            it 'includes volume mounted files' do
-              result = task_recipe_builder.build_app_task(config, task)
-              expect(result.volume_mounted_files.size).to be > 1
-            end
+          include_examples 'k8s service bindings' do
+            let(:_app) { task.app }
+            let(:_build) { task_recipe_builder.build_app_task(config, task) }
           end
 
-          context 'when file-based VCAP service bindings are enabled' do
-            before do
-              app = task.app
-              app.update(file_based_vcap_services_enabled: true)
-              VCAP::CloudController::ServiceBinding.make(service_instance: ManagedServiceInstance.make(space: app.space), app: app)
-            end
-
-            it 'includes volume mounted files' do
-              result = task_recipe_builder.build_app_task(config, task)
-              expect(result.volume_mounted_files.size).to eq(1)
-              expect(result.volume_mounted_files[0].path).to eq('vcap_services')
-            end
+          include_examples 'file-based VCAP service bindings' do
+            let(:_app) { task.app }
+            let(:_build) { task_recipe_builder.build_app_task(config, task) }
           end
         end
 
@@ -797,31 +810,14 @@ module VCAP::CloudController
             end
           end
 
-          context 'when k8s service bindings are enabled' do
-            before do
-              app = task.app
-              app.update(service_binding_k8s_enabled: true)
-              VCAP::CloudController::ServiceBinding.make(service_instance: ManagedServiceInstance.make(space: app.space), app: app)
-            end
-
-            it 'includes volume mounted files' do
-              result = task_recipe_builder.build_app_task(config, task)
-              expect(result.volume_mounted_files.size).to be > 1
-            end
+          include_examples 'k8s service bindings' do
+            let(:_app) { task.app }
+            let(:_build) { task_recipe_builder.build_app_task(config, task) }
           end
 
-          context 'when file-based VCAP service bindings are enabled' do
-            before do
-              app = task.app
-              app.update(file_based_vcap_services_enabled: true)
-              VCAP::CloudController::ServiceBinding.make(service_instance: ManagedServiceInstance.make(space: app.space), app: app)
-            end
-
-            it 'includes volume mounted files' do
-              result = task_recipe_builder.build_app_task(config, task)
-              expect(result.volume_mounted_files.size).to eq(1)
-              expect(result.volume_mounted_files[0].path).to eq('vcap_services')
-            end
+          include_examples 'file-based VCAP service bindings' do
+            let(:_app) { task.app }
+            let(:_build) { task_recipe_builder.build_app_task(config, task) }
           end
         end
       end

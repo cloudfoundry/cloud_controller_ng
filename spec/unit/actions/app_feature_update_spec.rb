@@ -122,6 +122,27 @@ module VCAP::CloudController
         end
       end
 
+      context 'when switching from service-binding-k8s to file-based-vcap-services' do
+        before do
+          app.update(service_binding_k8s_enabled: true)
+          features[:'service-binding-k8s'] = false
+          features[:'file-based-vcap-services'] = true
+        end
+
+        it 'updates the corresponding columns in a single database call' do
+          expect(app.service_binding_k8s_enabled).to be(true)
+          expect(app.file_based_vcap_services_enabled).to be(false)
+
+          expect do
+            AppFeatureUpdate.bulk_update(app, message)
+          end.to have_queried_db_times(/update .apps./i, 1)
+
+          app.reload
+          expect(app.service_binding_k8s_enabled).to be(false)
+          expect(app.file_based_vcap_services_enabled).to be(true)
+        end
+      end
+
       context 'when conflicting features are specified' do
         before do
           features[:'service-binding-k8s'] = true
