@@ -315,7 +315,6 @@ module VCAP::CloudController
           },
 
           request_timeout_in_seconds: Integer,
-          threadpool_size: Integer,
           skip_cert_verify: bool,
 
           webserver: String, # currently only puma

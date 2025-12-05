@@ -268,5 +268,3 @@ diego:
   pid_limit: 1024
 
 shared_isolation_segment_name: shared
-
-threadpool_size: 20
