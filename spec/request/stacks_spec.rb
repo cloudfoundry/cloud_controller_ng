@@ -27,6 +27,7 @@ RSpec.describe 'Stacks Request' do
               'build_rootfs_image' => stack1.build_rootfs_image,
               'guid' => stack1.guid,
               'default' => false,
+              'state' => 'ACTIVE',
               'metadata' => { 'labels' => {}, 'annotations' => {} },
               'created_at' => iso8601,
               'updated_at' => iso8601,
@@ -43,6 +44,7 @@ RSpec.describe 'Stacks Request' do
               'build_rootfs_image' => stack2.build_rootfs_image,
               'guid' => stack2.guid,
               'default' => true,
+              'state' => 'ACTIVE',
               'metadata' => { 'labels' => {}, 'annotations' => {} },
               'created_at' => iso8601,
               'updated_at' => iso8601,
@@ -123,6 +125,7 @@ RSpec.describe 'Stacks Request' do
                   'build_rootfs_image' => stack1.build_rootfs_image,
                   'guid' => stack1.guid,
                   'default' => false,
+                  'state' => 'ACTIVE',
                   'metadata' => { 'labels' => {}, 'annotations' => {} },
                   'created_at' => iso8601,
                   'updated_at' => iso8601,
@@ -139,6 +142,7 @@ RSpec.describe 'Stacks Request' do
                   'build_rootfs_image' => stack2.build_rootfs_image,
                   'guid' => stack2.guid,
                   'default' => true,
+                  'state' => 'ACTIVE',
                   'metadata' => { 'labels' => {}, 'annotations' => {} },
                   'created_at' => iso8601,
                   'updated_at' => iso8601,
@@ -178,6 +182,7 @@ RSpec.describe 'Stacks Request' do
                   'build_rootfs_image' => stack1.build_rootfs_image,
                   'guid' => stack1.guid,
                   'default' => false,
+                  'state' => 'ACTIVE',
                   'metadata' => { 'labels' => {}, 'annotations' => {} },
                   'created_at' => iso8601,
                   'updated_at' => iso8601,
@@ -194,6 +199,7 @@ RSpec.describe 'Stacks Request' do
                   'build_rootfs_image' => stack3.build_rootfs_image,
                   'guid' => stack3.guid,
                   'default' => false,
+                  'state' => 'ACTIVE',
                   'metadata' => { 'labels' => {}, 'annotations' => {} },
                   'created_at' => iso8601,
                   'updated_at' => iso8601,
@@ -233,6 +239,7 @@ RSpec.describe 'Stacks Request' do
                   'build_rootfs_image' => stack2.build_rootfs_image,
                   'guid' => stack2.guid,
                   'default' => true,
+                  'state' => 'ACTIVE',
                   'metadata' => { 'labels' => {}, 'annotations' => {} },
                   'created_at' => iso8601,
                   'updated_at' => iso8601,
@@ -288,6 +295,7 @@ RSpec.describe 'Stacks Request' do
                     'build_rootfs_image' => stack1.build_rootfs_image,
                     'guid' => stack1.guid,
                     'default' => false,
+                    'state' => 'ACTIVE',
                     'metadata' => {
                       'labels' => {
                         'release' => 'stable'
@@ -307,6 +315,17 @@ RSpec.describe 'Stacks Request' do
             )
           end
         end
+
+        context 'when stacks have different states' do
+          let!(:deprecated_stack) { VCAP::CloudController::Stack.make(state: 'DEPRECATED') }
+
+          it 'returns stacks with their states in the list' do
+            get '/v3/stacks', nil, user_header
+
+            stack_response = parsed_response['resources'].find { |s| s['guid'] == deprecated_stack.guid }
+            expect(stack_response['state']).to eq('DEPRECATED')
+          end
+        end
       end
     end
   end
@@ -324,6 +343,7 @@ RSpec.describe 'Stacks Request' do
         'build_rootfs_image' => stack.build_rootfs_image,
         'guid' => stack.guid,
         'default' => false,
+        'state' => 'ACTIVE',
         'metadata' => { 'labels' => {}, 'annotations' => {} },
         'created_at' => iso8601,
         'updated_at' => iso8601,
@@ -339,6 +359,17 @@ RSpec.describe 'Stacks Request' do
     end
 
     it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS
+
+    context 'when stack has a non-default state' do
+      let!(:deprecated_stack) { VCAP::CloudController::Stack.make(state: 'DEPRECATED') }
+
+      it 'returns the stack with its state' do
+        get "/v3/stacks/#{deprecated_stack.guid}", nil, user_header
+
+        expect(last_response.status).to eq(200)
+        expect(parsed_response['state']).to eq('DEPRECATED')
+      end
+    end
   end
 
   describe 'GET /v3/stacks/:guid/apps' do
@@ -633,6 +664,7 @@ RSpec.describe 'Stacks Request' do
       {
         name: 'the-name',
         description: 'the-description',
+        state: 'ACTIVE',
         metadata: {
           labels: {
             potato: 'yam'
@@ -661,6 +693,7 @@ RSpec.describe 'Stacks Request' do
           'run_rootfs_image' => created_stack.run_rootfs_image,
           'build_rootfs_image' => created_stack.build_rootfs_image,
           'default' => false,
+          'state' => 'ACTIVE',
           'metadata' => {
             'labels' => {
               'potato' => 'yam'
@@ -679,6 +712,60 @@ RSpec.describe 'Stacks Request' do
           }
         }
       )
+    end
+
+    context 'when creating a stack with a specific state' do
+      let(:request_body_with_state) do
+        {
+          name: 'deprecated-stack',
+          description: 'this stack is deprecated',
+          state: 'DEPRECATED'
+        }.to_json
+      end
+
+      it 'creates a stack with the specified state' do
+        expect do
+          post '/v3/stacks', request_body_with_state, headers
+        end.to change(VCAP::CloudController::Stack, :count).by 1
+
+        created_stack = VCAP::CloudController::Stack.last
+
+        expect(last_response.status).to eq(201)
+        expect(parsed_response).to be_a_response_like(
+          {
+            'name' => 'deprecated-stack',
+            'description' => 'this stack is deprecated',
+            'run_rootfs_image' => created_stack.run_rootfs_image,
+            'build_rootfs_image' => created_stack.build_rootfs_image,
+            'default' => false,
+            'state' => 'DEPRECATED',
+            'metadata' => { 'labels' => {}, 'annotations' => {} },
+            'guid' => created_stack.guid,
+            'created_at' => iso8601,
+            'updated_at' => iso8601,
+            'links' => {
+              'self' => {
+                'href' => "#{link_prefix}/v3/stacks/#{created_stack.guid}"
+              }
+            }
+          }
+        )
+      end
+    end
+
+    context 'when creating a stack with an invalid state' do
+      let(:request_body_invalid_state) do
+        {
+          name: 'invalid-state-stack',
+          state: 'INVALID_STATE'
+        }.to_json
+      end
+
+      it 'responds with 422 for invalid state' do
+        post '/v3/stacks', request_body_invalid_state, headers
+        expect(last_response.status).to eq(422)
+        expect(last_response).to have_error_message('State must be one of [ACTIVE, DEPRECATED, LOCKED, DISABLED]')
+      end
     end
 
     context 'when there is a model validation failure' do
@@ -725,6 +812,7 @@ RSpec.describe 'Stacks Request' do
           'run_rootfs_image' => stack.run_rootfs_image,
           'build_rootfs_image' => stack.build_rootfs_image,
           'default' => false,
+          'state' => 'ACTIVE',
           'metadata' => {
             'labels' => {
               'potato' => 'yam'
@@ -743,6 +831,134 @@ RSpec.describe 'Stacks Request' do
           }
         }
       )
+    end
+
+    context 'when updating stack state' do
+      let(:request_body_with_state) do
+        {
+          state: 'LOCKED'
+        }.to_json
+      end
+
+      it 'updates the stack with the specified state' do
+        patch "/v3/stacks/#{stack.guid}", request_body_with_state, headers
+
+        expect(last_response.status).to eq(200)
+        expect(parsed_response).to be_a_response_like(
+          {
+            'name' => stack.name,
+            'description' => stack.description,
+            'run_rootfs_image' => stack.run_rootfs_image,
+            'build_rootfs_image' => stack.build_rootfs_image,
+            'default' => false,
+            'state' => 'LOCKED',
+            'metadata' => { 'labels' => {}, 'annotations' => {} },
+            'guid' => stack.guid,
+            'created_at' => iso8601,
+            'updated_at' => iso8601,
+            'links' => {
+              'self' => {
+                'href' => "#{link_prefix}/v3/stacks/#{stack.guid}"
+              }
+            }
+          }
+        )
+      end
+    end
+
+    context 'when updating stack description' do
+      let(:request_body_with_description) do
+        {
+          description: 'Updated stack description'
+        }.to_json
+      end
+
+      it 'updates the stack with the specified description' do
+        patch "/v3/stacks/#{stack.guid}", request_body_with_description, headers
+
+        expect(last_response.status).to eq(200)
+        expect(parsed_response).to be_a_response_like(
+          {
+            'name' => stack.name,
+            'description' => 'Updated stack description',
+            'run_rootfs_image' => stack.run_rootfs_image,
+            'build_rootfs_image' => stack.build_rootfs_image,
+            'default' => false,
+            'state' => 'ACTIVE',
+            'metadata' => { 'labels' => {}, 'annotations' => {} },
+            'guid' => stack.guid,
+            'created_at' => iso8601,
+            'updated_at' => iso8601,
+            'links' => {
+              'self' => {
+                'href' => "#{link_prefix}/v3/stacks/#{stack.guid}"
+              }
+            }
+          }
+        )
+      end
+    end
+
+    context 'when updating both state and description' do
+      let(:request_body_with_both) do
+        {
+          state: 'DEPRECATED',
+          description: 'This stack is deprecated. Please migrate to a newer stack.'
+        }.to_json
+      end
+
+      it 'updates both the state and description' do
+        patch "/v3/stacks/#{stack.guid}", request_body_with_both, headers
+
+        expect(last_response.status).to eq(200)
+        expect(parsed_response).to be_a_response_like(
+          {
+            'name' => stack.name,
+            'description' => 'This stack is deprecated. Please migrate to a newer stack.',
+            'run_rootfs_image' => stack.run_rootfs_image,
+            'build_rootfs_image' => stack.build_rootfs_image,
+            'default' => false,
+            'state' => 'DEPRECATED',
+            'metadata' => { 'labels' => {}, 'annotations' => {} },
+            'guid' => stack.guid,
+            'created_at' => iso8601,
+            'updated_at' => iso8601,
+            'links' => {
+              'self' => {
+                'href' => "#{link_prefix}/v3/stacks/#{stack.guid}"
+              }
+            }
+          }
+        )
+      end
+    end
+
+    context 'when updating with an invalid state' do
+      let(:request_body_invalid_state) do
+        {
+          state: 'INVALID_STATE'
+        }.to_json
+      end
+
+      it 'responds with 422 for invalid state' do
+        patch "/v3/stacks/#{stack.guid}", request_body_invalid_state, headers
+        expect(last_response.status).to eq(422)
+        expect(last_response).to have_error_message('State must be one of [ACTIVE, DEPRECATED, LOCKED, DISABLED]')
+      end
+    end
+
+    context 'when updating with description that exceeds maximum length' do
+      let(:request_body_long_description) do
+        {
+          description: 'a' * 251
+        }.to_json
+      end
+
+      it 'responds with 422 for description too long' do
+        patch "/v3/stacks/#{stack.guid}", request_body_long_description, headers
+        expect(last_response.status).to eq(422)
+        expect(last_response).to have_error_message('Description is too long (maximum is 250 characters)')
+      end
     end
   end
 
