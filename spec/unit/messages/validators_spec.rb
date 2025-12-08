@@ -444,6 +444,12 @@ module VCAP::CloudController::Validators
         end
       end
 
+      before do
+        config = double('config', get: 'buildpack')
+        config_class = double('Config', config:)
+        stub_const('VCAP::CloudController::Config', config_class)
+      end
+
       context 'when the lifecycle type provided is invalid' do
         it 'adds lifecycle_type error message to the base class' do
           message = lifecycle_class.new({ lifecycle: { type: 'not valid', data: {} } })
@@ -540,6 +546,12 @@ module VCAP::CloudController::Validators
         validates_with OptionsValidator
       end
 
+      before do
+        feature_flag_class = double('FeatureFlag')
+        allow(feature_flag_class).to receive(:enabled?).with(:hash_based_routing).and_return(true)
+        stub_const('VCAP::CloudController::FeatureFlag', feature_flag_class)
+      end
+
       it 'successfully validates round-robin load-balancing algorithm' do
         message = OptionsMessage.new({ options: { loadbalancing: 'round-robin' } })
         expect(message).to be_valid
@@ -548,6 +560,40 @@ module VCAP::CloudController::Validators
       it 'successfully validates least-connection load-balancing algorithm' do
         message = OptionsMessage.new({ options: { loadbalancing: 'least-connection' } })
         expect(message).to be_valid
+      end
+
+      it 'successfully validates hash load-balancing algorithm with hash_header' do
+        message = OptionsMessage.new({ options: { loadbalancing: 'hash', hash_header: 'X-User-ID' } })
+        expect(message).to be_valid
+      end
+
+      it 'successfully validates hash algorithm with hash_header and hash_balance' do
+        message = OptionsMessage.new({ options: { loadbalancing: 'hash', hash_header: 'X-User-ID', hash_balance: 1.5 } })
+        expect(message).to be_valid
+      end
+
+      it 'adds error when hash algorithm is missing hash_header' do
+        message = OptionsMessage.new({ options: { loadbalancing: 'hash' } })
+        expect(message).not_to be_valid
+        expect(message.errors_on(:options)).to include('Hash header must be present when loadbalancing is set to hash')
+      end
+
+      it 'adds error when hash_header is set for non-hash algorithm' do
+        message = OptionsMessage.new({ options: { loadbalancing: 'round-robin', hash_header: 'X-User-ID' } })
+        expect(message).not_to be_valid
+        expect(message.errors_on(:options)).to include('Hash header can only be set when loadbalancing is hash')
+      end
+
+      it 'adds error when hash_balance is set for non-hash algorithm' do
+        message = OptionsMessage.new({ options: { loadbalancing: 'round-robin', hash_balance: 1.0 } })
+        expect(message).not_to be_valid
+        expect(message.errors_on(:options)).to include('Hash balance can only be set when loadbalancing is hash')
+      end
+
+      it 'adds error when hash_balance is negative' do
+        message = OptionsMessage.new({ options: { loadbalancing: 'hash', hash_header: 'X-User-ID', hash_balance: -1.0 } })
+        expect(message).not_to be_valid
+        expect(message.errors_on(:options)).to include('Hash balance must be greater than or equal to 0.0')
       end
 
       it 'successfully validates empty options' do
@@ -575,7 +621,7 @@ module VCAP::CloudController::Validators
       it 'adds invalid load balancer error message to the base class' do
         message = OptionsMessage.new({ options: { loadbalancing: 'donuts' } })
         expect(message).not_to be_valid
-        expect(message.errors_on(:options)).to include("Loadbalancing must be one of 'round-robin, least-connection' if present")
+        expect(message.errors_on(:options)).to include("Loadbalancing must be one of 'round-robin, least-connection, hash' if present")
       end
 
       it 'adds invalid field error message to the base class' do

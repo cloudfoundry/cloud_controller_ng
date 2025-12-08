@@ -99,7 +99,19 @@ class RoutesController < ApplicationController
   end
 
   def update
-    message = RouteUpdateMessage.new(hashed_params[:body])
+    params = hashed_params[:body]
+
+    # Merge existing route options with incoming options for partial updates
+    if params[:options] && route.options
+      existing_options = route.options.deep_symbolize_keys
+      params[:options] = existing_options.merge(params[:options].deep_symbolize_keys)
+      if params[:options][:loadbalancing] && params[:options][:loadbalancing] != 'hash'
+        params[:options].delete(:hash_header)
+        params[:options].delete(:hash_balance)
+      end
+    end
+
+    message = RouteUpdateMessage.new(params)
     unprocessable!(message.errors.full_messages) unless message.valid?
 
     unauthorized! unless permission_queryer.can_manage_apps_in_active_space?(route.space_id)

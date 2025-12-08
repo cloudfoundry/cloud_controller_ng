@@ -256,6 +256,95 @@ module VCAP::CloudController
             subject.update(route:, message:)
           end
         end
+
+        context 'when updating hash-based routing options partially' do
+          before do
+            VCAP::CloudController::FeatureFlag.make(name: 'hash_based_routing', enabled: true)
+            route.options = { 'loadbalancing' => 'hash', 'hash_header' => 'X-User-ID', 'hash_balance' => 1.5 }
+            route.save
+          end
+
+          context 'when only updating hash_balance' do
+            let(:body) do
+              {
+                options: {
+                  loadbalancing: 'hash',
+                  hash_header: 'X-User-ID',
+                  hash_balance: 2.0
+                }
+              }
+            end
+
+            it 'updates only hash_balance and keeps other options' do
+              expect(message).to be_valid
+              subject.update(route:, message:)
+              route.reload
+              expect(route.options).to include({ 'loadbalancing' => 'hash', 'hash_header' => 'X-User-ID', 'hash_balance' => '2.0' })
+            end
+
+            it 'notifies the backend' do
+              expect(fake_route_handler).to receive(:notify_backend_of_route_update)
+              subject.update(route:, message:)
+            end
+          end
+
+          context 'when only updating hash_header' do
+            let(:body) do
+              {
+                options: {
+                  loadbalancing: 'hash',
+                  hash_header: 'X-Session-ID',
+                  hash_balance: 1.5
+                }
+              }
+            end
+
+            it 'updates only hash_header and keeps other options' do
+              expect(message).to be_valid
+              subject.update(route:, message:)
+              route.reload
+              expect(route.options).to include({ 'loadbalancing' => 'hash', 'hash_header' => 'X-Session-ID', 'hash_balance' => '1.5' })
+            end
+          end
+
+          context 'when updating both hash_header and hash_balance' do
+            let(:body) do
+              {
+                options: {
+                  loadbalancing: 'hash',
+                  hash_header: 'X-Request-ID',
+                  hash_balance: 2.5
+                }
+              }
+            end
+
+            it 'updates both values and keeps loadbalancing' do
+              expect(message).to be_valid
+              subject.update(route:, message:)
+              route.reload
+              expect(route.options).to include({ 'loadbalancing' => 'hash', 'hash_header' => 'X-Request-ID', 'hash_balance' => '2.5' })
+            end
+          end
+
+          context 'when changing loadbalancing from hash to round-robin' do
+            let(:body) do
+              {
+                options: {
+                  loadbalancing: 'round-robin'
+                }
+              }
+            end
+
+            it 'removes hash-specific options' do
+              expect(message).to be_valid
+              subject.update(route:, message:)
+              route.reload
+              expect(route.options).to eq({ 'loadbalancing' => 'round-robin' })
+              expect(route.options).not_to have_key('hash_header')
+              expect(route.options).not_to have_key('hash_balance')
+            end
+          end
+        end
       end
     end
   end

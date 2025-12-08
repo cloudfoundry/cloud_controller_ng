@@ -478,6 +478,135 @@ module VCAP::CloudController
             end
           end
 
+          context 'when loadbalancing has value hash' do
+            before do
+              VCAP::CloudController::FeatureFlag.make(name: 'hash_based_routing', enabled: true)
+            end
+
+            context 'with hash_header' do
+              let(:params) do
+                {
+                  host: 'some-host',
+                  relationships: {
+                    space: { data: { guid: 'space-guid' } },
+                    domain: { data: { guid: 'domain-guid' } }
+                  },
+                  options: { loadbalancing: 'hash', hash_header: 'X-User-ID' }
+                }
+              end
+
+              it 'is valid' do
+                expect(subject).to be_valid
+              end
+            end
+
+            context 'with hash_header and hash_balance as float' do
+              let(:params) do
+                {
+                  host: 'some-host',
+                  relationships: {
+                    space: { data: { guid: 'space-guid' } },
+                    domain: { data: { guid: 'domain-guid' } }
+                  },
+                  options: { loadbalancing: 'hash', hash_header: 'X-User-ID', hash_balance: 1.5 }
+                }
+              end
+
+              it 'is valid' do
+                expect(subject).to be_valid
+              end
+            end
+
+            context 'with hash_header and hash_balance as string' do
+              let(:params) do
+                {
+                  host: 'some-host',
+                  relationships: {
+                    space: { data: { guid: 'space-guid' } },
+                    domain: { data: { guid: 'domain-guid' } }
+                  },
+                  options: { loadbalancing: 'hash', hash_header: 'X-User-ID', hash_balance: '1.5' }
+                }
+              end
+
+              it 'is valid' do
+                expect(subject).to be_valid
+              end
+            end
+
+            context 'without hash_header' do
+              let(:params) do
+                {
+                  host: 'some-host',
+                  relationships: {
+                    space: { data: { guid: 'space-guid' } },
+                    domain: { data: { guid: 'domain-guid' } }
+                  },
+                  options: { loadbalancing: 'hash' }
+                }
+              end
+
+              it 'is not valid' do
+                expect(subject).not_to be_valid
+                expect(subject.errors[:options]).to include('Hash header must be present when loadbalancing is set to hash')
+              end
+            end
+
+            context 'with negative hash_balance' do
+              let(:params) do
+                {
+                  host: 'some-host',
+                  relationships: {
+                    space: { data: { guid: 'space-guid' } },
+                    domain: { data: { guid: 'domain-guid' } }
+                  },
+                  options: { loadbalancing: 'hash', hash_header: 'X-User-ID', hash_balance: -1.0 }
+                }
+              end
+
+              it 'is not valid' do
+                expect(subject).not_to be_valid
+                expect(subject.errors[:options]).to include('Hash balance must be greater than or equal to 0.0')
+              end
+            end
+          end
+
+          context 'when hash_header is set for non-hash algorithm' do
+            let(:params) do
+              {
+                host: 'some-host',
+                relationships: {
+                  space: { data: { guid: 'space-guid' } },
+                  domain: { data: { guid: 'domain-guid' } }
+                },
+                options: { loadbalancing: 'round-robin', hash_header: 'X-User-ID' }
+              }
+            end
+
+            it 'is not valid' do
+              expect(subject).not_to be_valid
+              expect(subject.errors[:options]).to include('Hash header can only be set when loadbalancing is hash')
+            end
+          end
+
+          context 'when hash_balance is set for non-hash algorithm' do
+            let(:params) do
+              {
+                host: 'some-host',
+                relationships: {
+                  space: { data: { guid: 'space-guid' } },
+                  domain: { data: { guid: 'domain-guid' } }
+                },
+                options: { loadbalancing: 'round-robin', hash_balance: 1.0 }
+              }
+            end
+
+            it 'is not valid' do
+              expect(subject).not_to be_valid
+              expect(subject.errors[:options]).to include('Hash balance can only be set when loadbalancing is hash')
+            end
+          end
+
           context 'when loadbalancing has invalid value' do
             let(:params) do
               {
@@ -493,6 +622,17 @@ module VCAP::CloudController
             it 'is not valid' do
               expect(subject).not_to be_valid
               expect(subject.errors[:options]).to include("Loadbalancing must be one of 'round-robin, least-connection' if present")
+            end
+
+            context 'when hash_based_routing feature flag is enabled' do
+              before do
+                VCAP::CloudController::FeatureFlag.make(name: 'hash_based_routing', enabled: true)
+              end
+
+              it 'is not valid and includes hash in error message' do
+                expect(subject).not_to be_valid
+                expect(subject.errors[:options]).to include("Loadbalancing must be one of 'round-robin, least-connection, hash' if present")
+              end
             end
           end
         end
