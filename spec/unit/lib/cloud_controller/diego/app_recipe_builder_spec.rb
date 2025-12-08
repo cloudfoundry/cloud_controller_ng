@@ -57,6 +57,20 @@ module VCAP::CloudController
         end
       end
 
+      shared_examples 'IncompatibleBindings error handling' do
+        let(:incompatible_bindings_error) { VCAP::CloudController::Diego::ServiceBindingFilesBuilder::IncompatibleBindings.new('something is wrong') }
+
+        context 'when an IncompatibleBindings error is raised' do
+          before do
+            allow_any_instance_of(VCAP::CloudController::Diego::ServiceBindingFilesBuilder).to receive(:build).and_raise(incompatible_bindings_error)
+          end
+
+          it 'results in an UnprocessableEntity error' do
+            expect { _build }.to raise_error(CloudController::Errors::ApiError, /Cannot build service binding files .* - something is wrong/)
+          end
+        end
+      end
+
       shared_examples 'k8s service bindings' do
         context 'when k8s service bindings are enabled' do
           before do
@@ -68,6 +82,10 @@ module VCAP::CloudController
           it 'includes volume mounted files' do
             lrp = builder.build_app_lrp
             expect(lrp.volume_mounted_files.size).to be > 1
+          end
+
+          include_examples 'IncompatibleBindings error handling' do
+            let(:_build) { builder.build_app_lrp }
           end
         end
       end
@@ -84,6 +102,10 @@ module VCAP::CloudController
             lrp = builder.build_app_lrp
             expect(lrp.volume_mounted_files.size).to eq(1)
             expect(lrp.volume_mounted_files[0].path).to eq('vcap_services')
+          end
+
+          include_examples 'IncompatibleBindings error handling' do
+            let(:_build) { builder.build_app_lrp }
           end
         end
       end
