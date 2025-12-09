@@ -37,8 +37,10 @@ module VCAP::CloudController
             end
           end
 
-          TaskModel.where(guid: tasks_to_fail).each do |cc_task|
-            cc_task.update(state: TaskModel::FAILED_STATE, failure_reason: BULKER_TASK_FAILURE)
+          unless tasks_to_fail.empty?
+            TaskModel.where(guid: tasks_to_fail).each do |cc_task|
+              cc_task.update(state: TaskModel::FAILED_STATE, failure_reason: BULKER_TASK_FAILURE)
+            end
           end
         end
 
