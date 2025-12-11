@@ -48,7 +48,7 @@ jobs:
           fi
       - name: Create or Update Pull Request
         if: env.changes == 'true'
-        uses: peter-evans/create-pull-request@v7
+        uses: peter-evans/create-pull-request@v8
         with:
           branch: bump-bundler-version-${{ github.ref_name }}
           title: "Automated Bump of Bundler Version in Gemfile.lock"

@@ -70,7 +70,7 @@ jobs:
 
       - name: Create or Update Pull Request
         if: env.changes == 'true'
-        uses: peter-evans/create-pull-request@v7
+        uses: peter-evans/create-pull-request@v8
         with:
           path: cloud_controller_ng
           branch: bbs-protos-bump-${{ github.ref_name }}
