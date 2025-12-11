@@ -55,6 +55,20 @@ RSpec.describe 'Stacks State Management' do
       end
     end
 
+    context 'when creating stack with null state' do
+      it 'returns validation error' do
+        request_body = {
+          name: 'stack-null-state',
+          state: nil
+        }.to_json
+
+        post '/v3/stacks', request_body, headers
+
+        expect(last_response.status).to eq(422)
+        expect(parsed_response['errors'].first['detail']).to include('must be one of ACTIVE, RESTRICTED, DEPRECATED, DISABLED')
+      end
+    end
+
     context 'as non-admin user' do
       let(:non_admin_user) { make_user }
       let(:non_admin_headers) { headers_for(non_admin_user) }
