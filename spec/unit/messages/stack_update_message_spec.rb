@@ -52,6 +52,15 @@ RSpec.describe VCAP::CloudController::StackUpdateMessage do
           expect(subject).to be_valid
         end
       end
+
+      context 'when it is explicitly null' do
+        let(:params) { valid_params.merge({ state: nil }) }
+
+        it 'returns an error' do
+          expect(subject).not_to be_valid
+          expect(subject.errors[:state]).to include('must be one of ACTIVE, RESTRICTED, DEPRECATED, DISABLED')
+        end
+      end
     end
   end
 end
