@@ -20,9 +20,9 @@ module Database
         last_record = model.order(:id).last
         old_records = old_records.where(Sequel.lit('id < ?', last_record.id)) if last_record
       end
-      logger.info("Cleaning up #{old_records.count} #{model.table_name} table rows")
-
       old_records = exclude_running_records(old_records) if keep_running_records
+
+      logger.info("Cleaning up #{old_records.count} #{model.table_name} table rows")
 
       Database::BatchDelete.new(old_records, 1000).delete
     end
