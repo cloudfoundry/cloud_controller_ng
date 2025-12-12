@@ -4,100 +4,79 @@ require 'tmpdir'
 require 'fileutils'
 require 'cloud_controller/blobstore/base_client'
 require 'cloud_controller/blobstore/storage_cli/storage_cli_blob'
-
 module CloudController
   module Blobstore
     class StorageCliClient < BaseClient
       attr_reader :root_dir, :min_size, :max_size
 
-      @registry = {}
+      RESOURCE_TYPE_KEYS = {
+        'droplets' => :storage_cli_config_file_droplets,
+        'buildpack_cache' => :storage_cli_config_file_droplets,
+        'buildpacks' => :storage_cli_config_file_buildpacks,
+        'packages' => :storage_cli_config_file_packages,
+        'resource_pool' => :storage_cli_config_file_resource_pool
+      }.freeze
 
-      class << self
-        attr_reader :registry
+      PROVIDER_TO_STORAGE_CLI_STORAGETYPE = {
+        'AzureRM' => 'azurebs',
+        'aliyun' => 'alioss',
+        'AWS' => 's3',
+        'webdav' => 'dav',
+        'Google' => 'gcs'
+      }.freeze
 
-        def register(provider, klass)
-          registry[provider.to_s] = klass
-        end
+      IMPLEMENTED_PROVIDERS = %w[AzureRM aliyun].freeze
 
-        def build(directory_key:, root_dir:, resource_type: nil, min_size: nil, max_size: nil)
-          raise 'Missing resource_type' if resource_type.nil?
+      def initialize(directory_key:, resource_type:, root_dir:, min_size: nil, max_size: nil)
+        raise 'Missing resource_type' if resource_type.nil?
 
-          cfg = fetch_config(resource_type)
-          provider = cfg['provider']
+        cfg = fetch_config(resource_type)
+        @provider = cfg['provider'].to_s
+        raise BlobstoreError.new('No provider specified in config file') if @provider.empty?
+        raise "Unimplemented provider: #{@provider}, implemented ones are: #{IMPLEMENTED_PROVIDERS.join(', ')}" unless IMPLEMENTED_PROVIDERS.include?(@provider)
 
-          key        = provider.to_s
-          impl_class = registry[key] || registry[key.downcase] || registry[key.upcase]
-          raise "No storage CLI client registered for provider #{provider}" unless impl_class
-
-          impl_class.new(provider: provider, directory_key: directory_key, root_dir: root_dir, resource_type: resource_type, min_size: min_size, max_size: max_size,
-                         config_path: config_path_for(resource_type))
-        end
-
-        RESOURCE_TYPE_KEYS = {
-          'droplets' => :storage_cli_config_file_droplets,
-          'buildpack_cache' => :storage_cli_config_file_droplets,
-          'buildpacks' => :storage_cli_config_file_buildpacks,
-          'packages' => :storage_cli_config_file_packages,
-          'resource_pool' => :storage_cli_config_file_resource_pool
-        }.freeze
-
-        def fetch_config(resource_type)
-          path = config_path_for(resource_type)
-          validate_config_path!(path)
-
-          json = fetch_json(path)
-          validate_json_object!(json, path)
-          validate_required_keys!(json, path)
-
-          json
-        end
-
-        def config_path_for(resource_type)
-          normalized = resource_type.to_s
-          key = RESOURCE_TYPE_KEYS.fetch(normalized) do
-            raise BlobstoreError.new("Unknown resource_type: #{resource_type}")
-          end
-          VCAP::CloudController::Config.config.get(key)
-        end
-
-        def fetch_json(path)
-          Oj.load(File.read(path))
-        rescue Oj::ParseError, EncodingError => e
-          raise BlobstoreError.new("Failed to parse storage-cli JSON at #{path}: #{e.message}")
-        end
-
-        def validate_config_path!(path)
-          return if path && File.file?(path) && File.readable?(path)
-
-          raise BlobstoreError.new("Storage-cli config file not found or not readable at: #{path.inspect}")
-        end
-
-        def validate_json_object!(json, path)
-          raise BlobstoreError.new("Config at #{path} must be a JSON object") unless json.is_a?(Hash)
-        end
-
-        def validate_required_keys!(json, path)
-          provider = json['provider'].to_s.strip
-          raise BlobstoreError.new("No provider specified in config file: #{path.inspect}") if provider.empty?
-
-          required = %w[account_key account_name container_name environment]
-          missing = required.reject { |k| json.key?(k) && !json[k].to_s.strip.empty? }
-          return if missing.empty?
-
-          raise BlobstoreError.new("Missing required keys in #{path}: #{missing.join(', ')}")
-        end
-      end
-
-      def initialize(provider:, directory_key:, resource_type:, root_dir:, config_path:, min_size: nil, max_size: nil)
         @cli_path = cli_path
+        @config_file = config_path_for(resource_type)
         @directory_key = directory_key
         @resource_type = resource_type.to_s
         @root_dir = root_dir
         @min_size = min_size || 0
         @max_size = max_size
-        @provider = provider
-        @config_file = config_path
-        logger.info('storage_cli_config_selected', resource_type: @resource_type, path: @config_file)
+        @storage_type = PROVIDER_TO_STORAGE_CLI_STORAGETYPE[@provider]
+        logger.info('storage_cli_config_selected', resource_type: @resource_type, provider: @provider, path: @config_file)
+      end
+
+      def fetch_config(resource_type)
+        path = config_path_for(resource_type)
+        validate_config_path!(path)
+
+        json = fetch_json(path)
+        validate_json_object!(json, path)
+        json
+      end
+
+      def config_path_for(resource_type)
+        normalized = resource_type.to_s
+        key = RESOURCE_TYPE_KEYS.fetch(normalized) do
+          raise BlobstoreError.new("Unknown resource_type: #{resource_type}")
+        end
+        VCAP::CloudController::Config.config.get(key)
+      end
+
+      def fetch_json(path)
+        Oj.load(File.read(path))
+      rescue Oj::ParseError, EncodingError => e
+        raise BlobstoreError.new("Failed to parse storage-cli JSON at #{path}: #{e.message}")
+      end
+
+      def validate_config_path!(path)
+        return if path && File.file?(path) && File.readable?(path)
+
+        raise BlobstoreError.new("Storage-cli config file not found or not readable at: #{path.inspect}")
+      end
+
+      def validate_json_object!(json, path)
+        raise BlobstoreError.new("Config at #{path} must be a JSON object") unless json.is_a?(Hash)
       end
 
       def local?
@@ -192,7 +171,7 @@ module CloudController
         logger.info("[storage_cli_client] Running storage-cli: #{@cli_path} -c #{@config_file} #{command} #{args.join(' ')}")
 
         begin
-          stdout, stderr, status = Open3.capture3(@cli_path, '-c', @config_file, command, *args)
+          stdout, stderr, status = Open3.capture3(@cli_path, '-s', @storage_type, '-c', @config_file, command, *args)
         rescue StandardError => e
           raise BlobstoreError.new(e.inspect)
         end
@@ -224,7 +203,7 @@ module CloudController
       end
 
       def cli_path
-        raise NotImplementedError
+        ENV['STORAGE_CLI_PATH'] || '/var/vcap/packages/storage-cli/bin/storage-cli'
       end
 
       def build_config(connection_config)
