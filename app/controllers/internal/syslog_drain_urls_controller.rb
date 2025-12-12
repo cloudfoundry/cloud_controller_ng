@@ -3,52 +3,9 @@ module VCAP::CloudController
     # Endpoint uses mutual tls for auth, handled by nginx
     allow_unauthenticated_access
 
-    get '/internal/v4/syslog_drain_urls', :list
+    get '/internal/v5/syslog_drain_urls', :list
 
     def list
-      prepare_aggregate_function
-      guid_to_drain_maps = AppModel.
-                           join(ServiceBinding.table_name, app_guid: :guid).
-                           join(Space.table_name, guid: :apps__space_guid).
-                           join(Organization.table_name, id: :spaces__organization_id).
-                           where(Sequel.lit('syslog_drain_url IS NOT NULL')).
-                           where(Sequel.lit("syslog_drain_url != ''")).
-                           group(
-                             :"#{AppModel.table_name}__guid",
-                             :"#{AppModel.table_name}__name",
-                             :"#{Space.table_name}__name",
-                             :"#{Organization.table_name}__name"
-                           ).
-                           select(
-                             :"#{AppModel.table_name}__guid",
-                             :"#{AppModel.table_name}__name",
-                             aggregate_function(:"#{ServiceBinding.table_name}__syslog_drain_url").as(:syslog_drain_urls)
-                           ).
-                           select_append(:"#{Space.table_name}__name___space_name").
-                           select_append(:"#{Organization.table_name}__name___organization_name").
-                           order(:guid).
-                           limit(batch_size).
-                           offset(last_id).
-                           all
-
-      next_page_token = nil
-      drain_urls = {}
-
-      guid_to_drain_maps.each do |guid_and_drains|
-        drain_urls[guid_and_drains[:guid]] = {
-          drains: guid_and_drains[:syslog_drain_urls].split(','),
-          hostname: hostname_from_app_name(guid_and_drains[:organization_name], guid_and_drains[:space_name], guid_and_drains[:name])
-        }
-      end
-
-      next_page_token = last_id + batch_size unless guid_to_drain_maps.empty?
-
-      [HTTP::OK, Oj.dump({ results: drain_urls, next_id: next_page_token, v5_available: true }, mode: :compat)]
-    end
-
-    get '/internal/v5/syslog_drain_urls', :listv5
-
-    def listv5
       prepare_aggregate_function
 
       bindings = ServiceBinding.
