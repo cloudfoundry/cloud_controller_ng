@@ -37,6 +37,12 @@ module VCAP::CloudController
               subject.sync
             end.not_to(change { task.reload.state })
           end
+
+          it 'does not query tasks with a 1=0 clause' do
+            expect do
+              subject.sync
+            end.to have_queried_db_times(/select \* from .tasks. where \(1 = 0\)/i, 0)
+          end
         end
 
         context 'when a running CC task is missing from BBS' do
