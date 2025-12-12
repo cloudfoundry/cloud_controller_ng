@@ -154,6 +154,7 @@ RSpec/BeforeAfterAll:
     - 'spec/integration/cors_spec.rb'
     - 'spec/unit/lib/vcap/rest_api/event_query_spec.rb'
     - 'spec/unit/lib/vcap/rest_api/query_spec.rb'
+    - 'spec/isolated_specs/inline_runner_spec.rb'
 
 # Offense count: 4
 # This cop supports safe autocorrection (--autocorrect).

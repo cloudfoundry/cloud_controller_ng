@@ -43,6 +43,12 @@ module VCAP::CloudController
           job.perform
         end
       end
+
+      describe '#inline?' do
+        it 'returns true' do
+          expect(job.inline?).to be(true)
+        end
+      end
     end
   end
 end

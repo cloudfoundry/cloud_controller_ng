@@ -29,10 +29,8 @@ module VCAP::CloudController
         PollableJobModel.find_by_delayed_job(delayed_job)
       end
 
-      def run_inline(job)
-        run_immediately do
-          Delayed::Job.enqueue(TimeoutJob.new(job, job_timeout(job)), @opts)
-        end
+      def self.unwrap_job(job)
+        job.is_a?(WrappingJob) ? unwrap_job(job.handler) : job
       end
 
       private
@@ -64,29 +62,17 @@ module VCAP::CloudController
       end
 
       def job_timeout(job)
-        unwrapped_job = unwrap_job(job)
+        unwrapped_job = self.class.unwrap_job(job)
         return @timeout_calculator.calculate(unwrapped_job.try(:job_name_in_configuration), @opts[:queue]) if @opts[:queue]
 
         @timeout_calculator.calculate(unwrapped_job.try(:job_name_in_configuration))
       end
 
       def get_overwritten_job_priority_from_config(job)
-        unwrapped_job = unwrap_job(job)
+        unwrapped_job = self.class.unwrap_job(job)
         @priority_overwriter.get(unwrapped_job.try(:display_name)) ||
           @priority_overwriter.get(unwrapped_job.try(:job_name_in_configuration)) ||
           @priority_overwriter.get(unwrapped_job.class.name)
-      end
-
-      def unwrap_job(job)
-        job.is_a?(PollableJobWrapper) ? job.handler : job
-      end
-
-      def run_immediately
-        cache = Delayed::Worker.delay_jobs
-        Delayed::Worker.delay_jobs = false
-        yield
-      ensure
-        Delayed::Worker.delay_jobs = cache
       end
     end
   end

@@ -29,6 +29,10 @@ module VCAP::CloudController
           end
         end
 
+        def inline?
+          true
+        end
+
         private
 
         def logger

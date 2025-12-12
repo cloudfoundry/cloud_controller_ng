@@ -1,5 +1,6 @@
 require 'clockwork'
 require 'cloud_controller/clock/distributed_scheduler'
+require 'cloud_controller/clock/inline_runner'
 
 module VCAP::CloudController
   class Clock
@@ -9,6 +10,10 @@ module VCAP::CloudController
     HIGH_PRIORITY   = 0
     MEDIUM_PRIORITY = 1
     LOW_PRIORITY    = 100
+
+    def initialize
+      Jobs::InlineRunner.setup
+    end
 
     def schedule_daily_job(name:, at:, priority:)
       job_opts = {
@@ -48,7 +53,7 @@ module VCAP::CloudController
 
       schedule_job(job_opts) do
         job = yield
-        Jobs::Enqueuer.new(queue: name).run_inline(job)
+        Jobs::InlineRunner.new(queue: name).run(job)
       end
     end
 
