@@ -14,6 +14,7 @@ module VCAP::CloudController
               (Sequel[:route_shares][:target_space_guid] =~ readable_space_guids_dataset)
           end
         end
+        dataset = dataset.distinct(Sequel[:routes][:guid])
         filter(message, dataset)
       end
 
