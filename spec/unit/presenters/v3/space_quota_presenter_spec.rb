@@ -57,34 +57,10 @@ module VCAP::CloudController::Presenters::V3
         expect(result[:links][:organization][:href]).to match(%r{/v3/organizations/#{org.guid}$})
       end
 
-      context 'when using null values' do
-        let(:space_quota) do
-          VCAP::CloudController::SpaceQuotaDefinition.make(
-            guid: 'quota-guid',
-            organization: org,
-            memory_limit: -1,
-            instance_memory_limit: -1,
-            app_instance_limit: -1,
-            app_task_limit: -1,
-            log_rate_limit: -1,
-            total_services: -1,
-            total_service_keys: -1,
-            total_routes: -1,
-            total_reserved_route_ports: -1
-          )
-        end
-
-        it "properly converts -1 sentinel values to JSON's null" do
-          expect(result[:apps][:total_memory_in_mb]).to be_nil
-          expect(result[:apps][:per_process_memory_in_mb]).to be_nil
-          expect(result[:apps][:total_instances]).to be_nil
-          expect(result[:apps][:per_app_tasks]).to be_nil
-          expect(result[:apps][:log_rate_limit_in_bytes_per_second]).to be_nil
-          expect(result[:services][:total_service_instances]).to be_nil
-          expect(result[:services][:total_service_keys]).to be_nil
-          expect(result[:routes][:total_routes]).to be_nil
-          expect(result[:routes][:total_reserved_ports]).to be_nil
-        end
+      it 'calls the QuotaPresenterBuilder' do
+        allow(VCAP::CloudController::Presenters::QuotaPresenterBuilder).to receive(:new).and_call_original
+        result
+        expect(VCAP::CloudController::Presenters::QuotaPresenterBuilder).to have_received(:new).with(space_quota)
       end
 
       context 'when user is admin' do
