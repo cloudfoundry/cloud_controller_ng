@@ -95,10 +95,15 @@ module VCAP::CloudController
           elsif !route.available_in_space?(app.space)
             raise InvalidRoute.new('Routes cannot be mapped to destinations in different spaces')
           elsif manifest_route[:options] && route[:options] != manifest_route[:options]
-            # remove nil values from options
-            manifest_route[:options] = manifest_route[:options].compact
+            # Merge existing route options with manifest options for partial updates
+            merged_options = if route.options
+                               route.options.deep_symbolize_keys.merge(manifest_route[:options]).compact
+                             else
+                               manifest_route[:options].compact
+                             end
+
             message = RouteUpdateMessage.new({
-                                               'options' => manifest_route[:options]
+                                               'options' => merged_options
                                              })
             route = RouteUpdate.new.update(route:, message:)
           end

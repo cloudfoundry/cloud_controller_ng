@@ -69,6 +69,8 @@ Valid keys: '#{RouteOptionsMessage::VALID_MANIFEST_ROUTE_OPTIONS.join(', ')}'")
     def loadbalancings_are_valid
       return if errors[:routes].present?
 
+      valid_algorithms = RouteOptionsMessage.valid_loadbalancing_algorithms
+
       routes.each do |r|
         next unless r.keys.include?(:options) && r[:options].is_a?(Hash) && r[:options].keys.include?(:loadbalancing)
 
@@ -76,14 +78,51 @@ Valid keys: '#{RouteOptionsMessage::VALID_MANIFEST_ROUTE_OPTIONS.join(', ')}'")
         unless loadbalancing.is_a?(String)
           errors.add(:base,
                      message: "Invalid value for 'loadbalancing' for Route '#{r[:route]}'; \
-Valid values are: '#{RouteOptionsMessage::VALID_LOADBALANCING_ALGORITHMS.join(', ')}'")
+Valid values are: '#{valid_algorithms.join(', ')}'")
           next
         end
-        RouteOptionsMessage::VALID_LOADBALANCING_ALGORITHMS.exclude?(loadbalancing) &&
+
+        if valid_algorithms.exclude?(loadbalancing)
           errors.add(:base,
                      message: "Cannot use loadbalancing value '#{loadbalancing}' for Route '#{r[:route]}'; \
-Valid values are: '#{RouteOptionsMessage::VALID_LOADBALANCING_ALGORITHMS.join(', ')}'")
+Valid values are: '#{valid_algorithms.join(', ')}'")
+          next
+        end
+
+        # Validate hash-specific options
+        if loadbalancing == 'hash'
+          validate_hash_options_for_route(r)
+        else
+          validate_no_hash_options_for_route(r)
+        end
       end
+    end
+
+    def validate_hash_options_for_route(route)
+      options = route[:options]
+
+      # hash_header is required for hash algorithm
+      errors.add(:base, message: "Route '#{route[:route]}': hash_header must be present when loadbalancing is set to hash") if options[:hash_header].blank?
+
+      # hash_balance must be valid if present
+      return if options[:hash_balance].blank?
+
+      begin
+        hash_balance = Float(options[:hash_balance])
+        errors.add(:base, message: "Route '#{route[:route]}': hash_balance must be greater than or equal to 0.0") if hash_balance < 0.0
+      rescue ArgumentError, TypeError
+        errors.add(:base, message: "Route '#{route[:route]}': hash_balance must be a valid number")
+      end
+    end
+
+    def validate_no_hash_options_for_route(route)
+      options = route[:options]
+
+      errors.add(:base, message: "Route '#{route[:route]}': hash_header can only be set when loadbalancing is hash") if options[:hash_header].present?
+
+      return if options[:hash_balance].blank?
+
+      errors.add(:base, message: "Route '#{route[:route]}': hash_balance can only be set when loadbalancing is hash")
     end
 
     def routes_are_uris

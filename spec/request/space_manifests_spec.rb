@@ -647,7 +647,7 @@ RSpec.describe 'Space Manifests' do
 
           expect(last_response).to have_status_code(422)
           expect(last_response).to have_error_message("For application '#{app1_model.name}': \
-Route 'https://#{route.host}.#{route.domain.name}' contains invalid route option 'doesnt-exist'. Valid keys: 'loadbalancing'")
+Route 'https://#{route.host}.#{route.domain.name}' contains invalid route option 'doesnt-exist'. Valid keys: 'loadbalancing, hash_header, hash_balance'")
         end
       end
 

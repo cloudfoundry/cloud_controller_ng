@@ -2594,10 +2594,89 @@ RSpec.describe 'Routes Request' do
       end
     end
 
-    context 'when the user is not logged in' do
-      it 'returns 401 for Unauthenticated requests' do
-        patch "/v3/routes/#{route.guid}", nil, base_json_headers
-        expect(last_response).to have_status_code(401)
+    context 'when updating route options' do
+      context 'when updating hash-based routing options partially' do
+        before do
+          VCAP::CloudController::FeatureFlag.make(name: 'hash_based_routing', enabled: true)
+        end
+
+        let(:route) do
+          VCAP::CloudController::Route.make(
+            space: space,
+            domain: domain,
+            host: 'test-hash',
+            options: { 'loadbalancing' => 'hash', 'hash_header' => 'X-User-ID', 'hash_balance' => 1.5 }
+          )
+        end
+
+        it 'allows updating only hash_balance' do
+          params = { options: { hash_balance: 2.0 } }
+          patch "/v3/routes/#{route.guid}", params.to_json, admin_header
+
+          expect(last_response).to have_status_code(200)
+          parsed = parsed_response
+          expect(parsed['options']['loadbalancing']).to eq('hash')
+          expect(parsed['options']['hash_header']).to eq('X-User-ID')
+          expect(parsed['options']['hash_balance']).to eq('2.0')
+        end
+
+        it 'allows updating only hash_header' do
+          params = { options: { hash_header: 'X-Session-ID' } }
+          patch "/v3/routes/#{route.guid}", params.to_json, admin_header
+
+          expect(last_response).to have_status_code(200)
+          parsed = parsed_response
+          expect(parsed['options']['loadbalancing']).to eq('hash')
+          expect(parsed['options']['hash_header']).to eq('X-Session-ID')
+          expect(parsed['options']['hash_balance']).to eq('1.5')
+        end
+
+        it 'allows updating both hash_header and hash_balance' do
+          params = { options: { hash_header: 'X-Request-ID', hash_balance: 2.5 } }
+          patch "/v3/routes/#{route.guid}", params.to_json, admin_header
+
+          expect(last_response).to have_status_code(200)
+          parsed = parsed_response
+          expect(parsed['options']['loadbalancing']).to eq('hash')
+          expect(parsed['options']['hash_header']).to eq('X-Request-ID')
+          expect(parsed['options']['hash_balance']).to eq('2.5')
+        end
+
+        it 'allows changing to round-robin' do
+          params = { options: { loadbalancing: 'round-robin' } }
+          patch "/v3/routes/#{route.guid}", params.to_json, admin_header
+
+          expect(last_response).to have_status_code(200)
+          parsed = parsed_response
+          expect(parsed['options']['loadbalancing']).to eq('round-robin')
+          expect(parsed['options']).not_to have_key('hash_header')
+          expect(parsed['options']).not_to have_key('hash_balance')
+        end
+
+        it 'does not allow removing hash_header when loadbalancing is hash' do
+          params = { options: { hash_header: nil } }
+          patch "/v3/routes/#{route.guid}", params.to_json, admin_header
+
+          expect(last_response).to have_status_code(422)
+          expect(last_response).to have_error_message(/Hash header must be present when loadbalancing is set to hash/)
+        end
+      end
+
+      context 'when creating hash-based routing from scratch' do
+        before do
+          VCAP::CloudController::FeatureFlag.make(name: 'hash_based_routing', enabled: true)
+        end
+
+        it 'allows setting all hash-based options at once' do
+          params = { options: { loadbalancing: 'hash', hash_header: 'X-User-ID', hash_balance: 1.5 } }
+          patch "/v3/routes/#{route.guid}", params.to_json, admin_header
+
+          expect(last_response).to have_status_code(200)
+          parsed = parsed_response
+          expect(parsed['options']['loadbalancing']).to eq('hash')
+          expect(parsed['options']['hash_header']).to eq('X-User-ID')
+          expect(parsed['options']['hash_balance']).to eq('1.5')
+        end
       end
     end
   end

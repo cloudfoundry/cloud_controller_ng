@@ -18,6 +18,8 @@ module VCAP::CloudController
       attrs[:full_route] = route
       attrs[:options] = {}
       attrs[:options][:loadbalancing] = options[:loadbalancing] if options && options.key?(:loadbalancing)
+      attrs[:options][:hash_header] = options[:hash_header] if options && options.key?(:hash_header)
+      attrs[:options][:hash_balance] = options[:hash_balance] if options && options.key?(:hash_balance)
 
       ManifestRoute.new(attrs)
     end

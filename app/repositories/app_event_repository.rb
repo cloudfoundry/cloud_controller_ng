@@ -110,6 +110,7 @@ module VCAP::CloudController
                                             weight: route_mapping.weight,
                                             protocol: route_mapping.protocol
                                           })
+        metadata[:route_options] = route.options if route.options.present?
         create_app_audit_event(EventTypes::APP_MAP_ROUTE, app, app.space, actor_hash, metadata)
       end
 
@@ -126,6 +127,7 @@ module VCAP::CloudController
                                               weight: route_mapping.weight,
                                               protocol: route_mapping.protocol
                                             })
+        metadata[:route_options] = route.options if route.options.present?
         create_app_audit_event(EventTypes::APP_UNMAP_ROUTE, app, app.space, actor_hash, metadata)
       end
 

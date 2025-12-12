@@ -71,7 +71,8 @@ module VCAP::CloudController
     end
 
     def options_with_serialization=(opts)
-      self.options_without_serialization = Oj.dump(opts)
+      normalized_opts = normalize_hash_balance_to_string(opts)
+      self.options_without_serialization = Oj.dump(normalized_opts)
     end
 
     alias_method :options_without_serialization=, :options=
@@ -215,6 +216,22 @@ module VCAP::CloudController
     end
 
     private
+
+    def normalize_hash_balance_to_string(opts)
+      return opts unless opts.is_a?(Hash)
+      return opts unless opts.key?('hash_balance') || opts.key?(:hash_balance)
+
+      normalized = opts.dup
+      hash_balance_key = opts.key?('hash_balance') ? 'hash_balance' : :hash_balance
+      hash_balance_value = opts[hash_balance_key]
+
+      if hash_balance_value.present?
+        # Always convert to string for consistent storage in JSON
+        normalized[hash_balance_key] = hash_balance_value.to_s
+      end
+
+      normalized
+    end
 
     def before_destroy
       destroy_route_bindings

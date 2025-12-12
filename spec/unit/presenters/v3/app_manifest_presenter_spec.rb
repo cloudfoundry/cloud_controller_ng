@@ -292,6 +292,82 @@ module VCAP::CloudController::Presenters::V3
           end
         end
 
+        context 'routes with options' do
+          context 'when routes have hash-based routing with hash_balance' do
+            let(:route_with_string_balance) do
+              VCAP::CloudController::Route.make(
+                host: 'string-balance-route',
+                options: { 'loadbalancing' => 'hash', 'hash_header' => 'X-Session-ID', 'hash_balance' => '2.0' }
+              )
+            end
+            let!(:route_mapping_string) { VCAP::CloudController::RouteMappingModel.make(app: app, route: route_with_string_balance) }
+          end
+
+          context 'when routes have hash-based routing without hash_balance' do
+            let(:route_without_balance) do
+              VCAP::CloudController::Route.make(
+                host: 'no-balance-route',
+                options: { 'loadbalancing' => 'hash', 'hash_header' => 'X-User-ID' }
+              )
+            end
+            let!(:route_mapping_no_balance) { VCAP::CloudController::RouteMappingModel.make(app: app, route: route_without_balance) }
+
+            it 'presents the route options without hash_balance' do
+              result = AppManifestPresenter.new(app, service_bindings, app.route_mappings).to_hash
+              application = result[:applications].first
+
+              no_balance_route = application[:routes].find { |r| r[:route] == route_without_balance.uri }
+              expect(no_balance_route).to be_present
+              expect(no_balance_route[:options]).to eq({
+                                                         loadbalancing: 'hash',
+                                                         hash_header: 'X-User-ID'
+                                                       })
+            end
+          end
+
+          context 'when routes have round-robin loadbalancing' do
+            let(:route_round_robin) do
+              VCAP::CloudController::Route.make(
+                host: 'round-robin-route',
+                options: { 'loadbalancing' => 'round-robin' }
+              )
+            end
+            let!(:route_mapping_rr) { VCAP::CloudController::RouteMappingModel.make(app: app, route: route_round_robin) }
+
+            it 'presents the route with loadbalancing option only' do
+              result = AppManifestPresenter.new(app, service_bindings, app.route_mappings).to_hash
+              application = result[:applications].first
+
+              rr_route = application[:routes].find { |r| r[:route] == route_round_robin.uri }
+              expect(rr_route).to be_present
+              expect(rr_route[:options]).to eq({
+                                                 loadbalancing: 'round-robin'
+                                               })
+            end
+          end
+
+          context 'when routes have least-connection loadbalancing' do
+            let(:route_least_conn) do
+              VCAP::CloudController::Route.make(
+                host: 'least-conn-route',
+                options: { 'loadbalancing' => 'least-connection' }
+              )
+            end
+            let!(:route_mapping_lc) { VCAP::CloudController::RouteMappingModel.make(app: app, route: route_least_conn) }
+
+            it 'presents the route with loadbalancing option only' do
+              result = AppManifestPresenter.new(app, service_bindings, app.route_mappings).to_hash
+              application = result[:applications].first
+
+              lc_route = application[:routes].find { |r| r[:route] == route_least_conn.uri }
+              expect(lc_route).to be_present
+              expect(lc_route[:options]).to eq({
+                                                 loadbalancing: 'least-connection'
+                                               })
+            end
+          end
+        end
+
         context 'metadata' do
           context 'when there is no metadata' do
             before do
