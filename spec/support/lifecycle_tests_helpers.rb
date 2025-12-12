@@ -88,7 +88,7 @@ module LifecycleSpecHelper
   end
 
   def make_plan_visible(plan_guid)
-    post "v3/service_plans/#{plan_guid}/visibility", { type: 'public' }.to_json, admin_headers
+    patch "v3/service_plans/#{plan_guid}/visibility", { type: 'public' }.to_json, admin_headers
     expect(last_response).to have_status_code(200)
 
     get "v3/service_plans/#{plan_guid}/visibility", nil, admin_headers
