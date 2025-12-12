@@ -939,6 +939,48 @@ module VCAP::CloudController
                                             { prefix: nil, key_name: 'release', value: 'stable' })
           end
 
+          context 'when broker returns broker_provided_metadata' do
+            let(:broker_metadata) do
+              {
+                'labels' => {
+                  'service_engine_version' => 'postgresql 16.6'
+                },
+                'attributes' => {
+                  'attr_key' => 'attr_value'
+                }
+              }
+            end
+
+            let(:update_response) do
+              {
+                dashboard_url: updated_dashboard_url,
+                broker_provided_metadata: broker_metadata,
+                last_operation: {
+                  type: 'update',
+                  state: 'succeeded'
+                }
+              }
+            end
+
+            it 'saves the broker_provided_metadata to the instance' do
+              action.update(accepts_incomplete: true)
+
+              instance = original_instance.reload
+              expect(instance.broker_provided_metadata).to eq(broker_metadata)
+            end
+          end
+
+          context 'when broker does not return broker_provided_metadata' do
+            it 'does not modify existing broker_provided_metadata' do
+              original_instance.update(broker_provided_metadata: { 'old' => 'metadata' })
+
+              action.update(accepts_incomplete: true)
+
+              instance = original_instance.reload
+              expect(instance.broker_provided_metadata).to eq({ 'old' => 'metadata' })
+            end
+          end
+
           it 'logs an audit event' do
             action.update(accepts_incomplete: true)
 
@@ -1217,6 +1259,36 @@ module VCAP::CloudController
               instance_of(ManagedServiceInstance),
               audit_hash
             )
+          end
+
+          context 'when broker returns broker_provided_metadata during async update' do
+            let(:broker_metadata) do
+              {
+                'labels' => {
+                  'version' => '17.2'
+                }
+              }
+            end
+
+            let(:update_response) do
+              {
+                dashboard_url: updated_dashboard_url,
+                broker_provided_metadata: broker_metadata,
+                last_operation: {
+                  type: 'update',
+                  state: 'in progress',
+                  description: 'some description',
+                  broker_provided_operation: broker_provided_operation
+                }
+              }
+            end
+
+            it 'saves the broker_provided_metadata to the instance' do
+              action.update(accepts_incomplete: true)
+
+              instance = original_instance.reload
+              expect(instance.broker_provided_metadata).to eq(broker_metadata)
+            end
           end
 
           context 'when update does not return dashboard_url' do

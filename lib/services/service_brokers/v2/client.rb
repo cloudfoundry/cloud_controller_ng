@@ -56,7 +56,8 @@ module VCAP::Services::ServiceBrokers::V2
       return_values = {
         instance: {
           credentials: {},
-          dashboard_url: parsed_response['dashboard_url']
+          dashboard_url: parsed_response['dashboard_url'],
+          broker_provided_metadata: extract_broker_provided_metadata(parsed_response)
         },
         last_operation: {
           type: 'create',
@@ -203,6 +204,9 @@ module VCAP::Services::ServiceBrokers::V2
       }
 
       attributes[:dashboard_url] = dashboard_url if dashboard_url
+
+      # Add broker_provided_metadata extraction
+      attributes[:broker_provided_metadata] = extract_broker_provided_metadata(parsed_response)
 
       if state == 'in progress'
         proposed_changes = { service_plan_guid: plan.guid }
@@ -416,6 +420,12 @@ module VCAP::Services::ServiceBrokers::V2
         public_annotations.append(annotation) if annotation.key_prefix.present? || prefix.present?
       end
       hashified_annotations(public_annotations)
+    end
+
+    def extract_broker_provided_metadata(parsed_response)
+      return nil unless parsed_response['metadata'].present? && parsed_response['metadata'].is_a?(Hash)
+
+      parsed_response['metadata']
     end
   end
 end

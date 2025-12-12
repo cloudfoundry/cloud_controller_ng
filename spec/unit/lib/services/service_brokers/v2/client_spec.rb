@@ -259,6 +259,76 @@ module VCAP::Services::ServiceBrokers::V2
         end
       end
 
+      describe 'broker_provided_metadata extraction' do
+        context 'when broker returns metadata in the response' do
+          let(:response_data) do
+            {
+              'dashboard_url' => 'http://example-dashboard.com/9189kdfsk0vfnku',
+              'metadata' => {
+                'labels' => {
+                  'service_engine_version' => 'postgresql 16.6'
+                },
+                'attributes' => {
+                  'engine' => 'postgresql'
+                }
+              }
+            }
+          end
+
+          it 'returns the broker_provided_metadata' do
+            attributes = client.provision(instance)
+            expect(attributes[:instance][:broker_provided_metadata]).to eq(response_data['metadata'])
+          end
+        end
+
+        context 'when broker returns metadata with only labels' do
+          let(:response_data) do
+            {
+              'metadata' => {
+                'labels' => {
+                  'service_engine_version' => 'postgresql 16.6'
+                }
+              }
+            }
+          end
+
+          it 'returns the broker_provided_metadata with only labels' do
+            attributes = client.provision(instance)
+            expect(attributes[:instance][:broker_provided_metadata]).to eq(response_data['metadata'])
+          end
+        end
+
+        context 'when broker returns metadata with only attributes' do
+          let(:response_data) do
+            {
+              'metadata' => {
+                'attributes' => {
+                  'engine' => 'postgresql'
+                }
+              }
+            }
+          end
+
+          it 'returns the broker_provided_metadata with only attributes' do
+            attributes = client.provision(instance)
+            expect(attributes[:instance][:broker_provided_metadata]).to eq(response_data['metadata'])
+          end
+        end
+
+        context 'when broker does not return metadata' do
+          let(:response_data) do
+            {
+              'dashboard_url' => 'http://example-dashboard.com/9189kdfsk0vfnku'
+            }
+          end
+
+          it 'returns nil for broker_provided_metadata' do
+            attributes = client.provision(instance)
+            expect(attributes[:instance][:broker_provided_metadata]).to be_nil
+          end
+        end
+      end
+
       it 'passes arbitrary params in the broker request' do
         arbitrary_parameters = {
           'some_param' => 'some-value'
@@ -962,6 +1032,61 @@ module VCAP::Services::ServiceBrokers::V2
             client = Client.new(client_attrs)
             attributes, = client.update(instance, new_plan, accepts_incomplete: true)
             expect(attributes[:dashboard_url]).to eq('http://foo.com')
+          end
+        end
+      end
+
+      context 'when the broker returns broker_provided_metadata' do
+        context 'and the response is a 202' do
+          let(:code) { 202 }
+          let(:message) { 'Accepted' }
+
+          let(:response_data) do
+            {
+              'metadata' => {
+                'labels' => {
+                  'service_engine_version' => 'postgresql 16.6'
+                }
+              }
+            }
+          end
+
+          it 'returns the broker_provided_metadata from the broker response' do
+            client = Client.new(client_attrs)
+            attributes, = client.update(instance, new_plan, accepts_incomplete: true)
+            expect(attributes[:broker_provided_metadata]).to eq(response_data['metadata'])
+          end
+        end
+
+        context 'when metadata is nil' do
+          let(:code) { 200 }
+
+          let(:response_data) do
+            {
+              'metadata' => nil
+            }
+          end
+
+          it 'returns nil for broker_provided_metadata' do
+            client = Client.new(client_attrs)
+            attributes, = client.update(instance, new_plan, accepts_incomplete: true)
+            expect(attributes[:broker_provided_metadata]).to be_nil
+          end
+        end
+
+        context 'when metadata is not present' do
+          let(:code) { 200 }
+
+          let(:response_data) do
+            {
+              'dashboard_url' => 'http://foo.com'
+            }
+          end
+
+          it 'returns nil for broker_provided_metadata' do
+            client = Client.new(client_attrs)
+            attributes, = client.update(instance, new_plan, accepts_incomplete: true)
+            expect(attributes[:broker_provided_metadata]).to be_nil
           end
         end
       end

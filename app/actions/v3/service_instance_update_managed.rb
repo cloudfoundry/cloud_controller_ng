@@ -159,6 +159,7 @@ module VCAP::CloudController
           u[:maintenance_info] = maintenance_info if maintenance_info_updated?
         end
         updates[:dashboard_url] = broker_response[:dashboard_url] if broker_response.key?(:dashboard_url)
+        updates[:broker_provided_metadata] = broker_response[:broker_provided_metadata] if broker_response.key?(:broker_provided_metadata)
 
         ManagedServiceInstance.db.transaction do
           service_instance.save_with_new_operation(
@@ -174,6 +175,7 @@ module VCAP::CloudController
       def save_incomplete_instance(instance, broker_response)
         attributes_to_update = {}
         attributes_to_update[:dashboard_url] = broker_response[:dashboard_url] if broker_response.key?(:dashboard_url)
+        attributes_to_update[:broker_provided_metadata] = broker_response[:broker_provided_metadata] if broker_response.key?(:broker_provided_metadata)
 
         instance.save_with_new_operation(
           attributes_to_update,

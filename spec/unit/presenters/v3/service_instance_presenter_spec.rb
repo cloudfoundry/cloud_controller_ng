@@ -165,6 +165,70 @@ module VCAP::CloudController::Presenters::V3
           end
         end
       end
+
+      describe 'broker_provided_metadata' do
+        context 'when broker_provided_metadata is present' do
+          let(:broker_metadata) do
+            {
+              'labels' => {
+                'service_engine_version' => 'postgresql 16.6'
+              },
+              'attributes' => {
+                'attr_key' => 'attr_value'
+              }
+            }
+          end
+
+          let(:service_instance) do
+            VCAP::CloudController::ManagedServiceInstance.make(
+              service_plan: plan,
+              name: 'my-db',
+              tags: %w[tag1 tag2],
+              maintenance_info: maintenance_info,
+              dashboard_url: 'https://my-fantistic-service.com',
+              broker_provided_metadata: broker_metadata
+            )
+          end
+
+          it 'includes broker_provided_metadata in the response' do
+            expect(result[:broker_provided_metadata]).to eq(broker_metadata.deep_symbolize_keys)
+          end
+        end
+
+        context 'when broker_provided_metadata is nil' do
+          let(:service_instance) do
+            VCAP::CloudController::ManagedServiceInstance.make(
+              service_plan: plan,
+              name: 'my-db-no-metadata',
+              tags: %w[tag1 tag2],
+              maintenance_info: maintenance_info,
+              dashboard_url: 'https://my-fantistic-service.com',
+              broker_provided_metadata: nil
+            )
+          end
+
+          it 'does not include broker_provided_metadata in the response' do
+            expect(result).not_to have_key(:broker_provided_metadata)
+          end
+        end
+
+        context 'when broker_provided_metadata is an empty hash' do
+          let(:service_instance) do
+            VCAP::CloudController::ManagedServiceInstance.make(
+              service_plan: plan,
+              name: 'my-db-empty-metadata',
+              tags: %w[tag1 tag2],
+              maintenance_info: maintenance_info,
+              dashboard_url: 'https://my-fantistic-service.com',
+              broker_provided_metadata: {}
+            )
+          end
+
+          it 'does not include broker_provided_metadata in the response' do
+            expect(result).not_to have_key(:broker_provided_metadata)
+          end
+        end
+      end
     end
 
     context 'user-provided service instance' do

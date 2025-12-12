@@ -77,7 +77,7 @@ module VCAP::CloudController
         end
 
         def hash_additions_managed
-          {
+          base_hash = {
             type: 'managed',
             maintenance_info: maintenance_info,
             upgrade_available: upgrade_available,
@@ -101,6 +101,10 @@ module VCAP::CloudController
               }
             }
           }
+
+          base_hash[:broker_provided_metadata] = service_instance.broker_provided_metadata if service_instance.broker_provided_metadata.present?
+
+          base_hash
         end
 
         def hash_additions_user_provided
