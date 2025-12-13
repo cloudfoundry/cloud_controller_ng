@@ -117,3 +117,5 @@ require 'cloud_controller/user_audit_info'
 require 'cloud_controller/errands/rotate_database_key'
 
 require 'services'
+
+require 'cloud_controller/stack_state_validator'
