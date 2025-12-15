@@ -162,7 +162,7 @@ module CloudController
       end
 
       def ensure_bucket_exists
-        run_cli('ensure-bucket-exists')
+        run_cli('ensure-storage-exists')
       end
 
       private
