@@ -218,7 +218,7 @@ RSpec.describe AppsV3Controller, type: :controller do
       it 'returns an UnprocessableEntity error' do
         post :create, params: request_body, as: :json
 
-        expect(response).to have_http_status :unprocessable_entity
+        expect(response).to have_http_status :unprocessable_content
         expect(response.body).to include 'UnprocessableEntity'
       end
     end
@@ -232,7 +232,7 @@ RSpec.describe AppsV3Controller, type: :controller do
       it 'returns an UnprocessableEntity error' do
         post :create, params: request_body, as: :json
 
-        expect(response).to have_http_status :unprocessable_entity
+        expect(response).to have_http_status :unprocessable_content
         expect(response.body).to include 'UnprocessableEntity'
         expect(response.body).to include 'ya done goofed'
       end
@@ -253,7 +253,7 @@ RSpec.describe AppsV3Controller, type: :controller do
         it 'returns an UnprocessableEntity error' do
           post :create, params: request_body, as: :json
 
-          expect(response).to have_http_status :unprocessable_entity
+          expect(response).to have_http_status :unprocessable_content
           expect(response.body).to include 'UnprocessableEntity'
           expect(response).to have_error_message(/label [\w\s]+ error/)
         end
@@ -276,7 +276,7 @@ RSpec.describe AppsV3Controller, type: :controller do
         it 'returns an UnprocessableEntity error' do
           post :create, params: request_body, as: :json
 
-          expect(response).to have_http_status :unprocessable_entity
+          expect(response).to have_http_status :unprocessable_content
           expect(response.body).to include 'UnprocessableEntity'
           expect(response).to have_error_message(/annotation [\w\s]+ error/)
         end
@@ -331,7 +331,7 @@ RSpec.describe AppsV3Controller, type: :controller do
         it 'responds with 422' do
           post :create, params: request_body, as: :json
 
-          expect(response).to have_http_status(:unprocessable_entity)
+          expect(response).to have_http_status(:unprocessable_content)
           expect(response).to have_error_message(/exceed maximum of 1/)
         end
       end
@@ -393,7 +393,7 @@ RSpec.describe AppsV3Controller, type: :controller do
             it 'returns an UnprocessableEntity error' do
               post :create, params: request_body, as: :json
 
-              expect(response).to have_http_status :unprocessable_entity
+              expect(response).to have_http_status :unprocessable_content
               expect(response.body).to include 'UnprocessableEntity'
               expect(response.body).to include 'must be an existing admin buildpack or a valid git URI'
             end
@@ -411,7 +411,7 @@ RSpec.describe AppsV3Controller, type: :controller do
             it 'raises an UnprocessableEntity error' do
               post :create, params: request_body, as: :json
 
-              expect(response).to have_http_status(:unprocessable_entity)
+              expect(response).to have_http_status(:unprocessable_content)
               expect(response.body).to include 'UnprocessableEntity'
               expect(response.body).to include 'Lifecycle data must be an object'
             end
@@ -432,7 +432,7 @@ RSpec.describe AppsV3Controller, type: :controller do
           it 'raises an UnprocessableEntity error' do
             post :create, params: request_body, as: :json
 
-            expect(response).to have_http_status(:unprocessable_entity)
+            expect(response).to have_http_status(:unprocessable_content)
             expect(response.body).to include 'UnprocessableEntity'
             expect(response.body).to include "Lifecycle Unknown field(s): 'foo'"
           end
@@ -450,7 +450,7 @@ RSpec.describe AppsV3Controller, type: :controller do
           it 'raises an UnprocessableEntity error' do
             post :create, params: request_body, as: :json
 
-            expect(response).to have_http_status(:unprocessable_entity)
+            expect(response).to have_http_status(:unprocessable_content)
             expect(response.body).to include 'UnprocessableEntity'
             expect(response.body).to include 'Lifecycle data must be an object'
           end
@@ -603,7 +603,7 @@ RSpec.describe AppsV3Controller, type: :controller do
         it 'returns an UnprocessableEntity error' do
           patch :update, params: { guid: app_model.guid }.merge(request_body), as: :json
 
-          expect(response).to have_http_status :unprocessable_entity
+          expect(response).to have_http_status :unprocessable_content
           expect(response.body).to include 'UnprocessableEntity'
         end
       end
@@ -678,7 +678,7 @@ RSpec.describe AppsV3Controller, type: :controller do
 
               it 'returns a 422' do
                 patch :update, params: { guid: app_model.guid }.merge(request_body), as: :json
-                expect(response).to have_http_status :unprocessable_entity
+                expect(response).to have_http_status :unprocessable_content
                 expect(response.body).to include 'UnprocessableEntity'
                 expect(response.body).to match(/Metadata [\w\s]+ error/)
               end
@@ -713,7 +713,7 @@ RSpec.describe AppsV3Controller, type: :controller do
           it 'returns an UnprocessableEntity error' do
             patch :update, params: { guid: app_model.guid }.merge(request_body), as: :json
 
-            expect(response).to have_http_status :unprocessable_entity
+            expect(response).to have_http_status :unprocessable_content
             expect(response.body).to include 'UnprocessableEntity'
             expect(response.body).to include('must be an existing admin buildpack or a valid git URI')
           end
@@ -799,7 +799,7 @@ RSpec.describe AppsV3Controller, type: :controller do
               patch :update, params: { guid: app_model.guid }.merge(request_body), as: :json
 
               expect(response.body).to include 'UnprocessableEntity'
-              expect(response).to have_http_status(:unprocessable_entity)
+              expect(response).to have_http_status(:unprocessable_content)
               expect(response.body).to include('Stack')
             end
           end
@@ -839,7 +839,7 @@ RSpec.describe AppsV3Controller, type: :controller do
           it 'raises an error' do
             patch :update, params: { guid: app_model.guid }.merge(request_body), as: :json
 
-            expect(response).to have_http_status :unprocessable_entity
+            expect(response).to have_http_status :unprocessable_content
             expect(response.body).to include 'UnprocessableEntity'
             expect(response.body).to include('Lifecycle data must be an object')
           end
@@ -856,7 +856,7 @@ RSpec.describe AppsV3Controller, type: :controller do
           it 'raises an error' do
             patch :update, params: { guid: app_model.guid }.merge(request_body), as: :json
 
-            expect(response).to have_http_status :unprocessable_entity
+            expect(response).to have_http_status :unprocessable_content
             expect(response.body).to include 'UnprocessableEntity'
             expect(response.body).to include('Lifecycle type cannot be changed')
           end
@@ -877,7 +877,7 @@ RSpec.describe AppsV3Controller, type: :controller do
           it 'raises an error' do
             patch :update, params: { guid: app_model.guid }.merge(request_body), as: :json
 
-            expect(response).to have_http_status :unprocessable_entity
+            expect(response).to have_http_status :unprocessable_content
             expect(response.body).to include 'UnprocessableEntity'
             expect(response.body).to include('Lifecycle type cannot be changed')
           end
@@ -911,7 +911,7 @@ RSpec.describe AppsV3Controller, type: :controller do
           it 'raises an error' do
             patch :update, params: { guid: app_model.guid }.merge(request_body), as: :json
 
-            expect(response).to have_http_status :unprocessable_entity
+            expect(response).to have_http_status :unprocessable_content
             expect(response.body).to include 'UnprocessableEntity'
             expect(response.body).to include('Lifecycle data must be an object')
           end
@@ -934,7 +934,7 @@ RSpec.describe AppsV3Controller, type: :controller do
         it 'returns an UnprocessableEntity error' do
           patch :update, params: { guid: app_model.guid }.merge(request_body), as: :json
 
-          expect(response).to have_http_status :unprocessable_entity
+          expect(response).to have_http_status :unprocessable_content
           expect(response.body).to include 'UnprocessableEntity'
           expect(response).to have_error_message(/label [\w\s]+ error/)
         end
@@ -957,7 +957,7 @@ RSpec.describe AppsV3Controller, type: :controller do
         it 'returns an UnprocessableEntity error' do
           patch :update, params: { guid: app_model.guid }.merge(request_body), as: :json
 
-          expect(response).to have_http_status :unprocessable_entity
+          expect(response).to have_http_status :unprocessable_content
           expect(response.body).to include 'UnprocessableEntity'
           expect(response).to have_error_message(/annotation [\w\s]+ error/)
         end
@@ -1021,7 +1021,7 @@ RSpec.describe AppsV3Controller, type: :controller do
         it 'responds with 422' do
           patch :update, params: { guid: app_model.guid }.merge(request_body), as: :json
 
-          expect(response).to have_http_status(:unprocessable_entity)
+          expect(response).to have_http_status(:unprocessable_content)
           expect(response).to have_error_message(/exceed maximum of 1/)
         end
       end
@@ -1165,7 +1165,7 @@ RSpec.describe AppsV3Controller, type: :controller do
         response_body = parsed_body
         expect(response_body['errors'].first['title']).to eq 'CF-UnprocessableEntity'
         expect(response_body['errors'].first['detail']).to eq 'Assign a droplet before starting this app.'
-        expect(response).to have_http_status :unprocessable_entity
+        expect(response).to have_http_status :unprocessable_content
       end
     end
 
@@ -1190,7 +1190,7 @@ RSpec.describe AppsV3Controller, type: :controller do
 
         response_body = parsed_body
         expect(response_body['errors'].first['title']).to eq 'CF-UnprocessableEntity'
-        expect(response).to have_http_status :unprocessable_entity
+        expect(response).to have_http_status :unprocessable_content
       end
     end
 
@@ -1312,7 +1312,7 @@ RSpec.describe AppsV3Controller, type: :controller do
       it 'returns an UnprocessableEntity error' do
         put :stop, params: { guid: app_model.guid }, as: :json
 
-        expect(response).to have_http_status :unprocessable_entity
+        expect(response).to have_http_status :unprocessable_content
         expect(response.body).to include 'UnprocessableEntity'
       end
     end
@@ -1406,7 +1406,7 @@ RSpec.describe AppsV3Controller, type: :controller do
           response_body = parsed_body
           expect(response_body['errors'].first['title']).to eq 'CF-UnprocessableEntity'
           expect(response_body['errors'].first['detail']).to eq 'Assign a droplet before starting this app.'
-          expect(response).to have_http_status :unprocessable_entity
+          expect(response).to have_http_status :unprocessable_content
         end
       end
 
@@ -1468,7 +1468,7 @@ RSpec.describe AppsV3Controller, type: :controller do
           post :restart, params: { guid: app_model.guid }, as: :json
 
           response_body = parsed_body
-          expect(response).to have_http_status :unprocessable_entity
+          expect(response).to have_http_status :unprocessable_content
           expect(response_body['errors'].first['title']).to eq 'CF-UnprocessableEntity'
           expect(response_body['errors'].first['detail']).to eq 'Ahhh!'
         end
@@ -2063,7 +2063,7 @@ RSpec.describe AppsV3Controller, type: :controller do
       it 'returns a validation error' do
         patch :update_environment_variables, params: { guid: app_model.guid }.merge(request_body), as: :json
 
-        expect(response).to have_http_status :unprocessable_entity
+        expect(response).to have_http_status :unprocessable_content
         expect(response.body).to include 'UnprocessableEntity'
         expect(response.body).to include 'PORT'
       end
@@ -2085,7 +2085,7 @@ RSpec.describe AppsV3Controller, type: :controller do
       it 'returns a validation error' do
         patch :update_environment_variables, params: { guid: app_model.guid }.merge(request_body), as: :json
 
-        expect(response).to have_http_status :unprocessable_entity
+        expect(response).to have_http_status :unprocessable_content
         expect(response.body).to include "Non-string value in environment variable for key 'hashes_not_allowed'"
       end
     end
@@ -2124,7 +2124,7 @@ RSpec.describe AppsV3Controller, type: :controller do
       it 'returns a 422' do
         put :assign_current_droplet, params: { guid: app_model.guid }.merge(request_body), as: :json
 
-        expect(response).to have_http_status :unprocessable_entity
+        expect(response).to have_http_status :unprocessable_content
         expect(response.body).to include 'UnprocessableEntity'
         expect(response.body).to include 'Unable to assign current droplet. Ensure the droplet exists and belongs to this app.'
       end
@@ -2136,7 +2136,7 @@ RSpec.describe AppsV3Controller, type: :controller do
       it 'returns a 422' do
         put :assign_current_droplet, params: { guid: app_model.guid }.merge(request_body), as: :json
 
-        expect(response).to have_http_status :unprocessable_entity
+        expect(response).to have_http_status :unprocessable_content
         expect(response.body).to include 'UnprocessableEntity'
         expect(response.body).to include 'Current droplet cannot be removed. Replace it with a preferred droplet.'
       end
@@ -2149,7 +2149,7 @@ RSpec.describe AppsV3Controller, type: :controller do
       it 'returns a 422' do
         put :assign_current_droplet, params: { guid: app_model.guid }.merge(request_body), as: :json
 
-        expect(response).to have_http_status :unprocessable_entity
+        expect(response).to have_http_status :unprocessable_content
         expect(response.body).to include 'UnprocessableEntity'
         expect(response.body).to include 'Unable to assign current droplet. Ensure the droplet exists and belongs to this app.'
       end
@@ -2161,7 +2161,7 @@ RSpec.describe AppsV3Controller, type: :controller do
       it 'returns a 422' do
         put :assign_current_droplet, params: { guid: app_model.guid }.merge(request_body), as: :json
 
-        expect(response).to have_http_status :unprocessable_entity
+        expect(response).to have_http_status :unprocessable_content
         expect(response.body).to include 'UnprocessableEntity'
         expect(response.body).to include 'Unable to assign current droplet. Ensure the droplet exists and belongs to this app.'
       end
@@ -2185,7 +2185,7 @@ RSpec.describe AppsV3Controller, type: :controller do
       it 'returns an UnprocessableEntity error' do
         put :assign_current_droplet, params: { guid: app_model.guid }.merge(request_body), as: :json
 
-        expect(response).to have_http_status :unprocessable_entity
+        expect(response).to have_http_status :unprocessable_content
         expect(response.body).to include 'UnprocessableEntity'
       end
     end
@@ -2199,7 +2199,7 @@ RSpec.describe AppsV3Controller, type: :controller do
         it 'returns an UnprocessableEntity error' do
           put :assign_current_droplet, params: { guid: app_model.guid }.merge(request_body), as: :json
 
-          expect(response).to have_http_status :unprocessable_entity
+          expect(response).to have_http_status :unprocessable_content
           expect(response.body).to include 'UnprocessableEntity'
           expect(response.body).to include 'Unable to assign current droplet while the app has a deployment in progress. Wait for the deployment to complete or cancel it.'
         end

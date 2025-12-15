@@ -351,7 +351,7 @@ RSpec.describe ProcessesController, type: :controller do
       it 'returns 422' do
         patch :update, params: { process_guid: process_type.guid }.merge(request_body), as: :json
 
-        expect(response).to have_http_status(:unprocessable_entity)
+        expect(response).to have_http_status(:unprocessable_content)
         expect(response.body).to include('UnprocessableEntity')
         expect(response.body).to include('errorz')
       end
@@ -363,7 +363,7 @@ RSpec.describe ProcessesController, type: :controller do
       it 'returns 422' do
         patch :update, params: { process_guid: process_type.guid }.merge(request_body), as: :json
 
-        expect(response).to have_http_status(:unprocessable_entity)
+        expect(response).to have_http_status(:unprocessable_content)
         expect(response.body).to include('UnprocessableEntity')
         expect(response.body).to include('Command must be a string')
       end
@@ -387,7 +387,7 @@ RSpec.describe ProcessesController, type: :controller do
 
         patch :update, params: { process_guid: process.guid }.merge(request_body), as: :json
 
-        expect(response).to have_http_status(:unprocessable_entity)
+        expect(response).to have_http_status(:unprocessable_content)
         expect(response.body).to include('Cannot update this process while a deployment is in flight.')
       end
     end
@@ -624,7 +624,7 @@ RSpec.describe ProcessesController, type: :controller do
       it 'returns 422' do
         put :scale, params: { process_guid: process_type.guid }.merge(request_body), as: :json
 
-        expect(response).to have_http_status(:unprocessable_entity)
+        expect(response).to have_http_status(:unprocessable_content)
         expect(response.body).to include('UnprocessableEntity')
         expect(response.body).to include('errorz')
       end
@@ -661,7 +661,7 @@ RSpec.describe ProcessesController, type: :controller do
       it 'returns 422' do
         put :scale, params: { process_guid: process_type.guid }.merge(request_body), as: :json
 
-        expect(response).to have_http_status(:unprocessable_entity)
+        expect(response).to have_http_status(:unprocessable_content)
         expect(response.body).to include('UnprocessableEntity')
         expect(response.body).to include('Instances is not a number')
       end
@@ -694,7 +694,7 @@ RSpec.describe ProcessesController, type: :controller do
 
         put :scale, params: { process_guid: process.guid }.merge(request_body), as: :json
 
-        expect(response).to have_http_status(:unprocessable_entity)
+        expect(response).to have_http_status(:unprocessable_content)
         expect(response.body).to include('Cannot scale this process while a deployment is in flight.'), response.body
       end
     end

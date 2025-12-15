@@ -142,7 +142,7 @@ RSpec.describe PackagesController, type: :controller do
       it 'returns a 422 Unprocessable' do
         post :upload, params: params.merge(guid: package.guid), as: :json
 
-        expect(response).to have_http_status(:unprocessable_entity)
+        expect(response).to have_http_status(:unprocessable_content)
         expect(response.body).to include('UnprocessableEntity')
         expect(response.body).to include('Package type must be bits.')
       end
@@ -163,7 +163,7 @@ RSpec.describe PackagesController, type: :controller do
       it 'returns a 422 UnprocessableEntity error' do
         post :upload, params: params.merge(guid: package.guid), as: :json
 
-        expect(response).to have_http_status(:unprocessable_entity)
+        expect(response).to have_http_status(:unprocessable_content)
         expect(response.body).to include('UnprocessableEntity')
       end
     end
@@ -190,7 +190,7 @@ RSpec.describe PackagesController, type: :controller do
       it 'returns 422' do
         post :upload, params: params.merge(guid: package.guid), as: :json
 
-        expect(response).to have_http_status(:unprocessable_entity)
+        expect(response).to have_http_status(:unprocessable_content)
         expect(response.body).to include('UnprocessableEntity')
       end
     end
@@ -268,7 +268,7 @@ RSpec.describe PackagesController, type: :controller do
       it 'returns 422' do
         get :download, params: { guid: package.guid }
 
-        expect(response).to have_http_status(:unprocessable_entity)
+        expect(response).to have_http_status(:unprocessable_content)
         expect(response.body).to include('UnprocessableEntity')
       end
     end
@@ -282,7 +282,7 @@ RSpec.describe PackagesController, type: :controller do
       it 'returns 422' do
         get :download, params: { guid: package.guid }
 
-        expect(response).to have_http_status(:unprocessable_entity)
+        expect(response).to have_http_status(:unprocessable_content)
         expect(response.body).to include('UnprocessableEntity')
       end
     end
@@ -446,7 +446,7 @@ RSpec.describe PackagesController, type: :controller do
 
           it 'fails' do
             patch :update, params: { guid: package.guid }.merge(message), as: :json
-            expect(response).to have_http_status(:unprocessable_entity)
+            expect(response).to have_http_status(:unprocessable_content)
             expect(response).to have_error_message('Cannot update Docker credentials for a buildpack app.')
           end
         end
@@ -539,7 +539,7 @@ RSpec.describe PackagesController, type: :controller do
 
         it 'fails' do
           patch :update, params: { guid: package.guid }.merge(update_message2), as: :json
-          expect(response).to have_http_status(:unprocessable_entity)
+          expect(response).to have_http_status(:unprocessable_content)
         end
       end
 
@@ -564,7 +564,7 @@ RSpec.describe PackagesController, type: :controller do
 
         it 'displays an informative error' do
           patch :update, params: { guid: package.guid }.merge(request_body), as: :json
-          expect(response).to have_http_status(:unprocessable_entity)
+          expect(response).to have_http_status(:unprocessable_content)
           expect(response).to have_error_message(/label [\w\s]+ error/)
         end
       end
@@ -582,7 +582,7 @@ RSpec.describe PackagesController, type: :controller do
 
         it 'displays an informative error' do
           patch :update, params: { guid: package.guid }.merge(request_body), as: :json
-          expect(response).to have_http_status(:unprocessable_entity)
+          expect(response).to have_http_status(:unprocessable_content)
           expect(response).to have_error_message(/is greater than 5000 characters/)
         end
       end
@@ -605,7 +605,7 @@ RSpec.describe PackagesController, type: :controller do
 
         it 'fails with a 422' do
           patch :update, params: { guid: package.guid }.merge(request_body), as: :json
-          expect(response).to have_http_status(:unprocessable_entity)
+          expect(response).to have_http_status(:unprocessable_content)
           expect(response).to have_error_message(/exceed maximum of 2/)
         end
       end
@@ -1003,7 +1003,7 @@ RSpec.describe PackagesController, type: :controller do
           it 'returns an UnprocessableEntity error' do
             post :create, params: request_body, as: :json
 
-            expect(response).to have_http_status :unprocessable_entity
+            expect(response).to have_http_status :unprocessable_content
             expect(response.body).to include 'UnprocessableEntity'
             expect(response.body).to include "must be one of 'bits, docker'"
           end
@@ -1015,7 +1015,7 @@ RSpec.describe PackagesController, type: :controller do
           it 'returns a 422 UnprocessableEntity error' do
             post :create, params: request_body, as: :json
 
-            expect(response).to have_http_status :unprocessable_entity
+            expect(response).to have_http_status :unprocessable_content
             expect(response.body).to include 'UnprocessableEntity'
           end
         end
@@ -1028,7 +1028,7 @@ RSpec.describe PackagesController, type: :controller do
           it 'returns 422' do
             post :create, params: { app_guid: app_model.guid }.merge(request_body), as: :json
 
-            expect(response).to have_http_status :unprocessable_entity
+            expect(response).to have_http_status :unprocessable_content
             expect(response.body).to include 'UnprocessableEntity'
           end
         end
@@ -1039,7 +1039,7 @@ RSpec.describe PackagesController, type: :controller do
           it 'returns 422' do
             post :create, params: request_body, as: :json
 
-            expect(response).to have_http_status :unprocessable_entity
+            expect(response).to have_http_status :unprocessable_content
             expect(response.body).to include 'UnprocessableEntity'
             expect(response).to have_error_message('Cannot create bits package for a Docker app.')
           end
@@ -1067,7 +1067,7 @@ RSpec.describe PackagesController, type: :controller do
             it 'returns a 422 UnprocessableEntity error' do
               post :create, params: { app_guid: app_model.guid }.merge(request_body), as: :json
 
-              expect(response).to have_http_status :unprocessable_entity
+              expect(response).to have_http_status :unprocessable_content
               expect(response.body).to include 'UnprocessableEntity'
             end
           end
@@ -1080,7 +1080,7 @@ RSpec.describe PackagesController, type: :controller do
             it 'returns a 422 UnprocessableEntity error' do
               post :create, params: { app_guid: app_model.guid }.merge(request_body), as: :json
 
-              expect(response).to have_http_status :unprocessable_entity
+              expect(response).to have_http_status :unprocessable_content
               expect(response.body).to include 'UnprocessableEntity'
             end
           end
@@ -1124,7 +1124,7 @@ RSpec.describe PackagesController, type: :controller do
           it 'returns 422' do
             post :create, params: request_body, as: :json
 
-            expect(response).to have_http_status :unprocessable_entity
+            expect(response).to have_http_status :unprocessable_content
             expect(response.body).to include 'UnprocessableEntity'
             expect(response).to have_error_message('Cannot create Docker package for a buildpack app.')
           end
@@ -1148,7 +1148,7 @@ RSpec.describe PackagesController, type: :controller do
           it 'returns an UnprocessableEntity error' do
             post :create, params: metadata_request_body, as: :json
 
-            expect(response).to have_http_status :unprocessable_entity
+            expect(response).to have_http_status :unprocessable_content
             expect(response.body).to include 'UnprocessableEntity'
             expect(response).to have_error_message(/label [\w\s]+ error/)
           end
@@ -1168,7 +1168,7 @@ RSpec.describe PackagesController, type: :controller do
           it 'returns an UnprocessableEntity error' do
             post :create, params: metadata_request_body, as: :json
 
-            expect(response).to have_http_status :unprocessable_entity
+            expect(response).to have_http_status :unprocessable_content
             expect(response.body).to include 'UnprocessableEntity'
             expect(response).to have_error_message(/annotation [\w\s]+ error/)
           end
@@ -1252,7 +1252,7 @@ RSpec.describe PackagesController, type: :controller do
           it 'returns a 422 UnprocessableEntity error' do
             post :create, params: { source_guid: original_package.guid }.merge(relationship_request_body), as: :json
 
-            expect(response).to have_http_status :unprocessable_entity
+            expect(response).to have_http_status :unprocessable_content
             expect(response.body).to include 'UnprocessableEntity'
           end
         end
@@ -1279,7 +1279,7 @@ RSpec.describe PackagesController, type: :controller do
           it 'returns a 422 UnprocessableEntity error' do
             post :create, params: { source_guid: original_package.guid }.merge(relationship_request_body), as: :json
 
-            expect(response).to have_http_status :unprocessable_entity
+            expect(response).to have_http_status :unprocessable_content
             expect(response.body).to include 'UnprocessableEntity'
           end
         end
@@ -1303,7 +1303,7 @@ RSpec.describe PackagesController, type: :controller do
         it 'returns a 422 UnprocessableEntity error' do
           post :create, params: { source_guid: 'bogus package guid' }.merge(relationship_request_body), as: :json
 
-          expect(response).to have_http_status :unprocessable_entity
+          expect(response).to have_http_status :unprocessable_content
           expect(response.body).to include 'UnprocessableEntity'
         end
       end
@@ -1314,7 +1314,7 @@ RSpec.describe PackagesController, type: :controller do
         it 'returns a 422 UnprocessableEntity error' do
           post :create, params: { source_guid: original_package.guid }.merge(relationship_request_body), as: :json
 
-          expect(response).to have_http_status :unprocessable_entity
+          expect(response).to have_http_status :unprocessable_content
           expect(response.body).to include 'UnprocessableEntity'
         end
       end
@@ -1327,7 +1327,7 @@ RSpec.describe PackagesController, type: :controller do
         it 'returns 422' do
           post :create, params: { source_guid: original_package.guid }.merge(relationship_request_body), as: :json
 
-          expect(response).to have_http_status :unprocessable_entity
+          expect(response).to have_http_status :unprocessable_content
           expect(response.body).to include 'UnprocessableEntity'
           expect(response.body).to include 'ruh roh'
         end

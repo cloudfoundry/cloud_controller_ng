@@ -473,7 +473,7 @@ RSpec.describe SpacesV3Controller, type: :controller do
       it 'returns a 422' do
         post :create, params: req_body, as: :json
 
-        expect(response).to have_http_status :unprocessable_entity
+        expect(response).to have_http_status :unprocessable_content
         expect(response.body).to include 'UnprocessableEntity'
         expect(response.body).to include 'Invalid organization. Ensure the organization exists and you have access to it.'
       end
@@ -484,7 +484,7 @@ RSpec.describe SpacesV3Controller, type: :controller do
         set_current_user(user_without_role)
         post :create, params: req_body, as: :json
 
-        expect(response).to have_http_status :unprocessable_entity
+        expect(response).to have_http_status :unprocessable_content
         expect(response.body).to include 'UnprocessableEntity'
         expect(response.body).to include 'Invalid organization. Ensure the organization exists and you have access to it.'
       end
@@ -496,7 +496,7 @@ RSpec.describe SpacesV3Controller, type: :controller do
 
         post :create, params: req_body, as: :json
 
-        expect(response).to have_http_status :unprocessable_entity
+        expect(response).to have_http_status :unprocessable_content
         expect(response.body).to include 'UnprocessableEntity'
         expect(response.body).to include "Unknown field(s): 'invalid'"
       end
@@ -508,7 +508,7 @@ RSpec.describe SpacesV3Controller, type: :controller do
       it 'returns a 422 and a helpful error' do
         post :create, params: req_body, as: :json
 
-        expect(response).to have_http_status :unprocessable_entity
+        expect(response).to have_http_status :unprocessable_content
         expect(response.body).to include 'UnprocessableEntity'
         expect(response.body).to include "Name can't be blank"
       end
@@ -524,7 +524,7 @@ RSpec.describe SpacesV3Controller, type: :controller do
       it 'returns a 422 and a helpful error' do
         post :create, params: req_body, as: :json
 
-        expect(response).to have_http_status :unprocessable_entity
+        expect(response).to have_http_status :unprocessable_content
         expect(response.body).to include 'UnprocessableEntity'
         expect(response.body).to include 'Name must be unique'
       end
@@ -549,7 +549,7 @@ RSpec.describe SpacesV3Controller, type: :controller do
 
       it 'displays an informative error' do
         post :create, params: request_body, as: :json
-        expect(response).to have_http_status(:unprocessable_entity)
+        expect(response).to have_http_status(:unprocessable_content)
         expect(response).to have_error_message(/is greater than 5000 characters/)
       end
     end
@@ -578,7 +578,7 @@ RSpec.describe SpacesV3Controller, type: :controller do
 
       it 'fails with a 422' do
         post :create, params: request_body, as: :json
-        expect(response).to have_http_status(:unprocessable_entity)
+        expect(response).to have_http_status(:unprocessable_content)
         expect(response).to have_error_message(/exceed maximum of 1/)
       end
     end
@@ -682,7 +682,7 @@ RSpec.describe SpacesV3Controller, type: :controller do
 
         it 'fails' do
           patch :update, params: { guid: space.guid }.merge(update_message), as: :json
-          expect(response).to have_http_status(:unprocessable_entity)
+          expect(response).to have_http_status(:unprocessable_content)
         end
       end
 
@@ -729,7 +729,7 @@ RSpec.describe SpacesV3Controller, type: :controller do
 
         it 'displays an informative error' do
           patch :update, params: { guid: space.guid }.merge(request_body), as: :json
-          expect(response).to have_http_status(:unprocessable_entity)
+          expect(response).to have_http_status(:unprocessable_content)
           expect(response).to have_error_message('label key error')
         end
       end
@@ -747,7 +747,7 @@ RSpec.describe SpacesV3Controller, type: :controller do
 
         it 'displays an informative error' do
           patch :update, params: { guid: space.guid }.merge(request_body), as: :json
-          expect(response).to have_http_status(:unprocessable_entity)
+          expect(response).to have_http_status(:unprocessable_content)
           expect(response).to have_error_message(/is greater than 5000 characters/)
         end
       end
@@ -770,7 +770,7 @@ RSpec.describe SpacesV3Controller, type: :controller do
 
         it 'fails with a 422' do
           patch :update, params: { guid: space.guid }.merge(request_body), as: :json
-          expect(response).to have_http_status(:unprocessable_entity)
+          expect(response).to have_http_status(:unprocessable_content)
           expect(response).to have_error_message(/exceed maximum of 2/)
         end
       end
@@ -868,7 +868,7 @@ RSpec.describe SpacesV3Controller, type: :controller do
         it 'does not assign an isolation segment to a space in a different org' do
           patch :update_isolation_segment, params: { guid: space3.guid }.merge(update_message), as: :json
 
-          expect(response).to have_http_status(:unprocessable_entity)
+          expect(response).to have_http_status(:unprocessable_content)
           expect(response.body).to include(
             "Unable to assign isolation segment with guid '#{isolation_segment_model.guid}'. Ensure it has been entitled to the organization that this space belongs to."
           )
@@ -881,7 +881,7 @@ RSpec.describe SpacesV3Controller, type: :controller do
         it 'raises an error' do
           patch :update_isolation_segment, params: { guid: space1.guid }.merge(update_message), as: :json
 
-          expect(response).to have_http_status(:unprocessable_entity)
+          expect(response).to have_http_status(:unprocessable_content)
           expect(response.body).to include(
             "Unable to assign isolation segment with guid 'potato'. Ensure it has been entitled to the organization that this space belongs to."
           )

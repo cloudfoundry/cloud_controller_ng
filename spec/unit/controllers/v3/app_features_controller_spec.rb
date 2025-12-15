@@ -148,7 +148,7 @@ RSpec.describe AppFeaturesController, type: :controller do
         patch :update, params: { app_guid: app_model.guid, name: 'ssh' }, as: :json
       end.not_to(change { app_model.reload.values })
 
-      expect(response).to have_http_status(:unprocessable_entity)
+      expect(response).to have_http_status(:unprocessable_content)
       expect(response).to have_error_message('Enabled must be a boolean')
     end
   end

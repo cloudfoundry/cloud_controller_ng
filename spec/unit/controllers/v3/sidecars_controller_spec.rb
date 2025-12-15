@@ -180,7 +180,7 @@ RSpec.describe SidecarsController, type: :controller do
 
       it 'returns 422' do
         post :create, params: sidecar_params, as: :json
-        expect(response).to have_http_status :unprocessable_entity
+        expect(response).to have_http_status :unprocessable_content
         expect(response.body).to include 'UnprocessableEntity'
         expect(response.body).to include 'Sidecar with name \'my_sidecar\' already exists for given app'
       end

@@ -167,7 +167,7 @@ RSpec.describe TasksController, type: :controller do
         it 'returns an UnprocessableEntity error' do
           post :create, params: { app_guid: app_model.guid }.merge(metadata_request_body), as: :json
 
-          expect(response).to have_http_status :unprocessable_entity
+          expect(response).to have_http_status :unprocessable_content
           expect(response.body).to include 'UnprocessableEntity'
           expect(response.body).to include('label key error')
         end
@@ -193,7 +193,7 @@ RSpec.describe TasksController, type: :controller do
         it 'returns an UnprocessableEntity error' do
           post :create, params: { app_guid: app_model.guid }.merge(metadata_request_body), as: :json
 
-          expect(response).to have_http_status :unprocessable_entity
+          expect(response).to have_http_status :unprocessable_content
           expect(response.body).to include 'UnprocessableEntity'
           expect(response.body).to include 'annotation key error'
         end
@@ -248,7 +248,7 @@ RSpec.describe TasksController, type: :controller do
         it 'responds with 422' do
           post :create, params: { app_guid: app_model.guid }.merge(metadata_request_body), as: :json
 
-          expect(response).to have_http_status(:unprocessable_entity)
+          expect(response).to have_http_status(:unprocessable_content)
           expect(response).to have_error_message(/exceed maximum of 1/)
         end
       end
@@ -260,7 +260,7 @@ RSpec.describe TasksController, type: :controller do
 
         post :create, params: { app_guid: app_model.guid }.merge(request_body), as: :json
 
-        expect(response).to have_http_status :unprocessable_entity
+        expect(response).to have_http_status :unprocessable_content
         expect(response.body).to include 'UnprocessableEntity'
         expect(response.body).to include "Unknown field(s): 'invalid'"
       end
@@ -273,7 +273,7 @@ RSpec.describe TasksController, type: :controller do
 
         post :create, params: { app_guid: app_model.guid }.merge(request_body), as: :json
 
-        expect(response).to have_http_status :unprocessable_entity
+        expect(response).to have_http_status :unprocessable_content
         expect(response.body).to include 'UnprocessableEntity'
         expect(response.body).to include 'command must be shorter than 7 characters'
       end
@@ -283,7 +283,7 @@ RSpec.describe TasksController, type: :controller do
       it 'returns a useful error message' do
         post :create, params: { app_guid: app_model.guid }
 
-        expect(response).to have_http_status :unprocessable_entity
+        expect(response).to have_http_status :unprocessable_content
         expect(response.body).to include 'UnprocessableEntity'
       end
     end
@@ -303,7 +303,7 @@ RSpec.describe TasksController, type: :controller do
           it 'returns a 422 and a helpful error' do
             post :create, params: { app_guid: app_model.guid }.merge(request_body), as: :json
 
-            expect(response).to have_http_status :unprocessable_entity
+            expect(response).to have_http_status :unprocessable_content
             expect(response.body).to include 'UnprocessableEntity'
             expect(response.body).to include 'Task must have a droplet. Specify droplet or assign current droplet to app.'
           end
@@ -621,7 +621,7 @@ RSpec.describe TasksController, type: :controller do
       it 'returns a 422 Unprocessable' do
         put :cancel, params: { task_guid: task.guid }
 
-        expect(response).to have_http_status :unprocessable_entity
+        expect(response).to have_http_status :unprocessable_content
         expect(response.body).to include('sad trombone')
       end
     end
@@ -673,7 +673,7 @@ RSpec.describe TasksController, type: :controller do
       it 'returns an UnprocessableEntity error' do
         patch :update, params: { task_guid: task.guid }.merge(request_body), as: :json
 
-        expect(response).to have_http_status :unprocessable_entity
+        expect(response).to have_http_status :unprocessable_content
         expect(response.body).to include 'UnprocessableEntity'
       end
     end
@@ -692,7 +692,7 @@ RSpec.describe TasksController, type: :controller do
       it 'returns an UnprocessableEntity error' do
         patch :update, params: { task_guid: task.guid }.merge(request_body), as: :json
 
-        expect(response).to have_http_status :unprocessable_entity
+        expect(response).to have_http_status :unprocessable_content
         expect(response.body).to include 'UnprocessableEntity'
         expect(response.body).to include 'label key error'
       end
@@ -715,7 +715,7 @@ RSpec.describe TasksController, type: :controller do
       it 'returns an UnprocessableEntity error' do
         patch :update, params: { task_guid: task.guid }.merge(request_body), as: :json
 
-        expect(response).to have_http_status :unprocessable_entity
+        expect(response).to have_http_status :unprocessable_content
         expect(response.body).to include 'UnprocessableEntity'
         expect(response.body).to include 'annotation key error'
       end

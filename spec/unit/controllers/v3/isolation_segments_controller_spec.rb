@@ -207,7 +207,7 @@ RSpec.describe IsolationSegmentsController, type: :controller do
 
         it 'returns a 422' do
           post :assign_allowed_organizations, params: { guid: isolation_segment_model.guid }.merge(request_body), as: :json
-          expect(response).to have_http_status :unprocessable_entity
+          expect(response).to have_http_status :unprocessable_content
         end
       end
 
@@ -223,7 +223,7 @@ RSpec.describe IsolationSegmentsController, type: :controller do
 
         it 'does not assign any of the valid orgs and returns a 404' do
           post :assign_allowed_organizations, params: { guid: isolation_segment_model.guid }.merge(request_body), as: :json
-          expect(response).to have_http_status :unprocessable_entity
+          expect(response).to have_http_status :unprocessable_content
           expect(response.body).to include 'bogus-guid'
           expect(response.body).not_to include org1.guid
 
@@ -351,7 +351,7 @@ RSpec.describe IsolationSegmentsController, type: :controller do
 
         it 'returns a 422' do
           post :create, body: request_body
-          expect(response).to have_http_status :unprocessable_entity
+          expect(response).to have_http_status :unprocessable_content
         end
       end
 
@@ -360,7 +360,7 @@ RSpec.describe IsolationSegmentsController, type: :controller do
           VCAP::CloudController::IsolationSegmentModel.make(name: 'some-name')
           post :create, params: request_body
 
-          expect(response).to have_http_status :unprocessable_entity
+          expect(response).to have_http_status :unprocessable_content
         end
       end
     end
@@ -545,7 +545,7 @@ RSpec.describe IsolationSegmentsController, type: :controller do
           it 'returns a 422' do
             put :update, params: { guid: isolation_segment_model.guid }.merge(request_body), as: :json
 
-            expect(response).to have_http_status :unprocessable_entity
+            expect(response).to have_http_status :unprocessable_content
           end
         end
 
@@ -556,7 +556,7 @@ RSpec.describe IsolationSegmentsController, type: :controller do
           it 'returns a 422' do
             put :update, params: { guid: isolation_segment_model.guid }.merge(request_body), as: :json
 
-            expect(response).to have_http_status :unprocessable_entity
+            expect(response).to have_http_status :unprocessable_content
           end
         end
 
@@ -565,7 +565,7 @@ RSpec.describe IsolationSegmentsController, type: :controller do
 
           it 'returns a 422' do
             post :create, params: request_body
-            expect(response).to have_http_status :unprocessable_entity
+            expect(response).to have_http_status :unprocessable_content
           end
         end
       end
@@ -620,7 +620,7 @@ RSpec.describe IsolationSegmentsController, type: :controller do
           it 'returns a 422 UnprocessableEntity error' do
             delete :destroy, params: { guid: isolation_segment_model1.guid }, as: :json
 
-            expect(response).to have_http_status :unprocessable_entity
+            expect(response).to have_http_status :unprocessable_content
             expect(response.body).to include 'UnprocessableEntity'
             expect(response.body).to include('Revoke the Organization entitlements for your Isolation Segment.')
           end
@@ -679,14 +679,14 @@ RSpec.describe IsolationSegmentsController, type: :controller do
     it 'cannot be deleted' do
       delete :destroy, params: { guid: shared_segment.guid }, as: :json
 
-      expect(response).to have_http_status :unprocessable_entity
+      expect(response).to have_http_status :unprocessable_content
       expect(VCAP::CloudController::IsolationSegmentModel.first(guid: shared_segment.guid).exists?).to be true
     end
 
     it 'cannot be updated via API' do
       put :update, params: { guid: shared_segment.guid, body: request_body }, as: :json
 
-      expect(response).to have_http_status :unprocessable_entity
+      expect(response).to have_http_status :unprocessable_content
       expect(shared_segment.name).to eq(original_name)
     end
   end

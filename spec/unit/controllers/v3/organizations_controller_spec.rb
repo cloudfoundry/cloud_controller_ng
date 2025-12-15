@@ -83,7 +83,7 @@ RSpec.describe OrganizationsV3Controller, type: :controller do
       context 'when there is a message validation failure' do
         it 'displays an informative error' do
           post :create, params: { name: '' }, as: :json
-          expect(response).to have_http_status(:unprocessable_entity)
+          expect(response).to have_http_status(:unprocessable_content)
           expect(response).to have_error_message("Name can't be blank")
         end
       end
@@ -97,7 +97,7 @@ RSpec.describe OrganizationsV3Controller, type: :controller do
 
         it 'responds with 422' do
           post :create, params: { name: }, as: :json
-          expect(response).to have_http_status(:unprocessable_entity)
+          expect(response).to have_http_status(:unprocessable_content)
           expect(response).to have_error_message("Organization '#{name}' already exists.")
         end
       end
@@ -118,7 +118,7 @@ RSpec.describe OrganizationsV3Controller, type: :controller do
             }
           }, as: :json
 
-          expect(response).to have_http_status(:unprocessable_entity)
+          expect(response).to have_http_status(:unprocessable_content)
           expect(response).to have_error_message(/exceed maximum of 1/)
         end
       end
@@ -448,7 +448,7 @@ RSpec.describe OrganizationsV3Controller, type: :controller do
         org.reload
         error_string = "Unable to assign isolation segment with guid '#{isolation_segment.guid}'. Ensure it has been entitled to the organization."
 
-        expect(response).to have_http_status(:unprocessable_entity)
+        expect(response).to have_http_status(:unprocessable_content)
         expect(response.body).to include 'UnprocessableEntity'
         expect(response.body).to include(error_string)
       end
@@ -474,7 +474,7 @@ RSpec.describe OrganizationsV3Controller, type: :controller do
       it 'throws UnprocessableEntity error' do
         patch :update_default_isolation_segment, params: { guid: org.guid }.merge(request_body), as: :json
 
-        expect(response).to have_http_status(:unprocessable_entity)
+        expect(response).to have_http_status(:unprocessable_content)
         expect(response.body).to include 'UnprocessableEntity'
         expect(response.body).to include "Unable to assign isolation segment with guid 'garbage-guid'. Ensure it has been entitled to the organization."
       end
@@ -490,7 +490,7 @@ RSpec.describe OrganizationsV3Controller, type: :controller do
       it 'returns 422' do
         patch :update_default_isolation_segment, params: { guid: org.guid }.merge(request_body), as: :json
 
-        expect(response).to have_http_status(:unprocessable_entity)
+        expect(response).to have_http_status(:unprocessable_content)
         expect(response.body).to include('UnprocessableEntity')
         expect(response.body).to include('bad thing happened!')
       end
@@ -506,7 +506,7 @@ RSpec.describe OrganizationsV3Controller, type: :controller do
       it 'returns 422' do
         patch :update_default_isolation_segment, params: { guid: org.guid }.merge(request_body), as: :json
 
-        expect(response).to have_http_status(:unprocessable_entity)
+        expect(response).to have_http_status(:unprocessable_content)
         expect(response.body).to include('UnprocessableEntity')
         expect(response.body).to include('123 must be a string')
       end
@@ -690,7 +690,7 @@ RSpec.describe OrganizationsV3Controller, type: :controller do
 
         it 'displays an informative error' do
           patch :update, params: { guid: org.guid }.merge(request_body), as: :json
-          expect(response).to have_http_status(:unprocessable_entity)
+          expect(response).to have_http_status(:unprocessable_content)
           expect(response).to have_error_message('Name is too short (minimum is 1 character)')
         end
       end
@@ -726,7 +726,7 @@ RSpec.describe OrganizationsV3Controller, type: :controller do
 
         it 'displays an informative error' do
           patch :update, params: { guid: org.guid }.merge(request_body), as: :json
-          expect(response).to have_http_status(:unprocessable_entity)
+          expect(response).to have_http_status(:unprocessable_content)
           expect(response).to have_error_message(/label [\w\s]+ error/)
         end
       end
@@ -749,7 +749,7 @@ RSpec.describe OrganizationsV3Controller, type: :controller do
 
         it 'fails with a 422' do
           patch :update, params: { guid: org.guid }.merge(request_body), as: :json
-          expect(response).to have_http_status(:unprocessable_entity)
+          expect(response).to have_http_status(:unprocessable_content)
           expect(response).to have_error_message(/exceed maximum of 2/)
         end
       end

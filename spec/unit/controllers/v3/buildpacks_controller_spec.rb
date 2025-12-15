@@ -334,7 +334,7 @@ RSpec.describe BuildpacksController, type: :controller do
           it 'returns 422' do
             post :create, params: params, as: :json
 
-            expect(response).to have_http_status :unprocessable_entity
+            expect(response).to have_http_status :unprocessable_content
           end
 
           it 'returns a helpful error message' do
@@ -354,7 +354,7 @@ RSpec.describe BuildpacksController, type: :controller do
         it 'returns 422' do
           post :create, params: params, as: :json
 
-          expect(response).to have_http_status :unprocessable_entity
+          expect(response).to have_http_status :unprocessable_content
         end
 
         it 'does not create the buildpack' do
@@ -461,7 +461,7 @@ RSpec.describe BuildpacksController, type: :controller do
         it 'returns 422' do
           patch :update, params: { guid: buildpack.guid, enabled: 'totally-not-a-valid-value' }, as: :json
 
-          expect(response).to have_http_status :unprocessable_entity
+          expect(response).to have_http_status :unprocessable_content
           expect(parsed_body['errors'][0]['detail']).to include('Enabled must be a boolean')
         end
       end
@@ -471,7 +471,7 @@ RSpec.describe BuildpacksController, type: :controller do
           other_buildpack = VCAP::CloudController::Buildpack.make(stack: buildpack.stack)
           patch :update, params: { guid: buildpack.guid, name: other_buildpack.name }, as: :json
 
-          expect(response).to have_http_status :unprocessable_entity
+          expect(response).to have_http_status :unprocessable_content
           expect(parsed_body['errors'][0]['detail']).to include("Buildpack with name '#{other_buildpack.name}' and an unassigned stack already exists")
         end
       end
@@ -628,7 +628,7 @@ RSpec.describe BuildpacksController, type: :controller do
 
         it 'returns a 422 and error message that the buildpack is locked' do
           post :upload, params: { guid: bp.guid, bits_path: buildpack_bits_path, bits_name: buildpack_bits_name }.merge({}), as: :json
-          expect(response).to have_http_status :unprocessable_entity
+          expect(response).to have_http_status :unprocessable_content
           expect(response.body).to include 'UnprocessableEntity'
         end
       end
@@ -639,7 +639,7 @@ RSpec.describe BuildpacksController, type: :controller do
         it 'errors' do
           post :upload, params: params.merge({}), as: :json
 
-          expect(response).to have_http_status :unprocessable_entity
+          expect(response).to have_http_status :unprocessable_content
           expect(response.body).to include('UnprocessableEntity')
         end
       end
@@ -650,7 +650,7 @@ RSpec.describe BuildpacksController, type: :controller do
         it 'errors' do
           post :upload, params: params.merge({}), as: :json
 
-          expect(response).to have_http_status :unprocessable_entity
+          expect(response).to have_http_status :unprocessable_content
           expect(response.body).to include('UnprocessableEntity')
         end
       end

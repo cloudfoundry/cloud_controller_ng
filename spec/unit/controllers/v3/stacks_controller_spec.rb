@@ -158,7 +158,7 @@ RSpec.describe StacksController, type: :controller do
       it 'returns a 422 with the error message' do
         post :create, params: req_body, as: :json
 
-        expect(response).to have_http_status :unprocessable_entity
+        expect(response).to have_http_status :unprocessable_content
         expect(parsed_body['errors'].first['detail']).to eq 'Name can\'t be blank'
       end
     end
@@ -173,7 +173,7 @@ RSpec.describe StacksController, type: :controller do
       it 'returns a 422 with the error message' do
         post :create, params: req_body, as: :json
 
-        expect(response).to have_http_status :unprocessable_entity
+        expect(response).to have_http_status :unprocessable_content
         expect(parsed_body['errors'].first['detail']).to eq 'that did not work'
       end
     end
@@ -284,7 +284,7 @@ RSpec.describe StacksController, type: :controller do
         it 'returns 422' do
           delete :destroy, params: { guid: stack.guid }
 
-          expect(response).to have_http_status :unprocessable_entity
+          expect(response).to have_http_status :unprocessable_content
         end
 
         it 'returns 10008 UnprocessableEntity' do
@@ -405,7 +405,7 @@ RSpec.describe StacksController, type: :controller do
 
         it 'fails' do
           patch :update, params: { guid: stack.guid }.merge(update_message2), as: :json
-          expect(response).to have_http_status(:unprocessable_entity)
+          expect(response).to have_http_status(:unprocessable_content)
         end
       end
 
@@ -430,7 +430,7 @@ RSpec.describe StacksController, type: :controller do
 
         it 'displays an informative error' do
           patch :update, params: { guid: stack.guid }.merge(request_body), as: :json
-          expect(response).to have_http_status(:unprocessable_entity)
+          expect(response).to have_http_status(:unprocessable_content)
           expect(response).to have_error_message(/label [\w\s]+ error/)
         end
       end
@@ -448,7 +448,7 @@ RSpec.describe StacksController, type: :controller do
 
         it 'displays an informative error' do
           patch :update, params: { guid: stack.guid }.merge(request_body), as: :json
-          expect(response).to have_http_status(:unprocessable_entity)
+          expect(response).to have_http_status(:unprocessable_content)
           expect(response).to have_error_message(/is greater than 5000 characters/)
         end
       end
@@ -471,7 +471,7 @@ RSpec.describe StacksController, type: :controller do
 
         it 'fails with a 422' do
           patch :update, params: { guid: stack.guid }.merge(request_body), as: :json
-          expect(response).to have_http_status(:unprocessable_entity)
+          expect(response).to have_http_status(:unprocessable_content)
           expect(response).to have_error_message(/exceed maximum of 2/)
         end
       end
