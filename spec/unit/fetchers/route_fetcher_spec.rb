@@ -7,7 +7,6 @@ module VCAP::CloudController
     describe '.fetch' do
       before do
         Route.dataset.destroy
-        # shared_route.add_shared_space(space2)
       end
 
       let!(:space1) { Space.make }
@@ -17,7 +16,6 @@ module VCAP::CloudController
       let!(:route1) { Route.make(guid: 'route1_guid', host: 'host1', path: '/path1', space: space1, domain: domain1) }
       let!(:route2) { Route.make(guid: 'route2_guid', host: 'host2', path: '/path2', space: space1, domain: domain1) }
       let!(:route3) { Route.make(guid: 'route3_guid', host: 'host3', path: '/path1', space: space2, domain: domain2) }
-      # let!(:shared_route) { Route.make(guid: 'shared_route_guid', host: 'host2', path: '/path1', space: space1, domain: domain2) }
 
       let(:message) do
         RoutesListMessage.from_params(routes_filter)
@@ -30,14 +28,22 @@ module VCAP::CloudController
           expect(RouteFetcher.fetch(message, omniscient: true).all).to contain_exactly(route1, route2, route3)
         end
 
+        it 'does not duplicate routes when shared' do
+          space3 = Space.make
+          shared_route = Route.make(guid: 'shared_route_guid', host: 'host1', path: '/path_shared', space: space1, domain: domain1)
+          shared_route.add_shared_space(space2)
+          shared_route.add_shared_space(space3)
+          expect(RouteFetcher.fetch(message, omniscient: true).all).to contain_exactly(route1, route2, route3, shared_route)
+        end
+
         it 'fetches the routes owned by readable spaces' do
           dataset = RouteFetcher.fetch(message, readable_space_guids_dataset: Space.where(id: [space1.id]).select(:guid))
           expect(dataset.all).to contain_exactly(route1, route2)
         end
 
         it 'fetches the instances shared to readable spaces' do
-          space4 = Space.make
-          shared_route = Route.make(space: space4)
+          space3 = Space.make
+          shared_route = Route.make(space: space3)
           shared_route.add_shared_space(space2)
           dataset = RouteFetcher.fetch(message, readable_space_guids_dataset: Space.where(id: [space2.id]).select(:guid))
           expect(dataset.all).to contain_exactly(route3, shared_route)
