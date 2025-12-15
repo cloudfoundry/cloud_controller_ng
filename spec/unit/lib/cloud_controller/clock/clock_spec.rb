@@ -10,10 +10,19 @@ module VCAP::CloudController
         def initialize(*args); end
       end
     end
-    let(:enqueuer) { instance_double(Jobs::Enqueuer, enqueue: nil, run_inline: nil) }
+    let(:enqueuer) { instance_double(Jobs::Enqueuer, enqueue: nil) }
+    let(:inline_runner) { instance_double(Jobs::InlineRunner, run: nil) }
 
     before do
       allow(Jobs::Enqueuer).to receive(:new).and_return(enqueuer)
+      allow(Jobs::InlineRunner).to receive(:new).and_return(inline_runner)
+    end
+
+    describe 'setup' do
+      it 'sets up the Jobs::InlineRunner' do
+        expect(Jobs::InlineRunner).to receive(:setup)
+        clock
+      end
     end
 
     describe 'scheduling a daily job' do
@@ -127,8 +136,8 @@ module VCAP::CloudController
         clock.schedule_frequent_inline_job(**clock_opts) { some_job_class.new }
 
         expected_job_opts = { queue: job_name }
-        expect(Jobs::Enqueuer).to have_received(:new).with(expected_job_opts)
-        expect(enqueuer).to have_received(:run_inline).with(instance_of(some_job_class))
+        expect(Jobs::InlineRunner).to have_received(:new).with(expected_job_opts)
+        expect(inline_runner).to have_received(:run).with(instance_of(some_job_class))
       end
     end
   end
