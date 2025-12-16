@@ -3,6 +3,7 @@ require 'messages/validators'
 require 'messages/base_message'
 require 'messages/empty_lifecycle_data_message'
 require 'messages/buildpack_lifecycle_data_message'
+require 'messages/route_options_message'
 require 'cloud_controller/diego/lifecycles/app_docker_lifecycle'
 require 'cloud_controller/diego/lifecycles/app_buildpack_lifecycle'
 require 'cloud_controller/diego/lifecycles/lifecycles'
@@ -530,6 +531,22 @@ module VCAP::CloudController::Validators
     end
 
     describe 'OptionsValidator' do
+      # Stub the FeatureFlag class for lightweight tests
+      before do
+        unless defined?(VCAP::CloudController::FeatureFlag)
+          feature_flag_class = Class.new do
+            def self.enabled?(flag_name, **)
+              # Default: hash_based_routing is disabled
+              return false if flag_name == :hash_based_routing
+
+              false
+            end
+          end
+
+          stub_const('VCAP::CloudController::FeatureFlag', feature_flag_class)
+        end
+      end
+
       class OptionsMessage < VCAP::CloudController::BaseMessage
         register_allowed_keys [:options]
 
@@ -553,6 +570,21 @@ module VCAP::CloudController::Validators
       it 'successfully validates empty options' do
         message = OptionsMessage.new({ options: {} })
         expect(message).to be_valid
+      end
+
+      it 'adds invalid message for hash load-balancing algorithm' do
+        message = OptionsMessage.new({ options: { loadbalancing: 'hash' } })
+        expect(message).not_to be_valid
+      end
+
+      it 'adds invalid message for hash_header option' do
+        message = OptionsMessage.new({ options: { hash_header: 'X-Potatoes' } })
+        expect(message).not_to be_valid
+      end
+
+      it 'adds invalid message for hash_balance option' do
+        message = OptionsMessage.new({ options: { hash_balance: '1.2' } })
+        expect(message).not_to be_valid
       end
 
       it 'adds invalid options message when options is null' do
@@ -582,6 +614,65 @@ module VCAP::CloudController::Validators
         message = OptionsMessage.new({ options: { cookies: 'round-robin' } })
         expect(message).not_to be_valid
         expect(message.errors_on(:options)).to include('Unknown field(s): \'cookies\'')
+      end
+
+      context 'when hash_based_routing feature flag is disabled' do
+        it 'does not allow hash_header option' do
+          message = OptionsMessage.new({ options: { hash_header: 'X-User-ID' } })
+          expect(message).not_to be_valid
+          expect(message.errors_on(:options)).to include("Hash header can only be set when loadbalancing is hash")
+        end
+
+        it 'does not allow hash_balance option' do
+          message = OptionsMessage.new({ options: { hash_balance: '1.5' } })
+          expect(message).not_to be_valid
+          expect(message.errors_on(:options)).to include("Hash balance can only be set when loadbalancing is hash")
+        end
+
+        it 'does not allow hash load-balancing algorithm' do
+          message = OptionsMessage.new({ options: { loadbalancing: 'hash' } })
+          expect(message).not_to be_valid
+          expect(message.errors_on(:options)).to include("Loadbalancing must be one of 'round-robin, least-connection' if present")
+        end
+      end
+
+      context 'when hash_based_routing feature flag is enabled' do
+        before do
+          feature_flag_class = Class.new do
+            def self.enabled?(flag_name, **)
+              return true if flag_name == :hash_based_routing
+
+              false
+            end
+          end
+
+          stub_const('VCAP::CloudController::FeatureFlag', feature_flag_class)
+        end
+
+        it 'allows hash loadbalancing option' do
+          message = OptionsMessage.new({ options: { loadbalancing: 'hash' } })
+          expect(message).to be_valid
+        end
+
+        it 'allows hash_balance option' do
+          message = OptionsMessage.new({ options: { hash_balance: '1.5' } })
+          expect(message).to be_valid
+        end
+
+        it 'allows hash_header option' do
+          message = OptionsMessage.new({ options: { hash_header: 'X-User-ID' } })
+          expect(message).to be_valid
+        end
+
+        it 'does not allow hash_header without hash load-balancing' do
+          message = OptionsMessage.new({ options: { loadbalancing: 'round-robin', hash_header: 'X-User-ID' } })
+          expect(message).not_to be_valid
+        end
+
+        it 'does not allow hash_balance without hash load-balancing' do
+          message = OptionsMessage.new({ options: { loadbalancing: 'round-robin', hash_balance: '1.5' } })
+          expect(message).not_to be_valid
+        end
       end
     end
 

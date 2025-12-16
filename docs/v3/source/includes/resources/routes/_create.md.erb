@@ -23,7 +23,7 @@ curl "https://api.example.org/v3/routes" \
     },
     "options": {
         "loadbalancing": "round-robin"
-    }
+    },
     "metadata": {
       "labels": { "key": "value" },
       "annotations": { "note": "detailed information"}
@@ -70,4 +70,31 @@ Content-Type: application/json
 Admin |
 Space Developer |
 Space Supporter |
+
+#### Example with hash-based routing
+
+```shell
+curl "https://api.example.org/v3/routes" \
+  -X POST \
+  -H "Authorization: bearer [token]" \
+  -H "Content-type: application/json" \
+  -d '{
+    "host": "user-specific-app",
+    "relationships": {
+      "domain": {
+        "data": { "guid": "domain-guid" }
+      },
+      "space": {
+        "data": { "guid": "space-guid" }
+      }
+    },
+    "options": {
+        "loadbalancing": "hash",
+        "hash_header": "X-User-ID",
+        "hash_balance": "50.0"
+    }
+  }'
+```
+
+This creates a route that uses hash-based routing on the `X-User-ID` header with a load balance factor of 50.0.
 
