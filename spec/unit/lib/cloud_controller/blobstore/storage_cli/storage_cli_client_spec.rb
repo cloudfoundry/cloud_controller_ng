@@ -167,7 +167,7 @@ module CloudController
 
       describe 'client helper operations' do
         describe 'Json operations' do
-         let(:droplets_cfg) do
+          let(:droplets_cfg) do
             f = Tempfile.new(['droplets', '.json'])
             f.write({ provider: 'AzureRM',
                       account_key: 'bommelkey',
