@@ -158,6 +158,33 @@ module VCAP::CloudController::Presenters::V3
           expect(result[:package][:guid]).to eq(@package_guid)
         end
       end
+
+      context 'when stack has warnings' do
+        before do
+          build.instance_variable_set(:@stack_warnings, ['Stack cflinuxfs3 is deprecated. EOL Dec 2025'])
+        end
+
+        it 'includes warnings in response' do
+          expect(result[:warnings]).to be_present
+          expect(result[:warnings]).to eq([{ detail: 'Stack cflinuxfs3 is deprecated. EOL Dec 2025' }])
+        end
+      end
+
+      context 'when stack has no warnings' do
+        before do
+          build.instance_variable_set(:@stack_warnings, [])
+        end
+
+        it 'returns nil for warnings' do
+          expect(result[:warnings]).to be_nil
+        end
+      end
+
+      context 'when stack warnings is nil' do
+        it 'returns nil for warnings' do
+          expect(result[:warnings]).to be_nil
+        end
+      end
     end
   end
 end
