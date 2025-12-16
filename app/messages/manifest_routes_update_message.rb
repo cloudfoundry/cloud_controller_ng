@@ -90,7 +90,7 @@ Valid values are: '#{RouteOptionsMessage.valid_loadbalancing_algorithms.join(', 
     def hash_options_are_valid
       return if errors[:routes].present?
 
-      feature_enabled = VCAP::CloudController::FeatureFlag.enabled?(:hash_based_routing)
+      hash_based_routing_feature_enabled = VCAP::CloudController::FeatureFlag.enabled?(:hash_based_routing)
 
       routes.each do |r|
         next unless r.keys.include?(:options) && r[:options].is_a?(Hash)
@@ -101,12 +101,12 @@ Valid values are: '#{RouteOptionsMessage.valid_loadbalancing_algorithms.join(', 
         hash_balance = options[:hash_balance]
 
         # When feature flag is disabled, hash options are not allowed at all
-        if hash_header.present? && !feature_enabled
+        if hash_header.present? && !hash_based_routing_feature_enabled
           errors.add(:base, message: "Route '#{r[:route]}': Hash header can only be set when loadbalancing is hash")
           next
         end
 
-        if hash_balance.present? && !feature_enabled
+        if hash_balance.present? && !hash_based_routing_feature_enabled
           errors.add(:base, message: "Route '#{r[:route]}': Hash balance can only be set when loadbalancing is hash")
           next
         end
