@@ -1900,6 +1900,7 @@ RSpec.describe 'Apps' do
                                                             'droplet' => {
                                                               'guid' => droplet.guid
                                                             },
+                                                            'warnings' => nil,
                                                             'relationships' => { 'app' => { 'data' => { 'guid' => app_model.guid } } },
                                                             'metadata' => { 'labels' => {}, 'annotations' => {} },
                                                             'links' => {
@@ -1929,6 +1930,7 @@ RSpec.describe 'Apps' do
                                                             'droplet' => {
                                                               'guid' => second_droplet.guid
                                                             },
+                                                            'warnings' => nil,
                                                             'relationships' => { 'app' => { 'data' => { 'guid' => app_model.guid } } },
                                                             'metadata' => { 'labels' => {}, 'annotations' => {} },
                                                             'links' => {
