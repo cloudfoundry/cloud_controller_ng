@@ -452,6 +452,84 @@ module VCAP::CloudController
         end
       end
 
+      context 'when stack is DISABLED' do
+        let(:disabled_stack) { Stack.make(name: 'cflinuxfs3', state: 'DISABLED', description: 'Migrate to cflinuxfs4') }
+        let(:lifecycle_data) do
+          {
+            stack: disabled_stack.name,
+            buildpacks: [buildpack_git_url]
+          }
+        end
+
+        it 'raises StackValidationFailed error for staging' do
+          expect do
+            action.create_and_stage(package:, lifecycle:)
+          end.to raise_error(CloudController::Errors::ApiError) do |error|
+            expect(error.name).to eq('StackValidationFailed')
+            expect(error.message).to include('disabled')
+            expect(error.message).to include('cannot be used for staging new applications')
+          end
+        end
+
+        it 'does not create any DB records' do
+          expect do
+            action.create_and_stage(package:, lifecycle:)
+          rescue StandardError
+            nil
+          end.not_to(change { [BuildModel.count, BuildpackLifecycleDataModel.count, AppUsageEvent.count, Event.count] })
+        end
+      end
+
+      context 'when stack is RESTRICTED' do
+        let(:restricted_stack) { Stack.make(name: 'cflinuxfs3', state: 'RESTRICTED', description: 'No new apps') }
+        let(:lifecycle_data) do
+          {
+            stack: restricted_stack.name,
+            buildpacks: [buildpack_git_url]
+          }
+        end
+
+        context 'build for new app' do
+          it 'raises StackValidationFailed error' do
+            expect(app.builds_dataset.count).to eq(0)
+            expect do
+              action.create_and_stage(package:, lifecycle:)
+            end.to raise_error(CloudController::Errors::ApiError) do |error|
+              expect(error.name).to eq('StackValidationFailed')
+              expect(error.message).to include('annot be used for staging new applications')
+            end
+          end
+
+          it 'does not create any DB records' do
+            expect do
+              action.create_and_stage(package:, lifecycle:)
+            rescue StandardError
+              nil
+            end.not_to(change { [BuildModel.count, BuildpackLifecycleDataModel.count, AppUsageEvent.count, Event.count] })
+          end
+        end
+
+        context 'app has previous builds' do
+          before do
+            BuildModel.make(app: app, state: BuildModel::STAGED_STATE)
+          end
+
+          it 'allows restaging' do
+            expect(app.builds_dataset.count).to eq(1)
+            expect do
+              action.create_and_stage(package:, lifecycle:)
+            end.not_to raise_error
+          end
+
+          it 'creates build successfully' do
+            build = action.create_and_stage(package:, lifecycle:)
+            expect(build.id).not_to be_nil
+            expect(build.state).to eq(BuildModel::STAGING_STATE)
+            expect(app.builds_dataset.count).to eq(2)
+          end
+        end
+      end
+
       context 'when there is already a staging in progress for the app' do
         it 'raises a StagingInProgress exception' do
           BuildModel.make(state: BuildModel::STAGING_STATE, app: app)

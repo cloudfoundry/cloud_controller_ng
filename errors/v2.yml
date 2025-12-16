@@ -863,6 +863,11 @@
   http_code: 404
   message: "The stack could not be found: %s"
 
+250004:
+  name: StackValidationFailed
+  http_code: 422
+  message: "%s"
+
 260001:
   name: ServicePlanVisibilityInvalid
   http_code: 400
