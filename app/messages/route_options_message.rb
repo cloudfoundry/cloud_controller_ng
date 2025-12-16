@@ -34,7 +34,11 @@ module VCAP::CloudController
     end
 
     def hash_options_only_with_hash_loadbalancing
-      # When feature flag is disabled, these options are not allowed at all
+      # We cannot rely solely on NoAdditionalKeysValidator because:
+      # 1. register_allowed_keys sets the ALLOWED_KEYS constant at class load time
+      # 2. Even though we override allowed_keys method, the constant is already set
+      # 3. We need explicit runtime validation based on feature flag
+
       feature_enabled = VCAP::CloudController::FeatureFlag.enabled?(:hash_based_routing)
 
       if hash_header.present? && !feature_enabled
@@ -47,6 +51,7 @@ module VCAP::CloudController
         return
       end
 
+      # When loadbalancing is explicitly set to non-hash value, hash options are not allowed
       if hash_header.present? && loadbalancing.present? && loadbalancing != 'hash'
         errors.add(:base, 'Hash header can only be set when loadbalancing is hash')
       end

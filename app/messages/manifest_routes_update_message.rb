@@ -28,6 +28,7 @@ module VCAP::CloudController
     validate :route_protocols_are_valid, if: proc { |record| record.requested?(:routes) }
     validate :route_options_are_valid, if: proc { |record| record.requested?(:routes) }
     validate :loadbalancings_are_valid, if: proc { |record| record.requested?(:routes) }
+    validate :hash_options_are_valid, if: proc { |record| record.requested?(:routes) }
     validate :no_route_is_boolean
     validate :default_route_is_boolean
     validate :random_route_is_boolean
@@ -75,14 +76,49 @@ Valid keys: '#{RouteOptionsMessage.valid_route_options.join(', ')}'")
         loadbalancing = r[:options][:loadbalancing]
         unless loadbalancing.is_a?(String)
           errors.add(:base,
-            message: "Invalid value for 'loadbalancing' for Route '#{r[:route]}'; \
+                     message: "Invalid value for 'loadbalancing' for Route '#{r[:route]}'; \
 Valid values are: '#{RouteOptionsMessage.valid_loadbalancing_algorithms.join(', ')}'")
           next
         end
         RouteOptionsMessage.valid_loadbalancing_algorithms.exclude?(loadbalancing) &&
           errors.add(:base,
-            message: "Cannot use loadbalancing value '#{loadbalancing}' for Route '#{r[:route]}'; \
+                     message: "Cannot use loadbalancing value '#{loadbalancing}' for Route '#{r[:route]}'; \
 Valid values are: '#{RouteOptionsMessage.valid_loadbalancing_algorithms.join(', ')}'")
+      end
+    end
+
+    def hash_options_are_valid
+      return if errors[:routes].present?
+
+      feature_enabled = VCAP::CloudController::FeatureFlag.enabled?(:hash_based_routing)
+
+      routes.each do |r|
+        next unless r.keys.include?(:options) && r[:options].is_a?(Hash)
+
+        options = r[:options]
+        loadbalancing = options[:loadbalancing]
+        hash_header = options[:hash_header]
+        hash_balance = options[:hash_balance]
+
+        # When feature flag is disabled, hash options are not allowed at all
+        if hash_header.present? && !feature_enabled
+          errors.add(:base, message: "Route '#{r[:route]}': Hash header can only be set when loadbalancing is hash")
+          next
+        end
+
+        if hash_balance.present? && !feature_enabled
+          errors.add(:base, message: "Route '#{r[:route]}': Hash balance can only be set when loadbalancing is hash")
+          next
+        end
+
+        # When loadbalancing is explicitly set to non-hash value, hash options are not allowed
+        if hash_header.present? && loadbalancing.present? && loadbalancing != 'hash'
+          errors.add(:base, message: "Route '#{r[:route]}': Hash header can only be set when loadbalancing is hash")
+        end
+
+        if hash_balance.present? && loadbalancing.present? && loadbalancing != 'hash'
+          errors.add(:base, message: "Route '#{r[:route]}': Hash balance can only be set when loadbalancing is hash")
+        end
       end
     end
 

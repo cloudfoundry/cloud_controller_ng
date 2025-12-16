@@ -580,11 +580,13 @@ module VCAP::CloudController::Validators
       it 'adds invalid message for hash_header option' do
         message = OptionsMessage.new({ options: { hash_header: 'X-Potatoes' } })
         expect(message).not_to be_valid
+        expect(message.errors_on(:options)).to include("Hash header can only be set when loadbalancing is hash")
       end
 
       it 'adds invalid message for hash_balance option' do
         message = OptionsMessage.new({ options: { hash_balance: '1.2' } })
         expect(message).not_to be_valid
+        expect(message.errors_on(:options)).to include("Hash balance can only be set when loadbalancing is hash")
       end
 
       it 'adds invalid options message when options is null' do
