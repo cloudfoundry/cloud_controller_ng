@@ -1194,7 +1194,7 @@ RSpec.describe 'Packages' do
 
       expect(last_response.status).to eq(202)
       expect(last_response.body).to eq('')
-      expect(last_response.header['Location']).to match(%r{jobs/[a-fA-F0-9-]+})
+      expect(last_response.headers['Location']).to match(%r{jobs/[a-fA-F0-9-]+})
       execute_all_jobs(expected_successes: 2, expected_failures: 0)
       get "/v3/packages/#{guid}", {}, user_header
       expect(last_response.status).to eq(404)
