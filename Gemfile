@@ -31,7 +31,7 @@ gem 'redis'
 gem 'rubyzip', '>= 1.3.0'
 gem 'sequel', '~> 5.99'
 gem 'sequel_pg', require: 'sequel'
-gem 'sinatra', '~> 3.2'
+gem 'sinatra', '~> 4.2'
 gem 'sinatra-contrib'
 gem 'statsd-ruby', '~> 1.5.0'
 gem 'steno'
@@ -88,6 +88,7 @@ group :test do
   gem 'rubocop-sequel', '~> 0.4.1'
   gem 'timecop'
   gem 'webmock', '> 2.3.1'
+  gem 'webrick', '~> 1.9.0'
 end
 
 group :development do
