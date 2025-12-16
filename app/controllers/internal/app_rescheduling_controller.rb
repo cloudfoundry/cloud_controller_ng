@@ -25,7 +25,8 @@ module VCAP::CloudController
     private
 
     def rescheduling_request
-      payload = body.read
+      request.body.rewind
+      payload = request.body.read
       Oj.load(payload)
     rescue StandardError => e
       logger.error('diego.app_rescheduling.parse-error', payload: payload, error: e.to_s)
