@@ -21,7 +21,7 @@ module VCAP::CloudController
 
     plugin :after_initialize
 
-    serialize_attributes :json, :maintenance_info
+    serialize_attributes :json, :maintenance_info, :broker_provided_metadata
 
     def validation_policies
       if space

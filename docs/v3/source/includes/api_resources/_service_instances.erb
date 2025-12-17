@@ -43,6 +43,14 @@
       },
       "upgrade_available": false,
       "dashboard_url": "https://service-broker.example.org/dashboard",
+      "broker_provided_metadata": {
+        "labels": {
+          "service_engine_version": "16.6"
+        },
+        "attributes": {
+          "max_connections": "100"
+        }
+      },
       "last_operation": {
         "type": "create",
         "state": "succeeded",
@@ -152,6 +160,14 @@
   },
   "upgrade_available": false,
   "dashboard_url": "https://service-broker.example.org/dashboard",
+  "broker_provided_metadata": {
+    "labels": {
+      "service_engine_version": "16.6"
+    },
+    "attributes": {
+      "max_connections": "100"
+    }
+  },
   "last_operation": {
     "type": <%= metadata.fetch(:operation, "create").to_json %>,
     "state": "succeeded",
