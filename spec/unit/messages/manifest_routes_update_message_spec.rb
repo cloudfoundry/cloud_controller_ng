@@ -212,10 +212,10 @@ module VCAP::CloudController
       context 'when a route contains empty route options' do
         let(:body) do
           { 'routes' =>
-              [
-                { 'route' => 'existing.example.com',
-                  'options' => {} }
-              ] }
+            [
+              { 'route' => 'existing.example.com',
+                'options' => {} }
+            ] }
         end
 
         it 'returns true' do
@@ -245,10 +245,10 @@ module VCAP::CloudController
       context 'when a route contains invalid route options' do
         let(:body) do
           { 'routes' =>
-              [
-                { 'route' => 'existing.example.com',
-                  'options' => { 'invalid' => 'invalid' } }
-              ] }
+            [
+              { 'route' => 'existing.example.com',
+                'options' => { 'invalid' => 'invalid' } }
+            ] }
         end
 
         it 'returns true' do
@@ -263,12 +263,12 @@ module VCAP::CloudController
       context 'when a route contains a valid value for loadbalancing' do
         let(:body) do
           { 'routes' =>
-              [
-                { 'route' => 'existing.example.com',
-                  'options' => {
-                    'loadbalancing' => 'round-robin'
-                  } }
-              ] }
+            [
+              { 'route' => 'existing.example.com',
+                'options' => {
+                  'loadbalancing' => 'round-robin'
+                } }
+            ] }
         end
 
         it 'returns true' do
@@ -323,6 +323,24 @@ module VCAP::CloudController
             VCAP::CloudController::FeatureFlag.make(name: 'hash_based_routing', enabled: false)
           end
 
+          context 'when a route contains loadbalancing=hash' do
+            let(:body) do
+              { 'routes' =>
+                [
+                  { 'route' => 'existing.example.com',
+                    'options' => {
+                      'loadbalancing' => 'hash'
+                    } }
+                ] }
+            end
+            it 'returns false' do
+              msg = ManifestRoutesUpdateMessage.new(body)
+
+              expect(msg.valid?).to be(false)
+              expect(msg.errors.full_messages).to include("Cannot use loadbalancing value 'hash' for Route 'existing.example.com'; Valid values are: 'round-robin, least-connection'")
+            end
+          end
+
           context 'when a route contains hash_header' do
             let(:body) do
               { 'routes' =>
@@ -338,7 +356,7 @@ module VCAP::CloudController
               msg = ManifestRoutesUpdateMessage.new(body)
 
               expect(msg.valid?).to be(false)
-              expect(msg.errors.full_messages).to include("Route 'existing.example.com': Hash header can only be set when loadbalancing is hash")
+              expect(msg.errors.full_messages).to include("Route 'existing.example.com' contains invalid route option 'hash_header'. Valid keys: 'loadbalancing'")
             end
           end
 
@@ -357,7 +375,7 @@ module VCAP::CloudController
               msg = ManifestRoutesUpdateMessage.new(body)
 
               expect(msg.valid?).to be(false)
-              expect(msg.errors.full_messages).to include("Route 'existing.example.com': Hash balance can only be set when loadbalancing is hash")
+              expect(msg.errors.full_messages).to include("Route 'existing.example.com' contains invalid route option 'hash_balance'. Valid keys: 'loadbalancing'")
             end
           end
 
@@ -377,7 +395,8 @@ module VCAP::CloudController
               msg = ManifestRoutesUpdateMessage.new(body)
 
               expect(msg.valid?).to be(false)
-              expect(msg.errors.full_messages).to include("Route 'existing.example.com': Hash header can only be set when loadbalancing is hash")
+              # Should get error for invalid route options (both hash_header and hash_balance are invalid)
+              expect(msg.errors.full_messages.any? { |m| m.include?("contains invalid route option") }).to be(true)
             end
           end
         end
@@ -536,3 +555,4 @@ module VCAP::CloudController
     end
   end
 end
+

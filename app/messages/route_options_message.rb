@@ -19,9 +19,6 @@ module VCAP::CloudController
       algorithms.freeze
     end
 
-    def self.allowed_keys
-      valid_route_options
-    end
     validates_with NoAdditionalKeysValidator
     validate :loadbalancing_algorithm_is_valid
     validate :hash_options_only_with_hash_loadbalancing
@@ -34,21 +31,19 @@ module VCAP::CloudController
     end
 
     def hash_options_only_with_hash_loadbalancing
-      # We cannot rely solely on NoAdditionalKeysValidator because:
-      # 1. register_allowed_keys sets the ALLOWED_KEYS constant at class load time
-      # 2. Even though we override allowed_keys method, the constant is already set
-      # 3. We need explicit runtime validation based on feature flag
+      # Check if hash options are allowed (feature flag check via valid_route_options)
+      valid_options = self.class.valid_route_options
 
-      feature_enabled = VCAP::CloudController::FeatureFlag.enabled?(:hash_based_routing)
+      # Check all requested keys (options that were actually provided)
+      # Check needs to be done manually, as the set of allowed options may change during runtime (feature flag)
+      requested_keys.each do |key|
+        value = public_send(key) if respond_to?(key)
+        next unless value.present?
 
-      if hash_header.present? && !feature_enabled
-        errors.add(:base, 'Hash header can only be set when loadbalancing is hash')
-        return
-      end
-
-      if hash_balance.present? && !feature_enabled
-        errors.add(:base, 'Hash balance can only be set when loadbalancing is hash')
-        return
+        unless valid_options.include?(key)
+          errors.add(:base, "Unknown field(s): '#{key}'")
+          return
+        end
       end
 
       # When loadbalancing is explicitly set to non-hash value, hash options are not allowed
