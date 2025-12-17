@@ -62,9 +62,7 @@ module VCAP::CloudController
         prometheus_updater.update_gauge_metric(:cc_db_connection_pool_timeouts_total, 0, labels: { process_type: 'main' })
         @periodic_updater.setup_updates
       end
-      events.after_stopped do
-        @periodic_updater.stop_updates unless @periodic_updater.nil?
-      end
+      events.after_stopped(&method(:shutdown_periodic_updater))
 
       @puma_launcher = Puma::Launcher.new(puma_config, log_writer:, events:)
     end
@@ -77,6 +75,21 @@ module VCAP::CloudController
     end
 
     private
+
+    def shutdown_periodic_updater
+      if @periodic_updater
+        Thread.new do
+          # Give the trap handler a moment to return before taking any locks.
+          sleep 0.05
+          @periodic_updater.stop_updates
+        rescue StandardError => e
+          @logger.error "Failed to stop periodic updates cleanly: #{e}\n#{e.backtrace&.join("\n")}"
+        end
+      end
+    rescue StandardError => e
+      # Never let exceptions from the trap context bubble up and crash shutdown.
+      @logger.error "Failed to schedule periodic updates shutdown: #{e}\n#{e.backtrace&.join("\n")}"
+    end
 
     def prometheus_updater
       CloudController::DependencyLocator.instance.prometheus_updater
