@@ -51,7 +51,11 @@ module VCAP::CloudController
       # Validate hash_balance is numeric if present
       if hash_balance.present?
         begin
-          Float(hash_balance)
+          balance_float = Float(hash_balance)
+          # Must be either 0 or >= 1.1
+          unless balance_float == 0 || balance_float >= 1.1
+            errors.add(:hash_balance, 'must be either 0 or greater than or equal to 1.1')
+          end
         rescue ArgumentError, TypeError
           errors.add(:hash_balance, 'must be a numeric value')
         end

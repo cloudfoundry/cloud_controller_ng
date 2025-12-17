@@ -690,6 +690,27 @@ module VCAP::CloudController::Validators
           expect(message.errors.full_messages).to include('Options Hash balance must be a numeric value')
         end
 
+        it 'allows hash_balance of 0' do
+          message = OptionsMessage.new({ options: { hash_balance: 0 } })
+          expect(message).to be_valid
+        end
+
+        it 'allows hash_balance of 1.1' do
+          message = OptionsMessage.new({ options: { hash_balance: 1.1 } })
+          expect(message).to be_valid
+        end
+
+        it 'allows hash_balance greater than 1.1' do
+          message = OptionsMessage.new({ options: { hash_balance: 2.5 } })
+          expect(message).to be_valid
+        end
+
+        it 'does not allow hash_balance between 0 and 1.1' do
+          message = OptionsMessage.new({ options: { hash_balance: 0.5 } })
+          expect(message).not_to be_valid
+          expect(message.errors.full_messages).to include('Options Hash balance must be either 0 or greater than or equal to 1.1')
+        end
+
         it 'allows numeric string hash_balance' do
           message = OptionsMessage.new({ options: { hash_balance: '2.5' } })
           expect(message).to be_valid

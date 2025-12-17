@@ -566,6 +566,87 @@ module VCAP::CloudController
             end
           end
 
+          context 'when a route contains hash_balance of 0' do
+            let(:body) do
+              { 'routes' =>
+                [
+                  { 'route' => 'existing.example.com',
+                    'options' => {
+                      'loadbalancing' => 'hash',
+                      'hash_header' => 'X-User-ID',
+                      'hash_balance' => 0
+                    } }
+                ] }
+            end
+
+            it 'returns true' do
+              msg = ManifestRoutesUpdateMessage.new(body)
+
+              expect(msg.valid?).to be(true)
+            end
+          end
+
+          context 'when a route contains hash_balance between 0 and 1.1' do
+            let(:body) do
+              { 'routes' =>
+                [
+                  { 'route' => 'existing.example.com',
+                    'options' => {
+                      'loadbalancing' => 'hash',
+                      'hash_header' => 'X-User-ID',
+                      'hash_balance' => 0.5
+                    } }
+                ] }
+            end
+
+            it 'returns false' do
+              msg = ManifestRoutesUpdateMessage.new(body)
+
+              expect(msg.valid?).to be(false)
+              expect(msg.errors.full_messages).to include("Route 'existing.example.com': Hash balance must be either 0 or greater than or equal to 1.1")
+            end
+          end
+
+          context 'when a route contains hash_balance of 1.1' do
+            let(:body) do
+              { 'routes' =>
+                [
+                  { 'route' => 'existing.example.com',
+                    'options' => {
+                      'loadbalancing' => 'hash',
+                      'hash_header' => 'X-User-ID',
+                      'hash_balance' => 1.1
+                    } }
+                ] }
+            end
+
+            it 'returns true' do
+              msg = ManifestRoutesUpdateMessage.new(body)
+
+              expect(msg.valid?).to be(true)
+            end
+          end
+
+          context 'when a route contains hash_balance greater than 1.1' do
+            let(:body) do
+              { 'routes' =>
+                [
+                  { 'route' => 'existing.example.com',
+                    'options' => {
+                      'loadbalancing' => 'hash',
+                      'hash_header' => 'X-User-ID',
+                      'hash_balance' => 3.5
+                    } }
+                ] }
+            end
+
+            it 'returns true' do
+              msg = ManifestRoutesUpdateMessage.new(body)
+
+              expect(msg.valid?).to be(true)
+            end
+          end
+
           context 'when a route contains numeric string hash_balance' do
             let(:body) do
               { 'routes' =>
