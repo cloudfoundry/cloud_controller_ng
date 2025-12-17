@@ -21,8 +21,8 @@ module VCAP::CloudController
 
     validates_with NoAdditionalKeysValidator
     validate :loadbalancing_algorithm_is_valid
-    validate :hash_options_only_with_hash_loadbalancing
-    validate :hash_balance_is_numeric
+    validate :route_options_are_valid
+    validate :hash_options_are_valid
 
     def loadbalancing_algorithm_is_valid
       return if loadbalancing.nil?
@@ -31,20 +31,10 @@ module VCAP::CloudController
       errors.add(:loadbalancing, "must be one of '#{self.class.valid_loadbalancing_algorithms.join(', ')}' if present")
     end
 
-    def hash_balance_is_numeric
-      return if hash_balance.nil?
-
-      # Try to convert to float
-      Float(hash_balance)
-    rescue ArgumentError, TypeError
-      errors.add(:hash_balance, 'must be a numeric value')
-    end
-
-    def hash_options_only_with_hash_loadbalancing
-      # Check if hash options are allowed (feature flag check via valid_route_options)
+    def route_options_are_valid
       valid_options = self.class.valid_route_options
 
-      # Check all requested keys (options that were actually provided)
+      # Check if any requested options are not in valid_route_options
       # Check needs to be done manually, as the set of allowed options may change during runtime (feature flag)
       requested_keys.each do |key|
         value = public_send(key) if respond_to?(key)
@@ -53,6 +43,22 @@ module VCAP::CloudController
         unless valid_options.include?(key)
           errors.add(:base, "Unknown field(s): '#{key}'")
           return
+        end
+      end
+    end
+
+    def hash_options_are_valid
+      # Only validate hash-specific options when the feature flag is enabled
+      # If disabled, route_options_are_valid will already report them as unknown fields
+      return unless VCAP::CloudController::FeatureFlag.enabled?(:hash_based_routing)
+
+      # Feature flag is enabled - validate hash-specific options
+      # Validate hash_balance is numeric if present
+      if hash_balance.present?
+        begin
+          Float(hash_balance)
+        rescue ArgumentError, TypeError
+          errors.add(:hash_balance, 'must be a numeric value')
         end
       end
 

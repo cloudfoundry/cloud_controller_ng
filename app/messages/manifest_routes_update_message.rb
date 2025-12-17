@@ -90,6 +90,10 @@ Valid values are: '#{RouteOptionsMessage.valid_loadbalancing_algorithms.join(', 
     def hash_options_are_valid
       return if errors[:routes].present?
 
+      # Only validate hash-specific options when the feature flag is enabled
+      # If disabled, route_options_are_valid will already report them as invalid
+      return unless VCAP::CloudController::FeatureFlag.enabled?(:hash_based_routing)
+
       # Note: route_options_are_valid already validates that hash_header and hash_balance
       # are only allowed when the feature flag is enabled (via valid_route_options).
       # Here we only validate that they aren't used with non-hash loadbalancing algorithms.

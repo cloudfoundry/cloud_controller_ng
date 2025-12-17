@@ -379,6 +379,28 @@ module VCAP::CloudController
             end
           end
 
+          context 'when a route contains hash_balance with round-robin loadbalancing' do
+            let(:body) do
+              { 'routes' =>
+                [
+                  { 'route' => 'existing.example.com',
+                    'options' => {
+                      'loadbalancing' => 'round-robin',
+                      'hash_balance' => '1.2'
+                    } }
+                ] }
+            end
+
+            it 'returns false with only one error (invalid option), and skips hash-based routing specific error messages' do
+              msg = ManifestRoutesUpdateMessage.new(body)
+
+              expect(msg.valid?).to be(false)
+              expect(msg.errors.full_messages).to include("Route 'existing.example.com' contains invalid route option 'hash_balance'. Valid keys: 'loadbalancing'")
+              expect(msg.errors.full_messages).not_to include("Route 'existing.example.com': Hash balance can only be set when loadbalancing is hash")
+              expect(msg.errors.full_messages.length).to eq(1)
+            end
+          end
+
           context 'when a route contains both hash_header and hash_balance' do
             let(:body) do
               { 'routes' =>
