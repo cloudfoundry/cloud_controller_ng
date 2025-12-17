@@ -71,7 +71,8 @@ module VCAP::CloudController
     end
 
     def options_with_serialization=(opts)
-      self.options_without_serialization = Oj.dump(opts)
+      normalized_opts = normalize_hash_balance_to_string(opts)
+      self.options_without_serialization = Oj.dump(normalized_opts)
     end
 
     alias_method :options_without_serialization=, :options=
@@ -315,6 +316,17 @@ module VCAP::CloudController
       return if org_reserved_route_ports_policy.allow_more_route_ports?
 
       errors.add(:organization, :total_reserved_route_ports_exceeded)
+    end
+
+    def normalize_hash_balance_to_string(opts)
+      return opts unless opts.is_a?(Hash)
+      return opts unless opts.key?('hash_balance') || opts.key?(:hash_balance)
+
+      normalized = opts.deep_symbolize_keys
+      if normalized[:hash_balance].present?
+        normalized[:hash_balance] = normalized[:hash_balance].to_s
+      end
+      normalized
     end
 
     def validate_uniqueness_on_host_and_domain

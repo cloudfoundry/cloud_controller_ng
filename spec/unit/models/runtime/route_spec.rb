@@ -1055,6 +1055,122 @@ module VCAP::CloudController
       it { is_expected.to import_attributes :host, :domain_guid, :space_guid, :app_guids, :path, :port, :options }
     end
 
+    describe 'options normalization' do
+      let(:space) { Space.make }
+      let(:domain) { PrivateDomain.make(owning_organization: space.organization) }
+
+      context 'when hash_balance is provided as a float' do
+        it 'stores hash_balance as a string in the database' do
+          route = Route.make(
+            host: 'test-route',
+            domain: domain,
+            space: space,
+            options: { loadbalancing: 'hash', hash_header: 'X-User-ID', hash_balance: 1.5 }
+          )
+
+          route.reload
+          parsed_options = Oj.load(route.options_without_serialization)
+          expect(parsed_options['hash_balance']).to be_a(String)
+          expect(parsed_options['hash_balance']).to eq('1.5')
+        end
+      end
+
+      context 'when hash_balance is provided as an integer' do
+        it 'stores hash_balance as a string in the database' do
+          route = Route.make(
+            host: 'test-route',
+            domain: domain,
+            space: space,
+            options: { loadbalancing: 'hash', hash_header: 'X-User-ID', hash_balance: 2 }
+          )
+
+          route.reload
+          parsed_options = Oj.load(route.options_without_serialization)
+          expect(parsed_options['hash_balance']).to be_a(String)
+          expect(parsed_options['hash_balance']).to eq('2')
+        end
+      end
+
+      context 'when hash_balance is provided as a string' do
+        it 'keeps hash_balance as a string in the database' do
+          route = Route.make(
+            host: 'test-route',
+            domain: domain,
+            space: space,
+            options: { loadbalancing: 'hash', hash_header: 'X-User-ID', hash_balance: '1.25' }
+          )
+
+          route.reload
+          parsed_options = Oj.load(route.options_without_serialization)
+          expect(parsed_options['hash_balance']).to be_a(String)
+          expect(parsed_options['hash_balance']).to eq('1.25')
+        end
+      end
+
+      context 'when hash_balance is 0' do
+        it 'stores hash_balance as a string "0" in the database' do
+          route = Route.make(
+            host: 'test-route',
+            domain: domain,
+            space: space,
+            options: { loadbalancing: 'hash', hash_header: 'X-User-ID', hash_balance: 0 }
+          )
+
+          route.reload
+          parsed_options = Oj.load(route.options_without_serialization)
+          expect(parsed_options['hash_balance']).to be_a(String)
+          expect(parsed_options['hash_balance']).to eq('0')
+        end
+      end
+
+      context 'when options do not include hash_balance' do
+        it 'does not add hash_balance to the options' do
+          route = Route.make(
+            host: 'test-route',
+            domain: domain,
+            space: space,
+            options: { loadbalancing: 'round-robin' }
+          )
+
+          route.reload
+          parsed_options = Oj.load(route.options_without_serialization)
+          expect(parsed_options).not_to have_key('hash_balance')
+        end
+      end
+
+      context 'when options are nil' do
+        it 'handles nil options gracefully' do
+          route = Route.make(
+            host: 'test-route',
+            domain: domain,
+            space: space,
+            options: nil
+          )
+
+          route.reload
+          expect(route.options).to be_nil
+        end
+      end
+
+      context 'when updating an existing route with hash_balance as float' do
+        it 'converts hash_balance to string on update' do
+          route = Route.make(
+            host: 'test-route',
+            domain: domain,
+            space: space,
+            options: { loadbalancing: 'hash', hash_header: 'X-User-ID', hash_balance: 2.5 }
+          )
+
+          route.update(options: { loadbalancing: 'hash', hash_header: 'X-User-ID', hash_balance: 2.5 })
+          route.reload
+
+          parsed_options = Oj.load(route.options_without_serialization)
+          expect(parsed_options['hash_balance']).to be_a(String)
+          expect(parsed_options['hash_balance']).to eq('2.5')
+        end
+      end
+    end
+
     describe 'instance methods' do
       let(:space) { Space.make }
 
