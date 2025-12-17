@@ -52,7 +52,7 @@ module VCAP::CloudController
               )
             end
           end
-      rescue Sequel::ValidationFailed, RouteCreate::Error => e
+      rescue Sequel::ValidationFailed, RouteCreate::Error, RouteUpdate::Error => e
         raise InvalidRoute.new(e.message)
       end
 

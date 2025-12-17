@@ -1,5 +1,8 @@
 module VCAP::CloudController
   class RouteUpdate
+    class Error < StandardError
+    end
+
     def update(route:, message:)
       Route.db.transaction do
         if message.requested?(:options)
@@ -41,6 +44,7 @@ module VCAP::CloudController
       return if loadbalancing != 'hash'
 
       hash_header = options[:hash_header]
+
 
       if hash_header.blank?
         error!('Hash header must be present when loadbalancing is set to hash')
