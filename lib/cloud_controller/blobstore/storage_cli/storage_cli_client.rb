@@ -30,13 +30,14 @@ module CloudController
       def initialize(directory_key:, resource_type:, root_dir:, min_size: nil, max_size: nil)
         raise 'Missing resource_type' if resource_type.nil?
 
+        config_file_path = config_path_for(resource_type)
         cfg = fetch_config(resource_type)
         @provider = cfg['provider'].to_s
-        raise BlobstoreError.new('No provider specified in config file') if @provider.empty?
+        raise BlobstoreError.new("No provider specified in config file: #{File.basename(config_file_path)}") if @provider.empty?
         raise "Unimplemented provider: #{@provider}, implemented ones are: #{IMPLEMENTED_PROVIDERS.join(', ')}" unless IMPLEMENTED_PROVIDERS.include?(@provider)
 
         @cli_path = cli_path
-        @config_file = config_path_for(resource_type)
+        @config_file = config_file_path
         @directory_key = directory_key
         @resource_type = resource_type.to_s
         @root_dir = root_dir
