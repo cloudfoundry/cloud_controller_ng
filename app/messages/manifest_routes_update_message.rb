@@ -76,13 +76,13 @@ Valid keys: '#{RouteOptionsMessage.valid_route_options.join(', ')}'")
         loadbalancing = r[:options][:loadbalancing]
         unless loadbalancing.is_a?(String)
           errors.add(:base,
-                     message: "Invalid value for 'loadbalancing' for Route '#{r[:route]}'; \
+            message: "Invalid value for 'loadbalancing' for Route '#{r[:route]}'; \
 Valid values are: '#{RouteOptionsMessage.valid_loadbalancing_algorithms.join(', ')}'")
           next
         end
         RouteOptionsMessage.valid_loadbalancing_algorithms.exclude?(loadbalancing) &&
           errors.add(:base,
-                     message: "Cannot use loadbalancing value '#{loadbalancing}' for Route '#{r[:route]}'; \
+            message: "Cannot use loadbalancing value '#{loadbalancing}' for Route '#{r[:route]}'; \
 Valid values are: '#{RouteOptionsMessage.valid_loadbalancing_algorithms.join(', ')}'")
       end
     end
@@ -94,9 +94,8 @@ Valid values are: '#{RouteOptionsMessage.valid_loadbalancing_algorithms.join(', 
       # If disabled, route_options_are_valid will already report them as invalid
       return unless VCAP::CloudController::FeatureFlag.enabled?(:hash_based_routing)
 
-      # Note: route_options_are_valid already validates that hash_header and hash_balance
+      # NOTE: route_options_are_valid already validates that hash_header and hash_balance
       # are only allowed when the feature flag is enabled (via valid_route_options).
-      # Here we only validate that they aren't used with non-hash loadbalancing algorithms.
 
       routes.each do |r|
         next unless r.keys.include?(:options) && r[:options].is_a?(Hash)

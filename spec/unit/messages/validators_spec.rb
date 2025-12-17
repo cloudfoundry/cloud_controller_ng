@@ -631,6 +631,12 @@ module VCAP::CloudController::Validators
           expect(message.errors_on(:options)).to include("Unknown field(s): 'hash_balance'")
         end
 
+        it 'reports multiple invalid keys together' do
+          message = OptionsMessage.new({ options: { hash_header: 'X-User-ID', hash_balance: '1.5' } })
+          expect(message).not_to be_valid
+          expect(message.errors_on(:options)).to include("Unknown field(s): 'hash_header', 'hash_balance'")
+        end
+
         it 'does not allow hash load-balancing algorithm' do
           message = OptionsMessage.new({ options: { loadbalancing: 'hash' } })
           expect(message).not_to be_valid
@@ -698,7 +704,6 @@ module VCAP::CloudController::Validators
           message = OptionsMessage.new({ options: { hash_balance: 1.5 } })
           expect(message).to be_valid
         end
-
       end
     end
 

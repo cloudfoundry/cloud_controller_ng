@@ -7,9 +7,7 @@ module VCAP::CloudController
 
     def self.valid_route_options
       options = %i[loadbalancing]
-      if VCAP::CloudController::FeatureFlag.enabled?(:hash_based_routing)
-        options += %i[hash_header hash_balance]
-      end
+      options += %i[hash_header hash_balance] if VCAP::CloudController::FeatureFlag.enabled?(:hash_based_routing)
       options.freeze
     end
 
@@ -36,15 +34,12 @@ module VCAP::CloudController
 
       # Check if any requested options are not in valid_route_options
       # Check needs to be done manually, as the set of allowed options may change during runtime (feature flag)
-      requested_keys.each do |key|
+      invalid_keys = requested_keys.select do |key|
         value = public_send(key) if respond_to?(key)
-        next unless value.present?
-
-        unless valid_options.include?(key)
-          errors.add(:base, "Unknown field(s): '#{key}'")
-          return
-        end
+        value.present? && valid_options.exclude?(key)
       end
+
+      errors.add(:base, "Unknown field(s): '#{invalid_keys.join("', '")}'") if invalid_keys.any?
     end
 
     def hash_options_are_valid
@@ -63,13 +58,8 @@ module VCAP::CloudController
       end
 
       # When loadbalancing is explicitly set to non-hash value, hash options are not allowed
-      if hash_header.present? && loadbalancing.present? && loadbalancing != 'hash'
-        errors.add(:base, 'Hash header can only be set when loadbalancing is hash')
-      end
-
-      if hash_balance.present? && loadbalancing.present? && loadbalancing != 'hash'
-        errors.add(:base, 'Hash balance can only be set when loadbalancing is hash')
-      end
+      errors.add(:base, 'Hash header can only be set when loadbalancing is hash') if hash_header.present? && loadbalancing.present? && loadbalancing != 'hash'
+      errors.add(:base, 'Hash balance can only be set when loadbalancing is hash') if hash_balance.present? && loadbalancing.present? && loadbalancing != 'hash'
     end
   end
 end

@@ -333,11 +333,13 @@ module VCAP::CloudController
                     } }
                 ] }
             end
+
             it 'returns false' do
               msg = ManifestRoutesUpdateMessage.new(body)
 
               expect(msg.valid?).to be(false)
-              expect(msg.errors.full_messages).to include("Cannot use loadbalancing value 'hash' for Route 'existing.example.com'; Valid values are: 'round-robin, least-connection'")
+              expect(msg.errors.full_messages).to include(
+                "Cannot use loadbalancing value 'hash' for Route 'existing.example.com'; Valid values are: 'round-robin, least-connection'")
             end
           end
 
@@ -356,7 +358,8 @@ module VCAP::CloudController
               msg = ManifestRoutesUpdateMessage.new(body)
 
               expect(msg.valid?).to be(false)
-              expect(msg.errors.full_messages).to include("Route 'existing.example.com' contains invalid route option 'hash_header'. Valid keys: 'loadbalancing'")
+              expect(msg.errors.full_messages).to include(
+                "Route 'existing.example.com' contains invalid route option 'hash_header'. Valid keys: 'loadbalancing'")
             end
           end
 
@@ -418,7 +421,7 @@ module VCAP::CloudController
 
               expect(msg.valid?).to be(false)
               # Should get error for invalid route options (both hash_header and hash_balance are invalid)
-              expect(msg.errors.full_messages.any? { |m| m.include?("contains invalid route option") }).to be(true)
+              expect(msg.errors.full_messages.any? { |m| m.include?('contains invalid route option') }).to be(true)
             end
           end
         end
@@ -636,4 +639,3 @@ module VCAP::CloudController
     end
   end
 end
-
