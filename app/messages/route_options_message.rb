@@ -22,12 +22,22 @@ module VCAP::CloudController
     validates_with NoAdditionalKeysValidator
     validate :loadbalancing_algorithm_is_valid
     validate :hash_options_only_with_hash_loadbalancing
+    validate :hash_balance_is_numeric
 
     def loadbalancing_algorithm_is_valid
       return if loadbalancing.nil?
       return if self.class.valid_loadbalancing_algorithms.include?(loadbalancing)
 
       errors.add(:loadbalancing, "must be one of '#{self.class.valid_loadbalancing_algorithms.join(', ')}' if present")
+    end
+
+    def hash_balance_is_numeric
+      return if hash_balance.nil?
+
+      # Try to convert to float
+      Float(hash_balance)
+    rescue ArgumentError, TypeError
+      errors.add(:hash_balance, 'must be a numeric value')
     end
 
     def hash_options_only_with_hash_loadbalancing

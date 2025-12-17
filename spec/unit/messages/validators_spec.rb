@@ -678,6 +678,27 @@ module VCAP::CloudController::Validators
           expect(message.errors_on(:options)).to include('Hash balance can only be set when loadbalancing is hash')
         end
 
+        it 'does not allow non-numeric hash_balance' do
+          message = OptionsMessage.new({ options: { hash_balance: 'not-a-number' } })
+          expect(message).not_to be_valid
+          expect(message.errors.full_messages).to include('Options Hash balance must be a numeric value')
+        end
+
+        it 'allows numeric string hash_balance' do
+          message = OptionsMessage.new({ options: { hash_balance: '2.5' } })
+          expect(message).to be_valid
+        end
+
+        it 'allows integer string hash_balance' do
+          message = OptionsMessage.new({ options: { hash_balance: '3' } })
+          expect(message).to be_valid
+        end
+
+        it 'allows float hash_balance' do
+          message = OptionsMessage.new({ options: { hash_balance: 1.5 } })
+          expect(message).to be_valid
+        end
+
       end
     end
 

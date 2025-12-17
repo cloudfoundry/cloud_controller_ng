@@ -522,6 +522,65 @@ module VCAP::CloudController
             end
           end
 
+          context 'when a route contains non-numeric hash_balance' do
+            let(:body) do
+              { 'routes' =>
+                [
+                  { 'route' => 'existing.example.com',
+                    'options' => {
+                      'hash_balance' => 'not-a-number'
+                    } }
+                ] }
+            end
+
+            it 'returns false' do
+              msg = ManifestRoutesUpdateMessage.new(body)
+
+              expect(msg.valid?).to be(false)
+              expect(msg.errors.full_messages).to include("Route 'existing.example.com': Hash balance must be a numeric value")
+            end
+          end
+
+          context 'when a route contains numeric string hash_balance' do
+            let(:body) do
+              { 'routes' =>
+                [
+                  { 'route' => 'existing.example.com',
+                    'options' => {
+                      'loadbalancing' => 'hash',
+                      'hash_header' => 'X-User-ID',
+                      'hash_balance' => '2.5'
+                    } }
+                ] }
+            end
+
+            it 'returns true' do
+              msg = ManifestRoutesUpdateMessage.new(body)
+
+              expect(msg.valid?).to be(true)
+            end
+          end
+
+          context 'when a route contains float hash_balance' do
+            let(:body) do
+              { 'routes' =>
+                [
+                  { 'route' => 'existing.example.com',
+                    'options' => {
+                      'loadbalancing' => 'hash',
+                      'hash_header' => 'X-User-ID',
+                      'hash_balance' => 1.5
+                    } }
+                ] }
+            end
+
+            it 'returns true' do
+              msg = ManifestRoutesUpdateMessage.new(body)
+
+              expect(msg.valid?).to be(true)
+            end
+          end
+
           context 'when multiple routes have mixed valid and invalid hash options' do
             let(:body) do
               { 'routes' =>

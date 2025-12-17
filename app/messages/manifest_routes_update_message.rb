@@ -102,6 +102,14 @@ Valid values are: '#{RouteOptionsMessage.valid_loadbalancing_algorithms.join(', 
         hash_header = options[:hash_header]
         hash_balance = options[:hash_balance]
 
+        # Validate hash_balance is numeric if present
+        if hash_balance.present?
+          begin
+            Float(hash_balance)
+          rescue ArgumentError, TypeError
+            errors.add(:base, message: "Route '#{r[:route]}': Hash balance must be a numeric value")
+          end
+        end
 
         # When loadbalancing is explicitly set to non-hash value, hash options are not allowed
         if hash_header.present? && loadbalancing.present? && loadbalancing != 'hash'
