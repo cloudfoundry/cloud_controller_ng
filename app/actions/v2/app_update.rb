@@ -4,9 +4,12 @@ require 'actions/staging_cancel'
 module VCAP::CloudController
   module V2
     class AppUpdate
+      attr_reader :warnings
+
       def initialize(access_validator:, stagers:)
         @access_validator = access_validator
         @stagers          = stagers
+        @warnings         = []
       end
 
       def update(app, process, request_attrs)
@@ -116,7 +119,9 @@ module VCAP::CloudController
       end
 
       def stage(process)
-        V2::AppStage.new(stagers: @stagers).stage(process)
+        app_stage = V2::AppStage.new(stagers: @stagers)
+        app_stage.stage(process)
+        @warnings = app_stage.warnings
       end
 
       def start_or_stop(app, request_attrs)

@@ -11,7 +11,7 @@ module VCAP::CloudController
     describe 'POST /v2/apps/:id/restage' do
       subject(:restage_request) { post "/v2/apps/#{process.app.guid}/restage", {} }
       let!(:process) { ProcessModelFactory.make }
-      let(:app_stage) { instance_double(V2::AppStage, stage: nil) }
+      let(:app_stage) { instance_double(V2::AppStage, stage: nil, warnings: []) }
 
       before do
         allow(V2::AppStage).to receive(:new).and_return(app_stage)

@@ -926,6 +926,58 @@ RSpec.describe 'Apps' do
       end
     end
 
+    context 'stack state validation on app update with staging' do
+      let(:stager) { instance_double(VCAP::CloudController::Diego::Stager, stage: nil) }
+
+      before do
+        allow_any_instance_of(VCAP::CloudController::Stagers).to receive(:validate_process)
+        allow_any_instance_of(VCAP::CloudController::Stagers).to receive(:stager_for_build).and_return(stager)
+        VCAP::CloudController::Buildpack.make
+        VCAP::CloudController::PackageModel.make(app: process.app, state: VCAP::CloudController::PackageModel::READY_STATE)
+      end
+
+      context 'when stack is DISABLED' do
+        let(:disabled_stack) { VCAP::CloudController::Stack.make(name: 'cflinuxfs2', state: 'DISABLED', description: 'Migrate to cflinuxfs4') }
+        let(:update_params) { Oj.dump({ state: 'STARTED' }) }
+
+        before do
+          process.app.buildpack_lifecycle_data.update(stack: disabled_stack.name)
+          process.update(state: 'STOPPED')
+        end
+
+        it 'returns 422 with stack validation error when starting app' do
+          put "/v2/apps/#{process.guid}", update_params, headers_for(user)
+
+          expect(last_response.status).to eq(422)
+          parsed_response = Oj.load(last_response.body)
+          expect(parsed_response['error_code']).to eq('CF-StackValidationFailed')
+          expect(parsed_response['description']).to include('disabled')
+          expect(parsed_response['description']).to include('cflinuxfs2')
+        end
+      end
+
+      context 'when stack is DEPRECATED' do
+        let(:deprecated_stack) { VCAP::CloudController::Stack.make(name: 'cflinuxfs3', state: 'DEPRECATED', description: 'EOL Dec 2025') }
+        let(:update_params) { Oj.dump({ state: 'STARTED' }) }
+
+        before do
+          process.app.buildpack_lifecycle_data.update(stack: deprecated_stack.name)
+          process.app.update(droplet_guid: nil)
+          process.update(state: 'STOPPED')
+        end
+
+        it 'allows starting app with deprecation warning' do
+          put "/v2/apps/#{process.guid}", update_params, headers_for(user)
+
+          expect(last_response.status).to eq(201)
+          expect(last_response.headers['X-Cf-Warnings']).to be_present
+          decoded_warning = CGI.unescape(last_response.headers['X-Cf-Warnings'])
+          expect(decoded_warning).to include('deprecated')
+          expect(decoded_warning).to include('EOL Dec 2025')
+        end
+      end
+    end
+
     context 'when process memory is being decreased and the new memory allocation is lower than memory of associated sidecars' do
       let!(:process) do
         VCAP::CloudController::ProcessModelFactory.make(
@@ -1560,6 +1612,138 @@ RSpec.describe 'Apps' do
             post "/v2/apps/#{process.app.guid}/restage", nil, headers_for(user)
             expect(last_response.status).to eq(201), last_response.body
           end
+        end
+      end
+    end
+
+    context 'stack state validation' do
+      let(:process) { VCAP::CloudController::ProcessModelFactory.make(name: 'maria', space: space, diego: true) }
+      let(:stager) { instance_double(VCAP::CloudController::Diego::Stager, stage: nil) }
+
+      before do
+        allow_any_instance_of(VCAP::CloudController::Stagers).to receive(:validate_process)
+        allow_any_instance_of(VCAP::CloudController::Stagers).to receive(:stager_for_build).and_return(stager)
+        VCAP::CloudController::Buildpack.make
+      end
+
+      context 'when stack is DISABLED' do
+        let(:disabled_stack) { VCAP::CloudController::Stack.make(name: 'cflinuxfs2', state: 'DISABLED', description: 'Migrate to cflinuxfs4') }
+
+        before do
+          process.app.buildpack_lifecycle_data.update(stack: disabled_stack.name)
+        end
+
+        it 'returns 422 with stack validation error' do
+          post "/v2/apps/#{process.guid}/restage", nil, headers_for(user)
+
+          expect(last_response.status).to eq(422)
+          parsed_response = Oj.load(last_response.body)
+          expect(parsed_response['error_code']).to eq('CF-StackValidationFailed')
+          expect(parsed_response['description']).to include('disabled')
+          expect(parsed_response['description']).to include('cannot be used for staging')
+          expect(parsed_response['description']).to include('cflinuxfs2')
+          expect(parsed_response['description']).to include('Migrate to cflinuxfs4')
+        end
+
+        it 'does not expose stack state field in error response' do
+          post "/v2/apps/#{process.guid}/restage", nil, headers_for(user)
+
+          parsed_response = Oj.load(last_response.body)
+          expect(parsed_response['entity']).to be_nil
+          expect(parsed_response['error_code']).to eq('CF-StackValidationFailed')
+        end
+      end
+
+      context 'when stack is RESTRICTED' do
+        let(:restricted_stack) { VCAP::CloudController::Stack.make(name: 'cflinuxfs3', state: 'RESTRICTED', description: 'No new apps') }
+
+        before do
+          process.app.buildpack_lifecycle_data.update(stack: restricted_stack.name)
+        end
+
+        context 'for first build' do
+          before do
+            process.app.builds_dataset.destroy
+          end
+
+          it 'returns 422 with stack validation error' do
+            expect(process.app.builds_dataset.count).to eq(0)
+
+            post "/v2/apps/#{process.guid}/restage", nil, headers_for(user)
+
+            expect(last_response.status).to eq(422)
+            parsed_response = Oj.load(last_response.body)
+            expect(parsed_response['error_code']).to eq('CF-StackValidationFailed')
+            expect(parsed_response['description']).to include('cannot be used for staging new applications')
+            expect(parsed_response['description']).to include('cflinuxfs3')
+          end
+        end
+
+        context 'for restaging existing app' do
+          before do
+            VCAP::CloudController::BuildModel.make(app: process.app, state: 'STAGED')
+          end
+
+          it 'allows restaging without errors' do
+            post "/v2/apps/#{process.guid}/restage", nil, headers_for(user)
+
+            expect(last_response.status).to eq(201)
+          end
+
+          it 'does not include warnings header' do
+            post "/v2/apps/#{process.guid}/restage", nil, headers_for(user)
+
+            expect(last_response.headers['X-Cf-Warnings']).to be_nil
+          end
+        end
+      end
+
+      context 'when stack is DEPRECATED' do
+        let(:deprecated_stack) { VCAP::CloudController::Stack.make(name: 'cflinuxfs3', state: 'DEPRECATED', description: 'EOL Dec 2025') }
+
+        before do
+          process.app.buildpack_lifecycle_data.update(stack: deprecated_stack.name)
+        end
+
+        it 'allows restaging with success' do
+          post "/v2/apps/#{process.guid}/restage", nil, headers_for(user)
+
+          expect(last_response.status).to eq(201)
+        end
+
+        it 'includes deprecation warning in X-Cf-Warnings header' do
+          post "/v2/apps/#{process.guid}/restage", nil, headers_for(user)
+
+          expect(last_response.headers['X-Cf-Warnings']).to be_present
+          decoded_warning = CGI.unescape(last_response.headers['X-Cf-Warnings'])
+          expect(decoded_warning).to include('deprecated')
+          expect(decoded_warning).to include('cflinuxfs3')
+          expect(decoded_warning).to include('EOL Dec 2025')
+        end
+
+        it 'does not expose stack state field in response body' do
+          post "/v2/apps/#{process.guid}/restage", nil, headers_for(user)
+
+          parsed_response = Oj.load(last_response.body)
+          # The response includes process 'state' (STARTED/STOPPED) which is different from stack 'state'
+          # We verify stack state is not exposed by checking it's not in the stack-related fields
+          expect(parsed_response['entity']['stack_guid']).to be_present
+          expect(parsed_response.to_s).not_to match(/DEPRECATED/)
+        end
+      end
+
+      context 'when stack is ACTIVE' do
+        let(:active_stack) { VCAP::CloudController::Stack.make(name: 'cflinuxfs5', state: 'ACTIVE') }
+
+        before do
+          process.app.buildpack_lifecycle_data.update(stack: active_stack.name)
+        end
+
+        it 'allows restaging without warnings' do
+          post "/v2/apps/#{process.guid}/restage", nil, headers_for(user)
+
+          expect(last_response.status).to eq(201)
+          expect(last_response.headers['X-Cf-Warnings']).to be_nil
         end
       end
     end
