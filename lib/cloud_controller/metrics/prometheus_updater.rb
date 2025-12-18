@@ -1,5 +1,6 @@
 require 'prometheus/client'
 require 'prometheus/client/data_stores/direct_file_store'
+require 'cloud_controller/execution_context'
 
 module VCAP::CloudController::Metrics
   class PrometheusUpdater
@@ -29,12 +30,6 @@ module VCAP::CloudController::Metrics
       { type: :histogram, name: :cc_staging_failed_duration_seconds, docstring: 'Durations of failed staging events', buckets: DURATION_BUCKETS },
       { type: :gauge, name: :cc_requests_outstanding_total, docstring: 'Requests outstanding', aggregation: :sum },
       { type: :counter, name: :cc_requests_completed_total, docstring: 'Requests completed' },
-      { type: :gauge, name: :cc_vitals_started_at, docstring: 'CloudController Vitals: started_at', aggregation: :most_recent },
-      { type: :gauge, name: :cc_vitals_mem_bytes, docstring: 'CloudController Vitals: mem_bytes', aggregation: :most_recent },
-      { type: :gauge, name: :cc_vitals_cpu_load_avg, docstring: 'CloudController Vitals: cpu_load_avg', aggregation: :most_recent },
-      { type: :gauge, name: :cc_vitals_mem_used_bytes, docstring: 'CloudController Vitals: mem_used_bytes', aggregation: :most_recent },
-      { type: :gauge, name: :cc_vitals_mem_free_bytes, docstring: 'CloudController Vitals: mem_free_bytes', aggregation: :most_recent },
-      { type: :gauge, name: :cc_vitals_num_cores, docstring: 'CloudController Vitals: num_cores', aggregation: :most_recent },
       { type: :gauge, name: :cc_running_tasks_total, docstring: 'Total running tasks', aggregation: :most_recent },
       { type: :gauge, name: :cc_running_tasks_memory_bytes, docstring: 'Total memory consumed by running tasks', aggregation: :most_recent },
       { type: :gauge, name: :cc_users_total, docstring: 'Number of users', aggregation: :most_recent },
@@ -67,19 +62,68 @@ module VCAP::CloudController::Metrics
       { type: :histogram, name: :cc_job_duration_seconds, docstring: 'Job processing time (start to finish)', labels: %i[queue worker], buckets: DELAYED_JOB_METRIC_BUCKETS }
     ].freeze
 
-    def initialize(registry: Prometheus::Client.registry, cc_worker: false)
+    VITAL_METRICS = [
+      { type: :gauge, name: :cc_vitals_started_at, docstring: 'CloudController Vitals: started_at', aggregation: :most_recent },
+      { type: :gauge, name: :cc_vitals_mem_bytes, docstring: 'CloudController Vitals: mem_bytes', aggregation: :most_recent },
+      { type: :gauge, name: :cc_vitals_cpu_load_avg, docstring: 'CloudController Vitals: cpu_load_avg', aggregation: :most_recent },
+      { type: :gauge, name: :cc_vitals_mem_used_bytes, docstring: 'CloudController Vitals: mem_used_bytes', aggregation: :most_recent },
+      { type: :gauge, name: :cc_vitals_mem_free_bytes, docstring: 'CloudController Vitals: mem_free_bytes', aggregation: :most_recent },
+      { type: :gauge, name: :cc_vitals_num_cores, docstring: 'CloudController Vitals: num_cores', aggregation: :most_recent }
+    ].freeze
+
+    def initialize(registry: Prometheus::Client.registry)
       self.class.allow_pid_label
 
       @registry = registry
+      execution_context = VCAP::CloudController::ExecutionContext.from_process_type_env
 
-      # Register all metrics, to initialize them for discoverability
-      DB_CONNECTION_POOL_METRICS.each { |metric| register(metric) }
-      DELAYED_JOB_METRICS.each { |metric| register(metric) }
+      register_metrics_for_process(execution_context)
+      initialize_cc_db_connection_pool_timeouts_total(execution_context)
+    end
 
-      return if cc_worker
+    private
 
-      METRICS.each { |metric| register(metric) }
-      PUMA_METRICS.each { |metric| register(metric) } if VCAP::CloudController::Config.config&.get(:webserver) == 'puma'
+    # rubocop:disable Metrics/CyclomaticComplexity
+    def register_metrics_for_process(execution_context)
+      case execution_context
+      when VCAP::CloudController::ExecutionContext::CC_WORKER
+        DB_CONNECTION_POOL_METRICS.each { |metric| register(metric) }
+        DELAYED_JOB_METRICS.each { |metric| register(metric) }
+        VITAL_METRICS.each { |metric| register(metric) }
+      when VCAP::CloudController::ExecutionContext::CLOCK, VCAP::CloudController::ExecutionContext::DEPLOYMENT_UPDATER
+        DB_CONNECTION_POOL_METRICS.each { |metric| register(metric) }
+        VITAL_METRICS.each { |metric| register(metric) }
+      when VCAP::CloudController::ExecutionContext::API_PUMA_MAIN, VCAP::CloudController::ExecutionContext::API_PUMA_WORKER
+        DB_CONNECTION_POOL_METRICS.each { |metric| register(metric) }
+        DELAYED_JOB_METRICS.each { |metric| register(metric) }
+        VITAL_METRICS.each { |metric| register(metric) }
+        METRICS.each { |metric| register(metric) }
+        PUMA_METRICS.each { |metric| register(metric) } if is_puma_webserver?
+      else
+        raise 'Could not register Prometheus metrics: Unknown execution context'
+      end
+    end
+    # rubocop:enable Metrics/CyclomaticComplexity
+
+    def initialize_cc_db_connection_pool_timeouts_total(execution_context)
+      return if execution_context.nil? # In unit tests, the execution context might not be set - thus skip initialization
+      return unless @registry.exist?(:cc_db_connection_pool_timeouts_total) # If the metric is not registered, we don't need to initialize it
+
+      # initialize metric with 0 for discoverability, because it likely won't get updated on healthy systems
+      update_gauge_metric(:cc_db_connection_pool_timeouts_total, 0, labels: { process_type: execution_context.process_type })
+
+      return unless execution_context == VCAP::CloudController::ExecutionContext::API_PUMA_MAIN
+
+      # also initialize for puma_worker
+      update_gauge_metric(:cc_db_connection_pool_timeouts_total, 0, labels: { process_type: VCAP::CloudController::ExecutionContext::API_PUMA_WORKER.process_type })
+    end
+
+    public
+
+    def is_puma_webserver?
+      VCAP::CloudController::Config.config&.get(:webserver) == 'puma'
+    rescue VCAP::CloudController::Config::InvalidConfigPath
+      false
     end
 
     def update_gauge_metric(metric, value, labels: {})

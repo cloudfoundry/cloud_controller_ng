@@ -654,7 +654,7 @@ module VCAP::CloudController::Metrics
         expect(periodic_updater).to receive(:update_deploying_count).once
         expect(periodic_updater).to receive(:update_webserver_stats).once
 
-        periodic_updater.update!
+        PeriodicUpdater::ALL_TASKS.each { |task| periodic_updater.update!(task) }
       end
     end
 
@@ -677,6 +677,61 @@ module VCAP::CloudController::Metrics
         allow(logger).to receive(:info)
         periodic_updater.catch_error { raise exception }
         expect(logger).to have_received(:info).with(exception)
+      end
+    end
+
+    describe 'task list configuration' do
+      describe 'with vitals task only' do
+        let(:vitals_updater) do
+          PeriodicUpdater.new(start_time, log_counter, logger, statsd_updater, prometheus_updater, [PeriodicUpdater::VITALS_TASK])
+        end
+
+        before do
+          allow(statsd_updater).to receive(:update_vitals)
+          allow(prometheus_updater).to receive(:update_vitals)
+        end
+
+        it 'only sets up one timer task' do
+          vitals_updater.setup_updates
+
+          expect(vitals_updater.instance_variable_get(:@update_tasks).length).to eq(1)
+        end
+
+        it 'executes the vitals task' do
+          vitals_updater.update!(PeriodicUpdater::VITALS_TASK)
+
+          expect(statsd_updater).to have_received(:update_vitals)
+          expect(prometheus_updater).to have_received(:update_vitals)
+        end
+      end
+
+      describe 'with multiple specific tasks' do
+        let(:custom_updater) do
+          PeriodicUpdater.new(
+            start_time,
+            log_counter,
+            logger,
+            statsd_updater,
+            prometheus_updater,
+            [PeriodicUpdater::VITALS_TASK, PeriodicUpdater::LOG_COUNTS_TASK]
+          )
+        end
+
+        it 'sets up timer tasks for specified tasks only' do
+          allow(statsd_updater).to receive(:update_vitals)
+          allow(statsd_updater).to receive(:update_log_counts)
+          allow(prometheus_updater).to receive(:update_vitals)
+
+          custom_updater.setup_updates
+
+          expect(custom_updater.instance_variable_get(:@update_tasks).length).to eq(2)
+        end
+      end
+
+      describe 'default ALL_TASKS behavior' do
+        it 'uses all tasks when no task_list is provided' do
+          expect(periodic_updater.instance_variable_get(:@task_list)).to eq(PeriodicUpdater::ALL_TASKS)
+        end
       end
     end
   end

@@ -1,7 +1,7 @@
 require 'spec_helper'
 
 module VCAP::CloudController
-  RSpec.describe MetricsWebserver do
+  RSpec.describe ApiMetricsWebserver do
     let(:metrics_webserver) { described_class.new }
     let(:config) { double('config', get: nil) }
 

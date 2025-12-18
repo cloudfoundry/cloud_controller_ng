@@ -192,6 +192,35 @@ module VCAP::CloudController
           schedule.start
         end
       end
+
+      describe 'publish metrics' do
+        before do
+          allow(clock).to receive(:schedule_frequent_worker_job)
+          allow(clock).to receive(:schedule_frequent_inline_job)
+          allow(clock).to receive(:schedule_daily_job)
+          allow(VCAP::CloudController::StandaloneMetricsWebserver).to receive(:start_for_bosh_job)
+        end
+
+        context 'when set to false' do
+          before do
+            TestConfig.override(publish_metrics: false)
+          end
+
+          it 'does not publish metrics' do
+            schedule.start
+            expect(VCAP::CloudController::StandaloneMetricsWebserver).not_to have_received(:start_for_bosh_job)
+          end
+        end
+
+        context 'when set to true' do
+          before { TestConfig.override(publish_metrics: true) }
+
+          it 'sets up a webserve' do
+            schedule.start
+            expect(VCAP::CloudController::StandaloneMetricsWebserver).to have_received(:start_for_bosh_job)
+          end
+        end
+      end
     end
   end
 end

@@ -4,7 +4,7 @@ module DelayedJobMetrics
       attr_writer :prometheus
 
       def prometheus
-        @prometheus ||= CloudController::DependencyLocator.instance.cc_worker_prometheus_updater
+        @prometheus ||= CloudController::DependencyLocator.instance.prometheus_updater
       end
     end
 
