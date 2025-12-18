@@ -320,6 +320,21 @@ module VCAP::CloudController
       errors.add(:organization, :total_reserved_route_ports_exceeded)
     end
 
+    def validate_route_options
+      return if options.blank?
+
+      route_options = options.is_a?(Hash) ? options : options.deep_symbolize_keys
+      loadbalancing = route_options[:loadbalancing] || route_options['loadbalancing']
+
+      return if loadbalancing != 'hash'
+
+      hash_header = route_options[:hash_header] || route_options['hash_header']
+
+      if hash_header.blank?
+        errors.add(:route, :hash_header_missing)
+      end
+    end
+
     def normalize_hash_balance_to_string(opts)
       return opts unless opts.is_a?(Hash)
       return opts unless opts.key?('hash_balance') || opts.key?(:hash_balance)
@@ -344,21 +359,6 @@ module VCAP::CloudController
       end
 
       opts_symbolized
-    end
-
-    def validate_route_options
-      return if options.blank?
-
-      route_options = options.is_a?(Hash) ? options : options.deep_symbolize_keys
-      loadbalancing = route_options[:loadbalancing] || route_options['loadbalancing']
-
-      return if loadbalancing != 'hash'
-
-      hash_header = route_options[:hash_header] || route_options['hash_header']
-
-      if hash_header.blank?
-        errors.add(:options, 'Hash header must be present when loadbalancing is set to hash')
-      end
     end
 
     def validate_uniqueness_on_host_and_domain
