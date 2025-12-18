@@ -1171,6 +1171,183 @@ module VCAP::CloudController
       end
     end
 
+    describe 'route options validation' do
+      let(:space) { Space.make }
+      let(:domain) { PrivateDomain.make(owning_organization: space.organization) }
+
+      context 'when loadbalancing is hash' do
+        context 'and hash_header is present' do
+          it 'is valid' do
+            route = Route.new(
+              host: 'test-route',
+              domain: domain,
+              space: space,
+              options: { loadbalancing: 'hash', hash_header: 'X-User-ID' }
+            )
+
+            expect(route).to be_valid
+          end
+        end
+
+        context 'and hash_header is missing' do
+          it 'is invalid and adds an error' do
+            route = Route.new(
+              host: 'test-route',
+              domain: domain,
+              space: space,
+              options: { loadbalancing: 'hash' }
+            )
+
+            expect(route).not_to be_valid
+            expect(route.errors[:options]).to include('Hash header must be present when loadbalancing is set to hash')
+          end
+        end
+
+        context 'and hash_header is blank string' do
+          it 'is invalid and adds an error' do
+            route = Route.new(
+              host: 'test-route',
+              domain: domain,
+              space: space,
+              options: { loadbalancing: 'hash', hash_header: '' }
+            )
+
+            expect(route).not_to be_valid
+            expect(route.errors[:options]).to include('Hash header must be present when loadbalancing is set to hash')
+          end
+        end
+
+        context 'and hash_header and hash_balance are both present' do
+          it 'is valid' do
+            route = Route.new(
+              host: 'test-route',
+              domain: domain,
+              space: space,
+              options: { loadbalancing: 'hash', hash_header: 'X-User-ID', hash_balance: '1.5' }
+            )
+
+            expect(route).to be_valid
+          end
+        end
+      end
+
+      context 'when loadbalancing is round-robin' do
+        context 'and hash_header is present' do
+          it 'is valid (no validation error for non-hash loadbalancing)' do
+            route = Route.new(
+              host: 'test-route',
+              domain: domain,
+              space: space,
+              options: { loadbalancing: 'round-robin' }
+            )
+
+            expect(route).to be_valid
+          end
+        end
+      end
+
+      context 'when loadbalancing is least-connection' do
+        it 'is valid' do
+          route = Route.new(
+            host: 'test-route',
+            domain: domain,
+            space: space,
+            options: { loadbalancing: 'least-connection' }
+          )
+
+          expect(route).to be_valid
+        end
+      end
+
+      context 'when options are nil' do
+        it 'is valid' do
+          route = Route.new(
+            host: 'test-route',
+            domain: domain,
+            space: space,
+            options: nil
+          )
+
+          expect(route).to be_valid
+        end
+      end
+
+      context 'when options are empty hash' do
+        it 'is valid' do
+          route = Route.new(
+            host: 'test-route',
+            domain: domain,
+            space: space,
+            options: {}
+          )
+
+          expect(route).to be_valid
+        end
+      end
+
+      context 'when updating an existing route' do
+        context 'changing to hash loadbalancing without hash_header' do
+          it 'is invalid' do
+            route = Route.make(
+              host: 'test-route',
+              domain: domain,
+              space: space,
+              options: { loadbalancing: 'round-robin' }
+            )
+
+            route.options = { loadbalancing: 'hash' }
+
+            expect(route).not_to be_valid
+            expect(route.errors[:options]).to include('Hash header must be present when loadbalancing is set to hash')
+          end
+        end
+
+        context 'changing to hash loadbalancing with hash_header' do
+          it 'is valid' do
+            route = Route.make(
+              host: 'test-route',
+              domain: domain,
+              space: space,
+              options: { loadbalancing: 'round-robin' }
+            )
+
+            route.options = { loadbalancing: 'hash', hash_header: 'X-Request-ID' }
+
+            expect(route).to be_valid
+          end
+        end
+      end
+
+      context 'when options use string keys instead of symbols' do
+        context 'and hash_header is present' do
+          it 'is valid' do
+            route = Route.new(
+              host: 'test-route',
+              domain: domain,
+              space: space,
+              options: { 'loadbalancing' => 'hash', 'hash_header' => 'X-User-ID' }
+            )
+
+            expect(route).to be_valid
+          end
+        end
+
+        context 'and hash_header is missing' do
+          it 'is invalid and adds an error' do
+            route = Route.new(
+              host: 'test-route',
+              domain: domain,
+              space: space,
+              options: { 'loadbalancing' => 'hash' }
+            )
+
+            expect(route).not_to be_valid
+            expect(route.errors[:options]).to include('Hash header must be present when loadbalancing is set to hash')
+          end
+        end
+      end
+    end
+
     describe 'instance methods' do
       let(:space) { Space.make }
 

@@ -126,6 +126,7 @@ module VCAP::CloudController
       validate_total_routes
       validate_ports
       validate_total_reserved_route_ports if port && port > 0
+      validate_route_options
 
       RouteValidator.new(self).validate
     rescue RoutingApi::UaaUnavailable
@@ -327,6 +328,21 @@ module VCAP::CloudController
         normalized[:hash_balance] = normalized[:hash_balance].to_s
       end
       normalized
+    end
+
+    def validate_route_options
+      return if options.blank?
+
+      route_options = options.is_a?(Hash) ? options : options.deep_symbolize_keys
+      loadbalancing = route_options[:loadbalancing] || route_options['loadbalancing']
+
+      return if loadbalancing != 'hash'
+
+      hash_header = route_options[:hash_header] || route_options['hash_header']
+
+      if hash_header.blank?
+        errors.add(:options, 'Hash header must be present when loadbalancing is set to hash')
+      end
     end
 
     def validate_uniqueness_on_host_and_domain

@@ -1,8 +1,5 @@
 module VCAP::CloudController
   class RouteUpdate
-    class Error < StandardError
-    end
-
     def update(route:, message:)
       Route.db.transaction do
         if message.requested?(:options)
@@ -15,9 +12,6 @@ module VCAP::CloudController
             merged_options.delete(:hash_header)
             merged_options.delete(:hash_balance)
           end
-
-          # Validate the merged options
-          validate_route_options!(merged_options)
 
           # Set the options on the route
           route.options = merged_options
@@ -33,27 +27,6 @@ module VCAP::CloudController
         end
       end
       route
-    end
-
-    private
-
-    def validate_route_options!(options)
-      return if options.blank?
-
-      loadbalancing = options[:loadbalancing]
-      return if loadbalancing != 'hash'
-
-      hash_header = options[:hash_header]
-
-
-      if hash_header.blank?
-        error!('Hash header must be present when loadbalancing is set to hash')
-      end
-
-    end
-
-    def error!(message)
-      raise Error.new(message)
     end
   end
 end
