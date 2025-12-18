@@ -8,6 +8,10 @@ RSpec.describe 'Metrics' do
   delegate :app, to: :metrics_webserver
 
   before do
+    # Force Puma to bind to an ephemeral port (0) to avoid EADDRINUSE
+    allow_any_instance_of(Puma::Server).to receive(:add_tcp_listener).and_wrap_original do |m, host, _|
+      m.call(host, 0)
+    end
     allow_any_instance_of(VCAP::CloudController::Metrics::PeriodicUpdater).to receive(:update_webserver_stats)
     metrics_webserver.start(TestConfig.config_instance)
   end
