@@ -294,6 +294,7 @@ module VCAP::CloudController
 
       updater = V2::AppUpdate.new(access_validator: self, stagers: @stagers)
       updater.update(app, process, request_attrs)
+      updater.warnings.each { |warning| add_warning(warning) }
 
       after_update(process)
 

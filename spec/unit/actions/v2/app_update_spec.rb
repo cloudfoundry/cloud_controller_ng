@@ -432,7 +432,7 @@ module VCAP::CloudController
       describe 'updating docker_image' do
         let(:process) { ProcessModelFactory.make(app: AppModel.make(:docker), docker_image: 'repo/original-image') }
         let!(:original_package) { process.latest_package }
-        let(:app_stage) { instance_double(V2::AppStage, stage: nil) }
+        let(:app_stage) { instance_double(V2::AppStage, stage: nil, warnings: []) }
 
         before do
           FeatureFlag.create(name: 'diego_docker', enabled: true)
@@ -507,7 +507,7 @@ module VCAP::CloudController
       describe 'updating docker_credentials' do
         let(:process) { ProcessModelFactory.make(app: AppModel.make(:docker), docker_image: 'repo/original-image') }
         let!(:original_package) { process.latest_package }
-        let(:app_stage) { instance_double(V2::AppStage, stage: nil) }
+        let(:app_stage) { instance_double(V2::AppStage, stage: nil, warnings: []) }
 
         before do
           FeatureFlag.create(name: 'diego_docker', enabled: true)
@@ -545,7 +545,7 @@ module VCAP::CloudController
       end
 
       describe 'staging' do
-        let(:app_stage) { instance_double(V2::AppStage, stage: nil) }
+        let(:app_stage) { instance_double(V2::AppStage, stage: nil, warnings: []) }
         let(:process) { ProcessModelFactory.make(state: 'STARTED') }
         let(:app) { process.app }
 
