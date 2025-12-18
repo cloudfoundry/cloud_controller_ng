@@ -71,7 +71,8 @@ module VCAP::CloudController
     end
 
     def options_with_serialization=(opts)
-      normalized_opts = normalize_hash_balance_to_string(opts)
+      cleaned_opts = remove_hash_options_for_non_hash_loadbalancing(opts)
+      normalized_opts = normalize_hash_balance_to_string(cleaned_opts)
       self.options_without_serialization = Oj.dump(normalized_opts)
     end
 
@@ -328,6 +329,21 @@ module VCAP::CloudController
         normalized[:hash_balance] = normalized[:hash_balance].to_s
       end
       normalized
+    end
+
+    def remove_hash_options_for_non_hash_loadbalancing(opts)
+      return opts unless opts.is_a?(Hash)
+
+      opts_symbolized = opts.deep_symbolize_keys
+      loadbalancing = opts_symbolized[:loadbalancing]
+
+      # Remove hash-specific options if loadbalancing is set to non-hash value
+      if loadbalancing.present? && loadbalancing != 'hash'
+        opts_symbolized.delete(:hash_header)
+        opts_symbolized.delete(:hash_balance)
+      end
+
+      opts_symbolized
     end
 
     def validate_route_options

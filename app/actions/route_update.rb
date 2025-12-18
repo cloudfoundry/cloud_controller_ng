@@ -7,13 +7,7 @@ module VCAP::CloudController
           existing_options = route.options&.deep_symbolize_keys || {}
           merged_options = existing_options.merge(message.options).compact
 
-          # Remove hash-specific options if switching to non-hash loadbalancing
-          if merged_options[:loadbalancing] && merged_options[:loadbalancing] != 'hash'
-            merged_options.delete(:hash_header)
-            merged_options.delete(:hash_balance)
-          end
-
-          # Set the options on the route
+          # Set the options on the route (cleanup is handled by model)
           route.options = merged_options
         end
 
