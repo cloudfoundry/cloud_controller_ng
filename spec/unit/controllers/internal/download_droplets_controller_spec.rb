@@ -64,7 +64,7 @@ module VCAP::CloudController
           get "/internal/v2/droplets/#{process.guid}/#{process.droplet_checksum}/download"
 
           expect(last_response).to be_redirect
-          expect(last_response.header['Location']).to eq(expected_redirect)
+          expect(last_response.headers['Location']).to eq(expected_redirect)
         end
       end
 
@@ -250,7 +250,7 @@ module VCAP::CloudController
           get "/internal/v4/droplets/#{process.guid}/#{process.droplet_checksum}/download"
 
           expect(last_response).to be_redirect
-          expect(last_response.header['Location']).to eq('http://example.com/somewhere/else')
+          expect(last_response.headers['Location']).to eq('http://example.com/somewhere/else')
         end
 
         context 'when using with a revision' do
@@ -271,7 +271,7 @@ module VCAP::CloudController
             get "/internal/v4/droplets/#{process.guid}/#{new_droplet.checksum}/download"
 
             expect(last_response).to be_redirect
-            expect(last_response.header['Location']).to eq('http://example.com/correct/droplet')
+            expect(last_response.headers['Location']).to eq('http://example.com/correct/droplet')
           end
         end
       end

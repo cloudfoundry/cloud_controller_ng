@@ -163,7 +163,7 @@ RSpec.describe FeatureFlagsController, type: :controller do
         it 'returns a 422 with the error message' do
           patch :update, params: { name: feature_flag_name, enabled: true }, as: :json
 
-          expect(response).to have_http_status :unprocessable_entity
+          expect(response).to have_http_status :unprocessable_content
           expect(parsed_body['errors'].first['detail']).to eq 'that did not work'
         end
       end
@@ -174,7 +174,7 @@ RSpec.describe FeatureFlagsController, type: :controller do
             name: feature_flag_name,
             bogus_param: 'bogus value'
           }
-          expect(response).to have_http_status :unprocessable_entity
+          expect(response).to have_http_status :unprocessable_content
           expect(response.body).to include 'Unknown field'
         end
       end

@@ -121,7 +121,8 @@ module VCAP::CloudController
     attr_reader :stagers
 
     def read_body
-      payload          = body.read
+      request.body.rewind
+      payload = request.body.read
       Oj.load(payload, symbol_keys: true)
     rescue StandardError => e
       logger.error('diego.staging.parse-error', payload: payload, error: e.to_s)

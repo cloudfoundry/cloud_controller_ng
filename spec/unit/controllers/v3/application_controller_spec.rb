@@ -362,7 +362,7 @@ RSpec.describe ApplicationController, type: :controller do
       routes.draw { get 'multiple_warnings' => 'anonymous#multiple_warnings' }
       get :multiple_warnings
       expect(response).to have_http_status(:ok)
-      warnings = response.headers['X-Cf-Warnings'].split(',').map { |w| CGI.unescape(w) }
+      warnings = response.headers['X-Cf-Warnings'].map { |w| CGI.unescape(w) }
       expect(warnings).to eq([
         'warning,a',
         'wa,rning b',

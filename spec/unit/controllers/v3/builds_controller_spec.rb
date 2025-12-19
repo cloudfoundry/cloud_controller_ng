@@ -215,7 +215,7 @@ RSpec.describe BuildsController, type: :controller do
 
       it 'returns a 422 Unprocessable Entity and an informative error message' do
         post :create, params: req_body, as: :json
-        expect(response).to have_http_status :unprocessable_entity
+        expect(response).to have_http_status :unprocessable_content
         expect(response.body).to include 'Only one build can be STAGING at a time per application.'
       end
     end
@@ -226,7 +226,7 @@ RSpec.describe BuildsController, type: :controller do
       it 'returns a 422 Unprocessable Entity' do
         post :create, body: bad_request.to_json
 
-        expect(response).to have_http_status :unprocessable_entity
+        expect(response).to have_http_status :unprocessable_content
         expect(response.body).to include('UnprocessableEntity')
       end
 
@@ -242,7 +242,7 @@ RSpec.describe BuildsController, type: :controller do
         it 'returns a 422 Unprocessable Entity' do
           post :create, params: req_body, as: :json
 
-          expect(response).to have_http_status(:unprocessable_entity)
+          expect(response).to have_http_status(:unprocessable_content)
           expect(response.body).to include('UnprocessableEntity')
           expect(response.body).to include('Unable to use package. Ensure that the package exists and you have access to it.')
         end
@@ -258,7 +258,7 @@ RSpec.describe BuildsController, type: :controller do
       it 'returns a 422 Unprocessable Entity' do
         post :create, params: req_body, as: :json
 
-        expect(response).to have_http_status(:unprocessable_entity)
+        expect(response).to have_http_status(:unprocessable_content)
         expect(response.body).to include('UnprocessableEntity')
         expect(response.body).to include('an error occurred')
       end
@@ -300,7 +300,7 @@ RSpec.describe BuildsController, type: :controller do
             it 'returns a 422' do
               post :create, params: req_body, as: :json
 
-              expect(response).to have_http_status(:unprocessable_entity)
+              expect(response).to have_http_status(:unprocessable_content)
               expect(response.body).to include('UnprocessableEntity')
             end
           end
@@ -322,7 +322,7 @@ RSpec.describe BuildsController, type: :controller do
             it 'returns a 422' do
               post :create, params: req_body, as: :json
 
-              expect(response).to have_http_status(:unprocessable_entity)
+              expect(response).to have_http_status(:unprocessable_content)
               expect(response.body).to include('UnprocessableEntity')
             end
           end
@@ -439,7 +439,7 @@ RSpec.describe BuildsController, type: :controller do
           it 'raises a 422' do
             post :create, params: req_body, as: :json
 
-            expect(response).to have_http_status(:unprocessable_entity)
+            expect(response).to have_http_status(:unprocessable_content)
             expect(response.body).to include('UnprocessableEntity')
           end
         end
@@ -508,7 +508,7 @@ RSpec.describe BuildsController, type: :controller do
           it 'raises a 422' do
             post :create, params: req_body, as: :json
 
-            expect(response).to have_http_status(:unprocessable_entity)
+            expect(response).to have_http_status(:unprocessable_content)
             expect(response.body).to include('UnprocessableEntity')
           end
         end
@@ -601,7 +601,7 @@ RSpec.describe BuildsController, type: :controller do
         it 'returns 422 Unprocessable' do
           post :create, params: req_body, as: :json
 
-          expect(response).to have_http_status(:unprocessable_entity)
+          expect(response).to have_http_status(:unprocessable_content)
           expect(response.body).to include("space's memory limit exceeded")
           expect(response.body).to include('helpful message')
         end
@@ -617,7 +617,7 @@ RSpec.describe BuildsController, type: :controller do
         it 'returns 422 Unprocessable' do
           post :create, params: req_body, as: :json
 
-          expect(response).to have_http_status(:unprocessable_entity)
+          expect(response).to have_http_status(:unprocessable_content)
           expect(response.body).to include("organization's memory limit exceeded")
           expect(response.body).to include('helpful message')
         end
@@ -631,7 +631,7 @@ RSpec.describe BuildsController, type: :controller do
         it 'returns 422 Unprocessable' do
           post :create, params: req_body, as: :json
 
-          expect(response).to have_http_status(:unprocessable_entity)
+          expect(response).to have_http_status(:unprocessable_content)
           expect(response.body).to include('disk limit exceeded')
         end
       end
@@ -646,7 +646,7 @@ RSpec.describe BuildsController, type: :controller do
         it 'returns 422 Unprocessable' do
           post :create, params: req_body, as: :json
 
-          expect(response).to have_http_status(:unprocessable_entity)
+          expect(response).to have_http_status(:unprocessable_content)
           expect(response.body).to include("space's log rate limit exceeded")
           expect(response.body).to include('helpful message')
         end
@@ -662,7 +662,7 @@ RSpec.describe BuildsController, type: :controller do
         it 'returns 422 Unprocessable' do
           post :create, params: req_body, as: :json
 
-          expect(response).to have_http_status(:unprocessable_entity)
+          expect(response).to have_http_status(:unprocessable_content)
           expect(response.body).to include("organization's log rate limit exceeded")
           expect(response.body).to include('helpful message')
         end
@@ -727,7 +727,7 @@ RSpec.describe BuildsController, type: :controller do
 
         it 'returns the correct error message' do
           post :create, params: req_body, as: :json
-          expect(response).to have_http_status :unprocessable_entity
+          expect(response).to have_http_status :unprocessable_content
           expect(response.body).to include('UnprocessableEntity')
           expect(response.body).to include('Unable to use package. Ensure that the package exists and you have access to it.')
         end
@@ -740,7 +740,7 @@ RSpec.describe BuildsController, type: :controller do
 
         it 'returns the correct error message' do
           post :create, params: req_body, as: :json
-          expect(response).to have_http_status :unprocessable_entity
+          expect(response).to have_http_status :unprocessable_content
           expect(response.body).to include('UnprocessableEntity')
           expect(response.body).to include('Unable to use package. Ensure that the package exists and you have access to it.')
         end
@@ -813,7 +813,7 @@ RSpec.describe BuildsController, type: :controller do
     it 'returns 422 with invalid metadata' do
       patch :update, params: { guid: build.guid,
                                metadata: { annotations: { '' => 'stop', '*this*' => 'stuff' } } }, as: :json
-      expect(response).to have_http_status(:unprocessable_entity)
+      expect(response).to have_http_status(:unprocessable_content)
     end
 
     context 'when the build\'s package has been deleted' do

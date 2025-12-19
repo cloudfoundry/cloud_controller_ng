@@ -25,7 +25,8 @@ module VCAP::CloudController
     private
 
     def readiness_request
-      payload = body.read
+      request.body.rewind
+      payload = request.body.read
       Oj.load(payload)
     rescue StandardError => e
       logger.error('diego.app_readiness_changed.parse-error', payload: payload, error: e.to_s)

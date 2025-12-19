@@ -70,6 +70,7 @@ module Sinatra
         set(:show_exceptions, false)
         set(:raise_errors, false)
         set(:dump_errors, false)
+        set(:host_authorization, permitted_hosts: [])
       end
 
       configure :development do

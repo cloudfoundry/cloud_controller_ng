@@ -1818,7 +1818,7 @@ module VCAP::CloudController
       it 'lets the user download the droplet' do
         get "/v2/apps/#{process.app.guid}/droplet/download", Oj.dump({})
         expect(last_response).to be_redirect
-        expect(last_response.header['Location']).to eq('http://example.com/somewhere/else')
+        expect(last_response.headers['Location']).to eq('http://example.com/somewhere/else')
       end
 
       it 'returns an error for non-existent apps' do

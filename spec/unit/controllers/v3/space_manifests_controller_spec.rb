@@ -119,7 +119,7 @@ RSpec.describe SpaceManifestsController, type: :controller do
 
         it 'returns a 422' do
           post :apply_manifest, params: { guid: space.guid }, body: request_body.to_yaml, as: :yaml
-          expect(response).to have_http_status(:unprocessable_entity)
+          expect(response).to have_http_status(:unprocessable_content)
         end
       end
 
@@ -128,7 +128,7 @@ RSpec.describe SpaceManifestsController, type: :controller do
 
         it 'returns a 422' do
           post :apply_manifest, params: { guid: space.guid }, body: request_body.to_yaml, as: :yaml
-          expect(response).to have_http_status(:unprocessable_entity)
+          expect(response).to have_http_status(:unprocessable_content)
         end
       end
 
@@ -149,7 +149,7 @@ RSpec.describe SpaceManifestsController, type: :controller do
 
         it 'returns a 422 and validation errors' do
           post :apply_manifest, params: { guid: space.guid }, body: request_body.to_yaml, as: :yaml
-          expect(response).to have_http_status(:unprocessable_entity)
+          expect(response).to have_http_status(:unprocessable_content)
           errors = parsed_body['errors']
           expect(errors.size).to eq(14)
           def error_message(detail)
@@ -200,7 +200,7 @@ RSpec.describe SpaceManifestsController, type: :controller do
 
         it 'returns a 422' do
           post :apply_manifest, params: { guid: space.guid }, body: request_body.to_yaml, as: :yaml
-          expect(response).to have_http_status(:unprocessable_entity)
+          expect(response).to have_http_status(:unprocessable_content)
           parsed_response = Oj.load(response.body)
           expect(parsed_response['errors'][0]['detail']).to match(/For application at index 0:/)
         end
@@ -257,7 +257,7 @@ RSpec.describe SpaceManifestsController, type: :controller do
         it 'returns an error' do
           post :apply_manifest, params: { guid: space.guid }, body: request_body.to_yaml, as: :yaml
 
-          expect(response).to have_http_status(:unprocessable_entity)
+          expect(response).to have_http_status(:unprocessable_content)
           errors = parsed_body['errors']
           expect(errors.size).to eq(1)
           expected_error = [
@@ -301,7 +301,7 @@ RSpec.describe SpaceManifestsController, type: :controller do
         it 'returns an error' do
           post :apply_manifest, params: { guid: space.guid }, body: request_body.to_yaml, as: :yaml
 
-          expect(response).to have_http_status(:unprocessable_entity)
+          expect(response).to have_http_status(:unprocessable_content)
           errors = parsed_body['errors']
           expect(errors.size).to eq(1)
           expected_error = [
@@ -322,7 +322,7 @@ RSpec.describe SpaceManifestsController, type: :controller do
         it 'returns a 422 and a useful error to the user' do
           post :apply_manifest, params: { guid: space.guid }, body: request_body.to_yaml, as: :yaml
 
-          expect(response).to have_http_status(:unprocessable_entity)
+          expect(response).to have_http_status(:unprocessable_content)
           space_apply_manifest_jobs = Delayed::Job.where(Sequel.lit("handler like '%SpaceApplyManifest%'"))
           expect(space_apply_manifest_jobs.count).to eq 0
 
@@ -371,7 +371,7 @@ RSpec.describe SpaceManifestsController, type: :controller do
         it 'returns an error' do
           post :apply_manifest, params: { guid: space.guid }, body: request_body.to_yaml, as: :yaml
 
-          expect(response).to have_http_status(:unprocessable_entity)
+          expect(response).to have_http_status(:unprocessable_content)
           errors = parsed_body['errors']
           expect(errors.size).to eq(1)
           expected_error = [{
@@ -750,7 +750,7 @@ RSpec.describe SpaceManifestsController, type: :controller do
 
           it 'returns manifest errors associated with their apps' do
             post :apply_manifest, params: { guid: space.guid }, body: request_body.to_yaml, as: :yaml
-            expect(response).to have_http_status(:unprocessable_entity)
+            expect(response).to have_http_status(:unprocessable_content)
             errors = parsed_body['errors']
             expect(errors.size).to eq(2)
             processed_errors = errors.map { |h| h.except('test_mode_info') }

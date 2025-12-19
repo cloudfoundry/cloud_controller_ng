@@ -327,7 +327,7 @@ RSpec.describe RevisionsController, type: :controller do
       it 'returns a 422' do
         patch :update, params: { revision_guid: revision.guid }.merge(update_message), as: :json
 
-        expect(response).to have_http_status(:unprocessable_entity)
+        expect(response).to have_http_status(:unprocessable_content)
       end
     end
   end

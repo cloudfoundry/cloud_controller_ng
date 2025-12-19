@@ -55,7 +55,7 @@ RSpec.describe DropletsController, type: :controller do
       it 'returns a 422' do
         post :create, params: { source_guid: source_droplet_guid, body: { super_duper: 'bad_request' } }, as: :json
 
-        expect(response).to have_http_status(:unprocessable_entity)
+        expect(response).to have_http_status(:unprocessable_content)
         expect(response.body).to include('UnprocessableEntity')
       end
     end
@@ -116,7 +116,7 @@ RSpec.describe DropletsController, type: :controller do
       it 'returns an error' do
         post :create, params: { source_guid: source_droplet_guid }.merge(body: request_body), as: :json
 
-        expect(response).to have_http_status(:unprocessable_entity)
+        expect(response).to have_http_status(:unprocessable_content)
         expect(response.body).to include('boom')
       end
     end
@@ -490,7 +490,7 @@ RSpec.describe DropletsController, type: :controller do
 
       it 'displays an informative error' do
         patch :update, params: { guid: droplet.guid }.merge(request_body), as: :json
-        expect(response).to have_http_status(:unprocessable_entity)
+        expect(response).to have_http_status(:unprocessable_content)
         expect(response).to have_error_message("labels' is not an object")
       end
     end
@@ -573,7 +573,7 @@ RSpec.describe DropletsController, type: :controller do
         it 'returns an UnprocessableEntity error' do
           patch :update, params: { guid: droplet.guid }.merge(request_body), as: :json
 
-          expect(response).to have_http_status :unprocessable_entity
+          expect(response).to have_http_status :unprocessable_content
           expect(response.body).to include 'UnprocessableEntity'
           expect(response).to have_error_message(/label [\w\s]+ error/)
         end
@@ -596,7 +596,7 @@ RSpec.describe DropletsController, type: :controller do
         it 'returns an UnprocessableEntity error' do
           patch :update, params: { guid: droplet.guid }.merge(request_body), as: :json
 
-          expect(response).to have_http_status :unprocessable_entity
+          expect(response).to have_http_status :unprocessable_content
           expect(response.body).to include 'UnprocessableEntity'
           expect(response).to have_error_message(/annotation [\w\s]+ error/)
         end
@@ -646,7 +646,7 @@ RSpec.describe DropletsController, type: :controller do
 
         it 'responds with 422' do
           patch :update, params: { guid: droplet.guid }.merge(request_body), as: :json
-          expect(response).to have_http_status(:unprocessable_entity)
+          expect(response).to have_http_status(:unprocessable_content)
           expect(response.body).to include 'Failed to add 2 annotations because it would exceed maximum of 1'
         end
       end
@@ -669,7 +669,7 @@ RSpec.describe DropletsController, type: :controller do
 
         it 'responds with 422' do
           patch :update, params: { guid: droplet.guid }.merge(request_body), as: :json
-          expect(response).to have_http_status(:unprocessable_entity)
+          expect(response).to have_http_status(:unprocessable_content)
           expect(response.body).to include 'Failed to add 2 labels because it would exceed maximum of 1'
         end
       end
