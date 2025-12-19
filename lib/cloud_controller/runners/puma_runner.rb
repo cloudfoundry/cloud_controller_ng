@@ -62,8 +62,9 @@ module VCAP::CloudController
         prometheus_updater.update_gauge_metric(:cc_db_connection_pool_timeouts_total, 0, labels: { process_type: 'main' })
         @periodic_updater.setup_updates
       end
+
       events.after_stopped do
-        @periodic_updater.stop_updates unless @periodic_updater.nil?
+        stop_periodic_updates
       end
 
       @puma_launcher = Puma::Launcher.new(puma_config, log_writer:, events:)
@@ -77,6 +78,18 @@ module VCAP::CloudController
     end
 
     private
+
+    def stop_periodic_updates
+      @periodic_updater&.stop_updates
+      @logger.info('Successfully stopped periodic updates in after_stopped')
+    rescue ThreadError
+      at_exit do
+        @periodic_updater&.stop_updates
+        @logger.info('Successfully stopped periodic updates in at_exit')
+      end
+    rescue StandardError => e
+      @logger.error("Failed to stop periodic updates: #{e}\n#{e.backtrace&.join("\n")}")
+    end
 
     def prometheus_updater
       CloudController::DependencyLocator.instance.prometheus_updater
