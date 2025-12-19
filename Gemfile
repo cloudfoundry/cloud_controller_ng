@@ -88,7 +88,7 @@ group :test do
   gem 'rubocop-sequel', '~> 0.4.1'
   gem 'timecop'
   gem 'webmock', '> 2.3.1'
-  gem 'webrick', '~> 1.9.0'
+  gem 'webrick', '~> 1.9.2'
 end
 
 group :development do
