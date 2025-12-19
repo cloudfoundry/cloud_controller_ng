@@ -26,11 +26,22 @@ module VCAP::CloudController
       it { is_expected.to validate_presence :name }
       it { is_expected.to validate_uniqueness :name }
       it { is_expected.to strip_whitespace :name }
+
+      it 'validates that the state is one of the allowed values' do
+        stack = Stack.make
+        expect(stack).to be_valid
+        %w[ACTIVE DEPRECATED LOCKED DISABLED].each do |state|
+          stack.state = state
+          expect(stack).to be_valid
+        end
+        stack.state = 'INVALID'
+        expect(stack).not_to be_valid
+      end
     end
 
     describe 'Serialization' do
-      it { is_expected.to export_attributes :name, :description, :build_rootfs_image, :run_rootfs_image }
-      it { is_expected.to import_attributes :name, :description, :build_rootfs_image, :run_rootfs_image }
+      it { is_expected.to export_attributes :name, :description, :build_rootfs_image, :run_rootfs_image, :state }
+      it { is_expected.to import_attributes :name, :description, :build_rootfs_image, :run_rootfs_image, :state }
     end
 
     describe '.configure' do
