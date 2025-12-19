@@ -25,6 +25,8 @@ module VCAP::CloudController
     end
 
     def apply(app_guid, message)
+      logger = Steno.logger('app_appy_manifest')
+      logger.info("Applying app manifest #{message} to app: #{app_guid}")
       app = AppModel.first(guid: app_guid)
       app_instance_not_found!(app_guid) unless app
 
@@ -90,6 +92,8 @@ module VCAP::CloudController
     end
 
     def update_routes(app, message)
+      logger = Steno.logger('update_routes')
+      logger.info("Applying route message #{message} to app: #{app}")
       update_message = message.manifest_routes_update_message
       existing_routes = RouteMappingModel.where(app_guid: app.guid).all
 

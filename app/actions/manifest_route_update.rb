@@ -9,6 +9,9 @@ module VCAP::CloudController
 
     class << self
       def update(app_guid, message, user_audit_info)
+        logger = Steno.logger('cc.action.manifest_route_update')
+        logger.error("ManifestRouteUpdate.update called", app_guid: app_guid, message: message.inspect, location: "#{__FILE__}:#{__LINE__}")
+
         return unless message.requested?(:routes)
 
         app = AppModel.find(guid: app_guid)
@@ -74,6 +77,9 @@ module VCAP::CloudController
               :port
             )
           )
+
+          logger = Steno.logger('cc.action.manifest_route_update')
+          logger.info("Route lookup completed", manifest_route: manifest_route.inspect, route: route.inspect, location: "#{__FILE__}:#{__LINE__}")
 
           if !route
             FeatureFlag.raise_unless_enabled!(:route_creation)

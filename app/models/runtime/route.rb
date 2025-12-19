@@ -107,6 +107,9 @@ module VCAP::CloudController
     end
 
     def validate
+      logger = Steno.logger('cc.model.route')
+      logger.info("Route.validate called, route_guid: #{guid}, route_host: #{host}, route_options: #{options}, location: #{__FILE__}:#{__LINE__}")
+
       validates_presence :domain
       validates_presence :space
 
@@ -347,6 +350,9 @@ module VCAP::CloudController
     end
 
     def remove_hash_options_for_non_hash_loadbalancing(opts)
+      logger = Steno.logger('cc.model.route')
+      logger.info("remove_hash_options_for_non_hash_loadbalancing called", opts: opts.inspect, location: "#{__FILE__}:#{__LINE__}")
+
       return opts unless opts.is_a?(Hash)
 
       opts_symbolized = opts.deep_symbolize_keys
