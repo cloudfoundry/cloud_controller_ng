@@ -1,8 +1,11 @@
 module VCAP::CloudController
   module V2
     class AppStage
+      attr_reader :warnings
+
       def initialize(stagers:)
         @stagers = stagers
+        @warnings = []
       end
 
       def stage(process)
@@ -25,6 +28,9 @@ module VCAP::CloudController
           lifecycle: lifecycle,
           start_after_staging: true
         )
+
+        @warnings = build.instance_variable_get(:@stack_warnings) || []
+
         TelemetryLogger.v2_emit(
           'create-build',
           {

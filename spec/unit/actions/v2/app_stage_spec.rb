@@ -215,6 +215,100 @@ module VCAP::CloudController
             end
           end
         end
+
+        context 'stack state warnings' do
+          let(:process) { ProcessModelFactory.make }
+          let(:user_audit_info) do
+            UserAuditInfo.new(user_email: 'test@example.com', user_name: 'test-user', user_guid: 'test-guid')
+          end
+
+          before do
+            allow(UserAuditInfo).to receive(:from_context).and_return(user_audit_info)
+            allow(BuildCreate).to receive(:new).and_call_original
+            allow_any_instance_of(Diego::Stager).to receive(:stage).and_return 'staging-complete'
+          end
+
+          context 'when stack is DEPRECATED' do
+            let(:deprecated_stack) { Stack.make(name: 'cflinuxfs3', state: 'DEPRECATED', description: 'EOL Dec 2025') }
+
+            before do
+              process.app.buildpack_lifecycle_data.update(stack: deprecated_stack.name)
+            end
+
+            it 'captures warnings from BuildCreate' do
+              action.stage(process)
+
+              expect(action.warnings).not_to be_empty
+              expect(action.warnings.first).to include('deprecated')
+              expect(action.warnings.first).to include('cflinuxfs3')
+              expect(action.warnings.first).to include('EOL Dec 2025')
+            end
+          end
+
+          context 'when stack is ACTIVE' do
+            let(:active_stack) { Stack.make(name: 'cflinuxfs5', state: 'ACTIVE') }
+
+            before do
+              process.app.buildpack_lifecycle_data.update(stack: active_stack.name)
+            end
+
+            it 'has no warnings' do
+              action.stage(process)
+
+              expect(action.warnings).to be_empty
+            end
+          end
+
+          context 'when stack is DISABLED' do
+            let(:disabled_stack) { Stack.make(name: 'cflinuxfs2', state: 'DISABLED', description: 'Migrate to cflinuxfs4') }
+
+            before do
+              process.app.buildpack_lifecycle_data.update(stack: disabled_stack.name)
+            end
+
+            it 'raises StackValidationFailed error' do
+              expect { action.stage(process) }.to raise_error(CloudController::Errors::ApiError) do |error|
+                expect(error.name).to eq('StackValidationFailed')
+                expect(error.message).to include('disabled')
+                expect(error.message).to include('cannot be used for staging')
+              end
+            end
+          end
+
+          context 'when stack is RESTRICTED' do
+            let(:restricted_stack) { Stack.make(name: 'cflinuxfs3-restricted', state: 'RESTRICTED', description: 'No new apps') }
+
+            before do
+              process.app.buildpack_lifecycle_data.update(stack: restricted_stack.name)
+            end
+
+            context 'for first build' do
+              before do
+                process.app.builds_dataset.destroy
+              end
+
+              it 'raises StackValidationFailed error' do
+                expect(process.app.builds_dataset.count).to eq(0)
+
+                expect { action.stage(process) }.to raise_error(CloudController::Errors::ApiError) do |error|
+                  expect(error.name).to eq('StackValidationFailed')
+                  expect(error.message).to include('cannot be used for staging new applications')
+                end
+              end
+            end
+
+            context 'for restaging existing app' do
+              before do
+                BuildModel.make(app: process.app, state: 'STAGED')
+              end
+
+              it 'allows staging without warnings' do
+                expect { action.stage(process) }.not_to raise_error
+                expect(action.warnings).to be_empty
+              end
+            end
+          end
+        end
       end
     end
   end

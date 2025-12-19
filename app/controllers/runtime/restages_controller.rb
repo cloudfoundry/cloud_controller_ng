@@ -35,7 +35,10 @@ module VCAP::CloudController
         process.app.update(droplet_guid: nil)
         AppStart.start_without_event(process.app, create_revision: false)
       end
-      V2::AppStage.new(stagers: @stagers).stage(process)
+      # V2::AppStage.new(stagers: @stagers).stage(process)
+      app_stage = V2::AppStage.new(stagers: @stagers)
+      app_stage.stage(process)
+      app_stage.warnings.each { |warning| add_warning(warning) }
 
       @app_event_repository.record_app_restage(process, UserAuditInfo.from_context(SecurityContext))
 

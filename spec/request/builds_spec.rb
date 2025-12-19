@@ -92,6 +92,7 @@ RSpec.describe 'Builds' do
             'guid' => package.guid
           },
           'droplet' => nil,
+          'warnings' => nil,
           'relationships' => { 'app' => { 'data' => { 'guid' => app_model.guid } } },
           'links' => {
             'self' => {
@@ -196,6 +197,130 @@ RSpec.describe 'Builds' do
           }
           expect(logger_spy).to have_received(:info).with(Oj.dump(expected_json))
           expect(last_response.status).to eq(201), last_response.body
+        end
+      end
+    end
+
+    context 'when stack is DISABLED' do
+      let(:disabled_stack) { VCAP::CloudController::Stack.make(name: 'cflinuxfs3', state: 'DISABLED', description: 'cflinuxfs3 stack is now disabled') }
+      let(:create_request) do
+        {
+          lifecycle: {
+            type: 'buildpack',
+            data: {
+              buildpacks: ['https://github.com/myorg/awesome-buildpack'],
+              stack: disabled_stack.name
+            }
+          },
+          package: {
+            guid: package.guid
+          }
+        }
+      end
+
+      it 'returns 422 and does not create the build' do
+        post '/v3/builds', create_request.to_json, developer_headers
+
+        expect(last_response.status).to eq(422)
+        expect(parsed_response['errors'].first['detail']).to include('disabled')
+        expect(parsed_response['errors'].first['detail']).to include('cannot be used for staging new applications')
+        expect(VCAP::CloudController::BuildModel.count).to eq(0)
+      end
+    end
+
+    context 'when stack is RESTRICTED' do
+      let(:restricted_stack) { VCAP::CloudController::Stack.make(name: 'cflinuxfs3', state: 'RESTRICTED', description: 'No new apps') }
+      let(:create_request) do
+        {
+          lifecycle: {
+            type: 'buildpack',
+            data: {
+              buildpacks: ['http://github.com/myorg/awesome-buildpack'],
+              stack: restricted_stack.name
+            }
+          },
+          package: {
+            guid: package.guid
+          }
+        }
+      end
+
+      context 'first build for app' do
+        it 'returns 422 and does not create build' do
+          expect(app_model.builds_dataset.count).to eq(0)
+
+          post '/v3/builds', create_request.to_json, developer_headers
+
+          expect(last_response.status).to eq(422)
+          expect(parsed_response['errors'].first['detail']).to include('cannot be used for staging new applications')
+          expect(VCAP::CloudController::BuildModel.count).to eq(0)
+        end
+      end
+
+      context 'app has previous builds' do
+        before do
+          VCAP::CloudController::BuildModel.make(app: app_model, state: VCAP::CloudController::BuildModel::STAGED_STATE)
+        end
+
+        it 'returns 201 and creates build' do
+          expect(app_model.builds_dataset.count).to eq(1)
+
+          post '/v3/builds', create_request.to_json, developer_headers
+
+          expect(last_response.status).to eq(201)
+          expect(parsed_response['state']).to eq('STAGING')
+          expect(app_model.builds_dataset.count).to eq(2)
+        end
+      end
+    end
+
+    context 'when stack is DEPRECATED' do
+      let(:deprecated_stack) { VCAP::CloudController::Stack.make(name: 'cflinuxfs3', state: 'DEPRECATED', description: 'cflinuxfs3 stack is deprecated. Please migrate your application to cflinuxfs4') }
+      let(:create_request) do
+        {
+          lifecycle: {
+            type: 'buildpack',
+            data: {
+              buildpacks: ['http://github.com/myorg/awesome-buildpack'],
+              stack: deprecated_stack.name
+            }
+          },
+          package: {
+            guid: package.guid
+          }
+        }
+      end
+
+      context 'first build for app' do
+        it 'returns 201 and does not create the build' do
+          expect(app_model.builds_dataset.count).to eq(0)
+
+          post '/v3/builds', create_request.to_json, developer_headers
+
+          expect(last_response.status).to eq(201)
+          expect(parsed_response['state']).to eq('STAGING')
+          expect(parsed_response['warnings']).to be_present
+          expect(parsed_response['warnings'][0]['detail']).to include('deprecated')
+          expect(parsed_response['warnings'][0]['detail']).to include('cflinuxfs3 stack is deprecated')
+        end
+      end
+
+      context 'app has previous builds' do
+        before do
+          VCAP::CloudController::BuildModel.make(app: app_model, state: VCAP::CloudController::BuildModel::STAGED_STATE)
+        end
+
+        it 'returns 201 and does not create the build' do
+          expect(app_model.builds_dataset.count).to eq(1)
+
+          post '/v3/builds', create_request.to_json, developer_headers
+
+          expect(last_response.status).to eq(201)
+          expect(parsed_response['state']).to eq('STAGING')
+          expect(parsed_response['warnings']).to be_present
+          expect(parsed_response['warnings'][0]['detail']).to include('deprecated')
+          expect(parsed_response['warnings'][0]['detail']).to include('cflinuxfs3 stack is deprecated')
+          expect(app_model.builds_dataset.count).to eq(2)
         end
       end
     end
@@ -349,6 +474,7 @@ RSpec.describe 'Builds' do
                                                             'droplet' => {
                                                               'guid' => droplet.guid
                                                             },
+                                                            'warnings' => nil,
                                                             'relationships' => { 'app' => { 'data' => { 'guid' => app_model.guid } } },
                                                             'metadata' => { 'labels' => {}, 'annotations' => {} },
                                                             'links' => {
@@ -378,6 +504,7 @@ RSpec.describe 'Builds' do
                                                             'droplet' => {
                                                               'guid' => second_droplet.guid
                                                             },
+                                                            'warnings' => nil,
                                                             'relationships' => { 'app' => { 'data' => { 'guid' => app_model.guid } } },
                                                             'metadata' => { 'labels' => {}, 'annotations' => {} },
                                                             'links' => {
@@ -480,6 +607,7 @@ RSpec.describe 'Builds' do
           'droplet' => {
             'guid' => droplet.guid
           },
+          'warnings' => nil,
           'metadata' => { 'labels' => {}, 'annotations' => {} },
           'relationships' => { 'app' => { 'data' => { 'guid' => app_model.guid } } },
           'links' => {

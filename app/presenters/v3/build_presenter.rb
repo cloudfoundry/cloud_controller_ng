@@ -30,6 +30,7 @@ module VCAP::CloudController
             },
             package: { guid: build.package_guid },
             droplet: droplet,
+            warnings: build_warnings,
             created_by: {
               guid: build.created_by_user_guid,
               name: build.created_by_user_name,
@@ -59,6 +60,12 @@ module VCAP::CloudController
         def error
           e = [build.error_id, build.error_description].compact.join(' - ')
           e.presence
+        end
+
+        def build_warnings
+          return nil unless build.stack_warnings&.any?
+
+          build.stack_warnings.map { |warning| { detail: warning } }
         end
 
         def build_links

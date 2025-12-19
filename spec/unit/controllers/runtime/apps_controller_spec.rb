@@ -1094,7 +1094,7 @@ module VCAP::CloudController
       end
 
       describe 'staging' do
-        let(:app_stage) { instance_double(V2::AppStage, stage: nil) }
+        let(:app_stage) { instance_double(V2::AppStage, stage: nil, warnings: []) }
         let(:process) { ProcessModelFactory.make }
 
         before do

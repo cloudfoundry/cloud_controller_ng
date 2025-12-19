@@ -9,7 +9,7 @@ curl "https://api.example.org/v3/stacks/[guid]" \
   -X PATCH \
   -H "Authorization: bearer [token]" \
   -H "Content-Type: application/json" \
-  -d '{ "metadata": { "labels": { "key": "value" }, "annotations": {"note": "detailed information"}}}'
+  -d '{ "metadata": { "labels": { "key": "value" }, "annotations": {"note": "detailed information"}, "state": "DISABLED" }}'
 
 ```
 
@@ -21,7 +21,7 @@ Example Response
 HTTP/1.1 200 OK
 Content-Type: application/json
 
-<%= yield_content :single_stack, labels: { "key" => "value" }, "annotations": {"note" => "detailed information"} %>
+<%= yield_content :single_stack_disabled, labels: { "key" => "value" }, "annotations": {"note" => "detailed information"} %>
 ```
 
 #### Definition
@@ -33,6 +33,7 @@ Name | Type | Description
 ---- | ---- | -----------
 **metadata.labels** | [_label object_](#labels) | Labels applied to the stack
 **metadata.annotations**  | [_annotation object_](#annotations) | Annotations applied to the stack
+**state** | string | The state of the stack; valid states are: `ACTIVE`, `RESTRICTED`, `DEPRECATED`, `DISABLED`
 
 #### Permitted roles
  |
