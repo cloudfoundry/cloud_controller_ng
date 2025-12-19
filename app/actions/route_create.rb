@@ -20,7 +20,10 @@ module VCAP::CloudController
       )
 
       Route.db.transaction do
-        route.save
+        logger = Steno.logger('cc.action.route_create')
+        logger.info("About to call route.save", route_host: route.host, route_options: route.options.inspect, raise_on_failure: true, location: "#{__FILE__}:#{__LINE__}")
+
+        route.save(raise_on_failure: true)
 
         MetadataUpdate.update(route, message)
       end

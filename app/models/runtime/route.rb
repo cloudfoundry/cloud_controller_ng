@@ -71,9 +71,14 @@ module VCAP::CloudController
     end
 
     def options_with_serialization=(opts)
+      logger = Steno.logger('cc.model.route')
+      logger.info("options_with_serialization= setter called", opts: opts.inspect, location: "#{__FILE__}:#{__LINE__}")
+
       cleaned_opts = remove_hash_options_for_non_hash_loadbalancing(opts)
       normalized_opts = normalize_hash_balance_to_string(cleaned_opts)
       self.options_without_serialization = Oj.dump(normalized_opts)
+
+      logger.info("options_with_serialization= setter completed", normalized_opts: normalized_opts.inspect, json: self.options_without_serialization.inspect)
     end
 
     alias_method :options_without_serialization=, :options=
