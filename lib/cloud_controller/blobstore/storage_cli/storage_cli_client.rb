@@ -44,7 +44,7 @@ module CloudController
         @min_size = min_size || 0
         @max_size = max_size
         @storage_type = PROVIDER_TO_STORAGE_CLI_STORAGETYPE[@provider]
-        logger.info('[storage_cli_client] initialized with:', resource_type: @resource_type, provider: @provider, path: @config_file)
+        logger.info('initialized with:', resource_type: @resource_type, provider: @provider, path: @config_file)
       end
 
       def fetch_config(resource_type)
@@ -169,7 +169,7 @@ module CloudController
       private
 
       def run_cli(command, *args, allow_exit_code_three: false)
-        logger.info("[storage_cli_client] Running storage-cli: #{@cli_path} -c #{@config_file} #{command} #{args.join(' ')}")
+        logger.info("running storage-cli: #{@cli_path} -c #{@config_file} #{command} #{args.join(' ')}")
 
         begin
           stdout, stderr, status = Open3.capture3(@cli_path, '-s', @storage_type, '-c', @config_file, command, *args)
