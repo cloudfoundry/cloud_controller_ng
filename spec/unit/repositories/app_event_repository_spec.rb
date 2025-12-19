@@ -245,6 +245,32 @@ module VCAP::CloudController
           expect(event.metadata[:manifest_triggered]).to be_nil
         end
 
+        context 'when route has options' do
+          let(:route) { Route.make(options: { 'loadbalancing' => 'round-robin' }) }
+
+          it 'includes route_options in the metadata' do
+            event = app_event_repository.record_map_route(user_audit_info, route_mapping)
+            expect(event.type).to eq('audit.app.map-route')
+            expect(event.metadata[:route_guid]).to eq(route.guid)
+            expect(event.metadata[:route_options]).to eq({ 'loadbalancing' => 'round-robin' })
+          end
+        end
+
+        context 'when route has hash-based routing options' do
+          let(:route) { Route.make(options: { 'loadbalancing' => 'hash', 'hash_header' => 'X-User-ID', 'hash_balance' => '1.5' }) }
+
+          it 'includes route_options with all hash routing parameters in the metadata' do
+            event = app_event_repository.record_map_route(user_audit_info, route_mapping)
+            expect(event.type).to eq('audit.app.map-route')
+            expect(event.metadata[:route_guid]).to eq(route.guid)
+            expect(event.metadata[:route_options]).to eq({
+                                                           'loadbalancing' => 'hash',
+                                                           'hash_header' => 'X-User-ID',
+                                                           'hash_balance' => '1.5'
+                                                         })
+          end
+        end
+
         context 'when the event is manifest triggered' do
           let(:manifest_triggered) { true }
 
@@ -346,6 +372,32 @@ module VCAP::CloudController
           expect(event.metadata[:route_mapping_guid]).to eq(route_mapping.guid)
           expect(event.metadata[:process_type]).to eq('potato')
           expect(event.metadata[:manifest_triggered]).to be_nil
+        end
+
+        context 'when route has options' do
+          let(:route) { Route.make(options: { 'loadbalancing' => 'least-connection' }) }
+
+          it 'includes route_options in the metadata' do
+            event = app_event_repository.record_unmap_route(user_audit_info, route_mapping)
+            expect(event.type).to eq('audit.app.unmap-route')
+            expect(event.metadata[:route_guid]).to eq(route.guid)
+            expect(event.metadata[:route_options]).to eq({ 'loadbalancing' => 'least-connection' })
+          end
+        end
+
+        context 'when route has hash-based routing options' do
+          let(:route) { Route.make(options: { 'loadbalancing' => 'hash', 'hash_header' => 'X-Session-ID', 'hash_balance' => '2.0' }) }
+
+          it 'includes route_options with all hash routing parameters in the metadata' do
+            event = app_event_repository.record_unmap_route(user_audit_info, route_mapping)
+            expect(event.type).to eq('audit.app.unmap-route')
+            expect(event.metadata[:route_guid]).to eq(route.guid)
+            expect(event.metadata[:route_options]).to eq({
+                                                           'loadbalancing' => 'hash',
+                                                           'hash_header' => 'X-Session-ID',
+                                                           'hash_balance' => '2.0'
+                                                         })
+          end
         end
 
         context 'when the event is manifest triggered' do

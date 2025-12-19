@@ -157,6 +157,10 @@ module VCAP::CloudController
     end
 
     describe 'route validations' do
+      before do
+        VCAP::CloudController::FeatureFlag.make(name: 'hash_based_routing', enabled: true)
+      end
+
       context 'when all routes are valid' do
         let(:body) do
           { 'routes' =>
@@ -256,7 +260,9 @@ module VCAP::CloudController
 
           expect(msg.valid?).to be(false)
           expect(msg.errors.errors.length).to eq(1)
-          expect(msg.errors.full_messages).to include("Route 'existing.example.com' contains invalid route option 'invalid'. Valid keys: 'loadbalancing'")
+          expect(msg.errors.full_messages).to include(
+            "Route 'existing.example.com' contains invalid route option 'invalid'. Valid keys: 'loadbalancing, hash_header, hash_balance'"
+          )
         end
       end
 
@@ -278,6 +284,64 @@ module VCAP::CloudController
         end
       end
 
+      context 'when a route contains hash algorithm with hash_header' do
+        let(:body) do
+          { 'routes' =>
+              [
+                { 'route' => 'existing.example.com',
+                  'options' => {
+                    'loadbalancing' => 'hash',
+                    'hash_header' => 'X-User-ID'
+                  } }
+              ] }
+        end
+
+        it 'returns true' do
+          msg = ManifestRoutesUpdateMessage.new(body)
+
+          expect(msg.valid?).to be(true)
+        end
+      end
+
+      context 'when a route contains hash algorithm with hash_header and hash_balance' do
+        let(:body) do
+          { 'routes' =>
+              [
+                { 'route' => 'existing.example.com',
+                  'options' => {
+                    'loadbalancing' => 'hash',
+                    'hash_header' => 'X-User-ID',
+                    'hash_balance' => 1.5
+                  } }
+              ] }
+        end
+
+        it 'returns true' do
+          msg = ManifestRoutesUpdateMessage.new(body)
+
+          expect(msg.valid?).to be(true)
+        end
+      end
+
+      context 'when a route contains hash algorithm without hash_header' do
+        let(:body) do
+          { 'routes' =>
+              [
+                { 'route' => 'existing.example.com',
+                  'options' => {
+                    'loadbalancing' => 'hash'
+                  } }
+              ] }
+        end
+
+        it 'returns false' do
+          msg = ManifestRoutesUpdateMessage.new(body)
+
+          expect(msg.valid?).to be(false)
+          expect(msg.errors.full_messages).to include("Route 'existing.example.com': hash_header must be present when loadbalancing is set to hash")
+        end
+      end
+
       context 'when a route contains null as a value for loadbalancing' do
         let(:body) do
           { 'routes' =>
@@ -293,7 +357,7 @@ module VCAP::CloudController
           msg = ManifestRoutesUpdateMessage.new(body)
 
           expect(msg.valid?).to be(false)
-          expect(msg.errors.full_messages).to include("Invalid value for 'loadbalancing' for Route 'existing.example.com'; Valid values are: 'round-robin, least-connection'")
+          expect(msg.errors.full_messages).to include("Invalid value for 'loadbalancing' for Route 'existing.example.com'; Valid values are: 'round-robin, least-connection, hash'")
         end
       end
 
@@ -313,7 +377,9 @@ module VCAP::CloudController
 
           expect(msg.valid?).to be(false)
           expect(msg.errors.errors.length).to eq(1)
-          expect(msg.errors.full_messages).to include("Cannot use loadbalancing value 'sushi' for Route 'existing.example.com'; Valid values are: 'round-robin, least-connection'")
+          expect(msg.errors.full_messages).to include(
+            "Cannot use loadbalancing value 'sushi' for Route 'existing.example.com'; Valid values are: 'round-robin, least-connection, hash'"
+          )
         end
       end
     end
