@@ -1,7 +1,10 @@
+ruby '3.2.9'
+
 source 'https://rubygems.org'
 
 gem 'addressable'
 gem 'allowy', '>= 2.1.0'
+gem 'bundler', '2.4.19'
 gem 'clockwork', require: false
 gem 'cloudfront-signer'
 gem 'concurrent-ruby'
