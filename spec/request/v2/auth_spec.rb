@@ -6,12 +6,8 @@ RSpec.describe 'Auth' do
   let(:user_header) { headers_for(user) }
 
   before do
-    @test_mode = ENV.fetch('CC_TEST', nil)
-    ENV['CC_TEST'] = nil
-  end
-
-  after do
-    ENV['CC_TEST'] = @test_mode
+    allow(ENV).to receive(:fetch).with('CC_TEST', nil).and_return(nil)
+    allow(ENV).to receive(:fetch).and_call_original
   end
 
   context 'when the user has a valid token' do

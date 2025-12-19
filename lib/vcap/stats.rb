@@ -9,7 +9,7 @@ module VCAP
         pcpu = []
 
         ps_out = ps_pid
-        ps_out += ps_ppid if VCAP::CloudController::Config.config.get(:webserver) == 'puma'
+        ps_out += ps_ppid if is_puma_webserver?
         ps_out.split.each_with_index { |e, i| i.even? ? rss << e : pcpu << e }
 
         [rss.map(&:to_i).sum * 1024, pcpu.map(&:to_f).sum.round]
@@ -41,6 +41,12 @@ module VCAP
         else
           `ps -o rss=,pcpu= --ppid #{Process.pid}`
         end
+      end
+
+      def is_puma_webserver?
+        VCAP::CloudController::Config.config.get(:webserver) == 'puma'
+      rescue VCAP::CloudController::Config::InvalidConfigPath
+        false
       end
     end
   end

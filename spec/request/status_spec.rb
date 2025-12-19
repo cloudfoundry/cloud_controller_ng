@@ -4,7 +4,7 @@ module VCAP::CloudController
   RSpec.describe 'Status Endpoint' do
     include Rack::Test::Methods
 
-    let(:metrics_webserver) { MetricsWebserver.new }
+    let(:metrics_webserver) { ApiMetricsWebserver.new }
 
     delegate :app, to: :metrics_webserver
 

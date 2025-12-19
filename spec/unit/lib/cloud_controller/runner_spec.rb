@@ -271,8 +271,8 @@ module VCAP::CloudController
           let(:test_config_overrides) { super().merge(webserver: 'puma') }
 
           it 'starts the MetricsWebserver' do
-            expect(MetricsWebserver).to receive(:new).and_call_original
-            expect_any_instance_of(MetricsWebserver).to receive(:start)
+            expect(ApiMetricsWebserver).to receive(:new).and_call_original
+            expect_any_instance_of(ApiMetricsWebserver).to receive(:start)
 
             subject
           end

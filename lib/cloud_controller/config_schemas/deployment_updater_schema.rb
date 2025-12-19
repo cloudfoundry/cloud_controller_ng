@@ -148,6 +148,9 @@ module VCAP::CloudController
 
           stacks_file: String,
 
+          optional(:publish_metrics) => bool,
+          optional(:prometheus_port) => Integer,
+
           skip_cert_verify: bool,
 
           optional(:credhub_api) => {

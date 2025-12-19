@@ -12,7 +12,8 @@ require 'cloud_controller/logs/request_logs'
 require 'cloud_controller/telemetry_logger'
 require 'cloud_controller/secrets_fetcher'
 require 'cloud_controller/runners/puma_runner'
-require 'cloud_controller/metrics_webserver'
+require 'cloud_controller/api_metrics_webserver'
+require 'cloud_controller/execution_context'
 require 'prometheus/client/data_stores/direct_file_store'
 require 'prometheus/middleware/exporter'
 
@@ -33,7 +34,7 @@ module VCAP::CloudController
       # DB connection metrics have a label to determine whether the process accessing the connection is the
       # main or a worker process. We need to set this env variable before `setup_db` otherwise the main process
       # will show up twice in the metrics as main and worker.
-      ENV['PROCESS_TYPE'] = 'main'
+      VCAP::CloudController::ExecutionContext::API_PUMA_MAIN.set_process_type_env
 
       setup_cloud_controller
 
@@ -130,7 +131,7 @@ module VCAP::CloudController
       Prometheus::Client.config.data_store = Prometheus::Client::DataStores::DirectFileStore.new(dir: prometheus_dir)
 
       Thread.new do
-        VCAP::CloudController::MetricsWebserver.new.start(@config)
+        VCAP::CloudController::ApiMetricsWebserver.new.start(@config)
       end
     end
 

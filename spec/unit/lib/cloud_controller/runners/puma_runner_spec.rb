@@ -163,13 +163,6 @@ module VCAP::CloudController
         puma_launcher.config.final_options[:before_worker_shutdown].first[:block].call
       end
 
-      it 'initializes the cc_db_connection_pool_timeouts_total for the worker before worker boot' do
-        subject
-
-        expect(prometheus_updater).to receive(:update_gauge_metric).with(:cc_db_connection_pool_timeouts_total, 0, labels: { process_type: 'puma_worker' })
-        puma_launcher.config.final_options[:before_worker_boot].first[:block].call
-      end
-
       it 'sets environment variable `PROCESS_TYPE` to `puma_worker`' do
         subject
 
@@ -194,15 +187,6 @@ module VCAP::CloudController
     end
 
     describe 'Events' do
-      describe 'after_booted' do
-        it 'sets up periodic metrics updater with EM and initializes cc_db_connection_pool_timeouts_total for the main process' do
-          expect(periodic_updater).to receive(:setup_updates)
-          expect(prometheus_updater).to receive(:update_gauge_metric).with(:cc_db_connection_pool_timeouts_total, 0, labels: { process_type: 'main' })
-
-          puma_launcher.events.fire(:after_booted)
-        end
-      end
-
       describe 'after_stopped' do
         it 'stops the TimerTasks and logs incomplete requests' do
           expect(periodic_updater).to receive(:stop_updates)

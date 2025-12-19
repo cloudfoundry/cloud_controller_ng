@@ -3,29 +3,35 @@ require 'vcap/stats'
 
 module VCAP::CloudController::Metrics
   class PeriodicUpdater
-    def initialize(start_time, log_counter, logger, statsd_updater, prometheus_updater)
+    UPDATE_TASK = Struct.new(:method_name, :interval)
+
+    USER_COUNT_TASK = UPDATE_TASK.new(:update_user_count, 600).freeze
+    JOB_QUEUE_LENGTH_TASK = UPDATE_TASK.new(:update_job_queue_length, 30).freeze
+    JOB_QUEUE_LOAD_TASK = UPDATE_TASK.new(:update_job_queue_load, 30).freeze
+    FAILED_JOB_COUNT_TASK = UPDATE_TASK.new(:update_failed_job_count, 30).freeze
+    VITALS_TASK = UPDATE_TASK.new(:update_vitals, 30).freeze
+    LOG_COUNTS_TASK = UPDATE_TASK.new(:update_log_counts, 30).freeze
+    TASK_STATS_TASK = UPDATE_TASK.new(:update_task_stats, 30).freeze
+    DEPLOYING_COUNT_TASK = UPDATE_TASK.new(:update_deploying_count, 30).freeze
+    WEBSERVER_STATS_TASK = UPDATE_TASK.new(:update_webserver_stats, 30).freeze
+
+    ALL_TASKS = [USER_COUNT_TASK, JOB_QUEUE_LENGTH_TASK, JOB_QUEUE_LOAD_TASK, FAILED_JOB_COUNT_TASK, VITALS_TASK, LOG_COUNTS_TASK, TASK_STATS_TASK, DEPLOYING_COUNT_TASK,
+                 WEBSERVER_STATS_TASK].freeze
+
+    def initialize(start_time, log_counter, logger, statsd_updater, prometheus_updater, task_list: ALL_TASKS)
       @start_time = start_time
       @statsd_updater = statsd_updater
       @prometheus_updater = prometheus_updater
       @log_counter = log_counter
       @logger = logger
-      @known_job_queues = {
-        VCAP::CloudController::Jobs::Queues.local(VCAP::CloudController::Config.config).to_sym => 0
-      }
+      @known_job_queues = { VCAP::CloudController::Jobs::Queues.local(VCAP::CloudController::Config.config).to_sym => 0 }
+      @task_list = task_list
     end
 
     def setup_updates
-      update!
+      @task_list.each { |task| update!(task) }
       @update_tasks = []
-      @update_tasks << Concurrent::TimerTask.new(execution_interval: 600) { catch_error { update_user_count } }
-      @update_tasks << Concurrent::TimerTask.new(execution_interval: 30) { catch_error { update_job_queue_length } }
-      @update_tasks << Concurrent::TimerTask.new(execution_interval: 30) { catch_error { update_job_queue_load } }
-      @update_tasks << Concurrent::TimerTask.new(execution_interval: 30) { catch_error { update_failed_job_count } }
-      @update_tasks << Concurrent::TimerTask.new(execution_interval: 30) { catch_error { update_vitals } }
-      @update_tasks << Concurrent::TimerTask.new(execution_interval: 30) { catch_error { update_log_counts } }
-      @update_tasks << Concurrent::TimerTask.new(execution_interval: 30) { catch_error { update_task_stats } }
-      @update_tasks << Concurrent::TimerTask.new(execution_interval: 30) { catch_error { update_deploying_count } }
-      @update_tasks << Concurrent::TimerTask.new(execution_interval: 30) { catch_error { update_webserver_stats } }
+      @task_list.each { |task| @update_tasks << Concurrent::TimerTask.new(execution_interval: task.interval) { catch_error { update!(task) } } }
       @update_tasks.each(&:execute)
     end
 
@@ -35,16 +41,8 @@ module VCAP::CloudController::Metrics
       @update_tasks.each(&:shutdown)
     end
 
-    def update!
-      update_user_count
-      update_job_queue_length
-      update_job_queue_load
-      update_failed_job_count
-      update_vitals
-      update_log_counts
-      update_task_stats
-      update_deploying_count
-      update_webserver_stats
+    def update!(task)
+      send(task.method_name)
     end
 
     def catch_error
