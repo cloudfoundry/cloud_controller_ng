@@ -3,18 +3,20 @@ require 'spec_helper'
 module VCAP::CloudController
   RSpec.describe MetricsWebserver do
     let(:metrics_webserver) { described_class.new }
+    let(:puma_server_double) { instance_double(Puma::Server, add_tcp_listener: nil, add_unix_listener: nil, run: nil) }
     let(:config) { double('config', get: nil) }
 
-    after do
-      metrics_webserver.stop
+    before do
+      allow(Puma::Server).to receive(:new).and_return(puma_server_double)
     end
 
     describe '#start' do
       it 'configures and starts a Puma server' do
-        allow(Puma::Server).to receive(:new).and_call_original
-        expect_any_instance_of(Puma::Server).to receive(:run)
+        expect(puma_server_double).to receive(:run)
 
         metrics_webserver.start(config)
+
+        expect(Puma::Server).to have_received(:new).with(an_instance_of(Rack::Builder))
       end
 
       context 'when no socket is specified' do
@@ -23,7 +25,7 @@ module VCAP::CloudController
         end
 
         it 'uses a TCP listener' do
-          expect_any_instance_of(Puma::Server).to receive(:add_tcp_listener).with('127.0.0.1', 9395)
+          expect(puma_server_double).to receive(:add_tcp_listener).with('127.0.0.1', 9395)
 
           metrics_webserver.start(config)
         end
@@ -35,7 +37,7 @@ module VCAP::CloudController
         end
 
         it 'uses a Unix socket listener' do
-          expect_any_instance_of(Puma::Server).to receive(:add_unix_listener).with('/tmp/metrics.sock')
+          expect(puma_server_double).to receive(:add_unix_listener).with('/tmp/metrics.sock')
 
           metrics_webserver.start(config)
         end
