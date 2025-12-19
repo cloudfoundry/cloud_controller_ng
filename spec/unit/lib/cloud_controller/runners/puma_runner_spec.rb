@@ -208,7 +208,6 @@ module VCAP::CloudController
           expect(periodic_updater).to receive(:stop_updates)
 
           puma_launcher.events.fire(:after_stopped)
-          sleep 0.1
         end
       end
     end
