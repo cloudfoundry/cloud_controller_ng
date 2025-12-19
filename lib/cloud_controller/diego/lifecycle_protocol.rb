@@ -31,8 +31,8 @@ module VCAP::CloudController
         lifecycle_data.app_bits_download_uri              = @blobstore_url_generator.package_download_url(staging_details.package)
         lifecycle_data.app_bits_checksum                  = staging_details.package.checksum_info
         lifecycle_data.buildpack_cache_checksum           = staging_details.package.app.buildpack_cache_sha256_checksum
-        lifecycle_data.build_artifacts_cache_download_uri = @blobstore_url_generator.buildpack_cache_download_url(staging_details.package.app_guid, stack)
-        lifecycle_data.build_artifacts_cache_upload_uri   = @blobstore_url_generator.buildpack_cache_upload_url(staging_details.package.app_guid, stack)
+        lifecycle_data.build_artifacts_cache_download_uri = @blobstore_url_generator.buildpack_cache_download_url(staging_details.package.app_guid, normalize_stack_for_cache_key(stack))
+        lifecycle_data.build_artifacts_cache_upload_uri   = @blobstore_url_generator.buildpack_cache_upload_url(staging_details.package.app_guid, normalize_stack_for_cache_key(stack))
         lifecycle_data.droplet_upload_uri                 = @blobstore_url_generator.droplet_upload_url(staging_details.staging_guid)
         lifecycle_data.buildpacks                         = @buildpack_entry_generator.buildpack_entries(staging_details.lifecycle.buildpack_infos, stack)
         lifecycle_data.stack                              = stack
@@ -88,6 +88,33 @@ module VCAP::CloudController
       def container_env_vars_for_process(process)
         additional_env = []
         additional_env + WindowsEnvironmentSage.ponder(process.app)
+      end
+
+      def normalize_stack_for_cache_key(stack_name)
+        return stack_name unless stack_name.is_a?(String) && is_custom_stack?(stack_name)
+
+        # Extract the image name from the Docker URL for cache key compatibility
+        # Examples:
+        # https://docker.io/cloudfoundry/cflinuxfs4 -> cflinuxfs4
+        # docker://cloudfoundry/cflinuxfs3 -> cflinuxfs3
+        # docker.io/cloudfoundry/cflinuxfs4 -> cflinuxfs4
+        normalized_url = stack_name.gsub(%r{^(https?://|docker://)}, '')
+        if normalized_url.include?('/')
+          # Extract the last part of the path
+          parts = normalized_url.split('/')
+          parts.last
+        else
+          # If no path, use as-is
+          normalized_url
+        end
+      end
+
+      def is_custom_stack?(stack_name)
+        # Check for various container registry URL formats
+        return true if stack_name.include?('docker://')
+        return true if stack_name.match?(%r{^https?://})  # Any https/http URL
+        return true if stack_name.include?('.')  # Any string with a dot (likely a registry)
+        false
       end
 
       def logger

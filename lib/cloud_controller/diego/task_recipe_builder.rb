@@ -93,12 +93,55 @@ module VCAP::CloudController
               "app:#{staging_details.package.app_guid}"
             ]
           ),
-          image_username: staging_details.package.docker_username,
-          image_password: staging_details.package.docker_password,
+          image_username: image_username(staging_details),
+          image_password: image_password(staging_details),
           volume_mounted_files: ServiceBindingFilesBuilder.build(staging_details.package.app)
         }.compact)
       rescue ServiceBindingFilesBuilder::IncompatibleBindings => e
         raise CloudController::Errors::ApiError.new_from_details('UnprocessableEntity', "Cannot build service binding files for staging task - #{e.message}")
+      end
+
+      def image_username(staging_details)
+        return staging_details.package.docker_username if staging_details.package.docker_username.present?
+        return unless staging_details.lifecycle.respond_to?(:credentials) && staging_details.lifecycle.credentials.present?
+
+        cred = get_credentials_for_stack(staging_details)
+        cred ? cred['username'] : nil
+      end
+
+      def image_password(staging_details)
+        return staging_details.package.docker_password if staging_details.package.docker_password.present?
+        return unless staging_details.lifecycle.respond_to?(:credentials) && staging_details.lifecycle.credentials.present?
+
+        cred = get_credentials_for_stack(staging_details)
+        cred ? cred['password'] : nil
+      end
+
+      def get_credentials_for_stack(staging_details)
+        stack = staging_details.lifecycle.staging_stack
+        return nil unless is_custom_stack?(stack)
+
+        # Convert different URL formats to a standard format for parsing
+        normalized_stack = normalize_stack_url(stack)
+        stack_uri = URI.parse(normalized_stack)
+        host = stack_uri.host
+        staging_details.lifecycle.credentials[host]
+      end
+
+      def normalize_stack_url(stack_url)
+        return stack_url if stack_url.start_with?('docker://')
+        return stack_url.sub(/^https?:\/\//, 'docker://') if stack_url.match?(%r{^https?://})
+        return "docker://#{stack_url}" if stack_url.match?(%r{^[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}/.+})
+        stack_url
+      end
+
+      def is_custom_stack?(stack_name)
+        return false unless stack_name.is_a?(String)
+        # Check for various container registry URL formats
+        return true if stack_name.include?('docker://')
+        return true if stack_name.match?(%r{^https?://})  # Any https/http URL
+        return true if stack_name.include?('.')  # Any string with a dot (likely a registry)
+        false
       end
 
       private
