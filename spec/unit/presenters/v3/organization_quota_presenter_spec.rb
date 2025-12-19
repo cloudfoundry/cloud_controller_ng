@@ -42,6 +42,12 @@ module VCAP::CloudController::Presenters::V3
         expect(result[:links][:self][:href]).to match(%r{/v3/organization_quotas/#{organization_quota.guid}$})
       end
 
+      it 'calls the QuotaPresenterBuilder' do
+        allow(VCAP::CloudController::Presenters::QuotaPresenterBuilder).to receive(:new).and_call_original
+        result
+        expect(VCAP::CloudController::Presenters::QuotaPresenterBuilder).to have_received(:new).with(organization_quota)
+      end
+
       context 'when user is admin and there are no visible orgs' do
         let(:all_orgs_visible) { true }
         let(:visible_org_guids) { [] }
