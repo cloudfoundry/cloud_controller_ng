@@ -44,7 +44,6 @@ module CloudController
         @min_size = min_size || 0
         @max_size = max_size
         @storage_type = PROVIDER_TO_STORAGE_CLI_STORAGETYPE[@provider]
-        logger.info('initialized with:', resource_type: @resource_type, provider: @provider, path: @config_file)
       end
 
       def fetch_config(resource_type)
