@@ -5,6 +5,12 @@ require 'messages/stack_create_message'
 module VCAP::CloudController
   RSpec.describe StackCreate do
     describe 'create' do
+      let(:user) { User.make }
+      let(:user_email) { 'user@example.com' }
+      let(:user_audit_info) { UserAuditInfo.new(user_guid: user.guid, user_email: user_email) }
+
+      subject(:stack_create) { StackCreate.new(user_audit_info) }
+
       it 'creates a stack' do
         message = VCAP::CloudController::StackCreateMessage.new(
           name: 'the-name',
@@ -20,7 +26,7 @@ module VCAP::CloudController
             }
           }
         )
-        stack = StackCreate.new.create(message)
+        stack = stack_create.create(message)
 
         expect(stack.name).to eq('the-name')
         expect(stack.description).to eq('the-description')
@@ -35,6 +41,31 @@ module VCAP::CloudController
         )
       end
 
+      it 'creates an audit event' do
+        message = VCAP::CloudController::StackCreateMessage.new(
+          name: 'my-stack',
+          description: 'my-description'
+        )
+        created_stack = stack_create.create(message)
+
+        expect(VCAP::CloudController::Event.count).to eq(1)
+        stack_create_event = VCAP::CloudController::Event.find(type: 'audit.stack.create')
+        expect(stack_create_event).to exist
+        expect(stack_create_event.values).to include(
+          type: 'audit.stack.create',
+          actor: user_audit_info.user_guid,
+          actor_type: 'user',
+          actor_name: user_audit_info.user_email,
+          actee: created_stack.guid,
+          actee_type: 'stack',
+          actee_name: 'my-stack',
+          space_guid: '',
+          organization_guid: ''
+        )
+        expect(stack_create_event.metadata).to eq({ 'request' => message.audit_hash })
+        expect(stack_create_event.timestamp).to be
+      end
+
       context 'when a model validation fails' do
         it 'raises an error' do
           errors = Sequel::Model::Errors.new
@@ -44,7 +75,7 @@ module VCAP::CloudController
 
           message = VCAP::CloudController::StackCreateMessage.new(name: 'foobar')
           expect do
-            StackCreate.new.create(message)
+            stack_create.create(message)
           end.to raise_error(StackCreate::Error, 'blork is busted')
         end
       end
@@ -59,7 +90,7 @@ module VCAP::CloudController
         it 'raises a human-friendly error' do
           message = VCAP::CloudController::StackCreateMessage.new(name:)
           expect do
-            StackCreate.new.create(message)
+            stack_create.create(message)
           end.to raise_error(StackCreate::Error, 'Name must be unique')
         end
       end
@@ -71,7 +102,7 @@ module VCAP::CloudController
           message = VCAP::CloudController::StackCreateMessage.new(name:)
           # First request, should succeed
           expect do
-            StackCreate.new.create(message)
+            stack_create.create(message)
           end.not_to raise_error
 
           # Mock the validation for the second request to simulate the race condition and trigger a unique constraint violation
@@ -79,7 +110,7 @@ module VCAP::CloudController
 
           # Second request, should fail with correct error
           expect do
-            StackCreate.new.create(message)
+            stack_create.create(message)
           end.to raise_error(StackCreate::Error, 'Name must be unique')
         end
       end

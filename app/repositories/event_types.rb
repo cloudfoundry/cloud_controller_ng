@@ -123,6 +123,10 @@ module VCAP::CloudController
         SPACE_UPDATE = 'audit.space.update'.freeze,
         SPACE_DELETE_REQUEST = 'audit.space.delete-request'.freeze,
 
+        STACK_CREATE = 'audit.stack.create'.freeze,
+        STACK_UPDATE = 'audit.stack.update'.freeze,
+        STACK_DELETE = 'audit.stack.delete'.freeze,
+
         USER_SPACE_AUDITOR_ADD = 'audit.user.space_auditor_add'.freeze,
         USER_SPACE_AUDITOR_REMOVE = 'audit.user.space_auditor_remove'.freeze,
         USER_SPACE_SUPPORTER_ADD = 'audit.user.space_supporter_add'.freeze,

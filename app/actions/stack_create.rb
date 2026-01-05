@@ -1,6 +1,12 @@
+require 'repositories/stack_event_repository'
+
 module VCAP::CloudController
   class StackCreate
     class Error < ::StandardError
+    end
+
+    def initialize(user_audit_info)
+      @user_audit_info = user_audit_info
     end
 
     def create(message)
@@ -10,6 +16,8 @@ module VCAP::CloudController
       )
 
       MetadataUpdate.update(stack, message)
+
+      Repositories::StackEventRepository.new.record_stack_create(stack, @user_audit_info, message.audit_hash)
 
       stack
     rescue Sequel::ValidationFailed => e
