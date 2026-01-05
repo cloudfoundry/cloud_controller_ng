@@ -536,7 +536,7 @@ GEM
       rack-protection (= 4.2.1)
       sinatra (= 4.2.1)
       tilt (~> 2.0)
-    solargraph (0.58.0)
+    solargraph (0.58.1)
       ast (~> 2.4.3)
       backport (~> 1.2)
       benchmark (~> 0.4)
