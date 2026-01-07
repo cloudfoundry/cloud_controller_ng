@@ -303,6 +303,16 @@ RSpec.describe 'Builds' do
           expect(parsed_response['warnings'][0]['detail']).to include('deprecated')
           expect(parsed_response['warnings'][0]['detail']).to include('cflinuxfs3 stack is deprecated')
         end
+
+        it 'includes warming in response headers' do
+          post '/v3/builds', create_request.to_json, developer_headers
+
+          expect(last_response.status).to eq(201)
+          expect(last_response.headers['X-Cf-Warnings']).to be_present
+          warning = CGI.unescape(last_response.headers['X-Cf-Warnings'])
+          expect(warning).to include('deprecated')
+          expect(warning).to include('cflinuxfs3 stack is deprecated')
+        end
       end
 
       context 'app has previous builds' do
@@ -321,6 +331,16 @@ RSpec.describe 'Builds' do
           expect(parsed_response['warnings'][0]['detail']).to include('deprecated')
           expect(parsed_response['warnings'][0]['detail']).to include('cflinuxfs3 stack is deprecated')
           expect(app_model.builds_dataset.count).to eq(2)
+        end
+
+        it 'includes warming in response headers' do
+          post '/v3/builds', create_request.to_json, developer_headers
+
+          expect(last_response.status).to eq(201)
+          expect(last_response.headers['X-Cf-Warnings']).to be_present
+          warning = CGI.unescape(last_response.headers['X-Cf-Warnings'])
+          expect(warning).to include('deprecated')
+          expect(warning).to include('cflinuxfs3 stack is deprecated')
         end
       end
     end
