@@ -683,7 +683,7 @@ module VCAP::CloudController::Metrics
     describe 'task list configuration' do
       describe 'with vitals task only' do
         let(:vitals_updater) do
-          PeriodicUpdater.new(start_time, log_counter, logger, statsd_updater, prometheus_updater, [PeriodicUpdater::VITALS_TASK])
+          PeriodicUpdater.new(start_time, log_counter, logger, statsd_updater, prometheus_updater, task_list: [PeriodicUpdater::VITALS_TASK])
         end
 
         before do
@@ -713,7 +713,7 @@ module VCAP::CloudController::Metrics
             logger,
             statsd_updater,
             prometheus_updater,
-            [PeriodicUpdater::VITALS_TASK, PeriodicUpdater::LOG_COUNTS_TASK]
+            task_list: [PeriodicUpdater::VITALS_TASK, PeriodicUpdater::LOG_COUNTS_TASK]
           )
         end
 

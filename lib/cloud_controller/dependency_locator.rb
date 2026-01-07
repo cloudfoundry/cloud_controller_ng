@@ -80,7 +80,7 @@ module CloudController
                    Steno.logger('cc.vitals'),
                    statsd_updater,
                    prometheus_updater,
-                   task_list: [VCAP::CloudController::Metrics::PeriodicUpdater::VITALS_TASK],
+                   task_list: [VCAP::CloudController::Metrics::PeriodicUpdater::VITALS_TASK]
                  ))
     end
 
