@@ -48,12 +48,12 @@ module VCAP::CloudController::Metrics
 
     DB_CONNECTION_POOL_METRICS = [
       { type: :gauge, name: :cc_acquired_db_connections_total, labels: %i[process_type], docstring: 'Number of acquired DB connections' },
-      { type: :histogram, name: :cc_db_connection_hold_duration_seconds, docstring: 'The time threads were holding DB connections', buckets: CONNECTION_DURATION_BUCKETS },
+      { type: :histogram, name: :cc_db_connection_hold_duration_seconds, labels: %i[process_type], docstring: 'The time threads were holding DB connections', buckets: CONNECTION_DURATION_BUCKETS },
       # cc_connection_pool_timeouts_total must be a gauge metric, because otherwise we cannot match them with processes
       { type: :gauge, name: :cc_db_connection_pool_timeouts_total, labels: %i[process_type],
         docstring: 'Number of threads which failed to acquire a free DB connection from the pool within the timeout' },
       { type: :gauge, name: :cc_open_db_connections_total, labels: %i[process_type], docstring: 'Number of open DB connections (acquired + available)' },
-      { type: :histogram, name: :cc_db_connection_wait_duration_seconds, docstring: 'The time threads were waiting for an available DB connection',
+      { type: :histogram, name: :cc_db_connection_wait_duration_seconds, labels: %i[process_type], docstring: 'The time threads were waiting for an available DB connection',
         buckets: CONNECTION_DURATION_BUCKETS }
     ].freeze
 
@@ -63,12 +63,12 @@ module VCAP::CloudController::Metrics
     ].freeze
 
     VITAL_METRICS = [
-      { type: :gauge, name: :cc_vitals_started_at, docstring: 'CloudController Vitals: started_at', aggregation: :most_recent },
-      { type: :gauge, name: :cc_vitals_mem_bytes, docstring: 'CloudController Vitals: mem_bytes', aggregation: :most_recent },
-      { type: :gauge, name: :cc_vitals_cpu_load_avg, docstring: 'CloudController Vitals: cpu_load_avg', aggregation: :most_recent },
-      { type: :gauge, name: :cc_vitals_mem_used_bytes, docstring: 'CloudController Vitals: mem_used_bytes', aggregation: :most_recent },
-      { type: :gauge, name: :cc_vitals_mem_free_bytes, docstring: 'CloudController Vitals: mem_free_bytes', aggregation: :most_recent },
-      { type: :gauge, name: :cc_vitals_num_cores, docstring: 'CloudController Vitals: num_cores', aggregation: :most_recent }
+      { type: :gauge, name: :cc_vitals_started_at, labels: %i[process_type pid], docstring: 'CloudController Vitals: started_at', aggregation: :most_recent },
+      { type: :gauge, name: :cc_vitals_mem_bytes, labels: %i[process_type pid], docstring: 'CloudController Vitals: mem_bytes', aggregation: :most_recent },
+      { type: :gauge, name: :cc_vitals_cpu_load_avg, labels: %i[process_type pid], docstring: 'CloudController Vitals: cpu_load_avg', aggregation: :most_recent },
+      { type: :gauge, name: :cc_vitals_mem_used_bytes, labels: %i[process_type pid], docstring: 'CloudController Vitals: mem_used_bytes', aggregation: :most_recent },
+      { type: :gauge, name: :cc_vitals_mem_free_bytes, labels: %i[process_type pid], docstring: 'CloudController Vitals: mem_free_bytes', aggregation: :most_recent },
+      { type: :gauge, name: :cc_vitals_num_cores, labels: %i[process_type pid], docstring: 'CloudController Vitals: num_cores', aggregation: :most_recent }
     ].freeze
 
     def initialize(registry: Prometheus::Client.registry)
