@@ -65,6 +65,8 @@ class BuildsController < ApplicationController
       }
     )
 
+    add_warning_headers(build.stack_warnings) if build.stack_warnings&.any?
+
     render status: :created, json: Presenters::V3::BuildPresenter.new(build)
   rescue BuildCreate::InvalidPackage => e
     bad_request!(e.message)
