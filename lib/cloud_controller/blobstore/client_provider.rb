@@ -5,7 +5,6 @@ require 'cloud_controller/blobstore/error_handling_client'
 require 'cloud_controller/blobstore/webdav/dav_client'
 require 'cloud_controller/blobstore/safe_delete_client'
 require 'cloud_controller/blobstore/storage_cli/storage_cli_client'
-require 'cloud_controller/blobstore/storage_cli/azure_storage_cli_client'
 require 'google/apis/errors'
 
 module CloudController
@@ -72,7 +71,7 @@ module CloudController
         end
 
         def provide_storage_cli(options, directory_key, root_dir, resource_type)
-          client = StorageCliClient.build(
+          client = StorageCliClient.new(
             directory_key: directory_key,
             resource_type: resource_type,
             root_dir: root_dir,

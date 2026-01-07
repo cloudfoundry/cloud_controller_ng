@@ -1,11 +1,11 @@
 require 'spec_helper'
-require 'cloud_controller/blobstore/storage_cli/azure_storage_cli_client'
+require 'cloud_controller/blobstore/storage_cli/storage_cli_client'
 
 module CloudController
   module Blobstore
     RSpec.describe StorageCliClient do
-      describe 'registry build and lookup' do
-        it 'builds the correct client when JSON has provider AzureRM' do
+      describe 'client init' do
+        it 'init the correct client when JSON has provider AzureRM' do
           droplets_cfg = Tempfile.new(['droplets', '.json'])
           droplets_cfg.write({ provider: 'AzureRM',
                                account_key: 'bommelkey',
@@ -18,17 +18,21 @@ module CloudController
           allow(VCAP::CloudController::Config).to receive(:config).and_return(config_double)
           allow(config_double).to receive(:get).with(:storage_cli_config_file_droplets).and_return(droplets_cfg.path)
 
-          client_from_registry = StorageCliClient.build(
+          client = StorageCliClient.new(
             directory_key: 'dummy-key',
             root_dir: 'dummy-root',
             resource_type: 'droplets'
           )
-          expect(client_from_registry).to be_a(AzureStorageCliClient)
+          expect(client.instance_variable_get(:@provider)).to eq('AzureRM')
+          expect(client.instance_variable_get(:@storage_type)).to eq('azurebs')
+          expect(client.instance_variable_get(:@resource_type)).to eq('droplets')
+          expect(client.instance_variable_get(:@root_dir)).to eq('dummy-root')
+          expect(client.instance_variable_get(:@directory_key)).to eq('dummy-key')
 
           droplets_cfg.close!
         end
 
-        it 'raises an error for an unregistered provider' do
+        it 'raises an error for an unimplemented provider' do
           droplets_cfg = Tempfile.new(['droplets', '.json'])
           droplets_cfg.write(
             { provider: 'UnknownProvider',
@@ -44,26 +48,16 @@ module CloudController
           allow(config_double).to receive(:get).with(:storage_cli_config_file_droplets).and_return(droplets_cfg.path)
 
           expect do
-            StorageCliClient.build(directory_key: 'dummy-key', root_dir: 'dummy-root', resource_type: 'droplets')
-          end.to raise_error(RuntimeError, 'No storage CLI client registered for provider UnknownProvider')
+            StorageCliClient.new(directory_key: 'dummy-key', root_dir: 'dummy-root', resource_type: 'droplets')
+          end.to raise_error(RuntimeError, 'Unimplemented provider: UnknownProvider, implemented ones are: AzureRM, aliyun')
 
           droplets_cfg.close!
         end
 
-        it 'raises an error when provider is missing from the JSON' do
-          droplets_cfg = Tempfile.new(['droplets', '.json'])
-          droplets_cfg.write({}.to_json)
-          droplets_cfg.flush
-
-          config_double = instance_double(VCAP::CloudController::Config)
-          allow(VCAP::CloudController::Config).to receive(:config).and_return(config_double)
-          allow(config_double).to receive(:get).with(:storage_cli_config_file_droplets).and_return(droplets_cfg.path)
-
+        it 'raise when no resource type' do
           expect do
-            StorageCliClient.build(directory_key: 'dummy-key', root_dir: 'dummy-root', resource_type: 'droplets')
-          end.to raise_error(CloudController::Blobstore::BlobstoreError, /No provider specified in config file/)
-
-          droplets_cfg.close!
+            StorageCliClient.new(directory_key: 'dummy-key', root_dir: 'dummy-root', resource_type: nil)
+          end.to raise_error(RuntimeError, 'Missing resource_type')
         end
       end
 
@@ -104,7 +98,7 @@ module CloudController
         end
 
         def build_client(resource_type)
-          StorageCliClient.build(
+          StorageCliClient.new(
             directory_key: 'dir-key',
             root_dir: 'root',
             resource_type: resource_type
@@ -169,84 +163,249 @@ module CloudController
             /No provider specified/
           )
         end
+      end
 
-        it 'raises BlobstoreError on invalid JSON' do
-          File.write(droplets_cfg.path, '{not json')
-          expect do
-            StorageCliClient.build(directory_key: 'dir', root_dir: 'root', resource_type: 'droplets')
-          end.to raise_error(CloudController::Blobstore::BlobstoreError, /Failed to parse storage-cli JSON/)
-        end
+      describe 'client helper operations' do
+        describe 'Json operations' do
+          let(:droplets_cfg) do
+            f = Tempfile.new(['droplets', '.json'])
+            f.write({ provider: 'AzureRM',
+                      account_key: 'bommelkey',
+                      account_name: 'bommel',
+                      container_name: 'bommelcontainer',
+                      environment: 'BommelCloud' }.to_json)
+            f.flush
+            f
+          end
 
-        it 'raises when JSON is not an object' do
-          File.write(droplets_cfg.path, '[]')
-          expect do
-            StorageCliClient.build(directory_key: 'dir', root_dir: 'root', resource_type: 'droplets')
-          end.to raise_error(CloudController::Blobstore::BlobstoreError, /must be a JSON object/)
-        end
+          let(:config_double) { instance_double(VCAP::CloudController::Config) }
 
-        %w[account_key account_name container_name environment].each do |k|
-          it "raises when #{k} missing" do
-            cfg = { 'provider' => 'AzureRM', 'account_key' => 'a', 'account_name' => 'b',
-                    'container_name' => 'c', 'environment' => 'd' }
-            cfg.delete(k)
-            File.write(droplets_cfg.path, cfg.to_json)
+          before do
+            allow(VCAP::CloudController::Config).to receive(:config).and_return(config_double)
+            allow(config_double).to receive(:get).with(:storage_cli_config_file_droplets).and_return(droplets_cfg.path)
+          end
+
+          after do
+            droplets_cfg.close!
+          end
+
+          it 'raises BlobstoreError on invalid JSON' do
+            File.write(droplets_cfg.path, '{not json')
             expect do
-              StorageCliClient.build(directory_key: 'dir', root_dir: 'root', resource_type: 'droplets')
-            end.to raise_error(CloudController::Blobstore::BlobstoreError, /Missing required keys.*#{k}/)
+              StorageCliClient.new(directory_key: 'dir', root_dir: 'root', resource_type: 'droplets')
+            end.to raise_error(CloudController::Blobstore::BlobstoreError, /Failed to parse storage-cli JSON/)
+          end
+
+          it 'raises when JSON is not an object' do
+            File.write(droplets_cfg.path, '[]')
+            expect do
+              StorageCliClient.new(directory_key: 'dir', root_dir: 'root', resource_type: 'droplets')
+            end.to raise_error(CloudController::Blobstore::BlobstoreError, /must be a JSON object/)
+          end
+        end
+
+        describe 'with valid client' do
+          let(:client) do
+            droplets_cfg = Tempfile.new(['droplets', '.json'])
+            droplets_cfg.write({ provider: 'AzureRM',
+                                 account_key: 'bommelkey',
+                                 account_name: 'bommel',
+                                 container_name: 'bommelcontainer',
+                                 environment: 'BommelCloud' }.to_json)
+            droplets_cfg.flush
+
+            config_double = instance_double(VCAP::CloudController::Config)
+            allow(VCAP::CloudController::Config).to receive(:config).and_return(config_double)
+            allow(config_double).to receive(:get).with(:storage_cli_config_file_droplets).and_return(droplets_cfg.path)
+
+            StorageCliClient.new(
+              directory_key: 'dummy-key',
+              root_dir: 'dummy-root',
+              resource_type: 'droplets'
+            )
+          end
+
+          it '#local? returns false' do
+            expect(client.local?).to be false
+          end
+
+          it 'returns the default CLI path' do
+            expect(client.send(:cli_path)).to eq('/var/vcap/packages/storage-cli/bin/storage-cli')
+          end
+
+          it 'can be overridden by an environment variable' do
+            allow(ENV).to receive(:[]).and_call_original
+            allow(ENV).to receive(:[]).with('STORAGE_CLI_PATH').and_return('/custom/path/to/storage-cli')
+            expect(client.send(:cli_path)).to eq('/custom/path/to/storage-cli')
           end
         end
       end
 
-      describe '#exists? exit code handling' do
-        let(:config_double) { instance_double(VCAP::CloudController::Config) }
-        let(:droplets_cfg)  { Tempfile.new(['droplets', '.json']) }
+      describe 'client operations' do
+        let!(:tmp_cfg) do
+          f = Tempfile.new(['storage_cli_config', '.json'])
+          f.write({ provider: 'AzureRM',
+                    account_name: 'some-account-name',
+                    account_key: 'some-access-key',
+                    container_name: directory_key,
+                    environment: 'AzureCloud' }.to_json)
+          f.flush
+          f
+        end
 
         before do
-          droplets_cfg.write({ provider: 'AzureRM',
-                               account_key: 'bommelkey',
-                               account_name: 'bommel',
-                               container_name: 'bommelcontainer',
-                               environment: 'BommelCloud' }.to_json)
-          droplets_cfg.flush
+          cc_cfg = instance_double(VCAP::CloudController::Config)
+          allow(VCAP::CloudController::Config).to receive(:config).and_return(cc_cfg)
 
-          allow(VCAP::CloudController::Config).to receive(:config).and_return(config_double)
-          allow(config_double).to receive(:get).with(:storage_cli_config_file_droplets).and_return(droplets_cfg.path)
-
+          allow(cc_cfg).to receive(:get) do |key, *_|
+            case key
+            when :storage_cli_config_file_droplets,
+              :storage_cli_config_file_buildpacks,
+              :storage_cli_config_file_packages,
+              :storage_cli_config_file_resource_pool
+              tmp_cfg.path
+            end
+          end
           allow(Steno).to receive(:logger).and_return(double(info: nil, error: nil))
         end
 
-        after { droplets_cfg.close! }
+        after { tmp_cfg.close! }
 
-        let(:client) do
-          StorageCliClient.build(
-            directory_key: 'dir',
-            root_dir: 'root',
-            resource_type: 'droplets'
-          )
+        subject(:client) { StorageCliClient.new(directory_key: directory_key, resource_type: resource_type, root_dir: 'bommel') }
+        let(:directory_key) { 'my-bucket' }
+        let(:resource_type) { 'resource_pool' }
+        let(:downloaded_file) do
+          Tempfile.open('') do |tmpfile|
+            tmpfile.write('downloaded file content')
+            tmpfile
+          end
         end
 
-        it 'returns true on exitstatus 0' do
-          expect(Open3).to receive(:capture3).
-            with(kind_of(String), '-c', droplets_cfg.path, 'exists', kind_of(String)).
-            and_return(['', '', instance_double(Process::Status, success?: true, exitstatus: 0)])
+        let(:deletable_blob) { StorageCliBlob.new('deletable-blob') }
+        let(:dest_path) { File.join(Dir.mktmpdir, SecureRandom.uuid) }
 
-          expect(client.exists?('key')).to be true
+        describe  '#exists?' do
+          context 'when the blob exists' do
+            before { allow(client).to receive(:run_cli).with('exists', any_args).and_return([nil, instance_double(Process::Status, exitstatus: 0)]) }
+
+            it('returns true') { expect(client.exists?('some-blob-key')).to be true }
+          end
+
+          context 'when the blob does not exist' do
+            before { allow(client).to receive(:run_cli).with('exists', any_args).and_return([nil, instance_double(Process::Status, exitstatus: 3)]) }
+
+            it('returns false') { expect(client.exists?('some-blob-key')).to be false }
+          end
         end
 
-        it 'returns false on exitstatus 3' do
-          expect(Open3).to receive(:capture3).
-            with(kind_of(String), '-c', droplets_cfg.path, 'exists', kind_of(String)).
-            and_return(['', '', instance_double(Process::Status, success?: false, exitstatus: 3)])
+        describe '#files_for' do
+          context 'when CLI returns multiple files' do
+            let(:cli_output) { "aa/bb/blob1\ncc/dd/blob2\n" }
 
-          expect(client.exists?('key')).to be false
+            before do
+              allow(client).to receive(:run_cli).
+                with('list', 'some-prefix').
+                and_return([cli_output, instance_double(Process::Status, success?: true)])
+            end
+
+            it 'returns StorageCliBlob instances for each file' do
+              blobs = client.files_for('some-prefix')
+              expect(blobs.map(&:key)).to eq(['aa/bb/blob1', 'cc/dd/blob2'])
+              expect(blobs).to all(be_a(StorageCliBlob))
+            end
+          end
+
+          context 'when CLI returns empty output' do
+            before do
+              allow(client).to receive(:run_cli).
+                with('list', 'some-prefix').
+                and_return(["\n", instance_double(Process::Status, success?: true)])
+            end
+
+            it 'returns an empty array' do
+              expect(client.files_for('some-prefix')).to eq([])
+            end
+          end
+
+          context 'when CLI output has extra whitespace' do
+            let(:cli_output) { "aa/bb/blob1 \n \ncc/dd/blob2\n" }
+
+            before do
+              allow(client).to receive(:run_cli).
+                with('list', 'some-prefix').
+                and_return([cli_output, instance_double(Process::Status, success?: true)])
+            end
+
+            it 'strips and rejects empty lines' do
+              blobs = client.files_for('some-prefix')
+              expect(blobs.map(&:key)).to eq(['aa/bb/blob1', 'cc/dd/blob2'])
+            end
+          end
         end
 
-        it 'raises for other non-zero exit codes' do
-          expect(Open3).to receive(:capture3).
-            with(kind_of(String), '-c', droplets_cfg.path, 'exists', kind_of(String)).
-            and_return(['', 'boom', instance_double(Process::Status, success?: false, exitstatus: 2)])
+        describe '#blob' do
+          let(:properties_json) { '{"etag": "test-etag", "last_modified": "2024-10-01T00:00:00Z", "content_length": 1024}' }
 
-          expect { client.exists?('key') }.to raise_error(/storage-cli exists failed/)
+          it 'returns a list of StorageCliBlob instances for a given key' do
+            allow(client).to receive(:run_cli).with('properties', 'bommel/va/li/valid-blob').and_return([properties_json, instance_double(Process::Status, exitstatus: 0)])
+            allow(client).to receive(:run_cli).with('sign', 'bommel/va/li/valid-blob', 'get', '3600s').and_return(['some-url', instance_double(Process::Status, exitstatus: 0)])
+
+            blob = client.blob('valid-blob')
+            expect(blob).to be_a(StorageCliBlob)
+            expect(blob.key).to eq('valid-blob')
+            expect(blob.attributes(:etag, :last_modified, :content_length)).to eq({
+                                                                                    etag: 'test-etag',
+                                                                                    last_modified: '2024-10-01T00:00:00Z',
+                                                                                    content_length: 1024
+                                                                                  })
+            expect(blob.internal_download_url).to eq('some-url')
+            expect(blob.public_download_url).to eq('some-url')
+          end
+
+          it 'raises an error if the cli output is empty' do
+            allow(client).to receive(:run_cli).with('properties', 'bommel/no/ne/nonexistent-blob').and_return([nil, instance_double(Process::Status, exitstatus: 0)])
+            expect { client.blob('nonexistent-blob') }.to raise_error(BlobstoreError, /Properties command returned empty output/)
+          end
+
+          it 'raises an error if the cli output is not valid JSON' do
+            allow(client).to receive(:run_cli).with('properties', 'bommel/in/va/invalid-json').and_return(['not a json', instance_double(Process::Status, exitstatus: 0)])
+            expect { client.blob('invalid-json') }.to raise_error(BlobstoreError, /Failed to parse json properties/)
+          end
+        end
+
+        describe '#run_cli' do
+          it 'returns output and status on success' do
+            status = instance_double(Process::Status, success?: true, exitstatus: 0)
+            allow(Open3).to receive(:capture3).with(anything, '-s', anything, '-c', anything, 'list', 'arg1').and_return(['ok', '', status])
+
+            output, returned_status = client.send(:run_cli, 'list', 'arg1')
+            expect(output).to eq('ok')
+            expect(returned_status).to eq(status)
+          end
+
+          it 'raises an error on failure' do
+            status = instance_double(Process::Status, success?: false, exitstatus: 1)
+            allow(Open3).to receive(:capture3).with(anything, '-s', anything, '-c', anything, 'list', 'arg1').and_return(['', 'error message', status])
+
+            expect do
+              client.send(:run_cli, 'list', 'arg1')
+            end.to raise_error(RuntimeError, /storage-cli list failed with exit code 1/)
+          end
+
+          it 'allows exit code 3 if specified' do
+            status = instance_double(Process::Status, success?: false, exitstatus: 3)
+            allow(Open3).to receive(:capture3).with(anything, '-s', anything, '-c', anything, 'list', 'arg1').and_return(['', 'error message', status])
+
+            output, returned_status = client.send(:run_cli, 'list', 'arg1', allow_exit_code_three: true)
+            expect(output).to eq('')
+            expect(returned_status).to eq(status)
+          end
+
+          it 'raises BlobstoreError on Open3 failure' do
+            allow(Open3).to receive(:capture3).and_raise(StandardError.new('Open3 error'))
+
+            expect { client.send(:run_cli, 'list', 'arg1') }.to raise_error(BlobstoreError, /Open3 error/)
+          end
         end
       end
     end
