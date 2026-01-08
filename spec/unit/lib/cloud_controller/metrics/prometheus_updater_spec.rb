@@ -168,22 +168,22 @@ module VCAP::CloudController::Metrics
         updater.update_vitals(vitals)
 
         metric = prom_client.metrics.find { |m| m.name == :cc_vitals_started_at }
-        expect(metric.get).to eq 1_699_522_477.0
+        expect(metric.get(labels: { pid: Process.pid, process_type: 'main' })).to eq 1_699_522_477.0
 
         metric = prom_client.metrics.find { |m| m.name == :cc_vitals_cpu_load_avg }
-        expect(metric.get).to eq 0.5
+        expect(metric.get(labels: { pid: Process.pid, process_type: 'main' })).to eq 0.5
 
         metric = prom_client.metrics.find { |m| m.name == :cc_vitals_mem_used_bytes }
-        expect(metric.get).to eq 542
+        expect(metric.get(labels: { pid: Process.pid, process_type: 'main' })).to eq 542
 
         metric = prom_client.metrics.find { |m| m.name == :cc_vitals_mem_free_bytes }
-        expect(metric.get).to eq 927
+        expect(metric.get(labels: { pid: Process.pid, process_type: 'main' })).to eq 927
 
         metric = prom_client.metrics.find { |m| m.name == :cc_vitals_mem_bytes }
-        expect(metric.get).to eq 1
+        expect(metric.get(labels: { pid: Process.pid, process_type: 'main' })).to eq 1
 
         metric = prom_client.metrics.find { |m| m.name == :cc_vitals_num_cores }
-        expect(metric.get).to eq 4
+        expect(metric.get(labels: { pid: Process.pid, process_type: 'main' })).to eq 4
       end
     end
 

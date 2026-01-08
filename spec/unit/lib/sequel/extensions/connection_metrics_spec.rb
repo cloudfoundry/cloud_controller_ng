@@ -88,7 +88,8 @@ RSpec.describe 'Sequel::ConnectionMetrics' do
 
         it 'emits the time the thread waited for the connection' do
           db.pool.instance_variable_set(:@connection_info, db.pool.instance_variable_get(:@connection_info).merge!({ thread => { waiting_since: Time.now - 60 } }))
-          expect(prometheus_updater).to receive(:update_histogram_metric).with(:cc_db_connection_wait_duration_seconds, an_instance_of(ActiveSupport::Duration))
+          expect(prometheus_updater).to receive(:update_histogram_metric).with(:cc_db_connection_wait_duration_seconds, an_instance_of(ActiveSupport::Duration),
+                                                                               labels: { process_type: 'puma_worker' })
 
           expect { db.pool.send(:acquire, thread) }.to raise_error(Sequel::PoolTimeout)
         end
@@ -147,7 +148,7 @@ RSpec.describe 'Sequel::ConnectionMetrics' do
 
         Timecop.freeze do
           hold_duration = Time.now - acquired_at
-          expect(prometheus_updater).to receive(:update_histogram_metric).with(:cc_db_connection_hold_duration_seconds, hold_duration)
+          expect(prometheus_updater).to receive(:update_histogram_metric).with(:cc_db_connection_hold_duration_seconds, hold_duration, labels: { process_type: 'puma_worker' })
           db.pool.send(:release, thread)
         end
       end

@@ -48,7 +48,8 @@ module VCAP::CloudController::Metrics
 
     DB_CONNECTION_POOL_METRICS = [
       { type: :gauge, name: :cc_acquired_db_connections_total, labels: %i[process_type], docstring: 'Number of acquired DB connections' },
-      { type: :histogram, name: :cc_db_connection_hold_duration_seconds, labels: %i[process_type], docstring: 'The time threads were holding DB connections', buckets: CONNECTION_DURATION_BUCKETS },
+      { type: :histogram, name: :cc_db_connection_hold_duration_seconds, labels: %i[process_type], docstring: 'The time threads were holding DB connections',
+        buckets: CONNECTION_DURATION_BUCKETS },
       # cc_connection_pool_timeouts_total must be a gauge metric, because otherwise we cannot match them with processes
       { type: :gauge, name: :cc_db_connection_pool_timeouts_total, labels: %i[process_type],
         docstring: 'Number of threads which failed to acquire a free DB connection from the pool within the timeout' },
@@ -75,17 +76,17 @@ module VCAP::CloudController::Metrics
       self.class.allow_pid_label
 
       @registry = registry
-      execution_context = VCAP::CloudController::ExecutionContext.from_process_type_env
+      @execution_context = VCAP::CloudController::ExecutionContext.from_process_type_env
 
-      register_metrics_for_process(execution_context)
-      initialize_cc_db_connection_pool_timeouts_total(execution_context)
+      register_metrics_for_process
+      initialize_cc_db_connection_pool_timeouts_total
     end
 
     private
 
     # rubocop:disable Metrics/CyclomaticComplexity
-    def register_metrics_for_process(execution_context)
-      case execution_context
+    def register_metrics_for_process
+      case @execution_context
       when VCAP::CloudController::ExecutionContext::CC_WORKER
         DB_CONNECTION_POOL_METRICS.each { |metric| register(metric) }
         DELAYED_JOB_METRICS.each { |metric| register(metric) }
@@ -105,14 +106,14 @@ module VCAP::CloudController::Metrics
     end
     # rubocop:enable Metrics/CyclomaticComplexity
 
-    def initialize_cc_db_connection_pool_timeouts_total(execution_context)
-      return if execution_context.nil? # In unit tests, the execution context might not be set - thus skip initialization
+    def initialize_cc_db_connection_pool_timeouts_total
+      return if @execution_context.nil? # In unit tests, the execution context might not be set - thus skip initialization
       return unless @registry.exist?(:cc_db_connection_pool_timeouts_total) # If the metric is not registered, we don't need to initialize it
 
       # initialize metric with 0 for discoverability, because it likely won't get updated on healthy systems
-      update_gauge_metric(:cc_db_connection_pool_timeouts_total, 0, labels: { process_type: execution_context.process_type })
+      update_gauge_metric(:cc_db_connection_pool_timeouts_total, 0, labels: { process_type: @execution_context.process_type })
 
-      return unless execution_context == VCAP::CloudController::ExecutionContext::API_PUMA_MAIN
+      return unless @execution_context == VCAP::CloudController::ExecutionContext::API_PUMA_MAIN
 
       # also initialize for puma_worker
       update_gauge_metric(:cc_db_connection_pool_timeouts_total, 0, labels: { process_type: VCAP::CloudController::ExecutionContext::API_PUMA_WORKER.process_type })
@@ -179,7 +180,7 @@ module VCAP::CloudController::Metrics
     def update_vitals(vitals)
       vitals.each do |key, value|
         metric_key = :"cc_vitals_#{key.to_s.underscore}"
-        update_gauge_metric(metric_key, value)
+        update_gauge_metric(metric_key, value, labels: { process_type: @execution_context.process_type, pid: Process.pid })
       end
     end
 
