@@ -12,6 +12,7 @@ require 'cloud_controller/config_schemas/route_syncer_schema'
 require 'cloud_controller/config_schemas/worker_schema'
 require 'cloud_controller/config_schemas/deployment_updater_schema'
 require 'cloud_controller/config_schemas/rotate_database_key_schema'
+require 'cloud_controller/config_schemas/blobstore_benchmarks_schema'
 require 'utils/hash_utils'
 
 module VCAP::CloudController
