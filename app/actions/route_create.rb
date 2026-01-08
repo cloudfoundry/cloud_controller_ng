@@ -8,6 +8,9 @@ module VCAP::CloudController
     end
 
     def create(message:, space:, domain:, manifest_triggered: false)
+      logger = Steno.logger('cc.action.route_create')
+      logger.error("CRITICAL: RouteCreate.create called", manifest_triggered: manifest_triggered, message_options: message.options.inspect, location: "#{__FILE__}:#{__LINE__}")
+
       validate_tcp_route!(domain, message)
 
       route = Route.new(
@@ -21,7 +24,7 @@ module VCAP::CloudController
 
       Route.db.transaction do
         logger = Steno.logger('cc.action.route_create')
-        logger.info("About to call route.save", route_host: route.host, route_options: route.options.inspect, raise_on_failure: true, location: "#{__FILE__}:#{__LINE__}")
+        logger.error("CRITICAL: About to call route.save in RouteCreate", route_host: route.host, route_options: route.options.inspect, raise_on_failure: true, location: "#{__FILE__}:#{__LINE__}")
 
         route.save(raise_on_failure: true)
 

@@ -72,13 +72,14 @@ module VCAP::CloudController
 
     def options_with_serialization=(opts)
       logger = Steno.logger('cc.model.route')
-      logger.info("options_with_serialization= setter called", opts: opts.inspect, location: "#{__FILE__}:#{__LINE__}")
+      caller_info = caller[0..5].join("\n  ")
+      logger.error("CRITICAL: options_with_serialization= setter called", opts: opts.inspect, caller: caller_info, location: "#{__FILE__}:#{__LINE__}")
 
       cleaned_opts = remove_hash_options_for_non_hash_loadbalancing(opts)
       normalized_opts = normalize_hash_balance_to_string(cleaned_opts)
       self.options_without_serialization = Oj.dump(normalized_opts)
 
-      logger.info("options_with_serialization= setter completed", normalized_opts: normalized_opts.inspect, json: self.options_without_serialization.inspect)
+      logger.error("CRITICAL: options_with_serialization= setter completed", normalized_opts: normalized_opts.inspect, json: self.options_without_serialization.inspect)
     end
 
     alias_method :options_without_serialization=, :options=
@@ -113,7 +114,8 @@ module VCAP::CloudController
 
     def validate
       logger = Steno.logger('cc.model.route')
-      logger.info("Route.validate called, route_guid: #{guid}, route_host: #{host}, route_options: #{options}, location: #{__FILE__}:#{__LINE__}")
+      caller_info = caller[0..3].join("\n  ")
+      logger.error("CRITICAL: Route.validate called, route_guid: #{guid}, route_host: #{host}, route_options: #{options.inspect}, caller: #{caller_info}, location: #{__FILE__}:#{__LINE__}")
 
       validates_presence :domain
       validates_presence :space
@@ -356,19 +358,25 @@ module VCAP::CloudController
 
     def remove_hash_options_for_non_hash_loadbalancing(opts)
       logger = Steno.logger('cc.model.route')
-      logger.info("remove_hash_options_for_non_hash_loadbalancing called", opts: opts.inspect, location: "#{__FILE__}:#{__LINE__}")
+      logger.error("CRITICAL: remove_hash_options_for_non_hash_loadbalancing called", opts: opts.inspect, location: "#{__FILE__}:#{__LINE__}")
 
       return opts unless opts.is_a?(Hash)
 
       opts_symbolized = opts.deep_symbolize_keys
       loadbalancing = opts_symbolized[:loadbalancing]
 
+      logger.error("CRITICAL: loadbalancing value", loadbalancing: loadbalancing.inspect, location: "#{__FILE__}:#{__LINE__}")
+
       # Remove hash-specific options if loadbalancing is set to non-hash value
       if loadbalancing.present? && loadbalancing != 'hash'
+        logger.error("CRITICAL: Removing hash_header and hash_balance because loadbalancing=#{loadbalancing}", location: "#{__FILE__}:#{__LINE__}")
         opts_symbolized.delete(:hash_header)
         opts_symbolized.delete(:hash_balance)
+      else
+        logger.error("CRITICAL: NOT removing hash options", loadbalancing_present: loadbalancing.present?, loadbalancing_is_hash: (loadbalancing == 'hash'), location: "#{__FILE__}:#{__LINE__}")
       end
 
+      logger.error("CRITICAL: remove_hash_options result", result: opts_symbolized.inspect, location: "#{__FILE__}:#{__LINE__}")
       opts_symbolized
     end
 
