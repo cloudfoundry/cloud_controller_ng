@@ -11,8 +11,6 @@ class SpaceManifestsController < ApplicationController
   before_action :validate_content_type!
 
   def apply_manifest
-    logger = Steno.logger('app_manifest_message/apply_manifest')
-    logger.info("Running into apply_manifest...")
     space = Space.find(guid: hashed_params[:guid])
     space_not_found! unless space && permission_queryer.can_read_from_space?(space.id, space.organization_id)
     can_write_space(space)

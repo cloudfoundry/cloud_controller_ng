@@ -113,10 +113,6 @@ module VCAP::CloudController
     end
 
     def validate
-      logger = Steno.logger('cc.model.route')
-      caller_info = caller[0..3].join("\n  ")
-      logger.error("CRITICAL: Route.validate called, route_guid: #{guid}, route_host: #{host}, route_options: #{options.inspect}, caller: #{caller_info}, location: #{__FILE__}:#{__LINE__}")
-
       validates_presence :domain
       validates_presence :space
 
@@ -357,26 +353,17 @@ module VCAP::CloudController
     end
 
     def remove_hash_options_for_non_hash_loadbalancing(opts)
-      logger = Steno.logger('cc.model.route')
-      logger.error("CRITICAL: remove_hash_options_for_non_hash_loadbalancing called", opts: opts.inspect, location: "#{__FILE__}:#{__LINE__}")
-
       return opts unless opts.is_a?(Hash)
 
       opts_symbolized = opts.deep_symbolize_keys
       loadbalancing = opts_symbolized[:loadbalancing]
 
-      logger.error("CRITICAL: loadbalancing value", loadbalancing: loadbalancing.inspect, location: "#{__FILE__}:#{__LINE__}")
-
       # Remove hash-specific options if loadbalancing is set to non-hash value
       if loadbalancing.present? && loadbalancing != 'hash'
-        logger.error("CRITICAL: Removing hash_header and hash_balance because loadbalancing=#{loadbalancing}", location: "#{__FILE__}:#{__LINE__}")
         opts_symbolized.delete(:hash_header)
         opts_symbolized.delete(:hash_balance)
-      else
-        logger.error("CRITICAL: NOT removing hash options", loadbalancing_present: loadbalancing.present?, loadbalancing_is_hash: (loadbalancing == 'hash'), location: "#{__FILE__}:#{__LINE__}")
       end
 
-      logger.error("CRITICAL: remove_hash_options result", result: opts_symbolized.inspect, location: "#{__FILE__}:#{__LINE__}")
       opts_symbolized
     end
 

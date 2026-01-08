@@ -7,18 +7,9 @@ module VCAP::CloudController
     class InvalidRoute < StandardError
     end
 
-    # This log fires when the class is loaded - if you don't see it, the new code isn't being loaded
-    Steno.logger('cc.action.manifest_route_update').error("CRITICAL: ManifestRouteUpdate class loaded at #{Time.now}")
-
     class << self
       def update(app_guid, message, user_audit_info)
-        logger = Steno.logger('cc.action.manifest_route_update')
-        logger.error("CRITICAL: ManifestRouteUpdate.update called", app_guid: app_guid, message: message.inspect, message_routes: message.routes.inspect, message_requested_routes: message.requested?(:routes), location: "#{__FILE__}:#{__LINE__}")
-
-        unless message.requested?(:routes)
-          logger.error("CRITICAL: Early return - routes not requested", location: "#{__FILE__}:#{__LINE__}")
-          return
-        end
+        return unless message.requested?(:routes)
 
         app = AppModel.find(guid: app_guid)
         not_found! unless app
@@ -68,9 +59,6 @@ module VCAP::CloudController
       private
 
       def find_or_create_valid_route(app, manifest_route, user_audit_info)
-        logger = Steno.logger('cc.action.manifest_route_update')
-        logger.error("CRITICAL: find_or_create_valid_route called", manifest_route: manifest_route.inspect, has_options: manifest_route[:options].present?, options_value: manifest_route[:options].inspect, location: "#{__FILE__}:#{__LINE__}")
-
         manifest_route[:candidate_host_domain_pairs].each do |candidate|
           potential_domain = candidate[:domain]
           existing_domain = Domain.find(name: potential_domain)
@@ -87,11 +75,7 @@ module VCAP::CloudController
             )
           )
 
-          logger = Steno.logger('cc.action.manifest_route_update')
-          logger.error("CRITICAL: Route lookup completed", manifest_route: manifest_route.inspect, route_found: !route.nil?, route_guid: route&.guid, route_options: route&.options.inspect, manifest_options: manifest_route[:options].inspect, manifest_options_present: manifest_route[:options].present?, location: "#{__FILE__}:#{__LINE__}")
-
           if !route
-            logger.error("CRITICAL: Creating new route (route is nil)", location: "#{__FILE__}:#{__LINE__}")
             FeatureFlag.raise_unless_enabled!(:route_creation)
             raise CloudController::Errors::ApiError.new_from_details('NotAuthorized') if host == '*' && existing_domain.shared?
 
@@ -109,21 +93,14 @@ module VCAP::CloudController
               manifest_triggered: true
             )
           elsif !route.available_in_space?(app.space)
-            logger.error("CRITICAL: Route not available in space", location: "#{__FILE__}:#{__LINE__}")
             raise InvalidRoute.new('Routes cannot be mapped to destinations in different spaces')
           elsif manifest_route[:options]
-            logger.error("CRITICAL: Updating existing route options - ENTERING THIS BRANCH", existing_options: route.options.inspect, manifest_options: manifest_route[:options].inspect, location: "#{__FILE__}:#{__LINE__}")
             # remove nil values from options
             manifest_route[:options] = manifest_route[:options].compact
-            logger.error("CRITICAL: About to call RouteUpdate.new.update", manifest_route_options: manifest_route[:options].inspect, location: "#{__FILE__}:#{__LINE__}")
             message = RouteUpdateMessage.new({
                                                'options' => manifest_route[:options]
                                              })
-            logger.error("CRITICAL: Created RouteUpdateMessage", message: message.inspect, message_options: message.options.inspect, location: "#{__FILE__}:#{__LINE__}")
             route = RouteUpdate.new.update(route:, message:)
-            logger.error("CRITICAL: RouteUpdate.new.update completed", updated_route_options: route.options.inspect, location: "#{__FILE__}:#{__LINE__}")
-          else
-            logger.error("CRITICAL: Route exists, no update needed - ELSE BRANCH", route_has_options: route.options.present?, manifest_has_options: manifest_route[:options].present?, route_options: route.options.inspect, manifest_options: manifest_route[:options].inspect, location: "#{__FILE__}:#{__LINE__}")
           end
 
           return route
