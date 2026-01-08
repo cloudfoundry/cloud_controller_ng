@@ -5,7 +5,7 @@ module VCAP::CloudController
 
     def update(route:, message:)
       logger = Steno.logger('cc.action.route_update')
-      logger.info("RouteUpdate.update called", route_guid: route.guid, route_options: route.options.inspect, message: message.inspect, message_options: message.options.inspect, message_requested_options: message.requested?(:options), location: "#{__FILE__}:#{__LINE__}")
+      logger.error("CRITICAL: RouteUpdate.update called", route_guid: route.guid, route_options: route.options.inspect, message: message.inspect, message_options: message.options.inspect, message_requested_options: message.requested?(:options), location: "#{__FILE__}:#{__LINE__}")
 
       Route.db.transaction do
         if message.requested?(:options)
@@ -17,7 +17,7 @@ module VCAP::CloudController
           route.options = merged_options
         end
 
-        logger.info("About to call route.save", route_guid: route.guid, route_options: route.options.inspect, raise_on_failure: true, location: "#{__FILE__}:#{__LINE__}")
+        logger.error("CRITICAL: About to call route.save", route_guid: route.guid, route_options: route.options.inspect, raise_on_failure: true, location: "#{__FILE__}:#{__LINE__}")
 
         route.save(raise_on_failure: true)
         MetadataUpdate.update(route, message)

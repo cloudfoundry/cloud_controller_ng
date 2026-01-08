@@ -82,10 +82,10 @@ module VCAP::CloudController
           )
 
           logger = Steno.logger('cc.action.manifest_route_update')
-          logger.info("Route lookup completed", manifest_route: manifest_route.inspect, route_found: !route.nil?, route_guid: route&.guid, location: "#{__FILE__}:#{__LINE__}")
+          logger.error("CRITICAL: Route lookup completed", manifest_route: manifest_route.inspect, route_found: !route.nil?, route_guid: route&.guid, route_options: route&.options.inspect, manifest_options: manifest_route[:options].inspect, manifest_options_present: manifest_route[:options].present?, location: "#{__FILE__}:#{__LINE__}")
 
           if !route
-            logger.info("Creating new route", location: "#{__FILE__}:#{__LINE__}")
+            logger.error("CRITICAL: Creating new route (route is nil)", location: "#{__FILE__}:#{__LINE__}")
             FeatureFlag.raise_unless_enabled!(:route_creation)
             raise CloudController::Errors::ApiError.new_from_details('NotAuthorized') if host == '*' && existing_domain.shared?
 
@@ -103,20 +103,21 @@ module VCAP::CloudController
               manifest_triggered: true
             )
           elsif !route.available_in_space?(app.space)
-            logger.info("Route not available in space", location: "#{__FILE__}:#{__LINE__}")
+            logger.error("CRITICAL: Route not available in space", location: "#{__FILE__}:#{__LINE__}")
             raise InvalidRoute.new('Routes cannot be mapped to destinations in different spaces')
           elsif manifest_route[:options]
-            logger.info("Updating existing route options", existing_options: route.options.inspect, manifest_options: manifest_route[:options].inspect, location: "#{__FILE__}:#{__LINE__}")
+            logger.error("CRITICAL: Updating existing route options - ENTERING THIS BRANCH", existing_options: route.options.inspect, manifest_options: manifest_route[:options].inspect, location: "#{__FILE__}:#{__LINE__}")
             # remove nil values from options
             manifest_route[:options] = manifest_route[:options].compact
-            logger.info("About to call RouteUpdate.new.update", manifest_route_options: manifest_route[:options].inspect, location: "#{__FILE__}:#{__LINE__}")
+            logger.error("CRITICAL: About to call RouteUpdate.new.update", manifest_route_options: manifest_route[:options].inspect, location: "#{__FILE__}:#{__LINE__}")
             message = RouteUpdateMessage.new({
                                                'options' => manifest_route[:options]
                                              })
-            logger.info("Created RouteUpdateMessage", message: message.inspect, message_options: message.options.inspect, location: "#{__FILE__}:#{__LINE__}")
+            logger.error("CRITICAL: Created RouteUpdateMessage", message: message.inspect, message_options: message.options.inspect, location: "#{__FILE__}:#{__LINE__}")
             route = RouteUpdate.new.update(route:, message:)
+            logger.error("CRITICAL: RouteUpdate.new.update completed", updated_route_options: route.options.inspect, location: "#{__FILE__}:#{__LINE__}")
           else
-            logger.info("Route exists, no update needed", route_has_options: route.options.present?, manifest_has_options: manifest_route[:options].present?, route_options: route.options.inspect, manifest_options: manifest_route[:options].inspect, location: "#{__FILE__}:#{__LINE__}")
+            logger.error("CRITICAL: Route exists, no update needed - ELSE BRANCH", route_has_options: route.options.present?, manifest_has_options: manifest_route[:options].present?, route_options: route.options.inspect, manifest_options: manifest_route[:options].inspect, location: "#{__FILE__}:#{__LINE__}")
           end
 
           return route
