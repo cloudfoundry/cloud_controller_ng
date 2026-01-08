@@ -1,6 +1,12 @@
+require 'repositories/space_quota_event_repository'
+
 module VCAP::CloudController
   class SpaceQuotaApply
     class Error < ::StandardError
+    end
+
+    def initialize(user_audit_info)
+      @user_audit_info = user_audit_info
     end
 
     def apply(space_quota, message, visible_space_guids: [], all_spaces_visible: false)
@@ -17,7 +23,10 @@ module VCAP::CloudController
       end
 
       SpaceQuotaDefinition.db.transaction do
-        spaces.each { |space| space_quota.add_space(space) }
+        spaces.each do |space|
+          space_quota.add_space(space)
+          Repositories::SpaceQuotaEventRepository.new.record_space_quota_apply(space_quota, space, @user_audit_info)
+        end
       end
     rescue Sequel::ValidationFailed => e
       error!(e.message)

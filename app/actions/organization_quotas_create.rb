@@ -1,6 +1,12 @@
+require 'repositories/organization_quota_event_repository'
+
 module VCAP::CloudController
   class OrganizationQuotasCreate
     class Error < ::StandardError
+    end
+
+    def initialize(user_audit_info)
+      @user_audit_info = user_audit_info
     end
 
     # rubocop:todo Metrics/CyclomaticComplexity
@@ -33,6 +39,8 @@ module VCAP::CloudController
 
         orgs = valid_orgs(message.organization_guids)
         orgs.each { |org| org_quota.add_organization(org) }
+
+        Repositories::OrganizationQuotaEventRepository.new.record_organization_quota_create(org_quota, @user_audit_info, message.audit_hash)
       end
       org_quota
     rescue Sequel::ValidationFailed => e

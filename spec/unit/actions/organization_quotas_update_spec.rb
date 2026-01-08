@@ -5,6 +5,11 @@ require 'messages/organization_quotas_update_message'
 module VCAP::CloudController
   RSpec.describe OrganizationQuotasUpdate do
     describe 'update' do
+      let(:user) { User.make }
+      let(:user_email) { 'user@example.com' }
+      let(:user_name) { 'user-name' }
+      let(:user_audit_info) { UserAuditInfo.new(user_guid: user.guid, user_email: user_email, user_name: user_name) }
+
       context 'when updating an organization quota' do
         let!(:org_quota) { VCAP::CloudController::QuotaDefinition.make(name: 'org_quota_name', non_basic_services_allowed: true) }
 
@@ -42,7 +47,7 @@ module VCAP::CloudController
         end
 
         it 'updates an organization quota with the given values' do
-          updated_organization_quota = OrganizationQuotasUpdate.update(org_quota, message)
+          updated_organization_quota = OrganizationQuotasUpdate.update(org_quota, message, user_audit_info)
 
           expect(updated_organization_quota.name).to eq('don-quixote')
 
@@ -63,10 +68,32 @@ module VCAP::CloudController
         end
 
         it 'updates an organization quota with only the given values' do
-          updated_organization_quota = OrganizationQuotasUpdate.update(org_quota, minimum_message)
+          updated_organization_quota = OrganizationQuotasUpdate.update(org_quota, minimum_message, user_audit_info)
 
           expect(updated_organization_quota.name).to eq('org_quota_name')
           expect(updated_organization_quota.log_rate_limit).to eq(-1)
+        end
+
+        it 'creates an audit event' do
+          OrganizationQuotasUpdate.update(org_quota, message, user_audit_info)
+
+          expect(VCAP::CloudController::Event.count).to eq(1)
+          event = VCAP::CloudController::Event.last
+
+          expect(event.values).to include(
+            type: 'audit.organization_quota.update',
+            actee: org_quota.guid,
+            actee_type: 'organization_quota',
+            actee_name: 'don-quixote',
+            actor: user_audit_info.user_guid,
+            actor_type: 'user',
+            actor_name: user_audit_info.user_email,
+            actor_username: user_audit_info.user_name,
+            space_guid: '',
+            organization_guid: ''
+          )
+          expect(event.metadata).to eq({ 'request' => message.audit_hash })
+          expect(event.timestamp).to be
         end
 
         context 'when a model validation fails' do
@@ -78,7 +105,7 @@ module VCAP::CloudController
 
             message = VCAP::CloudController::OrganizationQuotasCreateMessage.new(name: 'foobar')
             expect do
-              OrganizationQuotasUpdate.update(org_quota, message)
+              OrganizationQuotasUpdate.update(org_quota, message, user_audit_info)
             end.to raise_error(OrganizationQuotasUpdate::Error, 'blork is busted')
           end
 
@@ -90,7 +117,7 @@ module VCAP::CloudController
 
             let(:create_message) { VCAP::CloudController::OrganizationQuotasCreateMessage.new(name:) }
 
-            let(:org_quotas_create) { OrganizationQuotasCreate.new }
+            let(:org_quotas_create) { OrganizationQuotasCreate.new(user_audit_info) }
 
             before do
               org_quotas_create.create(create_message)
@@ -98,7 +125,7 @@ module VCAP::CloudController
 
             it 'raises a human-friendly error' do
               expect do
-                OrganizationQuotasUpdate.update(org_quota, update_message)
+                OrganizationQuotasUpdate.update(org_quota, update_message, user_audit_info)
               end.to raise_error(OrganizationQuotasUpdate::Error, "Organization Quota '#{name}' already exists.")
             end
           end
@@ -121,7 +148,7 @@ module VCAP::CloudController
 
             it 'errors with a message telling the user the affected org' do
               expect do
-                OrganizationQuotasUpdate.update(org_quota, message)
+                OrganizationQuotasUpdate.update(org_quota, message, user_audit_info)
               end.to raise_error(OrganizationQuotasUpdate::Error, 'Current usage exceeds new quota values. This quota is applied to org ' \
                                                                   "'org-name-1' which contains apps running with an unlimited log rate limit.")
             end
@@ -134,7 +161,7 @@ module VCAP::CloudController
 
             it 'errors with a message telling the user the affected orgs' do
               expect do
-                OrganizationQuotasUpdate.update(org_quota, message)
+                OrganizationQuotasUpdate.update(org_quota, message, user_audit_info)
               end.to raise_error(OrganizationQuotasUpdate::Error, 'Current usage exceeds new quota values. This quota is applied to orgs ' \
                                                                   "'org-name-1', 'org-name-2' which contain apps running with an unlimited log rate limit.")
             end
@@ -147,7 +174,7 @@ module VCAP::CloudController
 
             it 'errors with a message telling the user some of the affected orgs and a total count' do
               expect do
-                OrganizationQuotasUpdate.update(org_quota, message)
+                OrganizationQuotasUpdate.update(org_quota, message, user_audit_info)
               end.to raise_error(OrganizationQuotasUpdate::Error, 'Current usage exceeds new quota values. This quota is applied to orgs ' \
                                                                   "'org-name-1', 'org-name-2' and 3 other orgs which contain apps running with an unlimited log rate limit.")
             end
@@ -162,7 +189,7 @@ module VCAP::CloudController
 
             it 'only names the org once in the error message' do
               expect do
-                OrganizationQuotasUpdate.update(org_quota, message)
+                OrganizationQuotasUpdate.update(org_quota, message, user_audit_info)
               end.to raise_error(OrganizationQuotasUpdate::Error, 'Current usage exceeds new quota values. This quota is applied to org ' \
                                                                   "'org-name' which contains apps running with an unlimited log rate limit.")
             end
