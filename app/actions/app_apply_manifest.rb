@@ -25,7 +25,8 @@ module VCAP::CloudController
     end
 
     def apply(app_guid, message)
-      logger = Steno.logger('app_appy_manifest')
+      logger = Steno.logger('app_apply_manifest')
+      logger.error("CRITICAL: AppApplyManifest.apply called for app_guid: #{app_guid}")
       logger.info("Applying app manifest #{message} to app: #{app_guid}")
       app = AppModel.first(guid: app_guid)
       app_instance_not_found!(app_guid) unless app

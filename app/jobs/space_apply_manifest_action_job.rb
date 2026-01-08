@@ -1,6 +1,9 @@
 module VCAP::CloudController
   module Jobs
     class SpaceApplyManifestActionJob < VCAP::CloudController::Jobs::CCJob
+      # This log fires when the worker loads the class
+      Steno.logger('cc.background').error("CRITICAL: SpaceApplyManifestActionJob class loaded at #{Time.now}")
+
       def initialize(space, app_guid_message_hash, apply_manifest_action, user_audit_info)
         @space = space
         @app_guid_message_hash = app_guid_message_hash
@@ -10,9 +13,11 @@ module VCAP::CloudController
 
       def perform
         logger = Steno.logger('cc.background')
+        logger.error("CRITICAL: SpaceApplyManifestActionJob.perform called for space: #{resource_guid}, apps: #{app_guid_message_hash.keys.inspect}")
         logger.info("Applying app manifest to app: #{resource_guid}")
 
         app_guid_message_hash.each do |app_guid, message|
+          logger.error("CRITICAL: Processing app_guid: #{app_guid}, message has routes: #{message.routes.present?}")
           apply_manifest_action.apply(app_guid, message)
         rescue AppPatchEnvironmentVariables::InvalidApp,
                AppUpdate::InvalidApp,
