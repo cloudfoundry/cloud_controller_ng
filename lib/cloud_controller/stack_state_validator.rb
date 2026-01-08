@@ -6,23 +6,27 @@ module VCAP::CloudController
     def self.validate_for_new_app!(stack)
       return [] if stack.active?
 
-      raise DisabledStackError.new("Stack '#{stack.name}' is disabled and cannot be used for staging new applications. #{stack.description}") if stack.disabled?
+      raise DisabledStackError.new(build_stack_error(stack, StackStates::STACK_DISABLED)) if stack.disabled?
 
-      raise RestrictedStackError.new("Stack '#{stack.name}' is restricted and cannot be used for staging new applications. #{stack.description}") if stack.restricted?
+      raise RestrictedStackError.new(build_stack_error(stack, StackStates::STACK_RESTRICTED)) if stack.restricted?
 
-      stack.deprecated? ? [build_deprecation_warning(stack)] : []
+      stack.deprecated? ? [build_deprecation_warning(stack, StackStates::STACK_DEPRECATED)] : []
     end
 
     def self.validate_for_restaging!(stack)
       return [] if stack.active? || stack.restricted?
 
-      raise DisabledStackError.new("Stack '#{stack.name}' is disabled and cannot be used for staging new applications. #{stack.description}") if stack.disabled?
+      raise DisabledStackError.new(build_stack_error(stack, StackStates::STACK_DISABLED)) if stack.disabled?
 
-      stack.deprecated? ? [build_deprecation_warning(stack)] : []
+      stack.deprecated? ? [build_deprecation_warning(stack, StackStates::STACK_DEPRECATED)] : []
     end
 
-    def self.build_deprecation_warning(stack)
-      "Stack '#{stack.name}' is deprecated and will be removed in the future. #{stack.description}"
+    def self.build_stack_error(stack, state)
+      "ERROR: Staging failed. The stack '#{stack.name}' is '#{state}' and cannot be used for staging."
+    end
+
+    def self.build_deprecation_warning(stack, state)
+      "WARNING: The stack '#{stack.name}' is '#{state}' and will be removed in the future."
     end
   end
 end

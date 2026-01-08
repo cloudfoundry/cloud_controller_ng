@@ -951,7 +951,7 @@ RSpec.describe 'Apps' do
           expect(last_response.status).to eq(422)
           parsed_response = Oj.load(last_response.body)
           expect(parsed_response['error_code']).to eq('CF-StackValidationFailed')
-          expect(parsed_response['description']).to include('disabled')
+          expect(parsed_response['description']).to include('DISABLED')
           expect(parsed_response['description']).to include('cflinuxfs2')
         end
       end
@@ -972,8 +972,8 @@ RSpec.describe 'Apps' do
           expect(last_response.status).to eq(201)
           expect(last_response.headers['X-Cf-Warnings']).to be_present
           decoded_warning = CGI.unescape(last_response.headers['X-Cf-Warnings'])
-          expect(decoded_warning).to include('deprecated')
-          expect(decoded_warning).to include('EOL Dec 2025')
+          expect(decoded_warning).to include('DEPRECATED')
+          expect(decoded_warning).to include('cflinuxfs3')
         end
       end
     end
@@ -1639,10 +1639,9 @@ RSpec.describe 'Apps' do
           expect(last_response.status).to eq(422)
           parsed_response = Oj.load(last_response.body)
           expect(parsed_response['error_code']).to eq('CF-StackValidationFailed')
-          expect(parsed_response['description']).to include('disabled')
+          expect(parsed_response['description']).to include('DISABLED')
           expect(parsed_response['description']).to include('cannot be used for staging')
           expect(parsed_response['description']).to include('cflinuxfs2')
-          expect(parsed_response['description']).to include('Migrate to cflinuxfs4')
         end
 
         it 'does not expose stack state field in error response' do
@@ -1674,7 +1673,7 @@ RSpec.describe 'Apps' do
             expect(last_response.status).to eq(422)
             parsed_response = Oj.load(last_response.body)
             expect(parsed_response['error_code']).to eq('CF-StackValidationFailed')
-            expect(parsed_response['description']).to include('cannot be used for staging new applications')
+            expect(parsed_response['description']).to include('cannot be used for staging')
             expect(parsed_response['description']).to include('cflinuxfs3')
           end
         end
@@ -1716,9 +1715,8 @@ RSpec.describe 'Apps' do
 
           expect(last_response.headers['X-Cf-Warnings']).to be_present
           decoded_warning = CGI.unescape(last_response.headers['X-Cf-Warnings'])
-          expect(decoded_warning).to include('deprecated')
+          expect(decoded_warning).to include('DEPRECATED')
           expect(decoded_warning).to include('cflinuxfs3')
-          expect(decoded_warning).to include('EOL Dec 2025')
         end
 
         it 'does not expose stack state field in response body' do

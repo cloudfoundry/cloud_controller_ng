@@ -222,8 +222,8 @@ RSpec.describe 'Builds' do
         post '/v3/builds', create_request.to_json, developer_headers
 
         expect(last_response.status).to eq(422)
-        expect(parsed_response['errors'].first['detail']).to include('disabled')
-        expect(parsed_response['errors'].first['detail']).to include('cannot be used for staging new applications')
+        expect(parsed_response['errors'].first['detail']).to include('DISABLED')
+        expect(parsed_response['errors'].first['detail']).to include('cannot be used for staging')
         expect(VCAP::CloudController::BuildModel.count).to eq(0)
       end
     end
@@ -252,7 +252,8 @@ RSpec.describe 'Builds' do
           post '/v3/builds', create_request.to_json, developer_headers
 
           expect(last_response.status).to eq(422)
-          expect(parsed_response['errors'].first['detail']).to include('cannot be used for staging new applications')
+          expect(parsed_response['errors'].first['detail']).to include('cannot be used for staging')
+          expect(parsed_response['errors'].first['detail']).to include('RESTRICTED')
           expect(VCAP::CloudController::BuildModel.count).to eq(0)
         end
       end
@@ -300,18 +301,19 @@ RSpec.describe 'Builds' do
           expect(last_response.status).to eq(201)
           expect(parsed_response['state']).to eq('STAGING')
           expect(parsed_response['warnings']).to be_present
-          expect(parsed_response['warnings'][0]['detail']).to include('deprecated')
-          expect(parsed_response['warnings'][0]['detail']).to include('cflinuxfs3 stack is deprecated')
+          expect(parsed_response['warnings'][0]['detail']).to include('DEPRECATED')
+          expect(parsed_response['warnings'][0]['detail']).to include('cflinuxfs3')
+          expect(parsed_response['warnings'][0]['detail']).to include('WARNING')
         end
 
-        it 'includes warming in response headers' do
+        it 'includes warning in response headers' do
           post '/v3/builds', create_request.to_json, developer_headers
 
           expect(last_response.status).to eq(201)
           expect(last_response.headers['X-Cf-Warnings']).to be_present
           warning = CGI.unescape(last_response.headers['X-Cf-Warnings'])
-          expect(warning).to include('deprecated')
-          expect(warning).to include('cflinuxfs3 stack is deprecated')
+          expect(warning).to include('DEPRECATED')
+          expect(warning).to include('cflinuxfs3')
         end
       end
 
@@ -328,19 +330,19 @@ RSpec.describe 'Builds' do
           expect(last_response.status).to eq(201)
           expect(parsed_response['state']).to eq('STAGING')
           expect(parsed_response['warnings']).to be_present
-          expect(parsed_response['warnings'][0]['detail']).to include('deprecated')
-          expect(parsed_response['warnings'][0]['detail']).to include('cflinuxfs3 stack is deprecated')
+          expect(parsed_response['warnings'][0]['detail']).to include('DEPRECATED')
+          expect(parsed_response['warnings'][0]['detail']).to include('cflinuxfs3')
           expect(app_model.builds_dataset.count).to eq(2)
         end
 
-        it 'includes warming in response headers' do
+        it 'includes warning in response headers' do
           post '/v3/builds', create_request.to_json, developer_headers
 
           expect(last_response.status).to eq(201)
           expect(last_response.headers['X-Cf-Warnings']).to be_present
           warning = CGI.unescape(last_response.headers['X-Cf-Warnings'])
-          expect(warning).to include('deprecated')
-          expect(warning).to include('cflinuxfs3 stack is deprecated')
+          expect(warning).to include('DEPRECATED')
+          expect(warning).to include('cflinuxfs3')
         end
       end
     end
