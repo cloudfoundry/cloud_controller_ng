@@ -7,10 +7,13 @@ module VCAP::CloudController
     class InvalidRoute < StandardError
     end
 
+    # This log fires when the class is loaded - if you don't see it, the new code isn't being loaded
+    Steno.logger('cc.action.manifest_route_update').error("CRITICAL: ManifestRouteUpdate class loaded at #{Time.now}")
+
     class << self
       def update(app_guid, message, user_audit_info)
         logger = Steno.logger('cc.action.manifest_route_update')
-        logger.error("ManifestRouteUpdate.update called", app_guid: app_guid, message: message.inspect, location: "#{__FILE__}:#{__LINE__}")
+        logger.error("CRITICAL: ManifestRouteUpdate.update called", app_guid: app_guid, message: message.inspect, message_routes: message.routes.inspect, location: "#{__FILE__}:#{__LINE__}")
 
         return unless message.requested?(:routes)
 
@@ -63,7 +66,7 @@ module VCAP::CloudController
 
       def find_or_create_valid_route(app, manifest_route, user_audit_info)
         logger = Steno.logger('cc.action.manifest_route_update')
-        logger.info("find_or_create_valid_route called", manifest_route: manifest_route.inspect, has_options: manifest_route[:options].present?, options_value: manifest_route[:options].inspect, location: "#{__FILE__}:#{__LINE__}")
+        logger.error("CRITICAL: find_or_create_valid_route called", manifest_route: manifest_route.inspect, has_options: manifest_route[:options].present?, options_value: manifest_route[:options].inspect, location: "#{__FILE__}:#{__LINE__}")
 
         manifest_route[:candidate_host_domain_pairs].each do |candidate|
           potential_domain = candidate[:domain]
