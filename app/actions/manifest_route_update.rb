@@ -62,6 +62,9 @@ module VCAP::CloudController
       private
 
       def find_or_create_valid_route(app, manifest_route, user_audit_info)
+        logger = Steno.logger('cc.action.manifest_route_update')
+        logger.info("find_or_create_valid_route called", manifest_route: manifest_route.inspect, has_options: manifest_route[:options].present?, options_value: manifest_route[:options].inspect, location: "#{__FILE__}:#{__LINE__}")
+
         manifest_route[:candidate_host_domain_pairs].each do |candidate|
           potential_domain = candidate[:domain]
           existing_domain = Domain.find(name: potential_domain)
@@ -102,13 +105,15 @@ module VCAP::CloudController
           elsif !route.available_in_space?(app.space)
             logger.info("Route not available in space", location: "#{__FILE__}:#{__LINE__}")
             raise InvalidRoute.new('Routes cannot be mapped to destinations in different spaces')
-          elsif manifest_route[:options] && route.options != manifest_route[:options]
+          elsif manifest_route[:options]
             logger.info("Updating existing route options", existing_options: route.options.inspect, manifest_options: manifest_route[:options].inspect, location: "#{__FILE__}:#{__LINE__}")
             # remove nil values from options
             manifest_route[:options] = manifest_route[:options].compact
+            logger.info("About to call RouteUpdate.new.update", manifest_route_options: manifest_route[:options].inspect, location: "#{__FILE__}:#{__LINE__}")
             message = RouteUpdateMessage.new({
                                                'options' => manifest_route[:options]
                                              })
+            logger.info("Created RouteUpdateMessage", message: message.inspect, message_options: message.options.inspect, location: "#{__FILE__}:#{__LINE__}")
             route = RouteUpdate.new.update(route:, message:)
           else
             logger.info("Route exists, no update needed", route_has_options: route.options.present?, manifest_has_options: manifest_route[:options].present?, route_options: route.options.inspect, manifest_options: manifest_route[:options].inspect, location: "#{__FILE__}:#{__LINE__}")

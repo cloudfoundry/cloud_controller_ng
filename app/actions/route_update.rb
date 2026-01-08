@@ -5,7 +5,7 @@ module VCAP::CloudController
 
     def update(route:, message:)
       logger = Steno.logger('cc.action.route_update')
-      logger.info("RouteUpdate.update called", route_guid: route.guid, route_options: route.options.inspect, message: message.inspect, location: "#{__FILE__}:#{__LINE__}")
+      logger.info("RouteUpdate.update called", route_guid: route.guid, route_options: route.options.inspect, message: message.inspect, message_options: message.options.inspect, message_requested_options: message.requested?(:options), location: "#{__FILE__}:#{__LINE__}")
 
       Route.db.transaction do
         if message.requested?(:options)
