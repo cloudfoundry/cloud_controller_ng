@@ -131,8 +131,9 @@ module CloudController
       @dependencies[:index_stopper] || register(:index_stopper, IndexStopper.new(runners))
     end
 
-    def droplet_blobstore
-      options = config.get(:droplets)
+    def droplet_blobstore(blobstore_type: nil)
+      options = config.get(:droplets).dup
+      options[:blobstore_type] = blobstore_type if blobstore_type
 
       Blobstore::ClientProvider.provide(
         options: options,
@@ -152,8 +153,9 @@ module CloudController
       )
     end
 
-    def package_blobstore
-      options = config.get(:packages)
+    def package_blobstore(blobstore_type: nil)
+      options = config.get(:packages).dup
+      options[:blobstore_type] = blobstore_type if blobstore_type
 
       Blobstore::ClientProvider.provide(
         options: options,
@@ -183,8 +185,9 @@ module CloudController
       )
     end
 
-    def buildpack_blobstore
-      options = config.get(:buildpacks)
+    def buildpack_blobstore(blobstore_type: nil)
+      options = config.get(:buildpacks).dup
+      options[:blobstore_type] = blobstore_type if blobstore_type
 
       Blobstore::ClientProvider.provide(
         options: options,
