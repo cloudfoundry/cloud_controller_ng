@@ -13,9 +13,12 @@ module VCAP::CloudController
     class << self
       def update(app_guid, message, user_audit_info)
         logger = Steno.logger('cc.action.manifest_route_update')
-        logger.error("CRITICAL: ManifestRouteUpdate.update called", app_guid: app_guid, message: message.inspect, message_routes: message.routes.inspect, location: "#{__FILE__}:#{__LINE__}")
+        logger.error("CRITICAL: ManifestRouteUpdate.update called", app_guid: app_guid, message: message.inspect, message_routes: message.routes.inspect, message_requested_routes: message.requested?(:routes), location: "#{__FILE__}:#{__LINE__}")
 
-        return unless message.requested?(:routes)
+        unless message.requested?(:routes)
+          logger.error("CRITICAL: Early return - routes not requested", location: "#{__FILE__}:#{__LINE__}")
+          return
+        end
 
         app = AppModel.find(guid: app_guid)
         not_found! unless app

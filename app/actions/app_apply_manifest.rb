@@ -93,16 +93,19 @@ module VCAP::CloudController
 
     def update_routes(app, message)
       logger = Steno.logger('update_routes')
-      logger.info("Applying route message #{message} to app: #{app}")
+      logger.error("CRITICAL: update_routes called, app: #{app.name}, message: #{message.inspect}")
       update_message = message.manifest_routes_update_message
+      logger.error("CRITICAL: update_message: #{update_message.inspect}, routes: #{update_message.routes.inspect}, requested_routes: #{update_message.requested?(:routes)}")
       existing_routes = RouteMappingModel.where(app_guid: app.guid).all
 
       if update_message.no_route
+        logger.error("CRITICAL: no_route branch")
         RouteMappingDelete.new(@user_audit_info, manifest_triggered: true).delete(existing_routes)
         return
       end
 
       if update_message.routes
+        logger.error("CRITICAL: Calling ManifestRouteUpdate.update")
         ManifestRouteUpdate.update(app.guid, update_message, @user_audit_info)
         return
       end
