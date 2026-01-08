@@ -35,7 +35,7 @@ class BuildpacksController < ApplicationController
     message = BuildpackCreateMessage.new(hashed_params[:body])
     unprocessable!(message.errors.full_messages) unless message.valid?
 
-    buildpack = BuildpackCreate.new.create(message)
+    buildpack = BuildpackCreate.new(user_audit_info).create(message)
 
     render status: :created, json: Presenters::V3::BuildpackPresenter.new(buildpack)
   rescue BuildpackCreate::Error => e
@@ -51,7 +51,7 @@ class BuildpacksController < ApplicationController
     message = BuildpackUpdateMessage.new(hashed_params[:body])
     unprocessable!(message.errors.full_messages) unless message.valid?
 
-    buildpack = VCAP::CloudController::BuildpackUpdate.new.update(buildpack, message)
+    buildpack = VCAP::CloudController::BuildpackUpdate.new(user_audit_info).update(buildpack, message)
 
     render status: :ok, json: Presenters::V3::BuildpackPresenter.new(buildpack)
   rescue BuildpackUpdate::Error => e
@@ -64,7 +64,7 @@ class BuildpacksController < ApplicationController
 
     unauthorized! unless permission_queryer.can_write_globally?
 
-    delete_action = BuildpackDelete.new
+    delete_action = BuildpackDelete.new(user_audit_info)
     deletion_job = VCAP::CloudController::Jobs::DeleteActionJob.new(Buildpack, buildpack.guid, delete_action)
     pollable_job = Jobs::Enqueuer.new(queue: Jobs::Queues.generic).enqueue_pollable(deletion_job)
 
