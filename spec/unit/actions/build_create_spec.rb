@@ -466,8 +466,8 @@ module VCAP::CloudController
             action.create_and_stage(package:, lifecycle:)
           end.to raise_error(CloudController::Errors::ApiError) do |error|
             expect(error.name).to eq('StackValidationFailed')
-            expect(error.message).to include('disabled')
-            expect(error.message).to include('cannot be used for staging new applications')
+            expect(error.message).to include('DISABLED')
+            expect(error.message).to include('cannot be used for staging')
           end
         end
 
@@ -496,7 +496,8 @@ module VCAP::CloudController
               action.create_and_stage(package:, lifecycle:)
             end.to raise_error(CloudController::Errors::ApiError) do |error|
               expect(error.name).to eq('StackValidationFailed')
-              expect(error.message).to include('annot be used for staging new applications')
+              expect(error.message).to include('annot be used for staging')
+              expect(error.message).to include('RESTRICTED')
             end
           end
 

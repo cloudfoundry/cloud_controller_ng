@@ -23,15 +23,14 @@ module VCAP::CloudController
           result = StackStateValidator.validate_for_new_app!(stack)
           expect(result).to be_an(Array)
           expect(result.size).to eq(1)
-          expect(result.first).to include("Stack '#{stack.name}' is deprecated and will be removed in the future. #{stack.description}")
+          expect(result.first).to include("stack '#{stack.name}' is '#{StackStates::STACK_DEPRECATED}' and will be removed in the future")
         end
 
         it 'returns a warning message with stack name' do
           result = StackStateValidator.validate_for_new_app!(stack)
           warning = result.first
           expect(warning).to include(stack.name)
-          expect(warning).to include(stack.description)
-          expect(warning).to include('deprecated')
+          expect(warning).to include('DEPRECATED')
         end
 
         it 'does not raise an error' do
@@ -45,19 +44,13 @@ module VCAP::CloudController
         it 'raise RestrictedStackError' do
           expect do
             StackStateValidator.validate_for_new_app!(stack)
-          end.to raise_error(StackStateValidator::RestrictedStackError, /Stack '#{stack.name}' is restricted and cannot be used for staging new applications./)
+          end.to raise_error(StackStateValidator::RestrictedStackError, /The stack '#{stack.name}' is '#{StackStates::STACK_RESTRICTED}' and cannot be used for staging./)
         end
 
         it 'includes stack name in error message' do
           expect do
             StackStateValidator.validate_for_new_app!(stack)
           end.to raise_error(StackStateValidator::RestrictedStackError, /#{stack.name}/)
-        end
-
-        it 'includes stack description in error message' do
-          expect do
-            StackStateValidator.validate_for_new_app!(stack)
-          end.to raise_error(StackStateValidator::RestrictedStackError, /#{stack.description}/)
         end
 
         it 'raises RestrictedStackError which is a StackStateValidator::Error' do
@@ -73,19 +66,13 @@ module VCAP::CloudController
         it 'returns a disabled error message' do
           expect do
             StackStateValidator.validate_for_new_app!(stack)
-          end.to raise_error(StackStateValidator::DisabledStackError, /Stack '#{stack.name}' is disabled and cannot be used for staging new applications./)
+          end.to raise_error(StackStateValidator::DisabledStackError, /The stack '#{stack.name}' is '#{StackStates::STACK_DISABLED}' and cannot be used for staging./)
         end
 
         it 'includes stack name in error message' do
           expect do
             StackStateValidator.validate_for_new_app!(stack)
           end.to raise_error(StackStateValidator::DisabledStackError, /#{stack.name}/)
-        end
-
-        it 'includes stack description in error message' do
-          expect do
-            StackStateValidator.validate_for_new_app!(stack)
-          end.to raise_error(StackStateValidator::DisabledStackError, /#{stack.description}/)
         end
       end
     end
@@ -111,15 +98,14 @@ module VCAP::CloudController
           result = StackStateValidator.validate_for_restaging!(stack)
           expect(result).to be_an(Array)
           expect(result.size).to eq(1)
-          expect(result.first).to include("Stack '#{stack.name}' is deprecated and will be removed in the future. #{stack.description}")
+          expect(result.first).to include("stack '#{stack.name}' is '#{StackStates::STACK_DEPRECATED}' and will be removed in the future")
         end
 
         it 'returns a warning message with stack name' do
           result = StackStateValidator.validate_for_restaging!(stack)
           warning = result.first
           expect(warning).to include(stack.name)
-          expect(warning).to include(stack.description)
-          expect(warning).to include('deprecated')
+          expect(warning).to include('DEPRECATED')
         end
 
         it 'does not raise an error' do
@@ -146,19 +132,13 @@ module VCAP::CloudController
         it 'returns a disabled error message' do
           expect do
             StackStateValidator.validate_for_restaging!(stack)
-          end.to raise_error(StackStateValidator::DisabledStackError, /Stack '#{stack.name}' is disabled and cannot be used for staging new applications./)
+          end.to raise_error(StackStateValidator::DisabledStackError, /The stack '#{stack.name}' is '#{StackStates::STACK_DISABLED}' and cannot be used for staging./)
         end
 
         it 'includes stack name in error message' do
           expect do
             StackStateValidator.validate_for_restaging!(stack)
           end.to raise_error(StackStateValidator::DisabledStackError, /#{stack.name}/)
-        end
-
-        it 'includes stack description in error message' do
-          expect do
-            StackStateValidator.validate_for_restaging!(stack)
-          end.to raise_error(StackStateValidator::DisabledStackError, /#{stack.description}/)
         end
       end
     end
@@ -167,22 +147,21 @@ module VCAP::CloudController
       let(:stack) { Stack.make(name: 'cflinuxfs3', description: 'End of life December 2025') }
 
       it 'returns formatted warning string' do
-        warning = StackStateValidator.build_deprecation_warning(stack)
+        warning = StackStateValidator.build_deprecation_warning(stack, StackStates::STACK_DEPRECATED)
         expect(warning).to be_a(String)
         expect(warning).to include('cflinuxfs3')
-        expect(warning).to include('deprecated')
-        expect(warning).to include('End of life December 2025')
+        expect(warning).to include('DEPRECATED')
       end
 
       it 'includes stack name when description is empty' do
         stack.description = ''
-        warning = StackStateValidator.build_deprecation_warning(stack)
+        warning = StackStateValidator.build_deprecation_warning(stack, StackStates::STACK_DEPRECATED)
         expect(warning).to include('cflinuxfs3')
       end
 
       it 'handles nil description' do
         stack.description = nil
-        warning = StackStateValidator.build_deprecation_warning(stack)
+        warning = StackStateValidator.build_deprecation_warning(stack, StackStates::STACK_DEPRECATED)
         expect(warning).to include('cflinuxfs3')
       end
     end

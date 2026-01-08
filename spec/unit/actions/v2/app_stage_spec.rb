@@ -239,9 +239,8 @@ module VCAP::CloudController
               action.stage(process)
 
               expect(action.warnings).not_to be_empty
-              expect(action.warnings.first).to include('deprecated')
+              expect(action.warnings.first).to include('DEPRECATED')
               expect(action.warnings.first).to include('cflinuxfs3')
-              expect(action.warnings.first).to include('EOL Dec 2025')
             end
           end
 
@@ -269,7 +268,7 @@ module VCAP::CloudController
             it 'raises StackValidationFailed error' do
               expect { action.stage(process) }.to raise_error(CloudController::Errors::ApiError) do |error|
                 expect(error.name).to eq('StackValidationFailed')
-                expect(error.message).to include('disabled')
+                expect(error.message).to include('DISABLED')
                 expect(error.message).to include('cannot be used for staging')
               end
             end
@@ -292,7 +291,8 @@ module VCAP::CloudController
 
                 expect { action.stage(process) }.to raise_error(CloudController::Errors::ApiError) do |error|
                   expect(error.name).to eq('StackValidationFailed')
-                  expect(error.message).to include('cannot be used for staging new applications')
+                  expect(error.message).to include('cannot be used for staging')
+                  expect(error.message).to include('RESTRICTED')
                 end
               end
             end
