@@ -5,7 +5,12 @@ require 'messages/organization_quotas_create_message'
 module VCAP::CloudController
   RSpec.describe OrganizationQuotasCreate do
     describe 'create' do
-      subject(:org_quotas_create) { OrganizationQuotasCreate.new }
+      let(:user) { User.make }
+      let(:user_email) { 'user@example.com' }
+      let(:user_name) { 'user-name' }
+      let(:user_audit_info) { UserAuditInfo.new(user_guid: user.guid, user_email: user_email, user_name: user_name) }
+
+      subject(:org_quotas_create) { OrganizationQuotasCreate.new(user_audit_info) }
 
       context 'when creating a organization quota' do
         let(:org) { VCAP::CloudController::Organization.make }
@@ -70,6 +75,28 @@ module VCAP::CloudController
           expect(organization_quota.total_private_domains).to eq(9)
 
           expect(organization_quota.organizations.count).to eq(0)
+        end
+
+        it 'creates an audit event' do
+          organization_quota = org_quotas_create.create(message)
+
+          expect(VCAP::CloudController::Event.count).to eq(1)
+          event = VCAP::CloudController::Event.last
+
+          expect(event.values).to include(
+            type: 'audit.organization_quota.create',
+            actee: organization_quota.guid,
+            actee_type: 'organization_quota',
+            actee_name: organization_quota.name,
+            actor: user_audit_info.user_guid,
+            actor_type: 'user',
+            actor_name: user_audit_info.user_email,
+            actor_username: user_audit_info.user_name,
+            space_guid: '',
+            organization_guid: ''
+          )
+          expect(event.metadata).to eq({ 'request' => message.audit_hash })
+          expect(event.timestamp).to be
         end
 
         it 'provides defaults if the parameters are not provided' do

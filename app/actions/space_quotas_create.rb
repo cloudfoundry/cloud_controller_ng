@@ -1,6 +1,12 @@
+require 'repositories/space_quota_event_repository'
+
 module VCAP::CloudController
   class SpaceQuotasCreate
     class Error < ::StandardError
+    end
+
+    def initialize(user_audit_info)
+      @user_audit_info = user_audit_info
     end
 
     # rubocop:todo Metrics/CyclomaticComplexity
@@ -31,6 +37,8 @@ module VCAP::CloudController
 
         spaces = valid_spaces(message.space_guids, organization)
         spaces.each { |space| space_quota.add_space(space) }
+
+        Repositories::SpaceQuotaEventRepository.new.record_space_quota_create(space_quota, @user_audit_info, message.audit_hash)
       end
 
       space_quota

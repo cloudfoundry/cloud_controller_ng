@@ -1,6 +1,12 @@
+require 'repositories/organization_quota_event_repository'
+
 module VCAP::CloudController
   class OrganizationQuotaApply
     class Error < ::StandardError
+    end
+
+    def initialize(user_audit_info)
+      @user_audit_info = user_audit_info
     end
 
     def apply(org_quota, message)
@@ -18,7 +24,10 @@ module VCAP::CloudController
       end
 
       QuotaDefinition.db.transaction do
-        orgs.each { |org| org_quota.add_organization(org) }
+        orgs.each do |org|
+          org_quota.add_organization(org)
+          Repositories::OrganizationQuotaEventRepository.new.record_organization_quota_apply(org_quota, org, @user_audit_info)
+        end
       end
     rescue Sequel::ValidationFailed => e
       error!(e.message)
