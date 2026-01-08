@@ -36,7 +36,7 @@ class StacksController < ApplicationController
     message = StackCreateMessage.new(hashed_params[:body])
     unprocessable!(message.errors.full_messages) unless message.valid?
 
-    stack = StackCreate.new.create(message)
+    stack = StackCreate.new(user_audit_info).create(message)
 
     render status: :created, json: Presenters::V3::StackPresenter.new(stack)
   rescue StackCreate::Error => e
@@ -52,7 +52,7 @@ class StacksController < ApplicationController
     message = StackUpdateMessage.new(hashed_params[:body])
     unprocessable!(message.errors.full_messages) unless message.valid?
 
-    stack = StackUpdate.new.update(stack, message)
+    stack = StackUpdate.new(user_audit_info).update(stack, message)
 
     render status: :ok, json: Presenters::V3::StackPresenter.new(stack)
   end
@@ -84,7 +84,7 @@ class StacksController < ApplicationController
     unauthorized! unless permission_queryer.can_write_globally?
 
     begin
-      StackDelete.new.delete(stack)
+      StackDelete.new(user_audit_info).delete(stack)
     rescue Stack::AppsStillPresentError
       unprocessable! "Cannot delete stack '#{stack.name}' because apps are currently using the stack."
     end
