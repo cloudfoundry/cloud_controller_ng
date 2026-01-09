@@ -1087,7 +1087,7 @@ module VCAP::CloudController
           route.reload
           parsed_options = Oj.load(route.options_without_serialization)
           expect(parsed_options['hash_balance']).to be_a(String)
-          expect(parsed_options['hash_balance']).to eq('2')
+          expect(parsed_options['hash_balance']).to eq('2.0')
         end
       end
 
@@ -1103,7 +1103,7 @@ module VCAP::CloudController
           route.reload
           parsed_options = Oj.load(route.options_without_serialization)
           expect(parsed_options['hash_balance']).to be_a(String)
-          expect(parsed_options['hash_balance']).to eq('1.25')
+          expect(parsed_options['hash_balance']).to eq('1.3')
         end
       end
 
@@ -1119,7 +1119,7 @@ module VCAP::CloudController
           route.reload
           parsed_options = Oj.load(route.options_without_serialization)
           expect(parsed_options['hash_balance']).to be_a(String)
-          expect(parsed_options['hash_balance']).to eq('0')
+          expect(parsed_options['hash_balance']).to eq('0.0')
         end
       end
 
@@ -1392,7 +1392,7 @@ module VCAP::CloudController
             )
 
             expect(route).not_to be_valid
-            expect(route.errors[:options]).to include('Hash header must be present when loadbalancing is set to hash')
+            expect(route.errors[:options]).to include :hash_header_missing
           end
         end
 
@@ -1406,7 +1406,7 @@ module VCAP::CloudController
             )
 
             expect(route).not_to be_valid
-            expect(route.errors[:options]).to include('Hash header must be present when loadbalancing is set to hash')
+            expect(route.errors[:options]).to include :hash_header_missing
           end
         end
 
@@ -1489,7 +1489,7 @@ module VCAP::CloudController
             route.options = { loadbalancing: 'hash' }
 
             expect(route).not_to be_valid
-            expect(route.errors[:options]).to include('Hash header must be present when loadbalancing is set to hash')
+            expect(route.errors[:options]).to include :hash_header_missing
           end
         end
 
@@ -1533,7 +1533,7 @@ module VCAP::CloudController
             )
 
             expect(route).not_to be_valid
-            expect(route.errors[:options]).to include('Hash header must be present when loadbalancing is set to hash')
+            expect(route.errors[:options]).to include :hash_header_missing
           end
         end
       end

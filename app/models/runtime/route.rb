@@ -76,7 +76,8 @@ module VCAP::CloudController
       logger.error("CRITICAL: options_with_serialization= setter called", opts: opts.inspect, caller: caller_info, location: "#{__FILE__}:#{__LINE__}")
 
       cleaned_opts = remove_hash_options_for_non_hash_loadbalancing(opts)
-      normalized_opts = normalize_hash_balance_to_string(cleaned_opts)
+      rounded_opts = round_hash_balance_to_one_decimal(cleaned_opts)
+      normalized_opts = normalize_hash_balance_to_string(rounded_opts)
       self.options_without_serialization = Oj.dump(normalized_opts)
 
       logger.error("CRITICAL: options_with_serialization= setter completed", normalized_opts: normalized_opts.inspect, json: self.options_without_serialization.inspect)
@@ -337,8 +338,27 @@ module VCAP::CloudController
       hash_header = route_options[:hash_header] || route_options['hash_header']
 
       if hash_header.blank?
-        errors.add(:options, 'Hash header must be present when loadbalancing is set to hash')
+        errors.add(:options, :hash_header_missing)
       end
+    end
+
+    def round_hash_balance_to_one_decimal(opts)
+      return opts unless opts.is_a?(Hash)
+
+      opts_symbolized = opts.symbolize_keys
+      hash_balance = opts_symbolized[:hash_balance]
+
+      if hash_balance.present?
+        begin
+          balance_float = Float(hash_balance)
+          # Round to at most 1 decimal place
+          opts_symbolized[:hash_balance] = (balance_float * 10).round / 10.0
+        rescue ArgumentError, TypeError
+          # If conversion fails, leave it as is - validation will catch it
+        end
+      end
+
+      opts_symbolized
     end
 
     def normalize_hash_balance_to_string(opts)

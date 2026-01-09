@@ -48,13 +48,29 @@ module VCAP::CloudController
       return unless VCAP::CloudController::FeatureFlag.enabled?(:hash_based_routing)
 
       # Feature flag is enabled - validate hash-specific options
+
+      # Validate hash_header length if present
+      if hash_header.present?
+        # Check length (at most 128 characters)
+        if hash_header.to_s.length > 128
+          errors.add(:hash_header, 'must be at most 128 characters')
+          return
+        end
+      end
+
       # Validate hash_balance is numeric if present
       if hash_balance.present?
+        # Check length first (at most 16 characters)
+        if hash_balance.to_s.length > 16
+          errors.add(:hash_balance, 'must be at most 16 characters')
+          return
+        end
+
         begin
           balance_float = Float(hash_balance)
-          # Must be either 0 or >= 1.1
-          unless balance_float == 0 || balance_float >= 1.1
-            errors.add(:hash_balance, 'must be either 0 or greater than or equal to 1.1')
+          # Must be either 0 or >= 1.1 and <= 10.0
+          unless balance_float == 0 || (balance_float >= 1.1 && balance_float <= 10)
+            errors.add(:hash_balance, 'must be either 0 or between 1.1 and 10.0')
           end
         rescue ArgumentError, TypeError
           errors.add(:hash_balance, 'must be a numeric value')

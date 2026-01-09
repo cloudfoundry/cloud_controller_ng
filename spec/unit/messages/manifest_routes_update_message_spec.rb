@@ -488,6 +488,45 @@ module VCAP::CloudController
             end
           end
 
+          context 'when a route contains hash_header longer than 128 characters' do
+            let(:body) do
+              { 'routes' =>
+                [
+                  { 'route' => 'existing.example.com',
+                    'options' => {
+                      'loadbalancing' => 'hash',
+                      'hash_header' => 'X' * 129
+                    } }
+                ] }
+            end
+
+            it 'returns false' do
+              msg = ManifestRoutesUpdateMessage.new(body)
+
+              expect(msg.valid?).to be(false)
+              expect(msg.errors.full_messages).to include("Route 'existing.example.com': Hash header must be at most 128 characters")
+            end
+          end
+
+          context 'when a route contains hash_header exactly 128 characters' do
+            let(:body) do
+              { 'routes' =>
+                [
+                  { 'route' => 'existing.example.com',
+                    'options' => {
+                      'loadbalancing' => 'hash',
+                      'hash_header' => 'X' * 128
+                    } }
+                ] }
+            end
+
+            it 'returns true' do
+              msg = ManifestRoutesUpdateMessage.new(body)
+
+              expect(msg.valid?).to be(true)
+            end
+          end
+
           context 'when a route contains hash_balance without loadbalancing' do
             let(:body) do
               { 'routes' =>
@@ -603,7 +642,7 @@ module VCAP::CloudController
               msg = ManifestRoutesUpdateMessage.new(body)
 
               expect(msg.valid?).to be(false)
-              expect(msg.errors.full_messages).to include("Route 'existing.example.com': Hash balance must be either 0 or greater than or equal to 1.1")
+              expect(msg.errors.full_messages).to include("Route 'existing.example.com': Hash balance must be either 0 or between to 1.1 and 10.0")
             end
           end
 
@@ -627,7 +666,7 @@ module VCAP::CloudController
             end
           end
 
-          context 'when a route contains hash_balance greater than 1.1' do
+          context 'when a route contains hash_balance greater than 10.0' do
             let(:body) do
               { 'routes' =>
                 [
@@ -635,7 +674,28 @@ module VCAP::CloudController
                     'options' => {
                       'loadbalancing' => 'hash',
                       'hash_header' => 'X-User-ID',
-                      'hash_balance' => 3.5
+                      'hash_balance' => 10.1
+                    } }
+                ] }
+            end
+
+            it 'returns false' do
+              msg = ManifestRoutesUpdateMessage.new(body)
+
+              expect(msg.valid?).to be(false)
+              expect(msg.errors.full_messages).to include("Route 'existing.example.com': Hash balance must be either 0 or between to 1.1 and 10.0")
+            end
+          end
+
+          context 'when a route contains hash_balance exactly 10.0' do
+            let(:body) do
+              { 'routes' =>
+                [
+                  { 'route' => 'existing.example.com',
+                    'options' => {
+                      'loadbalancing' => 'hash',
+                      'hash_header' => 'X-User-ID',
+                      'hash_balance' => 10.0
                     } }
                 ] }
             end
@@ -646,6 +706,7 @@ module VCAP::CloudController
               expect(msg.valid?).to be(true)
             end
           end
+
 
           context 'when a route contains numeric string hash_balance' do
             let(:body) do
@@ -681,6 +742,47 @@ module VCAP::CloudController
             end
 
             it 'returns true' do
+              msg = ManifestRoutesUpdateMessage.new(body)
+
+              expect(msg.valid?).to be(true)
+            end
+          end
+
+          context 'when a route contains hash_balance longer than 16 characters' do
+            let(:body) do
+              { 'routes' =>
+                [
+                  { 'route' => 'existing.example.com',
+                    'options' => {
+                      'loadbalancing' => 'hash',
+                      'hash_header' => 'X-User-ID',
+                      'hash_balance' => '12345678901234567'
+                    } }
+                ] }
+            end
+
+            it 'returns false' do
+              msg = ManifestRoutesUpdateMessage.new(body)
+
+              expect(msg.valid?).to be(false)
+              expect(msg.errors.full_messages).to include("Route 'existing.example.com': Hash balance must be at most 16 characters")
+            end
+          end
+
+          context 'when a route contains hash_balance exactly 16 characters' do
+            let(:body) do
+              { 'routes' =>
+                [
+                  { 'route' => 'existing.example.com',
+                    'options' => {
+                      'loadbalancing' => 'hash',
+                      'hash_header' => 'X-User-ID',
+                      'hash_balance' => '9.9'
+                    } }
+                ] }
+            end
+
+            it 'returns true if the value is numeric and within range' do
               msg = ManifestRoutesUpdateMessage.new(body)
 
               expect(msg.valid?).to be(true)
