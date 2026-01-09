@@ -15,36 +15,27 @@ module VCAP::CloudController::Metrics
     end
 
     def setup_updates
-      update!
       @update_tasks = []
-      @update_tasks << Concurrent::TimerTask.new(execution_interval: 600) { catch_error { update_user_count } }
-      @update_tasks << Concurrent::TimerTask.new(execution_interval: 30) { catch_error { update_job_queue_length } }
-      @update_tasks << Concurrent::TimerTask.new(execution_interval: 30) { catch_error { update_job_queue_load } }
-      @update_tasks << Concurrent::TimerTask.new(execution_interval: 30) { catch_error { update_failed_job_count } }
-      @update_tasks << Concurrent::TimerTask.new(execution_interval: 30) { catch_error { update_vitals } }
-      @update_tasks << Concurrent::TimerTask.new(execution_interval: 30) { catch_error { update_log_counts } }
-      @update_tasks << Concurrent::TimerTask.new(execution_interval: 30) { catch_error { update_task_stats } }
-      @update_tasks << Concurrent::TimerTask.new(execution_interval: 30) { catch_error { update_deploying_count } }
-      @update_tasks << Concurrent::TimerTask.new(execution_interval: 30) { catch_error { update_webserver_stats } }
+      setup_task(@update_tasks, 600, :update_user_count)
+      setup_task(@update_tasks, 30, :update_job_queue_length)
+      setup_task(@update_tasks, 30, :update_job_queue_load)
+      setup_task(@update_tasks, 30, :update_failed_job_count)
+      setup_task(@update_tasks, 30, :update_vitals)
+      setup_task(@update_tasks, 30, :update_log_counts)
+      setup_task(@update_tasks, 30, :update_task_stats)
+      setup_task(@update_tasks, 30, :update_deploying_count)
+      setup_task(@update_tasks, 30, :update_webserver_stats)
       @update_tasks.each(&:execute)
     end
 
     def stop_updates
-      return unless @update_tasks
+      return true unless @update_tasks
 
-      @update_tasks.each(&:shutdown)
-    end
+      @update_tasks.each(&:kill) # in-progress tasks will be allowed to complete, enqueued tasks will be dismissed
+      all_tasks_terminated = true
+      @update_tasks.each { |task| task.wait_for_termination(1) || (all_tasks_terminated = false) } # wait up to 1 second for each task to terminate
 
-    def update!
-      update_user_count
-      update_job_queue_length
-      update_job_queue_load
-      update_failed_job_count
-      update_vitals
-      update_log_counts
-      update_task_stats
-      update_deploying_count
-      update_webserver_stats
+      all_tasks_terminated # true if all tasks terminated, false if any are still running
     end
 
     def catch_error
@@ -171,6 +162,12 @@ module VCAP::CloudController::Metrics
         }
       end
       @prometheus_updater.update_webserver_stats_puma(worker_count, worker_stats)
+    end
+
+    private
+
+    def setup_task(update_tasks, interval, method_name)
+      update_tasks << Concurrent::TimerTask.new(execution_interval: interval, interval_type: :fixed_rate, run_now: true) { catch_error { send(method_name) } }
     end
   end
 end

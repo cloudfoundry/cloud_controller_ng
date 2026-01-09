@@ -204,8 +204,16 @@ module VCAP::CloudController
       end
 
       describe 'after_stopped' do
-        it 'stops the TimerTasks and logs incomplete requests' do
-          expect(periodic_updater).to receive(:stop_updates)
+        it 'stops the TimerTasks' do
+          expect(periodic_updater).to receive(:stop_updates).and_return(true)
+          expect(logger).to receive(:info).with(/Successfully stopped periodic updates/)
+
+          puma_launcher.events.fire(:after_stopped)
+        end
+
+        it 'logs a warning if stopping the TimerTasks fails' do
+          expect(periodic_updater).to receive(:stop_updates).and_return(false)
+          expect(logger).to receive(:warn).with(/Failed to stop all periodic update tasks/)
 
           puma_launcher.events.fire(:after_stopped)
         end
