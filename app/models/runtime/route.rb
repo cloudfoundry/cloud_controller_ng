@@ -338,7 +338,7 @@ module VCAP::CloudController
       hash_header = route_options[:hash_header] || route_options['hash_header']
 
       if hash_header.blank?
-        errors.add(:options, :hash_header_missing)
+        errors.add(:route, :hash_header_missing)
       end
     end
 

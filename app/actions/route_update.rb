@@ -18,7 +18,7 @@ module VCAP::CloudController
       end
       route
     rescue Sequel::ValidationFailed => e
-      validation_error!(e, route)
+      validation_error!(e)
     end
 
     private

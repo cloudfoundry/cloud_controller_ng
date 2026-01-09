@@ -78,7 +78,7 @@ module VCAP::CloudController
 
       error!("Reserved route ports quota exceeded for organization '#{space.organization.name}'.") if error.errors.on(:organization)&.include?(:total_reserved_route_ports_exceeded)
 
-      error!("Hash header must be present when loadbalancing is set to hash") if error.errors.on(:options)&.include?(:hash_header_missing)
+      error!("Hash header must be present when loadbalancing is set to hash") if error.errors.on(:route)&.include?(:hash_header_missing)
 
       validation_error_routing_api!(error)
       validation_error_host!(error, host, domain)
