@@ -259,6 +259,23 @@ module VCAP::CloudController
           end
         end
 
+        context 'when the lifecycle is valid' do
+          let(:message) do
+            AppUpdateMessage.new({
+                                   lifecycle: {
+                                     type: 'buildpack',
+                                     data: { buildpacks: ['http://new-buildpack.url', 'ruby'], stack: stack.name }
+                                   }
+                                 })
+          end
+
+          it 'does not raise an error' do
+            expect do
+              app_update.update(app_model, message, lifecycle)
+            end.not_to raise_error
+          end
+        end
+
         context 'when changing the lifecycle type' do
           let(:message) do
             AppUpdateMessage.new({
