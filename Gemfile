@@ -43,7 +43,7 @@ gem 'vmstat', '~> 2.3'
 gem 'actionpack', '~> 8.1.0'
 gem 'actionview', '~> 8.1.1'
 gem 'activemodel', '~> 8.1.0'
-gem 'railties', '~> 8.1.1'
+gem 'railties', '~> 8.1.2'
 
 gem 'azure-storage-blob', git: 'https://github.com/sethboyles/azure-storage-ruby.git', branch: 'x-ms-blob-content-type-fix-1.1'
 
