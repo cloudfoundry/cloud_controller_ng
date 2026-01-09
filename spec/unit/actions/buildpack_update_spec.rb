@@ -5,6 +5,11 @@ require 'messages/buildpack_update_message'
 module VCAP::CloudController
   RSpec.describe BuildpackUpdate do
     describe 'update' do
+      let(:user) { User.make }
+      let(:user_email) { 'user@example.com' }
+      let(:user_name) { 'user-name' }
+      let(:user_audit_info) { UserAuditInfo.new(user_guid: user.guid, user_email: user_email, user_name: user_name) }
+
       let!(:buildpack1) { Buildpack.make(position: 1) }
       let!(:buildpack2) { Buildpack.make(position: 2) }
       let!(:buildpack3) { Buildpack.make(position: 3) }
@@ -16,7 +21,7 @@ module VCAP::CloudController
               position: 2,
               name: 'new-name'
             )
-            BuildpackUpdate.new.update(buildpack1, message)
+            BuildpackUpdate.new(user_audit_info).update(buildpack1, message)
 
             expect(buildpack1.reload.position).to eq(2)
             expect(buildpack1.name).to eq('new-name')
@@ -30,7 +35,7 @@ module VCAP::CloudController
             position: 2,
             stack: 'invalid-stack'
           )
-          expect { BuildpackUpdate.new.update(buildpack1, message) }.to raise_error(BuildpackUpdate::Error)
+          expect { BuildpackUpdate.new(user_audit_info).update(buildpack1, message) }.to raise_error(BuildpackUpdate::Error)
 
           expect(buildpack1.reload.position).to eq(1)
         end
@@ -41,9 +46,33 @@ module VCAP::CloudController
           message = BuildpackUpdateMessage.new(
             enabled: false
           )
-          buildpack = BuildpackUpdate.new.update(buildpack1, message)
+          buildpack = BuildpackUpdate.new(user_audit_info).update(buildpack1, message)
 
           expect(buildpack.enabled).to be(false)
+        end
+
+        it 'creates an audit event' do
+          message = BuildpackUpdateMessage.new(
+            enabled: false
+          )
+          BuildpackUpdate.new(user_audit_info).update(buildpack1, message)
+
+          event = VCAP::CloudController::Event.last
+
+          expect(event.values).to include(
+            type: 'audit.buildpack.update',
+            actee: buildpack1.guid,
+            actee_type: 'buildpack',
+            actee_name: buildpack1.name,
+            actor: user_audit_info.user_guid,
+            actor_type: 'user',
+            actor_name: user_audit_info.user_email,
+            actor_username: user_audit_info.user_name,
+            space_guid: '',
+            organization_guid: ''
+          )
+          expect(event.metadata).to eq({ 'request' => message.audit_hash })
+          expect(event.timestamp).to be
         end
       end
 
@@ -52,7 +81,7 @@ module VCAP::CloudController
           message = BuildpackUpdateMessage.new(
             locked: true
           )
-          buildpack = BuildpackUpdate.new.update(buildpack1, message)
+          buildpack = BuildpackUpdate.new(user_audit_info).update(buildpack1, message)
 
           expect(buildpack.locked).to be(true)
         end
@@ -63,7 +92,7 @@ module VCAP::CloudController
           message = BuildpackUpdateMessage.new(
             name: 'new-name'
           )
-          buildpack = BuildpackUpdate.new.update(buildpack1, message)
+          buildpack = BuildpackUpdate.new(user_audit_info).update(buildpack1, message)
 
           expect(buildpack.name).to eq('new-name')
         end
@@ -81,7 +110,7 @@ module VCAP::CloudController
               }
             }
           )
-          buildpack = BuildpackUpdate.new.update(buildpack1, message)
+          buildpack = BuildpackUpdate.new(user_audit_info).update(buildpack1, message)
 
           expect(buildpack.labels[0].key_name).to eq('fruit')
           expect(buildpack.annotations[0].value).to eq('adora')
@@ -94,7 +123,7 @@ module VCAP::CloudController
             message = BuildpackUpdateMessage.new(stack: 'does-not-exist')
 
             expect do
-              BuildpackUpdate.new.update(buildpack1, message)
+              BuildpackUpdate.new(user_audit_info).update(buildpack1, message)
             end.to raise_error(BuildpackUpdate::Error, "Stack 'does-not-exist' does not exist")
           end
         end
@@ -106,7 +135,7 @@ module VCAP::CloudController
           it 'raises a human-friendly error' do
             message = BuildpackUpdateMessage.new(name: buildpack1.name)
             expect do
-              BuildpackUpdate.new.update(buildpack2, message)
+              BuildpackUpdate.new(user_audit_info).update(buildpack2, message)
             end.to raise_error(BuildpackUpdate::Error, "Buildpack with name '#{buildpack1.name}' and an unassigned stack already exists")
           end
         end
@@ -115,7 +144,7 @@ module VCAP::CloudController
           it 'raises a human-friendly error' do
             message = BuildpackUpdateMessage.new(stack: nil)
             expect do
-              BuildpackUpdate.new.update(buildpack1, message)
+              BuildpackUpdate.new(user_audit_info).update(buildpack1, message)
             end.to raise_error(BuildpackUpdate::Error, 'Buildpack stack cannot be changed')
           end
         end
@@ -125,7 +154,7 @@ module VCAP::CloudController
           message = BuildpackUpdateMessage.new(name: buildpack1.name)
 
           expect do
-            BuildpackUpdate.new.update(buildpack2, message)
+            BuildpackUpdate.new(user_audit_info).update(buildpack2, message)
           end.to raise_error(BuildpackUpdate::Error, "Buildpack with name '#{buildpack1.name}', stack '#{buildpack1.stack}' and lifecycle '#{buildpack1.lifecycle}' already exists")
         end
 
@@ -135,7 +164,7 @@ module VCAP::CloudController
           allow(buildpack1).to receive(:save).and_raise(Sequel::ValidationFailed.new(buildpack1))
 
           expect do
-            BuildpackUpdate.new.update(buildpack1, message)
+            BuildpackUpdate.new(user_audit_info).update(buildpack1, message)
           end.to raise_error(BuildpackUpdate::Error, /unknown error/)
         end
       end

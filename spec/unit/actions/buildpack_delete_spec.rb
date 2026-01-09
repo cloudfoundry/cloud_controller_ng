@@ -3,7 +3,12 @@ require 'actions/buildpack_delete'
 
 module VCAP::CloudController
   RSpec.describe BuildpackDelete do
-    subject(:buildpack_delete) { BuildpackDelete.new }
+    let(:user) { User.make }
+    let(:user_email) { 'user@example.com' }
+    let(:user_name) { 'user-name' }
+    let(:user_audit_info) { UserAuditInfo.new(user_guid: user.guid, user_email: user_email, user_name: user_name) }
+
+    subject(:buildpack_delete) { BuildpackDelete.new(user_audit_info) }
 
     describe '#delete' do
       let!(:buildpack) { Buildpack.make }
@@ -13,6 +18,30 @@ module VCAP::CloudController
           buildpack_delete.delete([buildpack])
         end.to change(Buildpack, :count).by(-1)
         expect { buildpack.refresh }.to raise_error Sequel::Error, 'Record not found'
+      end
+
+      it 'creates an audit event' do
+        buildpack_guid = buildpack.guid
+        buildpack_name = buildpack.name
+
+        buildpack_delete.delete([buildpack])
+
+        event = VCAP::CloudController::Event.last
+
+        expect(event.values).to include(
+          type: 'audit.buildpack.delete',
+          actee: buildpack_guid,
+          actee_type: 'buildpack',
+          actee_name: buildpack_name,
+          actor: user_audit_info.user_guid,
+          actor_type: 'user',
+          actor_name: user_audit_info.user_email,
+          actor_username: user_audit_info.user_name,
+          space_guid: '',
+          organization_guid: ''
+        )
+        expect(event.metadata).to eq({})
+        expect(event.timestamp).to be
       end
 
       context 'when the buildpack has associated bits in the blobstore' do
