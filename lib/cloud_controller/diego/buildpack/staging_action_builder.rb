@@ -17,16 +17,20 @@ module VCAP::CloudController
 
         private
 
+        def lifecycle
+          staging_details.lifecycle
+        end
+
         def stage_action
           staging_details_env = BbsEnvironmentBuilder.build(staging_details.environment_variables)
 
-          ::Diego::Bbs::Models::RunAction.new(
+          main_staging_action = ::Diego::Bbs::Models::RunAction.new(
             path: '/tmp/lifecycle/builder',
             user: 'vcap',
             args: [
-              "-buildpackOrder=#{lifecycle_data[:buildpacks].pluck(:key).join(',')}",
+              "-buildpackOrder=#{lifecycle.buildpack_infos.map(&:key).join(',')}",
               "-skipCertVerify=#{config.get(:skip_cert_verify)}",
-              "-skipDetect=#{skip_detect?}",
+              "-skipDetect=#{lifecycle.skip_detect?}",
               '-buildDir=/tmp/app',
               '-outputDroplet=/tmp/droplet',
               '-outputMetadata=/tmp/result.json',
@@ -37,6 +41,34 @@ module VCAP::CloudController
             resource_limits: ::Diego::Bbs::Models::ResourceLimits.new(nofile: config.get(:staging, :minimum_staging_file_descriptor_limit)),
             env: staging_details_env + platform_options_env
           )
+
+          # Check if stack has warnings and add them if needed
+          stack = Stack.find(name: lifecycle.staging_stack)
+          warning_actions = []
+
+          if stack&.state == 'DEPRECATED'
+            warning_message = "\033[1;33mWARNING: Stack '#{stack.name}' is deprecated. #{stack.description}\033[0m"
+            warning_actions << ::Diego::Bbs::Models::RunAction.new(
+              path: '/bin/echo',
+              user: 'vcap',
+              args: ['-e', warning_message],
+              env: staging_details_env + platform_options_env
+            )
+          elsif stack&.state == 'LOCKED'
+            warning_message = "\033[1;33mNOTICE: Stack '#{stack.name}' is locked and can only be used to update existing applications. #{stack.description}\033[0m"
+            warning_actions << ::Diego::Bbs::Models::RunAction.new(
+              path: '/bin/echo',
+              user: 'vcap',
+              args: ['-e', warning_message],
+              env: staging_details_env + platform_options_env
+            )
+          end
+
+          if warning_actions.any?
+            serial(warning_actions + [main_staging_action])
+          else
+            main_staging_action
+          end
         end
 
         def platform_options_env

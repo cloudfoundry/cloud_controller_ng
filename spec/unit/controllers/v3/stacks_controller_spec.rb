@@ -126,7 +126,7 @@ RSpec.describe StacksController, type: :controller do
   describe '#create' do
     let(:user) { VCAP::CloudController::User.make }
     let(:req_body) do
-      { name: 'the-name' }
+      { name: 'the-name', state: 'ACTIVE' }
     end
 
     before do

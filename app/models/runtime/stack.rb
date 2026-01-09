@@ -26,8 +26,8 @@ module VCAP::CloudController
 
     plugin :serialization
 
-    export_attributes :name, :description, :build_rootfs_image, :run_rootfs_image
-    import_attributes :name, :description, :build_rootfs_image, :run_rootfs_image
+    export_attributes :name, :description, :build_rootfs_image, :run_rootfs_image, :state
+    import_attributes :name, :description, :build_rootfs_image, :run_rootfs_image, :state
 
     strip_attributes :name
 
@@ -43,6 +43,7 @@ module VCAP::CloudController
     def validate
       validates_presence :name
       validates_unique :name
+      validates_includes %w[ACTIVE DEPRECATED LOCKED DISABLED], :state, allow_missing: true
     end
 
     def before_destroy
@@ -95,7 +96,7 @@ module VCAP::CloudController
         stack.set(hash)
         Steno.logger('cc.stack').warn('stack.populate.collision', hash) if stack.modified?
       else
-        create(hash.slice('name', 'description', 'build_rootfs_image', 'run_rootfs_image'))
+        create(hash.slice('name', 'description', 'build_rootfs_image', 'run_rootfs_image', 'state'))
       end
     end
   end
