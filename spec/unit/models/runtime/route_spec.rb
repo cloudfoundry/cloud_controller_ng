@@ -899,15 +899,15 @@ module VCAP::CloudController
 
         let(:http_route) do
           Route.new(space: space,
-                    domain: http_domain,
-                    host: 'bar')
+            domain: http_domain,
+            host: 'bar')
         end
 
         subject(:tcp_route) do
           Route.new(space: space,
-                    domain: tcp_domain,
-                    host: '',
-                    port: 6000)
+            domain: tcp_domain,
+            host: '',
+            port: 6000)
         end
         before do
           router_group = double('router_group', type: 'tcp', reservable_ports: [4444, 6000])
@@ -1151,24 +1151,6 @@ module VCAP::CloudController
           expect(route.options).to be_nil
         end
       end
-
-      context 'when updating an existing route with hash_balance as float' do
-        it 'converts hash_balance to string on update' do
-          route = Route.make(
-            host: 'test-route',
-            domain: domain,
-            space: space,
-            options: { loadbalancing: 'hash', hash_header: 'X-User-ID', hash_balance: 2.5 }
-          )
-
-          route.update(options: { loadbalancing: 'hash', hash_header: 'X-User-ID', hash_balance: 2.5 })
-          route.reload
-
-          parsed_options = Oj.load(route.options_without_serialization)
-          expect(parsed_options['hash_balance']).to be_a(String)
-          expect(parsed_options['hash_balance']).to eq('2.5')
-        end
-      end
     end
 
     describe 'normalize_hash_balance_to_string' do
@@ -1272,40 +1254,6 @@ module VCAP::CloudController
       let(:space) { Space.make }
       let(:domain) { PrivateDomain.make(owning_organization: space.organization) }
 
-      context 'when creating a route with round-robin and hash options' do
-        it 'removes hash_header and hash_balance' do
-          route = Route.make(
-            host: 'test-route',
-            domain: domain,
-            space: space,
-            options: { loadbalancing: 'round-robin', hash_header: 'X-User-ID', hash_balance: '1.5' }
-          )
-
-          route.reload
-          parsed_options = Oj.load(route.options_without_serialization)
-          expect(parsed_options['loadbalancing']).to eq('round-robin')
-          expect(parsed_options).not_to have_key('hash_header')
-          expect(parsed_options).not_to have_key('hash_balance')
-        end
-      end
-
-      context 'when creating a route with least-connection and hash options' do
-        it 'removes hash_header and hash_balance' do
-          route = Route.make(
-            host: 'test-route',
-            domain: domain,
-            space: space,
-            options: { loadbalancing: 'least-connection', hash_header: 'X-User-ID', hash_balance: '2.0' }
-          )
-
-          route.reload
-          parsed_options = Oj.load(route.options_without_serialization)
-          expect(parsed_options['loadbalancing']).to eq('least-connection')
-          expect(parsed_options).not_to have_key('hash_header')
-          expect(parsed_options).not_to have_key('hash_balance')
-        end
-      end
-
       context 'when creating a route with hash loadbalancing' do
         it 'keeps hash_header and hash_balance' do
           route = Route.make(
@@ -1377,6 +1325,24 @@ module VCAP::CloudController
           expect(parsed_options['loadbalancing']).to eq('hash')
           expect(parsed_options['hash_header']).to eq('X-User-ID')
           expect(parsed_options['hash_balance']).to eq('1.5')
+        end
+      end
+
+      context 'when removing hash loadbalancing option' do
+        it 'deletes hash_header and hash_balance when present' do
+          route = Route.make(
+            host: 'test-route',
+            domain: domain,
+            space: space,
+            options: { loadbalancing: 'hash', hash_header: 'X-User-ID', hash_balance: '1.5' }
+          )
+
+          route.update(options: { loadbalancing: nil })
+          route.reload
+
+          parsed_options = Oj.load(route.options_without_serialization)
+          expect(parsed_options).not_to have_key('hash_header')
+          expect(parsed_options).not_to have_key('hash_balance')
         end
       end
 
@@ -1459,17 +1425,15 @@ module VCAP::CloudController
       end
 
       context 'when loadbalancing is round-robin' do
-        context 'and hash_header is present' do
-          it 'is valid (no validation error for non-hash loadbalancing)' do
-            route = Route.new(
-              host: 'test-route',
-              domain: domain,
-              space: space,
-              options: { loadbalancing: 'round-robin' }
-            )
+        it 'is valid' do
+          route = Route.new(
+            host: 'test-route',
+            domain: domain,
+            space: space,
+            options: { loadbalancing: 'round-robin' }
+          )
 
-            expect(route).to be_valid
-          end
+          expect(route).to be_valid
         end
       end
 

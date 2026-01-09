@@ -190,7 +190,37 @@ module VCAP::CloudController
         end
       end
 
-      context 'when the route has existing options' do
+      context 'when the route has existing options for loadbalancing=hash' do
+        before do
+          route[:options] = '{"loadbalancing": "hash", "hash_header": "foobar", "hash_balance": "2"}'
+        end
+
+        context 'when the loadbalancing option value is set to null' do
+          let(:body) do
+            {
+              options: {
+                loadbalancing: nil
+              }
+            }
+          end
+
+          it 'removes this option and hash options' do
+            expect(message).to be_valid
+            subject.update(route:, message:)
+            route.reload
+            expect(route.options).to eq({})
+          end
+
+          it 'notifies the backend' do
+            expect(fake_route_handler).to receive(:notify_backend_of_route_update)
+            subject.update(route:, message:)
+          end
+        end
+
+      end
+
+
+      context 'when the route has existing option loadbalancing=round-robin' do
         before do
           route[:options] = '{"loadbalancing": "round-robin"}'
         end

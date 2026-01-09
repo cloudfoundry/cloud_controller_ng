@@ -337,29 +337,26 @@ module VCAP::CloudController
       hash_header = route_options[:hash_header] || route_options['hash_header']
 
       if hash_header.blank?
-        errors.add(:route, :hash_header_missing)
+        errors.add(:options, 'Hash header must be present when loadbalancing is set to hash')
       end
     end
 
     def normalize_hash_balance_to_string(opts)
       return opts unless opts.is_a?(Hash)
-      return opts unless opts.key?('hash_balance') || opts.key?(:hash_balance)
-
-      normalized = opts.deep_symbolize_keys
-      if normalized[:hash_balance].present?
-        normalized[:hash_balance] = normalized[:hash_balance].to_s
-      end
+      # We have a flat structure on options, so no deep_symbolize required
+      normalized = opts.symbolize_keys
+      normalized[:hash_balance] = normalized[:hash_balance].to_s if normalized[:hash_balance].present?
       normalized
     end
 
     def remove_hash_options_for_non_hash_loadbalancing(opts)
       return opts unless opts.is_a?(Hash)
 
-      opts_symbolized = opts.deep_symbolize_keys
+      opts_symbolized = opts.symbolize_keys
       loadbalancing = opts_symbolized[:loadbalancing]
 
       # Remove hash-specific options if loadbalancing is set to non-hash value
-      if loadbalancing.present? && loadbalancing != 'hash'
+      if loadbalancing != 'hash'
         opts_symbolized.delete(:hash_header)
         opts_symbolized.delete(:hash_balance)
       end

@@ -6,14 +6,7 @@ module VCAP::CloudController
     def update(route:, message:)
 
       Route.db.transaction do
-        if message.requested?(:options)
-          # Merge existing options with new options from message
-          existing_options = route.options || {}
-          merged_options = existing_options.merge(message.options).compact
-
-          # Set the options on the route (cleanup is handled by model)
-          route.options = merged_options
-        end
+        route.options = route.options.symbolize_keys.merge(message.options).compact if message.requested?(:options)
         route.save(raise_on_failure: true)
         MetadataUpdate.update(route, message)
       end
@@ -30,7 +23,7 @@ module VCAP::CloudController
 
     private
 
-    def validation_error!(error, route)
+    def validation_error!(error)
       # Handle hash_header validation error for hash loadbalancing
       if error.errors.on(:route)&.include?(:hash_header_missing)
         raise Error.new('Hash header must be present when loadbalancing is set to hash')
