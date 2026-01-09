@@ -708,7 +708,7 @@ module VCAP::CloudController::Validators
         it 'does not allow hash_balance between 0 and 1.1' do
           message = OptionsMessage.new({ options: { hash_balance: 0.5 } })
           expect(message).not_to be_valid
-          expect(message.errors.full_messages).to include('Options Hash balance must be either 0 or greater than or equal to 1.1')
+          expect(message.errors.full_messages).to include('Options Hash balance must be either 0 or between 1.1 and 10.0')
         end
 
         it 'allows numeric string hash_balance' do

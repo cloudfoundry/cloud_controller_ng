@@ -78,6 +78,8 @@ module VCAP::CloudController
       cleaned_opts = remove_hash_options_for_non_hash_loadbalancing(opts)
       rounded_opts = round_hash_balance_to_one_decimal(cleaned_opts)
       normalized_opts = normalize_hash_balance_to_string(rounded_opts)
+      # Remove nil values after all processing
+      normalized_opts = normalized_opts.compact if normalized_opts.is_a?(Hash)
       self.options_without_serialization = Oj.dump(normalized_opts)
 
       logger.error("CRITICAL: options_with_serialization= setter completed", normalized_opts: normalized_opts.inspect, json: self.options_without_serialization.inspect)
@@ -330,7 +332,7 @@ module VCAP::CloudController
     def validate_route_options
       return if options.blank?
 
-      route_options = options.is_a?(Hash) ? options : options.deep_symbolize_keys
+      route_options = options.is_a?(Hash) ? options : options.symbolize_keys
       loadbalancing = route_options[:loadbalancing] || route_options['loadbalancing']
 
       return if loadbalancing != 'hash'

@@ -20,7 +20,7 @@ module VCAP::CloudController
       )
 
       Route.db.transaction do
-        route.save(raise_on_failure: true)
+        route.save
 
         MetadataUpdate.update(route, message)
       end
