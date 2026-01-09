@@ -41,7 +41,7 @@ gem 'vmstat', '~> 2.3'
 
 # Rails Components
 gem 'actionpack', '~> 8.1.0'
-gem 'actionview', '~> 8.1.1'
+gem 'actionview', '~> 8.1.2'
 gem 'activemodel', '~> 8.1.0'
 gem 'railties', '~> 8.1.1'
 
