@@ -47,8 +47,8 @@ module Sequel
         # For both cases, when the thread acquires a connection in time, or when it runs into a PoolTimeout,
         # we emmit the time the thread waited for a connection.
         if @connection_info[thread] && @connection_info[thread].key?(:waiting_since)
-          @prometheus_updater.update_histogram_metric :cc_db_connection_wait_duration_seconds, (Time.now.utc - @connection_info[thread][:waiting_since]).seconds,
-                                                      labels: { process_type: }
+          @prometheus_updater.update_histogram_metric(:cc_db_connection_wait_duration_seconds, (Time.now.utc - @connection_info[thread][:waiting_since]).seconds,
+                                                      labels: { process_type: })
           @connection_info[thread].delete(:waiting_since)
         end
       end
@@ -80,8 +80,8 @@ module Sequel
 
       # acquired_at should be always set, but as a safeguard we check that it is present before accessing
       if @connection_info[thread] && @connection_info[thread].key?(:acquired_at)
-        @prometheus_updater.update_histogram_metric :cc_db_connection_hold_duration_seconds, (Time.now.utc - @connection_info[thread][:acquired_at]).seconds,
-                                                    labels: { process_type: }
+        @prometheus_updater.update_histogram_metric(:cc_db_connection_hold_duration_seconds, (Time.now.utc - @connection_info[thread][:acquired_at]).seconds,
+                                                    labels: { process_type: })
       end
 
       @prometheus_updater.decrement_gauge_metric(:cc_acquired_db_connections_total, labels: { process_type: })

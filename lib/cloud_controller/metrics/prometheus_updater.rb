@@ -79,7 +79,10 @@ module VCAP::CloudController::Metrics
       @execution_context = VCAP::CloudController::ExecutionContext.from_process_type_env
 
       register_metrics_for_process
+      return if @execution_context.nil? # In unit tests, the execution context might not be set - thus skip initialization
+
       initialize_cc_db_connection_pool_timeouts_total
+      initialize_cc_db_connection_wait_duration_seconds
     end
 
     private
@@ -107,16 +110,27 @@ module VCAP::CloudController::Metrics
     # rubocop:enable Metrics/CyclomaticComplexity
 
     def initialize_cc_db_connection_pool_timeouts_total
-      return if @execution_context.nil? # In unit tests, the execution context might not be set - thus skip initialization
       return unless @registry.exist?(:cc_db_connection_pool_timeouts_total) # If the metric is not registered, we don't need to initialize it
 
       # initialize metric with 0 for discoverability, because it likely won't get updated on healthy systems
       update_gauge_metric(:cc_db_connection_pool_timeouts_total, 0, labels: { process_type: @execution_context.process_type })
-
+      # also initialize for puma_worker
       return unless @execution_context == VCAP::CloudController::ExecutionContext::API_PUMA_MAIN
 
+      update_gauge_metric(:cc_db_connection_pool_timeouts_total, 0,
+                          labels: { process_type: VCAP::CloudController::ExecutionContext::API_PUMA_WORKER.process_type })
+    end
+
+    def initialize_cc_db_connection_wait_duration_seconds
+      return unless @registry.exist?(:cc_db_connection_wait_duration_seconds) # If the metric is not registered, we don't need to initialize it
+
+      # initialize metric with 0 for discoverability, because it likely won't get updated on healthy systems
+      update_histogram_metric(:cc_db_connection_wait_duration_seconds, 0, labels: { process_type: @execution_context.process_type })
       # also initialize for puma_worker
-      update_gauge_metric(:cc_db_connection_pool_timeouts_total, 0, labels: { process_type: VCAP::CloudController::ExecutionContext::API_PUMA_WORKER.process_type })
+      return unless @execution_context == VCAP::CloudController::ExecutionContext::API_PUMA_MAIN
+
+      update_histogram_metric(:cc_db_connection_wait_duration_seconds, 0,
+                              labels: { process_type: VCAP::CloudController::ExecutionContext::API_PUMA_WORKER.process_type })
     end
 
     public

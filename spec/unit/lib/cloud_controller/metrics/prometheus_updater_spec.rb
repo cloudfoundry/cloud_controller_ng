@@ -47,6 +47,20 @@ module VCAP::CloudController::Metrics
           expect(metric.get(labels: { process_type: 'main' })).to eq(0.0)
           expect(metric.get(labels: { process_type: 'puma_worker' })).to eq(0.0)
         end
+
+        it 'initializes cc_db_connection_wait_duration_seconds metric with process_type label' do
+          PrometheusUpdater.new(registry: prom_client) # somehow we need to re-initialize to have the correct execution context applied
+          metric = prom_client.metrics.find { |m| m.name == :cc_db_connection_wait_duration_seconds }
+          expect(metric).to be_present
+          expect(metric.get(labels: { process_type: 'main' })).to eq(
+            { '+Inf' => 1.0, '0.001' => 1.0, '0.005' => 1.0, '0.01' => 1.0, '0.05' => 1.0, '0.1' => 1.0, '0.5' => 1.0, '1' => 1.0,
+              '10' => 1.0, '5' => 1.0, 'sum' => 0.0 }
+          )
+          expect(metric.get(labels: { process_type: 'puma_worker' })).to eq(
+            { '+Inf' => 1.0, '0.001' => 1.0, '0.005' => 1.0, '0.01' => 1.0, '0.05' => 1.0, '0.1' => 1.0, '0.5' => 1.0, '1' => 1.0,
+              '10' => 1.0, '5' => 1.0, 'sum' => 0.0 }
+          )
+        end
       end
     end
 
