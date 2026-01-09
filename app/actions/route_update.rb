@@ -8,7 +8,7 @@ module VCAP::CloudController
       Route.db.transaction do
         if message.requested?(:options)
           # Merge existing options with new options from message
-          existing_options = route.options&.deep_symbolize_keys || {}
+          existing_options = route.options || {}
           merged_options = existing_options.merge(message.options).compact
 
           # Set the options on the route (cleanup is handled by model)
