@@ -1,5 +1,6 @@
 require 'models/helpers/process_types'
 require 'models/helpers/stack_config_file'
+require 'models/helpers/stack_states'
 
 module VCAP::CloudController
   class Stack < Sequel::Model
@@ -43,6 +44,7 @@ module VCAP::CloudController
     def validate
       validates_presence :name
       validates_unique :name
+      validates_includes StackStates::VALID_STATES, :state, allow_nil: true
     end
 
     def before_destroy
@@ -97,6 +99,30 @@ module VCAP::CloudController
       else
         create(hash.slice('name', 'description', 'build_rootfs_image', 'run_rootfs_image'))
       end
+    end
+
+    def active?
+      state == StackStates::STACK_ACTIVE
+    end
+
+    def deprecated?
+      state == StackStates::STACK_DEPRECATED
+    end
+
+    def restricted?
+      state == StackStates::STACK_RESTRICTED
+    end
+
+    def disabled?
+      state == StackStates::STACK_DISABLED
+    end
+
+    def can_stage_new_app?
+      !restricted? && !disabled?
+    end
+
+    def can_restage_apps?
+      !disabled?
     end
   end
 end
