@@ -52,7 +52,7 @@ module VCAP::CloudController
               )
             end
           end
-      rescue Sequel::ValidationFailed, RouteCreate::Error => e
+      rescue Sequel::ValidationFailed, RouteCreate::Error, RouteUpdate::Error => e
         raise InvalidRoute.new(e.message)
       end
 
@@ -94,9 +94,7 @@ module VCAP::CloudController
             )
           elsif !route.available_in_space?(app.space)
             raise InvalidRoute.new('Routes cannot be mapped to destinations in different spaces')
-          elsif manifest_route[:options] && route[:options] != manifest_route[:options]
-            # remove nil values from options
-            manifest_route[:options] = manifest_route[:options].compact
+          elsif manifest_route[:options]
             message = RouteUpdateMessage.new({
                                                'options' => manifest_route[:options]
                                              })

@@ -108,6 +108,8 @@ class RoutesController < ApplicationController
     VCAP::CloudController::RouteUpdate.new.update(route:, message:)
 
     render status: :ok, json: Presenters::V3::RoutePresenter.new(route)
+  rescue RouteUpdate::Error => e
+    unprocessable!(e.message)
   end
 
   def destroy

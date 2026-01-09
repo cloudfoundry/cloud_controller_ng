@@ -7,6 +7,8 @@ Example Route-Options object
 <%= yield_content :route_options %>
 ```
 
-| Name              | Type     | Description                                                                                          |
-|-------------------|----------|------------------------------------------------------------------------------------------------------|
-| **loadbalancing** | _string_ | The load-balancer associated with this route. Valid values are 'round-robin' and 'least-connection' |
+| Name              | Type     | Description                                                                                                                                                                                         |
+|-------------------|----------|-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| **loadbalancing** | _string_ | The load-balancer associated with this route. Valid values are 'round-robin', 'least-connection', and 'hash'                                                                                        |
+| **hash_header** | _string_ | HTTP header name to hash for routing (e.g., 'X-User-ID', 'Cookie'). Required when loadbalancing is 'hash'. Cannot be set when loadbalancing is not 'hash'.                                          |
+| **hash_balance** | _string_ | Weight factor for load balancing (1.1 - 10, or 0 for disabling balancing). Higher values consider load more. Optional when loadbalancing is 'hash'. Cannot be set when loadbalancing is not 'hash'. |
