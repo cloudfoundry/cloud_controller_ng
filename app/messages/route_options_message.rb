@@ -23,7 +23,7 @@ module VCAP::CloudController
     validate :hash_options_are_valid
 
     def loadbalancing_algorithm_is_valid
-      return if loadbalancing.nil?
+      return if loadbalancing.blank?
       return if self.class.valid_loadbalancing_algorithms.include?(loadbalancing)
 
       errors.add(:loadbalancing, "must be one of '#{self.class.valid_loadbalancing_algorithms.join(', ')}' if present")
