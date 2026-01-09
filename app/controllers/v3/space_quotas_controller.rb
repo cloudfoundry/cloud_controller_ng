@@ -46,7 +46,7 @@ class SpaceQuotasController < ApplicationController
     unauthorized! unless permission_queryer.can_write_to_active_org?(org.id)
     suspended! unless permission_queryer.is_org_active?(org.id)
 
-    space_quota = SpaceQuotasCreate.new.create(message, organization: org)
+    space_quota = SpaceQuotasCreate.new(user_audit_info).create(message, organization: org)
 
     render status: :created, json: Presenters::V3::SpaceQuotaPresenter.new(
       space_quota,
@@ -69,7 +69,7 @@ class SpaceQuotasController < ApplicationController
     message = VCAP::CloudController::OrganizationQuotasUpdateMessage.new(hashed_params[:body])
     unprocessable!(message.errors.full_messages) unless message.valid?
 
-    space_quota = SpaceQuotaUpdate.update(space_quota, message)
+    space_quota = SpaceQuotaUpdate.update(space_quota, message, user_audit_info)
 
     render status: :ok, json: Presenters::V3::SpaceQuotaPresenter.new(
       space_quota,
@@ -92,7 +92,7 @@ class SpaceQuotasController < ApplicationController
     message = SpaceQuotaApplyMessage.new(hashed_params[:body])
     unprocessable!(message.errors.full_messages) unless message.valid?
 
-    SpaceQuotaApply.new.apply(space_quota, message, **presenter_args)
+    SpaceQuotaApply.new(user_audit_info).apply(space_quota, message, **presenter_args)
 
     render status: :ok, json: Presenters::V3::ToManyRelationshipPresenter.new(
       "space_quotas/#{space_quota.guid}",
@@ -121,7 +121,7 @@ class SpaceQuotasController < ApplicationController
       unprocessable!("Unable to remove quota from space with guid '#{space_guid}'. Ensure the space quota is applied to this space.")
     end
 
-    SpaceQuotaUnapply.unapply(space_quota, space)
+    SpaceQuotaUnapply.new(user_audit_info).unapply(space_quota, space)
   rescue SpaceQuotaUnapply::Error => e
     unprocessable!(e.message)
   end
@@ -138,7 +138,7 @@ class SpaceQuotasController < ApplicationController
 
     unprocessable!('This quota is applied to one or more spaces. Remove this quota from all spaces before deleting.') unless space_quota.spaces_dataset.empty?
 
-    delete_action = SpaceQuotaDeleteAction.new
+    delete_action = SpaceQuotaDeleteAction.new(user_audit_info)
 
     deletion_job = VCAP::CloudController::Jobs::DeleteActionJob.new(SpaceQuotaDefinition, space_quota.guid, delete_action, 'space_quota')
     pollable_job = Jobs::Enqueuer.new(queue: Jobs::Queues.generic).enqueue_pollable(deletion_job)

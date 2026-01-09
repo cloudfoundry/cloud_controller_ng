@@ -1,3 +1,5 @@
+require 'repositories/space_quota_event_repository'
+
 module VCAP::CloudController
   class SpaceQuotaUpdate
     class Error < ::StandardError
@@ -6,7 +8,7 @@ module VCAP::CloudController
     MAX_SPACES_TO_LIST_ON_FAILURE = 2
 
     # rubocop:disable Metrics/CyclomaticComplexity
-    def self.update(quota, message)
+    def self.update(quota, message, user_audit_info)
       if log_rate_limit(message) != QuotaDefinition::UNLIMITED
         spaces = spaces_with_unlimited_processes(quota)
         unlimited_processes_exist_error!(spaces) if spaces.any?
@@ -31,6 +33,8 @@ module VCAP::CloudController
         quota.total_routes = total_routes(message) if message.routes_limits_message.requested? :total_routes
 
         quota.save
+
+        Repositories::SpaceQuotaEventRepository.new.record_space_quota_update(quota, user_audit_info, message.audit_hash)
       end
 
       quota
