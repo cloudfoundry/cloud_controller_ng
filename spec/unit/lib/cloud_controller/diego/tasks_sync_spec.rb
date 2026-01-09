@@ -45,7 +45,8 @@ module VCAP::CloudController
           end
         end
 
-        context 'when a running CC task is missing from BBS' do
+        context 'when a running CC task is missing from BBS', isolation: :truncation do
+          # Can't use transactions for isolation because we're using multiple threads
           let!(:running_task) { TaskModel.make(:running, created_at: 1.minute.ago) }
           let!(:canceling_task) { TaskModel.make(:canceling, created_at: 1.minute.ago) }
           let!(:start_event_for_running_task) { AppUsageEvent.make(task_guid: running_task.guid, state: 'TASK_STARTED') }
@@ -270,7 +271,7 @@ module VCAP::CloudController
           end
         end
 
-        context 'when a new task is created after cc initally fetches tasks from bbs' do
+        context 'when a new task is created after cc initially fetches tasks from bbs' do
           context 'and the newly started task does not complete before checking to see if it should fail' do
             let!(:cc_task) { TaskModel.make(guid: 'some-task-guid', state: TaskModel::RUNNING_STATE) }
             let(:bbs_task) { ::Diego::Bbs::Models::Task.new(task_guid: 'some-task-guid', state: ::Diego::Bbs::Models::Task::State::Running) }
@@ -298,7 +299,8 @@ module VCAP::CloudController
             end
           end
 
-          context 'and the newly started task completes before the iteration completes' do
+          context 'and the newly started task completes before the iteration completes', isolation: :truncation do
+            # Can't use transactions for isolation because we're using multiple threads
             let!(:cc_task) { TaskModel.make(guid: 'some-task-guid', state: TaskModel::RUNNING_STATE) }
             let(:bbs_tasks) { [] }
 

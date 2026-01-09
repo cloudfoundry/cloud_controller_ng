@@ -1,16 +1,15 @@
 module DatabaseIsolation
-  def self.choose(isolation, config, db)
+  def self.choose(isolation, db)
     case isolation
     when :truncation
-      TruncateTables.new(config, db)
+      TruncateTables.new(db)
     else
       RollbackTransaction.new
     end
   end
 
   class TruncateTables
-    def initialize(config, db)
-      @config = config
+    def initialize(db)
       @db = db
     end
 
@@ -24,7 +23,10 @@ module DatabaseIsolation
       table_truncator = TableTruncator.new(db)
       table_truncator.truncate_tables
 
-      VCAP::CloudController::Seeds.write_seed_data(config)
+      # VCAP::CloudController::Seeds requires the :api config
+      TestConfig.context = :api
+      TestConfig.reset
+      VCAP::CloudController::Seeds.write_seed_data(TestConfig.config_instance)
     end
 
     private

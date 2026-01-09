@@ -1,7 +1,7 @@
 require 'spec_helper'
 require 'rails_helper'
 
-RSpec.describe PackagesController, type: :controller do # , isolation: :truncation
+RSpec.describe PackagesController, type: :controller do
   describe '#index' do
     let(:user) { set_current_user(VCAP::CloudController::User.make) }
     let(:app_model) { VCAP::CloudController::AppModel.make }

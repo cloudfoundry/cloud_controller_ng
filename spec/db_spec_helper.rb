@@ -26,11 +26,7 @@ unless defined?(SPEC_HELPER_LOADED)
     end
 
     rspec_config.around do |example|
-      # DatabaseIsolation requires the api config context
-      TestConfig.context = :api
-      TestConfig.reset
-
-      isolation = DatabaseIsolation.choose(example.metadata[:isolation], TestConfig.config_instance, DbConfig.new.connection)
+      isolation = DatabaseIsolation.choose(example.metadata[:isolation], DbConfig.new.connection)
       isolation.cleanly { example.run }
     end
   end
