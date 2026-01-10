@@ -40,30 +40,28 @@ module Database
     end
 
     def exclude_running_records(old_records)
-      return old_records unless has_duration?(model)
+      return old_records unless has_usage_lifecycle?(model)
 
-      beginning_string = beginning_string(model)
-      ending_string = ending_string(model)
-      guid_symbol = guid_symbol(model)
-
-      raise "Invalid duration model: #{model}" if beginning_string.nil? || ending_string.nil? || guid_symbol.nil?
+      beginning_state = beginning_state(model)
+      ending_state = ending_state(model)
+      guid_column = guid_column(model)
 
       # Create subqueries for START and STOP records within the old records set
       # Using from_self creates a subquery, allowing us to reference these in complex joins
-      initial_records = old_records.where(state: beginning_string).from_self(alias: :initial_records)
-      final_records = old_records.where(state: ending_string).from_self(alias: :final_records)
+      initial_records = old_records.where(state: beginning_state).from_self(alias: :initial_records)
+      final_records = old_records.where(state: ending_state).from_self(alias: :final_records)
 
       # For each START record, check if there exists a STOP record that:
       # 1. Has the same resource GUID (app_guid or service_instance_guid)
       # 2. Was created AFTER the START record (higher ID implies later creation)
-      exists_condition = final_records.where(Sequel[:final_records][guid_symbol] => Sequel[:initial_records][guid_symbol]).where do
+      exists_condition = final_records.where(Sequel[:final_records][guid_column] => Sequel[:initial_records][guid_column]).where do
         Sequel[:final_records][:id] > Sequel[:initial_records][:id]
       end.select(1).exists
 
       prunable_initial_records = initial_records.where(exists_condition)
 
       # Include records with states other than START/STOP
-      other_records = old_records.exclude(state: [beginning_string, ending_string])
+      other_records = old_records.exclude(state: [beginning_state, ending_state])
 
       # Return the UNION of:
       # 1. START records that have a matching STOP (safe to delete)
@@ -72,32 +70,20 @@ module Database
       prunable_initial_records.union(final_records, all: true).union(other_records, all: true)
     end
 
-    def has_duration?(model)
-      return true if model == VCAP::CloudController::AppUsageEvent
-      return true if model == VCAP::CloudController::ServiceUsageEvent
-
-      false
+    def has_usage_lifecycle?(model)
+      model.respond_to?(:usage_lifecycle)
     end
 
-    def beginning_string(model)
-      return VCAP::CloudController::ProcessModel::STARTED if model == VCAP::CloudController::AppUsageEvent
-      return VCAP::CloudController::Repositories::ServiceUsageEventRepository::CREATED_EVENT_STATE if model == VCAP::CloudController::ServiceUsageEvent
-
-      nil
+    def beginning_state(model)
+      model.usage_lifecycle[:beginning_state]
     end
 
-    def ending_string(model)
-      return VCAP::CloudController::ProcessModel::STOPPED if model == VCAP::CloudController::AppUsageEvent
-      return VCAP::CloudController::Repositories::ServiceUsageEventRepository::DELETED_EVENT_STATE if model == VCAP::CloudController::ServiceUsageEvent
-
-      nil
+    def ending_state(model)
+      model.usage_lifecycle[:ending_state]
     end
 
-    def guid_symbol(model)
-      return :app_guid if model == VCAP::CloudController::AppUsageEvent
-      return :service_instance_guid if model == VCAP::CloudController::ServiceUsageEvent
-
-      nil
+    def guid_column(model)
+      model.usage_lifecycle[:guid_column]
     end
   end
 end
