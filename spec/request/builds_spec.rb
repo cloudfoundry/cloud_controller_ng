@@ -92,7 +92,6 @@ RSpec.describe 'Builds' do
             'guid' => package.guid
           },
           'droplet' => nil,
-          'warnings' => nil,
           'relationships' => { 'app' => { 'data' => { 'guid' => app_model.guid } } },
           'links' => {
             'self' => {
@@ -496,7 +495,6 @@ RSpec.describe 'Builds' do
                                                             'droplet' => {
                                                               'guid' => droplet.guid
                                                             },
-                                                            'warnings' => nil,
                                                             'relationships' => { 'app' => { 'data' => { 'guid' => app_model.guid } } },
                                                             'metadata' => { 'labels' => {}, 'annotations' => {} },
                                                             'links' => {
@@ -526,7 +524,6 @@ RSpec.describe 'Builds' do
                                                             'droplet' => {
                                                               'guid' => second_droplet.guid
                                                             },
-                                                            'warnings' => nil,
                                                             'relationships' => { 'app' => { 'data' => { 'guid' => app_model.guid } } },
                                                             'metadata' => { 'labels' => {}, 'annotations' => {} },
                                                             'links' => {
@@ -629,7 +626,6 @@ RSpec.describe 'Builds' do
           'droplet' => {
             'guid' => droplet.guid
           },
-          'warnings' => nil,
           'metadata' => { 'labels' => {}, 'annotations' => {} },
           'relationships' => { 'app' => { 'data' => { 'guid' => app_model.guid } } },
           'links' => {

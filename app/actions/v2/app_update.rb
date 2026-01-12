@@ -39,6 +39,7 @@ module VCAP::CloudController
           prepare_to_stage(app) if staging_necessary?(process, request_attrs)
         end
 
+        validate_stack_state(app, request_attrs)
         stage(process) if staging_necessary?(process, request_attrs)
       end
 
@@ -183,6 +184,23 @@ module VCAP::CloudController
 
       def v2_api_staging_disabled?
         !!VCAP::CloudController::Config.config.get(:temporary_disable_v2_staging)
+      end
+
+      def validate_stack_state(app, request_attrs)
+        return unless request_attrs.key?('stack_guid')
+        return if request_attrs.key?('docker_image')
+
+        stack = Stack.find(guid: request_attrs['stack_guid'])
+        return unless stack
+
+        stack_warnings = if app.builds_dataset.count.zero?
+                           StackStateValidator.validate_for_new_app!(stack)
+                         else
+                           StackStateValidator.validate_for_restaging!(stack)
+                         end
+        @warnings.concat(stack_warnings)
+      rescue StackStateValidator::DisabledStackError, StackStateValidator::RestrictedStackError => e
+        raise CloudController::Errors::ApiError.new_from_details('StackValidationFailed', e.message)
       end
     end
   end

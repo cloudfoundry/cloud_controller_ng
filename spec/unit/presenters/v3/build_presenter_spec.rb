@@ -175,14 +175,14 @@ module VCAP::CloudController::Presenters::V3
           build.instance_variable_set(:@stack_warnings, [])
         end
 
-        it 'returns nil for warnings' do
-          expect(result[:warnings]).to be_nil
+        it 'does not include warnings key' do
+          expect(result).not_to have_key(:warnings)
         end
       end
 
-      context 'when stack warnings is nil' do
-        it 'returns nil for warnings' do
-          expect(result[:warnings]).to be_nil
+      context 'when no stack warning present' do
+        it 'does not include warnings key' do
+          expect(result).not_to have_key(:warnings)
         end
       end
     end

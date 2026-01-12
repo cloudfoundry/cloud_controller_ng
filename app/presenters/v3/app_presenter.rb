@@ -45,6 +45,8 @@ module VCAP::CloudController
             links: build_links
           }
 
+          hash[:warnings] = app_warnings if app_warnings
+
           @decorators.reduce(hash) { |memo, d| d.decorate(memo, [app]) }
         end
 
@@ -73,6 +75,12 @@ module VCAP::CloudController
           }
 
           links.delete_if { |_, v| v.nil? }
+        end
+
+        def app_warnings
+          return nil unless app.stack_warnings&.any?
+
+          app.stack_warnings.map { |warning| { detail: warning } }
         end
       end
     end

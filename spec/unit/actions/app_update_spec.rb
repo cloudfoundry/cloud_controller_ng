@@ -357,6 +357,80 @@ module VCAP::CloudController
           expect { app_update.update(app_model, message, lifecycle) }.to raise_error(AppUpdate::InvalidApp)
         end
       end
+
+      describe 'stack state validation on stack change' do
+        let(:new_stack) { Stack.make(name: 'new-stack') }
+        let(:message) do
+          AppUpdateMessage.new({
+                                 lifecycle: {
+                                   type: 'buildpack',
+                                   data: { stack: new_stack.name }
+                                 }
+                               })
+        end
+
+        context 'when stack is DISABLED' do
+          before { new_stack.update(state: StackStates::STACK_DISABLED) }
+
+          it 'raises InvalidApp error' do
+            expect do
+              app_update.update(app_model, message, lifecycle)
+            end.to raise_error(AppUpdate::InvalidApp, /DISABLED/)
+          end
+        end
+
+        context 'when stack is RESTRICTED' do
+          before { new_stack.update(state: StackStates::STACK_RESTRICTED) }
+
+          context 'when app has no builds' do
+            it 'raises InvalidApp error' do
+              expect(app_model.builds_dataset.count).to eq(0)
+              expect do
+                app_update.update(app_model, message, lifecycle)
+              end.to raise_error(AppUpdate::InvalidApp, /RESTRICTED/)
+            end
+          end
+
+          context 'when app has previous builds' do
+            before { BuildModel.make(app: app_model, state: BuildModel::STAGED_STATE) }
+
+            it 'allows the update' do
+              expect(app_model.builds_dataset.count).to eq(1)
+              expect do
+                app_update.update(app_model, message, lifecycle)
+              end.not_to raise_error
+            end
+          end
+        end
+
+        context 'when stack is DEPRECATED' do
+          before { new_stack.update(state: StackStates::STACK_DEPRECATED) }
+
+          it 'updates the app with warnings' do
+            app = app_update.update(app_model, message, lifecycle)
+            expect(app.stack_warnings).to be_present
+            expect(app.stack_warnings.first).to include('DEPRECATED')
+          end
+        end
+
+        context 'when stack is ACTIVE' do
+          before { new_stack.update(state: StackStates::STACK_ACTIVE) }
+
+          it 'updates the app without warnings' do
+            app = app_update.update(app_model, message, lifecycle)
+            expect(app.stack_warnings).to be_empty
+          end
+        end
+
+        context 'when stack is not being changed' do
+          let(:message) { AppUpdateMessage.new({ name: 'new-name' }) }
+
+          it 'does not validate stack state' do
+            app = app_update.update(app_model, message, lifecycle)
+            expect(app.stack_warnings).to be_empty
+          end
+        end
+      end
     end
   end
 end

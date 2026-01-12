@@ -689,6 +689,80 @@ RSpec.describe 'Apps' do
         )
       end
     end
+
+    describe 'stack state validation' do
+      context 'when stack is DISABLED' do
+        let(:disabled_stack) { VCAP::CloudController::Stack.make(name: 'disabled-stack', state: 'DISABLED') }
+
+        it 'returns 422 with error message' do
+          post_params = Oj.dump({
+                                  name: 'maria',
+                                  space_guid: space.guid,
+                                  stack_guid: disabled_stack.guid
+                                })
+
+          post '/v2/apps', post_params, headers_for(user)
+
+          expect(last_response.status).to eq(422)
+          expect(parsed_response['error_code']).to eq('CF-StackValidationFailed')
+          expect(parsed_response['description']).to include('DISABLED')
+        end
+      end
+
+      context 'when stack is RESTRICTED' do
+        let(:restricted_stack) { VCAP::CloudController::Stack.make(name: 'restricted-stack', state: 'RESTRICTED') }
+
+        it 'returns 422 with error message for new apps' do
+          post_params = Oj.dump({
+                                  name: 'maria',
+                                  space_guid: space.guid,
+                                  stack_guid: restricted_stack.guid
+                                })
+
+          post '/v2/apps', post_params, headers_for(user)
+
+          expect(last_response.status).to eq(422)
+          expect(parsed_response['error_code']).to eq('CF-StackValidationFailed')
+          expect(parsed_response['description']).to include('RESTRICTED')
+        end
+      end
+
+      context 'when stack is DEPRECATED' do
+        let(:deprecated_stack) { VCAP::CloudController::Stack.make(name: 'deprecated-stack', state: 'DEPRECATED') }
+
+        it 'creates the app with warnings in X-Cf-Warnings header' do
+          post_params = Oj.dump({
+                                  name: 'maria',
+                                  space_guid: space.guid,
+                                  stack_guid: deprecated_stack.guid
+                                })
+
+          post '/v2/apps', post_params, headers_for(user)
+
+          expect(last_response.status).to eq(201)
+          expect(last_response.headers['X-Cf-Warnings']).to be_present
+          decoded_warning = CGI.unescape(last_response.headers['X-Cf-Warnings'])
+          expect(decoded_warning).to include('DEPRECATED')
+        end
+      end
+
+      context 'when stack is ACTIVE' do
+        let(:active_stack) { VCAP::CloudController::Stack.make(name: 'active-stack', state: 'ACTIVE') }
+
+        it 'creates the app without warnings' do
+          post_params = Oj.dump({
+                                  name: 'maria',
+                                  space_guid: space.guid,
+                                  stack_guid: active_stack.guid
+                                })
+
+          post '/v2/apps', post_params, headers_for(user)
+
+          expect(last_response.status).to eq(201)
+          expect(last_response.headers['X-Cf-Warnings']).to be_nil
+        end
+      end
+    end
   end
 
   describe 'PUT /v2/apps/:guid' do

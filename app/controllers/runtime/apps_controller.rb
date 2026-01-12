@@ -358,6 +358,8 @@ module VCAP::CloudController
       creator = V2::AppCreate.new(access_validator: self)
       process = creator.create(request_attrs)
 
+      process.stack_warnings&.each { |warning| add_warning(warning) }
+
       @app_event_repository.record_app_create(
         process,
         process.space,

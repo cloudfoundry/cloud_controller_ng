@@ -216,6 +216,71 @@ module VCAP::CloudController
           end.to raise_error(CloudController::Errors::V3::ApiError)
         end
       end
+
+      describe 'stack state validation' do
+        let(:test_stack) { Stack.make(name: 'test-stack-for-validation') }
+        let(:lifecycle_request) { { type: 'buildpack', data: { buildpacks: [buildpack_identifier], stack: test_stack.name } } }
+
+        context 'when stack is DISABLED' do
+          before { test_stack.update(state: StackStates::STACK_DISABLED) }
+
+          it 'raises InvalidApp error' do
+            expect do
+              app_create.create(message, lifecycle)
+            end.to raise_error(AppCreate::InvalidApp, /DISABLED/)
+          end
+
+          it 'does not create an app' do
+            expect do
+              app_create.create(message, lifecycle)
+            rescue StandardError
+              nil
+            end.not_to(change(AppModel, :count))
+          end
+        end
+
+        context 'when stack is RESTRICTED' do
+          before { test_stack.update(state: StackStates::STACK_RESTRICTED) }
+
+          it 'raises InvalidApp error for new apps' do
+            expect do
+              app_create.create(message, lifecycle)
+            end.to raise_error(AppCreate::InvalidApp, /RESTRICTED/)
+          end
+        end
+
+        context 'when stack is DEPRECATED' do
+          before { test_stack.update(state: StackStates::STACK_DEPRECATED) }
+
+          it 'creates the app with warnings' do
+            app = app_create.create(message, lifecycle)
+            expect(app.id).not_to be_nil
+            expect(app.stack_warnings).to be_present
+            expect(app.stack_warnings.first).to include('DEPRECATED')
+          end
+        end
+
+        context 'when stack is ACTIVE' do
+          before { test_stack.update(state: StackStates::STACK_ACTIVE) }
+
+          it 'creates the app without warnings' do
+            app = app_create.create(message, lifecycle)
+            expect(app.id).not_to be_nil
+            expect(app.stack_warnings).to be_empty
+          end
+        end
+
+        context 'when lifecycle is docker' do
+          let(:lifecycle_request) { { type: 'docker' } }
+          let(:lifecycle) { AppDockerLifecycle.new(message) }
+
+          it 'skips stack validation' do
+            app = app_create.create(message, lifecycle)
+            expect(app.id).not_to be_nil
+            expect(app.stack_warnings).to be_empty
+          end
+        end
+      end
     end
   end
 end

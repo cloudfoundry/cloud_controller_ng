@@ -15,7 +15,7 @@ module VCAP::CloudController
         end
 
         def to_hash
-          {
+          hash = {
             guid: build.guid,
             created_at: build.created_at,
             updated_at: build.updated_at,
@@ -30,7 +30,6 @@ module VCAP::CloudController
             },
             package: { guid: build.package_guid },
             droplet: droplet,
-            warnings: build_warnings,
             created_by: {
               guid: build.created_by_user_guid,
               name: build.created_by_user_name,
@@ -43,6 +42,10 @@ module VCAP::CloudController
             },
             links: build_links
           }
+
+          hash[:warnings] = build_warnings if build_warnings
+
+          hash
         end
 
         private

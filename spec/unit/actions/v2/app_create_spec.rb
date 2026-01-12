@@ -217,6 +217,109 @@ module VCAP::CloudController
           expect(process.app.lifecycle_data.buildpacks).to eq([])
         end
       end
+
+      describe 'stack state validation' do
+        context 'when stack is DISABLED' do
+          let(:disabled_stack) { Stack.make(name: 'disabled-stack', state: StackStates::STACK_DISABLED) }
+          let(:request_attrs) do
+            {
+              'name' => 'maria',
+              'space_guid' => space.guid,
+              'state' => 'STOPPED',
+              'health_check_type' => 'port',
+              'stack_guid' => disabled_stack.guid
+            }
+          end
+
+          it 'raises StackValidationFailed error' do
+            expect do
+              app_create.create(request_attrs)
+            end.to raise_error(CloudController::Errors::ApiError) do |error|
+              expect(error.name).to eq('StackValidationFailed')
+              expect(error.message).to include('DISABLED')
+            end
+          end
+        end
+
+        context 'when stack is RESTRICTED' do
+          let(:restricted_stack) { Stack.make(name: 'restricted-stack', state: StackStates::STACK_RESTRICTED) }
+          let(:request_attrs) do
+            {
+              'name' => 'maria',
+              'space_guid' => space.guid,
+              'state' => 'STOPPED',
+              'health_check_type' => 'port',
+              'stack_guid' => restricted_stack.guid
+            }
+          end
+
+          it 'raises StackValidationFailed error for new apps' do
+            expect do
+              app_create.create(request_attrs)
+            end.to raise_error(CloudController::Errors::ApiError) do |error|
+              expect(error.name).to eq('StackValidationFailed')
+              expect(error.message).to include('RESTRICTED')
+            end
+          end
+        end
+
+        context 'when stack is DEPRECATED' do
+          let(:deprecated_stack) { Stack.make(name: 'deprecated-stack', state: StackStates::STACK_DEPRECATED) }
+          let(:request_attrs) do
+            {
+              'name' => 'maria',
+              'space_guid' => space.guid,
+              'state' => 'STOPPED',
+              'health_check_type' => 'port',
+              'stack_guid' => deprecated_stack.guid
+            }
+          end
+
+          it 'creates the app with warnings' do
+            process = app_create.create(request_attrs)
+            expect(process.id).not_to be_nil
+            expect(process.stack_warnings).to be_present
+            expect(process.stack_warnings.first).to include('DEPRECATED')
+          end
+        end
+
+        context 'when stack is ACTIVE' do
+          let(:active_stack) { Stack.make(name: 'active-stack', state: StackStates::STACK_ACTIVE) }
+          let(:request_attrs) do
+            {
+              'name' => 'maria',
+              'space_guid' => space.guid,
+              'state' => 'STOPPED',
+              'health_check_type' => 'port',
+              'stack_guid' => active_stack.guid
+            }
+          end
+
+          it 'creates the app without warnings' do
+            process = app_create.create(request_attrs)
+            expect(process.id).not_to be_nil
+            expect(process.stack_warnings).to be_empty
+          end
+        end
+
+        context 'when app is docker-based' do
+          let(:request_attrs) do
+            {
+              'name' => 'maria',
+              'space_guid' => space.guid,
+              'state' => 'STOPPED',
+              'health_check_type' => 'port',
+              'docker_image' => 'some-image:latest'
+            }
+          end
+
+          it 'skips stack validation' do
+            process = app_create.create(request_attrs)
+            expect(process.id).not_to be_nil
+            expect(process.stack_warnings).to be_empty
+          end
+        end
+      end
     end
   end
 end

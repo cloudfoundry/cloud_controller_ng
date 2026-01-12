@@ -112,6 +112,32 @@ module VCAP::CloudController::Presenters::V3
           expect(result[:included][:bananas]).to contain_exactly('Davis is bananas')
         end
       end
+
+      context 'when there are stack warnings' do
+        before do
+          app.instance_variable_set(:@stack_warnings, ["WARNING: The stack 'cflinuxfs3' is 'DEPRECATED' and will be removed in the future."])
+        end
+
+        it 'includes warnings in the presented app' do
+          expect(result[:warnings]).to eq([{ detail: "WARNING: The stack 'cflinuxfs3' is 'DEPRECATED' and will be removed in the future." }])
+        end
+      end
+
+      context 'when there are no stack state validation warnings' do
+        it 'does not include warnings key' do
+          expect(result).not_to have_key(:warnings)
+        end
+      end
+
+      context 'when stack_warnings is empty' do
+        before do
+          app.instance_variable_set(:@stack_warnings, [])
+        end
+
+        it 'does not include warnings key' do
+          expect(result).not_to have_key(:warnings)
+        end
+      end
     end
   end
 end

@@ -715,6 +715,87 @@ module VCAP::CloudController
           end
         end
       end
+
+      describe 'stack state validation on stack change' do
+        let(:process) { ProcessModel.make }
+        let(:app) { process.app }
+
+        context 'when stack is DISABLED' do
+          let(:disabled_stack) { Stack.make(name: 'disabled-stack', state: StackStates::STACK_DISABLED) }
+
+          it 'raises StackValidationFailed error' do
+            expect do
+              app_update.update(app, process, { 'stack_guid' => disabled_stack.guid })
+            end.to raise_error(CloudController::Errors::ApiError) do |error|
+              expect(error.name).to eq('StackValidationFailed')
+              expect(error.message).to include('DISABLED')
+            end
+          end
+        end
+
+        context 'when stack is RESTRICTED' do
+          let(:restricted_stack) { Stack.make(name: 'restricted-stack', state: StackStates::STACK_RESTRICTED) }
+
+          context 'when app has no builds' do
+            it 'raises StackValidationFailed error' do
+              expect(app.builds_dataset.count).to eq(0)
+              expect do
+                app_update.update(app, process, { 'stack_guid' => restricted_stack.guid })
+              end.to raise_error(CloudController::Errors::ApiError) do |error|
+                expect(error.name).to eq('StackValidationFailed')
+                expect(error.message).to include('RESTRICTED')
+              end
+            end
+          end
+
+          context 'when app has previous builds' do
+            before { BuildModel.make(app: app, state: BuildModel::STAGED_STATE) }
+
+            it 'allows the update' do
+              expect(app.builds_dataset.count).to eq(1)
+              expect do
+                app_update.update(app, process, { 'stack_guid' => restricted_stack.guid })
+              end.not_to raise_error
+            end
+          end
+        end
+
+        context 'when stack is DEPRECATED' do
+          let(:deprecated_stack) { Stack.make(name: 'deprecated-stack', state: StackStates::STACK_DEPRECATED) }
+
+          it 'updates the app with warnings' do
+            app_update.update(app, process, { 'stack_guid' => deprecated_stack.guid })
+            expect(app_update.warnings).to be_present
+            expect(app_update.warnings.first).to include('DEPRECATED')
+          end
+        end
+
+        context 'when stack is ACTIVE' do
+          let(:active_stack) { Stack.make(name: 'active-stack', state: StackStates::STACK_ACTIVE) }
+
+          it 'updates the app without warnings' do
+            app_update.update(app, process, { 'stack_guid' => active_stack.guid })
+            expect(app_update.warnings).to be_empty
+          end
+        end
+
+        context 'when stack is not being changed' do
+          it 'does not validate stack state' do
+            app_update.update(app, process, { 'name' => 'new-name' })
+            expect(app_update.warnings).to be_empty
+          end
+        end
+
+        context 'when app is docker-based' do
+          let(:docker_process) { ProcessModelFactory.make(app: AppModel.make(:docker), docker_image: 'repo/original-image') }
+          let(:docker_app) { docker_process.app }
+
+          it 'skips stack validation when updating docker image' do
+            app_update.update(docker_app, docker_process, { 'docker_image' => 'new-image:latest' })
+            expect(app_update.warnings).to be_empty
+          end
+        end
+      end
     end
   end
 end

@@ -362,6 +362,96 @@ RSpec.describe 'Apps' do
         end
       end
     end
+
+    context 'stack state validation' do
+      before do
+        space.organization.add_user(user)
+        space.add_developer(user)
+      end
+
+      context 'when stack is DISABLED' do
+        let(:disabled_stack) { VCAP::CloudController::Stack.make(name: 'disabled-stack', state: 'DISABLED') }
+        let(:create_request) do
+          {
+            name: 'my_app',
+            lifecycle: { type: 'buildpack', data: { stack: disabled_stack.name } },
+            relationships: { space: { data: { guid: space.guid } } }
+          }
+        end
+
+        it 'returns 422 with error message' do
+          post '/v3/apps', create_request.to_json, user_header
+
+          expect(last_response.status).to eq(422)
+          expect(parsed_response['errors'].first['detail']).to include('DISABLED')
+        end
+      end
+
+      context 'when stack is RESTRICTED' do
+        let(:restricted_stack) { VCAP::CloudController::Stack.make(name: 'restricted-stack', state: 'RESTRICTED') }
+        let(:create_request) do
+          {
+            name: 'my_app',
+            lifecycle: { type: 'buildpack', data: { stack: restricted_stack.name } },
+            relationships: { space: { data: { guid: space.guid } } }
+          }
+        end
+
+        it 'returns 422 with error message for new apps' do
+          post '/v3/apps', create_request.to_json, user_header
+
+          expect(last_response.status).to eq(422)
+          expect(parsed_response['errors'].first['detail']).to include('RESTRICTED')
+        end
+      end
+
+      context 'when stack is DEPRECATED' do
+        let(:deprecated_stack) { VCAP::CloudController::Stack.make(name: 'deprecated-stack', state: 'DEPRECATED') }
+        let(:create_request) do
+          {
+            name: 'my_app',
+            lifecycle: { type: 'buildpack', data: { stack: deprecated_stack.name } },
+            relationships: { space: { data: { guid: space.guid } } }
+          }
+        end
+
+        it 'creates the app with warnings in response body' do
+          post '/v3/apps', create_request.to_json, user_header
+
+          expect(last_response.status).to eq(201)
+          expect(parsed_response['warnings']).to be_present
+          expect(parsed_response['warnings'].first['detail']).to include('DEPRECATED')
+        end
+
+        it 'includes warnings in X-Cf-Warnings header' do
+          post '/v3/apps', create_request.to_json, user_header
+
+          expect(last_response.status).to eq(201)
+          expect(last_response.headers['X-Cf-Warnings']).to be_present
+          decoded_warning = CGI.unescape(last_response.headers['X-Cf-Warnings'])
+          expect(decoded_warning).to include('DEPRECATED')
+        end
+      end
+
+      context 'when stack is ACTIVE' do
+        let(:active_stack) { VCAP::CloudController::Stack.make(name: 'active-stack', state: 'ACTIVE') }
+        let(:create_request) do
+          {
+            name: 'my_app',
+            lifecycle: { type: 'buildpack', data: { stack: active_stack.name } },
+            relationships: { space: { data: { guid: space.guid } } }
+          }
+        end
+
+        it 'creates the app without warnings' do
+          post '/v3/apps', create_request.to_json, user_header
+
+          expect(last_response.status).to eq(201)
+          expect(parsed_response).not_to have_key('warnings')
+          expect(last_response.headers['X-Cf-Warnings']).to be_nil
+        end
+      end
+    end
   end
 
   describe 'GET /v3/apps' do
@@ -1900,7 +1990,6 @@ RSpec.describe 'Apps' do
                                                             'droplet' => {
                                                               'guid' => droplet.guid
                                                             },
-                                                            'warnings' => nil,
                                                             'relationships' => { 'app' => { 'data' => { 'guid' => app_model.guid } } },
                                                             'metadata' => { 'labels' => {}, 'annotations' => {} },
                                                             'links' => {
@@ -1930,7 +2019,6 @@ RSpec.describe 'Apps' do
                                                             'droplet' => {
                                                               'guid' => second_droplet.guid
                                                             },
-                                                            'warnings' => nil,
                                                             'relationships' => { 'app' => { 'data' => { 'guid' => app_model.guid } } },
                                                             'metadata' => { 'labels' => {}, 'annotations' => {} },
                                                             'links' => {

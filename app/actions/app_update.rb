@@ -53,8 +53,13 @@ module VCAP::CloudController
         end
       end
 
+      warnings = validate_stack_state(app, message, lifecycle)
+      app.instance_variable_set(:@stack_warnings, warnings)
+
       app
-    rescue Sequel::ValidationFailed => e
+    rescue Sequel::ValidationFailed,
+           StackStateValidator::DisabledStackError,
+           StackStateValidator::RestrictedStackError => e
       raise InvalidApp.new(e.message)
     end
 
@@ -80,6 +85,20 @@ module VCAP::CloudController
 
     def existing_environment_variables_for(app)
       app.environment_variables.nil? ? {} : app.environment_variables.symbolize_keys
+    end
+
+    def validate_stack_state(app, message, lifecycle)
+      return [] if lifecycle.type == Lifecycles::DOCKER
+      return [] unless message.requested?(:lifecycle) && message.buildpack_data.requested?(:stack)
+
+      stack = Stack.find(name: message.buildpack_data.stack)
+      return [] unless stack
+
+      if app.builds_dataset.count.zero?
+        StackStateValidator.validate_for_new_app!(stack)
+      else
+        StackStateValidator.validate_for_restaging!(stack)
+      end
     end
   end
 end

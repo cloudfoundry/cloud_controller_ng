@@ -11,6 +11,8 @@ module VCAP::CloudController
     DEFAULT_CONTAINER_USER = 'vcap'.freeze
     DEFAULT_DOCKER_CONTAINER_USER = 'root'.freeze
 
+    attr_reader :stack_warnings
+
     many_to_many :routes, join_table: :route_mappings, left_key: :app_guid, left_primary_key: :guid, right_primary_key: :guid, right_key: :route_guid
     one_to_many :route_mappings, class: 'VCAP::CloudController::RouteMappingModel', key: :app_guid, primary_key: :guid
     one_to_many :service_bindings, key: :app_guid, primary_key: :guid

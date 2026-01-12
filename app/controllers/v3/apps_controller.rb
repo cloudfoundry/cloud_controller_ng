@@ -107,6 +107,8 @@ class AppsV3Controller < ApplicationController
       }
     )
 
+    add_warning_headers(app.stack_warnings) if app.stack_warnings&.any?
+
     render status: :created, json: Presenters::V3::AppPresenter.new(app)
   rescue AppCreate::InvalidApp => e
     unprocessable!(e.message)
@@ -133,6 +135,8 @@ class AppsV3Controller < ApplicationController
         'user-id' => current_user.guid
       }
     )
+
+    add_warning_headers(app.stack_warnings) if app.stack_warnings&.any?
 
     render status: :ok, json: Presenters::V3::AppPresenter.new(app)
   rescue AppUpdate::DropletNotFound

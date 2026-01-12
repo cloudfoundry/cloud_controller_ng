@@ -46,6 +46,9 @@ module VCAP::CloudController
           @access_validator.validate_access(:create, process, request_attrs)
         end
 
+        warnings = validate_stack_state(request_attrs)
+        process.instance_variable_set(:@stack_warnings, warnings)
+
         process
       end
 
@@ -105,6 +108,18 @@ module VCAP::CloudController
         return unless request_attrs['state'] == 'STARTED' && !process.package_available?
 
         raise CloudController::Errors::ApiError.new_from_details('AppPackageInvalid', 'bits have not been uploaded')
+      end
+
+      def validate_stack_state(request_attrs)
+        return [] if request_attrs.key?('docker_image')
+
+        stack_name = get_stack_name(request_attrs['stack_guid'])
+        stack = Stack.find(name: stack_name)
+        return [] unless stack
+
+        StackStateValidator.validate_for_new_app!(stack)
+      rescue StackStateValidator::DisabledStackError, StackStateValidator::RestrictedStackError => e
+        raise CloudController::Errors::ApiError.new_from_details('StackValidationFailed', e.message)
       end
     end
   end
