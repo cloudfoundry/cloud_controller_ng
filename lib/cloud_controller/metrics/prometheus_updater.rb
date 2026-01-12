@@ -50,6 +50,7 @@ module VCAP::CloudController::Metrics
       { type: :gauge, name: :cc_acquired_db_connections_total, labels: %i[process_type], docstring: 'Number of acquired DB connections' },
       { type: :histogram, name: :cc_db_connection_hold_duration_seconds, labels: %i[process_type], docstring: 'The time threads were holding DB connections',
         buckets: CONNECTION_DURATION_BUCKETS },
+      { type: :counter, name: :cc_db_connection_hold_time_seconds_total, labels: %i[process_type], docstring: 'Total time threads have held DB connections (seconds)' },
       # cc_connection_pool_timeouts_total must be a gauge metric, because otherwise we cannot match them with processes
       { type: :gauge, name: :cc_db_connection_pool_timeouts_total, labels: %i[process_type],
         docstring: 'Number of threads which failed to acquire a free DB connection from the pool within the timeout' },
@@ -153,8 +154,8 @@ module VCAP::CloudController::Metrics
       @registry.get(metric).decrement(labels:)
     end
 
-    def increment_counter_metric(metric)
-      @registry.get(metric).increment
+    def increment_counter_metric(metric, by=1, labels: {})
+      @registry.get(metric).increment(by:, labels:)
     end
 
     def update_histogram_metric(metric, value, labels: {})

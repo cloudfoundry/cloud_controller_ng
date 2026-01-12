@@ -153,6 +153,17 @@ RSpec.describe 'Sequel::ConnectionMetrics' do
         end
       end
 
+      it 'increments the db connection hold time seconds total metric' do
+        acquired_at = Time.now - 10
+        db.pool.instance_variable_set(:@connection_info, db.pool.instance_variable_get(:@connection_info).merge!({ thread => { acquired_at: } }))
+
+        Timecop.freeze do
+          hold_duration = Time.now - acquired_at
+          expect(prometheus_updater).to receive(:increment_counter_metric).with(:cc_db_connection_hold_time_seconds_total, hold_duration, labels: { process_type: 'puma_worker' })
+          db.pool.send(:release, thread)
+        end
+      end
+
       it 'decrements the acquired db connection metric' do
         expect(prometheus_updater).to receive(:decrement_gauge_metric).with(:cc_acquired_db_connections_total, labels: { process_type: 'puma_worker' })
         db.pool.send(:release, thread)

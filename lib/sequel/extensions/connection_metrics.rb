@@ -80,8 +80,10 @@ module Sequel
 
       # acquired_at should be always set, but as a safeguard we check that it is present before accessing
       if @connection_info[thread] && @connection_info[thread].key?(:acquired_at)
-        @prometheus_updater.update_histogram_metric(:cc_db_connection_hold_duration_seconds, (Time.now.utc - @connection_info[thread][:acquired_at]).seconds,
-                                                    labels: { process_type: })
+        duration = (Time.now.utc - @connection_info[thread][:acquired_at]).seconds
+        @prometheus_updater.update_histogram_metric(:cc_db_connection_hold_duration_seconds, duration, labels: { process_type: })
+
+        @prometheus_updater.increment_counter_metric(:cc_db_connection_hold_time_seconds_total, duration, labels: { process_type: })
       end
 
       @prometheus_updater.decrement_gauge_metric(:cc_acquired_db_connections_total, labels: { process_type: })
