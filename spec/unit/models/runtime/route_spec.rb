@@ -899,15 +899,15 @@ module VCAP::CloudController
 
         let(:http_route) do
           Route.new(space: space,
-            domain: http_domain,
-            host: 'bar')
+                    domain: http_domain,
+                    host: 'bar')
         end
 
         subject(:tcp_route) do
           Route.new(space: space,
-            domain: tcp_domain,
-            host: '',
-            port: 6000)
+                    domain: tcp_domain,
+                    host: '',
+                    port: 6000)
         end
         before do
           router_group = double('router_group', type: 'tcp', reservable_ports: [4444, 6000])
@@ -1238,10 +1238,10 @@ module VCAP::CloudController
       context 'with complete options hash' do
         it 'normalizes hash_balance while preserving other options' do
           result = route.send(:normalize_hash_balance_to_string, {
-            loadbalancing: 'hash',
-            hash_header: 'X-User-ID',
-            hash_balance: 3.14159
-          })
+                                loadbalancing: 'hash',
+                                hash_header: 'X-User-ID',
+                                hash_balance: 3.14159
+                              })
           expect(result[:loadbalancing]).to eq('hash')
           expect(result[:hash_header]).to eq('X-User-ID')
           expect(result[:hash_balance]).to eq('3.14159')

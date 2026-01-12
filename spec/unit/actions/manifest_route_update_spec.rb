@@ -512,7 +512,7 @@ module VCAP::CloudController
           it 'updates the existing route with the new loadbalancing option' do
             expect do
               ManifestRouteUpdate.update(app.guid, message, user_audit_info)
-            end.not_to(change { Route.count })
+            end.not_to(change(Route, :count))
 
             route.reload
             expect(route.options).to include({ 'loadbalancing' => 'least-connection' })

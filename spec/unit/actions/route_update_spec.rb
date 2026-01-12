@@ -374,7 +374,6 @@ module VCAP::CloudController
         end
       end
 
-
       context 'when the route has existing option loadbalancing=round-robin' do
         before do
           route[:options] = '{"loadbalancing": "round-robin"}'

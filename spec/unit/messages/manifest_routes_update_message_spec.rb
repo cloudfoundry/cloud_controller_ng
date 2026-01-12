@@ -339,7 +339,8 @@ module VCAP::CloudController
 
               expect(msg.valid?).to be(false)
               expect(msg.errors.full_messages).to include(
-                "Cannot use loadbalancing value 'hash' for Route 'existing.example.com'; Valid values are: 'round-robin, least-connection'")
+                "Cannot use loadbalancing value 'hash' for Route 'existing.example.com'; Valid values are: 'round-robin, least-connection'"
+              )
             end
           end
 
@@ -359,7 +360,8 @@ module VCAP::CloudController
 
               expect(msg.valid?).to be(false)
               expect(msg.errors.full_messages).to include(
-                "Route 'existing.example.com' contains invalid route option 'hash_header'. Valid keys: 'loadbalancing'")
+                "Route 'existing.example.com' contains invalid route option 'hash_header'. Valid keys: 'loadbalancing'"
+              )
             end
           end
 
@@ -706,7 +708,6 @@ module VCAP::CloudController
               expect(msg.valid?).to be(true)
             end
           end
-
 
           context 'when a route contains numeric string hash_balance' do
             let(:body) do
