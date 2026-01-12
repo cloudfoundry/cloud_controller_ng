@@ -35,7 +35,7 @@ gem 'sinatra', '~> 4.2'
 gem 'sinatra-contrib'
 gem 'statsd-ruby', '~> 1.5.0'
 gem 'steno'
-gem 'talentbox-delayed_job_sequel', '~> 4.3.0'
+gem 'talentbox-delayed_job_sequel', '~> 4.4.0'
 gem 'uri', '~> 1.1'
 gem 'vmstat', '~> 2.3'
 
