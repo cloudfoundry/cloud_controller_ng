@@ -47,31 +47,37 @@ module VCAP::CloudController
       # If disabled, route_options_are_valid will already report them as unknown fields
       return unless VCAP::CloudController::FeatureFlag.enabled?(:hash_based_routing)
 
-      # Feature flag is enabled - validate hash-specific options
+      validate_hash_header_length
+      validate_hash_balance_value
+      validate_hash_options_with_loadbalancing
+    end
 
-      # Validate hash_header length if present
-      if hash_header.present? && (hash_header.to_s.length > 128)
-        errors.add(:hash_header, 'must be at most 128 characters')
+    def validate_hash_header_length
+      return unless hash_header.present? && (hash_header.to_s.length > 128)
+
+      errors.add(:hash_header, 'must be at most 128 characters')
+    end
+
+    def validate_hash_balance_value
+      return if hash_balance.blank?
+
+      if hash_balance.to_s.length > 16
+        errors.add(:hash_balance, 'must be at most 16 characters')
         return
       end
 
-      # Validate hash_balance is numeric if present
-      if hash_balance.present?
-        # Check length first (at most 16 characters)
-        if hash_balance.to_s.length > 16
-          errors.add(:hash_balance, 'must be at most 16 characters')
-          return
-        end
+      validate_hash_balance_numeric
+    end
 
-        begin
-          balance_float = Float(hash_balance)
-          # Must be either 0 or >= 1.1 and <= 10.0
-          errors.add(:hash_balance, 'must be either 0 or between 1.1 and 10.0') unless balance_float == 0 || balance_float.between?(1.1, 10)
-        rescue ArgumentError, TypeError
-          errors.add(:hash_balance, 'must be a numeric value')
-        end
-      end
+    def validate_hash_balance_numeric
+      balance_float = Float(hash_balance)
+      # Must be either 0 or >= 1.1 and <= 10.0
+      errors.add(:hash_balance, 'must be either 0 or between 1.1 and 10.0') unless balance_float == 0 || balance_float.between?(1.1, 10)
+    rescue ArgumentError, TypeError
+      errors.add(:hash_balance, 'must be a numeric value')
+    end
 
+    def validate_hash_options_with_loadbalancing
       # When loadbalancing is explicitly set to non-hash value, hash options are not allowed
       errors.add(:base, 'Hash header can only be set when loadbalancing is hash') if hash_header.present? && loadbalancing.present? && loadbalancing != 'hash'
       errors.add(:base, 'Hash balance can only be set when loadbalancing is hash') if hash_balance.present? && loadbalancing.present? && loadbalancing != 'hash'

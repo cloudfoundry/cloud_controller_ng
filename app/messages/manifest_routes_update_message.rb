@@ -100,45 +100,59 @@ Valid values are: '#{RouteOptionsMessage.valid_loadbalancing_algorithms.join(', 
       routes.each do |r|
         next unless r.keys.include?(:options) && r[:options].is_a?(Hash)
 
-        options = r[:options]
-        loadbalancing = options[:loadbalancing]
-        hash_header = options[:hash_header]
-        hash_balance = options[:hash_balance]
-
-        # Validate hash_header length if present
-        if hash_header.present? && (hash_header.to_s.length > 128)
-          errors.add(:base, message: "Route '#{r[:route]}': Hash header must be at most 128 characters")
-          next
-        end
-
-        # Validate hash_balance is numeric if present
-        if hash_balance.present?
-          # Check length first (at most 16 characters)
-          if hash_balance.to_s.length > 16
-            errors.add(:base, message: "Route '#{r[:route]}': Hash balance must be at most 16 characters")
-            next
-          end
-
-          begin
-            balance_float = Float(hash_balance)
-            # Must be either 0 or >= 1.1 and <= 10.0
-            unless balance_float == 0 || balance_float.between?(1.1, 10)
-              errors.add(:base, message: "Route '#{r[:route]}': Hash balance must be either 0 or between to 1.1 and 10.0")
-            end
-          rescue ArgumentError, TypeError
-            errors.add(:base, message: "Route '#{r[:route]}': Hash balance must be a numeric value")
-          end
-        end
-
-        # When loadbalancing is explicitly set to non-hash value, hash options are not allowed
-        if hash_header.present? && loadbalancing.present? && loadbalancing != 'hash'
-          errors.add(:base, message: "Route '#{r[:route]}': Hash header can only be set when loadbalancing is hash")
-        end
-
-        if hash_balance.present? && loadbalancing.present? && loadbalancing != 'hash'
-          errors.add(:base, message: "Route '#{r[:route]}': Hash balance can only be set when loadbalancing is hash")
-        end
+        validate_route_hash_options(r)
       end
+    end
+
+    def validate_route_hash_options(route)
+      options = route[:options]
+      loadbalancing = options[:loadbalancing]
+      hash_header = options[:hash_header]
+      hash_balance = options[:hash_balance]
+
+      return if validate_route_hash_header(route, hash_header)
+      return if validate_route_hash_balance(route, hash_balance)
+
+      validate_route_hash_options_with_loadbalancing(route, loadbalancing, hash_header, hash_balance)
+    end
+
+    def validate_route_hash_header(route, hash_header)
+      return false unless hash_header.present? && (hash_header.to_s.length > 128)
+
+      errors.add(:base, message: "Route '#{route[:route]}': Hash header must be at most 128 characters")
+      true
+    end
+
+    def validate_route_hash_balance(route, hash_balance)
+      return false if hash_balance.blank?
+
+      if hash_balance.to_s.length > 16
+        errors.add(:base, message: "Route '#{route[:route]}': Hash balance must be at most 16 characters")
+        return true
+      end
+
+      validate_route_hash_balance_numeric(route, hash_balance)
+    end
+
+    def validate_route_hash_balance_numeric(route, hash_balance)
+      balance_float = Float(hash_balance)
+      # Must be either 0 or >= 1.1 and <= 10.0
+      errors.add(:base, message: "Route '#{route[:route]}': Hash balance must be either 0 or between to 1.1 and 10.0") unless balance_float == 0 || balance_float.between?(1.1, 10)
+      false
+    rescue ArgumentError, TypeError
+      errors.add(:base, message: "Route '#{route[:route]}': Hash balance must be a numeric value")
+      false
+    end
+
+    def validate_route_hash_options_with_loadbalancing(route, loadbalancing, hash_header, hash_balance)
+      # When loadbalancing is explicitly set to non-hash value, hash options are not allowed
+      if hash_header.present? && loadbalancing.present? && loadbalancing != 'hash'
+        errors.add(:base, message: "Route '#{route[:route]}': Hash header can only be set when loadbalancing is hash")
+      end
+
+      return unless hash_balance.present? && loadbalancing.present? && loadbalancing != 'hash'
+
+      errors.add(:base, message: "Route '#{route[:route]}': Hash balance can only be set when loadbalancing is hash")
     end
 
     def routes_are_uris
