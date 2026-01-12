@@ -22,7 +22,7 @@ module VCAP::CloudController
 
           logger.info "Buildpack #{name} created and installed"
         rescue StandardError => e
-          logger.error("Buildpack #{name} failed to install or update. Error: #{e.inspect}")
+          logger.error("Buildpack #{name} failed to install or update. Error: #{e.class} - #{e.message}")
           raise e
         end
       end

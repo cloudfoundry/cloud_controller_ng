@@ -64,7 +64,7 @@ module CloudFoundry
 
           [count_str.to_i, ttl_int]
         rescue Redis::BaseError => e
-          logger.error("Redis error: #{e.inspect}")
+          logger.error("Redis error: #{e.class} - #{e.message}")
           [1, expires_in]
         end
       end

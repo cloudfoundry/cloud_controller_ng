@@ -17,7 +17,7 @@ module VCAP::CloudController
 
           logger.info "Buildpack #{name} updated"
         rescue StandardError => e
-          logger.error("Buildpack #{name} failed to update. Error: #{e.inspect}")
+          logger.error("Buildpack #{name} failed to update. Error: #{e.class} - #{e.message}")
           raise
         end
       end

@@ -166,6 +166,7 @@ module Diego
           raise RequestError.new(e.message)
         else
           sleep_time = [delay, max_delay].min
+          @logger.error("Request to the diego backend failed with error: #{e.class} - #{e.message}")
           @logger.info("Attempting to connect to the diego backend. Total #{(retry_until - Time.now.utc).round(2)} seconds remaining. Next retry after #{sleep_time} seconds.")
           sleep(sleep_time)
           delay *= factor

@@ -64,7 +64,7 @@ module VCAP::CloudController::RoutingApi
     def token_info
       uaa_client.token_info
     rescue CF::UAA::BadResponse => e
-      logger.error("uaa request for token failed: #{e.inspect}")
+      logger.error("uaa request for token failed: #{e.class} - #{e.message}")
       raise UaaUnavailable
     end
 
