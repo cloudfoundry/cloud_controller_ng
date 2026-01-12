@@ -61,7 +61,7 @@ module VCAP::CloudController
         r[:options].each_key do |key|
           RouteOptionsMessage.valid_route_options.exclude?(key) &&
             errors.add(:base,
-              message: "Route '#{r[:route]}' contains invalid route option '#{key}'. \
+                       message: "Route '#{r[:route]}' contains invalid route option '#{key}'. \
 Valid keys: '#{RouteOptionsMessage.valid_route_options.join(', ')}'")
         end
       end
@@ -76,13 +76,13 @@ Valid keys: '#{RouteOptionsMessage.valid_route_options.join(', ')}'")
         loadbalancing = r[:options][:loadbalancing]
         unless loadbalancing.is_a?(String)
           errors.add(:base,
-            message: "Invalid value for 'loadbalancing' for Route '#{r[:route]}'; \
+                     message: "Invalid value for 'loadbalancing' for Route '#{r[:route]}'; \
 Valid values are: '#{RouteOptionsMessage.valid_loadbalancing_algorithms.join(', ')}'")
           next
         end
         RouteOptionsMessage.valid_loadbalancing_algorithms.exclude?(loadbalancing) &&
           errors.add(:base,
-            message: "Cannot use loadbalancing value '#{loadbalancing}' for Route '#{r[:route]}'; \
+                     message: "Cannot use loadbalancing value '#{loadbalancing}' for Route '#{r[:route]}'; \
 Valid values are: '#{RouteOptionsMessage.valid_loadbalancing_algorithms.join(', ')}'")
       end
     end
@@ -106,12 +106,9 @@ Valid values are: '#{RouteOptionsMessage.valid_loadbalancing_algorithms.join(', 
         hash_balance = options[:hash_balance]
 
         # Validate hash_header length if present
-        if hash_header.present?
-          # Check length (at most 128 characters)
-          if hash_header.to_s.length > 128
-            errors.add(:base, message: "Route '#{r[:route]}': Hash header must be at most 128 characters")
-            next
-          end
+        if hash_header.present? && (hash_header.to_s.length > 128)
+          errors.add(:base, message: "Route '#{r[:route]}': Hash header must be at most 128 characters")
+          next
         end
 
         # Validate hash_balance is numeric if present
@@ -125,7 +122,7 @@ Valid values are: '#{RouteOptionsMessage.valid_loadbalancing_algorithms.join(', 
           begin
             balance_float = Float(hash_balance)
             # Must be either 0 or >= 1.1 and <= 10.0
-            unless balance_float == 0 || (balance_float >= 1.1 && balance_float <= 10)
+            unless balance_float == 0 || balance_float.between?(1.1, 10)
               errors.add(:base, message: "Route '#{r[:route]}': Hash balance must be either 0 or between to 1.1 and 10.0")
             end
           rescue ArgumentError, TypeError
