@@ -3,28 +3,35 @@ require 'vcap/stats'
 
 module VCAP::CloudController::Metrics
   class PeriodicUpdater
-    def initialize(start_time, log_counter, logger, statsd_updater, prometheus_updater)
+    UPDATE_TASK = Struct.new(:method_name, :interval)
+
+    USER_COUNT_TASK = UPDATE_TASK.new(:update_user_count, 600).freeze
+    JOB_QUEUE_LENGTH_TASK = UPDATE_TASK.new(:update_job_queue_length, 30).freeze
+    JOB_QUEUE_LOAD_TASK = UPDATE_TASK.new(:update_job_queue_load, 30).freeze
+    FAILED_JOB_COUNT_TASK = UPDATE_TASK.new(:update_failed_job_count, 30).freeze
+    VITALS_TASK = UPDATE_TASK.new(:update_vitals, 30).freeze
+    LOG_COUNTS_TASK = UPDATE_TASK.new(:update_log_counts, 30).freeze
+    TASK_STATS_TASK = UPDATE_TASK.new(:update_task_stats, 30).freeze
+    DEPLOYING_COUNT_TASK = UPDATE_TASK.new(:update_deploying_count, 30).freeze
+    WEBSERVER_STATS_TASK = UPDATE_TASK.new(:update_webserver_stats, 30).freeze
+
+    ALL_TASKS = [USER_COUNT_TASK, JOB_QUEUE_LENGTH_TASK, JOB_QUEUE_LOAD_TASK, FAILED_JOB_COUNT_TASK, VITALS_TASK, LOG_COUNTS_TASK, TASK_STATS_TASK, DEPLOYING_COUNT_TASK,
+                 WEBSERVER_STATS_TASK].freeze
+
+    def initialize(start_time, log_counter, logger, statsd_updater, prometheus_updater, task_list: ALL_TASKS)
       @start_time = start_time
       @statsd_updater = statsd_updater
       @prometheus_updater = prometheus_updater
       @log_counter = log_counter
       @logger = logger
-      @known_job_queues = {
-        VCAP::CloudController::Jobs::Queues.local(VCAP::CloudController::Config.config).to_sym => 0
-      }
+      @known_job_queues = { VCAP::CloudController::Jobs::Queues.local(VCAP::CloudController::Config.config).to_sym => 0 }
+      @task_list = task_list
     end
 
     def setup_updates
       @update_tasks = []
-      setup_task(@update_tasks, 600, :update_user_count)
-      setup_task(@update_tasks, 30, :update_job_queue_length)
-      setup_task(@update_tasks, 30, :update_job_queue_load)
-      setup_task(@update_tasks, 30, :update_failed_job_count)
-      setup_task(@update_tasks, 30, :update_vitals)
-      setup_task(@update_tasks, 30, :update_log_counts)
-      setup_task(@update_tasks, 30, :update_task_stats)
-      setup_task(@update_tasks, 30, :update_deploying_count)
-      setup_task(@update_tasks, 30, :update_webserver_stats)
+      @task_list.each { |task| setup_task(@update_tasks, task.interval, task.method_name) }
+
       @update_tasks.each(&:execute)
     end
 

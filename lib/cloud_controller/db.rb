@@ -2,6 +2,7 @@ require 'sequel'
 require 'cloud_controller/db_migrator'
 require 'cloud_controller/db_connection/options_factory'
 require 'cloud_controller/db_connection/finalizer'
+require 'cloud_controller/execution_context'
 require 'sequel/extensions/query_length_logging'
 require 'sequel/extensions/request_query_metrics'
 
@@ -73,8 +74,9 @@ module VCAP::CloudController
     end
 
     def self.add_connection_metrics_extension(db)
-      # only add the metrics for api and cc-worker processes. Otherwise e.g. rake db:migrate would also initialize metric updaters, which need additional config
-      return if Object.const_defined?(:RakeConfig) && RakeConfig.context != :worker
+      # only add the metrics for api, cc-worker, clock & deployment_updater processes.
+      # Otherwise, e.g. rake db:migrate would also initialize metric updaters, which need additional config
+      return if ExecutionContext.from_process_type_env.nil?
 
       db.extension(:connection_metrics)
       # so that we gather connection metrics from the beginning

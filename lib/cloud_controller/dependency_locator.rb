@@ -24,6 +24,7 @@ require 'cloud_controller/resource_pool_wrapper'
 require 'cloud_controller/packager/local_bits_packer'
 require 'credhub/client'
 require 'cloud_controller/metrics/prometheus_updater'
+require 'cloud_controller/execution_context'
 
 module CloudController
   class DependencyLocator
@@ -70,12 +71,21 @@ module CloudController
                  ))
     end
 
-    def prometheus_updater
-      @dependencies[:prometheus_updater] || register(:prometheus_updater, VCAP::CloudController::Metrics::PrometheusUpdater.new)
+    def vitals_periodic_updater
+      @dependencies[:vitals_periodic_updater] ||
+        register(:vitals_periodic_updater,
+                 VCAP::CloudController::Metrics::PeriodicUpdater.new(
+                   Time.now.utc,
+                   log_counter,
+                   Steno.logger('cc.vitals'),
+                   statsd_updater,
+                   prometheus_updater,
+                   task_list: [VCAP::CloudController::Metrics::PeriodicUpdater::VITALS_TASK]
+                 ))
     end
 
-    def cc_worker_prometheus_updater
-      @dependencies[:cc_worker_prometheus_updater] || register(:cc_worker_prometheus_updater, VCAP::CloudController::Metrics::PrometheusUpdater.new(cc_worker: true))
+    def prometheus_updater
+      @dependencies[:prometheus_updater] || register(:prometheus_updater, VCAP::CloudController::Metrics::PrometheusUpdater.new)
     end
 
     def statsd_updater
@@ -362,6 +372,8 @@ module CloudController
       else
         register(:statsd_client, NullStatsdClient.new)
       end
+    rescue VCAP::CloudController::Config::InvalidConfigPath
+      register(:statsd_client, NullStatsdClient.new)
     end
 
     private

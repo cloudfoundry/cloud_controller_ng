@@ -165,6 +165,9 @@ module VCAP::CloudController
             optional(:port) => Integer
           },
 
+          optional(:publish_metrics) => bool,
+          optional(:prometheus_port) => Integer,
+
           skip_cert_verify: bool,
 
           optional(:routing_api) => {

@@ -228,12 +228,16 @@ RSpec.describe CloudController::DelayedWorker do
           before do
             allow(cc_delayed_worker).to receive(:is_first_generic_worker_on_machine?).and_return(true)
             allow(cc_delayed_worker).to receive(:readiness_port)
-            allow(cc_delayed_worker).to receive(:setup_webserver)
+            allow(cc_delayed_worker).to receive(:setup_metrics).and_call_original
+            allow(TestConfig.config_instance).to receive(:get).and_call_original
+            allow(TestConfig.config_instance).to receive(:get).with(:prometheus_port).and_return(9394)
+            allow(VCAP::CloudController::StandaloneMetricsWebserver).to receive(:start_for_bosh_job)
           end
 
           it 'sets up a webserver' do
             cc_delayed_worker.start_working
-            expect(cc_delayed_worker).to have_received(:setup_webserver)
+            expect(cc_delayed_worker).to have_received(:setup_metrics)
+            expect(VCAP::CloudController::StandaloneMetricsWebserver).to have_received(:start_for_bosh_job)
           end
         end
       end

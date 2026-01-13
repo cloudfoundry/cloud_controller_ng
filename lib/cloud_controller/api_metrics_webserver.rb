@@ -3,7 +3,7 @@ require 'prometheus/middleware/exporter'
 
 module VCAP
   module CloudController
-    class MetricsWebserver
+    class ApiMetricsWebserver
       attr_reader :app
 
       def initialize

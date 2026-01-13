@@ -1,6 +1,7 @@
 require 'spec_helper'
+require 'cloud_controller/execution_context'
 
-RSpec.describe Sequel::ConnectionMetrics do
+RSpec.describe 'Sequel::ConnectionMetrics' do
   let(:db_config) { DbConfig.new }
   # each test will have their own db connection pool. This helps to isolate the test from each other.
   let(:db) { VCAP::CloudController::DB.connect(db_config.config, db_config.db_logger) }
@@ -16,15 +17,13 @@ RSpec.describe Sequel::ConnectionMetrics do
   describe 'initialize' do
     context 'api process' do
       before do
+        VCAP::CloudController::ExecutionContext::API_PUMA_WORKER.set_process_type_env
         db.loggers << logger
         db.sql_log_level = :info
-        db.extension(:connection_metrics)
 
         allow(thread).to receive(:alive?).and_return(true)
 
         db.pool.instance_variable_set(:@prometheus_updater, prometheus_updater)
-
-        ENV['PROCESS_TYPE'] = 'puma_worker'
       end
 
       it 'initializes the prometheus_updater and connection_info' do
@@ -35,33 +34,30 @@ RSpec.describe Sequel::ConnectionMetrics do
 
     context 'cc-worker process' do
       before do
-        ENV['PROCESS_TYPE'] = 'cc-worker'
-        allow(VCAP::CloudController::Metrics::PrometheusUpdater).to receive(:new).and_return(VCAP::CloudController::Metrics::PrometheusUpdater.new(cc_worker: true))
+        VCAP::CloudController::ExecutionContext::CC_WORKER.set_process_type_env
+        allow(VCAP::CloudController::Metrics::PrometheusUpdater).to receive(:new).and_return(VCAP::CloudController::Metrics::PrometheusUpdater.new)
 
         db.loggers << logger
         db.sql_log_level = :info
-        db.extension(:connection_metrics)
 
         allow(thread).to receive(:alive?).and_return(true)
       end
 
       it 'initializes the prometheus_updater and for cc-worker' do
-        expect(VCAP::CloudController::Metrics::PrometheusUpdater).to have_received(:new).with({ cc_worker: true })
+        expect(VCAP::CloudController::Metrics::PrometheusUpdater).to have_received(:new)
       end
     end
   end
 
   describe 'methods' do
     before do
+      VCAP::CloudController::ExecutionContext::API_PUMA_WORKER.set_process_type_env
       db.loggers << logger
       db.sql_log_level = :info
-      db.extension(:connection_metrics)
 
       allow(thread).to receive(:alive?).and_return(true)
 
       db.pool.instance_variable_set(:@prometheus_updater, prometheus_updater)
-
-      ENV['PROCESS_TYPE'] = 'puma_worker'
     end
 
     describe 'acquire' do
@@ -85,7 +81,7 @@ RSpec.describe Sequel::ConnectionMetrics do
         end
 
         it 'increments the connection pool timeouts metric and raises' do
-          expect(prometheus_updater).to receive(:increment_gauge_metric).with(:cc_db_connection_pool_timeouts_total, labels: { process_type: 'puma_worker' })
+          expect(prometheus_updater).to receive(:increment_gauge_metric).with(:cc_db_connection_pool_timeouts_total)
 
           expect { db.pool.send(:acquire, thread) }.to raise_error(Sequel::PoolTimeout)
         end

@@ -1,7 +1,7 @@
 require 'spec_helper'
 
 module VCAP::CloudController
-  RSpec.describe MetricsWebserver do
+  RSpec.describe ApiMetricsWebserver do
     let(:metrics_webserver) { described_class.new }
     let(:puma_server_double) { instance_double(Puma::Server, add_tcp_listener: nil, add_unix_listener: nil, run: nil) }
     let(:config) { double('config', get: nil) }

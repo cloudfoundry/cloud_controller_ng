@@ -10,6 +10,46 @@ module VCAP::CloudController::Metrics
       Prometheus::Client::Registry.new
     end
 
+    describe '#initialize' do
+      RSpec.shared_examples 'metric registration based on execution context' do |exec_ctx, expected_metrics|
+        context "when running in #{exec_ctx} mode" do
+          before { allow(VCAP::CloudController::ExecutionContext).to receive(:from_process_type_env).and_return(exec_ctx) }
+
+          it 'registers all expected metrics' do
+            expected_metric_names = expected_metrics.flatten(1).pluck(:name)
+            expect(updater.instance_variable_get('@registry').instance_variable_get('@metrics').keys).to match_array(expected_metric_names)
+          end
+        end
+      end
+
+      it_behaves_like 'metric registration based on execution context', VCAP::CloudController::ExecutionContext::API_PUMA_MAIN,
+                      [PrometheusUpdater::METRICS, PrometheusUpdater::PUMA_METRICS, PrometheusUpdater::DB_CONNECTION_POOL_METRICS, PrometheusUpdater::DELAYED_JOB_METRICS, PrometheusUpdater::VITAL_METRICS]
+      it_behaves_like 'metric registration based on execution context', VCAP::CloudController::ExecutionContext::API_PUMA_WORKER,
+                      [PrometheusUpdater::METRICS, PrometheusUpdater::PUMA_METRICS, PrometheusUpdater::DB_CONNECTION_POOL_METRICS, PrometheusUpdater::DELAYED_JOB_METRICS, PrometheusUpdater::VITAL_METRICS]
+      it_behaves_like 'metric registration based on execution context', VCAP::CloudController::ExecutionContext::CC_WORKER,
+                      [PrometheusUpdater::DB_CONNECTION_POOL_METRICS, PrometheusUpdater::DELAYED_JOB_METRICS, PrometheusUpdater::VITAL_METRICS]
+      it_behaves_like 'metric registration based on execution context', VCAP::CloudController::ExecutionContext::CLOCK, [PrometheusUpdater::DB_CONNECTION_POOL_METRICS, PrometheusUpdater::VITAL_METRICS]
+      it_behaves_like 'metric registration based on execution context', VCAP::CloudController::ExecutionContext::DEPLOYMENT_UPDATER,
+                      [PrometheusUpdater::DB_CONNECTION_POOL_METRICS, PrometheusUpdater::VITAL_METRICS]
+
+      it 'raises error when execution context is nil' do
+        allow(VCAP::CloudController::ExecutionContext).to receive(:from_process_type_env).and_return(nil)
+        expect { PrometheusUpdater.new(registry: prom_client) }.to raise_error('Could not register Prometheus metrics: Unknown execution context')
+      end
+
+      context 'when execution context is set' do
+        before { allow(VCAP::CloudController::ExecutionContext).to receive(:from_process_type_env).and_return(VCAP::CloudController::ExecutionContext::API_PUMA_MAIN) }
+
+        it 'initializes cc_db_connection_pool_timeouts_total metric with process_type label' do
+          PrometheusUpdater.new(registry: prom_client) # somehow we need to re-initialize to have the correct execution context applied
+          metric = prom_client.metrics.find { |m| m.name == :cc_db_connection_pool_timeouts_total }
+          expect(metric).to be_present
+          expect(metric.get(labels: { process_type: 'main' })).to eq(0.0)
+          expect(metric.get(labels: { process_type: 'puma_worker' })).to eq(0.0)
+        end
+      end
+    end
+
     describe 'Prometheus creation guards work correctly' do
       # This might look to be a duplicate of 'records the current number of deployments that are DEPLOYING'
       # below, but it tests that at least one of the metric updating functions can be called multiple times
