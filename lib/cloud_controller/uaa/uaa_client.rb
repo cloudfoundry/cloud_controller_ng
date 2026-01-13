@@ -33,7 +33,7 @@ module VCAP::CloudController
     def token_info
       token_issuer.client_credentials_grant
     rescue CF::UAA::NotFound, CF::UAA::BadTarget, CF::UAA::BadResponse => e
-      logger.error("UAA request for token failed: #{e.inspect}")
+      logger.error("UAA request for token failed: #{e.class} - #{e.message}")
       raise UaaUnavailable
     end
 
@@ -44,7 +44,7 @@ module VCAP::CloudController
     def usernames_for_ids(user_ids)
       fetch_users(user_ids).transform_values { |user| user['username'] }
     rescue UaaUnavailable, CF::UAA::UAAError => e
-      logger.error("Failed to retrieve usernames from UAA: #{e.inspect}#{error_info_from_target_error(e)}")
+      logger.error("Failed to retrieve usernames from UAA: #{e.class} - #{e.message}#{error_info_from_target_error(e)}")
       {}
     end
 
@@ -56,7 +56,7 @@ module VCAP::CloudController
       user = results['resources'].first
       user && user['id']
     rescue CF::UAA::UAAError => e
-      logger.error("Failed to retrieve user id from UAA: #{e.inspect}#{error_info_from_target_error(e)}")
+      logger.error("Failed to retrieve user id from UAA: #{e.class} - #{e.message}#{error_info_from_target_error(e)}")
       raise UaaUnavailable
     end
 
@@ -92,7 +92,7 @@ module VCAP::CloudController
 
       results['resources'].pluck('origin')
     rescue UaaUnavailable, CF::UAA::UAAError => e
-      logger.error("Failed to retrieve origins from UAA: #{e.inspect}#{error_info_from_target_error(e)}")
+      logger.error("Failed to retrieve origins from UAA: #{e.class} - #{e.message}#{error_info_from_target_error(e)}")
       raise UaaUnavailable
     end
 
@@ -104,14 +104,14 @@ module VCAP::CloudController
       { 'id' => e.info['user_id'] }
     rescue CF::UAA::BadResponse => e
       unless e.message == 'invalid status response: 429'
-        logger.error("UAA request for creating a user failed: #{e.inspect}")
+        logger.error("UAA request for creating a user failed: #{e.class} - #{e.message}")
         raise UaaUnavailable
       end
 
-      logger.warn("UAA request for creating a user ran into rate limits: #{e.inspect}")
+      logger.warn("UAA request for creating a user ran into rate limits: #{e.class} - #{e.message}")
       raise UaaRateLimited
     rescue CF::UAA::UAAError => e
-      logger.error("UAA request for creating a user failed: #{e.inspect}")
+      logger.error("UAA request for creating a user failed: #{e.class} - #{e.message}")
       raise UaaUnavailable
     end
 
@@ -128,7 +128,7 @@ module VCAP::CloudController
       begin
         yield
       rescue CF::UAA::InvalidToken => e
-        logger.error("UAA request for token failed: #{e.inspect}")
+        logger.error("UAA request for token failed: #{e.class} - #{e.message}")
         raise
       rescue UaaUnavailable, CF::UAA::UAAError => e
         if Time.now.utc > retry_until
@@ -136,7 +136,7 @@ module VCAP::CloudController
           raise UaaUnavailable
         else
           sleep_time = [delay, max_delay].min
-          logger.error("Failed to retrieve details from UAA: #{e.inspect}#{error_info_from_target_error(e)}")
+          logger.error("Failed to retrieve details from UAA: #{e.class} - #{e.message}#{error_info_from_target_error(e)}")
           logger.info("Attempting to connect to the UAA. Total #{(retry_until - Time.now.utc).round(2)} seconds remaining. Next retry after #{sleep_time} seconds.")
           sleep(sleep_time)
           delay *= factor

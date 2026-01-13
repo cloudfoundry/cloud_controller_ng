@@ -231,7 +231,7 @@ module VCAP::CloudController
 
         it 'logs the error' do
           uaa_client.usernames_for_ids([userid_1])
-          expect(mock_logger).to have_received(:error).with("Failed to retrieve usernames from UAA: #{uaa_error.inspect}")
+          expect(mock_logger).to have_received(:error).with("Failed to retrieve usernames from UAA: #{uaa_error.class} - #{uaa_error.message}")
         end
 
         context 'TargetError with details' do
@@ -243,7 +243,7 @@ module VCAP::CloudController
 
           it 'logs the error details' do
             uaa_client.usernames_for_ids([userid_1])
-            expect(mock_logger).to have_received(:error).with("Failed to retrieve usernames from UAA: #<CF::UAA::TargetError: error response>, error_info: #{error_info}")
+            expect(mock_logger).to have_received(:error).with("Failed to retrieve usernames from UAA: CF::UAA::TargetError - error response, error_info: #{error_info}")
           end
         end
       end
@@ -519,7 +519,7 @@ module VCAP::CloudController
 
         it 'logs the error and raises UaaUnavailable' do
           expect { uaa_client.create_shadow_user('test-user@idp.local', 'idp.local') }.to raise_error(UaaUnavailable)
-          expect(mock_logger).to have_received(:error).with("UAA request for creating a user failed: #{uaa_error.inspect}")
+          expect(mock_logger).to have_received(:error).with("UAA request for creating a user failed: #{uaa_error.class} - #{uaa_error.message}")
         end
       end
 
@@ -535,7 +535,7 @@ module VCAP::CloudController
 
         it 'logs the error and raises UaaRateLimited' do
           expect { uaa_client.create_shadow_user('test-user@idp.local', 'idp.local') }.to raise_error(UaaRateLimited)
-          expect(mock_logger).to have_received(:warn).with("UAA request for creating a user ran into rate limits: #{uaa_error.inspect}")
+          expect(mock_logger).to have_received(:warn).with("UAA request for creating a user ran into rate limits: #{uaa_error.class} - #{uaa_error.message}")
         end
       end
 
@@ -551,7 +551,7 @@ module VCAP::CloudController
 
         it 'logs and raises the error' do
           expect { uaa_client.create_shadow_user('test-user@idp.local', 'idp.local') }.to raise_error(UaaUnavailable)
-          expect(mock_logger).to have_received(:error).with("UAA request for creating a user failed: #{uaa_error.inspect}")
+          expect(mock_logger).to have_received(:error).with("UAA request for creating a user failed: #{uaa_error.class} - #{uaa_error.message}")
         end
       end
     end
@@ -924,7 +924,7 @@ module VCAP::CloudController
           expect do
             uaa_client.origins_for_username(username)
           end.to raise_error(UaaUnavailable)
-          expect(mock_logger).to have_received(:error).with("Failed to retrieve origins from UAA: #{uaa_error.inspect}")
+          expect(mock_logger).to have_received(:error).with("Failed to retrieve origins from UAA: #{uaa_error.class} - #{uaa_error.message}")
         end
       end
     end

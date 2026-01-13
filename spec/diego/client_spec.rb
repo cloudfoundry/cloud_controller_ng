@@ -767,9 +767,10 @@ module Diego
               raise 'Error!'
             end
           end.to raise_error(RequestError, 'Error!')
+          expect(logger).to have_received(:error).with(/Request to the diego backend failed with error/)
           expect(logger).to have_received(:info).with(/Attempting to connect to the diego backend./)
           expect(logger).to have_received(:error).with(/Unable to establish a connection to diego backend/)
-          expect(logger).to have_received(:error).once
+          expect(logger).to have_received(:error).twice
           expect(logger).to have_received(:info).once
           expect(attempts).to eq(2)
         end

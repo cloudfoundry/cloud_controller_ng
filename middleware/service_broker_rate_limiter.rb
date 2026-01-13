@@ -70,7 +70,7 @@ module CloudFoundry
           @redis.decr(key)
           false
         rescue Redis::BaseError => e
-          logger.error("Redis error: #{e.inspect}")
+          logger.error("Redis error: #{e.class} - #{e.message}")
           true
         end
 
@@ -78,7 +78,7 @@ module CloudFoundry
           count_str = @redis.decr(key)
           @redis.incr(key) if count_str.to_i < 0
         rescue Redis::BaseError => e
-          logger.error("Redis error: #{e.inspect}")
+          logger.error("Redis error: #{e.class} - #{e.message}")
         end
       end
     end
