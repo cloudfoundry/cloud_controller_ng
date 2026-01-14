@@ -187,7 +187,7 @@ module VCAP::CloudController
             it 'raises an error indicating hash_header is required' do
               expect do
                 subject.create(message: message_without_hash_header, space: space, domain: domain)
-              end.to raise_error(RouteCreate::Error, 'Hash header must be present when loadbalancing is set to hash')
+              end.to raise_error(RouteCreate::Error, 'Hash header must be present when loadbalancing is set to hash.')
             end
           end
         end

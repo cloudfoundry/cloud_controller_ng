@@ -369,7 +369,7 @@ module VCAP::CloudController
             expect(message).to be_valid
             expect do
               subject.update(route:, message:)
-            end.to raise_error(RouteUpdate::Error, 'Hash header must be present when loadbalancing is set to hash')
+            end.to raise_error(RouteUpdate::Error, 'Hash header must be present when loadbalancing is set to hash.')
           end
         end
       end
@@ -415,7 +415,7 @@ module VCAP::CloudController
               expect(message).to be_valid
               expect do
                 subject.update(route:, message:)
-              end.to raise_error(RouteUpdate::Error, 'Hash header must be present when loadbalancing is set to hash')
+              end.to raise_error(RouteUpdate::Error, 'Hash header must be present when loadbalancing is set to hash.')
             end
           end
 

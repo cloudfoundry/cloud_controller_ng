@@ -757,7 +757,7 @@ module VCAP::CloudController
                     'options' => {
                       'loadbalancing' => 'hash',
                       'hash_header' => 'X-User-ID',
-                      'hash_balance' => '12345678901234567'
+                      'hash_balance' => '2.' + ('1' * 15)
                     } }
                 ] }
             end
@@ -778,7 +778,7 @@ module VCAP::CloudController
                     'options' => {
                       'loadbalancing' => 'hash',
                       'hash_header' => 'X-User-ID',
-                      'hash_balance' => '9.9'
+                      'hash_balance' => '2.' + ('1' * 14)
                     } }
                 ] }
             end
@@ -798,7 +798,7 @@ module VCAP::CloudController
                     'options' => {
                       'loadbalancing' => 'hash',
                       'hash_header' => 'X' * 129,
-                      'hash_balance' => '1' * 17
+                      'hash_balance' => '2.' + ('1' * 15)
                     } }
                 ] }
             end
@@ -809,7 +809,6 @@ module VCAP::CloudController
               expect(msg.valid?).to be(false)
               expect(msg.errors.full_messages).to include("Route 'existing.example.com': Hash header must be at most 128 characters")
               expect(msg.errors.full_messages).to include("Route 'existing.example.com': Hash balance must be at most 16 characters")
-
             end
           end
 

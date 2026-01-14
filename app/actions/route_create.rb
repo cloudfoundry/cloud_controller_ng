@@ -95,7 +95,7 @@ module VCAP::CloudController
     def validation_error_route!(error)
       return unless error.errors.on(:route)&.include?(:hash_header_missing)
 
-      error!('Hash header must be present when loadbalancing is set to hash')
+      error!('Hash header must be present when loadbalancing is set to hash.')
     end
 
     def validation_error_routing_api!(error)
