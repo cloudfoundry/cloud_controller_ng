@@ -644,7 +644,7 @@ module VCAP::CloudController
               msg = ManifestRoutesUpdateMessage.new(body)
 
               expect(msg.valid?).to be(false)
-              expect(msg.errors.full_messages).to include("Route 'existing.example.com': Hash balance must be either 0 or between to 1.1 and 10.0")
+              expect(msg.errors.full_messages).to include("Route 'existing.example.com': Hash balance must be either 0 or between 1.1 and 10.0")
             end
           end
 
@@ -685,7 +685,7 @@ module VCAP::CloudController
               msg = ManifestRoutesUpdateMessage.new(body)
 
               expect(msg.valid?).to be(false)
-              expect(msg.errors.full_messages).to include("Route 'existing.example.com': Hash balance must be either 0 or between to 1.1 and 10.0")
+              expect(msg.errors.full_messages).to include("Route 'existing.example.com': Hash balance must be either 0 or between 1.1 and 10.0")
             end
           end
 
@@ -787,6 +787,29 @@ module VCAP::CloudController
               msg = ManifestRoutesUpdateMessage.new(body)
 
               expect(msg.valid?).to be(true)
+            end
+          end
+
+          context 'when a route contains multiple issues with hash options' do
+            let(:body) do
+              { 'routes' =>
+                [
+                  { 'route' => 'existing.example.com',
+                    'options' => {
+                      'loadbalancing' => 'hash',
+                      'hash_header' => 'X' * 129,
+                      'hash_balance' => '1' * 17
+                    } }
+                ] }
+            end
+
+            it 'returns false and prints all errors' do
+              msg = ManifestRoutesUpdateMessage.new(body)
+
+              expect(msg.valid?).to be(false)
+              expect(msg.errors.full_messages).to include("Route 'existing.example.com': Hash header must be at most 128 characters")
+              expect(msg.errors.full_messages).to include("Route 'existing.example.com': Hash balance must be at most 16 characters")
+
             end
           end
 

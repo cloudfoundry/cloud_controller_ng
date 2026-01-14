@@ -110,25 +110,24 @@ Valid values are: '#{RouteOptionsMessage.valid_loadbalancing_algorithms.join(', 
       hash_header = options[:hash_header]
       hash_balance = options[:hash_balance]
 
-      return if validate_route_hash_header(route, hash_header)
-      return if validate_route_hash_balance(route, hash_balance)
+      validate_route_hash_header(route, hash_header)
+      validate_route_hash_balance(route, hash_balance)
 
       validate_route_hash_options_with_loadbalancing(route, loadbalancing, hash_header, hash_balance)
     end
 
     def validate_route_hash_header(route, hash_header)
-      return false unless hash_header.present? && (hash_header.to_s.length > 128)
+      return unless hash_header.present? && (hash_header.to_s.length > 128)
 
       errors.add(:base, message: "Route '#{route[:route]}': Hash header must be at most 128 characters")
-      true
     end
 
     def validate_route_hash_balance(route, hash_balance)
-      return false if hash_balance.blank?
+      return if hash_balance.blank?
 
       if hash_balance.to_s.length > 16
         errors.add(:base, message: "Route '#{route[:route]}': Hash balance must be at most 16 characters")
-        return true
+        return
       end
 
       validate_route_hash_balance_numeric(route, hash_balance)
@@ -137,11 +136,9 @@ Valid values are: '#{RouteOptionsMessage.valid_loadbalancing_algorithms.join(', 
     def validate_route_hash_balance_numeric(route, hash_balance)
       balance_float = Float(hash_balance)
       # Must be either 0 or >= 1.1 and <= 10.0
-      errors.add(:base, message: "Route '#{route[:route]}': Hash balance must be either 0 or between to 1.1 and 10.0") unless balance_float == 0 || balance_float.between?(1.1, 10)
-      false
+      errors.add(:base, message: "Route '#{route[:route]}': Hash balance must be either 0 or between 1.1 and 10.0") unless balance_float == 0 || balance_float.between?(1.1, 10)
     rescue ArgumentError, TypeError
       errors.add(:base, message: "Route '#{route[:route]}': Hash balance must be a numeric value")
-      false
     end
 
     def validate_route_hash_options_with_loadbalancing(route, loadbalancing, hash_header, hash_balance)
