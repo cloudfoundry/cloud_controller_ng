@@ -180,9 +180,8 @@ module CloudController
         begin
           stdout, stderr, status = Open3.capture3(@cli_path, '-s', @storage_type, '-c', @config_file, '-l', cli_log_file, command, *args)
           if @debug
-            log_data = { request_guid: ::VCAP::Request.current_id, user_guid: ::VCAP::CloudController::SecurityContext.current_user_guid }.compact
             stderr.split("\n").each do |line|
-              logger.debug("[DEBUG] storage-cli: #{line}", log_data)
+              logger.debug("[DEBUG] storage-cli: #{line}")
             end
           end
         rescue StandardError => e
