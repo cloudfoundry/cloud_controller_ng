@@ -9,7 +9,7 @@ RUN apt-get  update && apt-get install jq git curl -y \
 
 FROM mikefarah/yq:4 AS yq
 
-COPY --from=builder /uaa/scripts/cargo/uaa.yml /uaa.yml
+COPY --from=builder /uaa/scripts/boot/uaa.yml /uaa.yml
 
 # Change to root user
 USER root
