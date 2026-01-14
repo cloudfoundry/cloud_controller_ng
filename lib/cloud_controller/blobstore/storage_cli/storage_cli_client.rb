@@ -179,7 +179,12 @@ module CloudController
 
         begin
           stdout, stderr, status = Open3.capture3(@cli_path, '-s', @storage_type, '-c', @config_file, '-l', cli_log_file, command, *args)
-          logger.info("[DEBUG] storage-cli: #{stderr}") if @debug
+          if @debug
+            log_data = { request_guid: ::VCAP::Request.current_id, user_guid: ::VCAP::CloudController::SecurityContext.current_user_guid }.compact
+            stderr.split("\n").each do |line|
+              logger.debug("[DEBUG] storage-cli: #{line}", log_data)
+            end
+          end
         rescue StandardError => e
           raise BlobstoreError.new(e.inspect)
         end
