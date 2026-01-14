@@ -25,7 +25,7 @@ module CloudController
         'Google' => 'gcs'
       }.freeze
 
-      IMPLEMENTED_PROVIDERS = %w[AzureRM aliyun].freeze
+      IMPLEMENTED_PROVIDERS = %w[AzureRM aliyun Google].freeze
 
       def initialize(directory_key:, resource_type:, root_dir:, min_size: nil, max_size: nil)
         raise 'Missing resource_type' if resource_type.nil?
@@ -44,6 +44,7 @@ module CloudController
         @min_size = min_size || 0
         @max_size = max_size
         @storage_type = PROVIDER_TO_STORAGE_CLI_STORAGETYPE[@provider]
+        @debug = true
       end
 
       def fetch_config(resource_type)
@@ -167,11 +168,18 @@ module CloudController
 
       private
 
+      def cli_log_file
+        file = VCAP::CloudController::Config.config.get(:logging, :file)
+        log_dir = File.dirname(file)
+        File.join(log_dir, 'storage_cli.log')
+      end
+
       def run_cli(command, *args, allow_exit_code_three: false)
         logger.info("running storage-cli: #{@cli_path} -c #{@config_file} #{command} #{args.join(' ')}")
 
         begin
-          stdout, stderr, status = Open3.capture3(@cli_path, '-s', @storage_type, '-c', @config_file, command, *args)
+          stdout, stderr, status = Open3.capture3(@cli_path, '-s', @storage_type, '-c', @config_file, '-l', cli_log_file, command, *args)
+          logger.info("[DEBUG] storage-cli: #{stderr}") if @debug
         rescue StandardError => e
           raise BlobstoreError.new(e.inspect)
         end
