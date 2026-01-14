@@ -1,20 +1,4 @@
 require 'lightweight_spec_helper'
-
-# Stub Config for lightweight spec (must be before validators.rb is required)
-module VCAP
-  module CloudController
-    class Config
-      def self.config
-        self
-      end
-
-      def self.get(key)
-        'buildpack' if key == :default_app_lifecycle
-      end
-    end
-  end
-end
-
 require 'messages/validators'
 require 'messages/base_message'
 require 'messages/empty_lifecycle_data_message'
