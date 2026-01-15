@@ -10,7 +10,7 @@ module VCAP::CloudController
         def start
           with_error_logging('cc.deployment_updater') do
             config = CloudController::DependencyLocator.instance.config
-            if config.get(:publish_metrics) || false
+            if config.get(:publish_metrics)
               VCAP::CloudController::StandaloneMetricsWebserver.start_for_bosh_job(config.get(:prometheus_port) || 9395)
               periodic_updater = CloudController::DependencyLocator.instance.vitals_periodic_updater
               periodic_updater.setup_updates

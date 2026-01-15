@@ -36,7 +36,7 @@ module VCAP::CloudController
     end
 
     def start
-      if @config.get(:publish_metrics) || false
+      if @config.get(:publish_metrics)
         StandaloneMetricsWebserver.start_for_bosh_job(@config.get(:prometheus_port) || 9394)
         periodic_updater = CloudController::DependencyLocator.instance.vitals_periodic_updater
         periodic_updater.setup_updates

@@ -1,7 +1,7 @@
 require 'spec_helper'
 require 'cloud_controller/execution_context'
 
-RSpec.describe 'Sequel::ConnectionMetrics' do
+RSpec.describe Sequel::ConnectionMetrics do
   let(:db_config) { DbConfig.new }
   # each test will have their own db connection pool. This helps to isolate the test from each other.
   let(:db) { VCAP::CloudController::DB.connect(db_config.config, db_config.db_logger) }

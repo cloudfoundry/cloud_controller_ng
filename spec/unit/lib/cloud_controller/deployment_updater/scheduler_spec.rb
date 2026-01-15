@@ -173,7 +173,7 @@ module VCAP::CloudController
         context 'when set to true' do
           before { TestConfig.override(publish_metrics: true) }
 
-          it 'sets up a webserve' do
+          it 'sets up a webserver' do
             DeploymentUpdater::Scheduler.start
             expect(VCAP::CloudController::StandaloneMetricsWebserver).to have_received(:start_for_bosh_job)
           end

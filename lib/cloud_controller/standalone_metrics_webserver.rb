@@ -70,7 +70,7 @@ module VCAP::CloudController
     end
 
     def logger
-      Steno.logger('companion_metrics_webserver')
+      Steno.logger('standalone_metrics_webserver')
     end
   end
 end

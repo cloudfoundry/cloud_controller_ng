@@ -34,14 +34,14 @@ module VCAP::CloudController::Metrics
 
       it 'raises error when execution context is nil' do
         allow(VCAP::CloudController::ExecutionContext).to receive(:from_process_type_env).and_return(nil)
-        expect { PrometheusUpdater.new(registry: prom_client) }.to raise_error('Could not register Prometheus metrics: Unknown execution context')
+        expect { updater }.to raise_error('Could not register Prometheus metrics: Unknown execution context')
       end
 
       context 'when execution context is set' do
         before { allow(VCAP::CloudController::ExecutionContext).to receive(:from_process_type_env).and_return(VCAP::CloudController::ExecutionContext::API_PUMA_MAIN) }
 
         it 'initializes cc_db_connection_pool_timeouts_total metric with process_type label' do
-          PrometheusUpdater.new(registry: prom_client) # somehow we need to re-initialize to have the correct execution context applied
+          expect { updater }.not_to raise_error
           metric = prom_client.metrics.find { |m| m.name == :cc_db_connection_pool_timeouts_total }
           expect(metric).to be_present
           expect(metric.get(labels: { process_type: 'main' })).to eq(0.0)

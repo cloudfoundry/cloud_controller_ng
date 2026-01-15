@@ -68,7 +68,7 @@ namespace :jobs do
     VCAP::CloudController::ExecutionContext::CC_WORKER.set_rake_context
     VCAP::CloudController::ExecutionContext::CC_WORKER.set_process_type_env
 
-    publish_metrics = RakeConfig.config.get(:publish_metrics) || false
+    publish_metrics = RakeConfig.config.get(:publish_metrics)
 
     CloudController::DelayedWorker.new(queues: queues,
                                        name: args.name,
