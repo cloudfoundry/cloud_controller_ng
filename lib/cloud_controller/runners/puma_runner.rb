@@ -80,12 +80,20 @@ module VCAP::CloudController
     private
 
     def stop_periodic_updates
-      @periodic_updater&.stop_updates
-      @logger.info('Successfully stopped periodic updates in after_stopped')
+      return unless @periodic_updater
+
+      if @periodic_updater.stop_updates
+        @logger.info('Successfully stopped periodic updates in after_stopped')
+      else
+        @logger.warn('Failed to stop all periodic update tasks in after_stopped')
+      end
     rescue ThreadError
       at_exit do
-        @periodic_updater&.stop_updates
-        @logger.info('Successfully stopped periodic updates in at_exit')
+        if @periodic_updater.stop_updates
+          @logger.info('Successfully stopped periodic updates in at_exit')
+        else
+          @logger.warn('Failed to stop all periodic update tasks in at_exit')
+        end
       end
     rescue StandardError => e
       @logger.error("Failed to stop periodic updates: #{e}\n#{e.backtrace&.join("\n")}")

@@ -80,50 +80,9 @@ module VCAP::CloudController::Metrics
         allow(prometheus_updater).to receive(:update_job_queue_load)
         allow(prometheus_updater).to receive(:update_failed_job_count)
         allow(prometheus_updater).to receive(:update_vitals)
-        allow(prometheus_updater).to receive(:update_log_counts)
         allow(prometheus_updater).to receive(:update_task_stats)
         allow(prometheus_updater).to receive(:update_deploying_count)
         allow(prometheus_updater).to receive(:update_webserver_stats_puma)
-      end
-
-      it 'bumps the number of users and sets periodic timer' do
-        expect(periodic_updater).to receive(:update_user_count).once
-        periodic_updater.setup_updates
-      end
-
-      it 'bumps the length of cc job queues and sets periodic timer' do
-        expect(periodic_updater).to receive(:update_job_queue_length).once
-        periodic_updater.setup_updates
-      end
-
-      it 'bumps the load of cc job queues and sets periodic timer' do
-        expect(periodic_updater).to receive(:update_job_queue_load).once
-        periodic_updater.setup_updates
-      end
-
-      it 'bumps the length of cc failed job queues and sets periodic timer' do
-        expect(periodic_updater).to receive(:update_failed_job_count).once
-        periodic_updater.setup_updates
-      end
-
-      it 'updates the vitals' do
-        expect(periodic_updater).to receive(:update_vitals).once
-        periodic_updater.setup_updates
-      end
-
-      it 'updates the log counts' do
-        expect(periodic_updater).to receive(:update_log_counts).once
-        periodic_updater.setup_updates
-      end
-
-      it 'updates the task stats' do
-        expect(periodic_updater).to receive(:update_task_stats).once
-        periodic_updater.setup_updates
-      end
-
-      it 'updates the deploying count' do
-        expect(periodic_updater).to receive(:update_deploying_count).once
-        periodic_updater.setup_updates
       end
 
       context 'when Concurrent::TimerTasks are run' do
@@ -133,9 +92,11 @@ module VCAP::CloudController::Metrics
           allow(Concurrent::TimerTask).to receive(:new) do |opts, &block|
             @periodic_timers << {
               interval: opts[:execution_interval],
+              type: opts[:interval_type],
+              now: opts[:run_now],
               block: block
             }
-            double('TimerTask', execute: nil, shutdown: nil, kill: nil, running?: false)
+            double('TimerTask', execute: nil)
           end
 
           periodic_updater.setup_updates
@@ -145,6 +106,8 @@ module VCAP::CloudController::Metrics
           expect(periodic_updater).to receive(:catch_error).once.and_call_original
           expect(periodic_updater).to receive(:update_user_count).once
           expect(@periodic_timers[0][:interval]).to eq(600)
+          expect(@periodic_timers[0][:type]).to eq(:fixed_rate)
+          expect(@periodic_timers[0][:now]).to be(true)
 
           @periodic_timers[0][:block].call
         end
@@ -153,6 +116,8 @@ module VCAP::CloudController::Metrics
           expect(periodic_updater).to receive(:catch_error).once.and_call_original
           expect(periodic_updater).to receive(:update_job_queue_length).once
           expect(@periodic_timers[1][:interval]).to eq(30)
+          expect(@periodic_timers[1][:type]).to eq(:fixed_rate)
+          expect(@periodic_timers[1][:now]).to be(true)
 
           @periodic_timers[1][:block].call
         end
@@ -161,6 +126,8 @@ module VCAP::CloudController::Metrics
           expect(periodic_updater).to receive(:catch_error).once.and_call_original
           expect(periodic_updater).to receive(:update_job_queue_load).once
           expect(@periodic_timers[2][:interval]).to eq(30)
+          expect(@periodic_timers[2][:type]).to eq(:fixed_rate)
+          expect(@periodic_timers[2][:now]).to be(true)
 
           @periodic_timers[2][:block].call
         end
@@ -169,6 +136,8 @@ module VCAP::CloudController::Metrics
           expect(periodic_updater).to receive(:catch_error).once.and_call_original
           expect(periodic_updater).to receive(:update_failed_job_count).once
           expect(@periodic_timers[3][:interval]).to eq(30)
+          expect(@periodic_timers[3][:type]).to eq(:fixed_rate)
+          expect(@periodic_timers[3][:now]).to be(true)
 
           @periodic_timers[3][:block].call
         end
@@ -177,6 +146,8 @@ module VCAP::CloudController::Metrics
           expect(periodic_updater).to receive(:catch_error).once.and_call_original
           expect(periodic_updater).to receive(:update_vitals).once
           expect(@periodic_timers[4][:interval]).to eq(30)
+          expect(@periodic_timers[4][:type]).to eq(:fixed_rate)
+          expect(@periodic_timers[4][:now]).to be(true)
 
           @periodic_timers[4][:block].call
         end
@@ -185,6 +156,8 @@ module VCAP::CloudController::Metrics
           expect(periodic_updater).to receive(:catch_error).once.and_call_original
           expect(periodic_updater).to receive(:update_log_counts).once
           expect(@periodic_timers[5][:interval]).to eq(30)
+          expect(@periodic_timers[5][:type]).to eq(:fixed_rate)
+          expect(@periodic_timers[5][:now]).to be(true)
 
           @periodic_timers[5][:block].call
         end
@@ -193,8 +166,30 @@ module VCAP::CloudController::Metrics
           expect(periodic_updater).to receive(:catch_error).once.and_call_original
           expect(periodic_updater).to receive(:update_task_stats).once
           expect(@periodic_timers[6][:interval]).to eq(30)
+          expect(@periodic_timers[6][:type]).to eq(:fixed_rate)
+          expect(@periodic_timers[6][:now]).to be(true)
 
           @periodic_timers[6][:block].call
+        end
+
+        it 'updates the deploying count' do
+          expect(periodic_updater).to receive(:catch_error).once.and_call_original
+          expect(periodic_updater).to receive(:update_deploying_count).once
+          expect(@periodic_timers[7][:interval]).to eq(30)
+          expect(@periodic_timers[7][:type]).to eq(:fixed_rate)
+          expect(@periodic_timers[7][:now]).to be(true)
+
+          @periodic_timers[7][:block].call
+        end
+
+        it 'updates the webserver stats' do
+          expect(periodic_updater).to receive(:catch_error).once.and_call_original
+          expect(periodic_updater).to receive(:update_webserver_stats).once
+          expect(@periodic_timers[8][:interval]).to eq(30)
+          expect(@periodic_timers[8][:type]).to eq(:fixed_rate)
+          expect(@periodic_timers[8][:now]).to be(true)
+
+          @periodic_timers[8][:block].call
         end
       end
 
@@ -203,20 +198,43 @@ module VCAP::CloudController::Metrics
           expect { periodic_updater.stop_updates }.not_to raise_error
         end
 
-        it 'shuts down all timer tasks after setup_updates' do
-          timer_doubles = []
-          allow(Concurrent::TimerTask).to receive(:new) do |*|
-            dbl = double('TimerTask', execute: nil, shutdown: nil)
-            timer_doubles << dbl
-            dbl
+        context 'when Concurrent::TimerTasks are stopped' do
+          let(:tasks) { [] }
+          let(:wait_for_termination_response) { nil }
+
+          before do
+            allow(Concurrent::TimerTask).to receive(:new) do |*|
+              dbl = double('TimerTask', execute: nil, kill: nil, wait_for_termination: wait_for_termination_response)
+              tasks << dbl
+              dbl
+            end
+
+            periodic_updater.setup_updates
           end
 
-          periodic_updater.setup_updates
+          context 'when tasks are terminated in time' do
+            let(:wait_for_termination_response) { true }
 
-          expect(timer_doubles.size).to eq(9)
-          expect(timer_doubles).to all(receive(:shutdown).once)
+            it 'stops all tasks and returns true' do
+              expect(tasks.size).to eq(9)
+              expect(tasks).to all(receive(:kill).once)
+              expect(tasks).to all(receive(:wait_for_termination).with(1).once)
 
-          periodic_updater.stop_updates
+              expect(periodic_updater.stop_updates).to be(true)
+            end
+          end
+
+          context 'when tasks are not terminated in time' do
+            let(:wait_for_termination_response) { false }
+
+            it 'stops all tasks and returns false' do
+              expect(tasks.size).to eq(9)
+              expect(tasks).to all(receive(:kill).once)
+              expect(tasks).to all(receive(:wait_for_termination).with(1).once)
+
+              expect(periodic_updater.stop_updates).to be(false)
+            end
+          end
         end
       end
     end
@@ -639,22 +657,6 @@ module VCAP::CloudController::Metrics
           { started_at: 1_701_263_710, index: 1, pid: 234, thread_count: 2, backlog: 1, busy_threads: 1, pool_capacity: 2, requests_count: 10 }
         ]
         expect(prometheus_updater).to have_received(:update_webserver_stats_puma).with(expected_worker_count, expected_worker_stats)
-      end
-    end
-
-    describe '#update!' do
-      it 'calls all update methods' do
-        expect(periodic_updater).to receive(:update_user_count).once
-        expect(periodic_updater).to receive(:update_job_queue_length).once
-        expect(periodic_updater).to receive(:update_job_queue_load).once
-        expect(periodic_updater).to receive(:update_failed_job_count).once
-        expect(periodic_updater).to receive(:update_vitals).once
-        expect(periodic_updater).to receive(:update_log_counts).once
-        expect(periodic_updater).to receive(:update_task_stats).once
-        expect(periodic_updater).to receive(:update_deploying_count).once
-        expect(periodic_updater).to receive(:update_webserver_stats).once
-
-        periodic_updater.update!
       end
     end
 
