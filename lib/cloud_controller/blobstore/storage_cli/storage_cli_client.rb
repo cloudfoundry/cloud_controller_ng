@@ -181,7 +181,7 @@ module CloudController
           stdout, stderr, status = Open3.capture3(@cli_path, '-s', @storage_type, '-c', @config_file, '-l', cli_log_file, command, *args)
           if @debug
             stderr.split("\n").each do |line|
-              logger.debug("[DEBUG] storage-cli: #{line}")
+              logger.info("[DEBUG] storage-cli: #{line}")
             end
           end
         rescue StandardError => e
