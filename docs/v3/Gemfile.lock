@@ -37,7 +37,7 @@ GEM
     http_parser.rb (0.8.0)
     i18n (1.6.0)
       concurrent-ruby (~> 1.0)
-    json (2.13.2)
+    json (2.18.0)
     kramdown (2.4.0)
       rexml
     libv8-node (24.1.0.0)
