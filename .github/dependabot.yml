@@ -6,6 +6,8 @@ updates:
     interval: daily
     time: '11:00'
   open-pull-requests-limit: 100
+  allow:
+    - dependency-type: "all"
 - package-ecosystem: bundler
   directory: "/docs/v3"
   schedule:
