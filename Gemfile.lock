@@ -134,8 +134,10 @@ GEM
       irb (~> 1.10)
       reline (>= 0.3.8)
     declarative (0.0.20)
-    delayed_job (4.1.13)
+    delayed_job (4.2.0)
       activesupport (>= 3.0, < 9.0)
+      benchmark
+      logger
     diff-lcs (1.6.2)
     digest-xxhash (0.2.9)
     docile (1.1.5)
@@ -569,10 +571,9 @@ GEM
       fluent-logger
       yajl-ruby (~> 1.0)
     stringio (3.2.0)
-    talentbox-delayed_job_sequel (4.3.0)
-      delayed_job (~> 4.1.0)
-      sequel (>= 3.38, < 6.0)
-      tzinfo
+    talentbox-delayed_job_sequel (4.4.0)
+      delayed_job (~> 4.1)
+      sequel (>= 5.0, < 6.0)
     thor (1.4.0)
     tilt (2.7.0)
     timecop (0.9.10)
@@ -689,7 +690,7 @@ DEPENDENCIES
   spring-commands-rspec
   statsd-ruby (~> 1.5.0)
   steno
-  talentbox-delayed_job_sequel (~> 4.3.0)
+  talentbox-delayed_job_sequel (~> 4.4.0)
   timecop
   uri (~> 1.1)
   vmstat (~> 2.3)
