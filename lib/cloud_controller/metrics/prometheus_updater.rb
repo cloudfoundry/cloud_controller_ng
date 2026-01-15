@@ -101,7 +101,7 @@ module VCAP::CloudController::Metrics
         DELAYED_JOB_METRICS.each { |metric| register(metric) }
         VITAL_METRICS.each { |metric| register(metric) }
         METRICS.each { |metric| register(metric) }
-        PUMA_METRICS.each { |metric| register(metric) } if is_puma_webserver?
+        PUMA_METRICS.each { |metric| register(metric) }
       else
         raise 'Could not register Prometheus metrics: Unknown execution context'
       end
@@ -121,12 +121,6 @@ module VCAP::CloudController::Metrics
     end
 
     public
-
-    def is_puma_webserver?
-      VCAP::CloudController::Config.config&.get(:webserver) == 'puma'
-    rescue VCAP::CloudController::Config::InvalidConfigPath
-      false
-    end
 
     def update_gauge_metric(metric, value, labels: {})
       @registry.get(metric).set(value, labels:)
