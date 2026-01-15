@@ -574,7 +574,7 @@ GEM
     talentbox-delayed_job_sequel (4.4.0)
       delayed_job (~> 4.1)
       sequel (>= 5.0, < 6.0)
-    thor (1.4.0)
+    thor (1.5.0)
     tilt (2.7.0)
     timecop (0.9.10)
     timeliness (0.5.3)
