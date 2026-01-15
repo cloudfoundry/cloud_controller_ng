@@ -166,6 +166,13 @@ each_run_block = proc do
     end
 
     rspec_config.before do
+      Delayed::Worker.destroy_failed_jobs = false
+      Sequel::Deprecation.output = StringIO.new
+      Sequel::Deprecation.backtrace_filter = 5
+
+      TestConfig.context = example.metadata[:job_context] || :api
+      TestConfig.reset
+
       Fog::Mock.reset
 
       if Fog.mock?
@@ -175,13 +182,6 @@ each_run_block = proc do
         CloudController::DependencyLocator.instance.buildpack_blobstore.ensure_bucket_exists
       end
 
-      Delayed::Worker.destroy_failed_jobs = false
-      Sequel::Deprecation.output = StringIO.new
-      Sequel::Deprecation.backtrace_filter = 5
-
-      TestConfig.context = example.metadata[:job_context] || :api
-      TestConfig.reset
-
       VCAP::CloudController::SecurityContext.clear
       allow_any_instance_of(VCAP::CloudController::UaaTokenDecoder).to receive(:uaa_issuer).and_return(UAAIssuer::ISSUER)
 
@@ -190,11 +190,7 @@ each_run_block = proc do
     end
 
     rspec_config.around do |example|
-      # DatabaseIsolation requires the api config context
-      TestConfig.context = :api
-      TestConfig.reset
-
-      isolation = DatabaseIsolation.choose(example.metadata[:isolation], TestConfig.config_instance, DbConfig.new.connection)
+      isolation = DatabaseIsolation.choose(example.metadata[:isolation], DbConfig.new.connection)
       isolation.cleanly { example.run }
     end
 
