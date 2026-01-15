@@ -45,13 +45,29 @@ module VCAP::CloudController
           end
         end
 
-        context 'when a running CC task is missing from BBS', isolation: :truncation do
-          # Can't use transactions for isolation because we're using multiple threads
+        context 'when a running CC task is missing from BBS' do
           let!(:running_task) { TaskModel.make(:running, created_at: 1.minute.ago) }
           let!(:canceling_task) { TaskModel.make(:canceling, created_at: 1.minute.ago) }
           let!(:start_event_for_running_task) { AppUsageEvent.make(task_guid: running_task.guid, state: 'TASK_STARTED') }
           let!(:start_event_for_canceling_task) { AppUsageEvent.make(task_guid: canceling_task.guid, state: 'TASK_STARTED') }
           let(:bbs_tasks) { [] }
+
+          before do
+            # Don't use threads in this spec as it would require the use of 'isolation: :truncation' which is slow
+            class InlineWorkPool
+              def submit(*args, &block)
+                block.call(*args)
+              end
+
+              def drain; end
+
+              def exceptions
+                []
+              end
+            end
+
+            allow(WorkPool).to receive(:new).and_return(InlineWorkPool.new)
+          end
 
           it 'marks the tasks as failed' do
             subject.sync
