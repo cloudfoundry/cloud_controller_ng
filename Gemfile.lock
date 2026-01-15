@@ -575,7 +575,7 @@ GEM
     thor (1.4.0)
     tilt (2.6.1)
     timecop (0.9.10)
-    timeliness (0.4.5)
+    timeliness (0.5.3)
     trailblazer-option (0.1.2)
     tsort (0.2.0)
     tzinfo (2.0.6)
