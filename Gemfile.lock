@@ -573,7 +573,7 @@ GEM
       sequel (>= 3.38, < 6.0)
       tzinfo
     thor (1.4.0)
-    tilt (2.6.1)
+    tilt (2.7.0)
     timecop (0.9.10)
     timeliness (0.4.5)
     trailblazer-option (0.1.2)
