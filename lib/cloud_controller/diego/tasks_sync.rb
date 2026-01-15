@@ -78,8 +78,7 @@ module VCAP::CloudController
       def update_missing_diego_tasks(to_update)
         to_update.each do |task_guid|
           workpool.submit(task_guid) do |guid|
-            diego_task_missing = bbs_task_client.fetch_task(guid).nil?
-            if diego_task_missing
+            if bbs_task_client.fetch_task(guid).nil?
               # Mark the CC task as failed. Don't update tasks that are already in a terminal state.
               task = TaskModel.where(guid:).exclude(state: [TaskModel::FAILED_STATE, TaskModel::SUCCEEDED_STATE]).first
               task&.update(state: TaskModel::FAILED_STATE, failure_reason: BULKER_TASK_FAILURE) # invoke model's update method to create an event
