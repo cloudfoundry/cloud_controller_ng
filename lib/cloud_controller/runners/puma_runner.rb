@@ -2,6 +2,7 @@ require 'puma'
 require 'puma/configuration'
 require 'puma/events'
 require 'cloud_controller/logs/steno_io'
+require 'cloud_controller/execution_context'
 
 module VCAP::CloudController
   class PumaRunner
@@ -46,26 +47,15 @@ module VCAP::CloudController
         conf.before_fork do
           Sequel::Model.db.disconnect
         end
-        conf.before_worker_boot do
-          ENV['PROCESS_TYPE'] = 'puma_worker'
-          prometheus_updater.update_gauge_metric(:cc_db_connection_pool_timeouts_total, 0, labels: { process_type: 'puma_worker' })
-        end
-        conf.before_worker_shutdown do
-          request_logs.log_incomplete_requests if request_logs
-        end
+        conf.before_worker_boot { ExecutionContext::API_PUMA_WORKER.set_process_type_env }
+        conf.before_worker_shutdown { request_logs.log_incomplete_requests if request_logs }
       end
 
       log_writer = Puma::LogWriter.new(StenoIO.new(logger, :info), StenoIO.new(logger, :error))
 
       events = Puma::Events.new
-      events.after_booted do
-        prometheus_updater.update_gauge_metric(:cc_db_connection_pool_timeouts_total, 0, labels: { process_type: 'main' })
-        @periodic_updater.setup_updates
-      end
-
-      events.after_stopped do
-        stop_periodic_updates
-      end
+      events.after_booted { @periodic_updater.setup_updates }
+      events.after_stopped { stop_periodic_updates }
 
       @puma_launcher = Puma::Launcher.new(puma_config, log_writer:, events:)
     end

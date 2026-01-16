@@ -39,6 +39,7 @@ module VCAP::CloudController
         allow(DeploymentUpdater::Dispatcher).to receive(:dispatch)
         allow(CloudController::DependencyLocator.instance).to receive_messages(statsd_client:)
         allow(statsd_client).to receive(:timing)
+        allow(statsd_client).to receive(:batch) # mock vital metrics updates
       end
 
       it 'correctly configures a LockRunner and uses it to initialize a LockWorker' do
@@ -151,6 +152,31 @@ module VCAP::CloudController
             error_message: error.message,
             backtrace: anything
           )
+        end
+      end
+
+      describe 'publish metrics' do
+        before do
+          allow(VCAP::CloudController::StandaloneMetricsWebserver).to receive(:start_for_bosh_job)
+        end
+
+        context 'when set to false' do
+          before do
+            TestConfig.override(publish_metrics: false)
+          end
+
+          it 'does not publish metrics' do
+            DeploymentUpdater::Scheduler.start
+          end
+        end
+
+        context 'when set to true' do
+          before { TestConfig.override(publish_metrics: true) }
+
+          it 'sets up a webserver' do
+            DeploymentUpdater::Scheduler.start
+            expect(VCAP::CloudController::StandaloneMetricsWebserver).to have_received(:start_for_bosh_job)
+          end
         end
       end
     end

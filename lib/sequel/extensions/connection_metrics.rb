@@ -23,11 +23,7 @@ module Sequel
 
       pool.instance_exec do
         sync do
-          @prometheus_updater = if process_type == 'cc-worker'
-                                  CloudController::DependencyLocator.instance.cc_worker_prometheus_updater
-                                else
-                                  CloudController::DependencyLocator.instance.prometheus_updater
-                                end
+          @prometheus_updater = CloudController::DependencyLocator.instance.prometheus_updater
           @connection_info = {}
         end
       end
@@ -44,14 +40,14 @@ module Sequel
           @connection_info[thread][:acquired_at] = acquired_at
         end
       rescue Sequel::PoolTimeout
-        @prometheus_updater.increment_gauge_metric(:cc_db_connection_pool_timeouts_total, labels: { process_type: })
+        @prometheus_updater.increment_gauge_metric(:cc_db_connection_pool_timeouts_total)
         raise
       ensure
         # acquire calls assign_connection, where the thread possibly has to wait for a free connection.
         # For both cases, when the thread acquires a connection in time, or when it runs into a PoolTimeout,
         # we emmit the time the thread waited for a connection.
         if @connection_info[thread] && @connection_info[thread].key?(:waiting_since)
-          @prometheus_updater.update_histogram_metric :cc_db_connection_wait_duration_seconds, (Time.now.utc - @connection_info[thread][:waiting_since]).seconds
+          @prometheus_updater.update_histogram_metric(:cc_db_connection_wait_duration_seconds, (Time.now.utc - @connection_info[thread][:waiting_since]).seconds)
           @connection_info[thread].delete(:waiting_since)
         end
       end
@@ -83,7 +79,8 @@ module Sequel
 
       # acquired_at should be always set, but as a safeguard we check that it is present before accessing
       if @connection_info[thread] && @connection_info[thread].key?(:acquired_at)
-        @prometheus_updater.update_histogram_metric :cc_db_connection_hold_duration_seconds, (Time.now.utc - @connection_info[thread][:acquired_at]).seconds
+        duration = (Time.now.utc - @connection_info[thread][:acquired_at]).seconds
+        @prometheus_updater.update_histogram_metric(:cc_db_connection_hold_duration_seconds, duration)
       end
 
       @prometheus_updater.decrement_gauge_metric(:cc_acquired_db_connections_total, labels: { process_type: })

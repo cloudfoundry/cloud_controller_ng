@@ -1,6 +1,7 @@
 require 'clockwork'
 require 'cloud_controller/clock/clock'
 require 'cloud_controller/clock/job_timeout_calculator'
+require 'cloud_controller/standalone_metrics_webserver'
 
 module VCAP::CloudController
   class Scheduler
@@ -35,6 +36,12 @@ module VCAP::CloudController
     end
 
     def start
+      if @config.get(:publish_metrics)
+        StandaloneMetricsWebserver.start_for_bosh_job(@config.get(:prometheus_port) || 9394)
+        periodic_updater = CloudController::DependencyLocator.instance.vitals_periodic_updater
+        periodic_updater.setup_updates
+      end
+
       start_daily_jobs
       start_frequent_jobs
       start_inline_jobs

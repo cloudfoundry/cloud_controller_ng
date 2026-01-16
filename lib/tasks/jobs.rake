@@ -43,7 +43,6 @@ namespace :jobs do
     args.with_defaults(num_threads: nil)
     args.with_defaults(thread_grace_period_seconds: nil)
 
-    RakeConfig.context = :worker
     queues = [
       VCAP::CloudController::Jobs::Queues.generic,
       'app_usage_events',
@@ -64,10 +63,12 @@ namespace :jobs do
       'prune_excess_app_revisions'
     ]
 
-    ENV['PROCESS_TYPE'] = 'cc-worker'
     require 'cloud_controller/metrics/custom_process_id'
+    require 'cloud_controller/execution_context'
+    VCAP::CloudController::ExecutionContext::CC_WORKER.set_rake_context
+    VCAP::CloudController::ExecutionContext::CC_WORKER.set_process_type_env
 
-    publish_metrics = RakeConfig.config.get(:publish_metrics) || false
+    publish_metrics = RakeConfig.config.get(:publish_metrics)
 
     CloudController::DelayedWorker.new(queues: queues,
                                        name: args.name,
