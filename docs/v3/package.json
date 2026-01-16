@@ -25,6 +25,6 @@
     "glob": "^13.0.0",
     "gulp": "^5.0.1",
     "gulp-cli": "^3.1.0",
-    "linkinator": "^6.1.4"
+    "linkinator": "^7.5.3"
   }
 }
