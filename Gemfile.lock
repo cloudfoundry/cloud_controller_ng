@@ -331,7 +331,7 @@ GEM
     netrc (0.11.0)
     newrelic_rpm (10.0.0)
       logger
-    nio4r (2.7.4)
+    nio4r (2.7.5)
     nokogiri (1.19.0)
       mini_portile2 (~> 2.8.2)
       racc (~> 1.4)
