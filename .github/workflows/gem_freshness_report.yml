@@ -1,0 +1,28 @@
+name: Gem freshness report
+
+on:
+  schedule:
+    - cron: "0 8 * * 1" # Mondays 08:00 UTC
+  workflow_dispatch:
+
+permissions:
+  contents: read # to fetch code (actions/checkout)
+
+jobs:
+  report:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: hmarr/debug-action@v3
+      - uses: actions/checkout@v6
+      - uses: ./.github/workflows/composite/setup
+
+      - name: Generate report
+        run: |
+          bundle exec rake gem_freshness:report | tee gem_freshness_report.md
+          cat gem_freshness_report.md >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Upload report artifact
+        uses: actions/upload-artifact@v6
+        with:
+          path: gem_freshness_report.md
+          retention-days: 140
