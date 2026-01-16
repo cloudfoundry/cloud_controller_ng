@@ -529,62 +529,6 @@ module VCAP::CloudController::Validators
       end
     end
 
-    describe 'OptionsValidator' do
-      class OptionsMessage < VCAP::CloudController::BaseMessage
-        register_allowed_keys [:options]
-
-        def options_message
-          VCAP::CloudController::RouteOptionsMessage.new(options&.deep_symbolize_keys)
-        end
-
-        validates_with OptionsValidator
-      end
-
-      it 'successfully validates round-robin load-balancing algorithm' do
-        message = OptionsMessage.new({ options: { loadbalancing: 'round-robin' } })
-        expect(message).to be_valid
-      end
-
-      it 'successfully validates least-connection load-balancing algorithm' do
-        message = OptionsMessage.new({ options: { loadbalancing: 'least-connection' } })
-        expect(message).to be_valid
-      end
-
-      it 'successfully validates empty options' do
-        message = OptionsMessage.new({ options: {} })
-        expect(message).to be_valid
-      end
-
-      it 'adds invalid options message when options is null' do
-        message = OptionsMessage.new({ options: nil })
-        expect(message).not_to be_valid
-        expect(message.errors_on(:options)).to include("'options' is not a valid object")
-      end
-
-      it 'successfully validates empty load balancer' do
-        message = OptionsMessage.new({ options: { loadbalancing: nil } })
-        expect(message).to be_valid
-      end
-
-      it 'adds invalid object error message when options is not an object' do
-        message = OptionsMessage.new({ options: 'cheesecake' })
-        expect(message).not_to be_valid
-        expect(message.errors_on(:options)).to include("'options' is not a valid object")
-      end
-
-      it 'adds invalid load balancer error message to the base class' do
-        message = OptionsMessage.new({ options: { loadbalancing: 'donuts' } })
-        expect(message).not_to be_valid
-        expect(message.errors_on(:options)).to include("Loadbalancing must be one of 'round-robin, least-connection' if present")
-      end
-
-      it 'adds invalid field error message to the base class' do
-        message = OptionsMessage.new({ options: { cookies: 'round-robin' } })
-        expect(message).not_to be_valid
-        expect(message.errors_on(:options)).to include('Unknown field(s): \'cookies\'')
-      end
-    end
-
     describe 'ToOneRelationshipValidator' do
       let(:to_one_class) do
         Class.new(fake_class) do

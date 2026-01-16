@@ -61,6 +61,45 @@ module VCAP::CloudController
         expect(message).not_to be_valid
         expect(message.errors.full_messages[0]).to include("Options Unknown field(s): 'gorgonzola'")
       end
+
+      context 'when hash_based_routing feature flag is enabled' do
+        before do
+          VCAP::CloudController::FeatureFlag.make(name: 'hash_based_routing', enabled: true)
+        end
+
+        it 'does not accept hash_header longer than 128 characters' do
+          message = RouteUpdateMessage.new(params.merge(options: { loadbalancing: 'hash', hash_header: 'X' * 129 }))
+          expect(message).not_to be_valid
+          expect(message.errors.full_messages[0]).to include('Hash header must be at most 128 characters')
+        end
+
+        it 'accepts hash_header exactly 128 characters' do
+          message = RouteUpdateMessage.new(params.merge(options: { loadbalancing: 'hash', hash_header: 'X' * 128 }))
+          expect(message).to be_valid
+        end
+
+        it 'does not accept hash_balance longer than 16 characters' do
+          message = RouteUpdateMessage.new(params.merge(options: { loadbalancing: 'hash', hash_header: 'X-User-ID', hash_balance: '12345678901234567' }))
+          expect(message).not_to be_valid
+          expect(message.errors.full_messages[0]).to include('Hash balance must be at most 16 characters')
+        end
+
+        it 'accepts hash_balance exactly 16 characters' do
+          message = RouteUpdateMessage.new(params.merge(options: { loadbalancing: 'hash', hash_header: 'X-User-ID', hash_balance: '9.9' }))
+          expect(message).to be_valid
+        end
+
+        it 'does not accept hash_balance greater than 10.0' do
+          message = RouteUpdateMessage.new(params.merge(options: { loadbalancing: 'hash', hash_header: 'X-User-ID', hash_balance: 10.1 }))
+          expect(message).not_to be_valid
+          expect(message.errors.full_messages[0]).to include('Hash balance must be either 0 or between 1.1 and 10.0')
+        end
+
+        it 'accepts hash_balance exactly 10.0' do
+          message = RouteUpdateMessage.new(params.merge(options: { loadbalancing: 'hash', hash_header: 'X-User-ID', hash_balance: 10.0 }))
+          expect(message).to be_valid
+        end
+      end
     end
   end
 end

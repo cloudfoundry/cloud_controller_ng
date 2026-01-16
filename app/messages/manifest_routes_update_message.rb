@@ -28,6 +28,7 @@ module VCAP::CloudController
     validate :route_protocols_are_valid, if: proc { |record| record.requested?(:routes) }
     validate :route_options_are_valid, if: proc { |record| record.requested?(:routes) }
     validate :loadbalancings_are_valid, if: proc { |record| record.requested?(:routes) }
+    validate :hash_options_are_valid, if: proc { |record| record.requested?(:routes) }
     validate :no_route_is_boolean
     validate :default_route_is_boolean
     validate :random_route_is_boolean
@@ -58,10 +59,10 @@ module VCAP::CloudController
         end
 
         r[:options].each_key do |key|
-          RouteOptionsMessage::VALID_MANIFEST_ROUTE_OPTIONS.exclude?(key) &&
+          RouteOptionsMessage.valid_route_options.exclude?(key) &&
             errors.add(:base,
                        message: "Route '#{r[:route]}' contains invalid route option '#{key}'. \
-Valid keys: '#{RouteOptionsMessage::VALID_MANIFEST_ROUTE_OPTIONS.join(', ')}'")
+Valid keys: '#{RouteOptionsMessage.valid_route_options.join(', ')}'")
         end
       end
     end
@@ -76,14 +77,79 @@ Valid keys: '#{RouteOptionsMessage::VALID_MANIFEST_ROUTE_OPTIONS.join(', ')}'")
         unless loadbalancing.is_a?(String)
           errors.add(:base,
                      message: "Invalid value for 'loadbalancing' for Route '#{r[:route]}'; \
-Valid values are: '#{RouteOptionsMessage::VALID_LOADBALANCING_ALGORITHMS.join(', ')}'")
+Valid values are: '#{RouteOptionsMessage.valid_loadbalancing_algorithms.join(', ')}'")
           next
         end
-        RouteOptionsMessage::VALID_LOADBALANCING_ALGORITHMS.exclude?(loadbalancing) &&
+        RouteOptionsMessage.valid_loadbalancing_algorithms.exclude?(loadbalancing) &&
           errors.add(:base,
                      message: "Cannot use loadbalancing value '#{loadbalancing}' for Route '#{r[:route]}'; \
-Valid values are: '#{RouteOptionsMessage::VALID_LOADBALANCING_ALGORITHMS.join(', ')}'")
+Valid values are: '#{RouteOptionsMessage.valid_loadbalancing_algorithms.join(', ')}'")
       end
+    end
+
+    def hash_options_are_valid
+      return if errors[:routes].present?
+
+      # Only validate hash-specific options when the feature flag is enabled
+      # If disabled, route_options_are_valid will already report them as invalid
+      return unless VCAP::CloudController::FeatureFlag.enabled?(:hash_based_routing)
+
+      # NOTE: route_options_are_valid already validates that hash_header and hash_balance
+      # are only allowed when the feature flag is enabled (via valid_route_options).
+
+      routes.each do |r|
+        next unless r.keys.include?(:options) && r[:options].is_a?(Hash)
+
+        validate_route_hash_options(r)
+      end
+    end
+
+    def validate_route_hash_options(route)
+      options = route[:options]
+      loadbalancing = options[:loadbalancing]
+      hash_header = options[:hash_header]
+      hash_balance = options[:hash_balance]
+
+      validate_route_hash_header(route, hash_header)
+      validate_route_hash_balance(route, hash_balance)
+
+      validate_route_hash_options_with_loadbalancing(route, loadbalancing, hash_header, hash_balance)
+    end
+
+    def validate_route_hash_header(route, hash_header)
+      return unless hash_header.present? && (hash_header.to_s.length > 128)
+
+      errors.add(:base, message: "Route '#{route[:route]}': Hash header must be at most 128 characters")
+    end
+
+    def validate_route_hash_balance(route, hash_balance)
+      return if hash_balance.blank?
+
+      if hash_balance.to_s.length > 16
+        errors.add(:base, message: "Route '#{route[:route]}': Hash balance must be at most 16 characters")
+        return
+      end
+
+      validate_route_hash_balance_numeric(route, hash_balance)
+    end
+
+    def validate_route_hash_balance_numeric(route, hash_balance)
+      balance_float = Float(hash_balance)
+      # Must be either 0 or >= 1.1 and <= 10.0
+      errors.add(:base, message: "Route '#{route[:route]}': Hash balance must be either 0 or between 1.1 and 10.0") unless balance_float == 0 || balance_float.between?(1.1, 10)
+    rescue ArgumentError, TypeError
+      errors.add(:base, message: "Route '#{route[:route]}': Hash balance must be a numeric value")
+    end
+
+    def validate_route_hash_options_with_loadbalancing(route, loadbalancing, hash_header, hash_balance)
+      # When loadbalancing is explicitly set to non-hash value, hash options are not allowed
+      if hash_header.present? && loadbalancing.present? && loadbalancing != 'hash'
+        errors.add(:base, message: "Route '#{route[:route]}': Hash header can only be set when loadbalancing is hash")
+      end
+
+      return unless hash_balance.present? && loadbalancing.present? && loadbalancing != 'hash'
+
+      errors.add(:base, message: "Route '#{route[:route]}': Hash balance can only be set when loadbalancing is hash")
     end
 
     def routes_are_uris

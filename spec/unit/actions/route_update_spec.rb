@@ -190,7 +190,191 @@ module VCAP::CloudController
         end
       end
 
-      context 'when the route has existing options' do
+      context 'when the route has existing options for loadbalancing=hash' do
+        before do
+          VCAP::CloudController::FeatureFlag.make(name: 'hash_based_routing', enabled: true)
+          route[:options] = '{"loadbalancing": "hash", "hash_header": "foobar", "hash_balance": "2"}'
+        end
+
+        context 'when the loadbalancing option value is set to null' do
+          let(:body) do
+            {
+              options: {
+                loadbalancing: nil
+              }
+            }
+          end
+
+          it 'removes this option and hash options' do
+            expect(message).to be_valid
+            subject.update(route:, message:)
+            route.reload
+            expect(route.options).to eq({})
+          end
+
+          it 'notifies the backend' do
+            expect(fake_route_handler).to receive(:notify_backend_of_route_update)
+            subject.update(route:, message:)
+          end
+        end
+
+        context 'when updating only hash_header' do
+          let(:body) do
+            {
+              options: {
+                hash_header: 'X-New-Header'
+              }
+            }
+          end
+
+          it 'updates hash_header while keeping other options' do
+            expect(message).to be_valid
+            subject.update(route:, message:)
+            route.reload
+            expect(route.options).to include({ 'loadbalancing' => 'hash', 'hash_header' => 'X-New-Header', 'hash_balance' => '2.0' })
+          end
+
+          it 'notifies the backend' do
+            expect(fake_route_handler).to receive(:notify_backend_of_route_update)
+            subject.update(route:, message:)
+          end
+        end
+
+        context 'when updating only hash_balance' do
+          let(:body) do
+            {
+              options: {
+                hash_balance: '3.5'
+              }
+            }
+          end
+
+          it 'updates hash_balance while keeping other options' do
+            expect(message).to be_valid
+            subject.update(route:, message:)
+            route.reload
+            expect(route.options).to include({ 'loadbalancing' => 'hash', 'hash_header' => 'foobar', 'hash_balance' => '3.5' })
+          end
+
+          it 'notifies the backend' do
+            expect(fake_route_handler).to receive(:notify_backend_of_route_update)
+            subject.update(route:, message:)
+          end
+        end
+
+        context 'when updating both hash_header and hash_balance' do
+          let(:body) do
+            {
+              options: {
+                hash_header: 'X-Updated-Header',
+                hash_balance: '5.0'
+              }
+            }
+          end
+
+          it 'updates both hash options while keeping loadbalancing' do
+            expect(message).to be_valid
+            subject.update(route:, message:)
+            route.reload
+            expect(route.options).to include({ 'loadbalancing' => 'hash', 'hash_header' => 'X-Updated-Header', 'hash_balance' => '5.0' })
+          end
+
+          it 'notifies the backend' do
+            expect(fake_route_handler).to receive(:notify_backend_of_route_update)
+            subject.update(route:, message:)
+          end
+        end
+
+        context 'when setting hash_balance to null' do
+          let(:body) do
+            {
+              options: {
+                hash_balance: nil
+              }
+            }
+          end
+
+          it 'removes hash_balance while keeping other options' do
+            expect(message).to be_valid
+            subject.update(route:, message:)
+            route.reload
+            expect(route.options).to include({ 'loadbalancing' => 'hash', 'hash_header' => 'foobar' })
+            expect(route.options).not_to have_key('hash_balance')
+          end
+
+          it 'notifies the backend' do
+            expect(fake_route_handler).to receive(:notify_backend_of_route_update)
+            subject.update(route:, message:)
+          end
+        end
+
+        context 'when updating from hash to round-robin' do
+          let(:body) do
+            {
+              options: {
+                loadbalancing: 'round-robin'
+              }
+            }
+          end
+
+          it 'updates to round-robin and removes hash options' do
+            expect(message).to be_valid
+            subject.update(route:, message:)
+            route.reload
+            expect(route.options).to eq({ 'loadbalancing' => 'round-robin' })
+            expect(route.options).not_to have_key('hash_header')
+            expect(route.options).not_to have_key('hash_balance')
+          end
+
+          it 'notifies the backend' do
+            expect(fake_route_handler).to receive(:notify_backend_of_route_update)
+            subject.update(route:, message:)
+          end
+        end
+
+        context 'when updating from hash to least-connection' do
+          let(:body) do
+            {
+              options: {
+                loadbalancing: 'least-connection'
+              }
+            }
+          end
+
+          it 'updates to least-connection and removes hash options' do
+            expect(message).to be_valid
+            subject.update(route:, message:)
+            route.reload
+            expect(route.options).to eq({ 'loadbalancing' => 'least-connection' })
+            expect(route.options).not_to have_key('hash_header')
+            expect(route.options).not_to have_key('hash_balance')
+          end
+
+          it 'notifies the backend' do
+            expect(fake_route_handler).to receive(:notify_backend_of_route_update)
+            subject.update(route:, message:)
+          end
+        end
+
+        context 'when setting hash_header to null' do
+          let(:body) do
+            {
+              options: {
+                hash_header: nil
+              }
+            }
+          end
+
+          it 'raises an error because hash_header is required for hash loadbalancing' do
+            expect(message).to be_valid
+            expect do
+              subject.update(route:, message:)
+            end.to raise_error(RouteUpdate::Error, 'Hash header must be present when loadbalancing is set to hash.')
+          end
+        end
+      end
+
+      context 'when the route has existing option loadbalancing=round-robin' do
         before do
           route[:options] = '{"loadbalancing": "round-robin"}'
         end
@@ -210,6 +394,76 @@ module VCAP::CloudController
           it 'does not notifies the backend' do
             expect(fake_route_handler).not_to receive(:notify_backend_of_route_update)
             subject.update(route:, message:)
+          end
+        end
+
+        context 'when hash_based_routing feature flag is enabled' do
+          before do
+            VCAP::CloudController::FeatureFlag.make(name: 'hash_based_routing', enabled: true)
+          end
+
+          context 'when updating to hash loadbalancing without hash_header' do
+            let(:body) do
+              {
+                options: {
+                  loadbalancing: 'hash'
+                }
+              }
+            end
+
+            it 'raises an error' do
+              expect(message).to be_valid
+              expect do
+                subject.update(route:, message:)
+              end.to raise_error(RouteUpdate::Error, 'Hash header must be present when loadbalancing is set to hash.')
+            end
+          end
+
+          context 'when updating to hash loadbalancing with hash_header' do
+            let(:body) do
+              {
+                options: {
+                  loadbalancing: 'hash',
+                  hash_header: 'X-User-ID'
+                }
+              }
+            end
+
+            it 'successfully updates to hash loadbalancing' do
+              expect(message).to be_valid
+              subject.update(route:, message:)
+              route.reload
+              expect(route.options).to include({ 'loadbalancing' => 'hash', 'hash_header' => 'X-User-ID' })
+            end
+
+            it 'notifies the backend' do
+              expect(fake_route_handler).to receive(:notify_backend_of_route_update)
+              subject.update(route:, message:)
+            end
+          end
+
+          context 'when updating to hash loadbalancing with hash_header and hash_balance' do
+            let(:body) do
+              {
+                options: {
+                  loadbalancing: 'hash',
+                  hash_header: 'X-Session-ID',
+                  hash_balance: '2.5'
+                }
+              }
+            end
+
+            it 'successfully updates to hash loadbalancing with all options' do
+              expect(message).to be_valid
+              subject.update(route:, message:)
+              route.reload
+              expect(route.options).to include({ 'loadbalancing' => 'hash', 'hash_header' => 'X-Session-ID', 'hash_balance' => '2.5' })
+            end
+
+            it 'notifies the backend' do
+              expect(fake_route_handler).to receive(:notify_backend_of_route_update)
+              subject.update(route:, message:)
+            end
           end
         end
 

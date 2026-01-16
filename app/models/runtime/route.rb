@@ -71,7 +71,12 @@ module VCAP::CloudController
     end
 
     def options_with_serialization=(opts)
-      self.options_without_serialization = Oj.dump(opts)
+      cleaned_opts = remove_hash_options_for_non_hash_loadbalancing(opts)
+      rounded_opts = round_hash_balance_to_one_decimal(cleaned_opts)
+      normalized_opts = normalize_hash_balance_to_string(rounded_opts)
+      # Remove nil values after all processing
+      normalized_opts = normalized_opts.compact if normalized_opts.is_a?(Hash)
+      self.options_without_serialization = Oj.dump(normalized_opts)
     end
 
     alias_method :options_without_serialization=, :options=
@@ -125,6 +130,7 @@ module VCAP::CloudController
       validate_total_routes
       validate_ports
       validate_total_reserved_route_ports if port && port > 0
+      validate_route_options
 
       RouteValidator.new(self).validate
     rescue RoutingApi::UaaUnavailable
@@ -315,6 +321,64 @@ module VCAP::CloudController
       return if org_reserved_route_ports_policy.allow_more_route_ports?
 
       errors.add(:organization, :total_reserved_route_ports_exceeded)
+    end
+
+    def validate_route_options
+      return if options.blank?
+
+      route_options = options.is_a?(Hash) ? options : options.symbolize_keys
+      loadbalancing = route_options[:loadbalancing] || route_options['loadbalancing']
+
+      return if loadbalancing != 'hash'
+
+      hash_header = route_options[:hash_header] || route_options['hash_header']
+
+      return if hash_header.present?
+
+      errors.add(:route, :hash_header_missing)
+    end
+
+    def round_hash_balance_to_one_decimal(opts)
+      return opts unless opts.is_a?(Hash)
+
+      opts_symbolized = opts.symbolize_keys
+      hash_balance = opts_symbolized[:hash_balance]
+
+      if hash_balance.present?
+        begin
+          balance_float = Float(hash_balance)
+          # Round to at most 1 decimal place
+          opts_symbolized[:hash_balance] = (balance_float * 10).round / 10.0
+        rescue ArgumentError, TypeError
+          # If conversion fails, leave it as is - validation will catch it
+        end
+      end
+
+      opts_symbolized
+    end
+
+    def normalize_hash_balance_to_string(opts)
+      return opts unless opts.is_a?(Hash)
+
+      # We have a flat structure on options, so no deep_symbolize required
+      normalized = opts.symbolize_keys
+      normalized[:hash_balance] = normalized[:hash_balance].to_s if normalized[:hash_balance].present?
+      normalized
+    end
+
+    def remove_hash_options_for_non_hash_loadbalancing(opts)
+      return opts unless opts.is_a?(Hash)
+
+      opts_symbolized = opts.symbolize_keys
+      loadbalancing = opts_symbolized[:loadbalancing]
+
+      # Remove hash-specific options if loadbalancing is set to non-hash value
+      if loadbalancing != 'hash'
+        opts_symbolized.delete(:hash_header)
+        opts_symbolized.delete(:hash_balance)
+      end
+
+      opts_symbolized
     end
 
     def validate_uniqueness_on_host_and_domain

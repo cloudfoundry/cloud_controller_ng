@@ -68,22 +68,34 @@ module VCAP::CloudController
     end
 
     def validation_error!(error, host, path, port, space, domain)
-      error!("Invalid domain. Domain '#{domain.name}' is not available in organization '#{space.organization.name}'.") if error.errors.on(:domain)&.include?(:invalid_relation)
-
-      error!("Routes quota exceeded for space '#{space.name}'.") if error.errors.on(:space)&.include?(:total_routes_exceeded)
-
-      error!("Reserved route ports quota exceeded for space '#{space.name}'.") if error.errors.on(:space)&.include?(:total_reserved_route_ports_exceeded)
-
-      error!("Routes quota exceeded for organization '#{space.organization.name}'.") if error.errors.on(:organization)&.include?(:total_routes_exceeded)
-
-      error!("Reserved route ports quota exceeded for organization '#{space.organization.name}'.") if error.errors.on(:organization)&.include?(:total_reserved_route_ports_exceeded)
-
+      validation_error_domain!(error, space, domain)
+      validation_error_quota!(error, space)
+      validation_error_route!(error)
       validation_error_routing_api!(error)
       validation_error_host!(error, host, domain)
       validation_error_path!(error, host, path, domain)
       validation_error_port!(error, host, port, domain)
 
       error!(error.message)
+    end
+
+    def validation_error_domain!(error, space, domain)
+      return unless error.errors.on(:domain)&.include?(:invalid_relation)
+
+      error!("Invalid domain. Domain '#{domain.name}' is not available in organization '#{space.organization.name}'.")
+    end
+
+    def validation_error_quota!(error, space)
+      error!("Routes quota exceeded for space '#{space.name}'.") if error.errors.on(:space)&.include?(:total_routes_exceeded)
+      error!("Reserved route ports quota exceeded for space '#{space.name}'.") if error.errors.on(:space)&.include?(:total_reserved_route_ports_exceeded)
+      error!("Routes quota exceeded for organization '#{space.organization.name}'.") if error.errors.on(:organization)&.include?(:total_routes_exceeded)
+      error!("Reserved route ports quota exceeded for organization '#{space.organization.name}'.") if error.errors.on(:organization)&.include?(:total_reserved_route_ports_exceeded)
+    end
+
+    def validation_error_route!(error)
+      return unless error.errors.on(:route)&.include?(:hash_header_missing)
+
+      error!('Hash header must be present when loadbalancing is set to hash.')
     end
 
     def validation_error_routing_api!(error)

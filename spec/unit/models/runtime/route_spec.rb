@@ -1055,6 +1055,490 @@ module VCAP::CloudController
       it { is_expected.to import_attributes :host, :domain_guid, :space_guid, :app_guids, :path, :port, :options }
     end
 
+    describe 'options normalization' do
+      let(:space) { Space.make }
+      let(:domain) { PrivateDomain.make(owning_organization: space.organization) }
+
+      context 'when hash_balance is provided as a float' do
+        it 'stores hash_balance as a string in the database' do
+          route = Route.make(
+            host: 'test-route',
+            domain: domain,
+            space: space,
+            options: { loadbalancing: 'hash', hash_header: 'X-User-ID', hash_balance: 1.5 }
+          )
+
+          route.reload
+          parsed_options = Oj.load(route.options_without_serialization)
+          expect(parsed_options['hash_balance']).to be_a(String)
+          expect(parsed_options['hash_balance']).to eq('1.5')
+        end
+      end
+
+      context 'when hash_balance is provided as an integer' do
+        it 'stores hash_balance as a string in the database' do
+          route = Route.make(
+            host: 'test-route',
+            domain: domain,
+            space: space,
+            options: { loadbalancing: 'hash', hash_header: 'X-User-ID', hash_balance: 2 }
+          )
+
+          route.reload
+          parsed_options = Oj.load(route.options_without_serialization)
+          expect(parsed_options['hash_balance']).to be_a(String)
+          expect(parsed_options['hash_balance']).to eq('2.0')
+        end
+      end
+
+      context 'when hash_balance is provided as a string' do
+        it 'keeps hash_balance as a string in the database' do
+          route = Route.make(
+            host: 'test-route',
+            domain: domain,
+            space: space,
+            options: { loadbalancing: 'hash', hash_header: 'X-User-ID', hash_balance: '1.25' }
+          )
+
+          route.reload
+          parsed_options = Oj.load(route.options_without_serialization)
+          expect(parsed_options['hash_balance']).to be_a(String)
+          expect(parsed_options['hash_balance']).to eq('1.3')
+        end
+      end
+
+      context 'when hash_balance is 0' do
+        it 'stores hash_balance as a string "0" in the database' do
+          route = Route.make(
+            host: 'test-route',
+            domain: domain,
+            space: space,
+            options: { loadbalancing: 'hash', hash_header: 'X-User-ID', hash_balance: 0 }
+          )
+
+          route.reload
+          parsed_options = Oj.load(route.options_without_serialization)
+          expect(parsed_options['hash_balance']).to be_a(String)
+          expect(parsed_options['hash_balance']).to eq('0.0')
+        end
+      end
+
+      context 'when options do not include hash_balance' do
+        it 'does not add hash_balance to the options' do
+          route = Route.make(
+            host: 'test-route',
+            domain: domain,
+            space: space,
+            options: { loadbalancing: 'round-robin' }
+          )
+
+          route.reload
+          parsed_options = Oj.load(route.options_without_serialization)
+          expect(parsed_options).not_to have_key('hash_balance')
+        end
+      end
+
+      context 'when options are nil' do
+        it 'handles nil options gracefully' do
+          route = Route.make(
+            host: 'test-route',
+            domain: domain,
+            space: space,
+            options: nil
+          )
+
+          route.reload
+          expect(route.options).to be_nil
+        end
+      end
+    end
+
+    describe 'normalize_hash_balance_to_string' do
+      let(:space) { Space.make }
+      let(:domain) { PrivateDomain.make(owning_organization: space.organization) }
+      let(:route) { Route.new(host: 'test', domain: domain, space: space) }
+
+      context 'when hash_balance is provided as a float' do
+        it 'converts it to a string' do
+          result = route.send(:normalize_hash_balance_to_string, { hash_balance: 1.5 })
+          expect(result[:hash_balance]).to eq('1.5')
+          expect(result[:hash_balance]).to be_a(String)
+        end
+      end
+
+      context 'when hash_balance is provided as an integer' do
+        it 'converts it to a string' do
+          result = route.send(:normalize_hash_balance_to_string, { hash_balance: 2 })
+          expect(result[:hash_balance]).to eq('2')
+          expect(result[:hash_balance]).to be_a(String)
+        end
+      end
+
+      context 'when hash_balance is provided as 0' do
+        it 'converts it to string "0"' do
+          result = route.send(:normalize_hash_balance_to_string, { hash_balance: 0 })
+          expect(result[:hash_balance]).to eq('0')
+          expect(result[:hash_balance]).to be_a(String)
+        end
+      end
+
+      context 'when hash_balance is already a string' do
+        it 'keeps it as a string' do
+          result = route.send(:normalize_hash_balance_to_string, { hash_balance: '1.25' })
+          expect(result[:hash_balance]).to eq('1.25')
+          expect(result[:hash_balance]).to be_a(String)
+        end
+      end
+
+      context 'when hash_balance is provided with string key' do
+        it 'converts it to a string with symbol key' do
+          result = route.send(:normalize_hash_balance_to_string, { 'hash_balance' => 2.5 })
+          expect(result[:hash_balance]).to eq('2.5')
+          expect(result[:hash_balance]).to be_a(String)
+        end
+      end
+
+      context 'when hash_balance is not present' do
+        it 'returns the hash unchanged' do
+          result = route.send(:normalize_hash_balance_to_string, { loadbalancing: 'hash', hash_header: 'X-User-ID' })
+          expect(result[:loadbalancing]).to eq('hash')
+          expect(result[:hash_header]).to eq('X-User-ID')
+          expect(result).not_to have_key(:hash_balance)
+        end
+      end
+
+      context 'when hash_balance is nil' do
+        it 'does not convert nil to string' do
+          result = route.send(:normalize_hash_balance_to_string, { hash_balance: nil })
+          expect(result[:hash_balance]).to be_nil
+        end
+      end
+
+      context 'when hash_balance is an empty string' do
+        it 'does not convert empty string' do
+          result = route.send(:normalize_hash_balance_to_string, { hash_balance: '' })
+          expect(result[:hash_balance]).to eq('')
+        end
+      end
+
+      context 'when options is not a hash' do
+        it 'returns the input unchanged' do
+          result = route.send(:normalize_hash_balance_to_string, nil)
+          expect(result).to be_nil
+        end
+      end
+
+      context 'when options is an empty hash' do
+        it 'returns an empty hash' do
+          result = route.send(:normalize_hash_balance_to_string, {})
+          expect(result).to eq({})
+        end
+      end
+
+      context 'with complete options hash' do
+        it 'normalizes hash_balance while preserving other options' do
+          result = route.send(:normalize_hash_balance_to_string, {
+                                loadbalancing: 'hash',
+                                hash_header: 'X-User-ID',
+                                hash_balance: 3.14159
+                              })
+          expect(result[:loadbalancing]).to eq('hash')
+          expect(result[:hash_header]).to eq('X-User-ID')
+          expect(result[:hash_balance]).to eq('3.14159')
+          expect(result[:hash_balance]).to be_a(String)
+        end
+      end
+    end
+
+    describe 'hash options cleanup for non-hash loadbalancing' do
+      let(:space) { Space.make }
+      let(:domain) { PrivateDomain.make(owning_organization: space.organization) }
+
+      context 'when creating a route with hash loadbalancing' do
+        it 'keeps hash_header and hash_balance' do
+          route = Route.make(
+            host: 'test-route',
+            domain: domain,
+            space: space,
+            options: { loadbalancing: 'hash', hash_header: 'X-User-ID', hash_balance: '1.5' }
+          )
+
+          route.reload
+          parsed_options = Oj.load(route.options_without_serialization)
+          expect(parsed_options['loadbalancing']).to eq('hash')
+          expect(parsed_options['hash_header']).to eq('X-User-ID')
+          expect(parsed_options['hash_balance']).to eq('1.5')
+        end
+      end
+
+      context 'when updating a route from hash to round-robin' do
+        it 'removes hash_header and hash_balance' do
+          route = Route.make(
+            host: 'test-route',
+            domain: domain,
+            space: space,
+            options: { loadbalancing: 'hash', hash_header: 'X-User-ID', hash_balance: '1.5' }
+          )
+
+          route.update(options: { loadbalancing: 'round-robin' })
+          route.reload
+
+          parsed_options = Oj.load(route.options_without_serialization)
+          expect(parsed_options['loadbalancing']).to eq('round-robin')
+          expect(parsed_options).not_to have_key('hash_header')
+          expect(parsed_options).not_to have_key('hash_balance')
+        end
+      end
+
+      context 'when updating a route from hash to least-connection' do
+        it 'removes hash_header and hash_balance' do
+          route = Route.make(
+            host: 'test-route',
+            domain: domain,
+            space: space,
+            options: { loadbalancing: 'hash', hash_header: 'X-Request-ID', hash_balance: '2.5' }
+          )
+
+          route.update(options: { loadbalancing: 'least-connection' })
+          route.reload
+
+          parsed_options = Oj.load(route.options_without_serialization)
+          expect(parsed_options['loadbalancing']).to eq('least-connection')
+          expect(parsed_options).not_to have_key('hash_header')
+          expect(parsed_options).not_to have_key('hash_balance')
+        end
+      end
+
+      context 'when updating a route from round-robin to hash' do
+        it 'keeps hash_header and hash_balance if provided' do
+          route = Route.make(
+            host: 'test-route',
+            domain: domain,
+            space: space,
+            options: { loadbalancing: 'round-robin' }
+          )
+
+          route.update(options: { loadbalancing: 'hash', hash_header: 'X-User-ID', hash_balance: '1.5' })
+          route.reload
+
+          parsed_options = Oj.load(route.options_without_serialization)
+          expect(parsed_options['loadbalancing']).to eq('hash')
+          expect(parsed_options['hash_header']).to eq('X-User-ID')
+          expect(parsed_options['hash_balance']).to eq('1.5')
+        end
+      end
+
+      context 'when removing hash loadbalancing option' do
+        it 'deletes hash_header and hash_balance when present' do
+          route = Route.make(
+            host: 'test-route',
+            domain: domain,
+            space: space,
+            options: { loadbalancing: 'hash', hash_header: 'X-User-ID', hash_balance: '1.5' }
+          )
+
+          route.update(options: { loadbalancing: nil })
+          route.reload
+
+          parsed_options = Oj.load(route.options_without_serialization)
+          expect(parsed_options).not_to have_key('hash_header')
+          expect(parsed_options).not_to have_key('hash_balance')
+        end
+      end
+
+      context 'when using string keys instead of symbols' do
+        it 'still removes hash options for non-hash loadbalancing' do
+          route = Route.make(
+            host: 'test-route',
+            domain: domain,
+            space: space,
+            options: { 'loadbalancing' => 'round-robin', 'hash_header' => 'X-User-ID', 'hash_balance' => '1.5' }
+          )
+
+          route.reload
+          parsed_options = Oj.load(route.options_without_serialization)
+          expect(parsed_options['loadbalancing']).to eq('round-robin')
+          expect(parsed_options).not_to have_key('hash_header')
+          expect(parsed_options).not_to have_key('hash_balance')
+        end
+      end
+    end
+
+    describe 'route options validation' do
+      let(:space) { Space.make }
+      let(:domain) { PrivateDomain.make(owning_organization: space.organization) }
+
+      context 'when loadbalancing is hash' do
+        context 'and hash_header is present' do
+          it 'is valid' do
+            route = Route.new(
+              host: 'test-route',
+              domain: domain,
+              space: space,
+              options: { loadbalancing: 'hash', hash_header: 'X-User-ID' }
+            )
+
+            expect(route).to be_valid
+          end
+        end
+
+        context 'and hash_header is missing' do
+          it 'is invalid and adds an error' do
+            route = Route.new(
+              host: 'test-route',
+              domain: domain,
+              space: space,
+              options: { loadbalancing: 'hash' }
+            )
+
+            expect(route).not_to be_valid
+            expect(route.errors[:route]).to include :hash_header_missing
+          end
+        end
+
+        context 'and hash_header is blank string' do
+          it 'is invalid and adds an error' do
+            route = Route.new(
+              host: 'test-route',
+              domain: domain,
+              space: space,
+              options: { loadbalancing: 'hash', hash_header: '' }
+            )
+
+            expect(route).not_to be_valid
+            expect(route.errors[:route]).to include :hash_header_missing
+          end
+        end
+
+        context 'and hash_header and hash_balance are both present' do
+          it 'is valid' do
+            route = Route.new(
+              host: 'test-route',
+              domain: domain,
+              space: space,
+              options: { loadbalancing: 'hash', hash_header: 'X-User-ID', hash_balance: '1.5' }
+            )
+
+            expect(route).to be_valid
+          end
+        end
+      end
+
+      context 'when loadbalancing is round-robin' do
+        it 'is valid' do
+          route = Route.new(
+            host: 'test-route',
+            domain: domain,
+            space: space,
+            options: { loadbalancing: 'round-robin' }
+          )
+
+          expect(route).to be_valid
+        end
+      end
+
+      context 'when loadbalancing is least-connection' do
+        it 'is valid' do
+          route = Route.new(
+            host: 'test-route',
+            domain: domain,
+            space: space,
+            options: { loadbalancing: 'least-connection' }
+          )
+
+          expect(route).to be_valid
+        end
+      end
+
+      context 'when options are nil' do
+        it 'is valid' do
+          route = Route.new(
+            host: 'test-route',
+            domain: domain,
+            space: space,
+            options: nil
+          )
+
+          expect(route).to be_valid
+        end
+      end
+
+      context 'when options are empty hash' do
+        it 'is valid' do
+          route = Route.new(
+            host: 'test-route',
+            domain: domain,
+            space: space,
+            options: {}
+          )
+
+          expect(route).to be_valid
+        end
+      end
+
+      context 'when updating an existing route' do
+        context 'changing to hash loadbalancing without hash_header' do
+          it 'is invalid' do
+            route = Route.make(
+              host: 'test-route',
+              domain: domain,
+              space: space,
+              options: { loadbalancing: 'round-robin' }
+            )
+
+            route.options = { loadbalancing: 'hash' }
+
+            expect(route).not_to be_valid
+            expect(route.errors[:route]).to include :hash_header_missing
+          end
+        end
+
+        context 'changing to hash loadbalancing with hash_header' do
+          it 'is valid' do
+            route = Route.make(
+              host: 'test-route',
+              domain: domain,
+              space: space,
+              options: { loadbalancing: 'round-robin' }
+            )
+
+            route.options = { loadbalancing: 'hash', hash_header: 'X-Request-ID' }
+
+            expect(route).to be_valid
+          end
+        end
+      end
+
+      context 'when options use string keys instead of symbols' do
+        context 'and hash_header is present' do
+          it 'is valid' do
+            route = Route.new(
+              host: 'test-route',
+              domain: domain,
+              space: space,
+              options: { 'loadbalancing' => 'hash', 'hash_header' => 'X-User-ID' }
+            )
+
+            expect(route).to be_valid
+          end
+        end
+
+        context 'and hash_header is missing' do
+          it 'is invalid and adds an error' do
+            route = Route.new(
+              host: 'test-route',
+              domain: domain,
+              space: space,
+              options: { 'loadbalancing' => 'hash' }
+            )
+
+            expect(route).not_to be_valid
+            expect(route.errors[:route]).to include :hash_header_missing
+          end
+        end
+      end
+    end
+
     describe 'instance methods' do
       let(:space) { Space.make }
 

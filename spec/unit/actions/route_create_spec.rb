@@ -108,6 +108,118 @@ module VCAP::CloudController
         end
       end
 
+      context 'when given route options' do
+        context 'when creating a route with loadbalancing=hash' do
+          context 'with hash_header but without hash_balance' do
+            let(:message_with_hash_options) do
+              RouteCreateMessage.new({
+                                       relationships: {
+                                         space: {
+                                           data: { guid: space.guid }
+                                         },
+                                         domain: {
+                                           data: { guid: domain.guid }
+                                         }
+                                       },
+                                       options: {
+                                         loadbalancing: 'hash',
+                                         hash_header: 'X-User-ID'
+                                       }
+                                     })
+            end
+
+            it 'creates a route with hash loadbalancing and hash_header options' do
+              expect do
+                subject.create(message: message_with_hash_options, space: space, domain: domain)
+              end.to change(Route, :count).by(1)
+
+              route = Route.last
+              expect(route.options).to include({ 'loadbalancing' => 'hash', 'hash_header' => 'X-User-ID' })
+            end
+          end
+
+          context 'with both hash_header and hash_balance' do
+            let(:message_with_hash_options) do
+              RouteCreateMessage.new({
+                                       relationships: {
+                                         space: {
+                                           data: { guid: space.guid }
+                                         },
+                                         domain: {
+                                           data: { guid: domain.guid }
+                                         }
+                                       },
+                                       options: {
+                                         loadbalancing: 'hash',
+                                         hash_header: 'X-Session-ID',
+                                         hash_balance: '2'
+                                       }
+                                     })
+            end
+
+            it 'creates a route with hash loadbalancing, hash_header, and hash_balance options' do
+              expect do
+                subject.create(message: message_with_hash_options, space: space, domain: domain)
+              end.to change(Route, :count).by(1)
+
+              route = Route.last
+              expect(route.options).to include({ 'loadbalancing' => 'hash', 'hash_header' => 'X-Session-ID', 'hash_balance' => '2.0' })
+            end
+          end
+
+          context 'without hash_header (required)' do
+            let(:message_without_hash_header) do
+              RouteCreateMessage.new({
+                                       relationships: {
+                                         space: {
+                                           data: { guid: space.guid }
+                                         },
+                                         domain: {
+                                           data: { guid: domain.guid }
+                                         }
+                                       },
+                                       options: {
+                                         loadbalancing: 'hash'
+                                       }
+                                     })
+            end
+
+            it 'raises an error indicating hash_header is required' do
+              expect do
+                subject.create(message: message_without_hash_header, space: space, domain: domain)
+              end.to raise_error(RouteCreate::Error, 'Hash header must be present when loadbalancing is set to hash.')
+            end
+          end
+        end
+
+        context 'when creating a route with other loadbalancing options' do
+          let(:message_with_round_robin) do
+            RouteCreateMessage.new({
+                                     relationships: {
+                                       space: {
+                                         data: { guid: space.guid }
+                                       },
+                                       domain: {
+                                         data: { guid: domain.guid }
+                                       }
+                                     },
+                                     options: {
+                                       loadbalancing: 'round-robin'
+                                     }
+                                   })
+          end
+
+          it 'creates a route with the specified loadbalancing option' do
+            expect do
+              subject.create(message: message_with_round_robin, space: space, domain: domain)
+            end.to change(Route, :count).by(1)
+
+            route = Route.last
+            expect(route.options).to include({ 'loadbalancing' => 'round-robin' })
+          end
+        end
+      end
+
       context 'when the domain has an owning org that is different from the space\'s parent org' do
         let(:other_org) { VCAP::CloudController::Organization.make }
         let(:inaccessible_domain) { VCAP::CloudController::PrivateDomain.make(owning_organization: other_org) }

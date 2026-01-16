@@ -212,10 +212,10 @@ module VCAP::CloudController
       context 'when a route contains empty route options' do
         let(:body) do
           { 'routes' =>
-              [
-                { 'route' => 'existing.example.com',
-                  'options' => {} }
-              ] }
+            [
+              { 'route' => 'existing.example.com',
+                'options' => {} }
+            ] }
         end
 
         it 'returns true' do
@@ -245,10 +245,10 @@ module VCAP::CloudController
       context 'when a route contains invalid route options' do
         let(:body) do
           { 'routes' =>
-              [
-                { 'route' => 'existing.example.com',
-                  'options' => { 'invalid' => 'invalid' } }
-              ] }
+            [
+              { 'route' => 'existing.example.com',
+                'options' => { 'invalid' => 'invalid' } }
+            ] }
         end
 
         it 'returns true' do
@@ -263,12 +263,12 @@ module VCAP::CloudController
       context 'when a route contains a valid value for loadbalancing' do
         let(:body) do
           { 'routes' =>
-              [
-                { 'route' => 'existing.example.com',
-                  'options' => {
-                    'loadbalancing' => 'round-robin'
-                  } }
-              ] }
+            [
+              { 'route' => 'existing.example.com',
+                'options' => {
+                  'loadbalancing' => 'round-robin'
+                } }
+            ] }
         end
 
         it 'returns true' do
@@ -314,6 +314,532 @@ module VCAP::CloudController
           expect(msg.valid?).to be(false)
           expect(msg.errors.errors.length).to eq(1)
           expect(msg.errors.full_messages).to include("Cannot use loadbalancing value 'sushi' for Route 'existing.example.com'; Valid values are: 'round-robin, least-connection'")
+        end
+      end
+
+      context 'hash options validation' do
+        context 'when hash_based_routing feature flag is disabled' do
+          before do
+            VCAP::CloudController::FeatureFlag.make(name: 'hash_based_routing', enabled: false)
+          end
+
+          context 'when a route contains loadbalancing=hash' do
+            let(:body) do
+              { 'routes' =>
+                [
+                  { 'route' => 'existing.example.com',
+                    'options' => {
+                      'loadbalancing' => 'hash'
+                    } }
+                ] }
+            end
+
+            it 'returns false' do
+              msg = ManifestRoutesUpdateMessage.new(body)
+
+              expect(msg.valid?).to be(false)
+              expect(msg.errors.full_messages).to include(
+                "Cannot use loadbalancing value 'hash' for Route 'existing.example.com'; Valid values are: 'round-robin, least-connection'"
+              )
+            end
+          end
+
+          context 'when a route contains hash_header' do
+            let(:body) do
+              { 'routes' =>
+                [
+                  { 'route' => 'existing.example.com',
+                    'options' => {
+                      'hash_header' => 'X-User-ID'
+                    } }
+                ] }
+            end
+
+            it 'returns false' do
+              msg = ManifestRoutesUpdateMessage.new(body)
+
+              expect(msg.valid?).to be(false)
+              expect(msg.errors.full_messages).to include(
+                "Route 'existing.example.com' contains invalid route option 'hash_header'. Valid keys: 'loadbalancing'"
+              )
+            end
+          end
+
+          context 'when a route contains hash_balance' do
+            let(:body) do
+              { 'routes' =>
+                [
+                  { 'route' => 'existing.example.com',
+                    'options' => {
+                      'hash_balance' => '1.5'
+                    } }
+                ] }
+            end
+
+            it 'returns false' do
+              msg = ManifestRoutesUpdateMessage.new(body)
+
+              expect(msg.valid?).to be(false)
+              expect(msg.errors.full_messages).to include("Route 'existing.example.com' contains invalid route option 'hash_balance'. Valid keys: 'loadbalancing'")
+            end
+          end
+
+          context 'when a route contains hash_balance with round-robin loadbalancing' do
+            let(:body) do
+              { 'routes' =>
+                [
+                  { 'route' => 'existing.example.com',
+                    'options' => {
+                      'loadbalancing' => 'round-robin',
+                      'hash_balance' => '1.2'
+                    } }
+                ] }
+            end
+
+            it 'returns false with only one error (invalid option), and skips hash-based routing specific error messages' do
+              msg = ManifestRoutesUpdateMessage.new(body)
+
+              expect(msg.valid?).to be(false)
+              expect(msg.errors.full_messages).to include("Route 'existing.example.com' contains invalid route option 'hash_balance'. Valid keys: 'loadbalancing'")
+              expect(msg.errors.full_messages).not_to include("Route 'existing.example.com': Hash balance can only be set when loadbalancing is hash")
+              expect(msg.errors.full_messages.length).to eq(1)
+            end
+          end
+
+          context 'when a route contains both hash_header and hash_balance' do
+            let(:body) do
+              { 'routes' =>
+                [
+                  { 'route' => 'existing.example.com',
+                    'options' => {
+                      'hash_header' => 'X-User-ID',
+                      'hash_balance' => '1.5'
+                    } }
+                ] }
+            end
+
+            it 'returns false with appropriate error' do
+              msg = ManifestRoutesUpdateMessage.new(body)
+
+              expect(msg.valid?).to be(false)
+              # Should get error for invalid route options (both hash_header and hash_balance are invalid)
+              expect(msg.errors.full_messages.any? { |m| m.include?('contains invalid route option') }).to be(true)
+            end
+          end
+        end
+
+        context 'when hash_based_routing feature flag is enabled' do
+          before do
+            VCAP::CloudController::FeatureFlag.make(name: 'hash_based_routing', enabled: true)
+          end
+
+          context 'when a route contains hash_header with hash loadbalancing' do
+            let(:body) do
+              { 'routes' =>
+                [
+                  { 'route' => 'existing.example.com',
+                    'options' => {
+                      'loadbalancing' => 'hash',
+                      'hash_header' => 'X-User-ID'
+                    } }
+                ] }
+            end
+
+            it 'returns true' do
+              msg = ManifestRoutesUpdateMessage.new(body)
+
+              expect(msg.valid?).to be(true)
+            end
+          end
+
+          context 'when a route contains hash_balance with hash loadbalancing' do
+            let(:body) do
+              { 'routes' =>
+                [
+                  { 'route' => 'existing.example.com',
+                    'options' => {
+                      'loadbalancing' => 'hash',
+                      'hash_header' => 'X-User-ID',
+                      'hash_balance' => '1.5'
+                    } }
+                ] }
+            end
+
+            it 'returns true' do
+              msg = ManifestRoutesUpdateMessage.new(body)
+
+              expect(msg.valid?).to be(true)
+            end
+          end
+
+          context 'when a route contains hash_header without loadbalancing' do
+            let(:body) do
+              { 'routes' =>
+                [
+                  { 'route' => 'existing.example.com',
+                    'options' => {
+                      'hash_header' => 'X-User-ID'
+                    } }
+                ] }
+            end
+
+            it 'returns true (loadbalancing is omitted)' do
+              msg = ManifestRoutesUpdateMessage.new(body)
+
+              expect(msg.valid?).to be(true)
+            end
+          end
+
+          context 'when a route contains hash_header longer than 128 characters' do
+            let(:body) do
+              { 'routes' =>
+                [
+                  { 'route' => 'existing.example.com',
+                    'options' => {
+                      'loadbalancing' => 'hash',
+                      'hash_header' => 'X' * 129
+                    } }
+                ] }
+            end
+
+            it 'returns false' do
+              msg = ManifestRoutesUpdateMessage.new(body)
+
+              expect(msg.valid?).to be(false)
+              expect(msg.errors.full_messages).to include("Route 'existing.example.com': Hash header must be at most 128 characters")
+            end
+          end
+
+          context 'when a route contains hash_header exactly 128 characters' do
+            let(:body) do
+              { 'routes' =>
+                [
+                  { 'route' => 'existing.example.com',
+                    'options' => {
+                      'loadbalancing' => 'hash',
+                      'hash_header' => 'X' * 128
+                    } }
+                ] }
+            end
+
+            it 'returns true' do
+              msg = ManifestRoutesUpdateMessage.new(body)
+
+              expect(msg.valid?).to be(true)
+            end
+          end
+
+          context 'when a route contains hash_balance without loadbalancing' do
+            let(:body) do
+              { 'routes' =>
+                [
+                  { 'route' => 'existing.example.com',
+                    'options' => {
+                      'hash_header' => 'X-User-ID',
+                      'hash_balance' => '2.0'
+                    } }
+                ] }
+            end
+
+            it 'returns true (loadbalancing is omitted)' do
+              msg = ManifestRoutesUpdateMessage.new(body)
+
+              expect(msg.valid?).to be(true)
+            end
+          end
+
+          context 'when a route contains hash_header with non-hash loadbalancing' do
+            let(:body) do
+              { 'routes' =>
+                [
+                  { 'route' => 'existing.example.com',
+                    'options' => {
+                      'loadbalancing' => 'round-robin',
+                      'hash_header' => 'X-User-ID'
+                    } }
+                ] }
+            end
+
+            it 'returns false' do
+              msg = ManifestRoutesUpdateMessage.new(body)
+
+              expect(msg.valid?).to be(false)
+              expect(msg.errors.full_messages).to include("Route 'existing.example.com': Hash header can only be set when loadbalancing is hash")
+            end
+          end
+
+          context 'when a route contains hash_balance with non-hash loadbalancing' do
+            let(:body) do
+              { 'routes' =>
+                [
+                  { 'route' => 'existing.example.com',
+                    'options' => {
+                      'loadbalancing' => 'least-connection',
+                      'hash_balance' => '1.5'
+                    } }
+                ] }
+            end
+
+            it 'returns false' do
+              msg = ManifestRoutesUpdateMessage.new(body)
+
+              expect(msg.valid?).to be(false)
+              expect(msg.errors.full_messages).to include("Route 'existing.example.com': Hash balance can only be set when loadbalancing is hash")
+            end
+          end
+
+          context 'when a route contains non-numeric hash_balance' do
+            let(:body) do
+              { 'routes' =>
+                [
+                  { 'route' => 'existing.example.com',
+                    'options' => {
+                      'hash_balance' => 'not-a-number'
+                    } }
+                ] }
+            end
+
+            it 'returns false' do
+              msg = ManifestRoutesUpdateMessage.new(body)
+
+              expect(msg.valid?).to be(false)
+              expect(msg.errors.full_messages).to include("Route 'existing.example.com': Hash balance must be a numeric value")
+            end
+          end
+
+          context 'when a route contains hash_balance of 0' do
+            let(:body) do
+              { 'routes' =>
+                [
+                  { 'route' => 'existing.example.com',
+                    'options' => {
+                      'loadbalancing' => 'hash',
+                      'hash_header' => 'X-User-ID',
+                      'hash_balance' => 0
+                    } }
+                ] }
+            end
+
+            it 'returns true' do
+              msg = ManifestRoutesUpdateMessage.new(body)
+
+              expect(msg.valid?).to be(true)
+            end
+          end
+
+          context 'when a route contains hash_balance between 0 and 1.1' do
+            let(:body) do
+              { 'routes' =>
+                [
+                  { 'route' => 'existing.example.com',
+                    'options' => {
+                      'loadbalancing' => 'hash',
+                      'hash_header' => 'X-User-ID',
+                      'hash_balance' => 0.5
+                    } }
+                ] }
+            end
+
+            it 'returns false' do
+              msg = ManifestRoutesUpdateMessage.new(body)
+
+              expect(msg.valid?).to be(false)
+              expect(msg.errors.full_messages).to include("Route 'existing.example.com': Hash balance must be either 0 or between 1.1 and 10.0")
+            end
+          end
+
+          context 'when a route contains hash_balance of 1.1' do
+            let(:body) do
+              { 'routes' =>
+                [
+                  { 'route' => 'existing.example.com',
+                    'options' => {
+                      'loadbalancing' => 'hash',
+                      'hash_header' => 'X-User-ID',
+                      'hash_balance' => 1.1
+                    } }
+                ] }
+            end
+
+            it 'returns true' do
+              msg = ManifestRoutesUpdateMessage.new(body)
+
+              expect(msg.valid?).to be(true)
+            end
+          end
+
+          context 'when a route contains hash_balance greater than 10.0' do
+            let(:body) do
+              { 'routes' =>
+                [
+                  { 'route' => 'existing.example.com',
+                    'options' => {
+                      'loadbalancing' => 'hash',
+                      'hash_header' => 'X-User-ID',
+                      'hash_balance' => 10.1
+                    } }
+                ] }
+            end
+
+            it 'returns false' do
+              msg = ManifestRoutesUpdateMessage.new(body)
+
+              expect(msg.valid?).to be(false)
+              expect(msg.errors.full_messages).to include("Route 'existing.example.com': Hash balance must be either 0 or between 1.1 and 10.0")
+            end
+          end
+
+          context 'when a route contains hash_balance exactly 10.0' do
+            let(:body) do
+              { 'routes' =>
+                [
+                  { 'route' => 'existing.example.com',
+                    'options' => {
+                      'loadbalancing' => 'hash',
+                      'hash_header' => 'X-User-ID',
+                      'hash_balance' => 10.0
+                    } }
+                ] }
+            end
+
+            it 'returns true' do
+              msg = ManifestRoutesUpdateMessage.new(body)
+
+              expect(msg.valid?).to be(true)
+            end
+          end
+
+          context 'when a route contains numeric string hash_balance' do
+            let(:body) do
+              { 'routes' =>
+                [
+                  { 'route' => 'existing.example.com',
+                    'options' => {
+                      'loadbalancing' => 'hash',
+                      'hash_header' => 'X-User-ID',
+                      'hash_balance' => '2.5'
+                    } }
+                ] }
+            end
+
+            it 'returns true' do
+              msg = ManifestRoutesUpdateMessage.new(body)
+
+              expect(msg.valid?).to be(true)
+            end
+          end
+
+          context 'when a route contains float hash_balance' do
+            let(:body) do
+              { 'routes' =>
+                [
+                  { 'route' => 'existing.example.com',
+                    'options' => {
+                      'loadbalancing' => 'hash',
+                      'hash_header' => 'X-User-ID',
+                      'hash_balance' => 1.5
+                    } }
+                ] }
+            end
+
+            it 'returns true' do
+              msg = ManifestRoutesUpdateMessage.new(body)
+
+              expect(msg.valid?).to be(true)
+            end
+          end
+
+          context 'when a route contains hash_balance longer than 16 characters' do
+            let(:body) do
+              { 'routes' =>
+                [
+                  { 'route' => 'existing.example.com',
+                    'options' => {
+                      'loadbalancing' => 'hash',
+                      'hash_header' => 'X-User-ID',
+                      'hash_balance' => '2.' + ('1' * 15)
+                    } }
+                ] }
+            end
+
+            it 'returns false' do
+              msg = ManifestRoutesUpdateMessage.new(body)
+
+              expect(msg.valid?).to be(false)
+              expect(msg.errors.full_messages).to include("Route 'existing.example.com': Hash balance must be at most 16 characters")
+            end
+          end
+
+          context 'when a route contains hash_balance exactly 16 characters' do
+            let(:body) do
+              { 'routes' =>
+                [
+                  { 'route' => 'existing.example.com',
+                    'options' => {
+                      'loadbalancing' => 'hash',
+                      'hash_header' => 'X-User-ID',
+                      'hash_balance' => '2.' + ('1' * 14)
+                    } }
+                ] }
+            end
+
+            it 'returns true if the value is numeric and within range' do
+              msg = ManifestRoutesUpdateMessage.new(body)
+
+              expect(msg.valid?).to be(true)
+            end
+          end
+
+          context 'when a route contains multiple issues with hash options' do
+            let(:body) do
+              { 'routes' =>
+                [
+                  { 'route' => 'existing.example.com',
+                    'options' => {
+                      'loadbalancing' => 'hash',
+                      'hash_header' => 'X' * 129,
+                      'hash_balance' => '2.' + ('1' * 15)
+                    } }
+                ] }
+            end
+
+            it 'returns false and prints all errors' do
+              msg = ManifestRoutesUpdateMessage.new(body)
+
+              expect(msg.valid?).to be(false)
+              expect(msg.errors.full_messages).to include("Route 'existing.example.com': Hash header must be at most 128 characters")
+              expect(msg.errors.full_messages).to include("Route 'existing.example.com': Hash balance must be at most 16 characters")
+            end
+          end
+
+          context 'when multiple routes have mixed valid and invalid hash options' do
+            let(:body) do
+              { 'routes' =>
+                [
+                  { 'route' => 'valid1.example.com',
+                    'options' => {
+                      'loadbalancing' => 'hash',
+                      'hash_header' => 'X-User-ID'
+                    } },
+                  { 'route' => 'invalid.example.com',
+                    'options' => {
+                      'loadbalancing' => 'round-robin',
+                      'hash_header' => 'X-User-ID'
+                    } },
+                  { 'route' => 'valid2.example.com',
+                    'options' => {
+                      'hash_header' => 'X-Session-ID'
+                    } }
+                ] }
+            end
+
+            it 'returns false and reports the invalid route' do
+              msg = ManifestRoutesUpdateMessage.new(body)
+
+              expect(msg.valid?).to be(false)
+              expect(msg.errors.full_messages).to include("Route 'invalid.example.com': Hash header can only be set when loadbalancing is hash")
+            end
+          end
         end
       end
     end

@@ -23,7 +23,8 @@ module VCAP::CloudController
       service_instance_sharing: false,
       hide_marketplace_from_unauthenticated_users: false,
       resource_matching: true,
-      route_sharing: false
+      route_sharing: false,
+      hash_based_routing: false
     }.freeze
 
     ADMIN_SKIPPABLE = %i[

@@ -393,6 +393,270 @@ module VCAP::CloudController
           end.to raise_error(ManifestRouteUpdate::InvalidRoute, /Host format is invalid/)
         end
       end
+
+      context 'when route options are provided' do
+        let!(:domain) { VCAP::CloudController::SharedDomain.make(name: 'tomato.avocado-toast.com') }
+
+        before do
+          VCAP::CloudController::FeatureFlag.make(name: 'hash_based_routing', enabled: true)
+        end
+
+        context 'when creating a new route with loadbalancing options' do
+          let(:message) do
+            ManifestRoutesUpdateMessage.new(
+              routes: [
+                {
+                  route: 'http://potato.tomato.avocado-toast.com/some-path',
+                  options: { loadbalancing: 'round-robin' }
+                }
+              ]
+            )
+          end
+
+          it 'creates the route with the specified loadbalancing option' do
+            ManifestRouteUpdate.update(app.guid, message, user_audit_info)
+
+            routes = app.reload.routes
+            expect(routes.length).to eq(1)
+
+            route = routes.first
+            expect(route.options).to include({ 'loadbalancing' => 'round-robin' })
+          end
+        end
+
+        context 'when creating a new route with hash loadbalancing and hash_header' do
+          let(:message) do
+            ManifestRoutesUpdateMessage.new(
+              routes: [
+                {
+                  route: 'http://potato.tomato.avocado-toast.com/some-path',
+                  options: {
+                    loadbalancing: 'hash',
+                    hash_header: 'X-User-ID'
+                  }
+                }
+              ]
+            )
+          end
+
+          it 'creates the route with hash loadbalancing options' do
+            ManifestRouteUpdate.update(app.guid, message, user_audit_info)
+
+            routes = app.reload.routes
+            expect(routes.length).to eq(1)
+
+            route = routes.first
+            expect(route.options).to include({ 'loadbalancing' => 'hash', 'hash_header' => 'X-User-ID' })
+          end
+        end
+
+        context 'when creating a new route with hash loadbalancing, hash_header, and hash_balance' do
+          let(:message) do
+            ManifestRoutesUpdateMessage.new(
+              routes: [
+                {
+                  route: 'http://potato.tomato.avocado-toast.com/some-path',
+                  options: {
+                    loadbalancing: 'hash',
+                    hash_header: 'X-Session-ID',
+                    hash_balance: '2.5'
+                  }
+                }
+              ]
+            )
+          end
+
+          it 'creates the route with all hash loadbalancing options' do
+            ManifestRouteUpdate.update(app.guid, message, user_audit_info)
+
+            routes = app.reload.routes
+            expect(routes.length).to eq(1)
+
+            route = routes.first
+            expect(route.options).to include({ 'loadbalancing' => 'hash', 'hash_header' => 'X-Session-ID', 'hash_balance' => '2.5' })
+          end
+        end
+
+        context 'when creating a new route with hash loadbalancing but missing hash_header' do
+          let(:message) do
+            ManifestRoutesUpdateMessage.new(
+              routes: [
+                {
+                  route: 'http://potato.tomato.avocado-toast.com/some-path',
+                  options: { loadbalancing: 'hash' }
+                }
+              ]
+            )
+          end
+
+          it 'raises an error indicating hash_header is required' do
+            expect do
+              ManifestRouteUpdate.update(app.guid, message, user_audit_info)
+            end.to raise_error(ManifestRouteUpdate::InvalidRoute, /Hash header must be present when loadbalancing is set to hash./)
+          end
+        end
+
+        context 'when updating an existing route with new loadbalancing options' do
+          let!(:route) { Route.make(host: 'potato', domain: domain, path: '/some-path', space: app.space) }
+          let(:message) do
+            ManifestRoutesUpdateMessage.new(
+              routes: [
+                {
+                  route: 'http://potato.tomato.avocado-toast.com/some-path',
+                  options: { loadbalancing: 'least-connection' }
+                }
+              ]
+            )
+          end
+
+          it 'updates the existing route with the new loadbalancing option' do
+            expect do
+              ManifestRouteUpdate.update(app.guid, message, user_audit_info)
+            end.not_to(change(Route, :count))
+
+            route.reload
+            expect(route.options).to include({ 'loadbalancing' => 'least-connection' })
+          end
+        end
+
+        context 'when updating an existing route from round-robin to hash' do
+          let!(:route) do
+            Route.make(
+              host: 'potato',
+              domain: domain,
+              path: '/some-path',
+              space: app.space,
+              options: { loadbalancing: 'round-robin' }
+            )
+          end
+
+          let(:message) do
+            ManifestRoutesUpdateMessage.new(
+              routes: [
+                {
+                  route: 'http://potato.tomato.avocado-toast.com/some-path',
+                  options: {
+                    loadbalancing: 'hash',
+                    hash_header: 'X-User-ID'
+                  }
+                }
+              ]
+            )
+          end
+
+          it 'updates the route to hash loadbalancing with hash_header' do
+            ManifestRouteUpdate.update(app.guid, message, user_audit_info)
+
+            route.reload
+            expect(route.options).to include({ 'loadbalancing' => 'hash', 'hash_header' => 'X-User-ID' })
+          end
+        end
+
+        context 'when updating an existing hash route with new hash_header' do
+          let!(:route) do
+            Route.make(
+              host: 'potato',
+              domain: domain,
+              path: '/some-path',
+              space: app.space,
+              options: {
+                loadbalancing: 'hash',
+                hash_header: 'X-Old-Header',
+                hash_balance: '2.0'
+              }
+            )
+          end
+
+          let(:message) do
+            ManifestRoutesUpdateMessage.new(
+              routes: [
+                {
+                  route: 'http://potato.tomato.avocado-toast.com/some-path',
+                  options: { hash_header: 'X-New-Header' }
+                }
+              ]
+            )
+          end
+
+          it 'updates only the hash_header while keeping other options' do
+            ManifestRouteUpdate.update(app.guid, message, user_audit_info)
+
+            route.reload
+            expect(route.options).to include({ 'loadbalancing' => 'hash', 'hash_header' => 'X-New-Header', 'hash_balance' => '2.0' })
+          end
+        end
+
+        context 'when updating an existing hash route with new hash_balance' do
+          let!(:route) do
+            Route.make(
+              host: 'potato',
+              domain: domain,
+              path: '/some-path',
+              space: app.space,
+              options: {
+                loadbalancing: 'hash',
+                hash_header: 'X-User-ID',
+                hash_balance: '2.0'
+              }
+            )
+          end
+
+          let(:message) do
+            ManifestRoutesUpdateMessage.new(
+              routes: [
+                {
+                  route: 'http://potato.tomato.avocado-toast.com/some-path',
+                  options: { hash_balance: '5.0' }
+                }
+              ]
+            )
+          end
+
+          it 'updates only the hash_balance while keeping other options' do
+            ManifestRouteUpdate.update(app.guid, message, user_audit_info)
+
+            route.reload
+            expect(route.options).to include({ 'loadbalancing' => 'hash', 'hash_header' => 'X-User-ID', 'hash_balance' => '5.0' })
+          end
+        end
+
+        context 'when updating an existing hash route to remove loadbalancing' do
+          let!(:route) do
+            Route.make(
+              host: 'potato',
+              domain: domain,
+              path: '/some-path',
+              space: app.space,
+              options: {
+                loadbalancing: 'hash',
+                hash_header: 'X-User-ID',
+                hash_balance: '2.0'
+              }
+            )
+          end
+
+          let(:message) do
+            ManifestRoutesUpdateMessage.new(
+              routes: [
+                {
+                  route: 'http://potato.tomato.avocado-toast.com/some-path',
+                  options: { loadbalancing: nil }
+                }
+              ]
+            )
+          end
+
+          it 'removes loadbalancing and hash options' do
+            ManifestRouteUpdate.update(app.guid, message, user_audit_info)
+
+            route.reload
+            expect(route.options).to eq({})
+            expect(route.options).not_to have_key('loadbalancing')
+            expect(route.options).not_to have_key('hash_header')
+            expect(route.options).not_to have_key('hash_balance')
+          end
+        end
+      end
     end
   end
 end
