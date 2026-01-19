@@ -34,7 +34,7 @@ module VCAP::CloudController::Metrics
 
       it 'raises error when execution context is nil' do
         allow(VCAP::CloudController::ExecutionContext).to receive(:from_process_type_env).and_return(nil)
-        expect { updater }.to raise_error('Could not register Prometheus metrics: Unknown execution context')
+        expect { updater }.to raise_error('Could not register Prometheus metrics: Unexpected execution context: nil')
       end
 
       context 'when execution context is set' do

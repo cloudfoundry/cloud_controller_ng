@@ -214,14 +214,33 @@ RSpec.describe CloudController::DelayedWorker do
         end
       end
 
+      context 'when set to true but not in CC_WORKER context' do
+        before do
+          options[:publish_metrics] = true
+          allow(VCAP::CloudController::ExecutionContext).to receive(:from_process_type_env).and_return(nil)
+        end
+
+        it 'raises an error' do
+          expect do
+            cc_delayed_worker.start_working
+          end.to raise_error('Metric publishing is only supported for cc workers')
+        end
+      end
+
       context 'when set to true' do
         before do
           options[:publish_metrics] = true
+          allow(VCAP::CloudController::ExecutionContext).to receive(:from_process_type_env).and_return(VCAP::CloudController::ExecutionContext::CC_WORKER)
         end
 
         it 'publishes metrics' do
           cc_delayed_worker.start_working
           expect(Prometheus::Client::DataStores::DirectFileStore).to have_received(:new)
+        end
+
+        it 'loads the delayed job metrics plugin' do
+          cc_delayed_worker.start_working
+          expect(Delayed::Worker.plugins).to include(DelayedJobMetrics::Plugin)
         end
 
         context 'when first worker on machine' do

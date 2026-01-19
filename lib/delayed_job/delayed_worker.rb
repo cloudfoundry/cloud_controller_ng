@@ -27,6 +27,11 @@ class CloudController::DelayedWorker
   def start_working
     config = RakeConfig.config
     if @publish_metrics
+      # Local API workers don't have a concept of publishing metrics
+      unless VCAP::CloudController::ExecutionContext.from_process_type_env == VCAP::CloudController::ExecutionContext::CC_WORKER
+        raise 'Metric publishing is only supported for cc workers'
+      end
+
       setup_metrics(config)
       periodic_updater = CloudController::DependencyLocator.instance.vitals_periodic_updater
       periodic_updater.setup_updates
@@ -121,6 +126,8 @@ class CloudController::DelayedWorker
   def setup_metrics(config)
     prometheus_dir = File.join(config.get(:directories, :tmpdir), 'prometheus')
     Prometheus::Client.config.data_store = Prometheus::Client::DataStores::DirectFileStore.new(dir: prometheus_dir)
+
+    Delayed::Worker.plugins << DelayedJobMetrics::Plugin unless Delayed::Worker.plugins.include?(DelayedJobMetrics::Plugin)
 
     VCAP::CloudController::StandaloneMetricsWebserver.start_for_bosh_job(config.get(:prometheus_port) || 9394) if is_first_generic_worker_on_machine?
   end

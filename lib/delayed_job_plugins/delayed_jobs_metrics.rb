@@ -21,5 +21,3 @@ module DelayedJobMetrics
     end
   end
 end
-
-Delayed::Worker.plugins << DelayedJobMetrics::Plugin
