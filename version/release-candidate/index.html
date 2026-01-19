@@ -18181,7 +18181,17 @@ The origin must be different from <code class="prettyprint">uaa</code> in this c
 <tr>
 <td><strong>loadbalancing</strong></td>
 <td><em>string</em></td>
-<td>The load-balancer associated with this route. Valid values are &lsquo;round-robin&rsquo; and &lsquo;least-connection&rsquo;</td>
+<td>The load-balancer associated with this route. Valid values are &lsquo;round-robin&rsquo;, &lsquo;least-connection&rsquo;, and &lsquo;hash&rsquo;</td>
+</tr>
+<tr>
+<td><strong>hash_header</strong></td>
+<td><em>string</em></td>
+<td>HTTP header name to hash for routing (e.g., &lsquo;X-User-ID&rsquo;, &lsquo;Cookie&rsquo;). Required when loadbalancing is &lsquo;hash&rsquo;. Cannot be set when loadbalancing is not &lsquo;hash&rsquo;.</td>
+</tr>
+<tr>
+<td><strong>hash_balance</strong></td>
+<td><em>string</em></td>
+<td>Weight factor for load balancing (1.1 - 10, or 0 for disabling balancing). Higher values consider load more. Optional when loadbalancing is &lsquo;hash&rsquo;. Cannot be set when loadbalancing is not &lsquo;hash&rsquo;.</td>
 </tr>
 </tbody></table>
 <h3 id="create-a-route">Create a route</h3>
@@ -18204,7 +18214,7 @@ The origin must be different from <code class="prettyprint">uaa</code> in this c
     },
     "options": {
         "loadbalancing": "round-robin"
-    }
+    },
     "metadata": {
       "labels": { "key": "value" },
       "annotations": { "note": "detailed information"}
@@ -18372,6 +18382,30 @@ The origin must be different from <code class="prettyprint">uaa</code> in this c
 <td>Space Supporter</td>
 </tr>
 </tbody></table>
+
+<h4 id="example-with-hash-based-routing">Example with hash-based routing</h4>
+<div class="highlight"><pre class="highlight shell"><code>curl <span class="s2">"https://api.example.org/v3/routes"</span> <span class="se">\</span>
+  <span class="nt">-X</span> POST <span class="se">\</span>
+  <span class="nt">-H</span> <span class="s2">"Authorization: bearer [token]"</span> <span class="se">\</span>
+  <span class="nt">-H</span> <span class="s2">"Content-type: application/json"</span> <span class="se">\</span>
+  <span class="nt">-d</span> <span class="s1">'{
+    "host": "user-specific-app",
+    "relationships": {
+      "domain": {
+        "data": { "guid": "domain-guid" }
+      },
+      "space": {
+        "data": { "guid": "space-guid" }
+      }
+    },
+    "options": {
+        "loadbalancing": "hash",
+        "hash_header": "X-User-ID",
+        "hash_balance": "50.0"
+    }
+  }'</span>
+</code></pre></div>
+<p>This creates a route that uses hash-based routing on the <code class="prettyprint">X-User-ID</code> header with a load balance factor of 50.0.</p>
 <h3 id="get-a-route">Get a route</h3>
 <div class="highlight"><pre class="highlight plaintext"><code>Example Request
 </code></pre></div><div class="highlight"><pre class="highlight shell"><code>curl <span class="s2">"https://api.example.org/v3/routes/[guid]"</span> <span class="se">\</span>
