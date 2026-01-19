@@ -109,7 +109,8 @@ GEM
     bigdecimal (4.0.1)
     bit-struct (0.17)
     builder (3.3.0)
-    byebug (12.0.0)
+    byebug (13.0.0)
+      reline (>= 0.6.0)
     cf-uaa-lib (4.0.9)
       addressable (~> 2.8, >= 2.8.0)
       base64
@@ -363,12 +364,13 @@ GEM
     prism (1.8.0)
     prometheus-client (4.2.5)
       base64
-    pry (0.15.2)
+    pry (0.16.0)
       coderay (~> 1.1)
       method_source (~> 1.0)
-    pry-byebug (3.11.0)
-      byebug (~> 12.0)
-      pry (>= 0.13, < 0.16)
+      reline (>= 0.6.0)
+    pry-byebug (3.12.0)
+      byebug (~> 13.0)
+      pry (>= 0.13, < 0.17)
     psych (5.3.1)
       date
       stringio
