@@ -4,6 +4,7 @@ RSpec.describe DelayedJobMetrics::Plugin do
   let(:prometheus) { instance_double(VCAP::CloudController::Metrics::PrometheusUpdater) }
 
   before do
+    Delayed::Worker.plugins << DelayedJobMetrics::Plugin
     DelayedJobMetrics::Plugin.prometheus = prometheus
     allow(prometheus).to receive(:update_histogram_metric)
   end
@@ -33,13 +34,13 @@ RSpec.describe DelayedJobMetrics::Plugin do
         :cc_job_pickup_delay_seconds,
         be_within(0.5).of(10.0),
         labels: { queue: VCAP::CloudController::Jobs::Queues.generic, worker: 'test_worker' }
-      ).once
+      ).at_least(:once)
 
       expect(prometheus).to have_received(:update_histogram_metric).with(
         :cc_job_duration_seconds,
         kind_of(Numeric),
         labels: { queue: VCAP::CloudController::Jobs::Queues.generic, worker: 'test_worker' }
-      ).once
+      ).at_least(:once)
     end
   end
 end

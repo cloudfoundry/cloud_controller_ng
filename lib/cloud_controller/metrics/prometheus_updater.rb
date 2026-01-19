@@ -103,7 +103,7 @@ module VCAP::CloudController::Metrics
         METRICS.each { |metric| register(metric) }
         PUMA_METRICS.each { |metric| register(metric) }
       else
-        raise 'Could not register Prometheus metrics: Unknown execution context'
+        raise "Could not register Prometheus metrics: Unexpected execution context: #{@execution_context.inspect}"
       end
     end
     # rubocop:enable Metrics/CyclomaticComplexity
