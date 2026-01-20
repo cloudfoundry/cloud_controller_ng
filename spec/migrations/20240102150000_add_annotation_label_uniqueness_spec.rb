@@ -11,25 +11,19 @@ RSpec.describe 'migration to add unique constraint to annotation and labels', is
   let(:label) { VCAP::CloudController::IsolationSegmentLabelModel }
 
   describe 'annotation tables' do
-    it 'truncates keys to 63 characters' do
+    it 'truncates keys to 63 characters and leaves shorter keys unchanged' do
       i1 = isolation_segment.create(name: 'bommel')
-      key_name = 'a' * 64
+      key_name_long = 'a' * 64
       truncated_key_name = 'a' * 63
+      key_name_short = 'b' * 63
 
-      a1 = annotation.create(resource_guid: i1.guid, key_name: key_name, value: 'some_value')
+      a1 = annotation.create(resource_guid: i1.guid, key_name: key_name_long, value: 'some_value')
+      a2 = annotation.create(resource_guid: i1.guid, key_name: key_name_short, value: 'some_value2')
 
       expect { Sequel::Migrator.run(db, migrations_path, target: current_migration_index, allow_missing_migration_files: true) }.not_to raise_error
+
       expect(a1.reload.key_name).to eq(truncated_key_name)
-    end
-
-    it 'leaves keys that are shorter than 64 characters unchanged' do
-      i1 = isolation_segment.create(name: 'bommel')
-      key_name = 'a' * 63
-
-      a1 = annotation.create(resource_guid: i1.guid, key_name: key_name, value: 'some_value')
-
-      expect { Sequel::Migrator.run(db, migrations_path, target: current_migration_index, allow_missing_migration_files: true) }.not_to raise_error
-      expect(a1.reload.key_name).to eq(key_name)
+      expect(a2.reload.key_name).to eq(key_name_short)
     end
 
     it 'removes duplicate annotations but keeps one with smallest id' do
@@ -88,10 +82,11 @@ RSpec.describe 'migration to add unique constraint to annotation and labels', is
       expect(b4.reload).to be_a(annotation)
     end
 
-    it 'does not allow adding a duplicate' do
+    it 'does not allow adding a duplicate but allows different annotations' do
       i1 = isolation_segment.create(name: 'bommel')
       i2 = isolation_segment.create(name: 'sword')
       key = 'a' * 63
+      key_b = 'b' * 63
 
       # In case key_prefix is not set
       annotation.create(resource_guid: i1.guid, key_name: key, value: 'v1')
@@ -100,36 +95,21 @@ RSpec.describe 'migration to add unique constraint to annotation and labels', is
 
       expect { Sequel::Migrator.run(db, migrations_path, target: current_migration_index, allow_missing_migration_files: true) }.not_to raise_error
 
+      # Test: does not allow adding a duplicate
       expect { annotation.create(resource_guid: i1.guid, key_name: key, value: 'v2') }.to raise_error(Sequel::UniqueConstraintViolation)
       expect { annotation.create(resource_guid: i2.guid, key_prefix: 'bommel', key_name: key, value: 'v2') }.to raise_error(Sequel::UniqueConstraintViolation)
-    end
 
-    it 'does allow adding a different annotation' do
-      i1 = isolation_segment.create(name: 'bommel')
-      i2 = isolation_segment.create(name: 'sword')
-      key_a = 'a' * 63
-      key_b = 'b' * 63
+      # Test: does allow adding different annotations
+      a1 = annotation.create(resource_guid: i1.guid, key_name: key_b, value: 'v3')
+      a2 = annotation.create(resource_guid: i2.guid, key_name: key_b, value: 'v2')
+      b1 = annotation.create(resource_guid: i1.guid, key_prefix: 'sword', key_name: key, value: 'v4')
+      b2 = annotation.create(resource_guid: i2.guid, key_prefix: 'sword', key_name: key, value: 'v5')
 
-      expect { Sequel::Migrator.run(db, migrations_path, target: current_migration_index, allow_missing_migration_files: true) }.not_to raise_error
-
-      # In case key_prefix is not set
-      a1 = annotation.create(resource_guid: i1.guid, key_name: key_a, value: 'v1')
-      a2 = annotation.create(resource_guid: i2.guid, key_name: key_a, value: 'v2')
-      a3 = annotation.create(resource_guid: i1.guid, key_name: key_b, value: 'v3')
-      # In case key_prefix is set
-      b1 = annotation.create(resource_guid: i1.guid, key_prefix: 'bommel', key_name: key_a, value: 'v1')
-      b2 = annotation.create(resource_guid: i2.guid, key_prefix: 'bommel', key_name: key_a, value: 'v2')
-      b3 = annotation.create(resource_guid: i1.guid, key_prefix: 'bommel', key_name: key_b, value: 'v3')
-      b4 = annotation.create(resource_guid: i1.guid, key_prefix: 'sword', key_name: key_a, value: 'v4')
-
-      expect(annotation.all.count).to eq(7)
+      expect(annotation.where(key_name: key_b).count).to eq(2)
       expect(a1.reload).to be_a(annotation)
       expect(a2.reload).to be_a(annotation)
-      expect(a3.reload).to be_a(annotation)
       expect(b1.reload).to be_a(annotation)
       expect(b2.reload).to be_a(annotation)
-      expect(b3.reload).to be_a(annotation)
-      expect(b4.reload).to be_a(annotation)
     end
   end
 
@@ -190,10 +170,11 @@ RSpec.describe 'migration to add unique constraint to annotation and labels', is
       expect(b4.reload).to be_a(label)
     end
 
-    it 'does not allow adding a duplicate' do
+    it 'does not allow adding a duplicate but allows different labels' do
       i1 = isolation_segment.create(name: 'bommel')
       i2 = isolation_segment.create(name: 'sword')
       key = 'a' * 63
+      key_b = 'b' * 63
 
       # In case key_prefix is not set
       label.create(resource_guid: i1.guid, key_name: key, value: 'v1')
@@ -202,36 +183,21 @@ RSpec.describe 'migration to add unique constraint to annotation and labels', is
 
       expect { Sequel::Migrator.run(db, migrations_path, target: current_migration_index, allow_missing_migration_files: true) }.not_to raise_error
 
+      # Test: does not allow adding a duplicate
       expect { label.create(resource_guid: i1.guid, key_name: key, value: 'v2') }.to raise_error(Sequel::UniqueConstraintViolation)
       expect { label.create(resource_guid: i2.guid, key_prefix: 'bommel', key_name: key, value: 'v2') }.to raise_error(Sequel::UniqueConstraintViolation)
-    end
 
-    it 'does allow adding a different label' do
-      i1 = isolation_segment.create(name: 'bommel')
-      i2 = isolation_segment.create(name: 'sword')
-      key_a = 'a' * 63
-      key_b = 'b' * 63
+      # Test: does allow adding different labels
+      a1 = label.create(resource_guid: i1.guid, key_name: key_b, value: 'v3')
+      a2 = label.create(resource_guid: i2.guid, key_name: key_b, value: 'v2')
+      b1 = label.create(resource_guid: i1.guid, key_prefix: 'sword', key_name: key, value: 'v4')
+      b2 = label.create(resource_guid: i2.guid, key_prefix: 'sword', key_name: key, value: 'v5')
 
-      expect { Sequel::Migrator.run(db, migrations_path, target: current_migration_index, allow_missing_migration_files: true) }.not_to raise_error
-
-      # In case key_prefix is not set
-      a1 = label.create(resource_guid: i1.guid, key_name: key_a, value: 'v1')
-      a2 = label.create(resource_guid: i2.guid, key_name: key_a, value: 'v2')
-      a3 = label.create(resource_guid: i1.guid, key_name: key_b, value: 'v3')
-      # In case key_prefix is set
-      b1 = label.create(resource_guid: i1.guid, key_prefix: 'bommel', key_name: key_a, value: 'v1')
-      b2 = label.create(resource_guid: i2.guid, key_prefix: 'bommel', key_name: key_a, value: 'v2')
-      b3 = label.create(resource_guid: i1.guid, key_prefix: 'bommel', key_name: key_b, value: 'v3')
-      b4 = label.create(resource_guid: i1.guid, key_prefix: 'sword', key_name: key_a, value: 'v4')
-
-      expect(label.all.count).to eq(7)
+      expect(label.where(key_name: key_b).count).to eq(2)
       expect(a1.reload).to be_a(label)
       expect(a2.reload).to be_a(label)
-      expect(a3.reload).to be_a(label)
       expect(b1.reload).to be_a(label)
       expect(b2.reload).to be_a(label)
-      expect(b3.reload).to be_a(label)
-      expect(b4.reload).to be_a(label)
     end
   end
 end

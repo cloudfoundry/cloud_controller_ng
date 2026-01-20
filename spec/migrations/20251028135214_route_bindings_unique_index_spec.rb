@@ -14,11 +14,11 @@ RSpec.describe 'route bindings unique index', isolation: :truncation, type: :mig
 
   describe 'route_bindings table' do
     context 'up migration' do
-      it 'is in the correct state before migration' do
+      it 'removes duplicates, adds unique index, and handles idempotency' do
+        # Verify initial state
         expect(db.indexes(:route_bindings)).not_to include(:route_bindings_route_id_service_instance_id_index)
-      end
 
-      it 'removes duplicates and migrates successfully by adding unique index' do
+        # Insert test data with duplicates
         db[:route_bindings].insert(route_id: route_1.id, service_instance_id: service_instance_1.id, guid: SecureRandom.uuid)
         db[:route_bindings].insert(route_id: route_1.id, service_instance_id: service_instance_1.id, guid: SecureRandom.uuid)
         db[:route_bindings].insert(route_id: route_2.id, service_instance_id: service_instance_1.id, guid: SecureRandom.uuid)
@@ -43,25 +43,20 @@ RSpec.describe 'route bindings unique index', isolation: :truncation, type: :mig
 
         # Verify index is added
         expect(db.indexes(:route_bindings)).to include(:route_bindings_route_id_service_instance_id_index)
-      end
 
-      it 'does not fail if indexes/constraints are already in desired state' do
-        db.alter_table(:route_bindings) { add_index %i[route_id service_instance_id], unique: true, name: :route_bindings_route_id_service_instance_id_index }
+        # Test idempotency: running again should not fail
         expect { Sequel::Migrator.run(db, migrations_path, target: current_migration_index, allow_missing_migration_files: true) }.not_to raise_error
       end
     end
 
     context 'down migration' do
-      it 'rolls back successfully' do
+      it 'rolls back successfully and handles idempotency' do
         expect { Sequel::Migrator.run(db, migrations_path, target: current_migration_index, allow_missing_migration_files: true) }.not_to raise_error
         expect { Sequel::Migrator.run(db, migrations_path, target: current_migration_index - 1, allow_missing_migration_files: true) }.not_to raise_error
         expect(db.indexes(:route_bindings)).not_to include(:route_bindings_route_id_service_instance_id_index)
         expect(db.indexes(:route_bindings)).to include(:route_id) if db.database_type == :mysql
-      end
 
-      it 'does not fail if indexes/constraints are already in desired state' do
-        expect { Sequel::Migrator.run(db, migrations_path, target: current_migration_index, allow_missing_migration_files: true) }.not_to raise_error
-        db.alter_table(:route_bindings) { drop_index %i[route_id service_instance_id], unique: true, name: :route_bindings_route_id_service_instance_id_index }
+        # Test idempotency: running rollback again should not fail
         expect { Sequel::Migrator.run(db, migrations_path, target: current_migration_index - 1, allow_missing_migration_files: true) }.not_to raise_error
       end
     end

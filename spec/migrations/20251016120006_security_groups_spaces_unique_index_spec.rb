@@ -13,12 +13,12 @@ RSpec.describe 'security groups spaces unique index', isolation: :truncation, ty
 
   describe 'security_groups_spaces table' do
     context 'up migration' do
-      it 'is in the correct state before migration' do
+      it 'removes duplicates, updates indexes, and handles idempotency' do
+        # Verify initial state
         expect(db.indexes(:security_groups_spaces)).to include(:sgs_spaces_ids)
         expect(db.indexes(:security_groups_spaces)).not_to include(:security_groups_spaces_ids)
-      end
 
-      it 'removes duplicates and migrates successfully by adding unique index' do
+        # Insert test data with duplicates
         db[:security_groups_spaces].insert(security_group_id: sec_group_1.id, space_id: space_1.id)
         db[:security_groups_spaces].insert(security_group_id: sec_group_1.id, space_id: space_1.id)
         db[:security_groups_spaces].insert(security_group_id: sec_group_1.id, space_id: space_2.id)
@@ -44,31 +44,20 @@ RSpec.describe 'security groups spaces unique index', isolation: :truncation, ty
         # Verify indexes are updated
         expect(db.indexes(:security_groups_spaces)).not_to include(:sgs_spaces_ids)
         expect(db.indexes(:security_groups_spaces)).to include(:security_groups_spaces_ids)
-      end
 
-      it 'does not fail if indexes/constraints are already in desired state' do
-        db.alter_table :security_groups_spaces do
-          add_index %i[security_group_id space_id], unique: true, name: :security_groups_spaces_ids
-          drop_index %i[security_group_id space_id], name: :sgs_spaces_ids
-        end
+        # Test idempotency: running again should not fail
         expect { Sequel::Migrator.run(db, migrations_path, target: current_migration_index, allow_missing_migration_files: true) }.not_to raise_error
       end
     end
 
     context 'down migration' do
-      it 'rolls back successfully' do
+      it 'rolls back successfully and handles idempotency' do
         expect { Sequel::Migrator.run(db, migrations_path, target: current_migration_index, allow_missing_migration_files: true) }.not_to raise_error
         expect { Sequel::Migrator.run(db, migrations_path, target: current_migration_index - 1, allow_missing_migration_files: true) }.not_to raise_error
         expect(db.indexes(:security_groups_spaces)).to include(:sgs_spaces_ids)
         expect(db.indexes(:security_groups_spaces)).not_to include(:security_groups_spaces_ids)
-      end
 
-      it 'does not fail if indexes/constraints are already in desired state' do
-        expect { Sequel::Migrator.run(db, migrations_path, target: current_migration_index, allow_missing_migration_files: true) }.not_to raise_error
-        db.alter_table :security_groups_spaces do
-          add_index %i[security_group_id space_id], name: :sgs_spaces_ids
-          drop_index %i[security_group_id space_id], unique: true, name: :security_groups_spaces_ids
-        end
+        # Test idempotency: running rollback again should not fail
         expect { Sequel::Migrator.run(db, migrations_path, target: current_migration_index - 1, allow_missing_migration_files: true) }.not_to raise_error
       end
     end

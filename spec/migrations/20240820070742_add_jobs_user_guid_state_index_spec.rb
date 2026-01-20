@@ -19,17 +19,14 @@ RSpec.describe 'migration to replace user_guid_index with user_guid_state_index 
   end
 
   describe 'jobs table' do
-    it 'removes index `jobs_user_guid_index`' do
+    it 'removes index `jobs_user_guid_index` and adds `jobs_user_guid_state_index`' do
       skip if db.database_type != :postgres
       expect(db.indexes(:jobs)).to include(:jobs_user_guid_index)
-      expect { Sequel::Migrator.run(db, migrations_path, target: current_migration_index, allow_missing_migration_files: true) }.not_to raise_error
-      expect(db.indexes(:jobs)).not_to include(:jobs_user_guid_index)
-    end
-
-    it 'adds an index `jobs_user_guid_state_index`' do
-      skip if db.database_type != :postgres
       expect(partial_index_present).to be_falsey
+
       expect { Sequel::Migrator.run(db, migrations_path, target: current_migration_index, allow_missing_migration_files: true) }.not_to raise_error
+
+      expect(db.indexes(:jobs)).not_to include(:jobs_user_guid_index)
       expect(partial_index_present).to be_truthy
     end
 

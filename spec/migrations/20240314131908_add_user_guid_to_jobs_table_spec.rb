@@ -7,15 +7,13 @@ RSpec.describe 'migration to add user_guid column to jobs table and add an index
   end
 
   describe 'jobs table' do
-    it 'adds a column `user_guid`' do
+    it 'adds a column `user_guid` and an index on it' do
       expect(db[:jobs].columns).not_to include(:user_guid)
-      expect { Sequel::Migrator.run(db, migrations_path, target: current_migration_index, allow_missing_migration_files: true) }.not_to raise_error
-      expect(db[:jobs].columns).to include(:user_guid)
-    end
-
-    it 'adds an index on the user_guid column' do
       expect(db.indexes(:jobs)).not_to include(:jobs_user_guid_index)
+
       expect { Sequel::Migrator.run(db, migrations_path, target: current_migration_index, allow_missing_migration_files: true) }.not_to raise_error
+
+      expect(db[:jobs].columns).to include(:user_guid)
       expect(db.indexes(:jobs)).to include(:jobs_user_guid_index)
     end
 

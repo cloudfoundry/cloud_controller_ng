@@ -11,29 +11,24 @@ RSpec.describe "migration to add foreign key on column 'droplet_guid' in table '
       db[:apps].delete
     end
 
-    context 'before adding the foreign key' do
-      it 'allows inserts with a droplet_guid that does not exist' do
-        expect { db[:apps].insert(guid: 'app_guid', droplet_guid: 'not_exists') }.not_to raise_error
-      end
-    end
+    it 'adds foreign key constraint and removes invalid references' do
+      # Before migration: allows inserts with non-existent droplet_guid
+      expect { db[:apps].insert(guid: 'app_guid_test', droplet_guid: 'not_exists') }.not_to raise_error
+      db[:apps].delete
 
-    context 'after adding the foreign key' do
-      it 'prevents inserts with a droplet_guid that does not exist' do
-        Sequel::Migrator.run(db, migrations_path, target: current_migration_index, allow_missing_migration_files: true)
+      # Setup test data
+      db[:droplets].insert(guid: 'droplet_guid', state: 'some_state')
+      db[:apps].insert(guid: 'app_guid', droplet_guid: 'droplet_guid')
+      db[:apps].insert(guid: 'another_app_guid', droplet_guid: 'not_exists')
 
-        expect { db[:apps].insert(guid: 'app_guid', droplet_guid: 'not_exists') }.to raise_error(Sequel::ForeignKeyConstraintViolation)
-      end
+      Sequel::Migrator.run(db, migrations_path, target: current_migration_index, allow_missing_migration_files: true)
 
-      it 'removed references to not existing droplets' do
-        db[:droplets].insert(guid: 'droplet_guid', state: 'some_state')
-        db[:apps].insert(guid: 'app_guid', droplet_guid: 'droplet_guid')
-        db[:apps].insert(guid: 'another_app_guid', droplet_guid: 'not_exists')
+      # After migration: prevents inserts with non-existent droplet_guid
+      expect { db[:apps].insert(guid: 'app_guid_new', droplet_guid: 'not_exists') }.to raise_error(Sequel::ForeignKeyConstraintViolation)
 
-        Sequel::Migrator.run(db, migrations_path, target: current_migration_index, allow_missing_migration_files: true)
-
-        expect(db[:apps].where(guid: 'app_guid').get(:droplet_guid)).to eq('droplet_guid')
-        expect(db[:apps].where(guid: 'another_app_guid').get(:droplet_guid)).to be_nil
-      end
+      # After migration: invalid references removed, valid ones kept
+      expect(db[:apps].where(guid: 'app_guid').get(:droplet_guid)).to eq('droplet_guid')
+      expect(db[:apps].where(guid: 'another_app_guid').get(:droplet_guid)).to be_nil
     end
   end
 end

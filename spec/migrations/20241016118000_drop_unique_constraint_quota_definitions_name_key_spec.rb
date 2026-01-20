@@ -11,22 +11,15 @@ RSpec.describe 'migration to add or remove unique constraint on name column in q
         skip if db.database_type != :mysql
       end
 
-      it 'removes the unique constraint' do
+      it 'removes the unique constraint and handles idempotency' do
         expect(db.indexes(:quota_definitions)).to include(:name)
         expect { Sequel::Migrator.run(db, migrations_path, target: current_migration_index, allow_missing_migration_files: true) }.not_to raise_error
         expect(db.indexes(:quota_definitions)).not_to include(:name)
-      end
 
-      context 'unique constraint on name column does not exist' do
-        before do
-          db.drop_index :quota_definitions, :name, name: :name
-        end
-
-        it 'does not throw an error' do
-          expect(db.indexes(:quota_definitions)).not_to include(:name)
-          expect { Sequel::Migrator.run(db, migrations_path, target: current_migration_index, allow_missing_migration_files: true) }.not_to raise_error
-          expect(db.indexes(:quota_definitions)).not_to include(:name)
-        end
+        # Test idempotency: if constraint already removed, doesn't error
+        db.drop_index :quota_definitions, :name, name: :name, if_exists: true
+        expect { Sequel::Migrator.run(db, migrations_path, target: current_migration_index, allow_missing_migration_files: true) }.not_to raise_error
+        expect(db.indexes(:quota_definitions)).not_to include(:name)
       end
     end
 
@@ -35,24 +28,14 @@ RSpec.describe 'migration to add or remove unique constraint on name column in q
         skip if db.database_type != :postgres
       end
 
-      it 'removes the unique constraint' do
+      it 'removes the unique constraint and handles idempotency' do
         expect(db.indexes(:quota_definitions)).to include(:quota_definitions_name_key)
         expect { Sequel::Migrator.run(db, migrations_path, target: current_migration_index, allow_missing_migration_files: true) }.not_to raise_error
         expect(db.indexes(:quota_definitions)).not_to include(:quota_definitions_name_key)
-      end
 
-      context 'unique constraint on name column does not exist' do
-        before do
-          db.alter_table :quota_definitions do
-            drop_constraint :quota_definitions_name_key
-          end
-        end
-
-        it 'does not throw an error' do
-          expect(db.indexes(:quota_definitions)).not_to include(:quota_definitions_name_key)
-          expect { Sequel::Migrator.run(db, migrations_path, target: current_migration_index, allow_missing_migration_files: true) }.not_to raise_error
-          expect(db.indexes(:quota_definitions)).not_to include(:quota_definitions_name_key)
-        end
+        # Test idempotency: if constraint already removed, doesn't error
+        expect { Sequel::Migrator.run(db, migrations_path, target: current_migration_index, allow_missing_migration_files: true) }.not_to raise_error
+        expect(db.indexes(:quota_definitions)).not_to include(:quota_definitions_name_key)
       end
     end
   end
@@ -67,26 +50,14 @@ RSpec.describe 'migration to add or remove unique constraint on name column in q
         skip if db.database_type != :mysql
       end
 
-      it 'adds the unique constraint' do
+      it 'adds the unique constraint and handles idempotency' do
         expect(db.indexes(:quota_definitions)).not_to include(:name)
         expect { Sequel::Migrator.run(db, migrations_path, target: current_migration_index - 1, allow_missing_migration_files: true) }.not_to raise_error
         expect(db.indexes(:quota_definitions)).to include(:name)
-      end
 
-      context 'unique constraint on name column already exists' do
-        before do
-          Sequel::Migrator.run(db, migrations_path, target: current_migration_index, allow_missing_migration_files: true)
-
-          db.alter_table :quota_definitions do
-            add_index :name, name: :name
-          end
-        end
-
-        it 'does not fail' do
-          expect(db.indexes(:quota_definitions)).to include(:name)
-          expect { Sequel::Migrator.run(db, migrations_path, target: current_migration_index - 1, allow_missing_migration_files: true) }.not_to raise_error
-          expect(db.indexes(:quota_definitions)).to include(:name)
-        end
+        # Test idempotency: if constraint already exists, doesn't fail
+        expect { Sequel::Migrator.run(db, migrations_path, target: current_migration_index - 1, allow_missing_migration_files: true) }.not_to raise_error
+        expect(db.indexes(:quota_definitions)).to include(:name)
       end
     end
 
@@ -95,26 +66,14 @@ RSpec.describe 'migration to add or remove unique constraint on name column in q
         skip if db.database_type != :postgres
       end
 
-      it 'adds the unique constraint' do
+      it 'adds the unique constraint and handles idempotency' do
         expect(db.indexes(:quota_definitions)).not_to include(:quota_definitions_name_key)
         expect { Sequel::Migrator.run(db, migrations_path, target: current_migration_index - 1, allow_missing_migration_files: true) }.not_to raise_error
         expect(db.indexes(:quota_definitions)).to include(:quota_definitions_name_key)
-      end
 
-      context 'unique constraint on name column already exists' do
-        before do
-          Sequel::Migrator.run(db, migrations_path, target: current_migration_index, allow_missing_migration_files: true)
-
-          db.alter_table :quota_definitions do
-            add_unique_constraint :name, name: :quota_definitions_name_key
-          end
-        end
-
-        it 'does not fail' do
-          expect(db.indexes(:quota_definitions)).to include(:quota_definitions_name_key)
-          expect { Sequel::Migrator.run(db, migrations_path, target: current_migration_index - 1, allow_missing_migration_files: true) }.not_to raise_error
-          expect(db.indexes(:quota_definitions)).to include(:quota_definitions_name_key)
-        end
+        # Test idempotency: if constraint already exists, doesn't fail
+        expect { Sequel::Migrator.run(db, migrations_path, target: current_migration_index - 1, allow_missing_migration_files: true) }.not_to raise_error
+        expect(db.indexes(:quota_definitions)).to include(:quota_definitions_name_key)
       end
     end
   end

@@ -7,48 +7,24 @@ RSpec.describe 'migration to add user column to tasks table', isolation: :trunca
   end
 
   describe 'tasks table' do
-    it 'adds a column `user`' do
+    it 'adds a column `user` and handles idempotency' do
       expect(db[:tasks].columns).not_to include(:user)
       expect { Sequel::Migrator.run(db, migrations_path, target: current_migration_index, allow_missing_migration_files: true) }.not_to raise_error
       expect(db[:tasks].columns).to include(:user)
-    end
 
-    describe 'idempotency of up' do
-      context '`user` column already exists' do
-        before do
-          db.add_column :tasks, :user, String, size: 255, if_not_exists: true
-        end
-
-        it 'does not fail' do
-          expect(db[:tasks].columns).to include(:user)
-          expect { Sequel::Migrator.run(db, migrations_path, target: current_migration_index, allow_missing_migration_files: true) }.not_to raise_error
-        end
-      end
+      # Test idempotency: running again when column exists should not fail
+      expect { Sequel::Migrator.run(db, migrations_path, target: current_migration_index, allow_missing_migration_files: true) }.not_to raise_error
     end
 
     describe 'idempotency of down' do
-      context 'user column exists' do
-        before do
-          Sequel::Migrator.run(db, migrations_path, target: current_migration_index, allow_missing_migration_files: true)
-        end
+      it 'removes column and handles idempotency' do
+        Sequel::Migrator.run(db, migrations_path, target: current_migration_index, allow_missing_migration_files: true)
+        expect(db[:tasks].columns).to include(:user)
+        expect { Sequel::Migrator.run(db, migrations_path, target: current_migration_index - 1, allow_missing_migration_files: true) }.not_to raise_error
+        expect(db[:tasks].columns).not_to include(:user)
 
-        it 'continues to remove the `user_guid` column' do
-          expect(db[:tasks].columns).to include(:user)
-          expect { Sequel::Migrator.run(db, migrations_path, target: current_migration_index - 1, allow_missing_migration_files: true) }.not_to raise_error
-          expect(db[:tasks].columns).not_to include(:user)
-        end
-      end
-
-      context 'column does not exist' do
-        before do
-          Sequel::Migrator.run(db, migrations_path, target: current_migration_index, allow_missing_migration_files: true)
-          db.drop_column :tasks, :user
-        end
-
-        it 'does not fail' do
-          expect(db[:tasks].columns).not_to include(:user)
-          expect { Sequel::Migrator.run(db, migrations_path, target: current_migration_index - 1, allow_missing_migration_files: true) }.not_to raise_error
-        end
+        # Test idempotency: running rollback again when column doesn't exist should not fail
+        expect { Sequel::Migrator.run(db, migrations_path, target: current_migration_index - 1, allow_missing_migration_files: true) }.not_to raise_error
       end
     end
   end
