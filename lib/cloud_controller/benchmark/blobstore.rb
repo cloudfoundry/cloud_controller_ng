@@ -10,23 +10,17 @@ require 'securerandom'
 module VCAP::CloudController
   module Benchmark
     class Blobstore
-      SIZES = [
-        ['0.005MB', (0.005 * 1024 * 1024).to_i],
-        ['0.01MB',  (0.01  * 1024 * 1024).to_i],
-        ['0.1MB',   (0.1   * 1024 * 1024).to_i],
-        ['1MB',     1    * 1024 * 1024],
-        ['10MB',    10   * 1024 * 1024],
-        ['100MB',   100  * 1024 * 1024],
-        ['200MB',   200  * 1024 * 1024],
-        ['300MB',   300  * 1024 * 1024],
-        ['400MB',   400  * 1024 * 1024],
-        ['500MB',   500  * 1024 * 1024],
-        ['600MB',   600  * 1024 * 1024],
-        ['700MB',   700  * 1024 * 1024],
-        ['800MB',   800  * 1024 * 1024],
-        ['900MB',   900  * 1024 * 1024],
-        ['1000MB',  1000 * 1024 * 1024]
-      ].freeze
+      SIZES = {
+        '0.005MB' => (0.005 * 1024 * 1024).to_i,
+        '0.01MB' => (0.01 * 1024 * 1024).to_i,
+        '0.1MB' => (0.1 * 1024 * 1024).to_i,
+        '1MB' => 1 * 1024 * 1024,
+        '10MB' => 10   * 1024 * 1024,
+        '50MB' => 50   * 1024 * 1024,
+        '100MB' => 100  * 1024 * 1024,
+        '500MB' => 400  * 1024 * 1024,
+        '1000MB' => 1000 * 1024 * 1024
+      }.freeze
 
       CHUNK_1MB = '0'.b * (1024 * 1024)
 
@@ -46,7 +40,8 @@ module VCAP::CloudController
         puts("downloaded #{Buildpack.count} buildpacks, total #{bytes_read} bytes read")
         log_timing('buildpack download timing', timing)
 
-        droplet_results = []
+        upload_lines = []
+        download_lines = []
 
         SIZES.each do |label, bytes|
           Tempfile.create(["big-droplet-#{label}", '.bin'], resource_dir) do |tempfile|
@@ -54,21 +49,19 @@ module VCAP::CloudController
 
             guid, upload_timing = upload_droplet(tempfile.path)
             big_droplet_guids << guid
-            droplet_results << { label: "droplet #{label}", guid: guid, upload_timing: upload_timing }
+
+            download_timing = download_droplet(guid, resource_dir)
+
+            upload_lines << format_timing("droplet #{label} upload timing", upload_timing)
+            download_lines << format_timing("droplet #{label} download timing", download_timing)
           end
         end
-        # rubocop:disable Style/CombinableLoops
-        droplet_results.each do |r|
-          log_timing("#{r[:label]} upload timing", r[:upload_timing])
-        end
 
-        droplet_results.each do |r|
-          log_timing("#{r[:label]} download timing", download_droplet(r[:guid], resource_dir))
-        end
-        # rubocop:enable Style/CombinableLoops
+        puts(upload_lines.join("\n"))
+        puts(download_lines.join("\n"))
       ensure
-        FileUtils.remove_dir(resource_dir, true) if resource_dir
-        FileUtils.remove_dir(zip_output_dir, true) if zip_output_dir
+        FileUtils.remove_dir(resource_dir, true)
+        FileUtils.remove_dir(zip_output_dir, true)
 
         safe_delete(package_blobstore_client, package_guid)
         Array(big_droplet_guids).each { |g| safe_delete(droplet_blobstore_client, g) }
@@ -125,6 +118,10 @@ module VCAP::CloudController
 
       def log_timing(label, seconds)
         puts("#{label}: #{(seconds * 1000).round(3)}ms")
+      end
+
+      def format_timing(label, seconds)
+        "#{label}: #{(seconds * 1000).round(3)}ms"
       end
 
       def safe_delete(client, guid)
