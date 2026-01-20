@@ -5,6 +5,11 @@ require 'messages/buildpack_create_message'
 module VCAP::CloudController
   RSpec.describe BuildpackCreate do
     describe 'create' do
+      let(:user) { User.make }
+      let(:user_email) { 'user@example.com' }
+      let(:user_name) { 'user-name' }
+      let(:user_audit_info) { UserAuditInfo.new(user_guid: user.guid, user_email: user_email, user_name: user_name) }
+
       let!(:buildpack1) { Buildpack.create(name: 'take-up-position-1', position: 1) }
       let!(:buildpack2) { Buildpack.create(name: 'take-up-position-2', position: 2) }
       let!(:buildpack3) { Buildpack.create(name: 'take-up-position-3', position: 3) }
@@ -22,7 +27,7 @@ module VCAP::CloudController
             locked: true,
             lifecycle: Lifecycles::BUILDPACK
           )
-          buildpack = BuildpackCreate.new.create(message)
+          buildpack = BuildpackCreate.new(user_audit_info).create(message)
 
           expect(buildpack.name).to eq('the-name')
           expect(buildpack.stack).to eq('the-stack')
@@ -30,6 +35,33 @@ module VCAP::CloudController
           expect(buildpack.enabled).to be(false)
           expect(buildpack.locked).to be(true)
           expect(buildpack.lifecycle).to eq(Lifecycles::BUILDPACK)
+        end
+
+        it 'creates an audit event' do
+          message = BuildpackCreateMessage.new(
+            name: 'the-name',
+            stack: 'the-stack',
+            enabled: false,
+            locked: true
+          )
+          buildpack = BuildpackCreate.new(user_audit_info).create(message)
+
+          event = VCAP::CloudController::Event.last
+
+          expect(event.values).to include(
+            type: 'audit.buildpack.create',
+            actee: buildpack.guid,
+            actee_type: 'buildpack',
+            actee_name: buildpack.name,
+            actor: user_audit_info.user_guid,
+            actor_type: 'user',
+            actor_name: user_audit_info.user_email,
+            actor_username: user_audit_info.user_name,
+            space_guid: '',
+            organization_guid: ''
+          )
+          expect(event.metadata).to eq({ 'request' => message.audit_hash })
+          expect(event.timestamp).to be
         end
       end
 
@@ -49,7 +81,7 @@ module VCAP::CloudController
               }
             }
           )
-          buildpack = BuildpackCreate.new.create(message)
+          buildpack = BuildpackCreate.new(user_audit_info).create(message)
 
           expect(buildpack.name).to eq('the-name')
           expect(buildpack.stack).to eq('the-stack')
@@ -68,7 +100,7 @@ module VCAP::CloudController
               name: 'the-name',
               position: 2
             )
-            buildpack = BuildpackCreate.new.create(message)
+            buildpack = BuildpackCreate.new(user_audit_info).create(message)
 
             expect(buildpack.position).to eq(2)
             expect(buildpack1.reload.position).to eq(1)
@@ -83,7 +115,7 @@ module VCAP::CloudController
               name: 'the-name',
               position: 42
             )
-            buildpack = BuildpackCreate.new.create(message)
+            buildpack = BuildpackCreate.new(user_audit_info).create(message)
 
             expect(buildpack.position).to eq(4)
           end
@@ -97,7 +129,7 @@ module VCAP::CloudController
             stack: 'the-stack',
             locked: true
           )
-          buildpack = BuildpackCreate.new.create(message)
+          buildpack = BuildpackCreate.new(user_audit_info).create(message)
 
           expect(buildpack.enabled).to be(true)
         end
@@ -110,7 +142,7 @@ module VCAP::CloudController
             stack: 'the-stack',
             enabled: true
           )
-          buildpack = BuildpackCreate.new.create(message)
+          buildpack = BuildpackCreate.new(user_audit_info).create(message)
 
           expect(buildpack.locked).to be(false)
         end
@@ -123,7 +155,7 @@ module VCAP::CloudController
             stack: 'the-stack',
             lifecycle: Lifecycles::CNB
           )
-          buildpack = BuildpackCreate.new.create(message)
+          buildpack = BuildpackCreate.new(user_audit_info).create(message)
 
           expect(buildpack.lifecycle).to eq(Lifecycles::CNB)
         end
@@ -138,7 +170,7 @@ module VCAP::CloudController
 
           message = BuildpackCreateMessage.new(name: 'foobar')
           expect do
-            BuildpackCreate.new.create(message)
+            BuildpackCreate.new(user_audit_info).create(message)
           end.to raise_error(BuildpackCreate::Error, 'blork is busted')
         end
       end
@@ -148,7 +180,7 @@ module VCAP::CloudController
           message = BuildpackCreateMessage.new(name: 'the-name', stack: 'does-not-exist')
 
           expect do
-            BuildpackCreate.new.create(message)
+            BuildpackCreate.new(user_audit_info).create(message)
           end.to raise_error(BuildpackCreate::Error, "Stack 'does-not-exist' does not exist")
         end
       end
@@ -164,7 +196,7 @@ module VCAP::CloudController
           it 'raises a human-friendly error' do
             message = BuildpackCreateMessage.new(name:)
             expect do
-              BuildpackCreate.new.create(message)
+              BuildpackCreate.new(user_audit_info).create(message)
             end.to raise_error(BuildpackCreate::Error, "Buildpack with name 'the-name' and an unassigned stack already exists")
           end
         end
@@ -177,7 +209,7 @@ module VCAP::CloudController
           it 'raises a human-friendly error' do
             message = BuildpackCreateMessage.new(name: name, stack: 'the-stack')
             expect do
-              BuildpackCreate.new.create(message)
+              BuildpackCreate.new(user_audit_info).create(message)
             end.to raise_error(BuildpackCreate::Error, "Buildpack with name 'the-name', stack 'the-stack' and lifecycle 'buildpack' already exists")
           end
         end

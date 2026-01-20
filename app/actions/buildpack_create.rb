@@ -1,3 +1,5 @@
+require 'repositories/buildpack_event_repository'
+
 module VCAP::CloudController
   class BuildpackCreate
     class Error < ::StandardError
@@ -6,6 +8,10 @@ module VCAP::CloudController
     DEFAULT_POSITION = 1
     DEFAULT_ENABLED = true
     DEFAULT_LOCKED = false
+
+    def initialize(user_audit_info)
+      @user_audit_info = user_audit_info
+    end
 
     def create(message)
       Buildpack.db.transaction do
@@ -22,6 +28,10 @@ module VCAP::CloudController
         MetadataUpdate.update(buildpack, message)
 
         buildpack.move_to(message.position || DEFAULT_POSITION)
+
+        Repositories::BuildpackEventRepository.new.record_buildpack_create(buildpack, @user_audit_info, message.audit_hash)
+
+        buildpack
       end
     rescue Sequel::ValidationFailed => e
       validation_error!(e, message)

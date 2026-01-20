@@ -1,6 +1,12 @@
+require 'repositories/buildpack_event_repository'
+
 module VCAP::CloudController
   class BuildpackUpdate
     class Error < ::StandardError
+    end
+
+    def initialize(user_audit_info)
+      @user_audit_info = user_audit_info
     end
 
     def update(buildpack, message)
@@ -15,6 +21,8 @@ module VCAP::CloudController
         buildpack.locked = message.locked if message.requested?(:locked)
         buildpack.name = message.name if message.requested?(:name)
         buildpack.save
+
+        Repositories::BuildpackEventRepository.new.record_buildpack_update(buildpack, @user_audit_info, message.audit_hash)
       end
       buildpack
     rescue Sequel::ValidationFailed => e

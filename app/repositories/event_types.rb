@@ -54,6 +54,10 @@ module VCAP::CloudController
         APP_SSH_AUTHORIZED = 'audit.app.ssh-authorized'.freeze,
         APP_SSH_UNAUTHORIZED = 'audit.app.ssh-unauthorized'.freeze,
 
+        BUILDPACK_CREATE = 'audit.buildpack.create'.freeze,
+        BUILDPACK_UPDATE = 'audit.buildpack.update'.freeze,
+        BUILDPACK_DELETE = 'audit.buildpack.delete'.freeze,
+
         SERVICE_CREATE = 'audit.service.create'.freeze,
         SERVICE_UPDATE = 'audit.service.update'.freeze,
         SERVICE_DELETE = 'audit.service.delete'.freeze,
