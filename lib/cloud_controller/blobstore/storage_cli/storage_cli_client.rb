@@ -175,20 +175,20 @@ module CloudController
       end
 
       def additional_flags
-        flags_string = VCAP::CloudController::Config.config.get(:storage_cli_flag_options)
+        flags_string = VCAP::CloudController::Config.config.get(:storage_cli_flag_optionals)
         return [] if flags_string.nil? || flags_string.empty?
 
         flags_string.split
       end
 
       def run_cli(command, *args, allow_exit_code_three: false)
-        logger.info("running storage-cli: #{@cli_path} -c #{@config_file} #{command} #{args.join(' ')}")
+        logger.info("running storage-cli: #{@cli_path} -s #{@storage_type} -c #{@config_file} #{additional_flags.join(' ')} #{command} #{args.join(' ')}")
 
         begin
           stdout, stderr, status = Open3.capture3(@cli_path, '-s', @storage_type, '-c', @config_file, *additional_flags, command, *args)
           stderr.split("\n").each do |line|
+            logger.info("[INFO] storage-cli: #{line}")
             logger.debug("[DEBUG] storage-cli: #{line}")
-            logger.info("[DEBUG] storage-cli: #{line}")
           end
         rescue StandardError => e
           raise BlobstoreError.new(e.inspect)
