@@ -3,7 +3,12 @@ require 'actions/buildpack_upload'
 
 module VCAP::CloudController
   RSpec.describe BuildpackUpload do
-    subject(:buildpack_upload) { BuildpackUpload.new }
+    let(:user) { User.make }
+    let(:user_email) { 'user@example.com' }
+    let(:user_name) { 'user-name' }
+    let(:user_audit_info) { UserAuditInfo.new(user_guid: user.guid, user_email: user_email, user_name: user_name) }
+
+    subject(:buildpack_upload) { BuildpackUpload.new(user_audit_info) }
 
     describe '#upload_async' do
       let!(:buildpack) { VCAP::CloudController::Buildpack.create_from_hash({ name: 'upload_binary_buildpack', stack: nil, position: 0 }) }
@@ -37,7 +42,9 @@ module VCAP::CloudController
           expect(Jobs::V3::BuildpackBits).to receive(:new).with(
             buildpack.guid,
             '/tmp/path',
-            'buildpack.zip'
+            'buildpack.zip',
+            user_audit_info,
+            message.audit_hash
           ).and_call_original
           buildpack_upload.upload_async(message:, buildpack:, config:)
         end
