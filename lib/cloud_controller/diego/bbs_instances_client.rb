@@ -11,7 +11,7 @@ module VCAP::CloudController
         process_guid = ProcessGuid.from_process(process)
         logger.info('lrp.instances.request', process_guid:)
 
-        actual_lrps_response = handle_diego_errors(process_guid) do
+        actual_lrps_response = handle_diego_errors do
           response = @client.actual_lrps_by_process_guid(process_guid)
           logger.info('lrp.instances.response', process_guid: process_guid, error: response.error)
           response
@@ -20,9 +20,22 @@ module VCAP::CloudController
         actual_lrps_response.actual_lrps
       end
 
+      def actual_lrps_by_processes(processes)
+        process_guids = processes.map { |process| ProcessGuid.from_process(process) }
+        logger.info('actual.lrps.by.processes.request', process_guids:)
+
+        actual_lrps_response = handle_diego_errors do
+          response = @client.actual_lrps_by_process_guids(process_guids)
+          logger.info('actual.lrps.by.processes.response', process_guids: process_guids, error: response.error)
+          response
+        end
+
+        actual_lrps_response.actual_lrps
+      end
+
       def desired_lrp_instance(process)
         process_guid = ProcessGuid.from_process(process)
-        response = handle_diego_errors(process_guid) do
+        response = handle_diego_errors(handle_resource_not_found: true, process_guid: process_guid) do
           @client.desired_lrp_by_process_guid(process_guid)
         end
         response.desired_lrp
@@ -30,7 +43,7 @@ module VCAP::CloudController
 
       private
 
-      def handle_diego_errors(process_guid)
+      def handle_diego_errors(handle_resource_not_found: false, process_guid: nil)
         begin
           response = yield
         rescue ::Diego::Error => e
@@ -38,12 +51,11 @@ module VCAP::CloudController
         end
 
         if response.error
-          if response.error.type == ::Diego::Bbs::ErrorTypes::ResourceNotFound
+          if handle_resource_not_found && response.error.type == ::Diego::Bbs::ErrorTypes::ResourceNotFound
             raise CloudController::Errors::NoRunningInstances.new("No running instances found for process guid #{process_guid}")
           end
 
           raise CloudController::Errors::InstancesUnavailable.new(response.error.message)
-
         end
 
         response

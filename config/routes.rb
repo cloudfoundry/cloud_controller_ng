@@ -55,6 +55,7 @@ Rails.application.routes.draw do
   get '/processes', to: 'processes#index'
   get '/processes/:process_guid', to: 'processes#show'
   patch '/processes/:process_guid', to: 'processes#update'
+  get '/processes/:process_guid/process_instances', to: 'processes#process_instances'
   delete '/processes/:process_guid/instances/:index', to: 'processes#terminate'
   post '/processes/:process_guid/actions/scale', to: 'processes#scale'
   get '/processes/:process_guid/stats', to: 'processes#stats'
