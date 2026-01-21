@@ -168,12 +168,6 @@ module CloudController
 
       private
 
-      def cli_log_file
-        file = VCAP::CloudController::Config.config.get(:logging, :file)
-        log_dir = File.dirname(file)
-        File.join(log_dir, 'storage_cli.log')
-      end
-
       def additional_flags
         flags_string = VCAP::CloudController::Config.config.get(:storage_cli_optional_flags)
         return [] if flags_string.nil? || flags_string.empty?
