@@ -7,7 +7,7 @@ module VCAP::CloudController
       define_schema do
         blobstore_section = {
           blobstore_type: String,
-          blobstore_provider: String,
+          optional(:blobstore_provider) => String,
 
           optional(:connection_config) => Hash,
           optional(:fog_connection) => Hash,
