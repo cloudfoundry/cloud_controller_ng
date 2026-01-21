@@ -8,40 +8,34 @@ RSpec.describe 'migration to streamline changes to annotation_key_prefix', isola
 
   describe 'annotation tables' do
     it 'converts legacy key_prefixes to prefixes in key_prefix column and leaves non-legacy values unchanged' do
-      db[:isolation_segments].insert(name: 'bommel', guid: '123')
-      db[:isolation_segment_annotations].insert(
-        guid: 'bommel',
-        created_at: Time.now - 60,
-        updated_at: Time.now - 60,
-        resource_guid: '123',
-        key: 'mylegacyprefix/mykey',
-        value: 'some_value'
-      )
-      db[:isolation_segment_annotations].insert(guid: 'bommel2', resource_guid: '123', key_prefix: 'myprefix', key: 'mykey', value: 'some_value')
-      db[:isolation_segment_annotations].insert(guid: 'bommel3', resource_guid: '123', key: 'mykey2', value: 'some_value2')
+      resource_guid = 'iso-seg-guid'
+      db[:isolation_segments].insert(name: 'iso_seg', guid: resource_guid)
+      db[:isolation_segment_annotations].insert(guid: 'anno-1-guid', resource_guid: resource_guid, key: 'mylegacyprefix/mykey', value: 'some_value')
+      db[:isolation_segment_annotations].insert(guid: 'anno-2-guid', resource_guid: resource_guid, key_prefix: 'myprefix', key: 'mykey', value: 'some_value')
+      db[:isolation_segment_annotations].insert(guid: 'anno-3-guid', resource_guid: resource_guid, key: 'yourkey', value: 'some_other_value')
 
-      a1 = db[:isolation_segment_annotations].first(key: 'mylegacyprefix/mykey')
-      b1 = db[:isolation_segment_annotations].first(key: 'mykey')
-      b2 = db[:isolation_segment_annotations].first(key: 'mykey2')
+      anno1 = db[:isolation_segment_annotations].first(guid: 'anno-1-guid')
+      anno2 = db[:isolation_segment_annotations].first(key: 'mykey')
+      anno3 = db[:isolation_segment_annotations].first(key: 'yourkey')
 
       expect { Sequel::Migrator.run(db, migrations_path, target: current_migration_index, allow_missing_migration_files: true) }.not_to raise_error
 
       # Check legacy prefix was converted
-      a1_after = db[:isolation_segment_annotations].first(guid: 'bommel')
-      expect(a1_after[:guid]).to eq a1[:guid]
-      expect(a1_after[:created_at]).to eq a1[:created_at]
-      expect(a1_after[:updated_at]).not_to eq a1[:updated_at]
-      expect(a1_after[:resource_guid]).to eq a1[:resource_guid]
-      expect(a1_after[:key_prefix]).not_to eq a1[:key_prefix]
-      expect(a1_after[:key]).not_to eq a1[:key]
-      expect(a1_after[:key_prefix]).to eq 'mylegacyprefix'
-      expect(a1_after[:key]).to eq 'mykey'
+      anno1_after_mig = db[:isolation_segment_annotations].first(guid: 'anno-1-guid')
+      expect(anno1_after_mig[:guid]).to eq anno1[:guid]
+      expect(anno1_after_mig[:created_at]).to eq anno1[:created_at]
+      expect(anno1_after_mig[:updated_at]).not_to eq anno1[:updated_at]
+      expect(anno1_after_mig[:resource_guid]).to eq anno1[:resource_guid]
+      expect(anno1_after_mig[:key_prefix]).not_to eq anno1[:key_prefix]
+      expect(anno1_after_mig[:key]).not_to eq anno1[:key]
+      expect(anno1_after_mig[:key_prefix]).to eq 'mylegacyprefix'
+      expect(anno1_after_mig[:key]).to eq 'mykey'
 
       # Check non-legacy values unchanged
-      c1 = db[:isolation_segment_annotations].first(guid: 'bommel2')
-      c2 = db[:isolation_segment_annotations].first(guid: 'bommel3')
-      expect(b1.values).to eq(c1.values)
-      expect(b2.values).to eq(c2.values)
+      anno2_after_mig = db[:isolation_segment_annotations].first(guid: 'anno-2-guid')
+      anno3_after_mig = db[:isolation_segment_annotations].first(guid: 'anno-3-guid')
+      expect(anno2.values).to eq(anno2_after_mig.values)
+      expect(anno3.values).to eq(anno3_after_mig.values)
     end
   end
 end
