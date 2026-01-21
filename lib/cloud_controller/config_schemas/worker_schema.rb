@@ -46,7 +46,7 @@ module VCAP::CloudController
           optional(:storage_cli_config_file_packages) => String,
           optional(:storage_cli_config_file_resource_pool) => String,
           optional(:storage_cli_config_file_droplets) => String,
-          optional(:storage_cli_flag_optionals) => String,
+          optional(:storage_cli_optional_flags) => String,
 
           newrelic_enabled: bool,
 

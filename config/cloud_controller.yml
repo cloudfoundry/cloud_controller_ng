@@ -325,7 +325,6 @@ storage_cli_config_file_droplets: config/storage_cli_config_droplets.json
 storage_cli_config_file_packages: config/storage_cli_config_packages.json
 storage_cli_config_file_buildpacks: config/storage_cli_config_buildpacks.json
 storage_cli_config_file_resource_pool: config/storage_cli_config_resource_pool.json
-storage_cli_flag_optionals: '-log-level warn -log-file /tmp/storage_cli.log'
 
 newrelic_enabled: false
 

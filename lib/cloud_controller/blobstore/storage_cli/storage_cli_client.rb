@@ -175,7 +175,7 @@ module CloudController
       end
 
       def additional_flags
-        flags_string = VCAP::CloudController::Config.config.get(:storage_cli_flag_optionals)
+        flags_string = VCAP::CloudController::Config.config.get(:storage_cli_optional_flags)
         return [] if flags_string.nil? || flags_string.empty?
 
         flags_string.split
