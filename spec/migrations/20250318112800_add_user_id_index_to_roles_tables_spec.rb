@@ -23,8 +23,8 @@ RSpec.describe 'migration to add an index for user_id on all roles tables', isol
     skip unless db.database_type == :postgres
   end
 
-  describe 'up migration' do
-    it 'adds indexes for all tables and handles idempotency' do
+  describe 'roles tables' do
+    it 'adds and removes user_id indexes for all tables with idempotency' do
       # Verify initial state: no indexes exist
       tables.each do |table|
         table_sym = table.to_sym
@@ -32,7 +32,7 @@ RSpec.describe 'migration to add an index for user_id on all roles tables', isol
         expect(db.indexes(table_sym)).not_to include(index_sym)
       end
 
-      # Run migration
+      # === UP MIGRATION ===
       expect { Sequel::Migrator.run(db, migrations_path, target: current_migration_index, allow_missing_migration_files: true) }.not_to raise_error
 
       # Verify all indexes were created
@@ -42,24 +42,15 @@ RSpec.describe 'migration to add an index for user_id on all roles tables', isol
         expect(db.indexes(table_sym)).to include(index_sym)
       end
 
-      # Test idempotency: running migration again should not fail
+      # Test up migration idempotency
       expect { Sequel::Migrator.run(db, migrations_path, target: current_migration_index, allow_missing_migration_files: true) }.not_to raise_error
-    end
-  end
-
-  describe 'down migration' do
-    it 'removes indexes from all tables and handles idempotency' do
-      # Run up migration first
-      Sequel::Migrator.run(db, migrations_path, target: current_migration_index, allow_missing_migration_files: true)
-
-      # Verify indexes exist
       tables.each do |table|
         table_sym = table.to_sym
         index_sym = :"#{table}_user_id_index"
         expect(db.indexes(table_sym)).to include(index_sym)
       end
 
-      # Run down migration
+      # === DOWN MIGRATION ===
       expect { Sequel::Migrator.run(db, migrations_path, target: current_migration_index - 1, allow_missing_migration_files: true) }.not_to raise_error
 
       # Verify all indexes were removed
@@ -69,8 +60,13 @@ RSpec.describe 'migration to add an index for user_id on all roles tables', isol
         expect(db.indexes(table_sym)).not_to include(index_sym)
       end
 
-      # Test idempotency: running rollback again should not fail
+      # Test down migration idempotency
       expect { Sequel::Migrator.run(db, migrations_path, target: current_migration_index - 1, allow_missing_migration_files: true) }.not_to raise_error
+      tables.each do |table|
+        table_sym = table.to_sym
+        index_sym = :"#{table}_user_id_index"
+        expect(db.indexes(table_sym)).not_to include(index_sym)
+      end
     end
   end
 end
