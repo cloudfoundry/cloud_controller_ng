@@ -5,7 +5,12 @@ require 'messages/space_quotas_create_message'
 module VCAP::CloudController
   RSpec.describe SpaceQuotasCreate do
     describe 'create' do
-      subject(:space_quotas_create) { SpaceQuotasCreate.new }
+      let(:user) { User.make }
+      let(:user_email) { 'user@example.com' }
+      let(:user_name) { 'user-name' }
+      let(:user_audit_info) { UserAuditInfo.new(user_guid: user.guid, user_email: user_email, user_name: user_name) }
+
+      subject(:space_quotas_create) { SpaceQuotasCreate.new(user_audit_info) }
 
       let(:org) { VCAP::CloudController::Organization.make(guid: 'some-org') }
       let(:space) { VCAP::CloudController::Space.make(guid: 'some-space', organization: org) }
@@ -104,6 +109,28 @@ module VCAP::CloudController
             expect(space_quota.organization).to eq(org)
 
             expect(space_quota.spaces.count).to eq(1)
+          end
+
+          it 'creates an audit event' do
+            space_quota = space_quotas_create.create(message_with_params, organization: org)
+
+            expect(VCAP::CloudController::Event.count).to eq(1)
+            event = VCAP::CloudController::Event.last
+
+            expect(event.values).to include(
+              type: 'audit.space_quota.create',
+              actee: space_quota.guid,
+              actee_type: 'space_quota',
+              actee_name: space_quota.name,
+              actor: user_audit_info.user_guid,
+              actor_type: 'user',
+              actor_name: user_audit_info.user_email,
+              actor_username: user_audit_info.user_name,
+              space_guid: '',
+              organization_guid: org.guid
+            )
+            expect(event.metadata).to eq({ 'request' => message_with_params.audit_hash })
+            expect(event.timestamp).to be
           end
         end
       end

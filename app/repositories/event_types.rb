@@ -123,9 +123,20 @@ module VCAP::CloudController
         ORGANIZATION_UPDATE = 'audit.organization.update'.freeze,
         ORGANIZATION_DELETE_REQUEST = 'audit.organization.delete-request'.freeze,
 
+        ORGANIZATION_QUOTA_CREATE = 'audit.organization_quota.create'.freeze,
+        ORGANIZATION_QUOTA_UPDATE = 'audit.organization_quota.update'.freeze,
+        ORGANIZATION_QUOTA_DELETE = 'audit.organization_quota.delete'.freeze,
+        ORGANIZATION_QUOTA_APPLY = 'audit.organization_quota.apply'.freeze,
+
         SPACE_CREATE = 'audit.space.create'.freeze,
         SPACE_UPDATE = 'audit.space.update'.freeze,
         SPACE_DELETE_REQUEST = 'audit.space.delete-request'.freeze,
+
+        SPACE_QUOTA_CREATE = 'audit.space_quota.create'.freeze,
+        SPACE_QUOTA_UPDATE = 'audit.space_quota.update'.freeze,
+        SPACE_QUOTA_DELETE = 'audit.space_quota.delete'.freeze,
+        SPACE_QUOTA_APPLY = 'audit.space_quota.apply'.freeze,
+        SPACE_QUOTA_REMOVE = 'audit.space_quota.remove'.freeze,
 
         STACK_CREATE = 'audit.stack.create'.freeze,
         STACK_UPDATE = 'audit.stack.update'.freeze,

@@ -44,7 +44,7 @@ class OrganizationQuotasController < ApplicationController
     message = VCAP::CloudController::OrganizationQuotasCreateMessage.new(hashed_params[:body])
     unprocessable!(message.errors.full_messages) unless message.valid?
 
-    organization_quota = OrganizationQuotasCreate.new.create(message)
+    organization_quota = OrganizationQuotasCreate.new(user_audit_info).create(message)
 
     render json: Presenters::V3::OrganizationQuotaPresenter.new(organization_quota, **presenter_args), status: :created
   rescue OrganizationQuotasCreate::Error => e
@@ -60,7 +60,7 @@ class OrganizationQuotasController < ApplicationController
     organization_quota = QuotaDefinition.first(guid: hashed_params[:guid])
     resource_not_found!(:organization_quota) unless organization_quota
 
-    organization_quota = OrganizationQuotasUpdate.update(organization_quota, message)
+    organization_quota = OrganizationQuotasUpdate.update(organization_quota, message, user_audit_info)
 
     render json: Presenters::V3::OrganizationQuotaPresenter.new(organization_quota, **presenter_args), status: :ok
   rescue OrganizationQuotasUpdate::Error => e
@@ -77,7 +77,7 @@ class OrganizationQuotasController < ApplicationController
       unprocessable!('This quota is applied to one or more organizations. Apply different quotas to those organizations before deleting.')
     end
 
-    delete_action = OrganizationQuotaDeleteAction.new
+    delete_action = OrganizationQuotaDeleteAction.new(user_audit_info)
 
     deletion_job = VCAP::CloudController::Jobs::DeleteActionJob.new(QuotaDefinition, organization_quota.guid, delete_action, 'organization_quota')
     pollable_job = Jobs::Enqueuer.new(queue: Jobs::Queues.generic).enqueue_pollable(deletion_job)
@@ -94,7 +94,7 @@ class OrganizationQuotasController < ApplicationController
     organization_quota = QuotaDefinition.first(guid: hashed_params[:guid])
     resource_not_found!(:organization_quota) unless organization_quota
 
-    OrganizationQuotaApply.new.apply(organization_quota, message)
+    OrganizationQuotaApply.new(user_audit_info).apply(organization_quota, message)
 
     render status: :ok, json: Presenters::V3::ToManyRelationshipPresenter.new(
       "organization_quotas/#{organization_quota.guid}",

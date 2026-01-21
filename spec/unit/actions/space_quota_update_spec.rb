@@ -5,6 +5,10 @@ require 'messages/space_quota_update_message'
 module VCAP::CloudController
   RSpec.describe SpaceQuotaUpdate do
     let(:org) { VCAP::CloudController::Organization.make }
+    let(:user) { User.make }
+    let(:user_email) { 'user@example.com' }
+    let(:user_name) { 'user-name' }
+    let(:user_audit_info) { UserAuditInfo.new(user_guid: user.guid, user_email: user_email, user_name: user_name) }
 
     describe 'update' do
       context 'when updating a space quota' do
@@ -43,7 +47,7 @@ module VCAP::CloudController
         end
 
         it 'updates a space quota with the given values' do
-          updated_space_quota = SpaceQuotaUpdate.update(space_quota, message)
+          updated_space_quota = SpaceQuotaUpdate.update(space_quota, message, user_audit_info)
 
           expect(updated_space_quota.name).to eq('don-quixote')
 
@@ -62,10 +66,32 @@ module VCAP::CloudController
         end
 
         it 'updates a space quota with only the given values' do
-          updated_space_quota = SpaceQuotaUpdate.update(space_quota, minimum_message)
+          updated_space_quota = SpaceQuotaUpdate.update(space_quota, minimum_message, user_audit_info)
 
           expect(updated_space_quota.name).to eq('space_quota_name')
           expect(updated_space_quota.log_rate_limit).to eq(-1)
+        end
+
+        it 'creates an audit event' do
+          SpaceQuotaUpdate.update(space_quota, message, user_audit_info)
+
+          expect(VCAP::CloudController::Event.count).to eq(1)
+          event = VCAP::CloudController::Event.last
+
+          expect(event.values).to include(
+            type: 'audit.space_quota.update',
+            actee: space_quota.guid,
+            actee_type: 'space_quota',
+            actee_name: 'don-quixote',
+            actor: user_audit_info.user_guid,
+            actor_type: 'user',
+            actor_name: user_audit_info.user_email,
+            actor_username: user_audit_info.user_name,
+            space_guid: '',
+            organization_guid: org.guid
+          )
+          expect(event.metadata).to eq({ 'request' => message.audit_hash })
+          expect(event.timestamp).to be
         end
 
         context 'when a model validation fails' do
@@ -76,7 +102,7 @@ module VCAP::CloudController
 
             message = VCAP::CloudController::SpaceQuotaUpdateMessage.new(name: 'foobar')
             expect do
-              SpaceQuotaUpdate.update(space_quota, message)
+              SpaceQuotaUpdate.update(space_quota, message, user_audit_info)
             end.to raise_error(SpaceQuotaUpdate::Error, 'blork is busted')
           end
 
@@ -87,7 +113,7 @@ module VCAP::CloudController
 
             it 'raises a human-friendly error' do
               expect do
-                SpaceQuotaUpdate.update(space_quota, update_message)
+                SpaceQuotaUpdate.update(space_quota, update_message, user_audit_info)
               end.to raise_error(SpaceQuotaUpdate::Error, "Space Quota '#{name}' already exists.")
             end
           end
@@ -109,7 +135,7 @@ module VCAP::CloudController
 
             it 'errors with a message telling the user the affected space' do
               expect do
-                SpaceQuotaUpdate.update(space_quota, message)
+                SpaceQuotaUpdate.update(space_quota, message, user_audit_info)
               end.to raise_error(SpaceQuotaUpdate::Error, 'Current usage exceeds new quota values. This quota is applied to space ' \
                                                           "'space-name-1' which contains apps running with an unlimited log rate limit.")
             end
@@ -122,7 +148,7 @@ module VCAP::CloudController
 
             it 'errors with a message telling the user the affected spaces' do
               expect do
-                SpaceQuotaUpdate.update(space_quota, message)
+                SpaceQuotaUpdate.update(space_quota, message, user_audit_info)
               end.to raise_error(SpaceQuotaUpdate::Error, 'Current usage exceeds new quota values. This quota is applied to spaces ' \
                                                           "'space-name-1', 'space-name-2' which contain apps running with an unlimited log rate limit.")
             end
@@ -135,7 +161,7 @@ module VCAP::CloudController
 
             it 'errors with a message telling the user some of the affected spaces and a total count' do
               expect do
-                SpaceQuotaUpdate.update(space_quota, message)
+                SpaceQuotaUpdate.update(space_quota, message, user_audit_info)
               end.to raise_error(SpaceQuotaUpdate::Error, 'Current usage exceeds new quota values. This quota is applied to spaces ' \
                                                           "'space-name-1', 'space-name-2' and 3 other spaces which contain apps running with an unlimited log rate limit.")
             end
@@ -150,7 +176,7 @@ module VCAP::CloudController
 
             it 'only names the space once in the error message' do
               expect do
-                SpaceQuotaUpdate.update(space_quota, message)
+                SpaceQuotaUpdate.update(space_quota, message, user_audit_info)
               end.to raise_error(SpaceQuotaUpdate::Error, 'Current usage exceeds new quota values. This quota is applied to space ' \
                                                           "'space-name' which contains apps running with an unlimited log rate limit.")
             end

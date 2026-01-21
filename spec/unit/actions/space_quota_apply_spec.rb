@@ -8,7 +8,12 @@ module VCAP::CloudController
     let(:all_spaces_visible) { false }
 
     describe '#apply' do
-      subject { SpaceQuotaApply.new }
+      let(:user) { User.make }
+      let(:user_email) { 'user@example.com' }
+      let(:user_name) { 'user-name' }
+      let(:user_audit_info) { UserAuditInfo.new(user_guid: user.guid, user_email: user_email, user_name: user_name) }
+
+      subject { SpaceQuotaApply.new(user_audit_info) }
 
       let(:org) { VCAP::CloudController::Organization.make }
       let(:space) { VCAP::CloudController::Space.make(organization: org) }
@@ -30,6 +35,31 @@ module VCAP::CloudController
 
           expect(space_quota.spaces.count).to eq(1)
           expect(space_quota.spaces[0].guid).to eq(space.guid)
+        end
+
+        it 'creates an audit event' do
+          subject.apply(space_quota, message, visible_space_guids:, all_spaces_visible:)
+
+          expect(VCAP::CloudController::Event.count).to eq(1)
+          event = VCAP::CloudController::Event.last
+
+          expect(event.values).to include(
+            type: 'audit.space_quota.apply',
+            actee: space_quota.guid,
+            actee_type: 'space_quota',
+            actee_name: space_quota.name,
+            actor: user_audit_info.user_guid,
+            actor_type: 'user',
+            actor_name: user_audit_info.user_email,
+            actor_username: user_audit_info.user_name,
+            space_guid: space.guid,
+            organization_guid: space_quota.organization.guid
+          )
+          expect(event.metadata).to eq({
+                                         'space_guid' => space.guid,
+                                         'space_name' => space.name
+                                       })
+          expect(event.timestamp).to be
         end
       end
 
@@ -104,6 +134,46 @@ module VCAP::CloudController
               subject.apply(space_quota, message_with_invalid_space_guid, visible_space_guids:, all_spaces_visible:)
             end.to raise_error(SpaceQuotaApply::Error, "Spaces with guids [\"#{invalid_space_guid}\"] do not exist, or you do not have access to them.")
           end
+        end
+      end
+
+      context 'when applying quota to multiple spaces' do
+        let(:space2) { VCAP::CloudController::Space.make(organization: org) }
+        let(:visible_space_guids) { [space.guid, space2.guid] }
+        let(:message) do
+          VCAP::CloudController::SpaceQuotaApplyMessage.new({
+                                                              data: [{ guid: space.guid }, { guid: space2.guid }]
+                                                            })
+        end
+
+        it 'creates an audit event for each space' do
+          subject.apply(space_quota, message, visible_space_guids:, all_spaces_visible:)
+
+          expect(VCAP::CloudController::Event.count).to eq(2)
+          events = VCAP::CloudController::Event.all
+
+          space_event = events.find { |e| e.space_guid == space.guid }
+          space2_event = events.find { |e| e.space_guid == space2.guid }
+
+          expect(space_event.values).to include(
+            type: 'audit.space_quota.apply',
+            actee: space_quota.guid,
+            space_guid: space.guid
+          )
+          expect(space_event.metadata).to eq({
+                                               'space_guid' => space.guid,
+                                               'space_name' => space.name
+                                             })
+
+          expect(space2_event.values).to include(
+            type: 'audit.space_quota.apply',
+            actee: space_quota.guid,
+            space_guid: space2.guid
+          )
+          expect(space2_event.metadata).to eq({
+                                                'space_guid' => space2.guid,
+                                                'space_name' => space2.name
+                                              })
         end
       end
 

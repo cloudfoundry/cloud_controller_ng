@@ -1,3 +1,5 @@
+require 'repositories/organization_quota_event_repository'
+
 module VCAP::CloudController
   class OrganizationQuotasUpdate
     class Error < ::StandardError
@@ -6,7 +8,7 @@ module VCAP::CloudController
     MAX_ORGS_TO_LIST_ON_FAILURE = 2
 
     # rubocop:disable Metrics/CyclomaticComplexity
-    def self.update(quota, message)
+    def self.update(quota, message, user_audit_info)
       if log_rate_limit(message) != QuotaDefinition::UNLIMITED
         orgs = orgs_with_unlimited_processes(quota)
         unlimited_processes_exist_error!(orgs) if orgs.any?
@@ -33,6 +35,8 @@ module VCAP::CloudController
         quota.total_private_domains = total_private_domains(message) if message.domains_limits_message.requested? :total_domains
 
         quota.save
+
+        Repositories::OrganizationQuotaEventRepository.new.record_organization_quota_update(quota, user_audit_info, message.audit_hash)
       end
       # rubocop:enable Metrics/CyclomaticComplexity
 
