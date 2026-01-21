@@ -657,6 +657,77 @@ RSpec.describe 'Processes' do
     end
   end
 
+  describe 'GET /v3/processes/:guid/process_instances' do
+    let(:process) { VCAP::CloudController::ProcessModel.make(:process, app: app_model) }
+    let(:two_days_ago_since_epoch_ns) { 2.days.ago.to_f * 1e9 }
+    let(:two_days_in_seconds) { 60 * 60 * 24 * 2 }
+    let(:second_in_ns) { 1_000_000_000 }
+    let(:actual_lrp_0) do
+      Diego::Bbs::Models::ActualLRP.new(
+        actual_lrp_key: Diego::Bbs::Models::ActualLRPKey.new(process_guid: process.guid + 'version', index: 0),
+        actual_lrp_instance_key: Diego::Bbs::Models::ActualLRPInstanceKey.new(instance_guid: 'instance-a'),
+        state: Diego::ActualLRPState::RUNNING,
+        placement_error: '',
+        since: two_days_ago_since_epoch_ns
+      )
+    end
+    let(:actual_lrp_1) do
+      Diego::Bbs::Models::ActualLRP.new(
+        actual_lrp_key: Diego::Bbs::Models::ActualLRPKey.new(process_guid: process.guid + 'version', index: 1),
+        actual_lrp_instance_key: Diego::Bbs::Models::ActualLRPInstanceKey.new(instance_guid: 'instance-b'),
+        state: Diego::ActualLRPState::CLAIMED,
+        placement_error: '',
+        since: two_days_ago_since_epoch_ns + (1 * second_in_ns)
+      )
+    end
+    let(:bbs_response) { Diego::Bbs::Models::ActualLRPsByProcessGuidsResponse.new(actual_lrps: [actual_lrp_0, actual_lrp_1]) }
+    let(:bbs_client) { double(:bbs_client) }
+
+    let(:expected_response) do
+      {
+        'resources' => [{
+          'index' => 0,
+          'state' => 'RUNNING',
+          'since' => two_days_in_seconds
+        }, {
+          'index' => 1,
+          'state' => 'STARTING',
+          'since' => two_days_in_seconds - 1
+        }],
+        'links' => {
+          'self' => { 'href' => "#{link_prefix}/v3/processes/#{process.guid}/process_instances" },
+          'process' => { 'href' => "#{link_prefix}/v3/processes/#{process.guid}" }
+        }
+      }
+    end
+
+    before do
+      CloudController::DependencyLocator.instance.register(:bbs_instances_client, VCAP::CloudController::Diego::BbsInstancesClient.new(bbs_client))
+      allow(bbs_client).to receive(:actual_lrps_by_process_guids).and_return(bbs_response)
+    end
+
+    it 'retrieves all process instances for the process' do
+      get "/v3/processes/#{process.guid}/process_instances", nil, developer_headers
+
+      parsed_response = Oj.load(last_response.body)
+
+      expect(last_response.status).to eq(200)
+      expect(parsed_response).to be_a_response_like(expected_response)
+    end
+
+    context 'permissions' do
+      let(:api_call) { ->(user_headers) { get "/v3/processes/#{process.guid}/process_instances", nil, user_headers } }
+
+      let(:expected_codes_and_responses) do
+        h = Hash.new({ code: 200, response_object: expected_response }.freeze)
+        h['org_auditor'] = h['org_billing_manager'] = h['no_role'] = { code: 404, response_object: [] }
+        h
+      end
+
+      it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS
+    end
+  end
+
   describe 'PATCH /v3/processes/:guid' do
     let(:revision) { VCAP::CloudController::RevisionModel.make }
     let(:process) do

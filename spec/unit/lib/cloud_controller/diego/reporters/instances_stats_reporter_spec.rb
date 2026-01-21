@@ -692,6 +692,159 @@ module VCAP::CloudController
           end
         end
       end
+
+      describe '#instances_for_processes' do
+        let(:second_in_ns) { 1_000_000_000 }
+        let(:actual_lrp_0) do
+          ::Diego::Bbs::Models::ActualLRP.new(
+            actual_lrp_key: ::Diego::Bbs::Models::ActualLRPKey.new(process_guid: process.guid + 'version', index: 0),
+            actual_lrp_instance_key: ::Diego::Bbs::Models::ActualLRPInstanceKey.new(instance_guid: 'instance-a'),
+            state: ::Diego::ActualLRPState::RUNNING,
+            placement_error: '',
+            since: two_days_ago_since_epoch_ns
+          )
+        end
+        let(:actual_lrp_1) do
+          ::Diego::Bbs::Models::ActualLRP.new(
+            actual_lrp_key: ::Diego::Bbs::Models::ActualLRPKey.new(process_guid: process.guid + 'version', index: 1),
+            actual_lrp_instance_key: ::Diego::Bbs::Models::ActualLRPInstanceKey.new(instance_guid: 'instance-b'),
+            state: ::Diego::ActualLRPState::CLAIMED,
+            placement_error: '',
+            since: two_days_ago_since_epoch_ns + (1 * second_in_ns)
+          )
+        end
+        let(:actual_lrp_2a) do
+          ::Diego::Bbs::Models::ActualLRP.new(
+            actual_lrp_key: ::Diego::Bbs::Models::ActualLRPKey.new(process_guid: process.guid + 'version', index: 2),
+            actual_lrp_instance_key: ::Diego::Bbs::Models::ActualLRPInstanceKey.new(instance_guid: 'instance-c'),
+            state: ::Diego::ActualLRPState::RUNNING,
+            placement_error: '',
+            since: two_days_ago_since_epoch_ns + (2 * second_in_ns)
+          )
+        end
+        let(:actual_lrp_2b) do
+          ::Diego::Bbs::Models::ActualLRP.new(
+            actual_lrp_key: ::Diego::Bbs::Models::ActualLRPKey.new(process_guid: process.guid + 'version', index: 2),
+            actual_lrp_instance_key: ::Diego::Bbs::Models::ActualLRPInstanceKey.new(instance_guid: 'instance-d'),
+            state: ::Diego::ActualLRPState::UNCLAIMED,
+            placement_error: '',
+            since: two_days_ago_since_epoch_ns + (3 * second_in_ns)
+          )
+        end
+
+        before do
+          allow(bbs_instances_client).to receive_messages(actual_lrps_by_processes: bbs_actual_lrps_response)
+        end
+
+        context 'with multiple actual lrps' do
+          let(:bbs_actual_lrps_response) { [actual_lrp_1, actual_lrp_0, actual_lrp_2a] } # unordered to test sorting by index
+
+          it 'returns all instances sorted by index' do
+            instances = subject.instances_for_processes([process])
+            expect(instances).to eq({
+                                      process.guid => {
+                                        0 => { state: 'RUNNING', since: two_days_in_seconds },
+                                        1 => { state: 'STARTING', since: two_days_in_seconds - 1 },
+                                        2 => { state: 'RUNNING', since: two_days_in_seconds - 2 }
+                                      }
+                                    })
+          end
+        end
+
+        context 'with multiple actual lrps for the same index' do
+          let(:bbs_actual_lrps_response) { [actual_lrp_0, actual_lrp_1, actual_lrp_2a, actual_lrp_2b] }
+
+          it 'returns the newest instance per index' do
+            instances = subject.instances_for_processes([process])
+            expect(instances).to eq({
+                                      process.guid => {
+                                        0 => { state: 'RUNNING', since: two_days_in_seconds },
+                                        1 => { state: 'STARTING', since: two_days_in_seconds - 1 },
+                                        2 => { state: 'STARTING', since: two_days_in_seconds - 3 }
+                                      }
+                                    })
+          end
+        end
+
+        context 'with number of desired instances being greater than number of actual lrps' do
+          let(:bbs_actual_lrps_response) { [actual_lrp_0, actual_lrp_1] }
+          let(:desired_instances) { 4 }
+
+          it 'fills in missing instances as DOWN' do
+            instances = subject.instances_for_processes([process])
+            expect(instances).to eq({
+                                      process.guid => {
+                                        0 => { state: 'RUNNING', since: two_days_in_seconds },
+                                        1 => { state: 'STARTING', since: two_days_in_seconds - 1 },
+                                        2 => { state: 'DOWN' },
+                                        3 => { state: 'DOWN' }
+                                      }
+                                    })
+          end
+        end
+
+        context 'with multiple processes' do
+          let(:second_process) { ProcessModel.make }
+          let(:second_process_actual_lrp_0) do
+            ::Diego::Bbs::Models::ActualLRP.new(
+              actual_lrp_key: ::Diego::Bbs::Models::ActualLRPKey.new(process_guid: second_process.guid + 'version', index: 0),
+              actual_lrp_instance_key: ::Diego::Bbs::Models::ActualLRPInstanceKey.new(instance_guid: 'instance-e'),
+              state: ::Diego::ActualLRPState::RUNNING,
+              placement_error: '',
+              since: two_days_ago_since_epoch_ns + (4 * second_in_ns)
+            )
+          end
+          let(:second_process_actual_lrp_1) do
+            ::Diego::Bbs::Models::ActualLRP.new(
+              actual_lrp_key: ::Diego::Bbs::Models::ActualLRPKey.new(process_guid: second_process.guid + 'version', index: 1),
+              actual_lrp_instance_key: ::Diego::Bbs::Models::ActualLRPInstanceKey.new(instance_guid: 'instance-f'),
+              state: ::Diego::ActualLRPState::CRASHED,
+              placement_error: '',
+              since: two_days_ago_since_epoch_ns + (5 * second_in_ns)
+            )
+          end
+          let(:bbs_actual_lrps_response) { [actual_lrp_0, second_process_actual_lrp_0, actual_lrp_1, second_process_actual_lrp_1] } # unordered to test grouping
+
+          it 'returns instances grouped by process guid' do
+            instances = subject.instances_for_processes([process, second_process])
+            expect(instances).to eq({
+                                      process.guid => {
+                                        0 => { state: 'RUNNING', since: two_days_in_seconds },
+                                        1 => { state: 'STARTING', since: two_days_in_seconds - 1 }
+                                      },
+                                      second_process.guid => {
+                                        0 => { state: 'RUNNING', since: two_days_in_seconds - 4 },
+                                        1 => { state: 'CRASHED', since: two_days_in_seconds - 5 }
+                                      }
+                                    })
+          end
+        end
+
+        context 'with no actual lrps but desired instances' do
+          let(:bbs_actual_lrps_response) { [] }
+          let(:desired_instances) { 2 }
+
+          it 'fills in missing instances as DOWN' do
+            instances = subject.instances_for_processes([process])
+            expect(instances).to eq({
+                                      process.guid => {
+                                        0 => { state: 'DOWN' },
+                                        1 => { state: 'DOWN' }
+                                      }
+                                    })
+          end
+        end
+
+        context 'with no actual lrps and no desired instances' do
+          let(:bbs_actual_lrps_response) { [] }
+          let(:desired_instances) { 0 }
+
+          it 'returns an empty map for the instances' do
+            instances = subject.instances_for_processes([process])
+            expect(instances).to eq({ process.guid => {} })
+          end
+        end
+      end
     end
   end
 end

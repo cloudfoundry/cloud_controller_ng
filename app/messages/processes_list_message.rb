@@ -12,6 +12,8 @@ module VCAP::CloudController
 
     validates_with NoAdditionalParamsValidator # from BaseMessage
 
+    # validates :space_guids, array: true, allow_nil: true
+    # validates :organization_guids, array: true, allow_nil: true
     validates :app_guids, array: true, allow_nil: true
     validate :app_nested_request, if: -> { app_guid.present? }
 

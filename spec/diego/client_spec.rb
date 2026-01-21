@@ -668,6 +668,34 @@ module Diego
       end
     end
 
+    describe '#actual_lrps_by_process_guids' do
+      let(:actual_lrps) { [::Diego::Bbs::Models::ActualLRP.new, ::Diego::Bbs::Models::ActualLRP.new] }
+      let(:response_status) { 200 }
+      let(:response_body) do
+        Bbs::Models::ActualLRPsByProcessGuidsResponse.encode(
+          Bbs::Models::ActualLRPsByProcessGuidsResponse.new(error: nil, actual_lrps: actual_lrps)
+        ).to_s
+      end
+      let(:process_guids) { %w[process-guid another-process-guid] }
+
+      before do
+        stub_request(:post, "#{bbs_url}/v1/actual_lrps/list_by_process_guids").to_return(status: response_status, body: response_body)
+      end
+
+      it 'returns a LRP instances by process_guids response' do
+        expected_request = Bbs::Models::ActualLRPsByProcessGuidsRequest.new(process_guids:)
+
+        response = client.actual_lrps_by_process_guids(process_guids)
+        expect(response).to be_a(Bbs::Models::ActualLRPsByProcessGuidsResponse)
+        expect(response.error).to be_nil
+        expect(response.actual_lrps).to eq(actual_lrps)
+        expect(a_request(:post, "#{bbs_url}/v1/actual_lrps/list_by_process_guids").with(
+                 body: Bbs::Models::ActualLRPsByProcessGuidsRequest.encode(expected_request).to_s,
+                 headers: { 'Content-Type' => 'application/x-protobuf', 'X-Vcap-Request-Id' => request_id }
+               )).to have_been_made.once
+      end
+    end
+
     describe '#desired_lrps_scheduling_infos' do
       let(:scheduling_infos) { [::Diego::Bbs::Models::DesiredLRPSchedulingInfo.new] }
       let(:response_body) do

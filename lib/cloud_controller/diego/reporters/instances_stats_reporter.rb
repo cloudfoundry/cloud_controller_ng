@@ -29,13 +29,48 @@ module VCAP::CloudController
         raise exception
       end
 
+      def instances_for_processes(processes)
+        logger.debug('instances_for_processes.fetching_actual_lrps')
+
+        # Fetch actual_lrps for all processes
+        actual_lrps = bbs_instances_client.actual_lrps_by_processes(processes)
+
+        lrps_by_process_guid = actual_lrps.group_by { |lrp| (pg = lrp.actual_lrp_key&.process_guid) && ProcessGuid.cc_process_guid(pg) }
+
+        current_time_since_epoch_ns = Time.now.utc.to_f * 1e9
+        results = {}
+        processes.each do |process|
+          newest_lrp_by_index = (lrps_by_process_guid[process.guid] || []).
+                                group_by { |lrp| lrp.actual_lrp_key&.index }.
+                                transform_values { |lrps| lrps.max_by { |lrp| lrp.since || 0 } }
+
+          instances = {}
+          # Fill in the instances up to the max of desired instances and actual instances
+          [process.instances, newest_lrp_by_index.length].max.times do |idx|
+            lrp = newest_lrp_by_index[idx]
+            instances[idx] = if lrp
+                               {
+                                 state: LrpStateTranslator.translate_lrp_state(lrp),
+                                 since: nanoseconds_to_seconds(current_time_since_epoch_ns - lrp.since)
+                               }
+                             else
+                               { state: VCAP::CloudController::Diego::LRP_DOWN }
+                             end
+          end
+
+          results[process.guid] = instances
+        end
+
+        results
+      end
+
       private
 
       attr_reader :bbs_instances_client
 
       def get_stats(desired_lrp, process)
         log_cache_data, log_cache_errors = envelopes(desired_lrp, process)
-        stats = formatted_process_stats(log_cache_data, Time.now.to_datetime.rfc3339)
+        stats = formatted_process_stats(log_cache_data, Time.now.utc.to_datetime.rfc3339)
         quota_stats = formatted_quota_stats(log_cache_data)
         isolation_segment = desired_lrp.PlacementTags.first
         [log_cache_errors, stats, quota_stats, isolation_segment]
@@ -79,9 +114,9 @@ module VCAP::CloudController
             instance_guid: actual_lrp.actual_lrp_instance_key.instance_guid,
             port: get_default_port(actual_lrp.actual_lrp_net_info),
             net_info: actual_lrp_net_info_to_hash(actual_lrp.actual_lrp_net_info),
-            uptime: nanoseconds_to_seconds((Time.now.to_f * 1e9) - actual_lrp.since),
+            uptime: nanoseconds_to_seconds((Time.now.utc.to_f * 1e9) - actual_lrp.since),
             fds_quota: process.file_descriptors
-          }.merge(metrics_data_for_instance(stats, quota_stats, log_cache_errors, Time.now.to_datetime.rfc3339, actual_lrp.actual_lrp_key.index))
+          }.merge(metrics_data_for_instance(stats, quota_stats, log_cache_errors, Time.now.utc.to_datetime.rfc3339, actual_lrp.actual_lrp_key.index))
         }
         info[:details] = actual_lrp.placement_error if actual_lrp.placement_error.present?
 

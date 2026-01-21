@@ -1,6 +1,7 @@
 require 'presenters/v3/paginated_list_presenter'
 require 'presenters/v3/process_presenter'
 require 'presenters/v3/process_stats_presenter'
+require 'presenters/v3/process_instances_presenter'
 require 'cloud_controller/paging/pagination_options'
 require 'actions/process_delete'
 require 'fetchers/process_list_fetcher'
@@ -104,6 +105,12 @@ class ProcessesController < ApplicationController
     add_warning_headers(warnings)
 
     render status: :ok, json: Presenters::V3::ProcessStatsPresenter.new(@process.type, process_stats)
+  end
+
+  def process_instances
+    instances = instances_reporters.instances_for_processes([@process])
+
+    render status: :ok, json: Presenters::V3::ProcessInstancesPresenter.new(instances[@process.guid], @process)
   end
 
   private
