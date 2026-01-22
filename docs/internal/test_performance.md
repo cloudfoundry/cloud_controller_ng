@@ -150,20 +150,3 @@ time bundle exec rspec spec/unit/actions/app_create_spec.rb --format progress
 ```
 
 Compare the total time before and after each change.
-
-## Measured Results
-
-Baseline (no bootsnap, no Spring):
-- Files took 28.45 seconds to load
-- Total time: ~31 seconds
-
-With bootsnap (cache populated):
-- Files took 19-20 seconds to load
-- Total time: ~22 seconds
-- **Improvement: ~30% reduction in load time**
-
-With Spring preloader (after first run):
-- Total time: ~2 seconds
-- **Improvement: ~93% reduction in total time**
-
-The combination of bootsnap (for faster cold starts) and Spring (for iterative development) provides the best overall experience.

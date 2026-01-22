@@ -24,7 +24,7 @@ Running spork and/or spring doesn't seem to help substantially, but maybe they'r
 
 1. [x] Document exists explaining why tests are slow
 2. [x] Document explains solution(s) to why tests are slow
-3. [x] Tests reliably load/run faster
+3. [ ] Tests reliably load/run faster
 
 ---
 
