@@ -44,7 +44,6 @@ module CloudController
         @min_size = min_size || 0
         @max_size = max_size
         @storage_type = PROVIDER_TO_STORAGE_CLI_STORAGETYPE[@provider]
-        @debug = true
       end
 
       def fetch_config(resource_type)
@@ -182,7 +181,6 @@ module CloudController
           stdout, stderr, status = Open3.capture3(@cli_path, '-s', @storage_type, '-c', @config_file, *additional_flags, command, *args)
           stderr.split("\n").each do |line|
             logger.info("[INFO] storage-cli: #{line}")
-            logger.debug("[DEBUG] storage-cli: #{line}")
           end
         rescue StandardError => e
           raise BlobstoreError.new(e.inspect)
