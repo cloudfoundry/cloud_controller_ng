@@ -1,0 +1,315 @@
+diff --git a/lib/cloud_controller/membership.rb b/lib/cloud_controller/membership.rb
+index 25a7da1d3..76d2b21f3 100644
+--- a/lib/cloud_controller/membership.rb
++++ b/lib/cloud_controller/membership.rb
+@@ -12,6 +12,8 @@ module VCAP::CloudController
+     SPACE_ROLES = %w[space_developer space_manager space_auditor space_supporter].freeze
+     ORG_ROLES = %w[organization_manager organization_billing_manager organization_auditor organization_user].freeze
+ 
++    GROUP_NAME_PREFIX = 'group.'.freeze
++
+     def initialize(user)
+       @user = user
+     end
+@@ -94,8 +96,10 @@ module VCAP::CloudController
+       roles_filter(roles, ORG_ROLES).any?
+     end
+ 
++    # rubocop:disable Metrics/CyclomaticComplexity
+     def space_role_subqueries(roles, extra_filters={})
+-      roles_filter(roles, SPACE_ROLES).map do |space_role|
++      # Original user's roles
++      user_queries = roles_filter(roles, SPACE_ROLES).map do |space_role|
+         case space_role
+         when SPACE_DEVELOPER
+           SpaceDeveloper.where(extra_filters.merge(user_id: @user.id)).select(:space_id)
+@@ -107,10 +111,37 @@ module VCAP::CloudController
+           SpaceSupporter.where(extra_filters.merge(user_id: @user.id)).select(:space_id)
+         end
+       end.compact
++
++      # Add group users' roles
++      group_users = group_users_for_current_user
++      unless group_users.empty?
++        group_user_ids = group_users.map(&:id)
++        logger.info("[USER_GROUP_POC] Adding space roles for #{group_user_ids.length} group users")
++
++        group_queries = roles_filter(roles, SPACE_ROLES).map do |space_role|
++          case space_role
++          when SPACE_DEVELOPER
++            SpaceDeveloper.where(extra_filters.merge(user_id: group_user_ids)).select(:space_id)
++          when SPACE_MANAGER
++            SpaceManager.where(extra_filters.merge(user_id: group_user_ids)).select(:space_id)
++          when SPACE_AUDITOR
++            SpaceAuditor.where(extra_filters.merge(user_id: group_user_ids)).select(:space_id)
++          when SPACE_SUPPORTER
++            SpaceSupporter.where(extra_filters.merge(user_id: group_user_ids)).select(:space_id)
++          end
++        end.compact
++
++        user_queries.concat(group_queries)
++      end
++
++      user_queries
+     end
++    # rubocop:enable Metrics/CyclomaticComplexity
+ 
++    # rubocop:disable Metrics/CyclomaticComplexity
+     def org_role_subqueries(roles, extra_filters={})
+-      roles_filter(roles, ORG_ROLES).map do |org_role|
++      # Original user's roles
++      user_queries = roles_filter(roles, ORG_ROLES).map do |org_role|
+         case org_role
+         when ORG_MANAGER
+           OrganizationManager.where(extra_filters.merge(user_id: @user.id)).select(:organization_id)
+@@ -122,6 +153,86 @@ module VCAP::CloudController
+           OrganizationUser.where(extra_filters.merge(user_id: @user.id)).select(:organization_id)
+         end
+       end.compact
++
++      # Add group users' roles
++      group_users = group_users_for_current_user
++      unless group_users.empty?
++        group_user_ids = group_users.map(&:id)
++        logger.info("[USER_GROUP_POC] Adding org roles for #{group_user_ids.length} group users")
++
++        group_queries = roles_filter(roles, ORG_ROLES).map do |org_role|
++          case org_role
++          when ORG_MANAGER
++            OrganizationManager.where(extra_filters.merge(user_id: group_user_ids)).select(:organization_id)
++          when ORG_AUDITOR
++            OrganizationAuditor.where(extra_filters.merge(user_id: group_user_ids)).select(:organization_id)
++          when ORG_BILLING_MANAGER
++            OrganizationBillingManager.where(extra_filters.merge(user_id: group_user_ids)).select(:organization_id)
++          when ORG_USER
++            OrganizationUser.where(extra_filters.merge(user_id: group_user_ids)).select(:organization_id)
++          end
++        end.compact
++
++        user_queries.concat(group_queries)
++      end
++
++      user_queries
++    end
++    # rubocop:enable Metrics/CyclomaticComplexity
++
++    def group_users_for_current_user
++      return [] if current_user_groups.empty?
++
++      @group_users_for_current_user ||= fetch_group_users
++    end
++
++    def fetch_group_users
++      # Build group usernames: ["group.finance-team", "group.dev-team", ...]
++      group_usernames = current_user_groups.map { |group| "#{GROUP_NAME_PREFIX}#{group}" }
++
++      logger.info("[USER_GROUP_POC] Looking up group users for groups: #{current_user_groups.inspect}")
++      logger.info("[USER_GROUP_POC] Group usernames to lookup in UAA: #{group_usernames.inspect}")
++
++      # Batch lookup usernames -> GUIDs from UAA (origin: 'uaa' for PoC)
++      user_guids = lookup_user_guids_from_uaa(group_usernames)
++      return [] if user_guids.empty?
++
++      # Query CCDB for User models by resolved GUIDs
++      users = User.where(guid: user_guids).all
++
++      logger.info("[USER_GROUP_POC] Found #{users.length} group users in CCDB: #{users.map(&:guid).inspect}")
++
++      users
++    end
++
++    def lookup_user_guids_from_uaa(group_usernames)
++      user_guids = uaa_username_lookup_client.ids_for_usernames_and_origins(
++        group_usernames,
++        ['uaa']
++      )
++      logger.info("[USER_GROUP_POC] UAA returned #{user_guids.length} user GUIDs: #{user_guids.inspect}")
++      user_guids
++    rescue UaaUnavailable => e
++      logger.error("[USER_GROUP_POC] UAA unavailable during group user lookup: #{e.message}")
++      []
++    rescue StandardError => e
++      logger.error("[USER_GROUP_POC] Unexpected error during group user lookup: #{e.class} - #{e.message}")
++      logger.error("[USER_GROUP_POC] Backtrace: #{e.backtrace.first(5).join("\n")}")
++      []
++    end
++
++    def current_user_groups
++      groups = VCAP::CloudController::SecurityContext.user_groups
++      logger.info("[USER_GROUP_POC] Current user groups from SecurityContext: #{groups.inspect}")
++      groups
++    end
++
++    def uaa_username_lookup_client
++      CloudController::DependencyLocator.instance.uaa_username_lookup_client
++    end
++
++    def logger
++      @logger ||= Steno.logger('cc.membership')
+     end
+   end
+ end
+diff --git a/lib/cloud_controller/security_context.rb b/lib/cloud_controller/security_context.rb
+index d0e55b873..dea00797c 100644
+--- a/lib/cloud_controller/security_context.rb
++++ b/lib/cloud_controller/security_context.rb
+@@ -4,12 +4,14 @@ module VCAP::CloudController
+       Thread.current[:vcap_user] = nil
+       Thread.current[:vcap_token] = nil
+       Thread.current[:vcap_auth_token] = nil
++      Thread.current[:vcap_user_groups] = nil
+     end
+ 
+-    def self.set(user, token=nil, auth_token=nil)
++    def self.set(user, token=nil, auth_token=nil, user_groups=nil)
+       Thread.current[:vcap_user] = user
+       Thread.current[:vcap_token] = token
+       Thread.current[:vcap_auth_token] = auth_token
++      Thread.current[:vcap_user_groups] = user_groups
+     end
+ 
+     def self.current_user
+@@ -81,5 +83,18 @@ module VCAP::CloudController
+ 
+       ''
+     end
++
++    def self.user_groups
++      Thread.current[:vcap_user_groups] || []
++    end
++
++    def self.user_groups=(groups)
++      logger.info("[USER_GROUP_POC] Setting user groups in SecurityContext: #{groups.inspect}")
++      Thread.current[:vcap_user_groups] = groups
++    end
++
++    def self.logger
++      @logger ||= Steno.logger('cc.security_context')
++    end
+   end
+ end
+diff --git a/lib/cloud_controller/uaa/uaa_client.rb b/lib/cloud_controller/uaa/uaa_client.rb
+index 0708cd09b..3aa56bb30 100644
+--- a/lib/cloud_controller/uaa/uaa_client.rb
++++ b/lib/cloud_controller/uaa/uaa_client.rb
+@@ -145,6 +145,49 @@ module VCAP::CloudController
+       end
+     end
+ 
++    def userinfo(user_access_token)
++      logger.info('[USER_GROUP_POC] Fetching user info from UAA')
++      start_time = Time.now
++
++      response = http_client.get('userinfo', nil, { 'Authorization' => "Bearer #{user_access_token}" })
++
++      elapsed = Time.now - start_time
++      logger.info("[USER_GROUP_POC] UAA userinfo request completed in #{elapsed.round(3)}s, status: #{response.status}")
++
++      unless response.status == 200
++        logger.error("[USER_GROUP_POC] UAA userinfo request failed with status #{response.status}, body: #{response.body}")
++        raise UaaUnavailable
++      end
++
++      parsed = Oj.load(response.body)
++      logger.info("[USER_GROUP_POC] UAA userinfo response parsed, user_id: #{parsed['user_id']}, roles present: #{parsed.key?('roles')}")
++
++      if parsed['roles']
++        logger.info("[USER_GROUP_POC] User has #{parsed['roles'].length} external groups: #{parsed['roles'].inspect}")
++      else
++        logger.info('[USER_GROUP_POC] No roles claim in userinfo response')
++      end
++
++      parsed
++    rescue CF::UAA::NotFound, CF::UAA::BadTarget, CF::UAA::BadResponse => e
++      logger.error("[USER_GROUP_POC] UAA userinfo request failed: #{e.inspect}")
++      raise UaaUnavailable
++    rescue StandardError => e
++      logger.error("[USER_GROUP_POC] Unexpected error fetching userinfo: #{e.class} - #{e.message}")
++      logger.error("[USER_GROUP_POC] Backtrace: #{e.backtrace.first(5).join("\n")}")
++      raise UaaUnavailable
++    end
++
++    def external_groups_for_user(user_access_token)
++      info = userinfo(user_access_token)
++      groups = info['roles'] || []
++      logger.info("[USER_GROUP_POC] Extracted #{groups.length} external groups for user")
++      groups
++    rescue UaaUnavailable
++      logger.error('[USER_GROUP_POC] Failed to fetch external groups, re-raising UaaUnavailable')
++      raise
++    end
++
+     private
+ 
+     def query(type, **)
+@@ -201,5 +244,17 @@ module VCAP::CloudController
+     def error_info_from_target_error(e)
+       e.is_a?(CF::UAA::TargetError) ? ", error_info: #{e.info}" : ''
+     end
++
++    def http_client
++      @http_client ||= begin
++        client = HTTPClient.new(base_url: uaa_target)
++        client.ssl_config.verify_mode = OpenSSL::SSL::VERIFY_PEER
++        client.ssl_config.set_trust_ca(ca_file) if ca_file.present?
++        client.connect_timeout = http_timeout
++        client.send_timeout = http_timeout
++        client.receive_timeout = http_timeout
++        client
++      end
++    end
+   end
+ end
+diff --git a/middleware/security_context_setter.rb b/middleware/security_context_setter.rb
+index bdfe6fd0a..9a08908da 100644
+--- a/middleware/security_context_setter.rb
++++ b/middleware/security_context_setter.rb
+@@ -35,6 +35,8 @@ module CloudFoundry
+           env['cf.user_guid'] = id_from_token
+           env['cf.user_name'] = VCAP::CloudController::SecurityContext.token['user_name']
+           ::VCAP::Request.user_guid = id_from_token
++
++          fetch_and_store_user_groups
+         end
+ 
+         begin
+@@ -81,6 +83,39 @@ module CloudFoundry
+       def logger
+         @logger = Steno.logger('cc.security_context_setter')
+       end
++
++      def fetch_and_store_user_groups
++        return unless VCAP::CloudController::SecurityContext.valid_token?
++
++        logger.info('[USER_GROUP_POC] Attempting to fetch user groups from UAA')
++
++        # Get the raw auth token from SecurityContext
++        auth_token = VCAP::CloudController::SecurityContext.auth_token
++        logger.info("[USER_GROUP_POC] Auth token: #{auth_token}")
++        unless auth_token
++          logger.warn('[USER_GROUP_POC] No auth token available in SecurityContext')
++          return
++        end
++
++        # Extract bearer token (remove "Bearer " prefix if present)
++        token = auth_token.sub(/^Bearer\s+/i, '')
++
++        # Get UAA client and fetch groups
++        uaa_client = CloudController::DependencyLocator.instance.uaa_username_lookup_client
++        groups = uaa_client.external_groups_for_user(token)
++
++        logger.info("[USER_GROUP_POC] Successfully fetched #{groups.length} user groups from UAA")
++
++        # Store in SecurityContext
++        VCAP::CloudController::SecurityContext.user_groups = groups
++      rescue VCAP::CloudController::UaaUnavailable => e
++        logger.error("[USER_GROUP_POC] UAA unavailable when fetching user groups: #{e.message}")
++        VCAP::CloudController::SecurityContext.user_groups = []
++      rescue StandardError => e
++        logger.error("[USER_GROUP_POC] Unexpected error fetching user groups: #{e.class} - #{e.message}")
++        logger.error("[USER_GROUP_POC] Backtrace: #{e.backtrace.first(5).join("\n")}")
++        VCAP::CloudController::SecurityContext.user_groups = []
++      end
+     end
+   end
+ end

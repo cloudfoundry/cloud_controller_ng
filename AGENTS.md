@@ -1,0 +1,1 @@
+/Users/gcobb/workspace/ai_agent_rules/AGENTS.md
