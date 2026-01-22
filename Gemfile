@@ -92,6 +92,7 @@ group :test do
 end
 
 group :development do
+  gem 'bootsnap', require: false
   gem 'byebug'
   gem 'debug', '~> 1.11'
   gem 'listen'
