@@ -59,6 +59,3 @@ docs/v3/_yardoc
 docs/v3/doc/
 docs/v3/.idea/
 
-
-# Ralph config (may contain API key)
-.cursor/ralph-config.json
