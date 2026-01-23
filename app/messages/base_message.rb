@@ -139,6 +139,22 @@ module VCAP::CloudController
       end
     end
 
+    class EmbedParamValidator < ActiveModel::Validator
+      def validate(record)
+        return unless record.requested?(:embed)
+
+        key_counts = Hash.new(0)
+        record.embed.each do |embed_candidate|
+          if options[:valid_values].member?(embed_candidate)
+            key_counts[embed_candidate] += 1
+            record.errors.add(:base, message: "Duplicate embedded resource: '#{embed_candidate}'") if key_counts[embed_candidate] == 2
+          else
+            record.errors.add(:base, message: "Invalid embedded resource: '#{embed_candidate}'. Valid embedded resources are: '#{options[:valid_values].join("', '")}'")
+          end
+        end
+      end
+    end
+
     class LifecycleTypeParamValidator < ActiveModel::Validator
       def validate(record)
         return unless record.requested?(:lifecycle_type)

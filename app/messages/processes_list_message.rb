@@ -8,9 +8,11 @@ module VCAP::CloudController
       space_guids
       organization_guids
       app_guids
+      embed
     ]
 
     validates_with NoAdditionalParamsValidator # from BaseMessage
+    validates_with EmbedParamValidator, valid_values: ['process_instances']
 
     # validates :space_guids, array: true, allow_nil: true
     # validates :organization_guids, array: true, allow_nil: true
@@ -18,7 +20,7 @@ module VCAP::CloudController
     validate :app_nested_request, if: -> { app_guid.present? }
 
     def self.from_params(params)
-      super(params, %w[types space_guids organization_guids app_guids])
+      super(params, %w[types space_guids organization_guids app_guids embed])
     end
 
     def to_param_hash

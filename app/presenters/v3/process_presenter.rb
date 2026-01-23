@@ -14,7 +14,8 @@ module VCAP::CloudController
 
           readiness_health_check_data = { invocation_timeout: process.readiness_health_check_invocation_timeout, interval: process.readiness_health_check_interval }
           readiness_health_check_data[:endpoint] = process.readiness_health_check_http_endpoint if process.readiness_health_check_type == HealthCheckTypes::HTTP
-          {
+
+          hash = {
             guid: process.guid,
             created_at: process.created_at,
             updated_at: process.updated_at,
@@ -44,6 +45,8 @@ module VCAP::CloudController
             },
             links: build_links
           }
+
+          @decorators.reduce(hash) { |memo, d| d.decorate(memo, [process]) }
         end
 
         private
