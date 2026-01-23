@@ -159,27 +159,6 @@ module VCAP::CloudController::Presenters::V3
         end
       end
 
-      context 'when stack has warnings' do
-        before do
-          build.instance_variable_set(:@stack_warnings, ['Stack cflinuxfs3 is deprecated. EOL Dec 2025'])
-        end
-
-        it 'includes warnings in response' do
-          expect(result[:warnings]).to be_present
-          expect(result[:warnings]).to eq([{ detail: 'Stack cflinuxfs3 is deprecated. EOL Dec 2025' }])
-        end
-      end
-
-      context 'when stack has no warnings' do
-        before do
-          build.instance_variable_set(:@stack_warnings, [])
-        end
-
-        it 'does not include warnings key' do
-          expect(result).not_to have_key(:warnings)
-        end
-      end
-
       context 'when no stack warning present' do
         it 'does not include warnings key' do
           expect(result).not_to have_key(:warnings)

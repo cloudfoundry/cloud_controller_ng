@@ -415,12 +415,11 @@ RSpec.describe 'Apps' do
           }
         end
 
-        it 'creates the app with warnings in response body' do
+        it 'creates the app without warnings in response body' do
           post '/v3/apps', create_request.to_json, user_header
 
           expect(last_response.status).to eq(201)
-          expect(parsed_response['warnings']).to be_present
-          expect(parsed_response['warnings'].first['detail']).to include('DEPRECATED')
+          expect(parsed_response).not_to have_key('warnings')
         end
 
         it 'includes warnings in X-Cf-Warnings header' do

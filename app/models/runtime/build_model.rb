@@ -17,8 +17,6 @@ module VCAP::CloudController
                                 CNBGenericBuildFailed CNBDownloadBuildpackFailed CNBDetectFailed
                                 CNBBuildFailed CNBExportFailed CNBLaunchFailed CNBRestoreFailed].map(&:freeze).freeze
 
-    attr_reader :stack_warnings
-
     many_to_one :app,
                 class: 'VCAP::CloudController::AppModel',
                 key: :app_guid,

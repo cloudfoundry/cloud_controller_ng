@@ -25,7 +25,7 @@ module VCAP::CloudController
     class StagingInProgress < BuildError
     end
 
-    attr_reader :staging_response
+    attr_reader :staging_response, :warnings
 
     def initialize(user_audit_info: UserAuditInfo.from_context(SecurityContext),
                    memory_limit_calculator: QuotaValidatingStagingMemoryCalculator.new,
@@ -41,7 +41,7 @@ module VCAP::CloudController
 
     def create_and_stage(package:, lifecycle:, metadata: nil, start_after_staging: false)
       logger.info("creating build for package #{package.guid}")
-      warnings = validate_stack_state!(lifecycle, package.app)
+      @warnings = validate_stack_state!(lifecycle, package.app)
       staging_in_progress! if package.app.staging_in_progress?
       raise InvalidPackage.new('Cannot stage package whose state is not ready.') if package.state != PackageModel::READY_STATE
 
@@ -61,7 +61,6 @@ module VCAP::CloudController
         created_by_user_name: @user_audit_info.user_name,
         created_by_user_email: @user_audit_info.user_email
       )
-      build.instance_variable_set(:@stack_warnings, warnings)
 
       BuildModel.db.transaction do
         build.save

@@ -15,7 +15,7 @@ module VCAP::CloudController
         end
 
         def to_hash
-          hash = {
+          {
             guid: build.guid,
             created_at: build.created_at,
             updated_at: build.updated_at,
@@ -42,10 +42,6 @@ module VCAP::CloudController
             },
             links: build_links
           }
-
-          hash[:warnings] = build_warnings if build_warnings
-
-          hash
         end
 
         private
@@ -63,12 +59,6 @@ module VCAP::CloudController
         def error
           e = [build.error_id, build.error_description].compact.join(' - ')
           e.presence
-        end
-
-        def build_warnings
-          return nil unless build.stack_warnings&.any?
-
-          build.stack_warnings.map { |warning| { detail: warning } }
         end
 
         def build_links

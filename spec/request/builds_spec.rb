@@ -299,10 +299,7 @@ RSpec.describe 'Builds' do
 
           expect(last_response.status).to eq(201)
           expect(parsed_response['state']).to eq('STAGING')
-          expect(parsed_response['warnings']).to be_present
-          expect(parsed_response['warnings'][0]['detail']).to include('DEPRECATED')
-          expect(parsed_response['warnings'][0]['detail']).to include('cflinuxfs3')
-          expect(parsed_response['warnings'][0]['detail']).to include('WARNING')
+          expect(parsed_response).not_to have_key('warnings')
         end
 
         it 'includes warning in response headers' do
@@ -328,9 +325,7 @@ RSpec.describe 'Builds' do
 
           expect(last_response.status).to eq(201)
           expect(parsed_response['state']).to eq('STAGING')
-          expect(parsed_response['warnings']).to be_present
-          expect(parsed_response['warnings'][0]['detail']).to include('DEPRECATED')
-          expect(parsed_response['warnings'][0]['detail']).to include('cflinuxfs3')
+          expect(parsed_response).not_to have_key('warnings')
           expect(app_model.builds_dataset.count).to eq(2)
         end
 

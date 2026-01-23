@@ -22,8 +22,6 @@ module VCAP::CloudController
 
     extend IntegerArraySerializer
 
-    attr_reader :stack_warnings
-
     def after_initialize
       self.instances        ||= db_schema[:instances][:default].to_i
       self.memory           ||= Config.config.get(:default_app_memory)

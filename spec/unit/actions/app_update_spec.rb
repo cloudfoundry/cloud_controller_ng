@@ -407,9 +407,9 @@ module VCAP::CloudController
           before { new_stack.update(state: StackStates::STACK_DEPRECATED) }
 
           it 'updates the app with warnings' do
-            app = app_update.update(app_model, message, lifecycle)
-            expect(app.stack_warnings).to be_present
-            expect(app.stack_warnings.first).to include('DEPRECATED')
+            app_update.update(app_model, message, lifecycle)
+            expect(app_update.warnings).to be_present
+            expect(app_update.warnings.first).to include('DEPRECATED')
           end
         end
 
@@ -417,8 +417,8 @@ module VCAP::CloudController
           before { new_stack.update(state: StackStates::STACK_ACTIVE) }
 
           it 'updates the app without warnings' do
-            app = app_update.update(app_model, message, lifecycle)
-            expect(app.stack_warnings).to be_empty
+            app_update.update(app_model, message, lifecycle)
+            expect(app_update.warnings).to be_empty
           end
         end
 
@@ -426,8 +426,8 @@ module VCAP::CloudController
           let(:message) { AppUpdateMessage.new({ name: 'new-name' }) }
 
           it 'does not validate stack state' do
-            app = app_update.update(app_model, message, lifecycle)
-            expect(app.stack_warnings).to be_empty
+            app_update.update(app_model, message, lifecycle)
+            expect(app_update.warnings).to be_empty
           end
         end
       end

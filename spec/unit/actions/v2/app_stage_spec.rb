@@ -16,7 +16,7 @@ module VCAP::CloudController
 
         let(:package) { PackageModel.make(app: app, state: PackageModel::READY_STATE) }
         let(:build) { BuildModel.make(:buildpack, app: app, package: package, created_by_user_guid: 'user-guid') }
-        let(:build_create) { instance_double(BuildCreate, create_and_stage_without_event: build, staging_response: 'staging-response') }
+        let(:build_create) { instance_double(BuildCreate, create_and_stage_without_event: build, staging_response: 'staging-response', warnings: []) }
 
         before do
           allow(BuildCreate).to receive(:new).with(memory_limit_calculator: an_instance_of(NonQuotaValidatingStagingMemoryCalculator)).and_return(build_create)

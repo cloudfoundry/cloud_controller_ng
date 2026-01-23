@@ -255,8 +255,8 @@ module VCAP::CloudController
           it 'creates the app with warnings' do
             app = app_create.create(message, lifecycle)
             expect(app.id).not_to be_nil
-            expect(app.stack_warnings).to be_present
-            expect(app.stack_warnings.first).to include('DEPRECATED')
+            expect(app_create.warnings).to be_present
+            expect(app_create.warnings.first).to include('DEPRECATED')
           end
         end
 
@@ -266,7 +266,7 @@ module VCAP::CloudController
           it 'creates the app without warnings' do
             app = app_create.create(message, lifecycle)
             expect(app.id).not_to be_nil
-            expect(app.stack_warnings).to be_empty
+            expect(app_create.warnings).to be_empty
           end
         end
 
@@ -277,7 +277,7 @@ module VCAP::CloudController
           it 'skips stack validation' do
             app = app_create.create(message, lifecycle)
             expect(app.id).not_to be_nil
-            expect(app.stack_warnings).to be_empty
+            expect(app_create.warnings).to be_empty
           end
         end
       end

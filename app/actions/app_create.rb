@@ -9,6 +9,8 @@ module VCAP::CloudController
 
     class InvalidApp < StandardError; end
 
+    attr_reader :warnings
+
     def initialize(user_audit_info)
       @user_audit_info = user_audit_info
       @logger = Steno.logger('cc.action.app_create')
@@ -16,7 +18,6 @@ module VCAP::CloudController
 
     def create(message, lifecycle)
       app = nil
-      warnings = []
       AppModel.db.transaction do
         app = AppModel.create(
           name: message.name,
@@ -25,7 +26,7 @@ module VCAP::CloudController
         )
 
         lifecycle.create_lifecycle_data_model(app)
-        warnings = validate_stack_state(app, lifecycle)
+        @warnings = validate_stack_state(app, lifecycle)
         validate_buildpacks_are_ready(app)
 
         MetadataUpdate.update(app, message)
@@ -44,8 +45,6 @@ module VCAP::CloudController
           message.audit_hash
         )
       end
-
-      app.instance_variable_set(:@stack_warnings, warnings)
 
       app
     rescue Sequel::ValidationFailed => e

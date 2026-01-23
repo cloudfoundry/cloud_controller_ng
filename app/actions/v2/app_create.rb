@@ -1,6 +1,8 @@
 module VCAP::CloudController
   module V2
     class AppCreate
+      attr_reader :warnings
+
       def initialize(access_validator:)
         @access_validator = access_validator
       end
@@ -46,8 +48,7 @@ module VCAP::CloudController
           @access_validator.validate_access(:create, process, request_attrs)
         end
 
-        warnings = validate_stack_state(request_attrs)
-        process.instance_variable_set(:@stack_warnings, warnings)
+        @warnings = validate_stack_state(request_attrs)
 
         process
       end

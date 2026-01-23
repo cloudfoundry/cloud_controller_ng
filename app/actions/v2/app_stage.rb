@@ -29,7 +29,7 @@ module VCAP::CloudController
           start_after_staging: true
         )
 
-        @warnings = build.instance_variable_get(:@stack_warnings) || []
+        @warnings = build_creator.warnings || []
 
         TelemetryLogger.v2_emit(
           'create-build',
