@@ -45,10 +45,10 @@ module VCAP::CloudController
             connection_validation_timeout: Integer,
             optional(:ca_cert_path) => String
           },
-          storage_cli_config_file_resource_pool: String,
-          storage_cli_config_file_buildpacks: String,
-          storage_cli_config_file_packages: String,
-          storage_cli_config_file_droplets: String,
+          optional(:storage_cli_config_file_resource_pool) => String,
+          optional(:storage_cli_config_file_buildpacks) => String,
+          optional(:storage_cli_config_file_packages) => String,
+          optional(:storage_cli_config_file_droplets) => String,
 
           db_encryption_key: enum(String, NilClass),
 
