@@ -66,6 +66,54 @@ Used to test integration with [NATs](https://github.com/cloudfoundry/nats-releas
 Previously used to both generate the v2 API docs and test the user facing JSON response for the v2 API. Instead, write a request spec.
 To view the docs locally, cd into the `docs/v2` folder, run `python -mSimpleHTTPServer`, and navigate to `http://localhost:8000`.
 
+## Speeding Up Tests
+
+### Skip Database Recreate
+
+By default, running specs with `spec_helper` will automatically:
+1. Drop all database tables and views
+2. Run all migrations
+3. Confirm that all migrations have run
+
+See `spec_bootstrap.rb` for details.
+
+This is an expensive operation and can increase the test load time
+significantly. Furthermore, it is typically not needed, since the database
+schema changes infrequently and there is other tooling in place to isolate data
+between tests (see `database_isolation.rb`).
+
+To skip this step, set the `NO_DB_MIGRATION` environment variable. You will
+need to unset the variable, if you modify the database schema (i.e. adding a
+new migration).
+
+Example performance improvement:
+
+```sh
+❯ multitime -n 10 bundle exec rspec spec/unit/actions/app_create_spec.rb
+
+...
+
+===> multitime results
+1: bundle exec rspec spec/unit/actions/app_create_spec.rb
+            Mean        Std.Dev.    Min         Median      Max
+real        23.121      2.199       20.605      22.416      28.194
+user        4.100       0.105       3.902       4.103       4.292
+sys         2.382       0.084       2.266       2.381       2.557
+```
+
+```sh
+❯ NO_DB_MIGRATION=1 multitime -n 10 bundle exec rspec spec/unit/actions/app_create_spec.rb
+
+...
+
+===> multitime results
+1: bundle exec rspec spec/unit/actions/app_create_spec.rb
+            Mean        Std.Dev.    Min         Median      Max
+real        9.659       0.202       9.408       9.601       9.997
+user        2.968       0.046       2.856       2.991       3.015
+sys         1.636       0.042       1.569       1.640       1.720
+```
+
 ## Running Tests In Preloaded (Fast) Mode:
 
 Running unit tests is a good thing, but it can be annoying waiting for
