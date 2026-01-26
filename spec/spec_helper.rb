@@ -183,6 +183,7 @@ each_run_block = proc do
       end
 
       VCAP::CloudController::SecurityContext.clear
+      VCAP::Request.current_id = nil
       allow_any_instance_of(VCAP::CloudController::UaaTokenDecoder).to receive(:uaa_issuer).and_return(UAAIssuer::ISSUER)
 
       mock_redis = MockRedis.new
