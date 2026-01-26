@@ -19,6 +19,7 @@ module VCAP::CloudController
           optional(:storage_cli_config_file_packages) => String,
           optional(:storage_cli_config_file_resource_pool) => String,
           optional(:storage_cli_config_file_droplets) => String,
+          optional(:storage_cli_optional_flags) => String,
 
           readiness_port: {
             deployment_updater: Integer

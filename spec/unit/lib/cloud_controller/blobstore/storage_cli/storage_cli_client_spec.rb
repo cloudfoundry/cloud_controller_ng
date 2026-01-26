@@ -49,7 +49,7 @@ module CloudController
 
           expect do
             StorageCliClient.new(directory_key: 'dummy-key', root_dir: 'dummy-root', resource_type: 'droplets')
-          end.to raise_error(RuntimeError, 'Unimplemented provider: UnknownProvider, implemented ones are: AzureRM, aliyun')
+          end.to raise_error(RuntimeError, 'Unimplemented provider: UnknownProvider, implemented ones are: AzureRM, aliyun, Google')
 
           droplets_cfg.close!
         end
@@ -90,7 +90,7 @@ module CloudController
             end
           end
 
-          allow(Steno).to receive(:logger).and_return(double(info: nil, error: nil))
+          allow(Steno).to receive(:logger).and_return(double(info: nil, error: nil, debug: nil))
         end
 
         after do
@@ -266,7 +266,7 @@ module CloudController
               tmp_cfg.path
             end
           end
-          allow(Steno).to receive(:logger).and_return(double(info: nil, error: nil))
+          allow(Steno).to receive(:logger).and_return(double(info: nil, error: nil, debug: nil))
         end
 
         after { tmp_cfg.close! }
@@ -283,6 +283,28 @@ module CloudController
 
         let(:deletable_blob) { StorageCliBlob.new('deletable-blob') }
         let(:dest_path) { File.join(Dir.mktmpdir, SecureRandom.uuid) }
+
+        describe 'optional flags' do
+          context 'when there is no extra flags' do
+            before do
+              allow(VCAP::CloudController::Config.config).to receive(:get).with(:storage_cli_optional_flags).and_return('')
+            end
+
+            it('returns empty list') {
+              expect(client.send(:additional_flags)).to eq([])
+            }
+          end
+
+          context 'when there is extra flags' do
+            before do
+              allow(VCAP::CloudController::Config.config).to receive(:get).with(:storage_cli_optional_flags).and_return('-log-level warn -log-file some/path/storage-cli.log')
+            end
+
+            it('returns empty list') {
+              expect(client.send(:additional_flags)).to eq(['-log-level', 'warn', '-log-file', 'some/path/storage-cli.log'])
+            }
+          end
+        end
 
         describe  '#exists?' do
           context 'when the blob exists' do
