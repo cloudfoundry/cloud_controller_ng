@@ -12,6 +12,7 @@ curl "https://api.example.org/v3/stacks" \
   -d '{
     "name": "my-stack",
     "description": "Here is my stack!",
+    "state": "ACTIVE",
   }'
 ```
 
@@ -42,6 +43,7 @@ Name | Type | Description | Default
 **description** | _string_ | Description of the stack; must no longer than 250 characters | `null`
 **metadata.labels** | [_label object_](#labels) | Labels applied to the stack
 **metadata.annotations**  | [_annotation object_](#annotations) | Annotations applied to the stack
+**state** | string | The state of the stack; valid states are: `ACTIVE`, `RESTRICTED`, `DEPRECATED`, `DISABLED`
 
 #### Permitted roles
  |
