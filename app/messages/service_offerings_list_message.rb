@@ -4,6 +4,7 @@ require 'messages/validators/label_selector_requirement_validator'
 module VCAP::CloudController
   class ServiceOfferingsListMessage < MetadataListMessage
     @array_keys = %i[
+      broker_catalog_ids
       service_broker_guids
       service_broker_names
       names
