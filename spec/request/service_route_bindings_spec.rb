@@ -14,6 +14,20 @@ RSpec.describe 'v3 service route bindings' do
   let!(:org_annotation) { VCAP::CloudController::OrganizationAnnotationModel.make(key_prefix: 'pre.fix', key_name: 'foo', value: 'bar', resource_guid: org.guid) }
   let(:org) { VCAP::CloudController::Organization.make }
   let(:user) { VCAP::CloudController::User.make }
+  let(:parameters_mixed_data_types_as_json_string) do
+    '{"boolean":true,"string":"a string","int":123,"float":3.14159,"optional":null,"object":{"a":"b"},"array":["c","d"]}'
+  end
+  let(:parameters_mixed_data_types_as_hash) do
+    {
+      boolean: true,
+      string: 'a string',
+      int: 123,
+      float: 3.14159,
+      optional: nil,
+      object: { a: 'b' },
+      array: %w[c d]
+    }
+  end
 
   describe 'GET /v3/service_route_bindings' do
     # Because route bindings don't have names, we can't use the 'paginated response' shared example
@@ -1027,6 +1041,27 @@ RSpec.describe 'v3 service route bindings' do
           expect(service_instance.routes.count).to eq(0)
         end
       end
+
+      context 'when providing parameters with mixed data types' do
+        let(:request_body) do
+          "{\"relationships\":{\"service_instance\":{\"data\":{\"guid\":\"#{service_instance.guid}\"}},\"route\":{\"data\":{\"guid\":\"#{route.guid}\"}}}," \
+            "\"parameters\":#{parameters_mixed_data_types_as_json_string}}"
+        end
+
+        it 'correctly parses all data types and sends the desired JSON string to the service broker' do
+          post '/v3/service_route_bindings', request_body, admin_headers
+
+          expect_any_instance_of(VCAP::Services::ServiceBrokers::V2::Client).to receive(:bind).
+            with(binding, hash_including(arbitrary_parameters: parameters_mixed_data_types_as_hash)). # correct internal representation
+            and_call_original
+
+          stub_request(:put, "#{service_instance.service_broker.broker_url}/v2/service_instances/#{service_instance.guid}/service_bindings/#{binding.guid}").
+            with(query: { accepts_incomplete: true }, body: /"parameters":#{Regexp.escape(parameters_mixed_data_types_as_json_string)}/).
+            to_return(status: 201, body: '{}')
+
+          execute_all_jobs(expected_successes: 1, expected_failures: 0)
+        end
+      end
     end
 
     context 'user-provided service instance' do
@@ -1679,6 +1714,25 @@ RSpec.describe 'v3 service route bindings' do
           expect(parsed_response).to include(
             { 'abra' => 'kadabra', 'kadabra' => 'alakazan' }
           )
+        end
+
+        context 'when the broker returns params with mixed data types' do
+          before do
+            stub_request(:get, broker_fetch_binding_url).
+              to_return(status: broker_status_code, body: "{\"parameters\":#{parameters_mixed_data_types_as_json_string}}")
+          end
+
+          it 'correctly parses all data types and returns the desired JSON string' do
+            allow_any_instance_of(VCAP::CloudController::ServiceBindingRead).to receive(:fetch_parameters).and_wrap_original do |m, instance|
+              result = m.call(instance)
+              expect(result).to eq(parameters_mixed_data_types_as_hash) # correct internal representation
+              result
+            end
+
+            api_call.call(admin_headers)
+            expect(last_response).to have_status_code(200)
+            expect(last_response).to match(/#{Regexp.escape(parameters_mixed_data_types_as_json_string)}/)
+          end
         end
       end
 

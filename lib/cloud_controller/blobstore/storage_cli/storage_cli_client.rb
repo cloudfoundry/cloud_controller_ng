@@ -65,7 +65,7 @@ module CloudController
 
       def fetch_json(path)
         Oj.load(File.read(path))
-      rescue Oj::ParseError, EncodingError => e
+      rescue JSON::ParserError, EncodingError => e
         raise BlobstoreError.new("Failed to parse storage-cli JSON at #{path}: #{e.message}")
       end
 
