@@ -49,6 +49,7 @@ module VCAP::CloudController
           optional(:storage_cli_config_file_buildpacks) => String,
           optional(:storage_cli_config_file_packages) => String,
           optional(:storage_cli_config_file_droplets) => String,
+          optional(:storage_cli_optional_flags) => String,
 
           db_encryption_key: enum(String, NilClass),
 
