@@ -13,7 +13,7 @@ require 'cloud_controller/integer_array_serializer'
 require_relative 'buildpack'
 
 module VCAP::CloudController
-  class ProcessModel < Sequel::Model(:processes) # rubocop:disable Metrics/ClassLength
+  class ProcessModel < Sequel::Model(:processes)
     include Serializer
 
     plugin :serialization
@@ -97,16 +97,6 @@ module VCAP::CloudController
 
       def diego
         where(diego: true)
-      end
-
-      def buildpack_type
-        inner_join(BuildpackLifecycleDataModel.table_name, app_guid: :app_guid).
-          select_all(:processes)
-      end
-
-      def non_docker_type
-        inner_join(BuildpackLifecycleDataModel.table_name, app_guid: :app_guid).
-          select_all(:processes)
       end
     end
 
