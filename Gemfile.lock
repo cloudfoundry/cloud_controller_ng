@@ -32,13 +32,6 @@ GIT
       azure-core (~> 0.1.13)
       nokogiri (~> 1.6, >= 1.6.8)
 
-GIT
-  remote: https://github.com/sporkrb/spork
-  revision: 224df492657e617a0c93c0319e78f0eefee5b636
-  ref: 224df49
-  specs:
-    spork (1.0.0rc4)
-
 GEM
   remote: https://rubygems.org/
   specs:
@@ -691,7 +684,6 @@ DEPENDENCIES
   sinatra (~> 4.2)
   sinatra-contrib
   solargraph
-  spork!
   spring
   spring-commands-rspec
   statsd-ruby (~> 1.5.0)

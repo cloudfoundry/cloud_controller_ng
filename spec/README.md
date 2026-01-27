@@ -159,27 +159,3 @@ real        18.628      2.077       13.934      19.062      21.821
 user        0.177       0.032       0.129       0.185       0.233
 sys         0.103       0.014       0.078       0.107       0.126
 ```
-
-#### Spork (Legacy)
-
-Spork is an older implementation of the same "forking" strategy implemented by Spring.
-
-### Running Individual Tests
-
-In one terminal, change to the `Cloud Controller` root directory and run `bundle exec spork`
-
-In a separate terminal, you can run selected unit tests quickly by running them with the `--drb` option, as in:
-
-    bundle exec rspec --drb spec/unit/models/services/service_plan_visibility_spec.rb
-
-You can configure your IDE to take advantage of spork by inserting the `--drb` option. If `spork` isn't running `rspec` will ignore the `--drb` option and run the test the usual slower way.
-
-Press Ctrl-C in the first terminal to stop running `spork`.
-
-### Running Tests Automatically When Files Change
-
-In one terminal, change to the `Cloud Controller` root directory and run `bundle exec scripts/file-watcher.rb`
-
-As files change, they, or their related spec files, will be run automatically.
-
-Press Ctrl-C to stop running `file-watcher.rb`.
