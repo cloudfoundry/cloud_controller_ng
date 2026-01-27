@@ -468,7 +468,7 @@ RSpec.describe AppsV3Controller, type: :controller do
           {
             name: 'some-name',
             relationships: { space: { data: { guid: space.guid } } },
-            lifecycle: { type: 'cnb', data: { buildpacks: ['http://example.com'], credentials: { registry: { user: 'password' } } } }
+            lifecycle: { type: 'cnb', data: { buildpacks: ['http://example.com'], stack: 'cflinuxfs4', credentials: { 'docker.io' => { 'username' => 'user', 'password' => 'password' } } } }
           }
         end
 
@@ -479,7 +479,7 @@ RSpec.describe AppsV3Controller, type: :controller do
           lifecycle_data = response_body['lifecycle']['data']
 
           expect(response).to have_http_status :created
-          expect(lifecycle_data).to eq({ 'buildpacks' => ['http://example.com'], 'stack' => 'default-stack-name', 'credentials' => '***' })
+          expect(lifecycle_data).to eq({ 'buildpacks' => ['http://example.com'], 'stack' => 'cflinuxfs4' })
         end
       end
     end

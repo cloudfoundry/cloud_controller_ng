@@ -68,13 +68,10 @@ module VCAP::CloudController
     end
 
     def to_hash
-      hash = {
+      {
         buildpacks: buildpacks.map { |buildpack| CloudController::UrlSecretObfuscator.obfuscate(buildpack) },
         stack: stack
       }
-      hash[:credentials] = Presenters::Censorship::REDACTED_CREDENTIAL unless credentials.nil?
-
-      hash
     end
 
     def validate
