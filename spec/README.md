@@ -114,13 +114,58 @@ user        2.968       0.046       2.856       2.991       3.015
 sys         1.636       0.042       1.569       1.640       1.720
 ```
 
-## Running Tests In Preloaded (Fast) Mode:
+### Running Tests In Preloaded (Fast) Mode:
 
 Running unit tests is a good thing, but it can be annoying waiting for
 the ruby interpreter to load and then initialize `rspec` every single
 time you make a change. Fortunately, many other people have run into
-this same frustration and published their solutions to the problem. We
-use the `spork` library to speed up the `edit-run-fix` cycle.
+this same frustration and published their solutions to the problem. 
+
+#### Spring
+
+Rails Spring (not to be confused with the Java project with the same name) runs
+CC in a background process and then forks it every time you run tests. That
+means that everything loaded prior to the fork doesn't need to be re-loaded
+every time you run tests. This can speed up tests substantially.
+
+To use Spring, run `./bin/rspec` in place of the default `rspec` binary. CC's
+`.envrc` adds the `./bin`` directory to your PATH, so in most cases you can
+just run `rspec`. Spring will automatically watch and reload files, but you can
+manually stop it with `spring stop`. It will automatically start again
+the next time you run `rspec`.
+
+Example performance improvement:
+```sh
+❯ multitime -n 10 bundle exec /path/to/default/rspec spec/unit/actions/app_create_spec.rb
+
+...
+
+===> multitime results
+1: bundle exec rspec spec/unit/actions/app_create_spec.rb
+            Mean        Std.Dev.    Min         Median      Max
+real        24.471      2.420       20.169      25.499      27.303
+user        4.320       0.255       3.761       4.354       4.642
+sys         2.514       0.158       2.206       2.562       2.698
+```
+
+```sh
+❯ multitime -n 10 bundle exec ./bin/rspec spec/unit/actions/app_create_spec.rb
+
+...
+
+===> multitime results
+1: bundle exec ./bin/rspec spec/unit/actions/app_create_spec.rb
+            Mean        Std.Dev.    Min         Median      Max
+real        18.628      2.077       13.934      19.062      21.821
+user        0.177       0.032       0.129       0.185       0.233
+sys         0.103       0.014       0.078       0.107       0.126
+```
+
+If you do not want to use Spring, you can set the `DISABLE_SPRING` environment variable.
+
+#### Spork (Legacy)
+
+Spork is an older implementation of the same "forking" strategy implemented by Spring.
 
 ### Running Individual Tests
 
