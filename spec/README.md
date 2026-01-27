@@ -114,30 +114,48 @@ user        2.968       0.046       2.856       2.991       3.015
 sys         1.636       0.042       1.569       1.640       1.720
 ```
 
-## Running Tests In Preloaded (Fast) Mode:
+### Running Tests In Preloaded (Fast) Mode:
 
 Running unit tests is a good thing, but it can be annoying waiting for
 the ruby interpreter to load and then initialize `rspec` every single
 time you make a change. Fortunately, many other people have run into
-this same frustration and published their solutions to the problem. We
-use the `spork` library to speed up the `edit-run-fix` cycle.
+this same frustration and published their solutions to the problem. 
 
-### Running Individual Tests
+#### Spring
 
-In one terminal, change to the `Cloud Controller` root directory and run `bundle exec spork`
+Rails Spring (not to be confused with the Java project with the same name) runs
+CC in a background process and then forks it every time you run tests. That
+means that everything loaded prior to the fork doesn't need to be re-loaded
+every time you run tests. This can speed up tests substantially.
 
-In a separate terminal, you can run selected unit tests quickly by running them with the `--drb` option, as in:
+To use spring, run `./bin/rspec` in place of `rspec`. Spring should
+automatically watch and reload files, but you can manually stop it with
+`./bin/spring stop`. It will automatically start again the next time you run
+`./bin/rspec`.
 
-    bundle exec rspec --drb spec/unit/models/services/service_plan_visibility_spec.rb
+Example performance improvement:
+```sh
+❯ multitime -n 10 bundle exec rspec spec/unit/actions/app_create_spec.rb
 
-You can configure your IDE to take advantage of spork by inserting the `--drb` option. If `spork` isn't running `rspec` will ignore the `--drb` option and run the test the usual slower way.
+...
 
-Press Ctrl-C in the first terminal to stop running `spork`.
+===> multitime results
+1: bundle exec rspec spec/unit/actions/app_create_spec.rb
+            Mean        Std.Dev.    Min         Median      Max
+real        24.471      2.420       20.169      25.499      27.303
+user        4.320       0.255       3.761       4.354       4.642
+sys         2.514       0.158       2.206       2.562       2.698
+```
 
-### Running Tests Automatically When Files Change
+```sh
+❯ multitime -n 10 bundle exec ./bin/rspec spec/unit/actions/app_create_spec.rb
 
-In one terminal, change to the `Cloud Controller` root directory and run `bundle exec scripts/file-watcher.rb`
+...
 
-As files change, they, or their related spec files, will be run automatically.
-
-Press Ctrl-C to stop running `file-watcher.rb`.
+===> multitime results
+1: bundle exec ./bin/rspec spec/unit/actions/app_create_spec.rb
+            Mean        Std.Dev.    Min         Median      Max
+real        18.628      2.077       13.934      19.062      21.821
+user        0.177       0.032       0.129       0.185       0.233
+sys         0.103       0.014       0.078       0.107       0.126
+```
