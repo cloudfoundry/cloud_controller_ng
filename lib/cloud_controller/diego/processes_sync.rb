@@ -26,7 +26,7 @@ module VCAP::CloudController
         batched_processes_for_sync do |processes|
           processes.each do |process|
             process_guid = ProcessGuid.from_process(process)
-            diego_lrp    = diego_lrps.delete(process_guid)
+            diego_lrp = diego_lrps.delete(process_guid)
 
             if diego_lrp.nil?
               to_desire.append(process.id)
@@ -143,16 +143,10 @@ module VCAP::CloudController
 
       def processes(ids)
         processes = ProcessModel.
-                    diego.
-                    runnable.
                     where(Sequel.lit("#{ProcessModel.table_name}.id IN ?", ids)).
                     eager(:desired_droplet, :space, :service_bindings, { routes: :domain }, { app: :buildpack_lifecycle_data })
-        if FeatureFlag.enabled?(:diego_docker)
-          processes.select_all(ProcessModel.table_name)
-        else
-          # `select_all` is called by `non_docker_type`
-          processes.non_docker_type
-        end
+
+        processes.select_all(ProcessModel.table_name)
       end
 
       def processes_for_sync(last_id)
@@ -162,6 +156,12 @@ module VCAP::CloudController
                     where(Sequel.lit("#{ProcessModel.table_name}.id > ?", last_id)).
                     order(:"#{ProcessModel.table_name}__id").
                     limit(BATCH_SIZE)
+
+        unless FeatureFlag.enabled?(:diego_docker)
+          non_docker_app_guids = BuildpackLifecycleDataModel.select(:app_guid).
+                                 union(CNBLifecycleDataModel.select(:app_guid))
+          processes = processes.where(Sequel.qualify(ProcessModel.table_name, :app_guid) => non_docker_app_guids)
+        end
 
         processes.select(:"#{ProcessModel.table_name}__id", :"#{ProcessModel.table_name}__guid", :"#{ProcessModel.table_name}__version",
                          :"#{ProcessModel.table_name}__updated_at")
