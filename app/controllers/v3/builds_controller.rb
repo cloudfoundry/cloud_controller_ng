@@ -49,7 +49,8 @@ class BuildsController < ApplicationController
     FeatureFlag.raise_unless_enabled!(:diego_cnb) if lifecycle.type == VCAP::CloudController::Lifecycles::CNB
     unprocessable!(lifecycle.errors.full_messages) unless lifecycle.valid?
 
-    build = BuildCreate.new.create_and_stage(package: package, lifecycle: lifecycle, metadata: message.metadata)
+    build_creator = BuildCreate.new
+    build = build_creator.create_and_stage(package: package, lifecycle: lifecycle, metadata: message.metadata)
 
     TelemetryLogger.v3_emit(
       'create-build',
@@ -64,6 +65,8 @@ class BuildsController < ApplicationController
         'stack' => build.lifecycle_data.try(:stack)
       }
     )
+
+    add_warning_headers(build_creator.warnings) if build_creator.warnings&.any?
 
     render status: :created, json: Presenters::V3::BuildPresenter.new(build)
   rescue BuildCreate::InvalidPackage => e

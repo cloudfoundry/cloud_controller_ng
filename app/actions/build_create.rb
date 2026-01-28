@@ -25,7 +25,7 @@ module VCAP::CloudController
     class StagingInProgress < BuildError
     end
 
-    attr_reader :staging_response
+    attr_reader :staging_response, :warnings
 
     def initialize(user_audit_info: UserAuditInfo.from_context(SecurityContext),
                    memory_limit_calculator: QuotaValidatingStagingMemoryCalculator.new,
@@ -41,6 +41,7 @@ module VCAP::CloudController
 
     def create_and_stage(package:, lifecycle:, metadata: nil, start_after_staging: false)
       logger.info("creating build for package #{package.guid}")
+      @warnings = validate_stack_state!(lifecycle, package.app)
       staging_in_progress! if package.app.staging_in_progress?
       raise InvalidPackage.new('Cannot stage package whose state is not ready.') if package.state != PackageModel::READY_STATE
 
@@ -178,6 +179,30 @@ module VCAP::CloudController
 
     def staging_in_progress!
       raise StagingInProgress
+    end
+
+    def validate_stack_state!(lifecycle, app)
+      return [] if lifecycle.type == Lifecycles::DOCKER
+
+      stack = Stack.find(name: lifecycle.staging_stack)
+      return [] unless stack
+
+      warnings = if first_build_for_app?(app)
+                   StackStateValidator.validate_for_new_app!(stack)
+                 else
+                   StackStateValidator.validate_for_restaging!(stack)
+                 end
+      warnings.each { |warning| logger.warn(warning) }
+      warnings
+    rescue StackStateValidator::DisabledStackError, StackStateValidator::RestrictedStackError => e
+      raise CloudController::Errors::ApiError.new_from_details(
+        'StackValidationFailed',
+        e.message
+      )
+    end
+
+    def first_build_for_app?(app)
+      app.builds_dataset.count.zero?
     end
   end
 end

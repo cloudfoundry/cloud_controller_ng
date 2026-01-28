@@ -513,6 +513,51 @@ RSpec.describe StacksController, type: :controller do
       end
     end
 
+    describe 'default stack state change warning' do
+      let(:stack_config_file) { File.join(Paths::FIXTURES, 'config/stacks.yml') }
+      let(:default_stack_name) { 'default-stack-name' }
+
+      before do
+        VCAP::CloudController::Stack.dataset.destroy
+        VCAP::CloudController::Stack.configure(stack_config_file)
+        set_current_user_as_admin
+      end
+
+      context 'when changing state on the default stack' do
+        let!(:default_stack) { VCAP::CloudController::Stack.make(name: default_stack_name) }
+
+        it 'returns a warning header with the stack name' do
+          patch :update, params: { guid: default_stack.guid, state: 'DEPRECATED' }, as: :json
+
+          expect(response).to have_http_status(:ok)
+          expect(response).to have_warning_message("Changing state on the default stack '#{default_stack_name}' may affect new application deployments.")
+        end
+      end
+
+      context 'when changing state on a non-default stack' do
+        let!(:default_stack) { VCAP::CloudController::Stack.make(name: default_stack_name) }
+        let!(:other_stack) { VCAP::CloudController::Stack.make(name: 'other-stack') }
+
+        it 'does not return a warning header' do
+          patch :update, params: { guid: other_stack.guid, state: 'DEPRECATED' }, as: :json
+
+          expect(response).to have_http_status(:ok)
+          expect(response.headers['X-Cf-Warnings']).to be_nil
+        end
+      end
+
+      context 'when updating metadata on the default stack without changing state' do
+        let!(:default_stack) { VCAP::CloudController::Stack.make(name: default_stack_name) }
+
+        it 'does not return a warning header' do
+          patch :update, params: { guid: default_stack.guid, metadata: { labels: { foo: 'bar' } } }, as: :json
+
+          expect(response).to have_http_status(:ok)
+          expect(response.headers['X-Cf-Warnings']).to be_nil
+        end
+      end
+    end
+
     describe 'authorization' do
       it_behaves_like 'permissions endpoint' do
         let(:roles_to_http_responses) do

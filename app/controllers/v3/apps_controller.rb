@@ -98,7 +98,8 @@ class AppsV3Controller < ApplicationController
     FeatureFlag.raise_unless_enabled!(:diego_cnb) if lifecycle.type == VCAP::CloudController::Lifecycles::CNB
     unprocessable!(lifecycle.errors.full_messages) unless lifecycle.valid?
 
-    app = AppCreate.new(user_audit_info).create(message, lifecycle)
+    app_creator = AppCreate.new(user_audit_info)
+    app = app_creator.create(message, lifecycle)
     TelemetryLogger.v3_emit(
       'create-app',
       {
@@ -106,6 +107,8 @@ class AppsV3Controller < ApplicationController
         'user-id' => current_user.guid
       }
     )
+
+    add_warning_headers(app_creator.warnings) if app_creator.warnings&.any?
 
     render status: :created, json: Presenters::V3::AppPresenter.new(app)
   rescue AppCreate::InvalidApp => e
@@ -125,7 +128,8 @@ class AppsV3Controller < ApplicationController
     lifecycle = AppLifecycleProvider.provide_for_update(message, app)
     unprocessable!(lifecycle.errors.full_messages) unless lifecycle.valid?
 
-    app = AppUpdate.new(user_audit_info).update(app, message, lifecycle)
+    app_updater = AppUpdate.new(user_audit_info)
+    app = app_updater.update(app, message, lifecycle)
     TelemetryLogger.v3_emit(
       'update-app',
       {
@@ -133,6 +137,8 @@ class AppsV3Controller < ApplicationController
         'user-id' => current_user.guid
       }
     )
+
+    add_warning_headers(app_updater.warnings) if app_updater.warnings&.any?
 
     render status: :ok, json: Presenters::V3::AppPresenter.new(app)
   rescue AppUpdate::DropletNotFound

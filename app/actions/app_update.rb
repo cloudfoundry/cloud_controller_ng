@@ -7,6 +7,8 @@ module VCAP::CloudController
     class DropletNotFound < StandardError; end
     class InvalidApp < StandardError; end
 
+    attr_reader :warnings
+
     def initialize(user_audit_info, manifest_triggered: false, runners: nil)
       @user_audit_info = user_audit_info
       @logger = Steno.logger('cc.action.app_update')
@@ -53,8 +55,12 @@ module VCAP::CloudController
         end
       end
 
+      @warnings = validate_stack_state(app, message, lifecycle)
+
       app
-    rescue Sequel::ValidationFailed => e
+    rescue Sequel::ValidationFailed,
+           StackStateValidator::DisabledStackError,
+           StackStateValidator::RestrictedStackError => e
       raise InvalidApp.new(e.message)
     end
 
@@ -80,6 +86,20 @@ module VCAP::CloudController
 
     def existing_environment_variables_for(app)
       app.environment_variables.nil? ? {} : app.environment_variables.symbolize_keys
+    end
+
+    def validate_stack_state(app, message, lifecycle)
+      return [] if lifecycle.type == Lifecycles::DOCKER
+      return [] unless message.requested?(:lifecycle) && message.buildpack_data.requested?(:stack)
+
+      stack = Stack.find(name: message.buildpack_data.stack)
+      return [] unless stack
+
+      if app.builds_dataset.count.zero?
+        StackStateValidator.validate_for_new_app!(stack)
+      else
+        StackStateValidator.validate_for_restaging!(stack)
+      end
     end
   end
 end

@@ -294,6 +294,7 @@ module VCAP::CloudController
 
       updater = V2::AppUpdate.new(access_validator: self, stagers: @stagers)
       updater.update(app, process, request_attrs)
+      updater.warnings.each { |warning| add_warning(warning) }
 
       after_update(process)
 
@@ -356,6 +357,8 @@ module VCAP::CloudController
 
       creator = V2::AppCreate.new(access_validator: self)
       process = creator.create(request_attrs)
+
+      creator.warnings&.each { |warning| add_warning(warning) }
 
       @app_event_repository.record_app_create(
         process,
