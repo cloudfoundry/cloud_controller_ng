@@ -52,7 +52,9 @@ class StacksController < ApplicationController
     message = StackUpdateMessage.new(hashed_params[:body])
     unprocessable!(message.errors.full_messages) unless message.valid?
 
+    changing_default_stack_state = stack.default? && message.requested?(:state)
     stack = StackUpdate.new(user_audit_info).update(stack, message)
+    add_warning_headers(["Changing state on the default stack '#{stack.name}' may affect new application deployments."]) if changing_default_stack_state
 
     render status: :ok, json: Presenters::V3::StackPresenter.new(stack)
   end

@@ -16,7 +16,7 @@ module VCAP::CloudController
         MetadataUpdate.update(stack, message)
         Repositories::StackEventRepository.new.record_stack_update(stack, @user_audit_info, message.audit_hash)
       end
-      @logger.info("Finished updating metadata on stack #{stack.guid}")
+      @logger.info("Finished updating stack #{stack.guid}")
 
       stack
     rescue Sequel::ValidationFailed => e

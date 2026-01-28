@@ -292,7 +292,7 @@ RSpec.describe 'Builds' do
       end
 
       context 'first build for app' do
-        it 'returns 201 and does not create the build' do
+        it 'returns 201 and stages the app' do
           expect(app_model.builds_dataset.count).to eq(0)
 
           post '/v3/builds', create_request.to_json, developer_headers
@@ -318,7 +318,7 @@ RSpec.describe 'Builds' do
           VCAP::CloudController::BuildModel.make(app: app_model, state: VCAP::CloudController::BuildModel::STAGED_STATE)
         end
 
-        it 'returns 201 and does not create the build' do
+        it 'returns 201 and stages the app' do
           expect(app_model.builds_dataset.count).to eq(1)
 
           post '/v3/builds', create_request.to_json, developer_headers

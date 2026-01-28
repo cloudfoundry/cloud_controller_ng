@@ -44,7 +44,7 @@ module VCAP::CloudController
     def validate
       validates_presence :name
       validates_unique :name
-      validates_includes StackStates::VALID_STATES, :state, allow_nil: true
+      validates_includes StackStates::VALID_STATES, :state, allow_missing: true
     end
 
     def before_destroy
@@ -115,14 +115,6 @@ module VCAP::CloudController
 
     def disabled?
       state == StackStates::STACK_DISABLED
-    end
-
-    def can_stage_new_app?
-      !restricted? && !disabled?
-    end
-
-    def can_restage_apps?
-      !disabled?
     end
   end
 end

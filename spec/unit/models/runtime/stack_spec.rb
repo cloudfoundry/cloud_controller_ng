@@ -43,10 +43,10 @@ module VCAP::CloudController
           expect(stack.errors[:state]).to include(:includes)
         end
 
-        it 'allows nil state' do
+        it 'does not allow nil state' do
           stack = Stack.make
           stack.state = nil
-          expect(stack).to be_valid
+          expect(stack).not_to be_valid
         end
       end
     end
