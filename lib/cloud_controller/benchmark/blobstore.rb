@@ -18,7 +18,7 @@ module VCAP::CloudController
         '10MB' => 10   * 1024 * 1024,
         '50MB' => 50   * 1024 * 1024,
         '100MB' => 100  * 1024 * 1024,
-        '500MB' => 400  * 1024 * 1024,
+        '500MB' => 500  * 1024 * 1024,
         '1000MB' => 1000 * 1024 * 1024
       }.freeze
 
@@ -138,7 +138,7 @@ module VCAP::CloudController
           remaining = bytes
           while remaining > 0
             to_write = [CHUNK_1MB.bytesize, remaining].min
-            f.write(CHUNK_1MB, to_write)
+            f.write(CHUNK_1MB.byteslice(0, to_write))
             remaining -= to_write
           end
         end
