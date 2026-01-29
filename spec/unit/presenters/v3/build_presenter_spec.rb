@@ -158,6 +158,12 @@ module VCAP::CloudController::Presenters::V3
           expect(result[:package][:guid]).to eq(@package_guid)
         end
       end
+
+      context 'when no stack warning present' do
+        it 'does not include warnings key' do
+          expect(result).not_to have_key(:warnings)
+        end
+      end
     end
   end
 end

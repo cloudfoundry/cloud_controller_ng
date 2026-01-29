@@ -26,6 +26,7 @@ RSpec.describe 'Stacks Request' do
               'run_rootfs_image' => stack1.run_rootfs_image,
               'build_rootfs_image' => stack1.build_rootfs_image,
               'guid' => stack1.guid,
+              'state' => 'ACTIVE',
               'default' => false,
               'metadata' => { 'labels' => {}, 'annotations' => {} },
               'created_at' => iso8601,
@@ -42,6 +43,7 @@ RSpec.describe 'Stacks Request' do
               'run_rootfs_image' => stack2.run_rootfs_image,
               'build_rootfs_image' => stack2.build_rootfs_image,
               'guid' => stack2.guid,
+              'state' => 'ACTIVE',
               'default' => true,
               'metadata' => { 'labels' => {}, 'annotations' => {} },
               'created_at' => iso8601,
@@ -122,6 +124,7 @@ RSpec.describe 'Stacks Request' do
                   'run_rootfs_image' => stack1.run_rootfs_image,
                   'build_rootfs_image' => stack1.build_rootfs_image,
                   'guid' => stack1.guid,
+                  'state' => 'ACTIVE',
                   'default' => false,
                   'metadata' => { 'labels' => {}, 'annotations' => {} },
                   'created_at' => iso8601,
@@ -138,6 +141,7 @@ RSpec.describe 'Stacks Request' do
                   'run_rootfs_image' => stack2.run_rootfs_image,
                   'build_rootfs_image' => stack2.build_rootfs_image,
                   'guid' => stack2.guid,
+                  'state' => 'ACTIVE',
                   'default' => true,
                   'metadata' => { 'labels' => {}, 'annotations' => {} },
                   'created_at' => iso8601,
@@ -177,6 +181,7 @@ RSpec.describe 'Stacks Request' do
                   'run_rootfs_image' => stack1.run_rootfs_image,
                   'build_rootfs_image' => stack1.build_rootfs_image,
                   'guid' => stack1.guid,
+                  'state' => 'ACTIVE',
                   'default' => false,
                   'metadata' => { 'labels' => {}, 'annotations' => {} },
                   'created_at' => iso8601,
@@ -193,6 +198,7 @@ RSpec.describe 'Stacks Request' do
                   'run_rootfs_image' => stack3.run_rootfs_image,
                   'build_rootfs_image' => stack3.build_rootfs_image,
                   'guid' => stack3.guid,
+                  'state' => 'ACTIVE',
                   'default' => false,
                   'metadata' => { 'labels' => {}, 'annotations' => {} },
                   'created_at' => iso8601,
@@ -232,6 +238,7 @@ RSpec.describe 'Stacks Request' do
                   'run_rootfs_image' => stack2.run_rootfs_image,
                   'build_rootfs_image' => stack2.build_rootfs_image,
                   'guid' => stack2.guid,
+                  'state' => 'ACTIVE',
                   'default' => true,
                   'metadata' => { 'labels' => {}, 'annotations' => {} },
                   'created_at' => iso8601,
@@ -287,6 +294,7 @@ RSpec.describe 'Stacks Request' do
                     'run_rootfs_image' => stack1.run_rootfs_image,
                     'build_rootfs_image' => stack1.build_rootfs_image,
                     'guid' => stack1.guid,
+                    'state' => 'ACTIVE',
                     'default' => false,
                     'metadata' => {
                       'labels' => {
@@ -323,6 +331,7 @@ RSpec.describe 'Stacks Request' do
         'run_rootfs_image' => stack.run_rootfs_image,
         'build_rootfs_image' => stack.build_rootfs_image,
         'guid' => stack.guid,
+        'state' => 'ACTIVE',
         'default' => false,
         'metadata' => { 'labels' => {}, 'annotations' => {} },
         'created_at' => iso8601,
@@ -670,6 +679,7 @@ RSpec.describe 'Stacks Request' do
             }
           },
           'guid' => created_stack.guid,
+          'state' => 'ACTIVE',
           'created_at' => iso8601,
           'updated_at' => iso8601,
           'links' => {
@@ -734,6 +744,7 @@ RSpec.describe 'Stacks Request' do
             }
           },
           'guid' => stack.guid,
+          'state' => 'ACTIVE',
           'created_at' => iso8601,
           'updated_at' => iso8601,
           'links' => {

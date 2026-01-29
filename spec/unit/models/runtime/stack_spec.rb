@@ -26,6 +26,29 @@ module VCAP::CloudController
       it { is_expected.to validate_presence :name }
       it { is_expected.to validate_uniqueness :name }
       it { is_expected.to strip_whitespace :name }
+
+      describe 'state validation' do
+        it 'accepts valid states' do
+          stack = Stack.make
+          StackStates::VALID_STATES.each do |valid_state|
+            stack.state = valid_state
+            expect(stack).to be_valid
+          end
+        end
+
+        it 'rejects invalid states' do
+          stack = Stack.make
+          stack.state = 'INVALID'
+          expect(stack).not_to be_valid
+          expect(stack.errors[:state]).to include(:includes)
+        end
+
+        it 'does not allow nil state' do
+          stack = Stack.make
+          stack.state = nil
+          expect(stack).not_to be_valid
+        end
+      end
     end
 
     describe 'Serialization' do

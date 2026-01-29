@@ -9,6 +9,8 @@ module VCAP::CloudController
 
     class InvalidApp < StandardError; end
 
+    attr_reader :warnings
+
     def initialize(user_audit_info)
       @user_audit_info = user_audit_info
       @logger = Steno.logger('cc.action.app_create')
@@ -24,6 +26,7 @@ module VCAP::CloudController
         )
 
         lifecycle.create_lifecycle_data_model(app)
+        @warnings = validate_stack_state(app, lifecycle)
         validate_buildpacks_are_ready(app)
 
         MetadataUpdate.update(app, message)
@@ -47,6 +50,8 @@ module VCAP::CloudController
     rescue Sequel::ValidationFailed => e
       v3_api_error!(:UniquenessError, e.message) if e.errors.on(%i[space_guid name])
 
+      raise InvalidApp.new(e.message)
+    rescue StackStateValidator::DisabledStackError, StackStateValidator::RestrictedStackError => e
       raise InvalidApp.new(e.message)
     end
 
@@ -73,6 +78,18 @@ module VCAP::CloudController
           # errors.add(:buildpack, "#{buildpack.name.inspect} must be in ready state")
         end
       end
+    end
+
+    def validate_stack_state(app, lifecycle)
+      return [] if lifecycle.type == Lifecycles::DOCKER
+
+      stack_name = app.lifecycle_data.try(:stack)
+      return [] unless stack_name
+
+      stack = Stack.find(name: stack_name)
+      return [] unless stack
+
+      StackStateValidator.validate_for_new_app!(stack)
     end
   end
 end

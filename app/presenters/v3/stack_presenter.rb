@@ -12,6 +12,7 @@ module VCAP::CloudController::Presenters::V3
         updated_at: stack.updated_at,
         name: stack.name,
         description: stack.description,
+        state: stack.state,
         run_rootfs_image: stack.run_rootfs_image,
         build_rootfs_image: stack.build_rootfs_image,
         default: stack.default?,
