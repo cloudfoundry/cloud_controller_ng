@@ -178,7 +178,7 @@ GEM
       excon (~> 1.0)
       formatador (>= 0.2, < 2.0)
       mime-types
-    fog-google (1.27.0)
+    fog-google (1.28.0)
       addressable (>= 2.7.0)
       fog-core (~> 2.5)
       fog-json (~> 1.2)
@@ -302,7 +302,7 @@ GEM
     mime-types (3.7.0)
       logger
       mime-types-data (~> 3.2025, >= 3.2025.0507)
-    mime-types-data (3.2026.0113)
+    mime-types-data (3.2026.0127)
     mini_mime (1.1.5)
     mini_portile2 (2.8.9)
     minitest (6.0.1)
@@ -637,7 +637,7 @@ DEPENDENCIES
   fog-aws
   fog-azure-rm!
   fog-core (~> 2.6.0)
-  fog-google (~> 1.27.0)
+  fog-google (~> 1.28.0)
   fog-local
   fog-openstack
   googleapis-common-protos (>= 1.8.0)

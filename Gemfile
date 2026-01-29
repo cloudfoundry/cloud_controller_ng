@@ -51,7 +51,7 @@ gem 'fog-aliyun'
 gem 'fog-aws'
 gem 'fog-azure-rm', git: 'https://github.com/fog/fog-azure-rm.git', branch: 'fog-arm-cf'
 gem 'fog-core', '~> 2.6.0'
-gem 'fog-google', '~> 1.27.0'
+gem 'fog-google', '~> 1.28.0'
 gem 'fog-local'
 gem 'fog-openstack'
 
