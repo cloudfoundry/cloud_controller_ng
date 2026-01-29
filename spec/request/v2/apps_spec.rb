@@ -1763,10 +1763,10 @@ RSpec.describe 'Apps' do
             expect(last_response.status).to eq(201)
           end
 
-          it 'does not include warnings header' do
+          it 'includes warning in header' do
             post "/v2/apps/#{process.guid}/restage", nil, headers_for(user)
 
-            expect(last_response.headers['X-Cf-Warnings']).to be_nil
+            expect(last_response.headers['X-Cf-Warnings']).not_to be_nil
           end
         end
       end

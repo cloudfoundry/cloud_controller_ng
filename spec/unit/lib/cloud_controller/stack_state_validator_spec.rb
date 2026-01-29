@@ -116,9 +116,11 @@ module VCAP::CloudController
       context 'when stack is RESTRICTED' do
         let(:stack) { Stack.make(state: StackStates::STACK_RESTRICTED, description: 'My RESTRICTED stack') }
 
-        it 'returns empty warnings' do
+        it 'returns warnings for restaging' do
           result = StackStateValidator.validate_for_restaging!(stack)
-          expect(result).to eq([])
+          warning = result.first
+          expect(warning).to include(stack.name)
+          expect(warning).to include('RESTRICTED')
         end
 
         it 'does not raise an error' do
@@ -147,7 +149,7 @@ module VCAP::CloudController
       let(:stack) { Stack.make(name: 'cflinuxfs3', description: 'End of life December 2025') }
 
       it 'returns formatted warning string' do
-        warning = StackStateValidator.build_deprecation_warning(stack, StackStates::STACK_DEPRECATED)
+        warning = StackStateValidator.build_stack_warning(stack, StackStates::STACK_DEPRECATED)
         expect(warning).to be_a(String)
         expect(warning).to include('cflinuxfs3')
         expect(warning).to include('DEPRECATED')
@@ -155,13 +157,13 @@ module VCAP::CloudController
 
       it 'includes stack name when description is empty' do
         stack.description = ''
-        warning = StackStateValidator.build_deprecation_warning(stack, StackStates::STACK_DEPRECATED)
+        warning = StackStateValidator.build_stack_warning(stack, StackStates::STACK_DEPRECATED)
         expect(warning).to include('cflinuxfs3')
       end
 
       it 'handles nil description' do
         stack.description = nil
-        warning = StackStateValidator.build_deprecation_warning(stack, StackStates::STACK_DEPRECATED)
+        warning = StackStateValidator.build_stack_warning(stack, StackStates::STACK_DEPRECATED)
         expect(warning).to include('cflinuxfs3')
       end
     end
@@ -205,7 +207,7 @@ module VCAP::CloudController
 
         it 'allows RESTRICTED without warnings' do
           result = StackStateValidator.validate_for_restaging!(restricted_stack)
-          expect(result).to be_empty
+          expect(result).not_to be_empty
         end
 
         it 'rejects DISABLED' do

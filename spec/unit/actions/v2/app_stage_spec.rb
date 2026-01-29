@@ -302,9 +302,9 @@ module VCAP::CloudController
                 BuildModel.make(app: process.app, state: 'STAGED')
               end
 
-              it 'allows staging without warnings' do
+              it 'allows staging with warnings' do
                 expect { action.stage(process) }.not_to raise_error
-                expect(action.warnings).to be_empty
+                expect(action.warnings).not_to be_empty
               end
             end
           end
