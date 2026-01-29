@@ -210,6 +210,7 @@ RSpec.describe 'V3 service offerings' do
       let(:params) do
         {
           available: true,
+          broker_catalog_ids: %w[catalog-id-1 catalog-id-2],
           service_broker_guids: %w[foo bar],
           service_broker_names: %w[baz qux],
           names: %w[quux quuz],
@@ -369,6 +370,20 @@ RSpec.describe 'V3 service offerings' do
           expect_filtered_service_offerings(
             'available=false',
             [service_offering_unavailable]
+          )
+        end
+      end
+
+      describe 'broker_catalog_ids' do
+        let!(:service_offering_1) { VCAP::CloudController::ServicePlan.make(public: true).service }
+        let!(:service_offering_2) { VCAP::CloudController::ServicePlan.make(public: true).service }
+        let!(:service_offering_3) { VCAP::CloudController::ServicePlan.make(public: true).service }
+        let!(:service_offering_4) { VCAP::CloudController::ServicePlan.make(public: true).service }
+
+        it 'filters by broker catalog id' do
+          expect_filtered_service_offerings(
+            "broker_catalog_ids=#{service_offering_1.unique_id},#{service_offering_3.unique_id}",
+            [service_offering_1, service_offering_3]
           )
         end
       end

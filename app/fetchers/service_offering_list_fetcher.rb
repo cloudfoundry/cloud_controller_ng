@@ -15,6 +15,8 @@ module VCAP::CloudController
       private
 
       def filter(message, dataset, klass)
+        dataset = dataset.where(Sequel[:services][:unique_id] =~ message.broker_catalog_ids) if message.requested?(:broker_catalog_ids)
+
         dataset = dataset.where(Sequel[:services][:label] =~ message.names) if message.requested?(:names)
 
         dataset = dataset.where { Sequel[:services][:active] =~ message.available? } if message.requested?(:available)
