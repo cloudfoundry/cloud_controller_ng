@@ -397,6 +397,24 @@ module VCAP::CloudController
           end
         end
 
+        describe 'the `broker_catalog_ids` filter' do
+          let!(:service_offering_1) { VCAP::CloudController::ServicePlan.make(public: true).service }
+          let!(:service_offering_2) { VCAP::CloudController::ServicePlan.make(public: true).service }
+          let!(:service_offering_3) { VCAP::CloudController::ServicePlan.make(public: true).service }
+          let!(:service_offering_4) { VCAP::CloudController::ServicePlan.make(public: true).service }
+
+          let(:message) do
+            ServiceOfferingsListMessage.from_params({ broker_catalog_ids: [service_offering_1.unique_id, service_offering_4.unique_id].join(',') }.with_indifferent_access)
+          end
+
+          it 'filters the service offerings with matching broker catalog IDs' do
+            expect(service_offerings).to contain_exactly(
+              service_offering_1,
+              service_offering_4
+            )
+          end
+        end
+
         describe 'the `service_broker_guids` filter' do
           let!(:service_broker) { VCAP::CloudController::ServiceBroker.make }
           let!(:service_offering_1) do
