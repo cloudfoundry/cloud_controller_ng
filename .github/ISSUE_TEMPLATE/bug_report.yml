@@ -38,7 +38,7 @@ body:
       label: Current Result
       description: Describe what you are currently experiencing from this process, and thereby explain the bug. Include relevant logs. If relevant, include a screenshot.
       placeholder: "..."
-  - type: input
+  - type: textarea
     id: possible-fix
     attributes:
       label: Possible Fix
