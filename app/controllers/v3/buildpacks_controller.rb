@@ -82,7 +82,7 @@ class BuildpacksController < ApplicationController
 
     unprocessable!('Buildpack is locked') if buildpack.locked
 
-    pollable_job = BuildpackUpload.new.upload_async(
+    pollable_job = BuildpackUpload.new(user_audit_info).upload_async(
       message: message,
       buildpack: buildpack,
       config: configuration

@@ -57,6 +57,25 @@ module VCAP::CloudController
           metadata: {}
         )
       end
+
+      def record_buildpack_upload(buildpack, user_audit_info, request_attrs)
+        Event.create(
+          type: EventTypes::BUILDPACK_UPLOAD,
+          actee: buildpack.guid,
+          actee_type: 'buildpack',
+          actee_name: buildpack.name,
+          actor: user_audit_info.user_guid,
+          actor_type: 'user',
+          actor_name: user_audit_info.user_email,
+          actor_username: user_audit_info.user_name,
+          timestamp: Sequel::CURRENT_TIMESTAMP,
+          space_guid: '',
+          organization_guid: '',
+          metadata: {
+            request: request_attrs
+          }
+        )
+      end
     end
   end
 end
