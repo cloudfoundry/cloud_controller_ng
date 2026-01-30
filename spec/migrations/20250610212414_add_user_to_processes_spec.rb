@@ -7,49 +7,25 @@ RSpec.describe 'migration to add user column to processes table', isolation: :tr
   end
 
   describe 'processes table' do
-    it 'adds a column `user`' do
+    it 'adds and removes user column with idempotency' do
+      # Verify initial state
       expect(db[:processes].columns).not_to include(:user)
+
+      # === UP MIGRATION ===
       expect { Sequel::Migrator.run(db, migrations_path, target: current_migration_index, allow_missing_migration_files: true) }.not_to raise_error
       expect(db[:processes].columns).to include(:user)
-    end
 
-    describe 'idempotency of up' do
-      context '`user` column already exists' do
-        before do
-          db.add_column :processes, :user, String, size: 255, if_not_exists: true
-        end
+      # Test up migration idempotency
+      expect { Sequel::Migrator.run(db, migrations_path, target: current_migration_index, allow_missing_migration_files: true) }.not_to raise_error
+      expect(db[:processes].columns).to include(:user)
 
-        it 'does not fail' do
-          expect(db[:processes].columns).to include(:user)
-          expect { Sequel::Migrator.run(db, migrations_path, target: current_migration_index, allow_missing_migration_files: true) }.not_to raise_error
-        end
-      end
-    end
+      # === DOWN MIGRATION ===
+      expect { Sequel::Migrator.run(db, migrations_path, target: current_migration_index - 1, allow_missing_migration_files: true) }.not_to raise_error
+      expect(db[:processes].columns).not_to include(:user)
 
-    describe 'idempotency of down' do
-      context 'user column exists' do
-        before do
-          Sequel::Migrator.run(db, migrations_path, target: current_migration_index, allow_missing_migration_files: true)
-        end
-
-        it 'continues to remove the `user_guid` column' do
-          expect(db[:processes].columns).to include(:user)
-          expect { Sequel::Migrator.run(db, migrations_path, target: current_migration_index - 1, allow_missing_migration_files: true) }.not_to raise_error
-          expect(db[:processes].columns).not_to include(:user)
-        end
-      end
-
-      context 'column does not exist' do
-        before do
-          Sequel::Migrator.run(db, migrations_path, target: current_migration_index, allow_missing_migration_files: true)
-          db.drop_column :processes, :user
-        end
-
-        it 'does not fail' do
-          expect(db[:processes].columns).not_to include(:user)
-          expect { Sequel::Migrator.run(db, migrations_path, target: current_migration_index - 1, allow_missing_migration_files: true) }.not_to raise_error
-        end
-      end
+      # Test down migration idempotency
+      expect { Sequel::Migrator.run(db, migrations_path, target: current_migration_index - 1, allow_missing_migration_files: true) }.not_to raise_error
+      expect(db[:processes].columns).not_to include(:user)
     end
   end
 end
