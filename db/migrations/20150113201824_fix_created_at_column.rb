@@ -34,8 +34,8 @@ Sequel.migration do
   up do
     if self.class.name.match?(/mysql/i)
       table_names.each do |table|
-        run <<-SQL.squish
-        ALTER TABLE #{table} MODIFY created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP;
+        run <<~SQL.squish
+          ALTER TABLE #{table} MODIFY created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP;
         SQL
       end
     end
@@ -44,8 +44,8 @@ Sequel.migration do
   down do
     if self.class.name.match?(/mysql/i)
       table_names.each do |table|
-        run <<-SQL.squish
-        ALTER TABLE #{table} MODIFY created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP;
+        run <<~SQL.squish
+          ALTER TABLE #{table} MODIFY created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP;
         SQL
       end
     end

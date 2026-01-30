@@ -2,7 +2,7 @@ Sequel.migration do
   up do
     add_column :apps, :health_check_type, String, default: 'port'
 
-    run <<-SQL.squish
+    run <<~SQL.squish
       UPDATE apps a1
       SET health_check_type = 'none'
       WHERE id NOT IN (

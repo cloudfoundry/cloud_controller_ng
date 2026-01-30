@@ -15,7 +15,7 @@ Sequel.migration do
     ####
 
     transaction do
-      generate_stop_events_query = <<-SQL.squish
+      generate_stop_events_query = <<~SQL.squish
         INSERT INTO app_usage_events
           (guid, created_at, instance_count, memory_in_mb_per_instance, state, app_guid, app_name, space_guid, space_name, org_guid, buildpack_guid, buildpack_name, package_state, parent_app_name, parent_app_guid, process_type, task_guid, task_name, package_guid, previous_state, previous_package_state, previous_memory_in_mb_per_instance, previous_instance_count)
         SELECT %s, now(), p.instances, p.memory, 'STOPPED', p.guid, p.name, s.guid, s.name, o.guid, d.buildpack_receipt_buildpack_guid, d.buildpack_receipt_buildpack, p.package_state, a.name, a.guid, p.type, NULL, NULL, pkg.guid, 'STARTED', p.package_state, p.memory, p.instances
@@ -174,7 +174,7 @@ Sequel.migration do
       ####
       ## Fill in v3 apps table data
       ###
-      run <<-SQL.squish
+      run <<~SQL.squish
         INSERT INTO apps (guid, name, salt, encrypted_environment_variables, created_at, updated_at, space_guid, desired_state)
         SELECT p.guid, p.name, p.salt, p.encrypted_environment_json, p.created_at, p.updated_at, s.guid, p.state
         FROM processes as p, spaces as s
@@ -182,7 +182,7 @@ Sequel.migration do
         ORDER BY p.id
       SQL
 
-      run <<-SQL.squish
+      run <<~SQL.squish
         UPDATE processes SET app_guid=guid
       SQL
 
@@ -190,14 +190,14 @@ Sequel.migration do
       ## Create lifecycle data for buildpack apps
       ####
 
-      run <<-SQL.squish
+      run <<~SQL.squish
         INSERT INTO buildpack_lifecycle_data (app_guid, stack)
         SELECT processes.guid, stacks.name
         FROM processes, stacks
         WHERE docker_image is NULL AND stacks.id = processes.stack_id
       SQL
 
-      run <<-SQL.squish
+      run <<~SQL.squish
         UPDATE buildpack_lifecycle_data
         SET
           admin_buildpack_name=(
@@ -222,14 +222,14 @@ Sequel.migration do
       ## Fill in packages data
       ####
 
-      run <<-SQL.squish
+      run <<~SQL.squish
         INSERT INTO packages (guid, type, package_hash, state, error, app_guid)
         SELECT guid, 'bits', package_hash, 'READY', NULL, guid
           FROM processes
         WHERE package_hash IS NOT NULL AND docker_image IS NULL
       SQL
 
-      run <<-SQL.squish
+      run <<~SQL.squish
         INSERT INTO packages (guid, type, state, error, app_guid, docker_image)
         SELECT  guid, 'docker', 'READY', NULL, guid, docker_image
           FROM processes
@@ -242,7 +242,7 @@ Sequel.migration do
 
       # backfill any v2 droplets that do not exist due to lazy backfilling in v2 droplets.  it is unlikely there are
       # any of these, but possible in very old CF deployments
-      run <<-SQL.squish
+      run <<~SQL.squish
         INSERT INTO droplets (guid, app_id, droplet_hash, detected_start_command)
         SELECT processes.guid, processes.id, processes.droplet_hash, '' AS detected_start_command
           FROM processes
@@ -253,19 +253,19 @@ Sequel.migration do
       # pruning will not delete from the blobstore
 
       # prune orphaned droplets
-      run <<-SQL.squish
+      run <<~SQL.squish
         DELETE FROM droplets WHERE NOT EXISTS (SELECT 1 FROM processes WHERE droplets.app_id = processes.id)
       SQL
 
       # prune additional droplets, each app will have only one droplet
-      postgres_prune_droplets_query = <<-SQL.squish
+      postgres_prune_droplets_query = <<~SQL.squish
         DELETE FROM droplets
         USING droplets as d
           JOIN processes ON processes.id = d.app_id
         WHERE droplets.id = d.id AND (processes.droplet_hash <> d.droplet_hash OR processes.droplet_hash IS NULL)
       SQL
 
-      mysql_prune_droplets_query = <<-SQL.squish
+      mysql_prune_droplets_query = <<~SQL.squish
         DELETE droplets FROM droplets
           JOIN processes ON processes.id = droplets.app_id
         WHERE processes.droplet_hash <> droplets.droplet_hash OR processes.droplet_hash IS NULL
@@ -274,21 +274,21 @@ Sequel.migration do
       if dbtype == 'mysql'
         run mysql_prune_droplets_query
 
-        run <<-SQL.squish
+        run <<~SQL.squish
           DELETE a FROM droplets a, droplets b
           WHERE a.app_id=b.app_id AND a.id < b.id
         SQL
       elsif dbtype == 'postgres'
         run postgres_prune_droplets_query
 
-        run <<-SQL.squish
+        run <<~SQL.squish
           DELETE FROM droplets a USING droplets b
           WHERE a.app_id = b.app_id AND a.id < b.id
         SQL
       end
 
       # convert to v3 droplets
-      postgres_convert_to_v3_droplets_query = <<-SQL.squish
+      postgres_convert_to_v3_droplets_query = <<~SQL.squish
         UPDATE droplets
         SET
           guid = v2_app.guid,
@@ -304,7 +304,7 @@ Sequel.migration do
         WHERE v2_app.id = droplets.app_id
       SQL
 
-      mysql_convert_to_v3_droplets_query = <<-SQL.squish
+      mysql_convert_to_v3_droplets_query = <<~SQL.squish
         UPDATE droplets
         JOIN processes as v2_app
           ON v2_app.id = droplets.app_id
@@ -327,7 +327,7 @@ Sequel.migration do
       end
 
       # add lifecycle data to buildpack droplets
-      run <<-SQL.squish
+      run <<~SQL.squish
         INSERT INTO buildpack_lifecycle_data (droplet_guid)
         SELECT droplets.guid
           FROM processes, droplets
@@ -335,14 +335,14 @@ Sequel.migration do
       SQL
 
       # set current droplet on v3 app
-      postgres_set_current_droplet_query = <<-SQL.squish
+      postgres_set_current_droplet_query = <<~SQL.squish
         UPDATE apps
           SET droplet_guid = droplets.guid
         FROM droplets
           WHERE droplets.app_guid = apps.guid
       SQL
 
-      mysql_set_current_droplet_query = <<-SQL.squish
+      mysql_set_current_droplet_query = <<~SQL.squish
         UPDATE apps
         JOIN droplets as current_droplet
           ON apps.guid = current_droplet.app_guid
@@ -372,14 +372,14 @@ Sequel.migration do
       ## Migrate route mappings
       ####
 
-      run <<-SQL.squish
+      run <<~SQL.squish
         UPDATE apps_routes SET
           app_guid = (SELECT processes.guid FROM processes WHERE processes.id=apps_routes.app_id),
           route_guid = (SELECT routes.guid FROM routes WHERE routes.id=apps_routes.route_id),
           process_type = 'web'
       SQL
 
-      run <<-SQL.squish
+      run <<~SQL.squish
         UPDATE apps_routes SET app_port=8080 WHERE app_port IS NULL AND EXISTS (SELECT 1 FROM processes WHERE processes.docker_image IS NULL AND processes.id = apps_routes.app_id)
       SQL
 
@@ -411,7 +411,7 @@ Sequel.migration do
         self[:apps_routes].where(id: ids_to_remove).delete
       end
 
-      run <<-SQL.squish
+      run <<~SQL.squish
         UPDATE service_bindings SET
           app_guid = (SELECT processes.guid FROM processes WHERE processes.id=service_bindings.app_id),
           service_instance_guid = (SELECT service_instances.guid FROM service_instances WHERE service_instances.id=service_bindings.service_instance_id),
