@@ -231,6 +231,7 @@
 
 
 
+
 <h1 id="introduction">Introduction</h1>
 
 <h2 id="overview">Overview</h2>
@@ -22599,6 +22600,11 @@ They are only visible to members of that space.</p>
 <td>Filter by the <code class="prettyprint">available</code> property; valid values are <code class="prettyprint">true</code> or <code class="prettyprint">false</code></td>
 </tr>
 <tr>
+<td><strong>broker_catalog_ids</strong></td>
+<td><em>list of strings</em></td>
+<td>Comma-delimited list of IDs provided by the service broker for the service offering to filter by</td>
+</tr>
+<tr>
 <td><strong>service_broker_guids</strong></td>
 <td><em>list of strings</em></td>
 <td>Comma-delimited list of service broker GUIDs to filter by</td>
@@ -30910,6 +30916,19 @@ Buildpacks can also be associated with a particular stack if they contain stack-
 An application will automatically use buildpacks associated with the application&rsquo;s configured stack.</p>
 
 <p>Stacks are not used for apps with a <a href="#docker-lifecycle">Docker lifecycle</a>.</p>
+
+<p>Operators control stack availability through state management. The following states determine how a stack can be used:</p>
+
+<p><em>ACTIVE</em>: Default state. The stack is fully available for all operations.</p>
+
+<p><em>DEPRECATED</em>: The stack is nearing end-of-life. It remains fully functional,
+but users should migrate to an ACTIVE stack.</p>
+
+<p><em>RESTRICTED</em>: A transitional state typically applied before deprecation or disabling.
+New application creation is blocked; existing deployments continue to operate normally.</p>
+
+<p><em>DISABLED</em>: The stack has reached end-of-life. New application creation and restaging are prohibited. 
+Running applications remain available.</p>
 <h3 id="the-stack-object">The stack object</h3>
 <div class="highlight"><pre class="highlight plaintext"><code>Example Stack object
 </code></pre></div><div class="highlight"><pre class="highlight json"><code><span class="p">{</span><span class="w">
@@ -30918,6 +30937,7 @@ An application will automatically use buildpacks associated with the application
    </span><span class="nl">"updated_at"</span><span class="p">:</span><span class="w"> </span><span class="s2">"2018-11-09T22:43:28Z"</span><span class="p">,</span><span class="w">
    </span><span class="nl">"name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"my-stack"</span><span class="p">,</span><span class="w">
    </span><span class="nl">"description"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Here is my stack!"</span><span class="p">,</span><span class="w">
+   </span><span class="nl">"state"</span><span class="p">:</span><span class="w"> </span><span class="s2">"ACTIVE"</span><span class="p">,</span><span class="w">
    </span><span class="nl">"build_rootfs_image"</span><span class="p">:</span><span class="w"> </span><span class="s2">"my-stack"</span><span class="p">,</span><span class="w">
    </span><span class="nl">"run_rootfs_image"</span><span class="p">:</span><span class="w"> </span><span class="s2">"my-stack"</span><span class="p">,</span><span class="w">
    </span><span class="nl">"default"</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span><span class="p">,</span><span class="w">
@@ -30966,6 +30986,11 @@ An application will automatically use buildpacks associated with the application
 <td>The description of the stack</td>
 </tr>
 <tr>
+<td><strong>state</strong></td>
+<td>string</td>
+<td>The state of the stack; valid states are: <code class="prettyprint">ACTIVE</code>, <code class="prettyprint">RESTRICTED</code>, <code class="prettyprint">DEPRECATED</code>, <code class="prettyprint">DISABLED</code></td>
+</tr>
+<tr>
 <td><strong>build_rootfs_image</strong></td>
 <td>_string</td>
 <td>The name of the stack image associated with staging/building Apps. If a stack does not have unique images, this will be the same as the stack name.</td>
@@ -31005,6 +31030,7 @@ An application will automatically use buildpacks associated with the application
   <span class="nt">-d</span> <span class="s1">'{
     "name": "my-stack",
     "description": "Here is my stack!",
+    "state": "ACTIVE",
   }'</span>
 </code></pre></div><div class="highlight"><pre class="highlight plaintext"><code>Example Response
 </code></pre></div><div class="highlight"><pre class="highlight http"><code><span class="k">HTTP</span><span class="o">/</span><span class="m">1.1</span> <span class="m">201</span> <span class="ne">Created</span>
@@ -31016,6 +31042,7 @@ An application will automatically use buildpacks associated with the application
    </span><span class="nl">"updated_at"</span><span class="p">:</span><span class="w"> </span><span class="s2">"2018-11-09T22:43:28Z"</span><span class="p">,</span><span class="w">
    </span><span class="nl">"name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"my-stack"</span><span class="p">,</span><span class="w">
    </span><span class="nl">"description"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Here is my stack!"</span><span class="p">,</span><span class="w">
+   </span><span class="nl">"state"</span><span class="p">:</span><span class="w"> </span><span class="s2">"ACTIVE"</span><span class="p">,</span><span class="w">
    </span><span class="nl">"build_rootfs_image"</span><span class="p">:</span><span class="w"> </span><span class="s2">"my-stack"</span><span class="p">,</span><span class="w">
    </span><span class="nl">"run_rootfs_image"</span><span class="p">:</span><span class="w"> </span><span class="s2">"my-stack"</span><span class="p">,</span><span class="w">
    </span><span class="nl">"default"</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span><span class="p">,</span><span class="w">
@@ -31079,6 +31106,12 @@ An application will automatically use buildpacks associated with the application
 <td>Annotations applied to the stack</td>
 <td></td>
 </tr>
+<tr>
+<td><strong>state</strong></td>
+<td>string</td>
+<td>The state of the stack; valid states are: <code class="prettyprint">ACTIVE</code>, <code class="prettyprint">RESTRICTED</code>, <code class="prettyprint">DEPRECATED</code>, <code class="prettyprint">DISABLED</code></td>
+<td></td>
+</tr>
 </tbody></table>
 
 <h4 id="permitted-roles">Permitted roles</h4>
@@ -31107,6 +31140,7 @@ An application will automatically use buildpacks associated with the application
    </span><span class="nl">"updated_at"</span><span class="p">:</span><span class="w"> </span><span class="s2">"2018-11-09T22:43:28Z"</span><span class="p">,</span><span class="w">
    </span><span class="nl">"name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"my-stack"</span><span class="p">,</span><span class="w">
    </span><span class="nl">"description"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Here is my stack!"</span><span class="p">,</span><span class="w">
+   </span><span class="nl">"state"</span><span class="p">:</span><span class="w"> </span><span class="s2">"ACTIVE"</span><span class="p">,</span><span class="w">
    </span><span class="nl">"build_rootfs_image"</span><span class="p">:</span><span class="w"> </span><span class="s2">"my-stack"</span><span class="p">,</span><span class="w">
    </span><span class="nl">"run_rootfs_image"</span><span class="p">:</span><span class="w"> </span><span class="s2">"my-stack"</span><span class="p">,</span><span class="w">
    </span><span class="nl">"default"</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span><span class="p">,</span><span class="w">
@@ -31170,6 +31204,7 @@ An application will automatically use buildpacks associated with the application
       </span><span class="nl">"build_rootfs_image"</span><span class="p">:</span><span class="w"> </span><span class="s2">"my-stack-1-build"</span><span class="p">,</span><span class="w">
       </span><span class="nl">"run_rootfs_image"</span><span class="p">:</span><span class="w"> </span><span class="s2">"my-stack-1-run"</span><span class="p">,</span><span class="w">
       </span><span class="nl">"description"</span><span class="p">:</span><span class="w"> </span><span class="s2">"This is my first stack!"</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"state"</span><span class="p">:</span><span class="w"> </span><span class="s2">"ACTIVE"</span><span class="p">,</span><span class="w">
       </span><span class="nl">"default"</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span><span class="p">,</span><span class="w">
       </span><span class="nl">"metadata"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
         </span><span class="nl">"labels"</span><span class="p">:</span><span class="w"> </span><span class="p">{},</span><span class="w">
@@ -31189,6 +31224,7 @@ An application will automatically use buildpacks associated with the application
       </span><span class="nl">"description"</span><span class="p">:</span><span class="w"> </span><span class="s2">"This is my second stack!"</span><span class="p">,</span><span class="w">
       </span><span class="nl">"build_rootfs_image"</span><span class="p">:</span><span class="w"> </span><span class="s2">"my-stack-2-build"</span><span class="p">,</span><span class="w">
       </span><span class="nl">"run_rootfs_image"</span><span class="p">:</span><span class="w"> </span><span class="s2">"my-stack-2-run"</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"state"</span><span class="p">:</span><span class="w"> </span><span class="s2">"DEPRECATED"</span><span class="p">,</span><span class="w">
       </span><span class="nl">"default"</span><span class="p">:</span><span class="w"> </span><span class="kc">false</span><span class="p">,</span><span class="w">
       </span><span class="nl">"metadata"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
         </span><span class="nl">"labels"</span><span class="p">:</span><span class="w"> </span><span class="p">{},</span><span class="w">
@@ -31512,7 +31548,7 @@ An application will automatically use buildpacks associated with the application
   <span class="nt">-X</span> PATCH <span class="se">\</span>
   <span class="nt">-H</span> <span class="s2">"Authorization: bearer [token]"</span> <span class="se">\</span>
   <span class="nt">-H</span> <span class="s2">"Content-Type: application/json"</span> <span class="se">\</span>
-  <span class="nt">-d</span> <span class="s1">'{ "metadata": { "labels": { "key": "value" }, "annotations": {"note": "detailed information"}}}'</span>
+  <span class="nt">-d</span> <span class="s1">'{ "metadata": { "labels": { "key": "value" }, "annotations": {"note": "detailed information"}},"state":"ACTIVE"}'</span>
 
 </code></pre></div><div class="highlight"><pre class="highlight plaintext"><code>Example Response
 </code></pre></div><div class="highlight"><pre class="highlight http"><code><span class="k">HTTP</span><span class="o">/</span><span class="m">1.1</span> <span class="m">200</span> <span class="ne">OK</span>
@@ -31524,6 +31560,7 @@ An application will automatically use buildpacks associated with the application
    </span><span class="nl">"updated_at"</span><span class="p">:</span><span class="w"> </span><span class="s2">"2018-11-09T22:43:28Z"</span><span class="p">,</span><span class="w">
    </span><span class="nl">"name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"my-stack"</span><span class="p">,</span><span class="w">
    </span><span class="nl">"description"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Here is my stack!"</span><span class="p">,</span><span class="w">
+   </span><span class="nl">"state"</span><span class="p">:</span><span class="w"> </span><span class="s2">"DISABLED"</span><span class="p">,</span><span class="w">
    </span><span class="nl">"build_rootfs_image"</span><span class="p">:</span><span class="w"> </span><span class="s2">"my-stack"</span><span class="p">,</span><span class="w">
    </span><span class="nl">"run_rootfs_image"</span><span class="p">:</span><span class="w"> </span><span class="s2">"my-stack"</span><span class="p">,</span><span class="w">
    </span><span class="nl">"default"</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span><span class="p">,</span><span class="w">
@@ -31561,6 +31598,11 @@ An application will automatically use buildpacks associated with the application
 <td><strong>metadata.annotations</strong></td>
 <td><a href="#annotations"><em>annotation object</em></a></td>
 <td>Annotations applied to the stack</td>
+</tr>
+<tr>
+<td><strong>state</strong></td>
+<td>string</td>
+<td>The state of the stack; valid states are: <code class="prettyprint">ACTIVE</code>, <code class="prettyprint">RESTRICTED</code>, <code class="prettyprint">DEPRECATED</code>, <code class="prettyprint">DISABLED</code></td>
 </tr>
 </tbody></table>
 
