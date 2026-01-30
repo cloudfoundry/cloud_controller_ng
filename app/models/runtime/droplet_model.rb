@@ -133,7 +133,7 @@ module VCAP::CloudController
         begin
           docker_exec_metadata = Oj.load(execution_metadata)
           container_user = docker_exec_metadata['user']
-        rescue EncodingError
+        rescue JSON::ParserError
           # ignore
         end
       end

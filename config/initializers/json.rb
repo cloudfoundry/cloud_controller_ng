@@ -1,33 +1,23 @@
-require 'active_support/json/encoding'
+require 'bigdecimal'
+
+# Override BigDecimal's 'as_json' to return self so that Oj can handle it according to its configuration.
+# By default, ActiveSupport encodes BigDecimal as a string which we do not want.
+class BigDecimal
+  def as_json(*_args)
+    self
+  end
+end
 
 module CCInitializers
   def self.json(_cc_config)
-    Oj::Rails.optimize # Use optimized encoders instead of as_json() methods for available classes.
     Oj.default_options = {
-      bigdecimal_load: :bigdecimal,
-      mode: :rails
-    }
+      time_format: :ruby,            # Encode Time/DateTime in Ruby-style string format
+      mode: :rails,                  # Rails-compatible JSON behavior
+      bigdecimal_load: :bigdecimal,  # Decode JSON decimals as BigDecimal
+      compat_bigdecimal: true,       # Required in :rails mode to avoid Float decoding
+      bigdecimal_as_decimal: true    # Encode BigDecimal as JSON number (not string)
+    }.freeze
 
-    ActiveSupport.json_encoder = Class.new do
-      attr_reader :options
-
-      def initialize(options=nil)
-        @options = options || {}
-      end
-
-      def encode(value)
-        v = if value.is_a?(VCAP::CloudController::Presenters::V3::BasePresenter)
-              value.to_hash
-            else
-              value.as_json(options.dup)
-            end
-
-        if Rails.env.test?
-          Oj.dump(v, time_format: :ruby)
-        else
-          Oj.dump(v, options.merge(time_format: :ruby))
-        end
-      end
-    end
+    Oj.optimize_rails                # Use Oj for Rails JSON encoding/decoding
   end
 end

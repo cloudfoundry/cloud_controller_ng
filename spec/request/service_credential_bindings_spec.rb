@@ -14,6 +14,20 @@ RSpec.describe 'v3 service credential bindings' do
     space.add_developer(user)
     headers_for(user)
   end
+  let(:parameters_mixed_data_types_as_json_string) do
+    '{"boolean":true,"string":"a string","int":123,"float":3.14159,"optional":null,"object":{"a":"b"},"array":["c","d"]}'
+  end
+  let(:parameters_mixed_data_types_as_hash) do
+    {
+      boolean: true,
+      string: 'a string',
+      int: 123,
+      float: 3.14159,
+      optional: nil,
+      object: { a: 'b' },
+      array: %w[c d]
+    }
+  end
 
   describe 'GET /v3/service_credential_bindings' do
     it_behaves_like 'list query endpoint' do
@@ -1072,11 +1086,7 @@ RSpec.describe 'v3 service credential bindings' do
           end
         end
 
-        context 'when the broker will returns params' do
-          before do
-            stub_param_broker_request_for_binding(binding, binding_params)
-          end
-
+        context 'when the broker returns params' do
           it 'sends a request to the broker including the identity header' do
             api_call.call(headers_for(user, scopes: %w[cloud_controller.admin]))
 
@@ -1095,6 +1105,24 @@ RSpec.describe 'v3 service credential bindings' do
 
             expect(last_response).to have_status_code(200)
             expect(parsed_response).to eq(binding_params)
+          end
+
+          context 'when the broker returns params with mixed data types' do
+            before do
+              stub_param_broker_request_for_binding_with_json_string(binding, parameters_mixed_data_types_as_json_string)
+            end
+
+            it 'correctly parses all data types and returns the desired JSON string' do
+              allow_any_instance_of(VCAP::CloudController::ServiceBindingRead).to receive(:fetch_parameters).and_wrap_original do |m, instance|
+                result = m.call(instance)
+                expect(result).to eq(parameters_mixed_data_types_as_hash) # correct internal representation
+                result
+              end
+
+              api_call.call(admin_headers)
+              expect(last_response).to have_status_code(200)
+              expect(last_response).to match(/#{Regexp.escape(parameters_mixed_data_types_as_json_string)}/)
+            end
           end
         end
       end
@@ -1134,11 +1162,31 @@ RSpec.describe 'v3 service credential bindings' do
           ).to have_been_made.once
         end
 
-        it 'returns the params in the response body' do
-          api_call.call(admin_headers)
+        context 'when the broker returns params' do
+          it 'returns the params in the response body' do
+            api_call.call(admin_headers)
 
-          expect(last_response).to have_status_code(200)
-          expect(parsed_response).to eq(binding_params)
+            expect(last_response).to have_status_code(200)
+            expect(parsed_response).to eq(binding_params)
+          end
+
+          context 'when the broker returns params with mixed data types' do
+            before do
+              stub_param_broker_request_for_binding_with_json_string(binding, parameters_mixed_data_types_as_json_string)
+            end
+
+            it 'correctly parses all data types and returns the desired JSON string' do
+              allow_any_instance_of(VCAP::CloudController::ServiceBindingRead).to receive(:fetch_parameters).and_wrap_original do |m, instance|
+                result = m.call(instance)
+                expect(result).to eq(parameters_mixed_data_types_as_hash) # correct internal representation
+                result
+              end
+
+              api_call.call(admin_headers)
+              expect(last_response).to have_status_code(200)
+              expect(last_response).to match(/#{Regexp.escape(parameters_mixed_data_types_as_json_string)}/)
+            end
+          end
         end
 
         context "last service key operation is in 'create succeeded' state" do
@@ -1643,6 +1691,28 @@ RSpec.describe 'v3 service credential bindings' do
             expect(service_instance.service_bindings.count).to eq(0)
           end
         end
+
+        context 'when providing parameters with mixed data types' do
+          let(:request_body) do
+            "{\"type\":\"app\",\"name\":\"#{binding_name}\"," \
+              "\"relationships\":{\"service_instance\":{\"data\":{\"guid\":\"#{service_instance_guid}\"}},\"app\":{\"data\":{\"guid\":\"#{app_guid}\"}}}," \
+              "\"parameters\":#{parameters_mixed_data_types_as_json_string}}"
+          end
+
+          it 'correctly parses all data types and sends the desired JSON string to the service broker' do
+            post '/v3/service_credential_bindings', request_body, admin_headers
+
+            expect_any_instance_of(VCAP::Services::ServiceBrokers::V2::Client).to receive(:bind).
+              with(binding, hash_including(arbitrary_parameters: parameters_mixed_data_types_as_hash)). # correct internal representation
+              and_call_original
+
+            stub_request(:put, "#{service_instance.service_broker.broker_url}/v2/service_instances/#{service_instance_guid}/service_bindings/#{binding.guid}").
+              with(query: { accepts_incomplete: true }, body: /"parameters":#{Regexp.escape(parameters_mixed_data_types_as_json_string)}/).
+              to_return(status: 201, body: '{}')
+
+            execute_all_jobs(expected_successes: 1, expected_failures: 0)
+          end
+        end
       end
     end
 
@@ -1875,6 +1945,29 @@ RSpec.describe 'v3 service credential bindings' do
           api_call.call(admin_headers)
 
           expect(service_instance.service_keys.count).to eq(0)
+        end
+      end
+
+      context 'when providing parameters with mixed data types' do
+        let(:key) { VCAP::CloudController::ServiceKey.last }
+        let(:request_body) do
+          "{\"type\":\"key\",\"name\":\"#{binding_name}\"," \
+            "\"relationships\":{\"service_instance\":{\"data\":{\"guid\":\"#{service_instance_guid}\"}}}," \
+            "\"parameters\":#{parameters_mixed_data_types_as_json_string}}"
+        end
+
+        it 'correctly parses all data types and sends the desired JSON string to the service broker' do
+          post '/v3/service_credential_bindings', request_body, admin_headers
+
+          expect_any_instance_of(VCAP::Services::ServiceBrokers::V2::Client).to receive(:bind).
+            with(key, hash_including(arbitrary_parameters: parameters_mixed_data_types_as_hash)). # correct internal representation
+            and_call_original
+
+          stub_request(:put, "#{service_instance.service_broker.broker_url}/v2/service_instances/#{service_instance_guid}/service_bindings/#{key.guid}").
+            with(query: { accepts_incomplete: true }, body: /"parameters":#{Regexp.escape(parameters_mixed_data_types_as_json_string)}/).
+            to_return(status: 201, body: '{}')
+
+          execute_all_jobs(expected_successes: 1, expected_failures: 0)
         end
       end
     end
@@ -2585,11 +2678,15 @@ RSpec.describe 'v3 service credential bindings' do
   end
 
   def stub_param_broker_request_for_binding(binding, binding_params, status: 200)
+    stub_param_broker_request_for_binding_with_json_string(binding, binding_params.to_json, status:)
+  end
+
+  def stub_param_broker_request_for_binding_with_json_string(binding, binding_params_as_json_string, status: 200)
     instance = binding.service_instance
     broker_url = instance.service_broker.broker_url
     broker_binding_url = "#{broker_url}/v2/service_instances/#{instance.guid}/service_bindings/#{binding.guid}"
 
     stub_request(:get, /#{broker_binding_url}/).
-      to_return(status: status, body: { parameters: binding_params }.to_json)
+      to_return(status: status, body: "{\"parameters\":#{binding_params_as_json_string}}")
   end
 end

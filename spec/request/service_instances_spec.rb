@@ -8,6 +8,20 @@ RSpec.describe 'V3 service instances' do
   let(:space) { VCAP::CloudController::Space.make(organization: org, created_at: Time.now.utc - 1.second) }
   let!(:space_annotation) { VCAP::CloudController::SpaceAnnotationModel.make(key_prefix: 'pre.fix', key_name: 'baz', value: 'wow', space: space) }
   let(:another_space) { VCAP::CloudController::Space.make }
+  let(:parameters_mixed_data_types_as_json_string) do
+    '{"boolean":true,"string":"a string","int":123,"float":3.14159,"optional":null,"object":{"a":"b"},"array":["c","d"]}'
+  end
+  let(:parameters_mixed_data_types_as_hash) do
+    {
+      boolean: true,
+      string: 'a string',
+      int: 123,
+      float: 3.14159,
+      optional: nil,
+      object: { a: 'b' },
+      array: %w[c d]
+    }
+  end
 
   describe 'GET /v3/service_instances/:guid' do
     let(:api_call) { ->(user_headers) { get "/v3/service_instances/#{guid}", nil, user_headers } }
@@ -605,6 +619,22 @@ RSpec.describe 'V3 service instances' do
       end
     end
 
+    context 'when the service broker returns parameters with mixed data types' do
+      let(:body) { "{\"parameters\":#{parameters_mixed_data_types_as_json_string}}" }
+
+      it 'correctly parses all data types and returns the desired JSON string' do
+        allow_any_instance_of(VCAP::CloudController::ServiceInstanceRead).to receive(:fetch_parameters).and_wrap_original do |m, instance|
+          result = m.call(instance)
+          expect(result).to eq(parameters_mixed_data_types_as_hash) # correct internal representation
+          result
+        end
+
+        get "/v3/service_instances/#{instance.guid}/parameters", nil, admin_headers
+        expect(last_response).to have_status_code(200)
+        expect(last_response).to match(/#{Regexp.escape(parameters_mixed_data_types_as_json_string)}/)
+      end
+    end
+
     it 'sends the correct request to the service broker' do
       get "/v3/service_instances/#{instance.guid}/parameters", nil, headers_for(user, scopes: %w[cloud_controller.admin])
 
@@ -1085,6 +1115,28 @@ RSpec.describe 'V3 service instances' do
       before do
         allow(Steno).to receive(:logger).and_call_original
         allow(Steno).to receive(:logger).with('cc.api').and_return(mock_logger)
+      end
+
+      context 'when providing parameters with mixed data types' do
+        let(:request_body) do
+          "{\"type\":\"managed\",\"name\":\"#{name}\"," \
+            "\"relationships\":{\"space\":{\"data\":{\"guid\":\"#{space_guid}\"}},\"service_plan\":{\"data\":{\"guid\":\"#{service_plan_guid}\"}}}," \
+            "\"parameters\":#{parameters_mixed_data_types_as_json_string}}"
+        end
+
+        it 'correctly parses all data types and sends the desired JSON string to the service broker' do
+          post '/v3/service_instances', request_body, space_dev_headers
+
+          expect_any_instance_of(VCAP::Services::ServiceBrokers::V2::Client).to receive(:provision).
+            with(instance, hash_including(arbitrary_parameters: parameters_mixed_data_types_as_hash)). # correct internal representation
+            and_call_original
+
+          stub_request(:put, "#{instance.service_broker.broker_url}/v2/service_instances/#{instance.guid}").
+            with(query: { 'accepts_incomplete' => true }, body: /"parameters":#{Regexp.escape(parameters_mixed_data_types_as_json_string)}/).
+            to_return(status: 201, body: '{}')
+
+          execute_all_jobs(expected_successes: 1, expected_failures: 0)
+        end
       end
 
       it 'creates a service instance in the database' do
@@ -1869,6 +1921,27 @@ RSpec.describe 'V3 service instances' do
         before do
           allow(Steno).to receive(:logger).and_call_original
           allow(Steno).to receive(:logger).with('cc.api').and_return(mock_logger)
+        end
+
+        context 'when providing parameters with mixed data types' do
+          let(:request_body) do
+            "{\"parameters\":#{parameters_mixed_data_types_as_json_string}}"
+          end
+          let(:instance) { VCAP::CloudController::ServiceInstance.last }
+
+          it 'correctly parses all data types and sends the desired JSON string to the service broker' do
+            patch "/v3/service_instances/#{guid}", request_body, space_dev_headers
+
+            expect_any_instance_of(VCAP::Services::ServiceBrokers::V2::Client).to receive(:update).
+              with(instance, instance.service_plan, hash_including(arbitrary_parameters: parameters_mixed_data_types_as_hash)). # correct internal representation
+              and_call_original
+
+            stub_request(:patch, "#{instance.service_broker.broker_url}/v2/service_instances/#{instance.guid}").
+              with(query: { 'accepts_incomplete' => true }, body: /"parameters":#{Regexp.escape(parameters_mixed_data_types_as_json_string)}/).
+              to_return(status: 200, body: '{}')
+
+            execute_all_jobs(expected_successes: 1, expected_failures: 0)
+          end
         end
 
         it 'responds with a pollable job' do
