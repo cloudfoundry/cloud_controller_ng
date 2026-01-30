@@ -1,6 +1,8 @@
 require 'presenters/v3/paginated_list_presenter'
 require 'presenters/v3/process_presenter'
 require 'presenters/v3/process_stats_presenter'
+require 'presenters/v3/process_instances_presenter'
+require 'decorators/embed_process_instances_decorator'
 require 'cloud_controller/paging/pagination_options'
 require 'actions/process_delete'
 require 'fetchers/process_list_fetcher'
@@ -9,6 +11,7 @@ require 'actions/process_scale'
 require 'actions/process_terminate'
 require 'actions/process_update'
 require 'messages/process_scale_message'
+require 'messages/process_show_message'
 require 'messages/process_update_message'
 require 'messages/processes_list_message'
 require 'controllers/v3/mixins/app_sub_resource'
@@ -40,17 +43,30 @@ class ProcessesController < ApplicationController
                 end
     end
 
+    decorators = []
+    decorators << EmbedProcessInstancesDecorator if EmbedProcessInstancesDecorator.match?(message.embed)
+
     render status: :ok, json: Presenters::V3::PaginatedListPresenter.new(
       presenter: Presenters::V3::ProcessPresenter,
       paginated_result: SequelPaginator.new.get_page(dataset, message.try(:pagination_options)),
       path: base_url(resource: 'processes'),
-      message: message
+      message: message,
+      decorators: decorators
     )
   end
 
   def show
-    # TODO
-    render status: :ok, json: Presenters::V3::ProcessPresenter.new(@process, show_secrets: permission_queryer.can_read_secrets_in_space?(@space.id, @space.organization_id))
+    message = ProcessShowMessage.from_params(query_params)
+    invalid_param!(message.errors.full_messages) unless message.valid?
+
+    decorators = []
+    decorators << EmbedProcessInstancesDecorator if EmbedProcessInstancesDecorator.match?(message.embed)
+
+    render status: :ok, json: Presenters::V3::ProcessPresenter.new(
+      @process,
+      show_secrets: permission_queryer.can_read_secrets_in_space?(@space.id, @space.organization_id),
+      decorators: decorators
+    )
   end
 
   def update
@@ -104,6 +120,12 @@ class ProcessesController < ApplicationController
     add_warning_headers(warnings)
 
     render status: :ok, json: Presenters::V3::ProcessStatsPresenter.new(@process.type, process_stats)
+  end
+
+  def process_instances
+    instances = instances_reporters.instances_for_processes([@process])
+
+    render status: :ok, json: Presenters::V3::ProcessInstancesPresenter.new(instances[@process.guid], @process)
   end
 
   private
