@@ -8,7 +8,7 @@ Sequel.migration do
     end
 
     if self.class.name.match?(/mysql/i)
-      run <<-SQL.squish
+      run <<~SQL.squish
         UPDATE service_plans
           SET unique_id =
           (SELECT CONCAT(services.provider, '_', services.label, '_', service_plans.name)
@@ -16,7 +16,7 @@ Sequel.migration do
            WHERE services.id = service_plans.service_id)
       SQL
     else
-      run <<-SQL.squish
+      run <<~SQL.squish
         UPDATE service_plans
           SET unique_id =
           (SELECT (services.provider ||  '_' || services.label || '_' || service_plans.name)

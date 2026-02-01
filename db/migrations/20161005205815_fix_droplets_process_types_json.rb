@@ -23,7 +23,7 @@ Sequel.migration do
           ids << c[0]
         end
 
-        @db[<<-SQL.squish, *@batched_commands.flatten, *ids].update
+        @db[<<~SQL.squish, *@batched_commands.flatten, *ids].update
           UPDATE droplets
           SET process_types = (CASE #{cases.join(' ')} ELSE process_types END)
           WHERE id IN (#{id_place_holders.join(',')})
