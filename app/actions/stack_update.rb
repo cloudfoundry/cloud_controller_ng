@@ -13,6 +13,7 @@ module VCAP::CloudController
     def update(stack, message)
       stack.db.transaction do
         stack.update(state: message.state) if message.requested?(:state)
+        stack.update(state_reason: message.state_reason) if message.requested?(:state_reason)
         MetadataUpdate.update(stack, message)
         Repositories::StackEventRepository.new.record_stack_update(stack, @user_audit_info, message.audit_hash)
       end

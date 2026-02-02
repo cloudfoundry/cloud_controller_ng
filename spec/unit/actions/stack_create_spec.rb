@@ -41,6 +41,31 @@ module VCAP::CloudController
         )
       end
 
+      it 'creates a stack with state_reason' do
+        message = VCAP::CloudController::StackCreateMessage.new(
+          name: 'deprecated-stack',
+          state: 'DEPRECATED',
+          state_reason: 'This stack will be removed on 2026-12-31'
+        )
+        stack = stack_create.create(message)
+
+        expect(stack.name).to eq('deprecated-stack')
+        expect(stack.state).to eq('DEPRECATED')
+        expect(stack.state_reason).to eq('This stack will be removed on 2026-12-31')
+      end
+
+      it 'creates a stack without state_reason' do
+        message = VCAP::CloudController::StackCreateMessage.new(
+          name: 'active-stack',
+          state: 'ACTIVE'
+        )
+        stack = stack_create.create(message)
+
+        expect(stack.name).to eq('active-stack')
+        expect(stack.state).to eq('ACTIVE')
+        expect(stack.state_reason).to be_nil
+      end
+
       it 'creates an audit event' do
         message = VCAP::CloudController::StackCreateMessage.new(
           name: 'my-stack',
