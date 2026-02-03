@@ -9,7 +9,7 @@ curl "https://api.example.org/v3/stacks/[guid]" \
   -X PATCH \
   -H "Authorization: bearer [token]" \
   -H "Content-Type: application/json" \
-  -d '{ "metadata": { "labels": { "key": "value" }, "annotations": {"note": "detailed information"}},"state":"ACTIVE"}'
+  -d '{ "metadata": { "labels": { "key": "value" }, "annotations": {"note": "detailed information"}},"state":"ACTIVE", "state_reason": "Optional plain text describing the stack change" }'
 
 ```
 
@@ -34,6 +34,7 @@ Name | Type | Description
 **metadata.labels** | [_label object_](#labels) | Labels applied to the stack
 **metadata.annotations**  | [_annotation object_](#annotations) | Annotations applied to the stack
 **state** | string | The state of the stack; valid states are: `ACTIVE`, `RESTRICTED`, `DEPRECATED`, `DISABLED`
+**state_reason** | string | Optional plain text describing the stack change
 
 #### Permitted roles
  |
