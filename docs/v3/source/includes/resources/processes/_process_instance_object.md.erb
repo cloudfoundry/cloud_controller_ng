@@ -1,0 +1,14 @@
+### The process instance object
+
+```
+Example Process Instance object
+```
+```json
+<%= yield_content :single_process_instance %>
+```
+
+Name | Type | Description
+---- | ---- | -----------
+**index** | _integer_ | The zero-based index of the process instance
+**state** | _string_ | The state of the process instance (possible values: `RUNNING`, `CRASHED`, `STARTING`, `STOPPING`, `DOWN`)
+**since** | _integer_ | Number of seconds since the process instance entered its current state

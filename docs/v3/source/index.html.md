@@ -47,6 +47,7 @@ includes:
   - concepts/api_resource
   - concepts/authentication
   - concepts/authorization
+  - concepts/embed
   - concepts/errors
   - concepts/fields
   - concepts/filters
@@ -213,8 +214,10 @@ includes:
   - resources/processes/health_check_object
   - resources/processes/readiness_health_check_object
   - resources/processes/stats_object
+  - resources/processes/process_instance_object
   - resources/processes/get
   - resources/processes/stats
+  - resources/processes/process_instances
   - resources/processes/list
   - resources/processes/list_for_app
   - resources/processes/update

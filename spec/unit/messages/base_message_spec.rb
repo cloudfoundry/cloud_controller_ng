@@ -259,6 +259,32 @@ module VCAP::CloudController
       end
     end
 
+    describe 'embed param validation' do
+      let(:fake_class) do
+        Class.new(BaseMessage) do
+          register_allowed_keys [:embed]
+          validates_with VCAP::CloudController::BaseMessage::EmbedParamValidator, valid_values: %w[foo bar]
+
+          def self.model_name
+            ActiveModel::Name.new(self, nil, 'fake class')
+          end
+        end
+      end
+
+      it 'is valid with an allowed embed value' do
+        message = fake_class.new({ embed: ['bar'] })
+
+        expect(message).to be_valid
+      end
+
+      it 'is NOT valid with not allowed embed value' do
+        message = fake_class.new({ embed: ['stuff'] })
+
+        expect(message).not_to be_valid
+        expect(message.errors.full_messages[0]).to include("Invalid embedded resource: 'stuff'. Valid embedded resources are: 'foo', 'bar'")
+      end
+    end
+
     describe 'lifecycle type param validation' do
       let(:fake_class) do
         Class.new(BaseMessage) do

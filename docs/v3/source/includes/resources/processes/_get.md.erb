@@ -25,6 +25,33 @@ Content-Type: application/json
 `GET /v3/processes/:guid` <br>
 `GET /v3/apps/:guid/processes/:type`
 
+#### Query parameters
+
+Name | Type | Description
+---- | ---- | ------------
+**embed** | _string_ | Comma-delimited list of resources to embed in the response. Valid values are `process_instances`. See [embed](#embed) for more details.
+
+```
+Example Request with Embedded Process Instances
+```
+
+```shell
+curl "https://api.example.org/v3/processes/[guid]?embed=process_instances" \
+  -X GET \
+  -H "Authorization: bearer [token]"
+```
+
+```
+Example Response with Embedded Process Instances
+```
+
+```http
+HTTP/1.1 200 OK
+Content-Type: application/json
+
+<%= yield_content :single_process_with_embedded_process_instances %>
+```
+
 #### Permitted roles
 Role | Notes |
 --- | ---

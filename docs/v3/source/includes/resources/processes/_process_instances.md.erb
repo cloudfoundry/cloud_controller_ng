@@ -1,0 +1,39 @@
+### Get process instances for a process
+
+This endpoint retrieves the instances for a process. This is a pseudo-resource that provides a lightweight view of process instance states, containing only the `index`, `state`, and `since` fields. Unlike the full [process stats](#get-stats-for-a-process) endpoint, this endpoint is designed for embedding into process resources and provides a minimal representation.
+
+```
+Example Request
+```
+
+```shell
+curl "https://api.example.org/v3/processes/[guid]/process_instances" \
+  -X GET \
+  -H "Authorization: bearer [token]"
+```
+
+```
+Example Response
+```
+
+```http
+HTTP/1.1 200 OK
+Content-Type: application/json
+
+<%= yield_content :process_instances %>
+```
+
+#### Definition
+`GET /v3/processes/:guid/process_instances`
+
+#### Permitted roles
+Role | Notes |
+--- | ---
+Admin |
+Admin Read-Only |
+Global Auditor |
+Org Manager |
+Space Auditor |
+Space Developer |
+Space Manager |
+Space Supporter |

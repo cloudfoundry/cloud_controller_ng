@@ -2,6 +2,26 @@ require 'spec_helper'
 require 'request_spec_shared_examples'
 
 RSpec.describe 'Processes' do
+  RSpec.shared_examples 'process resources with no process_instances' do
+    it 'shows an empty array' do
+      parsed_response = Oj.load(last_response.body)
+
+      expect(last_response.status).to eq(200)
+
+      if parsed_response['resources'].nil?
+        # Single resource
+        expect(parsed_response['process_instances']).to eq([])
+        expect(parsed_response.keys.each_cons(keys_in_order.size)).to include(keys_in_order)
+      else
+        # Paginated list
+        parsed_response['resources'].each do |process|
+          expect(process['process_instances']).to eq([])
+          expect(process.keys.each_cons(keys_in_order.size)).to include(keys_in_order)
+        end
+      end
+    end
+  end
+
   let(:org) { VCAP::CloudController::Organization.make }
   let(:space) { VCAP::CloudController::Space.make(organization: org) }
   let(:app_model) { VCAP::CloudController::AppModel.make(space: space, name: 'my_app', droplet: droplet) }
@@ -21,6 +41,9 @@ RSpec.describe 'Processes' do
       annotations: { 'checksum' => 'SHA' }
     }
   end
+  let(:instances_reporters) { instance_double(VCAP::CloudController::InstancesReporters) }
+  let(:instances_for_processes) { {} }
+  let(:keys_in_order) { %w[readiness_health_check process_instances relationships] }
 
   before do
     allow_any_instance_of(Diego::Client).to receive(:build_client).and_return(build_client)
@@ -55,6 +78,11 @@ RSpec.describe 'Processes' do
       )
     end
 
+    before do
+      CloudController::DependencyLocator.instance.register(:instances_reporters, instances_reporters)
+      allow(instances_reporters).to receive(:instances_for_processes).and_return(instances_for_processes)
+    end
+
     it_behaves_like 'list query endpoint' do
       let(:message) { VCAP::CloudController::ProcessesListMessage }
       let(:request) { '/v3/processes' }
@@ -72,6 +100,7 @@ RSpec.describe 'Processes' do
           organization_guids: %w[foo bar],
           types: %w[foo bar],
           app_guids: %w[foo bar],
+          embed: 'process_instances',
           page: '2',
           per_page: '10',
           order_by: 'updated_at',
@@ -145,7 +174,8 @@ RSpec.describe 'Processes' do
               'scale' => { 'href' => "#{link_prefix}/v3/processes/#{web_process.guid}/actions/scale", 'method' => 'POST' },
               'app' => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}" },
               'space' => { 'href' => "#{link_prefix}/v3/spaces/#{space.guid}" },
-              'stats' => { 'href' => "#{link_prefix}/v3/processes/#{web_process.guid}/stats" }
+              'stats' => { 'href' => "#{link_prefix}/v3/processes/#{web_process.guid}/stats" },
+              'process_instances' => { 'href' => "#{link_prefix}/v3/processes/#{web_process.guid}/process_instances" }
             }
           },
           {
@@ -185,7 +215,8 @@ RSpec.describe 'Processes' do
               'scale' => { 'href' => "#{link_prefix}/v3/processes/#{worker_process.guid}/actions/scale", 'method' => 'POST' },
               'app' => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}" },
               'space' => { 'href' => "#{link_prefix}/v3/spaces/#{space.guid}" },
-              'stats' => { 'href' => "#{link_prefix}/v3/processes/#{worker_process.guid}/stats" }
+              'stats' => { 'href' => "#{link_prefix}/v3/processes/#{worker_process.guid}/stats" },
+              'process_instances' => { 'href' => "#{link_prefix}/v3/processes/#{worker_process.guid}/process_instances" }
             }
           }
         ]
@@ -384,6 +415,46 @@ RSpec.describe 'Processes' do
       end
     end
 
+    context 'with embed=process_instances' do
+      let(:instances_for_processes) do
+        {
+          web_process.guid => {
+            0 => { state: 'RUNNING', since: 111 },
+            1 => { state: 'STARTING', since: 222 }
+          },
+          worker_process.guid => {
+            0 => { state: 'RUNNING', since: 333 },
+            1 => { state: 'DOWN', since: 444 }
+          }
+        }
+      end
+
+      it 'shows the embedded process_instances arrays' do
+        get '/v3/processes?embed=process_instances', nil, developer_headers
+
+        parsed_response = Oj.load(last_response.body)
+
+        expect(last_response.status).to eq(200)
+
+        parsed_response['resources'].find { |resource| resource['guid'] == web_process.guid }.tap do |process|
+          expect(process['process_instances']).to eq([{ 'index' => 0, 'state' => 'RUNNING', 'since' => 111 }, { 'index' => 1, 'state' => 'STARTING', 'since' => 222 }])
+          expect(process.keys.each_cons(keys_in_order.size)).to include(keys_in_order)
+        end
+        parsed_response['resources'].find { |resource| resource['guid'] == worker_process.guid }.tap do |process|
+          expect(process['process_instances']).to eq([{ 'index' => 0, 'state' => 'RUNNING', 'since' => 333 }, { 'index' => 1, 'state' => 'DOWN', 'since' => 444 }])
+          expect(process.keys.each_cons(keys_in_order.size)).to include(keys_in_order)
+        end
+      end
+
+      context 'when there are no instances' do
+        let(:instances_for_processes) { { web_process.guid => {}, worker_process.guid => {} } }
+
+        before { get '/v3/processes?embed=process_instances', nil, developer_headers }
+
+        it_behaves_like 'process resources with no process_instances'
+      end
+    end
+
     context 'permissions' do
       let(:api_call) { ->(user_headers) { get '/v3/processes', nil, user_headers } }
 
@@ -452,7 +523,8 @@ RSpec.describe 'Processes' do
           'scale' => { 'href' => "#{link_prefix}/v3/processes/#{process.guid}/actions/scale", 'method' => 'POST' },
           'app' => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}" },
           'space' => { 'href' => "#{link_prefix}/v3/spaces/#{space.guid}" },
-          'stats' => { 'href' => "#{link_prefix}/v3/processes/#{process.guid}/stats" }
+          'stats' => { 'href' => "#{link_prefix}/v3/processes/#{process.guid}/stats" },
+          'process_instances' => { 'href' => "#{link_prefix}/v3/processes/#{process.guid}/process_instances" }
         }
       }
     end
@@ -477,6 +549,49 @@ RSpec.describe 'Processes' do
 
       expect(last_response.status).to eq(200)
       expect(parsed_response['command']).to eq('[PRIVATE DATA HIDDEN]')
+    end
+
+    context 'with embed=process_instances' do
+      let(:instances_for_processes) do
+        {
+          process.guid => {
+            0 => { state: 'RUNNING', since: 111 },
+            1 => { state: 'STARTING', since: 222 }
+          }
+        }
+      end
+      let(:expected_response) do
+        a = super().to_a
+        before_relationships = a.index { |k, _| k == 'relationships' } || a.length
+        a.insert(before_relationships, ['process_instances', [
+          { 'index' => 0, 'state' => 'RUNNING', 'since' => 111 },
+          { 'index' => 1, 'state' => 'STARTING', 'since' => 222 }
+        ]])
+        a.to_h
+      end
+
+      before do
+        CloudController::DependencyLocator.instance.register(:instances_reporters, instances_reporters)
+        allow(instances_reporters).to receive(:instances_for_processes).and_return(instances_for_processes)
+      end
+
+      it 'shows the embedded process_instances array' do
+        get "/v3/processes/#{process.guid}?embed=process_instances", nil, developer_headers
+
+        parsed_response = Oj.load(last_response.body)
+
+        expect(last_response.status).to eq(200)
+        expect(parsed_response).to be_a_response_like(expected_response)
+        expect(parsed_response.keys.each_cons(keys_in_order.size)).to include(keys_in_order)
+      end
+
+      context 'when there are no instances' do
+        let(:instances_for_processes) { { process.guid => {} } }
+
+        before { get "/v3/processes/#{process.guid}?embed=process_instances", nil, developer_headers }
+
+        it_behaves_like 'process resources with no process_instances'
+      end
     end
 
     context 'permissions' do
@@ -806,7 +921,8 @@ RSpec.describe 'Processes' do
           'scale' => { 'href' => "#{link_prefix}/v3/processes/#{process.guid}/actions/scale", 'method' => 'POST' },
           'app' => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}" },
           'space' => { 'href' => "#{link_prefix}/v3/spaces/#{space.guid}" },
-          'stats' => { 'href' => "#{link_prefix}/v3/processes/#{process.guid}/stats" }
+          'stats' => { 'href' => "#{link_prefix}/v3/processes/#{process.guid}/stats" },
+          'process_instances' => { 'href' => "#{link_prefix}/v3/processes/#{process.guid}/process_instances" }
         },
         'metadata' => {
           'labels' => {
@@ -969,7 +1085,8 @@ RSpec.describe 'Processes' do
           'scale' => { 'href' => "#{link_prefix}/v3/processes/#{process.guid}/actions/scale", 'method' => 'POST' },
           'app' => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}" },
           'space' => { 'href' => "#{link_prefix}/v3/spaces/#{space.guid}" },
-          'stats' => { 'href' => "#{link_prefix}/v3/processes/#{process.guid}/stats" }
+          'stats' => { 'href' => "#{link_prefix}/v3/processes/#{process.guid}/stats" },
+          'process_instances' => { 'href' => "#{link_prefix}/v3/processes/#{process.guid}/process_instances" }
         }
       }
     end
@@ -1335,7 +1452,8 @@ RSpec.describe 'Processes' do
               'scale' => { 'href' => "#{link_prefix}/v3/processes/#{process1.guid}/actions/scale", 'method' => 'POST' },
               'app' => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}" },
               'space' => { 'href' => "#{link_prefix}/v3/spaces/#{space.guid}" },
-              'stats' => { 'href' => "#{link_prefix}/v3/processes/#{process1.guid}/stats" }
+              'stats' => { 'href' => "#{link_prefix}/v3/processes/#{process1.guid}/stats" },
+              'process_instances' => { 'href' => "#{link_prefix}/v3/processes/#{process1.guid}/process_instances" }
             }
           },
           {
@@ -1379,7 +1497,8 @@ RSpec.describe 'Processes' do
               'scale' => { 'href' => "#{link_prefix}/v3/processes/#{process2.guid}/actions/scale", 'method' => 'POST' },
               'app' => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}" },
               'space' => { 'href' => "#{link_prefix}/v3/spaces/#{space.guid}" },
-              'stats' => { 'href' => "#{link_prefix}/v3/processes/#{process2.guid}/stats" }
+              'stats' => { 'href' => "#{link_prefix}/v3/processes/#{process2.guid}/stats" },
+              'process_instances' => { 'href' => "#{link_prefix}/v3/processes/#{process2.guid}/process_instances" }
             }
           }
         ]
@@ -1435,6 +1554,47 @@ RSpec.describe 'Processes' do
           returned_guids = parsed_response['resources'].pluck('guid')
           expect(returned_guids).to contain_exactly(process1.guid, process2.guid)
           expect(parsed_response['pagination']).to be_a_response_like(expected_pagination)
+        end
+      end
+    end
+
+    context 'with embed=process_instances' do
+      let(:instances_for_processes) do
+        {
+          process1.guid => { 0 => { state: 'RUNNING', since: 111 } },
+          process2.guid => { 0 => { state: 'STARTING', since: 222 } },
+          process3.guid => { 0 => { state: 'DOWN', since: 333 } },
+          deployment_process.guid => {}
+        }
+      end
+
+      before do
+        CloudController::DependencyLocator.instance.register(:instances_reporters, instances_reporters)
+        allow(instances_reporters).to receive(:instances_for_processes).and_return(instances_for_processes)
+      end
+
+      it 'shows the embedded process_instances arrays (empty if there are no instances)' do
+        get "/v3/apps/#{app_model.guid}/processes?embed=process_instances", nil, developer_headers
+
+        parsed_response = Oj.load(last_response.body)
+
+        expect(last_response.status).to eq(200)
+
+        parsed_response['resources'].find { |resource| resource['guid'] == process1.guid }.tap do |process|
+          expect(process['process_instances']).to eq([{ 'index' => 0, 'state' => 'RUNNING', 'since' => 111 }])
+          expect(process.keys.each_cons(keys_in_order.size)).to include(keys_in_order)
+        end
+        parsed_response['resources'].find { |resource| resource['guid'] == process2.guid }.tap do |process|
+          expect(process['process_instances']).to eq([{ 'index' => 0, 'state' => 'STARTING', 'since' => 222 }])
+          expect(process.keys.each_cons(keys_in_order.size)).to include(keys_in_order)
+        end
+        parsed_response['resources'].find { |resource| resource['guid'] == process3.guid }.tap do |process|
+          expect(process['process_instances']).to eq([{ 'index' => 0, 'state' => 'DOWN', 'since' => 333 }])
+          expect(process.keys.each_cons(keys_in_order.size)).to include(keys_in_order)
+        end
+        parsed_response['resources'].find { |resource| resource['guid'] == deployment_process.guid }.tap do |process|
+          expect(process['process_instances']).to eq([])
+          expect(process.keys.each_cons(keys_in_order.size)).to include(keys_in_order)
         end
       end
     end
@@ -1508,9 +1668,15 @@ RSpec.describe 'Processes' do
           'scale' => { 'href' => "#{link_prefix}/v3/processes/#{process.guid}/actions/scale", 'method' => 'POST' },
           'app' => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}" },
           'space' => { 'href' => "#{link_prefix}/v3/spaces/#{space.guid}" },
-          'stats' => { 'href' => "#{link_prefix}/v3/processes/#{process.guid}/stats" }
+          'stats' => { 'href' => "#{link_prefix}/v3/processes/#{process.guid}/stats" },
+          'process_instances' => { 'href' => "#{link_prefix}/v3/processes/#{process.guid}/process_instances" }
         }
       }
+    end
+
+    before do
+      CloudController::DependencyLocator.instance.register(:instances_reporters, instances_reporters)
+      allow(instances_reporters).to receive(:instances_for_processes).and_return(instances_for_processes)
     end
 
     it 'retrieves the process for an app with the requested type' do
@@ -1535,6 +1701,36 @@ RSpec.describe 'Processes' do
 
       expect(last_response.status).to eq(200)
       expect(parsed_response['command']).to eq('[PRIVATE DATA HIDDEN]')
+    end
+
+    context 'with embed=process_instances' do
+      let(:instances_for_processes) do
+        {
+          process.guid => {
+            0 => { state: 'RUNNING', since: 111 },
+            1 => { state: 'STARTING', since: 222 }
+          }
+        }
+      end
+
+      it 'shows the embedded process_instances arrays' do
+        get "/v3/apps/#{app_model.guid}/processes/web?embed=process_instances", nil, developer_headers
+
+        parsed_response = Oj.load(last_response.body)
+
+        expect(last_response.status).to eq(200)
+
+        expect(parsed_response['process_instances']).to eq([{ 'index' => 0, 'state' => 'RUNNING', 'since' => 111 }, { 'index' => 1, 'state' => 'STARTING', 'since' => 222 }])
+        expect(parsed_response.keys.each_cons(keys_in_order.size)).to include(keys_in_order)
+      end
+
+      context 'when there are no instances' do
+        let(:instances_for_processes) { { process.guid => {} } }
+
+        before { get "/v3/apps/#{app_model.guid}/processes/web?embed=process_instances", nil, developer_headers }
+
+        it_behaves_like 'process resources with no process_instances'
+      end
     end
 
     context 'permissions' do
@@ -1633,7 +1829,8 @@ RSpec.describe 'Processes' do
           'scale' => { 'href' => "#{link_prefix}/v3/processes/#{process.guid}/actions/scale", 'method' => 'POST' },
           'app' => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}" },
           'space' => { 'href' => "#{link_prefix}/v3/spaces/#{space.guid}" },
-          'stats' => { 'href' => "#{link_prefix}/v3/processes/#{process.guid}/stats" }
+          'stats' => { 'href' => "#{link_prefix}/v3/processes/#{process.guid}/stats" },
+          'process_instances' => { 'href' => "#{link_prefix}/v3/processes/#{process.guid}/process_instances" }
         },
         'metadata' => {
           'labels' => {
@@ -1764,7 +1961,8 @@ RSpec.describe 'Processes' do
           'scale' => { 'href' => "#{link_prefix}/v3/processes/#{process.guid}/actions/scale", 'method' => 'POST' },
           'app' => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}" },
           'space' => { 'href' => "#{link_prefix}/v3/spaces/#{space.guid}" },
-          'stats' => { 'href' => "#{link_prefix}/v3/processes/#{process.guid}/stats" }
+          'stats' => { 'href' => "#{link_prefix}/v3/processes/#{process.guid}/stats" },
+          'process_instances' => { 'href' => "#{link_prefix}/v3/processes/#{process.guid}/process_instances" }
         }
       }
     end
