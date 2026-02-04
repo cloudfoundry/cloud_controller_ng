@@ -29,7 +29,7 @@ module CloudFoundry
                                      'Access-Control-Allow-Methods' => 'GET,PUT,POST,DELETE',
                                      'Access-Control-Max-Age' => '900',
                                      'Access-Control-Allow-Headers' => Set.new(%w[origin content-type authorization]).
-              merge(env['HTTP_ACCESS_CONTROL_REQUEST_HEADERS'].to_s.split(',').map(&:strip).map(&:downcase)).to_a.join(',')
+                                                                       merge(env['HTTP_ACCESS_CONTROL_REQUEST_HEADERS'].to_s.split(',').map(&:strip).map(&:downcase)).to_a.join(',')
                                    })
         end
 

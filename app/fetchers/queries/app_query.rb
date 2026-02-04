@@ -28,8 +28,8 @@ module VCAP::RestAPI
       dataset.where(
         app: VCAP::CloudController::AppModel.where(
           buildpack_lifecycle_data: VCAP::CloudController::BuildpackLifecycleDataModel.where(stack: stack_names).
-            exclude(app_guid: nil).
-            select(:guid)
+                                    exclude(app_guid: nil).
+                                    select(:guid)
         ).select(:guid)
       )
     end
