@@ -19,9 +19,17 @@ module VCAP
                 updated_plan = subject.update(service_plan, message)
                 expect(updated_plan.reload.visibility_type).to eq 'public'
               end
+
+              context "when 'append_orgs' is set to true" do
+                it 'raises an error' do
+                  expect do
+                    subject.update(service_plan, message, append_organizations: true)
+                  end.to raise_error(ServicePlanVisibilityUpdate::UnprocessableRequest, "type must be 'organization'")
+                end
+              end
             end
 
-            context 'and its being updated do "organization"' do
+            context 'and its being updated to "organization"' do
               let(:org_guid) { Organization.make.guid }
               let(:other_org_guid) { Organization.make.guid }
               let(:params) do
@@ -37,6 +45,14 @@ module VCAP
                 visible_org_guids = updated_plan.service_plan_visibilities.map(&:organization_guid)
 
                 expect(visible_org_guids).to contain_exactly(org_guid, other_org_guid)
+              end
+
+              context "when 'append_orgs' is set to true" do
+                it 'raises an error' do
+                  expect do
+                    subject.update(service_plan, message, append_organizations: true)
+                  end.to raise_error(ServicePlanVisibilityUpdate::UnprocessableRequest, "can only append organizations to plans with visibility type 'organization'")
+                end
               end
             end
           end
@@ -51,9 +67,17 @@ module VCAP
                 updated_plan = subject.update(service_plan, message)
                 expect(updated_plan.reload.visibility_type).to eq 'admin'
               end
+
+              context "when 'append_orgs' is set to true" do
+                it 'raises an error' do
+                  expect do
+                    subject.update(service_plan, message, append_organizations: true)
+                  end.to raise_error(ServicePlanVisibilityUpdate::UnprocessableRequest, "type must be 'organization'")
+                end
+              end
             end
 
-            context 'and its being updated do "organization"' do
+            context 'and its being updated to "organization"' do
               let(:org_guid) { Organization.make.guid }
               let(:other_org_guid) { Organization.make.guid }
               let(:params) do
@@ -69,6 +93,14 @@ module VCAP
                 visible_org_guids = updated_plan.service_plan_visibilities.map(&:organization_guid)
 
                 expect(visible_org_guids).to contain_exactly(org_guid, other_org_guid)
+              end
+
+              context "when 'append_orgs' is set to true" do
+                it 'raises an error' do
+                  expect do
+                    subject.update(service_plan, message, append_organizations: true)
+                  end.to raise_error(ServicePlanVisibilityUpdate::UnprocessableRequest, "can only append organizations to plans with visibility type 'organization'")
+                end
               end
             end
           end
@@ -136,6 +168,14 @@ module VCAP
                 expect(updated_plan.service_plan_visibilities).to be_empty
                 expect(ServicePlanVisibility.where(service_plan:).all).to be_empty
               end
+
+              context "when 'append_orgs' is set to true" do
+                it 'raises an error' do
+                  expect do
+                    subject.update(service_plan, message, append_organizations: true)
+                  end.to raise_error(ServicePlanVisibilityUpdate::UnprocessableRequest, "type must be 'organization'")
+                end
+              end
             end
 
             context 'and its being updated to "public"' do
@@ -146,6 +186,14 @@ module VCAP
                 expect(updated_plan.reload.visibility_type).to eq 'public'
                 expect(updated_plan.service_plan_visibilities).to be_empty
                 expect(ServicePlanVisibility.where(service_plan:).all).to be_empty
+              end
+
+              context "when 'append_orgs' is set to true" do
+                it 'raises an error' do
+                  expect do
+                    subject.update(service_plan, message, append_organizations: true)
+                  end.to raise_error(ServicePlanVisibilityUpdate::UnprocessableRequest, "type must be 'organization'")
+                end
               end
             end
           end
