@@ -22,14 +22,17 @@ jobs:
           echo "Remove all bundler versions except the default one"
           gem uninstall bundler -a -x
 
+          BUNDLER_VERSION=$(ruby -rbundler -e 'puts Bundler::VERSION')
+
+          echo "Reinstall the default bundler version - just to be sure everything works"
+          gem install bundler -v $BUNDLER_VERSION
+
           ruby -v
           bundler -v
 
           # We are modifying the Gemfile.lock, thus have to set frozen to false.
           bundle config set frozen false
 
-          BUNDLER_VERSION=$(ruby -rbundler -e 'puts Bundler::VERSION')
-          
           echo "Update bundler version in Gemfile.lock"
           bundle update --bundler=$BUNDLER_VERSION
 
