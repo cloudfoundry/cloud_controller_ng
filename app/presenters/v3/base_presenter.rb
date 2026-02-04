@@ -13,6 +13,10 @@ module VCAP
             @decorators = decorators
           end
 
+          def as_json(*_args)
+            to_hash
+          end
+
           private
 
           def redact(unredacted_value)
