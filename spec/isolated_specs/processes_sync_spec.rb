@@ -56,6 +56,42 @@ module VCAP::CloudController
             expect(bbs_apps_client).not_to have_received(:stop_app)
             expect(bbs_apps_client).to have_received(:bump_freshness).once
           end
+
+          context 'when the process is a docker app' do
+            let(:app) { AppModel.make(:docker, droplet: DropletModel.make(:docker)) }
+            let(:good_process) { ProcessModel.make(:docker, state: 'STARTED', app: app) }
+
+            context 'when diego_docker is enabled' do
+              before do
+                FeatureFlag.create(name: 'diego_docker', enabled: true)
+              end
+
+              it 'does not touch lrps that are up to date and correct' do
+                allow(bbs_apps_client).to receive(:desire_app)
+                allow(bbs_apps_client).to receive(:update_app)
+                allow(bbs_apps_client).to receive(:stop_app)
+
+                subject.sync
+
+                expect(bbs_apps_client).not_to have_received(:desire_app)
+                expect(bbs_apps_client).not_to have_received(:update_app)
+                expect(bbs_apps_client).not_to have_received(:stop_app)
+                expect(bbs_apps_client).to have_received(:bump_freshness).once
+              end
+            end
+
+            context 'when diego_docker is disabled' do
+              before do
+                FeatureFlag.create(name: 'diego_docker', enabled: false)
+              end
+
+              it 'deletes the LRP' do
+                allow(bbs_apps_client).to receive(:stop_app)
+                subject.sync
+                expect(bbs_apps_client).to have_received(:stop_app).with(ProcessGuid.from_process(good_process))
+              end
+            end
+          end
         end
 
         context 'when a diego LRP is stale' do
@@ -83,6 +119,72 @@ module VCAP::CloudController
             subject.sync
             expect(bbs_apps_client).to have_received(:update_app).with(stale_process, stale_lrp_scheduling_info)
             expect(bbs_apps_client).to have_received(:bump_freshness).once
+          end
+
+          context 'when the process is a cnb app' do
+            let(:app) { AppModel.make(:cnb, droplet: DropletModel.make(:cnb)) }
+            let!(:stale_process) { ProcessModel.make(:cnb, state: 'STARTED', app: app) }
+
+            before do
+              FeatureFlag.create(name: 'diego_cnb', enabled: true)
+            end
+
+            context 'when diego_docker is disabled' do
+              before do
+                FeatureFlag.create(name: 'diego_docker', enabled: false)
+              end
+
+              it 'updates the stale lrp' do
+                allow(bbs_apps_client).to receive(:update_app)
+                subject.sync
+                expect(bbs_apps_client).to have_received(:update_app).with(stale_process, stale_lrp_scheduling_info)
+                expect(bbs_apps_client).to have_received(:bump_freshness).once
+              end
+            end
+
+            context 'when diego_docker is enabled' do
+              before do
+                FeatureFlag.create(name: 'diego_docker', enabled: true)
+              end
+
+              it 'updates the stale lrp' do
+                allow(bbs_apps_client).to receive(:update_app)
+                subject.sync
+                expect(bbs_apps_client).to have_received(:update_app).with(stale_process, stale_lrp_scheduling_info)
+                expect(bbs_apps_client).to have_received(:bump_freshness).once
+              end
+            end
+          end
+
+          context 'when the process is a docker app' do
+            let(:app) { AppModel.make(:docker, droplet: DropletModel.make(:docker)) }
+            let!(:stale_process) { ProcessModel.make(:docker, state: 'STARTED', app: app) }
+
+            context 'when diego_docker is enabled' do
+              before do
+                FeatureFlag.create(name: 'diego_docker', enabled: true)
+              end
+
+              it 'updates the stale lrp' do
+                allow(bbs_apps_client).to receive(:update_app)
+                subject.sync
+                expect(bbs_apps_client).to have_received(:update_app).with(stale_process, stale_lrp_scheduling_info)
+                expect(bbs_apps_client).to have_received(:bump_freshness).once
+              end
+            end
+
+            context 'when diego_docker is disabled' do
+              before do
+                FeatureFlag.create(name: 'diego_docker', enabled: false)
+              end
+
+              it 'deletes the lrp' do
+                allow(bbs_apps_client).to receive(:stop_app)
+                subject.sync
+                expect(bbs_apps_client).to have_received(:stop_app).with(ProcessGuid.from_process(stale_process))
+                expect(bbs_apps_client).to have_received(:bump_freshness).once
+              end
+            end
           end
 
           context 'when updating app fails' do
