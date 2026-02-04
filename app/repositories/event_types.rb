@@ -57,6 +57,7 @@ module VCAP::CloudController
         BUILDPACK_CREATE = 'audit.buildpack.create'.freeze,
         BUILDPACK_UPDATE = 'audit.buildpack.update'.freeze,
         BUILDPACK_DELETE = 'audit.buildpack.delete'.freeze,
+        BUILDPACK_UPLOAD = 'audit.buildpack.upload'.freeze,
 
         SERVICE_CREATE = 'audit.service.create'.freeze,
         SERVICE_UPDATE = 'audit.service.update'.freeze,

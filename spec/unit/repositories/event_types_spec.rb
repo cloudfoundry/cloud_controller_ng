@@ -67,6 +67,7 @@ module VCAP::CloudController
            'audit.buildpack.create',
            'audit.buildpack.update',
            'audit.buildpack.delete',
+           'audit.buildpack.upload',
            'audit.service.create',
            'audit.service.update',
            'audit.service.delete',

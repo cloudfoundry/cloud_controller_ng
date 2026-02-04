@@ -1,4 +1,5 @@
 require 'cloud_controller/upload_buildpack'
+require 'repositories/buildpack_event_repository'
 
 module VCAP::CloudController
   module Jobs
@@ -7,10 +8,12 @@ module VCAP::CloudController
         attr_reader :buildpack_guid
         alias_method :resource_guid, :buildpack_guid
 
-        def initialize(buildpack_guid, buildpack_bits_path, buildpack_bits_name)
+        def initialize(buildpack_guid, buildpack_bits_path, buildpack_bits_name, user_audit_info=nil, request_attrs=nil)
           @buildpack_guid = buildpack_guid
           @file_path = buildpack_bits_path
           @file_name = buildpack_bits_name
+          @user_audit_info = user_audit_info
+          @request_attrs = request_attrs
         end
 
         def perform
@@ -19,7 +22,9 @@ module VCAP::CloudController
           buildpack_blobstore = CloudController::DependencyLocator.instance.buildpack_blobstore
           buildpack = Buildpack.find(guid: buildpack_guid)
 
-          VCAP::CloudController::UploadBuildpack.new(buildpack_blobstore).upload_buildpack(buildpack, file_path, file_name)
+          upload_successful = VCAP::CloudController::UploadBuildpack.new(buildpack_blobstore).upload_buildpack(buildpack, file_path, file_name)
+
+          Repositories::BuildpackEventRepository.new.record_buildpack_upload(buildpack, @user_audit_info, @request_attrs || {}) if upload_successful && @user_audit_info
         ensure
           FileUtils.rm_f(file_path)
         end
