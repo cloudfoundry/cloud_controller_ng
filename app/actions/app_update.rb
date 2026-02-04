@@ -95,7 +95,7 @@ module VCAP::CloudController
       stack = Stack.find(name: message.buildpack_data.stack)
       return [] unless stack
 
-      if app.builds_dataset.count.zero?
+      if app.builds_dataset.empty?
         StackStateValidator.validate_for_new_app!(stack)
       else
         StackStateValidator.validate_for_restaging!(stack)

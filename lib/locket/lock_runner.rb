@@ -7,9 +7,9 @@ module Locket
     end
 
     def initialize(key:, owner:, host:, port:, client_ca_path:, client_cert_path:, client_key_path:)
-      client_ca = File.open(client_ca_path).read
-      client_key = File.open(client_key_path).read
-      client_cert = File.open(client_cert_path).read
+      client_ca = File.read(client_ca_path)
+      client_key = File.read(client_key_path)
+      client_cert = File.read(client_cert_path)
 
       @service = Models::Locket::Stub.new(
         "#{host}:#{port}",
@@ -29,15 +29,11 @@ module Locket
         loop do
           begin
             service.lock(build_lock_request)
-            if !@lock_acquired then
-              logger.info("Acquired lock '#{key}' for owner '#{owner}'")
-            end
+            logger.info("Acquired lock '#{key}' for owner '#{owner}'") unless @lock_acquired
             @lock_acquired = true
             failed = false
           rescue GRPC::BadStatus => e
-            if !failed then
-              logger.info("Failed to acquire lock '#{key}' for owner '#{owner}': #{e.message}")
-            end
+            logger.info("Failed to acquire lock '#{key}' for owner '#{owner}': #{e.message}") unless failed
             failed = true
             @lock_acquired = false
           end
@@ -65,9 +61,9 @@ module Locket
           resource: {
             key: key,
             owner: owner,
-            type_code: Models::TypeCode::LOCK,
+            type_code: Models::TypeCode::LOCK
           },
-          ttl_in_seconds: 15,
+          ttl_in_seconds: 15
         }
       )
     end

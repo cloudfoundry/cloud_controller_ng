@@ -202,7 +202,7 @@ module VCAP::CloudController
     end
 
     def first_build_for_app?(app)
-      app.builds_dataset.count.zero?
+      app.builds_dataset.empty?
     end
   end
 end

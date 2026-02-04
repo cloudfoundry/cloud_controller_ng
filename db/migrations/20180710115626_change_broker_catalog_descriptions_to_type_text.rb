@@ -6,15 +6,11 @@ Sequel.migration do
     # older brokers that may have long descriptions. Here we are disabling
     # rubocop from checking the string size.
     alter_table :services do
-      # rubocop:disable Migration/IncludeStringSize
       set_column_type :description, String, text: true
-      # rubocop:enable Migration/IncludeStringSize
     end
 
     alter_table :service_plans do
-      # rubocop:disable Migration/IncludeStringSize
       set_column_type :description, String, text: true
-      # rubocop:enable Migration/IncludeStringSize
     end
   end
 end
