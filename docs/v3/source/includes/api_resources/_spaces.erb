@@ -162,7 +162,40 @@
     "self": {
       "href": "https://api.example.org/v3/spaces/f47ac10b-58cc-4372-a567-0e02b2c3d479/usage_summary"
     },
-    "organization": {
+    "space": {
+      "href": "https://api.example.org/v3/spaces/f47ac10b-58cc-4372-a567-0e02b2c3d479"
+    }
+  }
+}
+<% end %>
+
+<% content_for :effective_space_quota do %>
+{
+  "apps": {
+    "total_memory_in_mb": 10240,
+    "total_instances": 100,
+    "total_routes": 2000,
+    "total_service_instances": 1000,
+    "paid_service_plans_allowed": true
+  },
+  "services": {
+    "total_service_instances": 1000,
+    "paid_service_plans_allowed": true
+  },
+  "routes": {
+    "total_routes": 2000
+  },
+  "domains": {
+    "total_private_domains": 10
+  },
+  "links": {
+    "self": {
+      "href": "https://api.example.org/v3/spaces/f47ac10b-58cc-4372-a567-0e02b2c3d479/effective_quota"
+    },
+    "usage_summary": {
+      "href": "https://api.example.org/v3/spaces/f47ac10b-58cc-4372-a567-0e02b2c3d479/usage_summary"
+    },
+    "space": {
       "href": "https://api.example.org/v3/spaces/f47ac10b-58cc-4372-a567-0e02b2c3d479"
     }
   }
