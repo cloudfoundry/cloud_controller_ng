@@ -189,12 +189,12 @@ module VCAP::CloudController
     def self.user_visibility_filter(user)
       {
         space_id: user.space_developer_space_ids.
-          union(user.space_manager_space_ids, from_self: false).
-          union(user.space_auditor_space_ids, from_self: false).
-          union(user.space_supporter_space_ids, from_self: false).
-          union(Space.join(user.org_manager_org_ids, organization_id: :organization_id).select(:spaces__id)).
-          union(Space.join(user.org_auditor_org_ids, organization_id: :organization_id).select(:spaces__id)).
-          select(:space_id)
+                  union(user.space_manager_space_ids, from_self: false).
+                  union(user.space_auditor_space_ids, from_self: false).
+                  union(user.space_supporter_space_ids, from_self: false).
+                  union(Space.join(user.org_manager_org_ids, organization_id: :organization_id).select(:spaces__id)).
+                  union(Space.join(user.org_auditor_org_ids, organization_id: :organization_id).select(:spaces__id)).
+                  select(:space_id)
       }
     end
 

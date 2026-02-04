@@ -75,7 +75,7 @@ module VCAP::CloudController
     many_to_many :security_groups,
                  dataset: lambda {
                    SecurityGroup.left_join(:security_groups_spaces, security_group_id: :id).
-                     where(Sequel.or(security_groups_spaces__space_id: id, security_groups__running_default: true)).distinct(:id)
+                   where(Sequel.or(security_groups_spaces__space_id: id, security_groups__running_default: true)).distinct(:id)
                  },
                  eager_loader: lambda { |spaces_map|
                    space_ids = spaces_map[:id_map].keys
@@ -99,7 +99,7 @@ module VCAP::CloudController
                  right_key: :staging_security_group_id,
                  dataset: lambda {
                    SecurityGroup.left_join(:staging_security_groups_spaces, staging_security_group_id: :id).
-                     where(Sequel.or(staging_security_groups_spaces__staging_space_id: id, security_groups__staging_default: true)).distinct(:id)
+                   where(Sequel.or(staging_security_groups_spaces__staging_space_id: id, security_groups__staging_default: true)).distinct(:id)
                  },
                  eager_loader: lambda { |spaces_map|
                    space_ids = spaces_map[:id_map].keys
@@ -277,11 +277,11 @@ module VCAP::CloudController
     def self.user_visibility_filter(user)
       {
         spaces__id: user.space_developer_space_ids.
-          union(user.space_manager_space_ids, from_self: false).
-          union(user.space_auditor_space_ids, from_self: false).
-          union(user.space_supporter_space_ids, from_self: false).
-          union(dataset.join(user.org_manager_org_ids, organization_id: :organization_id).select(:spaces__id), from_self: false).
-          select(:space_id)
+                    union(user.space_manager_space_ids, from_self: false).
+                    union(user.space_auditor_space_ids, from_self: false).
+                    union(user.space_supporter_space_ids, from_self: false).
+                    union(dataset.join(user.org_manager_org_ids, organization_id: :organization_id).select(:spaces__id), from_self: false).
+                    select(:space_id)
       }
     end
 

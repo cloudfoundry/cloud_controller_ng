@@ -38,24 +38,24 @@ module VCAP::CloudController
           when BuildpackLifecycleDataModel::LIFECYCLE_TYPE
             dataset = dataset.where(
               guid: BuildpackLifecycleDataModel.
-              where(Sequel.~(app_guid: nil)).
-              select(:app_guid)
+                    where(Sequel.~(app_guid: nil)).
+                    select(:app_guid)
             )
           when DockerLifecycleDataModel::LIFECYCLE_TYPE
             dataset = dataset.exclude(
               guid: BuildpackLifecycleDataModel.
-              where(Sequel.~(app_guid: nil)).
-              select(:app_guid)
+                    where(Sequel.~(app_guid: nil)).
+                    select(:app_guid)
             ).exclude(
               guid: CNBLifecycleDataModel.
-              where(Sequel.~(app_guid: nil)).
-              select(:app_guid)
+                    where(Sequel.~(app_guid: nil)).
+                    select(:app_guid)
             )
           when CNBLifecycleDataModel::LIFECYCLE_TYPE
             dataset = dataset.where(
               guid: CNBLifecycleDataModel.
-              where(Sequel.~(app_guid: nil)).
-              select(:app_guid)
+                    where(Sequel.~(app_guid: nil)).
+                    select(:app_guid)
             )
           end
         end

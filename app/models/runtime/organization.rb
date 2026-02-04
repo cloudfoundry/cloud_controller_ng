@@ -57,7 +57,7 @@ module VCAP::CloudController
         # r.qualified_right_key = :private_domain_id
         # r.predicate_key = :organization_id
         VCAP::CloudController::Domain.dataset.where(owning_organization_id: id).
-          or(id: db[r.join_table_source].select(r.qualified_right_key).where(r.predicate_key => id))
+        or(id: db[r.join_table_source].select(r.qualified_right_key).where(r.predicate_key => id))
       },
       before_add: proc { |org, private_domain| org.cancel_action unless private_domain.addable_to_organization?(org) },
       before_remove: proc { |org, private_domain| org.cancel_action if private_domain.owned_by?(org) },

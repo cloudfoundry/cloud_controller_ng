@@ -95,7 +95,7 @@ module VCAP::CloudController
         it 'returns true if the resource exists' do
           organization_quota = QuotaDefinition.make
           job = PollableJobModel.make(resource_type: 'organization_quota', resource_guid: organization_quota.
-            guid)
+                                                                                          guid)
           expect(job.resource_exists?).to be(true)
         end
 
