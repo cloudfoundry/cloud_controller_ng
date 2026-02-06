@@ -1,4 +1,4 @@
-require 'palm_civet'
+require 'cloud_controller/palm_civet'
 
 module VCAP::CloudController
   class ByteConverter
