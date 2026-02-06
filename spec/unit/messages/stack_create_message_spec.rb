@@ -124,7 +124,7 @@ RSpec.describe VCAP::CloudController::StackCreateMessage do
     end
 
     describe 'state_reason' do
-      MAX_STATE_REASON_LENGTH = 1000
+      MAX_STATE_REASON_LENGTH = 5000
 
       context 'when it is not provided' do
         let(:params) { valid_params }
