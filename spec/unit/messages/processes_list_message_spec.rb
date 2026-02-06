@@ -14,6 +14,7 @@ module VCAP::CloudController
           'organization_guids' => 'the_organization_guid, another-org-guid',
           'app_guids' => 'the-app-guid, the-app-guid2',
           'guids' => 'process-guid,process-guid2',
+          'embed' => 'process_instances',
           'order_by' => 'created_at',
           'label_selector' => 'key=value',
           'created_ats' => "#{Time.now.utc.iso8601},#{Time.now.utc.iso8601}",
@@ -33,6 +34,7 @@ module VCAP::CloudController
         expect(message.organization_guids).to eq(%w[the_organization_guid another-org-guid])
         expect(message.app_guids).to eq(%w[the-app-guid the-app-guid2])
         expect(message.guids).to eq(%w[process-guid process-guid2])
+        expect(message.embed).to eq(%w[process_instances])
         expect(message.label_selector).to eq('key=value')
       end
 
@@ -47,6 +49,7 @@ module VCAP::CloudController
         expect(message).to be_requested(:organization_guids)
         expect(message).to be_requested(:app_guids)
         expect(message).to be_requested(:guids)
+        expect(message).to be_requested(:embed)
         expect(message).to be_requested(:order_by)
         expect(message).to be_requested(:updated_ats)
         expect(message).to be_requested(:created_ats)
@@ -62,6 +65,7 @@ module VCAP::CloudController
           organization_guids: %w[organizationguid1 organizationguid2],
           guids: ['processguid1'],
           app_guid: 'appguid',
+          embed: 'process_instances',
           page: 1,
           label_selector: 'key=value',
           per_page: 5,
@@ -78,6 +82,7 @@ module VCAP::CloudController
           space_guids
           organization_guids
           guids
+          embed
           label_selector
           created_ats
           updated_ats
@@ -98,6 +103,7 @@ module VCAP::CloudController
                                              organization_guids: %w[organizationguid1 organizationguid2],
                                              guids: ['processguid'],
                                              app_guid: 'appguid',
+                                             embed: 'process_instances',
                                              page: 1,
                                              per_page: 5,
                                              order_by: 'created_at'

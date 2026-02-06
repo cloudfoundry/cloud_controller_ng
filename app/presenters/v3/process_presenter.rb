@@ -8,20 +8,14 @@ module VCAP::CloudController
       class ProcessPresenter < BasePresenter
         include VCAP::CloudController::Presenters::Mixins::MetadataPresentationHelpers
 
-        class << self
-          # :labels and :annotations come from MetadataPresentationHelpers
-          def associated_resources
-            super
-          end
-        end
-
         def to_hash
           health_check_data = { timeout: process.health_check_timeout, invocation_timeout: process.health_check_invocation_timeout, interval: process.health_check_interval }
           health_check_data[:endpoint] = process.health_check_http_endpoint if process.health_check_type == HealthCheckTypes::HTTP
 
           readiness_health_check_data = { invocation_timeout: process.readiness_health_check_invocation_timeout, interval: process.readiness_health_check_interval }
           readiness_health_check_data[:endpoint] = process.readiness_health_check_http_endpoint if process.readiness_health_check_type == HealthCheckTypes::HTTP
-          {
+
+          hash = {
             guid: process.guid,
             created_at: process.created_at,
             updated_at: process.updated_at,
@@ -51,6 +45,8 @@ module VCAP::CloudController
             },
             links: build_links
           }
+
+          @decorators.reduce(hash) { |memo, d| d.decorate(memo, [process]) }
         end
 
         private
@@ -73,7 +69,8 @@ module VCAP::CloudController
             scale: { href: url_builder.build_url(path: "/v3/processes/#{process.guid}/actions/scale"), method: 'POST' },
             app: { href: url_builder.build_url(path: "/v3/apps/#{process.app_guid}") },
             space: { href: url_builder.build_url(path: "/v3/spaces/#{process.space_guid}") },
-            stats: { href: url_builder.build_url(path: "/v3/processes/#{process.guid}/stats") }
+            stats: { href: url_builder.build_url(path: "/v3/processes/#{process.guid}/stats") },
+            process_instances: { href: url_builder.build_url(path: "/v3/processes/#{process.guid}/process_instances") }
           }
         end
       end

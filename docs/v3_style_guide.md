@@ -89,6 +89,7 @@
 - [Including Related Resources](#including-related-resources)
   - [Pagination of Included Resources (Proposal)](#pagination-of-included-resources-proposal)
     - [Pagination Links](#pagination-links)
+- [Embedding Related Pseudo-Resources](#embedding-related-pseudo-resources)
 - [GUID Hiding](#guid-hiding)
 - [Asynchronicity](#asynchronicity)
   - [Triggering Async Actions](#triggering-async-actions)
@@ -1131,7 +1132,15 @@ The pagination filters for included resources are included in the top-level pagi
 }
 ```
 
+## Embedding Related Pseudo-Resources
 
+The `embed` parameter allows clients to fetch resources and include information of related pseudo-resources directly in the response. This is different from the [`include`](#including-related-resources) parameter, which is used for fetching parent or related resources.
+
+Important: The `embed` feature is specifically designed for pseudo-resources that, by design, do not have their own list endpoint. These are resources that are tightly coupled to their parent resource and only make sense in the context of that parent. While they may have a GET endpoint to retrieve them individually for a specific parent, they cannot be listed independently across all parents. The `embed` parameter should only be used as written in the API documentation and is not intended for wide-spread use.
+
+For example, `process_instances` is a pseudo-resource that provides a lightweight view of process instance states. It can be embedded into process resources to avoid making additional API calls, but you cannot list all process instances across all processes in the system.
+
+Developers may choose to use the `embed` feature to reduce the number of API calls. The `embed` query param can be used with a single resource or a list of resources.
 
 ## GUID Hiding
 

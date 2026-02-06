@@ -85,8 +85,6 @@ Lint/UnusedMethodArgument:
 Lint/UselessMethodDefinition:
   Exclude:
     - 'app/messages/route_destination_update_message.rb'
-    - 'app/presenters/v3/buildpack_presenter.rb'
-    - 'app/presenters/v3/process_presenter.rb'
     - 'spec/support/fake_front_controller.rb'
 
 # Offense count: 791

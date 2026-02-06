@@ -29,7 +29,8 @@ module VCAP::CloudController::Presenters::V3
           scale: { href: "#{link_prefix}/v3/processes/#{process.guid}/actions/scale", method: 'POST' },
           app: { href: "#{link_prefix}/v3/apps/#{app_model.guid}" },
           space: { href: "#{link_prefix}/v3/spaces/#{process.space_guid}" },
-          stats: { href: "#{link_prefix}/v3/processes/#{process.guid}/stats" }
+          stats: { href: "#{link_prefix}/v3/processes/#{process.guid}/stats" },
+          process_instances: { href: "#{link_prefix}/v3/processes/#{process.guid}/process_instances" }
         }
       end
 

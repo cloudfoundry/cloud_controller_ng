@@ -1,0 +1,20 @@
+## Embed
+
+The `embed` parameter allows clients to fetch resources and include information of related pseudo-resources directly in the response. This is different from the [`include`](#include) parameter, which is used for fetching parent resources.
+
+**Important:** The `embed` feature is specifically designed for pseudo-resources that, by design, do not have their own list endpoint. These are resources that are tightly coupled to their parent resource and only make sense in the context of that parent. While they may have a GET endpoint to retrieve them individually for a specific parent, they cannot be listed independently across all parents.
+
+For example, `process_instances` is a pseudo-resource that provides a lightweight view of process instance states. It can be embedded into process resources to avoid making additional API calls, but you cannot list all process instances across all processes in the system.
+
+Developers may choose to use the `embed` feature to reduce the number of API calls. The embed query param can be used with a single resource or a list of resources.
+
+### Resources with embed
+
+The following resources can take an `embed` parameter:
+
+Resource | Allowed values
+-------- | --------------
+**processes** | `process_instances`
+**processes/[:guid]** | `process_instances`
+**apps/[:guid]/processes** | `process_instances`
+**apps/[:guid]/processes/[:type]** | `process_instances`
