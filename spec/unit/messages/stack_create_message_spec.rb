@@ -122,5 +122,52 @@ RSpec.describe VCAP::CloudController::StackCreateMessage do
         end
       end
     end
+
+    describe 'state_reason' do
+      MAX_STATE_REASON_LENGTH = 5000
+
+      context 'when it is not provided' do
+        let(:params) { valid_params }
+
+        it 'is valid' do
+          expect(subject).to be_valid
+          expect(subject.state_reason).to be_nil
+        end
+      end
+
+      context 'when it is provided' do
+        let(:params) { valid_params.merge({ state_reason: 'Stack will be removed on 2026-12-31' }) }
+
+        it 'is valid' do
+          expect(subject).to be_valid
+          expect(subject.state_reason).to eq('Stack will be removed on 2026-12-31')
+        end
+      end
+
+      context 'when it is explicitly null' do
+        let(:params) { valid_params.merge({ state_reason: nil }) }
+
+        it 'is valid' do
+          expect(subject).to be_valid
+        end
+      end
+
+      context 'when it is at maximum length' do
+        let(:params) { valid_params.merge({ state_reason: 'A' * MAX_STATE_REASON_LENGTH }) }
+
+        it 'is valid' do
+          expect(subject).to be_valid
+        end
+      end
+
+      context 'when it exceeds maximum length' do
+        let(:params) { valid_params.merge({ state_reason: 'A' * (MAX_STATE_REASON_LENGTH + 1) }) }
+
+        it 'returns an error' do
+          expect(subject).not_to be_valid
+          expect(subject.errors[:state_reason]).to eq ["is too long (maximum is #{MAX_STATE_REASON_LENGTH} characters)"]
+        end
+      end
+    end
   end
 end

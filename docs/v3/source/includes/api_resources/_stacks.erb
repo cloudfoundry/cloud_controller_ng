@@ -6,6 +6,7 @@
    "name": "my-stack",
    "description": "Here is my stack!",
    "state": "ACTIVE",
+   "state_reason": null,
    "build_rootfs_image": "my-stack",
    "run_rootfs_image": "my-stack",
    "default": true,
@@ -47,6 +48,7 @@
       "run_rootfs_image": "my-stack-1-run",
       "description": "This is my first stack!",
       "state": "ACTIVE",
+      "state_reason": null,
       "default": true,
       "metadata": {
         "labels": {},
@@ -67,6 +69,7 @@
       "build_rootfs_image": "my-stack-2-build",
       "run_rootfs_image": "my-stack-2-run",
       "state": "DEPRECATED",
+      "state_reason": "Stack deprecated and will be removed in future release",
       "default": false,
       "metadata": {
         "labels": {},
@@ -91,6 +94,7 @@
    "name": "my-stack",
    "description": "Here is my stack!",
    "state": "DISABLED",
+   "state_reason": "Stack disabled and cannot be used for staging new application",
    "build_rootfs_image": "my-stack",
    "run_rootfs_image": "my-stack",
    "default": true,

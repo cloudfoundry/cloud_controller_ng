@@ -55,5 +55,45 @@ module VCAP::CloudController
         expect(stack_update_event.timestamp).to be
       end
     end
+
+    context 'when updating state_reason' do
+      let(:stack) { Stack.make(state: 'ACTIVE') }
+
+      it 'updates state_reason when provided' do
+        message = StackUpdateMessage.new({
+                                           state: 'DEPRECATED',
+                                           state_reason: 'This stack will be removed on 2026-12-31'
+                                         })
+
+        stack_update.update(stack, message)
+        stack.reload
+
+        expect(stack.state).to eq('DEPRECATED')
+        expect(stack.state_reason).to eq('This stack will be removed on 2026-12-31')
+      end
+
+      it 'clears state_reason when set to nil' do
+        stack.update(state_reason: 'Old reason')
+
+        message = StackUpdateMessage.new({ state_reason: nil })
+
+        stack_update.update(stack, message)
+        stack.reload
+
+        expect(stack.state_reason).to be_nil
+      end
+
+      it 'preserves state_reason when not requested' do
+        stack.update(state_reason: 'Existing reason')
+
+        message = StackUpdateMessage.new({ state: 'RESTRICTED' })
+
+        stack_update.update(stack, message)
+        stack.reload
+
+        expect(stack.state).to eq('RESTRICTED')
+        expect(stack.state_reason).to eq('Existing reason')
+      end
+    end
   end
 end

@@ -26,11 +26,15 @@ module VCAP::CloudController
     end
 
     def self.build_stack_error(stack, state)
-      "ERROR: Staging failed. The stack '#{stack.name}' is '#{state}' and cannot be used for staging."
+      message = "ERROR: Staging failed. The stack '#{stack.name}' is '#{state}' and cannot be used for staging."
+      message += " #{stack.state_reason}" if stack.state_reason.present?
+      message
     end
 
     def self.build_stack_warning(stack, state)
-      "WARNING: The stack '#{stack.name}' is '#{state}' and will be removed in the future."
+      message = "WARNING: The stack '#{stack.name}' is '#{state}' and will be removed in the future."
+      message += " #{stack.state_reason}" if stack.state_reason.present?
+      message
     end
   end
 end

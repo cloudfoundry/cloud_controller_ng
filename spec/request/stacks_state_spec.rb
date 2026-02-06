@@ -27,6 +27,48 @@ RSpec.describe 'Stacks State Management' do
       end
     end
 
+    context 'when creating stack with state_reason' do
+      it 'creates stack with state_reason' do
+        request_body = {
+          name: 'deprecated-with-reason',
+          state: 'DEPRECATED',
+          state_reason: 'This stack will be removed on 2026-12-31'
+        }.to_json
+
+        post '/v3/stacks', request_body, headers
+
+        expect(last_response.status).to eq(201)
+        expect(parsed_response['state']).to eq('DEPRECATED')
+        expect(parsed_response['state_reason']).to eq('This stack will be removed on 2026-12-31')
+      end
+
+      it 'creates stack without state_reason' do
+        request_body = {
+          name: 'active-no-reason',
+          state: 'ACTIVE'
+        }.to_json
+
+        post '/v3/stacks', request_body, headers
+
+        expect(last_response.status).to eq(201)
+        expect(parsed_response['state']).to eq('ACTIVE')
+        expect(parsed_response['state_reason']).to be_nil
+      end
+
+      it 'rejects state_reason exceeding maximum length' do
+        request_body = {
+          name: 'long-reason-stack',
+          state: 'DEPRECATED',
+          state_reason: 'A' * 5001
+        }.to_json
+
+        post '/v3/stacks', request_body, headers
+
+        expect(last_response.status).to eq(422)
+        expect(parsed_response['errors'].first['detail']).to include('is too long')
+      end
+    end
+
     context 'when creating stack without state' do
       it 'defaults to ACTIVE' do
         request_body = {
@@ -165,6 +207,79 @@ RSpec.describe 'Stacks State Management' do
       end
     end
 
+    context 'when updating state_reason' do
+      it 'updates state_reason along with state' do
+        request_body = {
+          state: 'DEPRECATED',
+          state_reason: 'Stack will be removed on 2026-12-31'
+        }.to_json
+
+        patch "/v3/stacks/#{stack.guid}", request_body, headers
+
+        expect(last_response.status).to eq(200)
+        expect(parsed_response['state']).to eq('DEPRECATED')
+        expect(parsed_response['state_reason']).to eq('Stack will be removed on 2026-12-31')
+
+        stack.reload
+        expect(stack.state_reason).to eq('Stack will be removed on 2026-12-31')
+      end
+
+      it 'updates state_reason independently' do
+        stack.update(state: 'DEPRECATED')
+
+        request_body = {
+          state_reason: 'Updated reason for deprecation'
+        }.to_json
+
+        patch "/v3/stacks/#{stack.guid}", request_body, headers
+
+        expect(last_response.status).to eq(200)
+        expect(parsed_response['state']).to eq('DEPRECATED')
+        expect(parsed_response['state_reason']).to eq('Updated reason for deprecation')
+      end
+
+      it 'clears state_reason when set to null' do
+        stack.update(state: 'DEPRECATED', state_reason: 'Initial reason')
+
+        request_body = {
+          state_reason: nil
+        }.to_json
+
+        patch "/v3/stacks/#{stack.guid}", request_body, headers
+
+        expect(last_response.status).to eq(200)
+        expect(parsed_response['state_reason']).to be_nil
+
+        stack.reload
+        expect(stack.state_reason).to be_nil
+      end
+
+      it 'preserves state_reason when not included in request' do
+        stack.update(state: 'DEPRECATED', state_reason: 'Existing reason')
+
+        request_body = {
+          state: 'RESTRICTED'
+        }.to_json
+
+        patch "/v3/stacks/#{stack.guid}", request_body, headers
+
+        expect(last_response.status).to eq(200)
+        expect(parsed_response['state']).to eq('RESTRICTED')
+        expect(parsed_response['state_reason']).to eq('Existing reason')
+      end
+
+      it 'rejects state_reason exceeding maximum length' do
+        request_body = {
+          state_reason: 'A' * 5001
+        }.to_json
+
+        patch "/v3/stacks/#{stack.guid}", request_body, headers
+
+        expect(last_response.status).to eq(422)
+        expect(parsed_response['errors'].first['detail']).to include('is too long')
+      end
+    end
+
     context 'as non-admin user' do
       let(:non_admin_user) { make_user }
       let(:non_admin_headers) { headers_for(non_admin_user) }
@@ -190,15 +305,46 @@ RSpec.describe 'Stacks State Management' do
       expect(last_response.status).to eq(200)
       expect(parsed_response['state']).to eq('DEPRECATED')
     end
+
+    context 'when stack has state_reason' do
+      let!(:stack_with_reason) do
+        VCAP::CloudController::Stack.make(
+          state: 'DEPRECATED',
+          state_reason: 'EOL on 2026-12-31'
+        )
+      end
+
+      it 'returns state_reason in response' do
+        get "/v3/stacks/#{stack_with_reason.guid}", nil, reader_headers
+
+        expect(last_response.status).to eq(200)
+        expect(parsed_response['state']).to eq('DEPRECATED')
+        expect(parsed_response['state_reason']).to eq('EOL on 2026-12-31')
+      end
+    end
+
+    context 'when stack has no state_reason' do
+      let!(:stack_without_reason) do
+        VCAP::CloudController::Stack.make(state: 'ACTIVE', state_reason: nil)
+      end
+
+      it 'returns null state_reason in response' do
+        get "/v3/stacks/#{stack_without_reason.guid}", nil, reader_headers
+
+        expect(last_response.status).to eq(200)
+        expect(parsed_response['state']).to eq('ACTIVE')
+        expect(parsed_response['state_reason']).to be_nil
+      end
+    end
   end
 
   describe 'GET /v3/stacks' do
     before { VCAP::CloudController::Stack.dataset.destroy }
 
     let!(:active_stack) { VCAP::CloudController::Stack.make(name: 'active', state: 'ACTIVE') }
-    let!(:deprecated_stack) { VCAP::CloudController::Stack.make(name: 'deprecated', state: 'DEPRECATED') }
+    let!(:deprecated_stack) { VCAP::CloudController::Stack.make(name: 'deprecated', state: 'DEPRECATED', state_reason: 'Deprecated reason') }
     let!(:restricted_stack) { VCAP::CloudController::Stack.make(name: 'restricted', state: 'RESTRICTED') }
-    let!(:disabled_stack) { VCAP::CloudController::Stack.make(name: 'disabled', state: 'DISABLED') }
+    let!(:disabled_stack) { VCAP::CloudController::Stack.make(name: 'disabled', state: 'DISABLED', state_reason: 'Disabled reason') }
 
     let(:reader_user) { make_user }
     let(:reader_headers) { headers_for(reader_user) }
@@ -210,6 +356,26 @@ RSpec.describe 'Stacks State Management' do
 
       resources = parsed_response['resources']
       expect(resources.pluck('state')).to contain_exactly('ACTIVE', 'DEPRECATED', 'RESTRICTED', 'DISABLED')
+    end
+
+    it 'includes state_reason for stacks that have it' do
+      get '/v3/stacks', nil, reader_headers
+
+      expect(last_response.status).to eq(200)
+
+      resources = parsed_response['resources']
+
+      deprecated = resources.find { |r| r['name'] == 'deprecated' }
+      expect(deprecated['state_reason']).to eq('Deprecated reason')
+
+      disabled = resources.find { |r| r['name'] == 'disabled' }
+      expect(disabled['state_reason']).to eq('Disabled reason')
+
+      active = resources.find { |r| r['name'] == 'active' }
+      expect(active['state_reason']).to be_nil
+
+      restricted = resources.find { |r| r['name'] == 'restricted' }
+      expect(restricted['state_reason']).to be_nil
     end
   end
 end
