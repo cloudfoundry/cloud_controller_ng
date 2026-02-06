@@ -228,13 +228,13 @@ GEM
       google-apis-core (>= 0.11.0, < 2.a)
     google-cloud-env (1.6.0)
       faraday (>= 0.17.3, < 3.0)
-    google-protobuf (4.33.4)
+    google-protobuf (4.33.5)
       bigdecimal
       rake (>= 13)
-    google-protobuf (4.33.4-x86_64-darwin)
+    google-protobuf (4.33.5-x86_64-darwin)
       bigdecimal
       rake (>= 13)
-    google-protobuf (4.33.4-x86_64-linux-gnu)
+    google-protobuf (4.33.5-x86_64-linux-gnu)
       bigdecimal
       rake (>= 13)
     googleapis-common-protos (1.9.0)
