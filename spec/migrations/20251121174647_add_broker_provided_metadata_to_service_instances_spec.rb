@@ -12,33 +12,41 @@ RSpec.describe 'migration to add broker_provided_metadata column to service_inst
   end
 
   describe 'service_instances table' do
-    subject(:run_migration) { Sequel::Migrator.run(db, migrations_path, target: current_migration_index, allow_missing_migration_files: true) }
-
     let(:space) { VCAP::CloudController::Space.make }
 
-    it 'adds a column `broker_provided_metadata`' do
-      expect(db[:service_instances].columns).not_to include(:broker_provided_metadata)
-      run_migration
-      expect(db[:service_instances].columns).to include(:broker_provided_metadata)
-    end
+    it 'adds broker_provided_metadata column with correct properties' do
+      # Insert a service instance before migration to test preservation
+      db[:service_instances].insert(
+        guid: 'existing-service-instance-guid',
+        name: 'existing-instance',
+        space_id: space.id
+      )
 
-    it 'allows null values for broker_provided_metadata' do
-      run_migration
-      # Insert a service instance without broker_provided_metadata
+      # Verify column doesn't exist yet
+      expect(db[:service_instances].columns).not_to include(:broker_provided_metadata)
+
+      # Run migration
+      Sequel::Migrator.run(db, migrations_path, target: current_migration_index, allow_missing_migration_files: true)
+
+      # Verify column was added
+      expect(db[:service_instances].columns).to include(:broker_provided_metadata)
+
+      # Verify existing instance was preserved with null metadata
+      existing_instance = db[:service_instances].first(guid: 'existing-service-instance-guid')
+      expect(existing_instance).not_to be_nil
+      expect(existing_instance[:broker_provided_metadata]).to be_nil
+
+      # Verify null values are allowed
       db[:service_instances].insert(
         guid: 'test-service-instance-guid',
         name: 'test-instance',
         space_id: space.id,
         broker_provided_metadata: nil
       )
-      # Verify the insert succeeded and the column is null
-      instance = db[:service_instances].first(guid: 'test-service-instance-guid')
-      expect(instance[:broker_provided_metadata]).to be_nil
-    end
+      instance_with_null = db[:service_instances].first(guid: 'test-service-instance-guid')
+      expect(instance_with_null[:broker_provided_metadata]).to be_nil
 
-    it 'accepts text values for broker_provided_metadata' do
-      run_migration
-      # Insert a service instance with broker_provided_metadata
+      # Verify text values are accepted
       metadata_json = '{"labels": {"version": "1.0"}, "attributes": {"engine": "postgresql"}}'
       db[:service_instances].insert(
         guid: 'test-service-instance-with-metadata',
@@ -46,23 +54,8 @@ RSpec.describe 'migration to add broker_provided_metadata column to service_inst
         space_id: space.id,
         broker_provided_metadata: metadata_json
       )
-      # Verify the metadata was stored correctly
-      instance = db[:service_instances].first(guid: 'test-service-instance-with-metadata')
-      expect(instance[:broker_provided_metadata]).to eq(metadata_json)
-    end
-
-    it 'preserves existing service instances after migration' do
-      # Insert a service instance before migration
-      db[:service_instances].insert(
-        guid: 'existing-service-instance-guid',
-        name: 'existing-instance',
-        space_id: space.id
-      )
-      run_migration
-      # Verify the existing instance still exists and has null metadata
-      instance = db[:service_instances].first(guid: 'existing-service-instance-guid')
-      expect(instance).not_to be_nil
-      expect(instance[:broker_provided_metadata]).to be_nil
+      instance_with_metadata = db[:service_instances].first(guid: 'test-service-instance-with-metadata')
+      expect(instance_with_metadata[:broker_provided_metadata]).to eq(metadata_json)
     end
   end
 end

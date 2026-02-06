@@ -2,8 +2,6 @@ require 'migrations/helpers/migration_shared_context'
 require 'database/bigint_migration'
 
 RSpec.shared_context 'bigint migration step1' do
-  subject(:run_migration) { Sequel::Migrator.run(db, migrations_path, target: current_migration_index, allow_missing_migration_files: true) }
-
   include_context 'migration'
 
   let(:skip_bigint_id_migration) { nil }
@@ -29,25 +27,19 @@ RSpec.shared_context 'bigint migration step1' do
           db[table].delete
         end
 
-        it "changes the id column's type to bigint" do
+        it "changes the id column's type to bigint and does not add id_bigint column" do
           expect(db).to have_table_with_column_and_type(table, :id, 'integer')
-
-          run_migration
-
-          expect(db).to have_table_with_column_and_type(table, :id, 'bigint')
-        end
-
-        it 'does not add the id_bigint column' do
           expect(db).not_to have_table_with_column(table, :id_bigint)
 
-          run_migration
+          expect { Sequel::Migrator.run(db, migrations_path, target: current_migration_index, allow_missing_migration_files: true) }.not_to raise_error
 
+          expect(db).to have_table_with_column_and_type(table, :id, 'bigint')
           expect(db).not_to have_table_with_column(table, :id_bigint)
         end
 
         describe 'backfill' do
           before do
-            run_migration
+            Sequel::Migrator.run(db, migrations_path, target: current_migration_index, allow_missing_migration_files: true)
           end
 
           it 'fails with a proper error message' do
@@ -65,39 +57,26 @@ RSpec.shared_context 'bigint migration step1' do
           db[table].delete # Necessary to successfully run subsequent migrations in the after block of the migration shared context...
         end
 
-        it "does not change the id column's type" do
+        it 'keeps id as integer, adds id_bigint column and creates trigger function' do
           expect(db).to have_table_with_column_and_type(table, :id, 'integer')
-
-          run_migration
-
-          expect(db).to have_table_with_column_and_type(table, :id, 'integer')
-        end
-
-        it 'adds the id_bigint column' do
           expect(db).not_to have_table_with_column(table, :id_bigint)
-
-          run_migration
-
-          expect(db).to have_table_with_column_and_type(table, :id_bigint, 'bigint')
-        end
-
-        it 'creates the trigger function' do
           expect(db).not_to have_trigger_function_for_table(table)
 
-          run_migration
+          expect { Sequel::Migrator.run(db, migrations_path, target: current_migration_index, allow_missing_migration_files: true) }.not_to raise_error
+
+          expect(db).to have_table_with_column_and_type(table, :id, 'integer')
+          expect(db).to have_table_with_column_and_type(table, :id_bigint, 'bigint')
 
           expect(db).to have_trigger_function_for_table(table)
         end
 
-        it 'does not populate the id_bigint column for an existing entry' do
-          run_migration
+        it 'does not populate id_bigint for existing entries but does for new entries' do
+          expect { Sequel::Migrator.run(db, migrations_path, target: current_migration_index, allow_missing_migration_files: true) }.not_to raise_error
 
+          # Existing entry should not have id_bigint populated
           expect(db[table].where(id: old_id).get(:id_bigint)).to be_nil
-        end
 
-        it 'automatically populates the id_bigint column for a new entry' do
-          run_migration
-
+          # New entry should have id_bigint automatically populated
           new_id = insert.call(db)
           expect(db[table].where(id: new_id).get(:id_bigint)).to eq(new_id)
         end
@@ -105,8 +84,7 @@ RSpec.shared_context 'bigint migration step1' do
         describe 'backfill' do
           before do
             100.times { insert.call(db) }
-
-            run_migration
+            Sequel::Migrator.run(db, migrations_path, target: current_migration_index, allow_missing_migration_files: true)
           end
 
           context 'default batch size' do
@@ -159,7 +137,7 @@ RSpec.shared_context 'bigint migration step1' do
         expect(db).to have_table_with_column_and_type(table, :id, 'integer')
         expect(db).not_to have_table_with_column(table, :id_bigint)
 
-        run_migration
+        expect { Sequel::Migrator.run(db, migrations_path, target: current_migration_index, allow_missing_migration_files: true) }.not_to raise_error
 
         expect(db).to have_table_with_column_and_type(table, :id, 'integer')
         expect(db).not_to have_table_with_column(table, :id_bigint)
@@ -168,18 +146,16 @@ RSpec.shared_context 'bigint migration step1' do
   end
 
   describe 'down' do
-    subject(:run_rollback) { Sequel::Migrator.run(db, migrations_path, target: current_migration_index - 1, allow_missing_migration_files: true) }
-
     context 'when the table is empty' do
       before do
         db[table].delete
-        run_migration
+        Sequel::Migrator.run(db, migrations_path, target: current_migration_index, allow_missing_migration_files: true)
       end
 
       it "reverts the id column's type to integer" do
         expect(db).to have_table_with_column_and_type(table, :id, 'bigint')
 
-        run_rollback
+        expect { Sequel::Migrator.run(db, migrations_path, target: current_migration_index - 1, allow_missing_migration_files: true) }.not_to raise_error
 
         expect(db).to have_table_with_column_and_type(table, :id, 'integer')
       end
@@ -188,26 +164,20 @@ RSpec.shared_context 'bigint migration step1' do
     context 'when the table is not empty' do
       before do
         insert.call(db)
-        run_migration
+        Sequel::Migrator.run(db, migrations_path, target: current_migration_index, allow_missing_migration_files: true)
       end
 
       after do
         db[table].delete # Necessary to successfully run subsequent migrations in the after block of the migration shared context...
       end
 
-      it 'drops the id_bigint column' do
+      it 'drops the id_bigint column and trigger function' do
         expect(db).to have_table_with_column(table, :id_bigint)
-
-        run_rollback
-
-        expect(db).not_to have_table_with_column(table, :id_bigint)
-      end
-
-      it 'drops the trigger function' do
         expect(db).to have_trigger_function_for_table(table)
 
-        run_rollback
+        expect { Sequel::Migrator.run(db, migrations_path, target: current_migration_index - 1, allow_missing_migration_files: true) }.not_to raise_error
 
+        expect(db).not_to have_table_with_column(table, :id_bigint)
         expect(db).not_to have_trigger_function_for_table(table)
       end
     end
