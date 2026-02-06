@@ -59,7 +59,7 @@ RSpec.describe 'Stacks State Management' do
         request_body = {
           name: 'long-reason-stack',
           state: 'DEPRECATED',
-          state_reason: 'A' * 1001
+          state_reason: 'A' * 5001
         }.to_json
 
         post '/v3/stacks', request_body, headers
@@ -270,7 +270,7 @@ RSpec.describe 'Stacks State Management' do
 
       it 'rejects state_reason exceeding maximum length' do
         request_body = {
-          state_reason: 'A' * 1001
+          state_reason: 'A' * 5001
         }.to_json
 
         patch "/v3/stacks/#{stack.guid}", request_body, headers
