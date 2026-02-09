@@ -168,6 +168,112 @@ module VCAP::CloudController
       end
     end
 
+    describe 'state_reason in messages' do
+      describe '.build_stack_warning' do
+        context 'when state_reason is present' do
+          let(:stack) { Stack.make(name: 'old-stack', state: StackStates::STACK_DEPRECATED, state_reason: 'EOL on 2026-12-31') }
+
+          it 'includes state_reason in warning message' do
+            warning = StackStateValidator.build_stack_warning(stack, StackStates::STACK_DEPRECATED)
+            expect(warning).to include('old-stack')
+            expect(warning).to include('DEPRECATED')
+            expect(warning).to include('EOL on 2026-12-31')
+          end
+        end
+
+        context 'when state_reason is nil' do
+          let(:stack) { Stack.make(name: 'old-stack', state: StackStates::STACK_DEPRECATED, state_reason: nil) }
+
+          it 'does not append state_reason to warning message' do
+            warning = StackStateValidator.build_stack_warning(stack, StackStates::STACK_DEPRECATED)
+            expect(warning).to include('old-stack')
+            expect(warning).to include('DEPRECATED')
+            expect(warning).to end_with('will be removed in the future.')
+          end
+        end
+
+        context 'when state_reason is empty string' do
+          let(:stack) { Stack.make(name: 'old-stack', state: StackStates::STACK_DEPRECATED, state_reason: '') }
+
+          it 'does not append state_reason to warning message' do
+            warning = StackStateValidator.build_stack_warning(stack, StackStates::STACK_DEPRECATED)
+            expect(warning).to end_with('will be removed in the future.')
+          end
+        end
+      end
+
+      describe '.build_stack_error' do
+        context 'when state_reason is present' do
+          let(:stack) { Stack.make(name: 'disabled-stack', state: StackStates::STACK_DISABLED, state_reason: 'Security vulnerability') }
+
+          it 'includes state_reason in error message' do
+            error = StackStateValidator.build_stack_error(stack, StackStates::STACK_DISABLED)
+            expect(error).to include('disabled-stack')
+            expect(error).to include('DISABLED')
+            expect(error).to include('Security vulnerability')
+          end
+        end
+
+        context 'when state_reason is nil' do
+          let(:stack) { Stack.make(name: 'disabled-stack', state: StackStates::STACK_DISABLED, state_reason: nil) }
+
+          it 'does not append state_reason to error message' do
+            error = StackStateValidator.build_stack_error(stack, StackStates::STACK_DISABLED)
+            expect(error).to include('disabled-stack')
+            expect(error).to include('DISABLED')
+            expect(error).to end_with('cannot be used for staging.')
+          end
+        end
+      end
+
+      describe 'integration with validation methods' do
+        context 'when deprecated stack has state_reason' do
+          let(:stack) { Stack.make(state: StackStates::STACK_DEPRECATED, state_reason: 'Use cflinuxfs5 instead') }
+
+          it 'includes state_reason in warning for new app' do
+            warnings = StackStateValidator.validate_for_new_app!(stack)
+            expect(warnings.first).to include('Use cflinuxfs5 instead')
+          end
+
+          it 'includes state_reason in warning for restaging' do
+            warnings = StackStateValidator.validate_for_restaging!(stack)
+            expect(warnings.first).to include('Use cflinuxfs5 instead')
+          end
+        end
+
+        context 'when disabled stack has state_reason' do
+          let(:stack) { Stack.make(state: StackStates::STACK_DISABLED, state_reason: 'Critical security issue') }
+
+          it 'includes state_reason in error for new app' do
+            expect do
+              StackStateValidator.validate_for_new_app!(stack)
+            end.to raise_error(StackStateValidator::DisabledStackError, /Critical security issue/)
+          end
+
+          it 'includes state_reason in error for restaging' do
+            expect do
+              StackStateValidator.validate_for_restaging!(stack)
+            end.to raise_error(StackStateValidator::DisabledStackError, /Critical security issue/)
+          end
+        end
+
+        context 'when restricted stack has state_reason' do
+          let(:stack) { Stack.make(state: StackStates::STACK_RESTRICTED, state_reason: 'Limited availability') }
+
+          it 'includes state_reason in error for new app' do
+            expect do
+              StackStateValidator.validate_for_new_app!(stack)
+            end.to raise_error(StackStateValidator::RestrictedStackError, /Limited availability/)
+          end
+
+          it 'includes state_reason in warning for restaging' do
+            warnings = StackStateValidator.validate_for_restaging!(stack)
+            expect(warnings.first).to include('Limited availability')
+          end
+        end
+      end
+    end
+
     describe 'state behavior matrix' do
       let(:active_stack) { Stack.make(state: StackStates::STACK_ACTIVE) }
       let(:deprecated_stack) { Stack.make(state: StackStates::STACK_DEPRECATED) }

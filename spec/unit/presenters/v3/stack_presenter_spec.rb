@@ -52,12 +52,39 @@ RSpec.describe VCAP::CloudController::Presenters::V3::StackPresenter do
         expect(result[:updated_at]).to eq(stack.updated_at)
         expect(result[:name]).to eq(stack.name)
         expect(result[:description]).to eq(stack.description)
+        expect(result[:state]).to eq(stack.state)
+        expect(result[:state_reason]).to eq(stack.state_reason)
         expect(result[:run_rootfs_image]).to eq(stack.run_rootfs_image)
         expect(result[:build_rootfs_image]).to eq(stack.build_rootfs_image)
         expect(result[:default]).to be(false)
         expect(result[:metadata][:labels]).to eq('release' => 'stable', 'canberra.au/potato' => 'mashed')
         expect(result[:metadata][:annotations]).to eq('altitude' => '14,412', 'maize' => 'hfcs')
         expect(result[:links][:self][:href]).to eq("#{link_prefix}/v3/stacks/#{stack.guid}")
+      end
+    end
+
+    context 'when state_reason is present' do
+      let(:stack) do
+        VCAP::CloudController::Stack.make(
+          state: 'DEPRECATED',
+          state_reason: 'This stack will be removed on 2026-12-31'
+        )
+      end
+
+      it 'presents the state_reason' do
+        expect(result[:state]).to eq('DEPRECATED')
+        expect(result[:state_reason]).to eq('This stack will be removed on 2026-12-31')
+      end
+    end
+
+    context 'when state_reason is nil' do
+      let(:stack) do
+        VCAP::CloudController::Stack.make(state: 'ACTIVE', state_reason: nil)
+      end
+
+      it 'presents state_reason as nil' do
+        expect(result[:state]).to eq('ACTIVE')
+        expect(result[:state_reason]).to be_nil
       end
     end
 
