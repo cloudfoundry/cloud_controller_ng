@@ -52,6 +52,8 @@ module VCAP::CloudController
            'audit.app.map-route',
            'audit.app.unmap-route',
            'audit.app.build.create',
+           'audit.app.build.staged',
+           'audit.app.build.failed',
            'audit.app.environment.show',
            'audit.app.environment_variables.show',
            'audit.app.revision.create',

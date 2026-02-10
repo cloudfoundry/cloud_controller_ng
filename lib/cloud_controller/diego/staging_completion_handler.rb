@@ -59,6 +59,7 @@ module VCAP::CloudController
 
             V2::AppStop.stop(build.app, StagingCancel.new(stagers)) if with_start
           end
+          Repositories::BuildEventRepository.record_build_failed(build, payload[:error][:id], payload[:error][:message])
         rescue StandardError => e
           logger.error(logger_prefix + 'saving-staging-result-failed',
                        staging_guid: build.guid,
@@ -111,6 +112,8 @@ module VCAP::CloudController
                          droplet: droplet.inspect)
             return
           end
+
+          Repositories::BuildEventRepository.record_build_staged(build, droplet)
 
           begin
             if with_start
