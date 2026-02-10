@@ -31234,6 +31234,7 @@ Running applications remain available.</p>
    </span><span class="nl">"name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"my-stack"</span><span class="p">,</span><span class="w">
    </span><span class="nl">"description"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Here is my stack!"</span><span class="p">,</span><span class="w">
    </span><span class="nl">"state"</span><span class="p">:</span><span class="w"> </span><span class="s2">"ACTIVE"</span><span class="p">,</span><span class="w">
+   </span><span class="nl">"state_reason"</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="p">,</span><span class="w">
    </span><span class="nl">"build_rootfs_image"</span><span class="p">:</span><span class="w"> </span><span class="s2">"my-stack"</span><span class="p">,</span><span class="w">
    </span><span class="nl">"run_rootfs_image"</span><span class="p">:</span><span class="w"> </span><span class="s2">"my-stack"</span><span class="p">,</span><span class="w">
    </span><span class="nl">"default"</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span><span class="p">,</span><span class="w">
@@ -31287,6 +31288,11 @@ Running applications remain available.</p>
 <td>The state of the stack; valid states are: <code class="prettyprint">ACTIVE</code>, <code class="prettyprint">RESTRICTED</code>, <code class="prettyprint">DEPRECATED</code>, <code class="prettyprint">DISABLED</code></td>
 </tr>
 <tr>
+<td><strong>state_reason</strong></td>
+<td>string</td>
+<td>Optional plain text describing the stack state change</td>
+</tr>
+<tr>
 <td><strong>build_rootfs_image</strong></td>
 <td>_string</td>
 <td>The name of the stack image associated with staging/building Apps. If a stack does not have unique images, this will be the same as the stack name.</td>
@@ -31327,6 +31333,7 @@ Running applications remain available.</p>
     "name": "my-stack",
     "description": "Here is my stack!",
     "state": "ACTIVE",
+    "state_reason": "",
   }'</span>
 </code></pre></div><div class="highlight"><pre class="highlight plaintext"><code>Example Response
 </code></pre></div><div class="highlight"><pre class="highlight http"><code><span class="k">HTTP</span><span class="o">/</span><span class="m">1.1</span> <span class="m">201</span> <span class="ne">Created</span>
@@ -31339,6 +31346,7 @@ Running applications remain available.</p>
    </span><span class="nl">"name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"my-stack"</span><span class="p">,</span><span class="w">
    </span><span class="nl">"description"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Here is my stack!"</span><span class="p">,</span><span class="w">
    </span><span class="nl">"state"</span><span class="p">:</span><span class="w"> </span><span class="s2">"ACTIVE"</span><span class="p">,</span><span class="w">
+   </span><span class="nl">"state_reason"</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="p">,</span><span class="w">
    </span><span class="nl">"build_rootfs_image"</span><span class="p">:</span><span class="w"> </span><span class="s2">"my-stack"</span><span class="p">,</span><span class="w">
    </span><span class="nl">"run_rootfs_image"</span><span class="p">:</span><span class="w"> </span><span class="s2">"my-stack"</span><span class="p">,</span><span class="w">
    </span><span class="nl">"default"</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span><span class="p">,</span><span class="w">
@@ -31408,6 +31416,12 @@ Running applications remain available.</p>
 <td>The state of the stack; valid states are: <code class="prettyprint">ACTIVE</code>, <code class="prettyprint">RESTRICTED</code>, <code class="prettyprint">DEPRECATED</code>, <code class="prettyprint">DISABLED</code></td>
 <td></td>
 </tr>
+<tr>
+<td><strong>state_reason</strong></td>
+<td>string</td>
+<td>Optional plain text describing the stack state change</td>
+<td></td>
+</tr>
 </tbody></table>
 
 <h4 id="permitted-roles">Permitted roles</h4>
@@ -31437,6 +31451,7 @@ Running applications remain available.</p>
    </span><span class="nl">"name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"my-stack"</span><span class="p">,</span><span class="w">
    </span><span class="nl">"description"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Here is my stack!"</span><span class="p">,</span><span class="w">
    </span><span class="nl">"state"</span><span class="p">:</span><span class="w"> </span><span class="s2">"ACTIVE"</span><span class="p">,</span><span class="w">
+   </span><span class="nl">"state_reason"</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="p">,</span><span class="w">
    </span><span class="nl">"build_rootfs_image"</span><span class="p">:</span><span class="w"> </span><span class="s2">"my-stack"</span><span class="p">,</span><span class="w">
    </span><span class="nl">"run_rootfs_image"</span><span class="p">:</span><span class="w"> </span><span class="s2">"my-stack"</span><span class="p">,</span><span class="w">
    </span><span class="nl">"default"</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span><span class="p">,</span><span class="w">
@@ -31501,6 +31516,7 @@ Running applications remain available.</p>
       </span><span class="nl">"run_rootfs_image"</span><span class="p">:</span><span class="w"> </span><span class="s2">"my-stack-1-run"</span><span class="p">,</span><span class="w">
       </span><span class="nl">"description"</span><span class="p">:</span><span class="w"> </span><span class="s2">"This is my first stack!"</span><span class="p">,</span><span class="w">
       </span><span class="nl">"state"</span><span class="p">:</span><span class="w"> </span><span class="s2">"ACTIVE"</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"state_reason"</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="p">,</span><span class="w">
       </span><span class="nl">"default"</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span><span class="p">,</span><span class="w">
       </span><span class="nl">"metadata"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
         </span><span class="nl">"labels"</span><span class="p">:</span><span class="w"> </span><span class="p">{},</span><span class="w">
@@ -31521,6 +31537,7 @@ Running applications remain available.</p>
       </span><span class="nl">"build_rootfs_image"</span><span class="p">:</span><span class="w"> </span><span class="s2">"my-stack-2-build"</span><span class="p">,</span><span class="w">
       </span><span class="nl">"run_rootfs_image"</span><span class="p">:</span><span class="w"> </span><span class="s2">"my-stack-2-run"</span><span class="p">,</span><span class="w">
       </span><span class="nl">"state"</span><span class="p">:</span><span class="w"> </span><span class="s2">"DEPRECATED"</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"state_reason"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Stack deprecated and will be removed in future release"</span><span class="p">,</span><span class="w">
       </span><span class="nl">"default"</span><span class="p">:</span><span class="w"> </span><span class="kc">false</span><span class="p">,</span><span class="w">
       </span><span class="nl">"metadata"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
         </span><span class="nl">"labels"</span><span class="p">:</span><span class="w"> </span><span class="p">{},</span><span class="w">
@@ -31844,7 +31861,7 @@ Running applications remain available.</p>
   <span class="nt">-X</span> PATCH <span class="se">\</span>
   <span class="nt">-H</span> <span class="s2">"Authorization: bearer [token]"</span> <span class="se">\</span>
   <span class="nt">-H</span> <span class="s2">"Content-Type: application/json"</span> <span class="se">\</span>
-  <span class="nt">-d</span> <span class="s1">'{ "metadata": { "labels": { "key": "value" }, "annotations": {"note": "detailed information"}},"state":"ACTIVE"}'</span>
+  <span class="nt">-d</span> <span class="s1">'{ "metadata": { "labels": { "key": "value" }, "annotations": {"note": "detailed information"}},"state":"ACTIVE", "state_reason": "Optional plain text describing the stack state change" }'</span>
 
 </code></pre></div><div class="highlight"><pre class="highlight plaintext"><code>Example Response
 </code></pre></div><div class="highlight"><pre class="highlight http"><code><span class="k">HTTP</span><span class="o">/</span><span class="m">1.1</span> <span class="m">200</span> <span class="ne">OK</span>
@@ -31857,6 +31874,7 @@ Running applications remain available.</p>
    </span><span class="nl">"name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"my-stack"</span><span class="p">,</span><span class="w">
    </span><span class="nl">"description"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Here is my stack!"</span><span class="p">,</span><span class="w">
    </span><span class="nl">"state"</span><span class="p">:</span><span class="w"> </span><span class="s2">"DISABLED"</span><span class="p">,</span><span class="w">
+   </span><span class="nl">"state_reason"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Stack disabled and cannot be used for staging new application"</span><span class="p">,</span><span class="w">
    </span><span class="nl">"build_rootfs_image"</span><span class="p">:</span><span class="w"> </span><span class="s2">"my-stack"</span><span class="p">,</span><span class="w">
    </span><span class="nl">"run_rootfs_image"</span><span class="p">:</span><span class="w"> </span><span class="s2">"my-stack"</span><span class="p">,</span><span class="w">
    </span><span class="nl">"default"</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span><span class="p">,</span><span class="w">
@@ -31899,6 +31917,11 @@ Running applications remain available.</p>
 <td><strong>state</strong></td>
 <td>string</td>
 <td>The state of the stack; valid states are: <code class="prettyprint">ACTIVE</code>, <code class="prettyprint">RESTRICTED</code>, <code class="prettyprint">DEPRECATED</code>, <code class="prettyprint">DISABLED</code></td>
+</tr>
+<tr>
+<td><strong>state_reason</strong></td>
+<td>string</td>
+<td>Optional plain text describing the stack state change</td>
 </tr>
 </tbody></table>
 
