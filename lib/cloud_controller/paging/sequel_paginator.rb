@@ -6,21 +6,28 @@ module VCAP::CloudController
       page = pagination_options.page
       per_page = pagination_options.per_page
       order_direction = pagination_options.order_direction
-      order_by = pagination_options.order_by
+      order_by = pagination_options.order_by.to_sym
       table_name = dataset.model.table_name
-      has_guid_column = dataset.model.columns.include?(:guid)
 
-      order_type = Sequel.send(order_direction, Sequel.qualify(table_name, order_by))
-      dataset = dataset.order(order_type)
+      # 1. Order the dataset by the specified column and direction.
+      dataset = dataset.order(Sequel.send(order_direction, Sequel.qualify(table_name, order_by)))
 
+      # 2. When ordering by 'created_at', add another order by 'id' to ensure a chronological order of records with the same 'created_at' timestamp.
+      dataset = dataset.order_append(Sequel.send(order_direction, Sequel.qualify(table_name, :id))) if order_by == :created_at && has_column?(dataset, :id)
+
+      # 3. Add a secondary order in case 'secondary_default_order_by' is specified and no custom order has been provided.
       secondary_order_by = pagination_options.secondary_order_by
       dataset = dataset.order_append(Sequel.send(order_direction, Sequel.qualify(table_name, secondary_order_by))) if secondary_order_by
-      dataset = dataset.order_append(Sequel.send(order_direction, Sequel.qualify(table_name, :guid))) if order_by != 'id' && has_guid_column
+
+      # 4. If the dataset is not already ordered by a unique column, add another order by 'guid' to ensure a deterministic ordering of records.
+      if !order_includes_unique_column?(dataset.opts[:order]) && has_column?(dataset, :guid)
+        dataset = dataset.order_append(Sequel.send(order_direction, Sequel.qualify(table_name, :guid)))
+      end
 
       distinct_opt = dataset.opts[:distinct]
       if !distinct_opt.nil? && !distinct_opt.empty? # DISTINCT ON
         order_opt = dataset.opts[:order]
-        dataset = if order_opt.any? { |o| %i[id guid].include?(o.expression.column.to_sym) }
+        dataset = if order_includes_unique_column?(order_opt)
                     # If ORDER BY columns are unique, use them for the DISTINCT ON clause.
                     dataset.distinct(*order_opt.map(&:expression))
                   else
@@ -45,6 +52,14 @@ module VCAP::CloudController
     end
 
     private
+
+    def has_column?(dataset, column_name)
+      dataset.model.columns.include?(column_name)
+    end
+
+    def order_includes_unique_column?(order_opt)
+      order_opt.any? { |o| %i[id guid].include?(o.expression.column.to_sym) }
+    end
 
     def paginate_with_window_function(dataset, per_page, page, table_name)
       dataset = dataset.from_self if dataset.opts[:distinct]
