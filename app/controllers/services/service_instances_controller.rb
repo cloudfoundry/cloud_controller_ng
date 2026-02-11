@@ -10,7 +10,6 @@ require 'presenters/v2/service_instance_shared_to_presenter'
 require 'presenters/v2/service_instance_shared_from_presenter'
 
 module VCAP::CloudController
-  # rubocop:disable Metrics/ClassLength
   class ServiceInstancesController < RestController::ModelController
     include VCAP::CloudController::LockCheck
 
@@ -602,5 +601,4 @@ module VCAP::CloudController
       service_instance.clone.set(request_attrs.select { |k, _v| ServiceInstanceUpdate::KEYS_TO_UPDATE_CC.include? k })
     end
   end
-  # rubocop:enable Metrics/ClassLength
 end
