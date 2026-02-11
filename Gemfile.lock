@@ -416,7 +416,7 @@ GEM
     rbs (3.10.3)
       logger
       tsort
-    rdoc (7.1.0)
+    rdoc (7.2.0)
       erb
       psych (>= 4.0.0)
       tsort
