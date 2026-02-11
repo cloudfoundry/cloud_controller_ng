@@ -110,8 +110,8 @@ RSpec.describe 'V3 service instances' do
         expect({ included: parsed_response['included'] }).to match_json_response({ included: })
       end
 
-      it 'can include service plan guid and name fields' do
-        get "/v3/service_instances/#{guid}?fields[service_plan]=guid,name", nil, admin_headers
+      it 'can include service plan guid, name and broker catalog fields' do
+        get "/v3/service_instances/#{guid}?fields[service_plan]=guid,name,broker_catalog.id", nil, admin_headers
 
         expect(last_response).to have_status_code(200)
 
@@ -119,7 +119,10 @@ RSpec.describe 'V3 service instances' do
           service_plans: [
             {
               guid: instance.service_plan.guid,
-              name: instance.service_plan.name
+              name: instance.service_plan.name,
+              broker_catalog: {
+                id: instance.service_plan.unique_id
+              }
             }
           ]
         }
@@ -128,7 +131,7 @@ RSpec.describe 'V3 service instances' do
       end
 
       it 'can include service offering and broker fields' do
-        get "/v3/service_instances/#{guid}?fields[service_plan.service_offering]=name,guid,description,documentation_url&" \
+        get "/v3/service_instances/#{guid}?fields[service_plan.service_offering]=name,guid,description,documentation_url,broker_catalog.id&" \
             'fields[service_plan.service_offering.service_broker]=name,guid', nil, admin_headers
         expect(last_response).to have_status_code(200)
 
@@ -138,7 +141,10 @@ RSpec.describe 'V3 service instances' do
               name: instance.service_plan.service.name,
               guid: instance.service_plan.service.guid,
               description: instance.service_plan.service.description,
-              documentation_url: 'https://some.url.for.docs/'
+              documentation_url: 'https://some.url.for.docs/',
+              broker_catalog: {
+                id: instance.service_plan.service.unique_id
+              }
             }
           ],
           service_brokers: [
@@ -400,8 +406,8 @@ RSpec.describe 'V3 service instances' do
         end
 
         it 'can include the service plan, offering and broker fields' do
-          get '/v3/service_instances?fields[service_plan]=guid,name,relationships.service_offering&' \
-              'fields[service_plan.service_offering]=name,guid,description,documentation_url,relationships.service_broker&' \
+          get '/v3/service_instances?fields[service_plan]=guid,name,broker_catalog.id,relationships.service_offering&' \
+              'fields[service_plan.service_offering]=name,guid,description,documentation_url,broker_catalog.id,relationships.service_broker&' \
               'fields[service_plan.service_offering.service_broker]=name,guid', nil, admin_headers
 
           expect(last_response).to have_status_code(200)
@@ -411,6 +417,9 @@ RSpec.describe 'V3 service instances' do
               {
                 guid: msi_1.service_plan.guid,
                 name: msi_1.service_plan.name,
+                broker_catalog: {
+                  id: msi_1.service_plan.unique_id
+                },
                 relationships: {
                   service_offering: {
                     data: {
@@ -422,6 +431,9 @@ RSpec.describe 'V3 service instances' do
               {
                 guid: msi_2.service_plan.guid,
                 name: msi_2.service_plan.name,
+                broker_catalog: {
+                  id: msi_2.service_plan.unique_id
+                },
                 relationships: {
                   service_offering: {
                     data: {
@@ -433,6 +445,9 @@ RSpec.describe 'V3 service instances' do
               {
                 guid: ssi.service_plan.guid,
                 name: ssi.service_plan.name,
+                broker_catalog: {
+                  id: ssi.service_plan.unique_id
+                },
                 relationships: {
                   service_offering: {
                     data: {
@@ -448,6 +463,9 @@ RSpec.describe 'V3 service instances' do
                 guid: msi_1.service_plan.service.guid,
                 description: msi_1.service_plan.service.description,
                 documentation_url: 'https://some.url.for.docs/',
+                broker_catalog: {
+                  id: msi_1.service_plan.service.unique_id
+                },
                 relationships: {
                   service_broker: {
                     data: {
@@ -461,6 +479,9 @@ RSpec.describe 'V3 service instances' do
                 guid: msi_2.service_plan.service.guid,
                 description: msi_2.service_plan.service.description,
                 documentation_url: 'https://some.url.for.docs/',
+                broker_catalog: {
+                  id: msi_2.service_plan.service.unique_id
+                },
                 relationships: {
                   service_broker: {
                     data: {
@@ -474,6 +495,9 @@ RSpec.describe 'V3 service instances' do
                 guid: ssi.service_plan.service.guid,
                 description: ssi.service_plan.service.description,
                 documentation_url: 'https://some.url.for.docs/',
+                broker_catalog: {
+                  id: ssi.service_plan.service.unique_id
+                },
                 relationships: {
                   service_broker: {
                     data: {
