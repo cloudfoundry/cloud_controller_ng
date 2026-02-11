@@ -193,7 +193,7 @@ module VCAP::CloudController
         stack = Stack.find(guid: request_attrs['stack_guid'])
         return unless stack
 
-        stack_warnings = if app.builds_dataset.count.zero?
+        stack_warnings = if app.builds_dataset.empty?
                            StackStateValidator.validate_for_new_app!(stack)
                          else
                            StackStateValidator.validate_for_restaging!(stack)
