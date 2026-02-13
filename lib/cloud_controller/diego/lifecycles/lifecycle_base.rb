@@ -17,7 +17,13 @@ module VCAP::CloudController
     delegate :valid?, :errors, to: :validator
 
     def staging_stack
-      requested_stack || app_stack || VCAP::CloudController::Stack.default.name
+      stack = requested_stack || app_stack || VCAP::CloudController::Stack.default.name
+      FeatureFlag.raise_unless_enabled!(:diego_custom_stacks) if stack.is_a?(String) && is_custom_stack?(stack)
+      stack
+    end
+
+    def credentials
+      staging_message.lifecycle_data&.dig(:credentials)
     end
 
     private
@@ -31,5 +37,15 @@ module VCAP::CloudController
     end
 
     attr_reader :validator
+
+    private
+
+    def is_custom_stack?(stack_name)
+      # Check for various container registry URL formats
+      return true if stack_name.include?('docker://')
+      return true if stack_name.match?(%r{^https?://})  # Any https/http URL
+      return true if stack_name.include?('.')  # Any string with a dot (likely a registry)
+      false
+    end
   end
 end

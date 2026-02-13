@@ -198,7 +198,7 @@ module VCAP::CloudController::Validators
       lifecycle_data_message = lifecycle_data_message_class.new(record.lifecycle_data)
       return if lifecycle_data_message.valid?
 
-      lifecycle_data_message.errors.full_messages.each do |message|
+      lifecycle_data_message.errors.each do |attribute, message|
         record.errors.add(:lifecycle, message:)
       end
     end

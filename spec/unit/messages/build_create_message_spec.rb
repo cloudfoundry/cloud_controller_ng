@@ -126,6 +126,62 @@ module VCAP::CloudController
               expect(message).not_to be_valid
               expect(message.errors[:lifecycle]).to include('Buildpacks can only contain strings')
             end
+
+            context 'credentials' do
+              it 'is valid with valid credentials' do
+                params[:lifecycle] = {
+                  type: 'buildpack',
+                  data: {
+                    stack: 'cflinuxfs4',
+                    credentials: {
+                      'docker.io' => {
+                        'username' => 'user',
+                        'password' => 'password'
+                      }
+                    }
+                  }
+                }
+                message = BuildCreateMessage.new(params)
+                expect(message).to be_valid
+              end
+
+              it 'is invalid with invalid credentials' do
+                params[:lifecycle] = {
+                  type: 'buildpack',
+                  data: {
+                    stack: 'cflinuxfs4',
+                    credentials: {
+                      'docker.io' => {
+                        'username' => 'user'
+                      }
+                    }
+                  }
+                }
+                message = BuildCreateMessage.new(params)
+                expect(message).not_to be_valid
+                expect(message.errors[:lifecycle]).to include("credentials for docker.io must include 'username' and 'password'")
+              end
+            end
+
+            context 'when a custom stack is used with a system buildpack' do
+              before do
+                VCAP::CloudController::FeatureFlag.make(name: 'diego_custom_stacks', enabled: true)
+                VCAP::CloudController::Buildpack.make(name: 'ruby_buildpack')
+              end
+
+              it 'is not valid' do
+                params[:lifecycle] = {
+                  type: 'buildpack',
+                  data: {
+                    stack: 'docker://cloudfoundry/cflinuxfs4',
+                    buildpacks: ['ruby_buildpack']
+                  }
+                }
+                message = BuildCreateMessage.new(params)
+                expect(message).not_to be_valid
+                expect(message.errors[:lifecycle]).to include('Buildpack must be a custom buildpack when using a custom stack')
+              end
+            end
           end
 
           describe 'docker lifecycle' do
