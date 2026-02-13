@@ -1,0 +1,40 @@
+### Get effective space quota (experimental)
+
+```
+Example Request
+```
+
+```shell
+curl "https://api.example.org/v3/spaces/[guid]/effective_quota" \
+  -X GET \
+  -H "Authorization: bearer [token]"
+```
+
+```
+Example Response
+```
+
+```http
+HTTP/1.1 200 OK
+Content-Type: application/json
+
+<%= yield_content :effective_space_quota, '/v3/spaces/:guid/effective_quota' %>
+```
+
+This endpoint retrieves the effective quota for the specified space to show the actual applicable resource limits.
+The effective quota is dynamically calculated based on the space's and its organization's assigned quotas.
+
+#### Definition
+`GET /v3/spaces/:guid/effective_quota`
+
+#### Permitted roles
+|
+--- |
+Admin |
+Admin Read-Only |
+Global Auditor |
+Org Manager |
+Space Auditor |
+Space Developer |
+Space Manager |
+Space Supporter |
