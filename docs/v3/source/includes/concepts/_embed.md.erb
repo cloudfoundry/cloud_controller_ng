@@ -1,6 +1,6 @@
 ## Embed
 
-The `embed` parameter allows clients to fetch resources and include information of related pseudo-resources directly in the response. This is different from the [`include`](#include) parameter, which is used for fetching parent resources.
+The experimental `embed` parameter allows clients to fetch resources and include information of related pseudo-resources directly in the response. This is different from the [`include`](#include) parameter, which is used for fetching parent resources.
 
 **Important:** The `embed` feature is specifically designed for pseudo-resources that, by design, do not have their own list endpoint. These are resources that are tightly coupled to their parent resource and only make sense in the context of that parent. While they may have a GET endpoint to retrieve them individually for a specific parent, they cannot be listed independently across all parents.
 
