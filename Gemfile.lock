@@ -108,6 +108,8 @@ GEM
     benchmark (0.5.0)
     bigdecimal (4.0.1)
     bit-struct (0.17)
+    bootsnap (1.21.1)
+      msgpack (~> 1.2)
     builder (3.3.0)
     byebug (13.0.0)
       reline (>= 0.6.0)
@@ -626,6 +628,7 @@ DEPENDENCIES
   addressable
   allowy (>= 2.1.0)
   azure-storage-blob!
+  bootsnap
   byebug
   cf-uaa-lib (~> 4.0.9)
   clockwork
