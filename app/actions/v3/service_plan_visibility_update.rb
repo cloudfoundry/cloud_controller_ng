@@ -11,7 +11,12 @@ module VCAP::CloudController
         type = message.type
         requested_org_guids = message.organizations&.pluck(:guid) || []
 
-        unprocessable!("cannot update plans with visibility type 'space'") if space?(service_plan)
+        unprocessable!("cannot update plans with visibility type 'space'") if visibility_type_space?(service_plan)
+
+        if append_organizations # i.e. POST request
+          unprocessable!("type must be 'organization'") unless org?(type)
+          unprocessable!("can only append organizations to plans with visibility type 'organization'") unless visibility_type_org?(service_plan)
+        end
 
         service_plan.db.transaction do
           service_plan.lock!
@@ -69,8 +74,12 @@ module VCAP::CloudController
         raise UnprocessableRequest.new(message)
       end
 
-      def space?(service_plan)
+      def visibility_type_space?(service_plan)
         service_plan.visibility_type == VCAP::CloudController::ServicePlanVisibilityTypes::SPACE
+      end
+
+      def visibility_type_org?(service_plan)
+        service_plan.visibility_type == VCAP::CloudController::ServicePlanVisibilityTypes::ORGANIZATION
       end
 
       def org?(type)
