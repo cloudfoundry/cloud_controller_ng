@@ -278,7 +278,7 @@ class FakeModelTables
   def tables_for_sequel_paginator_spec
     db.create_table :table_without_guid do
       primary_key :id
-      DateTime :created_at
+      String :name
     end
   end
 

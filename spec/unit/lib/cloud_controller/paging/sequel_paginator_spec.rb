@@ -187,28 +187,37 @@ module VCAP::CloudController
         expect(paginated_result.records[3].guid).to eq(app_model2.guid)
       end
 
-      it 'orders by GUID as a secondary field when available' do
-        options = { page: page, per_page: 2, order_by: 'created_at', order_direction: 'asc' }
-        app_model1.update(guid: '1', created_at: '2019-12-25T13:00:00Z')
-        app_model2.update(guid: '2', created_at: '2019-12-25T13:00:00Z')
+      context 'deterministic ordering' do
+        before do
+          app_model1.update(guid: '2', created_at: '2019-12-25T13:00:00Z', updated_at: '2019-12-25T13:00:00Z')
+          app_model2.update(guid: '1', created_at: '2019-12-25T13:00:00Z', updated_at: '2019-12-25T13:00:00Z')
+        end
 
-        pagination_options = PaginationOptions.new(options)
-        paginated_result = paginator.get_page(dataset, pagination_options)
-        expect(paginated_result.records.first.guid).to eq(app_model1.guid)
-        expect(paginated_result.records.second.guid).to eq(app_model2.guid)
-      end
+        context "when ordered by 'created_at'" do
+          it "orders by 'id' as a secondary field" do
+            options = { page: page, per_page: 2, order_by: 'created_at', order_direction: 'asc' }
 
-      it 'does not order by GUID when the table has no GUID' do
-        options = { page: page, per_page: 2, order_by: 'created_at', order_direction: 'asc' }
+            pagination_options = PaginationOptions.new(options)
+            expect do
+              paginated_result = paginator.get_page(dataset, pagination_options)
+              expect(paginated_result.records.first.guid).to eq(app_model1.guid)
+              expect(paginated_result.records.second.guid).to eq(app_model2.guid)
+            end.to have_queried_db_times(/ORDER BY .\w*.\..created_at. ASC, .\w*.\..id. ASC LIMIT/i, 1)
+          end
+        end
 
-        pagination_options = PaginationOptions.new(options)
-        ds = TableWithoutGuid.dataset
-        expect do
-          paginator.get_page(ds, pagination_options)
-        end.to have_queried_db_times(/ORDER BY .\w*.\..created_at. ASC LIMIT/i, 1)
-        expect do
-          paginator.get_page(ds, pagination_options)
-        end.to have_queried_db_times(/ORDER BY .\w*.\..created_at. ASC, .\w*.\..guid. ASC LIMIT/i, 0)
+        context "when ordered by a non-unique column other than 'created_at'" do
+          it "orders by 'guid' as a secondary field" do
+            options = { page: page, per_page: 2, order_by: 'updated_at', order_direction: 'asc' }
+
+            pagination_options = PaginationOptions.new(options)
+            expect do
+              paginated_result = paginator.get_page(dataset, pagination_options)
+              expect(paginated_result.records.first.guid).to eq(app_model2.guid)
+              expect(paginated_result.records.second.guid).to eq(app_model1.guid)
+            end.to have_queried_db_times(/ORDER BY .\w*.\..updated_at. ASC, .\w*.\..guid. ASC LIMIT/i, 1)
+          end
+        end
       end
 
       it 'does not order by GUID when the primary order is by ID' do
@@ -221,6 +230,19 @@ module VCAP::CloudController
         expect do
           paginator.get_page(dataset, pagination_options)
         end.to have_queried_db_times(/ORDER BY .\w*.\..id. ASC, .\w*.\..guid. ASC LIMIT/i, 0)
+      end
+
+      it 'does not order by GUID when the table has no GUID' do
+        options = { page: page, per_page: 2, order_by: 'name', order_direction: 'asc' }
+
+        pagination_options = PaginationOptions.new(options)
+        ds = TableWithoutGuid.dataset
+        expect do
+          paginator.get_page(ds, pagination_options)
+        end.to have_queried_db_times(/ORDER BY .\w*.\..name. ASC LIMIT/i, 1)
+        expect do
+          paginator.get_page(ds, pagination_options)
+        end.to have_queried_db_times(/ORDER BY .\w*.\..name. ASC, .\w*.\..guid. ASC LIMIT/i, 0)
       end
 
       context 'when a DISTINCT ON clause is used' do # MySQL uses GROUP BY instead
@@ -237,12 +259,12 @@ module VCAP::CloudController
         end
 
         context 'when ordered by other column' do
-          let(:pagination_options) { PaginationOptions.new({ order_by: 'created_at' }) }
+          let(:pagination_options) { PaginationOptions.new({ order_by: 'name' }) }
 
           it 'uses other column and GUID for DISTINCT ON clause' do
             expect do
               paginator.get_page(distinct_dataset, pagination_options)
-            end.to have_queried_db_times(/(select distinct on \(.*created_at.*,.*guid.*\) .* from)|(group by)/i, paginator.can_paginate_with_window_function?(dataset) ? 1 : 2)
+            end.to have_queried_db_times(/(select distinct on \(.*name.*,.*guid.*\) .* from)|(group by)/i, paginator.can_paginate_with_window_function?(dataset) ? 1 : 2)
           end
 
           context 'when table has no GUID column' do
