@@ -41,6 +41,8 @@ module VCAP::CloudController
         APP_UNMAP_ROUTE = 'audit.app.unmap-route'.freeze,
 
         APP_BUILD_CREATE = 'audit.app.build.create'.freeze,
+        APP_BUILD_STAGED = 'audit.app.build.staged'.freeze,
+        APP_BUILD_FAILED = 'audit.app.build.failed'.freeze,
         APP_ENVIRONMENT_SHOW = 'audit.app.environment.show'.freeze,
         APP_ENVIRONMENT_VARIABLE_SHOW = 'audit.app.environment_variables.show'.freeze,
         APP_REVISION_CREATE = 'audit.app.revision.create'.freeze,

@@ -149,6 +149,11 @@ module VCAP::CloudController
                 subject.staging_complete(success_response)
               end
 
+              it 'records a build staged audit event' do
+                expect(Repositories::BuildEventRepository).to receive(:record_build_staged).with(build, droplet)
+                subject.staging_complete(success_response)
+              end
+
               context 'when there are sidecars in the staging result' do
                 before do
                   success_response[:result][:sidecars] = [{
@@ -553,6 +558,11 @@ module VCAP::CloudController
 
               it 'emits a loggregator error' do
                 expect(VCAP::AppLogEmitter).to receive(:emit_error).with(build.app_guid, /Found no compatible cell/)
+                subject.staging_complete(fail_response)
+              end
+
+              it 'records a build failed audit event' do
+                expect(Repositories::BuildEventRepository).to receive(:record_build_failed).with(build, 'NoCompatibleCell', 'Found no compatible cell')
                 subject.staging_complete(fail_response)
               end
             end
