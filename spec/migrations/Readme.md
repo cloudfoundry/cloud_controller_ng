@@ -77,8 +77,10 @@ To create resilient and reliable migrations, follow these guidelines:
 
 Sequel migration tests have a distinct operation compared to conventional RSpec tests. Primarily, they execute the Down migration and restore the database state to its previous form before the test-specific migration was carried out. The process includes running a test, creating assets, executing a specific migration file for testing, and asserting certain behaviors. However, be aware that Sequel migration tests impose specific limitations and requirements on test writing.
 
-1. The migration spec should not be influenced by any Cloud Controller code. This requirement is the same as for the migration itself. Any model changes can modify the old migrations and alter the behaviors and results of the tests. Therefore, don't select data via the CC models, instead make the selects in raw Sequel and assert the behavior you'd like to test.
-1. It's recommended to use the `migration` shared context, as it ensures that the database schema first reverts to the version before the migration you aim to test. This shared context also provides a directory containing a single migration for running a particular migration within a test. When the test is done, this shared context makes sure to restore the correct schema by running the migrations that post-date the one being tested. Thus, avoiding cases of a half-migrated database that could result in random test failures. It also makes sure to test not every migration that comes after the test migration, but just a single migration is executed and then the expected behavior is evaluated.
+### Limitations and Requirements
+1. **Independence**: The migration spec should not be influenced by any Cloud Controller code. This requirement is the same as for the migration itself. Any model changes can modify the old migrations and alter the behaviors and results of the tests. Therefore, don't select data via the CC models, instead make the selects in raw Sequel and assert the behavior you'd like to test.
+1. **Shared Context**: It's recommended to use the `migration` shared context, as it ensures that the database schema first reverts to the version before the migration you aim to test. This shared context also provides a directory containing a single migration for running a particular migration within a test. When the test is done, this shared context makes sure to restore the correct schema by running the migrations that post-date the one being tested. Thus, avoiding cases of a half-migrated database that could result in random test failures. It also makes sure to test not every migration that comes after the test migration, but just a single migration is executed and then the expected behavior is evaluated.
+1. **Performance**: Running migrations (`Sequel::Migrator.run(...)`) can be time-consuming and take serval seconds with each call. Therefore, it's advisable to limit the number of migration calls within a single spec file as much as possible. Group related tests into a single it block even if it does not follow the usual RSpec best practices. This approach minimizes the number of migration calls and enhances test performance.
 
 ### Usage
 
@@ -95,12 +97,15 @@ RSpec.describe 'migration to modify isolation_segments', isolation: :truncation 
 
   describe 'isolation_segments table' do
     it 'retains the initial name and guid' do
-      db[:isolation_segments].insert(name: 'bommel', guid: '123')
+      db[:isolation_segments].insert(name: 'name', guid: '123')
       a1 = db[:isolation_segment_annotations].first(resource_guid: '123')
       expect { Sequel::Migrator.run(db, migrations_path, target: current_migration_index, allow_missing_migration_files: true) }.not_to raise_error
       b1 = db[:isolation_segment_annotations].first(resource_guid: '123')
       expect(b1[:guid]).to eq a1[:guid]
       expect(b1[:name]).to eq a1[:name]
+      
+      # Test idempotency of the migration
+      expect { Sequel::Migrator.run(db, migrations_path, target: current_migration_index, allow_missing_migration_files: true) }.not_to raise_error
     end
   end
 end

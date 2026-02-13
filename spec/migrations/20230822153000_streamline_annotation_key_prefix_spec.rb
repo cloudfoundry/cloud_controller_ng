@@ -7,40 +7,35 @@ RSpec.describe 'migration to streamline changes to annotation_key_prefix', isola
   end
 
   describe 'annotation tables' do
-    it 'converts all legacy key_prefixes to annotations with prefixes in the key_prefix column' do
-      db[:isolation_segments].insert(name: 'bommel', guid: '123')
-      db[:isolation_segment_annotations].insert(
-        guid: 'bommel',
-        created_at: Time.now - 60,
-        updated_at: Time.now - 60,
-        resource_guid: '123',
-        key: 'mylegacyprefix/mykey',
-        value: 'some_value'
-      )
-      a1 = db[:isolation_segment_annotations].first(resource_guid: '123')
-      expect { Sequel::Migrator.run(db, migrations_path, target: current_migration_index, allow_missing_migration_files: true) }.not_to raise_error
-      b1 = db[:isolation_segment_annotations].first(resource_guid: '123')
-      expect(b1[:guid]).to eq a1[:guid]
-      expect(b1[:created_at]).to eq a1[:created_at]
-      expect(b1[:updated_at]).not_to eq a1[:updated_at]
-      expect(b1[:resource_guid]).to eq a1[:resource_guid]
-      expect(b1[:key_prefix]).not_to eq a1[:key_prefix]
-      expect(b1[:key]).not_to eq a1[:key]
-      expect(b1[:key_prefix]).to eq 'mylegacyprefix'
-      expect(b1[:key]).to eq 'mykey'
-    end
+    it 'converts legacy key_prefixes to prefixes in key_prefix column and leaves non-legacy values unchanged' do
+      resource_guid = 'iso-seg-guid'
+      db[:isolation_segments].insert(name: 'iso_seg', guid: resource_guid)
+      db[:isolation_segment_annotations].insert(guid: 'anno-1-guid', resource_guid: resource_guid, key: 'mylegacyprefix/mykey', value: 'some_value')
+      db[:isolation_segment_annotations].insert(guid: 'anno-2-guid', resource_guid: resource_guid, key_prefix: 'myprefix', key: 'mykey', value: 'some_value')
+      db[:isolation_segment_annotations].insert(guid: 'anno-3-guid', resource_guid: resource_guid, key: 'yourkey', value: 'some_other_value')
 
-    it 'doesnt touch any values that have no legacy key_prefix in its key field' do
-      db[:isolation_segments].insert(name: 'bommel', guid: '123')
-      db[:isolation_segment_annotations].insert(guid: 'bommel', resource_guid: '123', key_prefix: 'myprefix', key: 'mykey', value: 'some_value')
-      db[:isolation_segment_annotations].insert(guid: 'bommel2', resource_guid: '123', key: 'mykey2', value: 'some_value2')
-      b1 = db[:isolation_segment_annotations].first(key: 'mykey')
-      b2 = db[:isolation_segment_annotations].first(key: 'mykey2')
+      anno1 = db[:isolation_segment_annotations].first(guid: 'anno-1-guid')
+      anno2 = db[:isolation_segment_annotations].first(key: 'mykey')
+      anno3 = db[:isolation_segment_annotations].first(key: 'yourkey')
+
       expect { Sequel::Migrator.run(db, migrations_path, target: current_migration_index, allow_missing_migration_files: true) }.not_to raise_error
-      c1 = db[:isolation_segment_annotations].first(key: 'mykey')
-      c2 = db[:isolation_segment_annotations].first(key: 'mykey2')
-      expect(b1.values).to eq(c1.values)
-      expect(b2.values).to eq(c2.values)
+
+      # Check legacy prefix was converted
+      anno1_after_mig = db[:isolation_segment_annotations].first(guid: 'anno-1-guid')
+      expect(anno1_after_mig[:guid]).to eq anno1[:guid]
+      expect(anno1_after_mig[:created_at]).to eq anno1[:created_at]
+      expect(anno1_after_mig[:updated_at]).not_to eq anno1[:updated_at]
+      expect(anno1_after_mig[:resource_guid]).to eq anno1[:resource_guid]
+      expect(anno1_after_mig[:key_prefix]).not_to eq anno1[:key_prefix]
+      expect(anno1_after_mig[:key]).not_to eq anno1[:key]
+      expect(anno1_after_mig[:key_prefix]).to eq 'mylegacyprefix'
+      expect(anno1_after_mig[:key]).to eq 'mykey'
+
+      # Check non-legacy values unchanged
+      anno2_after_mig = db[:isolation_segment_annotations].first(guid: 'anno-2-guid')
+      anno3_after_mig = db[:isolation_segment_annotations].first(guid: 'anno-3-guid')
+      expect(anno2.values).to eq(anno2_after_mig.values)
+      expect(anno3.values).to eq(anno3_after_mig.values)
     end
   end
 end
