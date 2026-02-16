@@ -2275,10 +2275,15 @@ module VCAP::Services::ServiceBrokers::V2
         allow(http_client).to receive(:get).and_return(broker_response)
       end
 
-      it 'makes a get request with the correct path' do
+      it 'makes a get request with the correct path including service_id and plan_id' do
         client.fetch_service_binding(binding)
+
+        service_id = binding.service_instance.service.broker_provided_id
+        plan_id = binding.service_instance.service_plan.broker_provided_id
+        query_params = "?plan_id=#{plan_id}&service_id=#{service_id}"
+
         expect(http_client).to have_received(:get).with(
-          "/v2/service_instances/#{binding.service_instance.guid}/service_bindings/#{binding.guid}",
+          "/v2/service_instances/#{binding.service_instance.guid}/service_bindings/#{binding.guid}#{query_params}",
           { user_guid: nil }
         )
       end
@@ -2293,8 +2298,13 @@ module VCAP::Services::ServiceBrokers::V2
 
         it 'makes a request with the correct user_guid' do
           client.fetch_service_binding(binding, user_guid:)
+
+          service_id = binding.service_instance.service.broker_provided_id
+          plan_id = binding.service_instance.service_plan.broker_provided_id
+          query_params = "?plan_id=#{plan_id}&service_id=#{service_id}"
+
           expect(http_client).to have_received(:get).with(
-            "/v2/service_instances/#{binding.service_instance.guid}/service_bindings/#{binding.guid}",
+            "/v2/service_instances/#{binding.service_instance.guid}/service_bindings/#{binding.guid}#{query_params}",
             { user_guid: }
           )
         end
@@ -2309,10 +2319,15 @@ module VCAP::Services::ServiceBrokers::V2
         allow(http_client).to receive(:get).and_return(broker_response)
       end
 
-      it 'makes a get request with the correct path' do
+      it 'makes a get request with the correct path including service_id and plan_id' do
         client.fetch_service_instance(instance)
+
+        service_id = instance.service.broker_provided_id
+        plan_id = instance.service_plan.broker_provided_id
+        query_params = "?plan_id=#{plan_id}&service_id=#{service_id}"
+
         expect(http_client).to have_received(:get).with(
-          "/v2/service_instances/#{instance.guid}",
+          "/v2/service_instances/#{instance.guid}#{query_params}",
           { user_guid: nil }
         )
       end
@@ -2327,8 +2342,13 @@ module VCAP::Services::ServiceBrokers::V2
 
         it 'makes a request with the correct user_guid' do
           client.fetch_service_instance(instance, user_guid:)
+
+          service_id = instance.service.broker_provided_id
+          plan_id = instance.service_plan.broker_provided_id
+          query_params = "?plan_id=#{plan_id}&service_id=#{service_id}"
+
           expect(http_client).to have_received(:get).with(
-            "/v2/service_instances/#{instance.guid}",
+            "/v2/service_instances/#{instance.guid}#{query_params}",
             { user_guid: }
           )
         end

@@ -173,12 +173,14 @@ RSpec.describe 'Service Broker API integration' do
           end
 
           context 'when the last operation is successful' do
+            let(:fetch_binding_query) { 'plan_id=plan1-guid-here&service_id=service-guid-here' }
+
             it 'fetches the service binding details' do
               stub_async_last_operation
               async_bind_service(status: 202)
 
               service_binding = VCAP::CloudController::ServiceBinding.find(guid: @binding_guid)
-              stub_request(:get, service_binding_url(service_binding)).to_return(status: 200, body: '{"credentials": {"foo": true}}')
+              stub_request(:get, service_binding_url(service_binding, fetch_binding_query)).to_return(status: 200, body: '{"credentials": {"foo": true}}')
 
               Delayed::Worker.new.work_off
 
@@ -199,7 +201,7 @@ RSpec.describe 'Service Broker API integration' do
 
               context 'is invalid' do
                 it 'set the last operation status to failed and does not perform orphan mitigation' do
-                  stub_request(:get, service_binding_url(service_binding)).to_return(status: 200, body: 'invalid-response')
+                  stub_request(:get, service_binding_url(service_binding, fetch_binding_query)).to_return(status: 200, body: 'invalid-response')
 
                   Delayed::Worker.new.work_off
 
@@ -210,7 +212,7 @@ RSpec.describe 'Service Broker API integration' do
 
               context 'is not 200' do
                 it 'set the last operation status to failed and does not perform orphan mitigation' do
-                  stub_request(:get, service_binding_url(service_binding)).to_return(status: 204, body: '{}')
+                  stub_request(:get, service_binding_url(service_binding, fetch_binding_query)).to_return(status: 204, body: '{}')
 
                   Delayed::Worker.new.work_off
 
@@ -221,7 +223,7 @@ RSpec.describe 'Service Broker API integration' do
 
               context 'times out' do
                 it 'set the last operation status to failed and does not perform orphan mitigation' do
-                  stub_request(:get, service_binding_url(service_binding)).to_timeout
+                  stub_request(:get, service_binding_url(service_binding, fetch_binding_query)).to_timeout
 
                   Delayed::Worker.new.work_off
 

@@ -844,9 +844,11 @@ RSpec.describe 'v3 service route bindings' do
             let(:fetch_binding_body) do
               { route_service_url: }
             end
+            let(:fetch_binding_query) { { service_id: service_instance.service.broker_provided_id, plan_id: service_instance.service_plan.broker_provided_id } }
 
             before do
               stub_request(:get, broker_bind_url).
+                with(query: fetch_binding_query).
                 to_return(status: fetch_binding_status_code, body: fetch_binding_body.to_json, headers: {})
             end
 
@@ -856,6 +858,7 @@ RSpec.describe 'v3 service route bindings' do
               encoded_user_guid = Base64.strict_encode64("{\"user_id\":\"#{user.guid}\"}")
               expect(
                 a_request(:get, broker_bind_url).with(
+                  query: fetch_binding_query,
                   headers: { 'X-Broker-Api-Originating-Identity' => "cloudfoundry #{encoded_user_guid}" }
                 )
               ).to have_been_made.once
@@ -1634,12 +1637,14 @@ RSpec.describe 'v3 service route bindings' do
     context 'managed service instances' do
       let(:broker_base_url) { service_instance.service_broker.broker_url }
       let(:broker_fetch_binding_url) { "#{broker_base_url}/v2/service_instances/#{service_instance.guid}/service_bindings/#{binding.guid}" }
+      let(:broker_fetch_binding_query) { { service_id: service_instance.service.broker_provided_id, plan_id: service_instance.service_plan.broker_provided_id } }
       let(:broker_status_code) { 200 }
       let(:broker_response) { { parameters: { abra: 'kadabra', kadabra: 'alakazan' } } }
       let(:parameters_response) { { code: 200, response_object: broker_response[:parameters] } }
 
       before do
         stub_request(:get, broker_fetch_binding_url).
+          with(query: broker_fetch_binding_query).
           to_return(status: broker_status_code, body: broker_response.to_json, headers: {})
       end
 
@@ -1679,6 +1684,7 @@ RSpec.describe 'v3 service route bindings' do
         expect(
           a_request(:get, broker_fetch_binding_url).
             with(
+              query: broker_fetch_binding_query,
               headers: { 'X-Broker-Api-Originating-Identity' => "cloudfoundry #{encoded_user_guid}" }
             )
         ).to have_been_made.once
@@ -1719,6 +1725,7 @@ RSpec.describe 'v3 service route bindings' do
         context 'when the broker returns params with mixed data types' do
           before do
             stub_request(:get, broker_fetch_binding_url).
+              with(query: broker_fetch_binding_query).
               to_return(status: broker_status_code, body: "{\"parameters\":#{parameters_mixed_data_types_as_json_string}}")
           end
 

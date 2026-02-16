@@ -312,13 +312,13 @@ module VCAP::Services::ServiceBrokers::V2
     end
 
     def fetch_service_instance(instance, user_guid: nil)
-      path = service_instance_resource_path(instance)
+      path = fetch_service_instance_path(instance)
       response = @http_client.get(path, user_guid:)
       @response_parser.parse_fetch_service_instance(path, response).deep_symbolize_keys
     end
 
     def fetch_service_binding(service_binding, user_guid: nil)
-      path = service_binding_resource_path(service_binding.guid, service_binding.service_instance_guid)
+      path = fetch_service_binding_path(service_binding)
       response = @http_client.get(path, user_guid:)
       @response_parser.parse_fetch_service_binding(path, response).deep_symbolize_keys
     end
@@ -407,10 +407,26 @@ module VCAP::Services::ServiceBrokers::V2
       "#{service_binding_resource_path(service_binding.guid, service_binding.service_instance_guid)}/last_operation?#{query_params.to_query}"
     end
 
+    def fetch_service_binding_path(service_binding)
+      query_params = {
+        'service_id' => service_binding.service_instance.service.broker_provided_id,
+        'plan_id' => service_binding.service_instance.service_plan.broker_provided_id
+      }
+      "#{service_binding_resource_path(service_binding.guid, service_binding.service_instance_guid)}?#{query_params.to_query}"
+    end
+
     def service_instance_resource_path(instance, opts={})
       path = "/v2/service_instances/#{instance.guid}"
       path += '?accepts_incomplete=true' if opts[:accepts_incomplete]
       path
+    end
+
+    def fetch_service_instance_path(instance)
+      query_params = {
+        'service_id' => instance.service.broker_provided_id,
+        'plan_id' => instance.service_plan.broker_provided_id
+      }
+      "#{service_instance_resource_path(instance)}?#{query_params.to_query}"
     end
 
     def hashified_public_annotations(annotations)

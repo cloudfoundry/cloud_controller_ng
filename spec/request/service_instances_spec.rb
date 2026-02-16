@@ -641,6 +641,7 @@ RSpec.describe 'V3 service instances' do
       encoded_user_guid = Base64.strict_encode64("{\"user_id\":\"#{user.guid}\"}")
       expect(a_request(:get, "#{instance.service_broker.broker_url}/v2/service_instances/#{instance.guid}").
         with(
+          query: { service_id: service_plan.service.unique_id, plan_id: service_plan.unique_id },
           headers: { 'X-Broker-Api-Originating-Identity' => "cloudfoundry #{encoded_user_guid}" }
         )).to have_been_made.once
     end
@@ -1515,6 +1516,7 @@ RSpec.describe 'V3 service instances' do
                 to_return(status: 200, body: { state: 'succeeded' }.to_json, headers: {})
 
               stub_request(:get, "#{instance.service.service_broker.broker_url}/v2/service_instances/#{instance.guid}").
+                with(query: { service_id: service_plan.service.unique_id, plan_id: service_plan.unique_id }).
                 to_return(status: 200, body: { dashboard_url: }.to_json)
 
               execute_all_jobs(expected_successes: 1, expected_failures: 0)
@@ -2121,6 +2123,7 @@ RSpec.describe 'V3 service instances' do
                 to_return(status: last_operation_status_code, body: last_operation_response.to_json, headers: {})
 
               stub_request(:get, "#{service_instance.service_broker.broker_url}/v2/service_instances/#{service_instance.guid}").
+                with(query: { service_id: service_instance.service_plan.service.unique_id, plan_id: service_instance.service_plan.unique_id }).
                 to_return(status: 200, body: { dashboard_url: }.to_json)
             end
 

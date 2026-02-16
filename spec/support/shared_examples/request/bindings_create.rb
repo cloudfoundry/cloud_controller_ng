@@ -255,6 +255,12 @@ RSpec.shared_examples 'service credential binding create endpoint' do |klass, ch
           let(:fetch_binding_status_code) { 200 }
           let(:credentials) { { password: 'foo' } }
           let(:parameters) { { foo: 'bar', another_foo: 'another_bar' } }
+          let(:broker_fetch_binding_query) do
+            {
+              service_id: service_instance.service_plan.service.unique_id,
+              plan_id: service_instance.service_plan.unique_id
+            }
+          end
 
           let(:app_binding_attributes) do
             if check_app
@@ -277,6 +283,7 @@ RSpec.shared_examples 'service credential binding create endpoint' do |klass, ch
 
           before do
             stub_request(:get, broker_bind_url).
+              with(query: broker_fetch_binding_query).
               to_return(status: fetch_binding_status_code, body: fetch_binding_body.to_json, headers: {})
           end
 
@@ -286,6 +293,7 @@ RSpec.shared_examples 'service credential binding create endpoint' do |klass, ch
             encoded_user_guid = Base64.strict_encode64("{\"user_id\":\"#{user.guid}\"}")
             expect(
               a_request(:get, broker_bind_url).with(
+                query: broker_fetch_binding_query,
                 headers: { 'X-Broker-Api-Originating-Identity' => "cloudfoundry #{encoded_user_guid}" }
               )
             ).to have_been_made.once

@@ -1095,6 +1095,7 @@ RSpec.describe 'v3 service credential bindings' do
             expect(
               a_request(:get, broker_binding_url).
                 with(
+                  query: { service_id: instance.service.broker_provided_id, plan_id: instance.service_plan.broker_provided_id },
                   headers: { 'X-Broker-Api-Originating-Identity' => "cloudfoundry #{encoded_user_guid}" }
                 )
             ).to have_been_made.once
@@ -1157,6 +1158,7 @@ RSpec.describe 'v3 service credential bindings' do
           expect(
             a_request(:get, broker_binding_url).
               with(
+                query: { service_id: instance.service.broker_provided_id, plan_id: instance.service_plan.broker_provided_id },
                 headers: { 'X-Broker-Api-Originating-Identity' => "cloudfoundry #{encoded_user_guid}" }
               )
           ).to have_been_made.once
