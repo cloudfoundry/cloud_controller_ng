@@ -1,3 +1,4 @@
+# rubocop:disable Migration/TooManyMigrationRuns
 require 'migrations/helpers/migration_shared_context'
 require 'database/bigint_migration'
 
@@ -218,3 +219,4 @@ RSpec.shared_context 'bigint migration step3b' do
     end
   end
 end
+# rubocop:enable Migration/TooManyMigrationRuns
