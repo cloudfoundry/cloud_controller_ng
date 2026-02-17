@@ -49,7 +49,7 @@ module CloudController
 
           expect do
             StorageCliClient.new(directory_key: 'dummy-key', root_dir: 'dummy-root', resource_type: 'droplets')
-          end.to raise_error(RuntimeError, 'Unimplemented provider: UnknownProvider, implemented ones are: AzureRM, aliyun, Google')
+          end.to raise_error(RuntimeError, 'Unimplemented provider: UnknownProvider, implemented ones are: AzureRM, aliyun, Google, AWS')
 
           droplets_cfg.close!
         end

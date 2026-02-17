@@ -25,7 +25,7 @@ module CloudController
         'Google' => 'gcs'
       }.freeze
 
-      IMPLEMENTED_PROVIDERS = %w[AzureRM aliyun Google].freeze
+      IMPLEMENTED_PROVIDERS = %w[AzureRM aliyun Google AWS].freeze
 
       def initialize(directory_key:, resource_type:, root_dir:, min_size: nil, max_size: nil)
         raise 'Missing resource_type' if resource_type.nil?
