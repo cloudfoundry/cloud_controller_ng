@@ -347,7 +347,7 @@ GEM
       bigdecimal (>= 3.0)
       ostruct (>= 0.2)
     open3 (0.2.1)
-    openssl (4.0.0)
+    openssl (4.0.1)
     os (1.1.4)
     ostruct (0.6.3)
     palm_civet (1.1.0)
