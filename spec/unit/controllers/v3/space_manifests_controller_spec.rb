@@ -261,9 +261,9 @@ RSpec.describe SpaceManifestsController, type: :controller do
           errors = parsed_body['errors']
           expect(errors.size).to eq(1)
           expected_error = [
-            'detail' => "For application 'blah': Buildpack cannot be configured for a docker lifecycle app.",
-            'title' => 'CF-UnprocessableEntity',
-            'code' => 10_008
+            { 'detail' => "For application 'blah': Buildpack cannot be configured for a docker lifecycle app.",
+              'title' => 'CF-UnprocessableEntity',
+              'code' => 10_008 }
           ]
           expect(errors.map { |h| h.except('test_mode_info') }).to match_array(expected_error)
         end
@@ -305,9 +305,9 @@ RSpec.describe SpaceManifestsController, type: :controller do
           errors = parsed_body['errors']
           expect(errors.size).to eq(1)
           expected_error = [
-            'detail' => "For application 'blah': Buildpacks cannot be configured for a docker lifecycle app.",
-            'title' => 'CF-UnprocessableEntity',
-            'code' => 10_008
+            { 'detail' => "For application 'blah': Buildpacks cannot be configured for a docker lifecycle app.",
+              'title' => 'CF-UnprocessableEntity',
+              'code' => 10_008 }
           ]
           expect(errors.map { |h| h.except('test_mode_info') }).to match_array(expected_error)
         end

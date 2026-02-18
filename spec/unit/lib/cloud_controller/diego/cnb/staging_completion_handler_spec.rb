@@ -13,9 +13,9 @@ module VCAP::CloudController
               lifecycle_type: 'cnb',
               lifecycle_metadata: {
                 buildpacks: [
-                  key: 'foo',
-                  name: 'nodejs',
-                  version: '1.0.0'
+                  { key: 'foo',
+                    name: 'nodejs',
+                    version: '1.0.0' }
                 ]
               },
               process_types: {

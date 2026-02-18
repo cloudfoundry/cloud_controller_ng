@@ -18,15 +18,15 @@ LOCAL_ROLES = %w[
 ALL_PERMISSIONS = (LOCAL_ROLES + GLOBAL_SCOPES).freeze
 
 CF_NOT_AUTHORIZED = [
-  detail: 'You are not authorized to perform the requested action',
-  title: 'CF-NotAuthorized',
-  code: 10_003
+  { detail: 'You are not authorized to perform the requested action',
+    title: 'CF-NotAuthorized',
+    code: 10_003 }
 ].freeze
 
 CF_ORG_SUSPENDED = [
-  detail: 'The organization is suspended',
-  title: 'CF-OrgSuspended',
-  code: 10_017
+  { detail: 'The organization is suspended',
+    title: 'CF-OrgSuspended',
+    code: 10_017 }
 ].freeze
 
 RSpec.shared_examples 'paginated response' do |endpoint|
