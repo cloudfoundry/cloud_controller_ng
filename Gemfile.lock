@@ -117,8 +117,11 @@ GEM
       httpclient (~> 2.8, >= 2.8.2.4)
       json (~> 2.7)
       mutex_m
-    clockwork (3.0.2)
+    clockwork (4.0.0)
       activesupport
+      base64
+      bigdecimal
+      ostruct
       tzinfo
     cloudfront-signer (3.0.2)
     codeclimate-test-reporter (1.0.9)
