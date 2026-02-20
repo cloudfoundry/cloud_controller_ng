@@ -1,6 +1,11 @@
+# Derived from the palm_civet library
+# Copyright (c) 2013 Anand Gaitonde
+# Licensed under the MIT License
+# https://github.com/goodmustache/palm_civet
+
 module VCAP
   module CloudController
-    module PalmCivet
+    module ByteQuantity
       BYTE     = 1.0
       KILOBYTE = 1024 * BYTE
       MEGABYTE = 1024 * KILOBYTE

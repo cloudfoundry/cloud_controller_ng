@@ -1,4 +1,4 @@
-require 'cloud_controller/palm_civet'
+require 'cloud_controller/byte_quantity'
 
 module VCAP::CloudController
   class ByteConverter
@@ -10,8 +10,8 @@ module VCAP::CloudController
       return nil if human_readable_byte_value.blank?
       raise NonNumericError unless human_readable_byte_value.to_s.match?(/\A-?\d+(?:\.\d+)?/)
 
-      PalmCivet.to_megabytes(human_readable_byte_value.to_s)
-    rescue PalmCivet::InvalidByteQuantityError
+      ByteQuantity.to_megabytes(human_readable_byte_value.to_s)
+    rescue ByteQuantity::InvalidByteQuantityError
       raise InvalidUnitsError
     end
 
@@ -19,8 +19,8 @@ module VCAP::CloudController
       return nil if human_readable_byte_value.blank?
       raise NonNumericError unless human_readable_byte_value.to_s.match?(/\A-?\d+(?:\.\d+)?/)
 
-      PalmCivet.to_bytes(human_readable_byte_value.to_s)
-    rescue PalmCivet::InvalidByteQuantityError
+      ByteQuantity.to_bytes(human_readable_byte_value.to_s)
+    rescue ByteQuantity::InvalidByteQuantityError
       raise InvalidUnitsError
     end
 
