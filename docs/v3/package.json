@@ -4,7 +4,8 @@
   "description": "Cloud Foundry API Docs ========",
   "main": "index.js",
   "scripts": {
-    "start": "./node_modules/.bin/gulp",
+    "build:js": "node build-js.mjs",
+    "start": "npm run build:js && ./node_modules/.bin/gulp",
     "test": "echo \"Error: no test specified\" && exit 1",
     "checkdocs": "./node_modules/.bin/gulp checkdocs"
   },

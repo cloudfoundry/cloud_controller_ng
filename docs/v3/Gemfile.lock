@@ -180,6 +180,7 @@ DEPENDENCIES
   rake (>= 12.3.3)
   redcarpet (~> 3.6.1)
   sass
+  webrick
 
 BUNDLED WITH
    2.6.9

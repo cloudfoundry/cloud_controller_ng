@@ -21,7 +21,7 @@ ignore 'includes/api_resources/examples/*.json'
 activate :syntax
 
 # Sprockets removed - caused conflicts with Sass rendering
-# We'll handle JS concatenation differently
+# JavaScript bundling is now handled by esbuild (see build-js.mjs and package.json scripts)
 # activate :sprockets
 
 activate :autoprefixer do |config|
