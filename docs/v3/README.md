@@ -13,6 +13,17 @@ Getting Started
 - Start the test server: `npm start`
 - You can now see the docs at <http://localhost:8000>.
 
+Working with JavaScript
+-----------------------
+
+JavaScript files are maintained as separate source files in `source/javascripts/lib/` and `source/javascripts/app/` directories, then concatenated into `source/javascripts/all.js` by a build script.
+
+- **During development**: `npm start` automatically rebuilds the JavaScript bundle before starting the server
+- **Manual rebuild**: If you modify any JavaScript files in `lib/` or `app/`, run `npm run build:js` to regenerate `all.js`
+- **DO NOT edit** `source/javascripts/all.js` directly - it's auto-generated and your changes will be overwritten
+
+The build script (`build-js.mjs`) concatenates files in the correct dependency order. If you need to add or reorder JavaScript files, edit the `files` array in `build-js.mjs`.
+
 Making New Files
 ----------------
 
