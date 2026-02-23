@@ -62,6 +62,16 @@ module VCAP::CloudController::Diego
         expect(bbs_client).to have_received(:actual_lrps_by_process_guids).with(process_guids)
       end
 
+      context 'when the list of processes is empty' do
+        let(:processes) { [] }
+        let(:process_guids) { [] }
+
+        it 'returns an empty list and does not call diego' do
+          expect(client.actual_lrps_by_processes(processes)).to eq([])
+          expect(bbs_client).not_to have_received(:actual_lrps_by_process_guids)
+        end
+      end
+
       context 'when a Diego error is thrown' do
         before do
           allow(bbs_client).to receive(:actual_lrps_by_process_guids).with(process_guids).and_raise(::Diego::Error.new('boom'))

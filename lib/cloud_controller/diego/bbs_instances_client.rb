@@ -21,6 +21,8 @@ module VCAP::CloudController
       end
 
       def actual_lrps_by_processes(processes)
+        return [] if processes.empty?
+
         process_guids = processes.map { |process| ProcessGuid.from_process(process) }
         logger.info('actual.lrps.by.processes.request', process_guids:)
 
