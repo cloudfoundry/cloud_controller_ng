@@ -51,9 +51,7 @@ $lang-select-pressed-text: #fff; // color of language tab text when mouse is pre
 
 // DARK MODE
 ////////////////////
-// CSS custom properties for theme switching
 :root {
-  // Light mode (default)
   --main-bg: #{$main-bg};
   --nav-bg: #{$main-bg};
   --main-text: #{$main-text};
@@ -74,7 +72,6 @@ $lang-select-pressed-text: #fff; // color of language tab text when mouse is pre
   --heading-color: #{$main-text};
 }
 
-// Dark mode theme
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) {
     --main-bg: #1a1a1a;
@@ -98,7 +95,6 @@ $lang-select-pressed-text: #fff; // color of language tab text when mouse is pre
   }
 }
 
-// Manual dark mode override
 [data-theme="dark"] {
   --main-bg: #1a1a1a;
   --nav-bg: #0d0d0d;

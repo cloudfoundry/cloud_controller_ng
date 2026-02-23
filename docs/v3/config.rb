@@ -20,10 +20,6 @@ ignore 'includes/api_resources/examples/*.json'
 # Activate the syntax highlighter
 activate :syntax
 
-# Sprockets removed - caused conflicts with Sass rendering
-# JavaScript bundling is now handled by esbuild (see build-js.mjs and package.json scripts)
-# activate :sprockets
-
 activate :autoprefixer do |config|
   config.browsers = ['last 2 version', 'Firefox ESR']
   config.cascade  = false

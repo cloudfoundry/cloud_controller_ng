@@ -447,7 +447,7 @@ nav {
   pre > code {
     background-color: transparent;
     padding: 0;
-    color: inherit; // Don't override syntax highlighting colors
+    color: inherit;
   }
 
   aside {
@@ -621,7 +621,6 @@ nav {
 // DARK MODE LOGO INVERSION
 ////////////////////////////////////////////////////////////////////////////////
 
-// Invert logo in dark mode for better visibility
 [data-theme="dark"] .toc-wrapper > img {
   filter: invert(1) hue-rotate(180deg);
 }
