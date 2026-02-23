@@ -1,0 +1,26 @@
+// Theme toggle button styles
+.theme-toggle {
+  display: inline-block;
+  padding: 6px;
+  margin: 16px 0 8px 0;
+  background: var(--nav-active-bg);
+  border: 1px solid var(--border-color);
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 20px;
+  color: var(--nav-text);
+  transition: all 0.2s ease;
+  width: auto;
+  line-height: 1;
+
+  &:hover {
+    background: var(--nav-subitem-bg);
+    transform: scale(1.05);
+    border-color: var(--nav-active-text);
+  }
+
+  .theme-icon {
+    display: inline-block;
+    font-style: normal;
+  }
+}

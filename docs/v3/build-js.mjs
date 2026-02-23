@@ -19,7 +19,8 @@ const files = [
   'lib/_jquery.tocify.js',
   'lib/_imagesloaded.min.js',
   'app/_toc.js',
-  'app/_version_dropdown.js'
+  'app/_version_dropdown.js',
+  'app/_theme_toggle.js'
 ];
 
 const sourceDir = join(__dirname, 'source/javascripts');

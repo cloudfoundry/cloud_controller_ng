@@ -49,6 +49,78 @@ $lang-select-active-text: #fff; // color of selected language tab text
 $lang-select-pressed-text: #fff; // color of language tab text when mouse is pressed
 
 
+// DARK MODE
+////////////////////
+// CSS custom properties for theme switching
+:root {
+  // Light mode (default)
+  --main-bg: #{$main-bg};
+  --nav-bg: #{$main-bg};
+  --main-text: #{$main-text};
+  --nav-text: #{$gray1};
+  --nav-active-text: #{$blue1};
+  --nav-active-bg: #{$nav-active-bg};
+  --nav-subitem-bg: #{$nav-subitem-bg};
+  --code-bg: rgba(0, 0, 0, 0.05);
+  --code-text: #{$main-text};
+  --border-color: #cddce5;
+  --table-row-bg: #{$table-row-bg};
+  --aside-notice-bg: #{$aside-notice-bg};
+  --aside-warning-bg: #{$aside-warning-bg};
+  --aside-success-bg: #{$aside-success-bg};
+  --search-highlight: #f7e633;
+  --link-color: #{$blue1};
+  --link-border: #cddce5;
+  --heading-color: #{$main-text};
+}
+
+// Dark mode theme
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --main-bg: #1a1a1a;
+    --nav-bg: #0d0d0d;
+    --main-text: #e4e4e4;
+    --nav-text: #b0b0b0;
+    --nav-active-text: #5dade2;
+    --nav-active-bg: #2a2a2a;
+    --nav-subitem-bg: #1f1f1f;
+    --code-bg: rgba(255, 255, 255, 0.1);
+    --code-text: #e4e4e4;
+    --border-color: #404040;
+    --table-row-bg: #252525;
+    --aside-notice-bg: #2c4f6b;
+    --aside-warning-bg: #6b3a3c;
+    --aside-success-bg: #3a6b40;
+    --search-highlight: #b8a800;
+    --link-color: #5dade2;
+    --link-border: #404040;
+    --heading-color: #f0f0f0;
+  }
+}
+
+// Manual dark mode override
+[data-theme="dark"] {
+  --main-bg: #1a1a1a;
+  --nav-bg: #0d0d0d;
+  --main-text: #e4e4e4;
+  --nav-text: #b0b0b0;
+  --nav-active-text: #5dade2;
+  --nav-active-bg: #2a2a2a;
+  --nav-subitem-bg: #1f1f1f;
+  --code-bg: rgba(255, 255, 255, 0.1);
+  --code-text: #e4e4e4;
+  --border-color: #404040;
+  --table-row-bg: #252525;
+  --aside-notice-bg: #2c4f6b;
+  --aside-warning-bg: #6b3a3c;
+  --aside-success-bg: #3a6b40;
+  --search-highlight: #b8a800;
+  --link-color: #5dade2;
+  --link-border: #404040;
+  --heading-color: #f0f0f0;
+}
+
+
 // SIZES
 ////////////////////
 $nav-width: 230px; // width of the navbar

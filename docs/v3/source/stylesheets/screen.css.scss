@@ -3,6 +3,7 @@
 @import 'variables';
 @import 'icon-font';
 @import 'version-dropdown';
+@import 'theme-toggle';
 
 /*
 Copyright 2008-2013 Concur Technologies, Inc.
@@ -25,14 +26,14 @@ under the License.
 ////////////////////////////////////////////////////////////////////////////////
 
 html, body {
-  color: $main-text;
+  color: var(--main-text);
   padding: 0;
   margin: 0;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   font-size: $font-size-s;
   @extend %default-font;
-  background-color: $main-bg;
+  background-color: var(--main-bg);
   height: 100%;
   -webkit-text-size-adjust: none; /* Never autoresize text */
 }
@@ -69,8 +70,8 @@ h5, .h5 {
 }
 
 a, .link {
-  border-bottom: 1px dotted #cddce5;
-  color: $blue1;
+  border-bottom: 1px dotted var(--link-border);
+  color: var(--link-color);
   text-decoration: none;
   -webkit-transition: all 0.1s linear;
   -moz-transition: all 0.1s linear;
@@ -89,7 +90,7 @@ a, .link {
 }
 
 nav {
-  background: $main-bg;
+  background: var(--nav-bg);
   padding: 16px;
 }
 
@@ -105,7 +106,8 @@ nav {
   bottom: 0;
   width: $nav-width;
   font-size: 14px;
-  border-right: 1px solid #ccc;
+  border-right: 1px solid var(--border-color);
+  background-color: var(--nav-bg);
 
   // This is the logo at the top of the ToC
   & > img {
@@ -117,8 +119,10 @@ nav {
     position: relative;
 
     input {
+      background-color: var(--nav-bg);
+      color: var(--nav-text);
       border: none;
-      border-bottom: 1px solid #ccc;
+      border-bottom: 1px solid var(--border-color);
       padding: 4px 0 4px 28px;
       margin-top: $nav-v-padding;
       height: 32px;
@@ -131,7 +135,7 @@ nav {
       position: absolute;
       top: 18px;
       left: 8px;
-      color: $nav-text;
+      color: var(--nav-text);
       @extend %icon-search;
     }
   }
@@ -144,7 +148,7 @@ nav {
     margin-top: 0;
     margin-bottom: 1em;
     height: 0;
-    background: #fbfbfb;
+    background: var(--nav-subitem-bg);
     border-bottom-left-radius: 4px;
     border-bottom-right-radius: 4px;
     overflow-y: auto;
@@ -180,10 +184,10 @@ nav {
   }
 
   .toc-link {
-    color: $gray1;
+    color: var(--nav-text);
 
     &.toc-focus {
-      color: $blue1;
+      color: var(--nav-active-text);
     }
   }
 
@@ -273,7 +277,7 @@ nav {
   margin-left: $nav-width;
   position: relative;
   z-index: 10;
-  background-color: $main-bg;
+  background-color: var(--main-bg);
   min-height: 100%;
 
   padding-bottom: 1px; // prevent margin overflow
@@ -330,10 +334,11 @@ nav {
     @extend %header-font;
     padding-top: 0.5em;
     padding-bottom: 0.5em;
-    border-bottom: 1px solid #ccc;
+    border-bottom: 1px solid var(--border-color);
     margin-bottom: $h1-margin-bottom;
     margin-top: 2em;
-    border-top: 1px solid #ddd;
+    border-top: 1px solid var(--border-color);
+    color: var(--heading-color);
   }
 
   h1:first-child, div:first-child + h1 {
@@ -345,10 +350,11 @@ nav {
     @extend %header-font;
     margin-top: 4em;
     margin-bottom: 0;
-    border-top: 1px solid #ccc;
+    border-top: 1px solid var(--border-color);
     padding-top: 1.2em;
     padding-bottom: 1.2em;
     clear: both;
+    color: var(--heading-color);
   }
 
   // h2s right after h1s should bump right up
@@ -388,7 +394,7 @@ nav {
 
     th {
       padding: 5px 10px;
-      border-bottom: 1px solid #ccc;
+      border-bottom: 1px solid var(--border-color);
       vertical-align: bottom;
       @extend %header-font;
       font-size: 15px;
@@ -400,15 +406,15 @@ nav {
     }
 
     tr:last-child {
-      border-bottom: 1px solid #ccc;
+      border-bottom: 1px solid var(--border-color);
     }
 
     tr:nth-child(odd) > td {
-      background-color: lighten($table-row-bg, 4.2%);
+      background-color: var(--table-row-bg);
     }
 
     tr:nth-child(even) > td {
-      background-color: lighten($table-row-bg, 2.4%);
+      background-color: var(--main-bg);
     }
   }
 
@@ -430,7 +436,8 @@ nav {
   }
 
   code {
-    background-color: rgba(0, 0, 0, 0.05);
+    background-color: var(--code-bg);
+    color: var(--code-text);
     padding: 3px;
     border-radius: 3px;
     @extend %code-font;
@@ -440,6 +447,7 @@ nav {
   pre > code {
     background-color: transparent;
     padding: 0;
+    color: inherit; // Don't override syntax highlighting colors
   }
 
   aside {
@@ -447,15 +455,15 @@ nav {
     padding-bottom: 1em;
     margin-top: 1.5em;
     margin-bottom: 1.5em;
-    background: $aside-notice-bg;
+    background: var(--aside-notice-bg);
     line-height: 1.6;
 
     &.warning {
-      background-color: $aside-warning-bg;
+      background-color: var(--aside-warning-bg);
     }
 
     &.success {
-      background-color: $aside-success-bg;
+      background-color: var(--aside-success-bg);
     }
   }
 
@@ -607,4 +615,19 @@ nav {
 
 .highlight, .highlight .w {
   background-color: $code-background-color;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+// DARK MODE LOGO INVERSION
+////////////////////////////////////////////////////////////////////////////////
+
+// Invert logo in dark mode for better visibility
+[data-theme="dark"] .toc-wrapper > img {
+  filter: invert(1) hue-rotate(180deg);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) .toc-wrapper > img {
+    filter: invert(1) hue-rotate(180deg);
+  }
 }

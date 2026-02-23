@@ -53,6 +53,10 @@ table_of_contents = extract_table_of_contents(html)
     <nav class="toc-wrapper">
       <%= image_tag "logo.png" %>
 
+      <button id="theme-toggle" class="theme-toggle" aria-label="Toggle theme">
+        <span class="theme-icon">☾</span>
+      </button>
+
       <div class="dropdown version-dropdown">
         <button type="button" id="version-dropdown-button" class="version-dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false"><%= current_version %><span class="caret">&#x25BE;</span></button>
 
