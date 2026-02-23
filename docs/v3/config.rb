@@ -20,7 +20,9 @@ ignore 'includes/api_resources/examples/*.json'
 # Activate the syntax highlighter
 activate :syntax
 
-activate :sprockets
+# Sprockets removed - caused conflicts with Sass rendering
+# We'll handle JS concatenation differently
+# activate :sprockets
 
 activate :autoprefixer do |config|
   config.browsers = ['last 2 version', 'Firefox ESR']
