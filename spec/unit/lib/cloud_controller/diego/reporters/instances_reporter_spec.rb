@@ -453,6 +453,24 @@ module VCAP::CloudController
             end
           end
         end
+
+        context 'when an LRP is STOPPING' do
+          let(:desired_instances) { 1 }
+          let(:bbs_instances_response) do
+            [
+              make_actual_lrp(instance_guid: 'instance-a', index: 0, state: ::Diego::ActualLRPState::STOPPING, error: '', since: two_days_ago_since_epoch_ns)
+            ]
+          end
+
+          before do
+            allow(bbs_instances_client).to receive(:lrp_instances).with(process).and_return(bbs_instances_response)
+          end
+
+          it 'translates STOPPING to STOPPING' do
+            result = instances_reporter.all_instances_for_app(process)
+            expect(result[0][:state]).to eq(VCAP::CloudController::Diego::LRP_STOPPING)
+          end
+        end
       end
 
       describe '#instance_count_summary' do

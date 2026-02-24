@@ -146,6 +146,8 @@ module VCAP::CloudController
           lrp.placement_error.present? ? VCAP::CloudController::Diego::LRP_DOWN : VCAP::CloudController::Diego::LRP_STARTING
         when ::Diego::ActualLRPState::CRASHED
           VCAP::CloudController::Diego::LRP_CRASHED
+        when ::Diego::ActualLRPState::STOPPING
+          VCAP::CloudController::Diego::LRP_STOPPING
         else
           VCAP::CloudController::Diego::LRP_UNKNOWN
         end

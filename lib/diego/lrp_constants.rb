@@ -4,5 +4,6 @@ module Diego
     CLAIMED   = 'CLAIMED'.freeze
     RUNNING   = 'RUNNING'.freeze
     CRASHED   = 'CRASHED'.freeze
+    STOPPING  = 'STOPPING'.freeze
   end
 end
