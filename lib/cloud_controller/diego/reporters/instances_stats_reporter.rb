@@ -30,10 +30,25 @@ module VCAP::CloudController
       end
 
       def instances_for_processes(processes)
-        logger.debug('instances_for_processes.fetching_actual_lrps')
+        logger.info('instances_for_processes.fetching_actual_lrps')
 
         # Fetch actual_lrps for all processes
         actual_lrps = bbs_instances_client.actual_lrps_by_processes(processes)
+        logger.info(
+          'instances_for_processes.actual_lrps',
+          process_guids: processes.map(&:guid),
+          process_count: processes.length,
+          actual_lrp_count: actual_lrps.length,
+          actual_lrps_sample: actual_lrps.first(10).map do |lrp|
+            key = lrp.actual_lrp_key
+            {
+              process_guid: (pg = key&.process_guid) && ProcessGuid.cc_process_guid(pg),
+              index: key&.index,
+              since: lrp.since,
+              state: LrpStateTranslator.translate_lrp_state(lrp)
+            }
+          end
+        )
 
         lrps_by_process_guid = actual_lrps.group_by { |lrp| (pg = lrp.actual_lrp_key&.process_guid) && ProcessGuid.cc_process_guid(pg) }
 
