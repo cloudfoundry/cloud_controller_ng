@@ -747,6 +747,17 @@ module VCAP::CloudController
           end
         end
       end
+
+      context 'when the associated app is nil' do
+        before do
+          process.app = nil
+        end
+
+        it 'does not raise an error and returns nil' do
+          expect { process.run_action_user }.not_to raise_error
+          expect(process.run_action_user).to eq('vcap')
+        end
+      end
     end
 
     describe '#specified_or_detected_command' do

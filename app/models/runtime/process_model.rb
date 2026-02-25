@@ -385,7 +385,7 @@ module VCAP::CloudController
     def run_action_user
       return user if user.present?
 
-      docker? ? docker_run_action_user : AppModel::DEFAULT_CONTAINER_USER
+      app&.docker? ? docker_run_action_user : AppModel::DEFAULT_CONTAINER_USER
     end
 
     def specified_or_detected_command
