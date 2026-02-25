@@ -1,3 +1,5 @@
+require 'active_support/core_ext/module/delegation'
+
 class Module
   def logger
     Steno.logger(name)

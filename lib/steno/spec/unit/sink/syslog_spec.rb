@@ -1,4 +1,4 @@
-require 'spec_helper'
+require_relative '../../spec_helper'
 unless Steno::Sink::WINDOWS
   describe Steno::Sink::Syslog do
     let(:level) do

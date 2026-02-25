@@ -1,4 +1,4 @@
-require 'spec_helper'
+require_relative '../spec_helper'
 
 describe Steno::Logger do
   let(:logger) { described_class.new('test', []) }

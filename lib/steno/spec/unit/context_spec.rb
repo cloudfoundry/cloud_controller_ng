@@ -1,4 +1,4 @@
-require 'spec_helper'
+require_relative '../spec_helper'
 
 describe Steno::Context::Null do
   include_context 'steno context'

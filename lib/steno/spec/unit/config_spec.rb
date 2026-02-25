@@ -2,7 +2,7 @@ require 'fileutils'
 require 'tmpdir'
 require 'yaml'
 
-require 'spec_helper'
+require_relative '../spec_helper'
 
 describe Steno::Config do
   if Steno::Sink::WINDOWS

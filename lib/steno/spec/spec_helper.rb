@@ -1,5 +1,5 @@
 require 'rspec'
-
 require 'steno'
 
-Dir['./spec/support/**/*.rb'].each { |file| require file }
+# Load steno spec support files
+Dir[File.expand_path('../support/**/*.rb', __FILE__)].each { |file| require file }
