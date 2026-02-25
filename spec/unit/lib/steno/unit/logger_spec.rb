@@ -1,6 +1,7 @@
+require 'spec_helper'
 require_relative '../spec_helper'
 
-describe Steno::Logger do
+RSpec.describe Steno::Logger do
   let(:logger) { described_class.new('test', []) }
 
   it 'provides #level, #levelf, and #level? methods for each log level' do

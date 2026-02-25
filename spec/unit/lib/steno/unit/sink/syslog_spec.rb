@@ -1,6 +1,7 @@
+require 'spec_helper'
 require_relative '../../spec_helper'
 unless Steno::Sink::WINDOWS
-  describe Steno::Sink::Syslog do
+  RSpec.describe Steno::Sink::Syslog do
     let(:level) do
       Steno::Logger.lookup_level(:info)
     end

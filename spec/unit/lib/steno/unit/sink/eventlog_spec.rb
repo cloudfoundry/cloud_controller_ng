@@ -1,3 +1,4 @@
+require 'spec_helper'
 require_relative '../../spec_helper'
 if Steno::Sink::WINDOWS
   describe Steno::Sink::Eventlog do

@@ -1,6 +1,7 @@
+require 'spec_helper'
 require_relative '../spec_helper'
 
-describe Steno::TaggedLogger do
+RSpec.describe Steno::TaggedLogger do
   let(:sink) { NullSink.new }
   let(:logger) { Steno::Logger.new('test', [sink]) }
   let(:user_data) { { 'foo' => 'bar' } }

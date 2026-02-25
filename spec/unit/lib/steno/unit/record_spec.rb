@@ -1,6 +1,7 @@
+require 'spec_helper'
 require_relative '../spec_helper'
 
-describe Steno::Record do
+RSpec.describe Steno::Record do
   let(:message) { Array('test message') }
   let(:record) { described_class.new('test', :info, message) }
 

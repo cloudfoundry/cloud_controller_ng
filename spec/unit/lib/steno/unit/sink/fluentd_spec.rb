@@ -1,6 +1,7 @@
+require 'spec_helper'
 require_relative '../../spec_helper'
 
-describe Steno::Sink::IO do
+RSpec.describe Steno::Sink::IO do
   let(:level) do
     Steno::Logger.lookup_level(:info)
   end

@@ -1,8 +1,9 @@
+require 'spec_helper'
 require_relative '../spec_helper'
 
 require 'steno/json_prettifier'
 
-describe Steno::JsonPrettifier do
+RSpec.describe Steno::JsonPrettifier do
   let(:prettifier) { described_class.new }
   let(:codec) { Steno::Codec::Json.new }
 

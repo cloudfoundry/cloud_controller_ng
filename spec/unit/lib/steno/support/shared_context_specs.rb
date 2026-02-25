@@ -1,4 +1,4 @@
-shared_examples 'steno context' do
+RSpec.shared_examples 'steno context' do
   it 'supports clearing context local data' do
     context.data['test'] = 'value'
     context.clear

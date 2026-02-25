@@ -1,10 +1,11 @@
+require 'spec_helper'
 require 'fileutils'
 require 'tmpdir'
 require 'yaml'
 
 require_relative '../spec_helper'
 
-describe Steno::Config do
+RSpec.describe Steno::Config do
   if Steno::Sink::WINDOWS
     describe '.from_hash' do
       before do

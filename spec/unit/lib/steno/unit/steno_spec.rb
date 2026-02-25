@@ -1,6 +1,7 @@
+require 'spec_helper'
 require_relative '../spec_helper'
 
-describe Steno do
+RSpec.describe Steno do
   let(:config) { Steno::Config.new }
 
   before do

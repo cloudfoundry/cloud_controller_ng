@@ -1,6 +1,7 @@
+require 'spec_helper'
 require_relative '../spec_helper'
 
-describe Steno::Context::Null do
+RSpec.describe Steno::Context::Null do
   include_context 'steno context'
 
   let(:context) { described_class.new }
@@ -12,7 +13,7 @@ describe Steno::Context::Null do
   end
 end
 
-describe Steno::Context::ThreadLocal do
+RSpec.describe Steno::Context::ThreadLocal do
   include_context 'steno context'
 
   let(:context) { described_class.new }
@@ -40,7 +41,7 @@ describe Steno::Context::ThreadLocal do
   end
 end
 
-describe Steno::Context::FiberLocal do
+RSpec.describe Steno::Context::FiberLocal do
   include_context 'steno context'
 
   let(:context) { described_class.new }

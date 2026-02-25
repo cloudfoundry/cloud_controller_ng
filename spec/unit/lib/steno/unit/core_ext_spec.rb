@@ -1,3 +1,4 @@
+require 'spec_helper'
 require_relative '../spec_helper'
 
 require 'steno/core_ext'
@@ -7,7 +8,7 @@ module Foo
   end
 end
 
-describe Module do
+RSpec.describe Module do
   describe '#logger' do
     it 'requests a logger named after itself' do
       x = Foo.logger
@@ -17,7 +18,7 @@ describe Module do
   end
 end
 
-describe Class do
+RSpec.describe Class do
   describe '#logger' do
     it 'requests a logger named after itself' do
       x = Foo::Bar.logger
@@ -27,7 +28,7 @@ describe Class do
   end
 end
 
-describe Object do
+RSpec.describe Object do
   describe '#logger' do
     it 'requests a logger named after its class' do
       x = Foo::Bar.new.logger

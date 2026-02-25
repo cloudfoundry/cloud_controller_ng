@@ -1,6 +1,7 @@
+require 'spec_helper'
 require_relative '../spec_helper'
 
-describe Steno::Codec::Json do
+RSpec.describe Steno::Codec::Json do
   let(:codec) { described_class.new }
   let(:record) { make_record(data: { 'user' => 'data' }) }
 
