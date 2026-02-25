@@ -10,7 +10,7 @@ class Steno::Sink::Fluentd < Steno::Sink::Base
   #                    Key :host fluentd host (default: 127.0.0.1)
   #                    Key :port fluentd port (deafult: 24224)
   #                    Key :buffer_limit buffer limit of fluent-logger
-  def initialize(opts = {})
+  def initialize(opts={})
     super
 
     @fluentd = Fluent::Logger::FluentLogger.new(opts[:tag_prefix] || 'steno',

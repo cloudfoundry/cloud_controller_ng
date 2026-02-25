@@ -13,9 +13,7 @@ class Steno::LogLevel
     @priority = priority
   end
 
-  def to_s
-    @name.to_s
-  end
+  delegate :to_s, to: :@name
 
   def <=>(other)
     @priority <=> other.priority

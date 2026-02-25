@@ -36,7 +36,7 @@ class Steno::Logger
     def lookup_level(name)
       level = LEVELS[name]
 
-      raise Steno::Error, "Unknown level: #{name}" if level.nil?
+      raise Steno::Error.new("Unknown level: #{name}") if level.nil?
 
       level
     end
@@ -64,7 +64,7 @@ class Steno::Logger
   # @option opts [Symbol] :level  The minimum level for which this logger will
   #         emit log records. Defaults to :info.
   # @option opts [Steno::Context] :context
-  def initialize(name, sinks, opts = {})
+  def initialize(name, sinks, opts={})
     @name           = name
     @min_level      = self.class.lookup_level(opts[:level] || :info)
     @min_level_lock = Mutex.new
@@ -106,7 +106,7 @@ class Steno::Logger
   # @param [Exception] ex
 
   # @return [nil]
-  def log_exception(ex, user_data = {})
+  def log_exception(ex, user_data={})
     warn("Caught exception: #{ex}", user_data.merge(backtrace: ex.backtrace))
   end
 
@@ -117,7 +117,7 @@ class Steno::Logger
   # @param [Hash] user_data
   #
   # @return [nil]
-  def log(level_name, message = nil, user_data = nil)
+  def log(level_name, message=nil, user_data=nil)
     return unless level_active?(level_name)
 
     message = yield if block_given?
@@ -140,7 +140,7 @@ class Steno::Logger
   # @param [Hash] user_data
   #
   # @return [Steno::TaggedLogger]
-  def tag(user_data = {})
+  def tag(user_data={})
     Steno::TaggedLogger.new(self, user_data)
   end
 

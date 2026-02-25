@@ -1,5 +1,4 @@
 require 'digest/md5'
-require 'set'
 require 'yajl'
 
 module Steno
@@ -23,7 +22,7 @@ class Steno::JsonPrettifier
   class ParseError < StandardError
   end
 
-  def initialize(excluded_fields = [])
+  def initialize(excluded_fields=[])
     @time_format = '%Y-%m-%d %H:%M:%S.%6N'
     @excluded_fields = Set.new(excluded_fields)
     @max_src_len = MIN_COL_WIDTH
@@ -33,7 +32,7 @@ class Steno::JsonPrettifier
     begin
       json_record = Yajl::Parser.parse(line)
     rescue Yajl::ParseError => e
-      raise ParseError, e.to_s
+      raise ParseError.new(e.to_s)
     end
 
     format_record(json_record)
@@ -56,7 +55,7 @@ class Steno::JsonPrettifier
         exists = record.key?(field_name)
       else
         msg = "Expected the record to be a hash, but received: #{record.class}."
-        raise ParseError, msg
+        raise ParseError.new(msg)
       end
 
       fields << if exists
@@ -79,15 +78,15 @@ class Steno::JsonPrettifier
   end
 
   def format_process_id(record)
-    format('pid=%-5s', record['process_id'])
+    sprintf('pid=%-5s', record['process_id'])
   end
 
   def format_thread_id(record)
-    format('tid=%s', shortid(record['thread_id']))
+    sprintf('tid=%s', shortid(record['thread_id']))
   end
 
   def format_fiber_id(record)
-    format('fid=%s', shortid(record['fiber_id']))
+    sprintf('fid=%s', shortid(record['fiber_id']))
   end
 
   def location?(record)
@@ -103,7 +102,7 @@ class Steno::JsonPrettifier
                          parts.slice(-2, 2).join('/')
                        end
 
-    format('%s/%s:%s', trimmed_filename, record['method'], record['lineno'])
+    sprintf('%s/%s:%s', trimmed_filename, record['method'], record['lineno'])
   end
 
   def data?(record)
@@ -115,11 +114,11 @@ class Steno::JsonPrettifier
   end
 
   def format_log_level(record)
-    format('%7s', record['log_level'].upcase)
+    sprintf('%7s', record['log_level'].upcase)
   end
 
   def format_message(record)
-    format('-- %s', record['message'])
+    sprintf('-- %s', record['message'])
   end
 
   def shortid(data)

@@ -9,7 +9,7 @@ module Steno
 end
 
 class Steno::Codec::Json < Steno::Codec::Base
-  def initialize(opts = {})
+  def initialize(opts={})
     @iso8601_timestamps = opts[:iso8601_timestamps] || false
   end
 

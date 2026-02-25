@@ -18,8 +18,8 @@ describe Steno::Sink::IO do
 
       mock_sink = double('sink')
       expect(described_class).to receive(:new).with(mock_handle,
-                                                    max_retries: 10)
-                                              .and_return(mock_sink)
+                                                    max_retries: 10).
+        and_return(mock_sink)
 
       returned = described_class.for_file('path',
                                           max_retries: 10)
@@ -34,8 +34,8 @@ describe Steno::Sink::IO do
 
       mock_sink = double('sink')
       expect(described_class).to receive(:new).with(mock_handle,
-                                                    max_retries: 10)
-                                              .and_return(mock_sink)
+                                                    max_retries: 10).
+        and_return(mock_sink)
 
       returned = described_class.for_file('path',
                                           autoflush: false,
@@ -52,7 +52,7 @@ describe Steno::Sink::IO do
       io = double('io')
       expect(io).to receive(:write).with(record.message)
 
-      described_class.new(io, codec: codec).add_record(record)
+      described_class.new(io, codec:).add_record(record)
     end
 
     it 'bies default not retry on IOError' do
@@ -64,7 +64,7 @@ describe Steno::Sink::IO do
       expect(io).to receive(:write).with(record.message).ordered.and_raise(IOError)
 
       expect do
-        described_class.new(io, codec: codec).add_record(record)
+        described_class.new(io, codec:).add_record(record)
       end.to raise_error(IOError)
     end
 
@@ -74,12 +74,12 @@ describe Steno::Sink::IO do
 
       io = double('io')
 
-      expect(io).to receive(:write).exactly(3).times.with(record.message)
-                                   .and_raise(IOError)
+      expect(io).to receive(:write).exactly(3).times.with(record.message).
+        and_raise(IOError)
 
       expect do
-        described_class.new(io, codec: codec, max_retries: 2)
-                       .add_record(record)
+        described_class.new(io, codec: codec, max_retries: 2).
+          add_record(record)
       end.to raise_error(IOError)
     end
 
@@ -88,14 +88,14 @@ describe Steno::Sink::IO do
       expect(codec).to receive(:encode_record).with(record).and_return(record.message)
 
       io = double('io')
-      expect(io).to receive(:write).with(record.message).once
-                                   .and_raise(IOError)
-      expect(io).to receive(:write).with(record.message).once.ordered
-                                   .and_return(record.message)
+      expect(io).to receive(:write).with(record.message).once.
+        and_raise(IOError)
+      expect(io).to receive(:write).with(record.message).once.ordered.
+        and_return(record.message)
 
       expect do
-        described_class.new(io, codec: codec, max_retries: 1)
-                       .add_record(record)
+        described_class.new(io, codec: codec, max_retries: 1).
+          add_record(record)
       end.not_to raise_error
     end
   end

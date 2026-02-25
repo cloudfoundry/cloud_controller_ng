@@ -27,7 +27,7 @@ class Steno::Codec::Base
       if (ord_val > 31) && (ord_val < 127)
         c
       else
-        format('\\x%02x', ord_val)
+        sprintf('\\x%02x', ord_val)
       end
     end.join
   end

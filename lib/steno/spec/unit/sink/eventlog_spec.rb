@@ -12,9 +12,9 @@ if Steno::Sink::WINDOWS
     describe '#add_record' do
       it 'appends an encoded record with the correct priority' do
         eventlog = double('Win32::EventLog')
-        Win32::EventLog.should_receive(:open)
-                       .with('Application')
-                       .and_return(eventlog)
+        Win32::EventLog.should_receive(:open).
+          with('Application').
+          and_return(eventlog)
 
         sink = described_class.instance
         sink.open

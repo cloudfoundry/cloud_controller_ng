@@ -21,7 +21,7 @@ class Steno::Config
     # @param [Hash] overrides
     #
     # @return [Steno::Config]
-    def from_file(path, overrides = {})
+    def from_file(path, overrides={})
       h = YAML.load_file(path)
       h = h['logging'] || {}
       new(to_config_hash(h).merge(overrides))
@@ -45,7 +45,7 @@ class Steno::Config
 
       if hash[:file]
         max_retries = hash[:max_retries]
-        opts[:sinks] << Steno::Sink::IO.for_file(hash[:file], max_retries: max_retries)
+        opts[:sinks] << Steno::Sink::IO.for_file(hash[:file], max_retries:)
       end
 
       if Steno::Sink::WINDOWS
@@ -72,7 +72,7 @@ class Steno::Config
 
   attr_reader :sinks, :codec, :context, :default_log_level
 
-  def initialize(opts = {})
+  def initialize(opts={})
     @sinks             = opts[:sinks] || []
     @codec             = opts[:codec] || Steno::Codec::Json.new
     @context           = opts[:context] || Steno::Context::Null.new

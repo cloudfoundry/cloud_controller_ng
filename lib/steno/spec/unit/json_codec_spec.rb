@@ -58,7 +58,7 @@ describe Steno::Codec::Json do
     end
   end
 
-  def make_record(opts = {})
+  def make_record(opts={})
     Steno::Record.new(opts[:source]  || 'my_source',
                       opts[:level]   || :debug,
                       opts[:message] || 'test message',

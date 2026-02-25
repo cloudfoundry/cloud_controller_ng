@@ -13,7 +13,7 @@ class Steno::Record
   # @param [Array]  loc        Location where the record was generated.
   #        Format is [<filename>, <lineno>, <method>].
   # @param [Hash]   data       User-supplied data
-  def initialize(source, log_level, message, loc = [], data = {})
+  def initialize(source, log_level, message, loc=[], data={})
     raise 'Log level must be a Symbol' unless log_level.is_a? Symbol
 
     @timestamp  = Time.now

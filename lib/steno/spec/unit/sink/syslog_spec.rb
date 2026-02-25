@@ -46,8 +46,8 @@ unless Steno::Sink::WINDOWS
         sink = described_class.instance
         sink.open(identity)
 
-        truncated = record_with_big_message.message
-                                           .slice(0..(Steno::Sink::Syslog::MAX_MESSAGE_SIZE - 4))
+        truncated = record_with_big_message.message.
+                    slice(0..(Steno::Sink::Syslog::MAX_MESSAGE_SIZE - 4))
         truncated << Steno::Sink::Syslog::TRUNCATE_POSTFIX
         codec = double('codec')
         expect(codec).to receive(:encode_record) do |*args|

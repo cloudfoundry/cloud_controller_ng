@@ -5,7 +5,5 @@ class Module
 end
 
 class Object
-  def logger
-    self.class.logger
-  end
+  delegate :logger, to: :class
 end

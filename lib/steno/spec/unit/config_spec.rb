@@ -13,14 +13,14 @@ describe Steno::Config do
         @mock_sink_file = double('sink')
         expect(@mock_sink_file).to receive(:codec=)
         expect(Steno::Sink::IO).to receive(:for_file).with(@log_path,
-                                                           max_retries: 5)
-                                                     .and_return(@mock_sink_file)
+                                                           max_retries: 5).
+          and_return(@mock_sink_file)
 
         @mock_sink_eventlog = double('sink')
         expect(@mock_sink_eventlog).to receive(:codec=)
         expect(@mock_sink_eventlog).to receive(:open).with('test')
-        expect(Steno::Sink::Eventlog).to receive(:instance).twice
-                                                           .and_return(@mock_sink_eventlog)
+        expect(Steno::Sink::Eventlog).to receive(:instance).twice.
+          and_return(@mock_sink_eventlog)
       end
 
       after do
@@ -62,14 +62,14 @@ describe Steno::Config do
         @mock_sink_file = double('sink')
         allow(@mock_sink_file).to receive(:codec=)
         expect(Steno::Sink::IO).to receive(:for_file).with(@log_path,
-                                                           max_retries: 5)
-                                                     .and_return(@mock_sink_file)
+                                                           max_retries: 5).
+          and_return(@mock_sink_file)
 
         @mock_sink_syslog = double('sink')
         expect(@mock_sink_syslog).to receive(:codec=)
         expect(@mock_sink_syslog).to receive(:open).with('test')
-        expect(Steno::Sink::Syslog).to receive(:instance).twice
-                                                         .and_return(@mock_sink_syslog)
+        expect(Steno::Sink::Syslog).to receive(:instance).twice.
+          and_return(@mock_sink_syslog)
       end
 
       after do
@@ -158,8 +158,8 @@ describe Steno::Config do
       mock_sink = double('sink')
       expect(mock_sink).to receive(:codec=)
 
-      expect(Steno::Sink::IO).to receive(:for_file)
-        .with(@log_path, max_retries: 2).and_return(mock_sink)
+      expect(Steno::Sink::IO).to receive(:for_file).
+        with(@log_path, max_retries: 2).and_return(mock_sink)
       config = described_class.from_file(@config_path)
       expect(config.sinks.size).to eq(1)
       expect(config.sinks[0]).to eq(mock_sink)

@@ -1,5 +1,3 @@
-require 'fiber'
-
 class Fiber
   def __steno_context_data__
     @__steno_context_data__ ||= {}

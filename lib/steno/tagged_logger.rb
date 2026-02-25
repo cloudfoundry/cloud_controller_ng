@@ -29,7 +29,7 @@ class Steno::TaggedLogger
     define_logf_method(name)
   end
 
-  def initialize(proxied_logger, user_data = {})
+  def initialize(proxied_logger, user_data={})
     @proxied_logger = proxied_logger
     @user_data = user_data
   end
@@ -38,25 +38,25 @@ class Steno::TaggedLogger
     @proxied_logger.send(method, ...)
   end
 
-  def respond_to_missing?(method, include_private = false)
+  def respond_to_missing?(method, include_private=false)
     @proxied_logger.respond_to?(method, include_private) || super
   end
 
   # @see Steno::Logger#log
-  def log(level_name, message = nil, user_data = nil, &blk)
+  def log(level_name, message=nil, user_data=nil, &)
     ud = @user_data.merge(user_data || {})
 
-    @proxied_logger.log(level_name, message, ud, &blk)
+    @proxied_logger.log(level_name, message, ud, &)
   end
 
   # @see Steno::Logger#log_exception
-  def log_exception(ex, user_data = {})
+  def log_exception(ex, user_data={})
     ud = @user_data.merge(user_data || {})
 
     @proxied_logger.log_exception(ex, ud)
   end
 
-  def tag(new_user_data = {})
+  def tag(new_user_data={})
     Steno::TaggedLogger.new(proxied_logger, user_data.merge(new_user_data))
   end
 end

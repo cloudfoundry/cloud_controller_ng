@@ -14,7 +14,7 @@ class Steno::Sink::Base
   # @param [Steno::Codec::Base] formatter Transforms log records to their
   # raw, string-based representation that will be written to the underlying
   # sink.
-  def initialize(codec = nil)
+  def initialize(codec=nil)
     @codec = codec
   end
 

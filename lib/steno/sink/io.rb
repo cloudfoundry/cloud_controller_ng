@@ -14,7 +14,7 @@ class Steno::Sink::IO < Steno::Sink::Base
     #                 will not be buffered by Ruby. The key :max_retries
     #                 is forwarded to Steno::Sink::IO object during creation.
     # @return [Steno::Sink::IO]
-    def for_file(path, opts = {})
+    def for_file(path, opts={})
       autoflush = true
       autoflush = opts[:autoflush] if opts.include?(:autoflush)
 
@@ -34,7 +34,7 @@ class Steno::Sink::IO < Steno::Sink::Base
   #                    Key :max_retries takes an integer value which specifies
   #                    the number of times the write operation can be retried
   #                    when IOError is raised while writing a record.
-  def initialize(io, opts = {})
+  def initialize(io, opts={})
     super(opts[:codec])
 
     @max_retries = opts[:max_retries] || -1
