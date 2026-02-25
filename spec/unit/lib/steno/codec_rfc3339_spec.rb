@@ -1,5 +1,4 @@
 require 'spec_helper'
-require 'steno/codec_rfc3339'
 
 RSpec.describe Steno::Codec::JsonRFC3339 do
   let(:codec) { Steno::Codec::JsonRFC3339.new }
