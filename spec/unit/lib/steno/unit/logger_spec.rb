@@ -90,12 +90,4 @@ RSpec.describe Steno::Logger do
       logger.debugf('test %d %0.2f', 1, 2.2)
     end
   end
-
-  describe '#tag' do
-    it 'returns a tagged logger' do
-      tagged_logger = logger.tag('foo' => 'bar')
-      expect(tagged_logger).not_to be_nil
-      expect(tagged_logger.user_data).to eq({ 'foo' => 'bar' })
-    end
-  end
 end

@@ -78,7 +78,7 @@ Syslog.close if Syslog.opened?
 - Windows conditionals from config.rb, syslog.rb, test files
 - `WINDOWS` constant from sink/base.rb
 
-### 6. Unused Features Removal
+### 6. Unused Features Removal (Round 1)
 **Rationale**: Remove dead code not used by CCNG
 
 **Removed**:
@@ -93,6 +93,31 @@ Syslog.close if Syslog.opened?
 - `TaggedLogger` - Part of public API via `Logger#tag()`
 - `Logger#log_exception()` - Useful utility method
 - `Context::FiberLocal` - Valid alternative context type, minimal code
+
+### 7. Unused Features Removal (Round 2)
+**Rationale**: Deeper analysis revealed more unused code
+
+**Removed**:
+- `lib/steno/sink/fluentd.rb` - Fluentd sink, never configured or used (~60 lines)
+- `lib/steno/tagged_logger.rb` - TaggedLogger class, never used (~60 lines)
+- `Logger#tag()` method - Never called in CCNG (4 lines)
+- `Logger#log_exception()` method - Never called in CCNG (4 lines)
+- `Steno::Context::FiberLocal` - Fiber context, only ThreadLocal is used (~15 lines)
+- `Steno.set_logger_regexp()` - Dynamic logger level adjustment, unused (~20 lines)
+- `Steno.clear_logger_regexp()` - Counterpart method, unused (~15 lines)
+- `Steno.logger_level_snapshot()` - Logger level inspection, unused (~10 lines)
+- Removed Fluentd config line from config.rb
+- Removed `require 'steno/tagged_logger'` from steno.rb
+- Removed `require 'steno/sink/fluentd'` from sink.rb
+- Removed Fiber monkey patches from context.rb
+- Test files for removed features
+
+**Total code reduction**: ~240 lines (Round 1) + ~175 lines (Round 2) = **~415 lines removed**
+
+**What's kept**:
+- `Steno::Codec::Json` - Backward compatibility fallback for timestamp='deprecated'
+- `Steno::Context::Null` - Default fallback context
+- All log levels including debug1, debug2 - debug2 is actively used
 
 ---
 

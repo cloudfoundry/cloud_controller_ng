@@ -101,15 +101,6 @@ class Steno::Logger
     @min_level_lock.synchronize { level <= @min_level }
   end
 
-  # Convenience method for logging an exception, along with its backtrace.
-  #
-  # @param [Exception] exception
-
-  # @return [nil]
-  def log_exception(exception, user_data={})
-    warn("Caught exception: #{exception}", user_data.merge(backtrace: exception.backtrace))
-  end
-
   # Adds a record to the configured sinks.
   #
   # @param [Symbol] level_name    The level associated with the record
@@ -132,16 +123,6 @@ class Steno::Logger
     @sinks.each { |sink| sink.add_record(record) }
 
     nil
-  end
-
-  # Returns a proxy that will emit the supplied user data along with each
-  # log record.
-  #
-  # @param [Hash] user_data
-  #
-  # @return [Steno::TaggedLogger]
-  def tag(user_data={})
-    Steno::TaggedLogger.new(self, user_data)
   end
 
   private

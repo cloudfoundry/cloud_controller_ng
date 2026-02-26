@@ -42,25 +42,4 @@ RSpec.describe Steno::Context do
       t2.join
     end
   end
-
-  describe Steno::Context::FiberLocal do
-    include_context 'steno context'
-
-    let(:context) { described_class.new }
-
-    it 'stores data local to fibers' do
-      f2 = Fiber.new do
-        expect(context.data['fiber']).to be_nil
-        context.data['fiber'] = 'f2'
-      end
-
-      f1 = Fiber.new do
-        context.data['fiber'] = 'f1'
-        f2.resume
-        expect(context.data['fiber']).to eq('f1')
-      end
-
-      f1.resume
-    end
-  end
 end

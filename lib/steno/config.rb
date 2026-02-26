@@ -53,8 +53,6 @@ class Steno::Config
         opts[:sinks] << Steno::Sink::Syslog.instance
       end
 
-      opts[:sinks] << Steno::Sink::Fluentd.new(hash[:fluentd]) if hash[:fluentd]
-
       opts[:sinks] << Steno::Sink::IO.new($stdout) if opts[:sinks].empty?
 
       opts
