@@ -6,12 +6,12 @@ RSpec.describe Steno::Codec::Json do
 
   describe '#encode_record' do
     it 'encodes records as json hashes' do
-      parsed = Yajl::Parser.parse(codec.encode_record(record))
+      parsed = Oj.load(codec.encode_record(record))
       expect(parsed.class).to eq(Hash)
     end
 
     it 'encodes the timestamp as a float' do
-      parsed = Yajl::Parser.parse(codec.encode_record(record))
+      parsed = Oj.load(codec.encode_record(record))
       expect(parsed['timestamp'].class).to eq(Float)
     end
 
@@ -46,7 +46,7 @@ RSpec.describe Steno::Codec::Json do
 
       it 'encodes timestamps as UTC-formatted strings' do
         allow(record).to receive(:timestamp).and_return 1_396_473_763.811278 # 2014-04-02 22:22:43 +01:00
-        parsed = Yajl::Parser.parse(codec.encode_record(record))
+        parsed = Oj.load(codec.encode_record(record))
 
         expect(parsed['timestamp'].class).to eq(String)
         expect(parsed['timestamp']).to eq('2014-04-02T21:22:43.811278Z')

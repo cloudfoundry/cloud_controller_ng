@@ -103,11 +103,11 @@ class Steno::Logger
 
   # Convenience method for logging an exception, along with its backtrace.
   #
-  # @param [Exception] ex
+  # @param [Exception] exception
 
   # @return [nil]
-  def log_exception(ex, user_data={})
-    warn("Caught exception: #{ex}", user_data.merge(backtrace: ex.backtrace))
+  def log_exception(exception, user_data={})
+    warn("Caught exception: #{exception}", user_data.merge(backtrace: exception.backtrace))
   end
 
   # Adds a record to the configured sinks.

@@ -27,7 +27,7 @@ RSpec.describe 'db.rake', type: :migration do
     end
 
     after do
-      Steno.config.sinks.delete_if { |sink| sink.instance_variable_get(:@io) == $stdout }
+      Steno.config.sinks.delete_if { |sink| sink.instance_variable_get(:@io_obj) == $stdout }
     end
 
     it 'logs to configured sinks + STDOUT' do
@@ -35,10 +35,10 @@ RSpec.describe 'db.rake', type: :migration do
 
       # From test config:
       expect(Steno.config.sinks).to include(an_instance_of(Steno::Sink::Syslog))
-      expect(Steno.config.sinks).to include(an_instance_of(Steno::Sink::IO).and(satisfy { |sink| sink.instance_variable_get(:@io).is_a?(File) }))
+      expect(Steno.config.sinks).to include(an_instance_of(Steno::Sink::IO).and(satisfy { |sink| sink.instance_variable_get(:@io_obj).is_a?(File) }))
 
       # From db.rake:
-      expect(Steno.config.sinks).to include(an_instance_of(Steno::Sink::IO).and(satisfy { |sink| sink.instance_variable_get(:@io) == $stdout }))
+      expect(Steno.config.sinks).to include(an_instance_of(Steno::Sink::IO).and(satisfy { |sink| sink.instance_variable_get(:@io_obj) == $stdout }))
     end
 
     describe 'steno sink' do

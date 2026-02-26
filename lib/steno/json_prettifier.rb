@@ -1,5 +1,5 @@
 require 'digest/md5'
-require 'yajl'
+require 'oj'
 
 module Steno
 end
@@ -30,8 +30,8 @@ class Steno::JsonPrettifier
 
   def prettify_line(line)
     begin
-      json_record = Yajl::Parser.parse(line)
-    rescue Yajl::ParseError => e
+      json_record = Oj.load(line)
+    rescue StandardError => e
       raise ParseError.new(e.to_s)
     end
 
@@ -102,7 +102,7 @@ class Steno::JsonPrettifier
                          parts.slice(-2, 2).join('/')
                        end
 
-    sprintf('%s/%s:%s', trimmed_filename, record['method'], record['lineno'])
+    "#{trimmed_filename}/#{record['method']}:#{record['lineno']}"
   end
 
   def data?(record)

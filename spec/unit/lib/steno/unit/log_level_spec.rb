@@ -7,7 +7,9 @@ RSpec.describe Steno::LogLevel do
   it 'is comparable' do
     expect(info_level > debug_level).to be_truthy
     expect(debug_level > info_level).to be_falsey
+    # rubocop:disable Lint/BinaryOperatorWithIdenticalOperands
     expect(info_level == info_level).to be_truthy
+    # rubocop:enable Lint/BinaryOperatorWithIdenticalOperands
   end
 
   describe '#to_s' do

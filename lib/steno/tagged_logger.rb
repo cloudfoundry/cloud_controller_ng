@@ -50,10 +50,10 @@ class Steno::TaggedLogger
   end
 
   # @see Steno::Logger#log_exception
-  def log_exception(ex, user_data={})
+  def log_exception(exception, user_data={})
     ud = @user_data.merge(user_data || {})
 
-    @proxied_logger.log_exception(ex, ud)
+    @proxied_logger.log_exception(exception, ud)
   end
 
   def tag(new_user_data={})

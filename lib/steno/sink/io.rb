@@ -28,18 +28,18 @@ class Steno::Sink::IO < Steno::Sink::Base
 
   attr_reader :max_retries
 
-  # @param [IO] io     The IO object that will be written to
+  # @param [IO] io_obj     The IO object that will be written to
   # @param [Hash] opts Key :codec is used to specify a codec inheriting from
   #                    Steno::Codec::Base.
   #                    Key :max_retries takes an integer value which specifies
   #                    the number of times the write operation can be retried
   #                    when IOError is raised while writing a record.
-  def initialize(io, opts={})
+  def initialize(io_obj, opts={})
     super(opts[:codec])
 
     @max_retries = opts[:max_retries] || -1
     @io_lock = Mutex.new
-    @io = io
+    @io_obj = io_obj
   end
 
   def add_record(record)
@@ -48,7 +48,7 @@ class Steno::Sink::IO < Steno::Sink::Base
     @io_lock.synchronize do
       retries = 0
       begin
-        @io.write(bytes)
+        @io_obj.write(bytes)
       rescue IOError => e
         raise e unless retries < @max_retries
 
@@ -61,7 +61,7 @@ class Steno::Sink::IO < Steno::Sink::Base
   end
 
   def flush
-    @io_lock.synchronize { @io.flush }
+    @io_lock.synchronize { @io_obj.flush }
 
     nil
   end

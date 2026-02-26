@@ -1,4 +1,4 @@
-require 'yajl'
+require 'oj'
 require 'time'
 
 require 'steno/codec/base'
@@ -38,7 +38,7 @@ class Steno::Codec::Json < Steno::Codec::Base
 
     h['timestamp'] = Time.at(record.timestamp).utc.iso8601(6) if iso8601_timestamps?
 
-    "#{Yajl::Encoder.encode(h)}\n"
+    Oj.dump(h) + "\n"
   end
 
   def iso8601_timestamps?
