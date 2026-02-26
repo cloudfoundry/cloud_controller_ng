@@ -1,6 +1,83 @@
-# Steno Integration History
+# Steno Logging Library
 
-This directory contains the steno logging library, integrated from https://github.com/cloudfoundry/steno
+This directory contains the Steno logging library, integrated into Cloud Controller NG from the original standalone repository.
+
+**Original Repository**: https://github.com/cloudfoundry/steno
+**Integration Date**: February 25, 2026
+**Integration Method**: Git subtree (squashed)
+**Final Upstream Commit**: 5b08405f9 "Remove unused rack-test dependency and add explicit stdlib requires"
+
+## About This Integration
+
+Steno was originally maintained as a separate gem used by Cloud Controller NG. It has been integrated directly into CCNG because:
+
+1. **Low maintenance overhead**: Steno is stable and rarely changes
+2. **Compliance requirements**: CCNG requires annual dependency updates; integrating removes this overhead for a stable library
+3. **Single ownership**: Both projects are maintained by the Cloud Foundry Foundation
+
+This is a **modified version** of the original Steno library, adapted for CCNG's specific needs.
+
+## What Was Integrated
+
+- All steno library code (~1,106 lines)
+- Custom RFC3339 codec (previously in `lib/steno_custom_codec_temp/`)
+- LICENSE file (Apache 2.0 - for attribution)
+- NOTICE file (Apache 2.0 copyright notices)
+- Test suite (in `spec/unit/lib/steno/`)
+
+## What Was Excluded
+
+- Gem infrastructure (gemspec, Gemfile, Rakefile)
+- CI configuration (.github/)
+- Documentation (README, CHANGELOG, RELEASING)
+- Development tools (bin/steno-prettify, .rubocop*, etc.)
+
+## Modifications Made After Integration
+
+The following changes were made to adapt steno for CCNG:
+
+### 1. JSON Library Migration (Yajl → Oj)
+**Rationale**: Consolidate on single JSON library used throughout CCNG
+
+**Changes**:
+- `lib/steno/codec/json.rb`: `Yajl::Encoder.encode` → `Oj.dump`
+- `lib/steno/json_prettifier.rb`: `Yajl::Parser.parse` → `Oj.load`
+- `lib/steno/codec/codec_rfc3339.rb`: Added `require 'oj'`
+- `lib/steno/sink/counter.rb`: Changed to Oj, fixed to use string keys
+- Test files updated to use `Oj.load`
+
+### 2. Syslog Reopening Fix
+**Issue**: "syslog already open" error in tests after removal of syslog-logger wrapper
+
+**Fix**: Modified `lib/steno/sink/syslog.rb`:
+```ruby
+Syslog.close if Syslog.opened?
+```
+
+### 3. RuboCop Compliance
+**Variable naming**:
+- `ex` → `exception` (logger.rb, tagged_logger.rb)
+- `io` → `io_obj` (sink/io.rb - avoid shadowing IO class)
+
+**Code style**:
+- `sprintf` → string interpolation
+- Added rubocop disable comments where needed
+- Added empty class documentation
+- Added `require 'active_support/core_ext/module/delegation'` where needed
+
+### 4. Test Structure Updates
+- Moved tests from `lib/steno/spec/` to `spec/unit/lib/steno/` (CCNG convention)
+- Removed global spec_helper requires, added explicit requires per test
+- Wrapped test describes in parent `RSpec.describe` blocks
+
+### 5. Windows Support Removal
+**Rationale**: CCNG only runs on Linux
+
+**Removed**:
+- `lib/steno/sink/eventlog.rb` (Windows Event Log sink)
+- `spec/unit/lib/steno/unit/sink/eventlog_spec.rb`
+- Windows conditionals from config.rb, syslog.rb, test files
+- `WINDOWS` constant from sink/base.rb
 
 ## Original Steno Commit History (102 commits)
 
@@ -111,66 +188,10 @@ ff2f6e6 Update README to include Bug filing info per Deepika
 a1a602a Initial commit of steno
 ```
 
-## Integration Details
+## License
 
-- **Source Repository**: https://github.com/cloudfoundry/steno (house-keeping branch)
-- **Integration Method**: Git subtree with --squash
-- **Integration Date**: February 25, 2026
-- **Final Steno Commit**: 5b08405f9 "Remove unused rack-test dependency and add explicit stdlib requires"
+Steno is licensed under the Apache License 2.0. See LICENSE and NOTICE files in this directory for full copyright and license information.
 
-## What Was Integrated
+**Copyright (c) 2015 - Present CloudFoundry.org Foundation, Inc. All Rights Reserved.**
 
-- All steno library code (~1,106 lines)
-- Custom RFC3339 codec (previously in lib/steno_custom_codec_temp/)
-- LICENSE file (Apache 2.0 - copied from original repository for attribution)
-- NOTICE file (Apache 2.0 copyright notices - copied from original repository)
-- Test suite (moved to spec/unit/lib/steno/)
-
-## What Was Excluded
-
-- Gem infrastructure (gemspec, Gemfile, Rakefile)
-- CI configuration (.github/)
-- Documentation (README, CHANGELOG, RELEASING)
-- Development tools (bin/steno-prettify, .rubocop*, etc.)
-
-## Modifications Made After Integration
-
-The following changes were made to adapt steno for CCNG's needs:
-
-### 1. JSON Library Migration (Yajl → Oj)
-- **Rationale**: CCNG uses Oj throughout; consolidate on single JSON library
-- **Files changed**:
-  - `lib/steno/codec/json.rb`: Changed `Yajl::Encoder.encode` → `Oj.dump`
-  - `lib/steno/json_prettifier.rb`: Changed `Yajl::Parser.parse` → `Oj.load`, exception handling
-  - `lib/steno/codec/codec_rfc3339.rb`: Added `require 'oj'`
-  - `lib/steno/sink/counter.rb`: Changed encoder to Oj
-  - Test files updated to use `Oj.load` instead of `Yajl::Parser.parse`
-
-### 2. Syslog Reopening Fix
-- **Issue**: "syslog already open" error in tests due to removal of syslog-logger wrapper
-- **Fix**: Modified `lib/steno/sink/syslog.rb` to close syslog before reopening
-- **Added**: `Syslog.close if Syslog.opened?` before `Syslog.open()`
-
-### 3. RuboCop Compliance
-- **Variable naming**:
-  - `ex` → `exception` (in logger.rb, tagged_logger.rb)
-  - `io` → `io_obj` (in sink/io.rb to avoid shadowing IO class)
-- **Code style**:
-  - `sprintf` → string interpolation in json_prettifier.rb
-  - Added rubocop disable comments where needed (e.g., `Lint/BinaryOperatorWithIdenticalOperands`)
-  - Added empty class documentation comments
-- **Dependencies**: Added `require 'active_support/core_ext/module/delegation'` where needed
-
-### 4. Test Structure Updates
-- **Moved**: Tests from lib/steno/spec/ to spec/unit/lib/steno/ (CCNG convention)
-- **Isolation**: Removed global spec_helper requires, added explicit requires per test file
-- **Structure**: Wrapped test describes in parent `RSpec.describe` blocks for proper namespacing
-
-### 5. Windows Support Removal
-- **Rationale**: CCNG only runs on Linux; removing unused platform-specific code
-- **Removed**:
-  - `lib/steno/sink/eventlog.rb` (Windows Event Log sink)
-  - `spec/unit/lib/steno/unit/sink/eventlog_spec.rb` (Windows tests)
-  - Windows conditionals from config.rb, syslog.rb, and test files
-  - `WINDOWS` constant from sink/base.rb
-- **Simplified**: Syslog sink no longer conditionally defined
+This project contains software that is Copyright (c) 2012-2015 Pivotal Software, Inc.
