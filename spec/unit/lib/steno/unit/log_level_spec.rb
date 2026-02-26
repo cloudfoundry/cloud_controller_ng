@@ -1,5 +1,4 @@
-require 'spec_helper'
-require_relative '../spec_helper'
+require 'steno'
 
 RSpec.describe Steno::LogLevel do
   let(:info_level) { described_class.new(:info, 2) }

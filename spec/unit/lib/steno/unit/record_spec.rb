@@ -1,5 +1,4 @@
-require 'spec_helper'
-require_relative '../spec_helper'
+require 'steno'
 
 RSpec.describe Steno::Record do
   let(:message) { Array('test message') }

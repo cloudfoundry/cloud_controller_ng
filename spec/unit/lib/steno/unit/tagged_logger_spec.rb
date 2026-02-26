@@ -1,5 +1,5 @@
-require 'spec_helper'
-require_relative '../spec_helper'
+require 'steno'
+require_relative '../support/null_sink'
 
 RSpec.describe Steno::TaggedLogger do
   let(:sink) { NullSink.new }

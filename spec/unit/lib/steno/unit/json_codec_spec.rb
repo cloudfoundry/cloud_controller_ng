@@ -1,5 +1,4 @@
-require 'spec_helper'
-require_relative '../spec_helper'
+require 'steno'
 
 RSpec.describe Steno::Codec::Json do
   let(:codec) { described_class.new }

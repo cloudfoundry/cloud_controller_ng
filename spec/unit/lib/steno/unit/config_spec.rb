@@ -1,9 +1,7 @@
-require 'spec_helper'
 require 'fileutils'
 require 'tmpdir'
 require 'yaml'
-
-require_relative '../spec_helper'
+require 'steno'
 
 RSpec.describe Steno::Config do
   if Steno::Sink::WINDOWS

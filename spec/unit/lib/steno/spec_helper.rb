@@ -7,8 +7,6 @@ Dir[File.expand_path('support/**/*.rb', __dir__)].each { |file| require file }
 # Ensure syslog is closed after each steno test to avoid interfering with other tests
 RSpec.configure do |config|
   config.after do
-    if defined?(Syslog) && Syslog.opened?
-      Syslog.close
-    end
+    Syslog.close if defined?(Syslog) && Syslog.opened?
   end
 end

@@ -1,5 +1,5 @@
-require 'spec_helper'
-require_relative '../../spec_helper'
+require 'steno'
+
 unless Steno::Sink::WINDOWS
   RSpec.describe Steno::Sink::Syslog do
     let(:level) do

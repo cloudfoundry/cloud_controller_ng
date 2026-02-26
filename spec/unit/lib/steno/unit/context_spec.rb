@@ -1,63 +1,66 @@
-require 'spec_helper'
-require_relative '../spec_helper'
+require 'steno'
+require_relative '../support/shared_context_specs'
+require_relative '../support/barrier'
 
-RSpec.describe Steno::Context::Null do
-  include_context 'steno context'
+RSpec.describe Steno::Context do
+  describe Steno::Context::Null do
+    include_context 'steno context'
 
-  let(:context) { described_class.new }
+    let(:context) { described_class.new }
 
-  it 'stores no data' do
-    expect(context.data).to eq({})
-    context.data['foo'] = 'bar'
-    expect(context.data).to eq({})
+    it 'stores no data' do
+      expect(context.data).to eq({})
+      context.data['foo'] = 'bar'
+      expect(context.data).to eq({})
+    end
   end
-end
 
-RSpec.describe Steno::Context::ThreadLocal do
-  include_context 'steno context'
+  describe Steno::Context::ThreadLocal do
+    include_context 'steno context'
 
-  let(:context) { described_class.new }
+    let(:context) { described_class.new }
 
-  it 'stores data local to threads' do
-    b1 = Barrier.new
-    b2 = Barrier.new
+    it 'stores data local to threads' do
+      b1 = Barrier.new
+      b2 = Barrier.new
 
-    t1 = Thread.new do
-      context.data['thread'] = 't1'
-      b1.release
-      b2.wait
-      expect(context.data['thread']).to eq('t1')
+      t1 = Thread.new do
+        context.data['thread'] = 't1'
+        b1.release
+        b2.wait
+        expect(context.data['thread']).to eq('t1')
+      end
+
+      t2 = Thread.new do
+        b1.wait
+        expect(context.data['thread']).to be_nil
+        context.data['thread'] = 't2'
+        b2.release
+      end
+
+      t1.join
+      t2.join
     end
-
-    t2 = Thread.new do
-      b1.wait
-      expect(context.data['thread']).to be_nil
-      context.data['thread'] = 't2'
-      b2.release
-    end
-
-    t1.join
-    t2.join
   end
-end
 
-RSpec.describe Steno::Context::FiberLocal do
-  include_context 'steno context'
+  describe Steno::Context::FiberLocal do
+    include_context 'steno context'
 
-  let(:context) { described_class.new }
+    let(:context) { described_class.new }
 
-  it 'stores data local to fibers' do
-    f2 = Fiber.new do
-      expect(context.data['fiber']).to be_nil
-      context.data['fiber'] = 'f2'
+    it 'stores data local to fibers' do
+      f2 = Fiber.new do
+        expect(context.data['fiber']).to be_nil
+        context.data['fiber'] = 'f2'
+      end
+
+      f1 = Fiber.new do
+        context.data['fiber'] = 'f1'
+        f2.resume
+        expect(context.data['fiber']).to eq('f1')
+      end
+
+      f1.resume
     end
-
-    f1 = Fiber.new do
-      context.data['fiber'] = 'f1'
-      f2.resume
-      expect(context.data['fiber']).to eq('f1')
-    end
-
-    f1.resume
   end
 end
