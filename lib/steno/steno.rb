@@ -7,7 +7,6 @@ require 'steno/logger'
 require 'steno/tagged_logger'
 require 'steno/record'
 require 'steno/sink'
-require 'steno/version'
 
 module Steno
   class << self

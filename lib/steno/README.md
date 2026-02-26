@@ -34,14 +34,13 @@ This is a **modified version** of the original Steno library, adapted for CCNG's
 
 ## Modifications Made After Integration
 
-The following changes were made to adapt steno for CCNG:
+The following changes were made to adapt steno for CCNG. **When making future modifications to this integrated library, please document them in this section.**
 
 ### 1. JSON Library Migration (Yajl → Oj)
 **Rationale**: Consolidate on single JSON library used throughout CCNG
 
 **Changes**:
 - `lib/steno/codec/json.rb`: `Yajl::Encoder.encode` → `Oj.dump`
-- `lib/steno/json_prettifier.rb`: `Yajl::Parser.parse` → `Oj.load`
 - `lib/steno/codec/codec_rfc3339.rb`: Added `require 'oj'`
 - `lib/steno/sink/counter.rb`: Changed to Oj, fixed to use string keys
 - Test files updated to use `Oj.load`
@@ -78,6 +77,34 @@ Syslog.close if Syslog.opened?
 - `spec/unit/lib/steno/unit/sink/eventlog_spec.rb`
 - Windows conditionals from config.rb, syslog.rb, test files
 - `WINDOWS` constant from sink/base.rb
+
+### 6. Unused Features Removal
+**Rationale**: Remove dead code not used by CCNG
+
+**Removed**:
+- `lib/steno/version.rb` - Version constant no longer needed (not a gem)
+- `lib/steno/json_prettifier.rb` - CLI tool for prettifying logs, unused (~110 lines)
+- `lib/steno/core_ext.rb` - Monkey patches for `.logger` on Module/Class/Object, CCNG uses `Steno.logger()` instead (~50 lines)
+- `spec/unit/lib/steno/unit/json_prettifier_spec.rb` - Tests for removed feature
+- `spec/unit/lib/steno/unit/core_ext_spec.rb` - Tests for removed feature
+- Removed `require 'steno/version'` from steno.rb
+
+**What's kept** (even if unused):
+- `TaggedLogger` - Part of public API via `Logger#tag()`
+- `Logger#log_exception()` - Useful utility method
+- `Context::FiberLocal` - Valid alternative context type, minimal code
+
+---
+
+## Making Future Modifications
+
+If you modify this integrated steno library:
+
+1. **Document changes** in the "Modifications Made After Integration" section above
+2. **Include rationale** for why the change was made
+3. **List affected files** and what changed
+4. **Run tests** to ensure nothing breaks: `bundle exec rspec spec/unit/lib/steno/`
+5. **Update this README** in the same commit as your changes
 
 ## Original Steno Commit History (102 commits)
 
