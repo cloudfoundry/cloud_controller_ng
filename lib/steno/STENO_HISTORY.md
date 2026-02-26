@@ -123,6 +123,7 @@ a1a602a Initial commit of steno
 - All steno library code (~1,106 lines)
 - Custom RFC3339 codec (previously in lib/steno_custom_codec_temp/)
 - LICENSE file (Apache 2.0 - copied from original repository for attribution)
+- NOTICE file (Apache 2.0 copyright notices - copied from original repository)
 - Test suite (moved to spec/unit/lib/steno/)
 
 ## What Was Excluded
