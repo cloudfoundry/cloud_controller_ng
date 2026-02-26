@@ -48,12 +48,7 @@ class Steno::Config
         opts[:sinks] << Steno::Sink::IO.for_file(hash[:file], max_retries:)
       end
 
-      if Steno::Sink::WINDOWS
-        if hash[:eventlog]
-          Steno::Sink::Eventlog.instance.open(hash[:eventlog])
-          opts[:sinks] << Steno::Sink::Eventlog.instance
-        end
-      elsif hash[:syslog]
+      if hash[:syslog]
         Steno::Sink::Syslog.instance.open(hash[:syslog])
         opts[:sinks] << Steno::Sink::Syslog.instance
       end

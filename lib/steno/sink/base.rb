@@ -1,8 +1,5 @@
-require 'rbconfig'
-
 module Steno
   module Sink
-    WINDOWS = (RbConfig::CONFIG['host_os'] =~ /mswin|mingw|cygwin/)
   end
 end
 

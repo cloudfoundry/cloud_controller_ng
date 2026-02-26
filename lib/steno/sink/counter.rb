@@ -28,7 +28,7 @@ class Steno::Sink::Counter < Steno::Sink::Base
     hash = {}
     @mutex.synchronize do
       Steno::Logger::LEVELS.each_key do |level_name|
-        hash[level_name] = @counts.fetch(level_name.to_s, 0)
+        hash[level_name.to_s] = @counts.fetch(level_name.to_s, 0)
       end
     end
     Oj.dump(hash)
