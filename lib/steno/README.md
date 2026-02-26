@@ -62,7 +62,8 @@ Syslog.close if Syslog.opened?
 - `sprintf` → string interpolation
 - Added rubocop disable comments where needed
 - Added empty class documentation
-- Added `require 'active_support/core_ext/module/delegation'` where needed
+- `Rails/Delegate` cop: Converted `def to_s; @name.to_s; end` to `delegate :to_s, to: :@name` in `log_level.rb`
+  - Required adding `require 'active_support/core_ext/module/delegation'`
 
 ### 4. Test Structure Updates
 - Moved tests from `lib/steno/spec/` to `spec/unit/lib/steno/` (CCNG convention)
