@@ -35,6 +35,7 @@ class Steno::Sink::Syslog < Steno::Sink::Base
 
   def add_record(record)
     return if record.log_level == :off
+    return unless @syslog
 
     record = truncate_record(record)
     msg = @codec.encode_record(record)

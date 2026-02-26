@@ -17,8 +17,6 @@ RSpec.describe Steno::Sink::Syslog do
   describe '#add_record' do
     after do
       Syslog.close if Syslog.opened?
-      # Reset the singleton's syslog instance to prevent mock leakage between tests
-      described_class.instance.instance_variable_set(:@syslog, nil)
     end
 
     it 'appends an encoded record with the correct priority' do

@@ -4,7 +4,7 @@ require 'yaml'
 require 'steno'
 
 RSpec.describe Steno::Config do
-  describe '.from_hash' do
+  describe '.from_hash', :skip_syslog_reset do
     before do
       @log_path = 'some_file'
 
@@ -113,7 +113,7 @@ RSpec.describe Steno::Config do
       expect(config.sinks[0]).to eq(mock_sink)
     end
 
-    it "adds a syslog sink if the 'syslog' key is specified" do
+    it "adds a syslog sink if the 'syslog' key is specified", :skip_syslog_reset do
       write_config(@config_path, { 'syslog' => 'test' })
       mock_sink = double('sink')
       expect(mock_sink).to receive(:open).with('test')
