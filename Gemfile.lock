@@ -579,6 +579,7 @@ GEM
       spring (>= 0.9.1)
     statsd-ruby (1.5.0)
     stringio (3.2.0)
+    syslog (0.1.2)
     talentbox-delayed_job_sequel (4.4.0)
       delayed_job (~> 4.1)
       sequel (>= 5.0, < 6.0)
@@ -606,7 +607,6 @@ GEM
     webrick (1.9.2)
     xml-simple (1.1.9)
       rexml
-    yajl-ruby (1.4.3)
     yard (0.9.38)
     yard-activesupport-concern (0.0.1)
       yard (>= 0.8)
@@ -697,13 +697,13 @@ DEPENDENCIES
   spring
   spring-commands-rspec
   statsd-ruby (~> 1.5.0)
+  syslog
   talentbox-delayed_job_sequel (~> 4.4.0)
   timecop
   uri (~> 1.1)
   vmstat (~> 2.3)
   webmock (> 2.3.1)
   webrick (~> 1.9.2)
-  yajl-ruby (~> 1.0)
 
 BUNDLED WITH
    2.6.9
