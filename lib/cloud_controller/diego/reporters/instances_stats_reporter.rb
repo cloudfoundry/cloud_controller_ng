@@ -47,15 +47,7 @@ module VCAP::CloudController
           instances = {}
           # Fill in the instances up to the max of desired instances and actual instances
           [process.instances, newest_lrp_by_index.length].max.times do |idx|
-            lrp = newest_lrp_by_index[idx]
-            instances[idx] = if lrp
-                               {
-                                 state: LrpStateTranslator.translate_lrp_state(lrp),
-                                 since: nanoseconds_to_seconds(current_time_since_epoch_ns - lrp.since)
-                               }
-                             else
-                               { state: VCAP::CloudController::Diego::LRP_DOWN }
-                             end
+            instances[idx] = instance_hash(newest_lrp_by_index[idx], process, current_time_since_epoch_ns)
           end
 
           results[process.guid] = instances
@@ -67,6 +59,19 @@ module VCAP::CloudController
       private
 
       attr_reader :bbs_instances_client
+
+      def instance_hash(lrp, process, current_time_since_epoch_ns)
+        if lrp.nil?
+          { state: VCAP::CloudController::Diego::LRP_DOWN }
+        elsif process.stopped?
+          { state: app_instance_stopping_state }
+        else
+          {
+            state: LrpStateTranslator.translate_lrp_state(lrp),
+            since: nanoseconds_to_seconds(current_time_since_epoch_ns - lrp.since)
+          }
+        end
+      end
 
       def get_stats(desired_lrp, process)
         log_cache_data, log_cache_errors = envelopes(desired_lrp, process)
@@ -129,7 +134,7 @@ module VCAP::CloudController
         if bbs_instances_client.lrp_instances(process).empty?
           [fill_unreported_instances_with_down_instances({}, process, flat: false), []]
         else
-          state = Config.config.get(:app_instance_stopping_state) ? VCAP::CloudController::Diego::LRP_STOPPING : VCAP::CloudController::Diego::LRP_DOWN
+          state = app_instance_stopping_state
           # case when no desired_lrp exists but an actual_lrp
           logger.debug("Actual LRP found, setting state to #{state}", process_guid: process.guid)
           actual_lrp_info(process, nil, nil, nil, nil, state)
@@ -248,6 +253,10 @@ module VCAP::CloudController
         %i[container_port container_tls_proxy_port host_port host_tls_proxy_port].index_with do |field_name|
           port_mapping.send(field_name)
         end
+      end
+
+      def app_instance_stopping_state
+        @app_instance_stopping_state ||= Config.config.get(:app_instance_stopping_state) ? VCAP::CloudController::Diego::LRP_STOPPING : VCAP::CloudController::Diego::LRP_DOWN
       end
     end
   end

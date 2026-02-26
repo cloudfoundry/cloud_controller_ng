@@ -6,7 +6,7 @@ module VCAP::CloudController
     RSpec.describe InstancesStatsReporter do
       subject(:instances_reporter) { InstancesStatsReporter.new(bbs_instances_client, log_cache_client) }
       let(:app) { AppModel.make }
-      let(:process) { ProcessModel.make(instances: desired_instances, app: app) }
+      let(:process) { ProcessModel.make(instances: desired_instances, app: app, state: ProcessModel::STARTED) }
       let(:desired_instances) { 1 }
       let(:bbs_instances_client) { instance_double(BbsInstancesClient) }
       let(:log_cache_client) { instance_double(Logcache::ContainerMetricBatcher) }
@@ -749,6 +749,21 @@ module VCAP::CloudController
                                       }
                                     })
           end
+
+          context 'when the process is in state STOPPED' do
+            before { process.update(state: ProcessModel::STOPPED) }
+
+            it 'returns all instances as STOPPING' do
+              instances = subject.instances_for_processes([process])
+              expect(instances).to eq({
+                                        process.guid => {
+                                          0 => { state: 'STOPPING' },
+                                          1 => { state: 'STOPPING' },
+                                          2 => { state: 'STOPPING' }
+                                        }
+                                      })
+            end
+          end
         end
 
         context 'with multiple actual lrps for the same index' do
@@ -784,7 +799,7 @@ module VCAP::CloudController
         end
 
         context 'with multiple processes' do
-          let(:second_process) { ProcessModel.make }
+          let(:second_process) { ProcessModel.make(state: ProcessModel::STARTED) }
           let(:second_process_actual_lrp_0) do
             ::Diego::Bbs::Models::ActualLRP.new(
               actual_lrp_key: ::Diego::Bbs::Models::ActualLRPKey.new(process_guid: second_process.guid + 'version', index: 0),

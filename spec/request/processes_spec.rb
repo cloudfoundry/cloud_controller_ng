@@ -773,7 +773,7 @@ RSpec.describe 'Processes' do
   end
 
   describe 'GET /v3/processes/:guid/process_instances' do
-    let(:process) { VCAP::CloudController::ProcessModel.make(:process, app: app_model) }
+    let(:process) { VCAP::CloudController::ProcessModel.make(:process, app: app_model, state: VCAP::CloudController::ProcessModel::STARTED) }
     let(:two_days_ago_since_epoch_ns) { 2.days.ago.to_f * 1e9 }
     let(:two_days_in_seconds) { 60 * 60 * 24 * 2 }
     let(:second_in_ns) { 1_000_000_000 }
