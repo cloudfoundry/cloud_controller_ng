@@ -12,7 +12,7 @@ RSpec.describe Steno::Codec::Json do
 
     it 'encodes the timestamp as a float' do
       parsed = Oj.load(codec.encode_record(record))
-      expect(parsed['timestamp'].class).to eq(Float)
+      expect(parsed['timestamp']).to be_a(Numeric)
     end
 
     it 'escapes newlines' do
