@@ -2,4 +2,13 @@
 # This file loads steno's support files for its unit tests
 # The main spec_helper is loaded by each test file with require 'spec_helper'
 
-Dir[File.expand_path('../support/**/*.rb', __FILE__)].each { |file| require file }
+Dir[File.expand_path('support/**/*.rb', __dir__)].each { |file| require file }
+
+# Ensure syslog is closed after each steno test to avoid interfering with other tests
+RSpec.configure do |config|
+  config.after do
+    if defined?(Syslog) && Syslog.opened?
+      Syslog.close
+    end
+  end
+end

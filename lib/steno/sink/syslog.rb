@@ -29,6 +29,8 @@ unless Steno::Sink::WINDOWS
 
     def open(identity)
       @identity = identity
+      # Close syslog if it's already open before reopening with new identity
+      Syslog.close if Syslog.opened?
       @syslog = Syslog.open(@identity, Syslog::LOG_PID | Syslog::LOG_CONS)
     end
 
