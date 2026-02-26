@@ -205,6 +205,13 @@ each_run_block = proc do
       Timecop.return
     end
 
+    rspec_config.after do
+      # Reset the Syslog sink singleton to prevent mock leakage between tests
+      if defined?(Steno::Sink::Syslog)
+        Steno::Sink::Syslog.instance.instance_variable_set(:@syslog, nil)
+      end
+    end
+
     rspec_config.after(:each, type: :legacy_api) { add_deprecation_warning }
 
     RspecApiDocumentation.configure do |c|
