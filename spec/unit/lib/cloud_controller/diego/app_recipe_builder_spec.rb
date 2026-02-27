@@ -564,16 +564,6 @@ module VCAP::CloudController
                               log_source: HEALTH_LOG_SOURCE,
                               suppress_log_output: true
                             )
-                          ),
-                          ::Diego::Bbs::Models::Action.new(
-                            run_action: ::Diego::Bbs::Models::RunAction.new(
-                              user: 'lrp-action-user',
-                              path: '/tmp/lifecycle/healthcheck',
-                              args: ['-port=5555', '-timeout=10s'],
-                              resource_limits: ::Diego::Bbs::Models::ResourceLimits.new(nofile: expected_file_descriptor_limit),
-                              log_source: HEALTH_LOG_SOURCE,
-                              suppress_log_output: true
-                            )
                           )
                         ]
                       )
@@ -582,10 +572,16 @@ module VCAP::CloudController
                 )
               end
 
-              it 'adds a http healthcheck action using the first port' do
+              it 'adds a http healthcheck action using only the first port' do
                 lrp = builder.build_app_lrp
 
                 expect(lrp.monitor).to eq(expected_monitor_action)
+              end
+
+              it 'does not add monitor actions for additional ports' do
+                lrp = builder.build_app_lrp
+                actions = lrp.monitor.timeout_action.action.parallel_action.actions
+                expect(actions.size).to eq(1)
               end
 
               it 'adds an HTTP health check definition using the first port' do
@@ -608,10 +604,9 @@ module VCAP::CloudController
                 expect(monitor_args).to eq(['-port=4444', '-uri=http-endpoint'])
               end
 
-              it 'keeps a TCP health check definition for other ports' do
-                lrp       = builder.build_app_lrp
-                tcp_check = lrp.check_definition.checks[1].tcp_check
-                expect(tcp_check.port).to eq(5555)
+              it 'does not add TCP health check definitions for other ports' do
+                lrp = builder.build_app_lrp
+                expect(lrp.check_definition.checks.size).to eq(1)
               end
             end
 
@@ -715,10 +710,9 @@ module VCAP::CloudController
                 expect(http_check.request_timeout_ms).to eq(0)
               end
 
-              it 'keeps a TCP readiness health check definition for other ports' do
-                lrp       = builder.build_app_lrp
-                tcp_check = lrp.check_definition.readiness_checks[1].tcp_check
-                expect(tcp_check.port).to eq(5555)
+              it 'does not add TCP readiness health check definitions for other ports' do
+                lrp = builder.build_app_lrp
+                expect(lrp.check_definition.readiness_checks.size).to eq(1)
               end
             end
 

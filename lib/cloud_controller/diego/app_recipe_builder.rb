@@ -213,7 +213,7 @@ module VCAP::CloudController
       def generate_readiness_health_check_definition(lrp_builder)
         return [] unless MONITORED_READINESS_HEALTH_CHECK_TYPES.include?(process.readiness_health_check_type)
 
-        ports = lrp_builder.ports
+        ports = readiness_health_check_ports(lrp_builder)
         readiness_checks = []
         ports.each_with_index do |port, index|
           readiness_checks << build_readiness_check(port, index)
@@ -224,7 +224,7 @@ module VCAP::CloudController
       def generate_liveness_and_startup_health_check_defintion(lrp_builder)
         return [] unless MONITORED_HEALTH_CHECK_TYPES.include?(process.health_check_type)
 
-        desired_ports = lrp_builder.ports
+        desired_ports = health_check_ports(lrp_builder)
         checks        = []
         desired_ports.each_with_index do |port, index|
           checks << build_check(port, index)
@@ -280,7 +280,7 @@ module VCAP::CloudController
       def generate_monitor_action(lrp_builder)
         return unless MONITORED_HEALTH_CHECK_TYPES.include?(process.health_check_type)
 
-        desired_ports = lrp_builder.ports
+        desired_ports = health_check_ports(lrp_builder)
         actions       = []
         desired_ports.each_with_index do |port, index|
           actions << build_action(lrp_builder, port, index)
@@ -303,6 +303,22 @@ module VCAP::CloudController
           log_source: HEALTH_LOG_SOURCE,
           suppress_log_output: true
         )
+      end
+
+      def health_check_ports(lrp_builder)
+        if process.health_check_type == HealthCheckTypes::HTTP
+          lrp_builder.ports.first(1)
+        else
+          lrp_builder.ports
+        end
+      end
+
+      def readiness_health_check_ports(lrp_builder)
+        if process.readiness_health_check_type == HealthCheckTypes::HTTP
+          lrp_builder.ports.first(1)
+        else
+          lrp_builder.ports
+        end
       end
 
       def generate_network
