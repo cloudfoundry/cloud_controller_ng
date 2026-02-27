@@ -1,4 +1,4 @@
-require 'spec_helper'
+require 'lightweight_spec_helper'
 require 'locket/lock_worker'
 require 'locket/lock_runner'
 

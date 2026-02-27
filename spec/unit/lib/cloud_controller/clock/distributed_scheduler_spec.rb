@@ -1,4 +1,4 @@
-require 'spec_helper'
+require 'lightweight_spec_helper'
 require 'cloud_controller/clock/distributed_scheduler'
 
 module VCAP::CloudController
