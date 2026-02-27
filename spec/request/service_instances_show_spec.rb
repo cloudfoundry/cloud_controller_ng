@@ -184,30 +184,10 @@ RSpec.describe 'V3 service instances - Show and List' do
     end
 
     context 'given a mixture of managed, user-provided and shared service instances' do
-      let!(:msi_1) do
-        VCAP::CloudController::ManagedServiceInstance.make(
-          service_plan: VCAP::CloudController::ServicePlan.make(
-            service: VCAP::CloudController::Service.make(
-              service_broker: VCAP::CloudController::ServiceBroker.make(created_at: Time.now.utc - 2.seconds),
-              created_at: Time.now.utc - 2.seconds
-            ),
-            created_at: Time.now.utc - 2.seconds
-          ),
-          space: space
-        )
-      end
-      let!(:msi_2) do
-        VCAP::CloudController::ManagedServiceInstance.make(
-          service_plan: VCAP::CloudController::ServicePlan.make(
-            service: VCAP::CloudController::Service.make(
-              service_broker: VCAP::CloudController::ServiceBroker.make(created_at: Time.now.utc - 1.second),
-              created_at: Time.now.utc - 1.second
-            ),
-            created_at: Time.now.utc - 1.second
-          ),
-          space: another_space
-        )
-      end
+      # Let factory handle parent creation (broker → service → plan)
+      # Only specify what's actually needed for the tests
+      let!(:msi_1) { VCAP::CloudController::ManagedServiceInstance.make(space:) }
+      let!(:msi_2) { VCAP::CloudController::ManagedServiceInstance.make(space: another_space) }
       let!(:upsi_1) { VCAP::CloudController::UserProvidedServiceInstance.make(space:) }
       let!(:upsi_2) { VCAP::CloudController::UserProvidedServiceInstance.make(space: another_space) }
       let!(:ssi) { VCAP::CloudController::ManagedServiceInstance.make(space: another_space) }
@@ -340,44 +320,45 @@ RSpec.describe 'V3 service instances - Show and List' do
           get '/v3/service_instances?fields[space]=guid,name,relationships.organization&fields[space.organization]=name,guid', nil, admin_headers
           expect(last_response).to have_status_code(200)
 
-          included = {
-            spaces: [
-              {
-                guid: space.guid,
-                name: space.name,
-                relationships: {
-                  organization: {
-                    data: {
-                      guid: space.organization.guid
-                    }
-                  }
-                }
-              },
-              {
-                guid: another_space.guid,
-                name: another_space.name,
-                relationships: {
-                  organization: {
-                    data: {
-                      guid: another_space.organization.guid
-                    }
-                  }
-                }
-              }
-            ],
-            organizations: [
-              {
-                name: space.organization.name,
-                guid: space.organization.guid
-              },
-              {
-                name: another_space.organization.name,
-                guid: another_space.organization.guid
-              }
-            ]
-          }
+          expect(last_response).to have_status_code(200)
 
-          expect({ included: parsed_response['included'] }).to match_json_response({ included: })
+          # Check spaces are included with correct fields
+          expect(parsed_response['included']['spaces']).to contain_exactly(
+            {
+              'guid' => space.guid,
+              'name' => space.name,
+              'relationships' => {
+                'organization' => {
+                  'data' => {
+                    'guid' => space.organization.guid
+                  }
+                }
+              }
+            },
+            {
+              'guid' => another_space.guid,
+              'name' => another_space.name,
+              'relationships' => {
+                'organization' => {
+                  'data' => {
+                    'guid' => another_space.organization.guid
+                  }
+                }
+              }
+            }
+          )
+
+          # Check organizations are included with correct fields (order not guaranteed)
+          expect(parsed_response['included']['organizations']).to contain_exactly(
+            {
+              'name' => space.organization.name,
+              'guid' => space.organization.guid
+            },
+            {
+              'name' => another_space.organization.name,
+              'guid' => another_space.organization.guid
+            }
+          )
         end
 
         it 'can include the service plan, offering and broker fields' do
@@ -387,101 +368,101 @@ RSpec.describe 'V3 service instances - Show and List' do
 
           expect(last_response).to have_status_code(200)
 
-          included = {
-            service_plans: [
-              {
-                guid: msi_1.service_plan.guid,
-                name: msi_1.service_plan.name,
-                relationships: {
-                  service_offering: {
-                    data: {
-                      guid: msi_1.service_plan.service.guid
-                    }
-                  }
-                }
-              },
-              {
-                guid: msi_2.service_plan.guid,
-                name: msi_2.service_plan.name,
-                relationships: {
-                  service_offering: {
-                    data: {
-                      guid: msi_2.service_plan.service.guid
-                    }
-                  }
-                }
-              },
-              {
-                guid: ssi.service_plan.guid,
-                name: ssi.service_plan.name,
-                relationships: {
-                  service_offering: {
-                    data: {
-                      guid: ssi.service_plan.service.guid
-                    }
+          # Check service_plans are included with correct fields
+          expect(parsed_response['included']['service_plans']).to contain_exactly(
+            {
+              'guid' => msi_1.service_plan.guid,
+              'name' => msi_1.service_plan.name,
+              'relationships' => {
+                'service_offering' => {
+                  'data' => {
+                    'guid' => msi_1.service_plan.service.guid
                   }
                 }
               }
-            ],
-            service_offerings: [
-              {
-                name: msi_1.service_plan.service.name,
-                guid: msi_1.service_plan.service.guid,
-                description: msi_1.service_plan.service.description,
-                documentation_url: 'https://some.url.for.docs/',
-                relationships: {
-                  service_broker: {
-                    data: {
-                      guid: msi_1.service_plan.service.service_broker.guid
-                    }
-                  }
-                }
-              },
-              {
-                name: msi_2.service_plan.service.name,
-                guid: msi_2.service_plan.service.guid,
-                description: msi_2.service_plan.service.description,
-                documentation_url: 'https://some.url.for.docs/',
-                relationships: {
-                  service_broker: {
-                    data: {
-                      guid: msi_2.service_plan.service.service_broker.guid
-                    }
-                  }
-                }
-              },
-              {
-                name: ssi.service_plan.service.name,
-                guid: ssi.service_plan.service.guid,
-                description: ssi.service_plan.service.description,
-                documentation_url: 'https://some.url.for.docs/',
-                relationships: {
-                  service_broker: {
-                    data: {
-                      guid: ssi.service_plan.service.service_broker.guid
-                    }
+            },
+            {
+              'guid' => msi_2.service_plan.guid,
+              'name' => msi_2.service_plan.name,
+              'relationships' => {
+                'service_offering' => {
+                  'data' => {
+                    'guid' => msi_2.service_plan.service.guid
                   }
                 }
               }
-            ],
-            service_brokers: [
-              {
-                name: msi_1.service_plan.service.service_broker.name,
-                guid: msi_1.service_plan.service.service_broker.guid
-              },
-              {
-                name: msi_2.service_plan.service.service_broker.name,
-                guid: msi_2.service_plan.service.service_broker.guid
-              },
-              {
-                name: ssi.service_plan.service.service_broker.name,
-                guid: ssi.service_plan.service.service_broker.guid
+            },
+            {
+              'guid' => ssi.service_plan.guid,
+              'name' => ssi.service_plan.name,
+              'relationships' => {
+                'service_offering' => {
+                  'data' => {
+                    'guid' => ssi.service_plan.service.guid
+                  }
+                }
               }
+            }
+          )
 
-            ]
-          }
+          # Check service_offerings are included with correct fields (order not guaranteed)
+          expect(parsed_response['included']['service_offerings']).to contain_exactly(
+            {
+              'name' => msi_1.service_plan.service.name,
+              'guid' => msi_1.service_plan.service.guid,
+              'description' => msi_1.service_plan.service.description,
+              'documentation_url' => 'https://some.url.for.docs/',
+              'relationships' => {
+                'service_broker' => {
+                  'data' => {
+                    'guid' => msi_1.service_plan.service.service_broker.guid
+                  }
+                }
+              }
+            },
+            {
+              'name' => msi_2.service_plan.service.name,
+              'guid' => msi_2.service_plan.service.guid,
+              'description' => msi_2.service_plan.service.description,
+              'documentation_url' => 'https://some.url.for.docs/',
+              'relationships' => {
+                'service_broker' => {
+                  'data' => {
+                    'guid' => msi_2.service_plan.service.service_broker.guid
+                  }
+                }
+              }
+            },
+            {
+              'name' => ssi.service_plan.service.name,
+              'guid' => ssi.service_plan.service.guid,
+              'description' => ssi.service_plan.service.description,
+              'documentation_url' => 'https://some.url.for.docs/',
+              'relationships' => {
+                'service_broker' => {
+                  'data' => {
+                    'guid' => ssi.service_plan.service.service_broker.guid
+                  }
+                }
+              }
+            }
+          )
 
-          expect({ included: parsed_response['included'] }).to match_json_response({ included: })
+          # Check service_brokers are included with correct fields (order not guaranteed)
+          expect(parsed_response['included']['service_brokers']).to contain_exactly(
+            {
+              'name' => msi_1.service_plan.service.service_broker.name,
+              'guid' => msi_1.service_plan.service.service_broker.guid
+            },
+            {
+              'name' => msi_2.service_plan.service.service_broker.name,
+              'guid' => msi_2.service_plan.service.service_broker.guid
+            },
+            {
+              'name' => ssi.service_plan.service.service_broker.name,
+              'guid' => ssi.service_plan.service.service_broker.guid
+            }
+          )
         end
       end
     end
@@ -851,5 +832,4 @@ RSpec.describe 'V3 service instances - Show and List' do
       end
     end
   end
-
 end

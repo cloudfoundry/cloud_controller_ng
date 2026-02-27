@@ -3,11 +3,13 @@ require 'request_spec_shared_examples'
 
 RSpec.shared_context 'service instances setup' do
   let(:user) { VCAP::CloudController::User.make }
-  let(:org) { VCAP::CloudController::Organization.make(created_at: Time.now.utc - 1.second) }
-  let!(:org_annotation) { VCAP::CloudController::OrganizationAnnotationModel.make(key_prefix: 'pre.fix', key_name: 'foo', value: 'bar', resource_guid: org.guid) }
-  let(:space) { VCAP::CloudController::Space.make(organization: org, created_at: Time.now.utc - 1.second) }
-  let!(:space_annotation) { VCAP::CloudController::SpaceAnnotationModel.make(key_prefix: 'pre.fix', key_name: 'baz', value: 'wow', space: space) }
+  let(:space) { VCAP::CloudController::Space.make }
+  let(:org) { space.organization }
   let(:another_space) { VCAP::CloudController::Space.make }
+
+  # Only create annotations in tests that actually need them
+  # Most tests don't check annotations, so don't create them by default
+
   let(:parameters_mixed_data_types_as_json_string) do
     '{"boolean":true,"string":"a string","int":123,"float":3.14159,"optional":null,"object":{"a":"b"},"array":["c","d"]}'
   end

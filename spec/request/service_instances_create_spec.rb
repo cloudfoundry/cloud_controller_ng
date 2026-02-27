@@ -511,6 +511,10 @@ RSpec.describe 'V3 service instances - Create' do
       end
 
       describe 'the pollable job' do
+        # These tests verify broker request context includes org/space annotations
+        let!(:org_annotation) { VCAP::CloudController::OrganizationAnnotationModel.make(key_prefix: 'pre.fix', key_name: 'foo', value: 'bar', resource_guid: org.guid) }
+        let!(:space_annotation) { VCAP::CloudController::SpaceAnnotationModel.make(key_prefix: 'pre.fix', key_name: 'baz', value: 'wow', space: space) }
+
         let(:request_body_additions) { { parameters: { foo: 'bar', baz: 'qux' } } }
         let(:broker_response) { { dashboard_url: 'http://dashboard.url' } }
         let(:broker_status_code) { 201 }
@@ -869,5 +873,4 @@ RSpec.describe 'V3 service instances - Create' do
       end
     end
   end
-
 end

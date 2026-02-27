@@ -128,6 +128,10 @@ RSpec.describe 'V3 service instances - Update' do
       end
 
       describe 'updates that require broker communication' do
+        # These tests verify broker request context includes org/space annotations
+        let!(:org_annotation) { VCAP::CloudController::OrganizationAnnotationModel.make(key_prefix: 'pre.fix', key_name: 'foo', value: 'bar', resource_guid: org.guid) }
+        let!(:space_annotation) { VCAP::CloudController::SpaceAnnotationModel.make(key_prefix: 'pre.fix', key_name: 'baz', value: 'wow', space: space) }
+
         let(:service_offering) { VCAP::CloudController::Service.make }
         let(:original_service_plan) do
           VCAP::CloudController::ServicePlan.make(
@@ -1276,5 +1280,4 @@ RSpec.describe 'V3 service instances - Update' do
       end
     end
   end
-
 end
