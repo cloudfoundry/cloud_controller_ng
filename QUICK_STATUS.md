@@ -14,6 +14,13 @@
 - CI dominated by large integration/controller tests
 - 5,555-line test files are the real bottleneck
 
+**NEW: Actions profiling shows real slowdowns:**
+- ProcessRestart: 3.17s per example (slowest)
+- DeploymentCreate: 2.89s per example
+- RouteTransferOwner: 2.71s per example
+- AppRestart: 2.7s per example
+- These 4 examples alone = 11.47 seconds
+
 ## New Commit Ready for Review
 
 **commit 017a8e98d** - "Optimize 8 more message specs to use lightweight_spec_helper"

@@ -68,12 +68,14 @@ Examined expensive setup files:
 - **Conclusion:** These might belong in integration/ directory, not unit/
 - **Recommendation:** Needs architectural discussion, not quick optimization
 
-### 5. Profiling Attempted ⚠️
+### 5. Profiling Completed ✅
 
-Tried to profile controller and actions tests:
-- Background tasks had issues
-- Need better profiling strategy
-- This is why we don't see CI impact yet
+Successfully profiled actions directory tests:
+- **Found 4 examples taking 11.47 seconds combined**
+- ProcessRestart: 3.17s, DeploymentCreate: 2.89s, RouteTransferOwner: 2.71s, AppRestart: 2.7s
+- **Root cause:** ProcessObserver testing with full database transactions
+- **Insight:** These 4 examples alone are slower than all 28 files we optimized
+- See PROFILING_RESULTS.md for full analysis
 
 ---
 

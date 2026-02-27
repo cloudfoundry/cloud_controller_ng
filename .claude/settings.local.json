@@ -1,0 +1,37 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(cd:*)",
+      "Bash(ruby:*)",
+      "Bash(cd /Users/D059372/SAPDevelop/ghcom/cloud_controller_ng/docs/v3 && bundle update 2>&1)",
+      "Bash(bundle list:*)",
+      "Bash(grep:*)",
+      "Bash(tail:*)",
+      "Bash(bundle clean:*)",
+      "Bash(sleep 2:*)",
+      "Bash(curl:*)",
+      "Bash(bundle info:*)",
+      "Bash(cat:*)",
+      "Bash(npm install:*)",
+      "Bash(mkdir:*)",
+      "Bash(node:*)",
+      "Bash(npm run:*)",
+      "Bash(bundle exec:*)",
+      "Bash(npm start:*)",
+      "Bash(lsof:*)",
+      "Bash(bundle install:*)",
+      "Bash(git add:*)",
+      "WebSearch",
+      "WebFetch(domain:github.com)",
+      "WebFetch(domain:docusaurus.io)",
+      "Bash(gem list:*)",
+      "WebFetch(domain:rubygems.org)",
+      "WebFetch(domain:raw.githubusercontent.com)",
+      "Bash(git mv:*)",
+      "Bash(git commit:*)",
+      "Bash(echo \"=== Checking for existing log files ===\" && ls -lh tmp/cloud_controller*.log && echo \"\" && echo \"=== Preview of old log \\(first 5 lines\\) ===\" && head -5 tmp/cloud_controller_old.log 2>/dev/null)",
+      "Bash(chmod +x test_optimization_tools/find_all_remaining.rb && ruby test_optimization_tools/find_all_remaining.rb 2>&1)",
+      "Bash(chmod +x test_optimization_tools/batch_convert_top20.rb && ruby test_optimization_tools/batch_convert_top20.rb 2>&1)"
+    ]
+  }
+}
