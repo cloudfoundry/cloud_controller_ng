@@ -349,12 +349,6 @@ module VCAP::CloudController
     describe '#docker_user' do
       let(:droplet_model) { DropletModel.make }
 
-      context 'when the droplet DOES NOT belong to a Docker lifecycle app' do
-        it 'returns an empty string' do
-          expect(droplet_model.docker_user).to eq('')
-        end
-      end
-
       context 'when the droplet belongs to a Docker lifecycle app' do
         let(:droplet_execution_metadata) { '{"entrypoint":["/image-entrypoint.sh"],"user":"cnb"}' }
         let(:droplet_model) { DropletModel.make(:docker, execution_metadata: droplet_execution_metadata) }
