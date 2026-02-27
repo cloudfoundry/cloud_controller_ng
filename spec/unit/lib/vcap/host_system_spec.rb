@@ -1,4 +1,5 @@
-require 'spec_helper'
+require 'lightweight_spec_helper'
+require 'vcap/host_system'
 require 'vcap/host_system'
 
 RSpec.describe VCAP::HostSystem do
