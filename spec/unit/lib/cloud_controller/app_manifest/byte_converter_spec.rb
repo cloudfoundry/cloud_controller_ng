@@ -1,4 +1,4 @@
-require 'spec_helper'
+require 'lightweight_spec_helper'
 require 'cloud_controller/app_manifest/byte_converter'
 
 module VCAP::CloudController
