@@ -208,7 +208,10 @@ each_run_block = proc do
     rspec_config.after do
       # Reset the Syslog sink singleton to prevent mock leakage between tests
       # Skip for tests that mock the singleton itself (tagged with skip_syslog_reset)
-      if !RSpec.current_example.metadata[:skip_syslog_reset] && defined?(Steno::Sink::Syslog)
+      # Only reset if not running in parallel to avoid race conditions
+      if !RSpec.current_example.metadata[:skip_syslog_reset] &&
+         defined?(Steno::Sink::Syslog) &&
+         (ENV['TEST_ENV_NUMBER'].nil? || ENV['TEST_ENV_NUMBER'].empty?)
         begin
           instance = Steno::Sink::Syslog.instance
           instance.instance_variable_set(:@syslog, nil) if instance.respond_to?(:instance_variable_set)
