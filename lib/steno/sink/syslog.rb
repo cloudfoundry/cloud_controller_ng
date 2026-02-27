@@ -26,6 +26,15 @@ class Steno::Sink::Syslog < Steno::Sink::Base
     @syslog_lock = Mutex.new
   end
 
+  # Resets the singleton's internal state. This is primarily used for test cleanup
+  # to prevent mock leakage between tests when RSpec doubles are stored in @syslog or @codec.
+  def reset!
+    @syslog_lock.synchronize do
+      @syslog = nil
+      @codec = nil
+    end
+  end
+
   def open(identity)
     @identity = identity
     # Close syslog if it's already open before reopening with new identity
@@ -36,6 +45,7 @@ class Steno::Sink::Syslog < Steno::Sink::Base
   def add_record(record)
     return if record.log_level == :off
     return unless @syslog
+    return unless @codec
 
     record = truncate_record(record)
     msg = @codec.encode_record(record)

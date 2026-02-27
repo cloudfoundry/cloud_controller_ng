@@ -16,6 +16,8 @@ RSpec.describe Steno::Sink::Syslog do
 
   describe '#add_record' do
     after do
+      # Reset the singleton to clear any mocks stored in @syslog and @codec
+      described_class.instance.reset!
       Syslog.close if Syslog.opened?
     end
 

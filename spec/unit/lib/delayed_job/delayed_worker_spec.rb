@@ -2,7 +2,7 @@ require 'spec_helper'
 require 'tasks/rake_config'
 require 'delayed_job/delayed_worker'
 
-RSpec.describe CloudController::DelayedWorker, :skip_syslog_reset do
+RSpec.describe CloudController::DelayedWorker do
   let(:options) { { queues: 'default', name: 'test_worker' } }
   let(:environment) { instance_double(BackgroundJobEnvironment, setup_environment: nil) }
   let(:delayed_worker) { instance_double(Delayed::Worker, start: nil) }

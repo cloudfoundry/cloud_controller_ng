@@ -206,17 +206,15 @@ each_run_block = proc do
     end
 
     rspec_config.after do
-      # Reset the Syslog sink singleton to prevent mock leakage between tests
-      # Skip for tests that mock the singleton itself (tagged with skip_syslog_reset)
-      # Only reset if not running in parallel to avoid race conditions
-      if !RSpec.current_example.metadata[:skip_syslog_reset] &&
-         defined?(Steno::Sink::Syslog) &&
-         (ENV['TEST_ENV_NUMBER'].nil? || ENV['TEST_ENV_NUMBER'].empty?)
+      # Reset the Syslog sink singleton to prevent mock leakage between tests.
+      # The singleton can hold RSpec doubles (from syslog_spec tests) that would
+      # cause "double leaked into another example" errors if accessed by other tests.
+      # Skip for tests tagged with :skip_syslog_reset (those that mock the singleton class itself).
+      if !RSpec.current_example.metadata[:skip_syslog_reset] && defined?(Steno::Sink::Syslog)
         begin
-          instance = Steno::Sink::Syslog.instance
-          instance.instance_variable_set(:@syslog, nil) if instance.respond_to?(:instance_variable_set)
+          Steno::Sink::Syslog.instance.reset!
         rescue StandardError
-          # Ignore any errors - the test may be managing the singleton itself
+          # Ignore errors if the singleton is in an unexpected state
         end
       end
     end
