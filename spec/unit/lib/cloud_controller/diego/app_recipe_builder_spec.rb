@@ -572,7 +572,7 @@ module VCAP::CloudController
                 )
               end
 
-              it 'adds a http healthcheck action using only the first port' do
+              it 'adds an HTTP healthcheck action using only the first port' do
                 lrp = builder.build_app_lrp
 
                 expect(lrp.monitor).to eq(expected_monitor_action)
