@@ -1,3 +1,5 @@
+require 'lightweight_spec_helper'
+
 require 'rspec'
 require 'vcap/semver_validator'
 

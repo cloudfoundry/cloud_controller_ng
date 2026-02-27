@@ -1,3 +1,5 @@
+require 'lightweight_spec_helper'
+
 require 'utils/time_utils'
 
 RSpec.describe TimeUtils do

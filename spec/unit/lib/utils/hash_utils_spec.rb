@@ -1,3 +1,5 @@
+require 'lightweight_spec_helper'
+
 require 'utils/hash_utils'
 
 RSpec.describe HashUtils do
