@@ -1,4 +1,5 @@
-require 'spec_helper'
+require 'lightweight_spec_helper'
+require 'cloud_controller/random_route_generator'
 
 module VCAP::CloudController
   RSpec.describe RandomRouteGenerator do

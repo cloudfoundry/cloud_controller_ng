@@ -1,3 +1,5 @@
+require 'lightweight_spec_helper'
+
 RSpec.describe 'delayed_job' do
   describe 'version' do
     it 'is not updated' do
