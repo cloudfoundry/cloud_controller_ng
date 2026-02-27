@@ -1,4 +1,4 @@
-require 'spec_helper'
+require 'lightweight_spec_helper'
 require 'cloud_controller/database_parts_parser'
 
 RSpec.describe VCAP::CloudController::DatabasePartsParser do

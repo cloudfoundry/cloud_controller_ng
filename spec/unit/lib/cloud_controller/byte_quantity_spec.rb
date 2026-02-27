@@ -3,7 +3,7 @@
 # Licensed under the MIT License
 # https://github.com/goodmustache/palm_civet
 
-require 'spec_helper'
+require 'lightweight_spec_helper'
 require 'cloud_controller/byte_quantity'
 
 module VCAP::CloudController
