@@ -700,5 +700,4 @@ RSpec.describe 'V3 service instances - Sharing' do
       it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS + ADDITIONAL_PERMISSIONS_TO_TEST
     end
   end
-
 end

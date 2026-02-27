@@ -784,5 +784,4 @@ RSpec.describe 'V3 service instances - Delete' do
       end
     end
   end
-
 end
