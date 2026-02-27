@@ -25,7 +25,6 @@ AllCops:
     - lib/logcache/**/*_pb.rb
     - lib/loggregator-api/**/*_pb.rb
     - vendor/bundle/**/*
-    - test_optimization_tools/**/*
 
 
 #### CUSTOMIZED SECTION

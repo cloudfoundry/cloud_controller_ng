@@ -27,6 +27,26 @@ test.err
 test.out
 !/.devcontainer/**/*
 
+# Node modules and package files
+node_modules/
+package-lock.json
+package.json
+
+# Claude Code local files
+.claude/
+.CLAUDE.md
+
+# Test optimization working files
+test_optimization_tools/
+*_analysis*.md
+AUTONOMOUS_*.md
+PROFILING_*.md
+QUICK_STATUS.md
+REVIEW_*.md
+SESSION_*.md
+OPTION_*.md
+CI_*.md
+
 #DOCS
 docs/v2/index.html
 
