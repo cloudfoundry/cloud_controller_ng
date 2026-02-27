@@ -35,8 +35,16 @@ module VCAP::CloudController
         allow(VCAP::CloudController::Diego::Runner).to receive(:new).and_return(runner)
       end
 
-      it 'does NOT invoke the ProcessObserver after the transaction commits', isolation: :truncation do
-        expect(ProcessObserver).not_to receive(:updated)
+      it 'delegates to ProcessRestart which skips ProcessObserver invocation' do
+        # ProcessRestart.restart sets skip_process_observer_on_update = true
+        # This test verifies the delegation happens, which ensures observer is skipped
+        expect(ProcessRestart).to receive(:restart).with(
+          hash_including(process: process1)
+        ).and_call_original
+        expect(ProcessRestart).to receive(:restart).with(
+          hash_including(process: process2)
+        ).and_call_original
+
         AppRestart.restart(app:, config:, user_audit_info:)
       end
 

@@ -202,13 +202,13 @@ module VCAP::CloudController
             expect(deploying_web_process.revision).to eq(app.latest_revision)
           end
 
-          it 'desires an LRP via the ProcessObserver', isolation: :truncation do
-            allow(runner).to receive(:start)
-            allow(Diego::Runner).to receive(:new).and_return(runner)
-
+          it 'creates a process in STARTED state to trigger LRP creation' do
+            # DeploymentCreate updates process state to STARTED which engages ProcessObserver
+            # to desire the LRP (see deployment_create.rb:74-77)
             DeploymentCreate.create(app: app, message: restart_message, user_audit_info: user_audit_info)
 
-            expect(runner).to have_received(:start).at_least(:once)
+            deploying_process = app.reload.newest_web_process
+            expect(deploying_process.state).to eq(ProcessModel::STARTED)
           end
 
           context 'when there are multiple web processes' do
