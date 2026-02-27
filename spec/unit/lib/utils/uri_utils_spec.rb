@@ -1,6 +1,5 @@
 require 'lightweight_spec_helper'
 require 'utils/uri_utils'
-require 'utils/uri_utils'
 
 RSpec.describe UriUtils do
   describe '.is_uri?' do
