@@ -1,4 +1,5 @@
-require 'spec_helper'
+require 'lightweight_spec_helper'
+require 'messages/organization_quotas_list_message'
 
 module VCAP::CloudController
   RSpec.describe OrganizationQuotasListMessage do
