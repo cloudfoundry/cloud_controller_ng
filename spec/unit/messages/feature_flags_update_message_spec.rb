@@ -1,4 +1,4 @@
-require 'spec_helper'
+require 'lightweight_spec_helper'
 require 'messages/feature_flags_update_message'
 
 module VCAP::CloudController
