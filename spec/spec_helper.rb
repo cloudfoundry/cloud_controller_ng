@@ -159,6 +159,14 @@ each_run_block = proc do
       # calling this more than once will load tasks again and 'invoke' or 'execute' calls
       # will call rake tasks multiple times
       Application.load_tasks
+
+      # Set up Fog mock buckets once at suite start instead of every test
+      if Fog.mock?
+        CloudController::DependencyLocator.instance.droplet_blobstore.ensure_bucket_exists
+        CloudController::DependencyLocator.instance.package_blobstore.ensure_bucket_exists
+        CloudController::DependencyLocator.instance.global_app_bits_cache.ensure_bucket_exists
+        CloudController::DependencyLocator.instance.buildpack_blobstore.ensure_bucket_exists
+      end
     end
 
     rspec_config.before do
@@ -169,21 +177,24 @@ each_run_block = proc do
       TestConfig.context = example.metadata[:job_context] || :api
       TestConfig.reset
 
-      Fog::Mock.reset
-
-      if Fog.mock?
-        CloudController::DependencyLocator.instance.droplet_blobstore.ensure_bucket_exists
-        CloudController::DependencyLocator.instance.package_blobstore.ensure_bucket_exists
-        CloudController::DependencyLocator.instance.global_app_bits_cache.ensure_bucket_exists
-        CloudController::DependencyLocator.instance.buildpack_blobstore.ensure_bucket_exists
-      end
-
       VCAP::CloudController::SecurityContext.clear
       VCAP::Request.current_id = nil
       allow_any_instance_of(VCAP::CloudController::UaaTokenDecoder).to receive(:uaa_issuer).and_return(UAAIssuer::ISSUER)
 
       mock_redis = MockRedis.new
       allow(Redis).to receive(:new).and_return(mock_redis)
+    end
+
+    # Only reset Fog mocks for tests that use blobstores (tagged with :fog_reset)
+    # This avoids the overhead of clearing and recreating buckets for every test
+    rspec_config.before(:each, :fog_reset) do
+      Fog::Mock.reset
+      if Fog.mock?
+        CloudController::DependencyLocator.instance.droplet_blobstore.ensure_bucket_exists
+        CloudController::DependencyLocator.instance.package_blobstore.ensure_bucket_exists
+        CloudController::DependencyLocator.instance.global_app_bits_cache.ensure_bucket_exists
+        CloudController::DependencyLocator.instance.buildpack_blobstore.ensure_bucket_exists
+      end
     end
 
     rspec_config.around do |example|
