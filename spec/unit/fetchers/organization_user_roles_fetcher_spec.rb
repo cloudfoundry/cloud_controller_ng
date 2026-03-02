@@ -1,4 +1,4 @@
-require 'spec_helper'
+require 'db_spec_helper'
 require 'fetchers/organization_user_roles_fetcher'
 
 module VCAP::CloudController
