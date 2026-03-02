@@ -5,6 +5,9 @@ unless defined?(SPEC_HELPER_LOADED)
 
   require 'rails'
   require 'oj'
+  require 'sequel'
+  Sequel.default_timezone = :utc
+
   require 'support/bootstrap/spec_bootstrap'
   require 'support/database_isolation'
   require 'sequel_plugins/sequel_plugins'
