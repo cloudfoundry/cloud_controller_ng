@@ -15,12 +15,6 @@ RSpec.describe Steno::Sink::Syslog do
   end
 
   describe '#add_record' do
-    after do
-      # Reset the singleton to clear any mocks stored in @syslog and @codec
-      described_class.instance.reset!
-      Syslog.close if Syslog.opened?
-    end
-
     it 'appends an encoded record with the correct priority' do
       identity = 'test'
 

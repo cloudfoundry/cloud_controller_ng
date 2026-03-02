@@ -205,20 +205,6 @@ each_run_block = proc do
       Timecop.return
     end
 
-    rspec_config.after do
-      # Reset the Syslog sink singleton to prevent mock leakage between tests.
-      # The singleton can hold RSpec doubles (from syslog_spec tests) that would
-      # cause "double leaked into another example" errors if accessed by other tests.
-      # Skip for tests tagged with :skip_syslog_reset (those that mock the singleton class itself).
-      if !RSpec.current_example.metadata[:skip_syslog_reset] && defined?(Steno::Sink::Syslog)
-        begin
-          Steno::Sink::Syslog.instance.reset!
-        rescue StandardError
-          # Ignore errors if the singleton is in an unexpected state
-        end
-      end
-    end
-
     rspec_config.after(:each, type: :legacy_api) { add_deprecation_warning }
 
     RspecApiDocumentation.configure do |c|
