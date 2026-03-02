@@ -8,13 +8,16 @@ require 'pry'
 module VCAP
   module CloudController
     # Minimal Config stub for message validation specs
-    class Config
-      def self.config
-        @config ||= new
-      end
+    # Only define if not already defined (avoid conflict with spec_helper)
+    unless defined?(Config)
+      class Config
+        def self.config
+          @config ||= new
+        end
 
-      def get(*_keys)
-        nil
+        def get(*_keys)
+          nil
+        end
       end
     end
   end
