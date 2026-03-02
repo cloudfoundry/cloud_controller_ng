@@ -4,6 +4,7 @@ unless defined?(SPEC_HELPER_LOADED)
   require 'rspec/collection_matchers'
 
   require 'rails'
+  require 'oj'
   require 'support/bootstrap/spec_bootstrap'
   require 'support/database_isolation'
   require 'sequel_plugins/sequel_plugins'
