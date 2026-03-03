@@ -1,4 +1,4 @@
-require 'steno'
+require 'steno/steno'
 require 'optparse'
 require 'cloud_controller/uaa/uaa_token_decoder'
 require 'cloud_controller/uaa/uaa_verification_keys'

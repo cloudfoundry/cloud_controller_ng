@@ -1,0 +1,20 @@
+require 'steno/steno'
+
+RSpec.describe Steno::LogLevel do
+  let(:info_level) { described_class.new(:info, 2) }
+  let(:debug_level) { described_class.new(:debug, 1) }
+
+  it 'is comparable' do
+    expect(info_level > debug_level).to be_truthy
+    expect(debug_level > info_level).to be_falsey
+    # rubocop:disable Lint/BinaryOperatorWithIdenticalOperands
+    expect(info_level == info_level).to be_truthy
+    # rubocop:enable Lint/BinaryOperatorWithIdenticalOperands
+  end
+
+  describe '#to_s' do
+    it 'returns the name of the level' do
+      expect(info_level.to_s).to eq('info')
+    end
+  end
+end
