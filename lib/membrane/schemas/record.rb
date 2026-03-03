@@ -47,7 +47,7 @@ class Membrane::Schemas::Record < Membrane::Schemas::Base
           rescue Membrane::SchemaValidationError => e
             key_errors[k] = e.to_s
           end
-        elsif @optional_keys.exclude?(k)
+        elsif !@optional_keys.member?(k)
           key_errors[k] = 'Missing key'
         end
       end

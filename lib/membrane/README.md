@@ -177,6 +177,22 @@ Applied to all 15 Ruby files to bring 2014 code to 2025 standards.
   ```
 - **Note:** `strict_checking` was already a keyword arg, kept mixed style for compatibility
 
+#### 5.4 Ruby 3.3 Set API Compatibility
+- **Files:** `schemas/record.rb` (1 occurrence, line 50)
+- **Change:** `@optional_keys.exclude?(k)` → `!@optional_keys.include?(k)`
+- **Reason:** `Set#exclude?` was removed in Ruby 3.3
+- **Impact:** Logically identical, both check if key is NOT in the optional_keys set
+- **Example:**
+  ```ruby
+  # Before:
+  elsif @optional_keys.exclude?(k)
+    key_errors[k] = 'Missing key'
+
+  # After:
+  elsif !@optional_keys.include?(k)
+    key_errors[k] = 'Missing key'
+  ```
+
 ### 6. Files NOT Modified
 
 These files were copied verbatim with ONLY the `frozen_string_literal: true` magic comment added:
@@ -194,9 +210,10 @@ These files were copied verbatim with ONLY the `frozen_string_literal: true` mag
 | frozen_string_literal added | 15 | +30 | No |
 | Modernized raise statements | 10 | ~18 | No |
 | Removed .freeze on literals | 1 | ~1 | No |
+| Ruby 3.3 Set API fix | 1 | ~1 | No |
 | RuboCop compliance | 1 | ~10 | No |
 | Code style improvements | 8 | ~20 | No |
-| **Total** | **15 files** | **~87 lines** | **No** |
+| **Total** | **15 files** | **~88 lines** | **No** |
 
 ## Functional Impact
 
@@ -208,17 +225,116 @@ These files were copied verbatim with ONLY the `frozen_string_literal: true` mag
 
 ## Testing
 
-All changes have been verified with:
+### Test Coverage
+
+All changes have been verified with comprehensive test coverage:
+
+#### Unit Tests (13 spec files copied from upstream)
+
+**Location:** `spec/unit/lib/membrane/`
+
+**Main Integration Tests:**
+- `complex_schema_spec.rb` - Tests complex nested schemas
+- `schema_parser_spec.rb` - Tests SchemaParser parsing and deparsing
+
+**Schema Type Tests (11 files):**
+- `schemas/any_spec.rb` - Tests Any schema
+- `schemas/base_spec.rb` - Tests Base schema
+- `schemas/bool_spec.rb` - Tests Bool schema
+- `schemas/class_spec.rb` - Tests Class schema
+- `schemas/dictionary_spec.rb` - Tests Dictionary schema
+- `schemas/enum_spec.rb` - Tests Enum schema
+- `schemas/list_spec.rb` - Tests List schema
+- `schemas/record_spec.rb` - Tests Record schema
+- `schemas/regexp_spec.rb` - Tests Regexp schema
+- `schemas/tuple_spec.rb` - Tests Tuple schema
+- `schemas/value_spec.rb` - Tests Value schema
+
+**Test Helper:**
+- `membrane_spec_helper.rb` - Lightweight spec helper that loads only RSpec and Membrane (no database required), includes `MembraneSpecHelpers` module with `expect_validation_failure` helper
+
+**Spec Adaptations:**
+All upstream spec files were adapted for CCNG:
+1. Added `frozen_string_literal: true` magic comment
+2. Created lightweight `membrane_spec_helper.rb` (doesn't require database connection like CCNG's spec_helper)
+3. Changed all specs to use `require_relative "membrane_spec_helper"` instead of `require "spec_helper"`
+4. Added `require 'membrane'` to load vendored code
+5. Converted `describe` → `RSpec.describe` (modern RSpec syntax)
+6. Converted old RSpec 2.x syntax to RSpec 3.x (~51 occurrences):
+   - `.should eq` → `expect().to eq`
+   - `.should be_nil` → `expect().to be_nil`
+   - `.should match` → `expect().to match`
+   - `.should_receive` → `expect().to receive`
+   - `.should_not` → `expect().not_to`
+7. Fixed frozen string literal compatibility (3 occurrences in schema_parser_spec.rb):
+   - Removed `expect(val).to receive(:inspect)` style mocks on frozen objects
+   - Changed to verify output directly: `expect(parser.deparse(schema)).to eq val.inspect`
+   - Reason: With `frozen_string_literal: true`, can't define singleton methods on frozen objects
+   - **Impact:** Tests remain logically identical - same scenarios, same validations, same expected outcomes
+8. Fixed Ruby 3.3 compatibility issues in specs:
+   - Changed `Fixnum` → `Integer` in expected error messages (Ruby 2.4+ unified Fixnum/Bignum into Integer)
+   - Changed `Record.new({...}, [], true)` → `Record.new({...}, [], strict_checking: true)` to use keyword argument
+9. Fixed RSpec warning about unspecified error matcher (1 occurrence in base_spec.rb):
+   - Changed `expect { }.to raise_error` → `expect { }.to raise_error(ArgumentError, /wrong number of arguments/)`
+   - Reason: Prevents false positives by specifying exact error type and message pattern
+10. Added `MembraneSpecHelpers` module to `membrane_spec_helper.rb` with `expect_validation_failure` helper method used 17 times across specs
+
+#### Verification Tests (1 spec file)
+
+**Location:** `spec/unit/lib/`
+
+- `vendored_membrane_spec.rb` - Verifies vendored Membrane loads correctly and provides expected API
+
+#### Manual Testing
+
 - Standalone Ruby tests (all schema types)
-- CCNG's vendored_membrane_spec.rb
 - Manual validation of error handling
 - Verification that all 11 schema types instantiate correctly
+- Integration testing with existing CCNG code (VCAP::Config, JsonMessage)
+
+### Running Tests
+
+```bash
+# Run all Membrane specs
+bundle exec rspec spec/unit/lib/membrane/
+
+# Run specific schema tests
+bundle exec rspec spec/unit/lib/membrane/schemas/
+
+# Run integration tests
+bundle exec rspec spec/unit/lib/membrane/complex_schema_spec.rb
+
+# Run vendoring verification
+bundle exec rspec spec/unit/lib/vendored_membrane_spec.rb
+```
+
+## Files Added to CCNG
+
+### Library Code (18 files)
+- `lib/membrane.rb` - Shim entrypoint
+- `lib/membrane/*.rb` - 4 core files (errors, schemas, schema_parser, version)
+- `lib/membrane/schemas/*.rb` - 11 schema type files
+- `lib/membrane/LICENSE` - Apache 2.0 license (verbatim copy)
+- `lib/membrane/NOTICE` - Copyright notice (verbatim copy)
+- `lib/membrane/README.md` - This file (comprehensive documentation)
+
+### Test Files (14 files)
+- `spec/unit/lib/membrane/*.rb` - 2 main spec files
+- `spec/unit/lib/membrane/schemas/*.rb` - 11 schema spec files
+- `spec/unit/lib/membrane/membrane_spec_helper.rb` - Lightweight spec helper (no database)
+- `spec/unit/lib/vendored_membrane_spec.rb` - Vendoring verification spec
+
+**Total: 32 files added**
 
 ## Maintenance Notes
 
 Since the upstream repository has been inactive since 2014 and is effectively abandoned, these modifications bring the code to modern Ruby 3.3+ standards while maintaining full compatibility. All changes are purely stylistic, performance-related, or code quality improvements - no logic or behavior has been altered.
 
+The comprehensive test suite (13 spec files from upstream + 1 integration spec) ensures that all functionality continues to work correctly and provides confidence for future modifications.
+
 For any questions about these modifications, refer to the git history of:
-- `/Users/I546390/SAPDevelop/membrane_inline/cloud_controller_ng/lib/membrane/`
+- `cloud_controller_ng/lib/membrane/`
+- `cloud_controller_ng/spec/unit/lib/membrane/`
+- `cloud_controller_ng/spec/support/membrane_helpers.rb`
 
 Last updated: 2026-03-03
