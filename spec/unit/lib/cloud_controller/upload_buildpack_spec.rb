@@ -1,7 +1,7 @@
-require 'spec_helper'
+require 'fog_spec_helper'
 
 module VCAP::CloudController
-  RSpec.describe UploadBuildpack do
+  RSpec.describe UploadBuildpack, :fog_isolation do
     let(:buildpack_blobstore) { double(:buildpack_blobstore).as_null_object }
     let!(:buildpack) { VCAP::CloudController::Buildpack.create_from_hash({ name: 'upload_binary_buildpack', stack: 'cider', position: 0 }) }
 

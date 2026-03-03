@@ -1,9 +1,9 @@
-require 'spec_helper'
+require 'fog_spec_helper'
 require 'cloud_controller/blobstore/storage_cli/storage_cli_client'
 
 module CloudController
   module Blobstore
-    RSpec.describe StorageCliClient do
+    RSpec.describe StorageCliClient, :fog_isolation do
       describe 'client init' do
         # DEPRECATED: Legacy fog provider tests - remove after migration window
         # START LEGACY FOG SUPPORT TESTS
