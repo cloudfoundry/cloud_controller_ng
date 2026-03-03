@@ -1,6 +1,7 @@
-# Inlined Membrane Library
+# Membrane (Internalized Copy)
 
-This directory contains the Membrane validation library inlined from the archived CloudFoundry project:
+This directory contains an internalized and maintained fork of the archived
+cloudfoundry Membrane validation project:
 https://github.com/cloudfoundry/membrane
 
 **License:** Apache License 2.0
@@ -32,7 +33,7 @@ This code is inlined into Cloud Controller NG because:
 All modifications are documented here for license compliance and auditability.
 The upstream repository was archived in 2022 with the last commit from 2014.
 Since this is an inlined copy (not a vendored dependency), CCNG maintains
-and modernizes the code for Ruby 3.3+ compatibility and removes unused features.
+and modernizes the code for Ruby 3.3+ compatibility and removes unused features. This is now a CCNG-maintained fork of Membrane.
 
 ### 1. New Files Created
 
@@ -152,9 +153,93 @@ Applied to all 15 Ruby files to bring 2014 code to 2025 standards.
   # Modified for RuboCop compliance and Ruby 3.3 modernization
   ```
 
-### 5. Minor Code Improvements
+### 5. Removed Unused Upstream Feature: strict_checking
 
-#### 5.1 Attribute Reader Consolidation
+**Deliberate Design Decision:** This feature was removed because CCNG never uses it.
+
+#### 5.1 What Was Removed
+- **Files:** `schemas/record.rb` (multiple locations)
+- **Removed components:**
+  - `strict_checking:` parameter from `initialize` method signature
+  - `@strict_checking` instance variable
+  - `validate_extra_keys` private method
+  - Conditional logic checking extra keys in validation
+
+#### 5.2 Original Upstream Behavior
+- **Default (`strict_checking: false`):** Ignores extra keys not in schema (lenient)
+- **Opt-in (`strict_checking: true`):** Raises error on extra keys not in schema (strict)
+
+#### 5.3 CCNG Usage Analysis
+- Searched entire CCNG codebase: **Zero usages** of `strict_checking` parameter
+- Single production usage: `lib/vcap/config.rb` only passes 2 arguments (uses default)
+- CCNG always relied on default behavior (ignore extra keys)
+
+#### 5.4 New Behavior
+- **Always ignores extra keys** (same as upstream default)
+- **No behavioral change for CCNG** - preserves exact behavior CCNG has always used
+- **API breaking change vs upstream** - third parameter no longer exists
+
+#### 5.5 Rationale
+- Simplifies codebase by removing unused code paths
+- Makes behavior explicit rather than having unused configuration
+- Aligns with CCNG-maintained fork philosophy (tailor to actual needs)
+- Since upstream is archived, no risk of divergence issues
+
+#### 5.6 Code Changes
+```ruby
+# Before:
+def initialize(schemas, optional_keys=[], strict_checking: false)
+  @optional_keys = Set.new(optional_keys)
+  @schemas = schemas
+  @strict_checking = strict_checking
+end
+
+class KeyValidator
+  def initialize(optional_keys, schemas, strict_checking, object)
+    @strict_checking = strict_checking
+    # ...
+  end
+
+  def validate
+    # ... validation logic
+    key_errors.merge!(validate_extra_keys(@object.keys - schema_keys)) if @strict_checking
+    # ...
+  end
+
+  def validate_extra_keys(extra_keys)
+    extra_key_errors = {}
+    extra_keys.each { |k| extra_key_errors[k] = 'was not specified in the schema' }
+    extra_key_errors
+  end
+end
+
+# After:
+def initialize(schemas, optional_keys=[])
+  @optional_keys = Set.new(optional_keys)
+  @schemas = schemas
+end
+
+class KeyValidator
+  def initialize(optional_keys, schemas, object)
+    # No @strict_checking
+  end
+
+  def validate
+    # ... validation logic (no extra key checking)
+  end
+
+  # validate_extra_keys method removed entirely
+end
+```
+
+#### 5.7 Test Changes
+- Removed test: "raises an error if there are extra keys that are not matched in the schema"
+- Removed test: "doesnt raise an error" (in "when not strict checking" context)
+- Added test: "ignores extra keys that are not in the schema" (verifies default behavior)
+
+### 6. Minor Code Improvements
+
+#### 6.1 Attribute Reader Consolidation
 - **Files:** `schemas/dictionary.rb`, `schemas/record.rb`
 - **Change:**
   ```ruby
@@ -166,12 +251,12 @@ Applied to all 15 Ruby files to bring 2014 code to 2025 standards.
   attr_reader :key_schema, :value_schema
   ```
 
-#### 5.2 Unused Parameter Annotation
+#### 6.2 Unused Parameter Annotation
 - **Files:** `schemas/any.rb`
 - **Change:** `def validate(object)` → `def validate(_object)`
 - **Reason:** RuboCop compliance, documents intentionally unused parameter
 
-#### 5.3 Removed Redundant Require Statements
+#### 6.3 Removed Redundant Require Statements
 - **Files:** `schemas/record.rb` (1 occurrence)
 - **Change:** Removed `require "set"`
 - **Reason:** Set is already loaded by ActiveSupport in CCNG's environment
@@ -206,7 +291,7 @@ Applied to all 15 Ruby files to bring 2014 code to 2025 standards.
   end
   ```
 
-#### 5.5 Ruby 3.3 Set API Compatibility
+#### 6.4 Ruby 3.3 Set API Compatibility
 - **Files:** `schemas/record.rb` (1 occurrence, line 50)
 - **Change:** `@optional_keys.exclude?(k)` → `!@optional_keys.member?(k)`
 - **Reason:** `Set#exclude?` was removed in Ruby 3.3
@@ -223,7 +308,7 @@ Applied to all 15 Ruby files to bring 2014 code to 2025 standards.
     key_errors[k] = 'Missing key'
   ```
 
-### 6. Files NOT Modified
+### 7. Files NOT Modified
 
 These files were copied verbatim with ONLY the `frozen_string_literal: true` magic comment added:
 
@@ -236,21 +321,26 @@ These files were copied verbatim with ONLY the `frozen_string_literal: true` mag
 
 | Category | Files Changed | Lines Changed | Breaking? |
 |----------|---------------|---------------|-----------|
-| New shim file created | 1 | +8 | No |
+| New shim file created | 1 | +8 | No* |
 | frozen_string_literal added | 15 | +30 | No |
 | Modernized raise statements | 10 | ~18 | No |
 | Removed .freeze on literals | 1 | ~1 | No |
+| Removed unused strict_checking | 1 | ~15 | Yes** |
 | Ruby 3.3 Set API fix | 1 | ~1 | No |
 | RuboCop compliance | 1 | ~10 | No |
 | Code style improvements | 8 | ~20 | No |
-| **Total** | **15 files** | **~88 lines** | **No** |
+| **Total** | **15 files** | **~103 lines** | **See notes** |
+
+\* No breaking changes for CCNG's usage
+\** Breaks upstream API compatibility but feature was unused by CCNG
 
 ## Functional Impact
 
-✅ **Zero breaking changes**
-✅ **100% API compatible with upstream**
+✅ **Zero breaking changes for CCNG's usage patterns**
 ✅ **All existing CCNG code continues to work without modification**
-✅ **All Membrane tests pass**
+✅ **All actively-used Membrane functionality preserved**
+⚠️ **Removed unused `strict_checking` parameter (not used by CCNG)**
+✅ **Ruby 3.3+ compatibility achieved**
 ✅ **Performance improved (frozen strings, modern Ruby)**
 
 ## Testing
