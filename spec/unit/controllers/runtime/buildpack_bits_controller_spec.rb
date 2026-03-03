@@ -1,9 +1,9 @@
-require 'spec_helper'
+require 'fog_spec_helper'
 
 ## NOTICE: Prefer request specs over controller specs as per ADR #0003 ##
 
 module VCAP::CloudController
-  RSpec.describe VCAP::CloudController::BuildpackBitsController do
+  RSpec.describe VCAP::CloudController::BuildpackBitsController, :fog_isolation do
     let(:user) { make_user }
     let(:filename) { 'file.zip' }
     let(:sha_valid_zip) { Digester.new(algorithm: OpenSSL::Digest::SHA256).digest_file(valid_zip) }

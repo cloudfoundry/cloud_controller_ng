@@ -159,6 +159,15 @@ each_run_block = proc do
       # calling this more than once will load tasks again and 'invoke' or 'execute' calls
       # will call rake tasks multiple times
       Application.load_tasks
+
+      # Initialize Fog mock buckets once at suite start.
+      # Tests that need isolated/clean Fog state should use fog_spec_helper.
+      if Fog.mock?
+        CloudController::DependencyLocator.instance.droplet_blobstore.ensure_bucket_exists
+        CloudController::DependencyLocator.instance.package_blobstore.ensure_bucket_exists
+        CloudController::DependencyLocator.instance.global_app_bits_cache.ensure_bucket_exists
+        CloudController::DependencyLocator.instance.buildpack_blobstore.ensure_bucket_exists
+      end
     end
 
     rspec_config.before do
@@ -168,15 +177,6 @@ each_run_block = proc do
 
       TestConfig.context = example.metadata[:job_context] || :api
       TestConfig.reset
-
-      Fog::Mock.reset
-
-      if Fog.mock?
-        CloudController::DependencyLocator.instance.droplet_blobstore.ensure_bucket_exists
-        CloudController::DependencyLocator.instance.package_blobstore.ensure_bucket_exists
-        CloudController::DependencyLocator.instance.global_app_bits_cache.ensure_bucket_exists
-        CloudController::DependencyLocator.instance.buildpack_blobstore.ensure_bucket_exists
-      end
 
       VCAP::CloudController::SecurityContext.clear
       VCAP::Request.current_id = nil

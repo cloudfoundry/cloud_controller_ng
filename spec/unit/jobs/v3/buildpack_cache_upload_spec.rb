@@ -1,8 +1,8 @@
-require 'spec_helper'
+require 'fog_spec_helper'
 
 module VCAP::CloudController
   module Jobs::V3
-    RSpec.describe BuildpackCacheUpload, job_context: :api do
+    RSpec.describe BuildpackCacheUpload, :fog_isolation, job_context: :api do
       subject(:job) { BuildpackCacheUpload.new(local_path: local_file.path, app_guid: app.guid, stack_name: 'some-stack') }
 
       let(:app) { AppModel.make(:buildpack) }
