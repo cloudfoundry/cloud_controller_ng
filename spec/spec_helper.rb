@@ -136,8 +136,11 @@ each_run_block = proc do
       Sequel::Deprecation.output = StringIO.new
       Sequel::Deprecation.backtrace_filter = 5
 
-      TestConfig.context = example.metadata[:job_context] || :api
-      TestConfig.reset
+      new_context = example.metadata[:job_context] || :api
+      if TestConfig.context != new_context
+        TestConfig.context = new_context
+        TestConfig.reset
+      end
 
       VCAP::CloudController::SecurityContext.clear
       VCAP::Request.current_id = nil
