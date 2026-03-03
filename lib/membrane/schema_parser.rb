@@ -1,5 +1,7 @@
+# frozen_string_literal: true
+
 # Vendored from https://github.com/cloudfoundry/membrane
-# Modified for RuboCop compliance in CCNG
+# Modified for RuboCop compliance and Ruby 3.3 modernization
 
 require 'membrane/schemas'
 
@@ -7,7 +9,7 @@ module Membrane
 end
 
 class Membrane::SchemaParser
-  DEPARSE_INDENT = '  '.freeze
+  DEPARSE_INDENT = '  '
 
   class Dsl
     OptionalKeyMarker = Struct.new(:key)
