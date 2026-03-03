@@ -1,32 +1,32 @@
 # frozen_string_literal: true
 
-require_relative "../membrane_spec_helper"
-require "membrane"
+require_relative '../membrane_spec_helper'
+require 'membrane'
 
 RSpec.describe Membrane::Schemas::Record do
-  describe "#validate" do
-    it "should return an error if the validated object isn't a hash" do
+  describe '#validate' do
+    it "returns an error if the validated object isn't a hash" do
       schema = Membrane::Schemas::Record.new(nil)
 
-      expect_validation_failure(schema, "test", /instance of Hash/)
+      expect_validation_failure(schema, 'test', /instance of Hash/)
     end
 
-    it "should return an error for missing keys" do
-      key_schemas = { "foo" => Membrane::Schemas::Any.new }
+    it 'returns an error for missing keys' do
+      key_schemas = { 'foo' => Membrane::Schemas::Any.new }
       rec_schema = Membrane::Schemas::Record.new(key_schemas)
 
       expect_validation_failure(rec_schema, {}, /foo => Missing/)
     end
 
-    it "should validate the value for each key" do
+    it 'validates the value for each key' do
       data = {
-        "foo" => 1,
-        "bar" => 2,
+        'foo' => 1,
+        'bar' => 2
       }
 
       key_schemas = {
-        "foo" => double("foo"),
-        "bar" => double("bar"),
+        'foo' => double('foo'),
+        'bar' => double('bar')
       }
 
       key_schemas.each { |k, m| expect(m).to receive(:validate).with(data[k]) }
@@ -36,10 +36,10 @@ RSpec.describe Membrane::Schemas::Record do
       rec_schema.validate(data)
     end
 
-    it "should return all errors for keys or values that didn't validate" do
+    it "returns all errors for keys or values that didn't validate" do
       key_schemas = {
-        "foo" => Membrane::Schemas::Any.new,
-        "bar" => Membrane::Schemas::Class.new(String),
+        'foo' => Membrane::Schemas::Any.new,
+        'bar' => Membrane::Schemas::Class.new(String)
       }
 
       rec_schema = Membrane::Schemas::Record.new(key_schemas)
@@ -47,7 +47,7 @@ RSpec.describe Membrane::Schemas::Record do
       errors = nil
 
       begin
-        rec_schema.validate({ "bar" => 2 })
+        rec_schema.validate({ 'bar' => 2 })
       rescue Membrane::SchemaValidationError => e
         errors = e.to_s
       end
@@ -56,87 +56,86 @@ RSpec.describe Membrane::Schemas::Record do
       expect(errors).to match(/bar/)
     end
 
-    context "when strict checking" do
-      it "raises an error if there are extra keys that are not matched in the schema" do
+    context 'when strict checking' do
+      it 'raises an error if there are extra keys that are not matched in the schema' do
         data = {
-          "key" => "value",
-          "other_key" => 2,
+          'key' => 'value',
+          'other_key' => 2
         }
 
         rec_schema = Membrane::Schemas::Record.new({
-          "key" => Membrane::Schemas::Class.new(String)
-        }, [], strict_checking: true)
+                                                     'key' => Membrane::Schemas::Class.new(String)
+                                                   }, [], strict_checking: true)
 
-        expect {
+        expect do
           rec_schema.validate(data)
-        }.to raise_error(/other_key .* was not specified/)
+        end.to raise_error(/other_key .* was not specified/)
       end
     end
 
-    context "when not strict checking" do
-      it "doesnt raise an error" do
+    context 'when not strict checking' do
+      it 'doesnt raise an error' do
         data = {
-          "key" => "value",
-          "other_key" => 2,
+          'key' => 'value',
+          'other_key' => 2
         }
 
         rec_schema = Membrane::Schemas::Record.new({
-          "key" => Membrane::Schemas::Class.new(String)
-        })
+                                                     'key' => Membrane::Schemas::Class.new(String)
+                                                   })
 
-        expect {
+        expect do
           rec_schema.validate(data)
-        }.to_not raise_error
+        end.not_to raise_error
       end
     end
 
     context "when ENV['MEMBRANE_ERROR_USE_QUOTES'] is set" do
-      it "returns an error message that can be parsed" do
+      it 'returns an error message that can be parsed' do
         ENV['MEMBRANE_ERROR_USE_QUOTES'] = 'true'
         rec_schema = Membrane::SchemaParser.parse do
-          { "a_number"    => Integer,
-            "tf"          => bool,
-            "seventeen"   => 17,
-            "nested_hash" => Membrane::SchemaParser.parse { { size: Float } }
-          }
+          { 'a_number' => Integer,
+            'tf' => bool,
+            'seventeen' => 17,
+            'nested_hash' => Membrane::SchemaParser.parse { { size: Float } } }
         end
-        error_hash = nil
+        error_message = nil
         begin
           rec_schema.validate(
             { 'tf' => 'who knows', 'seventeen' => 18,
-              'nested_hash' => { size: 17, color: 'blue' } })
+              'nested_hash' => { size: 17, color: 'blue' } }
+          )
         rescue Membrane::SchemaValidationError => e
-          error_hash = eval(e.to_s)
+          error_message = e.to_s
         end
-        expect(error_hash).to include(
-          'tf' => 'Expected instance of true or false, given who knows')
-        expect(error_hash).to include(
-          'a_number' => 'Missing key')
-        expect(error_hash).to include(
-          'seventeen' => 'Expected 17, given 18')
-        expect(error_hash).to include('nested_hash')
-        expect(eval(error_hash['nested_hash'])).to include(
-          'size' => 'Expected instance of Float, given an instance of Integer')
+        expect(error_message).to include("'tf' => %q(Expected instance of true or false, given who knows)")
+        expect(error_message).to include("'a_number' => %q(Missing key)")
+        expect(error_message).to include("'seventeen' => %q(Expected 17, given 18)")
+        expect(error_message).to include("'nested_hash' => %q({ 'size' => %q(Expected instance of Float, given an instance of Integer) })")
         ENV.delete('MEMBRANE_ERROR_USE_QUOTES')
       end
     end
   end
 
-  describe "#parse" do
-    it "allows chaining/inheritance of schemas" do
-      base_schema = Membrane::SchemaParser.parse{{
-        "key" => String
-      }}
+  describe '#parse' do
+    it 'allows chaining/inheritance of schemas' do
+      base_schema = Membrane::SchemaParser.parse do
+        {
+          'key' => String
+        }
+      end
 
-      specific_schema = base_schema.parse{{
-        "another_key" => String
-      }}
+      specific_schema = base_schema.parse do
+        {
+          'another_key' => String
+        }
+      end
 
       input_hash = {
-        "key" => "value",
-        "another_key" => "another value",
+        'key' => 'value',
+        'another_key' => 'another value'
       }
-expect(      specific_schema.validate(input_hash)).to eq nil
+      expect(specific_schema.validate(input_hash)).to be_nil
     end
   end
 end
