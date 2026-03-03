@@ -1,13 +1,14 @@
-# Vendored Membrane Library
+# Inlined Membrane Library
 
-This directory contains the Membrane validation library vendored from:
+This directory contains the Membrane validation library inlined from the archived CloudFoundry project:
 https://github.com/cloudfoundry/membrane
 
 **License:** Apache License 2.0
 **Copyright:** (c) 2013 Pivotal Software Inc.
-**Vendored version:** 1.1.0
+**Inlined version:** 1.1.0
+**Upstream status:** Archived in 2022 (last commit: 2014-04-03)
 
-## Vendoring Details
+## Inlining Details
 
 **Source commit:**
 - Commit: `1eeadcf64c20d94e61379707c20b16d3d9a26d87`
@@ -16,26 +17,31 @@ https://github.com/cloudfoundry/membrane
 - Message: Add Code Climate badge to README.
 - Tag: scotty_09012012-23-g1eeadcf
 
-The upstream LICENSE and NOTICE files are included alongside the vendored code
+The upstream LICENSE and NOTICE files are included alongside the inlined code
 in this directory (copied verbatim from the upstream repository).
 Source: https://github.com/cloudfoundry/membrane
 
-This code is vendored (inlined) into Cloud Controller NG to remove
-the external gem dependency.
+This code is inlined into Cloud Controller NG because:
+- The upstream repository was archived in 2022 with no updates since 2014
+- Removes external gem dependency
+- Allows CCNG to maintain and modernize the code for Ruby 3.3+ compatibility
+- Enables removal of unused features specific to CCNG's needs
 
 ## Detailed Modifications from Upstream
 
 All modifications are documented here for license compliance and auditability.
-The upstream repository has been inactive since 2014-04-03.
+The upstream repository was archived in 2022 with the last commit from 2014.
+Since this is an inlined copy (not a vendored dependency), CCNG maintains
+and modernizes the code for Ruby 3.3+ compatibility and removes unused features.
 
 ### 1. New Files Created
 
 #### `lib/membrane.rb` (Shim/Entrypoint)
 - **Type:** New file
-- **Purpose:** Makes `require "membrane"` load vendored code instead of gem
+- **Purpose:** Makes `require "membrane"` load inlined code instead of gem
 - **Content:** Header comment + four require statements
 - **Changes from upstream:**
-  - Added 3-line header comment documenting vendoring
+  - Added 3-line header comment documenting inlining
   - Changed double quotes to single quotes (CCNG style)
 
 ### 2. Ruby 3.3 Modernization (All Files)
@@ -356,7 +362,7 @@ bundle exec rspec spec/unit/lib/vendored_membrane_spec.rb
 
 ## Maintenance Notes
 
-Since the upstream repository has been inactive since 2014 and is effectively abandoned, these modifications bring the code to modern Ruby 3.3+ standards while maintaining full compatibility. All changes are purely stylistic, performance-related, or code quality improvements - no logic or behavior has been altered.
+Since the upstream repository was archived in 2022 (with the last commit from 2014), this inlined copy is now maintained by CCNG. These modifications bring the code to modern Ruby 3.3+ standards while maintaining compatibility with CCNG's usage patterns. All changes are for modernization, performance, security, or removal of unused features - no logic changes to actively used functionality.
 
 The comprehensive test suite (13 spec files from upstream + 1 integration spec) ensures that all functionality continues to work correctly and provides confidence for future modifications.
 
