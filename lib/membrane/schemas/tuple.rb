@@ -1,5 +1,5 @@
-require "membrane/errors"
-require "membrane/schemas/base"
+require 'membrane/errors'
+require 'membrane/schemas/base'
 
 module Membrane
   module Schema
@@ -27,7 +27,7 @@ class Membrane::Schemas::Tuple < Membrane::Schemas::Base
     end
 
     def validate
-      fail!(@object) if !@object.kind_of?(Array)
+      fail!(@object) unless @object.is_a?(Array)
     end
 
     private
@@ -69,21 +69,19 @@ class Membrane::Schemas::Tuple < Membrane::Schemas::Base
       errors = {}
 
       @elem_schemas.each_with_index do |schema, ii|
-        begin
-          schema.validate(@object[ii])
-        rescue Membrane::SchemaValidationError => e
-          errors[ii] = e
-        end
+        schema.validate(@object[ii])
+      rescue Membrane::SchemaValidationError => e
+        errors[ii] = e
       end
 
-      fail!(errors) if errors.size > 0
+      fail!(errors) unless errors.empty?
     end
 
     private
 
     def fail!(errors)
-      emsg = "There were errors at the following indices: " \
-             + errors.map { |ii, err| "#{ii} => #{err}" }.join(", ")
+      emsg = 'There were errors at the following indices: ' \
+             + errors.map { |ii, err| "#{ii} => #{err}" }.join(', ')
       raise Membrane::SchemaValidationError.new(emsg)
     end
   end

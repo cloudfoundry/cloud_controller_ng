@@ -1,10 +1,13 @@
-require "membrane/schemas"
+# Vendored from https://github.com/cloudfoundry/membrane
+# Modified for RuboCop compliance in CCNG
+
+require 'membrane/schemas'
 
 module Membrane
 end
 
 class Membrane::SchemaParser
-  DEPARSE_INDENT = "  ".freeze
+  DEPARSE_INDENT = '  '.freeze
 
   class Dsl
     OptionalKeyMarker = Struct.new(:key)
@@ -37,51 +40,52 @@ class Membrane::SchemaParser
     end
   end
 
-  def self.parse(&blk)
-    new.parse(&blk)
+  def self.parse(&)
+    new.parse(&)
   end
 
   def self.deparse(schema)
     new.deparse(schema)
   end
 
-  def parse(&blk)
-    intermediate_schema = Dsl.new.instance_eval(&blk)
+  def parse(&)
+    intermediate_schema = Dsl.new.instance_eval(&)
 
     do_parse(intermediate_schema)
   end
 
+  # rubocop:disable Metrics/CyclomaticComplexity
   def deparse(schema)
     case schema
     when Membrane::Schemas::Any
-      "any"
+      'any'
     when Membrane::Schemas::Bool
-      "bool"
+      'bool'
     when Membrane::Schemas::Class
       schema.klass.name
     when Membrane::Schemas::Dictionary
-      "dict(%s, %s)" % [deparse(schema.key_schema),
-                        deparse(schema.value_schema)]
+      sprintf('dict(%<key>s, %<value>s)', key: deparse(schema.key_schema), value: deparse(schema.value_schema))
     when Membrane::Schemas::Enum
-      "enum(%s)" % [schema.elem_schemas.map { |es| deparse(es) }.join(", ")]
+      sprintf('enum(%<elems>s)', elems: schema.elem_schemas.map { |es| deparse(es) }.join(', '))
     when Membrane::Schemas::List
-      "[%s]" % [deparse(schema.elem_schema)]
+      sprintf('[%<elem>s]', elem: deparse(schema.elem_schema))
     when Membrane::Schemas::Record
       deparse_record(schema)
     when Membrane::Schemas::Regexp
       schema.regexp.inspect
     when Membrane::Schemas::Tuple
-      "tuple(%s)" % [schema.elem_schemas.map { |es| deparse(es) }.join(", ")]
+      sprintf('tuple(%<elems>s)', elems: schema.elem_schemas.map { |es| deparse(es) }.join(', '))
     when Membrane::Schemas::Value
       schema.value.inspect
     when Membrane::Schemas::Base
       schema.inspect
     else
-      emsg = "Expected instance of Membrane::Schemas::Base, given instance of" \
+      emsg = 'Expected instance of Membrane::Schemas::Base, given instance of' \
              + " #{schema.class}"
       raise ArgumentError.new(emsg)
     end
   end
+  # rubocop:enable Metrics/CyclomaticComplexity
 
   private
 
@@ -97,7 +101,7 @@ class Membrane::SchemaParser
       Membrane::Schemas::Regexp.new(object)
     when Dsl::DictionaryMarker
       Membrane::Schemas::Dictionary.new(do_parse(object.key_schema),
-                                       do_parse(object.value_schema))
+                                        do_parse(object.value_schema))
     when Dsl::EnumMarker
       elem_schemas = object.elem_schemas.map { |s| do_parse(s) }
       Membrane::Schemas::Enum.new(*elem_schemas)
@@ -113,25 +117,23 @@ class Membrane::SchemaParser
 
   def parse_list(schema)
     if schema.empty?
-      raise ArgumentError.new("You must supply a schema for elements.")
+      raise ArgumentError.new('You must supply a schema for elements.')
     elsif schema.length > 1
-      raise ArgumentError.new("Lists can only match a single schema.")
+      raise ArgumentError.new('Lists can only match a single schema.')
     end
 
     Membrane::Schemas::List.new(do_parse(schema[0]))
   end
 
   def parse_record(schema)
-    if schema.empty?
-      raise ArgumentError.new("You must supply at least one key-value pair.")
-    end
+    raise ArgumentError.new('You must supply at least one key-value pair.') if schema.empty?
 
     optional_keys = []
 
     parsed = {}
 
     schema.each do |key, value_schema|
-      if key.kind_of?(Dsl::OptionalKeyMarker)
+      if key.is_a?(Dsl::OptionalKeyMarker)
         key = key.key
         optional_keys << key
       end
@@ -143,40 +145,38 @@ class Membrane::SchemaParser
   end
 
   def deparse_record(schema)
-    lines = ["{"]
+    lines = ['{']
 
     schema.schemas.each do |key, val_schema|
-      dep_key = nil
-      if schema.optional_keys.include?(key)
-        dep_key = "optional(%s)" % [key.inspect]
-      else
-        dep_key = key.inspect
-      end
+      nil
+      dep_key = if schema.optional_keys.include?(key)
+                  sprintf('optional(%s)', key.inspect)
+                else
+                  key.inspect
+                end
 
       dep_key = DEPARSE_INDENT + dep_key
       dep_val_schema_lines = deparse(val_schema).split("\n")
 
       dep_val_schema_lines.each_with_index do |line, line_idx|
-        to_append = nil
+        nil
 
-        if 0 == line_idx
-          to_append = "%s => %s" % [dep_key, line]
-        else
-          # Indent continuation lines
-          to_append = DEPARSE_INDENT + line
-        end
+        to_append = if line_idx.zero?
+                      sprintf('%<key>s => %<val>s', key: dep_key, val: line)
+                    else
+                      # Indent continuation lines
+                      DEPARSE_INDENT + line
+                    end
 
         # This concludes the deparsed schema, append a comma in preparation
         # for the next k-v pair.
-        if dep_val_schema_lines.size - 1 == line_idx
-          to_append += ","
-        end
+        to_append += ',' if dep_val_schema_lines.size - 1 == line_idx
 
         lines << to_append
       end
     end
 
-    lines << "}"
+    lines << '}'
 
     lines.join("\n")
   end

@@ -1,7 +1,5 @@
-require "set"
-
-require "membrane/errors"
-require "membrane/schemas/base"
+require 'membrane/errors'
+require 'membrane/schemas/base'
 
 class Membrane::Schemas::Bool < Membrane::Schemas::Base
   def validate(object)
@@ -16,7 +14,7 @@ class Membrane::Schemas::Bool < Membrane::Schemas::Base
     end
 
     def validate
-      fail!(@object) if !TRUTH_VALUES.include?(@object)
+      fail!(@object) unless TRUTH_VALUES.include?(@object)
     end
 
     private

@@ -1,5 +1,5 @@
-require "membrane/errors"
-require "membrane/schemas/base"
+require 'membrane/errors'
+require 'membrane/schemas/base'
 
 module Membrane
   module Schema
@@ -21,13 +21,12 @@ class Membrane::Schemas::Regexp < Membrane::Schemas::Base
   end
 
   class StringValidator
-
     def initialize(object)
       @object = object
     end
 
     def validate
-      fail!(@object) if !@object.kind_of?(String)
+      fail!(@object) unless @object.is_a?(String)
     end
 
     private
@@ -36,18 +35,16 @@ class Membrane::Schemas::Regexp < Membrane::Schemas::Base
       emsg = "Expected instance of String, given instance of #{object.class}"
       raise Membrane::SchemaValidationError.new(emsg)
     end
-
   end
 
   class MatchValidator
-
     def initialize(regexp, object)
       @regexp = regexp
       @object = object
     end
 
     def validate
-      fail!(@regexp, @object) if !@regexp.match(@object)
+      fail!(@regexp, @object) unless @regexp.match(@object)
     end
 
     private

@@ -12,7 +12,7 @@ RSpec.describe 'Vendored Membrane' do
     end
 
     it 'loads Membrane from the vendored location (not from gems)' do
-      loaded_file = $LOADED_FEATURES.grep(/\/membrane\.rb/).first
+      loaded_file = $LOADED_FEATURES.grep(%r{/membrane\.rb}).first
 
       expect(loaded_file).to include('cloud_controller_ng/lib/membrane.rb')
       expect(loaded_file).not_to include('gems')

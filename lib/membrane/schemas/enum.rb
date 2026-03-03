@@ -1,5 +1,5 @@
-require "membrane/errors"
-require "membrane/schemas/base"
+require 'membrane/errors'
+require 'membrane/schemas/base'
 
 module Membrane
   module Schema
@@ -25,11 +25,10 @@ class Membrane::Schemas::Enum < Membrane::Schemas::Base
 
     def validate
       @elem_schemas.each do |schema|
-        begin
-          schema.validate(@object)
-          return nil
-        rescue Membrane::SchemaValidationError
-        end
+        schema.validate(@object)
+        return nil
+      rescue Membrane::SchemaValidationError
+        # Intentionally suppressed: try next schema
       end
 
       fail!(@elem_schemas, @object)
@@ -38,12 +37,11 @@ class Membrane::Schemas::Enum < Membrane::Schemas::Base
     private
 
     def fail!(elem_schemas, object)
-      elem_schema_str = elem_schemas.map { |s| s.to_s }.join(", ")
+      elem_schema_str = elem_schemas.map(&:to_s).join(', ')
 
       emsg = "Object #{object} doesn't validate" \
            + " against any of #{elem_schema_str}"
       raise Membrane::SchemaValidationError.new(emsg)
     end
   end
-
 end

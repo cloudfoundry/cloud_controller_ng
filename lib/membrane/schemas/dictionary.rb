@@ -1,5 +1,5 @@
-require "membrane/errors"
-require "membrane/schemas/base"
+require 'membrane/errors'
+require 'membrane/schemas/base'
 
 module Membrane
   module Schema
@@ -7,8 +7,7 @@ module Membrane
 end
 
 class Membrane::Schemas::Dictionary < Membrane::Schemas::Base
-  attr_reader :key_schema
-  attr_reader :value_schema
+  attr_reader :key_schema, :value_schema
 
   def initialize(key_schema, value_schema)
     @key_schema = key_schema
@@ -26,7 +25,7 @@ class Membrane::Schemas::Dictionary < Membrane::Schemas::Base
     end
 
     def validate
-      fail!(@object.class) if !@object.kind_of?(Hash)
+      fail!(@object.class) unless @object.is_a?(Hash)
     end
 
     private
@@ -48,21 +47,19 @@ class Membrane::Schemas::Dictionary < Membrane::Schemas::Base
       errors = {}
 
       @object.each do |k, v|
-        begin
-          @key_schema.validate(k)
-          @value_schema.validate(v)
-        rescue Membrane::SchemaValidationError => e
-          errors[k] = e.to_s
-        end
+        @key_schema.validate(k)
+        @value_schema.validate(v)
+      rescue Membrane::SchemaValidationError => e
+        errors[k] = e.to_s
       end
 
-      fail!(errors) if errors.size > 0
+      fail!(errors) unless errors.empty?
     end
 
     private
 
     def fail!(errors)
-      emsg = "{ " + errors.map { |k, e| "#{k} => #{e}" }.join(", ") + " }"
+      emsg = '{ ' + errors.map { |k, e| "#{k} => #{e}" }.join(', ') + ' }'
       raise Membrane::SchemaValidationError.new(emsg)
     end
   end

@@ -1,5 +1,5 @@
-require "membrane/errors"
-require "membrane/schemas/base"
+require 'membrane/errors'
+require 'membrane/schemas/base'
 
 class Membrane::Schemas::Class < Membrane::Schemas::Base
   attr_reader :klass
@@ -14,14 +14,13 @@ class Membrane::Schemas::Class < Membrane::Schemas::Base
   end
 
   class ClassValidator
-
     def initialize(klass, object)
       @klass = klass
       @object = object
     end
 
     def validate
-      fail!(@klass, @object) if !@object.kind_of?(@klass)
+      fail!(@klass, @object) unless @object.is_a?(@klass)
     end
 
     private

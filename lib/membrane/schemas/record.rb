@@ -1,7 +1,5 @@
-require "set"
-
-require "membrane/errors"
-require "membrane/schemas/base"
+require 'membrane/errors'
+require 'membrane/schemas/base'
 
 module Membrane
   module Schema
@@ -9,10 +7,9 @@ module Membrane
 end
 
 class Membrane::Schemas::Record < Membrane::Schemas::Base
-  attr_reader :schemas
-  attr_reader :optional_keys
+  attr_reader :schemas, :optional_keys
 
-  def initialize(schemas, optional_keys = [], strict_checking = false)
+  def initialize(schemas, optional_keys=[], strict_checking: false)
     @optional_keys = Set.new(optional_keys)
     @schemas = schemas
     @strict_checking = strict_checking
@@ -23,8 +20,8 @@ class Membrane::Schemas::Record < Membrane::Schemas::Base
     KeyValidator.new(@optional_keys, @schemas, @strict_checking, object).validate
   end
 
-  def parse(&blk)
-    other_record = Membrane::SchemaParser.parse(&blk)
+  def parse(&)
+    other_record = Membrane::SchemaParser.parse(&)
     @schemas.merge!(other_record.schemas)
     @optional_keys << other_record.optional_keys
 
@@ -43,21 +40,21 @@ class Membrane::Schemas::Record < Membrane::Schemas::Base
       key_errors = {}
       schema_keys = []
       @schemas.each do |k, schema|
-        if @object.has_key?(k)
+        if @object.key?(k)
           schema_keys << k
           begin
             schema.validate(@object[k])
           rescue Membrane::SchemaValidationError => e
             key_errors[k] = e.to_s
           end
-        elsif !@optional_keys.include?(k)
-          key_errors[k] = "Missing key"
+        elsif @optional_keys.exclude?(k)
+          key_errors[k] = 'Missing key'
         end
       end
 
       key_errors.merge!(validate_extra_keys(@object.keys - schema_keys)) if @strict_checking
 
-      fail!(key_errors) if key_errors.size > 0
+      fail!(key_errors) unless key_errors.empty?
     end
 
     private
@@ -65,7 +62,7 @@ class Membrane::Schemas::Record < Membrane::Schemas::Base
     def validate_extra_keys(extra_keys)
       extra_key_errors = {}
       extra_keys.each do |k|
-        extra_key_errors[k] = "was not specified in the schema"
+        extra_key_errors[k] = 'was not specified in the schema'
       end
 
       extra_key_errors
@@ -74,9 +71,9 @@ class Membrane::Schemas::Record < Membrane::Schemas::Base
     def fail!(errors)
       emsg =
         if ENV['MEMBRANE_ERROR_USE_QUOTES']
-          "{ " + errors.map { |k, e| "'#{k}' => %q(#{e})" }.join(", ") + " }"
+          '{ ' + errors.map { |k, e| "'#{k}' => %q(#{e})" }.join(', ') + ' }'
         else
-          "{ " + errors.map { |k, e| "#{k} => #{e}" }.join(", ") + " }"
+          '{ ' + errors.map { |k, e| "#{k} => #{e}" }.join(', ') + ' }'
         end
       raise Membrane::SchemaValidationError.new(emsg)
     end
@@ -88,7 +85,7 @@ class Membrane::Schemas::Record < Membrane::Schemas::Base
     end
 
     def validate
-      fail!(@object) unless @object.kind_of?(Hash)
+      fail!(@object) unless @object.is_a?(Hash)
     end
 
     private
