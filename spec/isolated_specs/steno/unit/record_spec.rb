@@ -1,4 +1,4 @@
-require 'steno'
+require 'steno/steno'
 
 RSpec.describe Steno::Record do
   let(:message) { Array('test message') }

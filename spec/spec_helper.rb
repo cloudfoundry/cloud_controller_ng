@@ -62,7 +62,7 @@ init_block = proc do
   require 'rack/test'
   require 'timecop'
 
-  require 'steno'
+  require 'steno/steno'
   require 'webmock/rspec'
 
   require 'pry'

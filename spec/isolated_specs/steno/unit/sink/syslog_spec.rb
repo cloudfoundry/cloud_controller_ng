@@ -1,4 +1,4 @@
-require 'steno'
+require 'steno/steno'
 
 RSpec.describe Steno::Sink::Syslog do
   let(:level) do

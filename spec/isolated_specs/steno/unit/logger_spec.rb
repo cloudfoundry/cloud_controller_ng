@@ -1,4 +1,4 @@
-require 'steno'
+require 'steno/steno'
 
 RSpec.describe Steno::Logger do
   let(:logger) { described_class.new('test', []) }

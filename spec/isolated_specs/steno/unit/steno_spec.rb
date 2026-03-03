@@ -1,4 +1,4 @@
-require 'steno'
+require 'steno/steno'
 
 RSpec.describe Steno do
   let(:config) { Steno::Config.new }

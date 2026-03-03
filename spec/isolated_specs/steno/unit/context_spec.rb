@@ -1,4 +1,4 @@
-require 'steno'
+require 'steno/steno'
 require_relative '../support/shared_context_specs'
 require_relative '../support/barrier'
 

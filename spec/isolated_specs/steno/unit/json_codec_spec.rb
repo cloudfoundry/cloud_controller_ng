@@ -1,4 +1,4 @@
-require 'steno'
+require 'steno/steno'
 
 RSpec.describe Steno::Codec::Json do
   let(:codec) { described_class.new }

@@ -5,7 +5,7 @@
 # they will be ignored and preserved.
 
 require 'httpclient'
-require 'steno'
+require 'steno/steno'
 require 'cloud_controller/blobstore/fog/providers'
 require 'cloud_controller/resource_match'
 

@@ -1,7 +1,7 @@
 require 'fileutils'
 require 'tmpdir'
 require 'yaml'
-require 'steno'
+require 'steno/steno'
 
 RSpec.describe Steno::Config do
   describe '.from_hash' do

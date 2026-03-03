@@ -1,4 +1,4 @@
-require 'steno'
+require 'steno/steno'
 
 RSpec.describe Steno::LogLevel do
   let(:info_level) { described_class.new(:info, 2) }

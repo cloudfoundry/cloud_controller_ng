@@ -1,4 +1,4 @@
-require 'steno'
+require 'steno/steno'
 
 module VCAP::CloudController
   class StenoConfigurer

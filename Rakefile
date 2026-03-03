@@ -9,7 +9,7 @@ require File.expand_path('config/boot', __dir__)
 
 require 'yaml'
 require 'sequel'
-require 'steno'
+require 'steno/steno'
 require 'cloud_controller'
 require_relative 'lib/tasks/rake_config'
 

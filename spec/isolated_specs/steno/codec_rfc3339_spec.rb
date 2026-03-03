@@ -1,4 +1,4 @@
-require 'steno'
+require 'steno/steno'
 require 'oj'
 
 RSpec.describe Steno::Codec::JsonRFC3339 do
