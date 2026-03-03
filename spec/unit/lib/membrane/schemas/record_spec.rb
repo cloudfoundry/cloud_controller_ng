@@ -56,38 +56,19 @@ RSpec.describe Membrane::Schemas::Record do
       expect(errors).to match(/bar/)
     end
 
-    context 'when strict checking' do
-      it 'raises an error if there are extra keys that are not matched in the schema' do
-        data = {
-          'key' => 'value',
-          'other_key' => 2
-        }
+    it 'ignores extra keys that are not in the schema' do
+      data = {
+        'key' => 'value',
+        'other_key' => 2
+      }
 
-        rec_schema = Membrane::Schemas::Record.new({
-                                                     'key' => Membrane::Schemas::Class.new(String)
-                                                   }, [], strict_checking: true)
+      rec_schema = Membrane::Schemas::Record.new({
+                                                   'key' => Membrane::Schemas::Class.new(String)
+                                                 })
 
-        expect do
-          rec_schema.validate(data)
-        end.to raise_error(/other_key .* was not specified/)
-      end
-    end
-
-    context 'when not strict checking' do
-      it 'doesnt raise an error' do
-        data = {
-          'key' => 'value',
-          'other_key' => 2
-        }
-
-        rec_schema = Membrane::Schemas::Record.new({
-                                                     'key' => Membrane::Schemas::Class.new(String)
-                                                   })
-
-        expect do
-          rec_schema.validate(data)
-        end.not_to raise_error
-      end
+      expect do
+        rec_schema.validate(data)
+      end.not_to raise_error
     end
 
     context "when ENV['MEMBRANE_ERROR_USE_QUOTES'] is set" do

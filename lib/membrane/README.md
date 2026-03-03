@@ -171,17 +171,34 @@ Applied to all 15 Ruby files to bring 2014 code to 2025 standards.
 - **Reason:** Set is already loaded by ActiveSupport in CCNG's environment
 - **Impact:** Avoids Lint/UnusedRequire warning, aligns with CCNG's dependency model
 
-#### 5.4 Keyword Argument Syntax
-- **Files:** `schemas/record.rb`
-- **Change:** Mixed positional/keyword → Explicit keyword argument
+#### 5.4 Removed Unused strict_checking Parameter
+- **Files:** `schemas/record.rb` (multiple locations)
+- **Change:** Removed `strict_checking` parameter and related validation logic
+- **Reason:** CCNG never uses this parameter anywhere in the codebase
+- **Original behavior:** Optional parameter `strict_checking: false` (default) would ignore extra keys; `strict_checking: true` would error on extra keys
+- **New behavior:** Always ignores extra keys (same as default/CCNG usage)
+- **Impact:** No behavioral change for CCNG - keeps the default behavior that CCNG has always used
+- **Changes made:**
+  - Removed `strict_checking:` parameter from `initialize`
+  - Removed `@strict_checking` instance variable
+  - Removed `validate_extra_keys` method (unused)
+  - Removed conditional check for extra keys in validation
+  - Updated test to verify extra keys are ignored (default behavior)
+- **Example:**
   ```ruby
   # Before:
-  def initialize(schemas, optional_keys = [], strict_checking = false)
+  def initialize(schemas, optional_keys=[], strict_checking: false)
+    @optional_keys = Set.new(optional_keys)
+    @schemas = schemas
+    @strict_checking = strict_checking
+  end
 
   # After:
-  def initialize(schemas, optional_keys=[], strict_checking: false)
+  def initialize(schemas, optional_keys=[])
+    @optional_keys = Set.new(optional_keys)
+    @schemas = schemas
+  end
   ```
-- **Note:** `strict_checking` was already a keyword arg, kept mixed style for compatibility
 
 #### 5.5 Ruby 3.3 Set API Compatibility
 - **Files:** `schemas/record.rb` (1 occurrence, line 50)

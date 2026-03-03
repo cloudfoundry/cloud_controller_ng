@@ -9,15 +9,14 @@ end
 class Membrane::Schemas::Record < Membrane::Schemas::Base
   attr_reader :schemas, :optional_keys
 
-  def initialize(schemas, optional_keys=[], strict_checking: false)
+  def initialize(schemas, optional_keys=[])
     @optional_keys = Set.new(optional_keys)
     @schemas = schemas
-    @strict_checking = strict_checking
   end
 
   def validate(object)
     HashValidator.new(object).validate
-    KeyValidator.new(@optional_keys, @schemas, @strict_checking, object).validate
+    KeyValidator.new(@optional_keys, @schemas, object).validate
   end
 
   def parse(&)
@@ -29,10 +28,9 @@ class Membrane::Schemas::Record < Membrane::Schemas::Base
   end
 
   class KeyValidator
-    def initialize(optional_keys, schemas, strict_checking, object)
+    def initialize(optional_keys, schemas, object)
       @optional_keys = optional_keys
       @schemas = schemas
-      @strict_checking = strict_checking
       @object = object
     end
 
@@ -52,21 +50,10 @@ class Membrane::Schemas::Record < Membrane::Schemas::Base
         end
       end
 
-      key_errors.merge!(validate_extra_keys(@object.keys - schema_keys)) if @strict_checking
-
       fail!(key_errors) unless key_errors.empty?
     end
 
     private
-
-    def validate_extra_keys(extra_keys)
-      extra_key_errors = {}
-      extra_keys.each do |k|
-        extra_key_errors[k] = 'was not specified in the schema'
-      end
-
-      extra_key_errors
-    end
 
     def fail!(errors)
       emsg =
