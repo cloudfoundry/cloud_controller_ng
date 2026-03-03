@@ -1,5 +1,4 @@
 require 'spec_helper'
-require 'steno/codec_rfc3339'
 
 module VCAP::CloudController
   RSpec.describe StenoConfigurer do

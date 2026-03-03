@@ -1,7 +1,4 @@
-require 'steno'
-require 'steno/codec_rfc3339'
-require 'steno/config'
-require 'steno/context'
+require 'steno/steno'
 
 module VCAP::CloudController
   class StenoConfigurer

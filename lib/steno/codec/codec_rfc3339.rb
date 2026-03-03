@@ -1,4 +1,5 @@
 require 'steno/codec/base'
+require 'oj'
 
 module Steno
   module Codec
