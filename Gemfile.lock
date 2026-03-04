@@ -579,7 +579,8 @@ GEM
       spring (>= 0.9.1)
     statsd-ruby (1.5.0)
     stringio (3.2.0)
-    syslog (0.1.2)
+    syslog (0.4.0)
+      logger
     talentbox-delayed_job_sequel (4.4.0)
       delayed_job (~> 4.1)
       sequel (>= 5.0, < 6.0)
