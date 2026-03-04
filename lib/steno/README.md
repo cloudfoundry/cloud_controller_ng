@@ -23,7 +23,7 @@ This is a **modified version** of the original Steno library, adapted for CCNG's
 - Custom RFC3339 codec (previously in `lib/steno_custom_codec_temp/`)
 - LICENSE file (Apache 2.0 - for attribution)
 - NOTICE file (Apache 2.0 copyright notices)
-- Test suite (in `spec/unit/lib/steno/`)
+- Test suite (in `spec/isolated_specs/steno/`)
 
 ## What Was Excluded
 
@@ -66,7 +66,7 @@ Syslog.close if Syslog.opened?
   - Required adding `require 'active_support/core_ext/module/delegation'`
 
 ### 4. Test Structure Updates
-- Moved tests from `lib/steno/spec/` to `spec/unit/lib/steno/` (CCNG convention)
+- Moved tests from `lib/steno/spec/` to `spec/isolated_specs/steno/` (CCNG convention)
 - Removed global spec_helper requires, added explicit requires per test
 - Wrapped test describes in parent `RSpec.describe` blocks
 
@@ -75,7 +75,7 @@ Syslog.close if Syslog.opened?
 
 **Removed**:
 - `lib/steno/sink/eventlog.rb` (Windows Event Log sink)
-- `spec/unit/lib/steno/unit/sink/eventlog_spec.rb`
+- `spec/isolated_specs/steno/unit/sink/eventlog_spec.rb`
 - Windows conditionals from config.rb, syslog.rb, test files
 - `WINDOWS` constant from sink/base.rb
 
@@ -86,8 +86,8 @@ Syslog.close if Syslog.opened?
 - `lib/steno/version.rb` - Version constant no longer needed (not a gem)
 - `lib/steno/json_prettifier.rb` - CLI tool for prettifying logs, unused (~110 lines)
 - `lib/steno/core_ext.rb` - Monkey patches for `.logger` on Module/Class/Object, CCNG uses `Steno.logger()` instead (~50 lines)
-- `spec/unit/lib/steno/unit/json_prettifier_spec.rb` - Tests for removed feature
-- `spec/unit/lib/steno/unit/core_ext_spec.rb` - Tests for removed feature
+- `spec/isolated_specs/steno/unit/json_prettifier_spec.rb` - Tests for removed feature
+- `spec/isolated_specs/steno/unit/core_ext_spec.rb` - Tests for removed feature
 - Removed `require 'steno/version'` from steno.rb
 
 **What's kept** (even if unused):
@@ -120,6 +120,16 @@ Syslog.close if Syslog.opened?
 - `Steno::Context::Null` - Default fallback context
 - All log levels including debug1, debug2 - debug2 is actively used
 
+### 8. LoggerIO Adapter for Puma Integration
+**Rationale**: `Puma::LogWriter` requires IO-compatible objects. Previously, a `StenoIO` class existed outside the Steno library to bridge this gap. Since Steno is now inlined, the adapter was moved into the Steno namespace for consistency.
+
+**Added**:
+- `lib/steno/logger_io.rb`: `Steno::LoggerIO` - an IO adapter that wraps a `Steno::Logger` and forwards `write`/`puts` calls to it at a configured log level. Used by `PumaRunner` to pass Steno loggers as IO objects to `Puma::LogWriter`.
+- `spec/isolated_specs/steno/unit/logger_io_spec.rb`: Tests for `Steno::LoggerIO`.
+
+**Modified**:
+- `lib/steno/logger.rb`: Broadened the callstack filter from removing only frames from `logger.rb` to removing all frames within `lib/steno/`. This ensures that log records originating via `Steno::LoggerIO` correctly attribute the source location to the caller rather than to the adapter itself.
+
 ---
 
 ## Making Future Modifications
@@ -129,7 +139,7 @@ If you modify this integrated steno library:
 1. **Document changes** in the "Modifications Made After Integration" section above
 2. **Include rationale** for why the change was made
 3. **List affected files** and what changed
-4. **Run tests** to ensure nothing breaks: `bundle exec rspec spec/unit/lib/steno/`
+4. **Run tests** to ensure nothing breaks: `bundle exec rspec spec/isolated_specs/steno/`
 5. **Update this README** in the same commit as your changes
 
 ## Original Steno Commit History (102 commits)

@@ -74,13 +74,18 @@ RSpec.describe Steno::Logger do
     end
 
     it 'creates a record with the proper level' do
-      sink = double('sink')
       expect(Steno::Record).to receive(:new).with('test', :warn, 'message', anything, anything).and_call_original
-      allow(sink).to receive(:add_record)
 
-      my_logger = described_class.new('test', [sink])
+      logger.warn('message')
+    end
 
-      my_logger.warn('message')
+    it 'creates a record with logger.rb being removed from the callstack' do
+      expect(Steno::Record).to receive(:new).and_wrap_original do |original_method, source, log_level, message, loc, data|
+        expect(loc[0]).not_to match(/logger\.rb/)
+        original_method.call(source, log_level, message, loc, data)
+      end
+
+      logger.warn('message')
     end
   end
 
