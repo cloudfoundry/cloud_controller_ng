@@ -1,7 +1,6 @@
 # frozen_string_literal: true
 
 require_relative '../membrane_spec_helper'
-require 'membrane'
 
 RSpec.describe Membrane::Schemas::Dictionary do
   describe '#validate' do
