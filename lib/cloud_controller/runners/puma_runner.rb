@@ -1,7 +1,7 @@
 require 'puma'
 require 'puma/configuration'
 require 'puma/events'
-require 'cloud_controller/logs/steno_io'
+require 'steno/steno'
 require 'cloud_controller/execution_context'
 
 module VCAP::CloudController
@@ -51,7 +51,7 @@ module VCAP::CloudController
         conf.before_worker_shutdown { request_logs.log_incomplete_requests if request_logs }
       end
 
-      log_writer = Puma::LogWriter.new(StenoIO.new(logger, :info), StenoIO.new(logger, :error))
+      log_writer = Puma::LogWriter.new(Steno::LoggerIO.new(logger, :info), Steno::LoggerIO.new(logger, :error))
 
       events = Puma::Events.new
       events.after_booted { @periodic_updater.setup_updates }

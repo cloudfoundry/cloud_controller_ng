@@ -128,21 +128,11 @@ class Steno::Logger
   private
 
   def parse_record_loc(callstack)
-    file = nil
-    lineno = nil
-    method = nil
+    frame = callstack.find { |f| f !~ %r{/lib/steno/} } || callstack.last
 
-    callstack.each do |frame|
-      next if frame =~ /logger\.rb/
-
-      file, lineno, method = frame.split(':')
-
-      lineno = lineno.to_i
-
-      method = ::Regexp.last_match(1) if method =~ /in `([^']+)/
-
-      break
-    end
+    file, lineno, method = frame.split(':')
+    lineno = lineno.to_i
+    method = ::Regexp.last_match(1) if method =~ /in `([^`']+)/
 
     [file, lineno, method]
   end

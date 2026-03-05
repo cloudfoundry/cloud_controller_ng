@@ -1,4 +1,7 @@
-class StenoIO
+module Steno
+end
+
+class Steno::LoggerIO
   def initialize(logger, level)
     @logger = logger
     @level = level
