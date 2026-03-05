@@ -98,6 +98,11 @@ module VCAP::CloudController
 
     private
 
+    # Normalize allowed_sources to use string keys (Rails may parse JSON with symbol keys)
+    def normalized_allowed_sources
+      @normalized_allowed_sources ||= allowed_sources.is_a?(Hash) ? allowed_sources.transform_keys(&:to_s) : allowed_sources
+    end
+
     def validate_allowed_sources_structure
       unless allowed_sources.is_a?(Hash)
         errors.add(:allowed_sources, 'must be an object')
@@ -105,19 +110,19 @@ module VCAP::CloudController
       end
 
       valid_keys = %w[apps spaces orgs any]
-      invalid_keys = allowed_sources.keys - valid_keys
+      invalid_keys = normalized_allowed_sources.keys - valid_keys
       errors.add(:allowed_sources, "contains invalid keys: #{invalid_keys.join(', ')}") if invalid_keys.any?
 
       # Validate types
       %w[apps spaces orgs].each do |key|
-        next unless allowed_sources[key].present?
+        next unless normalized_allowed_sources[key].present?
 
-        unless allowed_sources[key].is_a?(Array) && allowed_sources[key].all? { |v| v.is_a?(String) }
+        unless normalized_allowed_sources[key].is_a?(Array) && normalized_allowed_sources[key].all? { |v| v.is_a?(String) }
           errors.add(:allowed_sources, "#{key} must be an array of strings")
         end
       end
 
-      return unless allowed_sources['any'].present? && ![true, false].include?(allowed_sources['any'])
+      return unless normalized_allowed_sources['any'].present? && ![true, false].include?(normalized_allowed_sources['any'])
 
       errors.add(:allowed_sources, 'any must be a boolean')
     end
@@ -125,8 +130,8 @@ module VCAP::CloudController
     def validate_allowed_sources_any_exclusivity
       return unless allowed_sources.is_a?(Hash)
 
-      has_any = allowed_sources['any'] == true
-      has_lists = %w[apps spaces orgs].any? { |key| allowed_sources[key].present? && allowed_sources[key].any? }
+      has_any = normalized_allowed_sources['any'] == true
+      has_lists = %w[apps spaces orgs].any? { |key| normalized_allowed_sources[key].present? && normalized_allowed_sources[key].any? }
 
       return unless has_any && has_lists
 
@@ -143,7 +148,7 @@ module VCAP::CloudController
     end
 
     def validate_app_guids_exist
-      app_guids = allowed_sources['apps']
+      app_guids = normalized_allowed_sources['apps']
       return if app_guids.blank?
 
       existing_guids = AppModel.where(guid: app_guids).select_map(:guid)
@@ -154,7 +159,7 @@ module VCAP::CloudController
     end
 
     def validate_space_guids_exist
-      space_guids = allowed_sources['spaces']
+      space_guids = normalized_allowed_sources['spaces']
       return if space_guids.blank?
 
       existing_guids = Space.where(guid: space_guids).select_map(:guid)
@@ -165,7 +170,7 @@ module VCAP::CloudController
     end
 
     def validate_org_guids_exist
-      org_guids = allowed_sources['orgs']
+      org_guids = normalized_allowed_sources['orgs']
       return if org_guids.blank?
 
       existing_guids = Organization.where(guid: org_guids).select_map(:guid)
