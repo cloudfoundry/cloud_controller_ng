@@ -3,11 +3,12 @@ require 'messages/metadata_base_message'
 module VCAP::CloudController
   class RouteOptionsMessage < BaseMessage
     # Register all possible keys upfront so attr_accessors are created
-    register_allowed_keys %i[loadbalancing hash_header hash_balance]
+    register_allowed_keys %i[loadbalancing hash_header hash_balance allowed_sources]
 
     def self.valid_route_options
       options = %i[loadbalancing]
       options += %i[hash_header hash_balance] if VCAP::CloudController::FeatureFlag.enabled?(:hash_based_routing)
+      options += %i[allowed_sources] if VCAP::CloudController::FeatureFlag.enabled?(:app_to_app_mtls_routing)
       options.freeze
     end
 
@@ -21,6 +22,7 @@ module VCAP::CloudController
     validate :loadbalancing_algorithm_is_valid
     validate :route_options_are_valid
     validate :hash_options_are_valid
+    validate :allowed_sources_options_are_valid
 
     def loadbalancing_algorithm_is_valid
       return if loadbalancing.blank?
@@ -81,6 +83,96 @@ module VCAP::CloudController
       # When loadbalancing is explicitly set to non-hash value, hash options are not allowed
       errors.add(:base, 'Hash header can only be set when loadbalancing is hash') if hash_header.present? && loadbalancing.present? && loadbalancing != 'hash'
       errors.add(:base, 'Hash balance can only be set when loadbalancing is hash') if hash_balance.present? && loadbalancing.present? && loadbalancing != 'hash'
+    end
+
+    def allowed_sources_options_are_valid
+      # Only validate allowed_sources when the feature flag is enabled
+      # If disabled, route_options_are_valid will already report it as unknown field
+      return unless VCAP::CloudController::FeatureFlag.enabled?(:app_to_app_mtls_routing)
+      return if allowed_sources.blank?
+
+      validate_allowed_sources_structure
+      validate_allowed_sources_any_exclusivity
+      validate_allowed_sources_guids_exist
+    end
+
+    private
+
+    def validate_allowed_sources_structure
+      unless allowed_sources.is_a?(Hash)
+        errors.add(:allowed_sources, 'must be an object')
+        return
+      end
+
+      valid_keys = %w[apps spaces orgs any]
+      invalid_keys = allowed_sources.keys - valid_keys
+      errors.add(:allowed_sources, "contains invalid keys: #{invalid_keys.join(', ')}") if invalid_keys.any?
+
+      # Validate types
+      %w[apps spaces orgs].each do |key|
+        next unless allowed_sources[key].present?
+
+        unless allowed_sources[key].is_a?(Array) && allowed_sources[key].all? { |v| v.is_a?(String) }
+          errors.add(:allowed_sources, "#{key} must be an array of strings")
+        end
+      end
+
+      return unless allowed_sources['any'].present? && ![true, false].include?(allowed_sources['any'])
+
+      errors.add(:allowed_sources, 'any must be a boolean')
+    end
+
+    def validate_allowed_sources_any_exclusivity
+      return unless allowed_sources.is_a?(Hash)
+
+      has_any = allowed_sources['any'] == true
+      has_lists = %w[apps spaces orgs].any? { |key| allowed_sources[key].present? && allowed_sources[key].any? }
+
+      return unless has_any && has_lists
+
+      errors.add(:allowed_sources, 'any is mutually exclusive with apps, spaces, and orgs')
+    end
+
+    def validate_allowed_sources_guids_exist
+      return unless allowed_sources.is_a?(Hash)
+      return if errors[:allowed_sources].any? # Skip if already invalid
+
+      validate_app_guids_exist
+      validate_space_guids_exist
+      validate_org_guids_exist
+    end
+
+    def validate_app_guids_exist
+      app_guids = allowed_sources['apps']
+      return if app_guids.blank?
+
+      existing_guids = AppModel.where(guid: app_guids).select_map(:guid)
+      missing_guids = app_guids - existing_guids
+      return if missing_guids.empty?
+
+      errors.add(:allowed_sources, "apps contains non-existent app GUIDs: #{missing_guids.join(', ')}")
+    end
+
+    def validate_space_guids_exist
+      space_guids = allowed_sources['spaces']
+      return if space_guids.blank?
+
+      existing_guids = Space.where(guid: space_guids).select_map(:guid)
+      missing_guids = space_guids - existing_guids
+      return if missing_guids.empty?
+
+      errors.add(:allowed_sources, "spaces contains non-existent space GUIDs: #{missing_guids.join(', ')}")
+    end
+
+    def validate_org_guids_exist
+      org_guids = allowed_sources['orgs']
+      return if org_guids.blank?
+
+      existing_guids = Organization.where(guid: org_guids).select_map(:guid)
+      missing_guids = org_guids - existing_guids
+      return if missing_guids.empty?
+
+      errors.add(:allowed_sources, "orgs contains non-existent organization GUIDs: #{missing_guids.join(', ')}")
     end
   end
 end
