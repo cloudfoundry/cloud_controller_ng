@@ -2,14 +2,21 @@
 
 ## Status
 
-📝 **Accepted** - This ADR defines a shared direction for replacing fog-based blobstore implementations.
+✅ **Implemented** - Storage-CLI support is fully implemented for following Iaas Providers with native type names.
 
 | Provider     | Status                    | Notes                                                                                                   |
 |--------------|---------------------------|---------------------------------------------------------------------------------------------------------|
-| Azure        | 🚧 PoC in Progress        | [PoC](https://github.com/cloudfoundry/cloud_controller_ng/pull/4397) done with `bosh-azure-storage-cli` |
-| AWS          | 🧭 Open for Contribution  |                                                                                                         |
-| GCP          | 🧭 Open for Contribution  |                                                                                                         |
-| Alibaba Cloud| 🧭 Open for Contribution  |                                                                                                         |
+| Azure        | ✅ Implemented            | Uses `bosh-azure-storage-cli` with native type `azurebs`                                               |
+| AWS          | ✅ Implemented            | Uses `bosh-s3cli` with native type `s3`                                                                |
+| GCP          | ✅ Implemented            | Uses `bosh-gcscli` with native type `gcs`                                                              |
+| Alibaba Cloud| ✅ Implemented            | Uses `bosh-ali-storage-cli` with native type `alioss`                                                  |
+
+**Configuration Migration Status:**
+- The `blobstore_provider` field accepts both native storage-cli type names AND legacy fog names
+- **Recommended:** Use native storage-cli type names (azurebs, s3, gcs, alioss)
+- **Legacy fog names** (AzureRM, AWS, Google, aliyun) still supported for backwards compatibility
+- **WebDAV/dav intentionally excluded** until fully supported
+- **Timeline:** Legacy fog name support to be removed May 2026
 
 
 ## Context
@@ -46,15 +53,16 @@ Specifically, we will:
       packages:
               app_package_directory_key: app-packages
               blobstore_type: storage-cli
+              blobstore_provider: azurebs  # Native storage-cli type (RECOMMENDED)
+              # OR: blobstore_provider: AzureRM  # Legacy fog name (DEPRECATED)
               connection_config:
                 azure_storage_access_key: <access_key>
                 azure_storage_account_name: <account_name>
                 container_name: app-packages
                 environment: AzureCloud
-                provider: AzureRM
               max_package_size: 1610612736
     ```
-* Field `provider` will be used to determine the corresponding storage CLI blobstore client class (same approach is used for fog)
+* Field `blobstore_provider` will be used to determine the corresponding storage CLI blobstore client class (same approach is used for fog)
 * The `fog_connection` field will be renamed to `connection_config` to make it independent
 * Values from `connection_config` are used to generate the corresponding config file for the Bosh storage CLIs
     * Config generation could be moved away from ccng into capi-release to avoid duplication 
