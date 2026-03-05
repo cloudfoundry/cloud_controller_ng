@@ -37,12 +37,30 @@ module VCAP::CloudController
       end
     end
 
-    describe 'mtls_allowed_sources validations' do
+    describe 'mTLS allowed sources validations (RFC-0027 compliant flat options)' do
       context 'when app_to_app_mtls_routing feature flag is disabled' do
-        it 'does not allow mtls_allowed_sources option' do
-          message = RouteOptionsMessage.new({ mtls_allowed_sources: { apps: ['app-guid-1'] } })
+        it 'does not allow mtls_allowed_apps option' do
+          message = RouteOptionsMessage.new({ mtls_allowed_apps: 'app-guid-1' })
           expect(message).not_to be_valid
-          expect(message.errors_on(:base)).to include("Unknown field(s): 'mtls_allowed_sources'")
+          expect(message.errors_on(:base)).to include("Unknown field(s): 'mtls_allowed_apps'")
+        end
+
+        it 'does not allow mtls_allowed_spaces option' do
+          message = RouteOptionsMessage.new({ mtls_allowed_spaces: 'space-guid-1' })
+          expect(message).not_to be_valid
+          expect(message.errors_on(:base)).to include("Unknown field(s): 'mtls_allowed_spaces'")
+        end
+
+        it 'does not allow mtls_allowed_orgs option' do
+          message = RouteOptionsMessage.new({ mtls_allowed_orgs: 'org-guid-1' })
+          expect(message).not_to be_valid
+          expect(message.errors_on(:base)).to include("Unknown field(s): 'mtls_allowed_orgs'")
+        end
+
+        it 'does not allow mtls_allow_any option' do
+          message = RouteOptionsMessage.new({ mtls_allow_any: true })
+          expect(message).not_to be_valid
+          expect(message.errors_on(:base)).to include("Unknown field(s): 'mtls_allow_any'")
         end
       end
 
@@ -51,183 +69,176 @@ module VCAP::CloudController
           VCAP::CloudController::FeatureFlag.make(name: 'app_to_app_mtls_routing', enabled: true)
         end
 
-        describe 'structure validation' do
-          it 'allows valid mtls_allowed_sources with apps' do
+        describe 'mtls_allowed_apps validation' do
+          it 'allows valid comma-separated app GUIDs' do
+            app1 = AppModel.make
+            app2 = AppModel.make
+            message = RouteOptionsMessage.new({ mtls_allowed_apps: "#{app1.guid},#{app2.guid}" })
+            expect(message).to be_valid
+          end
+
+          it 'allows single app GUID' do
             app = AppModel.make
-            message = RouteOptionsMessage.new({ mtls_allowed_sources: { 'apps' => [app.guid] } })
+            message = RouteOptionsMessage.new({ mtls_allowed_apps: app.guid })
             expect(message).to be_valid
           end
 
-          it 'allows valid mtls_allowed_sources with spaces' do
-            space = Space.make
-            message = RouteOptionsMessage.new({ mtls_allowed_sources: { 'spaces' => [space.guid] } })
+          it 'allows app GUIDs with whitespace around commas' do
+            app1 = AppModel.make
+            app2 = AppModel.make
+            message = RouteOptionsMessage.new({ mtls_allowed_apps: "#{app1.guid} , #{app2.guid}" })
             expect(message).to be_valid
           end
 
-          it 'allows valid mtls_allowed_sources with orgs' do
-            org = Organization.make
-            message = RouteOptionsMessage.new({ mtls_allowed_sources: { 'orgs' => [org.guid] } })
-            expect(message).to be_valid
-          end
-
-          it 'allows valid mtls_allowed_sources with any: true' do
-            message = RouteOptionsMessage.new({ mtls_allowed_sources: { 'any' => true } })
-            expect(message).to be_valid
-          end
-
-          it 'allows valid mtls_allowed_sources with any: false' do
-            message = RouteOptionsMessage.new({ mtls_allowed_sources: { 'any' => false } })
-            expect(message).to be_valid
-          end
-
-          it 'allows empty mtls_allowed_sources object' do
-            message = RouteOptionsMessage.new({ mtls_allowed_sources: {} })
-            expect(message).to be_valid
-          end
-
-          it 'does not allow non-object mtls_allowed_sources' do
-            message = RouteOptionsMessage.new({ mtls_allowed_sources: 'invalid' })
+          it 'rejects non-existent app GUIDs' do
+            message = RouteOptionsMessage.new({ mtls_allowed_apps: 'non-existent-guid' })
             expect(message).not_to be_valid
-            expect(message.errors_on(:mtls_allowed_sources)).to include('must be an object')
-          end
-
-          it 'does not allow array mtls_allowed_sources' do
-            message = RouteOptionsMessage.new({ mtls_allowed_sources: ['app-guid-1'] })
-            expect(message).not_to be_valid
-            expect(message.errors_on(:mtls_allowed_sources)).to include('must be an object')
-          end
-
-          it 'does not allow invalid keys in mtls_allowed_sources' do
-            message = RouteOptionsMessage.new({ mtls_allowed_sources: { 'invalid_key' => 'value' } })
-            expect(message).not_to be_valid
-            expect(message.errors_on(:mtls_allowed_sources)).to include('contains invalid keys: invalid_key')
-          end
-
-          it 'does not allow non-array apps' do
-            message = RouteOptionsMessage.new({ mtls_allowed_sources: { 'apps' => 'not-an-array' } })
-            expect(message).not_to be_valid
-            expect(message.errors_on(:mtls_allowed_sources)).to include('apps must be an array of strings')
-          end
-
-          it 'does not allow non-string elements in apps array' do
-            message = RouteOptionsMessage.new({ mtls_allowed_sources: { 'apps' => [123, 456] } })
-            expect(message).not_to be_valid
-            expect(message.errors_on(:mtls_allowed_sources)).to include('apps must be an array of strings')
-          end
-
-          it 'does not allow non-array spaces' do
-            message = RouteOptionsMessage.new({ mtls_allowed_sources: { 'spaces' => 'not-an-array' } })
-            expect(message).not_to be_valid
-            expect(message.errors_on(:mtls_allowed_sources)).to include('spaces must be an array of strings')
-          end
-
-          it 'does not allow non-array orgs' do
-            message = RouteOptionsMessage.new({ mtls_allowed_sources: { 'orgs' => 'not-an-array' } })
-            expect(message).not_to be_valid
-            expect(message.errors_on(:mtls_allowed_sources)).to include('orgs must be an array of strings')
-          end
-
-          it 'does not allow non-boolean any' do
-            message = RouteOptionsMessage.new({ mtls_allowed_sources: { 'any' => 'true' } })
-            expect(message).not_to be_valid
-            expect(message.errors_on(:mtls_allowed_sources)).to include('any must be a boolean')
-          end
-        end
-
-        describe 'any exclusivity validation' do
-          it 'does not allow any: true with apps list' do
-            app = AppModel.make
-            message = RouteOptionsMessage.new({ mtls_allowed_sources: { 'any' => true, 'apps' => [app.guid] } })
-            expect(message).not_to be_valid
-            expect(message.errors_on(:mtls_allowed_sources)).to include('any is mutually exclusive with apps, spaces, and orgs')
-          end
-
-          it 'does not allow any: true with spaces list' do
-            space = Space.make
-            message = RouteOptionsMessage.new({ mtls_allowed_sources: { 'any' => true, 'spaces' => [space.guid] } })
-            expect(message).not_to be_valid
-            expect(message.errors_on(:mtls_allowed_sources)).to include('any is mutually exclusive with apps, spaces, and orgs')
-          end
-
-          it 'does not allow any: true with orgs list' do
-            org = Organization.make
-            message = RouteOptionsMessage.new({ mtls_allowed_sources: { 'any' => true, 'orgs' => [org.guid] } })
-            expect(message).not_to be_valid
-            expect(message.errors_on(:mtls_allowed_sources)).to include('any is mutually exclusive with apps, spaces, and orgs')
-          end
-
-          it 'allows any: false with apps list' do
-            app = AppModel.make
-            message = RouteOptionsMessage.new({ mtls_allowed_sources: { 'any' => false, 'apps' => [app.guid] } })
-            expect(message).to be_valid
-          end
-
-          it 'allows any: true with empty apps list' do
-            message = RouteOptionsMessage.new({ mtls_allowed_sources: { 'any' => true, 'apps' => [] } })
-            expect(message).to be_valid
-          end
-        end
-
-        describe 'GUID existence validation' do
-          it 'validates that app GUIDs exist' do
-            message = RouteOptionsMessage.new({ mtls_allowed_sources: { 'apps' => ['non-existent-app-guid'] } })
-            expect(message).not_to be_valid
-            expect(message.errors_on(:mtls_allowed_sources)).to include('apps contains non-existent app GUIDs: non-existent-app-guid')
-          end
-
-          it 'validates that space GUIDs exist' do
-            message = RouteOptionsMessage.new({ mtls_allowed_sources: { 'spaces' => ['non-existent-space-guid'] } })
-            expect(message).not_to be_valid
-            expect(message.errors_on(:mtls_allowed_sources)).to include('spaces contains non-existent space GUIDs: non-existent-space-guid')
-          end
-
-          it 'validates that org GUIDs exist' do
-            message = RouteOptionsMessage.new({ mtls_allowed_sources: { 'orgs' => ['non-existent-org-guid'] } })
-            expect(message).not_to be_valid
-            expect(message.errors_on(:mtls_allowed_sources)).to include('orgs contains non-existent organization GUIDs: non-existent-org-guid')
+            expect(message.errors_on(:mtls_allowed_apps)).to include('contains non-existent app GUIDs: non-existent-guid')
           end
 
           it 'reports multiple non-existent app GUIDs' do
-            message = RouteOptionsMessage.new({ mtls_allowed_sources: { 'apps' => ['guid-1', 'guid-2'] } })
+            message = RouteOptionsMessage.new({ mtls_allowed_apps: 'guid-1,guid-2' })
             expect(message).not_to be_valid
-            expect(message.errors_on(:mtls_allowed_sources)).to include('apps contains non-existent app GUIDs: guid-1, guid-2')
+            expect(message.errors_on(:mtls_allowed_apps)).to include('contains non-existent app GUIDs: guid-1, guid-2')
           end
 
-          it 'allows mix of existing apps, spaces, and orgs' do
+          it 'rejects non-string values' do
+            message = RouteOptionsMessage.new({ mtls_allowed_apps: ['array-not-string'] })
+            expect(message).not_to be_valid
+            expect(message.errors_on(:mtls_allowed_apps)).to include('must be a string of comma-separated GUIDs')
+          end
+        end
+
+        describe 'mtls_allowed_spaces validation' do
+          it 'allows valid comma-separated space GUIDs' do
+            space1 = Space.make
+            space2 = Space.make
+            message = RouteOptionsMessage.new({ mtls_allowed_spaces: "#{space1.guid},#{space2.guid}" })
+            expect(message).to be_valid
+          end
+
+          it 'allows single space GUID' do
+            space = Space.make
+            message = RouteOptionsMessage.new({ mtls_allowed_spaces: space.guid })
+            expect(message).to be_valid
+          end
+
+          it 'rejects non-existent space GUIDs' do
+            message = RouteOptionsMessage.new({ mtls_allowed_spaces: 'non-existent-space' })
+            expect(message).not_to be_valid
+            expect(message.errors_on(:mtls_allowed_spaces)).to include('contains non-existent space GUIDs: non-existent-space')
+          end
+
+          it 'rejects non-string values' do
+            message = RouteOptionsMessage.new({ mtls_allowed_spaces: { 'nested' => 'object' } })
+            expect(message).not_to be_valid
+            expect(message.errors_on(:mtls_allowed_spaces)).to include('must be a string of comma-separated GUIDs')
+          end
+        end
+
+        describe 'mtls_allowed_orgs validation' do
+          it 'allows valid comma-separated org GUIDs' do
+            org1 = Organization.make
+            org2 = Organization.make
+            message = RouteOptionsMessage.new({ mtls_allowed_orgs: "#{org1.guid},#{org2.guid}" })
+            expect(message).to be_valid
+          end
+
+          it 'allows single org GUID' do
+            org = Organization.make
+            message = RouteOptionsMessage.new({ mtls_allowed_orgs: org.guid })
+            expect(message).to be_valid
+          end
+
+          it 'rejects non-existent org GUIDs' do
+            message = RouteOptionsMessage.new({ mtls_allowed_orgs: 'non-existent-org' })
+            expect(message).not_to be_valid
+            expect(message.errors_on(:mtls_allowed_orgs)).to include('contains non-existent organization GUIDs: non-existent-org')
+          end
+        end
+
+        describe 'mtls_allow_any validation' do
+          it 'allows true value' do
+            message = RouteOptionsMessage.new({ mtls_allow_any: true })
+            expect(message).to be_valid
+          end
+
+          it 'allows false value' do
+            message = RouteOptionsMessage.new({ mtls_allow_any: false })
+            expect(message).to be_valid
+          end
+
+          it 'allows string "true"' do
+            message = RouteOptionsMessage.new({ mtls_allow_any: 'true' })
+            expect(message).to be_valid
+          end
+
+          it 'allows string "false"' do
+            message = RouteOptionsMessage.new({ mtls_allow_any: 'false' })
+            expect(message).to be_valid
+          end
+
+          it 'rejects non-boolean values' do
+            message = RouteOptionsMessage.new({ mtls_allow_any: 'yes' })
+            expect(message).not_to be_valid
+            expect(message.errors_on(:mtls_allow_any)).to include('must be a boolean (true or false)')
+          end
+        end
+
+        describe 'mtls_allow_any exclusivity validation' do
+          it 'does not allow mtls_allow_any with mtls_allowed_apps' do
+            app = AppModel.make
+            message = RouteOptionsMessage.new({ mtls_allow_any: true, mtls_allowed_apps: app.guid })
+            expect(message).not_to be_valid
+            expect(message.errors_on(:mtls_allow_any)).to include('is mutually exclusive with mtls_allowed_apps, mtls_allowed_spaces, and mtls_allowed_orgs')
+          end
+
+          it 'does not allow mtls_allow_any with mtls_allowed_spaces' do
+            space = Space.make
+            message = RouteOptionsMessage.new({ mtls_allow_any: true, mtls_allowed_spaces: space.guid })
+            expect(message).not_to be_valid
+            expect(message.errors_on(:mtls_allow_any)).to include('is mutually exclusive with mtls_allowed_apps, mtls_allowed_spaces, and mtls_allowed_orgs')
+          end
+
+          it 'does not allow mtls_allow_any with mtls_allowed_orgs' do
+            org = Organization.make
+            message = RouteOptionsMessage.new({ mtls_allow_any: true, mtls_allowed_orgs: org.guid })
+            expect(message).not_to be_valid
+            expect(message.errors_on(:mtls_allow_any)).to include('is mutually exclusive with mtls_allowed_apps, mtls_allowed_spaces, and mtls_allowed_orgs')
+          end
+
+          it 'allows mtls_allow_any: false with specific GUIDs' do
+            app = AppModel.make
+            message = RouteOptionsMessage.new({ mtls_allow_any: false, mtls_allowed_apps: app.guid })
+            expect(message).to be_valid
+          end
+
+          it 'allows string "true" exclusivity check' do
+            app = AppModel.make
+            message = RouteOptionsMessage.new({ mtls_allow_any: 'true', mtls_allowed_apps: app.guid })
+            expect(message).not_to be_valid
+            expect(message.errors_on(:mtls_allow_any)).to include('is mutually exclusive with mtls_allowed_apps, mtls_allowed_spaces, and mtls_allowed_orgs')
+          end
+        end
+
+        describe 'combined options' do
+          it 'allows all mTLS options together (without mtls_allow_any)' do
             app = AppModel.make
             space = Space.make
             org = Organization.make
             message = RouteOptionsMessage.new({
-              mtls_allowed_sources: {
-                'apps' => [app.guid],
-                'spaces' => [space.guid],
-                'orgs' => [org.guid]
-              }
+              mtls_allowed_apps: app.guid,
+              mtls_allowed_spaces: space.guid,
+              mtls_allowed_orgs: org.guid
             })
             expect(message).to be_valid
           end
 
-          it 'validates all types of GUIDs when multiple are provided' do
-            app = AppModel.make
-            message = RouteOptionsMessage.new({
-              mtls_allowed_sources: {
-                'apps' => [app.guid],
-                'spaces' => ['non-existent-space'],
-                'orgs' => ['non-existent-org']
-              }
-            })
-            expect(message).not_to be_valid
-            expect(message.errors_on(:mtls_allowed_sources)).to include('spaces contains non-existent space GUIDs: non-existent-space')
-            expect(message.errors_on(:mtls_allowed_sources)).to include('orgs contains non-existent organization GUIDs: non-existent-org')
-          end
-        end
-
-        describe 'combined with other options' do
-          it 'allows mtls_allowed_sources with loadbalancing' do
+          it 'allows mTLS options with loadbalancing' do
             app = AppModel.make
             message = RouteOptionsMessage.new({
               loadbalancing: 'round-robin',
-              mtls_allowed_sources: { 'apps' => [app.guid] }
+              mtls_allowed_apps: app.guid
             })
             expect(message).to be_valid
           end
