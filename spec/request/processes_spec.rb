@@ -83,6 +83,23 @@ RSpec.describe 'Processes' do
       allow(instances_reporters).to receive(:instances_for_processes).and_return(instances_for_processes)
     end
 
+    context 'eager loading' do
+      let(:cnb_app) { VCAP::CloudController::AppModel.make(:cnb, space:) }
+      let!(:cnb_process_1) { VCAP::CloudController::ProcessModel.make(:cnb, app: cnb_app) }
+      let!(:cnb_process_2) { VCAP::CloudController::ProcessModel.make(:cnb, app: cnb_app) }
+      let(:get_processes) { -> { get '/v3/processes', nil, developer_headers } }
+
+      it 'eager loads associated data needed to present processes' do
+        expect { get_processes.call }.to have_queried_db_times(/SELECT .* FROM .processes. /i, 1)
+        expect(last_response.status).to eq(200)
+        expect(parsed_response['resources'].count).to eq(4)
+
+        expect { get_processes.call }.to have_queried_db_times(/SELECT .* FROM .apps. /i, 1) # instead of 4 w/o eager loading
+        expect { get_processes.call }.to have_queried_db_times(/SELECT .* FROM .buildpack_lifecycle_data. /i, 1) # instead of 4 w/o eager loading
+        expect { get_processes.call }.to have_queried_db_times(/SELECT .* FROM .cnb_lifecycle_data. /i, 1) # instead of 2 w/o eager loading
+      end
+    end
+
     it_behaves_like 'list query endpoint' do
       let(:message) { VCAP::CloudController::ProcessesListMessage }
       let(:request) { '/v3/processes' }

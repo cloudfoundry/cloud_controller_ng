@@ -126,8 +126,6 @@ module VCAP::CloudController
     end
 
     def docker_user
-      return '' unless docker?
-
       container_user = ''
       if execution_metadata.present?
         begin
