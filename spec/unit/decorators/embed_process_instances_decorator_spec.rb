@@ -1,4 +1,5 @@
-require 'spec_helper'
+require 'db_spec_helper'
+require 'decorators/embed_process_instances_decorator'
 
 module VCAP::CloudController
   RSpec.describe EmbedProcessInstancesDecorator do

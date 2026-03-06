@@ -1,4 +1,4 @@
-require 'spec_helper'
+require 'db_spec_helper'
 require 'presenters/v3/route_destination_presenter'
 require 'messages/route_destinations_list_message'
 

@@ -1,9 +1,9 @@
-require 'spec_helper'
+require 'fog_spec_helper'
 require 'cloud_controller/blobstore/storage_cli/storage_cli_client'
 
 module CloudController
   module Blobstore
-    RSpec.describe StorageCliClient do
+    RSpec.describe StorageCliClient, :fog_isolation do
       describe 'client init' do
         it 'init the correct client when JSON has provider AzureRM' do
           droplets_cfg = Tempfile.new(['droplets', '.json'])
