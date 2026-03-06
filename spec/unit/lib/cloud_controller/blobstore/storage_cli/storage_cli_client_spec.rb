@@ -5,7 +5,9 @@ module CloudController
   module Blobstore
     RSpec.describe StorageCliClient do
       describe 'client init' do
-        it 'init the correct client when JSON has provider AzureRM' do
+        # DEPRECATED: Legacy fog provider tests - remove after migration window
+        # START LEGACY FOG SUPPORT TESTS
+        it 'init the correct client when JSON has provider AzureRM (legacy fog name)' do
           droplets_cfg = Tempfile.new(['droplets', '.json'])
           droplets_cfg.write({ provider: 'AzureRM',
                                account_key: 'bommelkey',
@@ -23,7 +25,33 @@ module CloudController
             root_dir: 'dummy-root',
             resource_type: 'droplets'
           )
-          expect(client.instance_variable_get(:@provider)).to eq('AzureRM')
+          expect(client.instance_variable_get(:@storage_type)).to eq('azurebs')
+          expect(client.instance_variable_get(:@resource_type)).to eq('droplets')
+          expect(client.instance_variable_get(:@root_dir)).to eq('dummy-root')
+          expect(client.instance_variable_get(:@directory_key)).to eq('dummy-key')
+
+          droplets_cfg.close!
+        end
+        # END LEGACY FOG SUPPORT TESTS
+
+        it 'init the correct client when JSON has provider azurebs (native storage-cli type)' do
+          droplets_cfg = Tempfile.new(['droplets', '.json'])
+          droplets_cfg.write({ provider: 'azurebs',
+                               account_key: 'bommelkey',
+                               account_name: 'bommel',
+                               container_name: 'bommelcontainer',
+                               environment: 'BommelCloud' }.to_json)
+          droplets_cfg.flush
+
+          config_double = instance_double(VCAP::CloudController::Config)
+          allow(VCAP::CloudController::Config).to receive(:config).and_return(config_double)
+          allow(config_double).to receive(:get).with(:storage_cli_config_file_droplets).and_return(droplets_cfg.path)
+
+          client = StorageCliClient.new(
+            directory_key: 'dummy-key',
+            root_dir: 'dummy-root',
+            resource_type: 'droplets'
+          )
           expect(client.instance_variable_get(:@storage_type)).to eq('azurebs')
           expect(client.instance_variable_get(:@resource_type)).to eq('droplets')
           expect(client.instance_variable_get(:@root_dir)).to eq('dummy-root')
@@ -32,7 +60,9 @@ module CloudController
           droplets_cfg.close!
         end
 
-        it 'raises an error for an unimplemented provider' do
+        # DEPRECATED: Legacy fog provider tests - remove after migration window
+        # START LEGACY FOG SUPPORT TESTS
+        it 'raises an error for an unknown legacy provider' do
           droplets_cfg = Tempfile.new(['droplets', '.json'])
           droplets_cfg.write(
             { provider: 'UnknownProvider',
@@ -49,10 +79,77 @@ module CloudController
 
           expect do
             StorageCliClient.new(directory_key: 'dummy-key', root_dir: 'dummy-root', resource_type: 'droplets')
-          end.to raise_error(RuntimeError, 'Unimplemented provider: UnknownProvider, implemented ones are: AzureRM, aliyun, Google, AWS')
+          end.to raise_error(RuntimeError, /Unknown provider: UnknownProvider/)
 
           droplets_cfg.close!
         end
+
+        it 'blocks webdav/dav provider explicitly' do
+          droplets_cfg = Tempfile.new(['droplets', '.json'])
+          droplets_cfg.write(
+            { provider: 'webdav',
+              account_key: 'bommelkey' }.to_json
+          )
+          droplets_cfg.flush
+
+          config_double = instance_double(VCAP::CloudController::Config)
+          allow(VCAP::CloudController::Config).to receive(:config).and_return(config_double)
+          allow(config_double).to receive(:get).with(:storage_cli_config_file_droplets).and_return(droplets_cfg.path)
+
+          expect do
+            StorageCliClient.new(directory_key: 'dummy-key', root_dir: 'dummy-root', resource_type: 'droplets')
+          end.to raise_error(RuntimeError, /is not supported yet/)
+
+          droplets_cfg.close!
+        end
+        # END LEGACY FOG SUPPORT TESTS
+
+        it 'raises an error for an unknown storage-cli type' do
+          droplets_cfg = Tempfile.new(['droplets', '.json'])
+          droplets_cfg.write(
+            { provider: 'unknown_type',
+              account_key: 'bommelkey',
+              account_name: 'bommel',
+              container_name: 'bommelcontainer',
+              environment: 'BommelCloud' }.to_json
+          )
+          droplets_cfg.flush
+
+          config_double = instance_double(VCAP::CloudController::Config)
+          allow(VCAP::CloudController::Config).to receive(:config).and_return(config_double)
+          allow(config_double).to receive(:get).with(:storage_cli_config_file_droplets).and_return(droplets_cfg.path)
+
+          expect do
+            StorageCliClient.new(directory_key: 'dummy-key', root_dir: 'dummy-root', resource_type: 'droplets')
+          end.to raise_error(RuntimeError, /Unknown provider: unknown_type/)
+
+          droplets_cfg.close!
+        end
+
+        # DEPRECATED: Legacy fog provider test - remove after migration window
+        # START LEGACY FOG SUPPORT TESTS
+        it 'raises an error when provider is missing' do
+          droplets_cfg = Tempfile.new(['droplets', '.json'])
+          droplets_cfg.write(
+            { account_key: 'bommelkey',
+              account_name: 'bommel',
+              container_name: 'bommelcontainer',
+              environment: 'BommelCloud' }.to_json
+          )
+          droplets_cfg.flush
+
+          config_double = instance_double(VCAP::CloudController::Config)
+          allow(VCAP::CloudController::Config).to receive(:config).and_return(config_double)
+          allow(config_double).to receive(:get).with(:storage_cli_config_file_droplets).and_return(droplets_cfg.path)
+
+          expect do
+            StorageCliClient.new(directory_key: 'dummy-key', root_dir: 'dummy-root', resource_type: 'droplets')
+          end.to raise_error(BlobstoreError, /No provider specified/)
+
+          droplets_cfg.close!
+        end
+        # END LEGACY FOG SUPPORT TESTS
+        # After removal, change error message expectation to /No storage_type specified/
 
         it 'raise when no resource type' do
           expect do

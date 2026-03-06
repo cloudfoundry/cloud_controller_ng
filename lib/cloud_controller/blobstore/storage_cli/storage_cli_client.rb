@@ -17,24 +17,45 @@ module CloudController
         'resource_pool' => :storage_cli_config_file_resource_pool
       }.freeze
 
-      PROVIDER_TO_STORAGE_CLI_STORAGETYPE = {
+      # Native storage-cli type names supported by CC (dav intentionally excluded for now)
+      STORAGE_CLI_TYPES = %w[azurebs alioss s3 gcs].freeze
+
+      # DEPRECATED: Legacy fog provider names (remove after migration window)
+      LEGACY_PROVIDER_TO_STORAGE_CLI_TYPE = {
         'AzureRM' => 'azurebs',
         'aliyun' => 'alioss',
         'AWS' => 's3',
-        'webdav' => 'dav',
         'Google' => 'gcs'
+        # 'webdav' => 'dav', # intentionally not enabled yet
       }.freeze
-
-      IMPLEMENTED_PROVIDERS = %w[AzureRM aliyun Google AWS].freeze
 
       def initialize(directory_key:, resource_type:, root_dir:, min_size: nil, max_size: nil)
         raise 'Missing resource_type' if resource_type.nil?
 
         config_file_path = config_path_for(resource_type)
         cfg = fetch_config(resource_type)
-        @provider = cfg['provider'].to_s
-        raise BlobstoreError.new("No provider specified in config file: #{File.basename(config_file_path)}") if @provider.empty?
-        raise "Unimplemented provider: #{@provider}, implemented ones are: #{IMPLEMENTED_PROVIDERS.join(', ')}" unless IMPLEMENTED_PROVIDERS.include?(@provider)
+
+        # Get provider field (can contain either fog name or storage-cli type)
+        provider = cfg['provider']&.to_s
+        raise BlobstoreError.new("No provider specified in config file: #{File.basename(config_file_path)}") if provider.nil? || provider.empty?
+
+        # Explicitly block unfinished webdav storage-cli support to avoid confusion and wasted effort on debugging
+        # unsupported providers. Remove this check when webdav support is added.
+        raise "provider '#{provider}' is not supported yet" if %w[webdav dav].include?(provider)
+
+        @storage_type =
+          if STORAGE_CLI_TYPES.include?(provider)
+            provider
+          else
+            # START LEGACY FOG SUPPORT (delete this whole else-branch after migration)
+            LEGACY_PROVIDER_TO_STORAGE_CLI_TYPE[provider]
+            # END LEGACY FOG SUPPORT
+          end
+
+        unless @storage_type
+          raise "Unknown provider: #{provider}. Supported storage-cli types: #{STORAGE_CLI_TYPES.join(', ')} " \
+                "(legacy fog names accepted temporarily: #{LEGACY_PROVIDER_TO_STORAGE_CLI_TYPE.keys.join(', ')})"
+        end
 
         @cli_path = cli_path
         @config_file = config_file_path
@@ -43,7 +64,6 @@ module CloudController
         @root_dir = root_dir
         @min_size = min_size || 0
         @max_size = max_size
-        @storage_type = PROVIDER_TO_STORAGE_CLI_STORAGETYPE[@provider]
       end
 
       def fetch_config(resource_type)
