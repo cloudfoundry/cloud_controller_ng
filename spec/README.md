@@ -128,14 +128,15 @@ CC in a background process and then forks it every time you run tests. That
 means that everything loaded prior to the fork doesn't need to be re-loaded
 every time you run tests. This can speed up tests substantially.
 
-To use spring, run `./bin/rspec` in place of `rspec`. Spring should
-automatically watch and reload files, but you can manually stop it with
-`./bin/spring stop`. It will automatically start again the next time you run
-`./bin/rspec`.
+To use Spring, run `./bin/rspec` in place of the default `rspec` binary. CC's
+`.envrc` adds the `./bin`` directory to your PATH, so in most cases you can
+just run `rspec`. Spring will automatically watch and reload files, but you can
+manually stop it with `spring stop`. It will automatically start again
+the next time you run `rspec`.
 
 Example performance improvement:
 ```sh
-❯ multitime -n 10 bundle exec rspec spec/unit/actions/app_create_spec.rb
+❯ multitime -n 10 bundle exec /path/to/default/rspec spec/unit/actions/app_create_spec.rb
 
 ...
 
@@ -159,6 +160,8 @@ real        18.628      2.077       13.934      19.062      21.821
 user        0.177       0.032       0.129       0.185       0.233
 sys         0.103       0.014       0.078       0.107       0.126
 ```
+
+If you do not want to use Spring, you can set the `DISABLE_SPRING` environment variable.
 
 #### Spork (Legacy)
 
