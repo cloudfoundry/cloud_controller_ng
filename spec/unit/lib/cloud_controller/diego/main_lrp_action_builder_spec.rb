@@ -247,6 +247,99 @@ module VCAP::CloudController
               )
             )
           end
+
+          context 'when SSH algorithm configuration is provided' do
+            before do
+              TestConfig.override(
+                diego: {
+                  sshd: {
+                    allowed_ciphers: 'cipher-1,cipher-2',
+                    allowed_host_key_algorithms: 'hostkeyalg-1,hostkeyalg-2',
+                    allowed_key_exchanges: 'kex-1,kex-2',
+                    allowed_macs: 'mac-1,mac-2'
+                  }
+                }
+              )
+            end
+
+            it 'includes SSH algorithm flags in the diego-sshd arguments' do
+              actions = MainLRPActionBuilder.build(process, lrp_builder, ssh_key).codependent_action.actions.map(&:run_action)
+              ssh_action = actions.find { |action| action.path == '/tmp/lifecycle/diego-sshd' }
+
+              expect(ssh_action.args).to include('-allowedCiphers=cipher-1,cipher-2')
+              expect(ssh_action.args).to include('-allowedHostKeyAlgorithms=hostkeyalg-1,hostkeyalg-2')
+              expect(ssh_action.args).to include('-allowedKeyExchanges=kex-1,kex-2')
+              expect(ssh_action.args).to include('-allowedMACs=mac-1,mac-2')
+            end
+          end
+
+          context 'when SSH algorithm configuration has empty strings' do
+            before do
+              TestConfig.override(
+                diego: {
+                  sshd: {
+                    allowed_ciphers: '',
+                    allowed_host_key_algorithms: '',
+                    allowed_key_exchanges: '',
+                    allowed_macs: ''
+                  }
+                }
+              )
+            end
+
+            it 'does not include SSH algorithm flags in the arguments' do
+              actions = MainLRPActionBuilder.build(process, lrp_builder, ssh_key).codependent_action.actions.map(&:run_action)
+              ssh_action = actions.find { |action| action.path == '/tmp/lifecycle/diego-sshd' }
+
+              expect(ssh_action.args).not_to include(match(/-allowedCiphers=/))
+              expect(ssh_action.args).not_to include(match(/-allowedHostKeyAlgorithms=/))
+              expect(ssh_action.args).not_to include(match(/-allowedKeyExchanges=/))
+              expect(ssh_action.args).not_to include(match(/-allowedMACs=/))
+            end
+          end
+
+          context 'when SSH algorithm configuration is partially provided' do
+            before do
+              TestConfig.override(
+                diego: {
+                  sshd: {
+                    allowed_ciphers: 'cipher-1',
+                    allowed_host_key_algorithms: '',
+                  }
+                }
+              )
+            end
+
+            it 'includes only the configured algorithm flags' do
+              actions = MainLRPActionBuilder.build(process, lrp_builder, ssh_key).codependent_action.actions.map(&:run_action)
+              ssh_action = actions.find { |action| action.path == '/tmp/lifecycle/diego-sshd' }
+
+              expect(ssh_action.args).to include('-allowedCiphers=cipher-1')
+              expect(ssh_action.args).not_to include(match(/-allowedHostKeyAlgorithms=/))
+              expect(ssh_action.args).not_to include(match(/-allowedKeyExchanges=/))
+              expect(ssh_action.args).not_to include(match(/-allowedMACs=/))
+            end
+          end
+
+          context 'when diego sshd configuration is missing' do
+            before do
+              TestConfig.override(diego: {})
+            end
+
+            it 'does not raise an error and excludes algorithm flags' do
+              expect do
+                MainLRPActionBuilder.build(process, lrp_builder, ssh_key)
+              end.not_to raise_error
+
+              actions = MainLRPActionBuilder.build(process, lrp_builder, ssh_key).codependent_action.actions.map(&:run_action)
+              ssh_action = actions.find { |action| action.path == '/tmp/lifecycle/diego-sshd' }
+
+              expect(ssh_action.args).not_to include(match(/-allowedCiphers=/))
+              expect(ssh_action.args).not_to include(match(/-allowedHostKeyAlgorithms=/))
+              expect(ssh_action.args).not_to include(match(/-allowedKeyExchanges=/))
+              expect(ssh_action.args).not_to include(match(/-allowedMACs=/))
+            end
+          end
         end
 
         describe 'VCAP_PLATFORM_OPTIONS' do
