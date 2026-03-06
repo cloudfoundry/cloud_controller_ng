@@ -160,7 +160,13 @@ module VCAP::CloudController
             insecure_docker_registry_list: [String],
             docker_staging_stack: String,
             optional(:temporary_oci_buildpack_mode) => enum('oci-phase-1', NilClass),
-            enable_declarative_asset_downloads: bool
+            enable_declarative_asset_downloads: bool,
+            optional(:sshd) => {
+              optional(:allowed_ciphers) => String,
+              optional(:allowed_host_key_algorithms) => String,
+              optional(:allowed_key_exchanges) => String,
+              optional(:allowed_macs) => String
+            }
           },
 
           app_log_revision: bool,
