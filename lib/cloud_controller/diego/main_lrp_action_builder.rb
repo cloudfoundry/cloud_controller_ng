@@ -100,20 +100,33 @@ module VCAP::CloudController
       end
 
       def generate_ssh_action(user, environment_variables)
+        sshd_args = [
+          "-address=#{sprintf('0.0.0.0:%<port>d', port: DEFAULT_SSH_PORT)}",
+          "-hostKey=#{ssh_key.private_key}",
+          "-authorizedKey=#{ssh_key.authorized_key}",
+          '-inheritDaemonEnv',
+          '-logLevel=fatal'
+        ]
+        add_allowed_ssh_algorithms(sshd_args)
+
         action(::Diego::Bbs::Models::RunAction.new(
                  user: user,
                  path: '/tmp/lifecycle/diego-sshd',
-                 args: [
-                   "-address=#{sprintf('0.0.0.0:%<port>d', port: DEFAULT_SSH_PORT)}",
-                   "-hostKey=#{ssh_key.private_key}",
-                   "-authorizedKey=#{ssh_key.authorized_key}",
-                   '-inheritDaemonEnv',
-                   '-logLevel=fatal'
-                 ],
+                 args: sshd_args,
                  env: environment_variables,
                  resource_limits: ::Diego::Bbs::Models::ResourceLimits.new(nofile: process.file_descriptors),
                  log_source: SSHD_LOG_SOURCE
                ))
+      end
+
+      def add_allowed_ssh_algorithms(args)
+        sshd_config = VCAP::CloudController::Config.config.get(:diego, :sshd)
+        return if sshd_config.nil?
+
+        args << "-allowedCiphers=#{sshd_config[:allowed_ciphers]}" if sshd_config[:allowed_ciphers].present?
+        args << "-allowedHostKeyAlgorithms=#{sshd_config[:allowed_host_key_algorithms]}" if sshd_config[:allowed_host_key_algorithms].present?
+        args << "-allowedKeyExchanges=#{sshd_config[:allowed_key_exchanges]}" if sshd_config[:allowed_key_exchanges].present?
+        args << "-allowedMACs=#{sshd_config[:allowed_macs]}" if sshd_config[:allowed_macs].present?
       end
     end
   end
