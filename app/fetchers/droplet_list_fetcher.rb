@@ -3,31 +3,33 @@ require 'fetchers/base_list_fetcher'
 module VCAP::CloudController
   class DropletListFetcher < BaseListFetcher
     class << self
-      def fetch_all(message)
-        dataset = DropletModel.dataset
-        filter(message, nil, nil, dataset)
+      def fetch_all(message, eager_loaded_associations: [])
+        filter(message, nil, nil, droplet_dataset(eager_loaded_associations))
       end
 
-      def fetch_for_spaces(message, space_guids)
-        dataset = DropletModel.dataset
-        filter(message, nil, space_guids, dataset)
+      def fetch_for_spaces(message, space_guids, eager_loaded_associations: [])
+        filter(message, nil, space_guids, droplet_dataset(eager_loaded_associations))
       end
 
-      def fetch_for_app(message)
+      def fetch_for_app(message, eager_loaded_associations: [])
         app = AppModel.where(guid: message.app_guid).first
         return nil unless app
 
-        [app, filter(message, app, nil, app.droplets_dataset)]
+        [app, filter(message, app, nil, droplet_dataset(eager_loaded_associations, app.droplets_dataset))]
       end
 
-      def fetch_for_package(message)
+      def fetch_for_package(message, eager_loaded_associations: [])
         package = PackageModel.where(guid: message.package_guid).first
         return nil unless package
 
-        [package, filter(message, nil, nil, package.droplets_dataset)]
+        [package, filter(message, nil, nil, droplet_dataset(eager_loaded_associations, package.droplets_dataset))]
       end
 
       private
+
+      def droplet_dataset(eager_loaded_associations, dataset=DropletModel.dataset)
+        dataset.eager(eager_loaded_associations)
+      end
 
       def filter(message, app, space_guids, dataset)
         if message.requested?(:current) && app
