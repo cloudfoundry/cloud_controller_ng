@@ -33,7 +33,12 @@ module VCAP::CloudController::Metrics
       { type: :gauge, name: :cc_running_tasks_total, docstring: 'Total running tasks', aggregation: :most_recent },
       { type: :gauge, name: :cc_running_tasks_memory_bytes, docstring: 'Total memory consumed by running tasks', aggregation: :most_recent },
       { type: :gauge, name: :cc_users_total, docstring: 'Number of users', aggregation: :most_recent },
-      { type: :gauge, name: :cc_deployments_in_progress_total, docstring: 'Number of in progress deployments', aggregation: :most_recent }
+      { type: :gauge, name: :cc_deployments_in_progress_total, docstring: 'Number of in progress deployments', aggregation: :most_recent },
+      { type: :histogram, name: :cc_app_usage_snapshot_generation_duration_seconds, docstring: 'Time taken to generate app usage snapshots', buckets: DELAYED_JOB_METRIC_BUCKETS },
+      { type: :counter, name: :cc_app_usage_snapshot_generation_failures_total, docstring: 'Total number of failed app usage snapshot generations' },
+      { type: :histogram, name: :cc_service_usage_snapshot_generation_duration_seconds, docstring: 'Time taken to generate service usage snapshots',
+        buckets: DELAYED_JOB_METRIC_BUCKETS },
+      { type: :counter, name: :cc_service_usage_snapshot_generation_failures_total, docstring: 'Total number of failed service snapshot generations' }
     ].freeze
 
     PUMA_METRICS = [

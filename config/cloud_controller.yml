@@ -58,6 +58,12 @@ service_operations_initial_cleanup:
 completed_tasks:
   cutoff_age_in_days: 31
 
+app_usage_snapshot:
+  cutoff_age_in_days: 31
+
+service_usage_snapshot:
+  cutoff_age_in_days: 31
+
 cpu_weight_min_memory: 128 #mb
 cpu_weight_max_memory: 8192 #mb
 default_app_memory: 1024 #mb

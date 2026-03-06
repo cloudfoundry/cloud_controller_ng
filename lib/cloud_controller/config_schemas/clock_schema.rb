@@ -211,6 +211,8 @@ module VCAP::CloudController
           },
 
           service_usage_events: { cutoff_age_in_days: Integer },
+          app_usage_snapshot: { cutoff_age_in_days: Integer },
+          service_usage_snapshot: { cutoff_age_in_days: Integer },
           default_app_ssh_access: bool,
           allow_app_ssh_access: bool,
           jobs: {
