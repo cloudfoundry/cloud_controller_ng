@@ -24,7 +24,8 @@ module VCAP::CloudController
       hide_marketplace_from_unauthenticated_users: false,
       resource_matching: true,
       route_sharing: false,
-      hash_based_routing: false
+      hash_based_routing: false,
+      app_to_app_mtls_routing: false
     }.freeze
 
     ADMIN_SKIPPABLE = %i[
