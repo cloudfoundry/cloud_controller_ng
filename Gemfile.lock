@@ -300,7 +300,6 @@ GEM
     machinist (1.0.6)
     mcp (0.8.0)
       json-schema (>= 4.1)
-    membrane (1.1.0)
     method_source (1.1.0)
     mime-types (3.7.0)
       logger
@@ -651,7 +650,6 @@ DEPENDENCIES
   listen
   loggregator_emitter (~> 5.0)
   machinist (~> 1.0.6)
-  membrane (~> 1.0)
   mime-types (~> 3.7)
   mock_redis
   multipart-parser
