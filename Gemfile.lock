@@ -523,7 +523,7 @@ GEM
     securerandom (0.4.1)
     sequel (5.102.0)
       bigdecimal
-    sequel_pg (1.18.2)
+    sequel_pg (1.19.0)
       pg (>= 0.18.0, != 1.2.0)
       sequel (>= 4.38.0)
     sexp_processor (4.17.5)
