@@ -6,10 +6,10 @@
 
 | Provider     | Status                    | Notes                                                                                                   |
 |--------------|---------------------------|---------------------------------------------------------------------------------------------------------|
-| Azure        | ✅ Implemented            | Uses `bosh-azure-storage-cli` with native type `azurebs`                                               |
-| AWS          | ✅ Implemented            | Uses `bosh-s3cli` with native type `s3`                                                                |
-| GCP          | ✅ Implemented            | Uses `bosh-gcscli` with native type `gcs`                                                              |
-| Alibaba Cloud| ✅ Implemented            | Uses `bosh-ali-storage-cli` with native type `alioss`                                                  |
+| Azure        | ✅ Implemented            | Uses [`storage-cli`](https://github.com/cloudfoundry/storage-cli/tree/main/azurebs) with native type `azurebs`                                               |
+| AWS          | ✅ Implemented            | Uses [`storage-cli`](https://github.com/cloudfoundry/storage-cli/tree/main/s3) with native type `s3`                                                                |
+| GCP          | ✅ Implemented            | Uses [`storage-cli`](https://github.com/cloudfoundry/storage-cli/tree/main/gcs) with native type `gcs`                                                              |
+| Alibaba Cloud| ✅ Implemented            | Uses [`storage-cli`](https://github.com/cloudfoundry/storage-cli/tree/main/alioss) with native type `alioss`                                                  |
 
 **Configuration Migration Status:**
 - The `blobstore_provider` field accepts both native storage-cli type names AND legacy fog names
