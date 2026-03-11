@@ -75,7 +75,7 @@ group :test do
   gem 'rspec-collection_matchers'
   gem 'rspec-instafail'
   gem 'rspec-its'
-  gem 'rspec-rails', '~> 8.0.3'
+  gem 'rspec-rails', '~> 8.0.4'
   gem 'rspec-wait'
   gem 'rubocop', '~> 1.85.1'
   gem 'rubocop-capybara'
