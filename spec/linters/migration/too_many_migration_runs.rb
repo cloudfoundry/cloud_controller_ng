@@ -2,132 +2,144 @@ module RuboCop
   module Cop
     module Migration
       class TooManyMigrationRuns < Base
-        MSG = 'Too many migration runs (%d). Combine tests to reduce migrations. See spec/migrations/README.md for further guidance.'.freeze
-        MAX_CALLS = 4
-
         def on_new_investigation
-          calls = 0
-          migrator_subject_names = []
-          migrator_method_names = []
-          migrator_let_names = []
-          migrator_before_after_blocks = Set.new
+          return unless processed_source.ast
 
-          extract_migrator_definitions(migrator_subject_names, migrator_method_names,
-                                       migrator_let_names, migrator_before_after_blocks)
+          definitions = extract_migrator_definitions
+          call_count = count_migrator_calls(definitions)
 
-          count_migrator_calls(calls, migrator_subject_names, migrator_method_names,
-                               migrator_let_names, migrator_before_after_blocks)
-        end
+          return unless call_count > 4
 
-        def extract_migrator_definitions(subject_names, method_names, let_names, before_after_blocks)
-          processed_source.ast.each_descendant(:def) do |node|
-            method_name = extract_migrator_method_name(node)
-            method_names << method_name if method_name
-          end
-
-          processed_source.ast.each_descendant(:block) do |node|
-            subject_name = extract_migrator_subject_name(node)
-            subject_names << subject_name if subject_name
-
-            let_name = extract_migrator_let_name(node)
-            let_names << let_name if let_name
-
-            before_after_blocks.add(node.object_id) if is_before_after_around_with_migrator?(node)
-          end
-        end
-
-        def count_migrator_calls(_calls, subjects, methods, lets, before_after_blocks)
-          call_count = count_before_after_migrations(before_after_blocks)
-          call_count += count_send_node_migrations(subjects, methods, lets, before_after_blocks)
-
-          add_offense(processed_source.ast, message: sprintf(MSG, call_count)) if call_count > MAX_CALLS
-        end
-
-        def count_before_after_migrations(before_after_blocks)
-          call_count = 0
-          processed_source.ast.each_descendant(:block) do |node|
-            call_count += count_direct_migrations_in_node(node) if before_after_blocks.include?(node.object_id)
-          end
-          call_count
-        end
-
-        def count_send_node_migrations(subjects, methods, lets, before_after_blocks)
-          call_count = 0
-          processed_source.ast.each_descendant(:send) do |node|
-            next if node.each_ancestor(:block).any? { |a| before_after_blocks.include?(a.object_id) }
-
-            call_count += count_migration_call(node, subjects, methods, lets)
-          end
-          call_count
-        end
-
-        def count_migration_call(node, subjects, methods, lets)
-          return 1 if direct_migrator_call?(node)
-          return 1 if helper_migration_call?(node, subjects, methods, lets)
-
-          0
-        end
-
-        def direct_migrator_call?(node)
-          return false unless node.method_name == :run && node.receiver&.source&.include?('Migrator')
-
-          !inside_definition?(node)
-        end
-
-        def helper_migration_call?(node, subjects, methods, lets)
-          subjects.include?(node.method_name) ||
-            lets.include?(node.method_name) ||
-            methods.include?(node.method_name)
+          add_offense(processed_source.ast,
+                      message: "Too many migration runs (#{call_count}). Combine tests to reduce migrations. See spec/migrations/README.md for further guidance.")
         end
 
         private
 
-        def extract_migrator_method_name(node)
-          return nil unless node.type == :def
-          return nil unless node.source.include?('Sequel::Migrator.run')
+        def extract_migrator_definitions
+          definitions = {
+            subject_names: [],
+            method_names: [],
+            let_names: [],
+            before_after_blocks: Set.new
+          }
 
-          node.method_name
-        end
-
-        def extract_migrator_subject_name(node)
-          return nil unless node.send_node.method_name == :subject
-          return nil unless node.source.include?('Sequel::Migrator.run')
-
-          first_arg = node.send_node.first_argument
-          first_arg&.sym_type? ? first_arg.value : nil
-        end
-
-        def extract_migrator_let_name(node)
-          return nil unless %i[let let!].include?(node.send_node.method_name)
-          return nil unless node.source.include?('Sequel::Migrator.run')
-
-          first_arg = node.send_node.first_argument
-          first_arg&.sym_type? ? first_arg.value : nil
-        end
-
-        def is_before_after_around_with_migrator?(node)
-          return false unless node.send_node
-          return false unless %i[before after around].include?(node.send_node.method_name)
-
-          node.source.include?('Sequel::Migrator.run')
-        end
-
-        def count_direct_migrations_in_node(node)
-          count = 0
-          node.each_descendant(:send) do |descendant|
-            count += 1 if descendant.method_name == :run && descendant.receiver&.source&.include?('Migrator')
+          # Single pass through the AST to collect all definitions
+          processed_source.ast.each_descendant(:def, :block) do |node|
+            case node.type
+            when :def
+              extract_migrator_method(node, definitions[:method_names])
+            when :block
+              extract_block_definitions(node, definitions)
+            end
           end
-          count
+
+          definitions
+        end
+
+        def extract_migrator_method(node, method_names)
+          return unless contains_migrator_run?(node)
+
+          method_names << node.method_name
+        end
+
+        def extract_block_definitions(node, definitions)
+          return unless node.send_node
+
+          method_name = node.send_node.method_name
+
+          case method_name
+          when :subject
+            extract_named_migrator(node, definitions[:subject_names])
+          when :let, :let!
+            extract_named_migrator(node, definitions[:let_names])
+          when :before, :after, :around
+            definitions[:before_after_blocks].add(node.object_id) if contains_migrator_run?(node)
+          end
+        end
+
+        def extract_named_migrator(node, names)
+          return unless contains_migrator_run?(node)
+
+          first_arg = node.send_node.first_argument
+          names << first_arg.value if first_arg&.sym_type?
+        end
+
+        def count_migrator_calls(definitions)
+          call_count = 0
+
+          # Single pass through send nodes to count all migration calls
+          processed_source.ast.each_descendant(:send) do |node|
+            next unless migration_call?(node, definitions)
+
+            call_count += 1
+          end
+
+          call_count
+        end
+
+        def migration_call?(node, definitions)
+          in_before_after_block = node.each_ancestor(:block).any? do |ancestor|
+            definitions[:before_after_blocks].include?(ancestor.object_id)
+          end
+
+          if in_before_after_block
+            # Count direct Migrator.run calls inside before/after/around blocks
+            migrator_run_call?(node)
+          else
+            # Count direct calls (not in definitions) or helper invocations
+            direct_migrator_call?(node) || helper_migration_call?(node, definitions)
+          end
+        end
+
+        def direct_migrator_call?(node)
+          return false unless migrator_run_call?(node)
+
+          !inside_definition?(node)
+        end
+
+        def migrator_run_call?(node)
+          return false unless node.method_name == :run
+
+          receiver = node.receiver
+          return false unless receiver
+
+          # Check for Sequel::Migrator.run or just Migrator.run
+          if receiver.const_type?
+            receiver_name = receiver.const_name
+            return ['Migrator', 'Sequel::Migrator'].include?(receiver_name)
+          end
+
+          false
+        end
+
+        def helper_migration_call?(node, definitions)
+          method = node.method_name
+          definitions[:subject_names].include?(method) ||
+            definitions[:let_names].include?(method) ||
+            definitions[:method_names].include?(method)
+        end
+
+        def contains_migrator_run?(node)
+          node.each_descendant(:send).any? { |send_node| migrator_run_call?(send_node) }
         end
 
         def inside_definition?(node)
-          node.each_ancestor(:def).any? { |a| a.source.include?('Sequel::Migrator.run') } ||
-            node.each_ancestor(:block).any? do |a|
-              %i[subject let let!].include?(a.send_node&.method_name) && a.source.include?('Sequel::Migrator.run')
-            end ||
-            node.each_ancestor(:block).any? do |a|
-              %i[before after around].include?(a.send_node&.method_name)
+          node.each_ancestor(:def, :block).any? do |ancestor|
+            case ancestor.type
+            when :def
+              contains_migrator_run?(ancestor)
+            when :block
+              next false unless ancestor.send_node
+
+              method = ancestor.send_node.method_name
+              if %i[subject let let!].include?(method)
+                contains_migrator_run?(ancestor)
+              else
+                %i[before after around].include?(method)
+              end
             end
+          end
         end
       end
     end
