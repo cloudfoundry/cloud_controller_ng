@@ -88,7 +88,13 @@ module VCAP::CloudController
             use_privileged_containers_for_running: bool,
             use_privileged_containers_for_staging: bool,
             optional(:temporary_oci_buildpack_mode) => enum('oci-phase-1', NilClass),
-            enable_declarative_asset_downloads: bool
+            enable_declarative_asset_downloads: bool,
+            optional(:sshd) => {
+              optional(:allowed_ciphers) => String,
+              optional(:allowed_host_key_algorithms) => String,
+              optional(:allowed_key_exchanges) => String,
+              optional(:allowed_macs) => String
+            }
           },
 
           app_log_revision: bool,
