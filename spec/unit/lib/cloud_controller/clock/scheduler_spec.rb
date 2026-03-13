@@ -28,7 +28,9 @@ module VCAP::CloudController
           diego_sync: { frequency_in_seconds: 30 },
           max_retained_deployments_per_app: 15,
           max_retained_builds_per_app: 15,
-          max_retained_revisions_per_app: 15
+          max_retained_revisions_per_app: 15,
+          app_usage_snapshot: { cutoff_age_in_days: 30 },
+          service_usage_snapshot: { cutoff_age_in_days: 30 }
         )
       end
 
@@ -55,6 +57,7 @@ module VCAP::CloudController
         expect(Clockwork).to have_received(:run)
       end
 
+      # rubocop:disable RSpec/MultipleExpectations
       it 'schedules cleanup for all daily jobs' do
         allow(clock).to receive(:schedule_frequent_worker_job)
         allow(clock).to receive(:schedule_frequent_inline_job)
@@ -131,8 +134,21 @@ module VCAP::CloudController
           expect(block.call).to be_instance_of(Jobs::Runtime::PruneExcessAppRevisions)
         end
 
+        expect(clock).to receive(:schedule_daily_job) do |args, &block|
+          expect(args).to eql(name: 'app_usage_snapshot', at: '04:00', priority: 0)
+          expect(Jobs::Runtime::AppUsageSnapshotCleanup).to receive(:new).with(30).and_call_original
+          expect(block.call).to be_instance_of(Jobs::Runtime::AppUsageSnapshotCleanup)
+        end
+
+        expect(clock).to receive(:schedule_daily_job) do |args, &block|
+          expect(args).to eql(name: 'service_usage_snapshot', at: '04:30', priority: 0)
+          expect(Jobs::Runtime::ServiceUsageSnapshotCleanup).to receive(:new).with(30).and_call_original
+          expect(block.call).to be_instance_of(Jobs::Runtime::ServiceUsageSnapshotCleanup)
+        end
+
         schedule.start
       end
+      # rubocop:enable RSpec/MultipleExpectations
 
       it 'schedules the frequent worker jobs' do
         allow(clock).to receive(:schedule_daily_job)

@@ -159,3 +159,8 @@ require 'models/runtime/organization_manager'
 require 'models/runtime/organization_billing_manager'
 require 'models/runtime/role'
 require 'models/runtime/asg_latest_update'
+
+require 'models/runtime/app_usage_snapshot'
+require 'models/runtime/service_usage_snapshot'
+require 'models/runtime/app_usage_snapshot_chunk'
+require 'models/runtime/service_usage_snapshot_chunk'
