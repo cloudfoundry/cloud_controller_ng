@@ -7,6 +7,13 @@ module VCAP::CloudController
       class DropletPresenter < BasePresenter
         include VCAP::CloudController::Presenters::Mixins::MetadataPresentationHelpers
 
+        class << self
+          # :labels and :annotations come from MetadataPresentationHelpers
+          def associated_resources
+            super + [{ buildpack_lifecycle_data: :buildpack_lifecycle_buildpacks }, :cnb_lifecycle_data]
+          end
+        end
+
         def to_hash
           {
             guid: droplet.guid,

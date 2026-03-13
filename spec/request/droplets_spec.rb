@@ -607,6 +607,24 @@ RSpec.describe 'Droplets' do
       droplet2.buildpack_lifecycle_data.update(buildpacks: ['http://buildpack.git.url.com'], stack: 'stack-2')
     end
 
+    context 'eager loading' do
+      let!(:docker_droplet_1) { VCAP::CloudController::DropletModel.make(:docker, app_guid: app_model.guid) }
+      let!(:docker_droplet_2) { VCAP::CloudController::DropletModel.make(:docker, app_guid: app_model.guid) }
+      let(:get_droplets) { -> { get '/v3/droplets', nil, developer_headers } }
+
+      it 'eager loads associated data needed to present droplets' do
+        expect { get_droplets.call }.to have_queried_db_times(/SELECT .* FROM .droplets. /i, 1)
+        expect(last_response.status).to eq(200)
+        expect(parsed_response['resources'].count).to eq(4)
+
+        expect { get_droplets.call }.to have_queried_db_times(/SELECT .* FROM .droplet_annotations. /i, 1) # instead of 4 w/o eager loading
+        expect { get_droplets.call }.to have_queried_db_times(/SELECT .* FROM .droplet_labels. /i, 1) # instead of 4 w/o eager loading
+        expect { get_droplets.call }.to have_queried_db_times(/SELECT .* FROM .buildpack_lifecycle_data. /i, 1) # instead of 4 w/o eager loading
+        expect { get_droplets.call }.to have_queried_db_times(/SELECT .* FROM .buildpack_lifecycle_buildpacks. /i, 1) # instead of 2 w/o eager loading
+        expect { get_droplets.call }.to have_queried_db_times(/SELECT .* FROM .cnb_lifecycle_data. /i, 1) # instead of 2 w/o eager loading
+      end
+    end
+
     it_behaves_like 'list query endpoint' do
       let(:request) { 'v3/droplets' }
       let(:message) { VCAP::CloudController::DropletsListMessage }
