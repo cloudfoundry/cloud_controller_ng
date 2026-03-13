@@ -363,8 +363,8 @@ RSpec.shared_examples 'list endpoint order_by timestamps' do |endpoint|
 
   context 'order_by created_at' do
     let!(:resource_1) { resource_klass.make(guid: '1', created_at: '2020-05-26T18:47:03Z', **additional_resource_params) }
-    let!(:resource_2) { resource_klass.make(guid: '2', created_at: '2020-05-26T18:47:02Z', **additional_resource_params) }
-    let!(:resource_3) { resource_klass.make(guid: '3', created_at: '2020-05-26T18:47:01Z', **additional_resource_params) }
+    let!(:resource_2) { resource_klass.make(guid: '3', created_at: '2020-05-26T18:47:02Z', **additional_resource_params) }
+    let!(:resource_3) { resource_klass.make(guid: '2', created_at: '2020-05-26T18:47:02Z', **additional_resource_params) }
     let!(:resource_4) { resource_klass.make(guid: '4', created_at: '2020-05-26T18:47:04Z', **additional_resource_params) }
 
     it 'sorts ascending' do
