@@ -1,5 +1,6 @@
-require 'spec_helper'
+require 'lightweight_spec_helper'
 require 'messages/droplets_list_message'
+require 'messages/spaces_list_message'
 
 module VCAP::CloudController
   RSpec.describe DropletsListMessage do

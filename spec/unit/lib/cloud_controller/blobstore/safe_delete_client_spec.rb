@@ -1,10 +1,10 @@
-require 'spec_helper'
+require 'fog_spec_helper'
 require 'cloud_controller/blobstore/null_client'
 require_relative 'client_shared'
 
 module CloudController
   module Blobstore
-    RSpec.describe SafeDeleteClient do
+    RSpec.describe SafeDeleteClient, :fog_isolation do
       subject(:client) { SafeDeleteClient.new(wrapped_client, root_dir) }
       let(:wrapped_client) { NullClient.new }
       let(:root_dir) { 'root-dir' }

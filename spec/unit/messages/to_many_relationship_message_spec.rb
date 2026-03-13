@@ -1,4 +1,4 @@
-require 'spec_helper'
+require 'lightweight_spec_helper'
 require 'messages/to_many_relationship_message'
 
 module VCAP::CloudController

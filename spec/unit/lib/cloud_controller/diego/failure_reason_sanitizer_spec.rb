@@ -1,4 +1,4 @@
-require 'spec_helper'
+require 'lightweight_spec_helper'
 require 'cloud_controller/diego/failure_reason_sanitizer'
 
 module VCAP::CloudController

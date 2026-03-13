@@ -1,4 +1,5 @@
-require 'spec_helper'
+require 'lightweight_spec_helper'
+require 'steno/steno'
 require 'cloud_controller/blob_sender/default_blob_sender'
 
 module CloudController

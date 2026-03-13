@@ -1,4 +1,5 @@
-require 'spec_helper'
+require 'lightweight_spec_helper'
+require 'addressable/uri'
 require 'cloud_controller/diego/docker/docker_uri_converter'
 require 'utils/uri_utils'
 

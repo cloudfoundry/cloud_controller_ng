@@ -1,4 +1,4 @@
-require 'spec_helper'
+require 'fog_spec_helper'
 
 ## NOTICE: Prefer request specs over controller specs as per ADR #0003 ##
 
@@ -164,7 +164,7 @@ module VCAP::CloudController
     end
   end
 
-  RSpec.describe StagingsController do
+  RSpec.describe StagingsController, :fog_isolation do
     let(:timeout_in_seconds) { 120 }
     let(:cc_addr) { '1.2.3.4' }
     let(:cc_port) { 5678 }

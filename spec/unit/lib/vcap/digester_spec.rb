@@ -1,4 +1,4 @@
-require 'spec_helper'
+require 'lightweight_spec_helper'
 require 'vcap/digester'
 
 RSpec.describe Digester do

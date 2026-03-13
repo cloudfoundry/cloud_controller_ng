@@ -1,4 +1,4 @@
-require 'spec_helper'
+require 'lightweight_spec_helper'
 require 'messages/metadata_base_message'
 
 module VCAP::CloudController

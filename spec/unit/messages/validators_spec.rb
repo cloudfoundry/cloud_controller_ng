@@ -6,6 +6,7 @@ require 'messages/buildpack_lifecycle_data_message'
 require 'cloud_controller/diego/lifecycles/app_docker_lifecycle'
 require 'cloud_controller/diego/lifecycles/app_buildpack_lifecycle'
 require 'cloud_controller/diego/lifecycles/lifecycles'
+require 'cloud_controller/config'
 require 'rspec/collection_matchers'
 require 'pry'
 
@@ -428,6 +429,11 @@ module VCAP::CloudController::Validators
     end
 
     describe 'LifecycleValidator' do
+      before do
+        config = instance_double(VCAP::CloudController::Config, get: 'buildpack')
+        allow(VCAP::CloudController::Config).to receive(:config).and_return(config)
+      end
+
       let(:lifecycle_class) do
         Class.new(fake_class) do
           attr_accessor :lifecycle
