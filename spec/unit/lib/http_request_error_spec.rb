@@ -1,4 +1,6 @@
-require 'spec_helper'
+require 'lightweight_spec_helper'
+require 'cloud_controller/structured_error'
+require 'cloud_controller/http_request_error'
 
 RSpec.describe HttpRequestError do
   let(:endpoint) { 'http://www.example.com/' }

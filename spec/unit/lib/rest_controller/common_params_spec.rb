@@ -1,4 +1,5 @@
-require 'spec_helper'
+require 'lightweight_spec_helper'
+require 'cloud_controller/rest_controller/common_params'
 
 module VCAP::CloudController::RestController
   RSpec.describe CommonParams do

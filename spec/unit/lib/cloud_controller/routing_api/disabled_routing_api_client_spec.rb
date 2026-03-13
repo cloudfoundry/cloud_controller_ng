@@ -1,4 +1,5 @@
-require 'spec_helper'
+require 'lightweight_spec_helper'
+require 'cloud_controller/routing_api/disabled_routing_api_client'
 
 module VCAP::CloudController::RoutingApi
   RSpec.describe DisabledClient do
