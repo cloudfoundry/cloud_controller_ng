@@ -3,7 +3,7 @@ require 'sequel'
 require 'oj'
 require 'delayed_job'
 
-require 'allowy'
+require 'allowy/allowy'
 
 require 'uaa/token_coder'
 

@@ -30,7 +30,6 @@ module SpecHelperHelper
     require 'pry'
 
     require 'cloud_controller'
-    require 'allowy/rspec'
 
     require 'rspec_api_documentation'
     require 'services'

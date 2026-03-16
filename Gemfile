@@ -1,7 +1,6 @@
 source 'https://rubygems.org'
 
 gem 'addressable'
-gem 'allowy', '>= 2.1.0'
 gem 'bootsnap', require: false
 gem 'clockwork', require: false
 gem 'cloudfront-signer'

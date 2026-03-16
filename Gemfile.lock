@@ -71,9 +71,6 @@ GEM
     aliyun-sdk (0.8.0)
       nokogiri (~> 1.6)
       rest-client (~> 2.0)
-    allowy (2.1.0)
-      activesupport (>= 3.2)
-      i18n
     ast (2.4.3)
     azure-core (0.1.15)
       faraday (~> 0.9)
@@ -619,7 +616,6 @@ DEPENDENCIES
   actionview (~> 8.1.1)
   activemodel (~> 8.1.2)
   addressable
-  allowy (>= 2.1.0)
   azure-storage-blob!
   bootsnap
   byebug
