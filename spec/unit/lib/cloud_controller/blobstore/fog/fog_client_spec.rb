@@ -1,4 +1,4 @@
-require 'spec_helper'
+require 'fog_spec_helper'
 require 'webrick'
 require_relative '../client_shared'
 require 'fog/aws/models/storage/files'
@@ -6,7 +6,7 @@ require 'fog/aws/models/storage/directories'
 
 module CloudController
   module Blobstore
-    RSpec.describe FogClient do
+    RSpec.describe FogClient, :fog_isolation do
       let(:content) { 'Some Nonsense' }
       let(:sha_of_content) { Digester.new.digest(content) }
       let(:local_dir) { Dir.mktmpdir }

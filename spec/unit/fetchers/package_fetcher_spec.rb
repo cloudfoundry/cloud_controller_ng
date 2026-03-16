@@ -1,4 +1,4 @@
-require 'spec_helper'
+require 'db_spec_helper'
 require 'fetchers/package_fetcher'
 
 module VCAP::CloudController

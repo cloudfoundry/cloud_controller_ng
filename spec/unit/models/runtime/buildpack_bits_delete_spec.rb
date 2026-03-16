@@ -1,7 +1,7 @@
-require 'spec_helper'
+require 'fog_spec_helper'
 
 module VCAP::CloudController
-  RSpec.describe BuildpackBitsDelete do
+  RSpec.describe BuildpackBitsDelete, :fog_isolation do
     let(:staging_timeout) { 144 }
     let(:key) { 'key' }
     let!(:blobstore) do

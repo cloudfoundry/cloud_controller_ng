@@ -1,8 +1,8 @@
-require 'spec_helper'
+require 'fog_spec_helper'
 
 module CloudController
   module Blobstore
-    RSpec.describe ClientProvider do
+    RSpec.describe ClientProvider, :fog_isolation do
       let(:options) { { blobstore_type: } }
 
       context 'when no type is requested' do

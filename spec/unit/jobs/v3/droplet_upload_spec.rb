@@ -1,8 +1,8 @@
-require 'spec_helper'
+require 'fog_spec_helper'
 
 module VCAP::CloudController
   module Jobs::V3
-    RSpec.describe DropletUpload, job_context: :api do
+    RSpec.describe DropletUpload, :fog_isolation, job_context: :api do
       let(:droplet) { DropletModel.make(state: 'STAGING', droplet_hash: nil, sha256_checksum: nil, app: nil) }
       let(:file_content) { 'some_file_content' }
       let(:local_file) do

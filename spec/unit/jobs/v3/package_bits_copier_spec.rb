@@ -1,8 +1,8 @@
-require 'spec_helper'
+require 'fog_spec_helper'
 
 module VCAP::CloudController
   module Jobs::V3
-    RSpec.describe PackageBitsCopier, job_context: :worker do
+    RSpec.describe PackageBitsCopier, :fog_isolation, job_context: :worker do
       subject(:job) { PackageBitsCopier.new(source_package.guid, destination_package.guid) }
 
       let(:package_bits_path) { File.expand_path('../../../fixtures/good.zip', File.dirname(__FILE__)) }

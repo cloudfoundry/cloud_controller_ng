@@ -1,8 +1,8 @@
-require 'spec_helper'
+require 'fog_spec_helper'
 
 module VCAP::CloudController
   module Jobs::Runtime
-    RSpec.describe BlobstoreUpload, job_context: :worker do
+    RSpec.describe BlobstoreUpload, :fog_isolation, job_context: :worker do
       let(:local_file) { Tempfile.new('tmpfile') }
       let(:blobstore_key) { 'key' }
       let(:blobstore_name) { :droplet_blobstore }

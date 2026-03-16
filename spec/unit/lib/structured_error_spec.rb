@@ -1,4 +1,5 @@
-require 'spec_helper'
+require 'lightweight_spec_helper'
+require 'cloud_controller/structured_error'
 
 RSpec.describe StructuredError do
   context 'with a hash source' do

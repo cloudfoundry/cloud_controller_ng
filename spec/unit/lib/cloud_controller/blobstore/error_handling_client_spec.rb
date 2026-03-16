@@ -1,11 +1,11 @@
-require 'spec_helper'
+require 'fog_spec_helper'
 require_relative 'client_shared'
 require 'cloud_controller/blobstore/error_handling_client'
 require 'cloud_controller/blobstore/null_client'
 
 module CloudController
   module Blobstore
-    RSpec.describe ErrorHandlingClient do
+    RSpec.describe ErrorHandlingClient, :fog_isolation do
       subject(:client) { ErrorHandlingClient.new(wrapped_client) }
       let(:wrapped_client) { Blobstore::NullClient.new }
       let(:logger) { instance_double(Steno::Logger, error: nil) }

@@ -1,4 +1,5 @@
-require 'spec_helper'
+require 'lightweight_spec_helper'
+require 'messages/app_show_message'
 
 module VCAP::CloudController
   RSpec.describe AppShowMessage do

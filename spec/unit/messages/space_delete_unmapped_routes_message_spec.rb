@@ -1,4 +1,4 @@
-require 'spec_helper'
+require 'lightweight_spec_helper'
 require 'messages/space_delete_unmapped_routes_message'
 
 module VCAP::CloudController

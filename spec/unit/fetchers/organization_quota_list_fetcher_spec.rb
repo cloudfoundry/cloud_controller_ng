@@ -1,4 +1,4 @@
-require 'spec_helper'
+require 'db_spec_helper'
 require 'fetchers/organization_quota_list_fetcher'
 require 'messages/organization_quotas_list_message'
 
