@@ -16,7 +16,7 @@ module VCAP::CloudController
     validates_with NoAdditionalKeysValidator, RelationshipValidator
     validates_with LifecycleValidator, if: lifecycle_type_requested?
 
-    validates :name, string: true
+    validates :name, string: true, length: { maximum: 255, message: 'is too long (maximum is 255 characters)' }
     validates :environment_variables, hash: true, allow_nil: true
 
     validates :lifecycle_type,

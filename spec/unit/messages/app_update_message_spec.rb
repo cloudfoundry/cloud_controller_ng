@@ -26,6 +26,17 @@ module VCAP::CloudController
         end
       end
 
+      context 'when name is too long' do
+        let(:params) { { name: 'a' * 256 } }
+
+        it 'is not valid' do
+          message = AppUpdateMessage.new(params)
+
+          expect(message).not_to be_valid
+          expect(message.errors_on(:name)).to include('is too long (maximum is 255 characters)')
+        end
+      end
+
       context 'when we have more than one error' do
         let(:params) { { name: 3.5, unexpected: 'foo' } }
 

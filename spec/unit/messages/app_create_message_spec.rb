@@ -67,6 +67,29 @@ module VCAP::CloudController
         end
       end
 
+      context 'when name is too long' do
+        let(:params) do
+          {
+            name: 'a' * 256,
+            relationships: { space: { data: { guid: 'space-guid' } } },
+            lifecycle: {
+              type: 'buildpack',
+              data: {
+                buildpack: 'nil',
+                stack: Stack.default.name
+              }
+            }
+          }
+        end
+
+        it 'is not valid' do
+          message = AppCreateMessage.new(params)
+
+          expect(message).not_to be_valid
+          expect(message.errors_on(:name)).to include('is too long (maximum is 255 characters)')
+        end
+      end
+
       context 'when environment_variables is not an object' do
         let(:params) do
           {
