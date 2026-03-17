@@ -27,10 +27,16 @@ module VCAP::CloudController
           expect(type).to eq('ssh-rsa')
 
           blob = Base64.strict_decode64(b64)
-          blob_buffer = Net::SSH::Buffer.new(blob)
-          blob_type = blob_buffer.read_string
-          e = blob_buffer.read_bignum # public exponent
-          n = blob_buffer.read_bignum # modulus
+          # Parse SSH public key blob (replaces Net::SSH::Buffer)
+          offset = 0
+          len = blob[offset, 4].unpack1('N')
+          blob_type = blob[offset + 4, len]
+          offset += 4 + len
+          len = blob[offset, 4].unpack1('N')
+          e = OpenSSL::BN.new(blob[offset + 4, len], 2) # public exponent
+          offset += 4 + len
+          len = blob[offset, 4].unpack1('N')
+          n = OpenSSL::BN.new(blob[offset + 4, len], 2) # modulus
           expect(blob_type).to eq('ssh-rsa')
 
           pk = OpenSSL::PKey::RSA.new(ssh_key.private_key)

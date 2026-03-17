@@ -323,7 +323,6 @@ GEM
     mutex_m (0.3.0)
     mysql2 (0.5.7)
       bigdecimal
-    net-ssh (7.3.1)
     netaddr (2.0.6)
     netrc (0.11.0)
     newrelic_rpm (10.2.0)
@@ -646,7 +645,6 @@ DEPENDENCIES
   mock_redis
   multipart-parser
   mysql2 (~> 0.5.7)
-  net-ssh
   netaddr (>= 2.0.4)
   newrelic_rpm
   nokogiri (>= 1.10.5)
