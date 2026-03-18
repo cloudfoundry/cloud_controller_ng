@@ -14,6 +14,7 @@ module VCAP::CloudController
           external_protocol: String,
           internal_service_hostname: String,
           disable_private_domain_cross_space_context_path_route_sharing: bool,
+          max_route_options_size: Integer,
           readiness_port: {
             cloud_controller_worker: Integer
           },

@@ -511,6 +511,30 @@ module VCAP::CloudController
           end
         end
       end
+
+      context 'when options size exceeds the configured limit' do
+        before do
+          TestConfig.override(max_route_options_size: 50)
+          # Enable hash_based_routing feature to allow hash_header in options
+          VCAP::CloudController::FeatureFlag.make(name: 'hash_based_routing', enabled: true, error_message: nil)
+          route[:options] = '{"loadbalancing": "round-robin"}'
+        end
+
+        let(:body) do
+          {
+            options: {
+              loadbalancing: 'hash',
+              hash_header: 'a' * 100
+            }
+          }
+        end
+
+        it 'raises an error indicating options size exceeded' do
+          expect do
+            subject.update(route:, message:)
+          end.to raise_error(RouteUpdate::Error, /Route options size exceeded: options must be smaller than 50 bytes/)
+        end
+      end
     end
   end
 end
