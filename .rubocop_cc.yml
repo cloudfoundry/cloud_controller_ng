@@ -112,7 +112,7 @@ Style/ExpandPathArguments:
 Style/FormatString:
   EnforcedStyle: sprintf
 Style/HashSyntax:
-  EnforcedShorthandSyntax: consistent
+  EnforcedShorthandSyntax: either_consistent
 Style/RaiseArgs:
   EnforcedStyle: compact
 Migration/TooManyMigrationRuns:
