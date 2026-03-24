@@ -16,7 +16,9 @@ USER root
 
 # Adapt issuer URI
 # Copy to uaa URL
-RUN yq  e '.issuer.uri = "http://localhost:8080"' -i /uaa.yml \
+# Add password.write authority to admin client (needed for password management tests)
+RUN yq e '.oauth.clients.admin.authorities += ",password.write"' -i /uaa.yml \
+  && yq e '.issuer.uri = "http://localhost:8080"' -i /uaa.yml \
   && yq e '.uaa.url = .issuer.uri' -i /uaa.yml
 
 # Runtime image
@@ -25,19 +27,18 @@ FROM tomcat:10-jdk21
 # Copy config file from yq image
 COPY --from=yq /uaa.yml /uaa.yml
 
-# Remove pre-installed apps
-RUN rm  -rf /usr/local/tomcat/webapps/*
-
-# Copy CF users
+# Copy CF users config
 RUN mkdir -p /usr/local/cf_config
 COPY uaa.yml /usr/local/cf_config/uaa.yml
 
-
-# Install war from build image
-COPY --from=builder /uaa/uaa/build/libs/cloudfoundry-identity-uaa-*.war /usr/local/tomcat/webapps/ROOT.war
+# Install JAR from build image (Spring Boot executable JAR)
+COPY --from=builder /uaa/uaa/build/libs/cloudfoundry-identity-uaa-*.war /app/uaa.jar
 COPY --from=builder /uaa/k8s/templates/log4j2.properties /log4j2.properties
 
 ENV JAVA_OPTS="-DLOGIN_CONFIG_URL=file:///uaa.yml -Dlogging.config=/log4j2.properties -DCLOUDFOUNDRY_CONFIG_PATH=/usr/local/cf_config"
-ENV spring_profiles=default
+ENV SPRING_PROFILES_ACTIVE=default
 
 EXPOSE 8080
+
+# Run as Spring Boot application
+CMD java $JAVA_OPTS -jar /app/uaa.jar
