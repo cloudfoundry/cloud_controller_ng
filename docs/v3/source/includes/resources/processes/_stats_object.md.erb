@@ -19,6 +19,7 @@ Name | Type | Description
 **usage** | _object_ | Object containing actual usage data for the instance; the value is `{}` when usage data is unavailable
 **usage.time** | _[timestamp](#timestamps)_ | The time when the usage was requested
 **usage.cpu** | _number_ | The current cpu usage of the instance
+**usage.cpu_entitlement** | _number_ | The current cpu usage relative to the instance's cpu entitlement; the value is `null` when cpu entitlement data is unavailable
 **usage.mem** | _integer_ | The current memory usage of the instance
 **usage.disk** | _integer_ | The current disk usage of the instance
 **usage.log_rate** | _integer_ | The current logging usage of the instance
