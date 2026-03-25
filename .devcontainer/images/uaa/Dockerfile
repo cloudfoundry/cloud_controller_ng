@@ -21,8 +21,8 @@ RUN yq e '.oauth.clients.admin.authorities += ",password.write"' -i /uaa.yml \
   && yq e '.issuer.uri = "http://localhost:8080"' -i /uaa.yml \
   && yq e '.uaa.url = .issuer.uri' -i /uaa.yml
 
-# Runtime image
-FROM tomcat:10-jdk21
+# Runtime image - lightweight JRE instead of Tomcat
+FROM sapmachine:21-jre-headless-ubuntu-jammy
 
 # Copy config file from yq image
 COPY --from=yq /uaa.yml /uaa.yml
@@ -41,4 +41,4 @@ ENV SPRING_PROFILES_ACTIVE=default
 EXPOSE 8080
 
 # Run as Spring Boot application
-CMD java $JAVA_OPTS -jar /app/uaa.jar
+CMD ["sh", "-c", "java $JAVA_OPTS -jar /app/uaa.jar"]
