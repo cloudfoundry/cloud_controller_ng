@@ -56,7 +56,8 @@ module VCAP::CloudController
                                                                                                    name: buildpack_name,
                                                                                                    stack: buildpack_fields[:stack],
                                                                                                    file: buildpack_fields[:file],
-                                                                                                   options: buildpack_fields[:options]
+                                                                                                   options: buildpack_fields[:options],
+                                                                                                   config_index: buildpack_fields[:config_index]
                                                                                                  })
                             end
           end

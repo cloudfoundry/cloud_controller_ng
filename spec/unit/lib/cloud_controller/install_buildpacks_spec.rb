@@ -43,7 +43,7 @@ module VCAP::CloudController
         context 'when a cnb buildpack is specified' do
           let(:file) { 'buildpack.cnb' }
           let(:buildpack_fields) do
-            { name: 'cnb_buildpack', file: file, stack: nil, options: { lifecycle: Lifecycles::CNB } }
+            { name: 'cnb_buildpack', file: file, stack: nil, options: { lifecycle: Lifecycles::CNB }, config_index: 0 }
           end
 
           let(:install_buildpack_config) do
@@ -77,7 +77,7 @@ module VCAP::CloudController
         context 'when a cnb buildpack is specified with .tgz extension' do
           let(:file) { 'buildpack.tgz' }
           let(:buildpack_fields) do
-            { name: 'cnb_buildpack', file: file, stack: nil, options: { lifecycle: Lifecycles::CNB } }
+            { name: 'cnb_buildpack', file: file, stack: nil, options: { lifecycle: Lifecycles::CNB }, config_index: 0 }
           end
 
           let(:install_buildpack_config) do
@@ -114,13 +114,13 @@ module VCAP::CloudController
           let(:buildpack2_file) { 'abuildpack2.zip' }
 
           let(:buildpack1a_fields) do
-            { name: 'buildpack1', file: buildpack1a_file, stack: 'cflinuxfs11', options: { lifecycle: Lifecycles::BUILDPACK } }
+            { name: 'buildpack1', file: buildpack1a_file, stack: 'cflinuxfs11', options: { lifecycle: Lifecycles::BUILDPACK }, config_index: 0 }
           end
           let(:buildpack1b_fields) do
-            { name: 'buildpack1', file: buildpack1b_file, stack: 'cflinuxfs12', options: { lifecycle: Lifecycles::BUILDPACK } }
+            { name: 'buildpack1', file: buildpack1b_file, stack: 'cflinuxfs12', options: { lifecycle: Lifecycles::BUILDPACK }, config_index: 1 }
           end
           let(:buildpack2_fields) do
-            { name: 'buildpack2', file: buildpack2_file, stack: nil, options: { lifecycle: Lifecycles::BUILDPACK } }
+            { name: 'buildpack2', file: buildpack2_file, stack: nil, options: { lifecycle: Lifecycles::BUILDPACK }, config_index: 2 }
           end
 
           before do
@@ -221,7 +221,8 @@ module VCAP::CloudController
           # call install
           # verify that job_factory.plan was called with the right file
           expect(File).to receive(:file?).with('another.zip').and_return(true)
-          expect(job_factory).to receive(:plan).with('buildpack1', [{ name: 'buildpack1', file: 'another.zip', stack: nil, options: { lifecycle: Lifecycles::BUILDPACK } }])
+          expect(job_factory).to receive(:plan).with('buildpack1',
+                                                     [{ name: 'buildpack1', file: 'another.zip', stack: nil, options: { lifecycle: Lifecycles::BUILDPACK }, config_index: 0 }])
 
           installer.install(TestConfig.config_instance.get(:install_buildpacks))
         end
@@ -235,7 +236,8 @@ module VCAP::CloudController
         it 'succeeds when no package is specified' do
           TestConfig.config[:install_buildpacks][0].delete('package')
           expect(File).to receive(:file?).with('another.zip').and_return(true)
-          expect(job_factory).to receive(:plan).with('buildpack1', [{ name: 'buildpack1', file: 'another.zip', stack: nil, options: { lifecycle: Lifecycles::BUILDPACK } }])
+          expect(job_factory).to receive(:plan).with('buildpack1',
+                                                     [{ name: 'buildpack1', file: 'another.zip', stack: nil, options: { lifecycle: Lifecycles::BUILDPACK }, config_index: 0 }])
 
           installer.install(TestConfig.config_instance.get(:install_buildpacks))
         end
@@ -291,6 +293,7 @@ module VCAP::CloudController
                  [{ name: 'buildpack1',
                     file: 'abuildpack.zip',
                     stack: nil,
+                    config_index: nil,
                     options: {
                       enabled: true,
                       lifecycle: Lifecycles::BUILDPACK,
@@ -301,6 +304,49 @@ module VCAP::CloudController
           installer.install(TestConfig.config_instance.get(:install_buildpacks))
 
           expect(installer.logger).not_to have_received(:error)
+        end
+
+        context 'when buildpacks mix explicit positions and sequential positions' do
+          let(:bp1_file) { 'buildpack1.zip' }
+          let(:bp2_file) { 'buildpack2.zip' }
+          let(:bp3_file) { 'buildpack3.zip' }
+
+          let(:install_buildpack_config) do
+            {
+              install_buildpacks: [
+                { 'name' => 'buildpack1', 'package' => 'pkg1' },
+                { 'name' => 'buildpack2', 'package' => 'pkg2', 'position' => 5 },
+                { 'name' => 'buildpack3', 'package' => 'pkg3' }
+              ]
+            }
+          end
+
+          before do
+            allow(Dir).to receive(:[]).with('/var/vcap/packages/pkg1/*[.zip|.cnb|.tgz|.tar.gz]').and_return([bp1_file])
+            allow(File).to receive(:file?).with(bp1_file).and_return(true)
+            allow(Dir).to receive(:[]).with('/var/vcap/packages/pkg2/*[.zip|.cnb|.tgz|.tar.gz]').and_return([bp2_file])
+            allow(File).to receive(:file?).with(bp2_file).and_return(true)
+            allow(Dir).to receive(:[]).with('/var/vcap/packages/pkg3/*[.zip|.cnb|.tgz|.tar.gz]').and_return([bp3_file])
+            allow(File).to receive(:file?).with(bp3_file).and_return(true)
+
+            allow(job_factory).to receive(:plan).and_return([canary_job])
+            allow(Jobs::Enqueuer).to receive(:new).and_return(enqueuer)
+            allow(enqueuer).to receive(:enqueue)
+          end
+
+          it 'assigns nil config_index to positioned buildpacks and sequential indices to others' do
+            installer.install(TestConfig.config_instance.get(:install_buildpacks))
+
+            expect(job_factory).to have_received(:plan).with('buildpack1', [
+              { name: 'buildpack1', file: bp1_file, stack: nil, options: { lifecycle: Lifecycles::BUILDPACK }, config_index: 0 }
+            ])
+            expect(job_factory).to have_received(:plan).with('buildpack2', [
+              { name: 'buildpack2', file: bp2_file, stack: nil, options: { lifecycle: Lifecycles::BUILDPACK, position: 5 }, config_index: nil }
+            ])
+            expect(job_factory).to have_received(:plan).with('buildpack3', [
+              { name: 'buildpack3', file: bp3_file, stack: nil, options: { lifecycle: Lifecycles::BUILDPACK }, config_index: 1 }
+            ])
+          end
         end
       end
     end

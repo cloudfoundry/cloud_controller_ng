@@ -15,7 +15,7 @@ module VCAP::CloudController
         end
 
         context 'when the manifest has one buildpack' do
-          let(:buildpack_fields) { [{ file: file, options: opts }] }
+          let(:buildpack_fields) { [{ file: file, options: opts, config_index: 0 }] }
           let(:single_buildpack_job) { jobs.first }
 
           shared_examples_for 'passthrough parameters' do
@@ -34,7 +34,7 @@ module VCAP::CloudController
 
           context 'when there is no matching buildpack record by name' do
             context 'and there is a detected stack in the zipfile' do
-              let(:buildpack_fields) { [{ file: file, options: opts, stack: 'detected stack' }] }
+              let(:buildpack_fields) { [{ file: file, options: opts, stack: 'detected stack', config_index: 0 }] }
 
               include_examples 'passthrough parameters'
 
@@ -44,6 +44,18 @@ module VCAP::CloudController
 
               it 'sets the stack to the detected stack' do
                 expect(single_buildpack_job.stack_name).to eq('detected stack')
+              end
+
+              it 'passes config_index to the create job' do
+                expect(single_buildpack_job.config_index).to eq(0)
+              end
+
+              context 'with a specific config_index' do
+                let(:buildpack_fields) { [{ file: file, options: opts, stack: 'detected stack', config_index: 3 }] }
+
+                it 'passes the config_index through' do
+                  expect(single_buildpack_job.config_index).to eq(3)
+                end
               end
             end
 
@@ -66,7 +78,7 @@ module VCAP::CloudController
               let!(:existing_buildpack) { Buildpack.make(name: name, stack: existing_stack.name, key: 'new_key', guid: 'the-guid') }
 
               context 'and the buildpack zip has the same stack' do
-                let(:buildpack_fields) { [{ file: file, options: opts, stack: existing_stack.name }] }
+                let(:buildpack_fields) { [{ file: file, options: opts, stack: existing_stack.name, config_index: 0 }] }
 
                 include_examples 'passthrough parameters'
 
@@ -84,7 +96,7 @@ module VCAP::CloudController
               end
 
               context 'and the buildpack zip has a different stack' do
-                let(:buildpack_fields) { [{ file: file, options: opts, stack: 'manifest stack' }] }
+                let(:buildpack_fields) { [{ file: file, options: opts, stack: 'manifest stack', config_index: 0 }] }
 
                 include_examples 'passthrough parameters'
 
@@ -98,7 +110,7 @@ module VCAP::CloudController
               end
 
               context 'and the manifest stack is nil' do
-                let(:buildpack_fields) { [{ file: file, options: opts, stack: nil }] }
+                let(:buildpack_fields) { [{ file: file, options: opts, stack: nil, config_index: 0 }] }
 
                 it 'errors' do
                   expect do
@@ -112,7 +124,7 @@ module VCAP::CloudController
               let!(:existing_buildpack) { Buildpack.make(name: name, stack: nil, key: 'new_key', guid: 'the-guid') }
 
               context 'and the buildpack zip also has a nil stack' do
-                let(:buildpack_fields) { [{ file: file, options: opts, stack: nil }] }
+                let(:buildpack_fields) { [{ file: file, options: opts, stack: nil, config_index: 0 }] }
 
                 include_examples 'passthrough parameters'
 
@@ -130,7 +142,7 @@ module VCAP::CloudController
               end
 
               context 'but the buildpack zip /has/ a stack' do
-                let(:buildpack_fields) { [{ file: file, options: opts, stack: 'manifest stack' }] }
+                let(:buildpack_fields) { [{ file: file, options: opts, stack: 'manifest stack', config_index: 0 }] }
 
                 include_examples 'passthrough parameters'
 
@@ -157,7 +169,7 @@ module VCAP::CloudController
             let!(:another_existing_buildpack) { Buildpack.make(name: name, stack: another_existing_stack.name, key: 'new_key', guid: 'another-guid') }
 
             context 'and one matches the manifest stack' do
-              let(:buildpack_fields) { [{ file: file, options: opts, stack: existing_stack.name }] }
+              let(:buildpack_fields) { [{ file: file, options: opts, stack: existing_stack.name, config_index: 0 }] }
 
               include_examples 'passthrough parameters'
 
@@ -175,7 +187,7 @@ module VCAP::CloudController
             end
 
             context 'and the manifest stack is nil' do
-              let(:buildpack_fields) { [{ file: file, options: opts, stack: nil }] }
+              let(:buildpack_fields) { [{ file: file, options: opts, stack: nil, config_index: 0 }] }
 
               it 'errors' do
                 expect do
@@ -185,7 +197,7 @@ module VCAP::CloudController
             end
 
             context 'and none match the manifest stack' do
-              let(:buildpack_fields) { [{ file: file, options: opts, stack: 'manifest stack' }] }
+              let(:buildpack_fields) { [{ file: file, options: opts, stack: 'manifest stack', config_index: 0 }] }
 
               include_examples 'passthrough parameters'
 
@@ -202,7 +214,9 @@ module VCAP::CloudController
 
         context 'when the manifest has multiple buildpack entries for one name, with different stacks' do
           let(:another_file) { 'the-other-file' }
-          let(:buildpack_fields) { [{ file: file, options: opts, stack: 'existing stack' }, { file: another_file, options: opts, stack: 'manifest stack' }] }
+          let(:buildpack_fields) do
+            [{ file: file, options: opts, stack: 'existing stack', config_index: 0 }, { file: another_file, options: opts, stack: 'manifest stack', config_index: 1 }]
+          end
 
           context 'and there are no matching Buildpacks' do
             it 'plans to create all the Buildpacks' do
@@ -277,7 +291,10 @@ module VCAP::CloudController
 
             let(:another_existing_stack) { Stack.make(name: 'another existing stack') }
             let!(:another_existing_buildpack) { Buildpack.make(name: name, stack: another_existing_stack.name, key: 'a_different_key', guid: 'a-different-guid') }
-            let(:buildpack_fields) { [{ file: file, options: opts, stack: existing_stack.name }, { file: another_file, options: opts, stack: another_existing_stack.name }] }
+            let(:buildpack_fields) do
+              [{ file: file, options: opts, stack: existing_stack.name, config_index: 0 },
+               { file: another_file, options: opts, stack: another_existing_stack.name, config_index: 1 }]
+            end
 
             context 'and none of them has a nil stack' do
               it 'creates a job for each buildpack' do
@@ -297,7 +314,7 @@ module VCAP::CloudController
           end
 
           context 'when one of them is stackless' do
-            let(:buildpack_fields) { [{ file: file, options: opts }] }
+            let(:buildpack_fields) { [{ file: file, options: opts, config_index: 0 }] }
 
             before do
               Stack.make(name: 'existing stack')
@@ -316,7 +333,7 @@ module VCAP::CloudController
 
         context 'when the manifest has multiple buildpack entries for one name, with the same stack' do
           let(:another_file) { 'the-other-file' }
-          let(:buildpack_fields) { [{ file: file, options: opts, stack: 'stack' }, { file: another_file, options: opts, stack: 'stack' }] }
+          let(:buildpack_fields) { [{ file: file, options: opts, stack: 'stack', config_index: 0 }, { file: another_file, options: opts, stack: 'stack', config_index: 1 }] }
 
           it 'raises a DuplicateInstall error' do
             expect do
@@ -327,7 +344,7 @@ module VCAP::CloudController
 
         context 'when the manifest has multiple buildpack entries for one name, neither specifying a stack' do
           let(:another_file) { 'the-other-file' }
-          let(:buildpack_fields) { [{ file: file, options: opts, stack: nil }, { file: another_file, options: opts, stack: nil }] }
+          let(:buildpack_fields) { [{ file: file, options: opts, stack: nil, config_index: 0 }, { file: another_file, options: opts, stack: nil, config_index: 1 }] }
 
           it 'raises a DuplicateInstall error' do
             expect do
@@ -338,7 +355,7 @@ module VCAP::CloudController
 
         context 'when the manifest has multiple buildpack entries for one name, one stackful and one stackless' do
           let(:another_file) { 'the-other-file' }
-          let(:buildpack_fields) { [{ file: file, options: opts, stack: 'stack' }, { file: another_file, options: opts, stack: nil }] }
+          let(:buildpack_fields) { [{ file: file, options: opts, stack: 'stack', config_index: 0 }, { file: another_file, options: opts, stack: nil, config_index: 1 }] }
 
           it 'raises a StacklessBuildpackIncompatibilityError error' do
             expect do
