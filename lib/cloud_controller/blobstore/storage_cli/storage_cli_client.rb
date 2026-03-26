@@ -17,16 +17,16 @@ module CloudController
         'resource_pool' => :storage_cli_config_file_resource_pool
       }.freeze
 
-      # Native storage-cli type names supported by CC (dav intentionally excluded for now)
-      STORAGE_CLI_TYPES = %w[azurebs alioss s3 gcs].freeze
+      # Native storage-cli type names supported by CC
+      STORAGE_CLI_TYPES = %w[azurebs alioss s3 gcs dav].freeze
 
       # DEPRECATED: Legacy fog provider names (remove after migration window)
       LEGACY_PROVIDER_TO_STORAGE_CLI_TYPE = {
         'AzureRM' => 'azurebs',
         'aliyun' => 'alioss',
         'AWS' => 's3',
-        'Google' => 'gcs'
-        # 'webdav' => 'dav', # intentionally not enabled yet
+        'Google' => 'gcs',
+        'webdav' => 'dav'
       }.freeze
 
       def initialize(directory_key:, resource_type:, root_dir:, min_size: nil, max_size: nil)
@@ -38,10 +38,6 @@ module CloudController
         # Get provider field (can contain either fog name or storage-cli type)
         provider = cfg['provider']&.to_s
         raise BlobstoreError.new("No provider specified in config file: #{File.basename(config_file_path)}") if provider.nil? || provider.empty?
-
-        # Explicitly block unfinished webdav storage-cli support to avoid confusion and wasted effort on debugging
-        # unsupported providers. Remove this check when webdav support is added.
-        raise "provider '#{provider}' is not supported yet" if %w[webdav dav].include?(provider)
 
         @storage_type =
           if STORAGE_CLI_TYPES.include?(provider)
