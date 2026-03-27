@@ -454,11 +454,21 @@ RSpec.describe 'V3 service plan visibility' do
         let(:service_plan) { VCAP::CloudController::ServicePlan.make(public: true) }
         let(:body) { { type: 'organization', organizations: [{ guid: org.guid }] } }
 
-        it 'returns a 422 bad request' do
+        it 'updates the visibility type AND add the orgs' do
           post api_url, body.to_json, admin_headers
 
-          expect(last_response).to have_status_code(422)
-          expect(parsed_response['errors'].first['detail']).to include("can only append organizations to plans with visibility type 'organization'")
+          expect(parsed_response['type']).to eq 'organization'
+          expect(parsed_response).not_to have_key('organizations')
+        end
+
+        it 'creates an audit event' do
+          post api_url, body.to_json, admin_headers
+          event = VCAP::CloudController::Event.find(type: 'audit.service_plan_visibility.update')
+          expect(event).to be
+          expect(event.actee).to eq(service_plan.guid)
+          expect(event.data).to include({
+                                          'request' => body.with_indifferent_access
+                                        })
         end
       end
 
@@ -509,11 +519,24 @@ RSpec.describe 'V3 service plan visibility' do
     context 'when request type is not "organization"' do
       let(:body) { { type: 'public' } }
 
-      it 'returns a 422 bad request' do
+      it 'behaves like a PATCH' do
         post api_url, body.to_json, admin_headers
+        expect(last_response).to have_status_code(200)
 
-        expect(last_response).to have_status_code(422)
-        expect(parsed_response['errors'].first['detail']).to include("type must be 'organization'")
+        get api_url, {}, admin_headers
+        expect(parsed_response).to eq({ 'type' => 'public' })
+        visibilities = VCAP::CloudController::ServicePlanVisibility.where(service_plan:).all
+        expect(visibilities).to be_empty
+      end
+
+      it 'creates an audit event' do
+        post api_url, body.to_json, admin_headers
+        event = VCAP::CloudController::Event.find(type: 'audit.service_plan_visibility.update')
+        expect(event).to be
+        expect(event.actee).to eq(service_plan.guid)
+        expect(event.data).to include({
+                                        'request' => body.with_indifferent_access
+                                      })
       end
     end
 
