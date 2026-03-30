@@ -107,10 +107,43 @@ module VCAP::CloudController
           let!(:succeeded_task) { TaskModel.make(:succeeded, created_at: 1.minute.ago) }
           let(:bbs_tasks) { [] }
 
-          it 'does nothing to the task' do
-            expect { subject.sync }.not_to(change do
-              [pending_task.reload.state, succeeded_task.reload.state]
-            end)
+          it 'does not change the succeeded task' do
+            expect { subject.sync }.not_to(change { succeeded_task.reload.state })
+          end
+
+          it 'does not change a recently created pending task' do
+            expect { subject.sync }.not_to(change { pending_task.reload.state })
+          end
+
+          it 'bumps freshness' do
+            subject.sync
+            expect(bbs_task_client).to have_received(:bump_freshness).once
+          end
+        end
+
+        context 'when a pending task has expired' do
+          let!(:expired_pending_task) do
+            task = TaskModel.make(:pending)
+            task.this.update(created_at: 10.minutes.ago)
+            task.reload
+          end
+          let!(:recent_pending_task) { TaskModel.make(:pending) }
+          let(:bbs_tasks) { [] }
+
+          it 'fails the expired pending task' do
+            subject.sync
+
+            expect(expired_pending_task.reload.state).to eq(TaskModel::FAILED_STATE)
+            expect(expired_pending_task.reload.failure_reason).to eq('Task expired in PENDING state')
+          end
+
+          it 'does not fail the recent pending task' do
+            expect { subject.sync }.not_to(change { recent_pending_task.reload.state })
+          end
+
+          it 'logs the expired pending task' do
+            subject.sync
+            expect(logger).to have_received(:info).with('expired-pending-task', task_guid: expired_pending_task.guid)
           end
 
           it 'bumps freshness' do

@@ -2,6 +2,7 @@ module VCAP::CloudController
   module Diego
     class TasksSync
       BATCH_SIZE = 500
+      PENDING_TASK_EXPIRATION_IN_SECONDS = 300
 
       class Error < StandardError
       end
@@ -21,10 +22,17 @@ module VCAP::CloudController
 
         to_update = []
         to_cancel = []
+        expired_pending = []
 
         batched_cc_tasks do |cc_tasks|
           cc_tasks.each do |cc_task|
             diego_task = diego_tasks.delete(cc_task.guid)
+
+            if cc_task.state == TaskModel::PENDING_STATE
+              expired_pending << cc_task.guid if cc_task.created_at < Time.now.utc - PENDING_TASK_EXPIRATION_IN_SECONDS
+              next
+            end
+
             next unless [TaskModel::RUNNING_STATE, TaskModel::CANCELING_STATE].include? cc_task.state
 
             if diego_task.nil?
@@ -34,6 +42,8 @@ module VCAP::CloudController
             end
           end
         end
+
+        fail_expired_pending_tasks(expired_pending)
 
         update_missing_diego_tasks(to_update)
         cancel_cc_tasks(to_cancel)
@@ -97,6 +107,16 @@ module VCAP::CloudController
         end
       end
 
+      def fail_expired_pending_tasks(expired_pending)
+        expired_pending.each do |task_guid|
+          task = TaskModel.where(guid: task_guid, state: TaskModel::PENDING_STATE).first
+          next unless task
+
+          task.update(state: TaskModel::FAILED_STATE, failure_reason: 'Task expired in PENDING state')
+          logger.info('expired-pending-task', task_guid: task_guid)
+        end
+      end
+
       def cancel_missing_cc_tasks(to_cancel_missing)
         to_cancel_missing.each_key do |task_guid|
           workpool.submit(task_guid) do |guid|
@@ -111,7 +131,7 @@ module VCAP::CloudController
         loop do
           tasks = TaskModel.where(
             Sequel.lit('tasks.id > ?', last_id)
-          ).order(:id).limit(BATCH_SIZE).select(:id, :guid, :state).all
+          ).order(:id).limit(BATCH_SIZE).select(:id, :guid, :state, :created_at).all
 
           yield tasks
           return if tasks.count < BATCH_SIZE
