@@ -9,8 +9,11 @@ module VCAP::CloudController
           blobstore_type: String,
           optional(:blobstore_provider) => String,
 
+          optional(:local_blobstore_path) => String,
           optional(:connection_config) => Hash,
           optional(:fog_connection) => Hash,
+          optional(:webdav_config) => Hash,
+          optional(:cdn) => Hash,
 
           fog_aws_storage_options: Hash,
           fog_gcp_storage_options: Hash,

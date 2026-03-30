@@ -162,6 +162,53 @@ module CloudController
           }
         end
       end
+
+      context 'when local is requested' do
+        let(:blobstore_type) { 'local' }
+        let(:base_path) { Dir.mktmpdir }
+
+        after do
+          FileUtils.rm_rf(base_path)
+        end
+
+        before do
+          options.merge!(local_blobstore_path: base_path, minimum_size: 100, maximum_size: 1000)
+        end
+
+        it 'provides a local client' do
+          allow(LocalClient).to receive(:new).and_call_original
+          ClientProvider.provide(options: options, directory_key: 'key')
+          expect(LocalClient).to have_received(:new).with(
+            directory_key: 'key',
+            base_path: base_path,
+            root_dir: nil,
+            min_size: 100,
+            max_size: 1000,
+            use_temp_storage: false
+          )
+        end
+      end
+
+      context 'when local-temp-storage is requested' do
+        let(:blobstore_type) { 'local-temp-storage' }
+
+        before do
+          options.merge!(minimum_size: 100, maximum_size: 1000)
+        end
+
+        it 'provides a local client with temp storage enabled' do
+          allow(LocalClient).to receive(:new).and_call_original
+          ClientProvider.provide(options: options, directory_key: 'key')
+          expect(LocalClient).to have_received(:new).with(
+            directory_key: 'key',
+            base_path: nil,
+            root_dir: nil,
+            min_size: 100,
+            max_size: 1000,
+            use_temp_storage: true
+          )
+        end
+      end
     end
   end
 end

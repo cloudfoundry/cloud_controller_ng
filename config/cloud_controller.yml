@@ -175,9 +175,8 @@ resource_pool:
   maximum_size: 42
   minimum_size: 1
   resource_directory_key: "spec-cc-resources"
-  fog_connection:
-    blobstore_timeout: 5
-    provider: "Local"
+  blobstore_type: local-temp-storage
+  fog_connection: {}
   fog_aws_storage_options: {}
   fog_gcp_storage_options: {}
 
@@ -185,26 +184,23 @@ packages:
   app_package_directory_key: "cc-packages"
   max_package_size: 42
   max_valid_packages_stored: 42
-  fog_connection:
-    blobstore_timeout: 5
-    provider: "Local"
+  blobstore_type: local-temp-storage
+  fog_connection: {}
   fog_aws_storage_options: {}
   fog_gcp_storage_options: {}
 
 droplets:
   droplet_directory_key: cc-droplets
   max_staged_droplets_stored: 42
-  fog_connection:
-    blobstore_timeout: 5
-    provider: "Local"
+  blobstore_type: local-temp-storage
+  fog_connection: {}
   fog_aws_storage_options: {}
   fog_gcp_storage_options: {}
 
 buildpacks:
   buildpack_directory_key: cc-buildpacks
-  fog_connection:
-    blobstore_timeout: 5
-    provider: "Local"
+  blobstore_type: local-temp-storage
+  fog_connection: {}
   fog_aws_storage_options: {}
   fog_gcp_storage_options: {}
 
