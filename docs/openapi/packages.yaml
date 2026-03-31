@@ -1,0 +1,1514 @@
+---
+openapi: 3.0.3
+info:
+  title: Cloud Controller V3 API
+  version: v3
+servers: []
+paths:
+  "/internal/v4/packages/42394bde-542d-44ef-88a6-feea1b627ef5":
+    patch:
+      summary: PATCH /internal/v4/packages/42394bde-542d-44ef-88a6-feea1b627ef5
+      requestBody:
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              type: object
+              properties:
+                '{"state":"READY","checksums":':
+                  type: object
+                  properties:
+                    '{"type":"sha1","value":"potato"},{"type":"sha256","value":"potatoest"}':
+                      type: object
+                      properties:
+                        "}":
+                          nullable: true
+                      required:
+                      - "}"
+                  required:
+                  - '{"type":"sha1","value":"potato"},{"type":"sha256","value":"potatoest"}'
+              required:
+              - '{"state":"READY","checksums":'
+            example:
+              '{"state":"READY","checksums":':
+                '{"type":"sha1","value":"potato"},{"type":"sha256","value":"potatoest"}':
+                  "}":
+      responses:
+        '204':
+          description: updates a package
+  "/v3/apps/{app_guid}/packages":
+    get:
+      summary: index
+      tags:
+      - Package
+      parameters:
+      - name: app_guid
+        in: path
+        required: true
+        schema:
+          type: string
+        example: 6279d42a-43eb-464e-b499-4e089d503e38
+      - name: guids
+        in: query
+        required: false
+        schema:
+          type: string
+        example: f13bc22b-da36-45f1-9e6c-5d76d739107e,ce0d1366-4c8b-450d-8630-45ac4ff9ea96
+      - name: order_by
+        in: query
+        required: false
+        schema:
+          type: string
+        example: "-created_at"
+      - name: page
+        in: query
+        required: false
+        schema:
+          type: integer
+        example: 1
+      - name: per_page
+        in: query
+        required: false
+        schema:
+          type: integer
+        example: 2
+      - name: states
+        in: query
+        required: false
+        schema:
+          type: string
+        example: PROCESSING_UPLOAD
+      responses:
+        '200':
+          description: filters by states
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  pagination:
+                    type: object
+                    properties:
+                      total_results:
+                        type: integer
+                      total_pages:
+                        type: integer
+                      first:
+                        type: object
+                        properties:
+                          href:
+                            type: string
+                        required:
+                        - href
+                      last:
+                        type: object
+                        properties:
+                          href:
+                            type: string
+                        required:
+                        - href
+                      next:
+                        nullable: true
+                      previous:
+                        nullable: true
+                    required:
+                    - total_results
+                    - total_pages
+                    - first
+                    - last
+                    - next
+                    - previous
+                  resources:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        guid:
+                          type: string
+                        created_at:
+                          type: string
+                        updated_at:
+                          type: string
+                        type:
+                          type: string
+                        data:
+                          type: object
+                          properties:
+                            error:
+                              nullable: true
+                            checksum:
+                              type: object
+                              properties:
+                                type:
+                                  type: string
+                                value:
+                                  type: string
+                              required:
+                              - type
+                              - value
+                          required:
+                          - error
+                          - checksum
+                        state:
+                          type: string
+                        relationships:
+                          type: object
+                          properties:
+                            app:
+                              type: object
+                              properties:
+                                data:
+                                  type: object
+                                  properties:
+                                    guid:
+                                      type: string
+                                  required:
+                                  - guid
+                              required:
+                              - data
+                          required:
+                          - app
+                        metadata:
+                          type: object
+                          properties:
+                            labels:
+                              type: object
+                              properties: {}
+                            annotations:
+                              type: object
+                              properties: {}
+                          required:
+                          - labels
+                          - annotations
+                        links:
+                          type: object
+                          properties:
+                            self:
+                              type: object
+                              properties:
+                                href:
+                                  type: string
+                              required:
+                              - href
+                            upload:
+                              type: object
+                              properties:
+                                href:
+                                  type: string
+                                method:
+                                  type: string
+                              required:
+                              - href
+                              - method
+                            download:
+                              type: object
+                              properties:
+                                href:
+                                  type: string
+                              required:
+                              - href
+                            app:
+                              type: object
+                              properties:
+                                href:
+                                  type: string
+                              required:
+                              - href
+                          required:
+                          - self
+                          - upload
+                          - download
+                          - app
+                      required:
+                      - guid
+                      - created_at
+                      - updated_at
+                      - type
+                      - data
+                      - state
+                      - relationships
+                      - metadata
+                      - links
+                required:
+                - pagination
+                - resources
+              example:
+                pagination:
+                  total_results: 2
+                  total_pages: 1
+                  first:
+                    href: http://api2.vcap.me/v3/apps/6279d42a-43eb-464e-b499-4e089d503e38/packages?page=1&per_page=50&states=PROCESSING_UPLOAD
+                  last:
+                    href: http://api2.vcap.me/v3/apps/6279d42a-43eb-464e-b499-4e089d503e38/packages?page=1&per_page=50&states=PROCESSING_UPLOAD
+                  next:
+                  previous:
+                resources:
+                - guid: 11e8fa6e-f7d4-4432-bc0f-bdc11d5a1d79
+                  created_at: '2026-03-31T23:36:34Z'
+                  updated_at: '2026-03-31T23:36:34Z'
+                  type: bits
+                  data:
+                    error:
+                    checksum:
+                      type: sha256
+                      value: 50ec47a2-fa13-4e08-9627-8dbac848ffb5
+                  state: PROCESSING_UPLOAD
+                  relationships:
+                    app:
+                      data:
+                        guid: 6279d42a-43eb-464e-b499-4e089d503e38
+                  metadata:
+                    labels: {}
+                    annotations: {}
+                  links:
+                    self:
+                      href: http://api2.vcap.me/v3/packages/11e8fa6e-f7d4-4432-bc0f-bdc11d5a1d79
+                    upload:
+                      href: http://api2.vcap.me/v3/packages/11e8fa6e-f7d4-4432-bc0f-bdc11d5a1d79/upload
+                      method: POST
+                    download:
+                      href: http://api2.vcap.me/v3/packages/11e8fa6e-f7d4-4432-bc0f-bdc11d5a1d79/download
+                    app:
+                      href: http://api2.vcap.me/v3/apps/6279d42a-43eb-464e-b499-4e089d503e38
+                - guid: 35af50a0-8379-4763-8a05-1acfb6bd9442
+                  created_at: '2026-03-31T23:36:34Z'
+                  updated_at: '2026-03-31T23:36:34Z'
+                  type: bits
+                  data:
+                    error:
+                    checksum:
+                      type: sha256
+                      value: ae59d177-4f9e-4690-8c77-4842b9a2aa73
+                  state: PROCESSING_UPLOAD
+                  relationships:
+                    app:
+                      data:
+                        guid: 6279d42a-43eb-464e-b499-4e089d503e38
+                  metadata:
+                    labels: {}
+                    annotations: {}
+                  links:
+                    self:
+                      href: http://api2.vcap.me/v3/packages/35af50a0-8379-4763-8a05-1acfb6bd9442
+                    upload:
+                      href: http://api2.vcap.me/v3/packages/35af50a0-8379-4763-8a05-1acfb6bd9442/upload
+                      method: POST
+                    download:
+                      href: http://api2.vcap.me/v3/packages/35af50a0-8379-4763-8a05-1acfb6bd9442/download
+                    app:
+                      href: http://api2.vcap.me/v3/apps/6279d42a-43eb-464e-b499-4e089d503e38
+  "/v3/packages":
+    get:
+      summary: index
+      tags:
+      - Package
+      parameters:
+      - name: app_guids
+        in: query
+        required: false
+        schema:
+          type: string
+        example: 88b7efa5-09a4-4750-9504-281813ac86a2,22ab1418-3eae-4566-a8d7-62ac0a737d4d
+      - name: guids
+        in: query
+        required: false
+        schema:
+          type: string
+        example: 41dfd8e5-83b2-4766-a8b2-12bec7d2e1b0,273212a8-6a4c-4ff2-a6c3-4b22931846e8
+      - name: label_selector
+        in: query
+        required: false
+        schema:
+          type: string
+        example: fruit=strawberry
+      - name: organization_guids
+        in: query
+        required: false
+        schema:
+          type: string
+        example: 4febbde6-8d98-480a-b34f-9de9586c302d,64dad799-b9a1-4113-98f4-5e7af3c24a77
+      - name: space_guids
+        in: query
+        required: false
+        schema:
+          type: string
+        example: edd914b2-3188-4b12-b722-361069b32caa,00bee01a-9f3c-42b1-9e83-4cf3ac5a64e4
+      - name: states
+        in: query
+        required: false
+        schema:
+          type: string
+        example: PROCESSING_UPLOAD
+      - name: types
+        in: query
+        required: false
+        schema:
+          type: string
+        example: bits
+      responses:
+        '200':
+          description: filters by types
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  pagination:
+                    type: object
+                    properties:
+                      total_results:
+                        type: integer
+                      total_pages:
+                        type: integer
+                      first:
+                        type: object
+                        properties:
+                          href:
+                            type: string
+                        required:
+                        - href
+                      last:
+                        type: object
+                        properties:
+                          href:
+                            type: string
+                        required:
+                        - href
+                      next:
+                        nullable: true
+                      previous:
+                        nullable: true
+                    required:
+                    - total_results
+                    - total_pages
+                    - first
+                    - last
+                    - next
+                    - previous
+                  resources:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        guid:
+                          type: string
+                        created_at:
+                          type: string
+                        updated_at:
+                          type: string
+                        type:
+                          type: string
+                        data:
+                          type: object
+                          properties:
+                            error:
+                              nullable: true
+                            checksum:
+                              type: object
+                              properties:
+                                type:
+                                  type: string
+                                value:
+                                  type: string
+                              required:
+                              - type
+                              - value
+                          required:
+                          - error
+                          - checksum
+                        state:
+                          type: string
+                        relationships:
+                          type: object
+                          properties:
+                            app:
+                              type: object
+                              properties:
+                                data:
+                                  type: object
+                                  properties:
+                                    guid:
+                                      type: string
+                                  required:
+                                  - guid
+                              required:
+                              - data
+                          required:
+                          - app
+                        metadata:
+                          type: object
+                          properties:
+                            labels:
+                              type: object
+                              properties:
+                                fruit:
+                                  type: string
+                            annotations:
+                              type: object
+                              properties: {}
+                          required:
+                          - labels
+                          - annotations
+                        links:
+                          type: object
+                          properties:
+                            self:
+                              type: object
+                              properties:
+                                href:
+                                  type: string
+                              required:
+                              - href
+                            upload:
+                              type: object
+                              properties:
+                                href:
+                                  type: string
+                                method:
+                                  type: string
+                              required:
+                              - href
+                              - method
+                            download:
+                              type: object
+                              properties:
+                                href:
+                                  type: string
+                              required:
+                              - href
+                            app:
+                              type: object
+                              properties:
+                                href:
+                                  type: string
+                              required:
+                              - href
+                          required:
+                          - self
+                          - upload
+                          - download
+                          - app
+                      required:
+                      - guid
+                      - created_at
+                      - updated_at
+                      - type
+                      - data
+                      - state
+                      - relationships
+                      - metadata
+                      - links
+                required:
+                - pagination
+                - resources
+              example:
+                pagination:
+                  total_results: 3
+                  total_pages: 1
+                  first:
+                    href: http://api2.vcap.me/v3/packages?page=1&per_page=50&types=bits
+                  last:
+                    href: http://api2.vcap.me/v3/packages?page=1&per_page=50&types=bits
+                  next:
+                  previous:
+                resources:
+                - guid: d332f496-f27d-4ae7-be9f-771884f4b724
+                  created_at: '2026-03-31T23:36:34Z'
+                  updated_at: '2026-03-31T23:36:34Z'
+                  type: bits
+                  data:
+                    error:
+                    checksum:
+                      type: sha256
+                      value: 48c0db8e-2aeb-4df9-9af7-694aced89002
+                  state: AWAITING_UPLOAD
+                  relationships:
+                    app:
+                      data:
+                        guid: 534ab69d-9b78-4eed-96f7-c45db1681144
+                  metadata:
+                    labels: {}
+                    annotations: {}
+                  links:
+                    self:
+                      href: http://api2.vcap.me/v3/packages/d332f496-f27d-4ae7-be9f-771884f4b724
+                    upload:
+                      href: http://api2.vcap.me/v3/packages/d332f496-f27d-4ae7-be9f-771884f4b724/upload
+                      method: POST
+                    download:
+                      href: http://api2.vcap.me/v3/packages/d332f496-f27d-4ae7-be9f-771884f4b724/download
+                    app:
+                      href: http://api2.vcap.me/v3/apps/534ab69d-9b78-4eed-96f7-c45db1681144
+                - guid: 9f8ceb08-91b2-4b7c-92ce-b268bdb09c1a
+                  created_at: '2026-03-31T23:36:34Z'
+                  updated_at: '2026-03-31T23:36:34Z'
+                  type: bits
+                  data:
+                    error:
+                    checksum:
+                      type: sha256
+                      value: b702ab73-5a6a-4297-88e1-c02c0c57f5fb
+                  state: AWAITING_UPLOAD
+                  relationships:
+                    app:
+                      data:
+                        guid: 534ab69d-9b78-4eed-96f7-c45db1681144
+                  metadata:
+                    labels: {}
+                    annotations: {}
+                  links:
+                    self:
+                      href: http://api2.vcap.me/v3/packages/9f8ceb08-91b2-4b7c-92ce-b268bdb09c1a
+                    upload:
+                      href: http://api2.vcap.me/v3/packages/9f8ceb08-91b2-4b7c-92ce-b268bdb09c1a/upload
+                      method: POST
+                    download:
+                      href: http://api2.vcap.me/v3/packages/9f8ceb08-91b2-4b7c-92ce-b268bdb09c1a/download
+                    app:
+                      href: http://api2.vcap.me/v3/apps/534ab69d-9b78-4eed-96f7-c45db1681144
+                - guid: 526eeace-4c42-4261-b3b6-927283caed81
+                  created_at: '2026-03-31T23:36:34Z'
+                  updated_at: '2026-03-31T23:36:34Z'
+                  type: bits
+                  data:
+                    error:
+                    checksum:
+                      type: sha256
+                      value: 8d317f8f-9874-4afe-a7ec-d9d7f8833174
+                  state: AWAITING_UPLOAD
+                  relationships:
+                    app:
+                      data:
+                        guid: 534ab69d-9b78-4eed-96f7-c45db1681144
+                  metadata:
+                    labels: {}
+                    annotations: {}
+                  links:
+                    self:
+                      href: http://api2.vcap.me/v3/packages/526eeace-4c42-4261-b3b6-927283caed81
+                    upload:
+                      href: http://api2.vcap.me/v3/packages/526eeace-4c42-4261-b3b6-927283caed81/upload
+                      method: POST
+                    download:
+                      href: http://api2.vcap.me/v3/packages/526eeace-4c42-4261-b3b6-927283caed81/download
+                    app:
+                      href: http://api2.vcap.me/v3/apps/534ab69d-9b78-4eed-96f7-c45db1681144
+    post:
+      summary: create
+      tags:
+      - Package
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                type:
+                  type: string
+                data:
+                  type: object
+                  properties:
+                    image:
+                      type: string
+                    username:
+                      type: string
+                    password:
+                      type: string
+                  required:
+                  - image
+                  - username
+                  - password
+                relationships:
+                  type: object
+                  properties:
+                    app:
+                      type: object
+                      properties:
+                        data:
+                          type: object
+                          properties:
+                            guid:
+                              type: string
+                          required:
+                          - guid
+                      required:
+                      - data
+                  required:
+                  - app
+                metadata:
+                  type: object
+                  properties:
+                    labels:
+                      type: object
+                      properties:
+                        release:
+                          type: string
+                        seriouseats.com/potato:
+                          type: string
+                      required:
+                      - release
+                      - seriouseats.com/potato
+                    annotations:
+                      type: object
+                      properties:
+                        potato:
+                          type: string
+                      required:
+                      - potato
+                  required:
+                  - labels
+                  - annotations
+              required:
+              - relationships
+            example:
+              type: docker
+              data:
+                image: registry/image:latest
+                username: my-docker-username
+                password: my-password
+              relationships:
+                app:
+                  data:
+                    guid: 1b13ebea-bb0c-4350-bfc6-cc8421fa1dd1
+              metadata:
+                labels:
+                  release: stable
+                  seriouseats.com/potato: mashed
+                annotations:
+                  potato: idaho
+      responses:
+        '201':
+          description: copies a package
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  guid:
+                    type: string
+                  created_at:
+                    type: string
+                  updated_at:
+                    type: string
+                  type:
+                    type: string
+                  data:
+                    type: object
+                    properties:
+                      image:
+                        type: string
+                      username:
+                        type: string
+                        nullable: true
+                      password:
+                        type: string
+                        nullable: true
+                    required:
+                    - image
+                    - username
+                    - password
+                  state:
+                    type: string
+                  relationships:
+                    type: object
+                    properties:
+                      app:
+                        type: object
+                        properties:
+                          data:
+                            type: object
+                            properties:
+                              guid:
+                                type: string
+                            required:
+                            - guid
+                        required:
+                        - data
+                    required:
+                    - app
+                  metadata:
+                    type: object
+                    properties:
+                      labels:
+                        type: object
+                        properties:
+                          release:
+                            type: string
+                          seriouseats.com/potato:
+                            type: string
+                      annotations:
+                        type: object
+                        properties:
+                          potato:
+                            type: string
+                    required:
+                    - labels
+                    - annotations
+                  links:
+                    type: object
+                    properties:
+                      self:
+                        type: object
+                        properties:
+                          href:
+                            type: string
+                        required:
+                        - href
+                      app:
+                        type: object
+                        properties:
+                          href:
+                            type: string
+                        required:
+                        - href
+                    required:
+                    - self
+                    - app
+                required:
+                - guid
+                - created_at
+                - updated_at
+                - type
+                - data
+                - state
+                - relationships
+                - metadata
+                - links
+              example:
+                guid: a16884ed-9ab5-463d-9db7-f6ec3d5e0bb6
+                created_at: '2026-03-31T23:36:33Z'
+                updated_at: '2026-03-31T23:36:33Z'
+                type: docker
+                data:
+                  image: http://awesome-sauce.com
+                  username:
+                  password:
+                state: READY
+                relationships:
+                  app:
+                    data:
+                      guid: 1b13ebea-bb0c-4350-bfc6-cc8421fa1dd1
+                metadata:
+                  labels:
+                    release: stable
+                    seriouseats.com/potato: mashed
+                  annotations:
+                    potato: idaho
+                links:
+                  self:
+                    href: http://api2.vcap.me/v3/packages/a16884ed-9ab5-463d-9db7-f6ec3d5e0bb6
+                  app:
+                    href: http://api2.vcap.me/v3/apps/1b13ebea-bb0c-4350-bfc6-cc8421fa1dd1
+      parameters:
+      - name: source_guid
+        in: query
+        required: false
+        schema:
+          type: string
+        example: 224a7d51-08d1-4ef1-8a1a-411af75066cd
+  "/v3/packages/{guid}":
+    get:
+      summary: show
+      tags:
+      - Package
+      parameters:
+      - name: guid
+        in: path
+        required: true
+        schema:
+          type: string
+        example: e505395a-547d-4933-89ab-3fd6d66e0c40
+      responses:
+        '404':
+          description: deletes a package asynchronously
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  errors:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        detail:
+                          type: string
+                        title:
+                          type: string
+                        code:
+                          type: integer
+                        test_mode_info:
+                          type: object
+                          properties:
+                            detail:
+                              type: string
+                            title:
+                              type: string
+                            backtrace:
+                              type: array
+                              items:
+                                type: string
+                          required:
+                          - detail
+                          - title
+                          - backtrace
+                      required:
+                      - detail
+                      - title
+                      - code
+                      - test_mode_info
+                required:
+                - errors
+              example:
+                errors:
+                - detail: Package not found
+                  title: CF-ResourceNotFound
+                  code: 10010
+                  test_mode_info:
+                    detail: Package not found
+                    title: CF-ResourceNotFound
+                    backtrace:
+                    - "/Users/sethboyles/workspace/capi-release/src/cloud_controller_ng/app/controllers/v3/application_controller.rb:62:in
+                      `resource_not_found!'"
+                    - "/Users/sethboyles/workspace/capi-release/src/cloud_controller_ng/app/controllers/v3/packages_controller.rb:193:in
+                      `package_not_found!'"
+                    - "/Users/sethboyles/workspace/capi-release/src/cloud_controller_ng/app/controllers/v3/packages_controller.rb:108:in
+                      `show'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/actionpack-8.1.3/lib/action_controller/metal/basic_implicit_render.rb:8:in
+                      `send_action'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/actionpack-8.1.3/lib/abstract_controller/base.rb:221:in
+                      `process_action'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/actionpack-8.1.3/lib/action_controller/metal/rendering.rb:199:in
+                      `process_action'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/actionpack-8.1.3/lib/abstract_controller/callbacks.rb:267:in
+                      `block in process_action'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/activesupport-8.1.3/lib/active_support/callbacks.rb:110:in
+                      `run_callbacks'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/actionpack-8.1.3/lib/abstract_controller/callbacks.rb:266:in
+                      `process_action'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/actionpack-8.1.3/lib/action_controller/metal/rescue.rb:36:in
+                      `process_action'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/actionpack-8.1.3/lib/action_controller/metal/instrumentation.rb:76:in
+                      `block in process_action'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/activesupport-8.1.3/lib/active_support/notifications.rb:210:in
+                      `block in instrument'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/activesupport-8.1.3/lib/active_support/notifications/instrumenter.rb:58:in
+                      `instrument'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/activesupport-8.1.3/lib/active_support/notifications.rb:210:in
+                      `instrument'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/actionpack-8.1.3/lib/action_controller/metal/instrumentation.rb:75:in
+                      `process_action'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/actionpack-8.1.3/lib/action_controller/metal/params_wrapper.rb:259:in
+                      `process_action'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/actionpack-8.1.3/lib/abstract_controller/base.rb:154:in
+                      `process'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/actionview-8.1.3/lib/action_view/rendering.rb:40:in
+                      `process'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/actionpack-8.1.3/lib/action_controller/metal.rb:252:in
+                      `dispatch'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/actionpack-8.1.3/lib/action_controller/metal.rb:335:in
+                      `dispatch'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/actionpack-8.1.3/lib/action_dispatch/routing/route_set.rb:65:in
+                      `dispatch'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/actionpack-8.1.3/lib/action_dispatch/routing/route_set.rb:50:in
+                      `serve'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/actionpack-8.1.3/lib/action_dispatch/journey/router.rb:35:in
+                      `block in serve'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/actionpack-8.1.3/lib/action_dispatch/journey/router.rb:86:in
+                      `block in recognize'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/actionpack-8.1.3/lib/action_dispatch/journey/router.rb:66:in
+                      `each'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/actionpack-8.1.3/lib/action_dispatch/journey/router.rb:66:in
+                      `recognize'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/actionpack-8.1.3/lib/action_dispatch/journey/router.rb:31:in
+                      `serve'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/actionpack-8.1.3/lib/action_dispatch/routing/route_set.rb:906:in
+                      `call'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/rack-3.2.5/lib/rack/tempfile_reaper.rb:20:in
+                      `call'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/actionpack-8.1.3/lib/action_dispatch/http/content_security_policy.rb:38:in
+                      `call'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/actionpack-8.1.3/lib/action_dispatch/middleware/callbacks.rb:31:in
+                      `block in call'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/activesupport-8.1.3/lib/active_support/callbacks.rb:101:in
+                      `run_callbacks'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/actionpack-8.1.3/lib/action_dispatch/middleware/callbacks.rb:30:in
+                      `call'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/actionpack-8.1.3/lib/action_dispatch/middleware/executor.rb:20:in
+                      `call'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/actionpack-8.1.3/lib/action_dispatch/middleware/actionable_exceptions.rb:18:in
+                      `call'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/actionpack-8.1.3/lib/action_dispatch/middleware/debug_exceptions.rb:31:in
+                      `call'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/actionpack-8.1.3/lib/action_dispatch/middleware/show_exceptions.rb:32:in
+                      `call'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/actionpack-8.1.3/lib/action_dispatch/middleware/remote_ip.rb:98:in
+                      `call'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/rack-3.2.5/lib/rack/runtime.rb:24:in
+                      `call'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/actionpack-8.1.3/lib/action_dispatch/middleware/executor.rb:20:in
+                      `call'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/rack-3.2.5/lib/rack/sendfile.rb:131:in
+                      `call'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/rack-3.2.5/lib/rack/urlmap.rb:76:in
+                      `block in call'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/rack-3.2.5/lib/rack/urlmap.rb:60:in
+                      `each'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/rack-3.2.5/lib/rack/urlmap.rb:60:in
+                      `call'"
+                    - "/Users/sethboyles/workspace/capi-release/src/cloud_controller_ng/middleware/request_logs.rb:14:in
+                      `call'"
+                    - "/Users/sethboyles/workspace/capi-release/src/cloud_controller_ng/middleware/zipkin.rb:32:in
+                      `call_app'"
+                    - "/Users/sethboyles/workspace/capi-release/src/cloud_controller_ng/middleware/zipkin.rb:9:in
+                      `call'"
+                    - "/Users/sethboyles/workspace/capi-release/src/cloud_controller_ng/middleware/security_context_setter.rb:41:in
+                      `call'"
+                    - "/Users/sethboyles/workspace/capi-release/src/cloud_controller_ng/middleware/vcap_request_context_setter.rb:17:in
+                      `call'"
+                    - "/Users/sethboyles/workspace/capi-release/src/cloud_controller_ng/middleware/cors.rb:50:in
+                      `call_app'"
+                    - "/Users/sethboyles/workspace/capi-release/src/cloud_controller_ng/middleware/cors.rb:14:in
+                      `call'"
+                    - "/Users/sethboyles/workspace/capi-release/src/cloud_controller_ng/middleware/request_metrics.rb:13:in
+                      `call'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/rack-3.2.5/lib/rack/builder.rb:283:in
+                      `call'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/rack-test-2.2.0/lib/rack/test.rb:360:in
+                      `process_request'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/rack-test-2.2.0/lib/rack/test.rb:163:in
+                      `custom_request'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/rack-test-2.2.0/lib/rack/test.rb:112:in
+                      `get'"
+                    - "/Users/sethboyles/.rubies/ruby-3.3.7/lib/ruby/3.3.0/forwardable.rb:240:in
+                      `get'"
+                    - "/Users/sethboyles/workspace/capi-release/src/cloud_controller_ng/spec/request/packages_spec.rb:1199:in
+                      `block (3 levels) in <main>'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/rspec-core-3.13.6/lib/rspec/core/example.rb:263:in
+                      `instance_exec'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/rspec-core-3.13.6/lib/rspec/core/example.rb:263:in
+                      `block in run'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/rspec-core-3.13.6/lib/rspec/core/example.rb:511:in
+                      `block in with_around_and_singleton_context_hooks'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/rspec-core-3.13.6/lib/rspec/core/example.rb:468:in
+                      `block in with_around_example_hooks'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/rspec-core-3.13.6/lib/rspec/core/hooks.rb:486:in
+                      `block in run'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/rspec-core-3.13.6/lib/rspec/core/hooks.rb:626:in
+                      `block in run_around_example_hooks_for'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/rspec-core-3.13.6/lib/rspec/core/example.rb:352:in
+                      `call'"
+                    - "/Users/sethboyles/workspace/capi-release/src/cloud_controller_ng/spec/spec_helper_helper.rb:155:in
+                      `block (3 levels) in each_run'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/sequel-5.102.0/lib/sequel/database/transactions.rb:257:in
+                      `_transaction'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/sequel-5.102.0/lib/sequel/database/transactions.rb:239:in
+                      `block in transaction'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/sequel-5.102.0/lib/sequel/connection_pool/threaded.rb:92:in
+                      `hold'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/sequel-5.102.0/lib/sequel/database/connecting.rb:283:in
+                      `synchronize'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/sequel-5.102.0/lib/sequel/database/transactions.rb:197:in
+                      `transaction'"
+                    - "/Users/sethboyles/workspace/capi-release/src/cloud_controller_ng/spec/support/database_isolation.rb:39:in
+                      `cleanly'"
+                    - "/Users/sethboyles/workspace/capi-release/src/cloud_controller_ng/spec/spec_helper_helper.rb:155:in
+                      `block (2 levels) in each_run'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/rspec-core-3.13.6/lib/rspec/core/example.rb:457:in
+                      `instance_exec'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/rspec-core-3.13.6/lib/rspec/core/example.rb:457:in
+                      `instance_exec'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/rspec-core-3.13.6/lib/rspec/core/hooks.rb:390:in
+                      `execute_with'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/rspec-core-3.13.6/lib/rspec/core/hooks.rb:628:in
+                      `block (2 levels) in run_around_example_hooks_for'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/rspec-core-3.13.6/lib/rspec/core/example.rb:352:in
+                      `call'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/webmock-3.26.2/lib/webmock/rspec.rb:39:in
+                      `block (2 levels) in <main>'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/rspec-core-3.13.6/lib/rspec/core/example.rb:457:in
+                      `instance_exec'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/rspec-core-3.13.6/lib/rspec/core/example.rb:457:in
+                      `instance_exec'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/rspec-core-3.13.6/lib/rspec/core/hooks.rb:390:in
+                      `execute_with'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/rspec-core-3.13.6/lib/rspec/core/hooks.rb:628:in
+                      `block (2 levels) in run_around_example_hooks_for'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/rspec-core-3.13.6/lib/rspec/core/example.rb:352:in
+                      `call'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/rspec-core-3.13.6/lib/rspec/core/hooks.rb:629:in
+                      `run_around_example_hooks_for'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/rspec-core-3.13.6/lib/rspec/core/hooks.rb:486:in
+                      `run'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/rspec-core-3.13.6/lib/rspec/core/example.rb:468:in
+                      `with_around_example_hooks'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/rspec-core-3.13.6/lib/rspec/core/example.rb:511:in
+                      `with_around_and_singleton_context_hooks'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/rspec-core-3.13.6/lib/rspec/core/example.rb:259:in
+                      `run'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/rspec-core-3.13.6/lib/rspec/core/example_group.rb:653:in
+                      `block in run_examples'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/rspec-core-3.13.6/lib/rspec/core/example_group.rb:649:in
+                      `map'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/rspec-core-3.13.6/lib/rspec/core/example_group.rb:649:in
+                      `run_examples'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/rspec-core-3.13.6/lib/rspec/core/example_group.rb:614:in
+                      `run'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/rspec-core-3.13.6/lib/rspec/core/example_group.rb:615:in
+                      `block in run'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/rspec-core-3.13.6/lib/rspec/core/example_group.rb:615:in
+                      `map'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/rspec-core-3.13.6/lib/rspec/core/example_group.rb:615:in
+                      `run'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/rspec-core-3.13.6/lib/rspec/core/runner.rb:121:in
+                      `block (3 levels) in run_specs'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/rspec-core-3.13.6/lib/rspec/core/runner.rb:121:in
+                      `map'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/rspec-core-3.13.6/lib/rspec/core/runner.rb:121:in
+                      `block (2 levels) in run_specs'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/rspec-core-3.13.6/lib/rspec/core/configuration.rb:2097:in
+                      `with_suite_hooks'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/rspec-core-3.13.6/lib/rspec/core/runner.rb:116:in
+                      `block in run_specs'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/rspec-core-3.13.6/lib/rspec/core/reporter.rb:74:in
+                      `report'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/rspec-core-3.13.6/lib/rspec/core/runner.rb:115:in
+                      `run_specs'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/rspec-core-3.13.6/lib/rspec/core/runner.rb:89:in
+                      `run'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/rspec-core-3.13.6/lib/rspec/core/runner.rb:71:in
+                      `run'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/rspec-core-3.13.6/lib/rspec/core/runner.rb:45:in
+                      `invoke'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/rspec-core-3.13.6/exe/rspec:4:in
+                      `<top (required)>'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/bin/rspec:25:in `load'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/bin/rspec:25:in `<top (required)>'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/bundler-2.6.9/lib/bundler/cli/exec.rb:59:in
+                      `load'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/bundler-2.6.9/lib/bundler/cli/exec.rb:59:in
+                      `kernel_load'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/bundler-2.6.9/lib/bundler/cli/exec.rb:23:in
+                      `run'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/bundler-2.6.9/lib/bundler/cli.rb:452:in
+                      `exec'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/bundler-2.6.9/lib/bundler/vendor/thor/lib/thor/command.rb:28:in
+                      `run'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/bundler-2.6.9/lib/bundler/vendor/thor/lib/thor/invocation.rb:127:in
+                      `invoke_command'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/bundler-2.6.9/lib/bundler/vendor/thor/lib/thor.rb:538:in
+                      `dispatch'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/bundler-2.6.9/lib/bundler/cli.rb:35:in
+                      `dispatch'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/bundler-2.6.9/lib/bundler/vendor/thor/lib/thor/base.rb:584:in
+                      `start'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/bundler-2.6.9/lib/bundler/cli.rb:29:in
+                      `start'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/bundler-2.6.9/exe/bundle:28:in
+                      `block in <top (required)>'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/bundler-2.6.9/lib/bundler/friendly_errors.rb:117:in
+                      `with_friendly_errors'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/bundler-2.6.9/exe/bundle:20:in
+                      `<top (required)>'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/bin/bundle:25:in `load'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/bin/bundle:25:in `<main>'"
+    patch:
+      summary: update
+      tags:
+      - Package
+      parameters:
+      - name: guid
+        in: path
+        required: true
+        schema:
+          type: string
+        example: 4dbe5fdf-ef28-44fc-9e39-50271c14270b
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                metadata:
+                  type: object
+                  properties:
+                    labels:
+                      type: object
+                      properties:
+                        release:
+                          type: string
+                        seriouseats.com/potato:
+                          type: string
+                      required:
+                      - release
+                      - seriouseats.com/potato
+                    annotations:
+                      type: object
+                      properties:
+                        checksum:
+                          type: string
+                      required:
+                      - checksum
+                  required:
+                  - labels
+                  - annotations
+              required:
+              - metadata
+            example:
+              metadata:
+                labels:
+                  release: stable
+                  seriouseats.com/potato: mashed
+                annotations:
+                  checksum: SHA
+      responses:
+        '200':
+          description: updates package metadata
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  guid:
+                    type: string
+                  created_at:
+                    type: string
+                  updated_at:
+                    type: string
+                  type:
+                    type: string
+                  data:
+                    type: object
+                    properties:
+                      error:
+                        nullable: true
+                      checksum:
+                        type: object
+                        properties:
+                          type:
+                            type: string
+                          value:
+                            type: string
+                        required:
+                        - type
+                        - value
+                    required:
+                    - error
+                    - checksum
+                  state:
+                    type: string
+                  relationships:
+                    type: object
+                    properties:
+                      app:
+                        type: object
+                        properties:
+                          data:
+                            type: object
+                            properties:
+                              guid:
+                                type: string
+                            required:
+                            - guid
+                        required:
+                        - data
+                    required:
+                    - app
+                  metadata:
+                    type: object
+                    properties:
+                      labels:
+                        type: object
+                        properties:
+                          release:
+                            type: string
+                          seriouseats.com/potato:
+                            type: string
+                        required:
+                        - release
+                        - seriouseats.com/potato
+                      annotations:
+                        type: object
+                        properties:
+                          checksum:
+                            type: string
+                        required:
+                        - checksum
+                    required:
+                    - labels
+                    - annotations
+                  links:
+                    type: object
+                    properties:
+                      self:
+                        type: object
+                        properties:
+                          href:
+                            type: string
+                        required:
+                        - href
+                      upload:
+                        type: object
+                        properties:
+                          href:
+                            type: string
+                          method:
+                            type: string
+                        required:
+                        - href
+                        - method
+                      download:
+                        type: object
+                        properties:
+                          href:
+                            type: string
+                        required:
+                        - href
+                      app:
+                        type: object
+                        properties:
+                          href:
+                            type: string
+                        required:
+                        - href
+                    required:
+                    - self
+                    - upload
+                    - download
+                    - app
+                required:
+                - guid
+                - created_at
+                - updated_at
+                - type
+                - data
+                - state
+                - relationships
+                - metadata
+                - links
+              example:
+                guid: 4dbe5fdf-ef28-44fc-9e39-50271c14270b
+                created_at: '2026-03-31T23:36:32Z'
+                updated_at: '2026-03-31T23:36:32Z'
+                type: bits
+                data:
+                  error:
+                  checksum:
+                    type: sha256
+                    value: c0f5ac7d-65d2-4686-ae67-3aaf19325811
+                state: AWAITING_UPLOAD
+                relationships:
+                  app:
+                    data:
+                      guid: meow-the-guid
+                metadata:
+                  labels:
+                    release: stable
+                    seriouseats.com/potato: mashed
+                  annotations:
+                    checksum: SHA
+                links:
+                  self:
+                    href: http://api2.vcap.me/v3/packages/4dbe5fdf-ef28-44fc-9e39-50271c14270b
+                  upload:
+                    href: http://api2.vcap.me/v3/packages/4dbe5fdf-ef28-44fc-9e39-50271c14270b/upload
+                    method: POST
+                  download:
+                    href: http://api2.vcap.me/v3/packages/4dbe5fdf-ef28-44fc-9e39-50271c14270b/download
+                  app:
+                    href: http://api2.vcap.me/v3/apps/meow-the-guid
+  "/v3/packages/{guid}/download":
+    get:
+      summary: download
+      tags:
+      - Package
+      parameters:
+      - name: guid
+        in: path
+        required: true
+        schema:
+          type: string
+        example: a23fa883-582b-4a84-b684-6ff317874b2f
+      responses:
+        '302':
+          description: downloads the bit(s) for a package
+          content:
+            text/html:
+              schema:
+                type: string
+              example: ''
+  "/v3/packages/{guid}/upload":
+    post:
+      summary: upload
+      tags:
+      - Package
+      parameters:
+      - name: guid
+        in: path
+        required: true
+        schema:
+          type: string
+        example: 35648e27-c75f-4c5f-8683-fd2112a9bf02
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                bits_name:
+                  type: string
+                bits_path:
+                  type: string
+                resources:
+                  type: string
+              required:
+              - bits_name
+              - bits_path
+            example:
+              bits_name: application.zip
+              bits_path: "/var/folders/ln/8bybwj1d40x1g_z85k73m36w0000gn/T/d20260331-89157-1mtvm3/application.zip"
+              resources: |-
+                [{"path":"path/to/content.txt","size_in_bytes":123,"checksum": { "value" : "b907173290db6a155949ab4dc9b2d019dea0c901" }},
+                                      {"path":"path/to/code.jar","size_in_bytes":123,"checksum": { "value" : "ff84f89760317996b9dd180ab996b079f418396f" }},
+                                      {"path":"path/to/code.jar","size_in_bytes":123,"checksum": { "value" : "ff84f89760317996b9dd180ab996b079f418396f" },"mode":"644"}]
+      responses:
+        '200':
+          description: uploads the bits for the package
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  guid:
+                    type: string
+                  created_at:
+                    type: string
+                  updated_at:
+                    type: string
+                  type:
+                    type: string
+                  data:
+                    type: object
+                    properties:
+                      error:
+                        nullable: true
+                      checksum:
+                        type: object
+                        properties:
+                          type:
+                            type: string
+                          value:
+                            type: string
+                        required:
+                        - type
+                        - value
+                    required:
+                    - error
+                    - checksum
+                  state:
+                    type: string
+                  relationships:
+                    type: object
+                    properties:
+                      app:
+                        type: object
+                        properties:
+                          data:
+                            type: object
+                            properties:
+                              guid:
+                                type: string
+                            required:
+                            - guid
+                        required:
+                        - data
+                    required:
+                    - app
+                  metadata:
+                    type: object
+                    properties:
+                      labels:
+                        type: object
+                        properties: {}
+                      annotations:
+                        type: object
+                        properties: {}
+                    required:
+                    - labels
+                    - annotations
+                  links:
+                    type: object
+                    properties:
+                      self:
+                        type: object
+                        properties:
+                          href:
+                            type: string
+                        required:
+                        - href
+                      upload:
+                        type: object
+                        properties:
+                          href:
+                            type: string
+                          method:
+                            type: string
+                        required:
+                        - href
+                        - method
+                      download:
+                        type: object
+                        properties:
+                          href:
+                            type: string
+                        required:
+                        - href
+                      app:
+                        type: object
+                        properties:
+                          href:
+                            type: string
+                        required:
+                        - href
+                    required:
+                    - self
+                    - upload
+                    - download
+                    - app
+                required:
+                - guid
+                - created_at
+                - updated_at
+                - type
+                - data
+                - state
+                - relationships
+                - metadata
+                - links
+              example:
+                guid: 35648e27-c75f-4c5f-8683-fd2112a9bf02
+                created_at: '2026-03-31T23:36:34Z'
+                updated_at: '2026-03-31T23:36:34Z'
+                type: bits
+                data:
+                  error:
+                  checksum:
+                    type: sha256
+                    value: 65acd590-159b-4344-b3c9-b8b103aaecf9
+                state: PROCESSING_UPLOAD
+                relationships:
+                  app:
+                    data:
+                      guid: woof
+                metadata:
+                  labels: {}
+                  annotations: {}
+                links:
+                  self:
+                    href: http://api2.vcap.me/v3/packages/35648e27-c75f-4c5f-8683-fd2112a9bf02
+                  upload:
+                    href: http://api2.vcap.me/v3/packages/35648e27-c75f-4c5f-8683-fd2112a9bf02/upload
+                    method: POST
+                  download:
+                    href: http://api2.vcap.me/v3/packages/35648e27-c75f-4c5f-8683-fd2112a9bf02/download
+                  app:
+                    href: http://api2.vcap.me/v3/apps/woof

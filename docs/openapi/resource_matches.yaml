@@ -1,0 +1,90 @@
+---
+openapi: 3.0.3
+info:
+  title: Cloud Controller V3 API
+  version: v3
+servers: []
+paths:
+  "/v3/resource_matches":
+    post:
+      summary: create
+      tags:
+      - ResourceMatch
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                resources:
+                  type: array
+                  items:
+                    type: object
+                    properties:
+                      checksum:
+                        type: object
+                        properties:
+                          value:
+                            type: string
+                        required:
+                        - value
+                      size_in_bytes:
+                        type: integer
+                      path:
+                        type: string
+                      mode:
+                        type: string
+                    required:
+                    - checksum
+                    - size_in_bytes
+                    - path
+                    - mode
+              required:
+              - resources
+            example:
+              resources:
+              - checksum:
+                  value: 002d760bea1be268e27077412e11a320d0f164d3
+                size_in_bytes: 36
+                path: "/path/to/filename"
+                mode: '0755'
+              - checksum:
+                  value: a9993e364706816aba3e25717850c26c9cd0d89d
+                size_in_bytes: 1
+                path: C:\unknown\file
+                mode: '0644'
+      responses:
+        '201':
+          description: returns zero matches
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  resources:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        checksum:
+                          type: object
+                          properties:
+                            value:
+                              type: string
+                          required:
+                          - value
+                        size_in_bytes:
+                          type: integer
+                        path:
+                          type: string
+                        mode:
+                          type: string
+                      required:
+                      - checksum
+                      - size_in_bytes
+                      - path
+                      - mode
+                required:
+                - resources
+              example:
+                resources: []

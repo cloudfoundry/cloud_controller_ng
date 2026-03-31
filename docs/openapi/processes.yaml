@@ -1,0 +1,3543 @@
+---
+openapi: 3.0.3
+info:
+  title: Cloud Controller V3 API
+  version: v3
+servers: []
+paths:
+  "/v3/apps/{app_guid}/processes":
+    get:
+      summary: index
+      tags:
+      - Process
+      parameters:
+      - name: app_guid
+        in: path
+        required: true
+        schema:
+          type: string
+        example: 5bb51978-e493-49cc-88b1-81a4810e7246
+      - name: embed
+        in: query
+        required: false
+        schema:
+          type: string
+        example: process_instances
+      - name: guids
+        in: query
+        required: false
+        schema:
+          type: string
+        example: 389a78c0-a521-4ce5-ac82-3d6dfbc9ba7c,b1196179-cbe5-40ab-92d3-ac7130c0effe
+      - name: per_page
+        in: query
+        required: false
+        schema:
+          type: integer
+        example: 2
+      - name: types
+        in: query
+        required: false
+        schema:
+          type: string
+        example: worker
+      responses:
+        '200':
+          description: returns only the matching processes
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  pagination:
+                    type: object
+                    properties:
+                      total_results:
+                        type: integer
+                      total_pages:
+                        type: integer
+                      first:
+                        type: object
+                        properties:
+                          href:
+                            type: string
+                        required:
+                        - href
+                      last:
+                        type: object
+                        properties:
+                          href:
+                            type: string
+                        required:
+                        - href
+                      next:
+                        type: object
+                        properties:
+                          href:
+                            type: string
+                        required:
+                        - href
+                        nullable: true
+                      previous:
+                        nullable: true
+                    required:
+                    - total_results
+                    - total_pages
+                    - first
+                    - last
+                    - next
+                    - previous
+                  resources:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        guid:
+                          type: string
+                        created_at:
+                          type: string
+                        updated_at:
+                          type: string
+                        version:
+                          type: string
+                        type:
+                          type: string
+                        command:
+                          type: string
+                        user:
+                          type: string
+                        instances:
+                          type: integer
+                        memory_in_mb:
+                          type: integer
+                        disk_in_mb:
+                          type: integer
+                        log_rate_limit_in_bytes_per_second:
+                          type: integer
+                        health_check:
+                          type: object
+                          properties:
+                            type:
+                              type: string
+                            data:
+                              type: object
+                              properties:
+                                timeout:
+                                  nullable: true
+                                invocation_timeout:
+                                  nullable: true
+                                interval:
+                                  nullable: true
+                              required:
+                              - timeout
+                              - invocation_timeout
+                              - interval
+                          required:
+                          - type
+                          - data
+                        readiness_health_check:
+                          type: object
+                          properties:
+                            type:
+                              type: string
+                            data:
+                              type: object
+                              properties:
+                                invocation_timeout:
+                                  nullable: true
+                                interval:
+                                  nullable: true
+                              required:
+                              - invocation_timeout
+                              - interval
+                          required:
+                          - type
+                          - data
+                        relationships:
+                          type: object
+                          properties:
+                            app:
+                              type: object
+                              properties:
+                                data:
+                                  type: object
+                                  properties:
+                                    guid:
+                                      type: string
+                                  required:
+                                  - guid
+                              required:
+                              - data
+                            revision:
+                              type: object
+                              properties:
+                                data:
+                                  type: object
+                                  properties:
+                                    guid:
+                                      type: string
+                                  required:
+                                  - guid
+                              required:
+                              - data
+                              nullable: true
+                          required:
+                          - app
+                          - revision
+                        metadata:
+                          type: object
+                          properties:
+                            labels:
+                              type: object
+                              properties: {}
+                            annotations:
+                              type: object
+                              properties: {}
+                          required:
+                          - labels
+                          - annotations
+                        links:
+                          type: object
+                          properties:
+                            self:
+                              type: object
+                              properties:
+                                href:
+                                  type: string
+                              required:
+                              - href
+                            scale:
+                              type: object
+                              properties:
+                                href:
+                                  type: string
+                                method:
+                                  type: string
+                              required:
+                              - href
+                              - method
+                            app:
+                              type: object
+                              properties:
+                                href:
+                                  type: string
+                              required:
+                              - href
+                            space:
+                              type: object
+                              properties:
+                                href:
+                                  type: string
+                              required:
+                              - href
+                            stats:
+                              type: object
+                              properties:
+                                href:
+                                  type: string
+                              required:
+                              - href
+                            process_instances:
+                              type: object
+                              properties:
+                                href:
+                                  type: string
+                              required:
+                              - href
+                          required:
+                          - self
+                          - scale
+                          - app
+                          - space
+                          - stats
+                          - process_instances
+                        process_instances:
+                          type: array
+                          items:
+                            type: object
+                            properties:
+                              index:
+                                type: integer
+                                nullable: true
+                              state:
+                                type: string
+                                nullable: true
+                              since:
+                                type: integer
+                                nullable: true
+                      required:
+                      - guid
+                      - created_at
+                      - updated_at
+                      - version
+                      - type
+                      - command
+                      - user
+                      - instances
+                      - memory_in_mb
+                      - disk_in_mb
+                      - log_rate_limit_in_bytes_per_second
+                      - health_check
+                      - readiness_health_check
+                      - relationships
+                      - metadata
+                      - links
+                required:
+                - pagination
+                - resources
+              example:
+                pagination:
+                  total_results: 2
+                  total_pages: 1
+                  first:
+                    href: http://api2.vcap.me/v3/apps/5bb51978-e493-49cc-88b1-81a4810e7246/processes?guids=389a78c0-a521-4ce5-ac82-3d6dfbc9ba7c%2Cb1196179-cbe5-40ab-92d3-ac7130c0effe&page=1&per_page=2
+                  last:
+                    href: http://api2.vcap.me/v3/apps/5bb51978-e493-49cc-88b1-81a4810e7246/processes?guids=389a78c0-a521-4ce5-ac82-3d6dfbc9ba7c%2Cb1196179-cbe5-40ab-92d3-ac7130c0effe&page=1&per_page=2
+                  next:
+                  previous:
+                resources:
+                - guid: 389a78c0-a521-4ce5-ac82-3d6dfbc9ba7c
+                  created_at: '2026-03-31T23:36:48Z'
+                  updated_at: '2026-03-31T23:36:48Z'
+                  version: 114ea07c-1a7c-4837-bce6-1c9bd54645b3
+                  type: web
+                  command: "[PRIVATE DATA HIDDEN IN LISTS]"
+                  user: vcap
+                  instances: 2
+                  memory_in_mb: 1024
+                  disk_in_mb: 1024
+                  log_rate_limit_in_bytes_per_second: 1048576
+                  health_check:
+                    type: port
+                    data:
+                      timeout:
+                      invocation_timeout:
+                      interval:
+                  readiness_health_check:
+                    type: process
+                    data:
+                      invocation_timeout:
+                      interval:
+                  relationships:
+                    app:
+                      data:
+                        guid: 5bb51978-e493-49cc-88b1-81a4810e7246
+                    revision:
+                  metadata:
+                    labels: {}
+                    annotations: {}
+                  links:
+                    self:
+                      href: http://api2.vcap.me/v3/processes/389a78c0-a521-4ce5-ac82-3d6dfbc9ba7c
+                    scale:
+                      href: http://api2.vcap.me/v3/processes/389a78c0-a521-4ce5-ac82-3d6dfbc9ba7c/actions/scale
+                      method: POST
+                    app:
+                      href: http://api2.vcap.me/v3/apps/5bb51978-e493-49cc-88b1-81a4810e7246
+                    space:
+                      href: http://api2.vcap.me/v3/spaces/119f6321-7f3a-4ffb-beab-26cb6dece2be
+                    stats:
+                      href: http://api2.vcap.me/v3/processes/389a78c0-a521-4ce5-ac82-3d6dfbc9ba7c/stats
+                    process_instances:
+                      href: http://api2.vcap.me/v3/processes/389a78c0-a521-4ce5-ac82-3d6dfbc9ba7c/process_instances
+                - guid: b1196179-cbe5-40ab-92d3-ac7130c0effe
+                  created_at: '2026-03-31T23:36:48Z'
+                  updated_at: '2026-03-31T23:36:48Z'
+                  version: 42ee3a5a-beae-4438-8a1e-c2335755c002
+                  type: worker
+                  command: "[PRIVATE DATA HIDDEN IN LISTS]"
+                  user: vcap
+                  instances: 1
+                  memory_in_mb: 100
+                  disk_in_mb: 200
+                  log_rate_limit_in_bytes_per_second: 400
+                  health_check:
+                    type: port
+                    data:
+                      timeout:
+                      invocation_timeout:
+                      interval:
+                  readiness_health_check:
+                    type: process
+                    data:
+                      invocation_timeout:
+                      interval:
+                  relationships:
+                    app:
+                      data:
+                        guid: 5bb51978-e493-49cc-88b1-81a4810e7246
+                    revision:
+                      data:
+                        guid: c188b6c2-3661-4145-b9fa-90b32d8fec7a
+                  metadata:
+                    labels: {}
+                    annotations: {}
+                  links:
+                    self:
+                      href: http://api2.vcap.me/v3/processes/b1196179-cbe5-40ab-92d3-ac7130c0effe
+                    scale:
+                      href: http://api2.vcap.me/v3/processes/b1196179-cbe5-40ab-92d3-ac7130c0effe/actions/scale
+                      method: POST
+                    app:
+                      href: http://api2.vcap.me/v3/apps/5bb51978-e493-49cc-88b1-81a4810e7246
+                    space:
+                      href: http://api2.vcap.me/v3/spaces/119f6321-7f3a-4ffb-beab-26cb6dece2be
+                    stats:
+                      href: http://api2.vcap.me/v3/processes/b1196179-cbe5-40ab-92d3-ac7130c0effe/stats
+                    process_instances:
+                      href: http://api2.vcap.me/v3/processes/b1196179-cbe5-40ab-92d3-ac7130c0effe/process_instances
+  "/v3/apps/{app_guid}/processes/{type}":
+    get:
+      summary: show
+      tags:
+      - Process
+      parameters:
+      - name: app_guid
+        in: path
+        required: true
+        schema:
+          type: string
+        example: a291e8f0-025e-4fb5-a312-8b5dbc4602fe
+      - name: embed
+        in: query
+        required: false
+        schema:
+          type: string
+        example: process_instances
+      - name: type
+        in: path
+        required: true
+        schema:
+          type: string
+        example: web
+      responses:
+        '200':
+          description: shows an empty array
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  guid:
+                    type: string
+                  created_at:
+                    type: string
+                  updated_at:
+                    type: string
+                  version:
+                    type: string
+                  type:
+                    type: string
+                  command:
+                    type: string
+                  user:
+                    type: string
+                  instances:
+                    type: integer
+                  memory_in_mb:
+                    type: integer
+                  disk_in_mb:
+                    type: integer
+                  log_rate_limit_in_bytes_per_second:
+                    type: integer
+                  health_check:
+                    type: object
+                    properties:
+                      type:
+                        type: string
+                      data:
+                        type: object
+                        properties:
+                          timeout:
+                            nullable: true
+                          invocation_timeout:
+                            nullable: true
+                          interval:
+                            nullable: true
+                        required:
+                        - timeout
+                        - invocation_timeout
+                        - interval
+                    required:
+                    - type
+                    - data
+                  readiness_health_check:
+                    type: object
+                    properties:
+                      type:
+                        type: string
+                      data:
+                        type: object
+                        properties:
+                          invocation_timeout:
+                            nullable: true
+                          interval:
+                            nullable: true
+                        required:
+                        - invocation_timeout
+                        - interval
+                    required:
+                    - type
+                    - data
+                  relationships:
+                    type: object
+                    properties:
+                      app:
+                        type: object
+                        properties:
+                          data:
+                            type: object
+                            properties:
+                              guid:
+                                type: string
+                            required:
+                            - guid
+                        required:
+                        - data
+                      revision:
+                        nullable: true
+                        type: object
+                        properties:
+                          data:
+                            type: object
+                            properties:
+                              guid:
+                                type: string
+                            required:
+                            - guid
+                        required:
+                        - data
+                    required:
+                    - app
+                    - revision
+                  metadata:
+                    type: object
+                    properties:
+                      labels:
+                        type: object
+                        properties: {}
+                      annotations:
+                        type: object
+                        properties: {}
+                    required:
+                    - labels
+                    - annotations
+                  links:
+                    type: object
+                    properties:
+                      self:
+                        type: object
+                        properties:
+                          href:
+                            type: string
+                        required:
+                        - href
+                      scale:
+                        type: object
+                        properties:
+                          href:
+                            type: string
+                          method:
+                            type: string
+                        required:
+                        - href
+                        - method
+                      app:
+                        type: object
+                        properties:
+                          href:
+                            type: string
+                        required:
+                        - href
+                      space:
+                        type: object
+                        properties:
+                          href:
+                            type: string
+                        required:
+                        - href
+                      stats:
+                        type: object
+                        properties:
+                          href:
+                            type: string
+                        required:
+                        - href
+                      process_instances:
+                        type: object
+                        properties:
+                          href:
+                            type: string
+                        required:
+                        - href
+                    required:
+                    - self
+                    - scale
+                    - app
+                    - space
+                    - stats
+                    - process_instances
+                  process_instances:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        index:
+                          type: integer
+                        state:
+                          type: string
+                        since:
+                          type: integer
+                      required:
+                      - index
+                      - state
+                      - since
+                required:
+                - guid
+                - created_at
+                - updated_at
+                - version
+                - type
+                - command
+                - user
+                - instances
+                - memory_in_mb
+                - disk_in_mb
+                - log_rate_limit_in_bytes_per_second
+                - health_check
+                - readiness_health_check
+                - relationships
+                - metadata
+                - links
+              example:
+                guid: 769ed163-f7ae-43e9-b821-1e3407f7804e
+                created_at: '2026-03-31T23:36:43Z'
+                updated_at: '2026-03-31T23:36:43Z'
+                version: b889c501-47e6-437a-9f94-b9c6dada6ff2
+                type: web
+                command: rackup
+                user: vcap
+                instances: 2
+                memory_in_mb: 1024
+                disk_in_mb: 1024
+                log_rate_limit_in_bytes_per_second: 1048576
+                health_check:
+                  type: port
+                  data:
+                    timeout:
+                    invocation_timeout:
+                    interval:
+                readiness_health_check:
+                  type: process
+                  data:
+                    invocation_timeout:
+                    interval:
+                relationships:
+                  app:
+                    data:
+                      guid: a291e8f0-025e-4fb5-a312-8b5dbc4602fe
+                  revision:
+                    data:
+                      guid: 017636e8-74a7-4f80-a9cd-5f6c2a2937b4
+                metadata:
+                  labels: {}
+                  annotations: {}
+                links:
+                  self:
+                    href: http://api2.vcap.me/v3/processes/769ed163-f7ae-43e9-b821-1e3407f7804e
+                  scale:
+                    href: http://api2.vcap.me/v3/processes/769ed163-f7ae-43e9-b821-1e3407f7804e/actions/scale
+                    method: POST
+                  app:
+                    href: http://api2.vcap.me/v3/apps/a291e8f0-025e-4fb5-a312-8b5dbc4602fe
+                  space:
+                    href: http://api2.vcap.me/v3/spaces/3d9d113a-dc6d-4114-9d93-0e65fe4b31f6
+                  stats:
+                    href: http://api2.vcap.me/v3/processes/769ed163-f7ae-43e9-b821-1e3407f7804e/stats
+                  process_instances:
+                    href: http://api2.vcap.me/v3/processes/769ed163-f7ae-43e9-b821-1e3407f7804e/process_instances
+                process_instances: []
+    patch:
+      summary: update
+      tags:
+      - Process
+      parameters:
+      - name: app_guid
+        in: path
+        required: true
+        schema:
+          type: string
+        example: b9256837-8342-408a-8fea-a3e6147d6eb3
+      - name: type
+        in: path
+        required: true
+        schema:
+          type: string
+        example: web
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                command:
+                  type: string
+                user:
+                  type: string
+                health_check:
+                  type: object
+                  properties:
+                    type:
+                      type: string
+                    data:
+                      type: object
+                      properties:
+                        timeout:
+                          type: integer
+                        endpoint:
+                          type: string
+                      required:
+                      - timeout
+                      - endpoint
+                  required:
+                  - type
+                  - data
+                readiness_health_check:
+                  type: object
+                  properties:
+                    type:
+                      type: string
+                    data:
+                      type: object
+                      properties:
+                        invocation_timeout:
+                          type: integer
+                        interval:
+                          type: integer
+                        endpoint:
+                          type: string
+                      required:
+                      - invocation_timeout
+                      - interval
+                      - endpoint
+                  required:
+                  - type
+                  - data
+                metadata:
+                  type: object
+                  properties:
+                    labels:
+                      type: object
+                      properties:
+                        release:
+                          type: string
+                        seriouseats.com/potato:
+                          type: string
+                      required:
+                      - release
+                      - seriouseats.com/potato
+                    annotations:
+                      type: object
+                      properties:
+                        checksum:
+                          type: string
+                      required:
+                      - checksum
+                  required:
+                  - labels
+                  - annotations
+              required:
+              - command
+              - user
+              - health_check
+              - readiness_health_check
+              - metadata
+            example:
+              command: new command
+              user: containeruser
+              health_check:
+                type: http
+                data:
+                  timeout: 20
+                  endpoint: "/healthcheck"
+              readiness_health_check:
+                type: http
+                data:
+                  invocation_timeout: 10
+                  interval: 7
+                  endpoint: "/ready"
+              metadata:
+                labels:
+                  release: stable
+                  seriouseats.com/potato: mashed
+                annotations:
+                  checksum: SHA
+      responses:
+        '200':
+          description: updates the process
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  guid:
+                    type: string
+                  created_at:
+                    type: string
+                  updated_at:
+                    type: string
+                  version:
+                    type: string
+                  type:
+                    type: string
+                  command:
+                    type: string
+                  user:
+                    type: string
+                  instances:
+                    type: integer
+                  memory_in_mb:
+                    type: integer
+                  disk_in_mb:
+                    type: integer
+                  log_rate_limit_in_bytes_per_second:
+                    type: integer
+                  health_check:
+                    type: object
+                    properties:
+                      type:
+                        type: string
+                      data:
+                        type: object
+                        properties:
+                          timeout:
+                            type: integer
+                          invocation_timeout:
+                            nullable: true
+                          interval:
+                            nullable: true
+                          endpoint:
+                            type: string
+                        required:
+                        - timeout
+                        - invocation_timeout
+                        - interval
+                        - endpoint
+                    required:
+                    - type
+                    - data
+                  readiness_health_check:
+                    type: object
+                    properties:
+                      type:
+                        type: string
+                      data:
+                        type: object
+                        properties:
+                          invocation_timeout:
+                            type: integer
+                          interval:
+                            type: integer
+                          endpoint:
+                            type: string
+                        required:
+                        - invocation_timeout
+                        - interval
+                        - endpoint
+                    required:
+                    - type
+                    - data
+                  relationships:
+                    type: object
+                    properties:
+                      app:
+                        type: object
+                        properties:
+                          data:
+                            type: object
+                            properties:
+                              guid:
+                                type: string
+                            required:
+                            - guid
+                        required:
+                        - data
+                      revision:
+                        nullable: true
+                    required:
+                    - app
+                    - revision
+                  metadata:
+                    type: object
+                    properties:
+                      labels:
+                        type: object
+                        properties:
+                          release:
+                            type: string
+                          seriouseats.com/potato:
+                            type: string
+                        required:
+                        - release
+                        - seriouseats.com/potato
+                      annotations:
+                        type: object
+                        properties:
+                          checksum:
+                            type: string
+                        required:
+                        - checksum
+                    required:
+                    - labels
+                    - annotations
+                  links:
+                    type: object
+                    properties:
+                      self:
+                        type: object
+                        properties:
+                          href:
+                            type: string
+                        required:
+                        - href
+                      scale:
+                        type: object
+                        properties:
+                          href:
+                            type: string
+                          method:
+                            type: string
+                        required:
+                        - href
+                        - method
+                      app:
+                        type: object
+                        properties:
+                          href:
+                            type: string
+                        required:
+                        - href
+                      space:
+                        type: object
+                        properties:
+                          href:
+                            type: string
+                        required:
+                        - href
+                      stats:
+                        type: object
+                        properties:
+                          href:
+                            type: string
+                        required:
+                        - href
+                      process_instances:
+                        type: object
+                        properties:
+                          href:
+                            type: string
+                        required:
+                        - href
+                    required:
+                    - self
+                    - scale
+                    - app
+                    - space
+                    - stats
+                    - process_instances
+                required:
+                - guid
+                - created_at
+                - updated_at
+                - version
+                - type
+                - command
+                - user
+                - instances
+                - memory_in_mb
+                - disk_in_mb
+                - log_rate_limit_in_bytes_per_second
+                - health_check
+                - readiness_health_check
+                - relationships
+                - metadata
+                - links
+              example:
+                guid: f68764e6-ba89-4c92-a557-d77eea7f41b4
+                created_at: '2026-03-31T23:36:46Z'
+                updated_at: '2026-03-31T23:36:46Z'
+                version: 3263dfe3-b691-4a89-ba23-25b549f5b0b5
+                type: web
+                command: new command
+                user: containeruser
+                instances: 2
+                memory_in_mb: 1024
+                disk_in_mb: 1024
+                log_rate_limit_in_bytes_per_second: 1048576
+                health_check:
+                  type: http
+                  data:
+                    timeout: 20
+                    invocation_timeout:
+                    interval:
+                    endpoint: "/healthcheck"
+                readiness_health_check:
+                  type: http
+                  data:
+                    invocation_timeout: 10
+                    interval: 7
+                    endpoint: "/ready"
+                relationships:
+                  app:
+                    data:
+                      guid: b9256837-8342-408a-8fea-a3e6147d6eb3
+                  revision:
+                metadata:
+                  labels:
+                    release: stable
+                    seriouseats.com/potato: mashed
+                  annotations:
+                    checksum: SHA
+                links:
+                  self:
+                    href: http://api2.vcap.me/v3/processes/f68764e6-ba89-4c92-a557-d77eea7f41b4
+                  scale:
+                    href: http://api2.vcap.me/v3/processes/f68764e6-ba89-4c92-a557-d77eea7f41b4/actions/scale
+                    method: POST
+                  app:
+                    href: http://api2.vcap.me/v3/apps/b9256837-8342-408a-8fea-a3e6147d6eb3
+                  space:
+                    href: http://api2.vcap.me/v3/spaces/8eeae251-cdaa-42b2-b457-8bad324b50fa
+                  stats:
+                    href: http://api2.vcap.me/v3/processes/f68764e6-ba89-4c92-a557-d77eea7f41b4/stats
+                  process_instances:
+                    href: http://api2.vcap.me/v3/processes/f68764e6-ba89-4c92-a557-d77eea7f41b4/process_instances
+  "/v3/apps/{app_guid}/processes/{type}/actions/scale":
+    post:
+      summary: scale
+      tags:
+      - Process
+      parameters:
+      - name: app_guid
+        in: path
+        required: true
+        schema:
+          type: string
+        example: fdb333c1-427e-464c-a9a4-cbb60502787a
+      - name: type
+        in: path
+        required: true
+        schema:
+          type: string
+        example: web
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                instances:
+                  type: integer
+                memory_in_mb:
+                  type: integer
+                disk_in_mb:
+                  type: integer
+                log_rate_limit_in_bytes_per_second:
+                  type: integer
+              required:
+              - instances
+              - memory_in_mb
+              - disk_in_mb
+              - log_rate_limit_in_bytes_per_second
+            example:
+              instances: 5
+              memory_in_mb: 10
+              disk_in_mb: 20
+              log_rate_limit_in_bytes_per_second: 40
+      responses:
+        '202':
+          description: can scale a process
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  guid:
+                    type: string
+                  created_at:
+                    type: string
+                  updated_at:
+                    type: string
+                  version:
+                    type: string
+                  type:
+                    type: string
+                  command:
+                    type: string
+                  user:
+                    type: string
+                  instances:
+                    type: integer
+                  memory_in_mb:
+                    type: integer
+                  disk_in_mb:
+                    type: integer
+                  log_rate_limit_in_bytes_per_second:
+                    type: integer
+                  health_check:
+                    type: object
+                    properties:
+                      type:
+                        type: string
+                      data:
+                        type: object
+                        properties:
+                          timeout:
+                            nullable: true
+                          invocation_timeout:
+                            nullable: true
+                          interval:
+                            nullable: true
+                        required:
+                        - timeout
+                        - invocation_timeout
+                        - interval
+                    required:
+                    - type
+                    - data
+                  readiness_health_check:
+                    type: object
+                    properties:
+                      type:
+                        type: string
+                      data:
+                        type: object
+                        properties:
+                          invocation_timeout:
+                            nullable: true
+                          interval:
+                            nullable: true
+                        required:
+                        - invocation_timeout
+                        - interval
+                    required:
+                    - type
+                    - data
+                  relationships:
+                    type: object
+                    properties:
+                      app:
+                        type: object
+                        properties:
+                          data:
+                            type: object
+                            properties:
+                              guid:
+                                type: string
+                            required:
+                            - guid
+                        required:
+                        - data
+                      revision:
+                        nullable: true
+                    required:
+                    - app
+                    - revision
+                  metadata:
+                    type: object
+                    properties:
+                      labels:
+                        type: object
+                        properties: {}
+                      annotations:
+                        type: object
+                        properties: {}
+                    required:
+                    - labels
+                    - annotations
+                  links:
+                    type: object
+                    properties:
+                      self:
+                        type: object
+                        properties:
+                          href:
+                            type: string
+                        required:
+                        - href
+                      scale:
+                        type: object
+                        properties:
+                          href:
+                            type: string
+                          method:
+                            type: string
+                        required:
+                        - href
+                        - method
+                      app:
+                        type: object
+                        properties:
+                          href:
+                            type: string
+                        required:
+                        - href
+                      space:
+                        type: object
+                        properties:
+                          href:
+                            type: string
+                        required:
+                        - href
+                      stats:
+                        type: object
+                        properties:
+                          href:
+                            type: string
+                        required:
+                        - href
+                      process_instances:
+                        type: object
+                        properties:
+                          href:
+                            type: string
+                        required:
+                        - href
+                    required:
+                    - self
+                    - scale
+                    - app
+                    - space
+                    - stats
+                    - process_instances
+                required:
+                - guid
+                - created_at
+                - updated_at
+                - version
+                - type
+                - command
+                - user
+                - instances
+                - memory_in_mb
+                - disk_in_mb
+                - log_rate_limit_in_bytes_per_second
+                - health_check
+                - readiness_health_check
+                - relationships
+                - metadata
+                - links
+              example:
+                guid: 303919b2-0a79-415b-942c-710815e8d79b
+                created_at: '2026-03-31T23:36:46Z'
+                updated_at: '2026-03-31T23:36:46Z'
+                version: a3627f19-7630-46ae-9944-733a9cb87463
+                type: web
+                command: rackup
+                user: vcap
+                instances: 5
+                memory_in_mb: 10
+                disk_in_mb: 20
+                log_rate_limit_in_bytes_per_second: 40
+                health_check:
+                  type: port
+                  data:
+                    timeout:
+                    invocation_timeout:
+                    interval:
+                readiness_health_check:
+                  type: process
+                  data:
+                    invocation_timeout:
+                    interval:
+                relationships:
+                  app:
+                    data:
+                      guid: f160d330-0b10-488b-a625-1bc6306eee05
+                  revision:
+                metadata:
+                  labels: {}
+                  annotations: {}
+                links:
+                  self:
+                    href: http://api2.vcap.me/v3/processes/303919b2-0a79-415b-942c-710815e8d79b
+                  scale:
+                    href: http://api2.vcap.me/v3/processes/303919b2-0a79-415b-942c-710815e8d79b/actions/scale
+                    method: POST
+                  app:
+                    href: http://api2.vcap.me/v3/apps/f160d330-0b10-488b-a625-1bc6306eee05
+                  space:
+                    href: http://api2.vcap.me/v3/spaces/f2e839ae-ab76-4d02-8d07-eef0c8aa650f
+                  stats:
+                    href: http://api2.vcap.me/v3/processes/303919b2-0a79-415b-942c-710815e8d79b/stats
+                  process_instances:
+                    href: http://api2.vcap.me/v3/processes/303919b2-0a79-415b-942c-710815e8d79b/process_instances
+        '422':
+          description: fails to scale the process
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  errors:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        detail:
+                          type: string
+                        title:
+                          type: string
+                        code:
+                          type: integer
+                        test_mode_info:
+                          type: object
+                          properties:
+                            detail:
+                              type: string
+                            title:
+                              type: string
+                            backtrace:
+                              type: array
+                              items:
+                                type: string
+                          required:
+                          - detail
+                          - title
+                          - backtrace
+                      required:
+                      - detail
+                      - title
+                      - code
+                      - test_mode_info
+                required:
+                - errors
+              example:
+                errors:
+                - detail: log_rate_limit exceeds organization log rate quota
+                  title: CF-UnprocessableEntity
+                  code: 10008
+                  test_mode_info:
+                    detail: log_rate_limit exceeds organization log rate quota
+                    title: CF-UnprocessableEntity
+                    backtrace:
+                    - "/Users/sethboyles/workspace/capi-release/src/cloud_controller_ng/app/controllers/v3/application_controller.rb:18:in
+                      `unprocessable!'"
+                    - "/Users/sethboyles/workspace/capi-release/src/cloud_controller_ng/app/controllers/v3/processes_controller.rb:115:in
+                      `rescue in scale'"
+                    - "/Users/sethboyles/workspace/capi-release/src/cloud_controller_ng/app/controllers/v3/processes_controller.rb:91:in
+                      `scale'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/actionpack-8.1.3/lib/action_controller/metal/basic_implicit_render.rb:8:in
+                      `send_action'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/actionpack-8.1.3/lib/abstract_controller/base.rb:221:in
+                      `process_action'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/actionpack-8.1.3/lib/action_controller/metal/rendering.rb:199:in
+                      `process_action'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/actionpack-8.1.3/lib/abstract_controller/callbacks.rb:267:in
+                      `block in process_action'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/activesupport-8.1.3/lib/active_support/callbacks.rb:110:in
+                      `run_callbacks'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/actionpack-8.1.3/lib/abstract_controller/callbacks.rb:266:in
+                      `process_action'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/actionpack-8.1.3/lib/action_controller/metal/rescue.rb:36:in
+                      `process_action'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/actionpack-8.1.3/lib/action_controller/metal/instrumentation.rb:76:in
+                      `block in process_action'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/activesupport-8.1.3/lib/active_support/notifications.rb:210:in
+                      `block in instrument'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/activesupport-8.1.3/lib/active_support/notifications/instrumenter.rb:58:in
+                      `instrument'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/activesupport-8.1.3/lib/active_support/notifications.rb:210:in
+                      `instrument'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/actionpack-8.1.3/lib/action_controller/metal/instrumentation.rb:75:in
+                      `process_action'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/actionpack-8.1.3/lib/action_controller/metal/params_wrapper.rb:259:in
+                      `process_action'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/actionpack-8.1.3/lib/abstract_controller/base.rb:154:in
+                      `process'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/actionview-8.1.3/lib/action_view/rendering.rb:40:in
+                      `process'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/actionpack-8.1.3/lib/action_controller/metal.rb:252:in
+                      `dispatch'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/actionpack-8.1.3/lib/action_controller/metal.rb:335:in
+                      `dispatch'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/actionpack-8.1.3/lib/action_dispatch/routing/route_set.rb:65:in
+                      `dispatch'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/actionpack-8.1.3/lib/action_dispatch/routing/route_set.rb:50:in
+                      `serve'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/actionpack-8.1.3/lib/action_dispatch/journey/router.rb:35:in
+                      `block in serve'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/actionpack-8.1.3/lib/action_dispatch/journey/router.rb:86:in
+                      `block in recognize'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/actionpack-8.1.3/lib/action_dispatch/journey/router.rb:66:in
+                      `each'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/actionpack-8.1.3/lib/action_dispatch/journey/router.rb:66:in
+                      `recognize'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/actionpack-8.1.3/lib/action_dispatch/journey/router.rb:31:in
+                      `serve'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/actionpack-8.1.3/lib/action_dispatch/routing/route_set.rb:906:in
+                      `call'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/rack-3.2.5/lib/rack/tempfile_reaper.rb:20:in
+                      `call'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/actionpack-8.1.3/lib/action_dispatch/http/content_security_policy.rb:38:in
+                      `call'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/actionpack-8.1.3/lib/action_dispatch/middleware/callbacks.rb:31:in
+                      `block in call'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/activesupport-8.1.3/lib/active_support/callbacks.rb:101:in
+                      `run_callbacks'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/actionpack-8.1.3/lib/action_dispatch/middleware/callbacks.rb:30:in
+                      `call'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/actionpack-8.1.3/lib/action_dispatch/middleware/executor.rb:20:in
+                      `call'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/actionpack-8.1.3/lib/action_dispatch/middleware/actionable_exceptions.rb:18:in
+                      `call'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/actionpack-8.1.3/lib/action_dispatch/middleware/debug_exceptions.rb:31:in
+                      `call'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/actionpack-8.1.3/lib/action_dispatch/middleware/show_exceptions.rb:32:in
+                      `call'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/actionpack-8.1.3/lib/action_dispatch/middleware/remote_ip.rb:98:in
+                      `call'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/rack-3.2.5/lib/rack/runtime.rb:24:in
+                      `call'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/actionpack-8.1.3/lib/action_dispatch/middleware/executor.rb:20:in
+                      `call'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/rack-3.2.5/lib/rack/sendfile.rb:131:in
+                      `call'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/rack-3.2.5/lib/rack/urlmap.rb:76:in
+                      `block in call'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/rack-3.2.5/lib/rack/urlmap.rb:60:in
+                      `each'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/rack-3.2.5/lib/rack/urlmap.rb:60:in
+                      `call'"
+                    - "/Users/sethboyles/workspace/capi-release/src/cloud_controller_ng/middleware/request_logs.rb:14:in
+                      `call'"
+                    - "/Users/sethboyles/workspace/capi-release/src/cloud_controller_ng/middleware/zipkin.rb:32:in
+                      `call_app'"
+                    - "/Users/sethboyles/workspace/capi-release/src/cloud_controller_ng/middleware/zipkin.rb:9:in
+                      `call'"
+                    - "/Users/sethboyles/workspace/capi-release/src/cloud_controller_ng/middleware/security_context_setter.rb:41:in
+                      `call'"
+                    - "/Users/sethboyles/workspace/capi-release/src/cloud_controller_ng/middleware/vcap_request_context_setter.rb:17:in
+                      `call'"
+                    - "/Users/sethboyles/workspace/capi-release/src/cloud_controller_ng/middleware/cors.rb:50:in
+                      `call_app'"
+                    - "/Users/sethboyles/workspace/capi-release/src/cloud_controller_ng/middleware/cors.rb:14:in
+                      `call'"
+                    - "/Users/sethboyles/workspace/capi-release/src/cloud_controller_ng/middleware/request_metrics.rb:13:in
+                      `call'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/rack-3.2.5/lib/rack/builder.rb:283:in
+                      `call'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/rack-test-2.2.0/lib/rack/test.rb:360:in
+                      `process_request'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/rack-test-2.2.0/lib/rack/test.rb:163:in
+                      `custom_request'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/rack-test-2.2.0/lib/rack/test.rb:112:in
+                      `post'"
+                    - "/Users/sethboyles/.rubies/ruby-3.3.7/lib/ruby/3.3.0/forwardable.rb:240:in
+                      `post'"
+                    - "/Users/sethboyles/workspace/capi-release/src/cloud_controller_ng/spec/request/processes_spec.rb:2038:in
+                      `block (4 levels) in <main>'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/rspec-core-3.13.6/lib/rspec/core/example.rb:263:in
+                      `instance_exec'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/rspec-core-3.13.6/lib/rspec/core/example.rb:263:in
+                      `block in run'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/rspec-core-3.13.6/lib/rspec/core/example.rb:511:in
+                      `block in with_around_and_singleton_context_hooks'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/rspec-core-3.13.6/lib/rspec/core/example.rb:468:in
+                      `block in with_around_example_hooks'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/rspec-core-3.13.6/lib/rspec/core/hooks.rb:486:in
+                      `block in run'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/rspec-core-3.13.6/lib/rspec/core/hooks.rb:626:in
+                      `block in run_around_example_hooks_for'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/rspec-core-3.13.6/lib/rspec/core/example.rb:352:in
+                      `call'"
+                    - "/Users/sethboyles/workspace/capi-release/src/cloud_controller_ng/spec/spec_helper_helper.rb:155:in
+                      `block (3 levels) in each_run'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/sequel-5.102.0/lib/sequel/database/transactions.rb:257:in
+                      `_transaction'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/sequel-5.102.0/lib/sequel/database/transactions.rb:239:in
+                      `block in transaction'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/sequel-5.102.0/lib/sequel/connection_pool/threaded.rb:92:in
+                      `hold'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/sequel-5.102.0/lib/sequel/database/connecting.rb:283:in
+                      `synchronize'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/sequel-5.102.0/lib/sequel/database/transactions.rb:197:in
+                      `transaction'"
+                    - "/Users/sethboyles/workspace/capi-release/src/cloud_controller_ng/spec/support/database_isolation.rb:39:in
+                      `cleanly'"
+                    - "/Users/sethboyles/workspace/capi-release/src/cloud_controller_ng/spec/spec_helper_helper.rb:155:in
+                      `block (2 levels) in each_run'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/rspec-core-3.13.6/lib/rspec/core/example.rb:457:in
+                      `instance_exec'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/rspec-core-3.13.6/lib/rspec/core/example.rb:457:in
+                      `instance_exec'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/rspec-core-3.13.6/lib/rspec/core/hooks.rb:390:in
+                      `execute_with'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/rspec-core-3.13.6/lib/rspec/core/hooks.rb:628:in
+                      `block (2 levels) in run_around_example_hooks_for'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/rspec-core-3.13.6/lib/rspec/core/example.rb:352:in
+                      `call'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/webmock-3.26.2/lib/webmock/rspec.rb:39:in
+                      `block (2 levels) in <main>'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/rspec-core-3.13.6/lib/rspec/core/example.rb:457:in
+                      `instance_exec'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/rspec-core-3.13.6/lib/rspec/core/example.rb:457:in
+                      `instance_exec'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/rspec-core-3.13.6/lib/rspec/core/hooks.rb:390:in
+                      `execute_with'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/rspec-core-3.13.6/lib/rspec/core/hooks.rb:628:in
+                      `block (2 levels) in run_around_example_hooks_for'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/rspec-core-3.13.6/lib/rspec/core/example.rb:352:in
+                      `call'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/rspec-core-3.13.6/lib/rspec/core/hooks.rb:629:in
+                      `run_around_example_hooks_for'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/rspec-core-3.13.6/lib/rspec/core/hooks.rb:486:in
+                      `run'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/rspec-core-3.13.6/lib/rspec/core/example.rb:468:in
+                      `with_around_example_hooks'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/rspec-core-3.13.6/lib/rspec/core/example.rb:511:in
+                      `with_around_and_singleton_context_hooks'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/rspec-core-3.13.6/lib/rspec/core/example.rb:259:in
+                      `run'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/rspec-core-3.13.6/lib/rspec/core/example_group.rb:653:in
+                      `block in run_examples'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/rspec-core-3.13.6/lib/rspec/core/example_group.rb:649:in
+                      `map'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/rspec-core-3.13.6/lib/rspec/core/example_group.rb:649:in
+                      `run_examples'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/rspec-core-3.13.6/lib/rspec/core/example_group.rb:614:in
+                      `run'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/rspec-core-3.13.6/lib/rspec/core/example_group.rb:615:in
+                      `block in run'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/rspec-core-3.13.6/lib/rspec/core/example_group.rb:615:in
+                      `map'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/rspec-core-3.13.6/lib/rspec/core/example_group.rb:615:in
+                      `run'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/rspec-core-3.13.6/lib/rspec/core/example_group.rb:615:in
+                      `block in run'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/rspec-core-3.13.6/lib/rspec/core/example_group.rb:615:in
+                      `map'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/rspec-core-3.13.6/lib/rspec/core/example_group.rb:615:in
+                      `run'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/rspec-core-3.13.6/lib/rspec/core/runner.rb:121:in
+                      `block (3 levels) in run_specs'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/rspec-core-3.13.6/lib/rspec/core/runner.rb:121:in
+                      `map'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/rspec-core-3.13.6/lib/rspec/core/runner.rb:121:in
+                      `block (2 levels) in run_specs'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/rspec-core-3.13.6/lib/rspec/core/configuration.rb:2097:in
+                      `with_suite_hooks'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/rspec-core-3.13.6/lib/rspec/core/runner.rb:116:in
+                      `block in run_specs'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/rspec-core-3.13.6/lib/rspec/core/reporter.rb:74:in
+                      `report'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/rspec-core-3.13.6/lib/rspec/core/runner.rb:115:in
+                      `run_specs'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/rspec-core-3.13.6/lib/rspec/core/runner.rb:89:in
+                      `run'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/rspec-core-3.13.6/lib/rspec/core/runner.rb:71:in
+                      `run'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/rspec-core-3.13.6/lib/rspec/core/runner.rb:45:in
+                      `invoke'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/rspec-core-3.13.6/exe/rspec:4:in
+                      `<top (required)>'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/bin/rspec:25:in `load'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/bin/rspec:25:in `<top (required)>'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/bundler-2.6.9/lib/bundler/cli/exec.rb:59:in
+                      `load'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/bundler-2.6.9/lib/bundler/cli/exec.rb:59:in
+                      `kernel_load'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/bundler-2.6.9/lib/bundler/cli/exec.rb:23:in
+                      `run'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/bundler-2.6.9/lib/bundler/cli.rb:452:in
+                      `exec'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/bundler-2.6.9/lib/bundler/vendor/thor/lib/thor/command.rb:28:in
+                      `run'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/bundler-2.6.9/lib/bundler/vendor/thor/lib/thor/invocation.rb:127:in
+                      `invoke_command'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/bundler-2.6.9/lib/bundler/vendor/thor/lib/thor.rb:538:in
+                      `dispatch'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/bundler-2.6.9/lib/bundler/cli.rb:35:in
+                      `dispatch'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/bundler-2.6.9/lib/bundler/vendor/thor/lib/thor/base.rb:584:in
+                      `start'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/bundler-2.6.9/lib/bundler/cli.rb:29:in
+                      `start'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/bundler-2.6.9/exe/bundle:28:in
+                      `block in <top (required)>'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/bundler-2.6.9/lib/bundler/friendly_errors.rb:117:in
+                      `with_friendly_errors'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/bundler-2.6.9/exe/bundle:20:in
+                      `<top (required)>'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/bin/bundle:25:in `load'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/bin/bundle:25:in `<main>'"
+  "/v3/apps/{app_guid}/processes/{type}/instances/{index}":
+    delete:
+      summary: terminate
+      tags:
+      - Process
+      parameters:
+      - name: app_guid
+        in: path
+        required: true
+        schema:
+          type: string
+        example: 42868333-7eb7-47be-a6b2-8e4b71f7c0a3
+      - name: index
+        in: path
+        required: true
+        schema:
+          type: integer
+        example: 0
+      - name: type
+        in: path
+        required: true
+        schema:
+          type: string
+        example: web
+      responses:
+        '204':
+          description: terminates a single instance of a process belonging to an app
+  "/v3/apps/{app_guid}/processes/{type}/stats":
+    get:
+      summary: stats
+      tags:
+      - Process
+      parameters:
+      - name: app_guid
+        in: path
+        required: true
+        schema:
+          type: string
+        example: 791b98db-6243-4863-bf0b-7250dca470d8
+      - name: type
+        in: path
+        required: true
+        schema:
+          type: string
+        example: worker
+      responses:
+        '200':
+          description: retrieves the stats for a process belonging to an app
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  resources:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        type:
+                          type: string
+                        index:
+                          type: integer
+                        instance_guid:
+                          type: string
+                        state:
+                          type: string
+                        routable:
+                          type: boolean
+                        host:
+                          type: string
+                        instance_internal_ip:
+                          type: string
+                        uptime:
+                          type: integer
+                        mem_quota:
+                          type: integer
+                        disk_quota:
+                          type: integer
+                        log_rate_limit:
+                          type: integer
+                        fds_quota:
+                          type: integer
+                        isolation_segment:
+                          type: string
+                        details:
+                          type: string
+                        instance_ports:
+                          type: array
+                          items:
+                            type: object
+                            properties:
+                              external:
+                                type: integer
+                              internal:
+                                type: integer
+                              external_tls_proxy_port:
+                                type: integer
+                              internal_tls_proxy_port:
+                                type: integer
+                            required:
+                            - external
+                            - internal
+                            - external_tls_proxy_port
+                            - internal_tls_proxy_port
+                        usage:
+                          type: object
+                          properties:
+                            time:
+                              type: string
+                            cpu:
+                              type: number
+                              format: float
+                            cpu_entitlement:
+                              type: number
+                              format: float
+                            mem:
+                              type: integer
+                            disk:
+                              type: integer
+                            log_rate:
+                              type: integer
+                          required:
+                          - time
+                          - cpu
+                          - cpu_entitlement
+                          - mem
+                          - disk
+                          - log_rate
+                      required:
+                      - type
+                      - index
+                      - instance_guid
+                      - state
+                      - routable
+                      - host
+                      - instance_internal_ip
+                      - uptime
+                      - mem_quota
+                      - disk_quota
+                      - log_rate_limit
+                      - fds_quota
+                      - isolation_segment
+                      - details
+                      - instance_ports
+                      - usage
+                required:
+                - resources
+              example:
+                resources:
+                - type: worker
+                  index: 0
+                  instance_guid: some-diego-instance-id
+                  state: RUNNING
+                  routable: true
+                  host: toast
+                  instance_internal_ip: 5.6.7.8
+                  uptime: 12345
+                  mem_quota: 1073741824
+                  disk_quota: 1073741824
+                  log_rate_limit: 1048576
+                  fds_quota: 16384
+                  isolation_segment: very-isolated
+                  details: some-details
+                  instance_ports:
+                  - external: 8080
+                    internal: 1234
+                    external_tls_proxy_port: 61002
+                    internal_tls_proxy_port: 61003
+                  - external: 3000
+                    internal: 4000
+                    external_tls_proxy_port: 61006
+                    internal_tls_proxy_port: 61007
+                  usage:
+                    time: 2026-03-31 23:36:48 UTC
+                    cpu: 0.8
+                    cpu_entitlement: 0.1
+                    mem: 128
+                    disk: 1024
+                    log_rate: 1024
+  "/v3/processes":
+    get:
+      summary: index
+      tags:
+      - Process
+      parameters:
+      - name: app_guids
+        in: query
+        required: false
+        schema:
+          type: string
+        example: eb243df0-11ab-4dd7-b22a-2d5b8ce3cb4a
+      - name: embed
+        in: query
+        required: false
+        schema:
+          type: string
+        example: process_instances
+      - name: guids
+        in: query
+        required: false
+        schema:
+          type: string
+        example: 567fc81b-9b03-456e-8a14-95776834feac,57b56e93-5fc6-4614-8ccb-0c7a64fbb03a
+      - name: label_selector
+        in: query
+        required: false
+        schema:
+          type: string
+        example: fruit=strawberry
+      - name: organization_guids
+        in: query
+        required: false
+        schema:
+          type: string
+        example: 111c965b-ac14-4c75-a93e-3e93fa011026
+      - name: per_page
+        in: query
+        required: false
+        schema:
+          type: integer
+        example: 2
+      - name: space_guids
+        in: query
+        required: false
+        schema:
+          type: string
+        example: 4bd20768-2ee0-41c4-826b-cfe8560e9621
+      - name: types
+        in: query
+        required: false
+        schema:
+          type: string
+        example: worker,doesnotexist
+      responses:
+        '200':
+          description: returns only the matching processes
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  pagination:
+                    type: object
+                    properties:
+                      total_results:
+                        type: integer
+                      total_pages:
+                        type: integer
+                      first:
+                        type: object
+                        properties:
+                          href:
+                            type: string
+                        required:
+                        - href
+                      last:
+                        type: object
+                        properties:
+                          href:
+                            type: string
+                        required:
+                        - href
+                      next:
+                        nullable: true
+                      previous:
+                        nullable: true
+                    required:
+                    - total_results
+                    - total_pages
+                    - first
+                    - last
+                    - next
+                    - previous
+                  resources:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        guid:
+                          type: string
+                        created_at:
+                          type: string
+                        updated_at:
+                          type: string
+                        version:
+                          type: string
+                        type:
+                          type: string
+                        command:
+                          type: string
+                        user:
+                          type: string
+                        instances:
+                          type: integer
+                        memory_in_mb:
+                          type: integer
+                        disk_in_mb:
+                          type: integer
+                        log_rate_limit_in_bytes_per_second:
+                          type: integer
+                        health_check:
+                          type: object
+                          properties:
+                            type:
+                              type: string
+                            data:
+                              type: object
+                              properties:
+                                timeout:
+                                  nullable: true
+                                invocation_timeout:
+                                  nullable: true
+                                interval:
+                                  nullable: true
+                              required:
+                              - timeout
+                              - invocation_timeout
+                              - interval
+                          required:
+                          - type
+                          - data
+                        readiness_health_check:
+                          type: object
+                          properties:
+                            type:
+                              type: string
+                            data:
+                              type: object
+                              properties:
+                                invocation_timeout:
+                                  nullable: true
+                                interval:
+                                  nullable: true
+                              required:
+                              - invocation_timeout
+                              - interval
+                          required:
+                          - type
+                          - data
+                        relationships:
+                          type: object
+                          properties:
+                            app:
+                              type: object
+                              properties:
+                                data:
+                                  type: object
+                                  properties:
+                                    guid:
+                                      type: string
+                                  required:
+                                  - guid
+                              required:
+                              - data
+                            revision:
+                              type: object
+                              properties:
+                                data:
+                                  type: object
+                                  properties:
+                                    guid:
+                                      type: string
+                                  required:
+                                  - guid
+                              required:
+                              - data
+                              nullable: true
+                          required:
+                          - app
+                          - revision
+                        metadata:
+                          type: object
+                          properties:
+                            labels:
+                              type: object
+                              properties:
+                                fruit:
+                                  type: string
+                            annotations:
+                              type: object
+                              properties: {}
+                          required:
+                          - labels
+                          - annotations
+                        links:
+                          type: object
+                          properties:
+                            self:
+                              type: object
+                              properties:
+                                href:
+                                  type: string
+                              required:
+                              - href
+                            scale:
+                              type: object
+                              properties:
+                                href:
+                                  type: string
+                                method:
+                                  type: string
+                              required:
+                              - href
+                              - method
+                            app:
+                              type: object
+                              properties:
+                                href:
+                                  type: string
+                              required:
+                              - href
+                            space:
+                              type: object
+                              properties:
+                                href:
+                                  type: string
+                              required:
+                              - href
+                            stats:
+                              type: object
+                              properties:
+                                href:
+                                  type: string
+                              required:
+                              - href
+                            process_instances:
+                              type: object
+                              properties:
+                                href:
+                                  type: string
+                              required:
+                              - href
+                          required:
+                          - self
+                          - scale
+                          - app
+                          - space
+                          - stats
+                          - process_instances
+                        process_instances:
+                          type: array
+                          items:
+                            type: object
+                            properties:
+                              index:
+                                type: integer
+                              state:
+                                type: string
+                              since:
+                                type: integer
+                            required:
+                            - index
+                            - state
+                            - since
+                      required:
+                      - guid
+                      - created_at
+                      - updated_at
+                      - version
+                      - type
+                      - command
+                      - user
+                      - instances
+                      - memory_in_mb
+                      - disk_in_mb
+                      - log_rate_limit_in_bytes_per_second
+                      - health_check
+                      - readiness_health_check
+                      - relationships
+                      - metadata
+                      - links
+                required:
+                - pagination
+                - resources
+              example:
+                pagination:
+                  total_results: 2
+                  total_pages: 1
+                  first:
+                    href: http://api2.vcap.me/v3/processes?guids=567fc81b-9b03-456e-8a14-95776834feac%2C57b56e93-5fc6-4614-8ccb-0c7a64fbb03a&page=1&per_page=2
+                  last:
+                    href: http://api2.vcap.me/v3/processes?guids=567fc81b-9b03-456e-8a14-95776834feac%2C57b56e93-5fc6-4614-8ccb-0c7a64fbb03a&page=1&per_page=2
+                  next:
+                  previous:
+                resources:
+                - guid: 567fc81b-9b03-456e-8a14-95776834feac
+                  created_at: '2026-03-31T23:36:44Z'
+                  updated_at: '2026-03-31T23:36:44Z'
+                  version: 8fdcd6bd-092b-4463-8876-18e7ff39bc3a
+                  type: web
+                  command: "[PRIVATE DATA HIDDEN IN LISTS]"
+                  user: vcap
+                  instances: 2
+                  memory_in_mb: 1024
+                  disk_in_mb: 1024
+                  log_rate_limit_in_bytes_per_second: 1048576
+                  health_check:
+                    type: port
+                    data:
+                      timeout:
+                      invocation_timeout:
+                      interval:
+                  readiness_health_check:
+                    type: process
+                    data:
+                      invocation_timeout:
+                      interval:
+                  relationships:
+                    app:
+                      data:
+                        guid: d1277584-0b44-436a-82ee-2956b253f7f0
+                    revision:
+                      data:
+                        guid: 5844bbf7-c437-4093-8a3c-afe9fe03dabf
+                  metadata:
+                    labels: {}
+                    annotations: {}
+                  links:
+                    self:
+                      href: http://api2.vcap.me/v3/processes/567fc81b-9b03-456e-8a14-95776834feac
+                    scale:
+                      href: http://api2.vcap.me/v3/processes/567fc81b-9b03-456e-8a14-95776834feac/actions/scale
+                      method: POST
+                    app:
+                      href: http://api2.vcap.me/v3/apps/d1277584-0b44-436a-82ee-2956b253f7f0
+                    space:
+                      href: http://api2.vcap.me/v3/spaces/4ec2caab-9a04-48ff-af98-1014714c1c95
+                    stats:
+                      href: http://api2.vcap.me/v3/processes/567fc81b-9b03-456e-8a14-95776834feac/stats
+                    process_instances:
+                      href: http://api2.vcap.me/v3/processes/567fc81b-9b03-456e-8a14-95776834feac/process_instances
+                - guid: 57b56e93-5fc6-4614-8ccb-0c7a64fbb03a
+                  created_at: '2026-03-31T23:36:44Z'
+                  updated_at: '2026-03-31T23:36:44Z'
+                  version: 5050ae16-049e-4ad4-89c5-ca2f40db28f0
+                  type: worker
+                  command: "[PRIVATE DATA HIDDEN IN LISTS]"
+                  user: vcap
+                  instances: 1
+                  memory_in_mb: 100
+                  disk_in_mb: 200
+                  log_rate_limit_in_bytes_per_second: 400
+                  health_check:
+                    type: port
+                    data:
+                      timeout:
+                      invocation_timeout:
+                      interval:
+                  readiness_health_check:
+                    type: process
+                    data:
+                      invocation_timeout:
+                      interval:
+                  relationships:
+                    app:
+                      data:
+                        guid: d1277584-0b44-436a-82ee-2956b253f7f0
+                    revision:
+                  metadata:
+                    labels: {}
+                    annotations: {}
+                  links:
+                    self:
+                      href: http://api2.vcap.me/v3/processes/57b56e93-5fc6-4614-8ccb-0c7a64fbb03a
+                    scale:
+                      href: http://api2.vcap.me/v3/processes/57b56e93-5fc6-4614-8ccb-0c7a64fbb03a/actions/scale
+                      method: POST
+                    app:
+                      href: http://api2.vcap.me/v3/apps/d1277584-0b44-436a-82ee-2956b253f7f0
+                    space:
+                      href: http://api2.vcap.me/v3/spaces/4ec2caab-9a04-48ff-af98-1014714c1c95
+                    stats:
+                      href: http://api2.vcap.me/v3/processes/57b56e93-5fc6-4614-8ccb-0c7a64fbb03a/stats
+                    process_instances:
+                      href: http://api2.vcap.me/v3/processes/57b56e93-5fc6-4614-8ccb-0c7a64fbb03a/process_instances
+  "/v3/processes/{process_guid}":
+    get:
+      summary: show
+      tags:
+      - Process
+      parameters:
+      - name: embed
+        in: query
+        required: false
+        schema:
+          type: string
+        example: process_instances
+      - name: process_guid
+        in: path
+        required: true
+        schema:
+          type: string
+        example: 00f3e976-e57e-4def-a992-ebe7926d61a0
+      responses:
+        '200':
+          description: shows an empty array
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  guid:
+                    type: string
+                  created_at:
+                    type: string
+                  updated_at:
+                    type: string
+                  version:
+                    type: string
+                  type:
+                    type: string
+                  command:
+                    type: string
+                  user:
+                    type: string
+                  instances:
+                    type: integer
+                  memory_in_mb:
+                    type: integer
+                  disk_in_mb:
+                    type: integer
+                  log_rate_limit_in_bytes_per_second:
+                    type: integer
+                  health_check:
+                    type: object
+                    properties:
+                      type:
+                        type: string
+                      data:
+                        type: object
+                        properties:
+                          timeout:
+                            nullable: true
+                          invocation_timeout:
+                            nullable: true
+                          interval:
+                            nullable: true
+                        required:
+                        - timeout
+                        - invocation_timeout
+                        - interval
+                    required:
+                    - type
+                    - data
+                  readiness_health_check:
+                    type: object
+                    properties:
+                      type:
+                        type: string
+                      data:
+                        type: object
+                        properties:
+                          invocation_timeout:
+                            nullable: true
+                          interval:
+                            nullable: true
+                        required:
+                        - invocation_timeout
+                        - interval
+                    required:
+                    - type
+                    - data
+                  relationships:
+                    type: object
+                    properties:
+                      app:
+                        type: object
+                        properties:
+                          data:
+                            type: object
+                            properties:
+                              guid:
+                                type: string
+                            required:
+                            - guid
+                        required:
+                        - data
+                      revision:
+                        type: object
+                        properties:
+                          data:
+                            type: object
+                            properties:
+                              guid:
+                                type: string
+                            required:
+                            - guid
+                        required:
+                        - data
+                    required:
+                    - app
+                    - revision
+                  metadata:
+                    type: object
+                    properties:
+                      labels:
+                        type: object
+                        properties: {}
+                      annotations:
+                        type: object
+                        properties: {}
+                    required:
+                    - labels
+                    - annotations
+                  links:
+                    type: object
+                    properties:
+                      self:
+                        type: object
+                        properties:
+                          href:
+                            type: string
+                        required:
+                        - href
+                      scale:
+                        type: object
+                        properties:
+                          href:
+                            type: string
+                          method:
+                            type: string
+                        required:
+                        - href
+                        - method
+                      app:
+                        type: object
+                        properties:
+                          href:
+                            type: string
+                        required:
+                        - href
+                      space:
+                        type: object
+                        properties:
+                          href:
+                            type: string
+                        required:
+                        - href
+                      stats:
+                        type: object
+                        properties:
+                          href:
+                            type: string
+                        required:
+                        - href
+                      process_instances:
+                        type: object
+                        properties:
+                          href:
+                            type: string
+                        required:
+                        - href
+                    required:
+                    - self
+                    - scale
+                    - app
+                    - space
+                    - stats
+                    - process_instances
+                  process_instances:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        index:
+                          type: integer
+                        state:
+                          type: string
+                        since:
+                          type: integer
+                      required:
+                      - index
+                      - state
+                      - since
+                required:
+                - guid
+                - created_at
+                - updated_at
+                - version
+                - type
+                - command
+                - user
+                - instances
+                - memory_in_mb
+                - disk_in_mb
+                - log_rate_limit_in_bytes_per_second
+                - health_check
+                - readiness_health_check
+                - relationships
+                - metadata
+                - links
+              example:
+                guid: 00f3e976-e57e-4def-a992-ebe7926d61a0
+                created_at: '2026-03-31T23:36:48Z'
+                updated_at: '2026-03-31T23:36:48Z'
+                version: 8b89543e-de05-40d5-b9e8-e10570bb7dba
+                type: web
+                command: rackup
+                user: vcap
+                instances: 2
+                memory_in_mb: 1024
+                disk_in_mb: 1024
+                log_rate_limit_in_bytes_per_second: 1048576
+                health_check:
+                  type: port
+                  data:
+                    timeout:
+                    invocation_timeout:
+                    interval:
+                readiness_health_check:
+                  type: process
+                  data:
+                    invocation_timeout:
+                    interval:
+                relationships:
+                  app:
+                    data:
+                      guid: dd416586-1826-463d-80c1-1e56398e4e9e
+                  revision:
+                    data:
+                      guid: c50977bf-caab-4194-8206-513aeac66167
+                metadata:
+                  labels: {}
+                  annotations: {}
+                links:
+                  self:
+                    href: http://api2.vcap.me/v3/processes/00f3e976-e57e-4def-a992-ebe7926d61a0
+                  scale:
+                    href: http://api2.vcap.me/v3/processes/00f3e976-e57e-4def-a992-ebe7926d61a0/actions/scale
+                    method: POST
+                  app:
+                    href: http://api2.vcap.me/v3/apps/dd416586-1826-463d-80c1-1e56398e4e9e
+                  space:
+                    href: http://api2.vcap.me/v3/spaces/aef82a0c-8ece-498c-8c16-aba4aa21d46a
+                  stats:
+                    href: http://api2.vcap.me/v3/processes/00f3e976-e57e-4def-a992-ebe7926d61a0/stats
+                  process_instances:
+                    href: http://api2.vcap.me/v3/processes/00f3e976-e57e-4def-a992-ebe7926d61a0/process_instances
+                process_instances: []
+    patch:
+      summary: update
+      tags:
+      - Process
+      parameters:
+      - name: process_guid
+        in: path
+        required: true
+        schema:
+          type: string
+        example: 07cd54fa-0056-4ef3-8515-ba350e8fd5c1
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                command:
+                  type: string
+                health_check:
+                  type: object
+                  properties:
+                    type:
+                      type: string
+                    data:
+                      type: object
+                      properties:
+                        timeout:
+                          type: integer
+                        interval:
+                          type: integer
+                      required:
+                      - timeout
+                      - interval
+                  required:
+                  - type
+                  - data
+                readiness_health_check:
+                  type: object
+                  properties:
+                    type:
+                      type: string
+                    data:
+                      type: object
+                      properties:
+                        invocation_timeout:
+                          type: integer
+                        interval:
+                          type: integer
+                      required:
+                      - invocation_timeout
+                      - interval
+                  required:
+                  - type
+                  - data
+                metadata:
+                  type: object
+                  properties:
+                    labels:
+                      type: object
+                      properties:
+                        release:
+                          type: string
+                        seriouseats.com/potato:
+                          type: string
+                      required:
+                      - release
+                      - seriouseats.com/potato
+                    annotations:
+                      type: object
+                      properties:
+                        checksum:
+                          type: string
+                      required:
+                      - checksum
+                  required:
+                  - labels
+                  - annotations
+              required:
+              - command
+              - health_check
+              - readiness_health_check
+              - metadata
+            example:
+              command: new command
+              health_check:
+                type: process
+                data:
+                  timeout: 20
+                  interval: 5
+              readiness_health_check:
+                type: port
+                data:
+                  invocation_timeout: 10
+                  interval: 6
+              metadata:
+                labels:
+                  release: stable
+                  seriouseats.com/potato: mashed
+                annotations:
+                  checksum: SHA
+      responses:
+        '200':
+          description: updates the process
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  guid:
+                    type: string
+                  created_at:
+                    type: string
+                  updated_at:
+                    type: string
+                  version:
+                    type: string
+                  type:
+                    type: string
+                  command:
+                    type: string
+                  user:
+                    type: string
+                  instances:
+                    type: integer
+                  memory_in_mb:
+                    type: integer
+                  disk_in_mb:
+                    type: integer
+                  log_rate_limit_in_bytes_per_second:
+                    type: integer
+                  health_check:
+                    type: object
+                    properties:
+                      type:
+                        type: string
+                      data:
+                        type: object
+                        properties:
+                          timeout:
+                            type: integer
+                          invocation_timeout:
+                            nullable: true
+                          interval:
+                            type: integer
+                        required:
+                        - timeout
+                        - invocation_timeout
+                        - interval
+                    required:
+                    - type
+                    - data
+                  readiness_health_check:
+                    type: object
+                    properties:
+                      type:
+                        type: string
+                      data:
+                        type: object
+                        properties:
+                          invocation_timeout:
+                            type: integer
+                          interval:
+                            type: integer
+                        required:
+                        - invocation_timeout
+                        - interval
+                    required:
+                    - type
+                    - data
+                  relationships:
+                    type: object
+                    properties:
+                      app:
+                        type: object
+                        properties:
+                          data:
+                            type: object
+                            properties:
+                              guid:
+                                type: string
+                            required:
+                            - guid
+                        required:
+                        - data
+                      revision:
+                        type: object
+                        properties:
+                          data:
+                            type: object
+                            properties:
+                              guid:
+                                type: string
+                            required:
+                            - guid
+                        required:
+                        - data
+                    required:
+                    - app
+                    - revision
+                  metadata:
+                    type: object
+                    properties:
+                      labels:
+                        type: object
+                        properties:
+                          release:
+                            type: string
+                          seriouseats.com/potato:
+                            type: string
+                        required:
+                        - release
+                        - seriouseats.com/potato
+                      annotations:
+                        type: object
+                        properties:
+                          checksum:
+                            type: string
+                        required:
+                        - checksum
+                    required:
+                    - labels
+                    - annotations
+                  links:
+                    type: object
+                    properties:
+                      self:
+                        type: object
+                        properties:
+                          href:
+                            type: string
+                        required:
+                        - href
+                      scale:
+                        type: object
+                        properties:
+                          href:
+                            type: string
+                          method:
+                            type: string
+                        required:
+                        - href
+                        - method
+                      app:
+                        type: object
+                        properties:
+                          href:
+                            type: string
+                        required:
+                        - href
+                      space:
+                        type: object
+                        properties:
+                          href:
+                            type: string
+                        required:
+                        - href
+                      stats:
+                        type: object
+                        properties:
+                          href:
+                            type: string
+                        required:
+                        - href
+                      process_instances:
+                        type: object
+                        properties:
+                          href:
+                            type: string
+                        required:
+                        - href
+                    required:
+                    - self
+                    - scale
+                    - app
+                    - space
+                    - stats
+                    - process_instances
+                required:
+                - guid
+                - created_at
+                - updated_at
+                - version
+                - type
+                - command
+                - user
+                - instances
+                - memory_in_mb
+                - disk_in_mb
+                - log_rate_limit_in_bytes_per_second
+                - health_check
+                - readiness_health_check
+                - relationships
+                - metadata
+                - links
+              example:
+                guid: 07cd54fa-0056-4ef3-8515-ba350e8fd5c1
+                created_at: '2026-03-31T23:36:45Z'
+                updated_at: '2026-03-31T23:36:45Z'
+                version: c01726a9-775e-4894-b89b-6b1d4e073305
+                type: web
+                command: new command
+                user: vcap
+                instances: 2
+                memory_in_mb: 1024
+                disk_in_mb: 1024
+                log_rate_limit_in_bytes_per_second: 1048576
+                health_check:
+                  type: process
+                  data:
+                    timeout: 20
+                    invocation_timeout:
+                    interval: 5
+                readiness_health_check:
+                  type: port
+                  data:
+                    invocation_timeout: 10
+                    interval: 6
+                relationships:
+                  app:
+                    data:
+                      guid: 5dfa1d7e-1ffe-41cc-88c7-604a7bef0069
+                  revision:
+                    data:
+                      guid: 0c603765-f6e1-4623-8fe4-405824de15a0
+                metadata:
+                  labels:
+                    release: stable
+                    seriouseats.com/potato: mashed
+                  annotations:
+                    checksum: SHA
+                links:
+                  self:
+                    href: http://api2.vcap.me/v3/processes/07cd54fa-0056-4ef3-8515-ba350e8fd5c1
+                  scale:
+                    href: http://api2.vcap.me/v3/processes/07cd54fa-0056-4ef3-8515-ba350e8fd5c1/actions/scale
+                    method: POST
+                  app:
+                    href: http://api2.vcap.me/v3/apps/5dfa1d7e-1ffe-41cc-88c7-604a7bef0069
+                  space:
+                    href: http://api2.vcap.me/v3/spaces/85d2f883-1942-4129-b35c-b2a9a87057ca
+                  stats:
+                    href: http://api2.vcap.me/v3/processes/07cd54fa-0056-4ef3-8515-ba350e8fd5c1/stats
+                  process_instances:
+                    href: http://api2.vcap.me/v3/processes/07cd54fa-0056-4ef3-8515-ba350e8fd5c1/process_instances
+  "/v3/processes/{process_guid}/actions/scale":
+    post:
+      summary: scale
+      tags:
+      - Process
+      parameters:
+      - name: process_guid
+        in: path
+        required: true
+        schema:
+          type: string
+        example: cae3f568-1ba1-4421-9c0d-8dd37edfa158
+      responses:
+        '202':
+          description: logs the required fields when the process gets scaled
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  guid:
+                    type: string
+                  created_at:
+                    type: string
+                  updated_at:
+                    type: string
+                  version:
+                    type: string
+                  type:
+                    type: string
+                  command:
+                    type: string
+                  user:
+                    type: string
+                  instances:
+                    type: integer
+                  memory_in_mb:
+                    type: integer
+                  disk_in_mb:
+                    type: integer
+                  log_rate_limit_in_bytes_per_second:
+                    type: integer
+                  health_check:
+                    type: object
+                    properties:
+                      type:
+                        type: string
+                      data:
+                        type: object
+                        properties:
+                          timeout:
+                            nullable: true
+                          invocation_timeout:
+                            nullable: true
+                          interval:
+                            nullable: true
+                        required:
+                        - timeout
+                        - invocation_timeout
+                        - interval
+                    required:
+                    - type
+                    - data
+                  readiness_health_check:
+                    type: object
+                    properties:
+                      type:
+                        type: string
+                      data:
+                        type: object
+                        properties:
+                          invocation_timeout:
+                            nullable: true
+                          interval:
+                            nullable: true
+                        required:
+                        - invocation_timeout
+                        - interval
+                    required:
+                    - type
+                    - data
+                  relationships:
+                    type: object
+                    properties:
+                      app:
+                        type: object
+                        properties:
+                          data:
+                            type: object
+                            properties:
+                              guid:
+                                type: string
+                            required:
+                            - guid
+                        required:
+                        - data
+                      revision:
+                        nullable: true
+                    required:
+                    - app
+                    - revision
+                  metadata:
+                    type: object
+                    properties:
+                      labels:
+                        type: object
+                        properties: {}
+                      annotations:
+                        type: object
+                        properties: {}
+                    required:
+                    - labels
+                    - annotations
+                  links:
+                    type: object
+                    properties:
+                      self:
+                        type: object
+                        properties:
+                          href:
+                            type: string
+                        required:
+                        - href
+                      scale:
+                        type: object
+                        properties:
+                          href:
+                            type: string
+                          method:
+                            type: string
+                        required:
+                        - href
+                        - method
+                      app:
+                        type: object
+                        properties:
+                          href:
+                            type: string
+                        required:
+                        - href
+                      space:
+                        type: object
+                        properties:
+                          href:
+                            type: string
+                        required:
+                        - href
+                      stats:
+                        type: object
+                        properties:
+                          href:
+                            type: string
+                        required:
+                        - href
+                      process_instances:
+                        type: object
+                        properties:
+                          href:
+                            type: string
+                        required:
+                        - href
+                    required:
+                    - self
+                    - scale
+                    - app
+                    - space
+                    - stats
+                    - process_instances
+                required:
+                - guid
+                - created_at
+                - updated_at
+                - version
+                - type
+                - command
+                - user
+                - instances
+                - memory_in_mb
+                - disk_in_mb
+                - log_rate_limit_in_bytes_per_second
+                - health_check
+                - readiness_health_check
+                - relationships
+                - metadata
+                - links
+              example:
+                guid: cae3f568-1ba1-4421-9c0d-8dd37edfa158
+                created_at: '2026-03-31T23:36:45Z'
+                updated_at: '2026-03-31T23:36:45Z'
+                version: f24bcbc2-73c2-43fa-b87f-ddf7ec3c9aab
+                type: web
+                command: rackup
+                user: vcap
+                instances: 5
+                memory_in_mb: 10
+                disk_in_mb: 20
+                log_rate_limit_in_bytes_per_second: 40
+                health_check:
+                  type: port
+                  data:
+                    timeout:
+                    invocation_timeout:
+                    interval:
+                readiness_health_check:
+                  type: process
+                  data:
+                    invocation_timeout:
+                    interval:
+                relationships:
+                  app:
+                    data:
+                      guid: 69a9ed0d-c085-41c3-9313-77a2ffd24d9f
+                  revision:
+                metadata:
+                  labels: {}
+                  annotations: {}
+                links:
+                  self:
+                    href: http://api2.vcap.me/v3/processes/cae3f568-1ba1-4421-9c0d-8dd37edfa158
+                  scale:
+                    href: http://api2.vcap.me/v3/processes/cae3f568-1ba1-4421-9c0d-8dd37edfa158/actions/scale
+                    method: POST
+                  app:
+                    href: http://api2.vcap.me/v3/apps/69a9ed0d-c085-41c3-9313-77a2ffd24d9f
+                  space:
+                    href: http://api2.vcap.me/v3/spaces/7c02a163-ce68-47b9-ba1c-5e277b72a791
+                  stats:
+                    href: http://api2.vcap.me/v3/processes/cae3f568-1ba1-4421-9c0d-8dd37edfa158/stats
+                  process_instances:
+                    href: http://api2.vcap.me/v3/processes/cae3f568-1ba1-4421-9c0d-8dd37edfa158/process_instances
+        '422':
+          description: returns a helpful error when the log quota is too small
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  errors:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        detail:
+                          type: string
+                        title:
+                          type: string
+                        code:
+                          type: integer
+                        test_mode_info:
+                          type: object
+                          properties:
+                            detail:
+                              type: string
+                            title:
+                              type: string
+                            backtrace:
+                              type: array
+                              items:
+                                type: string
+                          required:
+                          - detail
+                          - title
+                          - backtrace
+                      required:
+                      - detail
+                      - title
+                      - code
+                      - test_mode_info
+                required:
+                - errors
+              example:
+                errors:
+                - detail: Log rate limit in bytes per second must be greater than
+                    or equal to -1
+                  title: CF-UnprocessableEntity
+                  code: 10008
+                  test_mode_info:
+                    detail: Log rate limit in bytes per second must be greater than
+                      or equal to -1
+                    title: CF-UnprocessableEntity
+                    backtrace:
+                    - "/Users/sethboyles/workspace/capi-release/src/cloud_controller_ng/app/controllers/v3/application_controller.rb:18:in
+                      `unprocessable!'"
+                    - "/Users/sethboyles/workspace/capi-release/src/cloud_controller_ng/app/controllers/v3/processes_controller.rb:95:in
+                      `scale'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/actionpack-8.1.3/lib/action_controller/metal/basic_implicit_render.rb:8:in
+                      `send_action'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/actionpack-8.1.3/lib/abstract_controller/base.rb:221:in
+                      `process_action'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/actionpack-8.1.3/lib/action_controller/metal/rendering.rb:199:in
+                      `process_action'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/actionpack-8.1.3/lib/abstract_controller/callbacks.rb:267:in
+                      `block in process_action'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/activesupport-8.1.3/lib/active_support/callbacks.rb:110:in
+                      `run_callbacks'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/actionpack-8.1.3/lib/abstract_controller/callbacks.rb:266:in
+                      `process_action'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/actionpack-8.1.3/lib/action_controller/metal/rescue.rb:36:in
+                      `process_action'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/actionpack-8.1.3/lib/action_controller/metal/instrumentation.rb:76:in
+                      `block in process_action'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/activesupport-8.1.3/lib/active_support/notifications.rb:210:in
+                      `block in instrument'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/activesupport-8.1.3/lib/active_support/notifications/instrumenter.rb:58:in
+                      `instrument'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/activesupport-8.1.3/lib/active_support/notifications.rb:210:in
+                      `instrument'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/actionpack-8.1.3/lib/action_controller/metal/instrumentation.rb:75:in
+                      `process_action'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/actionpack-8.1.3/lib/action_controller/metal/params_wrapper.rb:259:in
+                      `process_action'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/actionpack-8.1.3/lib/abstract_controller/base.rb:154:in
+                      `process'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/actionview-8.1.3/lib/action_view/rendering.rb:40:in
+                      `process'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/actionpack-8.1.3/lib/action_controller/metal.rb:252:in
+                      `dispatch'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/actionpack-8.1.3/lib/action_controller/metal.rb:335:in
+                      `dispatch'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/actionpack-8.1.3/lib/action_dispatch/routing/route_set.rb:65:in
+                      `dispatch'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/actionpack-8.1.3/lib/action_dispatch/routing/route_set.rb:50:in
+                      `serve'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/actionpack-8.1.3/lib/action_dispatch/journey/router.rb:35:in
+                      `block in serve'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/actionpack-8.1.3/lib/action_dispatch/journey/router.rb:86:in
+                      `block in recognize'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/actionpack-8.1.3/lib/action_dispatch/journey/router.rb:66:in
+                      `each'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/actionpack-8.1.3/lib/action_dispatch/journey/router.rb:66:in
+                      `recognize'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/actionpack-8.1.3/lib/action_dispatch/journey/router.rb:31:in
+                      `serve'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/actionpack-8.1.3/lib/action_dispatch/routing/route_set.rb:906:in
+                      `call'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/rack-3.2.5/lib/rack/tempfile_reaper.rb:20:in
+                      `call'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/actionpack-8.1.3/lib/action_dispatch/http/content_security_policy.rb:38:in
+                      `call'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/actionpack-8.1.3/lib/action_dispatch/middleware/callbacks.rb:31:in
+                      `block in call'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/activesupport-8.1.3/lib/active_support/callbacks.rb:101:in
+                      `run_callbacks'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/actionpack-8.1.3/lib/action_dispatch/middleware/callbacks.rb:30:in
+                      `call'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/actionpack-8.1.3/lib/action_dispatch/middleware/executor.rb:20:in
+                      `call'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/actionpack-8.1.3/lib/action_dispatch/middleware/actionable_exceptions.rb:18:in
+                      `call'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/actionpack-8.1.3/lib/action_dispatch/middleware/debug_exceptions.rb:31:in
+                      `call'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/actionpack-8.1.3/lib/action_dispatch/middleware/show_exceptions.rb:32:in
+                      `call'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/actionpack-8.1.3/lib/action_dispatch/middleware/remote_ip.rb:98:in
+                      `call'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/rack-3.2.5/lib/rack/runtime.rb:24:in
+                      `call'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/actionpack-8.1.3/lib/action_dispatch/middleware/executor.rb:20:in
+                      `call'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/rack-3.2.5/lib/rack/sendfile.rb:131:in
+                      `call'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/rack-3.2.5/lib/rack/urlmap.rb:76:in
+                      `block in call'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/rack-3.2.5/lib/rack/urlmap.rb:60:in
+                      `each'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/rack-3.2.5/lib/rack/urlmap.rb:60:in
+                      `call'"
+                    - "/Users/sethboyles/workspace/capi-release/src/cloud_controller_ng/middleware/request_logs.rb:14:in
+                      `call'"
+                    - "/Users/sethboyles/workspace/capi-release/src/cloud_controller_ng/middleware/zipkin.rb:32:in
+                      `call_app'"
+                    - "/Users/sethboyles/workspace/capi-release/src/cloud_controller_ng/middleware/zipkin.rb:9:in
+                      `call'"
+                    - "/Users/sethboyles/workspace/capi-release/src/cloud_controller_ng/middleware/security_context_setter.rb:41:in
+                      `call'"
+                    - "/Users/sethboyles/workspace/capi-release/src/cloud_controller_ng/middleware/vcap_request_context_setter.rb:17:in
+                      `call'"
+                    - "/Users/sethboyles/workspace/capi-release/src/cloud_controller_ng/middleware/cors.rb:50:in
+                      `call_app'"
+                    - "/Users/sethboyles/workspace/capi-release/src/cloud_controller_ng/middleware/cors.rb:14:in
+                      `call'"
+                    - "/Users/sethboyles/workspace/capi-release/src/cloud_controller_ng/middleware/request_metrics.rb:13:in
+                      `call'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/rack-3.2.5/lib/rack/builder.rb:283:in
+                      `call'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/rack-test-2.2.0/lib/rack/test.rb:360:in
+                      `process_request'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/rack-test-2.2.0/lib/rack/test.rb:163:in
+                      `custom_request'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/rack-test-2.2.0/lib/rack/test.rb:112:in
+                      `post'"
+                    - "/Users/sethboyles/.rubies/ruby-3.3.7/lib/ruby/3.3.0/forwardable.rb:240:in
+                      `post'"
+                    - "/Users/sethboyles/workspace/capi-release/src/cloud_controller_ng/spec/request/processes_spec.rb:1251:in
+                      `block (3 levels) in <main>'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/rspec-core-3.13.6/lib/rspec/core/example.rb:263:in
+                      `instance_exec'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/rspec-core-3.13.6/lib/rspec/core/example.rb:263:in
+                      `block in run'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/rspec-core-3.13.6/lib/rspec/core/example.rb:511:in
+                      `block in with_around_and_singleton_context_hooks'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/rspec-core-3.13.6/lib/rspec/core/example.rb:468:in
+                      `block in with_around_example_hooks'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/rspec-core-3.13.6/lib/rspec/core/hooks.rb:486:in
+                      `block in run'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/rspec-core-3.13.6/lib/rspec/core/hooks.rb:626:in
+                      `block in run_around_example_hooks_for'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/rspec-core-3.13.6/lib/rspec/core/example.rb:352:in
+                      `call'"
+                    - "/Users/sethboyles/workspace/capi-release/src/cloud_controller_ng/spec/spec_helper_helper.rb:155:in
+                      `block (3 levels) in each_run'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/sequel-5.102.0/lib/sequel/database/transactions.rb:257:in
+                      `_transaction'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/sequel-5.102.0/lib/sequel/database/transactions.rb:239:in
+                      `block in transaction'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/sequel-5.102.0/lib/sequel/connection_pool/threaded.rb:92:in
+                      `hold'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/sequel-5.102.0/lib/sequel/database/connecting.rb:283:in
+                      `synchronize'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/sequel-5.102.0/lib/sequel/database/transactions.rb:197:in
+                      `transaction'"
+                    - "/Users/sethboyles/workspace/capi-release/src/cloud_controller_ng/spec/support/database_isolation.rb:39:in
+                      `cleanly'"
+                    - "/Users/sethboyles/workspace/capi-release/src/cloud_controller_ng/spec/spec_helper_helper.rb:155:in
+                      `block (2 levels) in each_run'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/rspec-core-3.13.6/lib/rspec/core/example.rb:457:in
+                      `instance_exec'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/rspec-core-3.13.6/lib/rspec/core/example.rb:457:in
+                      `instance_exec'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/rspec-core-3.13.6/lib/rspec/core/hooks.rb:390:in
+                      `execute_with'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/rspec-core-3.13.6/lib/rspec/core/hooks.rb:628:in
+                      `block (2 levels) in run_around_example_hooks_for'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/rspec-core-3.13.6/lib/rspec/core/example.rb:352:in
+                      `call'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/webmock-3.26.2/lib/webmock/rspec.rb:39:in
+                      `block (2 levels) in <main>'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/rspec-core-3.13.6/lib/rspec/core/example.rb:457:in
+                      `instance_exec'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/rspec-core-3.13.6/lib/rspec/core/example.rb:457:in
+                      `instance_exec'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/rspec-core-3.13.6/lib/rspec/core/hooks.rb:390:in
+                      `execute_with'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/rspec-core-3.13.6/lib/rspec/core/hooks.rb:628:in
+                      `block (2 levels) in run_around_example_hooks_for'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/rspec-core-3.13.6/lib/rspec/core/example.rb:352:in
+                      `call'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/rspec-core-3.13.6/lib/rspec/core/hooks.rb:629:in
+                      `run_around_example_hooks_for'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/rspec-core-3.13.6/lib/rspec/core/hooks.rb:486:in
+                      `run'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/rspec-core-3.13.6/lib/rspec/core/example.rb:468:in
+                      `with_around_example_hooks'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/rspec-core-3.13.6/lib/rspec/core/example.rb:511:in
+                      `with_around_and_singleton_context_hooks'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/rspec-core-3.13.6/lib/rspec/core/example.rb:259:in
+                      `run'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/rspec-core-3.13.6/lib/rspec/core/example_group.rb:653:in
+                      `block in run_examples'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/rspec-core-3.13.6/lib/rspec/core/example_group.rb:649:in
+                      `map'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/rspec-core-3.13.6/lib/rspec/core/example_group.rb:649:in
+                      `run_examples'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/rspec-core-3.13.6/lib/rspec/core/example_group.rb:614:in
+                      `run'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/rspec-core-3.13.6/lib/rspec/core/example_group.rb:615:in
+                      `block in run'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/rspec-core-3.13.6/lib/rspec/core/example_group.rb:615:in
+                      `map'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/rspec-core-3.13.6/lib/rspec/core/example_group.rb:615:in
+                      `run'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/rspec-core-3.13.6/lib/rspec/core/runner.rb:121:in
+                      `block (3 levels) in run_specs'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/rspec-core-3.13.6/lib/rspec/core/runner.rb:121:in
+                      `map'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/rspec-core-3.13.6/lib/rspec/core/runner.rb:121:in
+                      `block (2 levels) in run_specs'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/rspec-core-3.13.6/lib/rspec/core/configuration.rb:2097:in
+                      `with_suite_hooks'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/rspec-core-3.13.6/lib/rspec/core/runner.rb:116:in
+                      `block in run_specs'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/rspec-core-3.13.6/lib/rspec/core/reporter.rb:74:in
+                      `report'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/rspec-core-3.13.6/lib/rspec/core/runner.rb:115:in
+                      `run_specs'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/rspec-core-3.13.6/lib/rspec/core/runner.rb:89:in
+                      `run'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/rspec-core-3.13.6/lib/rspec/core/runner.rb:71:in
+                      `run'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/rspec-core-3.13.6/lib/rspec/core/runner.rb:45:in
+                      `invoke'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/rspec-core-3.13.6/exe/rspec:4:in
+                      `<top (required)>'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/bin/rspec:25:in `load'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/bin/rspec:25:in `<top (required)>'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/bundler-2.6.9/lib/bundler/cli/exec.rb:59:in
+                      `load'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/bundler-2.6.9/lib/bundler/cli/exec.rb:59:in
+                      `kernel_load'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/bundler-2.6.9/lib/bundler/cli/exec.rb:23:in
+                      `run'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/bundler-2.6.9/lib/bundler/cli.rb:452:in
+                      `exec'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/bundler-2.6.9/lib/bundler/vendor/thor/lib/thor/command.rb:28:in
+                      `run'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/bundler-2.6.9/lib/bundler/vendor/thor/lib/thor/invocation.rb:127:in
+                      `invoke_command'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/bundler-2.6.9/lib/bundler/vendor/thor/lib/thor.rb:538:in
+                      `dispatch'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/bundler-2.6.9/lib/bundler/cli.rb:35:in
+                      `dispatch'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/bundler-2.6.9/lib/bundler/vendor/thor/lib/thor/base.rb:584:in
+                      `start'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/bundler-2.6.9/lib/bundler/cli.rb:29:in
+                      `start'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/bundler-2.6.9/exe/bundle:28:in
+                      `block in <top (required)>'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/bundler-2.6.9/lib/bundler/friendly_errors.rb:117:in
+                      `with_friendly_errors'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/bundler-2.6.9/exe/bundle:20:in
+                      `<top (required)>'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/bin/bundle:25:in `load'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/bin/bundle:25:in `<main>'"
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                instances:
+                  type: integer
+                memory_in_mb:
+                  type: integer
+                disk_in_mb:
+                  type: integer
+                log_rate_limit_in_bytes_per_second:
+                  type: integer
+              required:
+              - instances
+              - memory_in_mb
+              - disk_in_mb
+              - log_rate_limit_in_bytes_per_second
+            example:
+              instances: 5
+              memory_in_mb: 10
+              disk_in_mb: 20
+              log_rate_limit_in_bytes_per_second: 40
+  "/v3/processes/{process_guid}/instances/{index}":
+    delete:
+      summary: terminate
+      tags:
+      - Process
+      parameters:
+      - name: index
+        in: path
+        required: true
+        schema:
+          type: integer
+        example: 0
+      - name: process_guid
+        in: path
+        required: true
+        schema:
+          type: string
+        example: ddb7d76b-b8f1-4e3d-a4b6-05100272695a
+      responses:
+        '204':
+          description: terminates a single instance of a process
+  "/v3/processes/{process_guid}/process_instances":
+    get:
+      summary: process_instances
+      tags:
+      - Process
+      parameters:
+      - name: process_guid
+        in: path
+        required: true
+        schema:
+          type: string
+        example: e43cf255-6da8-4231-9bcf-618380406ab6
+      responses:
+        '200':
+          description: retrieves all process instances for the process
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  resources:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        index:
+                          type: integer
+                        state:
+                          type: string
+                        since:
+                          type: integer
+                      required:
+                      - index
+                      - state
+                      - since
+                  links:
+                    type: object
+                    properties:
+                      self:
+                        type: object
+                        properties:
+                          href:
+                            type: string
+                        required:
+                        - href
+                      process:
+                        type: object
+                        properties:
+                          href:
+                            type: string
+                        required:
+                        - href
+                    required:
+                    - self
+                    - process
+                required:
+                - resources
+                - links
+              example:
+                resources:
+                - index: 0
+                  state: RUNNING
+                  since: 172800
+                - index: 1
+                  state: STARTING
+                  since: 172799
+                links:
+                  self:
+                    href: http://api2.vcap.me/v3/processes/e43cf255-6da8-4231-9bcf-618380406ab6/process_instances
+                  process:
+                    href: http://api2.vcap.me/v3/processes/e43cf255-6da8-4231-9bcf-618380406ab6
+  "/v3/processes/{process_guid}/stats":
+    get:
+      summary: stats
+      tags:
+      - Process
+      parameters:
+      - name: process_guid
+        in: path
+        required: true
+        schema:
+          type: string
+        example: 28f9d251-0018-47d7-869b-26833731df4c
+      responses:
+        '200':
+          description: retrieves the stats for a process
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  resources:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        type:
+                          type: string
+                        index:
+                          type: integer
+                        instance_guid:
+                          type: string
+                        state:
+                          type: string
+                        routable:
+                          type: boolean
+                        host:
+                          type: string
+                        instance_internal_ip:
+                          type: string
+                        uptime:
+                          type: integer
+                        mem_quota:
+                          type: integer
+                        disk_quota:
+                          type: integer
+                        log_rate_limit:
+                          type: integer
+                        fds_quota:
+                          type: integer
+                        isolation_segment:
+                          type: string
+                        details:
+                          type: string
+                        instance_ports:
+                          type: array
+                          items:
+                            type: object
+                            properties:
+                              external:
+                                type: integer
+                              internal:
+                                type: integer
+                              external_tls_proxy_port:
+                                type: integer
+                              internal_tls_proxy_port:
+                                type: integer
+                            required:
+                            - external
+                            - internal
+                            - external_tls_proxy_port
+                            - internal_tls_proxy_port
+                        usage:
+                          type: object
+                          properties:
+                            time:
+                              type: string
+                            cpu:
+                              type: number
+                              format: float
+                            cpu_entitlement:
+                              nullable: true
+                              type: number
+                              format: float
+                            mem:
+                              type: integer
+                            disk:
+                              type: integer
+                            log_rate:
+                              type: integer
+                          required:
+                          - time
+                          - cpu
+                          - cpu_entitlement
+                          - mem
+                          - disk
+                          - log_rate
+                      required:
+                      - type
+                      - index
+                      - instance_guid
+                      - state
+                      - routable
+                      - host
+                      - instance_internal_ip
+                      - uptime
+                      - mem_quota
+                      - disk_quota
+                      - log_rate_limit
+                      - fds_quota
+                      - isolation_segment
+                      - details
+                      - instance_ports
+                      - usage
+                required:
+                - resources
+              example:
+                resources:
+                - type: worker
+                  index: 0
+                  instance_guid: some-diego-instance-id
+                  state: RUNNING
+                  routable: true
+                  host: toast
+                  instance_internal_ip: 5.6.7.8
+                  uptime: 12345
+                  mem_quota: 1073741824
+                  disk_quota: 1073741824
+                  log_rate_limit: 1048576
+                  fds_quota: 16384
+                  isolation_segment: very-isolated
+                  details: some-details
+                  instance_ports:
+                  - external: 8080
+                    internal: 1234
+                    external_tls_proxy_port: 61002
+                    internal_tls_proxy_port: 61003
+                  - external: 3000
+                    internal: 4000
+                    external_tls_proxy_port: 61006
+                    internal_tls_proxy_port: 61007
+                  usage:
+                    time: 2026-03-31 23:36:48 UTC
+                    cpu: 0.8
+                    cpu_entitlement: 0.1
+                    mem: 128
+                    disk: 1024
+                    log_rate: 1024

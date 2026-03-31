@@ -1,0 +1,108 @@
+---
+openapi: 3.0.3
+info:
+  title: Cloud Controller V3 API
+  version: v3
+servers: []
+paths:
+  "/v3/info":
+    get:
+      summary: v3_info
+      tags:
+      - Info
+      responses:
+        '200':
+          description: includes has proper empty values
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  build:
+                    type: string
+                  cli_version:
+                    type: object
+                    properties:
+                      minimum:
+                        type: string
+                      recommended:
+                        type: string
+                    required:
+                    - minimum
+                    - recommended
+                  custom:
+                    type: object
+                    properties:
+                      arbitrary:
+                        type: string
+                  description:
+                    type: string
+                  name:
+                    type: string
+                  version:
+                    type: integer
+                  osbapi_version:
+                    type: string
+                  rate_limits:
+                    type: object
+                    properties:
+                      enabled:
+                        type: boolean
+                      general_limit:
+                        type: string
+                      reset_interval_in_minutes:
+                        type: string
+                    required:
+                    - enabled
+                    - general_limit
+                    - reset_interval_in_minutes
+                  links:
+                    type: object
+                    properties:
+                      self:
+                        type: object
+                        properties:
+                          href:
+                            type: string
+                        required:
+                        - href
+                      support:
+                        type: object
+                        properties:
+                          href:
+                            type: string
+                        required:
+                        - href
+                    required:
+                    - self
+                    - support
+                required:
+                - build
+                - cli_version
+                - custom
+                - description
+                - name
+                - version
+                - osbapi_version
+                - rate_limits
+                - links
+              example:
+                build: ''
+                cli_version:
+                  minimum: ''
+                  recommended: ''
+                custom:
+                  arbitrary: stuff
+                description: ''
+                name: ''
+                version: 0
+                osbapi_version: ''
+                rate_limits:
+                  enabled: false
+                  general_limit: ''
+                  reset_interval_in_minutes: ''
+                links:
+                  self:
+                    href: http://api2.vcap.me/v3/info
+                  support:
+                    href: ''

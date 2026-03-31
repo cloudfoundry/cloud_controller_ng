@@ -1,0 +1,669 @@
+---
+openapi: 3.0.3
+info:
+  title: Cloud Controller V3 API
+  version: v3
+servers: []
+paths:
+  "/v3/isolation_segments":
+    get:
+      summary: index
+      tags:
+      - IsolationSegment
+      responses:
+        '200':
+          description: filters by organization guids
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  pagination:
+                    type: object
+                    properties:
+                      total_results:
+                        type: integer
+                      total_pages:
+                        type: integer
+                      first:
+                        type: object
+                        properties:
+                          href:
+                            type: string
+                        required:
+                        - href
+                      last:
+                        type: object
+                        properties:
+                          href:
+                            type: string
+                        required:
+                        - href
+                      next:
+                        nullable: true
+                        type: object
+                        properties:
+                          href:
+                            type: string
+                        required:
+                        - href
+                      previous:
+                        nullable: true
+                        type: object
+                        properties:
+                          href:
+                            type: string
+                        required:
+                        - href
+                    required:
+                    - total_results
+                    - total_pages
+                    - first
+                    - last
+                    - next
+                    - previous
+                  resources:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        guid:
+                          type: string
+                        created_at:
+                          type: string
+                        updated_at:
+                          type: string
+                        name:
+                          type: string
+                        metadata:
+                          type: object
+                          properties:
+                            labels:
+                              type: object
+                              properties:
+                                animal:
+                                  type: string
+                                env:
+                                  type: string
+                            annotations:
+                              type: object
+                              properties: {}
+                          required:
+                          - labels
+                          - annotations
+                        links:
+                          type: object
+                          properties:
+                            self:
+                              type: object
+                              properties:
+                                href:
+                                  type: string
+                              required:
+                              - href
+                            organizations:
+                              type: object
+                              properties:
+                                href:
+                                  type: string
+                              required:
+                              - href
+                          required:
+                          - self
+                          - organizations
+                      required:
+                      - guid
+                      - created_at
+                      - updated_at
+                      - name
+                      - metadata
+                      - links
+                required:
+                - pagination
+                - resources
+              example:
+                pagination:
+                  total_results: 2
+                  total_pages: 1
+                  first:
+                    href: http://api2.vcap.me/v3/isolation_segments?organization_guids=e30ddee3-cdf1-4137-a0c9-fc4710c0c85f%2C9bbcda8c-b0f3-4413-8ad5-853920a3eb42&page=1&per_page=50
+                  last:
+                    href: http://api2.vcap.me/v3/isolation_segments?organization_guids=e30ddee3-cdf1-4137-a0c9-fc4710c0c85f%2C9bbcda8c-b0f3-4413-8ad5-853920a3eb42&page=1&per_page=50
+                  next:
+                  previous:
+                resources:
+                - guid: b9003559-8bda-495a-ab67-182a83a4dcf5
+                  created_at: '2026-03-31T23:35:07Z'
+                  updated_at: '2026-03-31T23:35:07Z'
+                  name: segment2
+                  metadata:
+                    labels: {}
+                    annotations: {}
+                  links:
+                    self:
+                      href: http://api2.vcap.me/v3/isolation_segments/b9003559-8bda-495a-ab67-182a83a4dcf5
+                    organizations:
+                      href: http://api2.vcap.me/v3/isolation_segments/b9003559-8bda-495a-ab67-182a83a4dcf5/organizations
+                - guid: be1aa257-1f17-492e-a95a-d17f74a8583a
+                  created_at: '2026-03-31T23:35:07Z'
+                  updated_at: '2026-03-31T23:35:07Z'
+                  name: segment3
+                  metadata:
+                    labels: {}
+                    annotations: {}
+                  links:
+                    self:
+                      href: http://api2.vcap.me/v3/isolation_segments/be1aa257-1f17-492e-a95a-d17f74a8583a
+                    organizations:
+                      href: http://api2.vcap.me/v3/isolation_segments/be1aa257-1f17-492e-a95a-d17f74a8583a/organizations
+      parameters:
+      - name: guids
+        in: query
+        required: false
+        schema:
+          type: string
+        example: 4b6ce4df-7fe0-4831-adff-205f3f1391a7,b199d5fb-a6b1-4dfc-874c-bc0ace33f576
+      - name: label_selector
+        in: query
+        required: false
+        schema:
+          type: string
+        example: "!fruit,env=prod,animal in (dog,horse)"
+      - name: names
+        in: query
+        required: false
+        schema:
+          type: string
+        example: segment3,segment5
+      - name: organization_guids
+        in: query
+        required: false
+        schema:
+          type: string
+        example: e30ddee3-cdf1-4137-a0c9-fc4710c0c85f,9bbcda8c-b0f3-4413-8ad5-853920a3eb42
+      - name: page
+        in: query
+        required: false
+        schema:
+          type: integer
+        example: 2
+      - name: per_page
+        in: query
+        required: false
+        schema:
+          type: integer
+        example: 2
+    post:
+      summary: create
+      tags:
+      - IsolationSegment
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+                metadata:
+                  type: object
+                  properties:
+                    labels:
+                      type: object
+                      properties:
+                        release:
+                          type: string
+                      required:
+                      - release
+                    annotations:
+                      type: object
+                      properties:
+                        note:
+                          type: string
+                      required:
+                      - note
+                  required:
+                  - labels
+                  - annotations
+              required:
+              - name
+              - metadata
+            example:
+              name: my_segment
+              metadata:
+                labels:
+                  release: stable
+                annotations:
+                  note: this info
+      responses:
+        '201':
+          description: creates an isolation segment
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  guid:
+                    type: string
+                  created_at:
+                    type: string
+                  updated_at:
+                    type: string
+                  name:
+                    type: string
+                  metadata:
+                    type: object
+                    properties:
+                      labels:
+                        type: object
+                        properties:
+                          release:
+                            type: string
+                        required:
+                        - release
+                      annotations:
+                        type: object
+                        properties:
+                          note:
+                            type: string
+                        required:
+                        - note
+                    required:
+                    - labels
+                    - annotations
+                  links:
+                    type: object
+                    properties:
+                      self:
+                        type: object
+                        properties:
+                          href:
+                            type: string
+                        required:
+                        - href
+                      organizations:
+                        type: object
+                        properties:
+                          href:
+                            type: string
+                        required:
+                        - href
+                    required:
+                    - self
+                    - organizations
+                required:
+                - guid
+                - created_at
+                - updated_at
+                - name
+                - metadata
+                - links
+              example:
+                guid: a49a946a-4363-43de-af42-d0662a6aeec2
+                created_at: '2026-03-31T23:35:06Z'
+                updated_at: '2026-03-31T23:35:06Z'
+                name: my_segment
+                metadata:
+                  labels:
+                    release: stable
+                  annotations:
+                    note: this info
+                links:
+                  self:
+                    href: http://api2.vcap.me/v3/isolation_segments/a49a946a-4363-43de-af42-d0662a6aeec2
+                  organizations:
+                    href: http://api2.vcap.me/v3/isolation_segments/a49a946a-4363-43de-af42-d0662a6aeec2/organizations
+  "/v3/isolation_segments/{guid}":
+    delete:
+      summary: destroy
+      tags:
+      - IsolationSegment
+      parameters:
+      - name: guid
+        in: path
+        required: true
+        schema:
+          type: string
+        example: da4c8025-519d-42c4-8bf4-b7f12eb26a8f
+      responses:
+        '204':
+          description: deletes the specified isolation segment
+    patch:
+      summary: update
+      tags:
+      - IsolationSegment
+      parameters:
+      - name: guid
+        in: path
+        required: true
+        schema:
+          type: string
+        example: 64daa678-5e1d-4d49-8bab-1522335cb29f
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+                metadata:
+                  type: object
+                  properties:
+                    labels:
+                      type: object
+                      properties:
+                        one:
+                          type: string
+                      required:
+                      - one
+                    annotations:
+                      type: object
+                      properties:
+                        three:
+                          type: string
+                      required:
+                      - three
+                  required:
+                  - labels
+                  - annotations
+              required:
+              - name
+              - metadata
+            example:
+              name: your_segment
+              metadata:
+                labels:
+                  one: two
+                annotations:
+                  three: four
+      responses:
+        '200':
+          description: updates the specified isolation segment
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  guid:
+                    type: string
+                  created_at:
+                    type: string
+                  updated_at:
+                    type: string
+                  name:
+                    type: string
+                  metadata:
+                    type: object
+                    properties:
+                      labels:
+                        type: object
+                        properties:
+                          one:
+                            type: string
+                        required:
+                        - one
+                      annotations:
+                        type: object
+                        properties:
+                          three:
+                            type: string
+                        required:
+                        - three
+                    required:
+                    - labels
+                    - annotations
+                  links:
+                    type: object
+                    properties:
+                      self:
+                        type: object
+                        properties:
+                          href:
+                            type: string
+                        required:
+                        - href
+                      organizations:
+                        type: object
+                        properties:
+                          href:
+                            type: string
+                        required:
+                        - href
+                    required:
+                    - self
+                    - organizations
+                required:
+                - guid
+                - created_at
+                - updated_at
+                - name
+                - metadata
+                - links
+              example:
+                guid: 64daa678-5e1d-4d49-8bab-1522335cb29f
+                created_at: '2026-03-31T23:35:07Z'
+                updated_at: '2026-03-31T23:35:07Z'
+                name: your_segment
+                metadata:
+                  labels:
+                    one: two
+                  annotations:
+                    three: four
+                links:
+                  self:
+                    href: http://api2.vcap.me/v3/isolation_segments/64daa678-5e1d-4d49-8bab-1522335cb29f
+                  organizations:
+                    href: http://api2.vcap.me/v3/isolation_segments/64daa678-5e1d-4d49-8bab-1522335cb29f/organizations
+  "/v3/isolation_segments/{guid}/relationships/organizations":
+    get:
+      summary: relationships_orgs
+      tags:
+      - IsolationSegment
+      parameters:
+      - name: guid
+        in: path
+        required: true
+        schema:
+          type: string
+        example: 87149483-2417-4b16-939f-fb882313e862
+      responses:
+        '200':
+          description: returns the organization guids assigned
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        guid:
+                          type: string
+                      required:
+                      - guid
+                  links:
+                    type: object
+                    properties:
+                      self:
+                        type: object
+                        properties:
+                          href:
+                            type: string
+                        required:
+                        - href
+                      related:
+                        type: object
+                        properties:
+                          href:
+                            type: string
+                        required:
+                        - href
+                    required:
+                    - self
+                    - related
+                required:
+                - data
+                - links
+              example:
+                data:
+                - guid: fa4a5e5d-1614-4daf-a819-6f86f6a06d59
+                - guid: 891b937d-c9ef-454b-8a11-6695a247af4d
+                links:
+                  self:
+                    href: http://api2.vcap.me/v3/isolation_segments/87149483-2417-4b16-939f-fb882313e862/relationships/organizations
+                  related:
+                    href: http://api2.vcap.me/v3/isolation_segments/87149483-2417-4b16-939f-fb882313e862/organizations
+    post:
+      summary: assign_allowed_organizations
+      tags:
+      - IsolationSegment
+      parameters:
+      - name: guid
+        in: path
+        required: true
+        schema:
+          type: string
+        example: 3a4c6cdb-424f-4859-8c82-5cc97adde334
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                data:
+                  type: array
+                  items:
+                    type: object
+                    properties:
+                      guid:
+                        type: string
+                    required:
+                    - guid
+              required:
+              - data
+            example:
+              data:
+              - guid: 309c488d-4471-44a6-afd3-9617fca20389
+      responses:
+        '200':
+          description: assigns the isolation segment to the organization
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        guid:
+                          type: string
+                      required:
+                      - guid
+                  links:
+                    type: object
+                    properties:
+                      self:
+                        type: object
+                        properties:
+                          href:
+                            type: string
+                        required:
+                        - href
+                      related:
+                        type: object
+                        properties:
+                          href:
+                            type: string
+                        required:
+                        - href
+                    required:
+                    - self
+                    - related
+                required:
+                - data
+                - links
+              example:
+                data:
+                - guid: 309c488d-4471-44a6-afd3-9617fca20389
+                links:
+                  self:
+                    href: http://api2.vcap.me/v3/isolation_segments/3a4c6cdb-424f-4859-8c82-5cc97adde334/relationships/organizations
+                  related:
+                    href: http://api2.vcap.me/v3/isolation_segments/3a4c6cdb-424f-4859-8c82-5cc97adde334/organizations
+  "/v3/isolation_segments/{guid}/relationships/organizations/{org_guid}":
+    delete:
+      summary: unassign_allowed_organization
+      tags:
+      - IsolationSegment
+      parameters:
+      - name: guid
+        in: path
+        required: true
+        schema:
+          type: string
+        example: 59662999-dd4f-46e7-9374-08501c17e3e7
+      - name: org_guid
+        in: path
+        required: true
+        schema:
+          type: string
+        example: 7f3e2598-e3f4-4e81-ad90-34d903b07201
+      responses:
+        '204':
+          description: removes the organization from the isolation segment
+  "/v3/isolation_segments/{guid}/relationships/spaces":
+    get:
+      summary: relationships_spaces
+      tags:
+      - IsolationSegment
+      parameters:
+      - name: guid
+        in: path
+        required: true
+        schema:
+          type: string
+        example: 85077be8-2250-4f4c-b843-aabfff6e3f23
+      responses:
+        '200':
+          description: returns the guids of the associated spaces
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        guid:
+                          type: string
+                      required:
+                      - guid
+                  links:
+                    type: object
+                    properties:
+                      self:
+                        type: object
+                        properties:
+                          href:
+                            type: string
+                        required:
+                        - href
+                    required:
+                    - self
+                required:
+                - data
+                - links
+              example:
+                data:
+                - guid: fd82681b-b0ac-4490-9f12-e626b3681ead
+                - guid: 6d4bf4f7-6d71-4e17-a6c9-c4aebac8442d
+                links:
+                  self:
+                    href: http://api2.vcap.me/v3/isolation_segments/85077be8-2250-4f4c-b843-aabfff6e3f23/relationships/spaces

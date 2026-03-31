@@ -1,0 +1,21 @@
+---
+openapi: 3.0.3
+info:
+  title: Cloud Controller V3 API
+  version: v3
+servers: []
+paths:
+  "/v3/spaces":
+    get:
+      summary: index
+      tags:
+      - SpacesV3
+      responses:
+        '429':
+          description: uses the general limit
+          content:
+            text/plain:
+              schema:
+                type: string
+              example: '{"errors":[{"detail":"Rate Limit Exceeded","title":"CF-RateLimitExceeded","code":10013,"test_mode_info":{"detail":"Rate
+                Limit Exceeded","title":"CF-RateLimitExceeded","backtrace":null}}]}'

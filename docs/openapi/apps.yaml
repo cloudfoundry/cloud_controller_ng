@@ -1,0 +1,4189 @@
+---
+openapi: 3.0.3
+info:
+  title: Cloud Controller V3 API
+  version: v3
+servers: []
+paths:
+  "/v3/apps":
+    get:
+      summary: index
+      tags:
+      - AppsV3
+      parameters:
+      - name: created_ats[lt]
+        in: query
+        required: false
+        schema:
+          type: string
+        example: '2020-05-26T18:47:03Z'
+      - name: guids
+        in: query
+        required: false
+        schema:
+          type: string
+        example: 8ef63612-1e4a-41f0-ab80-34d98c795e3d,c78f379b-215b-4d70-8571-ec07190ebadd
+      - name: include
+        in: query
+        required: false
+        schema:
+          type: string
+        example: space
+      - name: label_selector
+        in: query
+        required: false
+        schema:
+          type: string
+        example: foo in (bar)
+      - name: lifecycle_type
+        in: query
+        required: false
+        schema:
+          type: string
+        example: buildpack
+      - name: names
+        in: query
+        required: false
+        schema:
+          type: string
+        example: name1,name2
+      - name: order_by
+        in: query
+        required: false
+        schema:
+          type: string
+        example: "-state"
+      - name: organization_guids
+        in: query
+        required: false
+        schema:
+          type: string
+        example: 88c63a9a-ceb0-45a5-baf5-02429c979cc4,f3575d8c-7e1a-4b0b-bcac-0e8b362d3f30
+      - name: per_page
+        in: query
+        required: false
+        schema:
+          type: integer
+        example: 2
+      - name: space_guids
+        in: query
+        required: false
+        schema:
+          type: string
+        example: b6820c76-1ed4-4eb0-b2ce-cff69ca4122e,aaf4e442-0501-4716-ba83-c1a9904d8165
+      - name: stacks
+        in: query
+        required: false
+        schema:
+          type: string
+        example: ''
+      - name: updated_ats[lt]
+        in: query
+        required: false
+        schema:
+          type: string
+        example: '2020-05-26T18:47:03Z'
+      responses:
+        '200':
+          description: filters by lifecycle_type
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  pagination:
+                    type: object
+                    properties:
+                      total_results:
+                        type: integer
+                      total_pages:
+                        type: integer
+                      first:
+                        type: object
+                        properties:
+                          href:
+                            type: string
+                        required:
+                        - href
+                      last:
+                        type: object
+                        properties:
+                          href:
+                            type: string
+                        required:
+                        - href
+                      next:
+                        nullable: true
+                        type: object
+                        properties:
+                          href:
+                            type: string
+                        required:
+                        - href
+                      previous:
+                        nullable: true
+                    required:
+                    - total_results
+                    - total_pages
+                    - first
+                    - last
+                    - next
+                    - previous
+                  resources:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        guid:
+                          type: string
+                        created_at:
+                          type: string
+                        updated_at:
+                          type: string
+                        name:
+                          type: string
+                        state:
+                          type: string
+                        lifecycle:
+                          type: object
+                          properties:
+                            type:
+                              type: string
+                            data:
+                              type: object
+                              properties:
+                                buildpacks:
+                                  type: array
+                                  items:
+                                    type: string
+                                  nullable: true
+                                stack:
+                                  type: string
+                                  nullable: true
+                          required:
+                          - type
+                          - data
+                        relationships:
+                          type: object
+                          properties:
+                            space:
+                              type: object
+                              properties:
+                                data:
+                                  type: object
+                                  properties:
+                                    guid:
+                                      type: string
+                                  required:
+                                  - guid
+                              required:
+                              - data
+                            current_droplet:
+                              type: object
+                              properties:
+                                data:
+                                  type: object
+                                  properties:
+                                    guid:
+                                      nullable: true
+                                  required:
+                                  - guid
+                              required:
+                              - data
+                          required:
+                          - space
+                          - current_droplet
+                        metadata:
+                          type: object
+                          properties:
+                            labels:
+                              type: object
+                              properties:
+                                foo:
+                                  type: string
+                                fruit:
+                                  type: string
+                                santa:
+                                  type: string
+                            annotations:
+                              type: object
+                              properties: {}
+                          required:
+                          - labels
+                          - annotations
+                        links:
+                          type: object
+                          properties:
+                            self:
+                              type: object
+                              properties:
+                                href:
+                                  type: string
+                              required:
+                              - href
+                            environment_variables:
+                              type: object
+                              properties:
+                                href:
+                                  type: string
+                              required:
+                              - href
+                            space:
+                              type: object
+                              properties:
+                                href:
+                                  type: string
+                              required:
+                              - href
+                            processes:
+                              type: object
+                              properties:
+                                href:
+                                  type: string
+                              required:
+                              - href
+                            packages:
+                              type: object
+                              properties:
+                                href:
+                                  type: string
+                              required:
+                              - href
+                            current_droplet:
+                              type: object
+                              properties:
+                                href:
+                                  type: string
+                              required:
+                              - href
+                            droplets:
+                              type: object
+                              properties:
+                                href:
+                                  type: string
+                              required:
+                              - href
+                            tasks:
+                              type: object
+                              properties:
+                                href:
+                                  type: string
+                              required:
+                              - href
+                            start:
+                              type: object
+                              properties:
+                                href:
+                                  type: string
+                                method:
+                                  type: string
+                              required:
+                              - href
+                              - method
+                            stop:
+                              type: object
+                              properties:
+                                href:
+                                  type: string
+                                method:
+                                  type: string
+                              required:
+                              - href
+                              - method
+                            clear_buildpack_cache:
+                              type: object
+                              properties:
+                                href:
+                                  type: string
+                                method:
+                                  type: string
+                              required:
+                              - href
+                              - method
+                            revisions:
+                              type: object
+                              properties:
+                                href:
+                                  type: string
+                              required:
+                              - href
+                            deployed_revisions:
+                              type: object
+                              properties:
+                                href:
+                                  type: string
+                              required:
+                              - href
+                            features:
+                              type: object
+                              properties:
+                                href:
+                                  type: string
+                              required:
+                              - href
+                          required:
+                          - self
+                          - environment_variables
+                          - space
+                          - processes
+                          - packages
+                          - current_droplet
+                          - droplets
+                          - tasks
+                          - start
+                          - stop
+                          - clear_buildpack_cache
+                          - revisions
+                          - deployed_revisions
+                          - features
+                      required:
+                      - guid
+                      - created_at
+                      - updated_at
+                      - name
+                      - state
+                      - lifecycle
+                      - relationships
+                      - metadata
+                      - links
+                  included:
+                    type: object
+                    properties:
+                      spaces:
+                        type: array
+                        items:
+                          type: object
+                          properties:
+                            guid:
+                              type: string
+                            created_at:
+                              type: string
+                            updated_at:
+                              type: string
+                            name:
+                              type: string
+                            relationships:
+                              type: object
+                              properties:
+                                organization:
+                                  type: object
+                                  properties:
+                                    data:
+                                      type: object
+                                      properties:
+                                        guid:
+                                          type: string
+                                      required:
+                                      - guid
+                                  required:
+                                  - data
+                                quota:
+                                  type: object
+                                  properties:
+                                    data:
+                                      nullable: true
+                                  required:
+                                  - data
+                              required:
+                              - organization
+                              - quota
+                            metadata:
+                              type: object
+                              properties:
+                                labels:
+                                  type: object
+                                  properties: {}
+                                annotations:
+                                  type: object
+                                  properties: {}
+                              required:
+                              - labels
+                              - annotations
+                            links:
+                              type: object
+                              properties:
+                                self:
+                                  type: object
+                                  properties:
+                                    href:
+                                      type: string
+                                  required:
+                                  - href
+                                organization:
+                                  type: object
+                                  properties:
+                                    href:
+                                      type: string
+                                  required:
+                                  - href
+                                features:
+                                  type: object
+                                  properties:
+                                    href:
+                                      type: string
+                                  required:
+                                  - href
+                                apply_manifest:
+                                  type: object
+                                  properties:
+                                    href:
+                                      type: string
+                                    method:
+                                      type: string
+                                  required:
+                                  - href
+                                  - method
+                              required:
+                              - self
+                              - organization
+                              - features
+                              - apply_manifest
+                          required:
+                          - guid
+                          - created_at
+                          - updated_at
+                          - name
+                          - relationships
+                          - metadata
+                          - links
+                      organizations:
+                        type: array
+                        items:
+                          type: object
+                          properties:
+                            guid:
+                              type: string
+                            created_at:
+                              type: string
+                            updated_at:
+                              type: string
+                            name:
+                              type: string
+                            suspended:
+                              type: boolean
+                            relationships:
+                              type: object
+                              properties:
+                                quota:
+                                  type: object
+                                  properties:
+                                    data:
+                                      type: object
+                                      properties:
+                                        guid:
+                                          type: string
+                                      required:
+                                      - guid
+                                  required:
+                                  - data
+                              required:
+                              - quota
+                            metadata:
+                              type: object
+                              properties:
+                                labels:
+                                  type: object
+                                  properties: {}
+                                annotations:
+                                  type: object
+                                  properties: {}
+                              required:
+                              - labels
+                              - annotations
+                            links:
+                              type: object
+                              properties:
+                                self:
+                                  type: object
+                                  properties:
+                                    href:
+                                      type: string
+                                  required:
+                                  - href
+                                domains:
+                                  type: object
+                                  properties:
+                                    href:
+                                      type: string
+                                  required:
+                                  - href
+                                default_domain:
+                                  type: object
+                                  properties:
+                                    href:
+                                      type: string
+                                  required:
+                                  - href
+                                quota:
+                                  type: object
+                                  properties:
+                                    href:
+                                      type: string
+                                  required:
+                                  - href
+                              required:
+                              - self
+                              - domains
+                              - default_domain
+                              - quota
+                          required:
+                          - guid
+                          - created_at
+                          - updated_at
+                          - name
+                          - suspended
+                          - relationships
+                          - metadata
+                          - links
+                    required:
+                    - spaces
+                required:
+                - pagination
+                - resources
+                items:
+                  type: object
+                  properties: {}
+              example:
+                pagination:
+                  total_results: 2
+                  total_pages: 1
+                  first:
+                    href: http://api2.vcap.me/v3/apps?lifecycle_type=buildpack&page=1&per_page=50
+                  last:
+                    href: http://api2.vcap.me/v3/apps?lifecycle_type=buildpack&page=1&per_page=50
+                  next:
+                  previous:
+                resources:
+                - guid: 1d029c85-a0e7-4644-9738-3efec8c4b0b2
+                  created_at: '2026-03-31T23:34:12Z'
+                  updated_at: '2026-03-31T23:34:12Z'
+                  name: name1
+                  state: STOPPED
+                  lifecycle:
+                    type: buildpack
+                    data:
+                      buildpacks: []
+                      stack: name-20833
+                  relationships:
+                    space:
+                      data:
+                        guid: c81b4d9d-229f-441f-b0d5-4e471a1d79f9
+                    current_droplet:
+                      data:
+                        guid:
+                  metadata:
+                    labels: {}
+                    annotations: {}
+                  links:
+                    self:
+                      href: http://api2.vcap.me/v3/apps/1d029c85-a0e7-4644-9738-3efec8c4b0b2
+                    environment_variables:
+                      href: http://api2.vcap.me/v3/apps/1d029c85-a0e7-4644-9738-3efec8c4b0b2/environment_variables
+                    space:
+                      href: http://api2.vcap.me/v3/spaces/c81b4d9d-229f-441f-b0d5-4e471a1d79f9
+                    processes:
+                      href: http://api2.vcap.me/v3/apps/1d029c85-a0e7-4644-9738-3efec8c4b0b2/processes
+                    packages:
+                      href: http://api2.vcap.me/v3/apps/1d029c85-a0e7-4644-9738-3efec8c4b0b2/packages
+                    current_droplet:
+                      href: http://api2.vcap.me/v3/apps/1d029c85-a0e7-4644-9738-3efec8c4b0b2/droplets/current
+                    droplets:
+                      href: http://api2.vcap.me/v3/apps/1d029c85-a0e7-4644-9738-3efec8c4b0b2/droplets
+                    tasks:
+                      href: http://api2.vcap.me/v3/apps/1d029c85-a0e7-4644-9738-3efec8c4b0b2/tasks
+                    start:
+                      href: http://api2.vcap.me/v3/apps/1d029c85-a0e7-4644-9738-3efec8c4b0b2/actions/start
+                      method: POST
+                    stop:
+                      href: http://api2.vcap.me/v3/apps/1d029c85-a0e7-4644-9738-3efec8c4b0b2/actions/stop
+                      method: POST
+                    clear_buildpack_cache:
+                      href: http://api2.vcap.me/v3/apps/1d029c85-a0e7-4644-9738-3efec8c4b0b2/actions/clear_buildpack_cache
+                      method: POST
+                    revisions:
+                      href: http://api2.vcap.me/v3/apps/1d029c85-a0e7-4644-9738-3efec8c4b0b2/revisions
+                    deployed_revisions:
+                      href: http://api2.vcap.me/v3/apps/1d029c85-a0e7-4644-9738-3efec8c4b0b2/revisions/deployed
+                    features:
+                      href: http://api2.vcap.me/v3/apps/1d029c85-a0e7-4644-9738-3efec8c4b0b2/features
+                - guid: 2eb07774-7b7c-45c2-b0e1-9e8fc7ec4415
+                  created_at: '2026-03-31T23:34:12Z'
+                  updated_at: '2026-03-31T23:34:12Z'
+                  name: name3
+                  state: STOPPED
+                  lifecycle:
+                    type: buildpack
+                    data:
+                      buildpacks: []
+                      stack: name-20841
+                  relationships:
+                    space:
+                      data:
+                        guid: a79d40fd-7adc-4055-8428-4c2589c21f4c
+                    current_droplet:
+                      data:
+                        guid:
+                  metadata:
+                    labels: {}
+                    annotations: {}
+                  links:
+                    self:
+                      href: http://api2.vcap.me/v3/apps/2eb07774-7b7c-45c2-b0e1-9e8fc7ec4415
+                    environment_variables:
+                      href: http://api2.vcap.me/v3/apps/2eb07774-7b7c-45c2-b0e1-9e8fc7ec4415/environment_variables
+                    space:
+                      href: http://api2.vcap.me/v3/spaces/a79d40fd-7adc-4055-8428-4c2589c21f4c
+                    processes:
+                      href: http://api2.vcap.me/v3/apps/2eb07774-7b7c-45c2-b0e1-9e8fc7ec4415/processes
+                    packages:
+                      href: http://api2.vcap.me/v3/apps/2eb07774-7b7c-45c2-b0e1-9e8fc7ec4415/packages
+                    current_droplet:
+                      href: http://api2.vcap.me/v3/apps/2eb07774-7b7c-45c2-b0e1-9e8fc7ec4415/droplets/current
+                    droplets:
+                      href: http://api2.vcap.me/v3/apps/2eb07774-7b7c-45c2-b0e1-9e8fc7ec4415/droplets
+                    tasks:
+                      href: http://api2.vcap.me/v3/apps/2eb07774-7b7c-45c2-b0e1-9e8fc7ec4415/tasks
+                    start:
+                      href: http://api2.vcap.me/v3/apps/2eb07774-7b7c-45c2-b0e1-9e8fc7ec4415/actions/start
+                      method: POST
+                    stop:
+                      href: http://api2.vcap.me/v3/apps/2eb07774-7b7c-45c2-b0e1-9e8fc7ec4415/actions/stop
+                      method: POST
+                    clear_buildpack_cache:
+                      href: http://api2.vcap.me/v3/apps/2eb07774-7b7c-45c2-b0e1-9e8fc7ec4415/actions/clear_buildpack_cache
+                      method: POST
+                    revisions:
+                      href: http://api2.vcap.me/v3/apps/2eb07774-7b7c-45c2-b0e1-9e8fc7ec4415/revisions
+                    deployed_revisions:
+                      href: http://api2.vcap.me/v3/apps/2eb07774-7b7c-45c2-b0e1-9e8fc7ec4415/revisions/deployed
+                    features:
+                      href: http://api2.vcap.me/v3/apps/2eb07774-7b7c-45c2-b0e1-9e8fc7ec4415/features
+                included:
+                  spaces:
+                  - guid: 7228d153-b29e-4e7d-a7dd-4af02a1a7079
+                    created_at: '2026-03-31T23:34:12Z'
+                    updated_at: '2026-03-31T23:34:12Z'
+                    name: name-20708
+                    relationships:
+                      organization:
+                        data:
+                          guid: bd004998-b4b6-41ad-9771-a6d24de3dcdf
+                      quota:
+                        data:
+                    metadata:
+                      labels: {}
+                      annotations: {}
+                    links:
+                      self:
+                        href: http://api2.vcap.me/v3/spaces/7228d153-b29e-4e7d-a7dd-4af02a1a7079
+                      organization:
+                        href: http://api2.vcap.me/v3/organizations/bd004998-b4b6-41ad-9771-a6d24de3dcdf
+                      features:
+                        href: http://api2.vcap.me/v3/spaces/7228d153-b29e-4e7d-a7dd-4af02a1a7079/features
+                      apply_manifest:
+                        href: http://api2.vcap.me/v3/spaces/7228d153-b29e-4e7d-a7dd-4af02a1a7079/actions/apply_manifest
+                        method: POST
+        '400':
+          description: flags unsupported includes that contain supported ones
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  errors:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        detail:
+                          type: string
+                        title:
+                          type: string
+                        code:
+                          type: integer
+                        test_mode_info:
+                          type: object
+                          properties:
+                            detail:
+                              type: string
+                            title:
+                              type: string
+                            backtrace:
+                              type: array
+                              items:
+                                type: string
+                          required:
+                          - detail
+                          - title
+                          - backtrace
+                      required:
+                      - detail
+                      - title
+                      - code
+                      - test_mode_info
+                required:
+                - errors
+              example:
+                errors:
+                - detail: 'The query parameter is invalid: Invalid included resource:
+                    ''spaceship''. Valid included resources are: ''space'', ''org'',
+                    ''space.organization'', Invalid included resource: ''borgs''.
+                    Valid included resources are: ''space'', ''org'', ''space.organization'''
+                  title: CF-BadQueryParameter
+                  code: 10005
+                  test_mode_info:
+                    detail: 'The query parameter is invalid: Invalid included resource:
+                      ''spaceship''. Valid included resources are: ''space'', ''org'',
+                      ''space.organization'', Invalid included resource: ''borgs''.
+                      Valid included resources are: ''space'', ''org'', ''space.organization'''
+                    title: CF-BadQueryParameter
+                    backtrace:
+                    - "/Users/sethboyles/workspace/capi-release/src/cloud_controller_ng/app/controllers/v3/application_controller.rb:10:in
+                      `invalid_param!'"
+                    - "/Users/sethboyles/workspace/capi-release/src/cloud_controller_ng/app/controllers/v3/apps_controller.rb:38:in
+                      `index'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/actionpack-8.1.3/lib/action_controller/metal/basic_implicit_render.rb:8:in
+                      `send_action'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/actionpack-8.1.3/lib/abstract_controller/base.rb:221:in
+                      `process_action'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/actionpack-8.1.3/lib/action_controller/metal/rendering.rb:199:in
+                      `process_action'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/actionpack-8.1.3/lib/abstract_controller/callbacks.rb:267:in
+                      `block in process_action'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/activesupport-8.1.3/lib/active_support/callbacks.rb:110:in
+                      `run_callbacks'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/actionpack-8.1.3/lib/abstract_controller/callbacks.rb:266:in
+                      `process_action'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/actionpack-8.1.3/lib/action_controller/metal/rescue.rb:36:in
+                      `process_action'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/actionpack-8.1.3/lib/action_controller/metal/instrumentation.rb:76:in
+                      `block in process_action'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/activesupport-8.1.3/lib/active_support/notifications.rb:210:in
+                      `block in instrument'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/activesupport-8.1.3/lib/active_support/notifications/instrumenter.rb:58:in
+                      `instrument'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/activesupport-8.1.3/lib/active_support/notifications.rb:210:in
+                      `instrument'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/actionpack-8.1.3/lib/action_controller/metal/instrumentation.rb:75:in
+                      `process_action'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/actionpack-8.1.3/lib/action_controller/metal/params_wrapper.rb:259:in
+                      `process_action'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/actionpack-8.1.3/lib/abstract_controller/base.rb:154:in
+                      `process'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/actionview-8.1.3/lib/action_view/rendering.rb:40:in
+                      `process'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/actionpack-8.1.3/lib/action_controller/metal.rb:252:in
+                      `dispatch'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/actionpack-8.1.3/lib/action_controller/metal.rb:335:in
+                      `dispatch'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/actionpack-8.1.3/lib/action_dispatch/routing/route_set.rb:65:in
+                      `dispatch'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/actionpack-8.1.3/lib/action_dispatch/routing/route_set.rb:50:in
+                      `serve'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/actionpack-8.1.3/lib/action_dispatch/journey/router.rb:35:in
+                      `block in serve'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/actionpack-8.1.3/lib/action_dispatch/journey/router.rb:86:in
+                      `block in recognize'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/actionpack-8.1.3/lib/action_dispatch/journey/router.rb:66:in
+                      `each'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/actionpack-8.1.3/lib/action_dispatch/journey/router.rb:66:in
+                      `recognize'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/actionpack-8.1.3/lib/action_dispatch/journey/router.rb:31:in
+                      `serve'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/actionpack-8.1.3/lib/action_dispatch/routing/route_set.rb:906:in
+                      `call'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/rack-3.2.5/lib/rack/tempfile_reaper.rb:20:in
+                      `call'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/actionpack-8.1.3/lib/action_dispatch/http/content_security_policy.rb:38:in
+                      `call'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/actionpack-8.1.3/lib/action_dispatch/middleware/callbacks.rb:31:in
+                      `block in call'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/activesupport-8.1.3/lib/active_support/callbacks.rb:101:in
+                      `run_callbacks'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/actionpack-8.1.3/lib/action_dispatch/middleware/callbacks.rb:30:in
+                      `call'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/actionpack-8.1.3/lib/action_dispatch/middleware/executor.rb:20:in
+                      `call'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/actionpack-8.1.3/lib/action_dispatch/middleware/actionable_exceptions.rb:18:in
+                      `call'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/actionpack-8.1.3/lib/action_dispatch/middleware/debug_exceptions.rb:31:in
+                      `call'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/actionpack-8.1.3/lib/action_dispatch/middleware/show_exceptions.rb:32:in
+                      `call'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/actionpack-8.1.3/lib/action_dispatch/middleware/remote_ip.rb:98:in
+                      `call'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/rack-3.2.5/lib/rack/runtime.rb:24:in
+                      `call'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/actionpack-8.1.3/lib/action_dispatch/middleware/executor.rb:20:in
+                      `call'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/rack-3.2.5/lib/rack/sendfile.rb:131:in
+                      `call'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/rack-3.2.5/lib/rack/urlmap.rb:76:in
+                      `block in call'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/rack-3.2.5/lib/rack/urlmap.rb:60:in
+                      `each'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/rack-3.2.5/lib/rack/urlmap.rb:60:in
+                      `call'"
+                    - "/Users/sethboyles/workspace/capi-release/src/cloud_controller_ng/middleware/request_logs.rb:14:in
+                      `call'"
+                    - "/Users/sethboyles/workspace/capi-release/src/cloud_controller_ng/middleware/zipkin.rb:32:in
+                      `call_app'"
+                    - "/Users/sethboyles/workspace/capi-release/src/cloud_controller_ng/middleware/zipkin.rb:9:in
+                      `call'"
+                    - "/Users/sethboyles/workspace/capi-release/src/cloud_controller_ng/middleware/security_context_setter.rb:41:in
+                      `call'"
+                    - "/Users/sethboyles/workspace/capi-release/src/cloud_controller_ng/middleware/vcap_request_context_setter.rb:17:in
+                      `call'"
+                    - "/Users/sethboyles/workspace/capi-release/src/cloud_controller_ng/middleware/cors.rb:50:in
+                      `call_app'"
+                    - "/Users/sethboyles/workspace/capi-release/src/cloud_controller_ng/middleware/cors.rb:14:in
+                      `call'"
+                    - "/Users/sethboyles/workspace/capi-release/src/cloud_controller_ng/middleware/request_metrics.rb:13:in
+                      `call'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/rack-3.2.5/lib/rack/builder.rb:283:in
+                      `call'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/rack-test-2.2.0/lib/rack/test.rb:360:in
+                      `process_request'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/rack-test-2.2.0/lib/rack/test.rb:163:in
+                      `custom_request'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/rack-test-2.2.0/lib/rack/test.rb:112:in
+                      `get'"
+                    - "/Users/sethboyles/.rubies/ruby-3.3.7/lib/ruby/3.3.0/forwardable.rb:240:in
+                      `get'"
+                    - "/Users/sethboyles/workspace/capi-release/src/cloud_controller_ng/spec/request/apps_spec.rb:1358:in
+                      `block (4 levels) in <main>'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/rspec-core-3.13.6/lib/rspec/core/example.rb:263:in
+                      `instance_exec'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/rspec-core-3.13.6/lib/rspec/core/example.rb:263:in
+                      `block in run'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/rspec-core-3.13.6/lib/rspec/core/example.rb:511:in
+                      `block in with_around_and_singleton_context_hooks'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/rspec-core-3.13.6/lib/rspec/core/example.rb:468:in
+                      `block in with_around_example_hooks'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/rspec-core-3.13.6/lib/rspec/core/hooks.rb:486:in
+                      `block in run'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/rspec-core-3.13.6/lib/rspec/core/hooks.rb:626:in
+                      `block in run_around_example_hooks_for'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/rspec-core-3.13.6/lib/rspec/core/example.rb:352:in
+                      `call'"
+                    - "/Users/sethboyles/workspace/capi-release/src/cloud_controller_ng/spec/spec_helper_helper.rb:155:in
+                      `block (3 levels) in each_run'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/sequel-5.102.0/lib/sequel/database/transactions.rb:257:in
+                      `_transaction'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/sequel-5.102.0/lib/sequel/database/transactions.rb:239:in
+                      `block in transaction'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/sequel-5.102.0/lib/sequel/connection_pool/threaded.rb:92:in
+                      `hold'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/sequel-5.102.0/lib/sequel/database/connecting.rb:283:in
+                      `synchronize'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/sequel-5.102.0/lib/sequel/database/transactions.rb:197:in
+                      `transaction'"
+                    - "/Users/sethboyles/workspace/capi-release/src/cloud_controller_ng/spec/support/database_isolation.rb:39:in
+                      `cleanly'"
+                    - "/Users/sethboyles/workspace/capi-release/src/cloud_controller_ng/spec/spec_helper_helper.rb:155:in
+                      `block (2 levels) in each_run'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/rspec-core-3.13.6/lib/rspec/core/example.rb:457:in
+                      `instance_exec'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/rspec-core-3.13.6/lib/rspec/core/example.rb:457:in
+                      `instance_exec'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/rspec-core-3.13.6/lib/rspec/core/hooks.rb:390:in
+                      `execute_with'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/rspec-core-3.13.6/lib/rspec/core/hooks.rb:628:in
+                      `block (2 levels) in run_around_example_hooks_for'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/rspec-core-3.13.6/lib/rspec/core/example.rb:352:in
+                      `call'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/webmock-3.26.2/lib/webmock/rspec.rb:39:in
+                      `block (2 levels) in <main>'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/rspec-core-3.13.6/lib/rspec/core/example.rb:457:in
+                      `instance_exec'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/rspec-core-3.13.6/lib/rspec/core/example.rb:457:in
+                      `instance_exec'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/rspec-core-3.13.6/lib/rspec/core/hooks.rb:390:in
+                      `execute_with'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/rspec-core-3.13.6/lib/rspec/core/hooks.rb:628:in
+                      `block (2 levels) in run_around_example_hooks_for'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/rspec-core-3.13.6/lib/rspec/core/example.rb:352:in
+                      `call'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/rspec-core-3.13.6/lib/rspec/core/hooks.rb:629:in
+                      `run_around_example_hooks_for'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/rspec-core-3.13.6/lib/rspec/core/hooks.rb:486:in
+                      `run'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/rspec-core-3.13.6/lib/rspec/core/example.rb:468:in
+                      `with_around_example_hooks'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/rspec-core-3.13.6/lib/rspec/core/example.rb:511:in
+                      `with_around_and_singleton_context_hooks'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/rspec-core-3.13.6/lib/rspec/core/example.rb:259:in
+                      `run'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/rspec-core-3.13.6/lib/rspec/core/example_group.rb:653:in
+                      `block in run_examples'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/rspec-core-3.13.6/lib/rspec/core/example_group.rb:649:in
+                      `map'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/rspec-core-3.13.6/lib/rspec/core/example_group.rb:649:in
+                      `run_examples'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/rspec-core-3.13.6/lib/rspec/core/example_group.rb:614:in
+                      `run'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/rspec-core-3.13.6/lib/rspec/core/example_group.rb:615:in
+                      `block in run'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/rspec-core-3.13.6/lib/rspec/core/example_group.rb:615:in
+                      `map'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/rspec-core-3.13.6/lib/rspec/core/example_group.rb:615:in
+                      `run'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/rspec-core-3.13.6/lib/rspec/core/example_group.rb:615:in
+                      `block in run'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/rspec-core-3.13.6/lib/rspec/core/example_group.rb:615:in
+                      `map'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/rspec-core-3.13.6/lib/rspec/core/example_group.rb:615:in
+                      `run'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/rspec-core-3.13.6/lib/rspec/core/runner.rb:121:in
+                      `block (3 levels) in run_specs'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/rspec-core-3.13.6/lib/rspec/core/runner.rb:121:in
+                      `map'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/rspec-core-3.13.6/lib/rspec/core/runner.rb:121:in
+                      `block (2 levels) in run_specs'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/rspec-core-3.13.6/lib/rspec/core/configuration.rb:2097:in
+                      `with_suite_hooks'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/rspec-core-3.13.6/lib/rspec/core/runner.rb:116:in
+                      `block in run_specs'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/rspec-core-3.13.6/lib/rspec/core/reporter.rb:74:in
+                      `report'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/rspec-core-3.13.6/lib/rspec/core/runner.rb:115:in
+                      `run_specs'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/rspec-core-3.13.6/lib/rspec/core/runner.rb:89:in
+                      `run'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/rspec-core-3.13.6/lib/rspec/core/runner.rb:71:in
+                      `run'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/rspec-core-3.13.6/lib/rspec/core/runner.rb:45:in
+                      `invoke'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/rspec-core-3.13.6/exe/rspec:4:in
+                      `<top (required)>'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/bin/rspec:25:in `load'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/bin/rspec:25:in `<top (required)>'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/bundler-2.6.9/lib/bundler/cli/exec.rb:59:in
+                      `load'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/bundler-2.6.9/lib/bundler/cli/exec.rb:59:in
+                      `kernel_load'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/bundler-2.6.9/lib/bundler/cli/exec.rb:23:in
+                      `run'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/bundler-2.6.9/lib/bundler/cli.rb:452:in
+                      `exec'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/bundler-2.6.9/lib/bundler/vendor/thor/lib/thor/command.rb:28:in
+                      `run'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/bundler-2.6.9/lib/bundler/vendor/thor/lib/thor/invocation.rb:127:in
+                      `invoke_command'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/bundler-2.6.9/lib/bundler/vendor/thor/lib/thor.rb:538:in
+                      `dispatch'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/bundler-2.6.9/lib/bundler/cli.rb:35:in
+                      `dispatch'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/bundler-2.6.9/lib/bundler/vendor/thor/lib/thor/base.rb:584:in
+                      `start'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/bundler-2.6.9/lib/bundler/cli.rb:29:in
+                      `start'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/bundler-2.6.9/exe/bundle:28:in
+                      `block in <top (required)>'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/bundler-2.6.9/lib/bundler/friendly_errors.rb:117:in
+                      `with_friendly_errors'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/bundler-2.6.9/exe/bundle:20:in
+                      `<top (required)>'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/bin/bundle:25:in `load'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/bin/bundle:25:in `<main>'"
+    post:
+      summary: create
+      tags:
+      - AppsV3
+      responses:
+        '201':
+          description: create a docker app
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  guid:
+                    type: string
+                  created_at:
+                    type: string
+                  updated_at:
+                    type: string
+                  name:
+                    type: string
+                  state:
+                    type: string
+                  lifecycle:
+                    type: object
+                    properties:
+                      type:
+                        type: string
+                      data:
+                        type: object
+                        properties:
+                          buildpacks:
+                            type: array
+                            items:
+                              type: string
+                          stack:
+                            type: string
+                    required:
+                    - type
+                    - data
+                  relationships:
+                    type: object
+                    properties:
+                      space:
+                        type: object
+                        properties:
+                          data:
+                            type: object
+                            properties:
+                              guid:
+                                type: string
+                            required:
+                            - guid
+                        required:
+                        - data
+                      current_droplet:
+                        type: object
+                        properties:
+                          data:
+                            type: object
+                            properties:
+                              guid:
+                                nullable: true
+                            required:
+                            - guid
+                        required:
+                        - data
+                    required:
+                    - space
+                    - current_droplet
+                  metadata:
+                    type: object
+                    properties:
+                      labels:
+                        type: object
+                        properties:
+                          release:
+                            type: string
+                          code.cloudfoundry.org/cloud_controller_ng:
+                            type: string
+                      annotations:
+                        type: object
+                        properties:
+                          description:
+                            type: string
+                          dora.capi.land/stuff:
+                            type: string
+                    required:
+                    - labels
+                    - annotations
+                  links:
+                    type: object
+                    properties:
+                      self:
+                        type: object
+                        properties:
+                          href:
+                            type: string
+                        required:
+                        - href
+                      environment_variables:
+                        type: object
+                        properties:
+                          href:
+                            type: string
+                        required:
+                        - href
+                      space:
+                        type: object
+                        properties:
+                          href:
+                            type: string
+                        required:
+                        - href
+                      processes:
+                        type: object
+                        properties:
+                          href:
+                            type: string
+                        required:
+                        - href
+                      packages:
+                        type: object
+                        properties:
+                          href:
+                            type: string
+                        required:
+                        - href
+                      current_droplet:
+                        type: object
+                        properties:
+                          href:
+                            type: string
+                        required:
+                        - href
+                      droplets:
+                        type: object
+                        properties:
+                          href:
+                            type: string
+                        required:
+                        - href
+                      tasks:
+                        type: object
+                        properties:
+                          href:
+                            type: string
+                        required:
+                        - href
+                      start:
+                        type: object
+                        properties:
+                          href:
+                            type: string
+                          method:
+                            type: string
+                        required:
+                        - href
+                        - method
+                      stop:
+                        type: object
+                        properties:
+                          href:
+                            type: string
+                          method:
+                            type: string
+                        required:
+                        - href
+                        - method
+                      clear_buildpack_cache:
+                        type: object
+                        properties:
+                          href:
+                            type: string
+                          method:
+                            type: string
+                        required:
+                        - href
+                        - method
+                      revisions:
+                        type: object
+                        properties:
+                          href:
+                            type: string
+                        required:
+                        - href
+                      deployed_revisions:
+                        type: object
+                        properties:
+                          href:
+                            type: string
+                        required:
+                        - href
+                      features:
+                        type: object
+                        properties:
+                          href:
+                            type: string
+                        required:
+                        - href
+                    required:
+                    - self
+                    - environment_variables
+                    - space
+                    - processes
+                    - packages
+                    - current_droplet
+                    - droplets
+                    - tasks
+                    - start
+                    - stop
+                    - clear_buildpack_cache
+                    - revisions
+                    - deployed_revisions
+                    - features
+                required:
+                - guid
+                - created_at
+                - updated_at
+                - name
+                - state
+                - lifecycle
+                - relationships
+                - metadata
+                - links
+              example:
+                guid: 74f08b48-e9fb-4c8a-a9b0-5126bf6146d3
+                created_at: '2026-03-31T23:34:14Z'
+                updated_at: '2026-03-31T23:34:14Z'
+                name: my_app
+                state: STOPPED
+                lifecycle:
+                  type: docker
+                  data:
+                    buildpacks:
+                    - name-21628
+                    stack: name-21627
+                relationships:
+                  space:
+                    data:
+                      guid: 486d29b9-ff55-4be5-9192-33243ac66fd9
+                  current_droplet:
+                    data:
+                      guid:
+                metadata:
+                  labels:
+                    release: stable
+                    code.cloudfoundry.org/cloud_controller_ng: awesome
+                  annotations:
+                    description: gud app
+                    dora.capi.land/stuff: real gud stuff
+                links:
+                  self:
+                    href: http://api2.vcap.me/v3/apps/74f08b48-e9fb-4c8a-a9b0-5126bf6146d3
+                  environment_variables:
+                    href: http://api2.vcap.me/v3/apps/74f08b48-e9fb-4c8a-a9b0-5126bf6146d3/environment_variables
+                  space:
+                    href: http://api2.vcap.me/v3/spaces/486d29b9-ff55-4be5-9192-33243ac66fd9
+                  processes:
+                    href: http://api2.vcap.me/v3/apps/74f08b48-e9fb-4c8a-a9b0-5126bf6146d3/processes
+                  packages:
+                    href: http://api2.vcap.me/v3/apps/74f08b48-e9fb-4c8a-a9b0-5126bf6146d3/packages
+                  current_droplet:
+                    href: http://api2.vcap.me/v3/apps/74f08b48-e9fb-4c8a-a9b0-5126bf6146d3/droplets/current
+                  droplets:
+                    href: http://api2.vcap.me/v3/apps/74f08b48-e9fb-4c8a-a9b0-5126bf6146d3/droplets
+                  tasks:
+                    href: http://api2.vcap.me/v3/apps/74f08b48-e9fb-4c8a-a9b0-5126bf6146d3/tasks
+                  start:
+                    href: http://api2.vcap.me/v3/apps/74f08b48-e9fb-4c8a-a9b0-5126bf6146d3/actions/start
+                    method: POST
+                  stop:
+                    href: http://api2.vcap.me/v3/apps/74f08b48-e9fb-4c8a-a9b0-5126bf6146d3/actions/stop
+                    method: POST
+                  clear_buildpack_cache:
+                    href: http://api2.vcap.me/v3/apps/74f08b48-e9fb-4c8a-a9b0-5126bf6146d3/actions/clear_buildpack_cache
+                    method: POST
+                  revisions:
+                    href: http://api2.vcap.me/v3/apps/74f08b48-e9fb-4c8a-a9b0-5126bf6146d3/revisions
+                  deployed_revisions:
+                    href: http://api2.vcap.me/v3/apps/74f08b48-e9fb-4c8a-a9b0-5126bf6146d3/revisions/deployed
+                  features:
+                    href: http://api2.vcap.me/v3/apps/74f08b48-e9fb-4c8a-a9b0-5126bf6146d3/features
+        '422':
+          description: returns 422 with error message
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  errors:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        detail:
+                          type: string
+                        title:
+                          type: string
+                        code:
+                          type: integer
+                        test_mode_info:
+                          type: object
+                          properties:
+                            detail:
+                              type: string
+                            title:
+                              type: string
+                            backtrace:
+                              type: array
+                              items:
+                                type: string
+                          required:
+                          - detail
+                          - title
+                          - backtrace
+                      required:
+                      - detail
+                      - title
+                      - code
+                      - test_mode_info
+                required:
+                - errors
+              example:
+                errors:
+                - detail: 'ERROR: Staging failed. The stack ''disabled-stack'' is
+                    ''DISABLED'' and cannot be used for staging.'
+                  title: CF-UnprocessableEntity
+                  code: 10008
+                  test_mode_info:
+                    detail: 'ERROR: Staging failed. The stack ''disabled-stack'' is
+                      ''DISABLED'' and cannot be used for staging.'
+                    title: CF-UnprocessableEntity
+                    backtrace:
+                    - "/Users/sethboyles/workspace/capi-release/src/cloud_controller_ng/app/controllers/v3/application_controller.rb:18:in
+                      `unprocessable!'"
+                    - "/Users/sethboyles/workspace/capi-release/src/cloud_controller_ng/app/controllers/v3/apps_controller.rb:115:in
+                      `rescue in create'"
+                    - "/Users/sethboyles/workspace/capi-release/src/cloud_controller_ng/app/controllers/v3/apps_controller.rb:88:in
+                      `create'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/actionpack-8.1.3/lib/action_controller/metal/basic_implicit_render.rb:8:in
+                      `send_action'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/actionpack-8.1.3/lib/abstract_controller/base.rb:221:in
+                      `process_action'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/actionpack-8.1.3/lib/action_controller/metal/rendering.rb:199:in
+                      `process_action'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/actionpack-8.1.3/lib/abstract_controller/callbacks.rb:267:in
+                      `block in process_action'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/activesupport-8.1.3/lib/active_support/callbacks.rb:110:in
+                      `run_callbacks'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/actionpack-8.1.3/lib/abstract_controller/callbacks.rb:266:in
+                      `process_action'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/actionpack-8.1.3/lib/action_controller/metal/rescue.rb:36:in
+                      `process_action'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/actionpack-8.1.3/lib/action_controller/metal/instrumentation.rb:76:in
+                      `block in process_action'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/activesupport-8.1.3/lib/active_support/notifications.rb:210:in
+                      `block in instrument'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/activesupport-8.1.3/lib/active_support/notifications/instrumenter.rb:58:in
+                      `instrument'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/activesupport-8.1.3/lib/active_support/notifications.rb:210:in
+                      `instrument'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/actionpack-8.1.3/lib/action_controller/metal/instrumentation.rb:75:in
+                      `process_action'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/actionpack-8.1.3/lib/action_controller/metal/params_wrapper.rb:259:in
+                      `process_action'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/actionpack-8.1.3/lib/abstract_controller/base.rb:154:in
+                      `process'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/actionview-8.1.3/lib/action_view/rendering.rb:40:in
+                      `process'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/actionpack-8.1.3/lib/action_controller/metal.rb:252:in
+                      `dispatch'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/actionpack-8.1.3/lib/action_controller/metal.rb:335:in
+                      `dispatch'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/actionpack-8.1.3/lib/action_dispatch/routing/route_set.rb:65:in
+                      `dispatch'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/actionpack-8.1.3/lib/action_dispatch/routing/route_set.rb:50:in
+                      `serve'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/actionpack-8.1.3/lib/action_dispatch/journey/router.rb:35:in
+                      `block in serve'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/actionpack-8.1.3/lib/action_dispatch/journey/router.rb:86:in
+                      `block in recognize'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/actionpack-8.1.3/lib/action_dispatch/journey/router.rb:66:in
+                      `each'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/actionpack-8.1.3/lib/action_dispatch/journey/router.rb:66:in
+                      `recognize'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/actionpack-8.1.3/lib/action_dispatch/journey/router.rb:31:in
+                      `serve'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/actionpack-8.1.3/lib/action_dispatch/routing/route_set.rb:906:in
+                      `call'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/rack-3.2.5/lib/rack/tempfile_reaper.rb:20:in
+                      `call'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/actionpack-8.1.3/lib/action_dispatch/http/content_security_policy.rb:38:in
+                      `call'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/actionpack-8.1.3/lib/action_dispatch/middleware/callbacks.rb:31:in
+                      `block in call'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/activesupport-8.1.3/lib/active_support/callbacks.rb:101:in
+                      `run_callbacks'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/actionpack-8.1.3/lib/action_dispatch/middleware/callbacks.rb:30:in
+                      `call'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/actionpack-8.1.3/lib/action_dispatch/middleware/executor.rb:20:in
+                      `call'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/actionpack-8.1.3/lib/action_dispatch/middleware/actionable_exceptions.rb:18:in
+                      `call'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/actionpack-8.1.3/lib/action_dispatch/middleware/debug_exceptions.rb:31:in
+                      `call'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/actionpack-8.1.3/lib/action_dispatch/middleware/show_exceptions.rb:32:in
+                      `call'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/actionpack-8.1.3/lib/action_dispatch/middleware/remote_ip.rb:98:in
+                      `call'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/rack-3.2.5/lib/rack/runtime.rb:24:in
+                      `call'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/actionpack-8.1.3/lib/action_dispatch/middleware/executor.rb:20:in
+                      `call'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/rack-3.2.5/lib/rack/sendfile.rb:131:in
+                      `call'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/rack-3.2.5/lib/rack/urlmap.rb:76:in
+                      `block in call'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/rack-3.2.5/lib/rack/urlmap.rb:60:in
+                      `each'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/rack-3.2.5/lib/rack/urlmap.rb:60:in
+                      `call'"
+                    - "/Users/sethboyles/workspace/capi-release/src/cloud_controller_ng/middleware/request_logs.rb:14:in
+                      `call'"
+                    - "/Users/sethboyles/workspace/capi-release/src/cloud_controller_ng/middleware/zipkin.rb:32:in
+                      `call_app'"
+                    - "/Users/sethboyles/workspace/capi-release/src/cloud_controller_ng/middleware/zipkin.rb:9:in
+                      `call'"
+                    - "/Users/sethboyles/workspace/capi-release/src/cloud_controller_ng/middleware/security_context_setter.rb:41:in
+                      `call'"
+                    - "/Users/sethboyles/workspace/capi-release/src/cloud_controller_ng/middleware/vcap_request_context_setter.rb:17:in
+                      `call'"
+                    - "/Users/sethboyles/workspace/capi-release/src/cloud_controller_ng/middleware/cors.rb:50:in
+                      `call_app'"
+                    - "/Users/sethboyles/workspace/capi-release/src/cloud_controller_ng/middleware/cors.rb:14:in
+                      `call'"
+                    - "/Users/sethboyles/workspace/capi-release/src/cloud_controller_ng/middleware/request_metrics.rb:13:in
+                      `call'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/rack-3.2.5/lib/rack/builder.rb:283:in
+                      `call'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/rack-test-2.2.0/lib/rack/test.rb:360:in
+                      `process_request'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/rack-test-2.2.0/lib/rack/test.rb:163:in
+                      `custom_request'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/rack-test-2.2.0/lib/rack/test.rb:112:in
+                      `post'"
+                    - "/Users/sethboyles/.rubies/ruby-3.3.7/lib/ruby/3.3.0/forwardable.rb:240:in
+                      `post'"
+                    - "/Users/sethboyles/workspace/capi-release/src/cloud_controller_ng/spec/request/apps_spec.rb:383:in
+                      `block (5 levels) in <main>'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/rspec-core-3.13.6/lib/rspec/core/example.rb:263:in
+                      `instance_exec'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/rspec-core-3.13.6/lib/rspec/core/example.rb:263:in
+                      `block in run'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/rspec-core-3.13.6/lib/rspec/core/example.rb:511:in
+                      `block in with_around_and_singleton_context_hooks'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/rspec-core-3.13.6/lib/rspec/core/example.rb:468:in
+                      `block in with_around_example_hooks'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/rspec-core-3.13.6/lib/rspec/core/hooks.rb:486:in
+                      `block in run'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/rspec-core-3.13.6/lib/rspec/core/hooks.rb:626:in
+                      `block in run_around_example_hooks_for'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/rspec-core-3.13.6/lib/rspec/core/example.rb:352:in
+                      `call'"
+                    - "/Users/sethboyles/workspace/capi-release/src/cloud_controller_ng/spec/spec_helper_helper.rb:155:in
+                      `block (3 levels) in each_run'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/sequel-5.102.0/lib/sequel/database/transactions.rb:257:in
+                      `_transaction'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/sequel-5.102.0/lib/sequel/database/transactions.rb:239:in
+                      `block in transaction'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/sequel-5.102.0/lib/sequel/connection_pool/threaded.rb:92:in
+                      `hold'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/sequel-5.102.0/lib/sequel/database/connecting.rb:283:in
+                      `synchronize'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/sequel-5.102.0/lib/sequel/database/transactions.rb:197:in
+                      `transaction'"
+                    - "/Users/sethboyles/workspace/capi-release/src/cloud_controller_ng/spec/support/database_isolation.rb:39:in
+                      `cleanly'"
+                    - "/Users/sethboyles/workspace/capi-release/src/cloud_controller_ng/spec/spec_helper_helper.rb:155:in
+                      `block (2 levels) in each_run'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/rspec-core-3.13.6/lib/rspec/core/example.rb:457:in
+                      `instance_exec'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/rspec-core-3.13.6/lib/rspec/core/example.rb:457:in
+                      `instance_exec'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/rspec-core-3.13.6/lib/rspec/core/hooks.rb:390:in
+                      `execute_with'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/rspec-core-3.13.6/lib/rspec/core/hooks.rb:628:in
+                      `block (2 levels) in run_around_example_hooks_for'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/rspec-core-3.13.6/lib/rspec/core/example.rb:352:in
+                      `call'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/webmock-3.26.2/lib/webmock/rspec.rb:39:in
+                      `block (2 levels) in <main>'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/rspec-core-3.13.6/lib/rspec/core/example.rb:457:in
+                      `instance_exec'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/rspec-core-3.13.6/lib/rspec/core/example.rb:457:in
+                      `instance_exec'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/rspec-core-3.13.6/lib/rspec/core/hooks.rb:390:in
+                      `execute_with'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/rspec-core-3.13.6/lib/rspec/core/hooks.rb:628:in
+                      `block (2 levels) in run_around_example_hooks_for'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/rspec-core-3.13.6/lib/rspec/core/example.rb:352:in
+                      `call'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/rspec-core-3.13.6/lib/rspec/core/hooks.rb:629:in
+                      `run_around_example_hooks_for'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/rspec-core-3.13.6/lib/rspec/core/hooks.rb:486:in
+                      `run'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/rspec-core-3.13.6/lib/rspec/core/example.rb:468:in
+                      `with_around_example_hooks'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/rspec-core-3.13.6/lib/rspec/core/example.rb:511:in
+                      `with_around_and_singleton_context_hooks'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/rspec-core-3.13.6/lib/rspec/core/example.rb:259:in
+                      `run'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/rspec-core-3.13.6/lib/rspec/core/example_group.rb:653:in
+                      `block in run_examples'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/rspec-core-3.13.6/lib/rspec/core/example_group.rb:649:in
+                      `map'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/rspec-core-3.13.6/lib/rspec/core/example_group.rb:649:in
+                      `run_examples'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/rspec-core-3.13.6/lib/rspec/core/example_group.rb:614:in
+                      `run'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/rspec-core-3.13.6/lib/rspec/core/example_group.rb:615:in
+                      `block in run'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/rspec-core-3.13.6/lib/rspec/core/example_group.rb:615:in
+                      `map'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/rspec-core-3.13.6/lib/rspec/core/example_group.rb:615:in
+                      `run'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/rspec-core-3.13.6/lib/rspec/core/example_group.rb:615:in
+                      `block in run'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/rspec-core-3.13.6/lib/rspec/core/example_group.rb:615:in
+                      `map'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/rspec-core-3.13.6/lib/rspec/core/example_group.rb:615:in
+                      `run'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/rspec-core-3.13.6/lib/rspec/core/example_group.rb:615:in
+                      `block in run'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/rspec-core-3.13.6/lib/rspec/core/example_group.rb:615:in
+                      `map'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/rspec-core-3.13.6/lib/rspec/core/example_group.rb:615:in
+                      `run'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/rspec-core-3.13.6/lib/rspec/core/runner.rb:121:in
+                      `block (3 levels) in run_specs'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/rspec-core-3.13.6/lib/rspec/core/runner.rb:121:in
+                      `map'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/rspec-core-3.13.6/lib/rspec/core/runner.rb:121:in
+                      `block (2 levels) in run_specs'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/rspec-core-3.13.6/lib/rspec/core/configuration.rb:2097:in
+                      `with_suite_hooks'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/rspec-core-3.13.6/lib/rspec/core/runner.rb:116:in
+                      `block in run_specs'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/rspec-core-3.13.6/lib/rspec/core/reporter.rb:74:in
+                      `report'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/rspec-core-3.13.6/lib/rspec/core/runner.rb:115:in
+                      `run_specs'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/rspec-core-3.13.6/lib/rspec/core/runner.rb:89:in
+                      `run'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/rspec-core-3.13.6/lib/rspec/core/runner.rb:71:in
+                      `run'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/rspec-core-3.13.6/lib/rspec/core/runner.rb:45:in
+                      `invoke'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/rspec-core-3.13.6/exe/rspec:4:in
+                      `<top (required)>'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/bin/rspec:25:in `load'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/bin/rspec:25:in `<top (required)>'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/bundler-2.6.9/lib/bundler/cli/exec.rb:59:in
+                      `load'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/bundler-2.6.9/lib/bundler/cli/exec.rb:59:in
+                      `kernel_load'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/bundler-2.6.9/lib/bundler/cli/exec.rb:23:in
+                      `run'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/bundler-2.6.9/lib/bundler/cli.rb:452:in
+                      `exec'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/bundler-2.6.9/lib/bundler/vendor/thor/lib/thor/command.rb:28:in
+                      `run'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/bundler-2.6.9/lib/bundler/vendor/thor/lib/thor/invocation.rb:127:in
+                      `invoke_command'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/bundler-2.6.9/lib/bundler/vendor/thor/lib/thor.rb:538:in
+                      `dispatch'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/bundler-2.6.9/lib/bundler/cli.rb:35:in
+                      `dispatch'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/bundler-2.6.9/lib/bundler/vendor/thor/lib/thor/base.rb:584:in
+                      `start'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/bundler-2.6.9/lib/bundler/cli.rb:29:in
+                      `start'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/bundler-2.6.9/exe/bundle:28:in
+                      `block in <top (required)>'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/bundler-2.6.9/lib/bundler/friendly_errors.rb:117:in
+                      `with_friendly_errors'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/bundler-2.6.9/exe/bundle:20:in
+                      `<top (required)>'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/bin/bundle:25:in `load'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/bin/bundle:25:in `<main>'"
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+                lifecycle:
+                  type: object
+                  properties:
+                    type:
+                      type: string
+                    data:
+                      type: object
+                      properties:
+                        stack:
+                          type: string
+                        buildpacks:
+                          type: array
+                          items:
+                            type: string
+                  required:
+                  - type
+                  - data
+                relationships:
+                  type: object
+                  properties:
+                    space:
+                      type: object
+                      properties:
+                        data:
+                          type: object
+                          properties:
+                            guid:
+                              type: string
+                          required:
+                          - guid
+                      required:
+                      - data
+                  required:
+                  - space
+                environment_variables:
+                  type: object
+                  properties:
+                    open:
+                      type: string
+                  required:
+                  - open
+                metadata:
+                  type: object
+                  properties:
+                    labels:
+                      type: object
+                      properties:
+                        release:
+                          type: string
+                        code.cloudfoundry.org/cloud_controller_ng:
+                          type: string
+                      required:
+                      - release
+                      - code.cloudfoundry.org/cloud_controller_ng
+                    annotations:
+                      type: object
+                      properties:
+                        description:
+                          type: string
+                        dora.capi.land/stuff:
+                          type: string
+                      required:
+                      - description
+                      - dora.capi.land/stuff
+                  required:
+                  - labels
+                  - annotations
+              required:
+              - name
+              - relationships
+            example:
+              name: my_app
+              lifecycle:
+                type: docker
+                data:
+                  stack: name-21627
+                  buildpacks:
+                  - name-21628
+              relationships:
+                space:
+                  data:
+                    guid: 486d29b9-ff55-4be5-9192-33243ac66fd9
+              environment_variables:
+                open: source
+              metadata:
+                labels:
+                  release: stable
+                  code.cloudfoundry.org/cloud_controller_ng: awesome
+                annotations:
+                  description: gud app
+                  dora.capi.land/stuff: real gud stuff
+  "/v3/apps/{guid}":
+    delete:
+      summary: destroy
+      tags:
+      - AppsV3
+      parameters:
+      - name: guid
+        in: path
+        required: true
+        schema:
+          type: string
+        example: c3a1134e-db29-4ba6-91e6-0e500596efd5
+      responses:
+        '202':
+          description: deletes an App
+          content:
+            text/html:
+              schema:
+                type: string
+              example: ''
+    get:
+      summary: show
+      tags:
+      - AppsV3
+      parameters:
+      - name: guid
+        in: path
+        required: true
+        schema:
+          type: string
+        example: app1_guid
+      - name: include
+        in: query
+        required: false
+        schema:
+          type: string
+        example: space.organization
+      responses:
+        '200':
+          description: gets a specific app including space and org
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  guid:
+                    type: string
+                  created_at:
+                    type: string
+                  updated_at:
+                    type: string
+                  name:
+                    type: string
+                  state:
+                    type: string
+                  lifecycle:
+                    type: object
+                    properties:
+                      type:
+                        type: string
+                      data:
+                        type: object
+                        properties:
+                          buildpacks:
+                            type: array
+                            items:
+                              type: string
+                          stack:
+                            type: string
+                        required:
+                        - buildpacks
+                        - stack
+                    required:
+                    - type
+                    - data
+                  relationships:
+                    type: object
+                    properties:
+                      space:
+                        type: object
+                        properties:
+                          data:
+                            type: object
+                            properties:
+                              guid:
+                                type: string
+                            required:
+                            - guid
+                        required:
+                        - data
+                      current_droplet:
+                        type: object
+                        properties:
+                          data:
+                            type: object
+                            properties:
+                              guid:
+                                nullable: true
+                            required:
+                            - guid
+                        required:
+                        - data
+                    required:
+                    - space
+                    - current_droplet
+                  metadata:
+                    type: object
+                    properties:
+                      labels:
+                        type: object
+                        properties: {}
+                      annotations:
+                        type: object
+                        properties: {}
+                    required:
+                    - labels
+                    - annotations
+                  links:
+                    type: object
+                    properties:
+                      self:
+                        type: object
+                        properties:
+                          href:
+                            type: string
+                        required:
+                        - href
+                      environment_variables:
+                        type: object
+                        properties:
+                          href:
+                            type: string
+                        required:
+                        - href
+                      space:
+                        type: object
+                        properties:
+                          href:
+                            type: string
+                        required:
+                        - href
+                      processes:
+                        type: object
+                        properties:
+                          href:
+                            type: string
+                        required:
+                        - href
+                      packages:
+                        type: object
+                        properties:
+                          href:
+                            type: string
+                        required:
+                        - href
+                      current_droplet:
+                        type: object
+                        properties:
+                          href:
+                            type: string
+                        required:
+                        - href
+                      droplets:
+                        type: object
+                        properties:
+                          href:
+                            type: string
+                        required:
+                        - href
+                      tasks:
+                        type: object
+                        properties:
+                          href:
+                            type: string
+                        required:
+                        - href
+                      start:
+                        type: object
+                        properties:
+                          href:
+                            type: string
+                          method:
+                            type: string
+                        required:
+                        - href
+                        - method
+                      stop:
+                        type: object
+                        properties:
+                          href:
+                            type: string
+                          method:
+                            type: string
+                        required:
+                        - href
+                        - method
+                      clear_buildpack_cache:
+                        type: object
+                        properties:
+                          href:
+                            type: string
+                          method:
+                            type: string
+                        required:
+                        - href
+                        - method
+                      revisions:
+                        type: object
+                        properties:
+                          href:
+                            type: string
+                        required:
+                        - href
+                      deployed_revisions:
+                        type: object
+                        properties:
+                          href:
+                            type: string
+                        required:
+                        - href
+                      features:
+                        type: object
+                        properties:
+                          href:
+                            type: string
+                        required:
+                        - href
+                    required:
+                    - self
+                    - environment_variables
+                    - space
+                    - processes
+                    - packages
+                    - current_droplet
+                    - droplets
+                    - tasks
+                    - start
+                    - stop
+                    - clear_buildpack_cache
+                    - revisions
+                    - deployed_revisions
+                    - features
+                  included:
+                    type: object
+                    properties:
+                      spaces:
+                        type: array
+                        items:
+                          type: object
+                          properties:
+                            guid:
+                              type: string
+                            created_at:
+                              type: string
+                            updated_at:
+                              type: string
+                            name:
+                              type: string
+                            relationships:
+                              type: object
+                              properties:
+                                organization:
+                                  type: object
+                                  properties:
+                                    data:
+                                      type: object
+                                      properties:
+                                        guid:
+                                          type: string
+                                      required:
+                                      - guid
+                                  required:
+                                  - data
+                                quota:
+                                  type: object
+                                  properties:
+                                    data:
+                                      nullable: true
+                                  required:
+                                  - data
+                              required:
+                              - organization
+                              - quota
+                            metadata:
+                              type: object
+                              properties:
+                                labels:
+                                  type: object
+                                  properties: {}
+                                annotations:
+                                  type: object
+                                  properties: {}
+                              required:
+                              - labels
+                              - annotations
+                            links:
+                              type: object
+                              properties:
+                                self:
+                                  type: object
+                                  properties:
+                                    href:
+                                      type: string
+                                  required:
+                                  - href
+                                organization:
+                                  type: object
+                                  properties:
+                                    href:
+                                      type: string
+                                  required:
+                                  - href
+                                features:
+                                  type: object
+                                  properties:
+                                    href:
+                                      type: string
+                                  required:
+                                  - href
+                                apply_manifest:
+                                  type: object
+                                  properties:
+                                    href:
+                                      type: string
+                                    method:
+                                      type: string
+                                  required:
+                                  - href
+                                  - method
+                              required:
+                              - self
+                              - organization
+                              - features
+                              - apply_manifest
+                          required:
+                          - guid
+                          - created_at
+                          - updated_at
+                          - name
+                          - relationships
+                          - metadata
+                          - links
+                      organizations:
+                        type: array
+                        items:
+                          type: object
+                          properties:
+                            guid:
+                              type: string
+                            created_at:
+                              type: string
+                            updated_at:
+                              type: string
+                            name:
+                              type: string
+                            suspended:
+                              type: boolean
+                            relationships:
+                              type: object
+                              properties:
+                                quota:
+                                  type: object
+                                  properties:
+                                    data:
+                                      type: object
+                                      properties:
+                                        guid:
+                                          type: string
+                                      required:
+                                      - guid
+                                  required:
+                                  - data
+                              required:
+                              - quota
+                            metadata:
+                              type: object
+                              properties:
+                                labels:
+                                  type: object
+                                  properties: {}
+                                annotations:
+                                  type: object
+                                  properties: {}
+                              required:
+                              - labels
+                              - annotations
+                            links:
+                              type: object
+                              properties:
+                                self:
+                                  type: object
+                                  properties:
+                                    href:
+                                      type: string
+                                  required:
+                                  - href
+                                domains:
+                                  type: object
+                                  properties:
+                                    href:
+                                      type: string
+                                  required:
+                                  - href
+                                default_domain:
+                                  type: object
+                                  properties:
+                                    href:
+                                      type: string
+                                  required:
+                                  - href
+                                quota:
+                                  type: object
+                                  properties:
+                                    href:
+                                      type: string
+                                  required:
+                                  - href
+                              required:
+                              - self
+                              - domains
+                              - default_domain
+                              - quota
+                          required:
+                          - guid
+                          - created_at
+                          - updated_at
+                          - name
+                          - suspended
+                          - relationships
+                          - metadata
+                          - links
+                    required:
+                    - spaces
+                required:
+                - guid
+                - created_at
+                - updated_at
+                - name
+                - state
+                - lifecycle
+                - relationships
+                - metadata
+                - links
+              example:
+                guid: app1_guid
+                created_at: '2026-03-31T23:34:15Z'
+                updated_at: '2026-03-31T23:34:15Z'
+                name: my_app
+                state: STARTED
+                lifecycle:
+                  type: buildpack
+                  data:
+                    buildpacks:
+                    - bp-name
+                    stack: stack-name
+                relationships:
+                  space:
+                    data:
+                      guid: 582b803d-a9c5-4292-a8db-25f7c4862207
+                  current_droplet:
+                    data:
+                      guid:
+                metadata:
+                  labels: {}
+                  annotations: {}
+                links:
+                  self:
+                    href: http://api2.vcap.me/v3/apps/app1_guid
+                  environment_variables:
+                    href: http://api2.vcap.me/v3/apps/app1_guid/environment_variables
+                  space:
+                    href: http://api2.vcap.me/v3/spaces/582b803d-a9c5-4292-a8db-25f7c4862207
+                  processes:
+                    href: http://api2.vcap.me/v3/apps/app1_guid/processes
+                  packages:
+                    href: http://api2.vcap.me/v3/apps/app1_guid/packages
+                  current_droplet:
+                    href: http://api2.vcap.me/v3/apps/app1_guid/droplets/current
+                  droplets:
+                    href: http://api2.vcap.me/v3/apps/app1_guid/droplets
+                  tasks:
+                    href: http://api2.vcap.me/v3/apps/app1_guid/tasks
+                  start:
+                    href: http://api2.vcap.me/v3/apps/app1_guid/actions/start
+                    method: POST
+                  stop:
+                    href: http://api2.vcap.me/v3/apps/app1_guid/actions/stop
+                    method: POST
+                  clear_buildpack_cache:
+                    href: http://api2.vcap.me/v3/apps/app1_guid/actions/clear_buildpack_cache
+                    method: POST
+                  revisions:
+                    href: http://api2.vcap.me/v3/apps/app1_guid/revisions
+                  deployed_revisions:
+                    href: http://api2.vcap.me/v3/apps/app1_guid/revisions/deployed
+                  features:
+                    href: http://api2.vcap.me/v3/apps/app1_guid/features
+                included:
+                  spaces:
+                  - guid: 582b803d-a9c5-4292-a8db-25f7c4862207
+                    created_at: '2026-03-31T23:34:15Z'
+                    updated_at: '2026-03-31T23:34:15Z'
+                    name: name-21798
+                    relationships:
+                      organization:
+                        data:
+                          guid: 6c5fd88f-2269-4956-b978-005327be13c4
+                      quota:
+                        data:
+                    metadata:
+                      labels: {}
+                      annotations: {}
+                    links:
+                      self:
+                        href: http://api2.vcap.me/v3/spaces/582b803d-a9c5-4292-a8db-25f7c4862207
+                      organization:
+                        href: http://api2.vcap.me/v3/organizations/6c5fd88f-2269-4956-b978-005327be13c4
+                      features:
+                        href: http://api2.vcap.me/v3/spaces/582b803d-a9c5-4292-a8db-25f7c4862207/features
+                      apply_manifest:
+                        href: http://api2.vcap.me/v3/spaces/582b803d-a9c5-4292-a8db-25f7c4862207/actions/apply_manifest
+                        method: POST
+                  organizations:
+                  - guid: 6c5fd88f-2269-4956-b978-005327be13c4
+                    created_at: '2026-03-28T23:34:15Z'
+                    updated_at: '2026-03-31T23:34:15Z'
+                    name: name-21796
+                    suspended: false
+                    relationships:
+                      quota:
+                        data:
+                          guid: 6b1d8cfe-fb04-4a9e-ba44-9864601749fd
+                    metadata:
+                      labels: {}
+                      annotations: {}
+                    links:
+                      self:
+                        href: http://api2.vcap.me/v3/organizations/6c5fd88f-2269-4956-b978-005327be13c4
+                      domains:
+                        href: http://api2.vcap.me/v3/organizations/6c5fd88f-2269-4956-b978-005327be13c4/domains
+                      default_domain:
+                        href: http://api2.vcap.me/v3/organizations/6c5fd88f-2269-4956-b978-005327be13c4/domains/default
+                      quota:
+                        href: http://api2.vcap.me/v3/organization_quotas/6b1d8cfe-fb04-4a9e-ba44-9864601749fd
+    patch:
+      summary: update
+      tags:
+      - AppsV3
+      parameters:
+      - name: guid
+        in: path
+        required: true
+        schema:
+          type: string
+        example: 841443d5-226a-4129-a094-7a1f4fb24485
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+                lifecycle:
+                  type: object
+                  properties:
+                    type:
+                      type: string
+                    data:
+                      type: object
+                      properties:
+                        buildpacks:
+                          type: array
+                          items:
+                            type: string
+                        stack:
+                          type: string
+                      required:
+                      - buildpacks
+                      - stack
+                  required:
+                  - type
+                  - data
+                metadata:
+                  type: object
+                  properties:
+                    labels:
+                      type: object
+                      properties:
+                        release:
+                          type: string
+                        code.cloudfoundry.org/cloud_controller_ng:
+                          type: string
+                        delete-me:
+                          nullable: true
+                      required:
+                      - release
+                      - code.cloudfoundry.org/cloud_controller_ng
+                      - delete-me
+                    annotations:
+                      type: object
+                      properties:
+                        contacts:
+                          type: string
+                        anno1:
+                          type: string
+                        please:
+                          nullable: true
+                      required:
+                      - contacts
+                      - anno1
+                      - please
+                  required:
+                  - labels
+                  - annotations
+              required:
+              - name
+              - lifecycle
+              - metadata
+            example:
+              name: new-name
+              lifecycle:
+                type: buildpack
+                data:
+                  buildpacks:
+                  - http://gitwheel.org/my-app
+                  stack: redhat
+              metadata:
+                labels:
+                  release: stable
+                  code.cloudfoundry.org/cloud_controller_ng: awesome
+                  delete-me:
+                annotations:
+                  contacts: Bill tel(1111111) email(bill@fixme), Bob tel(222222) pager(3333333#555)
+                    email(bob@fixme)
+                  anno1: new-value
+                  please:
+      responses:
+        '200':
+          description: notifies diego that an app has been renamed
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  guid:
+                    type: string
+                  created_at:
+                    type: string
+                  updated_at:
+                    type: string
+                  name:
+                    type: string
+                  state:
+                    type: string
+                  lifecycle:
+                    type: object
+                    properties:
+                      type:
+                        type: string
+                      data:
+                        type: object
+                        properties:
+                          buildpacks:
+                            type: array
+                            items:
+                              type: string
+                          stack:
+                            type: string
+                        required:
+                        - buildpacks
+                        - stack
+                    required:
+                    - type
+                    - data
+                  relationships:
+                    type: object
+                    properties:
+                      space:
+                        type: object
+                        properties:
+                          data:
+                            type: object
+                            properties:
+                              guid:
+                                type: string
+                            required:
+                            - guid
+                        required:
+                        - data
+                      current_droplet:
+                        type: object
+                        properties:
+                          data:
+                            type: object
+                            properties:
+                              guid:
+                                nullable: true
+                            required:
+                            - guid
+                        required:
+                        - data
+                    required:
+                    - space
+                    - current_droplet
+                  metadata:
+                    type: object
+                    properties:
+                      labels:
+                        type: object
+                        properties:
+                          release:
+                            type: string
+                          code.cloudfoundry.org/cloud_controller_ng:
+                            type: string
+                        required:
+                        - release
+                        - code.cloudfoundry.org/cloud_controller_ng
+                      annotations:
+                        type: object
+                        properties:
+                          anno1:
+                            type: string
+                          contacts:
+                            type: string
+                        required:
+                        - anno1
+                        - contacts
+                    required:
+                    - labels
+                    - annotations
+                  links:
+                    type: object
+                    properties:
+                      self:
+                        type: object
+                        properties:
+                          href:
+                            type: string
+                        required:
+                        - href
+                      environment_variables:
+                        type: object
+                        properties:
+                          href:
+                            type: string
+                        required:
+                        - href
+                      space:
+                        type: object
+                        properties:
+                          href:
+                            type: string
+                        required:
+                        - href
+                      processes:
+                        type: object
+                        properties:
+                          href:
+                            type: string
+                        required:
+                        - href
+                      packages:
+                        type: object
+                        properties:
+                          href:
+                            type: string
+                        required:
+                        - href
+                      current_droplet:
+                        type: object
+                        properties:
+                          href:
+                            type: string
+                        required:
+                        - href
+                      droplets:
+                        type: object
+                        properties:
+                          href:
+                            type: string
+                        required:
+                        - href
+                      tasks:
+                        type: object
+                        properties:
+                          href:
+                            type: string
+                        required:
+                        - href
+                      start:
+                        type: object
+                        properties:
+                          href:
+                            type: string
+                          method:
+                            type: string
+                        required:
+                        - href
+                        - method
+                      stop:
+                        type: object
+                        properties:
+                          href:
+                            type: string
+                          method:
+                            type: string
+                        required:
+                        - href
+                        - method
+                      clear_buildpack_cache:
+                        type: object
+                        properties:
+                          href:
+                            type: string
+                          method:
+                            type: string
+                        required:
+                        - href
+                        - method
+                      revisions:
+                        type: object
+                        properties:
+                          href:
+                            type: string
+                        required:
+                        - href
+                      deployed_revisions:
+                        type: object
+                        properties:
+                          href:
+                            type: string
+                        required:
+                        - href
+                      features:
+                        type: object
+                        properties:
+                          href:
+                            type: string
+                        required:
+                        - href
+                    required:
+                    - self
+                    - environment_variables
+                    - space
+                    - processes
+                    - packages
+                    - current_droplet
+                    - droplets
+                    - tasks
+                    - start
+                    - stop
+                    - clear_buildpack_cache
+                    - revisions
+                    - deployed_revisions
+                    - features
+                required:
+                - guid
+                - created_at
+                - updated_at
+                - name
+                - state
+                - lifecycle
+                - relationships
+                - metadata
+                - links
+              example:
+                guid: 841443d5-226a-4129-a094-7a1f4fb24485
+                created_at: '2026-03-31T23:34:10Z'
+                updated_at: '2026-03-31T23:34:10Z'
+                name: new-name
+                state: STOPPED
+                lifecycle:
+                  type: buildpack
+                  data:
+                    buildpacks:
+                    - http://gitwheel.org/my-app
+                    stack: redhat
+                relationships:
+                  space:
+                    data:
+                      guid: af1fa4b2-752e-420e-81ba-93617b4178b4
+                  current_droplet:
+                    data:
+                      guid:
+                metadata:
+                  labels:
+                    release: stable
+                    code.cloudfoundry.org/cloud_controller_ng: awesome
+                  annotations:
+                    anno1: new-value
+                    contacts: Bill tel(1111111) email(bill@fixme), Bob tel(222222)
+                      pager(3333333#555) email(bob@fixme)
+                links:
+                  self:
+                    href: http://api2.vcap.me/v3/apps/841443d5-226a-4129-a094-7a1f4fb24485
+                  environment_variables:
+                    href: http://api2.vcap.me/v3/apps/841443d5-226a-4129-a094-7a1f4fb24485/environment_variables
+                  space:
+                    href: http://api2.vcap.me/v3/spaces/af1fa4b2-752e-420e-81ba-93617b4178b4
+                  processes:
+                    href: http://api2.vcap.me/v3/apps/841443d5-226a-4129-a094-7a1f4fb24485/processes
+                  packages:
+                    href: http://api2.vcap.me/v3/apps/841443d5-226a-4129-a094-7a1f4fb24485/packages
+                  current_droplet:
+                    href: http://api2.vcap.me/v3/apps/841443d5-226a-4129-a094-7a1f4fb24485/droplets/current
+                  droplets:
+                    href: http://api2.vcap.me/v3/apps/841443d5-226a-4129-a094-7a1f4fb24485/droplets
+                  tasks:
+                    href: http://api2.vcap.me/v3/apps/841443d5-226a-4129-a094-7a1f4fb24485/tasks
+                  start:
+                    href: http://api2.vcap.me/v3/apps/841443d5-226a-4129-a094-7a1f4fb24485/actions/start
+                    method: POST
+                  stop:
+                    href: http://api2.vcap.me/v3/apps/841443d5-226a-4129-a094-7a1f4fb24485/actions/stop
+                    method: POST
+                  clear_buildpack_cache:
+                    href: http://api2.vcap.me/v3/apps/841443d5-226a-4129-a094-7a1f4fb24485/actions/clear_buildpack_cache
+                    method: POST
+                  revisions:
+                    href: http://api2.vcap.me/v3/apps/841443d5-226a-4129-a094-7a1f4fb24485/revisions
+                  deployed_revisions:
+                    href: http://api2.vcap.me/v3/apps/841443d5-226a-4129-a094-7a1f4fb24485/revisions/deployed
+                  features:
+                    href: http://api2.vcap.me/v3/apps/841443d5-226a-4129-a094-7a1f4fb24485/features
+  "/v3/apps/{guid}/actions/restart":
+    post:
+      summary: restart
+      tags:
+      - AppsV3
+      parameters:
+      - name: guid
+        in: path
+        required: true
+        schema:
+          type: string
+        example: 55b56d2d-86a7-414b-88c1-097752af648f
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties: {}
+            example: {}
+      responses:
+        '200':
+          description: logs the required fields when the app is restarted
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  guid:
+                    type: string
+                  created_at:
+                    type: string
+                  updated_at:
+                    type: string
+                  name:
+                    type: string
+                  state:
+                    type: string
+                  lifecycle:
+                    type: object
+                    properties:
+                      type:
+                        type: string
+                      data:
+                        type: object
+                        properties:
+                          buildpacks:
+                            type: array
+                            items:
+                              type: string
+                          stack:
+                            type: string
+                        required:
+                        - buildpacks
+                        - stack
+                    required:
+                    - type
+                    - data
+                  relationships:
+                    type: object
+                    properties:
+                      space:
+                        type: object
+                        properties:
+                          data:
+                            type: object
+                            properties:
+                              guid:
+                                type: string
+                            required:
+                            - guid
+                        required:
+                        - data
+                      current_droplet:
+                        type: object
+                        properties:
+                          data:
+                            type: object
+                            properties:
+                              guid:
+                                type: string
+                            required:
+                            - guid
+                        required:
+                        - data
+                    required:
+                    - space
+                    - current_droplet
+                  metadata:
+                    type: object
+                    properties:
+                      labels:
+                        type: object
+                        properties: {}
+                      annotations:
+                        type: object
+                        properties: {}
+                    required:
+                    - labels
+                    - annotations
+                  links:
+                    type: object
+                    properties:
+                      self:
+                        type: object
+                        properties:
+                          href:
+                            type: string
+                        required:
+                        - href
+                      environment_variables:
+                        type: object
+                        properties:
+                          href:
+                            type: string
+                        required:
+                        - href
+                      space:
+                        type: object
+                        properties:
+                          href:
+                            type: string
+                        required:
+                        - href
+                      processes:
+                        type: object
+                        properties:
+                          href:
+                            type: string
+                        required:
+                        - href
+                      packages:
+                        type: object
+                        properties:
+                          href:
+                            type: string
+                        required:
+                        - href
+                      current_droplet:
+                        type: object
+                        properties:
+                          href:
+                            type: string
+                        required:
+                        - href
+                      droplets:
+                        type: object
+                        properties:
+                          href:
+                            type: string
+                        required:
+                        - href
+                      tasks:
+                        type: object
+                        properties:
+                          href:
+                            type: string
+                        required:
+                        - href
+                      start:
+                        type: object
+                        properties:
+                          href:
+                            type: string
+                          method:
+                            type: string
+                        required:
+                        - href
+                        - method
+                      stop:
+                        type: object
+                        properties:
+                          href:
+                            type: string
+                          method:
+                            type: string
+                        required:
+                        - href
+                        - method
+                      clear_buildpack_cache:
+                        type: object
+                        properties:
+                          href:
+                            type: string
+                          method:
+                            type: string
+                        required:
+                        - href
+                        - method
+                      revisions:
+                        type: object
+                        properties:
+                          href:
+                            type: string
+                        required:
+                        - href
+                      deployed_revisions:
+                        type: object
+                        properties:
+                          href:
+                            type: string
+                        required:
+                        - href
+                      features:
+                        type: object
+                        properties:
+                          href:
+                            type: string
+                        required:
+                        - href
+                    required:
+                    - self
+                    - environment_variables
+                    - space
+                    - processes
+                    - packages
+                    - current_droplet
+                    - droplets
+                    - tasks
+                    - start
+                    - stop
+                    - clear_buildpack_cache
+                    - revisions
+                    - deployed_revisions
+                    - features
+                required:
+                - guid
+                - created_at
+                - updated_at
+                - name
+                - state
+                - lifecycle
+                - relationships
+                - metadata
+                - links
+              example:
+                guid: 55b56d2d-86a7-414b-88c1-097752af648f
+                created_at: '2026-03-31T23:34:13Z'
+                updated_at: '2026-03-31T23:34:13Z'
+                name: app-name
+                state: STARTED
+                lifecycle:
+                  type: buildpack
+                  data:
+                    buildpacks:
+                    - http://example.com/git
+                    stack: stack-name
+                relationships:
+                  space:
+                    data:
+                      guid: 885b97cc-38e7-43dd-80d6-93e8ab9b869e
+                  current_droplet:
+                    data:
+                      guid: '0975774d-e30f-435e-90fd-31a30761a9a7'
+                metadata:
+                  labels: {}
+                  annotations: {}
+                links:
+                  self:
+                    href: http://api2.vcap.me/v3/apps/55b56d2d-86a7-414b-88c1-097752af648f
+                  environment_variables:
+                    href: http://api2.vcap.me/v3/apps/55b56d2d-86a7-414b-88c1-097752af648f/environment_variables
+                  space:
+                    href: http://api2.vcap.me/v3/spaces/885b97cc-38e7-43dd-80d6-93e8ab9b869e
+                  processes:
+                    href: http://api2.vcap.me/v3/apps/55b56d2d-86a7-414b-88c1-097752af648f/processes
+                  packages:
+                    href: http://api2.vcap.me/v3/apps/55b56d2d-86a7-414b-88c1-097752af648f/packages
+                  current_droplet:
+                    href: http://api2.vcap.me/v3/apps/55b56d2d-86a7-414b-88c1-097752af648f/droplets/current
+                  droplets:
+                    href: http://api2.vcap.me/v3/apps/55b56d2d-86a7-414b-88c1-097752af648f/droplets
+                  tasks:
+                    href: http://api2.vcap.me/v3/apps/55b56d2d-86a7-414b-88c1-097752af648f/tasks
+                  start:
+                    href: http://api2.vcap.me/v3/apps/55b56d2d-86a7-414b-88c1-097752af648f/actions/start
+                    method: POST
+                  stop:
+                    href: http://api2.vcap.me/v3/apps/55b56d2d-86a7-414b-88c1-097752af648f/actions/stop
+                    method: POST
+                  clear_buildpack_cache:
+                    href: http://api2.vcap.me/v3/apps/55b56d2d-86a7-414b-88c1-097752af648f/actions/clear_buildpack_cache
+                    method: POST
+                  revisions:
+                    href: http://api2.vcap.me/v3/apps/55b56d2d-86a7-414b-88c1-097752af648f/revisions
+                  deployed_revisions:
+                    href: http://api2.vcap.me/v3/apps/55b56d2d-86a7-414b-88c1-097752af648f/revisions/deployed
+                  features:
+                    href: http://api2.vcap.me/v3/apps/55b56d2d-86a7-414b-88c1-097752af648f/features
+  "/v3/apps/{guid}/actions/start":
+    post:
+      summary: start
+      tags:
+      - AppsV3
+      parameters:
+      - name: guid
+        in: path
+        required: true
+        schema:
+          type: string
+        example: 17ab5a59-8384-45e9-9d10-67e0abd0a738
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties: {}
+            example: {}
+      responses:
+        '200':
+          description: starts the app successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  guid:
+                    type: string
+                  created_at:
+                    type: string
+                  updated_at:
+                    type: string
+                  name:
+                    type: string
+                  state:
+                    type: string
+                  lifecycle:
+                    type: object
+                    properties:
+                      type:
+                        type: string
+                      data:
+                        type: object
+                        properties:
+                          buildpacks:
+                            type: array
+                            items:
+                              type: string
+                          stack:
+                            type: string
+                        required:
+                        - buildpacks
+                        - stack
+                    required:
+                    - type
+                    - data
+                  relationships:
+                    type: object
+                    properties:
+                      space:
+                        type: object
+                        properties:
+                          data:
+                            type: object
+                            properties:
+                              guid:
+                                type: string
+                            required:
+                            - guid
+                        required:
+                        - data
+                      current_droplet:
+                        type: object
+                        properties:
+                          data:
+                            type: object
+                            properties:
+                              guid:
+                                type: string
+                            required:
+                            - guid
+                        required:
+                        - data
+                    required:
+                    - space
+                    - current_droplet
+                  metadata:
+                    type: object
+                    properties:
+                      labels:
+                        type: object
+                        properties: {}
+                      annotations:
+                        type: object
+                        properties: {}
+                    required:
+                    - labels
+                    - annotations
+                  links:
+                    type: object
+                    properties:
+                      self:
+                        type: object
+                        properties:
+                          href:
+                            type: string
+                        required:
+                        - href
+                      environment_variables:
+                        type: object
+                        properties:
+                          href:
+                            type: string
+                        required:
+                        - href
+                      space:
+                        type: object
+                        properties:
+                          href:
+                            type: string
+                        required:
+                        - href
+                      processes:
+                        type: object
+                        properties:
+                          href:
+                            type: string
+                        required:
+                        - href
+                      packages:
+                        type: object
+                        properties:
+                          href:
+                            type: string
+                        required:
+                        - href
+                      current_droplet:
+                        type: object
+                        properties:
+                          href:
+                            type: string
+                        required:
+                        - href
+                      droplets:
+                        type: object
+                        properties:
+                          href:
+                            type: string
+                        required:
+                        - href
+                      tasks:
+                        type: object
+                        properties:
+                          href:
+                            type: string
+                        required:
+                        - href
+                      start:
+                        type: object
+                        properties:
+                          href:
+                            type: string
+                          method:
+                            type: string
+                        required:
+                        - href
+                        - method
+                      stop:
+                        type: object
+                        properties:
+                          href:
+                            type: string
+                          method:
+                            type: string
+                        required:
+                        - href
+                        - method
+                      clear_buildpack_cache:
+                        type: object
+                        properties:
+                          href:
+                            type: string
+                          method:
+                            type: string
+                        required:
+                        - href
+                        - method
+                      revisions:
+                        type: object
+                        properties:
+                          href:
+                            type: string
+                        required:
+                        - href
+                      deployed_revisions:
+                        type: object
+                        properties:
+                          href:
+                            type: string
+                        required:
+                        - href
+                      features:
+                        type: object
+                        properties:
+                          href:
+                            type: string
+                        required:
+                        - href
+                    required:
+                    - self
+                    - environment_variables
+                    - space
+                    - processes
+                    - packages
+                    - current_droplet
+                    - droplets
+                    - tasks
+                    - start
+                    - stop
+                    - clear_buildpack_cache
+                    - revisions
+                    - deployed_revisions
+                    - features
+                required:
+                - guid
+                - created_at
+                - updated_at
+                - name
+                - state
+                - lifecycle
+                - relationships
+                - metadata
+                - links
+              example:
+                guid: 17ab5a59-8384-45e9-9d10-67e0abd0a738
+                created_at: '2026-03-31T23:34:16Z'
+                updated_at: '2026-03-31T23:34:16Z'
+                name: app-name
+                state: STARTED
+                lifecycle:
+                  type: buildpack
+                  data:
+                    buildpacks:
+                    - http://example.com/git
+                    stack: stack-name
+                relationships:
+                  space:
+                    data:
+                      guid: 7727723f-6ee1-4970-a8bd-eb8abff0aa26
+                  current_droplet:
+                    data:
+                      guid: 20396647-ad40-4e99-a475-79a98e9b7222
+                metadata:
+                  labels: {}
+                  annotations: {}
+                links:
+                  self:
+                    href: http://api2.vcap.me/v3/apps/17ab5a59-8384-45e9-9d10-67e0abd0a738
+                  environment_variables:
+                    href: http://api2.vcap.me/v3/apps/17ab5a59-8384-45e9-9d10-67e0abd0a738/environment_variables
+                  space:
+                    href: http://api2.vcap.me/v3/spaces/7727723f-6ee1-4970-a8bd-eb8abff0aa26
+                  processes:
+                    href: http://api2.vcap.me/v3/apps/17ab5a59-8384-45e9-9d10-67e0abd0a738/processes
+                  packages:
+                    href: http://api2.vcap.me/v3/apps/17ab5a59-8384-45e9-9d10-67e0abd0a738/packages
+                  current_droplet:
+                    href: http://api2.vcap.me/v3/apps/17ab5a59-8384-45e9-9d10-67e0abd0a738/droplets/current
+                  droplets:
+                    href: http://api2.vcap.me/v3/apps/17ab5a59-8384-45e9-9d10-67e0abd0a738/droplets
+                  tasks:
+                    href: http://api2.vcap.me/v3/apps/17ab5a59-8384-45e9-9d10-67e0abd0a738/tasks
+                  start:
+                    href: http://api2.vcap.me/v3/apps/17ab5a59-8384-45e9-9d10-67e0abd0a738/actions/start
+                    method: POST
+                  stop:
+                    href: http://api2.vcap.me/v3/apps/17ab5a59-8384-45e9-9d10-67e0abd0a738/actions/stop
+                    method: POST
+                  clear_buildpack_cache:
+                    href: http://api2.vcap.me/v3/apps/17ab5a59-8384-45e9-9d10-67e0abd0a738/actions/clear_buildpack_cache
+                    method: POST
+                  revisions:
+                    href: http://api2.vcap.me/v3/apps/17ab5a59-8384-45e9-9d10-67e0abd0a738/revisions
+                  deployed_revisions:
+                    href: http://api2.vcap.me/v3/apps/17ab5a59-8384-45e9-9d10-67e0abd0a738/revisions/deployed
+                  features:
+                    href: http://api2.vcap.me/v3/apps/17ab5a59-8384-45e9-9d10-67e0abd0a738/features
+        '422':
+          description: fails to start the app
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  errors:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        detail:
+                          type: string
+                        title:
+                          type: string
+                        code:
+                          type: integer
+                        test_mode_info:
+                          type: object
+                          properties:
+                            detail:
+                              type: string
+                            title:
+                              type: string
+                            backtrace:
+                              type: array
+                              items:
+                                type: string
+                          required:
+                          - detail
+                          - title
+                          - backtrace
+                      required:
+                      - detail
+                      - title
+                      - code
+                      - test_mode_info
+                required:
+                - errors
+              example:
+                errors:
+                - detail: log_rate_limit cannot be unlimited in organization 'name-22066'.
+                  title: CF-UnprocessableEntity
+                  code: 10008
+                  test_mode_info:
+                    detail: log_rate_limit cannot be unlimited in organization 'name-22066'.
+                    title: CF-UnprocessableEntity
+                    backtrace:
+                    - "/Users/sethboyles/workspace/capi-release/src/cloud_controller_ng/app/controllers/v3/application_controller.rb:18:in
+                      `unprocessable!'"
+                    - "/Users/sethboyles/workspace/capi-release/src/cloud_controller_ng/app/controllers/v3/apps_controller.rb:187:in
+                      `rescue in start'"
+                    - "/Users/sethboyles/workspace/capi-release/src/cloud_controller_ng/app/controllers/v3/apps_controller.rb:167:in
+                      `start'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/actionpack-8.1.3/lib/action_controller/metal/basic_implicit_render.rb:8:in
+                      `send_action'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/actionpack-8.1.3/lib/abstract_controller/base.rb:221:in
+                      `process_action'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/actionpack-8.1.3/lib/action_controller/metal/rendering.rb:199:in
+                      `process_action'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/actionpack-8.1.3/lib/abstract_controller/callbacks.rb:267:in
+                      `block in process_action'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/activesupport-8.1.3/lib/active_support/callbacks.rb:110:in
+                      `run_callbacks'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/actionpack-8.1.3/lib/abstract_controller/callbacks.rb:266:in
+                      `process_action'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/actionpack-8.1.3/lib/action_controller/metal/rescue.rb:36:in
+                      `process_action'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/actionpack-8.1.3/lib/action_controller/metal/instrumentation.rb:76:in
+                      `block in process_action'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/activesupport-8.1.3/lib/active_support/notifications.rb:210:in
+                      `block in instrument'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/activesupport-8.1.3/lib/active_support/notifications/instrumenter.rb:58:in
+                      `instrument'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/activesupport-8.1.3/lib/active_support/notifications.rb:210:in
+                      `instrument'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/actionpack-8.1.3/lib/action_controller/metal/instrumentation.rb:75:in
+                      `process_action'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/actionpack-8.1.3/lib/action_controller/metal/params_wrapper.rb:259:in
+                      `process_action'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/actionpack-8.1.3/lib/abstract_controller/base.rb:154:in
+                      `process'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/actionview-8.1.3/lib/action_view/rendering.rb:40:in
+                      `process'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/actionpack-8.1.3/lib/action_controller/metal.rb:252:in
+                      `dispatch'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/actionpack-8.1.3/lib/action_controller/metal.rb:335:in
+                      `dispatch'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/actionpack-8.1.3/lib/action_dispatch/routing/route_set.rb:65:in
+                      `dispatch'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/actionpack-8.1.3/lib/action_dispatch/routing/route_set.rb:50:in
+                      `serve'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/actionpack-8.1.3/lib/action_dispatch/journey/router.rb:35:in
+                      `block in serve'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/actionpack-8.1.3/lib/action_dispatch/journey/router.rb:86:in
+                      `block in recognize'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/actionpack-8.1.3/lib/action_dispatch/journey/router.rb:66:in
+                      `each'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/actionpack-8.1.3/lib/action_dispatch/journey/router.rb:66:in
+                      `recognize'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/actionpack-8.1.3/lib/action_dispatch/journey/router.rb:31:in
+                      `serve'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/actionpack-8.1.3/lib/action_dispatch/routing/route_set.rb:906:in
+                      `call'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/rack-3.2.5/lib/rack/tempfile_reaper.rb:20:in
+                      `call'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/actionpack-8.1.3/lib/action_dispatch/http/content_security_policy.rb:38:in
+                      `call'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/actionpack-8.1.3/lib/action_dispatch/middleware/callbacks.rb:31:in
+                      `block in call'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/activesupport-8.1.3/lib/active_support/callbacks.rb:101:in
+                      `run_callbacks'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/actionpack-8.1.3/lib/action_dispatch/middleware/callbacks.rb:30:in
+                      `call'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/actionpack-8.1.3/lib/action_dispatch/middleware/executor.rb:20:in
+                      `call'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/actionpack-8.1.3/lib/action_dispatch/middleware/actionable_exceptions.rb:18:in
+                      `call'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/actionpack-8.1.3/lib/action_dispatch/middleware/debug_exceptions.rb:31:in
+                      `call'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/actionpack-8.1.3/lib/action_dispatch/middleware/show_exceptions.rb:32:in
+                      `call'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/actionpack-8.1.3/lib/action_dispatch/middleware/remote_ip.rb:98:in
+                      `call'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/rack-3.2.5/lib/rack/runtime.rb:24:in
+                      `call'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/actionpack-8.1.3/lib/action_dispatch/middleware/executor.rb:20:in
+                      `call'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/rack-3.2.5/lib/rack/sendfile.rb:131:in
+                      `call'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/rack-3.2.5/lib/rack/urlmap.rb:76:in
+                      `block in call'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/rack-3.2.5/lib/rack/urlmap.rb:60:in
+                      `each'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/rack-3.2.5/lib/rack/urlmap.rb:60:in
+                      `call'"
+                    - "/Users/sethboyles/workspace/capi-release/src/cloud_controller_ng/middleware/request_logs.rb:14:in
+                      `call'"
+                    - "/Users/sethboyles/workspace/capi-release/src/cloud_controller_ng/middleware/zipkin.rb:32:in
+                      `call_app'"
+                    - "/Users/sethboyles/workspace/capi-release/src/cloud_controller_ng/middleware/zipkin.rb:9:in
+                      `call'"
+                    - "/Users/sethboyles/workspace/capi-release/src/cloud_controller_ng/middleware/security_context_setter.rb:41:in
+                      `call'"
+                    - "/Users/sethboyles/workspace/capi-release/src/cloud_controller_ng/middleware/vcap_request_context_setter.rb:17:in
+                      `call'"
+                    - "/Users/sethboyles/workspace/capi-release/src/cloud_controller_ng/middleware/cors.rb:50:in
+                      `call_app'"
+                    - "/Users/sethboyles/workspace/capi-release/src/cloud_controller_ng/middleware/cors.rb:14:in
+                      `call'"
+                    - "/Users/sethboyles/workspace/capi-release/src/cloud_controller_ng/middleware/request_metrics.rb:13:in
+                      `call'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/rack-3.2.5/lib/rack/builder.rb:283:in
+                      `call'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/rack-test-2.2.0/lib/rack/test.rb:360:in
+                      `process_request'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/rack-test-2.2.0/lib/rack/test.rb:163:in
+                      `custom_request'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/rack-test-2.2.0/lib/rack/test.rb:112:in
+                      `post'"
+                    - "/Users/sethboyles/.rubies/ruby-3.3.7/lib/ruby/3.3.0/forwardable.rb:240:in
+                      `post'"
+                    - "/Users/sethboyles/workspace/capi-release/src/cloud_controller_ng/spec/request/apps_spec.rb:2630:in
+                      `block (8 levels) in <main>'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/rspec-core-3.13.6/lib/rspec/core/example.rb:263:in
+                      `instance_exec'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/rspec-core-3.13.6/lib/rspec/core/example.rb:263:in
+                      `block in run'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/rspec-core-3.13.6/lib/rspec/core/example.rb:511:in
+                      `block in with_around_and_singleton_context_hooks'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/rspec-core-3.13.6/lib/rspec/core/example.rb:468:in
+                      `block in with_around_example_hooks'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/rspec-core-3.13.6/lib/rspec/core/hooks.rb:486:in
+                      `block in run'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/rspec-core-3.13.6/lib/rspec/core/hooks.rb:626:in
+                      `block in run_around_example_hooks_for'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/rspec-core-3.13.6/lib/rspec/core/example.rb:352:in
+                      `call'"
+                    - "/Users/sethboyles/workspace/capi-release/src/cloud_controller_ng/spec/spec_helper_helper.rb:155:in
+                      `block (3 levels) in each_run'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/sequel-5.102.0/lib/sequel/database/transactions.rb:257:in
+                      `_transaction'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/sequel-5.102.0/lib/sequel/database/transactions.rb:239:in
+                      `block in transaction'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/sequel-5.102.0/lib/sequel/connection_pool/threaded.rb:92:in
+                      `hold'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/sequel-5.102.0/lib/sequel/database/connecting.rb:283:in
+                      `synchronize'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/sequel-5.102.0/lib/sequel/database/transactions.rb:197:in
+                      `transaction'"
+                    - "/Users/sethboyles/workspace/capi-release/src/cloud_controller_ng/spec/support/database_isolation.rb:39:in
+                      `cleanly'"
+                    - "/Users/sethboyles/workspace/capi-release/src/cloud_controller_ng/spec/spec_helper_helper.rb:155:in
+                      `block (2 levels) in each_run'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/rspec-core-3.13.6/lib/rspec/core/example.rb:457:in
+                      `instance_exec'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/rspec-core-3.13.6/lib/rspec/core/example.rb:457:in
+                      `instance_exec'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/rspec-core-3.13.6/lib/rspec/core/hooks.rb:390:in
+                      `execute_with'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/rspec-core-3.13.6/lib/rspec/core/hooks.rb:628:in
+                      `block (2 levels) in run_around_example_hooks_for'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/rspec-core-3.13.6/lib/rspec/core/example.rb:352:in
+                      `call'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/webmock-3.26.2/lib/webmock/rspec.rb:39:in
+                      `block (2 levels) in <main>'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/rspec-core-3.13.6/lib/rspec/core/example.rb:457:in
+                      `instance_exec'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/rspec-core-3.13.6/lib/rspec/core/example.rb:457:in
+                      `instance_exec'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/rspec-core-3.13.6/lib/rspec/core/hooks.rb:390:in
+                      `execute_with'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/rspec-core-3.13.6/lib/rspec/core/hooks.rb:628:in
+                      `block (2 levels) in run_around_example_hooks_for'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/rspec-core-3.13.6/lib/rspec/core/example.rb:352:in
+                      `call'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/rspec-core-3.13.6/lib/rspec/core/hooks.rb:629:in
+                      `run_around_example_hooks_for'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/rspec-core-3.13.6/lib/rspec/core/hooks.rb:486:in
+                      `run'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/rspec-core-3.13.6/lib/rspec/core/example.rb:468:in
+                      `with_around_example_hooks'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/rspec-core-3.13.6/lib/rspec/core/example.rb:511:in
+                      `with_around_and_singleton_context_hooks'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/rspec-core-3.13.6/lib/rspec/core/example.rb:259:in
+                      `run'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/rspec-core-3.13.6/lib/rspec/core/example_group.rb:653:in
+                      `block in run_examples'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/rspec-core-3.13.6/lib/rspec/core/example_group.rb:649:in
+                      `map'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/rspec-core-3.13.6/lib/rspec/core/example_group.rb:649:in
+                      `run_examples'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/rspec-core-3.13.6/lib/rspec/core/example_group.rb:614:in
+                      `run'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/rspec-core-3.13.6/lib/rspec/core/example_group.rb:615:in
+                      `block in run'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/rspec-core-3.13.6/lib/rspec/core/example_group.rb:615:in
+                      `map'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/rspec-core-3.13.6/lib/rspec/core/example_group.rb:615:in
+                      `run'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/rspec-core-3.13.6/lib/rspec/core/example_group.rb:615:in
+                      `block in run'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/rspec-core-3.13.6/lib/rspec/core/example_group.rb:615:in
+                      `map'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/rspec-core-3.13.6/lib/rspec/core/example_group.rb:615:in
+                      `run'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/rspec-core-3.13.6/lib/rspec/core/example_group.rb:615:in
+                      `block in run'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/rspec-core-3.13.6/lib/rspec/core/example_group.rb:615:in
+                      `map'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/rspec-core-3.13.6/lib/rspec/core/example_group.rb:615:in
+                      `run'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/rspec-core-3.13.6/lib/rspec/core/example_group.rb:615:in
+                      `block in run'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/rspec-core-3.13.6/lib/rspec/core/example_group.rb:615:in
+                      `map'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/rspec-core-3.13.6/lib/rspec/core/example_group.rb:615:in
+                      `run'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/rspec-core-3.13.6/lib/rspec/core/example_group.rb:615:in
+                      `block in run'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/rspec-core-3.13.6/lib/rspec/core/example_group.rb:615:in
+                      `map'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/rspec-core-3.13.6/lib/rspec/core/example_group.rb:615:in
+                      `run'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/rspec-core-3.13.6/lib/rspec/core/example_group.rb:615:in
+                      `block in run'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/rspec-core-3.13.6/lib/rspec/core/example_group.rb:615:in
+                      `map'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/rspec-core-3.13.6/lib/rspec/core/example_group.rb:615:in
+                      `run'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/rspec-core-3.13.6/lib/rspec/core/runner.rb:121:in
+                      `block (3 levels) in run_specs'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/rspec-core-3.13.6/lib/rspec/core/runner.rb:121:in
+                      `map'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/rspec-core-3.13.6/lib/rspec/core/runner.rb:121:in
+                      `block (2 levels) in run_specs'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/rspec-core-3.13.6/lib/rspec/core/configuration.rb:2097:in
+                      `with_suite_hooks'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/rspec-core-3.13.6/lib/rspec/core/runner.rb:116:in
+                      `block in run_specs'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/rspec-core-3.13.6/lib/rspec/core/reporter.rb:74:in
+                      `report'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/rspec-core-3.13.6/lib/rspec/core/runner.rb:115:in
+                      `run_specs'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/rspec-core-3.13.6/lib/rspec/core/runner.rb:89:in
+                      `run'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/rspec-core-3.13.6/lib/rspec/core/runner.rb:71:in
+                      `run'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/rspec-core-3.13.6/lib/rspec/core/runner.rb:45:in
+                      `invoke'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/rspec-core-3.13.6/exe/rspec:4:in
+                      `<top (required)>'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/bin/rspec:25:in `load'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/bin/rspec:25:in `<top (required)>'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/bundler-2.6.9/lib/bundler/cli/exec.rb:59:in
+                      `load'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/bundler-2.6.9/lib/bundler/cli/exec.rb:59:in
+                      `kernel_load'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/bundler-2.6.9/lib/bundler/cli/exec.rb:23:in
+                      `run'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/bundler-2.6.9/lib/bundler/cli.rb:452:in
+                      `exec'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/bundler-2.6.9/lib/bundler/vendor/thor/lib/thor/command.rb:28:in
+                      `run'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/bundler-2.6.9/lib/bundler/vendor/thor/lib/thor/invocation.rb:127:in
+                      `invoke_command'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/bundler-2.6.9/lib/bundler/vendor/thor/lib/thor.rb:538:in
+                      `dispatch'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/bundler-2.6.9/lib/bundler/cli.rb:35:in
+                      `dispatch'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/bundler-2.6.9/lib/bundler/vendor/thor/lib/thor/base.rb:584:in
+                      `start'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/bundler-2.6.9/lib/bundler/cli.rb:29:in
+                      `start'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/bundler-2.6.9/exe/bundle:28:in
+                      `block in <top (required)>'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/bundler-2.6.9/lib/bundler/friendly_errors.rb:117:in
+                      `with_friendly_errors'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/gems/bundler-2.6.9/exe/bundle:20:in
+                      `<top (required)>'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/bin/bundle:25:in `load'"
+                    - "/Users/sethboyles/.gem/ruby/3.3.7/bin/bundle:25:in `<main>'"
+  "/v3/apps/{guid}/actions/stop":
+    post:
+      summary: stop
+      tags:
+      - AppsV3
+      parameters:
+      - name: guid
+        in: path
+        required: true
+        schema:
+          type: string
+        example: d31e848e-5c68-49af-95ba-5b39ef9a2f01
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties: {}
+            example: {}
+      responses:
+        '200':
+          description: logs the required fields when the app stops
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  guid:
+                    type: string
+                  created_at:
+                    type: string
+                  updated_at:
+                    type: string
+                  name:
+                    type: string
+                  state:
+                    type: string
+                  lifecycle:
+                    type: object
+                    properties:
+                      type:
+                        type: string
+                      data:
+                        type: object
+                        properties:
+                          buildpacks:
+                            type: array
+                            items:
+                              type: string
+                          stack:
+                            type: string
+                        required:
+                        - buildpacks
+                        - stack
+                    required:
+                    - type
+                    - data
+                  relationships:
+                    type: object
+                    properties:
+                      space:
+                        type: object
+                        properties:
+                          data:
+                            type: object
+                            properties:
+                              guid:
+                                type: string
+                            required:
+                            - guid
+                        required:
+                        - data
+                      current_droplet:
+                        type: object
+                        properties:
+                          data:
+                            type: object
+                            properties:
+                              guid:
+                                type: string
+                            required:
+                            - guid
+                        required:
+                        - data
+                    required:
+                    - space
+                    - current_droplet
+                  metadata:
+                    type: object
+                    properties:
+                      labels:
+                        type: object
+                        properties: {}
+                      annotations:
+                        type: object
+                        properties: {}
+                    required:
+                    - labels
+                    - annotations
+                  links:
+                    type: object
+                    properties:
+                      self:
+                        type: object
+                        properties:
+                          href:
+                            type: string
+                        required:
+                        - href
+                      environment_variables:
+                        type: object
+                        properties:
+                          href:
+                            type: string
+                        required:
+                        - href
+                      space:
+                        type: object
+                        properties:
+                          href:
+                            type: string
+                        required:
+                        - href
+                      processes:
+                        type: object
+                        properties:
+                          href:
+                            type: string
+                        required:
+                        - href
+                      packages:
+                        type: object
+                        properties:
+                          href:
+                            type: string
+                        required:
+                        - href
+                      current_droplet:
+                        type: object
+                        properties:
+                          href:
+                            type: string
+                        required:
+                        - href
+                      droplets:
+                        type: object
+                        properties:
+                          href:
+                            type: string
+                        required:
+                        - href
+                      tasks:
+                        type: object
+                        properties:
+                          href:
+                            type: string
+                        required:
+                        - href
+                      start:
+                        type: object
+                        properties:
+                          href:
+                            type: string
+                          method:
+                            type: string
+                        required:
+                        - href
+                        - method
+                      stop:
+                        type: object
+                        properties:
+                          href:
+                            type: string
+                          method:
+                            type: string
+                        required:
+                        - href
+                        - method
+                      clear_buildpack_cache:
+                        type: object
+                        properties:
+                          href:
+                            type: string
+                          method:
+                            type: string
+                        required:
+                        - href
+                        - method
+                      revisions:
+                        type: object
+                        properties:
+                          href:
+                            type: string
+                        required:
+                        - href
+                      deployed_revisions:
+                        type: object
+                        properties:
+                          href:
+                            type: string
+                        required:
+                        - href
+                      features:
+                        type: object
+                        properties:
+                          href:
+                            type: string
+                        required:
+                        - href
+                    required:
+                    - self
+                    - environment_variables
+                    - space
+                    - processes
+                    - packages
+                    - current_droplet
+                    - droplets
+                    - tasks
+                    - start
+                    - stop
+                    - clear_buildpack_cache
+                    - revisions
+                    - deployed_revisions
+                    - features
+                required:
+                - guid
+                - created_at
+                - updated_at
+                - name
+                - state
+                - lifecycle
+                - relationships
+                - metadata
+                - links
+              example:
+                guid: d31e848e-5c68-49af-95ba-5b39ef9a2f01
+                created_at: '2026-03-31T23:34:13Z'
+                updated_at: '2026-03-31T23:34:13Z'
+                name: app-name
+                state: STOPPED
+                lifecycle:
+                  type: buildpack
+                  data:
+                    buildpacks:
+                    - http://example.com/git
+                    stack: stack-name
+                relationships:
+                  space:
+                    data:
+                      guid: 137c96d0-f12a-4dd5-a56c-f35663ff585e
+                  current_droplet:
+                    data:
+                      guid: f79dba7a-1282-4f2d-a928-43c49004417d
+                metadata:
+                  labels: {}
+                  annotations: {}
+                links:
+                  self:
+                    href: http://api2.vcap.me/v3/apps/d31e848e-5c68-49af-95ba-5b39ef9a2f01
+                  environment_variables:
+                    href: http://api2.vcap.me/v3/apps/d31e848e-5c68-49af-95ba-5b39ef9a2f01/environment_variables
+                  space:
+                    href: http://api2.vcap.me/v3/spaces/137c96d0-f12a-4dd5-a56c-f35663ff585e
+                  processes:
+                    href: http://api2.vcap.me/v3/apps/d31e848e-5c68-49af-95ba-5b39ef9a2f01/processes
+                  packages:
+                    href: http://api2.vcap.me/v3/apps/d31e848e-5c68-49af-95ba-5b39ef9a2f01/packages
+                  current_droplet:
+                    href: http://api2.vcap.me/v3/apps/d31e848e-5c68-49af-95ba-5b39ef9a2f01/droplets/current
+                  droplets:
+                    href: http://api2.vcap.me/v3/apps/d31e848e-5c68-49af-95ba-5b39ef9a2f01/droplets
+                  tasks:
+                    href: http://api2.vcap.me/v3/apps/d31e848e-5c68-49af-95ba-5b39ef9a2f01/tasks
+                  start:
+                    href: http://api2.vcap.me/v3/apps/d31e848e-5c68-49af-95ba-5b39ef9a2f01/actions/start
+                    method: POST
+                  stop:
+                    href: http://api2.vcap.me/v3/apps/d31e848e-5c68-49af-95ba-5b39ef9a2f01/actions/stop
+                    method: POST
+                  clear_buildpack_cache:
+                    href: http://api2.vcap.me/v3/apps/d31e848e-5c68-49af-95ba-5b39ef9a2f01/actions/clear_buildpack_cache
+                    method: POST
+                  revisions:
+                    href: http://api2.vcap.me/v3/apps/d31e848e-5c68-49af-95ba-5b39ef9a2f01/revisions
+                  deployed_revisions:
+                    href: http://api2.vcap.me/v3/apps/d31e848e-5c68-49af-95ba-5b39ef9a2f01/revisions/deployed
+                  features:
+                    href: http://api2.vcap.me/v3/apps/d31e848e-5c68-49af-95ba-5b39ef9a2f01/features
+  "/v3/apps/{guid}/builds":
+    get:
+      summary: builds
+      tags:
+      - AppsV3
+      parameters:
+      - name: guid
+        in: path
+        required: true
+        schema:
+          type: string
+        example: 3fc27846-f950-4a54-af32-0b547bc2e7a0
+      - name: label_selector
+        in: query
+        required: false
+        schema:
+          type: string
+        example: fruit=strawberry
+      - name: order_by
+        in: query
+        required: false
+        schema:
+          type: string
+        example: "-created_at"
+      - name: per_page
+        in: query
+        required: false
+        schema:
+          type: integer
+        example: 2
+      responses:
+        '200':
+          description: filters on label_selector
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  pagination:
+                    type: object
+                    properties:
+                      total_results:
+                        type: integer
+                      total_pages:
+                        type: integer
+                      first:
+                        type: object
+                        properties:
+                          href:
+                            type: string
+                        required:
+                        - href
+                      last:
+                        type: object
+                        properties:
+                          href:
+                            type: string
+                        required:
+                        - href
+                      next:
+                        nullable: true
+                      previous:
+                        nullable: true
+                    required:
+                    - total_results
+                    - total_pages
+                    - first
+                    - last
+                    - next
+                    - previous
+                  resources:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        guid:
+                          type: string
+                        created_at:
+                          type: string
+                        updated_at:
+                          type: string
+                        state:
+                          type: string
+                        staging_memory_in_mb:
+                          type: integer
+                        staging_disk_in_mb:
+                          type: integer
+                        staging_log_rate_limit_bytes_per_second:
+                          type: integer
+                        error:
+                          nullable: true
+                        lifecycle:
+                          type: object
+                          properties:
+                            type:
+                              type: string
+                            data:
+                              type: object
+                              properties:
+                                buildpacks:
+                                  type: array
+                                  items:
+                                    type: string
+                                stack:
+                                  type: string
+                              required:
+                              - buildpacks
+                              - stack
+                          required:
+                          - type
+                          - data
+                        package:
+                          type: object
+                          properties:
+                            guid:
+                              type: string
+                          required:
+                          - guid
+                        droplet:
+                          type: object
+                          properties:
+                            guid:
+                              type: string
+                          required:
+                          - guid
+                        created_by:
+                          type: object
+                          properties:
+                            guid:
+                              type: string
+                            name:
+                              type: string
+                            email:
+                              type: string
+                          required:
+                          - guid
+                          - name
+                          - email
+                        relationships:
+                          type: object
+                          properties:
+                            app:
+                              type: object
+                              properties:
+                                data:
+                                  type: object
+                                  properties:
+                                    guid:
+                                      type: string
+                                  required:
+                                  - guid
+                              required:
+                              - data
+                          required:
+                          - app
+                        metadata:
+                          type: object
+                          properties:
+                            labels:
+                              type: object
+                              properties:
+                                fruit:
+                                  type: string
+                            annotations:
+                              type: object
+                              properties: {}
+                          required:
+                          - labels
+                          - annotations
+                        links:
+                          type: object
+                          properties:
+                            self:
+                              type: object
+                              properties:
+                                href:
+                                  type: string
+                              required:
+                              - href
+                            app:
+                              type: object
+                              properties:
+                                href:
+                                  type: string
+                              required:
+                              - href
+                            droplet:
+                              type: object
+                              properties:
+                                href:
+                                  type: string
+                              required:
+                              - href
+                          required:
+                          - self
+                          - app
+                          - droplet
+                      required:
+                      - guid
+                      - created_at
+                      - updated_at
+                      - state
+                      - staging_memory_in_mb
+                      - staging_disk_in_mb
+                      - staging_log_rate_limit_bytes_per_second
+                      - error
+                      - lifecycle
+                      - package
+                      - droplet
+                      - created_by
+                      - relationships
+                      - metadata
+                      - links
+                required:
+                - pagination
+                - resources
+              example:
+                pagination:
+                  total_results: 1
+                  total_pages: 1
+                  first:
+                    href: http://api2.vcap.me/v3/apps/3fc27846-f950-4a54-af32-0b547bc2e7a0/builds?label_selector=fruit%3Dstrawberry&page=1&per_page=50
+                  last:
+                    href: http://api2.vcap.me/v3/apps/3fc27846-f950-4a54-af32-0b547bc2e7a0/builds?label_selector=fruit%3Dstrawberry&page=1&per_page=50
+                  next:
+                  previous:
+                resources:
+                - guid: 7449f055-eb61-4c52-b12b-9e6e81150d4d
+                  created_at: '2026-03-31T23:34:11Z'
+                  updated_at: '2026-03-31T23:34:11Z'
+                  state: STAGED
+                  staging_memory_in_mb: 123
+                  staging_disk_in_mb: 456
+                  staging_log_rate_limit_bytes_per_second: 789
+                  error:
+                  lifecycle:
+                    type: buildpack
+                    data:
+                      buildpacks:
+                      - http://github.com/myorg/awesome-buildpack
+                      stack: cflinuxfs4
+                  package:
+                    guid: 2b25850d-da37-4348-ae18-57e5b33f3702
+                  droplet:
+                    guid: 426f82d4-1516-4acb-b0be-95e32963645b
+                  created_by:
+                    guid: uaa-id-3086
+                    name: bob the builder
+                    email: bob@loblaw.com
+                  relationships:
+                    app:
+                      data:
+                        guid: 3fc27846-f950-4a54-af32-0b547bc2e7a0
+                  metadata:
+                    labels:
+                      fruit: strawberry
+                    annotations: {}
+                  links:
+                    self:
+                      href: http://api2.vcap.me/v3/builds/7449f055-eb61-4c52-b12b-9e6e81150d4d
+                    app:
+                      href: http://api2.vcap.me/v3/apps/3fc27846-f950-4a54-af32-0b547bc2e7a0
+                    droplet:
+                      href: http://api2.vcap.me/v3/droplets/426f82d4-1516-4acb-b0be-95e32963645b
+  "/v3/apps/{guid}/environment_variables":
+    get:
+      summary: show_environment_variables
+      tags:
+      - AppsV3
+      parameters:
+      - name: guid
+        in: path
+        required: true
+        schema:
+          type: string
+        example: 247f9fd0-2c6e-4541-bc75-74dfc2df53bf
+      responses:
+        '500':
+          description: fails to decrypt the environment variables and returns a 500
+            error
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  errors:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        detail:
+                          type: string
+                        title:
+                          type: string
+                        code:
+                          type: integer
+                        test_mode_info:
+                          type: object
+                          properties:
+                            detail:
+                              type: string
+                            title:
+                              type: string
+                            backtrace:
+                              nullable: true
+                          required:
+                          - detail
+                          - title
+                          - backtrace
+                      required:
+                      - detail
+                      - title
+                      - code
+                      - test_mode_info
+                required:
+                - errors
+              example:
+                errors:
+                - detail: Error while processing encrypted data
+                  title: CF-InternalServerError
+                  code: 10081
+                  test_mode_info:
+                    detail: Error while processing encrypted data
+                    title: CF-InternalServerError
+                    backtrace:
+  "/v3/apps/{guid}/relationships/current_droplet":
+    patch:
+      summary: assign_current_droplet
+      tags:
+      - AppsV3
+      parameters:
+      - name: guid
+        in: path
+        required: true
+        schema:
+          type: string
+        example: 542aa7c9-6380-4546-a19f-5bcfeba0c5d4
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                data:
+                  type: object
+                  properties:
+                    guid:
+                      type: string
+                  required:
+                  - guid
+              required:
+              - data
+            example:
+              data:
+                guid: 4c9b1f3a-d947-4c86-bfa6-367b8be71f31
+      responses:
+        '200':
+          description: creates sidecars that were saved on the droplet
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: object
+                    properties:
+                      guid:
+                        type: string
+                    required:
+                    - guid
+                  links:
+                    type: object
+                    properties:
+                      self:
+                        type: object
+                        properties:
+                          href:
+                            type: string
+                        required:
+                        - href
+                      related:
+                        type: object
+                        properties:
+                          href:
+                            type: string
+                        required:
+                        - href
+                    required:
+                    - self
+                    - related
+                required:
+                - data
+                - links
+              example:
+                data:
+                  guid: 4c9b1f3a-d947-4c86-bfa6-367b8be71f31
+                links:
+                  self:
+                    href: http://api2.vcap.me/v3/apps/542aa7c9-6380-4546-a19f-5bcfeba0c5d4/relationships/current_droplet
+                  related:
+                    href: http://api2.vcap.me/v3/apps/542aa7c9-6380-4546-a19f-5bcfeba0c5d4/droplets/current
