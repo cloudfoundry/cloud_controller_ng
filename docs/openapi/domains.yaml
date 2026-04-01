@@ -3,11 +3,15 @@ openapi: 3.0.3
 info:
   title: Cloud Controller V3 API
   version: v3
+  description: Domains represent a [fully qualified domain name](https://en.wikipedia.org/wiki/Fully_qualified_domain_name)
+    that is used for application routes. A domain can be scoped to an organization,
+    meaning it can be used to create routes for spaces inside that organization, or
+    be left unscoped to allow all organizations access.
 servers: []
 paths:
   "/v3/domains":
     get:
-      summary: index
+      summary: List domains
       tags:
       - Domain
       parameters:
@@ -847,7 +851,7 @@ paths:
                     - "/Users/sethboyles/.gem/ruby/3.3.7/bin/bundle:25:in `load'"
                     - "/Users/sethboyles/.gem/ruby/3.3.7/bin/bundle:25:in `<main>'"
     post:
-      summary: create
+      summary: Create a domain
       tags:
       - Domain
       responses:
@@ -2308,7 +2312,7 @@ paths:
                   key2: value2
   "/v3/domains/{guid}":
     delete:
-      summary: destroy
+      summary: Delete a domain
       tags:
       - Domain
       parameters:
@@ -2916,7 +2920,7 @@ paths:
                     - "/Users/sethboyles/.gem/ruby/3.3.7/bin/bundle:25:in `load'"
                     - "/Users/sethboyles/.gem/ruby/3.3.7/bin/bundle:25:in `<main>'"
     get:
-      summary: show
+      summary: Get a domain
       tags:
       - Domain
       parameters:
@@ -3227,7 +3231,7 @@ paths:
                     - "/Users/sethboyles/.gem/ruby/3.3.7/bin/bundle:25:in `load'"
                     - "/Users/sethboyles/.gem/ruby/3.3.7/bin/bundle:25:in `<main>'"
     patch:
-      summary: update
+      summary: Update a domain
       tags:
       - Domain
       parameters:
@@ -3839,7 +3843,7 @@ paths:
                     - "/Users/sethboyles/.gem/ruby/3.3.7/bin/bundle:25:in `<main>'"
   "/v3/domains/{guid}/relationships/shared_organizations":
     post:
-      summary: update_shared_orgs
+      summary: Share a domain
       tags:
       - Domain
       parameters:
@@ -3849,6 +3853,7 @@ paths:
         schema:
           type: string
         example: c00d9932-460e-4229-a1a8-18afd4115096
+        description: Unique identifier for the resource
       responses:
         '401':
           description: returns 401 for Unauthenticated requests
@@ -5052,7 +5057,7 @@ paths:
                     - "/Users/sethboyles/.gem/ruby/3.3.7/bin/bundle:25:in `<main>'"
   "/v3/domains/{guid}/relationships/shared_organizations/{org_guid}":
     delete:
-      summary: delete_shared_org
+      summary: Unshare a domain
       tags:
       - Domain
       parameters:
@@ -6291,7 +6296,7 @@ paths:
                     - "/Users/sethboyles/.gem/ruby/3.3.7/bin/bundle:25:in `<main>'"
   "/v3/domains/{guid}/route_reservations":
     get:
-      summary: check_routes
+      summary: Check reserved routes for a domain
       tags:
       - Domain
       parameters:
@@ -6301,6 +6306,7 @@ paths:
         schema:
           type: string
         example: visible
+        description: Unique identifier for the resource
       responses:
         '200':
           description: returns a 404 with a helpful error message
@@ -6614,3 +6620,9 @@ paths:
                       `<top (required)>'"
                     - "/Users/sethboyles/.gem/ruby/3.3.7/bin/bundle:25:in `load'"
                     - "/Users/sethboyles/.gem/ruby/3.3.7/bin/bundle:25:in `<main>'"
+tags:
+- name: Domain
+  description: Domains represent a [fully qualified domain name](https://en.wikipedia.org/wiki/Fully_qualified_domain_name)
+    that is used for application routes. A domain can be scoped to an organization,
+    meaning it can be used to create routes for spaces inside that organization, or
+    be left unscoped to allow all organizations access.

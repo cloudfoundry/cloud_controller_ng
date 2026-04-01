@@ -3,11 +3,16 @@ openapi: 3.0.3
 info:
   title: Cloud Controller V3 API
   version: v3
+  description: Service usage events are a record of changes in the usage of services.
+    For example, service usage events are recorded when a service instance is created,
+    updated, and deleted. They may contain information about the service instance
+    in question and the associated space, service broker, and service offering. Usage
+    events are typically used by billing and chargeback applications.
 servers: []
 paths:
   "/v3/service_usage_events":
     get:
-      summary: index
+      summary: List service usage events
       tags:
       - ServiceUsageEvent
       parameters:
@@ -17,6 +22,8 @@ paths:
         schema:
           type: string
         example: 3a0213c2-2bb7-4138-ad92-5e348331d33e
+        description: Filters out events before and including the event with the given
+          guid
       - name: created_ats[lt]
         in: query
         required: false
@@ -35,18 +42,22 @@ paths:
         schema:
           type: string
         example: 07abffb1-9e9a-45a8-a224-d3785274e279
+        description: Comma-delimited list of usage event guids to filter by
       - name: service_instance_types
         in: query
         required: false
         schema:
           type: string
         example: managed_service_instance
+        description: Comma-delimited list of service instance types to filter by;
+          valid values are managedserviceinstance and userprovidedservice_instance
       - name: service_offering_guids
         in: query
         required: false
         schema:
           type: string
         example: offering-guid
+        description: Comma-delimited list of service offering guids to filter by
       - name: updated_ats[lt]
         in: query
         required: false
@@ -829,7 +840,7 @@ paths:
                     - "/Users/sethboyles/.gem/ruby/3.3.7/bin/bundle:25:in `<main>'"
   "/v3/service_usage_events/{guid}":
     get:
-      summary: show
+      summary: Get a service usage event
       tags:
       - ServiceUsageEvent
       parameters:
@@ -1440,3 +1451,10 @@ paths:
                       `<top (required)>'"
                     - "/Users/sethboyles/.gem/ruby/3.3.7/bin/bundle:25:in `load'"
                     - "/Users/sethboyles/.gem/ruby/3.3.7/bin/bundle:25:in `<main>'"
+tags:
+- name: ServiceUsageEvent
+  description: Service usage events are a record of changes in the usage of services.
+    For example, service usage events are recorded when a service instance is created,
+    updated, and deleted. They may contain information about the service instance
+    in question and the associated space, service broker, and service offering. Usage
+    events are typically used by billing and chargeback applications.

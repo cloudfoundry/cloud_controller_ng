@@ -3,11 +3,13 @@ openapi: 3.0.3
 info:
   title: Cloud Controller V3 API
   version: v3
+  description: Apps are top-level objects that link together and contain configuration
+    information for your packages, droplets, processes, tasks, and more.
 servers: []
 paths:
   "/v3/apps":
     get:
-      summary: index
+      summary: List apps
       tags:
       - AppsV3
       parameters:
@@ -23,60 +25,73 @@ paths:
         schema:
           type: string
         example: 8ef63612-1e4a-41f0-ab80-34d98c795e3d,c78f379b-215b-4d70-8571-ec07190ebadd
+        description: Comma-delimited list of app guids to filter by
       - name: include
         in: query
         required: false
         schema:
           type: string
         example: space
+        description: Optionally include a list of unique related resources in the
+          response; valid values are space and space.organization
       - name: label_selector
         in: query
         required: false
         schema:
           type: string
         example: foo in (bar)
+        description: A query string containing a list of label selector requirements
       - name: lifecycle_type
         in: query
         required: false
         schema:
           type: string
         example: buildpack
+        description: Lifecycle type to filter by; valid values are buildpack, cnb,
+          docker
       - name: names
         in: query
         required: false
         schema:
           type: string
         example: name1,name2
+        description: Comma-delimited list of app names to filter by
       - name: order_by
         in: query
         required: false
         schema:
           type: string
         example: "-state"
+        description: Value to sort by. Defaults to ascending; prepend with - to sort
+          descending. Valid values are createdat, updatedat, name, state
       - name: organization_guids
         in: query
         required: false
         schema:
           type: string
         example: 88c63a9a-ceb0-45a5-baf5-02429c979cc4,f3575d8c-7e1a-4b0b-bcac-0e8b362d3f30
+        description: Comma-delimited list of organization guids to filter by
       - name: per_page
         in: query
         required: false
         schema:
           type: integer
         example: 2
+        description: Number of results per page; valid values are 1 through 5000
       - name: space_guids
         in: query
         required: false
         schema:
           type: string
         example: b6820c76-1ed4-4eb0-b2ce-cff69ca4122e,aaf4e442-0501-4716-ba83-c1a9904d8165
+        description: Comma-delimited list of space guids to filter by
       - name: stacks
         in: query
         required: false
         schema:
           type: string
         example: ''
+        description: Comma-delimited list of stack names to filter by
       - name: updated_ats[lt]
         in: query
         required: false
@@ -987,7 +1002,7 @@ paths:
                     - "/Users/sethboyles/.gem/ruby/3.3.7/bin/bundle:25:in `load'"
                     - "/Users/sethboyles/.gem/ruby/3.3.7/bin/bundle:25:in `<main>'"
     post:
-      summary: create
+      summary: Create an app
       tags:
       - AppsV3
       responses:
@@ -1676,7 +1691,7 @@ paths:
                   dora.capi.land/stuff: real gud stuff
   "/v3/apps/{guid}":
     delete:
-      summary: destroy
+      summary: Delete an app
       tags:
       - AppsV3
       parameters:
@@ -1695,7 +1710,7 @@ paths:
                 type: string
               example: ''
     get:
-      summary: show
+      summary: Get an app
       tags:
       - AppsV3
       parameters:
@@ -1705,12 +1720,15 @@ paths:
         schema:
           type: string
         example: app1_guid
+        description: Unique identifier for the resource
       - name: include
         in: query
         required: false
         schema:
           type: string
         example: space.organization
+        description: Optionally include additional related resources in the response;
+          valid values are space and space.organization
       responses:
         '200':
           description: gets a specific app including space and org
@@ -2219,7 +2237,7 @@ paths:
                       quota:
                         href: http://api2.vcap.me/v3/organization_quotas/6b1d8cfe-fb04-4a9e-ba44-9864601749fd
     patch:
-      summary: update
+      summary: Update an app
       tags:
       - AppsV3
       parameters:
@@ -2229,6 +2247,7 @@ paths:
         schema:
           type: string
         example: 841443d5-226a-4129-a094-7a1f4fb24485
+        description: Unique identifier for the resource
       requestBody:
         content:
           application/json:
@@ -2601,7 +2620,7 @@ paths:
                     href: http://api2.vcap.me/v3/apps/841443d5-226a-4129-a094-7a1f4fb24485/features
   "/v3/apps/{guid}/actions/restart":
     post:
-      summary: restart
+      summary: Restart an app
       tags:
       - AppsV3
       parameters:
@@ -2889,7 +2908,7 @@ paths:
                     href: http://api2.vcap.me/v3/apps/55b56d2d-86a7-414b-88c1-097752af648f/features
   "/v3/apps/{guid}/actions/start":
     post:
-      summary: start
+      summary: Start an app
       tags:
       - AppsV3
       parameters:
@@ -3500,7 +3519,7 @@ paths:
                     - "/Users/sethboyles/.gem/ruby/3.3.7/bin/bundle:25:in `<main>'"
   "/v3/apps/{guid}/actions/stop":
     post:
-      summary: stop
+      summary: Stop an app
       tags:
       - AppsV3
       parameters:
@@ -3788,7 +3807,7 @@ paths:
                     href: http://api2.vcap.me/v3/apps/d31e848e-5c68-49af-95ba-5b39ef9a2f01/features
   "/v3/apps/{guid}/builds":
     get:
-      summary: builds
+      summary: List builds for an app
       tags:
       - AppsV3
       parameters:
@@ -3798,24 +3817,29 @@ paths:
         schema:
           type: string
         example: 3fc27846-f950-4a54-af32-0b547bc2e7a0
+        description: Unique identifier for the resource
       - name: label_selector
         in: query
         required: false
         schema:
           type: string
         example: fruit=strawberry
+        description: A query string containing a list of label selector requirements
       - name: order_by
         in: query
         required: false
         schema:
           type: string
         example: "-created_at"
+        description: Value to sort by; defaults to ascending. Prepend with - to sort
+          descending.  Valid values are createdat, updatedat
       - name: per_page
         in: query
         required: false
         schema:
           type: integer
         example: 2
+        description: Number of results per page;  valid values are 1 through 5000
       responses:
         '200':
           description: filters on label_selector
@@ -4052,7 +4076,7 @@ paths:
                       href: http://api2.vcap.me/v3/droplets/426f82d4-1516-4acb-b0be-95e32963645b
   "/v3/apps/{guid}/environment_variables":
     get:
-      summary: show_environment_variables
+      summary: Get environment variables for an app
       tags:
       - AppsV3
       parameters:
@@ -4113,7 +4137,7 @@ paths:
                     backtrace:
   "/v3/apps/{guid}/relationships/current_droplet":
     patch:
-      summary: assign_current_droplet
+      summary: Set current droplet
       tags:
       - AppsV3
       parameters:
@@ -4187,3 +4211,7 @@ paths:
                     href: http://api2.vcap.me/v3/apps/542aa7c9-6380-4546-a19f-5bcfeba0c5d4/relationships/current_droplet
                   related:
                     href: http://api2.vcap.me/v3/apps/542aa7c9-6380-4546-a19f-5bcfeba0c5d4/droplets/current
+tags:
+- name: AppsV3
+  description: Apps are top-level objects that link together and contain configuration
+    information for your packages, droplets, processes, tasks, and more.

@@ -3,11 +3,17 @@ openapi: 3.0.3
 info:
   title: Cloud Controller V3 API
   version: v3
+  description: 'There are two types of environment variable groups: running and staging.
+    They are designed to allow platform operators/admins to manage environment variables
+    across all apps in a foundation. Variables in a **running** environment variable
+    group will be injected into all **running app containers**. Variables in a **staging**
+    environment variable group will be injected into the **staging container** for
+    all apps while they are being staged.'
 servers: []
 paths:
   "/v3/environment_variable_groups/{name}":
     get:
-      summary: show
+      summary: Get an environment variable group
       tags:
       - EnvironmentVariableGroup
       parameters:
@@ -668,7 +674,7 @@ paths:
                     - "/Users/sethboyles/.gem/ruby/3.3.7/bin/bundle:25:in `load'"
                     - "/Users/sethboyles/.gem/ruby/3.3.7/bin/bundle:25:in `<main>'"
     patch:
-      summary: update
+      summary: Update environment variable group
       tags:
       - EnvironmentVariableGroup
       parameters:
@@ -1650,3 +1656,11 @@ paths:
                 foo: in-n-out
                 boo: mcdonalds
                 bar:
+tags:
+- name: EnvironmentVariableGroup
+  description: 'There are two types of environment variable groups: running and staging.
+    They are designed to allow platform operators/admins to manage environment variables
+    across all apps in a foundation. Variables in a **running** environment variable
+    group will be injected into all **running app containers**. Variables in a **staging**
+    environment variable group will be injected into the **staging container** for
+    all apps while they are being staged.'

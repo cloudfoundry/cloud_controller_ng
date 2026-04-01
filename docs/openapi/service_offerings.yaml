@@ -3,11 +3,15 @@ openapi: 3.0.3
 info:
   title: Cloud Controller V3 API
   version: v3
+  description: Service offerings represent the services offered by service brokers.
+    A service broker will have one or more service offerings. A service offering will
+    have one or more service plans. Service offerings and service plans are created
+    and updated when a service broker is registered or updated.
 servers: []
 paths:
   "/v3/service_offerings":
     get:
-      summary: index
+      summary: List service offerings
       tags:
       - ServiceOffering
       responses:
@@ -251,12 +255,15 @@ paths:
         schema:
           type: string
         example: 'false'
+        description: Filter by the available property; valid values are true or false
       - name: broker_catalog_ids
         in: query
         required: false
         schema:
           type: string
         example: 3ff27c6f-1028-4f38-9a4b-c201e229b391,9d2ee50c-9cad-41ff-a5ca-4db4a2721da3
+        description: Comma-delimited list of IDs provided by the service broker for
+          the service offering to filter by
       - name: fields[service_broker]
         in: query
         required: false
@@ -279,51 +286,60 @@ paths:
         schema:
           type: string
         example: flavor=orange
+        description: A query string containing a list of label selector requirements
       - name: names
         in: query
         required: false
         schema:
           type: string
         example: label-1345,label-1348
+        description: Comma-delimited list of names to filter by
       - name: order_by
         in: query
         required: false
         schema:
           type: string
         example: "-name"
+        description: Value to sort by. Defaults to ascending; prepend with - to sort
+          descending Valid values are createdat, updatedat and name
       - name: organization_guids
         in: query
         required: false
         schema:
           type: string
         example: 0ee45532-69b7-467c-a99b-705e0ca4a37c,ef677de6-9486-4c90-a78d-54d04bb6c588
+        description: Comma-delimited list of organization GUIDs to filter by
       - name: per_page
         in: query
         required: false
         schema:
           type: integer
         example: 2
+        description: Number of results per page;  valid values are 1 through 5000
       - name: service_broker_guids
         in: query
         required: false
         schema:
           type: string
         example: 5ca4858d-fc99-476f-8188-42c2c2dc6b74,0811566f-d41a-40c8-94e0-162ff6e7d6df
+        description: Comma-delimited list of service broker GUIDs to filter by
       - name: service_broker_names
         in: query
         required: false
         schema:
           type: string
         example: name-43446,name-43452
+        description: Comma-delimited list of service broker names to filter by
       - name: space_guids
         in: query
         required: false
         schema:
           type: string
         example: 662e4e9b-7f6a-439a-a7b1-db333f96d6b9,3121fb36-f2bf-485a-bacd-e0fdc0450000
+        description: Comma-delimited list of space GUIDs to filter by
   "/v3/service_offerings/{guid}":
     delete:
-      summary: destroy
+      summary: Delete a service offering
       tags:
       - ServiceOffering
       parameters:
@@ -333,12 +349,15 @@ paths:
         schema:
           type: string
         example: 036f1930-01b6-4603-a659-f019629f6024
+        description: Unique identifier for the resource
       - name: purge
         in: query
         required: false
         schema:
           type: string
         example: 'true'
+        description: If true, any service plans, instances, and bindings associated
+          with this service offering will also be deleted
       responses:
         '204':
           description: emits an audit event
@@ -654,7 +673,7 @@ paths:
                     - "/Users/sethboyles/.gem/ruby/3.3.7/bin/bundle:25:in `load'"
                     - "/Users/sethboyles/.gem/ruby/3.3.7/bin/bundle:25:in `<main>'"
     get:
-      summary: show
+      summary: Get a service offering
       tags:
       - ServiceOffering
       parameters:
@@ -674,6 +693,7 @@ paths:
         schema:
           type: string
         example: f3f5f3c1-9ca0-4078-9082-0c093e8ba885
+        description: Unique identifier for the resource
       responses:
         '200':
           description: displays the metadata correctly
@@ -884,7 +904,7 @@ paths:
                   - name: name-44290
                     guid: 208f1560-beec-4176-afbe-498ee1297496
     patch:
-      summary: update
+      summary: Update a service offering
       tags:
       - ServiceOffering
       parameters:
@@ -894,6 +914,7 @@ paths:
         schema:
           type: string
         example: some-invalid-guid
+        description: Unique identifier for the resource
       requestBody:
         content:
           application/json:
@@ -1720,3 +1741,9 @@ paths:
                       `<top (required)>'"
                     - "/Users/sethboyles/.gem/ruby/3.3.7/bin/bundle:25:in `load'"
                     - "/Users/sethboyles/.gem/ruby/3.3.7/bin/bundle:25:in `<main>'"
+tags:
+- name: ServiceOffering
+  description: Service offerings represent the services offered by service brokers.
+    A service broker will have one or more service offerings. A service offering will
+    have one or more service plans. Service offerings and service plans are created
+    and updated when a service broker is registered or updated.

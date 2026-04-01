@@ -7,7 +7,7 @@ servers: []
 paths:
   "/v3/jobs/{guid}":
     get:
-      summary: show
+      summary: Get a job
       tags:
       - V3::Job
       parameters:
@@ -325,7 +325,7 @@ paths:
                     href: http://api2.vcap.me/v3/spaces/301817fa-81f1-4e1b-b629-390af3473a66
   "/v3/spaces/{guid}/actions/apply_manifest":
     post:
-      summary: apply_manifest
+      summary: Apply a manifest to a space
       tags:
       - SpaceManifest
       parameters:
@@ -998,7 +998,7 @@ paths:
                     - "/Users/sethboyles/.gem/ruby/3.3.7/bin/bundle:25:in `<main>'"
   "/v3/spaces/{guid}/manifest_diff":
     post:
-      summary: diff_manifest
+      summary: Create a manifest diff for a space (experimental)
       tags:
       - SpaceManifest
       parameters:

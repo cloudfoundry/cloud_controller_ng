@@ -3,11 +3,14 @@ openapi: 3.0.3
 info:
   title: Cloud Controller V3 API
   version: v3
+  description: Service plans represent the service plans offered by a service offering.
+    A service offering will have one or more service plans. Service offerings and
+    service plans are created and updated when a service broker is registered or updated.
 servers: []
 paths:
   "/v3/service_offerings/{guid}":
     get:
-      summary: show
+      summary: Get a service offering
       tags:
       - ServiceOffering
       parameters:
@@ -17,6 +20,7 @@ paths:
         schema:
           type: string
         example: 81b307f1-f32b-4909-84f4-0800b7d005cb
+        description: Unique identifier for the resource
       responses:
         '200':
           description: links to service offerings
@@ -195,7 +199,7 @@ paths:
                     href: http://api2.vcap.me/v3/service_brokers/0c4e68d9-09e9-4b45-a79a-3cad85d670d9
   "/v3/service_plans":
     get:
-      summary: index
+      summary: List service plans
       tags:
       - ServicePlan
       responses:
@@ -853,12 +857,15 @@ paths:
         schema:
           type: string
         example: 'false'
+        description: Filter by the available property; valid values are true or false
       - name: broker_catalog_ids
         in: query
         required: false
         schema:
           type: string
         example: 1193afb3-f166-4e86-8ead-87c293f06d90
+        description: Comma-delimited list of IDs provided by the service broker for
+          the service plan to filter by
       - name: fields[service_offering.service_broker]
         in: query
         required: false
@@ -875,45 +882,53 @@ paths:
         schema:
           type: string
         example: space.organization
+        description: Optionally include a list of unique related resources in the
+          response;  valid values are space.organization and service_offering
       - name: label_selector
         in: query
         required: false
         schema:
           type: string
         example: flavor=orange
+        description: A query string containing a list of label selector requirements
       - name: organization_guids
         in: query
         required: false
         schema:
           type: string
         example: 31b83bbc-31dc-41f9-968e-58883999fd6b,7814355d-e12f-479c-8ca1-1a8325390bf3
+        description: Comma-delimited list of organization GUIDs to filter by
       - name: service_broker_names
         in: query
         required: false
         schema:
           type: string
         example: space_broker
+        description: Comma-delimited list of service broker names to filter by
       - name: service_instance_guids
         in: query
         required: false
         schema:
           type: string
         example: b9817b3c-6e43-4913-adc9-6d3ab9579d7f,d5e6d70b-141a-49f5-a2e6-95e974fefdf4
+        description: Comma-delimited list of service Instance GUIDs to filter by
       - name: service_offering_names
         in: query
         required: false
         schema:
           type: string
         example: label-529,label-530
+        description: Comma-delimited list of service Offering names to filter by
       - name: space_guids
         in: query
         required: false
         schema:
           type: string
         example: d75ea138-5cf9-47c5-9415-64a7f11a3006,6c8fa815-fecf-49b0-b036-f54c1f321715
+        description: Comma-delimited list of space GUIDs to filter by
   "/v3/service_plans/{guid}":
     delete:
-      summary: destroy
+      summary: Delete a service plan
       tags:
       - ServicePlan
       parameters:
@@ -1228,7 +1243,7 @@ paths:
                     - "/Users/sethboyles/.gem/ruby/3.3.7/bin/bundle:25:in `load'"
                     - "/Users/sethboyles/.gem/ruby/3.3.7/bin/bundle:25:in `<main>'"
     get:
-      summary: show
+      summary: Get a service plan
       tags:
       - ServicePlan
       parameters:
@@ -1248,12 +1263,15 @@ paths:
         schema:
           type: string
         example: adeb706c-4e3d-4707-a617-16098a80fbe3
+        description: Unique identifier for the resource
       - name: include
         in: query
         required: false
         schema:
           type: string
         example: space.organization
+        description: Optionally include a list of related resources in the response;  valid
+          values are space.organization and service_offering
       responses:
         '200':
           description: can include service broker name and guid
@@ -1913,7 +1931,7 @@ paths:
                   - name: name-22504
                     guid: 9dcb178d-97fa-4de8-849f-524f28c153ef
     patch:
-      summary: update
+      summary: Update a service plan
       tags:
       - ServicePlan
       parameters:
@@ -1923,6 +1941,7 @@ paths:
         schema:
           type: string
         example: 8a0f25c7-d418-4db1-98b7-5d3c14434a0a
+        description: Unique identifier for the resource
       requestBody:
         content:
           application/json:
@@ -2785,7 +2804,7 @@ paths:
                     - "/Users/sethboyles/.gem/ruby/3.3.7/bin/bundle:25:in `<main>'"
   "/v3/service_plans/{guid}/visibility":
     get:
-      summary: show
+      summary: Get a service plan visibility
       tags:
       - ServicePlanVisibility
       parameters:
@@ -2809,3 +2828,8 @@ paths:
                 - type
               example:
                 type: public
+tags:
+- name: ServiceOffering
+  description: Service plans represent the service plans offered by a service offering.
+    A service offering will have one or more service plans. Service offerings and
+    service plans are created and updated when a service broker is registered or updated.

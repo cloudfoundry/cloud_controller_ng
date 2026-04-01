@@ -3,11 +3,15 @@ openapi: 3.0.3
 info:
   title: Cloud Controller V3 API
   version: v3
+  description: An org is a development account that an individual or multiple collaborators
+    can own and use. All collaborators access an org with user accounts. Collaborators
+    in an org share a resource quota plan, applications, services availability, and
+    custom domains.
 servers: []
 paths:
   "/v3/isolation_segments/{isolation_segment_guid}/organizations":
     get:
-      summary: index
+      summary: List organizations for isolation segment
       tags:
       - OrganizationsV3
       parameters:
@@ -17,12 +21,14 @@ paths:
         schema:
           type: string
         example: dee226db-21d0-4c47-b05b-5cbd0960d249
+        description: Unique identifier for the resource
       - name: per_page
         in: query
         required: false
         schema:
           type: integer
         example: 2
+        description: Number of results per page;  valid values are 1 through 5000
       responses:
         '200':
           description: returns a paginated list of orgs entitled to the isolation
@@ -211,7 +217,7 @@ paths:
                       href: http://api2.vcap.me/v3/organization_quotas/5f21ae39-b47f-4d00-869b-e58d7cbaec5f
   "/v3/jobs/{guid}":
     get:
-      summary: show
+      summary: Get a job
       tags:
       - V3::Job
       parameters:
@@ -529,7 +535,7 @@ paths:
                     href: http://api2.vcap.me/v3/organizations/3a6d24db-efd8-41f7-8bec-72f487137269
   "/v3/organizations":
     get:
-      summary: index
+      summary: List organizations
       tags:
       - OrganizationsV3
       parameters:
@@ -539,12 +545,14 @@ paths:
         schema:
           type: string
         example: "!fruit,env=prod,animal in (dog,horse)"
+        description: A query string containing a list of label selector requirements
       - name: per_page
         in: query
         required: false
         schema:
           type: integer
         example: 2
+        description: Number of results per page;  valid values are 1 through 5000
       responses:
         '200':
           description: returns the matching orgs
@@ -745,7 +753,7 @@ paths:
                     quota:
                       href: http://api2.vcap.me/v3/organization_quotas/5aa7c554-f1ec-4091-a4d1-d26e66dbd6c1
     post:
-      summary: create
+      summary: Create an organization
       tags:
       - OrganizationsV3
       requestBody:
@@ -924,7 +932,7 @@ paths:
                     href: http://api2.vcap.me/v3/organization_quotas/5a6948e2-7fc7-45cf-ab5e-e8e0eaf2f56a
   "/v3/organizations/{guid}":
     delete:
-      summary: destroy
+      summary: Delete an organization
       tags:
       - OrganizationsV3
       parameters:
@@ -1237,7 +1245,7 @@ paths:
                     - "/Users/sethboyles/.gem/ruby/3.3.7/bin/bundle:25:in `load'"
                     - "/Users/sethboyles/.gem/ruby/3.3.7/bin/bundle:25:in `<main>'"
     patch:
-      summary: update
+      summary: Update an organization
       tags:
       - OrganizationsV3
       parameters:
@@ -1247,6 +1255,7 @@ paths:
         schema:
           type: string
         example: 5eb1197e-f3ff-49f0-b335-7fa7d2086004
+        description: Unique identifier for the resource
       requestBody:
         content:
           application/json:
@@ -1735,7 +1744,7 @@ paths:
                     - "/Users/sethboyles/.gem/ruby/3.3.7/bin/bundle:25:in `<main>'"
   "/v3/organizations/{guid}/domains":
     get:
-      summary: index_org_domains
+      summary: List domains for an organization
       tags:
       - OrganizationsV3
       parameters:
@@ -2851,7 +2860,7 @@ paths:
                     - "/Users/sethboyles/.gem/ruby/3.3.7/bin/bundle:25:in `<main>'"
   "/v3/organizations/{guid}/domains/default":
     get:
-      summary: show_default_domain
+      summary: Get default domain
       tags:
       - OrganizationsV3
       parameters:
@@ -3466,7 +3475,7 @@ paths:
                     - "/Users/sethboyles/.gem/ruby/3.3.7/bin/bundle:25:in `<main>'"
   "/v3/organizations/{guid}/relationships/default_isolation_segment":
     get:
-      summary: show_default_isolation_segment
+      summary: Get default isolation segment
       tags:
       - OrganizationsV3
       parameters:
@@ -3523,7 +3532,7 @@ paths:
                   related:
                     href: http://api2.vcap.me/v3/isolation_segments/9a75aa6a-7f91-40f8-a222-9bc8fb6b76a2
     patch:
-      summary: update_default_isolation_segment
+      summary: Assign default isolation segment
       tags:
       - OrganizationsV3
       parameters:
@@ -3533,6 +3542,7 @@ paths:
         schema:
           type: string
         example: 892bf888-9ebf-405c-bce0-49d4f56ccef2
+        description: Unique identifier for the resource
       requestBody:
         content:
           application/json:
@@ -3599,7 +3609,7 @@ paths:
                     href: http://api2.vcap.me/v3/isolation_segments/1f9331b1-2940-484b-8a7a-85996411c434
   "/v3/organizations/{guid}/usage_summary":
     get:
-      summary: show_usage_summary
+      summary: Get usage summary
       tags:
       - OrganizationsV3
       parameters:
@@ -3911,7 +3921,7 @@ paths:
                     - "/Users/sethboyles/.gem/ruby/3.3.7/bin/bundle:25:in `<main>'"
   "/v3/organizations/{guid}/users":
     get:
-      summary: list_members
+      summary: List users for an organization
       tags:
       - OrganizationsV3
       parameters:
@@ -3927,30 +3937,40 @@ paths:
         schema:
           type: string
         example: 11f75f15-005c-4ba5-bf30-8ed30a38407b
+        description: Unique identifier for the resource
       - name: guids
         in: query
         required: false
         schema:
           type: string
         example: uaa-id-3756
+        description: Comma-delimited list of user guids to filter by
       - name: label_selector
         in: query
         required: false
         schema:
           type: string
         example: animal in (dog)
+        description: A query string containing a list of label selector requirements
       - name: origins
         in: query
         required: false
         schema:
           type: string
         example: Okta
+        description: Comma-delimited list of user origins (user stores) to filter
+          by, for example, users authenticated by UAA have the origin "uaa"; users
+          authenticated by an LDAP provider have the origin "ldap"; when filtering
+          by origins, usernames must be included
       - name: partial_usernames
         in: query
         required: false
         schema:
           type: string
         example: b-mcjam
+        description: Comma-delimited list of strings to search by. When using this
+          query parameter, all the users that contain the string provided in their
+          username will be returned. Mutually exclusive with usernames
       - name: updated_ats[lt]
         in: query
         required: false
@@ -3963,6 +3983,8 @@ paths:
         schema:
           type: string
         example: rob-mcjames
+        description: Comma-delimited list of usernames to filter by. Mutually exclusive
+          with partial_usernames
       responses:
         '200':
           description: returns 200 and filters
@@ -4683,7 +4705,7 @@ paths:
                     - "/Users/sethboyles/.gem/ruby/3.3.7/bin/bundle:25:in `<main>'"
   "/v3/spaces/{guid}":
     get:
-      summary: show
+      summary: Get a space
       tags:
       - SpacesV3
       parameters:
@@ -4693,6 +4715,7 @@ paths:
         schema:
           type: string
         example: ce882032-1322-41e1-ba54-dea3757376ad
+        description: Unique identifier for the resource
       responses:
         '404':
           description: destroys the requested organization and sub resources (spaces)
@@ -5137,3 +5160,9 @@ paths:
                       `<top (required)>'"
                     - "/Users/sethboyles/.gem/ruby/3.3.7/bin/bundle:25:in `load'"
                     - "/Users/sethboyles/.gem/ruby/3.3.7/bin/bundle:25:in `<main>'"
+tags:
+- name: OrganizationsV3
+  description: An org is a development account that an individual or multiple collaborators
+    can own and use. All collaborators access an org with user accounts. Collaborators
+    in an org share a resource quota plan, applications, services availability, and
+    custom domains.

@@ -3,11 +3,19 @@ openapi: 3.0.3
 info:
   title: Cloud Controller V3 API
   version: v3
+  description: Service brokers manage the lifecycle of services. On behalf of users,
+    Cloud Controller will interact with service brokers to provision, get access to
+    and manage access to the service offerings and plans they offer. Admins can create
+    and manage service brokers that are globally available, i.e., the service broker
+    and its associated resources (service offerings and plans) can be made available
+    to all users. Space Developers can create and manage space-scoped service brokers.
+    A space-scoped broker and its associated resources will only be available in the
+    space the service broker was created.
 servers: []
 paths:
   "/v3/jobs/{guid}":
     get:
-      summary: show
+      summary: Get a job
       tags:
       - V3::Job
       parameters:
@@ -127,7 +135,7 @@ paths:
                     href: http://api2.vcap.me/v3/service_brokers/a73c586b-7a54-406c-80fd-f4840b0fb031
   "/v3/service_brokers":
     get:
-      summary: index
+      summary: List service brokers
       tags:
       - ServiceBroker
       responses:
@@ -272,20 +280,23 @@ paths:
         schema:
           type: string
         example: boomerang=gel
+        description: A query string containing a list of label selector requirements
       - name: names
         in: query
         required: false
         schema:
           type: string
         example: test-broker-foo
+        description: Comma-delimited list of service broker names to filter by
       - name: space_guids
         in: query
         required: false
         schema:
           type: string
         example: f2ff5a52-80c8-4de3-a7df-75743d3f19b8
+        description: Comma-delimited list of space GUIDs to filter by
     post:
-      summary: create
+      summary: Create a service broker
       tags:
       - ServiceBroker
       requestBody:
@@ -1017,7 +1028,7 @@ paths:
                     - "/Users/sethboyles/.gem/ruby/3.3.7/bin/bundle:25:in `<main>'"
   "/v3/service_brokers/{guid}":
     delete:
-      summary: destroy
+      summary: Delete a service broker
       tags:
       - ServiceBroker
       parameters:
@@ -1674,7 +1685,7 @@ paths:
                     - "/Users/sethboyles/.gem/ruby/3.3.7/bin/bundle:25:in `load'"
                     - "/Users/sethboyles/.gem/ruby/3.3.7/bin/bundle:25:in `<main>'"
     get:
-      summary: show
+      summary: Get a service broker
       tags:
       - ServiceBroker
       parameters:
@@ -2093,7 +2104,7 @@ paths:
                     - "/Users/sethboyles/.gem/ruby/3.3.7/bin/bundle:25:in `load'"
                     - "/Users/sethboyles/.gem/ruby/3.3.7/bin/bundle:25:in `<main>'"
     patch:
-      summary: update
+      summary: Update a service broker
       tags:
       - ServiceBroker
       parameters:
@@ -2103,6 +2114,7 @@ paths:
         schema:
           type: string
         example: 6a97a5b5-46c1-4525-b117-8b2e0586c699
+        description: Unique identifier for the resource
       requestBody:
         content:
           application/json:
@@ -2909,3 +2921,13 @@ paths:
                     detail: Error while processing encrypted data
                     title: CF-InternalServerError
                     backtrace:
+tags:
+- name: V3::Job
+  description: Service brokers manage the lifecycle of services. On behalf of users,
+    Cloud Controller will interact with service brokers to provision, get access to
+    and manage access to the service offerings and plans they offer. Admins can create
+    and manage service brokers that are globally available, i.e., the service broker
+    and its associated resources (service offerings and plans) can be made available
+    to all users. Space Developers can create and manage space-scoped service brokers.
+    A space-scoped broker and its associated resources will only be available in the
+    space the service broker was created.

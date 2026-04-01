@@ -7,7 +7,7 @@ servers: []
 paths:
   "/v3/spaces":
     get:
-      summary: index
+      summary: List spaces
       tags:
       - SpacesV3
       responses:

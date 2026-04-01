@@ -3,11 +3,18 @@ openapi: 3.0.3
 info:
   title: Cloud Controller V3 API
   version: v3
+  description: 'Buildpacks are used during a [build][builds] to download external
+    dependencies and transform a [package][packages] into an executable [droplet][droplets].
+    In this way, buildpacks are a pluggable extension to Cloud Foundry that enable
+    CF to run different languages and frameworks. Buildpacks will automatically detect
+    if they support an application. Buildpacks can also be explicitly specified on
+    [apps][] and [builds][]. [apps]: #apps [builds]: #builds [droplets]: #droplets
+    [packages]: #packages'
 servers: []
 paths:
   "/v3/buildpacks":
     get:
-      summary: index
+      summary: List buildpacks
       tags:
       - Buildpack
       responses:
@@ -258,44 +265,52 @@ paths:
         schema:
           type: string
         example: "!fruit,env=prod,animal in (dog,horse)"
+        description: A query string containing a list of label selector requirements
       - name: lifecycle
         in: query
         required: false
         schema:
           type: string
         example: cnb
+        description: Type of buildpack. Valid values are buildpack and cnb
       - name: names
         in: query
         required: false
         schema:
           type: string
         example: name-5907,name-5911
+        description: Comma-delimited list of buildpack names to filter by
       - name: order_by
         in: query
         required: false
         schema:
           type: string
         example: "-lifecycle"
+        description: Value to sort by; defaults to ascending. Prepend with - to sort
+          descending.  Valid values are createdat, updatedat, lifecycle, and position
       - name: page
         in: query
         required: false
         schema:
           type: integer
         example: 1
+        description: Page to display; valid values are integers >= 1
       - name: per_page
         in: query
         required: false
         schema:
           type: integer
         example: 2
+        description: Number of results per page;  valid values are 1 through 5000
       - name: stacks
         in: query
         required: false
         schema:
           type: string
         example: name-5848
+        description: Comma-delimited list of stack names to filter by
     post:
-      summary: create
+      summary: Create a buildpack
       tags:
       - Buildpack
       responses:
@@ -1061,7 +1076,7 @@ paths:
               position: 42
   "/v3/buildpacks/{guid}":
     get:
-      summary: show
+      summary: Get a buildpack
       tags:
       - Buildpack
       parameters:
@@ -1667,7 +1682,7 @@ paths:
                     - "/Users/sethboyles/.gem/ruby/3.3.7/bin/bundle:25:in `load'"
                     - "/Users/sethboyles/.gem/ruby/3.3.7/bin/bundle:25:in `<main>'"
     patch:
-      summary: update
+      summary: Update a buildpack
       tags:
       - Buildpack
       parameters:
@@ -1677,6 +1692,7 @@ paths:
         schema:
           type: string
         example: 36c054f5-bd94-4f6d-956a-9e29df5a18bb
+        description: Unique identifier for the resource
       requestBody:
         content:
           application/json:
@@ -1791,7 +1807,7 @@ paths:
                     method: POST
   "/v3/jobs/{guid}":
     get:
-      summary: show
+      summary: Get a job
       tags:
       - V3::Job
       parameters:
@@ -1867,3 +1883,12 @@ paths:
                     href: http://api2.vcap.me/v3/jobs/49aed21c-09ba-4bd7-a323-270e0e686caa
                   buildpack:
                     href: http://api2.vcap.me/v3/buildpacks/74e8e0d9-1086-4104-b65f-6e09b6df9a37
+tags:
+- name: Buildpack
+  description: 'Buildpacks are used during a [build][builds] to download external
+    dependencies and transform a [package][packages] into an executable [droplet][droplets].
+    In this way, buildpacks are a pluggable extension to Cloud Foundry that enable
+    CF to run different languages and frameworks. Buildpacks will automatically detect
+    if they support an application. Buildpacks can also be explicitly specified on
+    [apps][] and [builds][]. [apps]: #apps [builds]: #builds [droplets]: #droplets
+    [packages]: #packages'

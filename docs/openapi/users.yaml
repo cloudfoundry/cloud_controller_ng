@@ -3,11 +3,22 @@ openapi: 3.0.3
 info:
   title: Cloud Controller V3 API
   version: v3
+  description: The user resource is used to manage access to organizations, spaces,
+    and other resources within Cloud Foundry. Cloud Controller is not the ultimate
+    authority on the users in the Cloud Foundry system; UAA and its configured identity
+    providers determine which users are able to sign in to Cloud Foundry. To be functional,
+    Cloud Controller users must "shadow" a corresponding user or client in UAA. The
+    Cloud Controller user resource's guid should match either a UAA user or a UAA
+    client id. However, Cloud Controller does not enforce that a user's guid is a
+    valid UAA user or client id. Users can be assigned roles, which give them privileges
+    to perform actions within a given context. For example, the Space Developer role
+    grants a user permission to manage apps and services in a space (e.g. to push
+    apps, scale apps, delete apps).
 servers: []
 paths:
   "/v3/users":
     get:
-      summary: index
+      summary: List users
       tags:
       - User
       parameters:
@@ -23,12 +34,17 @@ paths:
         schema:
           type: string
         example: animal in (dog)
+        description: A query string containing a list of label selector requirements
       - name: origins
         in: query
         required: false
         schema:
           type: string
         example: uaa
+        description: Comma-delimited list of user origins (user stores) to filter
+          by, for example, users authenticated by UAA have the origin "uaa"; users
+          authenticated by an LDAP provider have the origin "ldap"; when filtering
+          by origins, usernames must be included
       - name: updated_ats[lt]
         in: query
         required: false
@@ -41,6 +57,8 @@ paths:
         schema:
           type: string
         example: bob-mcjames
+        description: Comma-delimited list of usernames to filter by. Mutually exclusive
+          with partial_usernames
       responses:
         '200':
           description: returns a 200 and the filtered routes for "in" label selector
@@ -1078,7 +1096,7 @@ paths:
                     - "/Users/sethboyles/.gem/ruby/3.3.7/bin/bundle:25:in `load'"
                     - "/Users/sethboyles/.gem/ruby/3.3.7/bin/bundle:25:in `<main>'"
     post:
-      summary: create
+      summary: Create a user
       tags:
       - User
       responses:
@@ -2428,7 +2446,7 @@ paths:
               origin: idp.local
   "/v3/users/{guid}":
     delete:
-      summary: destroy
+      summary: Delete a user
       tags:
       - User
       parameters:
@@ -3349,7 +3367,7 @@ paths:
                     - "/Users/sethboyles/.gem/ruby/3.3.7/bin/bundle:25:in `load'"
                     - "/Users/sethboyles/.gem/ruby/3.3.7/bin/bundle:25:in `<main>'"
     get:
-      summary: show
+      summary: Get a user
       tags:
       - User
       parameters:
@@ -4034,7 +4052,7 @@ paths:
                     - "/Users/sethboyles/.gem/ruby/3.3.7/bin/bundle:25:in `load'"
                     - "/Users/sethboyles/.gem/ruby/3.3.7/bin/bundle:25:in `<main>'"
     patch:
-      summary: update
+      summary: Update a user
       tags:
       - User
       parameters:
@@ -4044,6 +4062,7 @@ paths:
         schema:
           type: string
         example: actee-guid
+        description: Unique identifier for the resource
       responses:
         '422':
           description: returns a 422
@@ -4351,3 +4370,16 @@ paths:
                       `<top (required)>'"
                     - "/Users/sethboyles/.gem/ruby/3.3.7/bin/bundle:25:in `load'"
                     - "/Users/sethboyles/.gem/ruby/3.3.7/bin/bundle:25:in `<main>'"
+tags:
+- name: User
+  description: The user resource is used to manage access to organizations, spaces,
+    and other resources within Cloud Foundry. Cloud Controller is not the ultimate
+    authority on the users in the Cloud Foundry system; UAA and its configured identity
+    providers determine which users are able to sign in to Cloud Foundry. To be functional,
+    Cloud Controller users must "shadow" a corresponding user or client in UAA. The
+    Cloud Controller user resource's guid should match either a UAA user or a UAA
+    client id. However, Cloud Controller does not enforce that a user's guid is a
+    valid UAA user or client id. Users can be assigned roles, which give them privileges
+    to perform actions within a given context. For example, the Space Developer role
+    grants a user permission to manage apps and services in a space (e.g. to push
+    apps, scale apps, delete apps).

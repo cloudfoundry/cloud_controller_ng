@@ -3,11 +3,13 @@ openapi: 3.0.3
 info:
   title: Cloud Controller V3 API
   version: v3
+  description: Service plan visibility is used to manage whether a role has access
+    to a given service plan and its service offering.
 servers: []
 paths:
   "/v3/service_plans/{guid}/visibility":
     get:
-      summary: show
+      summary: Get a service plan visibility
       tags:
       - ServicePlanVisibility
       parameters:
@@ -352,7 +354,7 @@ paths:
                     - "/Users/sethboyles/.gem/ruby/3.3.7/bin/bundle:25:in `load'"
                     - "/Users/sethboyles/.gem/ruby/3.3.7/bin/bundle:25:in `<main>'"
     patch:
-      summary: update
+      summary: Update a service plan visibility
       tags:
       - ServicePlanVisibility
       parameters:
@@ -1285,7 +1287,7 @@ paths:
                     - "/Users/sethboyles/.gem/ruby/3.3.7/bin/bundle:25:in `load'"
                     - "/Users/sethboyles/.gem/ruby/3.3.7/bin/bundle:25:in `<main>'"
     post:
-      summary: apply
+      summary: Apply a service plan visibility
       tags:
       - ServicePlanVisibility
       parameters:
@@ -2283,7 +2285,7 @@ paths:
               - guid: 951c1c19-ccd3-45ca-9e35-6ab300ee3d0d
   "/v3/service_plans/{guid}/visibility/{org_guid}":
     delete:
-      summary: destroy
+      summary: Remove organization from a service plan visibility
       tags:
       - ServicePlanVisibility
       parameters:
@@ -2896,3 +2898,7 @@ paths:
                       `<top (required)>'"
                     - "/Users/sethboyles/.gem/ruby/3.3.7/bin/bundle:25:in `load'"
                     - "/Users/sethboyles/.gem/ruby/3.3.7/bin/bundle:25:in `<main>'"
+tags:
+- name: ServicePlanVisibility
+  description: Service plan visibility is used to manage whether a role has access
+    to a given service plan and its service offering.

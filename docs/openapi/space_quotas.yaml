@@ -3,11 +3,19 @@ openapi: 3.0.3
 info:
   title: Cloud Controller V3 API
   version: v3
+  description: Space quotas are named sets of quotas. Space quota names are unique
+    within an organization. For example, an organization may only have one space quota
+    named "production", but two organizations may have two distinct space quotas,
+    both named "production". Only one space quota may be applied to a given space
+    at any given time. Space quotas cannot be used to bypass organization quotas.
+    When the organization's quota and the space's quota specify a different values
+    for a given resource, the more restrictive of the two is used. In the event of
+    permissions, the more restrictive permission is used.
 servers: []
 paths:
   "/v3/space_quotas":
     get:
-      summary: index
+      summary: List space quotas
       tags:
       - SpaceQuota
       responses:
@@ -535,8 +543,22 @@ paths:
         schema:
           type: string
         example: space-guid,space-2-guid
+      description: Name | Type | Description ---- | ---- | ----------- guids | list
+        of strings | Comma-delimited list of space quota guids to filter by names
+        | list of strings | Comma-delimited list of space quota names to filter by
+        organizationguids | list of strings | Comma-delimited list of organization
+        guids to filter by spaceguids | list of strings | Comma-delimited list of
+        space guids to filter by page | integer | Page to display; valid values are
+        integers >= 1 perpage | integer | Number of results per page;  valid values
+        are 1 through 5000 orderby | string | Value to sort by. Defaults to ascending;
+        prepend with - to sort descending.  Valid values are createdat, updatedat
+        createdats | timestamp | Timestamp to filter by. When filtering on equality,
+        several comma-delimited timestamps may be passed. Also supports filtering
+        with relational operators updatedats | timestamp | Timestamp to filter by.
+        When filtering on equality, several comma-delimited timestamps may be passed.
+        Also supports filtering with relational operators
     post:
-      summary: create
+      summary: Create a space quota
       tags:
       - SpaceQuota
       requestBody:
@@ -1398,7 +1420,7 @@ paths:
                     - "/Users/sethboyles/.gem/ruby/3.3.7/bin/bundle:25:in `<main>'"
   "/v3/space_quotas/{guid}":
     delete:
-      summary: destroy
+      summary: Delete a space quota
       tags:
       - SpaceQuota
       parameters:
@@ -2012,7 +2034,7 @@ paths:
                     - "/Users/sethboyles/.gem/ruby/3.3.7/bin/bundle:25:in `load'"
                     - "/Users/sethboyles/.gem/ruby/3.3.7/bin/bundle:25:in `<main>'"
     get:
-      summary: show
+      summary: Get a space quota
       tags:
       - SpaceQuota
       parameters:
@@ -2622,7 +2644,7 @@ paths:
                     - "/Users/sethboyles/.gem/ruby/3.3.7/bin/bundle:25:in `load'"
                     - "/Users/sethboyles/.gem/ruby/3.3.7/bin/bundle:25:in `<main>'"
     patch:
-      summary: update
+      summary: Update a space quota
       tags:
       - SpaceQuota
       parameters:
@@ -2632,6 +2654,7 @@ paths:
         schema:
           type: string
         example: space_quota_to_update_guid
+        description: Unique identifier for the resource
       responses:
         '200':
           description: succeeds without changing the quota
@@ -3413,7 +3436,7 @@ paths:
                 paid_services_allowed: false
   "/v3/space_quotas/{guid}/relationships/spaces":
     post:
-      summary: apply_to_spaces
+      summary: Apply a space quota to a space
       tags:
       - SpaceQuota
       parameters:
@@ -3423,6 +3446,7 @@ paths:
         schema:
           type: string
         example: space-quota-guid
+        description: Unique identifier for the resource
       responses:
         '422':
           description: returns a helpful error message
@@ -3723,7 +3747,7 @@ paths:
                     - "/Users/sethboyles/.gem/ruby/3.3.7/bin/bundle:25:in `<main>'"
   "/v3/space_quotas/{guid}/relationships/spaces/{space_guid}":
     delete:
-      summary: remove_from_space
+      summary: Remove a space quota from a space
       tags:
       - SpaceQuota
       parameters:
@@ -4039,3 +4063,13 @@ paths:
                       `<top (required)>'"
                     - "/Users/sethboyles/.gem/ruby/3.3.7/bin/bundle:25:in `load'"
                     - "/Users/sethboyles/.gem/ruby/3.3.7/bin/bundle:25:in `<main>'"
+tags:
+- name: SpaceQuota
+  description: Space quotas are named sets of quotas. Space quota names are unique
+    within an organization. For example, an organization may only have one space quota
+    named "production", but two organizations may have two distinct space quotas,
+    both named "production". Only one space quota may be applied to a given space
+    at any given time. Space quotas cannot be used to bypass organization quotas.
+    When the organization's quota and the space's quota specify a different values
+    for a given resource, the more restrictive of the two is used. In the event of
+    permissions, the more restrictive permission is used.

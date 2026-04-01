@@ -3,11 +3,15 @@ openapi: 3.0.3
 info:
   title: Cloud Controller V3 API
   version: v3
+  description: An instantiation of a service. Service instances can be of type `managed`
+    when it is an instantiation of a [service offering](#service-offerings) registered
+    with CF or `user-provided` when it describes an instance of an offering that is
+    not registered with CF.
 servers: []
 paths:
   "/v3/service_instances":
     get:
-      summary: index
+      summary: List service instances
       tags:
       - ServiceInstancesV3
       parameters:
@@ -72,42 +76,49 @@ paths:
         schema:
           type: string
         example: fruit=strawberry
+        description: A query string containing a list of label selector requirements
       - name: names
         in: query
         required: false
         schema:
           type: string
         example: name-34734
+        description: Comma-delimited list of service instance names to filter by
       - name: organization_guids
         in: query
         required: false
         schema:
           type: string
         example: b3b32d0b-790c-429e-9232-e22ea491b161
+        description: Comma-delimited list of organization guids to filter by
       - name: service_plan_guids
         in: query
         required: false
         schema:
           type: string
         example: 34b9aa6a-a762-4e1d-b004-3ec6fec3aa5c,df65e64e-6b5d-4c4d-9269-202167816c74
+        description: Comma-delimited list of service plan guids to filter by
       - name: service_plan_names
         in: query
         required: false
         schema:
           type: string
         example: name-34767,name-34770
+        description: Comma-delimited list of service plan names to filter by
       - name: space_guids
         in: query
         required: false
         schema:
           type: string
         example: 3b20998b-d38d-45ec-9b4d-bc0baa4977fd
+        description: Comma-delimited list of space guids to filter by
       - name: type
         in: query
         required: false
         schema:
           type: string
         example: managed
+        description: Filter by type; valid values are managed and user-provided
       responses:
         '200':
           description: eager loads associated resources that the presenter specifies
@@ -514,7 +525,7 @@ paths:
                   - guid: 2a24ae14-0608-4025-ae56-50736e905919
                     name: name-34670
     post:
-      summary: create
+      summary: Create a service instance
       tags:
       - ServiceInstancesV3
       responses:
@@ -1501,7 +1512,7 @@ paths:
                 - d
   "/v3/service_instances/{guid}":
     delete:
-      summary: destroy
+      summary: Delete a service instance
       tags:
       - ServiceInstancesV3
       parameters:
@@ -1511,12 +1522,15 @@ paths:
         schema:
           type: string
         example: edb93500-b09e-4693-b53b-c5fbb942e4d2
+        description: Unique identifier for the resource
       - name: purge
         in: query
         required: false
         schema:
           type: string
         example: 'true'
+        description: If true, deletes the service instance and all associated resources
+          without any interaction with the service broker.
       - name: "{}"
         in: query
         required: false
@@ -2460,7 +2474,7 @@ paths:
                     - "/Users/sethboyles/.gem/ruby/3.3.7/bin/bundle:25:in `load'"
                     - "/Users/sethboyles/.gem/ruby/3.3.7/bin/bundle:25:in `<main>'"
     get:
-      summary: show
+      summary: Get a service instance
       tags:
       - ServiceInstancesV3
       parameters:
@@ -2522,6 +2536,7 @@ paths:
         schema:
           type: string
         example: 5fd7e273-4f46-435c-b460-74d75414d245
+        description: Unique identifier for the resource
       responses:
         '200':
           description: can include service offering and broker fields
@@ -3093,7 +3108,7 @@ paths:
                     - "/Users/sethboyles/.gem/ruby/3.3.7/bin/bundle:25:in `load'"
                     - "/Users/sethboyles/.gem/ruby/3.3.7/bin/bundle:25:in `<main>'"
     patch:
-      summary: update
+      summary: Update a service instance
       tags:
       - ServiceInstancesV3
       parameters:
@@ -3103,6 +3118,7 @@ paths:
         schema:
           type: string
         example: no-such-instance
+        description: Unique identifier for the resource
       responses:
         '200':
           description: updates the a service instance in the database
@@ -4821,7 +4837,7 @@ paths:
               route_service_url: https://bar2.com
   "/v3/service_instances/{guid}/credentials":
     get:
-      summary: credentials
+      summary: Get credentials for a user-provided service instance
       tags:
       - ServiceInstancesV3
       parameters:
@@ -5135,7 +5151,7 @@ paths:
                     - "/Users/sethboyles/.gem/ruby/3.3.7/bin/bundle:25:in `<main>'"
   "/v3/service_instances/{guid}/parameters":
     get:
-      summary: parameters
+      summary: Get parameters for a managed service instance
       tags:
       - ServiceInstancesV3
       parameters:
@@ -6426,7 +6442,7 @@ paths:
                       status: 422
   "/v3/service_instances/{guid}/relationships/shared_spaces":
     get:
-      summary: relationships_shared_spaces
+      summary: List shared spaces relationship
       tags:
       - ServiceInstancesV3
       parameters:
@@ -6466,6 +6482,7 @@ paths:
         schema:
           type: string
         example: '01429d3a-86d6-4d35-9d11-56593453cd77'
+        description: Unique identifier for the resource
       responses:
         '200':
           description: does not include space and organization names of the shared
@@ -6857,7 +6874,7 @@ paths:
                     - "/Users/sethboyles/.gem/ruby/3.3.7/bin/bundle:25:in `load'"
                     - "/Users/sethboyles/.gem/ruby/3.3.7/bin/bundle:25:in `<main>'"
     post:
-      summary: share_service_instance
+      summary: Share a service instance to other spaces
       tags:
       - ServiceInstancesV3
       parameters:
@@ -6867,6 +6884,7 @@ paths:
         schema:
           type: string
         example: dcb77986-974d-49d4-8cf4-a6bce59d4c69
+        description: Unique identifier for the resource
       requestBody:
         content:
           application/json:
@@ -7829,7 +7847,7 @@ paths:
                     - "/Users/sethboyles/.gem/ruby/3.3.7/bin/bundle:25:in `<main>'"
   "/v3/service_instances/{guid}/relationships/shared_spaces/usage_summary":
     get:
-      summary: shared_spaces_usage_summary
+      summary: Get usage summary in shared spaces
       tags:
       - ServiceInstancesV3
       parameters:
@@ -8216,7 +8234,7 @@ paths:
                     - "/Users/sethboyles/.gem/ruby/3.3.7/bin/bundle:25:in `<main>'"
   "/v3/service_instances/{guid}/relationships/shared_spaces/{space_guid}":
     delete:
-      summary: unshare_service_instance
+      summary: Unshare a service instance from another space
       tags:
       - ServiceInstancesV3
       parameters:
@@ -9144,3 +9162,9 @@ paths:
                       `<top (required)>'"
                     - "/Users/sethboyles/.gem/ruby/3.3.7/bin/bundle:25:in `load'"
                     - "/Users/sethboyles/.gem/ruby/3.3.7/bin/bundle:25:in `<main>'"
+tags:
+- name: ServiceInstancesV3
+  description: An instantiation of a service. Service instances can be of type `managed`
+    when it is an instantiation of a [service offering](#service-offerings) registered
+    with CF or `user-provided` when it describes an instance of an offering that is
+    not registered with CF.

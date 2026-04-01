@@ -3,11 +3,13 @@ openapi: 3.0.3
 info:
   title: Cloud Controller V3 API
   version: v3
+  description: Isolation Segments provide dedicated pools of resources to which apps
+    can be deployed to isolate workloads.
 servers: []
 paths:
   "/v3/isolation_segments":
     get:
-      summary: index
+      summary: List isolation segments
       tags:
       - IsolationSegment
       responses:
@@ -163,38 +165,44 @@ paths:
         schema:
           type: string
         example: 4b6ce4df-7fe0-4831-adff-205f3f1391a7,b199d5fb-a6b1-4dfc-874c-bc0ace33f576
+        description: Comma-delimited list of isolation segment guids to filter by
       - name: label_selector
         in: query
         required: false
         schema:
           type: string
         example: "!fruit,env=prod,animal in (dog,horse)"
+        description: A query string containing a list of label selector requirements
       - name: names
         in: query
         required: false
         schema:
           type: string
         example: segment3,segment5
+        description: Comma-delimited list of isolation segment names to filter by
       - name: organization_guids
         in: query
         required: false
         schema:
           type: string
         example: e30ddee3-cdf1-4137-a0c9-fc4710c0c85f,9bbcda8c-b0f3-4413-8ad5-853920a3eb42
+        description: Comma-delimited list of organization guids to filter by
       - name: page
         in: query
         required: false
         schema:
           type: integer
         example: 2
+        description: Page to display; valid values are integers >= 1
       - name: per_page
         in: query
         required: false
         schema:
           type: integer
         example: 2
+        description: Number of results per page;  valid values are 1 through 5000
     post:
-      summary: create
+      summary: Create an isolation segment
       tags:
       - IsolationSegment
       requestBody:
@@ -315,7 +323,7 @@ paths:
                     href: http://api2.vcap.me/v3/isolation_segments/a49a946a-4363-43de-af42-d0662a6aeec2/organizations
   "/v3/isolation_segments/{guid}":
     delete:
-      summary: destroy
+      summary: Delete an isolation segment
       tags:
       - IsolationSegment
       parameters:
@@ -329,7 +337,7 @@ paths:
         '204':
           description: deletes the specified isolation segment
     patch:
-      summary: update
+      summary: Update an isolation segment
       tags:
       - IsolationSegment
       parameters:
@@ -339,6 +347,7 @@ paths:
         schema:
           type: string
         example: 64daa678-5e1d-4d49-8bab-1522335cb29f
+        description: Unique identifier for the resource
       requestBody:
         content:
           application/json:
@@ -457,7 +466,7 @@ paths:
                     href: http://api2.vcap.me/v3/isolation_segments/64daa678-5e1d-4d49-8bab-1522335cb29f/organizations
   "/v3/isolation_segments/{guid}/relationships/organizations":
     get:
-      summary: relationships_orgs
+      summary: List organizations relationship
       tags:
       - IsolationSegment
       parameters:
@@ -517,7 +526,7 @@ paths:
                   related:
                     href: http://api2.vcap.me/v3/isolation_segments/87149483-2417-4b16-939f-fb882313e862/organizations
     post:
-      summary: assign_allowed_organizations
+      summary: Entitle organizations for an isolation segment
       tags:
       - IsolationSegment
       parameters:
@@ -527,6 +536,7 @@ paths:
         schema:
           type: string
         example: 3a4c6cdb-424f-4859-8c82-5cc97adde334
+        description: Unique identifier for the resource
       requestBody:
         content:
           application/json:
@@ -597,7 +607,7 @@ paths:
                     href: http://api2.vcap.me/v3/isolation_segments/3a4c6cdb-424f-4859-8c82-5cc97adde334/organizations
   "/v3/isolation_segments/{guid}/relationships/organizations/{org_guid}":
     delete:
-      summary: unassign_allowed_organization
+      summary: Revoke entitlement to isolation segment for an organization
       tags:
       - IsolationSegment
       parameters:
@@ -618,7 +628,7 @@ paths:
           description: removes the organization from the isolation segment
   "/v3/isolation_segments/{guid}/relationships/spaces":
     get:
-      summary: relationships_spaces
+      summary: List spaces relationship
       tags:
       - IsolationSegment
       parameters:
@@ -667,3 +677,7 @@ paths:
                 links:
                   self:
                     href: http://api2.vcap.me/v3/isolation_segments/85077be8-2250-4f4c-b843-aabfff6e3f23/relationships/spaces
+tags:
+- name: IsolationSegment
+  description: Isolation Segments provide dedicated pools of resources to which apps
+    can be deployed to isolate workloads.

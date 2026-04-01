@@ -3,11 +3,17 @@ openapi: 3.0.3
 info:
   title: Cloud Controller V3 API
   version: v3
+  description: Service route bindings are relations between a service instance and
+    a route. Not all service instances support route binding. In order to bind to
+    a managed service instance, the service instance should be created from a service
+    offering that has requires route forwarding (`requires=[route_forwarding]`). In
+    order to bind to a user-provided service instance, the service instance must have
+    `route_service_url` set.
 servers: []
 paths:
   "/v3/jobs/{guid}":
     get:
-      summary: show
+      summary: Get a job
       tags:
       - V3::Job
       parameters:
@@ -85,7 +91,7 @@ paths:
                     href: http://api2.vcap.me/v3/service_route_bindings/8154fefa-ce50-4f9b-9118-58cc6d45d026
   "/v3/service_route_bindings":
     get:
-      summary: index
+      summary: List service route bindings
       tags:
       - ServiceRouteBinding
       parameters:
@@ -852,8 +858,9 @@ paths:
                       `<top (required)>'"
                     - "/Users/sethboyles/.gem/ruby/3.3.7/bin/bundle:25:in `load'"
                     - "/Users/sethboyles/.gem/ruby/3.3.7/bin/bundle:25:in `<main>'"
+      description: Retrieve all service route bindings the user has access to.
     post:
-      summary: create
+      summary: Create a service route binding
       tags:
       - ServiceRouteBinding
       requestBody:
@@ -1487,7 +1494,7 @@ paths:
                     backtrace:
   "/v3/service_route_bindings/{guid}":
     delete:
-      summary: destroy
+      summary: Delete a service route binding
       tags:
       - ServiceRouteBinding
       parameters:
@@ -2122,7 +2129,7 @@ paths:
                     - "/Users/sethboyles/.gem/ruby/3.3.7/bin/bundle:25:in `load'"
                     - "/Users/sethboyles/.gem/ruby/3.3.7/bin/bundle:25:in `<main>'"
     get:
-      summary: show
+      summary: Get a service route binding
       tags:
       - ServiceRouteBinding
       parameters:
@@ -2132,12 +2139,15 @@ paths:
         schema:
           type: string
         example: no-such-route-binding
+        description: Unique identifier for the resource
       - name: include
         in: query
         required: false
         schema:
           type: string
         example: planet
+        description: 'Optionally include a list of unique related resources in the
+          response. Valid values are: route, service_instance'
       responses:
         '200':
           description: can include `route`
@@ -3243,7 +3253,7 @@ paths:
                     - "/Users/sethboyles/.gem/ruby/3.3.7/bin/bundle:25:in `<main>'"
   "/v3/service_route_bindings/{guid}/parameters":
     get:
-      summary: parameters
+      summary: Get parameters for a route binding
       tags:
       - ServiceRouteBinding
       parameters:
@@ -3917,3 +3927,11 @@ paths:
                       `<top (required)>'"
                     - "/Users/sethboyles/.gem/ruby/3.3.7/bin/bundle:25:in `load'"
                     - "/Users/sethboyles/.gem/ruby/3.3.7/bin/bundle:25:in `<main>'"
+tags:
+- name: V3::Job
+  description: Service route bindings are relations between a service instance and
+    a route. Not all service instances support route binding. In order to bind to
+    a managed service instance, the service instance should be created from a service
+    offering that has requires route forwarding (`requires=[route_forwarding]`). In
+    order to bind to a user-provided service instance, the service instance must have
+    `route_service_url` set.

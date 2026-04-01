@@ -3,11 +3,35 @@ openapi: 3.0.3
 info:
   title: Cloud Controller V3 API
   version: v3
+  description: 'Sidecars are additional operating system processes that are run in
+    the same container as a [process](#processes). #### Use cases for sidecars Sidecars
+    are useful for any app processes that need to communicate with another within
+    the same container or are otherwise dependent on each other. Some use cases are:
+    - Two or more processes that require access to a shared file - An Application
+    Performance Monitoring (APM) tool that attaches to a dependent app''s processes
+    - Two or more processes that communicate via a local socket #### Steps to create
+    a sidecar The recommended way to create sidecars for your app is with a [manifest](#manifests).
+    ```yaml sidecars: - name: authenticator process_types: [ ''web'', ''worker'' ]
+    command: bundle exec run-authenticator - name: performance monitor process_types:
+    [ ''web'' ] command: bundle exec run-performance-monitor memory: 128M ``` - **name**
+    is a user defined identifier (unique per app) - **process_types** is a list of
+    app processes the sidecar will attach to. You can attach multiple sidecars to
+    each process type your app uses - **command** is the command used to start the
+    sidecar - **memory** is the memory reserved for the sidecar<sup>[1]</sup> <sup>1
+    Applies for Java apps.  If you do not reserve memory for the sidecar, the JVM
+    will consume all of the memory in the app container.  This value must be less
+    thatn the process'' reserved memory.</sup> #### Current limitations - Start and
+    stop order of app processes and their sidecars is undefined - App processes and
+    sidecar processes are codependent: if either crashes or exits, the other will
+    as well - Sidecars are currently not independently scalable (memory / disk) and
+    share resources with the main app process and other sidecars within that container
+    - Sidecars only support PID based health checks; HTTP health-checks for sidecars
+    are not currently supported - This has only been tested on Linux based systems'
 servers: []
 paths:
   "/v3/apps/{app_guid}/sidecars":
     get:
-      summary: index_by_app
+      summary: List sidecars for app
       tags:
       - Sidecar
       parameters:
@@ -17,12 +41,14 @@ paths:
         schema:
           type: string
         example: fake-app-guid
+        description: Unique identifier for the resource
       - name: per_page
         in: query
         required: false
         schema:
           type: integer
         example: 2
+        description: Number of results per page;  valid values are 1 through 5000
       responses:
         '200':
           description: lists the sidecars for an app
@@ -464,7 +490,7 @@ paths:
                     - "/Users/sethboyles/.gem/ruby/3.3.7/bin/bundle:25:in `<main>'"
   "/v3/apps/{guid}":
     delete:
-      summary: destroy
+      summary: Delete an app
       tags:
       - AppsV3
       parameters:
@@ -484,7 +510,7 @@ paths:
               example: ''
   "/v3/apps/{guid}/sidecars":
     post:
-      summary: create
+      summary: Create a sidecar associated with an app
       tags:
       - Sidecar
       parameters:
@@ -494,6 +520,7 @@ paths:
         schema:
           type: string
         example: d7d3b084-947e-4b6f-b87e-3a368b0b37fd
+        description: Unique identifier for the resource
       requestBody:
         content:
           application/json:
@@ -891,7 +918,7 @@ paths:
                     - "/Users/sethboyles/.gem/ruby/3.3.7/bin/bundle:25:in `<main>'"
   "/v3/processes/{process_guid}/sidecars":
     get:
-      summary: index_by_process
+      summary: List sidecars for process
       tags:
       - Sidecar
       parameters:
@@ -901,12 +928,14 @@ paths:
         schema:
           type: integer
         example: 2
+        description: Number of results per page;  valid values are 1 through 5000
       - name: process_guid
         in: path
         required: true
         schema:
           type: string
         example: fake-process-guid
+        description: Unique identifier for the resource
       responses:
         '200':
           description: retrieves the process' sidecars
@@ -1350,7 +1379,7 @@ paths:
                     - "/Users/sethboyles/.gem/ruby/3.3.7/bin/bundle:25:in `<main>'"
   "/v3/sidecars/{guid}":
     delete:
-      summary: destroy
+      summary: Delete a sidecar
       tags:
       - Sidecar
       parameters:
@@ -1364,7 +1393,7 @@ paths:
         '204':
           description: deletes the sidecar
     get:
-      summary: show
+      summary: Get a sidecar
       tags:
       - Sidecar
       parameters:
@@ -1443,7 +1472,7 @@ paths:
                 created_at: '2026-03-31T23:33:22Z'
                 updated_at: '2026-03-31T23:33:22Z'
     patch:
-      summary: update
+      summary: Update a sidecar
       tags:
       - Sidecar
       parameters:
@@ -1453,6 +1482,7 @@ paths:
         schema:
           type: string
         example: 525add0d-4652-4615-b2aa-5e760e4148dc
+        description: Unique identifier for the resource
       requestBody:
         content:
           application/json:
@@ -2140,3 +2170,29 @@ paths:
                       `<top (required)>'"
                     - "/Users/sethboyles/.gem/ruby/3.3.7/bin/bundle:25:in `load'"
                     - "/Users/sethboyles/.gem/ruby/3.3.7/bin/bundle:25:in `<main>'"
+tags:
+- name: Sidecar
+  description: 'Sidecars are additional operating system processes that are run in
+    the same container as a [process](#processes). #### Use cases for sidecars Sidecars
+    are useful for any app processes that need to communicate with another within
+    the same container or are otherwise dependent on each other. Some use cases are:
+    - Two or more processes that require access to a shared file - An Application
+    Performance Monitoring (APM) tool that attaches to a dependent app''s processes
+    - Two or more processes that communicate via a local socket #### Steps to create
+    a sidecar The recommended way to create sidecars for your app is with a [manifest](#manifests).
+    ```yaml sidecars: - name: authenticator process_types: [ ''web'', ''worker'' ]
+    command: bundle exec run-authenticator - name: performance monitor process_types:
+    [ ''web'' ] command: bundle exec run-performance-monitor memory: 128M ``` - **name**
+    is a user defined identifier (unique per app) - **process_types** is a list of
+    app processes the sidecar will attach to. You can attach multiple sidecars to
+    each process type your app uses - **command** is the command used to start the
+    sidecar - **memory** is the memory reserved for the sidecar<sup>[1]</sup> <sup>1
+    Applies for Java apps.  If you do not reserve memory for the sidecar, the JVM
+    will consume all of the memory in the app container.  This value must be less
+    thatn the process'' reserved memory.</sup> #### Current limitations - Start and
+    stop order of app processes and their sidecars is undefined - App processes and
+    sidecar processes are codependent: if either crashes or exits, the other will
+    as well - Sidecars are currently not independently scalable (memory / disk) and
+    share resources with the main app process and other sidecars within that container
+    - Sidecars only support PID based health checks; HTTP health-checks for sidecars
+    are not currently supported - This has only been tested on Linux based systems'

@@ -3,11 +3,15 @@ openapi: 3.0.3
 info:
   title: Cloud Controller V3 API
   version: v3
+  description: Routes are addresses that direct matched network traffic to one or
+    more destinations. Each route is based on a domain name with additional matching
+    criteria (host (subdomain), path, etc). Matched traffic will be distributed across
+    all destinations, based on their configuration (round-robin by default).
 servers: []
 paths:
   "/v3/apps/{guid}/routes":
     get:
-      summary: index_by_app
+      summary: List routes for an app
       tags:
       - Route
       parameters:
@@ -17,12 +21,14 @@ paths:
         schema:
           type: string
         example: 5098338f-3f7f-41fd-a88d-54cd4233dd59
+        description: Unique identifier for the resource
       - name: ports
         in: query
         required: false
         schema:
           type: string
         example: '7777,8888'
+        description: Comma-delimited list of ports to filter by (e.g. 3306,5432)
       responses:
         '200':
           description: returns routes filtered by ports
@@ -275,7 +281,7 @@ paths:
                   options: {}
   "/v3/routes":
     get:
-      summary: index
+      summary: List routes
       tags:
       - Route
       parameters:
@@ -285,66 +291,78 @@ paths:
         schema:
           type: string
         example: 6476eea7-942f-4c23-b04c-d24840e93dc1
+        description: Comma-delimited list of app guids to filter by
       - name: domain_guids
         in: query
         required: false
         schema:
           type: string
         example: 53dd1d94-5d47-49b3-b6fe-2264d6ff7e1b
+        description: Comma-delimited list of domain guids to filter by
       - name: hosts
         in: query
         required: false
         schema:
           type: string
         example: ''
+        description: Comma-delimited list of hostnames to filter by
       - name: include
         in: query
         required: false
         schema:
           type: string
         example: domain
+        description: Optionally include a list of unique related resources in the
+          response  Valid values are domain, space.organization, space
       - name: label_selector
         in: query
         required: false
         schema:
           type: string
         example: animal in (dog)
+        description: A query string containing a list of label selector requirements
       - name: organization_guids
         in: query
         required: false
         schema:
           type: string
         example: f193e478-17f0-45b0-9f40-9eb85f2c004e
+        description: Comma-delimited list of organization guids to filter by
       - name: page
         in: query
         required: false
         schema:
           type: string
         example: potato
+        description: Page to display; valid values are integers >= 1
       - name: paths
         in: query
         required: false
         schema:
           type: string
         example: ''
+        description: Comma-delimited list of paths to filter by (e.g. /path1,/path2)
       - name: ports
         in: query
         required: false
         schema:
           type: string
         example: '7777,8888'
+        description: Comma-delimited list of ports to filter by (e.g. 3306,5432)
       - name: service_instance_guids
         in: query
         required: false
         schema:
           type: string
         example: c169da56-9e3c-490e-a997-ae7a25c33795,3cd3641f-ce61-40ff-ba58-cc460d78f1a0
+        description: Comma-delimited list of service instance guids to filter by
       - name: space_guids
         in: query
         required: false
         schema:
           type: string
         example: 8637f606-f302-48dc-ac9d-dfd7998a49d6
+        description: Comma-delimited list of space guids to filter by
       responses:
         '200':
           description: returns route with no path when filtering by empty path
@@ -1534,7 +1552,7 @@ paths:
                     - "/Users/sethboyles/.gem/ruby/3.3.7/bin/bundle:25:in `load'"
                     - "/Users/sethboyles/.gem/ruby/3.3.7/bin/bundle:25:in `<main>'"
     post:
-      summary: create
+      summary: Create a route
       tags:
       - Route
       responses:
@@ -2949,7 +2967,7 @@ paths:
                     guid: 6593a0c7-3379-47d2-9fae-67933914f819
   "/v3/routes/{guid}":
     delete:
-      summary: destroy
+      summary: Delete a route
       tags:
       - Route
       parameters:
@@ -3262,7 +3280,7 @@ paths:
                     - "/Users/sethboyles/.gem/ruby/3.3.7/bin/bundle:25:in `load'"
                     - "/Users/sethboyles/.gem/ruby/3.3.7/bin/bundle:25:in `<main>'"
     get:
-      summary: show
+      summary: Get a route
       tags:
       - Route
       parameters:
@@ -3272,12 +3290,15 @@ paths:
         schema:
           type: string
         example: ed87cadd-ef63-45ed-9c3d-5e6e3d2c1107
+        description: Unique identifier for the resource
       - name: include
         in: query
         required: false
         schema:
           type: string
         example: domain
+        description: Optionally include additional related resources in the response  Valid
+          values are domain, space.organization, space
       responses:
         '200':
           description: includes the domain for the route
@@ -4079,7 +4100,7 @@ paths:
                     - "/Users/sethboyles/.gem/ruby/3.3.7/bin/bundle:25:in `load'"
                     - "/Users/sethboyles/.gem/ruby/3.3.7/bin/bundle:25:in `<main>'"
     patch:
-      summary: update
+      summary: Update a route
       tags:
       - Route
       parameters:
@@ -4991,7 +5012,7 @@ paths:
                     - "/Users/sethboyles/.gem/ruby/3.3.7/bin/bundle:25:in `<main>'"
   "/v3/routes/{guid}/relationships/shared_spaces":
     get:
-      summary: relationships_shared_routes
+      summary: Lists shared spaces relationship (experimental)
       tags:
       - Route
       parameters:
@@ -5599,7 +5620,7 @@ paths:
                     - "/Users/sethboyles/.gem/ruby/3.3.7/bin/bundle:25:in `load'"
                     - "/Users/sethboyles/.gem/ruby/3.3.7/bin/bundle:25:in `<main>'"
     post:
-      summary: share_routes
+      summary: Share a route with other spaces (experimental)
       tags:
       - Route
       parameters:
@@ -5609,6 +5630,7 @@ paths:
         schema:
           type: string
         example: 3b629902-e64f-4432-8f8f-953b985d6928
+        description: Unique identifier for the resource
       responses:
         '200':
           description: reports that the route is now shared
@@ -6578,7 +6600,7 @@ paths:
               - guid: 1aaf7815-c8bb-4011-a096-486f77d7fd19
   "/v3/routes/{guid}/relationships/shared_spaces/{space_guid}":
     delete:
-      summary: unshare_route
+      summary: Unshare a route that was shared with another space (experimental)
       tags:
       - Route
       parameters:
@@ -7510,7 +7532,7 @@ paths:
                     - "/Users/sethboyles/.gem/ruby/3.3.7/bin/bundle:25:in `<main>'"
   "/v3/routes/{guid}/relationships/space":
     patch:
-      summary: transfer_owner
+      summary: Transfer ownership (experimental)
       tags:
       - Route
       parameters:
@@ -8453,3 +8475,9 @@ paths:
             example:
               data:
                 guid: 571dfa8a-1d82-40cf-a05f-fb0d9ae8e6cc
+tags:
+- name: Route
+  description: Routes are addresses that direct matched network traffic to one or
+    more destinations. Each route is based on a domain name with additional matching
+    criteria (host (subdomain), path, etc). Matched traffic will be distributed across
+    all destinations, based on their configuration (round-robin by default).

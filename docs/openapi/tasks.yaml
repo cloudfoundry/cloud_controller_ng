@@ -3,11 +3,14 @@ openapi: 3.0.3
 info:
   title: Cloud Controller V3 API
   version: v3
+  description: Tasks are one-off jobs that are intended to perform a task, stop, and
+    be cleaned up, freeing up resources. Examples of this include database migrations,
+    sending things, and batch jobs.
 servers: []
 paths:
   "/v3/apps/{app_guid}/tasks":
     get:
-      summary: index
+      summary: List tasks for an app
       tags:
       - Task
       parameters:
@@ -17,30 +20,36 @@ paths:
         schema:
           type: string
         example: 40f19066-7eb7-4629-9e13-ff64dafb89c8
+        description: Unique identifier for the resource
       - name: names
         in: query
         required: false
         schema:
           type: string
         example: task one
+        description: Comma-delimited list of task names to filter by
       - name: per_page
         in: query
         required: false
         schema:
           type: integer
         example: 2
+        description: Number of results per page;  valid values are 1 through 5000
       - name: sequence_ids
         in: query
         required: false
         schema:
           type: integer
         example: 117
+        description: Comma delimited list of sequence ids to filter by Valid values
+          are integers >= 1
       - name: states
         in: query
         required: false
         schema:
           type: string
         example: SUCCEEDED
+        description: Comma-delimited list of task states to filter by
       responses:
         '200':
           description: filters by state
@@ -254,7 +263,7 @@ paths:
                     droplet:
                       href: http://api2.vcap.me/v3/droplets/0a3a88e9-fb2e-4a15-873b-3e50f82d5d44
     post:
-      summary: create
+      summary: Create a task
       tags:
       - Task
       parameters:
@@ -264,6 +273,7 @@ paths:
         schema:
           type: string
         example: '00826ddf-1a91-4618-a6f2-24b4516d3845'
+        description: Unique identifier for the resource
       requestBody:
         content:
           application/json:
@@ -812,7 +822,7 @@ paths:
                     - "/Users/sethboyles/.gem/ruby/3.3.7/bin/bundle:25:in `<main>'"
   "/v3/tasks":
     get:
-      summary: index
+      summary: List tasks
       tags:
       - Task
       parameters:
@@ -822,42 +832,49 @@ paths:
         schema:
           type: string
         example: 677656cf-6e44-4e3f-83e1-41e57f1b3033
+        description: Comma-delimited list of app guids to filter by
       - name: label_selector
         in: query
         required: false
         schema:
           type: string
         example: boomerang=gel
+        description: A query string containing a list of label selector requirements
       - name: names
         in: query
         required: false
         schema:
           type: string
         example: task one
+        description: Comma-delimited list of task names to filter by
       - name: organization_guids
         in: query
         required: false
         schema:
           type: string
         example: 3121fb34-2854-42c8-b7fe-902b1d6bd540
+        description: Comma-delimited list of organization guids to filter by
       - name: per_page
         in: query
         required: false
         schema:
           type: integer
         example: 2
+        description: Number of results per page;  valid values are 1 through 5000
       - name: space_guids
         in: query
         required: false
         schema:
           type: string
         example: c1b4df02-30eb-49d7-9711-c202448049bf
+        description: Comma-delimited list of space guids to filter by
       - name: states
         in: query
         required: false
         schema:
           type: string
         example: SUCCEEDED
+        description: Comma-delimited list of task states to filter by
       responses:
         '200':
           description: filters by label selectors
@@ -1072,7 +1089,7 @@ paths:
                       href: http://api2.vcap.me/v3/droplets/92763314-ce5a-49f2-96f2-2014f77d5107
   "/v3/tasks/{task_guid}":
     patch:
-      summary: update
+      summary: Update a task
       tags:
       - Task
       parameters:
@@ -1082,6 +1099,7 @@ paths:
         schema:
           type: string
         example: 58cec8ec-473f-4b01-9a47-f8427d408f0e
+        description: Unique identifier for the resource
       requestBody:
         content:
           application/json:
@@ -1284,7 +1302,7 @@ paths:
                     href: http://api2.vcap.me/v3/droplets/576faf9c-e68d-4dd8-80c9-6c502a1fa63c
   "/v3/tasks/{task_guid}/cancel":
     put:
-      summary: cancel
+      summary: Cancel a task
       tags:
       - Task
       parameters:
@@ -1458,3 +1476,9 @@ paths:
                     method: POST
                   droplet:
                     href: http://api2.vcap.me/v3/droplets/578b4f6e-ff42-4b4e-802e-2106c2925b7b
+      description: Cancel a running task.
+tags:
+- name: Task
+  description: Tasks are one-off jobs that are intended to perform a task, stop, and
+    be cleaned up, freeing up resources. Examples of this include database migrations,
+    sending things, and batch jobs.

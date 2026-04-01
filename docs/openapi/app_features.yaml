@@ -3,11 +3,13 @@ openapi: 3.0.3
 info:
   title: Cloud Controller V3 API
   version: v3
+  description: App features are used to manage whether optional capabilities are enabled
+    for a given application.
 servers: []
 paths:
   "/v3/apps/{app_guid}/features/{name}":
     patch:
-      summary: update
+      summary: Update an app feature
       tags:
       - AppFeature
       parameters:
@@ -17,12 +19,14 @@ paths:
         schema:
           type: string
         example: ae576eca-db13-4a4b-bf73-8f6cf8f2e5f6
+        description: Unique identifier for the resource
       - name: name
         in: path
         required: true
         schema:
           type: string
         example: file-based-vcap-services
+        description: Unique identifier for the resource
       responses:
         '422':
           description: returns an error which states that both features cannot be
@@ -336,3 +340,7 @@ paths:
                       `<top (required)>'"
                     - "/Users/sethboyles/.gem/ruby/3.3.7/bin/bundle:25:in `load'"
                     - "/Users/sethboyles/.gem/ruby/3.3.7/bin/bundle:25:in `<main>'"
+tags:
+- name: AppFeature
+  description: App features are used to manage whether optional capabilities are enabled
+    for a given application.

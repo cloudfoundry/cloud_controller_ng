@@ -3,11 +3,13 @@ openapi: 3.0.3
 info:
   title: Cloud Controller V3 API
   version: v3
+  description: Feature flags are runtime flags that enable or disable functionality
+    on the API.
 servers: []
 paths:
   "/v3/feature_flags":
     get:
-      summary: index
+      summary: List feature flags
       tags:
       - FeatureFlag
       responses:
@@ -425,7 +427,7 @@ paths:
         example: '2020-05-26T18:47:02Z'
   "/v3/feature_flags/{name}":
     get:
-      summary: show
+      summary: Get a feature flag
       tags:
       - FeatureFlag
       parameters:
@@ -480,7 +482,7 @@ paths:
                   self:
                     href: http://api2.vcap.me/v3/feature_flags/diego_docker
     patch:
-      summary: update
+      summary: Update a feature flag
       tags:
       - FeatureFlag
       parameters:
@@ -490,6 +492,7 @@ paths:
         schema:
           type: string
         example: diego_docker
+        description: Unique identifier for the resource
       requestBody:
         content:
           application/json:
@@ -845,3 +848,7 @@ paths:
                       `<top (required)>'"
                     - "/Users/sethboyles/.gem/ruby/3.3.7/bin/bundle:25:in `load'"
                     - "/Users/sethboyles/.gem/ruby/3.3.7/bin/bundle:25:in `<main>'"
+tags:
+- name: FeatureFlag
+  description: Feature flags are runtime flags that enable or disable functionality
+    on the API.

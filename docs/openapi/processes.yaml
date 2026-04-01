@@ -3,11 +3,19 @@ openapi: 3.0.3
 info:
   title: Cloud Controller V3 API
   version: v3
+  description: 'Processes define the runnable units of an app. An app can have multiple
+    process types, each with differing commands and scale. Processes for an app are
+    defined by the buildpack used to stage the app and can be customized by including
+    a [Procfile](#procfiles) in the application source. #### Web process type * By
+    default, a newly created app will come with one instance of the `web` process
+    and all other process types are scaled to zero * Scale the `web` process to zero
+    if it is not required for your app * Unless otherwise specified, all routes will
+    be mapped to the `web` process by default'
 servers: []
 paths:
   "/v3/apps/{app_guid}/processes":
     get:
-      summary: index
+      summary: List processes for app
       tags:
       - Process
       parameters:
@@ -17,30 +25,37 @@ paths:
         schema:
           type: string
         example: 5bb51978-e493-49cc-88b1-81a4810e7246
+        description: Unique identifier for the resource
       - name: embed
         in: query
         required: false
         schema:
           type: string
         example: process_instances
+        description: Comma-delimited list of resources to embed in the response. Valid
+          values are process_instances. See embed for more details. This parameter
+          is experimental.
       - name: guids
         in: query
         required: false
         schema:
           type: string
         example: 389a78c0-a521-4ce5-ac82-3d6dfbc9ba7c,b1196179-cbe5-40ab-92d3-ac7130c0effe
+        description: Comma-delimited list of process guids to filter by
       - name: per_page
         in: query
         required: false
         schema:
           type: integer
         example: 2
+        description: Number of results per page;  valid values are 1 through 5000
       - name: types
         in: query
         required: false
         schema:
           type: string
         example: worker
+        description: Comma-delimited list of process types to filter by
       responses:
         '200':
           description: returns only the matching processes
@@ -388,7 +403,7 @@ paths:
                       href: http://api2.vcap.me/v3/processes/b1196179-cbe5-40ab-92d3-ac7130c0effe/process_instances
   "/v3/apps/{app_guid}/processes/{type}":
     get:
-      summary: show
+      summary: Get a process
       tags:
       - Process
       parameters:
@@ -657,8 +672,9 @@ paths:
                   process_instances:
                     href: http://api2.vcap.me/v3/processes/769ed163-f7ae-43e9-b821-1e3407f7804e/process_instances
                 process_instances: []
+      description: Retrieves a process scoped to an app by type.
     patch:
-      summary: update
+      summary: Update a process
       tags:
       - Process
       parameters:
@@ -1012,9 +1028,10 @@ paths:
                     href: http://api2.vcap.me/v3/processes/f68764e6-ba89-4c92-a557-d77eea7f41b4/stats
                   process_instances:
                     href: http://api2.vcap.me/v3/processes/f68764e6-ba89-4c92-a557-d77eea7f41b4/process_instances
+      description: Updates a process scoped to an app by type.
   "/v3/apps/{app_guid}/processes/{type}/actions/scale":
     post:
-      summary: scale
+      summary: Scale a process
       tags:
       - Process
       parameters:
@@ -1571,9 +1588,10 @@ paths:
                       `<top (required)>'"
                     - "/Users/sethboyles/.gem/ruby/3.3.7/bin/bundle:25:in `load'"
                     - "/Users/sethboyles/.gem/ruby/3.3.7/bin/bundle:25:in `<main>'"
+      description: Scales a process scoped to an app by type.
   "/v3/apps/{app_guid}/processes/{type}/instances/{index}":
     delete:
-      summary: terminate
+      summary: Terminate a process instance
       tags:
       - Process
       parameters:
@@ -1598,9 +1616,10 @@ paths:
       responses:
         '204':
           description: terminates a single instance of a process belonging to an app
+      description: Terminates a process instance scoped to an app by type.
   "/v3/apps/{app_guid}/processes/{type}/stats":
     get:
-      summary: stats
+      summary: Get stats for a process
       tags:
       - Process
       parameters:
@@ -1750,9 +1769,10 @@ paths:
                     mem: 128
                     disk: 1024
                     log_rate: 1024
+      description: Retrieves stats for a process scoped to an app by type.
   "/v3/processes":
     get:
-      summary: index
+      summary: List processes
       tags:
       - Process
       parameters:
@@ -1762,48 +1782,58 @@ paths:
         schema:
           type: string
         example: eb243df0-11ab-4dd7-b22a-2d5b8ce3cb4a
+        description: Comma-delimited list of app guids to filter by
       - name: embed
         in: query
         required: false
         schema:
           type: string
         example: process_instances
+        description: Comma-delimited list of resources to embed in the response. Valid
+          values are process_instances. See embed for more details. This parameter
+          is experimental.
       - name: guids
         in: query
         required: false
         schema:
           type: string
         example: 567fc81b-9b03-456e-8a14-95776834feac,57b56e93-5fc6-4614-8ccb-0c7a64fbb03a
+        description: Comma-delimited list of process guids to filter by
       - name: label_selector
         in: query
         required: false
         schema:
           type: string
         example: fruit=strawberry
+        description: A query string containing a list of label selector requirements
       - name: organization_guids
         in: query
         required: false
         schema:
           type: string
         example: 111c965b-ac14-4c75-a93e-3e93fa011026
+        description: Comma-delimited list of organization guids to filter by
       - name: per_page
         in: query
         required: false
         schema:
           type: integer
         example: 2
+        description: Number of results per page;  valid values are 1 through 5000
       - name: space_guids
         in: query
         required: false
         schema:
           type: string
         example: 4bd20768-2ee0-41c4-826b-cfe8560e9621
+        description: Comma-delimited list of space guids to filter by
       - name: types
         in: query
         required: false
         schema:
           type: string
         example: worker,doesnotexist
+        description: Comma-delimited list of process types to filter by
       responses:
         '200':
           description: returns only the matching processes
@@ -2148,7 +2178,7 @@ paths:
                       href: http://api2.vcap.me/v3/processes/57b56e93-5fc6-4614-8ccb-0c7a64fbb03a/process_instances
   "/v3/processes/{process_guid}":
     get:
-      summary: show
+      summary: Get a process
       tags:
       - Process
       parameters:
@@ -2158,12 +2188,16 @@ paths:
         schema:
           type: string
         example: process_instances
+        description: Comma-delimited list of resources to embed in the response. Valid
+          values are process_instances. See embed for more details. This parameter
+          is experimental.
       - name: process_guid
         in: path
         required: true
         schema:
           type: string
         example: 00f3e976-e57e-4def-a992-ebe7926d61a0
+        description: Unique identifier for the resource
       responses:
         '200':
           description: shows an empty array
@@ -2410,8 +2444,9 @@ paths:
                   process_instances:
                     href: http://api2.vcap.me/v3/processes/00f3e976-e57e-4def-a992-ebe7926d61a0/process_instances
                 process_instances: []
+      description: GET /v3/apps/:guid/processes/:type
     patch:
-      summary: update
+      summary: Update a process
       tags:
       - Process
       parameters:
@@ -2421,6 +2456,7 @@ paths:
         schema:
           type: string
         example: 07cd54fa-0056-4ef3-8515-ba350e8fd5c1
+        description: Unique identifier for the resource
       requestBody:
         content:
           application/json:
@@ -2757,7 +2793,7 @@ paths:
                     href: http://api2.vcap.me/v3/processes/07cd54fa-0056-4ef3-8515-ba350e8fd5c1/process_instances
   "/v3/processes/{process_guid}/actions/scale":
     post:
-      summary: scale
+      summary: Scale a process
       tags:
       - Process
       parameters:
@@ -2767,6 +2803,7 @@ paths:
         schema:
           type: string
         example: cae3f568-1ba1-4421-9c0d-8dd37edfa158
+        description: Unique identifier for the resource
       responses:
         '202':
           description: logs the required fields when the process gets scaled
@@ -3302,9 +3339,10 @@ paths:
               memory_in_mb: 10
               disk_in_mb: 20
               log_rate_limit_in_bytes_per_second: 40
+      description: POST /v3/apps/:guid/processes/:type/actions/scale
   "/v3/processes/{process_guid}/instances/{index}":
     delete:
-      summary: terminate
+      summary: Terminate a process instance
       tags:
       - Process
       parameters:
@@ -3323,9 +3361,10 @@ paths:
       responses:
         '204':
           description: terminates a single instance of a process
+      description: DELETE /v3/apps/:guid/processes/:type/instances/:index
   "/v3/processes/{process_guid}/process_instances":
     get:
-      summary: process_instances
+      summary: Get process instances for a process (experimental)
       tags:
       - Process
       parameters:
@@ -3394,9 +3433,10 @@ paths:
                     href: http://api2.vcap.me/v3/processes/e43cf255-6da8-4231-9bcf-618380406ab6/process_instances
                   process:
                     href: http://api2.vcap.me/v3/processes/e43cf255-6da8-4231-9bcf-618380406ab6
+      description: Retrieves process instances.
   "/v3/processes/{process_guid}/stats":
     get:
-      summary: stats
+      summary: Get stats for a process
       tags:
       - Process
       parameters:
@@ -3541,3 +3581,14 @@ paths:
                     mem: 128
                     disk: 1024
                     log_rate: 1024
+      description: GET /v3/apps/:guid/processes/:type/stats
+tags:
+- name: Process
+  description: 'Processes define the runnable units of an app. An app can have multiple
+    process types, each with differing commands and scale. Processes for an app are
+    defined by the buildpack used to stage the app and can be customized by including
+    a [Procfile](#procfiles) in the application source. #### Web process type * By
+    default, a newly created app will come with one instance of the `web` process
+    and all other process types are scaled to zero * Scale the `web` process to zero
+    if it is not required for your app * Unless otherwise specified, all routes will
+    be mapped to the `web` process by default'

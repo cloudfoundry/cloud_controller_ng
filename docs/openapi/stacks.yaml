@@ -3,11 +3,27 @@ openapi: 3.0.3
 info:
   title: Cloud Controller V3 API
   version: v3
+  description: 'Stacks are the base operating system and file system that your application
+    will execute in. A stack is how you configure applications to run against different
+    operating systems (like Windows or Linux) and different versions of those operating
+    systems (like Windows 2012 or Windows 2016). An application''s [lifecycle](#lifecycles)
+    will specify which stack to execute the application in. Buildpacks can also be
+    associated with a particular stack if they contain stack-specific logic. An application
+    will automatically use buildpacks associated with the application''s configured
+    stack. Stacks are not used for apps with a [Docker lifecycle](#docker-lifecycle).
+    Operators control stack availability through state management. The following states
+    determine how a stack can be used: *ACTIVE*: Default state. The stack is fully
+    available for all operations. *DEPRECATED*: The stack is nearing end-of-life.
+    It remains fully functional, but users should migrate to an ACTIVE stack. *RESTRICTED*:
+    A transitional state typically applied before deprecation or disabling. New application
+    creation is blocked; existing deployments continue to operate normally. *DISABLED*:
+    The stack has reached end-of-life. New application creation and restaging are
+    prohibited. Running applications remain available.'
 servers: []
 paths:
   "/v3/stacks":
     get:
-      summary: index
+      summary: List stacks
       tags:
       - Stack
       parameters:
@@ -17,30 +33,35 @@ paths:
         schema:
           type: string
         example: 'true'
+        description: If true, only return the default stack
       - name: label_selector
         in: query
         required: false
         schema:
           type: string
         example: release=stable
+        description: A query string containing a list of label selector requirements
       - name: names
         in: query
         required: false
         schema:
           type: string
         example: name-6962,name-6963
+        description: Comma-delimited list of stack names to filter by
       - name: page
         in: query
         required: false
         schema:
           type: integer
         example: 1
+        description: Page to display; valid values are integers >= 1
       - name: per_page
         in: query
         required: false
         schema:
           type: integer
         example: 2
+        description: Number of results per page;  valid values are 1 through 5000
       responses:
         '200':
           description: returns a list of label filtered stacks
@@ -183,7 +204,7 @@ paths:
                     self:
                       href: http://api2.vcap.me/v3/stacks/9feb4112-c417-4a77-b798-b1bcee8cf817
     post:
-      summary: create
+      summary: Create a stack
       tags:
       - Stack
       requestBody:
@@ -621,7 +642,7 @@ paths:
                     - "/Users/sethboyles/.gem/ruby/3.3.7/bin/bundle:25:in `<main>'"
   "/v3/stacks/{guid}":
     delete:
-      summary: destroy
+      summary: Delete a stack
       tags:
       - Stack
       parameters:
@@ -635,7 +656,7 @@ paths:
         '204':
           description: destroys the stack
     patch:
-      summary: update
+      summary: Update a stack
       tags:
       - Stack
       parameters:
@@ -645,6 +666,7 @@ paths:
         schema:
           type: string
         example: c9b2266a-79e7-4036-9e66-aa359ee9e38f
+        description: Unique identifier for the resource
       requestBody:
         content:
           application/json:
@@ -773,7 +795,7 @@ paths:
                     href: http://api2.vcap.me/v3/stacks/c9b2266a-79e7-4036-9e66-aa359ee9e38f
   "/v3/stacks/{guid}/apps":
     get:
-      summary: show_apps
+      summary: List apps on a stack
       tags:
       - Stack
       parameters:
@@ -783,6 +805,7 @@ paths:
         schema:
           type: string
         example: 92c32ded-8731-4151-9958-869b529ae48a
+        description: Unique identifier for the resource
       - name: per_pae
         in: query
         required: false
@@ -795,6 +818,7 @@ paths:
         schema:
           type: integer
         example: 2
+        description: Number of results per page;  valid values are 1 through 5000
       responses:
         '200':
           description: return the list of all apps using the given stack
@@ -2072,3 +2096,21 @@ paths:
                       `<top (required)>'"
                     - "/Users/sethboyles/.gem/ruby/3.3.7/bin/bundle:25:in `load'"
                     - "/Users/sethboyles/.gem/ruby/3.3.7/bin/bundle:25:in `<main>'"
+tags:
+- name: Stack
+  description: 'Stacks are the base operating system and file system that your application
+    will execute in. A stack is how you configure applications to run against different
+    operating systems (like Windows or Linux) and different versions of those operating
+    systems (like Windows 2012 or Windows 2016). An application''s [lifecycle](#lifecycles)
+    will specify which stack to execute the application in. Buildpacks can also be
+    associated with a particular stack if they contain stack-specific logic. An application
+    will automatically use buildpacks associated with the application''s configured
+    stack. Stacks are not used for apps with a [Docker lifecycle](#docker-lifecycle).
+    Operators control stack availability through state management. The following states
+    determine how a stack can be used: *ACTIVE*: Default state. The stack is fully
+    available for all operations. *DEPRECATED*: The stack is nearing end-of-life.
+    It remains fully functional, but users should migrate to an ACTIVE stack. *RESTRICTED*:
+    A transitional state typically applied before deprecation or disabling. New application
+    creation is blocked; existing deployments continue to operate normally. *DISABLED*:
+    The stack has reached end-of-life. New application creation and restaging are
+    prohibited. Running applications remain available.'

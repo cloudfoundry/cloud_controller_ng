@@ -3,6 +3,9 @@ openapi: 3.0.3
 info:
   title: Cloud Controller V3 API
   version: v3
+  description: A package is an application's 'source code'; either raw bits for your
+    application or a pointer to these bits. In Cloud Foundry, packages are staged
+    to produce an executable Droplet. We currently support raw bits and Docker packages.
 servers: []
 paths:
   "/internal/v4/packages/42394bde-542d-44ef-88a6-feea1b627ef5":
@@ -37,7 +40,7 @@ paths:
           description: updates a package
   "/v3/apps/{app_guid}/packages":
     get:
-      summary: index
+      summary: List packages for an app
       tags:
       - Package
       parameters:
@@ -47,36 +50,43 @@ paths:
         schema:
           type: string
         example: 6279d42a-43eb-464e-b499-4e089d503e38
+        description: Unique identifier for the resource
       - name: guids
         in: query
         required: false
         schema:
           type: string
         example: f13bc22b-da36-45f1-9e6c-5d76d739107e,ce0d1366-4c8b-450d-8630-45ac4ff9ea96
+        description: Comma-delimited list of package guids to filter by
       - name: order_by
         in: query
         required: false
         schema:
           type: string
         example: "-created_at"
+        description: Value to sort by; defaults to ascending. Prepend with - to sort
+          descending.  Valid values are createdat, updatedat
       - name: page
         in: query
         required: false
         schema:
           type: integer
         example: 1
+        description: Page to display; valid values are integers >= 1
       - name: per_page
         in: query
         required: false
         schema:
           type: integer
         example: 2
+        description: Number of results per page;  valid values are 1 through 5000
       - name: states
         in: query
         required: false
         schema:
           type: string
         example: PROCESSING_UPLOAD
+        description: Comma-delimited list of package states to filter by
       responses:
         '200':
           description: filters by states
@@ -298,7 +308,7 @@ paths:
                       href: http://api2.vcap.me/v3/apps/6279d42a-43eb-464e-b499-4e089d503e38
   "/v3/packages":
     get:
-      summary: index
+      summary: List packages
       tags:
       - Package
       parameters:
@@ -308,42 +318,49 @@ paths:
         schema:
           type: string
         example: 88b7efa5-09a4-4750-9504-281813ac86a2,22ab1418-3eae-4566-a8d7-62ac0a737d4d
+        description: Comma-delimited list of app guids to filter by
       - name: guids
         in: query
         required: false
         schema:
           type: string
         example: 41dfd8e5-83b2-4766-a8b2-12bec7d2e1b0,273212a8-6a4c-4ff2-a6c3-4b22931846e8
+        description: Comma-delimited list of package guids to filter by
       - name: label_selector
         in: query
         required: false
         schema:
           type: string
         example: fruit=strawberry
+        description: A query string containing a list of label selector requirements
       - name: organization_guids
         in: query
         required: false
         schema:
           type: string
         example: 4febbde6-8d98-480a-b34f-9de9586c302d,64dad799-b9a1-4113-98f4-5e7af3c24a77
+        description: Comma-delimited list of organization guids to filter by
       - name: space_guids
         in: query
         required: false
         schema:
           type: string
         example: edd914b2-3188-4b12-b722-361069b32caa,00bee01a-9f3c-42b1-9e83-4cf3ac5a64e4
+        description: Comma-delimited list of space guids to filter by
       - name: states
         in: query
         required: false
         schema:
           type: string
         example: PROCESSING_UPLOAD
+        description: Comma-delimited list of package states to filter by
       - name: types
         in: query
         required: false
         schema:
           type: string
         example: bits
+        description: Comma-delimited list of package types to filter by
       responses:
         '200':
           description: filters by types
@@ -593,7 +610,7 @@ paths:
                     app:
                       href: http://api2.vcap.me/v3/apps/534ab69d-9b78-4eed-96f7-c45db1681144
     post:
-      summary: create
+      summary: Copy a package
       tags:
       - Package
       requestBody:
@@ -807,7 +824,7 @@ paths:
         example: 224a7d51-08d1-4ef1-8a1a-411af75066cd
   "/v3/packages/{guid}":
     get:
-      summary: show
+      summary: Get a package
       tags:
       - Package
       parameters:
@@ -1112,7 +1129,7 @@ paths:
                     - "/Users/sethboyles/.gem/ruby/3.3.7/bin/bundle:25:in `load'"
                     - "/Users/sethboyles/.gem/ruby/3.3.7/bin/bundle:25:in `<main>'"
     patch:
-      summary: update
+      summary: Update a package
       tags:
       - Package
       parameters:
@@ -1122,6 +1139,7 @@ paths:
         schema:
           type: string
         example: 4dbe5fdf-ef28-44fc-9e39-50271c14270b
+        description: Unique identifier for the resource
       requestBody:
         content:
           application/json:
@@ -1318,7 +1336,7 @@ paths:
                     href: http://api2.vcap.me/v3/apps/meow-the-guid
   "/v3/packages/{guid}/download":
     get:
-      summary: download
+      summary: Download package bits
       tags:
       - Package
       parameters:
@@ -1338,7 +1356,7 @@ paths:
               example: ''
   "/v3/packages/{guid}/upload":
     post:
-      summary: upload
+      summary: Upload package bits
       tags:
       - Package
       parameters:
@@ -1348,6 +1366,7 @@ paths:
         schema:
           type: string
         example: 35648e27-c75f-4c5f-8683-fd2112a9bf02
+        description: Unique identifier for the resource
       requestBody:
         content:
           application/json:
@@ -1512,3 +1531,8 @@ paths:
                     href: http://api2.vcap.me/v3/packages/35648e27-c75f-4c5f-8683-fd2112a9bf02/download
                   app:
                     href: http://api2.vcap.me/v3/apps/woof
+tags:
+- name: Package
+  description: A package is an application's 'source code'; either raw bits for your
+    application or a pointer to these bits. In Cloud Foundry, packages are staged
+    to produce an executable Droplet. We currently support raw bits and Docker packages.

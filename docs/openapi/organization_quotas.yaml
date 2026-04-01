@@ -3,11 +3,17 @@ openapi: 3.0.3
 info:
   title: Cloud Controller V3 API
   version: v3
+  description: Organization quotas are named sets of memory, log rate, service, and
+    instance usage quotas. For example, one organization quota might allow up to 10
+    services, 10 routes, and 2 GB of RAM, while another might offer 100 services,
+    100 routes, and 10 GB of RAM. An organization has exactly one organization quota.
+    If not specifically assigned a quota, it will have the default quota. For more
+    information, see the [Cloud Foundry docs](https://docs.cloudfoundry.org/adminguide/quota-plans.html).
 servers: []
 paths:
   "/v3/organization_quotas":
     get:
-      summary: index
+      summary: List organization quotas
       tags:
       - OrganizationQuota
       parameters:
@@ -515,8 +521,21 @@ paths:
                       `<top (required)>'"
                     - "/Users/sethboyles/.gem/ruby/3.3.7/bin/bundle:25:in `load'"
                     - "/Users/sethboyles/.gem/ruby/3.3.7/bin/bundle:25:in `<main>'"
+      description: Name | Type | Description ---- | ---- | ----------- guids | list
+        of strings | Comma-delimited list of organization quota guids to filter by
+        names | list of strings | Comma-delimited list of organization quota names
+        to filter by organizationguids | list of strings | Comma-delimited list of
+        organization guids to filter by page | integer | Page to display; valid values
+        are integers >= 1 perpage | integer | Number of results per page;  valid values
+        are 1 through 5000 orderby | string | Value to sort by; defaults to ascending.
+        Prepend with - to sort descending.  Valid values are createdat, updatedat
+        createdats | timestamp | Timestamp to filter by. When filtering on equality,
+        several comma-delimited timestamps may be passed. Also supports filtering
+        with relational operators updatedats | timestamp_ | Timestamp to filter by.
+        When filtering on equality, several comma-delimited timestamps may be passed.
+        Also supports filtering with relational operators
     post:
-      summary: create
+      summary: Create an organization quota
       tags:
       - OrganizationQuota
       responses:
@@ -1369,7 +1388,7 @@ paths:
                 total_domains: 7
   "/v3/organization_quotas/{guid}":
     delete:
-      summary: destroy
+      summary: Delete an organization quota
       tags:
       - OrganizationQuota
       parameters:
@@ -1979,7 +1998,7 @@ paths:
                     - "/Users/sethboyles/.gem/ruby/3.3.7/bin/bundle:25:in `load'"
                     - "/Users/sethboyles/.gem/ruby/3.3.7/bin/bundle:25:in `<main>'"
     get:
-      summary: show
+      summary: Get an organization quota
       tags:
       - OrganizationQuota
       parameters:
@@ -2722,7 +2741,7 @@ paths:
                     - "/Users/sethboyles/.gem/ruby/3.3.7/bin/bundle:25:in `load'"
                     - "/Users/sethboyles/.gem/ruby/3.3.7/bin/bundle:25:in `<main>'"
     patch:
-      summary: update
+      summary: Update an organization quota
       tags:
       - OrganizationQuota
       parameters:
@@ -2732,6 +2751,7 @@ paths:
         schema:
           type: string
         example: 61dc6872-631f-444f-87b8-454751c2180c
+        description: Unique identifier for the resource
       responses:
         '200':
           description: succeeds without changing the quota
@@ -3493,7 +3513,7 @@ paths:
                 paid_services_allowed: false
   "/v3/organization_quotas/{guid}/relationships/organizations":
     post:
-      summary: apply_to_organizations
+      summary: Apply an organization quota to an organization
       tags:
       - OrganizationQuota
       parameters:
@@ -3503,6 +3523,7 @@ paths:
         schema:
           type: string
         example: bbcebc6a-1421-42c2-854d-0dc9b2aba1e2
+        description: Unique identifier for the resource
       responses:
         '422':
           description: returns a 422 with a helpful message
@@ -3803,3 +3824,11 @@ paths:
                       `<top (required)>'"
                     - "/Users/sethboyles/.gem/ruby/3.3.7/bin/bundle:25:in `load'"
                     - "/Users/sethboyles/.gem/ruby/3.3.7/bin/bundle:25:in `<main>'"
+tags:
+- name: OrganizationQuota
+  description: Organization quotas are named sets of memory, log rate, service, and
+    instance usage quotas. For example, one organization quota might allow up to 10
+    services, 10 routes, and 2 GB of RAM, while another might offer 100 services,
+    100 routes, and 10 GB of RAM. An organization has exactly one organization quota.
+    If not specifically assigned a quota, it will have the default quota. For more
+    information, see the [Cloud Foundry docs](https://docs.cloudfoundry.org/adminguide/quota-plans.html).

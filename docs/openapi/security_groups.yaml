@@ -3,11 +3,16 @@ openapi: 3.0.3
 info:
   title: Cloud Controller V3 API
   version: v3
+  description: Security groups are collections of egress traffic rules that can be
+    applied to the staging or running state of applications. Security groups can either
+    be applied globally or at the space-level. Security groups can only allow (whitelist)
+    traffic. They cannot be used to disallow (blacklist) traffic. IPv6 security groups
+    can be configured if `cc.enable_ipv6` is set to `true`.
 servers: []
 paths:
   "/v3/security_groups":
     get:
-      summary: index
+      summary: List security groups
       tags:
       - SecurityGroup
       parameters:
@@ -23,36 +28,44 @@ paths:
         schema:
           type: string
         example: 'true'
+        description: If true, only include the security groups that are enabled for
+          running
       - name: globally_enabled_staging
         in: query
         required: false
         schema:
           type: string
         example: 'true'
+        description: If true, only include the security groups that are enabled for
+          staging
       - name: guids
         in: query
         required: false
         schema:
           type: string
         example: security_group_2_guid
+        description: Comma-delimited list of security group guids to filter by
       - name: names
         in: query
         required: false
         schema:
           type: string
         example: name-48136
+        description: Comma-delimited list of security group names to filter by
       - name: running_space_guids
         in: query
         required: false
         schema:
           type: string
         example: space-guid
+        description: Comma-delimited list of space guids to filter by
       - name: staging_space_guids
         in: query
         required: false
         schema:
           type: string
         example: space-guid
+        description: Comma-delimited list of space guids to filter by
       responses:
         '200':
           description: filters on globally_enabled_running
@@ -523,7 +536,7 @@ paths:
                     - "/Users/sethboyles/.gem/ruby/3.3.7/bin/bundle:25:in `load'"
                     - "/Users/sethboyles/.gem/ruby/3.3.7/bin/bundle:25:in `<main>'"
     post:
-      summary: create
+      summary: Create a security group
       tags:
       - SecurityGroup
       responses:
@@ -835,7 +848,7 @@ paths:
                     - "/Users/sethboyles/.gem/ruby/3.3.7/bin/bundle:25:in `<main>'"
   "/v3/security_groups/{guid}":
     get:
-      summary: show
+      summary: Get a security group
       tags:
       - SecurityGroup
       parameters:
@@ -1144,7 +1157,7 @@ paths:
                     - "/Users/sethboyles/.gem/ruby/3.3.7/bin/bundle:25:in `load'"
                     - "/Users/sethboyles/.gem/ruby/3.3.7/bin/bundle:25:in `<main>'"
     patch:
-      summary: update
+      summary: Update a security group
       tags:
       - SecurityGroup
       parameters:
@@ -1154,6 +1167,7 @@ paths:
         schema:
           type: string
         example: 300695f4-c4a4-491d-baea-1569e82f9200
+        description: Unique identifier for the resource
       requestBody:
         content:
           application/json:
@@ -1857,7 +1871,7 @@ paths:
                     - "/Users/sethboyles/.gem/ruby/3.3.7/bin/bundle:25:in `<main>'"
   "/v3/security_groups/{guid}/relationships/running_spaces":
     post:
-      summary: create_running_spaces
+      summary: Bind a running security group to spaces
       tags:
       - SecurityGroup
       parameters:
@@ -1867,6 +1881,7 @@ paths:
         schema:
           type: string
         example: e5292661-3e56-431f-ada9-83cecb3cdffa
+        description: Unique identifier for the resource
       responses:
         '404':
           description: returns a 404
@@ -2480,7 +2495,7 @@ paths:
                     - "/Users/sethboyles/.gem/ruby/3.3.7/bin/bundle:25:in `<main>'"
   "/v3/security_groups/{guid}/relationships/running_spaces/{space_guid}":
     delete:
-      summary: delete_running_spaces
+      summary: Unbind a running security group from a space
       tags:
       - SecurityGroup
       parameters:
@@ -3109,7 +3124,7 @@ paths:
                     - "/Users/sethboyles/.gem/ruby/3.3.7/bin/bundle:25:in `<main>'"
   "/v3/security_groups/{guid}/relationships/staging_spaces":
     post:
-      summary: create_staging_spaces
+      summary: Bind a staging security group to spaces
       tags:
       - SecurityGroup
       parameters:
@@ -3119,6 +3134,7 @@ paths:
         schema:
           type: string
         example: 96d1931b-f229-4084-9d03-17315eab277b
+        description: Unique identifier for the resource
       responses:
         '404':
           description: returns a 404
@@ -3732,7 +3748,7 @@ paths:
                     - "/Users/sethboyles/.gem/ruby/3.3.7/bin/bundle:25:in `<main>'"
   "/v3/security_groups/{guid}/relationships/staging_spaces/{space_guid}":
     delete:
-      summary: delete_staging_spaces
+      summary: Unbind a staging security group from a space
       tags:
       - SecurityGroup
       parameters:
@@ -4359,3 +4375,10 @@ paths:
                       `<top (required)>'"
                     - "/Users/sethboyles/.gem/ruby/3.3.7/bin/bundle:25:in `load'"
                     - "/Users/sethboyles/.gem/ruby/3.3.7/bin/bundle:25:in `<main>'"
+tags:
+- name: SecurityGroup
+  description: Security groups are collections of egress traffic rules that can be
+    applied to the staging or running state of applications. Security groups can either
+    be applied globally or at the space-level. Security groups can only allow (whitelist)
+    traffic. They cannot be used to disallow (blacklist) traffic. IPv6 security groups
+    can be configured if `cc.enable_ipv6` is set to `true`.

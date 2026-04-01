@@ -3,11 +3,14 @@ openapi: 3.0.3
 info:
   title: Cloud Controller V3 API
   version: v3
+  description: Every application and service is scoped to a space. Each org contains
+    at least one space. A space provides users with access to a shared location for
+    application development, deployment, and maintenance.
 servers: []
 paths:
   "/v3/spaces":
     get:
-      summary: index
+      summary: List spaces
       tags:
       - SpacesV3
       parameters:
@@ -17,24 +20,29 @@ paths:
         schema:
           type: string
         example: organization,not_supported
+        description: Optionally include a list of unique related resources in the
+          response;  valid value is organization
       - name: label_selector
         in: query
         required: false
         schema:
           type: string
         example: "!fruit,env=prod,animal in (cat,horse)"
+        description: A query string containing a list of label selector requirements
       - name: organization_guids
         in: query
         required: false
         schema:
           type: string
         example: orgF
+        description: Comma-delimited list of organization guids to filter by
       - name: per_page
         in: query
         required: false
         schema:
           type: integer
         example: 2
+        description: Number of results per page;  valid values are 1 through 5000
       responses:
         '200':
           description: does not include spaces if no one asks for them
@@ -726,7 +734,7 @@ paths:
                     - "/Users/sethboyles/.gem/ruby/3.3.7/bin/bundle:25:in `load'"
                     - "/Users/sethboyles/.gem/ruby/3.3.7/bin/bundle:25:in `<main>'"
     post:
-      summary: create
+      summary: Create a space
       tags:
       - SpacesV3
       requestBody:
@@ -1222,7 +1230,7 @@ paths:
                     - "/Users/sethboyles/.gem/ruby/3.3.7/bin/bundle:25:in `<main>'"
   "/v3/spaces/{guid}":
     delete:
-      summary: destroy
+      summary: Delete a space
       tags:
       - SpacesV3
       parameters:
@@ -1535,7 +1543,7 @@ paths:
                     - "/Users/sethboyles/.gem/ruby/3.3.7/bin/bundle:25:in `load'"
                     - "/Users/sethboyles/.gem/ruby/3.3.7/bin/bundle:25:in `<main>'"
     get:
-      summary: show
+      summary: Get a space
       tags:
       - SpacesV3
       parameters:
@@ -1545,12 +1553,15 @@ paths:
         schema:
           type: string
         example: 6f0af53a-e762-4bba-8171-86a0552d340d
+        description: Unique identifier for the resource
       - name: include
         in: query
         required: false
         schema:
           type: string
         example: organization
+        description: Optionally include additional related resources in the response;  valid
+          value is organization
       responses:
         '200':
           description: returns the requested space including quota relationship and
@@ -2237,7 +2248,7 @@ paths:
                     - "/Users/sethboyles/.gem/ruby/3.3.7/bin/bundle:25:in `load'"
                     - "/Users/sethboyles/.gem/ruby/3.3.7/bin/bundle:25:in `<main>'"
     patch:
-      summary: update
+      summary: Update a space
       tags:
       - SpacesV3
       parameters:
@@ -2247,6 +2258,7 @@ paths:
         schema:
           type: string
         example: 4e6858fe-0ca5-4129-9436-82f3977b014c
+        description: Unique identifier for the resource
       responses:
         '200':
           description: Updates the spaces label
@@ -2705,7 +2717,7 @@ paths:
                   fruit: strawberry
   "/v3/spaces/{guid}/relationships/isolation_segment":
     get:
-      summary: show_isolation_segment
+      summary: Get assigned isolation segment
       tags:
       - SpacesV3
       parameters:
@@ -3046,7 +3058,7 @@ paths:
                     - "/Users/sethboyles/.gem/ruby/3.3.7/bin/bundle:25:in `<main>'"
   "/v3/spaces/{guid}/routes":
     delete:
-      summary: delete_unmapped_routes
+      summary: Delete unmapped routes for a space
       tags:
       - SpacesV3
       parameters:
@@ -3360,7 +3372,7 @@ paths:
                     - "/Users/sethboyles/.gem/ruby/3.3.7/bin/bundle:25:in `<main>'"
   "/v3/spaces/{guid}/running_security_groups":
     get:
-      summary: running_security_groups
+      summary: List running security groups for a space
       tags:
       - SpacesV3
       parameters:
@@ -3370,12 +3382,14 @@ paths:
         schema:
           type: string
         example: e1945ec2-2321-4423-b168-65dac823bc02
+        description: Unique identifier for the resource
       - name: names
         in: query
         required: false
         schema:
           type: string
         example: my_super_sec_group
+        description: Comma-delimited list of security group names to filter by
       responses:
         '200':
           description: returns the filtered list
@@ -3539,7 +3553,7 @@ paths:
                       href: http://api2.vcap.me/v3/security_groups/07a94576-e1ba-4274-b153-761088efeb97
   "/v3/spaces/{guid}/staging_security_groups":
     get:
-      summary: staging_security_groups
+      summary: List staging security groups for a space
       tags:
       - SpacesV3
       parameters:
@@ -3549,12 +3563,14 @@ paths:
         schema:
           type: string
         example: db41bc5e-9256-47f9-9d58-d24838399a6c
+        description: Unique identifier for the resource
       - name: names
         in: query
         required: false
         schema:
           type: string
         example: my_super_sec_group
+        description: Comma-delimited list of security group names to filter by
       responses:
         '200':
           description: returns the filtered list
@@ -3718,7 +3734,7 @@ paths:
                       href: http://api2.vcap.me/v3/security_groups/42306ed0-463f-4d4b-b228-aaf2ef6e837b
   "/v3/spaces/{guid}/users":
     get:
-      summary: list_members
+      summary: List users for a space
       tags:
       - SpacesV3
       parameters:
@@ -3734,24 +3750,31 @@ paths:
         schema:
           type: string
         example: fd95720b-4354-4a6c-b491-e3aae276dd52
+        description: Unique identifier for the resource
       - name: guids
         in: query
         required: false
         schema:
           type: string
         example: uaa-id-353
+        description: Comma-delimited list of user guids to filter by
       - name: label_selector
         in: query
         required: false
         schema:
           type: string
         example: animal in (dog)
+        description: A query string containing a list of label selector requirements
       - name: origins
         in: query
         required: false
         schema:
           type: string
         example: Okta
+        description: Comma-delimited list of user origins (user stores) to filter
+          by, for example, users authenticated by UAA have the origin "uaa"; users
+          authenticated by an LDAP provider have the origin "ldap"; when filtering
+          by origins, usernames must be included
       - name: updated_ats[lt]
         in: query
         required: false
@@ -3764,6 +3787,8 @@ paths:
         schema:
           type: string
         example: bob-mcjames
+        description: Comma-delimited list of usernames to filter by. Mutually exclusive
+          with partial_usernames
       responses:
         '200':
           description: returns 200 and filters
@@ -4482,3 +4507,8 @@ paths:
                       `<top (required)>'"
                     - "/Users/sethboyles/.gem/ruby/3.3.7/bin/bundle:25:in `load'"
                     - "/Users/sethboyles/.gem/ruby/3.3.7/bin/bundle:25:in `<main>'"
+tags:
+- name: SpacesV3
+  description: Every application and service is scoped to a space. Each org contains
+    at least one space. A space provides users with access to a shared location for
+    application development, deployment, and maintenance.

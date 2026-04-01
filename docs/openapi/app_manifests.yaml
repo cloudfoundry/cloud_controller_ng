@@ -3,11 +3,12 @@ openapi: 3.0.3
 info:
   title: Cloud Controller V3 API
   version: v3
+  description: ''
 servers: []
 paths:
   "/v3/apps/{guid}/manifest":
     get:
-      summary: show
+      summary: Generate a manifest for an app
       tags:
       - AppManifest
       parameters:
@@ -84,3 +85,6 @@ paths:
                     process_types:
                     - other_worker
                     command: rackup
+tags:
+- name: AppManifest
+  description: ''

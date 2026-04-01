@@ -7,7 +7,7 @@ servers: []
 paths:
   "/v3/apps":
     post:
-      summary: create
+      summary: Create an app
       tags:
       - AppsV3
       requestBody:
@@ -342,7 +342,7 @@ paths:
                     href: http://api2.vcap.me/v3/apps/4eaf8f80-60e5-448b-be43-f63d554aa01f/features
   "/v3/spaces":
     get:
-      summary: index
+      summary: List spaces
       tags:
       - SpacesV3
       responses:

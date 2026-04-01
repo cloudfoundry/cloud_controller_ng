@@ -3,11 +3,16 @@ openapi: 3.0.3
 info:
   title: Cloud Controller V3 API
   version: v3
+  description: 'Space features are used to manage whether optional capabilities are
+    enabled for a given space. Currently, the only space feature is SSH (`ssh`), which
+    controls whether applications in the space may be accessed via SSH. **Note**:
+    SSH must also be [enabled globally](https://docs.cloudfoundry.org/running/config-ssh.html)
+    and on the [app](#supported-app-features).'
 servers: []
 paths:
   "/v3/spaces/{guid}/features/{name}":
     get:
-      summary: show
+      summary: Get a space feature
       tags:
       - SpaceFeature
       parameters:
@@ -316,7 +321,7 @@ paths:
                     - "/Users/sethboyles/.gem/ruby/3.3.7/bin/bundle:25:in `load'"
                     - "/Users/sethboyles/.gem/ruby/3.3.7/bin/bundle:25:in `<main>'"
     patch:
-      summary: update
+      summary: Update space features
       tags:
       - SpaceFeature
       parameters:
@@ -630,3 +635,10 @@ paths:
                       `<top (required)>'"
                     - "/Users/sethboyles/.gem/ruby/3.3.7/bin/bundle:25:in `load'"
                     - "/Users/sethboyles/.gem/ruby/3.3.7/bin/bundle:25:in `<main>'"
+tags:
+- name: SpaceFeature
+  description: 'Space features are used to manage whether optional capabilities are
+    enabled for a given space. Currently, the only space feature is SSH (`ssh`), which
+    controls whether applications in the space may be accessed via SSH. **Note**:
+    SSH must also be [enabled globally](https://docs.cloudfoundry.org/running/config-ssh.html)
+    and on the [app](#supported-app-features).'

@@ -3,11 +3,12 @@ openapi: 3.0.3
 info:
   title: Cloud Controller V3 API
   version: v3
+  description: Info endpoints expose Cloud Controller configuration information.
 servers: []
 paths:
   "/v3/info":
     get:
-      summary: v3_info
+      summary: Get platform info
       tags:
       - Info
       responses:
@@ -106,3 +107,6 @@ paths:
                     href: http://api2.vcap.me/v3/info
                   support:
                     href: ''
+tags:
+- name: Info
+  description: Info endpoints expose Cloud Controller configuration information.

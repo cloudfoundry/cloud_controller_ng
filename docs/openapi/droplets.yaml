@@ -3,11 +3,20 @@ openapi: 3.0.3
 info:
   title: Cloud Controller V3 API
   version: v3
+  description: 'Droplets are the result of staging an application package. There are
+    two types (lifecycles) of droplets: buildpack and docker. In the case of the buildpacks,
+    the droplet contains the bits produced by the buildpack, typically application
+    code and dependencies. After an application is created and packages are uploaded,
+    a droplet must be created via a [build](#builds) in order for an application to
+    be deployed or tasks to be run. The current droplet [must be assigned](#set-current-droplet)
+    to an application before it may be started. When [tasks are created](#create-a-task),
+    they either use a specific droplet guid, or use the current droplet assigned to
+    an application.'
 servers: []
 paths:
   "/v3/apps/{app_guid}/droplets":
     get:
-      summary: index
+      summary: List droplets for an app
       tags:
       - Droplet
       parameters:
@@ -17,24 +26,28 @@ paths:
         schema:
           type: string
         example: 7b5e13ad-2c7b-40f9-8552-3f1cbefec459
+        description: Unique identifier for the resource
       - name: current
         in: query
         required: false
         schema:
           type: string
         example: 'true'
+        description: If true, only include the droplet currently assigned to the app
       - name: label_selector
         in: query
         required: false
         schema:
           type: string
         example: fruit
+        description: A query string containing a list of label selector requirements
       - name: states
         in: query
         required: false
         schema:
           type: string
         example: STAGED
+        description: Comma-delimited list of droplet states to filter by
       responses:
         '200':
           description: returns an empty list
@@ -257,7 +270,7 @@ paths:
                 resources: []
   "/v3/droplets":
     get:
-      summary: index
+      summary: List droplets
       tags:
       - Droplet
       parameters:
@@ -267,6 +280,7 @@ paths:
         schema:
           type: string
         example: 26aa6d1c-7f42-4b22-916e-9c23cf93fc01
+        description: Comma-delimited list of app guids to filter by
       - name: created_ats[lt]
         in: query
         required: false
@@ -279,42 +293,50 @@ paths:
         schema:
           type: string
         example: e662bc67-5355-41db-98ce-8adfc18c137c,38259d93-6645-4f99-85d1-7f6e4e7dc0c0
+        description: Comma-delimited list of droplet guids to filter by
       - name: label_selector
         in: query
         required: false
         schema:
           type: string
         example: "!fruit,animal in (dog,horse),env=prod"
+        description: A query string containing a list of label selector requirements
       - name: order_by
         in: query
         required: false
         schema:
           type: string
         example: "-created_at"
+        description: Value to sort by. Defaults to ascending; prepend with - to sort
+          descending.  Valid values are createdat and updatedat
       - name: organization_guids
         in: query
         required: false
         schema:
           type: string
         example: f2dac97b-3df1-4d3e-9f6d-8b9554dc5f51
+        description: Comma-delimited list of organization guids to filter by
       - name: per_page
         in: query
         required: false
         schema:
           type: integer
         example: 2
+        description: Number of results per page;  valid values are 1 through 5000
       - name: space_guids
         in: query
         required: false
         schema:
           type: string
         example: c06eb7fd-132b-4c2d-a1e3-ae3c2fa1f919,6320581a-b53d-42bd-b261-2e15cd67cc01
+        description: Comma-delimited list of space guids to filter by
       - name: states
         in: query
         required: false
         schema:
           type: string
         example: STAGED,FAILED
+        description: Comma-delimited list of droplet states to filter by
       - name: updated_ats[lt]
         in: query
         required: false
@@ -611,7 +633,7 @@ paths:
                     download:
                       href: http://api2.vcap.me/v3/droplets/17263918-e2ea-4e66-986e-5e4e14735e19/download
     post:
-      summary: create
+      summary: Copy a droplet
       tags:
       - Droplet
       responses:
@@ -1518,7 +1540,7 @@ paths:
                     - "/Users/sethboyles/.gem/ruby/3.3.7/bin/bundle:25:in `<main>'"
   "/v3/droplets/{guid}":
     delete:
-      summary: destroy
+      summary: Delete a droplet
       tags:
       - Droplet
       parameters:
@@ -1827,7 +1849,7 @@ paths:
                     - "/Users/sethboyles/.gem/ruby/3.3.7/bin/bundle:25:in `load'"
                     - "/Users/sethboyles/.gem/ruby/3.3.7/bin/bundle:25:in `<main>'"
     patch:
-      summary: update
+      summary: Update a droplet
       tags:
       - Droplet
       parameters:
@@ -1837,6 +1859,7 @@ paths:
         schema:
           type: string
         example: fake_guid
+        description: Unique identifier for the resource
       responses:
         '200':
           description: updates the image
@@ -2941,7 +2964,7 @@ paths:
               image: rebased-image-reference
   "/v3/droplets/{guid}/download":
     get:
-      summary: download
+      summary: Download droplet bits
       tags:
       - Droplet
       parameters:
@@ -3864,7 +3887,7 @@ paths:
                     - "/Users/sethboyles/.gem/ruby/3.3.7/bin/bundle:25:in `<main>'"
   "/v3/droplets/{guid}/upload":
     post:
-      summary: upload
+      summary: Upload droplet bits
       tags:
       - Droplet
       parameters:
@@ -3874,6 +3897,7 @@ paths:
         schema:
           type: string
         example: 41a2d03e-6848-45ca-82f9-8e123d9e6dca
+        description: Unique identifier for the resource
       responses:
         '404':
           description: returns 404 with a helpful error message
@@ -4475,7 +4499,7 @@ paths:
                     - "/Users/sethboyles/.gem/ruby/3.3.7/bin/bundle:25:in `<main>'"
   "/v3/jobs/{guid}":
     get:
-      summary: show
+      summary: Get a job
       tags:
       - V3::Job
       parameters:
@@ -4553,7 +4577,7 @@ paths:
                     href: http://api2.vcap.me/v3/droplets/e7c705e7-0cbe-4fe8-9d92-8f8a9bfa44ff
   "/v3/packages/{package_guid}/droplets":
     get:
-      summary: index
+      summary: List droplets for a package
       tags:
       - Droplet
       parameters:
@@ -4563,18 +4587,21 @@ paths:
         schema:
           type: string
         example: fruit
+        description: A query string containing a list of label selector requirements
       - name: package_guid
         in: path
         required: true
         schema:
           type: string
         example: 43a97d80-dde0-4ebb-a649-b587d4aaa506
+        description: Unique identifier for the resource
       - name: states
         in: query
         required: false
         schema:
           type: string
         example: STAGED
+        description: Comma-delimited list of droplet states to filter by
       responses:
         '200':
           description: returns only the packages for the app with specified labels
@@ -4832,3 +4859,14 @@ paths:
                       method: PATCH
                     package:
                       href: http://api2.vcap.me/v3/packages/43a97d80-dde0-4ebb-a649-b587d4aaa506
+tags:
+- name: Droplet
+  description: 'Droplets are the result of staging an application package. There are
+    two types (lifecycles) of droplets: buildpack and docker. In the case of the buildpacks,
+    the droplet contains the bits produced by the buildpack, typically application
+    code and dependencies. After an application is created and packages are uploaded,
+    a droplet must be created via a [build](#builds) in order for an application to
+    be deployed or tasks to be run. The current droplet [must be assigned](#set-current-droplet)
+    to an application before it may be started. When [tasks are created](#create-a-task),
+    they either use a specific droplet guid, or use the current droplet assigned to
+    an application.'

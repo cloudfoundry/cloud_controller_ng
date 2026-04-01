@@ -7,7 +7,7 @@ servers: []
 paths:
   "/v3/stacks":
     get:
-      summary: index
+      summary: List stacks
       tags:
       - Stack
       responses:
@@ -192,7 +192,7 @@ paths:
                     self:
                       href: http://api2.vcap.me/v3/stacks/09b6ff3e-9e30-469b-9997-c51c87a9a88b
     post:
-      summary: create
+      summary: Create a stack
       tags:
       - Stack
       responses:
@@ -896,7 +896,7 @@ paths:
               state_reason: This stack will be removed on 2026-12-31
   "/v3/stacks/{guid}":
     get:
-      summary: show
+      summary: Get a stack
       tags:
       - Stack
       parameters:
@@ -990,7 +990,7 @@ paths:
                   self:
                     href: http://api2.vcap.me/v3/stacks/72fd4a34-3e20-426f-8927-fd41f13c389c
     patch:
-      summary: update
+      summary: Update a stack
       tags:
       - Stack
       parameters:
@@ -1000,6 +1000,7 @@ paths:
         schema:
           type: string
         example: 1fb7baef-7890-49c4-a2bf-83c06a457af7
+        description: Unique identifier for the resource
       requestBody:
         content:
           application/json:

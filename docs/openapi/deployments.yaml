@@ -3,11 +3,24 @@ openapi: 3.0.3
 info:
   title: Cloud Controller V3 API
   version: v3
+  description: 'Deployments are objects that manage updates to applications with zero
+    downtime. They can either: * Manage updating an app''s [droplet](#droplets) directly
+    after an application package is staged * Roll an app back to a specific [revision](#revisions)
+    along with its associated droplet Deployments are different than the traditional
+    method of pushing app updates which performs start/stop deployments. Deployment
+    strategies supported: * [Rolling deployments](https://docs.cloudfoundry.org/devguide/deploy-apps/rolling-deploy.html)
+    allows for applications to be deployed without incurring downtime by gradually
+    rolling out instances. Max-in-flight can be configured to specify how many instances
+    are rolled out simultaneously. * [Canary deployments](https://docs.cloudfoundry.org/devguide/deploy-apps/rolling-deploy.html#canary-deployment-process)
+    deploy a single instance and pause for user evaluation. If the canary instance
+    is deemed successful, the deployment can be resumed via the [continue action](#continue-a-deployment).
+    The deployment then continues like a rolling deployment. This feature is experimental
+    and is subject to change.'
 servers: []
 paths:
   "/v3/deployments":
     get:
-      summary: index
+      summary: List deployments
       tags:
       - Deployment
       responses:
@@ -311,32 +324,39 @@ paths:
         schema:
           type: string
         example: release=stable
+        description: A query string containing a list of label selector requirements
       - name: per_page
         in: query
         required: false
         schema:
           type: integer
         example: 2
+        description: Number of results per page;  valid values are 1 through 5000
       - name: states
         in: query
         required: false
         schema:
           type: string
         example: DEPLOYING
+        description: Comma-delimited list of states to filter by
       - name: status_reasons
         in: query
         required: false
         schema:
           type: string
         example: SUPERSEDED,DEPLOYED
+        description: Comma-delimited list of status reasons to filter by; valid values
+          include DEPLOYING, PAUSED, CANCELING, DEPLOYED, CANCELED, SUPERSEDED
       - name: status_values
         in: query
         required: false
         schema:
           type: string
         example: FINALIZED
+        description: Comma-delimited list of status values to filter by; valid values
+          include ACTIVE and FINALIZED
     post:
-      summary: create
+      summary: Create a deployment
       tags:
       - Deployment
       responses:
@@ -1004,7 +1024,7 @@ paths:
                 guid: 451fcd31-4c56-4595-a737-6fec3d21eefc
   "/v3/deployments/{guid}":
     get:
-      summary: show
+      summary: Get a deployment
       tags:
       - Deployment
       parameters:
@@ -1232,7 +1252,7 @@ paths:
                     href: http://api2.vcap.me/v3/deployments/c08f1737-3e02-48e0-874f-a1015e8c25b0/actions/continue
                     method: POST
     patch:
-      summary: update
+      summary: Update a deployment
       tags:
       - Deployment
       parameters:
@@ -1242,6 +1262,7 @@ paths:
         schema:
           type: string
         example: fcd079cb-1672-49c7-831a-660b547ecf7c
+        description: Unique identifier for the resource
       requestBody:
         content:
           application/json:
@@ -1459,7 +1480,7 @@ paths:
                     method: POST
   "/v3/deployments/{guid}/actions/cancel":
     post:
-      summary: cancel
+      summary: Cancel a deployment
       tags:
       - Deployment
       parameters:
@@ -1487,7 +1508,7 @@ paths:
               example: ''
   "/v3/deployments/{guid}/actions/continue":
     post:
-      summary: continue
+      summary: Continue a deployment
       tags:
       - Deployment
       parameters:
@@ -1813,3 +1834,18 @@ paths:
               type: object
               properties: {}
             example: {}
+tags:
+- name: Deployment
+  description: 'Deployments are objects that manage updates to applications with zero
+    downtime. They can either: * Manage updating an app''s [droplet](#droplets) directly
+    after an application package is staged * Roll an app back to a specific [revision](#revisions)
+    along with its associated droplet Deployments are different than the traditional
+    method of pushing app updates which performs start/stop deployments. Deployment
+    strategies supported: * [Rolling deployments](https://docs.cloudfoundry.org/devguide/deploy-apps/rolling-deploy.html)
+    allows for applications to be deployed without incurring downtime by gradually
+    rolling out instances. Max-in-flight can be configured to specify how many instances
+    are rolled out simultaneously. * [Canary deployments](https://docs.cloudfoundry.org/devguide/deploy-apps/rolling-deploy.html#canary-deployment-process)
+    deploy a single instance and pause for user evaluation. If the canary instance
+    is deemed successful, the deployment can be resumed via the [continue action](#continue-a-deployment).
+    The deployment then continues like a rolling deployment. This feature is experimental
+    and is subject to change.'
