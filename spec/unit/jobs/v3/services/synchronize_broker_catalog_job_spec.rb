@@ -201,6 +201,70 @@ module VCAP
             allow(catalog).to receive_messages(valid?: true, compatible?: false, incompatibility_errors: incompatibility_errors)
           end
         end
+
+        describe '#recover_from_failure' do
+          let(:broker) do
+            ServiceBroker.create(
+              name: 'test-broker',
+              broker_url: 'http://example.org/broker-url',
+              auth_username: 'username',
+              auth_password: 'password'
+            )
+          end
+          let(:user_audit_info) { instance_double(UserAuditInfo, { user_guid: Sham.guid }) }
+
+          subject(:job) do
+            SynchronizeBrokerCatalogJob.new(broker.guid, user_audit_info:)
+          end
+
+          context 'when broker is in SYNCHRONIZING state' do
+            before do
+              broker.update(state: ServiceBrokerStateEnum::SYNCHRONIZING)
+            end
+
+            it 'sets the broker to SYNCHRONIZATION_FAILED' do
+              expect do
+                job.recover_from_failure
+              end.to change { broker.reload.state }.
+                from(ServiceBrokerStateEnum::SYNCHRONIZING).
+                to(ServiceBrokerStateEnum::SYNCHRONIZATION_FAILED)
+            end
+          end
+
+          shared_examples 'does not change the broker state' do |expected_state|
+            it 'leaves the state unchanged' do
+              broker.update(state: expected_state)
+              job.recover_from_failure
+
+              expect(broker.reload.state).to eq(expected_state)
+            end
+          end
+
+          context 'when broker is in a different state' do
+            include_examples 'does not change the broker state', ServiceBrokerStateEnum::AVAILABLE
+            include_examples 'does not change the broker state', ServiceBrokerStateEnum::DELETE_IN_PROGRESS
+          end
+
+          context 'when database error occurs during recovery' do
+            let(:dataset) { instance_double(Sequel::Dataset) }
+            let(:logger) { instance_double(Steno::Logger, error: nil) }
+
+            before do
+              broker.update(state: ServiceBrokerStateEnum::SYNCHRONIZING)
+              allow(ServiceBroker).to receive(:where).
+                with(guid: broker.guid, state: ServiceBrokerStateEnum::SYNCHRONIZING).
+                and_return(dataset)
+              allow(dataset).to receive(:update).and_raise(Sequel::DatabaseError.new(RuntimeError.new('connection lost')))
+              allow(Steno).to receive(:logger).with('cc.background').and_return(logger)
+            end
+
+            it 'logs the error and does not raise' do
+              expect { job.recover_from_failure }.not_to raise_error
+              expect(logger).to have_received(:error).with(/Failed to recover broker state/)
+              expect(broker.reload.state).to eq(ServiceBrokerStateEnum::SYNCHRONIZING)
+            end
+          end
+        end
       end
     end
   end

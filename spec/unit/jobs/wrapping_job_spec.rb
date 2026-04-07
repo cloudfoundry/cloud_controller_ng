@@ -198,6 +198,28 @@ module VCAP::CloudController
           end
         end
       end
+
+      describe '#recover_from_failure' do
+        context 'when the wrapped job has the recover_from_failure method defined' do
+          it 'delegates to the handler' do
+            handler = double('Job', recover_from_failure: nil)
+            job     = WrappingJob.new(handler)
+
+            expect(handler).to receive(:recover_from_failure)
+            job.recover_from_failure
+          end
+        end
+
+        context 'when the wrapped job does not have the recover_from_failure method defined' do
+          it 'does not raise an exception' do
+            handler = Object.new
+            job     = WrappingJob.new(handler)
+            expect do
+              job.recover_from_failure
+            end.not_to raise_error
+          end
+        end
+      end
     end
   end
 end

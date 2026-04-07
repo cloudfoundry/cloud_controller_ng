@@ -34,6 +34,14 @@ module VCAP::CloudController
         'service_broker.catalog.synchronize'
       end
 
+      def recover_from_failure
+        ServiceBroker.where(guid: broker_guid, state: ServiceBrokerStateEnum::SYNCHRONIZING).
+          update(state: ServiceBrokerStateEnum::SYNCHRONIZATION_FAILED)
+      rescue StandardError => e
+        logger = Steno.logger('cc.background')
+        logger.error("Failed to recover broker state for #{broker_guid}: #{e.class}: #{e.message}")
+      end
+
       private
 
       attr_reader :broker_guid, :user_audit_info

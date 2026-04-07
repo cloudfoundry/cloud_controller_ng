@@ -446,6 +446,29 @@ module VCAP
             end
           end
 
+          context 'when database disconnects during state rollback' do
+            let(:catalog_error) { StandardError.new('Catalog fetch failed') }
+            let(:mock_dataset) { instance_double(Sequel::Postgres::Dataset) }
+
+            before do
+              allow_any_instance_of(VCAP::CloudController::V3::ServiceBrokerCatalogUpdater).to receive(:refresh).and_raise(catalog_error)
+              allow(mock_dataset).to receive(:update).and_raise(Sequel::DatabaseDisconnectError.new('connection lost'))
+              allow(ServiceBroker).to receive(:where).and_call_original
+              allow(ServiceBroker).to receive(:where).
+                with(id: update_broker_request.service_broker_id, state: ServiceBrokerStateEnum::SYNCHRONIZING).
+                and_return(mock_dataset)
+            end
+
+            it 're-raises the original error instead of the rollback database error' do
+              expect { job.perform }.to raise_error(catalog_error)
+            end
+
+            it 'still cleans up the update request' do
+              expect { job.perform }.to raise_error(catalog_error)
+              expect(ServiceBrokerUpdateRequest.where(id: update_broker_request.id).all).to be_empty
+            end
+          end
+
           context 'when the broker ceases to exist during the job' do
             it 'raises a ServiceBrokerGone error' do
               broker.destroy
@@ -454,6 +477,62 @@ module VCAP
                 ::CloudController::Errors::V3::ApiError,
                 'The service broker was removed before the synchronization completed'
               )
+            end
+          end
+
+          describe '#recover_from_failure' do
+            let(:previous_state) { ServiceBrokerStateEnum::AVAILABLE }
+
+            subject(:job) do
+              UpdateBrokerJob.new(update_broker_request.guid, broker.guid, previous_state, user_audit_info:)
+            end
+
+            context 'when broker is in SYNCHRONIZING state' do
+              before do
+                broker.update(state: ServiceBrokerStateEnum::SYNCHRONIZING)
+              end
+
+              it 'sets the broker to SYNCHRONIZATION_FAILED' do
+                expect do
+                  job.recover_from_failure
+                end.to change { broker.reload.state }.
+                  from(ServiceBrokerStateEnum::SYNCHRONIZING).
+                  to(ServiceBrokerStateEnum::SYNCHRONIZATION_FAILED)
+              end
+            end
+
+            shared_examples 'does not change the broker state' do |expected_state|
+              it 'leaves the state unchanged' do
+                broker.update(state: expected_state)
+                job.recover_from_failure
+
+                expect(broker.reload.state).to eq(expected_state)
+              end
+            end
+
+            context 'when broker is in a different state' do
+              include_examples 'does not change the broker state', ServiceBrokerStateEnum::AVAILABLE
+              include_examples 'does not change the broker state', ServiceBrokerStateEnum::DELETE_IN_PROGRESS
+            end
+
+            context 'when database error occurs during recovery' do
+              let(:dataset) { instance_double(Sequel::Dataset) }
+              let(:logger) { instance_double(Steno::Logger, error: nil) }
+
+              before do
+                broker.update(state: ServiceBrokerStateEnum::SYNCHRONIZING)
+                allow(ServiceBroker).to receive(:where).
+                  with(guid: broker.guid, state: ServiceBrokerStateEnum::SYNCHRONIZING).
+                  and_return(dataset)
+                allow(dataset).to receive(:update).and_raise(Sequel::DatabaseError.new(RuntimeError.new('connection lost')))
+                allow(Steno).to receive(:logger).with('cc.background').and_return(logger)
+              end
+
+              it 'logs the error and does not raise' do
+                expect { job.recover_from_failure }.not_to raise_error
+                expect(logger).to have_received(:error).with(/Failed to recover broker state/)
+                expect(broker.reload.state).to eq(ServiceBrokerStateEnum::SYNCHRONIZING)
+              end
             end
           end
 

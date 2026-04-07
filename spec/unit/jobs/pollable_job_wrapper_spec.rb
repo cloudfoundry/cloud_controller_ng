@@ -201,6 +201,57 @@ module VCAP::CloudController::Jobs
             execute_all_jobs(expected_successes: 0, expected_failures: 1)
           end
         end
+
+        describe '#failure' do
+          let(:delayed_job) { instance_double(Delayed::Backend::Sequel::Job, guid: 'job-guid') }
+          let!(:pollable_job) do
+            VCAP::CloudController::PollableJobModel.make(delayed_job_guid: 'job-guid', state: VCAP::CloudController::PollableJobModel::PROCESSING_STATE)
+          end
+
+          context 'when handler implements recover_from_failure' do
+            let(:handler) do
+              instance_double(VCAP::CloudController::V3::UpdateBrokerJob, recover_from_failure: nil, warnings: nil)
+            end
+            let(:wrapper) { PollableJobWrapper.new(handler) }
+
+            it 'calls recover_from_failure and marks the pollable job failed' do
+              wrapper.failure(delayed_job)
+
+              expect(handler).to have_received(:recover_from_failure)
+              expect(pollable_job.reload.state).to eq(VCAP::CloudController::PollableJobModel::FAILED_STATE)
+            end
+
+            context 'when recover_from_failure raises an error' do
+              let(:logger) { instance_double(Steno::Logger, error: nil) }
+
+              before do
+                allow(handler).to receive(:recover_from_failure).and_raise(StandardError.new('recovery failed'))
+                allow(Steno).to receive(:logger).with('cc.pollable.job.wrapper').and_return(logger)
+              end
+
+              it 'logs the error without re-raising' do
+                expect { wrapper.failure(delayed_job) }.not_to raise_error
+                expect(logger).to have_received(:error).with(/failure recovery failed/)
+              end
+
+              it 'still marks the pollable job as failed' do
+                wrapper.failure(delayed_job)
+
+                expect(pollable_job.reload.state).to eq(VCAP::CloudController::PollableJobModel::FAILED_STATE)
+              end
+            end
+          end
+
+          context 'when handler does not implement recover_from_failure' do
+            let(:handler) { double('HandlerWithoutRecovery', warnings: nil) }
+            let(:wrapper) { PollableJobWrapper.new(handler) }
+
+            it 'still marks the pollable job as failed without error' do
+              expect { wrapper.failure(delayed_job) }.not_to raise_error
+              expect(pollable_job.reload.state).to eq(VCAP::CloudController::PollableJobModel::FAILED_STATE)
+            end
+          end
+        end
       end
     end
 

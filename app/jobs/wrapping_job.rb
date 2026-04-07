@@ -51,6 +51,10 @@ module VCAP::CloudController
         handler.error(job, e) if handler.respond_to?(:error)
       end
 
+      def recover_from_failure
+        handler.recover_from_failure if handler.respond_to?(:recover_from_failure)
+      end
+
       def display_name
         handler.respond_to?(:display_name) ? handler.display_name : handler.class.name
       end

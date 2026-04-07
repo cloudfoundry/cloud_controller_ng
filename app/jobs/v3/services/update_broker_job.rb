@@ -37,6 +37,14 @@ module VCAP::CloudController
         'service_broker.update'
       end
 
+      def recover_from_failure
+        ServiceBroker.where(guid: broker_guid, state: ServiceBrokerStateEnum::SYNCHRONIZING).
+          update(state: ServiceBrokerStateEnum::SYNCHRONIZATION_FAILED)
+      rescue StandardError => e
+        logger = Steno.logger('cc.background')
+        logger.error("Failed to recover broker state for #{broker_guid}: #{e.class}: #{e.message}")
+      end
+
       private
 
       attr_reader :update_request_guid, :broker_guid, :previous_broker_state, :user_audit_info
@@ -66,16 +74,31 @@ module VCAP::CloudController
 
           @warnings
         rescue StandardError => e
-          ServiceBroker.where(id: update_request.service_broker_id).update(state: previous_broker_state)
+          rollback_broker_state
 
           raise V3::ServiceBrokerUpdate::InvalidServiceBroker.new(e.message) if e.is_a?(Sequel::ValidationFailed)
 
-          raise e
+          raise
         ensure
-          update_request.destroy
+          destroy_update_request
         end
 
         private
+
+        def rollback_broker_state
+          return unless update_request
+
+          ServiceBroker.where(id: update_request.service_broker_id, state: ServiceBrokerStateEnum::SYNCHRONIZING).
+            update(state: previous_broker_state)
+        rescue StandardError
+          # Best effort only; wrapper failure hook will retry
+        end
+
+        def destroy_update_request
+          update_request&.destroy
+        rescue StandardError
+          # Don't mask original failure
+        end
 
         def update_params
           params = {}

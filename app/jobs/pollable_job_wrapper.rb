@@ -70,6 +70,12 @@ module VCAP::CloudController
       end
 
       def failure(job)
+        begin
+          recover_from_failure
+        rescue StandardError => e
+          logger.error("failure recovery failed: #{e.class}: #{e.message}")
+        end
+
         change_state(job, PollableJobModel::FAILED_STATE)
       end
 
