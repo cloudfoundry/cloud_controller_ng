@@ -1,0 +1,51 @@
+#!/bin/bash
+set -euo pipefail
+
+# Install storage-cli binary for S3 blobstore testing
+# Downloads to tmp/bin/storage-cli
+
+INSTALL_DIR="${INSTALL_DIR:-$(pwd)/tmp/bin}"
+GITHUB_REPO="cloudfoundry/storage-cli"
+
+# Detect platform
+case "$(uname -s)-$(uname -m)" in
+  Linux-x86_64)   platform="linux-amd64" ;;
+  Linux-aarch64)  platform="linux-arm64" ;;
+  Darwin-x86_64)  platform="darwin-amd64" ;;
+  Darwin-arm64)   platform="darwin-arm64" ;;
+  *)
+    echo "Error: Unsupported platform: $(uname -s)-$(uname -m)"
+    exit 1
+    ;;
+esac
+
+# Get latest version
+version=$(curl -sL "https://api.github.com/repos/${GITHUB_REPO}/releases/latest" | grep '"tag_name":' | sed -E 's/.*"([^"]+)".*/\1/')
+version_number="${version#v}"
+
+# Check if already installed
+if [[ -x "${INSTALL_DIR}/storage-cli" ]]; then
+  installed=$("${INSTALL_DIR}/storage-cli" -v 2>/dev/null | grep -oE '[0-9]+\.[0-9]+\.[0-9]+' || echo "")
+  if [[ "$installed" == "$version_number" ]]; then
+    echo "✓ storage-cli ${version} already installed at ${INSTALL_DIR}/storage-cli"
+    exit 0
+  fi
+fi
+
+# Download
+mkdir -p "${INSTALL_DIR}"
+url="https://github.com/${GITHUB_REPO}/releases/download/${version}/storage-cli-${version_number}-${platform}"
+echo "Downloading storage-cli ${version} for ${platform}..."
+
+if ! curl -sL --fail -o "${INSTALL_DIR}/storage-cli" "$url"; then
+  echo "Error: Failed to download from $url"
+  exit 1
+fi
+
+chmod +x "${INSTALL_DIR}/storage-cli"
+echo "✓ Installed to ${INSTALL_DIR}/storage-cli"
+echo ""
+echo "Next steps:"
+echo "  export STORAGE_CLI_PATH=\"\$(pwd)/tmp/bin/storage-cli\""
+echo "  cc-containers start s3"
+echo "  cc-generate-config storage-cli"

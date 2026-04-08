@@ -1,19 +1,33 @@
 version: "3.3"
 services:
 
+  # Override nginx to use devcontainer-specific config (upstream: codespace:3000)
+  nginx:
+    volumes:
+      - .devcontainer/images/nginx/conf-devcontainer/nginx.conf:/usr/local/nginx/conf/nginx.conf:ro
+      - ./tmp:/tmp
+
   # Dev Container
   codespace:
     container_name: codespace
     build:
       context: ./
       dockerfile: .devcontainer/images/devcontainer/Dockerfile
+      args:
+        # Use major.minor from .ruby-version (e.g., 3.3.10 -> 3.3)
+        RUBY_VERSION: "3.3"
     restart: unless-stopped
     command: /bin/sh -c "while sleep 1000; do :; done"
     volumes:
       - .:/workspace:cached
-      - /var/run/docker.sock:/var/run/docker.sock
-    network_mode: host
+      # Cache rvm gems in a named volume - persists between rebuilds
+      - rvm-gems-cache:/usr/local/rvm/gems:cached
+    networks:
+      - cc-net
     cap_add:
       - SYS_PTRACE
     security_opt:
       - seccomp:unconfined
+
+volumes:
+  rvm-gems-cache:

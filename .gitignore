@@ -27,6 +27,12 @@ test.err
 test.out
 !/.devcontainer/**/*
 
+# Dev environment overrides
+.envrc.local
+
+# Generated dev files (safe to delete)
+tmp/.dev-generated/
+
 #DOCS
 docs/v2/index.html
 

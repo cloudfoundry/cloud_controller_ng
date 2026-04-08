@@ -1,0 +1,41 @@
+#!/bin/bash
+# Manage Docker containers for Cloud Controller development
+#
+# Usage: cc-containers <command> [args]
+#
+# Commands:
+#   start [profile]   Start containers (default: dev)
+#   stop              Stop all containers
+#   status            Show container status
+#   logs [service]    Follow logs (all or specific service)
+#
+# Profiles:
+#   dev (default)     DBs + UAA + nginx (typical development)
+#   minimal           UAA + nginx only (for local brew DBs)
+#   full              All services including diego mocks
+#   s3                Dev + SeaweedFS (S3 blobstore, local only)
+#
+# Examples:
+#   cc-containers start           # Start dev profile
+#   cc-containers start minimal   # Just UAA + nginx
+#   cc-containers logs nginx      # Follow nginx logs
+
+set -e
+export COMPOSE_PROJECT_NAME=cloud_controller_ng
+
+[ -z "$1" ] && { head -20 "$0" | tail -18; exit 1; }
+
+case "$1" in
+  start)
+    case "${2:-dev}" in
+      dev)     docker compose --profile dev up -d --no-recreate ;;
+      minimal) docker compose up -d --no-recreate ;;
+      full)    docker compose --profile dev --profile broker --profile s3 --profile diego up -d --no-recreate ;;
+      s3)      docker compose --profile dev --profile s3 up -d --no-recreate ;;
+      *)       echo "Unknown profile: $2"; exit 1 ;;
+    esac ;;
+  stop)   docker compose --profile dev --profile broker --profile s3 --profile diego down ;;
+  status) docker compose --profile dev --profile broker --profile s3 --profile diego ps ;;
+  logs)   shift; docker compose --profile dev --profile broker --profile s3 --profile diego logs -f "$@" ;;
+  *)      echo "Unknown command: $1"; exit 1 ;;
+esac

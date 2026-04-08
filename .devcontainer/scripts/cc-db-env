@@ -1,0 +1,89 @@
+#!/bin/bash
+# Database environment configuration for Cloud Controller
+#
+# Usage: eval "$(cc-db-env <db> <schema>)"
+#
+# Arguments:
+#   <db>      Database type: psql or mysql
+#   <schema>  Database schema: ccdb, test, or custom name
+#
+# Special schemas:
+#   ccdb      Single database for running Cloud Controller
+#   test      Parallel test databases (sets connection prefixes, not DB_CONNECTION_STRING)
+#
+# Examples:
+#   eval "$(cc-db-env psql ccdb)"           # Run CC with PostgreSQL
+#   eval "$(cc-db-env mysql ccdb)"          # Run CC with MySQL
+#   eval "$(cc-db-env psql test)"           # Parallel tests with PostgreSQL
+#   eval "$(cc-db-env mysql test)"          # Parallel tests with MySQL
+#   eval "$(cc-db-env psql my-experiment)"  # Custom PostgreSQL database
+
+set -e
+
+db="${1:-}"
+schema="${2:-}"
+
+if [ "$db" = "status" ]; then
+  echo "DB=${DB:-<not set>}"
+  echo "DB_CONNECTION_STRING=${DB_CONNECTION_STRING:-<not set>}"
+  echo "POSTGRES_CONNECTION_PREFIX=${POSTGRES_CONNECTION_PREFIX:-<not set>}"
+  echo "MYSQL_CONNECTION_PREFIX=${MYSQL_CONNECTION_PREFIX:-<not set>}"
+  echo "CLOUD_CONTROLLER_NG_CONFIG=${CLOUD_CONTROLLER_NG_CONFIG:-<not set>}"
+  exit 0
+fi
+
+if [ -z "$db" ] || [ -z "$schema" ]; then
+  >&2 echo "Usage: eval \"\$(cc-db-env <db> <schema>)\" or cc-db-env status"
+  >&2 echo "  db: psql, mysql    schema: ccdb, test, or custom"
+  exit 1
+fi
+
+pg_host="${DEVCONTAINER:+postgres}"; pg_host="${pg_host:-localhost}"
+mysql_host="${DEVCONTAINER:+mysql}"; mysql_host="${mysql_host:-127.0.0.1}"
+cc_config="${CC_CONFIG:-local}"
+
+case "$db" in
+  psql|postgres)
+    case "$schema" in
+      test)
+        cat <<EOF
+export DB="postgres"
+export POSTGRES_CONNECTION_PREFIX="postgres://postgres:supersecret@${pg_host}:5432"
+unset DB_CONNECTION_STRING MYSQL_CONNECTION_PREFIX CLOUD_CONTROLLER_NG_CONFIG
+EOF
+        >&2 echo "✓ psql test"
+        ;;
+      *)
+        cat <<EOF
+export DB="postgres"
+export DB_CONNECTION_STRING="postgres://postgres:supersecret@${pg_host}:5432/${schema}"
+export CLOUD_CONTROLLER_NG_CONFIG="tmp/.dev-generated/cloud_controller.${cc_config}.yml"
+unset POSTGRES_CONNECTION_PREFIX MYSQL_CONNECTION_PREFIX
+EOF
+        >&2 echo "✓ psql ${schema}"
+        ;;
+    esac
+    ;;
+  mysql)
+    case "$schema" in
+      test)
+        cat <<EOF
+export DB="mysql"
+export MYSQL_CONNECTION_PREFIX="mysql2://root:supersecret@${mysql_host}:3306"
+unset DB_CONNECTION_STRING POSTGRES_CONNECTION_PREFIX CLOUD_CONTROLLER_NG_CONFIG
+EOF
+        >&2 echo "✓ mysql test"
+        ;;
+      *)
+        cat <<EOF
+export DB="mysql"
+export DB_CONNECTION_STRING="mysql2://root:supersecret@${mysql_host}:3306/${schema}"
+export CLOUD_CONTROLLER_NG_CONFIG="tmp/.dev-generated/cloud_controller.${cc_config}.yml"
+unset POSTGRES_CONNECTION_PREFIX MYSQL_CONNECTION_PREFIX
+EOF
+        >&2 echo "✓ mysql ${schema}"
+        ;;
+    esac
+    ;;
+  *) >&2 echo "Error: Unknown database type: $db (use psql or mysql)"; exit 1 ;;
+esac

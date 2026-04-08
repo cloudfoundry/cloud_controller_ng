@@ -9,8 +9,9 @@
     <envs>
       <env name="DB" value="postgres" />
       <env name="DB_CONNECTION_STRING" value="postgres://postgres:supersecret@localhost:5432/ccdb" />
-      <env name="CLOUD_CONTROLLER_NG_CONFIG" value="tmp/cloud_controller.yml" />
+      <env name="CLOUD_CONTROLLER_NG_CONFIG" value="tmp/.dev-generated/cloud_controller.local.yml" />
       <env name="DISABLE_SPRING" value="true" />
+      <env name="STORAGE_CLI_PATH" value="$PROJECT_DIR$/tmp/bin/storage-cli" />
     </envs>
     <EXTENSION ID="BundlerRunConfigurationExtension" BUNDLE_MODE="AUTO" bundleExecEnabled="true" />
     <EXTENSION ID="RubyCoverageRunConfigurationExtension" track_test_folders="true" runner="rcov" ENABLE_BRANCH_COVERAGE="true" ENABLE_FORKED_COVERAGE="true">

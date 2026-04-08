@@ -1,45 +1,22 @@
 version: "3.3"
+
+# Profiles:
+#   (default)  - uaa, nginx only (for local DB via brew)
+#   dev        - + postgres, mysql (typical development)
+#   broker     - + catsbroker
+#   s3         - + seaweedfs (S3-compatible blobstore)
+#   diego      - + diego-api, mockserver, loggregator-metron
+#   full       - all services
+#
+# Usage:
+#   docker compose --profile dev up -d         # Typical dev (DBs + uaa + nginx)
+#   docker compose up -d                       # Local DBs via brew (just uaa + nginx)
+#   docker compose --profile full up -d        # All services
+
 services:
 
-  # Postgres
-  postgres:
-    container_name: postgres
-    image: postgres:16-alpine
-    environment:
-      POSTGRES_PASSWORD: supersecret
-    command: # logs every statement sent to the server. Slow, but helpful. Fills up disk Quickly !
-      - "postgres"
-      - "-c"
-      - "log_statement=all"
-    ports:
-      - "127.0.0.1:5432:5432"
-    networks:
-      - cc-net
-    healthcheck:
-      test: [ "CMD-SHELL", "pg_isready" ]
-      interval: 10s
-      timeout: 5s
-      retries: 5
-    restart: unless-stopped
+  # === Default (always started) ===
 
-  # MySQL
-  mysql:
-    container_name: mysql
-    image: mysql:8.2
-    environment:
-      MYSQL_ROOT_PASSWORD: supersecret
-    ports:
-      - "127.0.0.1:3306:3306"
-    healthcheck:
-      test: [ "CMD", "mysqladmin", "ping", "-h", "localhost" ]
-      interval: 10s
-      timeout: 20s
-      retries: 3
-    networks:
-      - cc-net
-    restart: unless-stopped
-
-  # UAA
   uaa:
     container_name: uaa
     build:
@@ -56,109 +33,6 @@ services:
       - cc-net
     restart: unless-stopped
 
-  diego-api:
-    container_name: diego-api
-    build:
-      context: .devcontainer/images/bbs
-      dockerfile: Dockerfile
-    volumes:
-      - .devcontainer/images/bbs/bbs.json:/bbs/bbs.json:ro
-      - .devcontainer/images/bbs/locket.json:/bbs/locket.json:ro
-      - ./spec/fixtures/certs:/bbs/certs:ro
-    ports:
-      - "8889:8889"
-    depends_on:
-      - loggregator-metron
-    networks:
-      - cc-net
-    restart: unless-stopped
-
-  mockserver:
-    container_name: mockserver
-    build:
-      context: .devcontainer/images/mockserver
-      dockerfile: Dockerfile
-    ports:
-      - "1234:1234"
-    environment:
-      DIEGO_URL: https://diego-api:8889/
-      DIEGO_CA: /mock/certs/bbs_ca.crt
-      DIEGO_CLIENT_CERT: /mock/certs/bbs_client.crt
-      DIEGO_CLIENT_KEY: /mock/certs/bbs_client.key
-    volumes:
-      - ./spec/fixtures/certs:/mock/certs:ro
-    networks:
-      - cc-net
-    restart: unless-stopped
-
-  # Loggregator Metron Mock
-  loggregator-metron:
-    container_name: loggregator-metron
-    build:
-      context: .devcontainer/images/loggregator-metron
-      dockerfile: Dockerfile
-    ports:
-      - "127.0.0.1:3456:3456"
-    environment:
-      METRON_CERT: /metron/certs/metron.crt
-      METRON_KEY: /metron/certs/metron.key
-      METRON_CA: /metron/certs/metron_ca.crt
-    volumes:
-      - ./spec/fixtures/certs:/metron/certs:ro
-    networks:
-      - cc-net
-    restart: unless-stopped
-
-  # Minio S3 Blobstore
-  minio:
-    container_name: minio
-    image: minio/minio:latest
-    command: minio server --address ":9001" "/data"
-    ports:
-      - "127.0.0.1:9001:9001"
-      - "127.0.0.1:9000:9000"
-    environment:
-      MC_HOST_custom: http://localhost:9001
-    healthcheck:
-      test:
-        [
-          "CMD",
-          "mc",
-          "ready",
-          "custom"
-        ]
-      interval: 30s
-      timeout: 20s
-      retries: 3
-    networks:
-      - cc-net
-    restart: unless-stopped
-
-  # CATS Configurable Service Broker
-  catsbroker:
-    container_name: catsbroker
-    build:
-      context: .devcontainer/images/catsbroker
-      dockerfile: Dockerfile
-    ports:
-      - "127.0.0.1:9292:9292"
-      - "127.0.0.1:9393:80"
-    healthcheck:
-      test:
-        [
-          "CMD",
-          "curl",
-          "-f",
-          "http://localhost:9292/v2/catalog"
-        ]
-      interval: 30s
-      timeout: 20s
-      retries: 3
-    networks:
-      - cc-net
-    restart: unless-stopped
-
-  # Nginx Reverse Proxy (For uploads e.g. Packages)
   nginx:
     container_name: nginx
     build:
@@ -179,5 +53,157 @@ services:
       - "host.docker.internal:host-gateway"
     restart: unless-stopped
 
+  # === DB Profile ===
+
+  postgres:
+    container_name: postgres
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_PASSWORD: supersecret
+    ports:
+      - "127.0.0.1:5432:5432"
+    networks:
+      - cc-net
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+    profiles:
+      - dev
+      - full
+
+  mysql:
+    container_name: mysql
+    image: mysql:8.2
+    environment:
+      MYSQL_ROOT_PASSWORD: supersecret
+    ports:
+      - "127.0.0.1:3306:3306"
+    healthcheck:
+      test: [ "CMD", "mysqladmin", "ping", "-h", "localhost" ]
+      interval: 10s
+      timeout: 20s
+      retries: 3
+    networks:
+      - cc-net
+    restart: unless-stopped
+    profiles:
+      - dev
+      - full
+
+  # === Broker Profile ===
+
+  catsbroker:
+    container_name: catsbroker
+    build:
+      context: .devcontainer/images/catsbroker
+      dockerfile: Dockerfile
+    ports:
+      - "127.0.0.1:9292:9292"
+      - "127.0.0.1:9393:80"
+    healthcheck:
+      test: [ "CMD", "curl", "-f", "http://localhost:9292/v2/catalog" ]
+      interval: 30s
+      timeout: 20s
+      retries: 3
+    networks:
+      - cc-net
+    restart: unless-stopped
+    profiles:
+      - broker
+      - full
+
+  # === S3 Profile ===
+
+  seaweedfs:
+    container_name: seaweedfs
+    image: chrislusf/seaweedfs:latest
+    command: 'server -s3 -dir=/data -s3.port=8333 -s3.allowEmptyFolder=true -s3.config=/etc/seaweedfs/s3.json'
+    ports:
+      - "127.0.0.1:8333:8333"
+      - "127.0.0.1:9333:9333"
+    volumes:
+      - seaweedfs-data:/data
+      - .devcontainer/images/seaweedfs:/etc/seaweedfs:ro
+    healthcheck:
+      test: ["CMD", "wget", "-q", "--spider", "http://localhost:9333/cluster/status"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    networks:
+      - cc-net
+    restart: unless-stopped
+    profiles:
+      - s3
+      - full
+
+  # === Diego Profile ===
+
+  diego-api:
+    container_name: diego-api
+    build:
+      context: .devcontainer/images/bbs
+      dockerfile: Dockerfile
+    volumes:
+      - .devcontainer/images/bbs/bbs.json:/bbs/bbs.json:ro
+      - .devcontainer/images/bbs/locket.json:/bbs/locket.json:ro
+      - ./spec/fixtures/certs:/bbs/certs:ro
+    ports:
+      - "8889:8889"
+    depends_on:
+      - loggregator-metron
+    networks:
+      - cc-net
+    restart: unless-stopped
+    profiles:
+      - diego
+      - full
+
+  mockserver:
+    container_name: mockserver
+    build:
+      context: .devcontainer/images/mockserver
+      dockerfile: Dockerfile
+    ports:
+      - "1234:1234"
+    environment:
+      DIEGO_URL: https://diego-api:8889/
+      DIEGO_CA: /mock/certs/bbs_ca.crt
+      DIEGO_CLIENT_CERT: /mock/certs/bbs_client.crt
+      DIEGO_CLIENT_KEY: /mock/certs/bbs_client.key
+    volumes:
+      - ./spec/fixtures/certs:/mock/certs:ro
+    networks:
+      - cc-net
+    restart: unless-stopped
+    profiles:
+      - diego
+      - full
+
+  loggregator-metron:
+    container_name: loggregator-metron
+    build:
+      context: .devcontainer/images/loggregator-metron
+      dockerfile: Dockerfile
+    ports:
+      - "127.0.0.1:3456:3456"
+    environment:
+      METRON_CERT: /metron/certs/metron.crt
+      METRON_KEY: /metron/certs/metron.key
+      METRON_CA: /metron/certs/metron_ca.crt
+    volumes:
+      - ./spec/fixtures/certs:/metron/certs:ro
+    networks:
+      - cc-net
+    restart: unless-stopped
+    profiles:
+      - diego
+      - full
+
 networks:
   cc-net:
+
+volumes:
+  seaweedfs-data:

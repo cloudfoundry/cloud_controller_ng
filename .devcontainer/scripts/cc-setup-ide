@@ -1,0 +1,37 @@
+#!/bin/bash
+# Copy IDE configurations from templates to workspace root
+# Copies files without overwriting existing ones
+set -e
+
+cd "$(dirname "$0")/../.."
+
+echo "Copying IDE configurations (existing files preserved)..."
+
+# VS Code - copy individual files to not overwrite user customizations
+mkdir -p .vscode
+for file in .devcontainer/configs/vscode/.vscode/*; do
+    dest=".vscode/$(basename "$file")"
+    if [ ! -e "$dest" ]; then
+        cp -a "$file" "$dest"
+        echo "  Copied: $dest"
+    fi
+done
+
+# IntelliJ - copy runConfigurations and inspectionProfiles
+mkdir -p .idea/runConfigurations .idea/inspectionProfiles
+for file in .devcontainer/configs/intellij/.idea/runConfigurations/*; do
+    dest=".idea/runConfigurations/$(basename "$file")"
+    if [ ! -e "$dest" ]; then
+        cp -a "$file" "$dest"
+        echo "  Copied: $dest"
+    fi
+done
+for file in .devcontainer/configs/intellij/.idea/inspectionProfiles/*; do
+    dest=".idea/inspectionProfiles/$(basename "$file")"
+    if [ ! -e "$dest" ]; then
+        cp -a "$file" "$dest"
+        echo "  Copied: $dest"
+    fi
+done
+
+echo "✓ Done"

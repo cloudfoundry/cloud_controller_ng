@@ -10,6 +10,7 @@
       <env name="DB" value="postgres" />
       <env name="DB_CONNECTION_STRING" value="postgres://postgres:supersecret@localhost:5432/ccdb" />
       <env name="DISABLE_SPRING" value="true" />
+      <env name="STORAGE_CLI_PATH" value="$PROJECT_DIR$/tmp/bin/storage-cli" />
     </envs>
     <EXTENSION ID="BundlerRunConfigurationExtension" BUNDLE_MODE="AUTO" bundleExecEnabled="true" />
     <EXTENSION ID="JRubyRunConfigurationExtension" NailgunExecEnabled="false" />
@@ -24,7 +25,7 @@
     </EXTENSION>
     <EXTENSION ID="org.jetbrains.plugins.ruby.rails.run.RailsRunConfigurationExtension" SCRATCH_USE_RAILS_RUNNER="false" />
     <RUBY_RUN_CONFIG NAME="SCRIPT_PATH" VALUE="$PROJECT_DIR$/bin/cloud_controller" />
-    <RUBY_RUN_CONFIG NAME="SCRIPT_ARGS" VALUE="-c tmp/cloud_controller.yml" />
+    <RUBY_RUN_CONFIG NAME="SCRIPT_ARGS" VALUE="-c tmp/.dev-generated/cloud_controller.local.yml" />
     <method v="2">
       <option name="Make" enabled="true" />
     </method>

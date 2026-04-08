@@ -1,7 +1,9 @@
-FROM mcr.microsoft.com/vscode/devcontainers/ruby:3.2
+ARG RUBY_VERSION=3.3
+FROM mcr.microsoft.com/vscode/devcontainers/ruby:${RUBY_VERSION}
 
-COPY --from=docker:dind /usr/local/bin/docker /usr/local/bin/
+# Docker CLI and compose are installed by the docker-outside-of-docker feature
 COPY .devcontainer/images/devcontainer/setup.sh /tmp/setup.sh
-COPY .ruby-version /tmp/.ruby-version
 USER vscode
-RUN /tmp/setup.sh && sudo rm /tmp/setup.sh /tmp/.ruby-version
+RUN /tmp/setup.sh && sudo rm /tmp/setup.sh && sudo chmod 1777 /tmp
+
+WORKDIR /workspace

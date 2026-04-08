@@ -34,15 +34,15 @@ When deployed via capi-release only:
 * Droplets: An executable containing an app and its runtime dependencies
 * Buildpacks: Set of programs that transform packages into droplets
 * Buildpack cache: Cached dependencies and build artifacts to speed up future staging
- 
-Cloud Controller currently supports [webdav](http://www.webdav.org/) and the following [fog](http://fog.io) connectors: 
 
-* Alibaba Cloud (Experimental)
-* Azure
-* Openstack
-* Local (NFS)
-* Google
-* AWS
+#### Providers
+
+| Provider | `blobstore_type` | Backends | Notes |
+|----------|------------------|----------|-------|
+| Storage CLI | `storage-cli` | S3, S3-compatible, GCS, Azure, Alibaba Cloud | |
+| Fog | `fog` | AWS, Azure, GCS, Alibaba Cloud, OpenStack, Local/NFS | **Default.** Local/NFS not recommended for production |
+| WebDAV | `webdav` | WebDAV servers | |
+| Local | `local`, `local-temp-storage` | Filesystem, NFS | Development and testing only |
 
 ### Runtime
 
@@ -52,140 +52,182 @@ See [Diego Design Notes](https://github.com/cloudfoundry/diego-design-notes) for
 ## Contributing
 
 Please read the [contributors' guide](https://github.com/cloudfoundry/cloud_controller_ng/blob/main/CONTRIBUTING.md) and the [Cloud Foundry Code of Conduct](https://cloudfoundry.org/code-of-conduct/)
-### Predefined Development Environment
 
-To commence your work in a fully equipped development environment, you have two main options:
+### Development Environment Setup
 
-1. **GitHub Codespaces**: GitHub Codespaces provisions a virtual machine with essential core services, such as S3 Blobstore, Database, and NGINX. It also establishes a connection that your IDE can use (VSCode is recommended). To initiate a codespace, click on the green button within the GitHub UI(upper right corner) and select the 'Codespaces' tab.
+#### Option 1: Devcontainer
 
-2. **Local Environment**: This option allows you to establish an environment on your local machine with the same core services as GitHub Codespaces, using Docker.
+- **GitHub Codespaces:** Click "Code" → "Codespaces" → "Create codespace"
+- **VS Code:** Open folder → "Reopen in Container"
 
-A script in the project's root directory provides convenient shortcuts to set up an environment locally:
+Other IDEs with devcontainer support (e.g., IntelliJ) may work but are not tested.
 
-```
-Usage: ./devenv.sh COMMAND
-
-Commands:
-  create     - Setting up the development environment(containers)
-  start      - Starting the development environment(containers), an existing fully set up set of containers must exist.
-  stop       - Stopping but not removing the development environment(containers)
-  destroy    - Stopping and removing the development environment(containers)
-  runconfigs - Copies matching run configurations for intellij and vscode into the respective folders
-  help       - Print this help text
+Everything autoconfigures. After setup completes, use VS Code's **Run/Debug panel** (see `.vscode/launch.json`) or run manually:
+```bash
+cc-generate-config             # Generate cloud_controller.yml
+eval "$(cc-db-env psql ccdb)"  # Set database env vars
+cloud_controller -c tmp/.dev-generated/cloud_controller.devcontainer.yml
+cflogin                        # Authenticate CF CLI (alias for cf api + auth)
 ```
 
-To run this script, ensure the following are installed on your local system:
+#### Option 2: Local Development
 
-- Ruby (Refer to the .ruby-version file for the correct version)
-- [Bundler](https://bundler.io/)
-- [Docker](https://www.docker.com/) (Feature "Allow privileged port mapping" must be enabled in Avanced Options on Docker Desktop for Mac, docker must be accessable without root permissions)
-- [Docker Compose](https://github.com/docker/compose)
-- [PSQL CLI](https://www.postgresql.org/docs/current/app-psql.html)
-- [MYSQL CLI](https://dev.mysql.com/doc/refman/8.0/en/mysql.html)
-- [UAAC](https://github.com/cloudfoundry/cf-uaac)
-- [yq 4+](https://github.com/mikefarah/yq)
+**Prerequisites:** Ruby (see `.ruby-version` for correct version), [Bundler](https://bundler.io/), [Docker Desktop](https://www.docker.com/products/docker-desktop/), [direnv](https://direnv.net/), [PSQL](https://www.postgresql.org) and/or [MySQL](https://dev.mysql.com/doc/mysql-shell/en/).
 
-Upon executing `./devenv.sh create`, the necessary containers will be set up and the databases will be initialized and migrated. 
+```bash
+direnv allow                    # Enable direnv (adds cc-* scripts to PATH)
+bundle install                  # Install gems
+cc-containers start             # Start DBs + UAA + nginx
+cc-generate-config              # Generate cloud_controller.yml
+eval "$(cc-db-env psql ccdb)"   # Set database env vars
+cc-reset-db                     # (re)create and migrate databases
+cc-setup-ide                    # Copy IDE run/debug configs (optional)
+```
 
-As an optional step, execute `./devenv.sh runconfigs` to copy predefined settings and run configurations for this project into `.vscode` and `.idea` directories for VSCode and IntelliJ/RubyMine/JetBrains IDEs. These configurations are opinionated and, hence, not provided by default, but they do offer common configurations to debug `rspecs`, `cloud_controller`, `local_worker`, and `generic_worker`.
+Then see [Running Cloud Controller](#running-cloud-controller) below.
+
+#### Helper Scripts
+
+All scripts are prefixed with `cc-` and added to PATH via direnv:
+
+| Script | Purpose |
+|--------|---------|
+| `cc-containers <cmd>` | Manage Docker containers (see below) |
+| `cc-db-env <db> <schema>` | Set `DB_CONNECTION_STRING` and `CLOUD_CONTROLLER_NG_CONFIG`. Usage: `eval "$(cc-db-env psql ccdb)"` |
+| `cc-generate-config [mode]` | Generate cloud_controller.yml (modes: local-temp-storage, local, storage-cli) |
+| `cc-reset-db` | Drop and recreate all databases |
+| `cc-setup-ide` | Copy IDE configs (VS Code, IntelliJ) - won't overwrite existing |
+| `cc-install-storage-cli` | Install storage-cli binary to tmp/bin/ (for S3 blobstore testing) |
+
+**Container management** (or use `docker compose` directly with profiles: `dev`, `full`, `s3`):
+```bash
+cc-containers start           # DBs + UAA + nginx (typical dev)
+cc-containers start minimal   # UAA + nginx only (for databases via brew)
+cc-containers start full      # All services
+cc-containers start s3        # Dev + SeaweedFS (S3 testing, local only)
+cc-containers stop            # Stop all
+cc-containers logs [service]  # Follow logs
+cc-containers status          # Show status
+```
+
+**Using brew databases instead of Docker:**
+```bash
+brew services start postgresql@16
+brew services start mysql
+cc-containers start minimal   # Only starts UAA + nginx
+```
+
+**S3 blobstore testing (local only):**
+
+To test with S3-compatible storage via SeaweedFS:
+
+```bash
+cc-install-storage-cli                       # Downloads storage-cli to tmp/bin/
+export STORAGE_CLI_PATH="$(pwd)/tmp/bin/storage-cli"  # Point CC to storage-cli binary
+cc-containers start s3                       # Start dev profile + SeaweedFS
+cc-generate-config storage-cli               # Generate config with storage-cli blobstore
+eval "$(cc-db-env psql ccdb)"
+cloud_controller -c tmp/.dev-generated/cloud_controller.local.yml
+```
+
+**Note:** S3/storage-cli mode is only available for local development, not in devcontainer due to SeaweedFS mount issues.
+
+**Configuration:** Create `.envrc.local` (gitignored) for personal settings:
+```bash
+export PARALLEL_TEST_PROCESSORS=4  # Limit parallel test workers
+```
+
+#### Ports
+
+| Service | Port | Notes |
+|---------|------|-------|
+| Cloud Controller | 3000 | Direct access without nginx |
+| nginx | 80 | Proxies to CC, handles uploads |
+| UAA | 8080 | |
+| Postgres | 5432 | |
+| MySQL | 3306 | |
+
+#### Running Cloud Controller
+
+Cloud Controller requires `DB_CONNECTION_STRING` and a config file. The easiest way is using `cc-db-env`:
+
+```bash
+eval "$(cc-db-env psql ccdb)"        # Sets DB_CONNECTION_STRING and CLOUD_CONTROLLER_NG_CONFIG
+cloud_controller -c tmp/.dev-generated/cloud_controller.${CC_CONFIG}.yml
+
+# In another terminal, start a worker for async jobs (e.g., buildpack uploads):
+eval "$(cc-db-env psql ccdb)"
+bundle exec rake jobs:local
+```
+
+Or set environment variables manually:
+```bash
+export DB_CONNECTION_STRING="postgres://postgres:supersecret@localhost:5432/ccdb"
+cloud_controller -c tmp/.dev-generated/cloud_controller.local.yml
+```
+
+`CC_CONFIG` is `local` by default, `devcontainer` in devcontainer/codespaces.
+
+#### CF CLI
+
+```bash
+# Devcontainer:
+cflogin                               # Alias: cf api http://nginx && cf auth ccadmin secret
+
+# Local (via nginx):
+cf api http://localhost && cf auth ccadmin secret
+
+# Local (direct, no nginx):
+cf api http://localhost:3000 && cf auth ccadmin secret
+```
 
 #### Credentials
 
-This Setup automatically creates a user in UAA for login in the cloud_controller, and sets Passwords for Postgres and Mysql.
-In case you need them to configure them somewhere else (e.g. database visualizers):
-- Postgres: postgres:supersecret@localhost:5432
-- MySQL: root:supersecret@127.0.0.1:3306
-- UAA Admin: 
-```bash
-uaac target http://localhost:8080
-uaac token client get admin -s "adminsecret"
-```
-- CF Admin:
-```bash
-cf api http://localhost
-cf login -u ccadmin -p secret
-```
+| Service | Connection |
+|---------|------------|
+| Postgres | `postgres://postgres:supersecret@localhost:5432` |
+| MySQL | `mysql2://root:supersecret@localhost:3306` |
+| CF Admin | `ccadmin` / `secret` |
 
-#### Starting the Cloud Controller locally
+### Running Tests
 
-When the Docker containers have been set up as described above, you can start the cloud controller locally. Start the main process with:
-```
-DB_CONNECTION_STRING=mysql2://root:supersecret@127.0.0.1:3306/ccdb ./bin/cloud_controller -c ./tmp/cloud_controller.yml
-```
-Then start a local worker:
-```
-DB_CONNECTION_STRING=mysql2://root:supersecret@127.0.0.1:3306/ccdb CLOUD_CONTROLLER_NG_CONFIG=./tmp/cloud_controller.yml bundle exec rake jobs:local
-```
-Start a delayed_job worker:
-```
-DB_CONNECTION_STRING=mysql2://root:supersecret@127.0.0.1:3306/ccdb CLOUD_CONTROLLER_NG_CONFIG=./tmp/cloud_controller.yml bundle exec rake jobs:generic
-```
-And finally start the scheduler:
-```
-DB_CONNECTION_STRING=mysql2://root:supersecret@127.0.0.1:3306/ccdb CLOUD_CONTROLLER_NG_CONFIG=./tmp/cloud_controller.yml bundle exec rake clock:start
-```
-
-Known limitations:
-- The [uaa_client_manager](https://github.com/cloudfoundry/cloud_controller_ng/blob/96c729fd116843ce06f40e7325a89f59b64d5f86/lib/services/sso/uaa/uaa_client_manager.rb#L29) requires SSL for UAA connections. The UAA instance in the Docker container provides however only plain http connections. You can set `http.use_ssl` to `false` as workaround.
-
-### Unit Tests
 **TLDR:** Always run `bundle exec rake` before committing
 
 To maintain a consistent and effective approach to testing, please refer to [the spec README](spec/README.md) and
 keep it up to date, documenting the purpose of the various types of tests.
 
-By default `rspec` will randomly pick between postgres and mysql.
+#### Database Configuration
 
-If postgres is not running on your OSX machine, you can start up a server by doing the following:
-```
-brew services start postgresql
-createuser -s postgres
-DB=postgres rake db:create
+The easiest way to configure the database for tests is using `cc-db-env`:
+
+```bash
+eval "$(cc-db-env psql test)"  # Configure for parallel tests with PostgreSQL
+eval "$(cc-db-env mysql test)" # Configure for parallel tests with MySQL
 ```
 
-It will try to connect to those databases with the following connection string:
+Alternatively, you can set environment variables manually. By default rspec will randomly pick between postgres and mysql. It will try to connect with the following connection strings:
 
 * postgres: `postgres://postgres@localhost:5432/cc_test`
 * mysql: `mysql2://root:password@localhost:3306/cc_test`
 
 To specify a custom username, password, host, or port for either database type, you can override the default
 connection string prefix (the part before the `cc_test` database name) by setting the `MYSQL_CONNECTION_PREFIX`
-and/or `POSTGRES_CONNECTION_PREFIX` variables. Alternatively, to override the full connection string, including 
-the database name, you can set the `DB_CONNECTION_STRING` environment variable.  This will restrict you to only 
+and/or `POSTGRES_CONNECTION_PREFIX` variables. Alternatively, to override the full connection string, including
+the database name, you can set the `DB_CONNECTION_STRING` environment variable. This will restrict you to only
 running tests in serial, however.
 
-For example, to run unit tests in parallel with a custom mysql username and password, you could execute:
+For example, to run unit tests in parallel with a custom mysql username and password:
 ```
 MYSQL_CONNECTION_PREFIX=mysql2://custom_user:custom_password@localhost:3306 bundle exec rake
 ```
 
-The following are examples of completely fully overriding the database connection string:
-
-    DB_CONNECTION_STRING="postgres://postgres@localhost:5432/cc_test" DB=postgres rake spec:serial
-    DB_CONNECTION_STRING="mysql2://root:password@localhost:3306/cc_test" DB=mysql rake spec:serial
-
-If you are running the integration specs (which are included in the full rake),
-and you are specifying `DB_CONNECTION_STRING`, you will also
-need to have a second test database with `_integration_cc` as the name suffix.
-
-For example, if you are using:
-
-    DB_CONNECTION_STRING="postgres://postgres@localhost:5432/cc_test"
-
-You will also need a database called:
-
-    `cc_test_integration_cc`
-
-The command
+Examples using `DB_CONNECTION_STRING` (serial only):
 ```
-rake db:create
+DB_CONNECTION_STRING="postgres://postgres@localhost:5432/cc_test" DB=postgres bundle exec rake spec:serial
+DB_CONNECTION_STRING="mysql2://root:password@localhost:3306/cc_test" DB=mysql bundle exec rake spec:serial
 ```
-will create the above database when the `DB` environment variable is set to postgres or mysql.
-You should run this before running rake in order to ensure that the `cc_test` database exists.
 
 #### Running tests on a single file
-
-The development team typically will run the specs to a single file as (e.g.)
 
     bundle exec rspec spec/unit/controllers/runtime/users_controller_spec.rb
 
@@ -197,9 +239,6 @@ Note that this will run all tests in parallel by default. If you are setting a c
 you will need to run the tests in serial instead:
 
     bundle exec rake spec:serial
-
-To be able to run the unit tests in parallel and still use custom connection strings, use the
-`MYSQL_CONNECTION_PREFIX` and `POSTGRES_CONNECTION_PREFIX` environment variables described above.
 
 #### Running static analysis
 

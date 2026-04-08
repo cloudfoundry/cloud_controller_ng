@@ -1,16 +1,40 @@
 {
+  // ==========================================================================
+  // TEST RUNNING: Use ruby-spec-runner (status bar buttons: "Run spec" / "Debug spec")
+  // Note: VS Code test explorer disabled - Ruby LSP hangs on large codebases
+  // ==========================================================================
   "ruby-spec-runner.rspecEnv": {
     "DB": "postgres",
-    "POSTGRES_CONNECTION_PREFIX": "postgres://postgres:supersecret@localhost:5432",
-    "MYSQL_CONNECTION_PREFIX": "mysql2://root:supersecret@localhost:3306"
+    "POSTGRES_CONNECTION_PREFIX": "postgres://postgres:supersecret@postgres:5432"
   },
+  "ruby-spec-runner.rspecCommand": "bundle exec rspec",
+  "ruby-spec-runner.changeDirectoryToWorkspaceRoot": true,
+
+  // Ruby LSP - use rvm Ruby
+  "rubyLsp.rubyVersionManager": {
+    "identifier": "rvm"
+  },
+  "rubyLsp.testFramework": "rspec",
+
+  // RuboCop
   "ruby.rubocop.autocorrectOnSave": true,
   "ruby.rubocop.configFilePath": ".rubocop.yml",
   "ruby.rubocop.hideDisableSuggestions": true,
   "ruby.rubocop.useBundler": true,
   "ruby.rubocop.useServer": true,
   "ruby.rubocop.onSave": true,
-  "solargraph.useBundler": false,
+
+  // Solargraph - code intelligence
+  "solargraph.useBundler": true,
+  "solargraph.diagnostics": false,
+  "solargraph.formatting": false,
+  "solargraph.completion": true,
+  "solargraph.hover": true,
+  "solargraph.definitions": true,
+  "solargraph.references": true,
+  "solargraph.symbols": true,
+
+  // Editor
   "editor.bracketPairColorization.enabled": true,
   "editor.guides.bracketPairs": true
 }

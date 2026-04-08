@@ -1,0 +1,38 @@
+#!/usr/bin/env ruby
+# Usage: cc-reset-db [DB=postgres|mysql]
+APP_ROOT = if ENV['DEVCONTAINER']
+             '/workspace'
+           else
+             (File.exist?('Gemfile') ? Dir.pwd : File.expand_path('../../..', __dir__))
+           end
+abort 'Error: Run from repository root' unless APP_ROOT && File.exist?("#{APP_ROOT}/Gemfile")
+
+def run!(cmd)
+  puts "Running: #{cmd}"
+  Dir.chdir(APP_ROOT) { system(cmd, exception: true) }
+end
+
+db = ENV['DB'] ||= 'postgres'
+pg_host = ENV['DEVCONTAINER'] ? 'postgres' : 'localhost'
+mysql_host = ENV['DEVCONTAINER'] ? 'mysql' : '127.0.0.1'
+
+puts "== Resetting #{db} databases =="
+
+begin
+  ENV.delete('DB_CONNECTION_STRING')
+  ENV[db == 'postgres' ? 'POSTGRES_CONNECTION_PREFIX' : 'MYSQL_CONNECTION_PREFIX'] =
+    db == 'postgres' ? "postgres://postgres:supersecret@#{pg_host}:5432" : "mysql2://root:supersecret@#{mysql_host}:3306"
+
+  run! 'bundle exec rake parallel:drop parallel:create db:parallel:migrate'
+
+  ENV['DB_CONNECTION_STRING'] = if db == 'postgres'
+                                  "postgres://postgres:supersecret@#{pg_host}:5432/ccdb"
+                                else
+                                  "mysql2://root:supersecret@#{mysql_host}:3306/ccdb"
+                                end
+
+  run! 'bundle exec rake db:recreate db:migrate db:seed'
+  puts '✓ Done'
+rescue StandardError => e
+  abort "Failed: #{e.message}\nMake sure containers are running: cc-containers start"
+end

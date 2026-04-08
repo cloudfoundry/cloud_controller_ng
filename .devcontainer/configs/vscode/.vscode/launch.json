@@ -1,7 +1,11 @@
 {
-    // Use IntelliSense to learn about possible attributes.
-    // Hover to view descriptions of existing attributes.
-    // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
+    // Run/Debug configurations for Cloud Controller
+    //
+    // These configs work in both local and devcontainer environments:
+    // - Local: Uses POSTGRES_CONNECTION_PREFIX from .envrc (localhost)
+    // - Devcontainer: Uses POSTGRES_CONNECTION_PREFIX from devcontainer.json (postgres container)
+    //
+    // Run 'cc-generate-config' first to create tmp/.dev-generated/cloud_controller.*.yml
     "version": "0.2.0",
     "configurations": [
         {
@@ -11,36 +15,23 @@
             "useBundler": true,
             "cwd": "${workspaceRoot}",
             "command": "bin/cloud_controller",
-            "script": "-c tmp/cloud_controller.yml",
+            "script": "-c tmp/.dev-generated/cloud_controller.${env:CC_CONFIG}.yml",
             "env": {
                 "DB": "postgres",
-                "DB_CONNECTION_STRING": "postgres://postgres:supersecret@localhost:5432/ccdb"
+                "DB_CONNECTION_STRING": "${env:POSTGRES_CONNECTION_PREFIX}/ccdb"
             }
         },
         {
-            "name": "[Mariadb] CloudController",
+            "name": "[Mysql] CloudController",
             "type": "rdbg",
             "request": "launch",
             "useBundler": true,
             "cwd": "${workspaceRoot}",
             "command": "bin/cloud_controller",
-            "script": "-c tmp/cloud_controller.yml",
+            "script": "-c tmp/.dev-generated/cloud_controller.${env:CC_CONFIG}.yml",
             "env": {
                 "DB": "mysql",
-                "DB_CONNECTION_STRING": "mysql2://root:supersecret@localhost:3306/ccdb"
-            }
-        },
-        {
-            "name": "[Mariadb] Unittests",
-            "type": "rdbg",
-            "request": "launch",
-            "useBundler": true,
-            "cwd": "${workspaceRoot}",
-            "command": "bin/rake",
-            "script": "spec:all",
-            "env": {
-                "DB": "mysql",
-                "MYSQL_CONNECTION_PREFIX": "mysql2://root:supersecret@localhost:3306"
+                "DB_CONNECTION_STRING": "${env:MYSQL_CONNECTION_PREFIX}/ccdb"
             }
         },
         {
@@ -50,52 +41,23 @@
             "useBundler": true,
             "cwd": "${workspaceRoot}",
             "command": "bin/rake",
-            "script": "spec:all",
+            "script": "spec",
             "env": {
                 "DB": "postgres",
-                "POSTGRES_CONNECTION_PREFIX": "postgres://postgres:supersecret@localhost:5432"
+                "POSTGRES_CONNECTION_PREFIX": "${env:POSTGRES_CONNECTION_PREFIX}"
             }
         },
         {
-            "name": "[Mariadb] CC Worker",
+            "name": "[Mysql] Unittests",
             "type": "rdbg",
             "request": "launch",
             "useBundler": true,
             "cwd": "${workspaceRoot}",
             "command": "bin/rake",
-            "script": "jobs:generic",
+            "script": "spec",
             "env": {
                 "DB": "mysql",
-                "DB_CONNECTION_STRING": "mysql2://root:supersecret@localhost:3306/ccdb",
-                "CLOUD_CONTROLLER_NG_CONFIG": "tmp/cloud_controller.yml"
-            }
-        },
-        {
-            "name": "[Postgres] CC Worker",
-            "type": "rdbg",
-            "request": "launch",
-            "useBundler": true,
-            "cwd": "${workspaceRoot}",
-            "command": "bin/rake",
-            "script": "jobs:generic",
-            "env": {
-                "DB": "postgres",
-                "DB_CONNECTION_STRING": "postgres://postgres:supersecret@localhost:5432/ccdb",
-                "CLOUD_CONTROLLER_NG_CONFIG": "tmp/cloud_controller.yml"
-            }
-        },
-        {
-            "name": "[Mariadb] CC Local Worker",
-            "type": "rdbg",
-            "request": "launch",
-            "useBundler": true,
-            "cwd": "${workspaceRoot}",
-            "command": "bin/rake",
-            "script": "jobs:local",
-            "env": {
-                "DB": "mysql",
-                "DB_CONNECTION_STRING": "mysql2://root:supersecret@localhost:3306/ccdb",
-                "CLOUD_CONTROLLER_NG_CONFIG": "tmp/cloud_controller.yml"
+                "MYSQL_CONNECTION_PREFIX": "${env:MYSQL_CONNECTION_PREFIX}"
             }
         },
         {
@@ -108,22 +70,50 @@
             "script": "jobs:local",
             "env": {
                 "DB": "postgres",
-                "DB_CONNECTION_STRING": "postgres://postgres:supersecret@localhost:5432/ccdb",
-                "CLOUD_CONTROLLER_NG_CONFIG": "tmp/cloud_controller.yml"
+                "DB_CONNECTION_STRING": "${env:POSTGRES_CONNECTION_PREFIX}/ccdb",
+                "CLOUD_CONTROLLER_NG_CONFIG": "tmp/.dev-generated/cloud_controller.${env:CC_CONFIG}.yml"
             }
         },
         {
-            "name": "[Mariadb] CC Scheduler",
+            "name": "[Mysql] CC Local Worker",
             "type": "rdbg",
             "request": "launch",
             "useBundler": true,
             "cwd": "${workspaceRoot}",
             "command": "bin/rake",
-            "script": "clock:start",
+            "script": "jobs:local",
             "env": {
                 "DB": "mysql",
-                "DB_CONNECTION_STRING": "mysql2://root:supersecret@localhost:3306/ccdb",
-                "CLOUD_CONTROLLER_NG_CONFIG": "tmp/cloud_controller.yml"
+                "DB_CONNECTION_STRING": "${env:MYSQL_CONNECTION_PREFIX}/ccdb",
+                "CLOUD_CONTROLLER_NG_CONFIG": "tmp/.dev-generated/cloud_controller.${env:CC_CONFIG}.yml"
+            }
+        },
+        {
+            "name": "[Postgres] CC Generic Worker",
+            "type": "rdbg",
+            "request": "launch",
+            "useBundler": true,
+            "cwd": "${workspaceRoot}",
+            "command": "bin/rake",
+            "script": "jobs:generic",
+            "env": {
+                "DB": "postgres",
+                "DB_CONNECTION_STRING": "${env:POSTGRES_CONNECTION_PREFIX}/ccdb",
+                "CLOUD_CONTROLLER_NG_CONFIG": "tmp/.dev-generated/cloud_controller.${env:CC_CONFIG}.yml"
+            }
+        },
+        {
+            "name": "[Mysql] CC Generic Worker",
+            "type": "rdbg",
+            "request": "launch",
+            "useBundler": true,
+            "cwd": "${workspaceRoot}",
+            "command": "bin/rake",
+            "script": "jobs:generic",
+            "env": {
+                "DB": "mysql",
+                "DB_CONNECTION_STRING": "${env:MYSQL_CONNECTION_PREFIX}/ccdb",
+                "CLOUD_CONTROLLER_NG_CONFIG": "tmp/.dev-generated/cloud_controller.${env:CC_CONFIG}.yml"
             }
         },
         {
@@ -136,8 +126,22 @@
             "script": "clock:start",
             "env": {
                 "DB": "postgres",
-                "DB_CONNECTION_STRING": "postgres://postgres:supersecret@localhost:5432/ccdb",
-                "CLOUD_CONTROLLER_NG_CONFIG": "tmp/cloud_controller.yml"
+                "DB_CONNECTION_STRING": "${env:POSTGRES_CONNECTION_PREFIX}/ccdb",
+                "CLOUD_CONTROLLER_NG_CONFIG": "tmp/.dev-generated/cloud_controller.${env:CC_CONFIG}.yml"
+            }
+        },
+        {
+            "name": "[Mysql] CC Scheduler",
+            "type": "rdbg",
+            "request": "launch",
+            "useBundler": true,
+            "cwd": "${workspaceRoot}",
+            "command": "bin/rake",
+            "script": "clock:start",
+            "env": {
+                "DB": "mysql",
+                "DB_CONNECTION_STRING": "${env:MYSQL_CONNECTION_PREFIX}/ccdb",
+                "CLOUD_CONTROLLER_NG_CONFIG": "tmp/.dev-generated/cloud_controller.${env:CC_CONFIG}.yml"
             }
         }
     ]

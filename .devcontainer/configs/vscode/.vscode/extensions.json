@@ -1,0 +1,11 @@
+{
+  "recommendations": [
+    "KoichiSasada.vscode-rdbg",
+    "Fooo.ruby-spec-runner",
+    "castwide.solargraph",
+    "eamodio.gitlens"
+  ],
+  "unwantedRecommendations": [
+    "Shopify.ruby-lsp"
+  ]
+}

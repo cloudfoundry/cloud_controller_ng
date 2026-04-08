@@ -15,20 +15,37 @@
         "postgres",
         "mysql",
         "uaa",
-        "minio",
         "catsbroker",
         "nginx"
     ],
+    "features": {
+        "ghcr.io/devcontainers/features/docker-outside-of-docker:1": {
+            "moby": false
+        }
+    },
     "workspaceFolder": "/workspace",
-    "initializeCommand": ".devcontainer/scripts/codespaces_init.sh",
-    "onCreateCommand": ".devcontainer/scripts/codespaces_start.sh",
+    "postCreateCommand": "direnv allow",
+    "postStartCommand": ".devcontainer/scripts/cc-setup-devcontainer && cc-setup-ide",
+    "remoteEnv": {
+        "DEVCONTAINER": "true",
+        "CC_CONFIG": "devcontainer",
+        "DB": "postgres",
+        "COMPOSE_PROJECT_NAME": "cloud_controller_ng",
+        "COMPOSE_PROFILES": "dev,broker",
+        "PATH": "${containerEnv:PATH}:/usr/local/bin:${containerWorkspaceFolder}/.devcontainer/scripts",
+        "POSTGRES_CONNECTION_PREFIX": "postgres://postgres:supersecret@postgres:5432",
+        "MYSQL_CONNECTION_PREFIX": "mysql2://root:supersecret@mysql:3306"
+    },
     "customizations": {
-        // Configure properties specific to VS Code.
         "vscode": {
-            // Set *default* container specific settings.json values on container create.
-            "settings": {},
-            // Add the IDs of extensions you want installed when the container is created.
+            "settings": {
+                "rubyLsp.rubyVersionManager": {
+                    "identifier": "rvm"
+                },
+                "rubyLsp.testFramework": "rspec"
+            },
             "extensions": [
+                "Shopify.ruby-lsp",
                 "ms-azuretools.vscode-docker",
                 "oderwat.indent-rainbow",
                 "KoichiSasada.vscode-rdbg",
@@ -39,14 +56,12 @@
             ]
         }
     },
-    // Use 'forwardPorts' to make a list of ports inside the container available locally.
     "forwardPorts": [
         80,
         1234,
+        8333,
         9292,
         9393,
-        9000,
-        9001,
         8080,
         3306,
         5432

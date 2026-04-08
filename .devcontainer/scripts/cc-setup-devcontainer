@@ -1,0 +1,33 @@
+#!/usr/bin/env ruby
+# One-time setup for devcontainer/codespaces only
+abort 'For local dev: bundle install && cc-generate-config && cc-reset-db' unless ENV['DEVCONTAINER']
+
+Dir.chdir('/workspace')
+def run(cmd) = system(cmd) || abort("Failed: #{cmd}")
+def quiet(cmd) = system(cmd, out: File::NULL, err: File::NULL)
+
+puts '== Devcontainer Setup =='
+
+# Bundle
+system 'bundle config set --local jobs 4'
+quiet('bundle check') ? puts('Bundle OK') : run('bundle install')
+
+# Config
+run "cc-generate-config #{ENV['BLOBSTORE_MODE'] || 'local-temp-storage'}"
+
+# Wait for DB
+db = ENV['DB'] ||= 'postgres'
+db_cmd = db == 'postgres' ? 'PGPASSWORD=supersecret psql -h postgres -U postgres -c "SELECT 1"' : 'mysql -h mysql -u root -psupersecret -e "SELECT 1"'
+print "Waiting for #{db}..."
+60.times do
+  break if quiet(db_cmd)
+
+  print '.'
+  sleep 2
+end
+abort "\nDB not ready" unless quiet(db_cmd)
+puts ' ready'
+
+# Setup DBs
+run 'cc-reset-db'
+puts '✓ Done. Run: eval "$(cc-db-env psql ccdb)" && cloud_controller -c tmp/.dev-generated/cloud_controller.devcontainer.yml'

@@ -1,0 +1,101 @@
+#!/usr/bin/env ruby
+# Usage: cc-generate-config [mode] [name]
+# Modes: local-temp-storage (default), local, storage-cli
+# Name: custom config name (e.g., "cc2" generates cloud_controller.cc2.yml)
+require 'yaml'
+require 'oj'
+require 'fileutils'
+
+APP_ROOT = if File.exist?('.devcontainer/scripts/cc-generate-config')
+             Dir.pwd
+           elsif File.exist?('../../config/cloud_controller.yml')
+             File.expand_path('../..', __dir__)
+           else
+             abort 'Error: Run from repository root'
+           end
+Dir.chdir(APP_ROOT)
+
+mode = 'local-temp-storage'
+custom_name = nil
+ARGV.each do |arg|
+  if %w[local-temp-storage local storage-cli].include?(arg) then mode = arg
+  elsif ['-h', '--help'].include?(arg)
+    puts "Usage: cc-generate-config [mode] [name]\nModes: local-temp-storage, local, storage-cli\nName: custom config name (generates cloud_controller.<name>.yml)"
+    exit 0
+  else
+    custom_name = arg
+  end
+end
+
+HOSTS = {
+  'devcontainer' => { 'external_domain' => 'nginx', 'uaa' => 'uaa', 'seaweedfs' => 'seaweedfs' },
+  'local' => { 'external_domain' => 'localhost', 'uaa' => 'localhost', 'seaweedfs' => 'localhost' }
+}.freeze
+
+def generate_config(mode, hosts)
+  config = YAML.load_file('config/cloud_controller.yml')
+
+  config['external_domain'] = hosts['external_domain']
+  config['system_domain'] = '127.0.0.1.nip.io'
+  config['external_port'] = 3000
+  config['login']['url'] = "http://#{hosts['uaa']}:8080"
+  config['uaa']['url'] = "http://#{hosts['uaa']}:8080"
+  config['uaa']['internal_url'] = "http://#{hosts['uaa']}:8080"
+  config['uaa']['resource_id'] = 'cloud_controller'
+  config['uaa'].delete('symmetric_secret')
+  config['cloud_controller_username_lookup_client_name'] = 'login'
+  config['cloud_controller_username_lookup_client_secret'] = 'loginsecret'
+  config['diego']['bbs']['url'] = 'http://127.0.0.1:1234'
+  config['diego']['bbs']['key_file'] = 'spec/fixtures/certs/bbs_client.key'
+  config['diego']['bbs']['cert_file'] = 'spec/fixtures/certs/bbs_client.crt'
+  config['diego']['bbs']['ca_file'] = 'spec/fixtures/certs/bbs_ca.crt'
+  config['nginx']['use_nginx'] = true
+  config['nginx']['instance_socket'] = ''
+  config['logging']['file'] = 'tmp/cloud_controller.log'
+  config['telemetry_log_path'] = 'tmp/cloud_controller_telemetry.log'
+  config['directories']['tmpdir'] = "#{Dir.pwd}/tmp"
+  config['directories']['diagnostics'] = 'tmp'
+  config['security_event_logging']['enabled'] = true
+  config['security_event_logging']['file'] = 'tmp/cef.log'
+  config['packages']['max_package_size'] = 2_147_483_648
+
+  case mode
+  when 'local'
+    blobstore_path = "#{Dir.pwd}/tmp/blobstore"
+    FileUtils.mkdir_p(blobstore_path)
+    %w[resource_pool packages droplets buildpacks].each do |store|
+      config[store]['blobstore_type'] = 'local'
+      config[store]['local_blobstore_path'] = blobstore_path
+      config[store]['fog_connection'] = {}
+    end
+  when 'storage-cli'
+    config_dir = "#{Dir.pwd}/tmp/.dev-generated/storage_cli_configs"
+    FileUtils.mkdir_p(config_dir)
+    { 'resource_pool' => 'cc-resources', 'packages' => 'cc-packages', 'droplets' => 'cc-droplets', 'buildpacks' => 'cc-buildpacks' }.each do |store, bucket|
+      File.write("#{config_dir}/#{store}.json",
+                 Oj.dump(
+                   { 'provider' => 's3', 'credentials_source' => 'static', 'host' => "http://#{hosts['seaweedfs']}:8333", 'bucket_name' => bucket, 'access_key_id' => 'any',
+                     'secret_access_key' => 'any', 'region' => 'us-east-1' }, mode: :compat, indent: 2
+                 ))
+      config[store]['blobstore_type'] = 'storage-cli'
+      config[store]['fog_connection'] = {}
+      config[store].delete('local_blobstore_path')
+      config["storage_cli_config_file_#{store}"] = "#{config_dir}/#{store}.json"
+    end
+  end
+  config
+end
+
+output_dir = "#{Dir.pwd}/tmp/.dev-generated"
+FileUtils.mkdir_p(output_dir)
+
+if custom_name
+  env_name = ENV['DEVCONTAINER'] ? 'devcontainer' : 'local'
+  File.write("#{output_dir}/cloud_controller.#{custom_name}.yml", YAML.dump(generate_config(mode, HOSTS[env_name])))
+  puts "✓ tmp/.dev-generated/cloud_controller.#{custom_name}.yml"
+else
+  HOSTS.each do |env_name, hosts|
+    File.write("#{output_dir}/cloud_controller.#{env_name}.yml", YAML.dump(generate_config(mode, hosts)))
+    puts "✓ tmp/.dev-generated/cloud_controller.#{env_name}.yml"
+  end
+end

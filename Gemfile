@@ -93,6 +93,7 @@ group :development do
   gem 'debug', '~> 1.11'
   gem 'listen'
   gem 'roodi'
+  gem 'ruby-lsp-rspec', require: false
   gem 'solargraph'
   gem 'spring'
   gem 'spring-commands-rspec'
