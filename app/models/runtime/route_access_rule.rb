@@ -11,5 +11,27 @@ module VCAP::CloudController
       validates_presence :selector
       validates_presence :route_id
     end
+
+    def after_create
+      super
+      touch_associated_processes
+    end
+
+    def after_destroy
+      super
+      touch_associated_processes
+    end
+
+    private
+
+    def touch_associated_processes
+      # Update the timestamp on all processes associated with this route
+      # This triggers Diego's ProcessesSync to pick up the route changes
+      return unless route
+
+      route.apps.each do |process|
+        process.update(updated_at: Time.now)
+      end
+    end
   end
 end
