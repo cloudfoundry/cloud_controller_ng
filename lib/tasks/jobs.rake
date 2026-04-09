@@ -49,6 +49,7 @@ namespace :jobs do
       'audit_events',
       'failed_jobs',
       'service_operations_initial_cleanup',
+      'delayed_jobs_recover',
       'service_usage_events',
       'completed_tasks',
       'expired_blob_cleanup',

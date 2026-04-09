@@ -24,7 +24,8 @@ module VCAP::CloudController
       { name: 'pending_droplets', class: Jobs::Runtime::PendingDropletCleanup },
       { name: 'pending_builds', class: Jobs::Runtime::PendingBuildCleanup },
       { name: 'failed_jobs', class: Jobs::Runtime::FailedJobsCleanup },
-      { name: 'service_operations_initial_cleanup', class: Jobs::Runtime::ServiceOperationsInitialCleanup }
+      { name: 'service_operations_initial_cleanup', class: Jobs::Runtime::ServiceOperationsInitialCleanup },
+      { name: 'delayed_jobs_recover', class: Jobs::Runtime::DelayedJobsRecover }
     ].freeze
 
     def initialize(config)
