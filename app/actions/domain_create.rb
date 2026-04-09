@@ -21,6 +21,8 @@ module VCAP::CloudController
                end
 
       domain.router_group_guid = message.router_group_guid
+      domain.enforce_access_rules = message.enforce_access_rules || false
+      domain.access_rules_scope = message.access_rules_scope
 
       Domain.db.transaction do
         domain.save

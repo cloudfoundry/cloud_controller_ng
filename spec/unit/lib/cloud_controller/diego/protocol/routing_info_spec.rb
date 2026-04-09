@@ -250,6 +250,64 @@ module VCAP::CloudController
               it 'does not include the internal routes' do
               end
             end
+
+            context 'when the route domain has enforce_access_rules enabled' do
+              let(:valid_uuid) { '11111111-2222-3333-4444-555555555555' }
+              let(:enforce_domain) do
+                PrivateDomain.make(
+                  name: 'mtls.example.com',
+                  owning_organization: org,
+                  enforce_access_rules: true,
+                  access_rules_scope: 'space'
+                )
+              end
+              let(:mtls_route) { Route.make(host: 'myapp', domain: enforce_domain, space: space) }
+              let!(:access_rule1) do
+                RouteAccessRule.create(
+                  guid: SecureRandom.uuid,
+                  name: 'allow-app',
+                  selector: "cf:app:#{valid_uuid}",
+                  route_id: mtls_route.id
+                )
+              end
+              let!(:access_rule2) do
+                RouteAccessRule.create(
+                  guid: SecureRandom.uuid,
+                  name: 'allow-space',
+                  selector: "cf:space:#{valid_uuid}",
+                  route_id: mtls_route.id
+                )
+              end
+
+              before do
+                RouteMappingModel.make(app: process.app, route: mtls_route, process_type: process.type)
+              end
+
+              it 'injects access_scope and access_rules into route options' do
+                http_routes = ri['http_routes']
+                mtls_entry = http_routes.find { |r| r['hostname'] == "myapp.mtls.example.com" }
+
+                expect(mtls_entry).not_to be_nil
+                expect(mtls_entry['options']['access_scope']).to eq('space')
+                expect(mtls_entry['options']['access_rules']).to include("cf:app:#{valid_uuid}")
+                expect(mtls_entry['options']['access_rules']).to include("cf:space:#{valid_uuid}")
+              end
+
+              context 'when the route has no access rules' do
+                before do
+                  access_rule1.destroy
+                  access_rule2.destroy
+                end
+
+                it 'injects access_scope but omits access_rules key' do
+                  http_routes = ri['http_routes']
+                  mtls_entry = http_routes.find { |r| r['hostname'] == "myapp.mtls.example.com" }
+
+                  expect(mtls_entry['options']['access_scope']).to eq('space')
+                  expect(mtls_entry['options']).not_to have_key('access_rules')
+                end
+              end
+            end
           end
 
           context 'tcp routes' do

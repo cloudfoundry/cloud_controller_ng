@@ -338,6 +338,13 @@ Rails.application.routes.draw do
   post '/roles', to: 'roles#create'
   delete '/roles/:guid', to: 'roles#destroy'
 
+  # access_rules
+  get '/access_rules', to: 'access_rules#index'
+  get '/access_rules/:guid', to: 'access_rules#show'
+  post '/access_rules', to: 'access_rules#create'
+  patch '/access_rules/:guid', to: 'access_rules#update'
+  delete '/access_rules/:guid', to: 'access_rules#destroy'
+
   # info
   get '/info', to: 'info#v3_info'
   get '/info/usage_summary', to: 'info#show_usage_summary'

@@ -403,6 +403,93 @@ module VCAP::CloudController
           expect(subject).to be_valid
         end
       end
+
+      context 'enforce_access_rules' do
+        context 'when not a boolean' do
+          let(:params) { { name: 'name.com', enforce_access_rules: 'yes' } }
+
+          it 'is not valid' do
+            expect(subject).not_to be_valid
+            expect(subject.errors[:enforce_access_rules]).to include('must be a boolean')
+          end
+        end
+
+        context 'when true without access_rules_scope' do
+          let(:params) { { name: 'name.com', enforce_access_rules: true } }
+
+          it 'is not valid' do
+            expect(subject).not_to be_valid
+            expect(subject.errors[:access_rules_scope]).to include('is required when enforce_access_rules is true')
+          end
+        end
+
+        context 'when true with a valid access_rules_scope' do
+          let(:params) { { name: 'name.com', enforce_access_rules: true, access_rules_scope: 'space' } }
+
+          it 'is valid' do
+            expect(subject).to be_valid
+          end
+        end
+
+        context 'when false without access_rules_scope' do
+          let(:params) { { name: 'name.com', enforce_access_rules: false } }
+
+          it 'is valid' do
+            expect(subject).to be_valid
+          end
+        end
+
+        context 'when omitted' do
+          let(:params) { { name: 'name.com' } }
+
+          it 'is valid' do
+            expect(subject).to be_valid
+          end
+        end
+      end
+
+      context 'access_rules_scope' do
+        context 'when set to an invalid value' do
+          let(:params) { { name: 'name.com', enforce_access_rules: true, access_rules_scope: 'invalid' } }
+
+          it 'is not valid' do
+            expect(subject).not_to be_valid
+            expect(subject.errors[:access_rules_scope]).to include("must be one of 'any', 'org', 'space'")
+          end
+        end
+
+        context "when set to 'any'" do
+          let(:params) { { name: 'name.com', enforce_access_rules: true, access_rules_scope: 'any' } }
+
+          it 'is valid' do
+            expect(subject).to be_valid
+          end
+        end
+
+        context "when set to 'org'" do
+          let(:params) { { name: 'name.com', enforce_access_rules: true, access_rules_scope: 'org' } }
+
+          it 'is valid' do
+            expect(subject).to be_valid
+          end
+        end
+
+        context "when set to 'space'" do
+          let(:params) { { name: 'name.com', enforce_access_rules: true, access_rules_scope: 'space' } }
+
+          it 'is valid' do
+            expect(subject).to be_valid
+          end
+        end
+
+        context 'when provided without enforce_access_rules' do
+          let(:params) { { name: 'name.com', access_rules_scope: 'space' } }
+
+          it 'is valid (scope alone is permissible)' do
+            expect(subject).to be_valid
+          end
+        end
+      end
     end
 
     describe 'accessor methods' do
