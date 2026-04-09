@@ -121,6 +121,22 @@ module VCAP::CloudController
             expect(bbs_apps_client).to have_received(:bump_freshness).once
           end
 
+          context 'when the stale process gets a new version between fetching for sync (only guid + version + created_at) and fetching for actual update (full model)' do
+            before do
+              allow(subject).to receive(:update_lrps).and_wrap_original do |method, *args|
+                stale_process.set_new_version
+                stale_process.save
+                method.call(*args)
+              end
+            end
+
+            it 'skips the (obsolete) update' do
+              allow(bbs_apps_client).to receive(:update_app)
+              subject.sync
+              expect(bbs_apps_client).not_to have_received(:update_app)
+            end
+          end
+
           context 'when the process is a cnb app' do
             let(:app) { AppModel.make(:cnb, droplet: DropletModel.make(:cnb)) }
             let!(:stale_process) { ProcessModel.make(:cnb, state: 'STARTED', app: app) }
@@ -251,6 +267,22 @@ module VCAP::CloudController
             subject.sync
             expect(bbs_apps_client).to have_received(:desire_app).with(missing_process)
             expect(bbs_apps_client).to have_received(:bump_freshness).once
+          end
+
+          context 'when the missing process gets a new version between fetching for sync (only guid + version + created_at) and fetching for actual creation (full model)' do
+            before do
+              allow(subject).to receive(:desire_lrps).and_wrap_original do |method, *args|
+                missing_process.set_new_version
+                missing_process.save
+                method.call(*args)
+              end
+            end
+
+            it 'skips the (obsolete) creation' do
+              allow(bbs_apps_client).to receive(:desire_app)
+              subject.sync
+              expect(bbs_apps_client).not_to have_received(:desire_app)
+            end
           end
 
           context 'when desiring app fails' do

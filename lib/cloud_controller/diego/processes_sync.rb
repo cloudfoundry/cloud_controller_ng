@@ -21,7 +21,7 @@ module VCAP::CloudController
         @bump_freshness = true
         diego_lrps = bbs_apps_client.fetch_scheduling_infos.index_by { |d| d.desired_lrp_key.process_guid }
         logger.info('fetched-scheduling-infos')
-        to_desire = []
+        to_desire = {}
         to_update = {}
         batched_processes_for_sync do |processes|
           processes.each do |process|
@@ -29,7 +29,7 @@ module VCAP::CloudController
             diego_lrp = diego_lrps.delete(process_guid)
 
             if diego_lrp.nil?
-              to_desire.append(process.id)
+              to_desire[process.id] = process_guid
             elsif process.updated_at.to_f.to_s != diego_lrp.annotation
               to_update[process.id] = diego_lrp
             end
@@ -87,7 +87,10 @@ module VCAP::CloudController
       def update_lrps(to_update)
         batched_processes(to_update.keys) do |processes|
           processes.each do |process|
-            workpool.submit(process, to_update[process.id]) do |p, l|
+            existing_lrp = to_update[process.id]
+            next if ProcessGuid.from_process(process) != existing_lrp.desired_lrp_key.process_guid
+
+            workpool.submit(process, existing_lrp) do |p, l|
               logger.info('updating-lrp', process_guid: p.guid, app_guid: p.app_guid)
               bbs_apps_client.update_app(p, l)
               logger.info('update-lrp', process_guid: p.guid)
@@ -97,8 +100,11 @@ module VCAP::CloudController
       end
 
       def desire_lrps(to_desire)
-        batched_processes(to_desire) do |processes|
+        batched_processes(to_desire.keys) do |processes|
           processes.each do |process|
+            desired_process_guid = to_desire[process.id]
+            next if ProcessGuid.from_process(process) != desired_process_guid
+
             workpool.submit(process) do |p|
               logger.info('desiring-lrp', process_guid: p.guid, app_guid: p.app_guid)
               bbs_apps_client.desire_app(p)
