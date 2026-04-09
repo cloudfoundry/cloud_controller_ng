@@ -341,7 +341,7 @@ GEM
     openssl (4.0.1)
     os (1.1.4)
     ostruct (0.6.3)
-    parallel (1.28.0)
+    parallel (2.0.0)
     parallel_tests (5.6.0)
       parallel
     parser (3.3.11.1)
@@ -466,11 +466,11 @@ GEM
       activesupport (>= 3.0.0)
       mustache (~> 1.0, >= 0.99.4)
       rspec (~> 3.0)
-    rubocop (1.86.0)
+    rubocop (1.86.1)
       json (~> 2.3)
       language_server-protocol (~> 3.17.0.2)
       lint_roller (~> 1.1.0)
-      parallel (~> 1.10)
+      parallel (>= 1.10)
       parser (>= 3.3.0.2)
       rainbow (>= 2.2.2, < 4.0)
       regexp_parser (>= 2.9.3, < 3.0)
@@ -665,7 +665,7 @@ DEPENDENCIES
   rspec-rails (~> 8.0.4)
   rspec-wait
   rspec_api_documentation (>= 6.1.0)
-  rubocop (~> 1.86.0)
+  rubocop (~> 1.86.1)
   rubocop-capybara
   rubocop-factory_bot
   rubocop-rails (~> 2.34)
