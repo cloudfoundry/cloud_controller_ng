@@ -65,7 +65,7 @@ module VCAP::CloudController
                    for_update.first
             return unless pjob
 
-            # bring the record into a clean polling state
+            # bring the pollable job into the clean polling state
             pjob.update(cf_api_error: nil, state: PollableJobModel::POLLING_STATE)
 
             # unwrap the serialized handler and re-enqueue via the reoccurring job
