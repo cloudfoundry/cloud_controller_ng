@@ -81,6 +81,15 @@ module VCAP::CloudController::Validators
       end
 
       describe 'invalid keys' do
+        context 'when the key contains a space' do
+          let(:labels) { { 'potato mashed' => 'value' } }
+
+          it 'is invalid' do
+            expect(subject).not_to be_valid
+            expect(subject.errors_on(:metadata)).to include("label key error: 'potato mashed' contains invalid characters")
+          end
+        end
+
         context 'when the key contains one invalid character' do
           # for the 32nd-126th characters, excluding the ones inside of the %r()
           (32.chr..126.chr).to_a.reject { |c| %r{[\w\-._/\s]}.match(c) }.each do |c|
@@ -363,6 +372,15 @@ module VCAP::CloudController::Validators
           it 'does not run validations' do
             expect(subject).to be_valid
           end
+        end
+      end
+
+      context 'when the annotations key contains a space' do
+        let(:annotations) { { 'potato mashed' => 'value' } }
+
+        it 'is invalid' do
+          expect(subject).not_to be_valid
+          expect(subject.errors_on(:metadata)).to include("annotation key error: 'potato mashed' contains invalid characters")
         end
       end
 
