@@ -21,6 +21,7 @@ module VCAP::CloudController
           failed_jobs: { frequency_in_seconds: 400, cutoff_age_in_days: 4, max_number_of_failed_delayed_jobs: 10 },
           pollable_jobs: { cutoff_age_in_days: 2 },
           service_operations_initial_cleanup: { frequency_in_seconds: 600 },
+          delayed_jobs_recover: { frequency_in_seconds: 600 },
           service_usage_events: { cutoff_age_in_days: 5 },
           completed_tasks: { cutoff_age_in_days: 6 },
           pending_droplets: { frequency_in_seconds: 300, expiration_in_seconds: 600 },
@@ -159,6 +160,12 @@ module VCAP::CloudController
           expect(args).to eql(name: 'service_operations_initial_cleanup', interval: 600)
           expect(Jobs::Runtime::ServiceOperationsInitialCleanup).to receive(:new).and_call_original
           expect(block.call).to be_instance_of(Jobs::Runtime::ServiceOperationsInitialCleanup)
+        end
+
+        expect(clock).to receive(:schedule_frequent_worker_job) do |args, &block|
+          expect(args).to eql(name: 'delayed_jobs_recover', interval: 600)
+          expect(Jobs::Runtime::DelayedJobsRecover).to receive(:new).and_call_original
+          expect(block.call).to be_instance_of(Jobs::Runtime::DelayedJobsRecover)
         end
 
         schedule.start
