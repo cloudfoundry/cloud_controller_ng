@@ -107,10 +107,12 @@ class AccessRulesController < ApplicationController
   def build_dataset(message)
     dataset = VCAP::CloudController::RouteAccessRule.dataset
 
-    readable_route_ids = VCAP::CloudController::Route.
-      join(:spaces, id: :space_id).
-      where(Sequel.lit(permission_queryer.readable_space_scoped_space_guids_query)).
-      select(:routes__id)
+    if permission_queryer.can_read_globally?
+      readable_route_ids = VCAP::CloudController::Route.select(:id)
+    else
+      readable_space_ids = permission_queryer.readable_space_scoped_spaces_query.select(:id)
+      readable_route_ids = VCAP::CloudController::Route.where(space_id: readable_space_ids).select(:id)
+    end
 
     dataset = dataset.where(route_id: readable_route_ids)
 
