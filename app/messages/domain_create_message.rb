@@ -16,6 +16,8 @@ module VCAP::CloudController
       internal
       relationships
       router_group
+      enforce_access_rules
+      access_rules_scope
     ]
 
     def self.relationships_requested?
@@ -59,6 +61,12 @@ module VCAP::CloudController
               allow_nil: true,
               boolean: true
 
+    validates :enforce_access_rules,
+              allow_nil: true,
+              boolean: true
+
+    validate :access_rules_scope_validation
+
     delegate :organization_guid, to: :relationships_message
     delegate :shared_organizations_guids, to: :relationships_message
 
@@ -95,6 +103,20 @@ module VCAP::CloudController
       errors.add(:router_group, "Unknown field(s): '#{extra_keys.join("', '")}'") if extra_keys.any?
 
       errors.add(:router_group, 'guid must be a string') unless router_group_guid.is_a?(String)
+    end
+
+    def access_rules_scope_validation
+      if requested?(:access_rules_scope)
+        unless access_rules_scope.nil? || %w[any org space].include?(access_rules_scope)
+          errors.add(:access_rules_scope, "must be one of 'any', 'org', 'space'")
+        end
+      end
+
+      if requested?(:enforce_access_rules) && enforce_access_rules == true
+        if !requested?(:access_rules_scope) || access_rules_scope.nil?
+          errors.add(:access_rules_scope, 'is required when enforce_access_rules is true')
+        end
+      end
     end
 
     class Relationships < BaseMessage

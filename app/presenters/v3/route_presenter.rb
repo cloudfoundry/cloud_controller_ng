@@ -48,12 +48,17 @@ module VCAP::CloudController::Presenters::V3
         },
         links: build_links
       }
-      hash.merge!(options: route.options) unless route.options.nil?
+      unless route.options.nil?
+        public_options = route.options.reject { |k, _| INTERNAL_ROUTE_OPTIONS.include?(k.to_s) }
+        hash.merge!(options: public_options) unless public_options.empty?
+      end
 
       @decorators.reduce(hash) { |memo, d| d.decorate(memo, [route]) }
     end
 
     private
+
+    INTERNAL_ROUTE_OPTIONS = %w[access_scope access_rules].freeze
 
     def route
       @resource

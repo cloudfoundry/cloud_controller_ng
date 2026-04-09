@@ -28,6 +28,8 @@ module VCAP::CloudController::Presenters::V3
         internal: domain.internal,
         router_group: hashified_router_group(domain.router_group_guid),
         supported_protocols: domain.protocols,
+        enforce_access_rules: domain.enforce_access_rules || false,
+        access_rules_scope: domain.access_rules_scope,
         relationships: {
           organization: {
             data: owning_org_guid

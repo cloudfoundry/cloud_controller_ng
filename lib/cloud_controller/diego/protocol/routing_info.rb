@@ -9,7 +9,7 @@ module VCAP::CloudController
         end
 
         def routing_info
-          process_eager = ProcessModel.eager(route_mappings: { route: %i[domain route_binding] }).where(id: process.id).all
+          process_eager = ProcessModel.eager(route_mappings: { route: %i[domain route_binding access_rules] }).where(id: process.id).all
 
           return {} if process_eager.empty?
 
@@ -44,6 +44,17 @@ module VCAP::CloudController
             info['port'] = get_port_to_use(route_mapping)
             info['protocol'] = route_mapping.protocol
             info['options'] = r.options if r.options
+
+            # Inject mTLS access control options for enforce_access_rules domains.
+            # These are GoRouter-internal keys and are filtered from the /v3/routes API.
+            if r.domain.enforce_access_rules
+              mtls_options = info['options']&.dup || {}
+              mtls_options['access_scope'] = r.domain.access_rules_scope if r.domain.access_rules_scope
+              selectors = r.access_rules.map(&:selector)
+              mtls_options['access_rules'] = selectors.join(',') unless selectors.empty?
+              info['options'] = mtls_options
+            end
+
             info
           end
         end
