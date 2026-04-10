@@ -128,6 +128,13 @@ class AccessRulesController < ApplicationController
         select_all(:route_access_rules)
     end
 
+    if message.requested?(:space_guids)
+      dataset = dataset.
+        join(:routes, id: :route_id).
+        where(routes__space_id: VCAP::CloudController::Space.where(guid: message.space_guids).select(:id)).
+        select_all(:route_access_rules)
+    end
+
     dataset = dataset.where(name: message.names) if message.requested?(:names)
     dataset = dataset.where(selector: message.selectors) if message.requested?(:selectors)
 
