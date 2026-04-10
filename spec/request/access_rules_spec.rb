@@ -133,7 +133,7 @@ RSpec.describe 'Access Rules' do
         }.to_json, admin_header
 
         expect(last_response.status).to eq(422)
-        expect(last_response.body).to include("cf:any")
+        expect(last_response.body).to include('cf:any')
       end
     end
 
@@ -155,7 +155,7 @@ RSpec.describe 'Access Rules' do
         }.to_json, admin_header
 
         expect(last_response.status).to eq(422)
-        expect(last_response.body).to include("cf:any")
+        expect(last_response.body).to include('cf:any')
       end
     end
 
@@ -479,6 +479,96 @@ RSpec.describe 'Access Rules' do
 
         expect(last_response.status).to eq(200)
         # Should succeed without error even with cf:any selector
+      end
+    end
+
+    context 'with include=route' do
+      let(:route2) { VCAP::CloudController::Route.make(space: space, domain: mtls_domain) }
+
+      let!(:rule_on_route1) do
+        VCAP::CloudController::RouteAccessRule.create(
+          guid: SecureRandom.uuid,
+          name: 'rule-on-route1',
+          selector: 'cf:any',
+          route_id: mtls_route.id
+        )
+      end
+
+      let!(:rule_on_route2) do
+        VCAP::CloudController::RouteAccessRule.create(
+          guid: SecureRandom.uuid,
+          name: 'rule-on-route2',
+          selector: "cf:app:#{valid_uuid}",
+          route_id: route2.id
+        )
+      end
+
+      it 'includes route resources' do
+        get '/v3/access_rules?include=route', nil, admin_header
+
+        expect(last_response.status).to eq(200)
+        parsed = Oj.load(last_response.body)
+
+        # Check included structure
+        expect(parsed['included']).to be_a(Hash)
+        expect(parsed['included']['routes']).to be_an(Array)
+        expect(parsed['included']['routes'].length).to be >= 2
+
+        # Check routes are included with full details
+        route1_included = parsed['included']['routes'].find { |r| r['guid'] == mtls_route.guid }
+        expect(route1_included).to be_present
+        expect(route1_included['guid']).to eq(mtls_route.guid)
+        expect(route1_included['url']).to be_present
+
+        route2_included = parsed['included']['routes'].find { |r| r['guid'] == route2.guid }
+        expect(route2_included).to be_present
+        expect(route2_included['guid']).to eq(route2.guid)
+      end
+
+      it 'includes only unique routes when multiple rules reference the same route' do
+        # Create another rule on the same route
+        VCAP::CloudController::RouteAccessRule.create(
+          guid: SecureRandom.uuid,
+          name: 'another-rule-on-route1',
+          selector: "cf:app:#{valid_uuid}",
+          route_id: mtls_route.id
+        )
+
+        get '/v3/access_rules?include=route', nil, admin_header
+
+        expect(last_response.status).to eq(200)
+        parsed = Oj.load(last_response.body)
+
+        # Route should appear only once
+        route_count = parsed['included']['routes'].count { |r| r['guid'] == mtls_route.guid }
+        expect(route_count).to eq(1)
+      end
+
+      it 'combines include=route with include=selector_resource' do
+        app = VCAP::CloudController::AppModel.make(space: space, name: 'test-app')
+        VCAP::CloudController::RouteAccessRule.create(
+          guid: SecureRandom.uuid,
+          name: 'combined-rule',
+          selector: "cf:app:#{app.guid}",
+          route_id: mtls_route.id
+        )
+
+        get '/v3/access_rules?include=route,selector_resource', nil, admin_header
+
+        expect(last_response.status).to eq(200)
+        parsed = Oj.load(last_response.body)
+
+        # Both routes and selector resources should be included
+        expect(parsed['included']['routes']).to be_an(Array)
+        expect(parsed['included']['apps']).to be_an(Array)
+
+        # Verify route is present
+        route_included = parsed['included']['routes'].find { |r| r['guid'] == mtls_route.guid }
+        expect(route_included).to be_present
+
+        # Verify app is present
+        app_included = parsed['included']['apps'].find { |a| a['guid'] == app.guid }
+        expect(app_included).to be_present
       end
     end
   end
