@@ -6,12 +6,14 @@ module VCAP::CloudController
       route_guids
       names
       selectors
+      include
     ]
 
     validates_with NoAdditionalParamsValidator
+    validates_with IncludeParamValidator, valid_values: ['selector_resource', 'route']
 
     def self.from_params(params)
-      super(params, %w[route_guids names selectors])
+      super(params, %w[route_guids names selectors include])
     end
   end
 end
