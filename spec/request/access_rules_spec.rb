@@ -301,6 +301,73 @@ RSpec.describe 'Access Rules' do
       expect(parsed['resources'][0]['selector']).to eq('cf:any')
     end
 
+    describe 'filtering by space_guids' do
+      let(:other_org) { VCAP::CloudController::Organization.make }
+      let(:other_space) { VCAP::CloudController::Space.make(organization: other_org) }
+      let(:other_mtls_domain) do
+        VCAP::CloudController::PrivateDomain.make(
+          owning_organization: other_org,
+          enforce_access_rules: true,
+          access_rules_scope: 'space'
+        )
+      end
+      let(:other_route) { VCAP::CloudController::Route.make(space: other_space, domain: other_mtls_domain) }
+      let!(:rule_in_other_space) do
+        VCAP::CloudController::RouteAccessRule.create(
+          guid: SecureRandom.uuid,
+          name: 'rule-in-other-space',
+          selector: 'cf:any',
+          route_id: other_route.id
+        )
+      end
+
+      before do
+        other_org.add_user(user)
+        other_space.add_developer(user)
+      end
+
+      it 'filters by single space_guid' do
+        get "/v3/access_rules?space_guids=#{space.guid}", nil, admin_header
+
+        expect(last_response.status).to eq(200)
+        parsed = Oj.load(last_response.body)
+        guids = parsed['resources'].map { |r| r['guid'] }
+        expect(guids).to include(rule1.guid, rule2.guid)
+        expect(guids).not_to include(rule_in_other_space.guid)
+      end
+
+      it 'filters by multiple space_guids' do
+        get "/v3/access_rules?space_guids=#{space.guid},#{other_space.guid}", nil, admin_header
+
+        expect(last_response.status).to eq(200)
+        parsed = Oj.load(last_response.body)
+        guids = parsed['resources'].map { |r| r['guid'] }
+        expect(guids).to include(rule1.guid, rule2.guid, rule_in_other_space.guid)
+      end
+
+      it 'combines space_guids with other filters' do
+        get "/v3/access_rules?space_guids=#{space.guid}&names=rule-one", nil, admin_header
+
+        expect(last_response.status).to eq(200)
+        parsed = Oj.load(last_response.body)
+        expect(parsed['resources'].length).to eq(1)
+        expect(parsed['resources'][0]['guid']).to eq(rule1.guid)
+        expect(parsed['resources'][0]['name']).to eq('rule-one')
+      end
+
+      it 'returns empty when space has no access rules' do
+        empty_space = VCAP::CloudController::Space.make(organization: org)
+        org.add_user(user)
+        empty_space.add_developer(user)
+
+        get "/v3/access_rules?space_guids=#{empty_space.guid}", nil, admin_header
+
+        expect(last_response.status).to eq(200)
+        parsed = Oj.load(last_response.body)
+        expect(parsed['resources'].length).to eq(0)
+      end
+    end
+
     context 'with include=selector_resource' do
       let!(:app) { VCAP::CloudController::AppModel.make(space: space, name: 'frontend-app') }
       let!(:other_space) { VCAP::CloudController::Space.make(organization: org, name: 'other-space') }
