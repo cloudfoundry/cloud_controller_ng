@@ -3,6 +3,7 @@ require 'messages/access_rule_update_message'
 require 'messages/access_rules_list_message'
 require 'presenters/v3/access_rule_presenter'
 require 'decorators/include_access_rule_selector_resource_decorator'
+require 'decorators/include_access_rule_route_decorator'
 
 class AccessRulesController < ApplicationController
   def index
@@ -13,6 +14,7 @@ class AccessRulesController < ApplicationController
 
     decorators = []
     decorators << IncludeAccessRuleSelectorResourceDecorator if IncludeAccessRuleSelectorResourceDecorator.match?(message.include)
+    decorators << IncludeAccessRuleRouteDecorator if IncludeAccessRuleRouteDecorator.match?(message.include)
 
     render status: :ok, json: Presenters::V3::PaginatedListPresenter.new(
       presenter: Presenters::V3::AccessRulePresenter,
@@ -42,27 +44,17 @@ class AccessRulesController < ApplicationController
     unauthorized! unless permission_queryer.can_write_to_active_space?(route.space.id)
     suspended! unless permission_queryer.is_space_active?(route.space.id)
 
-    unless route.domain.enforce_access_rules
-      unprocessable!("Cannot create access rules for route '#{route.guid}': the route's domain does not have enforce_access_rules enabled.")
-    end
+    unprocessable!("Cannot create access rules for route '#{route.guid}': the route's domain does not have enforce_access_rules enabled.") unless route.domain.enforce_access_rules
 
     # Enforce cf:any exclusivity: if route already has a cf:any rule, reject new rules;
     # if new rule is cf:any, reject if route already has any rules.
     existing_selectors = route.access_rules.map(&:selector)
-    if message.selector == 'cf:any' && existing_selectors.any?
-      unprocessable!("Cannot add 'cf:any' selector when other access rules already exist for this route.")
-    end
-    if existing_selectors.include?('cf:any') && message.selector != 'cf:any'
-      unprocessable!("Cannot add selector '#{message.selector}': route already has a 'cf:any' rule.")
-    end
+    unprocessable!("Cannot add 'cf:any' selector when other access rules already exist for this route.") if message.selector == 'cf:any' && existing_selectors.any?
+    unprocessable!("Cannot add selector '#{message.selector}': route already has a 'cf:any' rule.") if existing_selectors.include?('cf:any') && message.selector != 'cf:any'
 
     # Uniqueness: name and selector must be unique per route
-    if route.access_rules.any? { |r| r.name == message.name }
-      unprocessable!("An access rule with name '#{message.name}' already exists for this route.")
-    end
-    if existing_selectors.include?(message.selector)
-      unprocessable!("An access rule with selector '#{message.selector}' already exists for this route.")
-    end
+    unprocessable!("An access rule with name '#{message.name}' already exists for this route.") if route.access_rules.any? { |r| r.name == message.name }
+    unprocessable!("An access rule with selector '#{message.selector}' already exists for this route.") if existing_selectors.include?(message.selector)
 
     access_rule = VCAP::CloudController::RouteAccessRule.new(
       guid: SecureRandom.uuid,
@@ -123,16 +115,16 @@ class AccessRulesController < ApplicationController
 
     if message.requested?(:route_guids)
       dataset = dataset.
-        join(:routes, id: :route_id).
-        where(routes__guid: message.route_guids).
-        select_all(:route_access_rules)
+                join(:routes, id: :route_id).
+                where(routes__guid: message.route_guids).
+                select_all(:route_access_rules)
     end
 
     if message.requested?(:space_guids)
       dataset = dataset.
-        join(:routes, id: :route_id).
-        where(routes__space_id: VCAP::CloudController::Space.where(guid: message.space_guids).select(:id)).
-        select_all(:route_access_rules)
+                join(:routes, id: :route_id).
+                where(routes__space_id: VCAP::CloudController::Space.where(guid: message.space_guids).select(:id)).
+                select_all(:route_access_rules)
     end
 
     dataset = dataset.where(name: message.names) if message.requested?(:names)
