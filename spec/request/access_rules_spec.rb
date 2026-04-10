@@ -300,6 +300,120 @@ RSpec.describe 'Access Rules' do
       expect(parsed['resources'].length).to eq(1)
       expect(parsed['resources'][0]['selector']).to eq('cf:any')
     end
+
+    context 'with include=selector_resource' do
+      let!(:app) { VCAP::CloudController::AppModel.make(space: space, name: 'frontend-app') }
+      let!(:other_space) { VCAP::CloudController::Space.make(organization: org, name: 'other-space') }
+      let!(:other_org) { VCAP::CloudController::Organization.make(name: 'other-org') }
+
+      let!(:app_rule) do
+        VCAP::CloudController::RouteAccessRule.create(
+          guid: SecureRandom.uuid,
+          name: 'app-rule',
+          selector: "cf:app:#{app.guid}",
+          route_id: mtls_route.id
+        )
+      end
+
+      let!(:space_rule) do
+        VCAP::CloudController::RouteAccessRule.create(
+          guid: SecureRandom.uuid,
+          name: 'space-rule',
+          selector: "cf:space:#{other_space.guid}",
+          route_id: mtls_route.id
+        )
+      end
+
+      let!(:org_rule) do
+        VCAP::CloudController::RouteAccessRule.create(
+          guid: SecureRandom.uuid,
+          name: 'org-rule',
+          selector: "cf:org:#{other_org.guid}",
+          route_id: mtls_route.id
+        )
+      end
+
+      it 'includes resolved selector resources' do
+        get '/v3/access_rules?include=selector_resource', nil, admin_header
+
+        expect(last_response.status).to eq(200)
+        parsed = Oj.load(last_response.body)
+
+        # Check included structure
+        expect(parsed['included']).to be_a(Hash)
+        expect(parsed['included']['apps']).to be_an(Array)
+        expect(parsed['included']['spaces']).to be_an(Array)
+        expect(parsed['included']['organizations']).to be_an(Array)
+
+        # Check app is included with full details
+        app_included = parsed['included']['apps'].find { |a| a['guid'] == app.guid }
+        expect(app_included).to be_present
+        expect(app_included['name']).to eq('frontend-app')
+        expect(app_included['guid']).to eq(app.guid)
+
+        # Check space is included
+        space_included = parsed['included']['spaces'].find { |s| s['guid'] == other_space.guid }
+        expect(space_included).to be_present
+        expect(space_included['name']).to eq('other-space')
+
+        # Check org is included
+        org_included = parsed['included']['organizations'].find { |o| o['guid'] == other_org.guid }
+        expect(org_included).to be_present
+        expect(org_included['name']).to eq('other-org')
+      end
+
+      it 'handles stale resources (missing GUIDs) gracefully' do
+        stale_guid = '99999999-9999-9999-9999-999999999999'
+        VCAP::CloudController::RouteAccessRule.create(
+          guid: SecureRandom.uuid,
+          name: 'stale-rule',
+          selector: "cf:app:#{stale_guid}",
+          route_id: mtls_route.id
+        )
+
+        get '/v3/access_rules?include=selector_resource', nil, admin_header
+
+        expect(last_response.status).to eq(200)
+        parsed = Oj.load(last_response.body)
+
+        # Stale resource should not appear in included
+        stale_app = parsed['included']['apps'].find { |a| a['guid'] == stale_guid }
+        expect(stale_app).to be_nil
+      end
+
+      it 'includes only unique resources when multiple rules reference the same resource' do
+        # Create another rule referencing the same app
+        VCAP::CloudController::RouteAccessRule.create(
+          guid: SecureRandom.uuid,
+          name: 'another-app-rule',
+          selector: "cf:app:#{app.guid}",
+          route_id: VCAP::CloudController::Route.make(space: space, domain: mtls_domain).id
+        )
+
+        get '/v3/access_rules?include=selector_resource', nil, admin_header
+
+        expect(last_response.status).to eq(200)
+        parsed = Oj.load(last_response.body)
+
+        # App should appear only once
+        app_count = parsed['included']['apps'].count { |a| a['guid'] == app.guid }
+        expect(app_count).to eq(1)
+      end
+
+      it 'does not include resources for cf:any selectors' do
+        VCAP::CloudController::RouteAccessRule.create(
+          guid: SecureRandom.uuid,
+          name: 'any-rule',
+          selector: 'cf:any',
+          route_id: VCAP::CloudController::Route.make(space: space, domain: mtls_domain).id
+        )
+
+        get '/v3/access_rules?include=selector_resource', nil, admin_header
+
+        expect(last_response.status).to eq(200)
+        # Should succeed without error even with cf:any selector
+      end
+    end
   end
 
   describe 'DELETE /v3/access_rules/:guid' do

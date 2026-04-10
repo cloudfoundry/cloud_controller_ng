@@ -2,6 +2,7 @@ require 'messages/access_rule_create_message'
 require 'messages/access_rule_update_message'
 require 'messages/access_rules_list_message'
 require 'presenters/v3/access_rule_presenter'
+require 'decorators/include_access_rule_selector_resource_decorator'
 
 class AccessRulesController < ApplicationController
   def index
@@ -10,11 +11,15 @@ class AccessRulesController < ApplicationController
 
     dataset = build_dataset(message)
 
+    decorators = []
+    decorators << IncludeAccessRuleSelectorResourceDecorator if IncludeAccessRuleSelectorResourceDecorator.match?(message.include)
+
     render status: :ok, json: Presenters::V3::PaginatedListPresenter.new(
       presenter: Presenters::V3::AccessRulePresenter,
       paginated_result: SequelPaginator.new.get_page(dataset, message.try(:pagination_options)),
       path: '/v3/access_rules',
-      message: message
+      message: message,
+      decorators: decorators
     )
   end
 
