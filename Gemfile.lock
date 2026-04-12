@@ -153,8 +153,8 @@ GEM
     fluent-logger (0.10.0)
       logger (~> 1.6)
       msgpack (>= 1.0.0, < 2)
-    fog-aliyun (0.4.0)
-      addressable (~> 2.8.0)
+    fog-aliyun (0.4.1)
+      addressable (>= 2.8, < 2.10)
       aliyun-sdk (~> 0.8.0)
       fog-core
       fog-json
@@ -312,7 +312,7 @@ GEM
       faraday-cookie_jar (~> 0.0.6)
       ms_rest (~> 0.6.3)
     msgpack (1.8.0)
-    multi_json (1.20.0)
+    multi_json (1.20.1)
     multipart-parser (0.1.1)
     multipart-post (2.4.1)
     mustache (1.1.2)
