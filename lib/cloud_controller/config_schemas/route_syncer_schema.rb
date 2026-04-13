@@ -7,8 +7,7 @@ module VCAP::CloudController
         {
           logging: {
             level: String, # debug, info, etc.
-            file: String, # Log file to use
-            syslog: String # Name to associate with syslog messages (should start with 'vcap.')
+            file: String # Log file to use
           },
 
           pid_filename: String, # Pid filename to use

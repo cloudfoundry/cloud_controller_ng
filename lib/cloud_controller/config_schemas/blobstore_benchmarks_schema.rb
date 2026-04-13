@@ -34,7 +34,6 @@ module VCAP::CloudController
           optional(:logging) => {
             optional(:level) => String,
             optional(:file) => String,
-            optional(:syslog) => String,
             optional(:stdout_sink_enabled) => bool
           },
 

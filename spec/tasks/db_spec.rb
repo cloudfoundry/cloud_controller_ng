@@ -11,7 +11,6 @@ RSpec.describe 'db.rake', type: :migration do
         logging: {
           stdout_sink_enabled: stdout_sink_enabled,
           level: 'debug2',
-          syslog: 'vcap.example',
           file: '/tmp/cloud_controller.log',
           anonymize_ips: false,
           format: { timestamp: 'rfc3339' }
@@ -34,7 +33,6 @@ RSpec.describe 'db.rake', type: :migration do
       Rake::Task['db:migrate'].execute
 
       # From test config:
-      expect(Steno.config.sinks).to include(an_instance_of(Steno::Sink::Syslog))
       expect(Steno.config.sinks).to include(an_instance_of(Steno::Sink::IO).and(satisfy { |sink| sink.instance_variable_get(:@io_obj).is_a?(File) }))
 
       # From db.rake:

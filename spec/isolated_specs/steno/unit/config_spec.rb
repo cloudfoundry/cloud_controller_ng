@@ -13,12 +13,6 @@ RSpec.describe Steno::Config do
       expect(Steno::Sink::IO).to receive(:for_file).with(@log_path,
                                                          max_retries: 5).
         and_return(@mock_sink_file)
-
-      @mock_sink_syslog = double('sink')
-      expect(@mock_sink_syslog).to receive(:codec=)
-      expect(@mock_sink_syslog).to receive(:open).with('test')
-      expect(Steno::Sink::Syslog).to receive(:instance).twice.
-        and_return(@mock_sink_syslog)
     end
 
     after do
@@ -28,8 +22,8 @@ RSpec.describe Steno::Config do
       expect(@config.context.class).to eq(Steno::Context::Null)
       expect(@config.codec.class).to eq(Steno::Codec::Json)
 
-      expect(@config.sinks.size).to eq(2)
-      expect(@config.sinks).to contain_exactly(@mock_sink_file, @mock_sink_syslog)
+      expect(@config.sinks.size).to eq(1)
+      expect(@config.sinks).to contain_exactly(@mock_sink_file)
     end
 
     it 'works for symbolized keys' do
@@ -37,7 +31,6 @@ RSpec.describe Steno::Config do
         file: @log_path,
         level: 'debug2',
         default_log_level: 'warn',
-        syslog: 'test',
         max_retries: 5
       }
     end
@@ -47,7 +40,6 @@ RSpec.describe Steno::Config do
         'file' => @log_path,
         'level' => 'debug2',
         'default_log_level' => 'warn',
-        'syslog' => 'test',
         'max_retries' => 5
       }
     end
@@ -108,19 +100,6 @@ RSpec.describe Steno::Config do
 
       expect(Steno::Sink::IO).to receive(:for_file).
         with(@log_path, max_retries: 2).and_return(mock_sink)
-      config = described_class.from_file(@config_path)
-      expect(config.sinks.size).to eq(1)
-      expect(config.sinks[0]).to eq(mock_sink)
-    end
-
-    it "adds a syslog sink if the 'syslog' key is specified" do
-      write_config(@config_path, { 'syslog' => 'test' })
-      mock_sink = double('sink')
-      expect(mock_sink).to receive(:open).with('test')
-      expect(mock_sink).to receive(:codec=)
-
-      expect(Steno::Sink::Syslog).to receive(:instance).twice.and_return(mock_sink)
-
       config = described_class.from_file(@config_path)
       expect(config.sinks.size).to eq(1)
       expect(config.sinks[0]).to eq(mock_sink)

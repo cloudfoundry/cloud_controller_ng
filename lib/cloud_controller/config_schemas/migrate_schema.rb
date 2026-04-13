@@ -34,7 +34,6 @@ module VCAP::CloudController
           logging: {
             level: String, # debug, info, etc.
             file: String, # Log file to use
-            syslog: String, # Name to associate with syslog messages (should start with 'vcap.')
             optional(:stdout_sink_enabled) => bool
           }
         }

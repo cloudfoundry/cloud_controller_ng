@@ -1,4 +1,3 @@
-require 'syslog/logger'
 require 'vcap_request_context_setter'
 require 'cors'
 require 'request_metrics'

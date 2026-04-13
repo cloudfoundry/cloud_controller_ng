@@ -15,7 +15,6 @@ class Steno::Config
     #     logging:
     #       level:  <info, debug, etc>
     #       file:   </path/to/logfile>
-    #       syslog: <syslog name>
     #
     # @param [String] path  Path to yaml config
     # @param [Hash] overrides
@@ -46,11 +45,6 @@ class Steno::Config
       if hash[:file]
         max_retries = hash[:max_retries]
         opts[:sinks] << Steno::Sink::IO.for_file(hash[:file], max_retries:)
-      end
-
-      if hash[:syslog]
-        Steno::Sink::Syslog.instance.open(hash[:syslog])
-        opts[:sinks] << Steno::Sink::Syslog.instance
       end
 
       opts[:sinks] << Steno::Sink::IO.new($stdout) if opts[:sinks].empty?
