@@ -316,8 +316,7 @@ GEM
     multipart-parser (0.1.1)
     multipart-post (2.4.1)
     mustache (1.1.2)
-    mustermann (3.0.4)
-      ruby2_keywords (~> 0.0.1)
+    mustermann (3.1.0)
     mutex_m (0.3.0)
     mysql2 (0.5.7)
       bigdecimal
@@ -503,7 +502,6 @@ GEM
       lint_roller (~> 1.1)
       rubocop (>= 1.72.1, < 2)
     ruby-progressbar (1.13.0)
-    ruby2_keywords (0.0.5)
     ruby_parser (3.22.0)
       racc (~> 1.5)
       sexp_processor (~> 4.16)
