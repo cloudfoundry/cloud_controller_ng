@@ -33,7 +33,7 @@ COPY uaa.yml /usr/local/cf_config/uaa.yml
 
 # Install JAR from build image (Spring Boot executable JAR)
 COPY --from=builder /uaa/uaa/build/libs/cloudfoundry-identity-uaa-*.war /app/uaa.jar
-COPY --from=builder /uaa/k8s/templates/log4j2.properties /log4j2.properties
+COPY --from=builder /uaa/scripts/boot/log4j2.properties /log4j2.properties
 
 ENV JAVA_OPTS="-DLOGIN_CONFIG_URL=file:///uaa.yml -Dlogging.config=/log4j2.properties -DCLOUDFOUNDRY_CONFIG_PATH=/usr/local/cf_config"
 ENV SPRING_PROFILES_ACTIVE=default
