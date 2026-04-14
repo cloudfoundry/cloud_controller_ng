@@ -105,6 +105,7 @@ cc-containers start           # DBs + UAA + nginx (typical dev)
 cc-containers start minimal   # UAA + nginx only (for databases via brew)
 cc-containers start full      # All services
 cc-containers start s3        # Dev + SeaweedFS (S3 testing, local only)
+cc-containers start broker    # Dev + CATS service broker
 cc-containers stop            # Stop all
 cc-containers logs [service]  # Follow logs
 cc-containers status          # Show status

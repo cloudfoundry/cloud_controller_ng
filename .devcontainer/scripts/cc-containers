@@ -13,6 +13,7 @@
 #   dev (default)     DBs + UAA + nginx (typical development)
 #   minimal           UAA + nginx only (for local brew DBs)
 #   full              All services including diego mocks
+#   broker            Dev + Service Broker (for testing service broker interactions)
 #   s3                Dev + SeaweedFS (S3 blobstore, local only)
 #
 # Examples:
@@ -31,6 +32,7 @@ case "$1" in
       dev)     docker compose --profile dev up -d --no-recreate ;;
       minimal) docker compose up -d --no-recreate ;;
       full)    docker compose --profile dev --profile broker --profile s3 --profile diego up -d --no-recreate ;;
+      broker)   docker compose --profile dev --profile broker up -d --no-recreate ;;
       s3)      docker compose --profile dev --profile s3 up -d --no-recreate ;;
       *)       echo "Unknown profile: $2"; exit 1 ;;
     esac ;;
