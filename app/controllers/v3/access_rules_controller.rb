@@ -44,6 +44,9 @@ class AccessRulesController < ApplicationController
     unauthorized! unless permission_queryer.can_write_to_active_space?(route.space.id)
     suspended! unless permission_queryer.is_space_active?(route.space.id)
 
+    if route.domain.internal?
+      unprocessable!('Cannot create access rules for routes on internal domains. Internal routes use container-to-container networking and bypass GoRouter.')
+    end
     unprocessable!("Cannot create access rules for route '#{route.guid}': the route's domain does not have enforce_access_rules enabled.") unless route.domain.enforce_access_rules
 
     # Enforce cf:any exclusivity: if route already has a cf:any rule, reject new rules;
