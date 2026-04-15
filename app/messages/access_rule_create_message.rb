@@ -5,7 +5,6 @@ module VCAP::CloudController
     SELECTOR_REGEX = /\A(cf:(app|space|org):[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}|cf:any)\z/
 
     register_allowed_keys %i[
-      name
       selector
       relationships
     ]
@@ -13,7 +12,6 @@ module VCAP::CloudController
     validates_with NoAdditionalKeysValidator
     validates_with RelationshipValidator
 
-    validates :name, presence: true, string: true
     validates :selector, presence: true, string: true
 
     validate :selector_format_valid

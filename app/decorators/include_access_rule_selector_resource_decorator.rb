@@ -6,12 +6,15 @@ module VCAP::CloudController
     SELECTOR_REGEX = /\Acf:(app|space|org):([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})\z/
 
     def self.match?(include_params)
-      include_params&.include?('selector_resource')
+      return false unless include_params
+
+      # Match if any of: selector_resource, app, space, organization
+      (include_params & %w[selector_resource app space organization]).any?
     end
 
     def self.decorate(hash, access_rules)
       hash[:included] ||= {}
-      
+
       # Collect all GUIDs by type
       app_guids = []
       space_guids = []
@@ -38,7 +41,7 @@ module VCAP::CloudController
       hash[:included][:apps] = fetch_and_present_apps(app_guids.uniq)
       hash[:included][:spaces] = fetch_and_present_spaces(space_guids.uniq)
       hash[:included][:organizations] = fetch_and_present_organizations(org_guids.uniq)
-      
+
       hash
     end
 
