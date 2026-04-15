@@ -6,14 +6,15 @@ module VCAP::CloudController
     describe '.from_params' do
       let(:params) do
         {
+          'guids' => 'guid1,guid2',
           'route_guids' => 'route1,route2',
           'space_guids' => 'space1,space2',
-          'names' => 'name1,name2',
           'selectors' => 'selector1,selector2',
+          'selector_resource_guids' => 'resource1,resource2',
           'page' => 1,
           'per_page' => 5,
           'order_by' => 'created_at',
-          'include' => 'selector_resource,route'
+          'include' => 'selector_resource,route,app,space,organization'
         }
       end
 
@@ -21,23 +22,25 @@ module VCAP::CloudController
         message = AccessRulesListMessage.from_params(params)
 
         expect(message).to be_a(AccessRulesListMessage)
+        expect(message.guids).to eq(%w[guid1 guid2])
         expect(message.route_guids).to eq(%w[route1 route2])
         expect(message.space_guids).to eq(%w[space1 space2])
-        expect(message.names).to eq(%w[name1 name2])
         expect(message.selectors).to eq(%w[selector1 selector2])
+        expect(message.selector_resource_guids).to eq(%w[resource1 resource2])
         expect(message.page).to eq(1)
         expect(message.per_page).to eq(5)
         expect(message.order_by).to eq('created_at')
-        expect(message.include).to eq(%w[selector_resource route])
+        expect(message.include).to eq(%w[selector_resource route app space organization])
       end
 
       it 'converts requested keys to symbols' do
         message = AccessRulesListMessage.from_params(params)
 
+        expect(message).to be_requested(:guids)
         expect(message).to be_requested(:route_guids)
         expect(message).to be_requested(:space_guids)
-        expect(message).to be_requested(:names)
         expect(message).to be_requested(:selectors)
+        expect(message).to be_requested(:selector_resource_guids)
         expect(message).to be_requested(:page)
         expect(message).to be_requested(:per_page)
         expect(message).to be_requested(:order_by)
@@ -48,19 +51,20 @@ module VCAP::CloudController
     describe '#to_param_hash' do
       let(:opts) do
         {
+          guids: %w[guid1 guid2],
           route_guids: %w[route1 route2],
           space_guids: %w[space1 space2],
-          names: %w[name1 name2],
           selectors: %w[selector1 selector2],
+          selector_resource_guids: %w[resource1 resource2],
           page: 1,
           per_page: 5,
           order_by: 'created_at',
-          include: %w[selector_resource route]
+          include: %w[selector_resource route app space organization]
         }
       end
 
       it 'excludes the pagination keys' do
-        expected_params = %i[route_guids space_guids names selectors include]
+        expected_params = %i[guids route_guids space_guids selectors selector_resource_guids include]
         expect(AccessRulesListMessage.from_params(opts).to_param_hash.keys).to match_array(expected_params)
       end
     end
@@ -69,14 +73,15 @@ module VCAP::CloudController
       it 'accepts a set of fields' do
         expect do
           AccessRulesListMessage.from_params({
+                                               guids: [],
                                                route_guids: [],
                                                space_guids: [],
-                                               names: [],
                                                selectors: [],
+                                               selector_resource_guids: [],
                                                page: 1,
                                                per_page: 5,
                                                order_by: 'created_at',
-                                               include: ['selector_resource', 'route']
+                                               include: %w[selector_resource route app space organization]
                                              })
         end.not_to raise_error
       end
@@ -101,7 +106,16 @@ module VCAP::CloudController
           message = AccessRulesListMessage.from_params({ 'include' => 'route' })
           expect(message).to be_valid
 
-          message = AccessRulesListMessage.from_params({ 'include' => 'selector_resource,route' })
+          message = AccessRulesListMessage.from_params({ 'include' => 'app' })
+          expect(message).to be_valid
+
+          message = AccessRulesListMessage.from_params({ 'include' => 'space' })
+          expect(message).to be_valid
+
+          message = AccessRulesListMessage.from_params({ 'include' => 'organization' })
+          expect(message).to be_valid
+
+          message = AccessRulesListMessage.from_params({ 'include' => 'selector_resource,route,app,space,organization' })
           expect(message).to be_valid
         end
 
@@ -128,6 +142,24 @@ module VCAP::CloudController
           message = AccessRulesListMessage.from_params space_guids: %w[space1 space2]
           expect(message).to be_valid
           expect(message.space_guids).to eq(%w[space1 space2])
+        end
+
+        it 'validates selector_resource_guids is an array' do
+          message = AccessRulesListMessage.from_params selector_resource_guids: 'not array'
+          expect(message).not_to be_valid
+          expect(message.errors[:selector_resource_guids].length).to eq 1
+        end
+
+        it 'allows selector_resource_guids to be nil' do
+          message = AccessRulesListMessage.from_params({})
+          expect(message).to be_valid
+          expect(message.selector_resource_guids).to be_nil
+        end
+
+        it 'allows selector_resource_guids to be an array' do
+          message = AccessRulesListMessage.from_params selector_resource_guids: %w[guid1 guid2]
+          expect(message).to be_valid
+          expect(message.selector_resource_guids).to eq(%w[guid1 guid2])
         end
       end
     end

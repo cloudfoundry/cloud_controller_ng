@@ -52,13 +52,11 @@ class AccessRulesController < ApplicationController
     unprocessable!("Cannot add 'cf:any' selector when other access rules already exist for this route.") if message.selector == 'cf:any' && existing_selectors.any?
     unprocessable!("Cannot add selector '#{message.selector}': route already has a 'cf:any' rule.") if existing_selectors.include?('cf:any') && message.selector != 'cf:any'
 
-    # Uniqueness: name and selector must be unique per route
-    unprocessable!("An access rule with name '#{message.name}' already exists for this route.") if route.access_rules.any? { |r| r.name == message.name }
+    # Uniqueness: selector must be unique per route
     unprocessable!("An access rule with selector '#{message.selector}' already exists for this route.") if existing_selectors.include?(message.selector)
 
     access_rule = VCAP::CloudController::RouteAccessRule.new(
       guid: SecureRandom.uuid,
-      name: message.name,
       selector: message.selector,
       route_id: route.id,
       created_at: Time.now.utc,
@@ -127,8 +125,17 @@ class AccessRulesController < ApplicationController
                 select_all(:route_access_rules)
     end
 
-    dataset = dataset.where(name: message.names) if message.requested?(:names)
+    dataset = dataset.where(guid: message.guids) if message.requested?(:guids)
     dataset = dataset.where(selector: message.selectors) if message.requested?(:selectors)
+
+    if message.requested?(:selector_resource_guids)
+      # Text-match against selector string for resource GUIDs
+      # Handles cf:app:<guid>, cf:space:<guid>, cf:org:<guid>
+      conditions = message.selector_resource_guids.map do |guid|
+        Sequel.like(:selector, "%#{guid}%")
+      end
+      dataset = dataset.where(Sequel.|(*conditions))
+    end
 
     dataset
   end

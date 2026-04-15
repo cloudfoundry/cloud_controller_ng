@@ -7,7 +7,6 @@ module VCAP::CloudController
                 without_guid_generation: true
 
     def validate
-      validates_presence :name
       validates_presence :selector
       validates_presence :route_id
     end
