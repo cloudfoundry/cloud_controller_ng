@@ -20,7 +20,7 @@ Sequel.migration do
         primary_key :id, name: :id
         String :guid, null: false, size: 255
         String :resource_guid, null: false, size: 255
-        String :key_prefix, size: 253
+        String :key_prefix, null: false, default: '', size: 253
         String :key_name, null: false, size: 63
         String :value, null: false, size: 63
         DateTime :created_at, null: false
@@ -38,15 +38,15 @@ Sequel.migration do
         primary_key :id, name: :id
         String :guid, null: false, size: 255
         String :resource_guid, null: false, size: 255
-        String :key_prefix, size: 253
-        String :key, null: false, size: 1000
+        String :key_prefix, null: false, default: '', size: 253
+        String :key_name, null: false, size: 63
         String :value, size: 5000
         DateTime :created_at, null: false
         DateTime :updated_at
 
         index :guid, unique: true, name: :route_access_rule_annotations_guid_index
         index :resource_guid, name: :route_access_rule_annotations_resource_guid_index
-        index %i[resource_guid key], unique: true, name: :route_access_rule_annotations_key_index
+        index %i[resource_guid key_prefix key_name], unique: true, name: :route_access_rule_annotations_key_index
         foreign_key [:resource_guid], :route_access_rules, key: :guid, on_delete: :cascade, name: :fk_route_access_rule_annotations_resource_guid
       end
     end
