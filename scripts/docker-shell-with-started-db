@@ -1,0 +1,33 @@
+#!/bin/bash
+set -e -u
+
+ROOT_DIR_PATH="$(cd $(dirname $0)/.. && pwd)"
+cd "${ROOT_DIR_PATH}"
+
+# if DB not set, default to postgres because we usually use
+# postgres in our deployments
+db=${DB:-"postgres"}
+
+if [ "$db" = "mysql" ]; then
+  docker_image=cloudfoundry/tas-runtime-mysql-5.7
+elif [ "$db" = "mysql8" ]; then
+  docker_image=cloudfoundry/tas-runtime-mysql-8.0
+else
+  docker_image=cloudfoundry/tas-runtime-postgres
+fi
+
+
+if [[ "${DB}" =~ mysql ]]; then
+  db=mysql
+fi
+
+docker run \
+   --rm \
+   -it \
+   --privileged \
+   -v "${PWD}:/cloud_controller_ng" \
+   -e "DB=$db" \
+   --cap-add ALL \
+   -w /cloud_controller_ng \
+   $docker_image \
+   /cloud_controller_ng/scripts/start-db-in-docker.sh "$@"
