@@ -14,12 +14,12 @@ module VCAP::CloudController
       route_ids = access_rules.map(&:route_id).uniq
 
       # Fetch routes with their associations
-      routes = VCAP::CloudController::Route.where(id: route_ids).
+      routes = Route.where(id: route_ids).
                order(:created_at, :guid).
-               eager(VCAP::CloudController::Presenters::V3::RoutePresenter.associated_resources).all
+               eager(Presenters::V3::RoutePresenter.associated_resources).all
 
       # Present routes
-      hash[:included][:routes] = routes.map { |route| VCAP::CloudController::Presenters::V3::RoutePresenter.new(route).to_hash }
+      hash[:included][:routes] = routes.map { |route| Presenters::V3::RoutePresenter.new(route).to_hash }
 
       hash
     end

@@ -56,9 +56,9 @@ module VCAP::CloudController::Presenters::V3
       @decorators.reduce(hash) { |memo, d| d.decorate(memo, [route]) }
     end
 
-    private
-
     INTERNAL_ROUTE_OPTIONS = %w[access_scope access_rules].freeze
+
+    private
 
     def route
       @resource

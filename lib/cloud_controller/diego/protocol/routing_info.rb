@@ -37,26 +37,32 @@ module VCAP::CloudController
           end
 
           route_mappings.map do |route_mapping|
-            r = route_mapping.route
-            info = { 'hostname' => r.uri }
-            info['route_service_url'] = r.route_binding.route_service_url if r.route_binding && r.route_binding.route_service_url
-            info['router_group_guid'] = r.domain.router_group_guid if r.domain.is_a?(SharedDomain) && !r.domain.router_group_guid.nil?
-            info['port'] = get_port_to_use(route_mapping)
-            info['protocol'] = route_mapping.protocol
-            info['options'] = r.options if r.options
-
-            # Inject mTLS access control options for enforce_access_rules domains.
-            # These are GoRouter-internal keys and are filtered from the /v3/routes API.
-            if r.domain.enforce_access_rules
-              mtls_options = info['options']&.dup || {}
-              mtls_options['access_scope'] = r.domain.access_rules_scope if r.domain.access_rules_scope
-              selectors = r.access_rules.map(&:selector)
-              mtls_options['access_rules'] = selectors.join(',') unless selectors.empty?
-              info['options'] = mtls_options
-            end
-
-            info
+            build_http_route_info(route_mapping)
           end
+        end
+
+        def build_http_route_info(route_mapping)
+          r = route_mapping.route
+          info = { 'hostname' => r.uri }
+          info['route_service_url'] = r.route_binding.route_service_url if r.route_binding && r.route_binding.route_service_url
+          info['router_group_guid'] = r.domain.router_group_guid if r.domain.is_a?(SharedDomain) && !r.domain.router_group_guid.nil?
+          info['port'] = get_port_to_use(route_mapping)
+          info['protocol'] = route_mapping.protocol
+          info['options'] = r.options if r.options
+
+          add_mtls_options(info, r) if r.domain.enforce_access_rules
+
+          info
+        end
+
+        def add_mtls_options(info, route)
+          # Inject mTLS access control options for enforce_access_rules domains.
+          # These are GoRouter-internal keys and are filtered from the /v3/routes API.
+          mtls_options = info['options']&.dup || {}
+          mtls_options['access_scope'] = route.domain.access_rules_scope if route.domain.access_rules_scope
+          selectors = route.access_rules.map(&:selector)
+          mtls_options['access_rules'] = selectors.join(',') unless selectors.empty?
+          info['options'] = mtls_options
         end
 
         def tcp_info(process_eager)
