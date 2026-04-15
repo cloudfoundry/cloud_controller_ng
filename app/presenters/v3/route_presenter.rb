@@ -50,7 +50,7 @@ module VCAP::CloudController::Presenters::V3
       }
       unless route.options.nil?
         public_options = route.options.reject { |k, _| INTERNAL_ROUTE_OPTIONS.include?(k.to_s) }
-        hash.merge!(options: public_options) unless public_options.empty?
+        hash.merge!(options: public_options)
       end
 
       @decorators.reduce(hash) { |memo, d| d.decorate(memo, [route]) }
