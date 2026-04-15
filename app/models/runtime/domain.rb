@@ -79,8 +79,8 @@ module VCAP::CloudController
     one_to_many :labels, class: 'VCAP::CloudController::DomainLabelModel', key: :resource_guid, primary_key: :guid
     one_to_many :annotations, class: 'VCAP::CloudController::DomainAnnotationModel', key: :resource_guid, primary_key: :guid
 
-    export_attributes :name, :owning_organization_guid, :shared_organizations, :enforce_access_rules, :access_rules_scope
-    import_attributes :name, :owning_organization_guid, :enforce_access_rules, :access_rules_scope
+    export_attributes :name, :owning_organization_guid, :shared_organizations
+    import_attributes :name, :owning_organization_guid
     strip_attributes :name
 
     add_association_dependencies labels: :destroy
