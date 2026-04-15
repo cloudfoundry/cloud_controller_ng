@@ -206,6 +206,24 @@ RSpec.describe 'Access Rules' do
         expect(last_response.body).to include('Selector')
       end
     end
+
+    context 'when a concurrent request creates the same selector (UniqueConstraintViolation)' do
+      it 'returns 422 instead of 500' do
+        # Simulate a race condition where the DB unique constraint catches the duplicate
+        # after validation passes but before the insert commits
+        allow_any_instance_of(VCAP::CloudController::RouteAccessRule).to receive(:save).and_raise(
+          Sequel::UniqueConstraintViolation.new('UNIQUE constraint failed: route_access_rules.route_id, route_access_rules.selector')
+        )
+
+        post '/v3/access_rules', {
+          selector: "cf:app:#{valid_uuid}",
+          relationships: { route: { data: { guid: mtls_route.guid } } }
+        }.to_json, admin_header
+
+        expect(last_response.status).to eq(422)
+        expect(last_response.body).to include('already exists')
+      end
+    end
   end
 
   describe 'GET /v3/access_rules/:guid' do
@@ -341,6 +359,52 @@ RSpec.describe 'Access Rules' do
 
         expect(last_response.status).to eq(200)
         parsed = Oj.load(last_response.body)
+        expect(parsed['resources'].length).to eq(0)
+      end
+    end
+
+    describe 'filtering by both route_guids and space_guids' do
+      let(:other_org) { VCAP::CloudController::Organization.make }
+      let(:other_space) { VCAP::CloudController::Space.make(organization: other_org) }
+      let(:other_mtls_domain) do
+        VCAP::CloudController::PrivateDomain.make(
+          owning_organization: other_org,
+          enforce_access_rules: true,
+          access_rules_scope: 'space'
+        )
+      end
+      let(:other_route) { VCAP::CloudController::Route.make(space: other_space, domain: other_mtls_domain) }
+      let!(:rule_in_other_space) do
+        VCAP::CloudController::RouteAccessRule.create(
+          guid: SecureRandom.uuid,
+          selector: 'cf:any',
+          route_id: other_route.id
+        )
+      end
+
+      before do
+        other_org.add_user(user)
+        other_space.add_developer(user)
+      end
+
+      it 'returns results matching both route_guids and space_guids without ambiguous column errors' do
+        get "/v3/access_rules?route_guids=#{mtls_route.guid}&space_guids=#{space.guid}", nil, admin_header
+
+        expect(last_response.status).to eq(200)
+        parsed = Oj.load(last_response.body)
+        guids = parsed['resources'].pluck('guid')
+        expect(guids).to include(rule1.guid)
+        expect(guids).not_to include(rule_in_other_space.guid)
+      end
+    end
+
+    describe 'filtering by selector_resource_guids' do
+      it 'does not match unintended rows when guid contains LIKE wildcards' do
+        get '/v3/access_rules?selector_resource_guids=%25', nil, admin_header
+
+        expect(last_response.status).to eq(200)
+        parsed = Oj.load(last_response.body)
+        # Should not match all rows via SQL wildcard; % is escaped
         expect(parsed['resources'].length).to eq(0)
       end
     end

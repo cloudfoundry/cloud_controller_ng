@@ -41,18 +41,28 @@ class AccessRulesController < ApplicationController
 
     route = find_and_authorize_route(message.route_guid)
     validate_route_domain(route)
-    validate_selector_exclusivity(route, message.selector)
 
-    access_rule = VCAP::CloudController::RouteAccessRule.new(
-      guid: SecureRandom.uuid,
-      selector: message.selector,
-      route_id: route.id,
-      created_at: Time.now.utc,
-      updated_at: Time.now.utc
-    )
-    access_rule.save
+    access_rule = VCAP::CloudController::RouteAccessRule.db.transaction do
+      # Lock existing access rules for this route to prevent concurrent inserts
+      # from violating cf:any exclusivity or uniqueness constraints
+      VCAP::CloudController::RouteAccessRule.where(route_id: route.id).for_update.all
+
+      validate_selector_exclusivity(route, message.selector)
+
+      rule = VCAP::CloudController::RouteAccessRule.new(
+        guid: SecureRandom.uuid,
+        selector: message.selector,
+        route_id: route.id,
+        created_at: Time.now.utc,
+        updated_at: Time.now.utc
+      )
+      rule.save
+      rule
+    end
 
     render status: :created, json: Presenters::V3::AccessRulePresenter.new(access_rule)
+  rescue Sequel::UniqueConstraintViolation
+    unprocessable!("An access rule with selector '#{message.selector}' already exists for this route.")
   end
 
   def update
@@ -126,18 +136,15 @@ class AccessRulesController < ApplicationController
 
     dataset = dataset.where(route_id: readable_route_ids)
 
-    if message.requested?(:route_guids)
+    # Join routes at most once when either route_guids or space_guids is requested
+    if message.requested?(:route_guids) || message.requested?(:space_guids)
       dataset = dataset.
                 join(:routes, id: :route_id).
-                where(routes__guid: message.route_guids).
                 select_all(:route_access_rules)
-    end
 
-    if message.requested?(:space_guids)
-      dataset = dataset.
-                join(:routes, id: :route_id).
-                where(routes__space_id: VCAP::CloudController::Space.where(guid: message.space_guids).select(:id)).
-                select_all(:route_access_rules)
+      dataset = dataset.where(Sequel[:routes][:guid] => message.route_guids) if message.requested?(:route_guids)
+
+      dataset = dataset.where(Sequel[:routes][:space_id] => VCAP::CloudController::Space.where(guid: message.space_guids).select(:id)) if message.requested?(:space_guids)
     end
 
     dataset = dataset.where(guid: message.guids) if message.requested?(:guids)
@@ -146,8 +153,10 @@ class AccessRulesController < ApplicationController
     if message.requested?(:selector_resource_guids)
       # Text-match against selector string for resource GUIDs
       # Handles cf:app:<guid>, cf:space:<guid>, cf:org:<guid>
+      # Escape LIKE metacharacters (% and _) in user-provided values
       conditions = message.selector_resource_guids.map do |guid|
-        Sequel.like(:selector, "%#{guid}%")
+        escaped_guid = guid.gsub('%', '\\%').gsub('_', '\\_')
+        Sequel.like(:selector, "%#{escaped_guid}%")
       end
       dataset = dataset.where(Sequel.|(*conditions))
     end
