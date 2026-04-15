@@ -265,7 +265,6 @@ module VCAP::CloudController
               let!(:access_rule1) do
                 RouteAccessRule.create(
                   guid: SecureRandom.uuid,
-                  name: 'allow-app',
                   selector: "cf:app:#{valid_uuid}",
                   route_id: mtls_route.id
                 )
@@ -273,7 +272,6 @@ module VCAP::CloudController
               let!(:access_rule2) do
                 RouteAccessRule.create(
                   guid: SecureRandom.uuid,
-                  name: 'allow-space',
                   selector: "cf:space:#{valid_uuid}",
                   route_id: mtls_route.id
                 )
