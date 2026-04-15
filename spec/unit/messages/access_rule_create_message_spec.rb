@@ -14,8 +14,7 @@ module VCAP::CloudController
       context 'when all valid params are given' do
         let(:params) do
           {
-            name: 'allow-frontend',
-            selector: "cf:app:#{valid_uuid}",
+            selector: "cf:app:#{valid_uuid}"
           }.merge(valid_route_relationship)
         end
 
@@ -27,9 +26,8 @@ module VCAP::CloudController
       context 'when unexpected keys are provided' do
         let(:params) do
           {
-            name: 'allow-frontend',
             selector: "cf:app:#{valid_uuid}",
-            unexpected: 'field',
+            unexpected: 'field'
           }.merge(valid_route_relationship)
         end
 
@@ -39,41 +37,10 @@ module VCAP::CloudController
         end
       end
 
-      describe 'name' do
-        context 'when name is missing' do
-          let(:params) do
-            {
-              selector: "cf:app:#{valid_uuid}",
-            }.merge(valid_route_relationship)
-          end
-
-          it 'is not valid' do
-            expect(subject).not_to be_valid
-            expect(subject.errors[:name]).to include("can't be blank")
-          end
-        end
-
-        context 'when name is not a string' do
-          let(:params) do
-            {
-              name: 42,
-              selector: "cf:app:#{valid_uuid}",
-            }.merge(valid_route_relationship)
-          end
-
-          it 'is not valid' do
-            expect(subject).not_to be_valid
-            expect(subject.errors[:name]).to include('must be a string')
-          end
-        end
-      end
-
       describe 'selector' do
         context 'when selector is missing' do
           let(:params) do
-            {
-              name: 'allow-frontend',
-            }.merge(valid_route_relationship)
+            valid_route_relationship
           end
 
           it 'is not valid' do
@@ -85,8 +52,7 @@ module VCAP::CloudController
         context 'when selector is not a string' do
           let(:params) do
             {
-              name: 'allow-frontend',
-              selector: 123,
+              selector: 123
             }.merge(valid_route_relationship)
           end
 
@@ -100,8 +66,7 @@ module VCAP::CloudController
           context 'cf:app:<uuid>' do
             let(:params) do
               {
-                name: 'allow-app',
-                selector: "cf:app:#{valid_uuid}",
+                selector: "cf:app:#{valid_uuid}"
               }.merge(valid_route_relationship)
             end
 
@@ -113,8 +78,7 @@ module VCAP::CloudController
           context 'cf:space:<uuid>' do
             let(:params) do
               {
-                name: 'allow-space',
-                selector: "cf:space:#{valid_uuid}",
+                selector: "cf:space:#{valid_uuid}"
               }.merge(valid_route_relationship)
             end
 
@@ -126,8 +90,7 @@ module VCAP::CloudController
           context 'cf:org:<uuid>' do
             let(:params) do
               {
-                name: 'allow-org',
-                selector: "cf:org:#{valid_uuid}",
+                selector: "cf:org:#{valid_uuid}"
               }.merge(valid_route_relationship)
             end
 
@@ -139,8 +102,7 @@ module VCAP::CloudController
           context 'cf:any' do
             let(:params) do
               {
-                name: 'allow-any',
-                selector: 'cf:any',
+                selector: 'cf:any'
               }.merge(valid_route_relationship)
             end
 
@@ -152,8 +114,7 @@ module VCAP::CloudController
           context 'invalid format' do
             let(:params) do
               {
-                name: 'bad-rule',
-                selector: 'not-valid',
+                selector: 'not-valid'
               }.merge(valid_route_relationship)
             end
 
@@ -168,8 +129,7 @@ module VCAP::CloudController
           context 'cf:app: with invalid uuid' do
             let(:params) do
               {
-                name: 'bad-rule',
-                selector: 'cf:app:not-a-uuid',
+                selector: 'cf:app:not-a-uuid'
               }.merge(valid_route_relationship)
             end
 
@@ -184,8 +144,7 @@ module VCAP::CloudController
           context 'cf:unknown type' do
             let(:params) do
               {
-                name: 'bad-rule',
-                selector: "cf:team:#{valid_uuid}",
+                selector: "cf:team:#{valid_uuid}"
               }.merge(valid_route_relationship)
             end
 
@@ -203,8 +162,7 @@ module VCAP::CloudController
         context 'when relationships is missing' do
           let(:params) do
             {
-              name: 'allow-frontend',
-              selector: "cf:app:#{valid_uuid}",
+              selector: "cf:app:#{valid_uuid}"
             }
           end
 
@@ -217,9 +175,8 @@ module VCAP::CloudController
         context 'when route relationship is missing' do
           let(:params) do
             {
-              name: 'allow-frontend',
               selector: "cf:app:#{valid_uuid}",
-              relationships: {},
+              relationships: {}
             }
           end
 
@@ -231,9 +188,8 @@ module VCAP::CloudController
         context 'when route guid is provided' do
           let(:params) do
             {
-              name: 'allow-frontend',
               selector: "cf:app:#{valid_uuid}",
-              relationships: { route: { data: { guid: 'some-route-guid' } } },
+              relationships: { route: { data: { guid: 'some-route-guid' } } }
             }
           end
 

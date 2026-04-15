@@ -39,24 +39,9 @@ class AccessRulesController < ApplicationController
     message = AccessRuleCreateMessage.new(hashed_params[:body])
     unprocessable!(message.errors.full_messages) unless message.valid?
 
-    route = VCAP::CloudController::Route.find(guid: message.route_guid)
-    resource_not_found!(:route) unless route && permission_queryer.can_read_from_space?(route.space.id, route.space.organization_id)
-    unauthorized! unless permission_queryer.can_write_to_active_space?(route.space.id)
-    suspended! unless permission_queryer.is_space_active?(route.space.id)
-
-    if route.domain.internal?
-      unprocessable!('Cannot create access rules for routes on internal domains. Internal routes use container-to-container networking and bypass GoRouter.')
-    end
-    unprocessable!("Cannot create access rules for route '#{route.guid}': the route's domain does not have enforce_access_rules enabled.") unless route.domain.enforce_access_rules
-
-    # Enforce cf:any exclusivity: if route already has a cf:any rule, reject new rules;
-    # if new rule is cf:any, reject if route already has any rules.
-    existing_selectors = route.access_rules.map(&:selector)
-    unprocessable!("Cannot add 'cf:any' selector when other access rules already exist for this route.") if message.selector == 'cf:any' && existing_selectors.any?
-    unprocessable!("Cannot add selector '#{message.selector}': route already has a 'cf:any' rule.") if existing_selectors.include?('cf:any') && message.selector != 'cf:any'
-
-    # Uniqueness: selector must be unique per route
-    unprocessable!("An access rule with selector '#{message.selector}' already exists for this route.") if existing_selectors.include?(message.selector)
+    route = find_and_authorize_route(message.route_guid)
+    validate_route_domain(route)
+    validate_selector_exclusivity(route, message.selector)
 
     access_rule = VCAP::CloudController::RouteAccessRule.new(
       guid: SecureRandom.uuid,
@@ -101,6 +86,33 @@ class AccessRulesController < ApplicationController
   end
 
   private
+
+  def find_and_authorize_route(route_guid)
+    route = VCAP::CloudController::Route.find(guid: route_guid)
+    resource_not_found!(:route) unless route && permission_queryer.can_read_from_space?(route.space.id, route.space.organization_id)
+    unauthorized! unless permission_queryer.can_write_to_active_space?(route.space.id)
+    suspended! unless permission_queryer.is_space_active?(route.space.id)
+    route
+  end
+
+  def validate_route_domain(route)
+    if route.domain.internal?
+      unprocessable!('Cannot create access rules for routes on internal domains. Internal routes use container-to-container networking and bypass GoRouter.')
+    end
+    unprocessable!("Cannot create access rules for route '#{route.guid}': the route's domain does not have enforce_access_rules enabled.") unless route.domain.enforce_access_rules
+  end
+
+  def validate_selector_exclusivity(route, selector)
+    existing_selectors = route.access_rules.map(&:selector)
+
+    # Enforce cf:any exclusivity: if route already has a cf:any rule, reject new rules;
+    # if new rule is cf:any, reject if route already has any rules.
+    unprocessable!("Cannot add 'cf:any' selector when other access rules already exist for this route.") if selector == 'cf:any' && existing_selectors.any?
+    unprocessable!("Cannot add selector '#{selector}': route already has a 'cf:any' rule.") if existing_selectors.include?('cf:any') && selector != 'cf:any'
+
+    # Uniqueness: selector must be unique per route
+    unprocessable!("An access rule with selector '#{selector}' already exists for this route.") if existing_selectors.include?(selector)
+  end
 
   def build_dataset(message)
     dataset = VCAP::CloudController::RouteAccessRule.dataset

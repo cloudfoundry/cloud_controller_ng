@@ -18,7 +18,7 @@ module VCAP::CloudController
     validates :selector_resource_guids, array: true, allow_nil: true
 
     def self.from_params(params)
-      super(params, %w[guids route_guids space_guids selectors selector_resource_guids include])
+      super(params, %w[route_guids space_guids selectors selector_resource_guids include])
     end
   end
 end

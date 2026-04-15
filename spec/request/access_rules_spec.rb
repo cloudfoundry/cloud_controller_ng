@@ -176,27 +176,6 @@ RSpec.describe 'Access Rules' do
       end
     end
 
-    context 'duplicate name per route' do
-      before do
-        VCAP::CloudController::RouteAccessRule.create(
-          guid: SecureRandom.uuid,
-          selector: "cf:app:#{valid_uuid}",
-          route_id: mtls_route.id
-        )
-      end
-
-      it 'returns 422' do
-        other_uuid = 'aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee'
-        post '/v3/access_rules', {
-          selector: "cf:space:#{other_uuid}",
-          relationships: { route: { data: { guid: mtls_route.guid } } }
-        }.to_json, admin_header
-
-        expect(last_response.status).to eq(422)
-        expect(last_response.body).to include('allow-frontend')
-      end
-    end
-
     context 'duplicate selector per route' do
       before do
         VCAP::CloudController::RouteAccessRule.create(
@@ -224,7 +203,7 @@ RSpec.describe 'Access Rules' do
         }.to_json, admin_header
 
         expect(last_response.status).to eq(422)
-        expect(last_response.body).to include('selector')
+        expect(last_response.body).to include('Selector')
       end
     end
   end
@@ -277,7 +256,7 @@ RSpec.describe 'Access Rules' do
 
       expect(last_response.status).to eq(200)
       parsed = Oj.load(last_response.body)
-      guids = parsed['resources'].map { |r| r['guid'] }
+      guids = parsed['resources'].pluck('guid')
       expect(guids).to include(rule1.guid, rule2.guid)
     end
 
@@ -286,7 +265,7 @@ RSpec.describe 'Access Rules' do
 
       expect(last_response.status).to eq(200)
       parsed = Oj.load(last_response.body)
-      guids = parsed['resources'].map { |r| r['guid'] }
+      guids = parsed['resources'].pluck('guid')
       expect(guids).to include(rule1.guid)
       expect(guids).not_to include(rule2.guid)
     end
@@ -329,7 +308,7 @@ RSpec.describe 'Access Rules' do
 
         expect(last_response.status).to eq(200)
         parsed = Oj.load(last_response.body)
-        guids = parsed['resources'].map { |r| r['guid'] }
+        guids = parsed['resources'].pluck('guid')
         expect(guids).to include(rule1.guid, rule2.guid)
         expect(guids).not_to include(rule_in_other_space.guid)
       end
@@ -339,7 +318,7 @@ RSpec.describe 'Access Rules' do
 
         expect(last_response.status).to eq(200)
         parsed = Oj.load(last_response.body)
-        guids = parsed['resources'].map { |r| r['guid'] }
+        guids = parsed['resources'].pluck('guid')
         expect(guids).to include(rule1.guid, rule2.guid, rule_in_other_space.guid)
       end
 
@@ -367,14 +346,14 @@ RSpec.describe 'Access Rules' do
     end
 
     context 'with include=selector_resource' do
-      let!(:app) { VCAP::CloudController::AppModel.make(space: space, name: 'frontend-app') }
+      let!(:frontend_app) { VCAP::CloudController::AppModel.make(space: space, name: 'frontend-app') }
       let!(:other_space) { VCAP::CloudController::Space.make(organization: org, name: 'other-space') }
       let!(:other_org) { VCAP::CloudController::Organization.make(name: 'other-org') }
 
       let!(:app_rule) do
         VCAP::CloudController::RouteAccessRule.create(
           guid: SecureRandom.uuid,
-          selector: "cf:app:#{app.guid}",
+          selector: "cf:app:#{frontend_app.guid}",
           route_id: mtls_route.id
         )
       end
@@ -408,10 +387,10 @@ RSpec.describe 'Access Rules' do
         expect(parsed['included']['organizations']).to be_an(Array)
 
         # Check app is included with full details
-        app_included = parsed['included']['apps'].find { |a| a['guid'] == app.guid }
+        app_included = parsed['included']['apps'].find { |a| a['guid'] == frontend_app.guid }
         expect(app_included).to be_present
         expect(app_included['name']).to eq('frontend-app')
-        expect(app_included['guid']).to eq(app.guid)
+        expect(app_included['guid']).to eq(frontend_app.guid)
 
         # Check space is included
         space_included = parsed['included']['spaces'].find { |s| s['guid'] == other_space.guid }
@@ -446,7 +425,7 @@ RSpec.describe 'Access Rules' do
         # Create another rule referencing the same app
         VCAP::CloudController::RouteAccessRule.create(
           guid: SecureRandom.uuid,
-          selector: "cf:app:#{app.guid}",
+          selector: "cf:app:#{frontend_app.guid}",
           route_id: VCAP::CloudController::Route.make(space: space, domain: mtls_domain).id
         )
 
@@ -456,7 +435,7 @@ RSpec.describe 'Access Rules' do
         parsed = Oj.load(last_response.body)
 
         # App should appear only once
-        app_count = parsed['included']['apps'].count { |a| a['guid'] == app.guid }
+        app_count = parsed['included']['apps'].count { |a| a['guid'] == frontend_app.guid }
         expect(app_count).to eq(1)
       end
 
@@ -516,10 +495,10 @@ RSpec.describe 'Access Rules' do
       end
 
       it 'includes only unique routes when multiple rules reference the same route' do
-        # Create another rule on the same route
+        # Create another rule on the same route with a different selector
         VCAP::CloudController::RouteAccessRule.create(
           guid: SecureRandom.uuid,
-          selector: "cf:app:#{valid_uuid}",
+          selector: "cf:app:#{SecureRandom.uuid}",
           route_id: mtls_route.id
         )
 
@@ -534,10 +513,10 @@ RSpec.describe 'Access Rules' do
       end
 
       it 'combines include=route with include=selector_resource' do
-        app = VCAP::CloudController::AppModel.make(space: space, name: 'test-app')
+        test_app = VCAP::CloudController::AppModel.make(space: space, name: 'test-app')
         VCAP::CloudController::RouteAccessRule.create(
           guid: SecureRandom.uuid,
-          selector: "cf:app:#{app.guid}",
+          selector: "cf:app:#{test_app.guid}",
           route_id: mtls_route.id
         )
 
@@ -555,7 +534,7 @@ RSpec.describe 'Access Rules' do
         expect(route_included).to be_present
 
         # Verify app is present
-        app_included = parsed['included']['apps'].find { |a| a['guid'] == app.guid }
+        app_included = parsed['included']['apps'].find { |a| a['guid'] == test_app.guid }
         expect(app_included).to be_present
       end
     end

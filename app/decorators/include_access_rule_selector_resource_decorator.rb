@@ -9,7 +9,7 @@ module VCAP::CloudController
       return false unless include_params
 
       # Match if any of: selector_resource, app, space, organization
-      (include_params & %w[selector_resource app space organization]).any?
+      include_params.intersect?(%w[selector_resource app space organization])
     end
 
     def self.decorate(hash, access_rules)
@@ -48,28 +48,28 @@ module VCAP::CloudController
     private_class_method def self.fetch_and_present_apps(guids)
       return [] if guids.empty?
 
-      apps = VCAP::CloudController::AppModel.where(guid: guids).
+      apps = AppModel.where(guid: guids).
              order(:created_at, :guid).
-             eager(VCAP::CloudController::Presenters::V3::AppPresenter.associated_resources).all
-      apps.map { |app| VCAP::CloudController::Presenters::V3::AppPresenter.new(app).to_hash }
+             eager(Presenters::V3::AppPresenter.associated_resources).all
+      apps.map { |app| Presenters::V3::AppPresenter.new(app).to_hash }
     end
 
     private_class_method def self.fetch_and_present_spaces(guids)
       return [] if guids.empty?
 
-      spaces = VCAP::CloudController::Space.where(guid: guids).
+      spaces = Space.where(guid: guids).
                order(:created_at, :guid).
-               eager(VCAP::CloudController::Presenters::V3::SpacePresenter.associated_resources).all
-      spaces.map { |space| VCAP::CloudController::Presenters::V3::SpacePresenter.new(space).to_hash }
+               eager(Presenters::V3::SpacePresenter.associated_resources).all
+      spaces.map { |space| Presenters::V3::SpacePresenter.new(space).to_hash }
     end
 
     private_class_method def self.fetch_and_present_organizations(guids)
       return [] if guids.empty?
 
-      orgs = VCAP::CloudController::Organization.where(guid: guids).
+      orgs = Organization.where(guid: guids).
              order(:created_at, :guid).
-             eager(VCAP::CloudController::Presenters::V3::OrganizationPresenter.associated_resources).all
-      orgs.map { |org| VCAP::CloudController::Presenters::V3::OrganizationPresenter.new(org).to_hash }
+             eager(Presenters::V3::OrganizationPresenter.associated_resources).all
+      orgs.map { |org| Presenters::V3::OrganizationPresenter.new(org).to_hash }
     end
   end
 end

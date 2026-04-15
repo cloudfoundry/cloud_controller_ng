@@ -106,17 +106,14 @@ module VCAP::CloudController
     end
 
     def access_rules_scope_validation
-      if requested?(:access_rules_scope)
-        unless access_rules_scope.nil? || %w[any org space].include?(access_rules_scope)
-          errors.add(:access_rules_scope, "must be one of 'any', 'org', 'space'")
-        end
+      if requested?(:access_rules_scope) && !(access_rules_scope.nil? || %w[any org space].include?(access_rules_scope))
+        errors.add(:access_rules_scope, "must be one of 'any', 'org', 'space'")
       end
 
-      if requested?(:enforce_access_rules) && enforce_access_rules == true
-        if !requested?(:access_rules_scope) || access_rules_scope.nil?
-          errors.add(:access_rules_scope, 'is required when enforce_access_rules is true')
-        end
-      end
+      return unless requested?(:enforce_access_rules) && enforce_access_rules == true
+      return unless !requested?(:access_rules_scope) || access_rules_scope.nil?
+
+      errors.add(:access_rules_scope, 'is required when enforce_access_rules is true')
     end
 
     class Relationships < BaseMessage

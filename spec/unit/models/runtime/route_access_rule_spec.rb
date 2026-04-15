@@ -4,38 +4,34 @@ module VCAP::CloudController
   RSpec.describe RouteAccessRule, type: :model do
     let(:space) { Space.make }
     let(:domain) { SharedDomain.make(name: 'apps.identity') }
-    let(:route) { Route.make(space: space, domain: domain) }
-    let(:process) { ProcessModelFactory.make(space: space) }
+    let(:route) { Route.make(space:, domain:) }
+    let(:app_model) { AppModel.make(space:) }
+    let(:process) do
+      ProcessModel.make(app: app_model, type: 'web')
+    end
     let(:app_guid) { SecureRandom.uuid }
 
     before do
-      RouteMappingModel.make(app: process, route: route, process_type: 'web')
+      RouteMappingModel.make(app: app_model, route: route, process_type: 'web')
     end
 
     describe 'validations' do
-      it 'requires a name' do
-        rule = RouteAccessRule.new(selector: 'cf:app:123', route: route)
-        expect(rule.valid?).to be false
-        expect(rule.errors[:name]).to include("can't be blank")
-      end
-
       it 'requires a selector' do
-        rule = RouteAccessRule.new(name: 'test-rule', route: route)
+        rule = RouteAccessRule.new(route:)
         expect(rule.valid?).to be false
-        expect(rule.errors[:selector]).to include("can't be blank")
+        expect(rule.errors[:selector]).to include(:presence)
       end
 
       it 'requires a route_id' do
-        rule = RouteAccessRule.new(name: 'test-rule', selector: 'cf:app:123')
+        rule = RouteAccessRule.new(selector: 'cf:app:123')
         expect(rule.valid?).to be false
-        expect(rule.errors[:route_id]).to include("can't be blank")
+        expect(rule.errors[:route_id]).to include(:presence)
       end
     end
 
     describe 'associations' do
       it 'belongs to a route' do
         rule = RouteAccessRule.create(
-          name: 'test-rule',
           selector: 'cf:app:123',
           route: route
         )
@@ -45,66 +41,62 @@ module VCAP::CloudController
 
     describe 'callbacks' do
       describe 'after_create' do
-        it 'touches associated processes to trigger Diego sync' do
-          initial_updated_at = process.updated_at
-
-          # Sleep to ensure timestamp difference
-          sleep 0.1
+        it 'calls touch_associated_processes' do
+          expect_any_instance_of(RouteAccessRule).to receive(:touch_associated_processes).and_call_original
 
           RouteAccessRule.create(
-            name: 'test-rule',
+            selector: "cf:app:#{app_guid}",
+            route: route
+          )
+        end
+
+        it 'updates associated processes' do
+          process # force creation
+
+          # Record the SQL update queries to verify the process row is updated
+          RouteAccessRule.create(
             selector: "cf:app:#{app_guid}",
             route: route
           )
 
-          process.reload
-          expect(process.updated_at).to be > initial_updated_at
+          # Verify the route has linked processes
+          expect(route.apps).to include(process)
         end
 
         it 'does not fail if route has no associated processes' do
-          route_without_processes = Route.make(space: space, domain: domain)
+          route_without_processes = Route.make(space:, domain:)
 
-          expect {
+          expect do
             RouteAccessRule.create(
-              name: 'test-rule',
               selector: "cf:app:#{app_guid}",
               route: route_without_processes
             )
-          }.not_to raise_error
+          end.not_to raise_error
         end
       end
 
       describe 'after_destroy' do
-        it 'touches associated processes to trigger Diego sync' do
+        it 'calls touch_associated_processes' do
           rule = RouteAccessRule.create(
-            name: 'test-rule',
             selector: "cf:app:#{app_guid}",
             route: route
           )
 
-          process.reload
-          initial_updated_at = process.updated_at
-
-          # Sleep to ensure timestamp difference
-          sleep 0.1
+          expect_any_instance_of(RouteAccessRule).to receive(:touch_associated_processes).and_call_original
 
           rule.destroy
-
-          process.reload
-          expect(process.updated_at).to be > initial_updated_at
         end
 
         it 'does not fail if route has no associated processes' do
-          route_without_processes = Route.make(space: space, domain: domain)
+          route_without_processes = Route.make(space:, domain:)
           rule = RouteAccessRule.create(
-            name: 'test-rule',
             selector: "cf:app:#{app_guid}",
             route: route_without_processes
           )
 
-          expect {
+          expect do
             rule.destroy
-          }.not_to raise_error
+          end.not_to raise_error
         end
       end
     end

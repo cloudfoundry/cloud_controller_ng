@@ -38,6 +38,7 @@ module VCAP::CloudController
           }
 
           # Extract resource GUID from selector and populate read-only relationships
+          # Only include the guid in data if the resource actually exists
           selector_match = access_rule.selector.match(/\Acf:(app|space|org):([0-9a-f-]+)\z/)
           if selector_match
             resource_type = selector_match[1]
@@ -45,17 +46,20 @@ module VCAP::CloudController
 
             case resource_type
             when 'app'
-              relationships[:app] = { data: { guid: resource_guid } }
+              app_exists = VCAP::CloudController::AppModel.where(guid: resource_guid).any?
+              relationships[:app] = { data: app_exists ? { guid: resource_guid } : nil }
               relationships[:space] = { data: nil }
               relationships[:organization] = { data: nil }
             when 'space'
+              space_exists = VCAP::CloudController::Space.where(guid: resource_guid).any?
               relationships[:app] = { data: nil }
-              relationships[:space] = { data: { guid: resource_guid } }
+              relationships[:space] = { data: space_exists ? { guid: resource_guid } : nil }
               relationships[:organization] = { data: nil }
             when 'org'
+              org_exists = VCAP::CloudController::Organization.where(guid: resource_guid).any?
               relationships[:app] = { data: nil }
               relationships[:space] = { data: nil }
-              relationships[:organization] = { data: { guid: resource_guid } }
+              relationships[:organization] = { data: org_exists ? { guid: resource_guid } : nil }
             end
           else
             # cf:any or malformed - all relationships are null

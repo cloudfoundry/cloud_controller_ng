@@ -285,7 +285,7 @@ module VCAP::CloudController
 
               it 'injects access_scope and access_rules into route options' do
                 http_routes = ri['http_routes']
-                mtls_entry = http_routes.find { |r| r['hostname'] == "myapp.mtls.example.com" }
+                mtls_entry = http_routes.find { |r| r['hostname'] == 'myapp.mtls.example.com' }
 
                 expect(mtls_entry).not_to be_nil
                 expect(mtls_entry['options']['access_scope']).to eq('space')
@@ -301,7 +301,7 @@ module VCAP::CloudController
 
                 it 'injects access_scope but omits access_rules key' do
                   http_routes = ri['http_routes']
-                  mtls_entry = http_routes.find { |r| r['hostname'] == "myapp.mtls.example.com" }
+                  mtls_entry = http_routes.find { |r| r['hostname'] == 'myapp.mtls.example.com' }
 
                   expect(mtls_entry['options']['access_scope']).to eq('space')
                   expect(mtls_entry['options']).not_to have_key('access_rules')
