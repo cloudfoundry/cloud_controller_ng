@@ -399,12 +399,28 @@ RSpec.describe 'Access Rules' do
     end
 
     describe 'filtering by selector_resource_guids' do
-      it 'does not match unintended rows when guid contains LIKE wildcards' do
+      it 'escapes % so it does not act as a LIKE wildcard' do
         get '/v3/access_rules?selector_resource_guids=%25', nil, admin_header
 
         expect(last_response.status).to eq(200)
         parsed = Oj.load(last_response.body)
-        # Should not match all rows via SQL wildcard; % is escaped
+        expect(parsed['resources'].length).to eq(0)
+      end
+
+      it 'escapes _ so it does not act as a LIKE single-char wildcard' do
+        get '/v3/access_rules?selector_resource_guids=cf_app', nil, admin_header
+
+        expect(last_response.status).to eq(200)
+        parsed = Oj.load(last_response.body)
+        # _ would match any single char (e.g. "cf:app"), but escaped it matches literal "_"
+        expect(parsed['resources'].length).to eq(0)
+      end
+
+      it 'escapes backslash so it does not act as a LIKE escape character' do
+        get '/v3/access_rules?selector_resource_guids=cf%5Capp', nil, admin_header
+
+        expect(last_response.status).to eq(200)
+        parsed = Oj.load(last_response.body)
         expect(parsed['resources'].length).to eq(0)
       end
     end
