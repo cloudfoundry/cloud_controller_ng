@@ -238,6 +238,43 @@ module VCAP::CloudController::Presenters::V3
           end
         end
 
+        context 'when the domain has enforce_access_rules enabled' do
+          let(:org) { VCAP::CloudController::Organization.make }
+          let(:domain) do
+            VCAP::CloudController::PrivateDomain.make(
+              name: 'mtls.domain.com',
+              owning_organization: org,
+              enforce_access_rules: true,
+              access_rules_scope: 'space'
+            )
+          end
+
+          it 'includes enforce_access_rules and access_rules_scope in the output' do
+            expect(subject[:enforce_access_rules]).to be(true)
+            expect(subject[:access_rules_scope]).to eq('space')
+          end
+        end
+
+        context 'when the domain does not have enforce_access_rules enabled' do
+          let(:domain) do
+            VCAP::CloudController::SharedDomain.make(
+              name: 'regular.domain.com'
+            )
+          end
+
+          let(:routing_api_client) { instance_double(VCAP::CloudController::RoutingApi::Client) }
+
+          before do
+            allow_any_instance_of(CloudController::DependencyLocator).to receive(:routing_api_client).and_return(routing_api_client)
+            allow(routing_api_client).to receive_messages(enabled?: true, router_group: nil)
+          end
+
+          it 'does not include enforce_access_rules or access_rules_scope in the output' do
+            expect(subject).not_to have_key(:enforce_access_rules)
+            expect(subject).not_to have_key(:access_rules_scope)
+          end
+        end
+
         context 'and the routing API is disabled' do
           before do
             allow(routing_api_client).to receive(:enabled?).and_return false
