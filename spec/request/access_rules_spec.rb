@@ -16,9 +16,16 @@ RSpec.describe 'Access Rules' do
   let(:regular_domain) do
     VCAP::CloudController::PrivateDomain.make(owning_organization: org)
   end
+  let(:internal_domain) do
+    VCAP::CloudController::PrivateDomain.make(
+      owning_organization: org,
+      internal: true
+    )
+  end
 
   let(:mtls_route) { VCAP::CloudController::Route.make(space: space, domain: mtls_domain) }
   let(:regular_route) { VCAP::CloudController::Route.make(space: space, domain: regular_domain) }
+  let(:internal_route) { VCAP::CloudController::Route.make(space: space, domain: internal_domain) }
 
   let(:valid_uuid) { '11111111-2222-3333-4444-555555555555' }
 
@@ -90,6 +97,25 @@ RSpec.describe 'Access Rules' do
 
         expect(last_response.status).to eq(422)
         expect(last_response.body).to include('enforce_access_rules')
+      end
+    end
+
+    context 'when the route is on an internal domain' do
+      let(:request_body) do
+        {
+          selector: "cf:app:#{valid_uuid}",
+          relationships: {
+            route: { data: { guid: internal_route.guid } }
+          }
+        }
+      end
+
+      it 'returns 422 with a message about internal domains' do
+        post '/v3/access_rules', request_body.to_json, admin_header
+
+        expect(last_response.status).to eq(422)
+        expect(last_response.body).to include('internal domains')
+        expect(last_response.body).to include('container-to-container networking')
       end
     end
 
