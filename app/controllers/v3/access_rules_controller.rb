@@ -153,9 +153,9 @@ class AccessRulesController < ApplicationController
     if message.requested?(:selector_resource_guids)
       # Text-match against selector string for resource GUIDs
       # Handles cf:app:<guid>, cf:space:<guid>, cf:org:<guid>
-      # Escape LIKE metacharacters (% and _) in user-provided values
+      # Escape LIKE metacharacters (\, %, _) in user-provided values
       conditions = message.selector_resource_guids.map do |guid|
-        escaped_guid = guid.gsub('%', '\\%').gsub('_', '\\_')
+        escaped_guid = guid.gsub('\\', '\\\\').gsub('%', '\\%').gsub('_', '\\_')
         Sequel.like(:selector, "%#{escaped_guid}%")
       end
       dataset = dataset.where(Sequel.|(*conditions))
