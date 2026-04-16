@@ -5,7 +5,7 @@
 require 'google/protobuf'
 
 
-descriptor_data = "\n\x12volume_mount.proto\x12\x10\x64iego.bbs.models\"7\n\x0cSharedDevice\x12\x11\n\tvolume_id\x18\x01 \x01(\t\x12\x14\n\x0cmount_config\x18\x02 \x01(\t\"\x84\x01\n\x0bVolumeMount\x12\x0e\n\x06\x64river\x18\x01 \x01(\t\x12\x15\n\rcontainer_dir\x18\x03 \x01(\t\x12\x0c\n\x04mode\x18\x06 \x01(\t\x12.\n\x06shared\x18\x07 \x01(\x0b\x32\x1e.diego.bbs.models.SharedDeviceJ\x04\x08\x02\x10\x03J\x04\x08\x04\x10\x05J\x04\x08\x05\x10\x06\"\'\n\x0fVolumePlacement\x12\x14\n\x0c\x64river_names\x18\x01 \x03(\tb\x06proto3"
+descriptor_data = "\n\x12volume_mount.proto\x12\x10\x64iego.bbs.models\"7\n\x0cSharedDevice\x12\x11\n\tvolume_id\x18\x01 \x01(\t\x12\x14\n\x0cmount_config\x18\x02 \x01(\t\"R\n\x0f\x44\x65\x64icatedDevice\x12\x12\n\nmounter_id\x18\x01 \x01(\t\x12\x14\n\x0cmount_config\x18\x02 \x01(\t\x12\x15\n\rdevice_config\x18\x03 \x01(\t\"\xba\x01\n\x0bVolumeMount\x12\x0e\n\x06\x64river\x18\x01 \x01(\t\x12\x15\n\rcontainer_dir\x18\x03 \x01(\t\x12\x0c\n\x04mode\x18\x06 \x01(\t\x12.\n\x06shared\x18\x07 \x01(\x0b\x32\x1e.diego.bbs.models.SharedDevice\x12\x34\n\tdedicated\x18\x08 \x01(\x0b\x32!.diego.bbs.models.DedicatedDeviceJ\x04\x08\x02\x10\x03J\x04\x08\x04\x10\x05J\x04\x08\x05\x10\x06\"\'\n\x0fVolumePlacement\x12\x14\n\x0c\x64river_names\x18\x01 \x03(\tb\x06proto3"
 
 pool = Google::Protobuf::DescriptorPool.generated_pool
 pool.add_serialized_file(descriptor_data)
@@ -14,6 +14,7 @@ module Diego
   module Bbs
     module Models
       SharedDevice = ::Google::Protobuf::DescriptorPool.generated_pool.lookup("diego.bbs.models.SharedDevice").msgclass
+      DedicatedDevice = ::Google::Protobuf::DescriptorPool.generated_pool.lookup("diego.bbs.models.DedicatedDevice").msgclass
       VolumeMount = ::Google::Protobuf::DescriptorPool.generated_pool.lookup("diego.bbs.models.VolumeMount").msgclass
       VolumePlacement = ::Google::Protobuf::DescriptorPool.generated_pool.lookup("diego.bbs.models.VolumePlacement").msgclass
     end
