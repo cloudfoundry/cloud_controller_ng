@@ -1,8 +1,6 @@
 module mockserver
 
-go 1.24.0
-
-toolchain go1.24.1
+go 1.25.0
 
 require (
 	code.cloudfoundry.org/bbs v0.0.0-20240321110538-9b9671a851e9
@@ -21,12 +19,13 @@ require (
 	github.com/gogo/protobuf v1.3.2 // indirect
 	github.com/golang-jwt/jwt v3.2.2+incompatible // indirect
 	github.com/google/pprof v0.0.0-20210720184732-4bb14d4b1be1 // indirect
-	github.com/jackc/pgx/v5 v5.5.5 // indirect
+	github.com/jackc/pgx/v5 v5.9.0 // indirect
 	github.com/mattn/go-colorable v0.1.13 // indirect
 	github.com/mattn/go-isatty v0.0.20 // indirect
 	github.com/onsi/ginkgo/v2 v2.17.1 // indirect
 	github.com/onsi/gomega v1.32.0 // indirect
 	github.com/openzipkin/zipkin-go v0.4.2 // indirect
+	github.com/stretchr/testify v1.11.1 // indirect
 	github.com/tedsuo/ifrit v0.0.0-20230516164442-7862c310ad26 // indirect
 	github.com/valyala/bytebufferpool v1.0.0 // indirect
 	github.com/valyala/fasttemplate v1.2.2 // indirect
