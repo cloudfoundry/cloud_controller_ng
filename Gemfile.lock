@@ -316,7 +316,7 @@ GEM
     multipart-parser (0.1.1)
     multipart-post (2.4.1)
     mustache (1.1.2)
-    mustermann (3.1.0)
+    mustermann (3.1.1)
     mutex_m (0.3.0)
     mysql2 (0.5.7)
       bigdecimal
