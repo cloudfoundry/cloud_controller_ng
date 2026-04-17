@@ -171,7 +171,7 @@ module VCAP::CloudController::Presenters::V3
         before do
           TestConfig.override(
             kubernetes: { host_url: nil },
-            external_domain: 'api2.vcap.me',
+            external_domain: 'api2.127.0.0.1.nip.io',
             external_protocol: 'https'
           )
           allow_any_instance_of(CloudController::DependencyLocator).to receive(:routing_api_client).and_return(routing_api_client)
@@ -213,9 +213,9 @@ module VCAP::CloudController::Presenters::V3
           expect(subject[:supported_protocols]).to eq(['tcp'])
           expect(subject[:metadata][:labels]).to eq({ 'maine.gov/potato' => 'mashed' })
           expect(subject[:metadata][:annotations]).to eq({ 'contacts' => 'Bill tel(1111111) email(bill@fixme), Bob tel(222222) pager(3333333#555) email(bob@fixme)' })
-          expect(subject[:links][:self][:href]).to eq("https://api2.vcap.me/v3/domains/#{domain.guid}")
-          expect(subject[:links][:route_reservations][:href]).to eq("https://api2.vcap.me/v3/domains/#{domain.guid}/route_reservations")
-          expect(subject[:links][:router_group][:href]).to eq('https://api2.vcap.me/routing/v1/router_groups/some-router-guid')
+          expect(subject[:links][:self][:href]).to eq("https://api2.127.0.0.1.nip.io/v3/domains/#{domain.guid}")
+          expect(subject[:links][:route_reservations][:href]).to eq("https://api2.127.0.0.1.nip.io/v3/domains/#{domain.guid}/route_reservations")
+          expect(subject[:links][:router_group][:href]).to eq('https://api2.127.0.0.1.nip.io/routing/v1/router_groups/some-router-guid')
         end
 
         context 'when the kubernetes host url is blank' do

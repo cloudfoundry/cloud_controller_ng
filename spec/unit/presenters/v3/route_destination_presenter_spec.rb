@@ -33,10 +33,10 @@ module VCAP::CloudController::Presenters::V3
           protocol: route_mapping.protocol,
           links: {
             destinations: {
-              href: "http://api2.vcap.me/v3/routes/#{route.guid}/destinations"
+              href: "http://api2.127.0.0.1.nip.io/v3/routes/#{route.guid}/destinations"
             },
             route: {
-              href: "http://api2.vcap.me/v3/routes/#{route.guid}"
+              href: "http://api2.127.0.0.1.nip.io/v3/routes/#{route.guid}"
             }
           },
           created_at: Time.at(1),

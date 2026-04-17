@@ -10,7 +10,7 @@ readiness_port:
   deployment_updater: -1
 
 external_protocol: http
-external_domain: api2.vcap.me
+external_domain: api2.127.0.0.1.nip.io
 temporary_disable_deployments: false
 deployment_updater:
   update_frequency_in_seconds: 30
@@ -19,7 +19,7 @@ deployment_updater:
 internal_service_hostname: api.internal.cf
 
 system_domain_organization: the-system_domain-org-name
-system_domain: vcap.me
+system_domain: 127.0.0.1.nip.io
 app_domains:
   - customer-app-domain1.com
   - name: customer-app-domain2.com

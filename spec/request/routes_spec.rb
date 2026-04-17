@@ -313,10 +313,10 @@ RSpec.describe 'Routes Request' do
             },
             options: {},
             links: {
-              self: { href: "http://api2.vcap.me/v3/routes/#{route1_domain1.guid}" },
-              space: { href: "http://api2.vcap.me/v3/spaces/#{space.guid}" },
+              self: { href: "http://api2.127.0.0.1.nip.io/v3/routes/#{route1_domain1.guid}" },
+              space: { href: "http://api2.127.0.0.1.nip.io/v3/spaces/#{space.guid}" },
               destinations: { href: %r{#{Regexp.escape(link_prefix)}/v3/routes/#{route1_domain1.guid}/destinations} },
-              domain: { href: "http://api2.vcap.me/v3/domains/#{domain1.guid}" }
+              domain: { href: "http://api2.127.0.0.1.nip.io/v3/domains/#{domain1.guid}" }
             }
           }
         end
@@ -425,10 +425,10 @@ RSpec.describe 'Routes Request' do
           },
           options: {},
           links: {
-            self: { href: 'http://api2.vcap.me/v3/routes/route-without-host' },
-            space: { href: "http://api2.vcap.me/v3/spaces/#{space.guid}" },
+            self: { href: 'http://api2.127.0.0.1.nip.io/v3/routes/route-without-host' },
+            space: { href: "http://api2.127.0.0.1.nip.io/v3/spaces/#{space.guid}" },
             destinations: { href: %r{#{Regexp.escape(link_prefix)}/v3/routes/route-without-host/destinations} },
-            domain: { href: "http://api2.vcap.me/v3/domains/#{domain.guid}" }
+            domain: { href: "http://api2.127.0.0.1.nip.io/v3/domains/#{domain.guid}" }
           }
         }
       end
@@ -461,10 +461,10 @@ RSpec.describe 'Routes Request' do
           },
           options: {},
           links: {
-            self: { href: 'http://api2.vcap.me/v3/routes/route-without-host2' },
-            space: { href: "http://api2.vcap.me/v3/spaces/#{space.guid}" },
+            self: { href: 'http://api2.127.0.0.1.nip.io/v3/routes/route-without-host2' },
+            space: { href: "http://api2.127.0.0.1.nip.io/v3/spaces/#{space.guid}" },
             destinations: { href: %r{#{Regexp.escape(link_prefix)}/v3/routes/route-without-host2/destinations} },
-            domain: { href: "http://api2.vcap.me/v3/domains/#{domain.guid}" }
+            domain: { href: "http://api2.127.0.0.1.nip.io/v3/domains/#{domain.guid}" }
           }
         }
       end
@@ -500,10 +500,10 @@ RSpec.describe 'Routes Request' do
           },
           options: {},
           links: {
-            self: { href: 'http://api2.vcap.me/v3/routes/route-without-path' },
-            space: { href: "http://api2.vcap.me/v3/spaces/#{space.guid}" },
+            self: { href: 'http://api2.127.0.0.1.nip.io/v3/routes/route-without-path' },
+            space: { href: "http://api2.127.0.0.1.nip.io/v3/spaces/#{space.guid}" },
             destinations: { href: %r{#{Regexp.escape(link_prefix)}/v3/routes/route-without-path/destinations} },
-            domain: { href: "http://api2.vcap.me/v3/domains/#{domain.guid}" }
+            domain: { href: "http://api2.127.0.0.1.nip.io/v3/domains/#{domain.guid}" }
           }
         }
       end
@@ -1601,7 +1601,7 @@ RSpec.describe 'Routes Request' do
         before do
           TestConfig.override(
             kubernetes: { host_url: nil },
-            external_domain: 'api2.vcap.me',
+            external_domain: 'api2.127.0.0.1.nip.io',
             external_protocol: 'https'
           )
           allow_any_instance_of(CloudController::DependencyLocator).to receive(:routing_api_client).and_return(routing_api_client)

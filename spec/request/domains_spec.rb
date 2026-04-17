@@ -717,7 +717,7 @@ RSpec.describe 'Domains Request' do
         before do
           TestConfig.override(
             kubernetes: { host_url: nil },
-            external_domain: 'api2.vcap.me',
+            external_domain: 'api2.127.0.0.1.nip.io',
             external_protocol: 'https'
           )
           allow_any_instance_of(CloudController::DependencyLocator).to receive(:routing_api_client).and_return(routing_api_client)

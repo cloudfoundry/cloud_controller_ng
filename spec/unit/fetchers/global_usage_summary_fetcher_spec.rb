@@ -39,7 +39,7 @@ module VCAP::CloudController
         expect(summary.routes).to eq(2)
         expect(summary.service_instances).to eq(2)
         expect(summary.reserved_ports).to eq(1)
-        expect(summary.domains).to eq(2) # system domain "vcap.me" plus :private_domain_without_router_group
+        expect(summary.domains).to eq(2) # system domain "127.0.0.1.nip.io" plus :private_domain_without_router_group
         expect(summary.per_app_tasks).to eq(1)
         expect(summary.service_keys).to eq(2)
       end
