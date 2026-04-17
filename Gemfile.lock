@@ -599,7 +599,7 @@ GEM
     webrick (1.9.2)
     xml-simple (1.1.9)
       rexml
-    yard (0.9.41)
+    yard (0.9.42)
     yard-activesupport-concern (0.0.1)
       yard (>= 0.8)
     yard-solargraph (0.1.0)
