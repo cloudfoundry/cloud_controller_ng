@@ -151,6 +151,10 @@ RSpec.describe 'V3 service brokers' do
           stub_request(:get, 'http://example.org/my-service-broker-url/v2/catalog').
             with(basic_auth: %w[admin password]).
             to_return(status: 200, body: catalog, headers: {})
+
+          # Both jobs may be enqueued with the same timestamp, making pickup order non-deterministic.
+          # Give the delete job a higher priority number so the create job always runs first.
+          TestConfig.config[:jobs][:priorities] = { 'service_broker.delete': 10 }
         end
 
         it 'allows deletion during creation' do
