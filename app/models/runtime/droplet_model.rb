@@ -33,10 +33,6 @@ module VCAP::CloudController
                class: 'VCAP::CloudController::BuildpackLifecycleDataModel',
                key: :droplet_guid,
                primary_key: :guid
-    one_to_one :kpack_lifecycle_data,
-               class: 'VCAP::CloudController::KpackLifecycleDataModel',
-               key: :droplet_guid,
-               primary_key: :guid
     one_to_one :cnb_lifecycle_data,
                class: 'VCAP::CloudController::CNBLifecycleDataModel',
                key: :droplet_guid,
@@ -45,7 +41,6 @@ module VCAP::CloudController
     one_to_many :annotations, class: 'VCAP::CloudController::DropletAnnotationModel', key: :resource_guid, primary_key: :guid
 
     add_association_dependencies buildpack_lifecycle_data: :destroy
-    add_association_dependencies kpack_lifecycle_data: :destroy
     add_association_dependencies cnb_lifecycle_data: :destroy
     add_association_dependencies labels: :destroy
     add_association_dependencies annotations: :destroy

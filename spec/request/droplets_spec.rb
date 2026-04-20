@@ -1924,7 +1924,7 @@ RSpec.describe 'Droplets' do
         let(:rebased_image_reference) { 'rebased-image-reference' }
         let!(:og_docker_droplet) do
           VCAP::CloudController::DropletModel.make(
-            :kpack,
+            :docker,
             state: VCAP::CloudController::DropletModel::STAGED_STATE,
             app_guid: app_model.guid,
             package_guid: package_model.guid,

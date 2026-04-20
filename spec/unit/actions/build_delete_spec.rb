@@ -60,16 +60,6 @@ module VCAP::CloudController
         end.to change(BuildpackLifecycleDataModel, :count).by(-2).and change(BuildpackLifecycleBuildpackModel, :count).by(-2)
         [lifecycle_data1, lifecycle_data2, lifecycle_buildpack1, lifecycle_buildpack2].each { |l| expect(l).not_to exist }
       end
-
-      it 'deletes associated kpack lifecycle data' do
-        lifecycle1 = KpackLifecycleDataModel.make(build: build1)
-        lifecycle2 = KpackLifecycleDataModel.make(build: build2)
-
-        expect do
-          build_delete.delete_for_app(app.guid)
-        end.to change(KpackLifecycleDataModel, :count).by(-2)
-        [lifecycle1, lifecycle2].each { |l| expect(l).not_to exist }
-      end
     end
   end
 end

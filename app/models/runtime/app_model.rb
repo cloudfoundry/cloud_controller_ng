@@ -52,11 +52,6 @@ module VCAP::CloudController
                key: :app_guid,
                primary_key: :guid
 
-    one_to_one :kpack_lifecycle_data,
-               class: 'VCAP::CloudController::KpackLifecycleDataModel',
-               key: :app_guid,
-               primary_key: :guid
-
     one_to_one :cnb_lifecycle_data,
                class: 'VCAP::CloudController::CNBLifecycleDataModel',
                key: :app_guid,
@@ -66,7 +61,6 @@ module VCAP::CloudController
     serializes_via_json :environment_variables
 
     add_association_dependencies buildpack_lifecycle_data: :destroy
-    add_association_dependencies kpack_lifecycle_data: :destroy
     add_association_dependencies cnb_lifecycle_data: :destroy
     add_association_dependencies labels: :destroy
     add_association_dependencies annotations: :destroy
