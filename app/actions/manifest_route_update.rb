@@ -24,7 +24,8 @@ module VCAP::CloudController
           current_route = manifest_route_mapping[:route].to_s
           route = {
             model: find_or_create_valid_route(app, manifest_route_mapping[:route].to_hash, user_audit_info),
-            protocol: manifest_route_mapping[:protocol]
+            protocol: manifest_route_mapping[:protocol],
+            route_string: current_route
           }
 
           raise InvalidRoute.new("No domains exist for route #{current_route}") if route[:model].blank?
@@ -35,6 +36,7 @@ module VCAP::CloudController
         # map route to app, but do this only if the full message contains valid routes
         routes_to_map.
           each do |route|
+            current_route = route[:route_string]
             route_mapping = RouteMappingModel.find(app: app, route: route[:model])
             if route_mapping.nil?
               UpdateRouteDestinations.add(
@@ -57,6 +59,9 @@ module VCAP::CloudController
       rescue Sequel::ValidationFailed, RouteCreate::Error, RouteUpdate::Error => e
         route_info = current_route ? "For route '#{current_route}': " : ''
         raise InvalidRoute.new("#{route_info}#{e.message}")
+      rescue UpdateRouteDestinations::Error => e
+        route_info = current_route ? "For route '#{current_route}': " : ''
+        raise UpdateRouteDestinations::Error.new("#{route_info}#{e.message}")
       end
 
       private

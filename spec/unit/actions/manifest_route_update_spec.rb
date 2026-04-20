@@ -312,7 +312,10 @@ module VCAP::CloudController
               it 'throws an error' do
                 expect do
                   ManifestRouteUpdate.update(app.guid, message, user_audit_info)
-                end.to raise_error(VCAP::CloudController::UpdateRouteDestinations::Error, 'Cannot use \'http2\' protocol for tcp routes; valid options are: [tcp].')
+                end.to raise_error(
+                  VCAP::CloudController::UpdateRouteDestinations::Error,
+                  %r{For route 'http://tcp.tomato.avocado-toast.com:1234': Cannot use 'http2' protocol for tcp routes; valid options are: \[tcp\]}
+                )
               end
             end
           end
@@ -492,7 +495,10 @@ module VCAP::CloudController
           it 'raises an error indicating hash_header is required' do
             expect do
               ManifestRouteUpdate.update(app.guid, message, user_audit_info)
-            end.to raise_error(ManifestRouteUpdate::InvalidRoute, /Hash header must be present when loadbalancing is set to hash./)
+            end.to raise_error(
+              ManifestRouteUpdate::InvalidRoute,
+              %r{For route 'http://potato.tomato.avocado-toast.com/some-path': Hash header must be present when loadbalancing is set to hash.}
+            )
           end
         end
 
