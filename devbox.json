@@ -1,0 +1,69 @@
+{
+  "$schema": "https://raw.githubusercontent.com/jetify-com/devbox/0.16.0/.schema/devbox.schema.json",
+  "packages": [
+    "ruby@3.3",
+    "bundler@latest",
+    "libpq@latest",
+    "openssl@latest",
+    "libyaml@latest",
+    "pkg-config@latest",
+    "zstd@latest",
+    "postgresql@latest"
+  ],
+  "shell": {
+    "init_hook": [
+      "# Devbox installs only the default nix output (runtime libs). Native Ruby gem",
+      "# extensions need dev headers and pkg-config files from the -dev outputs.",
+      "# This hook reads -dev output paths from devbox.lock and adds them to the",
+      "# compiler search paths.",
+      "",
+      "LIBRARY_PATH=\"$DEVBOX_PACKAGES_DIR/lib${LIBRARY_PATH:+:$LIBRARY_PATH}\"",
+      "C_INCLUDE_PATH=\"$DEVBOX_PACKAGES_DIR/include${C_INCLUDE_PATH:+:$C_INCLUDE_PATH}\"",
+      "",
+      "_devbox_realize_dev_outputs() {",
+      "  local lockfile=\"$PWD/devbox.lock\"",
+      "  [ -f \"$lockfile\" ] || return",
+      "  local arch=$(uname -m)",
+      "  local os=$(uname -s | tr '[:upper:]' '[:lower:]')",
+      "  local system=\"${arch}-${os}\"",
+      "",
+      "  # Extract -dev and -out paths from devbox.lock using ruby (available in our shell)",
+      "  local dev_paths",
+      "  dev_paths=$(ruby -rjson -e '",
+      "    lock = JSON.parse(File.read(ARGV[0]))",
+      "    sys = ARGV[1]",
+      "    lock.fetch(\"packages\", {}).each do |_, info|",
+      "      outputs = info.dig(\"systems\", sys, \"outputs\") || []",
+      "      outputs.each do |o|",
+      "        # Include dev outputs, and also \"out\" outputs that contain includes",
+      "        puts o[\"path\"] if o[\"name\"] == \"dev\" || o[\"name\"] == \"out\"",
+      "        end",
+      "      end",
+      "    end",
+      "  ' \"$lockfile\" \"$system\" 2>/dev/null)",
+      "",
+      "  local p",
+      "  for p in $dev_paths; do",
+      "    # Realize (download) the store path if not already present",
+      "    [ -d \"$p\" ] || nix-store --realise \"$p\" >/dev/null 2>&1 || continue",
+      "    [ -d \"$p/include\" ] && C_INCLUDE_PATH=\"${p}/include:$C_INCLUDE_PATH\"",
+      "    [ -d \"$p/lib/pkgconfig\" ] && PKG_CONFIG_PATH=\"${p}/lib/pkgconfig:${PKG_CONFIG_PATH:-}\"",
+      "    [ -d \"$p/lib\" ] && LIBRARY_PATH=\"${p}/lib:$LIBRARY_PATH\"",
+      "  done",
+      "}",
+      "",
+      "_devbox_realize_dev_outputs",
+      "export C_INCLUDE_PATH LIBRARY_PATH PKG_CONFIG_PATH",
+      "unset -f _devbox_realize_dev_outputs",
+      "",
+      "# Set database connection prefix for PostgreSQL tests",
+      "export POSTGRES_CONNECTION_PREFIX=\"postgres://postgres:supersecret@localhost:5432\"",
+      "export DB=postgres"
+    ],
+    "scripts": {
+      "test": [
+        "echo \"Error: no test specified\" && exit 1"
+      ]
+    }
+  }
+}
