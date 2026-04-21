@@ -203,7 +203,7 @@ RSpec.describe 'Route Policies' do
         }.to_json, admin_header
 
         expect(last_response.status).to eq(422)
-        expect(last_response.body).to include('Selector')
+        expect(last_response.body).to include('Source')
       end
     end
 
@@ -289,7 +289,7 @@ RSpec.describe 'Route Policies' do
     end
 
     it 'filters by selectors' do
-      get '/v3/route_policies?selectors=cf:any', nil, admin_header
+      get '/v3/route_policies?sources=cf:any', nil, admin_header
 
       expect(last_response.status).to eq(200)
       parsed = Oj.load(last_response.body)
@@ -341,7 +341,7 @@ RSpec.describe 'Route Policies' do
       end
 
       it 'combines space_guids with other filters' do
-        get "/v3/route_policies?space_guids=#{space.guid}&selectors=cf:app:#{valid_uuid}", nil, admin_header
+        get "/v3/route_policies?space_guids=#{space.guid}&sources=cf:app:#{valid_uuid}", nil, admin_header
 
         expect(last_response.status).to eq(200)
         parsed = Oj.load(last_response.body)
