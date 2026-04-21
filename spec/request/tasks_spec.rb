@@ -60,7 +60,7 @@ RSpec.describe 'Tasks' do
           names: %w[foo bar],
           states: %w[test foo],
           organization_guids: 'foo,bar',
-          label_source: 'foo,bar',
+          label_selector: 'foo,bar',
           created_ats: "#{Time.now.utc.iso8601},#{Time.now.utc.iso8601}",
           updated_ats: { gt: Time.now.utc.iso8601 }
         }
@@ -89,7 +89,7 @@ RSpec.describe 'Tasks' do
           page: '2',
           per_page: '10',
           order_by: 'updated_at',
-          label_source: 'foo,bar',
+          label_selector: 'foo,bar',
           created_ats: "#{Time.now.utc.iso8601},#{Time.now.utc.iso8601}",
           updated_ats: { gt: Time.now.utc.iso8601 }
         }
@@ -347,7 +347,7 @@ RSpec.describe 'Tasks' do
           organization_guids: app_model.organization.guid,
           space_guids: app_model.space.guid,
           states: 'SUCCEEDED',
-          label_source: 'boomerang'
+          label_selector: 'boomerang'
         }
 
         get "/v3/tasks?#{query.to_query}", nil, developer_headers

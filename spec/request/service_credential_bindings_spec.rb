@@ -53,7 +53,7 @@ RSpec.describe 'v3 service credential bindings' do
           guids: 'foo,bar',
           created_ats: "#{Time.now.utc.iso8601},#{Time.now.utc.iso8601}",
           updated_ats: { gt: Time.now.utc.iso8601 },
-          label_source: 'env'
+          label_selector: 'env'
         }
       end
     end

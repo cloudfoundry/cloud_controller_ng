@@ -219,7 +219,7 @@ RSpec.describe 'V3 service offerings' do
           per_page: '10',
           page: 2,
           order_by: 'updated_at',
-          label_source: 'foo==bar',
+          label_selector: 'foo==bar',
           fields: { 'service_broker' => 'name' },
           guids: 'foo,bar',
           created_ats: "#{Time.now.utc.iso8601},#{Time.now.utc.iso8601}",
