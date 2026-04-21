@@ -238,24 +238,24 @@ module VCAP::CloudController::Presenters::V3
           end
         end
 
-        context 'when the domain has enforce_access_rules enabled' do
+        context 'when the domain has enforce_route_policies enabled' do
           let(:org) { VCAP::CloudController::Organization.make }
           let(:domain) do
             VCAP::CloudController::PrivateDomain.make(
               name: 'mtls.domain.com',
               owning_organization: org,
-              enforce_access_rules: true,
-              access_rules_scope: 'space'
+              enforce_route_policies: true,
+              route_policies_scope: 'space'
             )
           end
 
-          it 'includes enforce_access_rules and access_rules_scope in the output' do
+          it 'includes enforce_route_policies and route_policies_scope in the output' do
             expect(subject[:enforce_route_policies]).to be(true)
             expect(subject[:route_policies_scope]).to eq('space')
           end
         end
 
-        context 'when the domain does not have enforce_access_rules enabled' do
+        context 'when the domain does not have enforce_route_policies enabled' do
           let(:domain) do
             VCAP::CloudController::SharedDomain.make(
               name: 'regular.domain.com'
@@ -269,7 +269,7 @@ module VCAP::CloudController::Presenters::V3
             allow(routing_api_client).to receive_messages(enabled?: true, router_group: nil)
           end
 
-          it 'does not include enforce_access_rules or access_rules_scope in the output' do
+          it 'does not include enforce_route_policies or route_policies_scope in the output' do
             expect(subject).not_to have_key(:enforce_route_policies)
             expect(subject).not_to have_key(:route_policies_scope)
           end

@@ -1,5 +1,5 @@
 require 'spec_helper'
-require 'messages/access_rule_create_message'
+require 'messages/route_policy_create_message'
 
 module VCAP::CloudController
   RSpec.describe RoutePolicyCreateMessage do
