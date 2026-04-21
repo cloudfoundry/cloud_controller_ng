@@ -251,14 +251,14 @@ module VCAP::CloudController
               end
             end
 
-            context 'when the route domain has enforce_access_rules enabled' do
+            context 'when the route domain has enforce_route_policies enabled' do
               let(:valid_uuid) { '11111111-2222-3333-4444-555555555555' }
               let(:enforce_domain) do
                 PrivateDomain.make(
                   name: 'mtls.example.com',
                   owning_organization: org,
-                  enforce_access_rules: true,
-                  access_rules_scope: 'space'
+                  enforce_route_policies: true,
+                  route_policies_scope: 'space'
                 )
               end
               let(:mtls_route) { Route.make(host: 'myapp', domain: enforce_domain, space: space) }
