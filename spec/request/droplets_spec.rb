@@ -646,7 +646,7 @@ RSpec.describe 'Droplets' do
           space_guids: 'test',
           states: %w[test foo],
           organization_guids: 'foo,bar',
-          label_selector: 'foo,bar',
+          label_source: 'foo,bar',
           created_ats: "#{Time.now.utc.iso8601},#{Time.now.utc.iso8601}",
           updated_ats: { gt: Time.now.utc.iso8601 }
         }
@@ -674,7 +674,7 @@ RSpec.describe 'Droplets' do
           current: true,
           package_guid: package_model.guid,
           states: %w[test foo],
-          label_selector: 'foo,bar',
+          label_source: 'foo,bar',
           created_ats: "#{Time.now.utc.iso8601},#{Time.now.utc.iso8601}",
           updated_ats: { gt: Time.now.utc.iso8601 }
         }

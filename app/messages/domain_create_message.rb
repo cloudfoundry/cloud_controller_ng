@@ -16,8 +16,8 @@ module VCAP::CloudController
       internal
       relationships
       router_group
-      enforce_access_rules
-      access_rules_scope
+      enforce_route_policies
+      route_policies_scope
     ]
 
     def self.relationships_requested?
@@ -61,11 +61,11 @@ module VCAP::CloudController
               allow_nil: true,
               boolean: true
 
-    validates :enforce_access_rules,
+    validates :enforce_route_policies,
               allow_nil: true,
               boolean: true
 
-    validate :access_rules_scope_validation
+    validate :route_policies_scope_validation
 
     delegate :organization_guid, to: :relationships_message
     delegate :shared_organizations_guids, to: :relationships_message
@@ -105,15 +105,15 @@ module VCAP::CloudController
       errors.add(:router_group, 'guid must be a string') unless router_group_guid.is_a?(String)
     end
 
-    def access_rules_scope_validation
-      if requested?(:access_rules_scope) && !(access_rules_scope.nil? || %w[any org space].include?(access_rules_scope))
-        errors.add(:access_rules_scope, "must be one of 'any', 'org', 'space'")
+    def route_policies_scope_validation
+      if requested?(:route_policies_scope) && !(route_policies_scope.nil? || %w[any org space].include?(route_policies_scope))
+        errors.add(:route_policies_scope, "must be one of 'any', 'org', 'space'")
       end
 
-      return unless requested?(:enforce_access_rules) && enforce_access_rules == true
-      return unless !requested?(:access_rules_scope) || access_rules_scope.nil?
+      return unless requested?(:enforce_route_policies) && enforce_route_policies == true
+      return unless !requested?(:route_policies_scope) || route_policies_scope.nil?
 
-      errors.add(:access_rules_scope, 'is required when enforce_access_rules is true')
+      errors.add(:route_policies_scope, 'is required when enforce_route_policies is true')
     end
 
     class Relationships < BaseMessage

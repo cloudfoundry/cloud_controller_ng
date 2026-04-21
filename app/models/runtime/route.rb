@@ -39,8 +39,8 @@ module VCAP::CloudController
 
     add_association_dependencies route_mappings: :destroy
 
-    one_to_many :access_rules, class: 'VCAP::CloudController::RouteAccessRule', key: :route_id, primary_key: :id
-    add_association_dependencies access_rules: :destroy
+    one_to_many :route_policies, class: 'VCAP::CloudController::RoutePolicy', key: :route_id, primary_key: :id
+    add_association_dependencies route_policies: :destroy
 
     export_attributes :host, :path, :domain_guid, :space_guid, :service_instance_guid, :port, :options
     import_attributes :host, :path, :domain_guid, :space_guid, :app_guids, :port, :options

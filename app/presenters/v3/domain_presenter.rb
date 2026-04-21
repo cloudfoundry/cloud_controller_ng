@@ -43,9 +43,9 @@ module VCAP::CloudController::Presenters::V3
         links: build_links
       }
 
-      if domain.enforce_access_rules
-        hash[:enforce_access_rules] = true
-        hash[:access_rules_scope] = domain.access_rules_scope
+      if domain.enforce_route_policies
+        hash[:enforce_route_policies] = true
+        hash[:route_policies_scope] = domain.route_policies_scope
       end
 
       hash

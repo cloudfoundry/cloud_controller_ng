@@ -185,7 +185,7 @@ RSpec.describe 'Revisions' do
               order_by: 'updated_at',
               guids: app_model.guid.to_s,
               versions: '1,2',
-              label_selector: 'foo,bar',
+              label_source: 'foo,bar',
               created_ats: "#{Time.now.utc.iso8601},#{Time.now.utc.iso8601}",
               updated_ats: { gt: Time.now.utc.iso8601 }
             }

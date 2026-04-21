@@ -404,13 +404,13 @@ module VCAP::CloudController
         end
       end
 
-      context 'enforce_access_rules' do
+      context 'enforce_route_policies' do
         context 'when not a boolean' do
           let(:params) { { name: 'name.com', enforce_access_rules: 'yes' } }
 
           it 'is not valid' do
             expect(subject).not_to be_valid
-            expect(subject.errors[:enforce_access_rules]).to include('must be a boolean')
+            expect(subject.errors[:enforce_route_policies]).to include('must be a boolean')
           end
         end
 
@@ -419,7 +419,7 @@ module VCAP::CloudController
 
           it 'is not valid' do
             expect(subject).not_to be_valid
-            expect(subject.errors[:access_rules_scope]).to include('is required when enforce_access_rules is true')
+            expect(subject.errors[:route_policies_scope]).to include('is required when enforce_access_rules is true')
           end
         end
 
@@ -448,13 +448,13 @@ module VCAP::CloudController
         end
       end
 
-      context 'access_rules_scope' do
+      context 'route_policies_scope' do
         context 'when set to an invalid value' do
           let(:params) { { name: 'name.com', enforce_access_rules: true, access_rules_scope: 'invalid' } }
 
           it 'is not valid' do
             expect(subject).not_to be_valid
-            expect(subject.errors[:access_rules_scope]).to include("must be one of 'any', 'org', 'space'")
+            expect(subject.errors[:route_policies_scope]).to include("must be one of 'any', 'org', 'space'")
           end
         end
 

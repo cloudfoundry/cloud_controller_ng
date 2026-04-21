@@ -52,7 +52,7 @@ module VCAP::CloudController
           names: %w[name1 name2],
           guids: %w[guid1 guid2],
           organization_guids: %w[o-guid1 o-guid2],
-          label_selector: 'foo=bar',
+          label_source: 'foo=bar',
           page: 1,
           per_page: 5,
           order_by: 'created_at',
@@ -81,7 +81,7 @@ module VCAP::CloudController
                                                      names: [],
                                                      guids: [],
                                                      organization_guids: [],
-                                                     label_selector: '',
+                                                     label_source: '',
                                                      page: 1,
                                                      per_page: 5,
                                                      order_by: 'created_at'

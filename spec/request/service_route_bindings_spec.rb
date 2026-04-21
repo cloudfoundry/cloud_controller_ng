@@ -71,7 +71,7 @@ RSpec.describe 'v3 service route bindings' do
           per_page: '10',
           page: 2,
           order_by: 'updated_at',
-          label_selector: 'foo==bar',
+          label_source: 'foo==bar',
           guids: 'foo,bar',
           created_ats: "#{Time.now.utc.iso8601},#{Time.now.utc.iso8601}",
           updated_ats: { gt: Time.now.utc.iso8601 }

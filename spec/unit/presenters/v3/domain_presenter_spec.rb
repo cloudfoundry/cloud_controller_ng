@@ -250,8 +250,8 @@ module VCAP::CloudController::Presenters::V3
           end
 
           it 'includes enforce_access_rules and access_rules_scope in the output' do
-            expect(subject[:enforce_access_rules]).to be(true)
-            expect(subject[:access_rules_scope]).to eq('space')
+            expect(subject[:enforce_route_policies]).to be(true)
+            expect(subject[:route_policies_scope]).to eq('space')
           end
         end
 
@@ -270,8 +270,8 @@ module VCAP::CloudController::Presenters::V3
           end
 
           it 'does not include enforce_access_rules or access_rules_scope in the output' do
-            expect(subject).not_to have_key(:enforce_access_rules)
-            expect(subject).not_to have_key(:access_rules_scope)
+            expect(subject).not_to have_key(:enforce_route_policies)
+            expect(subject).not_to have_key(:route_policies_scope)
           end
         end
 

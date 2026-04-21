@@ -1,19 +1,19 @@
 module VCAP::CloudController
-  class RouteAccessRule < Sequel::Model(:route_access_rules)
+  class RoutePolicy < Sequel::Model(:route_policies)
     many_to_one :route,
                 class: 'VCAP::CloudController::Route',
                 key: :route_id,
                 primary_key: :id,
                 without_guid_generation: true
 
-    one_to_many :labels, class: 'VCAP::CloudController::RouteAccessRuleLabelModel', key: :resource_guid, primary_key: :guid
-    one_to_many :annotations, class: 'VCAP::CloudController::RouteAccessRuleAnnotationModel', key: :resource_guid, primary_key: :guid
+    one_to_many :labels, class: 'VCAP::CloudController::RoutePolicyLabelModel', key: :resource_guid, primary_key: :guid
+    one_to_many :annotations, class: 'VCAP::CloudController::RoutePolicyAnnotationModel', key: :resource_guid, primary_key: :guid
 
     add_association_dependencies labels: :destroy
     add_association_dependencies annotations: :destroy
 
     def validate
-      validates_presence :selector
+      validates_presence :source
       validates_presence :route_id
     end
 

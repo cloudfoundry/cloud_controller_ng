@@ -170,7 +170,7 @@ RSpec.describe 'V3 service instances' do
           per_page: '10',
           page: 2,
           order_by: 'updated_at',
-          label_selector: 'foo,bar',
+          label_source: 'foo,bar',
           type: 'managed',
           service_plan_guids: %w[guid-1 guid-2],
           service_plan_names: %w[plan-1 plan-2],

@@ -1,11 +1,9 @@
 module VCAP::CloudController
-  class RouteAccessRuleAnnotationModel < Sequel::Model(:route_access_rule_annotations)
-    set_primary_key :id
-    many_to_one :route_access_rule,
+  class RoutePolicyLabelModel < Sequel::Model(:route_policy_labels)
+    many_to_one :route_policy,
                 primary_key: :guid,
                 key: :resource_guid,
                 without_guid_generation: true
-
     include MetadataModelMixin
   end
 end

@@ -64,7 +64,7 @@ module VCAP::CloudController
           organization_guids: %w[orgguid1 orgguid2],
           space_guids: %w[spaceguid1 spaceguid2],
           sequence_ids: ['1, 2'],
-          label_selector: 'unicycling=fred',
+          label_source: 'unicycling=fred',
           page: 1,
           per_page: 5
         }
