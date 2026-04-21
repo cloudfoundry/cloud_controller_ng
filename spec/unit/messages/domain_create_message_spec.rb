@@ -406,7 +406,7 @@ module VCAP::CloudController
 
       context 'enforce_route_policies' do
         context 'when not a boolean' do
-          let(:params) { { name: 'name.com', enforce_access_rules: 'yes' } }
+          let(:params) { { name: 'name.com', enforce_route_policies: 'yes' } }
 
           it 'is not valid' do
             expect(subject).not_to be_valid
@@ -414,25 +414,25 @@ module VCAP::CloudController
           end
         end
 
-        context 'when true without access_rules_scope' do
-          let(:params) { { name: 'name.com', enforce_access_rules: true } }
+        context 'when true without route_policies_scope' do
+          let(:params) { { name: 'name.com', enforce_route_policies: true } }
 
           it 'is not valid' do
             expect(subject).not_to be_valid
-            expect(subject.errors[:route_policies_scope]).to include('is required when enforce_access_rules is true')
+            expect(subject.errors[:route_policies_scope]).to include('is required when enforce_route_policies is true')
           end
         end
 
-        context 'when true with a valid access_rules_scope' do
-          let(:params) { { name: 'name.com', enforce_access_rules: true, access_rules_scope: 'space' } }
+        context 'when true with a valid route_policies_scope' do
+          let(:params) { { name: 'name.com', enforce_route_policies: true, route_policies_scope: 'space' } }
 
           it 'is valid' do
             expect(subject).to be_valid
           end
         end
 
-        context 'when false without access_rules_scope' do
-          let(:params) { { name: 'name.com', enforce_access_rules: false } }
+        context 'when false without route_policies_scope' do
+          let(:params) { { name: 'name.com', enforce_route_policies: false } }
 
           it 'is valid' do
             expect(subject).to be_valid
@@ -450,7 +450,7 @@ module VCAP::CloudController
 
       context 'route_policies_scope' do
         context 'when set to an invalid value' do
-          let(:params) { { name: 'name.com', enforce_access_rules: true, access_rules_scope: 'invalid' } }
+          let(:params) { { name: 'name.com', enforce_route_policies: true, route_policies_scope: 'invalid' } }
 
           it 'is not valid' do
             expect(subject).not_to be_valid
@@ -459,7 +459,7 @@ module VCAP::CloudController
         end
 
         context "when set to 'any'" do
-          let(:params) { { name: 'name.com', enforce_access_rules: true, access_rules_scope: 'any' } }
+          let(:params) { { name: 'name.com', enforce_route_policies: true, route_policies_scope: 'any' } }
 
           it 'is valid' do
             expect(subject).to be_valid
@@ -467,7 +467,7 @@ module VCAP::CloudController
         end
 
         context "when set to 'org'" do
-          let(:params) { { name: 'name.com', enforce_access_rules: true, access_rules_scope: 'org' } }
+          let(:params) { { name: 'name.com', enforce_route_policies: true, route_policies_scope: 'org' } }
 
           it 'is valid' do
             expect(subject).to be_valid
@@ -475,15 +475,15 @@ module VCAP::CloudController
         end
 
         context "when set to 'space'" do
-          let(:params) { { name: 'name.com', enforce_access_rules: true, access_rules_scope: 'space' } }
+          let(:params) { { name: 'name.com', enforce_route_policies: true, route_policies_scope: 'space' } }
 
           it 'is valid' do
             expect(subject).to be_valid
           end
         end
 
-        context 'when provided without enforce_access_rules' do
-          let(:params) { { name: 'name.com', access_rules_scope: 'space' } }
+        context 'when provided without enforce_route_policies' do
+          let(:params) { { name: 'name.com', route_policies_scope: 'space' } }
 
           it 'is valid (scope alone is permissible)' do
             expect(subject).to be_valid
