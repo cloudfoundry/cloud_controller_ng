@@ -92,7 +92,8 @@ RSpec.describe LoggregatorEmitter::Client do
     it 'uses insecure credentials when no cert files are provided' do
       client = described_class.new(endpoint: 'localhost:1234', origin: 'cloud_controller', source_type: 'API', instance_id: 0)
       client.emit('app-guid-123', 'message')
-      expect(Loggregator::V2::Ingress::Stub).to have_received(:new).with('localhost:1234', :this_channel_is_insecure)
+      expect(Loggregator::V2::Ingress::Stub).to have_received(:new).with('localhost:1234', :this_channel_is_insecure,
+                                                                         channel_args: {}, timeout: 10)
     end
 
     it 'uses TLS credentials when all cert files are provided' do
@@ -109,12 +110,14 @@ RSpec.describe LoggregatorEmitter::Client do
         instance_id: 0,
         ca_cert_file: '/certs/ca.crt',
         client_cert_file: '/certs/client.crt',
-        client_key_file: '/certs/client.key'
+        client_key_file: '/certs/client.key',
+        tls_subject_name: 'metron'
       )
       client.emit('app-guid-123', 'message')
 
       expect(GRPC::Core::ChannelCredentials).to have_received(:new).with('ca-cert-content', 'client-key-content', 'client-cert-content')
-      expect(Loggregator::V2::Ingress::Stub).to have_received(:new).with('localhost:1234', tls_creds)
+      expect(Loggregator::V2::Ingress::Stub).to have_received(:new).with('localhost:1234', tls_creds, channel_args: { 'grpc.ssl_target_name_override': 'metron' },
+                                                                                                      timeout: 10)
     end
   end
 end
