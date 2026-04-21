@@ -110,7 +110,7 @@ class CloudController::DelayedWorker
       ca_cert_file: config.get(:loggregator, :ca_file),
       client_cert_file: config.get(:loggregator, :cert_file),
       client_key_file: config.get(:loggregator, :key_file),
-      tls_subject_name: config.get(:loggregator, :subject_name)
+      subject_name: config.get(:loggregator, :subject_name)
     )
   end
 

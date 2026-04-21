@@ -111,7 +111,7 @@ RSpec.describe LoggregatorEmitter::Client do
         ca_cert_file: '/certs/ca.crt',
         client_cert_file: '/certs/client.crt',
         client_key_file: '/certs/client.key',
-        tls_subject_name: 'metron'
+        subject_name: 'metron'
       )
       client.emit('app-guid-123', 'message')
 

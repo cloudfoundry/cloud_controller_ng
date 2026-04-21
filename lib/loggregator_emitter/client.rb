@@ -3,7 +3,7 @@ require 'loggregator-api/v2/envelope_pb'
 
 module LoggregatorEmitter
   class Client
-    def initialize(endpoint:, origin:, source_type:, instance_id: nil, ca_cert_file: nil, client_cert_file: nil, client_key_file: nil, tls_subject_name: nil)
+    def initialize(endpoint:, origin:, source_type:, instance_id: nil, ca_cert_file: nil, client_cert_file: nil, client_key_file: nil, subject_name: nil)
       raise ArgumentError.new('Must provide a valid endpoint') if endpoint.nil? || endpoint.empty?
       raise ArgumentError.new('Must provide a valid origin') unless origin
       raise ArgumentError.new('Must provide a valid source_type') unless source_type
@@ -12,7 +12,7 @@ module LoggregatorEmitter
       @ca_cert_file = ca_cert_file
       @client_cert_file = client_cert_file
       @client_key_file = client_key_file
-      @tls_subject_name = tls_subject_name
+      @subject_name = subject_name
       @default_tags = { 'origin' => origin, 'source_type' => source_type }
       @instance_id = instance_id && instance_id.to_s
     end
@@ -33,7 +33,7 @@ module LoggregatorEmitter
       @stub ||= Loggregator::V2::Ingress::Stub.new(
         @endpoint,
         build_credentials,
-        channel_args: @tls_subject_name ? { GRPC::Core::Channel::SSL_TARGET => @tls_subject_name } : {},
+        channel_args: @subject_name ? { GRPC::Core::Channel::SSL_TARGET => @subject_name } : {},
         timeout: 10
       )
     end
