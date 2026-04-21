@@ -47,7 +47,7 @@ module VCAP::CloudController
           names: %w[name1 name2],
           stacks: %w[stack1 stack2],
           lifecycle: 'buildpack',
-          label_source: 'foo=bar',
+          label_selector: 'foo=bar',
           page: 1,
           per_page: 5
         }
@@ -65,7 +65,7 @@ module VCAP::CloudController
           BuildpacksListMessage.from_params({
                                               names: [],
                                               stacks: [],
-                                              label_source: '',
+                                              label_selector: '',
                                               lifecycle: 'buildpack'
                                             })
         end.not_to raise_error

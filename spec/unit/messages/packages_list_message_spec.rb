@@ -57,7 +57,7 @@ module VCAP::CloudController
           app_guids: %w[appguid1 appguid2],
           organization_guids: %w[organizationguid1 organizationguid2],
           app_guid: 'appguid',
-          label_source: 'key=value',
+          label_selector: 'key=value',
           page: 1,
           per_page: 5
         }

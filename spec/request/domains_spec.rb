@@ -31,7 +31,7 @@ RSpec.describe 'Domains Request' do
           names: 'foo,bar',
           guids: 'foo,bar',
           organization_guids: 'foo,bar',
-          label_source: 'foo,bar',
+          label_selector: 'foo,bar',
           created_ats: "#{Time.now.utc.iso8601},#{Time.now.utc.iso8601}",
           updated_ats: { gt: Time.now.utc.iso8601 }
         }

@@ -410,7 +410,7 @@ RSpec.describe 'Builds' do
           guids: '123',
           app_guids: '123',
           package_guids: '123',
-          label_source: 'foo,bar',
+          label_selector: 'foo,bar',
           created_ats: "#{Time.now.utc.iso8601},#{Time.now.utc.iso8601}",
           updated_ats: { gt: Time.now.utc.iso8601 }
         }

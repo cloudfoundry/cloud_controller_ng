@@ -40,7 +40,7 @@ module VCAP::CloudController
       let(:opts) do
         {
           versions: %w[1 3],
-          label_source: 'key=value',
+          label_selector: 'key=value',
           page: 1,
           per_page: 5,
           deployable: true
@@ -61,7 +61,7 @@ module VCAP::CloudController
                                                 per_page: 5,
                                                 versions: ['1'],
                                                 deployable: true,
-                                                label_source: 'key=value'
+                                                label_selector: 'key=value'
                                               })
         end.not_to raise_error
       end

@@ -167,7 +167,7 @@ module VCAP::CloudController
           let(:filters) do
             {
               space_guids: [space_2.guid],
-              label_source: 'dog in (poodle,scooby-doo)',
+              label_selector: 'dog in (poodle,scooby-doo)',
               names: [space_scoped_broker_1.name]
             }
           end
@@ -196,7 +196,7 @@ module VCAP::CloudController
           let(:filters) do
             {
               space_guids: [space_1.guid, space_2.guid],
-              label_source: 'dog in (poodle,scooby-doo)',
+              label_selector: 'dog in (poodle,scooby-doo)',
               names: [space_scoped_broker_1.name]
             }
           end

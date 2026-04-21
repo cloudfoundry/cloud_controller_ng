@@ -490,7 +490,7 @@ module VCAP::CloudController
           let!(:service_offering_1) { VCAP::CloudController::ServicePlan.make(public: true, active: true).service }
           let!(:service_offering_2) { VCAP::CloudController::ServicePlan.make(public: true, active: true).service }
           let!(:service_offering_3) { VCAP::CloudController::ServicePlan.make(public: true, active: true).service }
-          let(:message) { ServiceOfferingsListMessage.from_params({ label_source: 'flavor=orange' }.with_indifferent_access) }
+          let(:message) { ServiceOfferingsListMessage.from_params({ label_selector: 'flavor=orange' }.with_indifferent_access) }
 
           before do
             VCAP::CloudController::ServiceOfferingLabelModel.make(resource_guid: service_offering_1.guid, key_name: 'flavor', value: 'orange')
