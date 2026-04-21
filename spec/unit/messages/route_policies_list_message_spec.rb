@@ -9,12 +9,12 @@ module VCAP::CloudController
           'guids' => 'guid1,guid2',
           'route_guids' => 'route1,route2',
           'space_guids' => 'space1,space2',
-          'sources' => 'selector1,selector2',
+          'sources' => 'source1,source2',
           'source_guids' => 'resource1,resource2',
           'page' => 1,
           'per_page' => 5,
           'order_by' => 'created_at',
-          'include' => 'selector_resource,route,app,space,organization'
+          'include' => 'source,route,app,space,organization'
         }
       end
 
@@ -25,12 +25,12 @@ module VCAP::CloudController
         expect(message.guids).to eq(%w[guid1 guid2])
         expect(message.route_guids).to eq(%w[route1 route2])
         expect(message.space_guids).to eq(%w[space1 space2])
-        expect(message.selectors).to eq(%w[selector1 selector2])
-        expect(message.selector_resource_guids).to eq(%w[resource1 resource2])
+        expect(message.sources).to eq(%w[source1 source2])
+        expect(message.source_guids).to eq(%w[resource1 resource2])
         expect(message.page).to eq(1)
         expect(message.per_page).to eq(5)
         expect(message.order_by).to eq('created_at')
-        expect(message.include).to eq(%w[selector_resource route app space organization])
+        expect(message.include).to eq(%w[source route app space organization])
       end
 
       it 'converts requested keys to symbols' do
@@ -54,17 +54,17 @@ module VCAP::CloudController
           guids: %w[guid1 guid2],
           route_guids: %w[route1 route2],
           space_guids: %w[space1 space2],
-          selectors: %w[selector1 selector2],
-          selector_resource_guids: %w[resource1 resource2],
+          sources: %w[source1 source2],
+          source_guids: %w[resource1 resource2],
           page: 1,
           per_page: 5,
           order_by: 'created_at',
-          include: %w[selector_resource route app space organization]
+          include: %w[source route app space organization]
         }
       end
 
       it 'excludes the pagination keys' do
-        expected_params = %i[guids route_guids space_guids selectors selector_resource_guids include]
+        expected_params = %i[guids route_guids space_guids sources source_guids include]
         expect(RoutePoliciesListMessage.from_params(opts).to_param_hash.keys).to match_array(expected_params)
       end
     end
@@ -73,16 +73,16 @@ module VCAP::CloudController
       it 'accepts a set of fields' do
         expect do
           RoutePoliciesListMessage.from_params({
-                                               guids: [],
-                                               route_guids: [],
-                                               space_guids: [],
-                                               selectors: [],
-                                               selector_resource_guids: [],
-                                               page: 1,
-                                               per_page: 5,
-                                               order_by: 'created_at',
-                                               include: %w[selector_resource route app space organization]
-                                             })
+                                                 guids: [],
+                                                 route_guids: [],
+                                                 space_guids: [],
+                                                 sources: [],
+                                                 source_guids: [],
+                                                 page: 1,
+                                                 per_page: 5,
+                                                 order_by: 'created_at',
+                                                 include: %w[source route app space organization]
+                                               })
         end.not_to raise_error
       end
 
@@ -115,7 +115,7 @@ module VCAP::CloudController
           message = RoutePoliciesListMessage.from_params({ 'include' => 'organization' })
           expect(message).to be_valid
 
-          message = RoutePoliciesListMessage.from_params({ 'include' => 'selector_resource,route,app,space,organization' })
+          message = RoutePoliciesListMessage.from_params({ 'include' => 'source,route,app,space,organization' })
           expect(message).to be_valid
         end
 
@@ -144,22 +144,22 @@ module VCAP::CloudController
           expect(message.space_guids).to eq(%w[space1 space2])
         end
 
-        it 'validates selector_resource_guids is an array' do
-          message = RoutePoliciesListMessage.from_params selector_resource_guids: 'not array'
+        it 'validates source_guids is an array' do
+          message = RoutePoliciesListMessage.from_params source_guids: 'not array'
           expect(message).not_to be_valid
           expect(message.errors[:source_guids].length).to eq 1
         end
 
-        it 'allows selector_resource_guids to be nil' do
+        it 'allows source_guids to be nil' do
           message = RoutePoliciesListMessage.from_params({})
           expect(message).to be_valid
-          expect(message.selector_resource_guids).to be_nil
+          expect(message.source_guids).to be_nil
         end
 
-        it 'allows selector_resource_guids to be an array' do
-          message = RoutePoliciesListMessage.from_params selector_resource_guids: %w[guid1 guid2]
+        it 'allows source_guids to be an array' do
+          message = RoutePoliciesListMessage.from_params source_guids: %w[guid1 guid2]
           expect(message).to be_valid
-          expect(message.selector_resource_guids).to eq(%w[guid1 guid2])
+          expect(message.source_guids).to eq(%w[guid1 guid2])
         end
       end
     end

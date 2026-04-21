@@ -9,8 +9,8 @@ RSpec.describe 'Route Policies' do
   let(:mtls_domain) do
     VCAP::CloudController::PrivateDomain.make(
       owning_organization: org,
-      enforce_access_rules: true,
-      access_rules_scope: 'space'
+      enforce_route_policies: true,
+      route_policies_scope: 'space'
     )
   end
   let(:regular_domain) do
@@ -82,7 +82,7 @@ RSpec.describe 'Route Policies' do
       end
     end
 
-    context 'when the domain does not have enforce_access_rules enabled' do
+    context 'when the domain does not have enforce_route_policies enabled' do
       let(:request_body) do
         {
           source: "cf:app:#{valid_uuid}",
@@ -212,7 +212,7 @@ RSpec.describe 'Route Policies' do
         # Simulate a race condition where the DB unique constraint catches the duplicate
         # after validation passes but before the insert commits
         allow_any_instance_of(VCAP::CloudController::RoutePolicy).to receive(:save).and_raise(
-          Sequel::UniqueConstraintViolation.new('UNIQUE constraint failed: route_access_rules.route_id, route_access_rules.source')
+          Sequel::UniqueConstraintViolation.new('UNIQUE constraint failed: route_policies.route_id, route_policies.source')
         )
 
         post '/v3/route_policies', {
@@ -236,11 +236,11 @@ RSpec.describe 'Route Policies' do
     end
 
     it 'returns the access rule' do
-      get "/v3/route_policies/#{access_rule.guid}", nil, admin_header
+      get "/v3/route_policies/#{route_policy.guid}", nil, admin_header
 
       expect(last_response.status).to eq(200)
       parsed = Oj.load(last_response.body)
-      expect(parsed['guid']).to eq(access_rule.guid)
+      expect(parsed['guid']).to eq(route_policy.guid)
       expect(parsed['source']).to eq("cf:app:#{valid_uuid}")
     end
 
@@ -303,8 +303,8 @@ RSpec.describe 'Route Policies' do
       let(:other_mtls_domain) do
         VCAP::CloudController::PrivateDomain.make(
           owning_organization: other_org,
-          enforce_access_rules: true,
-          access_rules_scope: 'space'
+          enforce_route_policies: true,
+          route_policies_scope: 'space'
         )
       end
       let(:other_route) { VCAP::CloudController::Route.make(space: other_space, domain: other_mtls_domain) }
@@ -369,8 +369,8 @@ RSpec.describe 'Route Policies' do
       let(:other_mtls_domain) do
         VCAP::CloudController::PrivateDomain.make(
           owning_organization: other_org,
-          enforce_access_rules: true,
-          access_rules_scope: 'space'
+          enforce_route_policies: true,
+          route_policies_scope: 'space'
         )
       end
       let(:other_route) { VCAP::CloudController::Route.make(space: other_space, domain: other_mtls_domain) }
@@ -398,9 +398,9 @@ RSpec.describe 'Route Policies' do
       end
     end
 
-    describe 'filtering by selector_resource_guids' do
+    describe 'filtering by source_guids' do
       it 'escapes % so it does not act as a LIKE wildcard' do
-        get '/v3/route_policies?selector_resource_guids=%25', nil, admin_header
+        get '/v3/route_policies?source_guids=%25', nil, admin_header
 
         expect(last_response.status).to eq(200)
         parsed = Oj.load(last_response.body)
@@ -408,7 +408,7 @@ RSpec.describe 'Route Policies' do
       end
 
       it 'escapes _ so it does not act as a LIKE single-char wildcard' do
-        get '/v3/route_policies?selector_resource_guids=cf_app', nil, admin_header
+        get '/v3/route_policies?source_guids=cf_app', nil, admin_header
 
         expect(last_response.status).to eq(200)
         parsed = Oj.load(last_response.body)
@@ -417,7 +417,7 @@ RSpec.describe 'Route Policies' do
       end
 
       it 'escapes backslash so it does not act as a LIKE escape character' do
-        get '/v3/route_policies?selector_resource_guids=cf%5Capp', nil, admin_header
+        get '/v3/route_policies?source_guids=cf%5Capp', nil, admin_header
 
         expect(last_response.status).to eq(200)
         parsed = Oj.load(last_response.body)
@@ -425,7 +425,7 @@ RSpec.describe 'Route Policies' do
       end
     end
 
-    context 'with include=selector_resource' do
+    context 'with include=source' do
       let!(:frontend_app) { VCAP::CloudController::AppModel.make(space: space, name: 'frontend-app') }
       let!(:other_space) { VCAP::CloudController::Space.make(organization: org, name: 'other-space') }
       let!(:other_org) { VCAP::CloudController::Organization.make(name: 'other-org') }
@@ -455,7 +455,7 @@ RSpec.describe 'Route Policies' do
       end
 
       it 'includes resolved selector resources' do
-        get '/v3/route_policies?include=selector_resource', nil, admin_header
+        get '/v3/route_policies?include=source', nil, admin_header
 
         expect(last_response.status).to eq(200)
         parsed = Oj.load(last_response.body)
@@ -491,7 +491,7 @@ RSpec.describe 'Route Policies' do
           route_id: mtls_route.id
         )
 
-        get '/v3/route_policies?include=selector_resource', nil, admin_header
+        get '/v3/route_policies?include=source', nil, admin_header
 
         expect(last_response.status).to eq(200)
         parsed = Oj.load(last_response.body)
@@ -509,7 +509,7 @@ RSpec.describe 'Route Policies' do
           route_id: VCAP::CloudController::Route.make(space: space, domain: mtls_domain).id
         )
 
-        get '/v3/route_policies?include=selector_resource', nil, admin_header
+        get '/v3/route_policies?include=source', nil, admin_header
 
         expect(last_response.status).to eq(200)
         parsed = Oj.load(last_response.body)
@@ -526,7 +526,7 @@ RSpec.describe 'Route Policies' do
           route_id: VCAP::CloudController::Route.make(space: space, domain: mtls_domain).id
         )
 
-        get '/v3/route_policies?include=selector_resource', nil, admin_header
+        get '/v3/route_policies?include=source', nil, admin_header
 
         expect(last_response.status).to eq(200)
         # Should succeed without error even with cf:any selector
@@ -592,7 +592,7 @@ RSpec.describe 'Route Policies' do
         expect(route_count).to eq(1)
       end
 
-      it 'combines include=route with include=selector_resource' do
+      it 'combines include=route with include=source' do
         test_app = VCAP::CloudController::AppModel.make(space: space, name: 'test-app')
         VCAP::CloudController::RoutePolicy.create(
           guid: SecureRandom.uuid,
@@ -600,7 +600,7 @@ RSpec.describe 'Route Policies' do
           route_id: mtls_route.id
         )
 
-        get '/v3/route_policies?include=route,selector_resource', nil, admin_header
+        get '/v3/route_policies?include=route,source', nil, admin_header
 
         expect(last_response.status).to eq(200)
         parsed = Oj.load(last_response.body)
@@ -630,10 +630,10 @@ RSpec.describe 'Route Policies' do
     end
 
     it 'deletes the access rule and returns 204' do
-      delete "/v3/route_policies/#{access_rule.guid}", nil, admin_header
+      delete "/v3/route_policies/#{route_policy.guid}", nil, admin_header
 
       expect(last_response.status).to eq(204)
-      expect(VCAP::CloudController::RoutePolicy.find(guid: access_rule.guid)).to be_nil
+      expect(VCAP::CloudController::RoutePolicy.find(guid: route_policy.guid)).to be_nil
     end
 
     context 'when the access rule does not exist' do
@@ -655,7 +655,7 @@ RSpec.describe 'Route Policies' do
     end
 
     it 'returns 200' do
-      patch "/v3/route_policies/#{access_rule.guid}", {
+      patch "/v3/route_policies/#{route_policy.guid}", {
         metadata: { labels: { env: 'production' } }
       }.to_json, admin_header
 
