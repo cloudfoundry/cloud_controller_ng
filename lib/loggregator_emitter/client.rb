@@ -14,7 +14,7 @@ module LoggregatorEmitter
       @client_key_file = client_key_file
       @subject_name = subject_name
       @default_tags = { 'origin' => origin, 'source_type' => source_type }
-      @instance_id = instance_id && instance_id.to_s
+      @instance_id = instance_id&.to_s
     end
 
     def emit(app_id, message, tags={})
