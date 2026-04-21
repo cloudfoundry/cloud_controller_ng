@@ -46,7 +46,7 @@ module VCAP::CloudController
             'process_id' => ::Diego::Bbs::Models::MetricTagValue.new(static: process.guid)
           }
         end
-        let(:formatted_current_time) { Time.now.to_datetime.rfc3339 }
+        let(:formatted_current_time) { Time.now.utc.to_datetime.rfc3339 }
 
         let(:lrp_1_net_info) do
           ::Diego::Bbs::Models::ActualLRPNetInfo.new(
