@@ -67,7 +67,7 @@ module VCAP::CloudController
           app_guid: 'appguid',
           embed: 'process_instances',
           page: 1,
-          label_selector: 'key=value',
+          label_source: 'key=value',
           per_page: 5,
           order_by: 'created_at',
           created_ats: [Time.now.utc.iso8601, Time.now.utc.iso8601],

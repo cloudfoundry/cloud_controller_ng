@@ -1,21 +1,21 @@
 require 'messages/metadata_base_message'
 
 module VCAP::CloudController
-  class AccessRuleCreateMessage < MetadataBaseMessage
-    SELECTOR_REGEX = /\A(cf:(app|space|org):[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}|cf:any)\z/
+  class RoutePolicyCreateMessage < MetadataBaseMessage
+    SOURCE_REGEX = /\A(cf:(app|space|org):[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}|cf:any)\z/
 
     register_allowed_keys %i[
-      selector
+      source
       relationships
     ]
 
     validates_with NoAdditionalKeysValidator
     validates_with RelationshipValidator
 
-    validates :selector, presence: true, string: true
+    validates :source, presence: true, string: true
 
-    validate :selector_format_valid
-    validate :selector_not_cf_any_with_others
+    validate :source_format_valid
+    validate :source_not_cf_any_with_others
 
     delegate :route_guid, to: :relationships_message
 
@@ -25,15 +25,15 @@ module VCAP::CloudController
 
     private
 
-    def selector_format_valid
-      return unless selector.is_a?(String)
-      return if SELECTOR_REGEX.match?(selector)
+    def source_format_valid
+      return unless source.is_a?(String)
+      return if SOURCE_REGEX.match?(source)
 
-      errors.add(:selector, "must be in format 'cf:app:<uuid>', 'cf:space:<uuid>', 'cf:org:<uuid>', or 'cf:any'")
+      errors.add(:source, "must be in format 'cf:app:<uuid>', 'cf:space:<uuid>', 'cf:org:<uuid>', or 'cf:any'")
     end
 
-    def selector_not_cf_any_with_others
-      # enforced at the controller level when checking existing rules on the route
+    def source_not_cf_any_with_others
+      # enforced at the controller level when checking existing policies on the route
     end
 
     class Relationships < BaseMessage

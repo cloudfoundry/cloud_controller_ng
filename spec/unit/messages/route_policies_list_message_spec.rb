@@ -1,16 +1,16 @@
 require 'spec_helper'
-require 'messages/access_rules_list_message'
+require 'messages/route_policies_list_message'
 
 module VCAP::CloudController
-  RSpec.describe AccessRulesListMessage do
+  RSpec.describe RoutePoliciesListMessage do
     describe '.from_params' do
       let(:params) do
         {
           'guids' => 'guid1,guid2',
           'route_guids' => 'route1,route2',
           'space_guids' => 'space1,space2',
-          'selectors' => 'selector1,selector2',
-          'selector_resource_guids' => 'resource1,resource2',
+          'sources' => 'selector1,selector2',
+          'source_guids' => 'resource1,resource2',
           'page' => 1,
           'per_page' => 5,
           'order_by' => 'created_at',
@@ -18,10 +18,10 @@ module VCAP::CloudController
         }
       end
 
-      it 'returns the correct AccessRulesListMessage' do
-        message = AccessRulesListMessage.from_params(params)
+      it 'returns the correct RoutePoliciesListMessage' do
+        message = RoutePoliciesListMessage.from_params(params)
 
-        expect(message).to be_a(AccessRulesListMessage)
+        expect(message).to be_a(RoutePoliciesListMessage)
         expect(message.guids).to eq(%w[guid1 guid2])
         expect(message.route_guids).to eq(%w[route1 route2])
         expect(message.space_guids).to eq(%w[space1 space2])
@@ -34,13 +34,13 @@ module VCAP::CloudController
       end
 
       it 'converts requested keys to symbols' do
-        message = AccessRulesListMessage.from_params(params)
+        message = RoutePoliciesListMessage.from_params(params)
 
         expect(message).to be_requested(:guids)
         expect(message).to be_requested(:route_guids)
         expect(message).to be_requested(:space_guids)
-        expect(message).to be_requested(:selectors)
-        expect(message).to be_requested(:selector_resource_guids)
+        expect(message).to be_requested(:sources)
+        expect(message).to be_requested(:source_guids)
         expect(message).to be_requested(:page)
         expect(message).to be_requested(:per_page)
         expect(message).to be_requested(:order_by)
@@ -65,14 +65,14 @@ module VCAP::CloudController
 
       it 'excludes the pagination keys' do
         expected_params = %i[guids route_guids space_guids selectors selector_resource_guids include]
-        expect(AccessRulesListMessage.from_params(opts).to_param_hash.keys).to match_array(expected_params)
+        expect(RoutePoliciesListMessage.from_params(opts).to_param_hash.keys).to match_array(expected_params)
       end
     end
 
     describe 'fields' do
       it 'accepts a set of fields' do
         expect do
-          AccessRulesListMessage.from_params({
+          RoutePoliciesListMessage.from_params({
                                                guids: [],
                                                route_guids: [],
                                                space_guids: [],
@@ -87,12 +87,12 @@ module VCAP::CloudController
       end
 
       it 'accepts an empty set' do
-        message = AccessRulesListMessage.from_params({})
+        message = RoutePoliciesListMessage.from_params({})
         expect(message).to be_valid
       end
 
       it 'does not accept a field not in this set' do
-        message = AccessRulesListMessage.from_params({ foobar: 'pants' })
+        message = RoutePoliciesListMessage.from_params({ foobar: 'pants' })
 
         expect(message).not_to be_valid
         expect(message.errors[:base][0]).to include("Unknown query parameter(s): 'foobar'")
@@ -100,64 +100,64 @@ module VCAP::CloudController
 
       describe 'include validations' do
         it 'accepts valid include values' do
-          message = AccessRulesListMessage.from_params({ 'include' => 'selector_resource' })
+          message = RoutePoliciesListMessage.from_params({ 'include' => 'source' })
           expect(message).to be_valid
 
-          message = AccessRulesListMessage.from_params({ 'include' => 'route' })
+          message = RoutePoliciesListMessage.from_params({ 'include' => 'route' })
           expect(message).to be_valid
 
-          message = AccessRulesListMessage.from_params({ 'include' => 'app' })
+          message = RoutePoliciesListMessage.from_params({ 'include' => 'app' })
           expect(message).to be_valid
 
-          message = AccessRulesListMessage.from_params({ 'include' => 'space' })
+          message = RoutePoliciesListMessage.from_params({ 'include' => 'space' })
           expect(message).to be_valid
 
-          message = AccessRulesListMessage.from_params({ 'include' => 'organization' })
+          message = RoutePoliciesListMessage.from_params({ 'include' => 'organization' })
           expect(message).to be_valid
 
-          message = AccessRulesListMessage.from_params({ 'include' => 'selector_resource,route,app,space,organization' })
+          message = RoutePoliciesListMessage.from_params({ 'include' => 'selector_resource,route,app,space,organization' })
           expect(message).to be_valid
         end
 
         it 'rejects invalid include values' do
-          message = AccessRulesListMessage.from_params({ 'include' => 'invalid' })
+          message = RoutePoliciesListMessage.from_params({ 'include' => 'invalid' })
           expect(message).not_to be_valid
         end
       end
 
       describe 'validations' do
         it 'validates space_guids is an array' do
-          message = AccessRulesListMessage.from_params space_guids: 'not array'
+          message = RoutePoliciesListMessage.from_params space_guids: 'not array'
           expect(message).not_to be_valid
           expect(message.errors[:space_guids].length).to eq 1
         end
 
         it 'allows space_guids to be nil' do
-          message = AccessRulesListMessage.from_params({})
+          message = RoutePoliciesListMessage.from_params({})
           expect(message).to be_valid
           expect(message.space_guids).to be_nil
         end
 
         it 'allows space_guids to be an array' do
-          message = AccessRulesListMessage.from_params space_guids: %w[space1 space2]
+          message = RoutePoliciesListMessage.from_params space_guids: %w[space1 space2]
           expect(message).to be_valid
           expect(message.space_guids).to eq(%w[space1 space2])
         end
 
         it 'validates selector_resource_guids is an array' do
-          message = AccessRulesListMessage.from_params selector_resource_guids: 'not array'
+          message = RoutePoliciesListMessage.from_params selector_resource_guids: 'not array'
           expect(message).not_to be_valid
-          expect(message.errors[:selector_resource_guids].length).to eq 1
+          expect(message.errors[:source_guids].length).to eq 1
         end
 
         it 'allows selector_resource_guids to be nil' do
-          message = AccessRulesListMessage.from_params({})
+          message = RoutePoliciesListMessage.from_params({})
           expect(message).to be_valid
           expect(message.selector_resource_guids).to be_nil
         end
 
         it 'allows selector_resource_guids to be an array' do
-          message = AccessRulesListMessage.from_params selector_resource_guids: %w[guid1 guid2]
+          message = RoutePoliciesListMessage.from_params selector_resource_guids: %w[guid1 guid2]
           expect(message).to be_valid
           expect(message.selector_resource_guids).to eq(%w[guid1 guid2])
         end

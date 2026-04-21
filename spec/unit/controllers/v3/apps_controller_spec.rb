@@ -135,7 +135,7 @@ RSpec.describe AppsV3Controller, type: :controller do
 
     context 'label_selection' do
       it 'returns a 400 when the label_selector is invalid' do
-        get :index, params: { label_selector: 'buncha nonsense' }
+        get :index, params: { label_source: 'buncha nonsense' }
 
         expect(response).to have_http_status(:bad_request)
 

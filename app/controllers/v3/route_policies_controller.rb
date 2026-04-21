@@ -1,0 +1,168 @@
+require 'messages/route_policy_create_message'
+require 'messages/route_policy_update_message'
+require 'messages/route_policies_list_message'
+require 'presenters/v3/route_policy_presenter'
+require 'decorators/include_route_policy_source_decorator'
+require 'decorators/include_route_policy_route_decorator'
+
+class RoutePoliciesController < ApplicationController
+  def index
+    message = RoutePoliciesListMessage.from_params(query_params)
+    invalid_param!(message.errors.full_messages) unless message.valid?
+
+    dataset = build_dataset(message)
+
+    decorators = []
+    decorators << IncludeRoutePolicySourceDecorator if IncludeRoutePolicySourceDecorator.match?(message.include)
+    decorators << IncludeRoutePolicyRouteDecorator if IncludeRoutePolicyRouteDecorator.match?(message.include)
+
+    render status: :ok, json: Presenters::V3::PaginatedListPresenter.new(
+      presenter: Presenters::V3::RoutePolicyPresenter,
+      paginated_result: SequelPaginator.new.get_page(dataset, message.try(:pagination_options)),
+      path: '/v3/route_policies',
+      message: message,
+      decorators: decorators
+    )
+  end
+
+  def show
+    route_policy = VCAP::CloudController::RoutePolicy.find(guid: hashed_params[:guid])
+    resource_not_found!(:route_policy) unless route_policy
+
+    route = route_policy.route
+    resource_not_found!(:route_policy) unless route && permission_queryer.can_read_from_space?(route.space.id, route.space.organization_id)
+
+    render status: :ok, json: Presenters::V3::RoutePolicyPresenter.new(route_policy)
+  end
+
+  def create
+    message = RoutePolicyCreateMessage.new(hashed_params[:body])
+    unprocessable!(message.errors.full_messages) unless message.valid?
+
+    route = find_and_authorize_route(message.route_guid)
+    validate_route_domain(route)
+
+    route_policy = VCAP::CloudController::RoutePolicy.db.transaction do
+      # Lock existing route policies for this route to prevent concurrent inserts
+      # from violating cf:any exclusivity or uniqueness constraints
+      VCAP::CloudController::RoutePolicy.where(route_id: route.id).for_update.all
+
+      validate_source_exclusivity(route, message.source)
+
+      policy = VCAP::CloudController::RoutePolicy.new(
+        guid: SecureRandom.uuid,
+        source: message.source,
+        route_id: route.id,
+        created_at: Time.now.utc,
+        updated_at: Time.now.utc
+      )
+      policy.save
+      policy
+    end
+
+    render status: :created, json: Presenters::V3::RoutePolicyPresenter.new(route_policy)
+  rescue Sequel::UniqueConstraintViolation
+    unprocessable!("A route policy with source '#{message.source}' already exists for this route.")
+  end
+
+  def update
+    route_policy = VCAP::CloudController::RoutePolicy.find(guid: hashed_params[:guid])
+    resource_not_found!(:route_policy) unless route_policy
+
+    route = route_policy.route
+    resource_not_found!(:route_policy) unless route && permission_queryer.can_read_from_space?(route.space.id, route.space.organization_id)
+    unauthorized! unless permission_queryer.can_write_to_active_space?(route.space.id)
+    suspended! unless permission_queryer.is_space_active?(route.space.id)
+
+    message = RoutePolicyUpdateMessage.new(hashed_params[:body])
+    unprocessable!(message.errors.full_messages) unless message.valid?
+
+    VCAP::CloudController::MetadataUpdate.update(route_policy, message)
+
+    render status: :ok, json: Presenters::V3::RoutePolicyPresenter.new(route_policy.reload)
+  end
+
+  def destroy
+    route_policy = VCAP::CloudController::RoutePolicy.find(guid: hashed_params[:guid])
+    resource_not_found!(:route_policy) unless route_policy
+
+    route = route_policy.route
+    resource_not_found!(:route_policy) unless route && permission_queryer.can_read_from_space?(route.space.id, route.space.organization_id)
+    unauthorized! unless permission_queryer.can_write_to_active_space?(route.space.id)
+    suspended! unless permission_queryer.is_space_active?(route.space.id)
+
+    route_policy.destroy
+    head :no_content
+  end
+
+  private
+
+  def find_and_authorize_route(route_guid)
+    route = VCAP::CloudController::Route.find(guid: route_guid)
+    resource_not_found!(:route) unless route && permission_queryer.can_read_from_space?(route.space.id, route.space.organization_id)
+    unauthorized! unless permission_queryer.can_write_to_active_space?(route.space.id)
+    suspended! unless permission_queryer.is_space_active?(route.space.id)
+    route
+  end
+
+  def validate_route_domain(route)
+    if route.domain.internal?
+      unprocessable!('Cannot create route policies for routes on internal domains. Internal routes use container-to-container networking and bypass GoRouter.')
+    end
+    return if route.domain.enforce_route_policies
+
+    unprocessable!("Cannot create route policies for route '#{route.guid}': the route's domain does not have enforce_route_policies enabled.")
+  end
+
+  def validate_source_exclusivity(route, source)
+    existing_sources = route.route_policies.map(&:source)
+
+    # Enforce cf:any exclusivity: if route already has a cf:any policy, reject new policies;
+    # if new policy is cf:any, reject if route already has any policies.
+    unprocessable!("Cannot add 'cf:any' source when other route policies already exist for this route.") if source == 'cf:any' && existing_sources.any?
+    unprocessable!("Cannot add source '#{source}': route already has a 'cf:any' policy.") if existing_sources.include?('cf:any') && source != 'cf:any'
+
+    # Uniqueness: source must be unique per route
+    unprocessable!("A route policy with source '#{source}' already exists for this route.") if existing_sources.include?(source)
+  end
+
+  def build_dataset(message)
+    dataset = VCAP::CloudController::RoutePolicy.dataset
+
+    if permission_queryer.can_read_globally?
+      readable_route_ids = VCAP::CloudController::Route.select(:id)
+    else
+      readable_space_ids = permission_queryer.readable_space_scoped_spaces_query.select(:id)
+      readable_route_ids = VCAP::CloudController::Route.where(space_id: readable_space_ids).select(:id)
+    end
+
+    dataset = dataset.where(route_id: readable_route_ids)
+
+    # Join routes at most once when either route_guids or space_guids is requested
+    if message.requested?(:route_guids) || message.requested?(:space_guids)
+      dataset = dataset.
+                join(:routes, id: :route_id).
+                select_all(:route_policies)
+
+      dataset = dataset.where(Sequel[:routes][:guid] => message.route_guids) if message.requested?(:route_guids)
+
+      dataset = dataset.where(Sequel[:routes][:space_id] => VCAP::CloudController::Space.where(guid: message.space_guids).select(:id)) if message.requested?(:space_guids)
+    end
+
+    dataset = dataset.where(guid: message.guids) if message.requested?(:guids)
+    dataset = dataset.where(source: message.sources) if message.requested?(:sources)
+
+    if message.requested?(:source_guids)
+      # Text-match against source string for resource GUIDs
+      # Handles cf:app:<guid>, cf:space:<guid>, cf:org:<guid>
+      # Escape LIKE metacharacters (\, %, _) in user-provided values
+      conditions = message.source_guids.map do |guid|
+        escaped_guid = guid.gsub('\\', '\\\\').gsub('%', '\\%').gsub('_', '\\_')
+        Sequel.like(:source, "%#{escaped_guid}%")
+      end
+      dataset = dataset.where(Sequel.|(*conditions))
+    end
+
+    dataset
+  end
+end

@@ -4,18 +4,18 @@ require 'presenters/mixins/metadata_presentation_helpers'
 module VCAP::CloudController
   module Presenters
     module V3
-      class AccessRulePresenter < BasePresenter
+      class RoutePolicyPresenter < BasePresenter
         include VCAP::CloudController::Presenters::Mixins::MetadataPresentationHelpers
 
         def to_hash
           {
-            guid: access_rule.guid,
-            created_at: access_rule.created_at,
-            updated_at: access_rule.updated_at,
-            selector: access_rule.selector,
+            guid: route_policy.guid,
+            created_at: route_policy.created_at,
+            updated_at: route_policy.updated_at,
+            source: route_policy.source,
             metadata: {
-              labels: hashified_labels(access_rule.labels),
-              annotations: hashified_annotations(access_rule.annotations)
+              labels: hashified_labels(route_policy.labels),
+              annotations: hashified_annotations(route_policy.annotations)
             },
             relationships: build_relationships,
             links: build_links
@@ -24,7 +24,7 @@ module VCAP::CloudController
 
         private
 
-        def access_rule
+        def route_policy
           @resource
         end
 
@@ -32,18 +32,18 @@ module VCAP::CloudController
           relationships = {
             route: {
               data: {
-                guid: access_rule.route.guid
+                guid: route_policy.route.guid
               }
             }
           }
 
-          # Extract resource GUID from selector and populate read-only relationships
+          # Extract resource GUID from source and populate read-only relationships
           # The guid is included as-is without per-row existence checks to avoid N+1 queries.
-          # Use ?include=selector_resource to get full resource details with batch loading.
-          selector_match = access_rule.selector.match(/\Acf:(app|space|org):([0-9a-f-]+)\z/)
-          if selector_match
-            resource_type = selector_match[1]
-            resource_guid = selector_match[2]
+          # Use ?include=source to get full resource details with batch loading.
+          source_match = route_policy.source.match(/\Acf:(app|space|org):([0-9a-f-]+)\z/)
+          if source_match
+            resource_type = source_match[1]
+            resource_guid = source_match[2]
 
             relationships[:app] = { data: resource_type == 'app' ? { guid: resource_guid } : nil }
             relationships[:space] = { data: resource_type == 'space' ? { guid: resource_guid } : nil }
@@ -61,10 +61,10 @@ module VCAP::CloudController
         def build_links
           {
             self: {
-              href: url_builder.build_url(path: "/v3/access_rules/#{access_rule.guid}")
+              href: url_builder.build_url(path: "/v3/route_policies/#{route_policy.guid}")
             },
             route: {
-              href: url_builder.build_url(path: "/v3/routes/#{access_rule.route.guid}")
+              href: url_builder.build_url(path: "/v3/routes/#{route_policy.route.guid}")
             }
           }
         end

@@ -67,7 +67,7 @@ module VCAP::CloudController
           per_page: 5,
           order_by: 'created_at',
           include: ['space', 'space.organization'],
-          label_selector: 'foo in (stuff,things)',
+          label_source: 'foo in (stuff,things)',
           lifecycle_type: 'buildpack'
         }
       end
@@ -90,7 +90,7 @@ module VCAP::CloudController
                                         per_page: 5,
                                         order_by: 'created_at',
                                         include: ['space', 'space.organization'],
-                                        label_selector: 'foo in (stuff,things)',
+                                        label_source: 'foo in (stuff,things)',
                                         lifecycle_type: 'buildpack'
                                       })
         end.not_to raise_error

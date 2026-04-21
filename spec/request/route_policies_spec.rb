@@ -1,6 +1,6 @@
 require 'spec_helper'
 
-RSpec.describe 'Access Rules' do
+RSpec.describe 'Route Policies' do
   let(:user) { VCAP::CloudController::User.make }
   let(:admin_header) { admin_headers_for(user) }
   let(:org) { VCAP::CloudController::Organization.make }
@@ -34,12 +34,12 @@ RSpec.describe 'Access Rules' do
       guid: rule.guid,
       created_at: iso8601,
       updated_at: iso8601,
-      selector: rule.selector,
+      source: rule.source,
       relationships: {
         route: { data: { guid: rule.route.guid } }
       },
       links: {
-        self: { href: %r{/v3/access_rules/#{rule.guid}} },
+        self: { href: %r{/v3/route_policies/#{rule.guid}} },
         route: { href: %r{/v3/routes/#{rule.route.guid}} }
       }
     }
@@ -51,10 +51,10 @@ RSpec.describe 'Access Rules' do
     space.add_developer(user)
   end
 
-  describe 'POST /v3/access_rules' do
+  describe 'POST /v3/route_policies' do
     let(:request_body) do
       {
-        selector: "cf:app:#{valid_uuid}",
+        source: "cf:app:#{valid_uuid}",
         relationships: {
           route: { data: { guid: mtls_route.guid } }
         }
@@ -63,11 +63,11 @@ RSpec.describe 'Access Rules' do
 
     context 'as admin' do
       it 'creates an access rule and returns 201' do
-        post '/v3/access_rules', request_body.to_json, admin_header
+        post '/v3/route_policies', request_body.to_json, admin_header
 
         expect(last_response.status).to eq(201)
         parsed = Oj.load(last_response.body)
-        expect(parsed['selector']).to eq("cf:app:#{valid_uuid}")
+        expect(parsed['source']).to eq("cf:app:#{valid_uuid}")
         expect(parsed['relationships']['route']['data']['guid']).to eq(mtls_route.guid)
       end
     end
@@ -76,7 +76,7 @@ RSpec.describe 'Access Rules' do
       let(:user_headers) { headers_for(user) }
 
       it 'creates an access rule' do
-        post '/v3/access_rules', request_body.to_json, user_headers
+        post '/v3/route_policies', request_body.to_json, user_headers
 
         expect(last_response.status).to eq(201)
       end
@@ -85,7 +85,7 @@ RSpec.describe 'Access Rules' do
     context 'when the domain does not have enforce_access_rules enabled' do
       let(:request_body) do
         {
-          selector: "cf:app:#{valid_uuid}",
+          source: "cf:app:#{valid_uuid}",
           relationships: {
             route: { data: { guid: regular_route.guid } }
           }
@@ -93,17 +93,17 @@ RSpec.describe 'Access Rules' do
       end
 
       it 'returns 422' do
-        post '/v3/access_rules', request_body.to_json, admin_header
+        post '/v3/route_policies', request_body.to_json, admin_header
 
         expect(last_response.status).to eq(422)
-        expect(last_response.body).to include('enforce_access_rules')
+        expect(last_response.body).to include('enforce_route_policies')
       end
     end
 
     context 'when the route is on an internal domain' do
       let(:request_body) do
         {
-          selector: "cf:app:#{valid_uuid}",
+          source: "cf:app:#{valid_uuid}",
           relationships: {
             route: { data: { guid: internal_route.guid } }
           }
@@ -111,7 +111,7 @@ RSpec.describe 'Access Rules' do
       end
 
       it 'returns 422 with a message about internal domains' do
-        post '/v3/access_rules', request_body.to_json, admin_header
+        post '/v3/route_policies', request_body.to_json, admin_header
 
         expect(last_response.status).to eq(422)
         expect(last_response.body).to include('internal domains')
@@ -122,7 +122,7 @@ RSpec.describe 'Access Rules' do
     context 'when the route does not exist' do
       let(:request_body) do
         {
-          selector: "cf:app:#{valid_uuid}",
+          source: "cf:app:#{valid_uuid}",
           relationships: {
             route: { data: { guid: 'nonexistent-guid' } }
           }
@@ -130,7 +130,7 @@ RSpec.describe 'Access Rules' do
       end
 
       it 'returns 404' do
-        post '/v3/access_rules', request_body.to_json, admin_header
+        post '/v3/route_policies', request_body.to_json, admin_header
 
         expect(last_response.status).to eq(404)
       end
@@ -138,16 +138,16 @@ RSpec.describe 'Access Rules' do
 
     context 'cf:any exclusivity' do
       before do
-        VCAP::CloudController::RouteAccessRule.create(
+        VCAP::CloudController::RoutePolicy.create(
           guid: SecureRandom.uuid,
-          selector: "cf:app:#{valid_uuid}",
+          source: "cf:app:#{valid_uuid}",
           route_id: mtls_route.id
         )
       end
 
       it 'rejects cf:any when other rules exist' do
-        post '/v3/access_rules', {
-          selector: 'cf:any',
+        post '/v3/route_policies', {
+          source: 'cf:any',
           relationships: { route: { data: { guid: mtls_route.guid } } }
         }.to_json, admin_header
 
@@ -158,16 +158,16 @@ RSpec.describe 'Access Rules' do
 
     context 'when a cf:any rule already exists' do
       before do
-        VCAP::CloudController::RouteAccessRule.create(
+        VCAP::CloudController::RoutePolicy.create(
           guid: SecureRandom.uuid,
-          selector: 'cf:any',
+          source: 'cf:any',
           route_id: mtls_route.id
         )
       end
 
       it 'rejects adding a specific selector' do
-        post '/v3/access_rules', {
-          selector: "cf:space:#{valid_uuid}",
+        post '/v3/route_policies', {
+          source: "cf:space:#{valid_uuid}",
           relationships: { route: { data: { guid: mtls_route.guid } } }
         }.to_json, admin_header
 
@@ -178,16 +178,16 @@ RSpec.describe 'Access Rules' do
 
     context 'duplicate selector per route' do
       before do
-        VCAP::CloudController::RouteAccessRule.create(
+        VCAP::CloudController::RoutePolicy.create(
           guid: SecureRandom.uuid,
-          selector: "cf:app:#{valid_uuid}",
+          source: "cf:app:#{valid_uuid}",
           route_id: mtls_route.id
         )
       end
 
       it 'returns 422' do
-        post '/v3/access_rules', {
-          selector: "cf:app:#{valid_uuid}",
+        post '/v3/route_policies', {
+          source: "cf:app:#{valid_uuid}",
           relationships: { route: { data: { guid: mtls_route.guid } } }
         }.to_json, admin_header
 
@@ -197,8 +197,8 @@ RSpec.describe 'Access Rules' do
 
     context 'invalid selector format' do
       it 'returns 422' do
-        post '/v3/access_rules', {
-          selector: 'not-valid',
+        post '/v3/route_policies', {
+          source: 'not-valid',
           relationships: { route: { data: { guid: mtls_route.guid } } }
         }.to_json, admin_header
 
@@ -211,12 +211,12 @@ RSpec.describe 'Access Rules' do
       it 'returns 422 instead of 500' do
         # Simulate a race condition where the DB unique constraint catches the duplicate
         # after validation passes but before the insert commits
-        allow_any_instance_of(VCAP::CloudController::RouteAccessRule).to receive(:save).and_raise(
-          Sequel::UniqueConstraintViolation.new('UNIQUE constraint failed: route_access_rules.route_id, route_access_rules.selector')
+        allow_any_instance_of(VCAP::CloudController::RoutePolicy).to receive(:save).and_raise(
+          Sequel::UniqueConstraintViolation.new('UNIQUE constraint failed: route_access_rules.route_id, route_access_rules.source')
         )
 
-        post '/v3/access_rules', {
-          selector: "cf:app:#{valid_uuid}",
+        post '/v3/route_policies', {
+          source: "cf:app:#{valid_uuid}",
           relationships: { route: { data: { guid: mtls_route.guid } } }
         }.to_json, admin_header
 
@@ -226,51 +226,51 @@ RSpec.describe 'Access Rules' do
     end
   end
 
-  describe 'GET /v3/access_rules/:guid' do
-    let!(:access_rule) do
-      VCAP::CloudController::RouteAccessRule.create(
+  describe 'GET /v3/route_policies/:guid' do
+    let!(:route_policy) do
+      VCAP::CloudController::RoutePolicy.create(
         guid: SecureRandom.uuid,
-        selector: "cf:app:#{valid_uuid}",
+        source: "cf:app:#{valid_uuid}",
         route_id: mtls_route.id
       )
     end
 
     it 'returns the access rule' do
-      get "/v3/access_rules/#{access_rule.guid}", nil, admin_header
+      get "/v3/route_policies/#{access_rule.guid}", nil, admin_header
 
       expect(last_response.status).to eq(200)
       parsed = Oj.load(last_response.body)
       expect(parsed['guid']).to eq(access_rule.guid)
-      expect(parsed['selector']).to eq("cf:app:#{valid_uuid}")
+      expect(parsed['source']).to eq("cf:app:#{valid_uuid}")
     end
 
     context 'when the access rule does not exist' do
       it 'returns 404' do
-        get '/v3/access_rules/nonexistent-guid', nil, admin_header
+        get '/v3/route_policies/nonexistent-guid', nil, admin_header
 
         expect(last_response.status).to eq(404)
       end
     end
   end
 
-  describe 'GET /v3/access_rules' do
+  describe 'GET /v3/route_policies' do
     let!(:rule1) do
-      VCAP::CloudController::RouteAccessRule.create(
+      VCAP::CloudController::RoutePolicy.create(
         guid: SecureRandom.uuid,
-        selector: "cf:app:#{valid_uuid}",
+        source: "cf:app:#{valid_uuid}",
         route_id: mtls_route.id
       )
     end
     let!(:rule2) do
-      VCAP::CloudController::RouteAccessRule.create(
+      VCAP::CloudController::RoutePolicy.create(
         guid: SecureRandom.uuid,
-        selector: 'cf:any',
+        source: 'cf:any',
         route_id: VCAP::CloudController::Route.make(space: space, domain: mtls_domain).id
       )
     end
 
     it 'lists all accessible access rules' do
-      get '/v3/access_rules', nil, admin_header
+      get '/v3/route_policies', nil, admin_header
 
       expect(last_response.status).to eq(200)
       parsed = Oj.load(last_response.body)
@@ -279,7 +279,7 @@ RSpec.describe 'Access Rules' do
     end
 
     it 'filters by route_guids' do
-      get "/v3/access_rules?route_guids=#{mtls_route.guid}", nil, admin_header
+      get "/v3/route_policies?route_guids=#{mtls_route.guid}", nil, admin_header
 
       expect(last_response.status).to eq(200)
       parsed = Oj.load(last_response.body)
@@ -289,12 +289,12 @@ RSpec.describe 'Access Rules' do
     end
 
     it 'filters by selectors' do
-      get '/v3/access_rules?selectors=cf:any', nil, admin_header
+      get '/v3/route_policies?selectors=cf:any', nil, admin_header
 
       expect(last_response.status).to eq(200)
       parsed = Oj.load(last_response.body)
       expect(parsed['resources'].length).to eq(1)
-      expect(parsed['resources'][0]['selector']).to eq('cf:any')
+      expect(parsed['resources'][0]['source']).to eq('cf:any')
     end
 
     describe 'filtering by space_guids' do
@@ -309,9 +309,9 @@ RSpec.describe 'Access Rules' do
       end
       let(:other_route) { VCAP::CloudController::Route.make(space: other_space, domain: other_mtls_domain) }
       let!(:rule_in_other_space) do
-        VCAP::CloudController::RouteAccessRule.create(
+        VCAP::CloudController::RoutePolicy.create(
           guid: SecureRandom.uuid,
-          selector: 'cf:any',
+          source: 'cf:any',
           route_id: other_route.id
         )
       end
@@ -322,7 +322,7 @@ RSpec.describe 'Access Rules' do
       end
 
       it 'filters by single space_guid' do
-        get "/v3/access_rules?space_guids=#{space.guid}", nil, admin_header
+        get "/v3/route_policies?space_guids=#{space.guid}", nil, admin_header
 
         expect(last_response.status).to eq(200)
         parsed = Oj.load(last_response.body)
@@ -332,7 +332,7 @@ RSpec.describe 'Access Rules' do
       end
 
       it 'filters by multiple space_guids' do
-        get "/v3/access_rules?space_guids=#{space.guid},#{other_space.guid}", nil, admin_header
+        get "/v3/route_policies?space_guids=#{space.guid},#{other_space.guid}", nil, admin_header
 
         expect(last_response.status).to eq(200)
         parsed = Oj.load(last_response.body)
@@ -341,13 +341,13 @@ RSpec.describe 'Access Rules' do
       end
 
       it 'combines space_guids with other filters' do
-        get "/v3/access_rules?space_guids=#{space.guid}&selectors=cf:app:#{valid_uuid}", nil, admin_header
+        get "/v3/route_policies?space_guids=#{space.guid}&selectors=cf:app:#{valid_uuid}", nil, admin_header
 
         expect(last_response.status).to eq(200)
         parsed = Oj.load(last_response.body)
         expect(parsed['resources'].length).to eq(1)
         expect(parsed['resources'][0]['guid']).to eq(rule1.guid)
-        expect(parsed['resources'][0]['selector']).to eq("cf:app:#{valid_uuid}")
+        expect(parsed['resources'][0]['source']).to eq("cf:app:#{valid_uuid}")
       end
 
       it 'returns empty when space has no access rules' do
@@ -355,7 +355,7 @@ RSpec.describe 'Access Rules' do
         org.add_user(user)
         empty_space.add_developer(user)
 
-        get "/v3/access_rules?space_guids=#{empty_space.guid}", nil, admin_header
+        get "/v3/route_policies?space_guids=#{empty_space.guid}", nil, admin_header
 
         expect(last_response.status).to eq(200)
         parsed = Oj.load(last_response.body)
@@ -375,9 +375,9 @@ RSpec.describe 'Access Rules' do
       end
       let(:other_route) { VCAP::CloudController::Route.make(space: other_space, domain: other_mtls_domain) }
       let!(:rule_in_other_space) do
-        VCAP::CloudController::RouteAccessRule.create(
+        VCAP::CloudController::RoutePolicy.create(
           guid: SecureRandom.uuid,
-          selector: 'cf:any',
+          source: 'cf:any',
           route_id: other_route.id
         )
       end
@@ -388,7 +388,7 @@ RSpec.describe 'Access Rules' do
       end
 
       it 'returns results matching both route_guids and space_guids without ambiguous column errors' do
-        get "/v3/access_rules?route_guids=#{mtls_route.guid}&space_guids=#{space.guid}", nil, admin_header
+        get "/v3/route_policies?route_guids=#{mtls_route.guid}&space_guids=#{space.guid}", nil, admin_header
 
         expect(last_response.status).to eq(200)
         parsed = Oj.load(last_response.body)
@@ -400,7 +400,7 @@ RSpec.describe 'Access Rules' do
 
     describe 'filtering by selector_resource_guids' do
       it 'escapes % so it does not act as a LIKE wildcard' do
-        get '/v3/access_rules?selector_resource_guids=%25', nil, admin_header
+        get '/v3/route_policies?selector_resource_guids=%25', nil, admin_header
 
         expect(last_response.status).to eq(200)
         parsed = Oj.load(last_response.body)
@@ -408,7 +408,7 @@ RSpec.describe 'Access Rules' do
       end
 
       it 'escapes _ so it does not act as a LIKE single-char wildcard' do
-        get '/v3/access_rules?selector_resource_guids=cf_app', nil, admin_header
+        get '/v3/route_policies?selector_resource_guids=cf_app', nil, admin_header
 
         expect(last_response.status).to eq(200)
         parsed = Oj.load(last_response.body)
@@ -417,7 +417,7 @@ RSpec.describe 'Access Rules' do
       end
 
       it 'escapes backslash so it does not act as a LIKE escape character' do
-        get '/v3/access_rules?selector_resource_guids=cf%5Capp', nil, admin_header
+        get '/v3/route_policies?selector_resource_guids=cf%5Capp', nil, admin_header
 
         expect(last_response.status).to eq(200)
         parsed = Oj.load(last_response.body)
@@ -431,31 +431,31 @@ RSpec.describe 'Access Rules' do
       let!(:other_org) { VCAP::CloudController::Organization.make(name: 'other-org') }
 
       let!(:app_rule) do
-        VCAP::CloudController::RouteAccessRule.create(
+        VCAP::CloudController::RoutePolicy.create(
           guid: SecureRandom.uuid,
-          selector: "cf:app:#{frontend_app.guid}",
+          source: "cf:app:#{frontend_app.guid}",
           route_id: mtls_route.id
         )
       end
 
       let!(:space_rule) do
-        VCAP::CloudController::RouteAccessRule.create(
+        VCAP::CloudController::RoutePolicy.create(
           guid: SecureRandom.uuid,
-          selector: "cf:space:#{other_space.guid}",
+          source: "cf:space:#{other_space.guid}",
           route_id: mtls_route.id
         )
       end
 
       let!(:org_rule) do
-        VCAP::CloudController::RouteAccessRule.create(
+        VCAP::CloudController::RoutePolicy.create(
           guid: SecureRandom.uuid,
-          selector: "cf:org:#{other_org.guid}",
+          source: "cf:org:#{other_org.guid}",
           route_id: mtls_route.id
         )
       end
 
       it 'includes resolved selector resources' do
-        get '/v3/access_rules?include=selector_resource', nil, admin_header
+        get '/v3/route_policies?include=selector_resource', nil, admin_header
 
         expect(last_response.status).to eq(200)
         parsed = Oj.load(last_response.body)
@@ -485,13 +485,13 @@ RSpec.describe 'Access Rules' do
 
       it 'handles stale resources (missing GUIDs) gracefully' do
         stale_guid = '99999999-9999-9999-9999-999999999999'
-        VCAP::CloudController::RouteAccessRule.create(
+        VCAP::CloudController::RoutePolicy.create(
           guid: SecureRandom.uuid,
-          selector: "cf:app:#{stale_guid}",
+          source: "cf:app:#{stale_guid}",
           route_id: mtls_route.id
         )
 
-        get '/v3/access_rules?include=selector_resource', nil, admin_header
+        get '/v3/route_policies?include=selector_resource', nil, admin_header
 
         expect(last_response.status).to eq(200)
         parsed = Oj.load(last_response.body)
@@ -503,13 +503,13 @@ RSpec.describe 'Access Rules' do
 
       it 'includes only unique resources when multiple rules reference the same resource' do
         # Create another rule referencing the same app
-        VCAP::CloudController::RouteAccessRule.create(
+        VCAP::CloudController::RoutePolicy.create(
           guid: SecureRandom.uuid,
-          selector: "cf:app:#{frontend_app.guid}",
+          source: "cf:app:#{frontend_app.guid}",
           route_id: VCAP::CloudController::Route.make(space: space, domain: mtls_domain).id
         )
 
-        get '/v3/access_rules?include=selector_resource', nil, admin_header
+        get '/v3/route_policies?include=selector_resource', nil, admin_header
 
         expect(last_response.status).to eq(200)
         parsed = Oj.load(last_response.body)
@@ -520,13 +520,13 @@ RSpec.describe 'Access Rules' do
       end
 
       it 'does not include resources for cf:any selectors' do
-        VCAP::CloudController::RouteAccessRule.create(
+        VCAP::CloudController::RoutePolicy.create(
           guid: SecureRandom.uuid,
-          selector: 'cf:any',
+          source: 'cf:any',
           route_id: VCAP::CloudController::Route.make(space: space, domain: mtls_domain).id
         )
 
-        get '/v3/access_rules?include=selector_resource', nil, admin_header
+        get '/v3/route_policies?include=selector_resource', nil, admin_header
 
         expect(last_response.status).to eq(200)
         # Should succeed without error even with cf:any selector
@@ -537,23 +537,23 @@ RSpec.describe 'Access Rules' do
       let(:route2) { VCAP::CloudController::Route.make(space: space, domain: mtls_domain) }
 
       let!(:rule_on_route1) do
-        VCAP::CloudController::RouteAccessRule.create(
+        VCAP::CloudController::RoutePolicy.create(
           guid: SecureRandom.uuid,
-          selector: 'cf:any',
+          source: 'cf:any',
           route_id: mtls_route.id
         )
       end
 
       let!(:rule_on_route2) do
-        VCAP::CloudController::RouteAccessRule.create(
+        VCAP::CloudController::RoutePolicy.create(
           guid: SecureRandom.uuid,
-          selector: "cf:app:#{valid_uuid}",
+          source: "cf:app:#{valid_uuid}",
           route_id: route2.id
         )
       end
 
       it 'includes route resources' do
-        get '/v3/access_rules?include=route', nil, admin_header
+        get '/v3/route_policies?include=route', nil, admin_header
 
         expect(last_response.status).to eq(200)
         parsed = Oj.load(last_response.body)
@@ -576,13 +576,13 @@ RSpec.describe 'Access Rules' do
 
       it 'includes only unique routes when multiple rules reference the same route' do
         # Create another rule on the same route with a different selector
-        VCAP::CloudController::RouteAccessRule.create(
+        VCAP::CloudController::RoutePolicy.create(
           guid: SecureRandom.uuid,
-          selector: "cf:app:#{SecureRandom.uuid}",
+          source: "cf:app:#{SecureRandom.uuid}",
           route_id: mtls_route.id
         )
 
-        get '/v3/access_rules?include=route', nil, admin_header
+        get '/v3/route_policies?include=route', nil, admin_header
 
         expect(last_response.status).to eq(200)
         parsed = Oj.load(last_response.body)
@@ -594,13 +594,13 @@ RSpec.describe 'Access Rules' do
 
       it 'combines include=route with include=selector_resource' do
         test_app = VCAP::CloudController::AppModel.make(space: space, name: 'test-app')
-        VCAP::CloudController::RouteAccessRule.create(
+        VCAP::CloudController::RoutePolicy.create(
           guid: SecureRandom.uuid,
-          selector: "cf:app:#{test_app.guid}",
+          source: "cf:app:#{test_app.guid}",
           route_id: mtls_route.id
         )
 
-        get '/v3/access_rules?include=route,selector_resource', nil, admin_header
+        get '/v3/route_policies?include=route,selector_resource', nil, admin_header
 
         expect(last_response.status).to eq(200)
         parsed = Oj.load(last_response.body)
@@ -620,42 +620,42 @@ RSpec.describe 'Access Rules' do
     end
   end
 
-  describe 'DELETE /v3/access_rules/:guid' do
-    let!(:access_rule) do
-      VCAP::CloudController::RouteAccessRule.create(
+  describe 'DELETE /v3/route_policies/:guid' do
+    let!(:route_policy) do
+      VCAP::CloudController::RoutePolicy.create(
         guid: SecureRandom.uuid,
-        selector: "cf:app:#{valid_uuid}",
+        source: "cf:app:#{valid_uuid}",
         route_id: mtls_route.id
       )
     end
 
     it 'deletes the access rule and returns 204' do
-      delete "/v3/access_rules/#{access_rule.guid}", nil, admin_header
+      delete "/v3/route_policies/#{access_rule.guid}", nil, admin_header
 
       expect(last_response.status).to eq(204)
-      expect(VCAP::CloudController::RouteAccessRule.find(guid: access_rule.guid)).to be_nil
+      expect(VCAP::CloudController::RoutePolicy.find(guid: access_rule.guid)).to be_nil
     end
 
     context 'when the access rule does not exist' do
       it 'returns 404' do
-        delete '/v3/access_rules/nonexistent-guid', nil, admin_header
+        delete '/v3/route_policies/nonexistent-guid', nil, admin_header
 
         expect(last_response.status).to eq(404)
       end
     end
   end
 
-  describe 'PATCH /v3/access_rules/:guid (metadata update)' do
-    let!(:access_rule) do
-      VCAP::CloudController::RouteAccessRule.create(
+  describe 'PATCH /v3/route_policies/:guid (metadata update)' do
+    let!(:route_policy) do
+      VCAP::CloudController::RoutePolicy.create(
         guid: SecureRandom.uuid,
-        selector: "cf:app:#{valid_uuid}",
+        source: "cf:app:#{valid_uuid}",
         route_id: mtls_route.id
       )
     end
 
     it 'returns 200' do
-      patch "/v3/access_rules/#{access_rule.guid}", {
+      patch "/v3/route_policies/#{access_rule.guid}", {
         metadata: { labels: { env: 'production' } }
       }.to_json, admin_header
 
@@ -664,7 +664,7 @@ RSpec.describe 'Access Rules' do
 
     context 'when the access rule does not exist' do
       it 'returns 404' do
-        patch '/v3/access_rules/nonexistent-guid', {}.to_json, admin_header
+        patch '/v3/route_policies/nonexistent-guid', {}.to_json, admin_header
 
         expect(last_response.status).to eq(404)
       end

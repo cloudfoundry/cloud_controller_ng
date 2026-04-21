@@ -1,18 +1,18 @@
 module VCAP::CloudController
-  class IncludeAccessRuleSelectorResourceDecorator
-    # Handles `?include=selector_resource` for GET /v3/access_rules
-    # Stale/missing resources (selector GUIDs that no longer exist) are silently absent.
+  class IncludeRoutePolicySourceDecorator
+    # Handles `?include=source` for GET /v3/route_policies
+    # Stale/missing resources (source GUIDs that no longer exist) are silently absent.
 
-    SELECTOR_REGEX = /\Acf:(app|space|org):([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})\z/
+    SOURCE_REGEX = /\Acf:(app|space|org):([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})\z/
 
     def self.match?(include_params)
       return false unless include_params
 
-      # Match if any of: selector_resource, app, space, organization
-      include_params.intersect?(%w[selector_resource app space organization])
+      # Match if any of: source, app, space, organization
+      include_params.intersect?(%w[source app space organization])
     end
 
-    def self.decorate(hash, access_rules)
+    def self.decorate(hash, route_policies)
       hash[:included] ||= {}
 
       # Collect all GUIDs by type
@@ -20,8 +20,8 @@ module VCAP::CloudController
       space_guids = []
       org_guids = []
 
-      access_rules.each do |rule|
-        match = SELECTOR_REGEX.match(rule.selector)
+      route_policies.each do |policy|
+        match = SOURCE_REGEX.match(policy.source)
         next unless match
 
         resource_type = match[1]

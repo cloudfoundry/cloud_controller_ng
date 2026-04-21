@@ -289,7 +289,7 @@ module VCAP::CloudController
         end
 
         it 'handles ruby symbols' do
-          message = list_message_klass.from_params(label_selector: 'example.com/foo==bar')
+          message = list_message_klass.from_params(label_source: 'example.com/foo==bar')
           expect(message.requirements.first.key).to eq('example.com/foo')
         end
       end

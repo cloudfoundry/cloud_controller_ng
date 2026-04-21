@@ -154,7 +154,7 @@ module VCAP::CloudController::Presenters::V3
             path: path,
             space: space,
             domain: domain,
-            options: { 'access_scope' => 'space', 'access_rules' => 'cf:app:some-guid' }
+            options: { 'route_policy_scope' => 'space', 'route_policy_sources' => 'cf:app:some-guid' }
           )
         end
 
@@ -172,16 +172,16 @@ module VCAP::CloudController::Presenters::V3
             domain: domain,
             options: {
               'loadbalancing' => 'round-robin',
-              'access_scope' => 'space',
-              'access_rules' => 'cf:app:some-guid'
+              'route_policy_scope' => 'space',
+              'route_policy_sources' => 'cf:app:some-guid'
             }
           )
         end
 
         it 'exposes only the public options' do
           expect(subject[:options]).to eq('loadbalancing' => 'round-robin')
-          expect(subject[:options]).not_to have_key('access_scope')
-          expect(subject[:options]).not_to have_key('access_rules')
+          expect(subject[:options]).not_to have_key('route_policy_scope')
+          expect(subject[:options]).not_to have_key('route_policy_sources')
         end
       end
 

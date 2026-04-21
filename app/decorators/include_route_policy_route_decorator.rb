@@ -1,17 +1,17 @@
 module VCAP::CloudController
-  class IncludeAccessRuleRouteDecorator
-    # Handles `?include=route` for GET /v3/access_rules
-    # Includes the route resources associated with the access rules
+  class IncludeRoutePolicyRouteDecorator
+    # Handles `?include=route` for GET /v3/route_policies
+    # Includes the route resources associated with the route policies
 
     def self.match?(include_params)
       include_params&.include?('route')
     end
 
-    def self.decorate(hash, access_rules)
+    def self.decorate(hash, route_policies)
       hash[:included] ||= {}
 
-      # Collect all unique route IDs from access rules
-      route_ids = access_rules.map(&:route_id).uniq
+      # Collect all unique route IDs from route policies
+      route_ids = route_policies.map(&:route_id).uniq
 
       # Fetch routes with their associations
       routes = Route.where(id: route_ids).

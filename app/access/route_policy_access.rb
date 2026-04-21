@@ -1,12 +1,12 @@
 module VCAP::CloudController
-  class AccessRuleAccess < BaseAccess
-    # Space Developer of the route's space can manage access rules.
+  class RoutePolicyAccess < BaseAccess
+    # Space Developer of the route's space can manage route policies.
     # No bilateral requirement — destination-controlled auth only.
 
-    def create?(access_rule, _params=nil)
+    def create?(route_policy, _params=nil)
       return true if admin_user?
 
-      route = access_rule.route
+      route = route_policy.route
       return false unless route
 
       space = route.space
@@ -14,21 +14,21 @@ module VCAP::CloudController
         space.developers.include?(context.user)
     end
 
-    def read?(access_rule)
+    def read?(route_policy)
       return true if admin_user? || admin_read_only_user? || global_auditor?
 
-      route = access_rule.route
+      route = route_policy.route
       return false unless route
 
-      object_is_visible_to_user?(access_rule, context.user)
+      object_is_visible_to_user?(route_policy, context.user)
     end
 
-    def update?(access_rule, _params=nil)
-      create?(access_rule)
+    def update?(route_policy, _params=nil)
+      create?(route_policy)
     end
 
-    def delete?(access_rule)
-      create?(access_rule)
+    def delete?(route_policy)
+      create?(route_policy)
     end
 
     def index?(_object_class, _params=nil)
