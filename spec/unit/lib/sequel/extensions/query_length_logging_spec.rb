@@ -1,8 +1,9 @@
-require 'spec_helper'
+require 'lightweight_db_spec_helper'
+require 'sequel/extensions/query_length_logging'
 
 RSpec.describe Sequel::QueryLengthLogging do
   describe 'log_connection_yield' do
-    let(:db) { DbConfig.new.connection }
+    let(:db) { DB }
     let(:logs) { StringIO.new }
     let(:logger) { Logger.new(logs) }
 

@@ -27,8 +27,7 @@ module VCAP::CloudController
     one_to_many :buildpack_lifecycle_buildpacks,
                 class: '::VCAP::CloudController::BuildpackLifecycleBuildpackModel',
                 key: :cnb_lifecycle_data_guid,
-                primary_key: :guid,
-                order: :id
+                primary_key: :guid
     plugin :nested_attributes
     nested_attributes :buildpack_lifecycle_buildpacks, destroy: true
     add_association_dependencies buildpack_lifecycle_buildpacks: :destroy

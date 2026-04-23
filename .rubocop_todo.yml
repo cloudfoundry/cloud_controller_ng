@@ -173,6 +173,7 @@ RSpec/BeforeAfterAll:
     - 'spec/integration/app_log_emitter_spec.rb'
     - 'spec/integration/cors_spec.rb'
     - 'spec/isolated_specs/inline_runner_spec.rb'
+    - 'spec/unit/lib/sequel/extensions/default_order_by_id_spec.rb'
     - 'spec/unit/lib/vcap/rest_api/event_query_spec.rb'
     - 'spec/unit/lib/vcap/rest_api/query_spec.rb'
 

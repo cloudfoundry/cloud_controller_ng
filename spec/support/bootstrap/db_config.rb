@@ -1,9 +1,10 @@
 require 'cloud_controller/db'
 require 'cloud_controller/database_parts_parser'
+require_relative 'db_connection_string'
 
 class DbConfig
   def initialize(connection_string: ENV.fetch('DB_CONNECTION_STRING', nil), db_type: ENV.fetch('DB', nil))
-    @connection_string = connection_string || default_connection_string(db_type || 'postgres')
+    @connection_string = DbConnectionString.new(connection_string: connection_string, db_type: db_type).to_s
     initialize_environment_for_cc_spawning
   end
 
@@ -48,26 +49,5 @@ class DbConfig
 
   def initialize_environment_for_cc_spawning
     ENV['DB_CONNECTION_STRING'] = connection_string
-  end
-
-  def default_connection_string(db_type)
-    "#{default_connection_prefix(db_type)}/#{default_name}"
-  end
-
-  def default_connection_prefix(db_type)
-    default_connection_prefixes = {
-      'mysql' => ENV['MYSQL_CONNECTION_PREFIX'] || 'mysql2://root:password@localhost:3306',
-      'postgres' => ENV['POSTGRES_CONNECTION_PREFIX'] || 'postgres://postgres@localhost:5432'
-    }
-
-    default_connection_prefixes[db_type]
-  end
-
-  def default_name
-    if ENV['TEST_ENV_NUMBER'].presence
-      "cc_test_#{ENV.fetch('TEST_ENV_NUMBER')}"
-    else
-      'cc_test_1'
-    end
   end
 end
