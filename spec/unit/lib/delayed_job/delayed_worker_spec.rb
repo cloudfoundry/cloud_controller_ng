@@ -17,6 +17,11 @@ RSpec.describe CloudController::DelayedWorker do
     allow(threaded_worker).to receive(:name=).with(anything)
   end
 
+  after do
+    VCAP::AppLogEmitter.emitter = nil
+    VCAP::AppLogEmitter.logger = nil
+  end
+
   describe '#initialize' do
     it 'sets the correct default queue options' do
       worker_instance = CloudController::DelayedWorker.new(options)

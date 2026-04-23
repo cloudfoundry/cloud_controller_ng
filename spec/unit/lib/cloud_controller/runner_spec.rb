@@ -37,6 +37,11 @@ module VCAP::CloudController
       allow(Puma::Server).to receive(:new).and_return(puma_server_double)
     end
 
+    after do
+      VCAP::AppLogEmitter.emitter = nil
+      VCAP::AppLogEmitter.logger = nil
+    end
+
     subject do
       Runner.new(argv + ['-c', config_file.path])
     end
