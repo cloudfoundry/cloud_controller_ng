@@ -286,7 +286,7 @@ GEM
     loofah (2.25.1)
       crass (~> 1.0.2)
       nokogiri (>= 1.12.0)
-    machinist (1.0.6)
+    machinist (2.0)
     method_source (1.1.0)
     mime-types (3.7.0)
       logger
@@ -637,7 +637,7 @@ DEPENDENCIES
   json-diff
   json-schema
   listen
-  machinist (~> 1.0.6)
+  machinist (~> 2.0)
   mime-types (~> 3.7)
   mock_redis
   multipart-parser
