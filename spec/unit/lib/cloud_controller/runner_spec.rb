@@ -38,8 +38,8 @@ module VCAP::CloudController
     end
 
     after do
-      VCAP::AppLogEmitter.emitter = nil
-      VCAP::AppLogEmitter.logger = nil
+      VCAP::AppLogEmitter.instance_variable_set(:@emitter, nil)
+      VCAP::AppLogEmitter.instance_variable_set(:@logger, nil)
     end
 
     subject do
