@@ -147,8 +147,8 @@ module VCAP
                 type: 'create',
                 state: 'succeeded',
                 description: 'some description',
-                updated_at: credential_binding.updated_at,
-                created_at: credential_binding.created_at
+                updated_at: credential_binding.last_operation.updated_at,
+                created_at: credential_binding.last_operation.created_at
               },
               metadata: {
                 annotations: {
