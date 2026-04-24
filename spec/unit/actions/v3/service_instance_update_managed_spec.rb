@@ -1248,6 +1248,7 @@ module VCAP::CloudController
 
             expect(instance.last_operation.type).to eq('update')
             expect(instance.last_operation.state).to eq('in progress')
+            expect(instance.last_operation.description).to eq('some description')
             expect(instance.last_operation.broker_provided_operation).to eq(broker_provided_operation)
           end
 
@@ -1477,6 +1478,7 @@ module VCAP::CloudController
 
             expect(instance.last_operation.type).to eq('update')
             expect(instance.last_operation.state).to eq('succeeded')
+            expect(instance.last_operation.description).to eq(description)
 
             expect(instance).to have_annotations({ prefix: 'pre.fix', key_name: 'to_delete', value: 'value' }, { prefix: 'pre.fix', key_name: 'fox', value: 'bushy' },
                                                  { prefix: 'seriouseats.com', key_name: 'potato', value: 'fried' })
