@@ -11,6 +11,7 @@ plugins:
 require:
   - ./spec/linters/migration/add_constraint_name.rb
   - ./spec/linters/migration/include_string_size.rb
+  - ./spec/linters/migration/no_model_in_specs.rb
   - ./spec/linters/migration/require_primary_key.rb
   - ./spec/linters/migration/too_many_migration_runs.rb
   - ./spec/linters/match_requires_with_includes.rb
@@ -67,6 +68,12 @@ Migration/IncludeStringSize: # Exclude for old Migrations
   Exclude:
     - !ruby/regexp /db/migrations/201([0-9]).+\.rb$/
     - !ruby/regexp /db/migrations/202([0-2]).+\.rb$/
+Migration/NoModelInSpecs:
+  Include:
+    - spec/migrations/**/*
+  Exclude:
+    # Uses custom tmp_migrations_dir so schema is never rolled back
+    - spec/migrations/20190712210940_backfill_status_for_deployments_spec.rb
 Migration/RequirePrimaryKey: # Exclude for old Migrations
   Include:
     - db/migrations/**/*
