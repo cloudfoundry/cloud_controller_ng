@@ -323,116 +323,13 @@ RSpec.describe 'Revisions' do
           end
         end
 
-        context 'filtering by guids' do
-          before do
-            VCAP::CloudController::RevisionModel.plugin :timestamps, update_on_create: false
+        it_behaves_like 'list_endpoint_with_common_filters' do
+          let(:resource_klass) { VCAP::CloudController::RevisionModel }
+          let(:additional_resource_params) { { app: app_model } }
+          let(:api_call) do
+            ->(headers, filters) { get "/v3/apps/#{app_model.guid}/revisions?#{filters}", nil, headers }
           end
-
-          let(:droplet) { VCAP::CloudController::DropletModel.make(app: app_model) }
-          # .make updates the resource after creating it, over writing our passed in updated_at timestamp
-          # Therefore we cannot use shared_examples as the updated_at will not be as written
-          let!(:resource_1) do
-            VCAP::CloudController::RevisionModel.create(
-              created_at: '2020-05-26T18:47:01Z',
-              updated_at: '2020-05-26T18:47:01Z',
-              droplet: droplet,
-              description: '',
-              app: app_model
-            )
-          end
-          let!(:resource_2) do
-            VCAP::CloudController::RevisionModel.create(
-              created_at: '2020-05-26T18:47:02Z',
-              updated_at: '2020-05-26T18:47:02Z',
-              droplet: droplet,
-              description: '',
-              app: app_model
-            )
-          end
-          let!(:resource_3) do
-            VCAP::CloudController::RevisionModel.create(
-              created_at: '2020-05-26T18:47:03Z',
-              updated_at: '2020-05-26T18:47:03Z',
-              droplet: droplet,
-              description: '',
-              app: app_model
-            )
-          end
-
-          after do
-            VCAP::CloudController::RevisionModel.plugin :timestamps, update_on_create: true
-          end
-
-          it 'filters by the created at' do
-            get "/v3/apps/#{app_model.guid}/revisions?guids=#{resource_1.guid},#{resource_2.guid}", nil, admin_headers
-
-            expect(last_response).to have_status_code(200)
-            expect(parsed_response['resources'].pluck('guid')).to contain_exactly(resource_1.guid, resource_2.guid)
-          end
-        end
-
-        context 'filtering by timestamps' do
-          before do
-            VCAP::CloudController::RevisionModel.plugin :timestamps, update_on_create: false
-          end
-
-          let(:droplet) { VCAP::CloudController::DropletModel.make(app: app_model) }
-          # .make updates the resource after creating it, over writing our passed in updated_at timestamp
-          # Therefore we cannot use shared_examples as the updated_at will not be as written
-          let!(:resource_1) do
-            VCAP::CloudController::RevisionModel.create(
-              created_at: '2020-05-26T18:47:01Z',
-              updated_at: '2020-05-26T18:47:01Z',
-              droplet: droplet,
-              description: '',
-              app: app_model
-            )
-          end
-          let!(:resource_2) do
-            VCAP::CloudController::RevisionModel.create(
-              created_at: '2020-05-26T18:47:02Z',
-              updated_at: '2020-05-26T18:47:02Z',
-              droplet: droplet,
-              description: '',
-              app: app_model
-            )
-          end
-          let!(:resource_3) do
-            VCAP::CloudController::RevisionModel.create(
-              created_at: '2020-05-26T18:47:03Z',
-              updated_at: '2020-05-26T18:47:03Z',
-              droplet: droplet,
-              description: '',
-              app: app_model
-            )
-          end
-          let!(:resource_4) do
-            VCAP::CloudController::RevisionModel.create(
-              created_at: '2020-05-26T18:47:04Z',
-              updated_at: '2020-05-26T18:47:04Z',
-              droplet: droplet,
-              description: '',
-              app: app_model
-            )
-          end
-
-          after do
-            VCAP::CloudController::RevisionModel.plugin :timestamps, update_on_create: true
-          end
-
-          it 'filters by the created at' do
-            get "/v3/apps/#{app_model.guid}/revisions?created_ats[lt]=#{resource_3.created_at.iso8601}", nil, admin_headers
-
-            expect(last_response).to have_status_code(200)
-            expect(parsed_response['resources'].pluck('guid')).to contain_exactly(resource_1.guid, resource_2.guid)
-          end
-
-          it 'filters by the updated_at' do
-            get "/v3/apps/#{app_model.guid}/revisions?updated_ats[lt]=#{resource_3.updated_at.iso8601}", nil, admin_headers
-
-            expect(last_response).to have_status_code(200)
-            expect(parsed_response['resources'].pluck('guid')).to contain_exactly(resource_1.guid, resource_2.guid)
-          end
+          let(:headers) { admin_headers }
         end
       end
     end

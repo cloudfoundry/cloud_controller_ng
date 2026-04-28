@@ -79,7 +79,7 @@ module VCAP::CloudController::Diego
       end
 
       context 'when the task is for a buildpack app' do
-        let(:app) { VCAP::CloudController::AppModel.make(:buildpack) }
+        let(:app) { VCAP::CloudController::AppModel.make }
 
         it 'sets the LANG environment variable' do
           constructed_envs = TaskEnvironment.new(app, task, space).build

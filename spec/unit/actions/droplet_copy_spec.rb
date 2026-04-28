@@ -72,6 +72,16 @@ module VCAP::CloudController
         end
       end
 
+      context 'when source and destination lifecycle types do not match' do
+        let!(:target_app) { VCAP::CloudController::AppModel.make(:docker, name: 'target-app-name') }
+
+        it 'raises' do
+          expect do
+            droplet_copy.copy(target_app, user_audit_info)
+          end.to raise_error(/source and destination lifecycle types do not match/)
+        end
+      end
+
       context 'when lifecycle is buildpack' do
         it 'creates a buildpack_lifecycle_data record for the new droplet' do
           expect do
@@ -101,6 +111,7 @@ module VCAP::CloudController
 
       context 'when lifecycle is docker' do
         let(:lifecycle_type) { :docker }
+        let!(:target_app) { VCAP::CloudController::AppModel.make(:docker, name: 'target-app-name') }
 
         before do
           source_droplet.update(docker_receipt_image: 'urvashi/reddy')

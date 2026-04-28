@@ -204,16 +204,16 @@ module VCAP::CloudController
 
       context 'filtering timestamps' do
         before do
-          AppModel.plugin :timestamps, update_on_create: false
+          AppModel.plugin :timestamps, update_on_create: true, allow_manual_update: true
         end
 
-        let!(:resource_1) { AppModel.create(name: '1', created_at: '2020-05-26T18:47:01Z', updated_at: '2020-05-26T18:47:01Z', space: space) }
-        let!(:resource_2) { AppModel.create(name: '2', created_at: '2020-05-26T18:47:02Z', updated_at: '2020-05-26T18:47:02Z', space: space) }
-        let!(:resource_3) { AppModel.create(name: '3', created_at: '2020-05-26T18:47:03Z', updated_at: '2020-05-26T18:47:03Z', space: space) }
-        let!(:resource_4) { AppModel.create(name: '4', created_at: '2020-05-26T18:47:04Z', updated_at: '2020-05-26T18:47:04Z', space: space) }
+        let!(:resource_1) { AppModel.make(name: '1', created_at: '2020-05-26T18:47:01Z', space: space).tap { |r| r.update(updated_at: '2020-05-26T18:47:01Z') } }
+        let!(:resource_2) { AppModel.make(name: '2', created_at: '2020-05-26T18:47:02Z', space: space).tap { |r| r.update(updated_at: '2020-05-26T18:47:02Z') } }
+        let!(:resource_3) { AppModel.make(name: '3', created_at: '2020-05-26T18:47:03Z', space: space).tap { |r| r.update(updated_at: '2020-05-26T18:47:03Z') } }
+        let!(:resource_4) { AppModel.make(name: '4', created_at: '2020-05-26T18:47:04Z', space: space).tap { |r| r.update(updated_at: '2020-05-26T18:47:04Z') } }
 
         after do
-          AppModel.plugin :timestamps, update_on_create: true
+          AppModel.plugin :timestamps, update_on_create: true, allow_manual_update: false
         end
 
         context 'filtering on created_at' do

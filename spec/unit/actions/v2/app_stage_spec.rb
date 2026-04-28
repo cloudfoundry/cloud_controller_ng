@@ -15,7 +15,7 @@ module VCAP::CloudController
         let(:app) { AppModel.make }
 
         let(:package) { PackageModel.make(app: app, state: PackageModel::READY_STATE) }
-        let(:build) { BuildModel.make(:buildpack, app: app, package: package, created_by_user_guid: 'user-guid') }
+        let(:build) { BuildModel.make(app: app, package: package, created_by_user_guid: 'user-guid') }
         let(:build_create) { instance_double(BuildCreate, create_and_stage_without_event: build, staging_response: 'staging-response', warnings: []) }
 
         before do

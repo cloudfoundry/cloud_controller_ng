@@ -122,7 +122,6 @@ module VCAP::CloudController
 
         context 'buildpack' do
           let(:build) { BuildModel.make }
-          let!(:lifecycle_data_model) { BuildpackLifecycleDataModel.make(build:) }
 
           it 'delegates to a buildpack staging completion handler' do
             stager.staging_complete(build, staging_response)
@@ -133,7 +132,6 @@ module VCAP::CloudController
 
         context 'docker' do
           let(:build) { BuildModel.make(:docker) }
-          let!(:lifecycle_data_model) { nil }
 
           it 'delegates to a docker staging completion handler' do
             stager.staging_complete(build, staging_response)
@@ -143,8 +141,7 @@ module VCAP::CloudController
         end
 
         context 'cnb' do
-          let(:build) { BuildModel.make }
-          let!(:lifecycle_data_model) { CNBLifecycleDataModel.make(build:) }
+          let(:build) { BuildModel.make(:cnb) }
 
           it 'delegates to a cnb staging completion handler' do
             stager.staging_complete(build, staging_response)

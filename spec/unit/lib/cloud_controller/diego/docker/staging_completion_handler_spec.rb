@@ -6,14 +6,15 @@ module VCAP::CloudController
     module Docker
       RSpec.describe StagingCompletionHandler do
         let(:logger) { instance_double(Steno::Logger, info: nil, error: nil, warn: nil) }
-        let(:app) { AppModel.make }
-        let(:package) { PackageModel.make(app:) }
-        let!(:build) { BuildModel.make(app: app, package: package, state: BuildModel::STAGING_STATE) }
+        let(:app) { AppModel.make(:docker) }
+        let(:package) { PackageModel.make(:docker, app:) }
+        let!(:build) { BuildModel.make(:docker, app: app, package: package, state: BuildModel::STAGING_STATE) }
         let(:runners) { instance_double(Runners) }
 
         subject(:handler) { StagingCompletionHandler.new(build, runners) }
 
         before do
+          FeatureFlag.create(name: 'diego_docker', enabled: true)
           allow(Steno).to receive(:logger).and_return(logger)
           allow(VCAP::AppLogEmitter).to receive(:emit_error)
           set_current_user_as_admin(user: User.make(guid: '1234'), email: 'joe@joe.com', user_name: 'briggs')

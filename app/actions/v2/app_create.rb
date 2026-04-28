@@ -15,7 +15,8 @@ module VCAP::CloudController
             name: request_attrs['name'],
             space_guid: request_attrs['space_guid'],
             environment_variables: request_attrs['environment_json'],
-            enable_ssh: request_attrs['enable_ssh']
+            enable_ssh: request_attrs['enable_ssh'],
+            lifecycle_type: (request_attrs.key?('docker_image') ? DockerLifecycleDataModel::LIFECYCLE_TYPE : BuildpackLifecycleDataModel::LIFECYCLE_TYPE)
           )
 
           validate_lifecycle!(request_attrs)

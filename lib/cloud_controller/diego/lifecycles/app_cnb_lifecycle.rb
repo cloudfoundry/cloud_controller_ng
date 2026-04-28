@@ -18,7 +18,7 @@ module VCAP::CloudController
     delegate :valid?, :errors, to: :validator
 
     def create_lifecycle_data_model(app)
-      CNBLifecycleDataModel.create(
+      app.cnb_lifecycle_data = CNBLifecycleDataModel.create(
         buildpacks:,
         stack:,
         credentials:,

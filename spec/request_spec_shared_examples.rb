@@ -305,19 +305,22 @@ RSpec.shared_examples 'list_endpoint_with_common_filters' do
   end
 
   context 'filtering timestamps on update' do
-    # before must occur before the let! otherwise the resources will be created with
-    # update_on_create: true
+    # Some blueprints call object.save multiple times (e.g. to create associated lifecycle_data),
+    # which triggers the timestamps plugin's before_update hook and overwrites updated_at.
+    # Setting allow_manual_update: true and using an explicit update after make ensures the
+    # updated_at value is preserved. Note: plugin :timestamps resets all options to defaults,
+    # so update_on_create: true must be passed explicitly to preserve it.
     before do
-      resource_klass.plugin :timestamps, update_on_create: false
+      resource_klass.plugin :timestamps, update_on_create: true, allow_manual_update: true
     end
 
-    let!(:resource_1) { resource_klass.make(guid: '1', updated_at: '2020-05-26T18:47:01Z', **additional_resource_params) }
-    let!(:resource_2) { resource_klass.make(guid: '2', updated_at: '2020-05-26T18:47:02Z', **additional_resource_params) }
-    let!(:resource_3) { resource_klass.make(guid: '3', updated_at: '2020-05-26T18:47:03Z', **additional_resource_params) }
-    let!(:resource_4) { resource_klass.make(guid: '4', updated_at: '2020-05-26T18:47:04Z', **additional_resource_params) }
+    let!(:resource_1) { resource_klass.make(guid: '1', **additional_resource_params).tap { |r| r.update(updated_at: '2020-05-26T18:47:01Z') } }
+    let!(:resource_2) { resource_klass.make(guid: '2', **additional_resource_params).tap { |r| r.update(updated_at: '2020-05-26T18:47:02Z') } }
+    let!(:resource_3) { resource_klass.make(guid: '3', **additional_resource_params).tap { |r| r.update(updated_at: '2020-05-26T18:47:03Z') } }
+    let!(:resource_4) { resource_klass.make(guid: '4', **additional_resource_params).tap { |r| r.update(updated_at: '2020-05-26T18:47:04Z') } }
 
     after do
-      resource_klass.plugin :timestamps, update_on_create: true
+      resource_klass.plugin :timestamps, update_on_create: true, allow_manual_update: false
     end
 
     it 'filters' do

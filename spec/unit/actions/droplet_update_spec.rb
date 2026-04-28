@@ -74,7 +74,7 @@ module VCAP::CloudController
         end
 
         context 'when the droplet type is buildpack' do
-          let!(:droplet) { DropletModel.make(:buildpack, app: nil) }
+          let!(:droplet) { DropletModel.make(app: nil) }
 
           let(:message) do
             VCAP::CloudController::DropletUpdateMessage.new({

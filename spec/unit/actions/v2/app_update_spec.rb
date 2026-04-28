@@ -416,7 +416,7 @@ module VCAP::CloudController
         end
 
         context 'when changing from buildpack to docker' do
-          let(:process) { ProcessModel.make(app: AppModel.make(:buildpack)) }
+          let(:process) { ProcessModel.make(app: AppModel.make) }
           let(:app) { process.app }
 
           it 'raises an error' do

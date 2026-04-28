@@ -46,19 +46,17 @@ module VCAP::CloudController
       end
 
       it 'deletes associated buildpack lifecycle data/buildpack' do
-        lifecycle_data1 = BuildpackLifecycleDataModel.make(build: build1)
-        lifecycle_data2 = BuildpackLifecycleDataModel.make(build: build2)
         lifecycle_buildpack1 = BuildpackLifecycleBuildpackModel.make(
-          buildpack_lifecycle_data: lifecycle_data1, admin_buildpack_name: nil, buildpack_url: 'http://example.com/buildpack1'
+          buildpack_lifecycle_data: build1.buildpack_lifecycle_data, admin_buildpack_name: nil, buildpack_url: 'http://example.com/buildpack1'
         )
         lifecycle_buildpack2 = BuildpackLifecycleBuildpackModel.make(
-          buildpack_lifecycle_data: lifecycle_data2, admin_buildpack_name: nil, buildpack_url: 'http://example.com/buildpack2'
+          buildpack_lifecycle_data: build2.buildpack_lifecycle_data, admin_buildpack_name: nil, buildpack_url: 'http://example.com/buildpack2'
         )
 
         expect do
           build_delete.delete_for_app(app.guid)
         end.to change(BuildpackLifecycleDataModel, :count).by(-2).and change(BuildpackLifecycleBuildpackModel, :count).by(-2)
-        [lifecycle_data1, lifecycle_data2, lifecycle_buildpack1, lifecycle_buildpack2].each { |l| expect(l).not_to exist }
+        [build1.buildpack_lifecycle_data, build2.buildpack_lifecycle_data, lifecycle_buildpack1, lifecycle_buildpack2].each { |l| expect(l).not_to exist }
       end
     end
   end
