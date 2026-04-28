@@ -6,13 +6,14 @@ Sequel.migration do
       duplicates = self[:buildpacks].select(:name, :stack, :lifecycle).group(:name, :stack, :lifecycle).having { count(1) > 1 }
 
       duplicates.each do |dup|
-        ids_to_remove = self[:buildpacks].
-                        where(name: dup[:name], stack: dup[:stack], lifecycle: dup[:lifecycle]).
-                        select(:id).
-                        order(:id).
-                        offset(1).
-                        map(:id)
+        rows_to_remove = self[:buildpacks].where(name: dup[:name], stack: dup[:stack], lifecycle: dup[:lifecycle]).
+                         select(:id, :guid).order(:id).offset(1).all
 
+        guids_to_remove = rows_to_remove.map { |r| r[:guid] }
+        ids_to_remove   = rows_to_remove.map { |r| r[:id] }
+
+        self[:buildpack_annotations].where(resource_guid: guids_to_remove).delete
+        self[:buildpack_labels].where(resource_guid: guids_to_remove).delete
         self[:buildpacks].where(id: ids_to_remove).delete
       end
     end

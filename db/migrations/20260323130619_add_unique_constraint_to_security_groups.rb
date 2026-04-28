@@ -14,6 +14,8 @@ Sequel.migration do # rubocop:disable Metrics/BlockLength
                         order(:id).
                         offset(1).
                         map(:id)
+        self[:security_groups_spaces].where(security_group_id: ids_to_remove).delete
+        self[:staging_security_groups_spaces].where(staging_security_group_id: ids_to_remove).delete
         self[:security_groups].where(id: ids_to_remove).delete
       end
     end
