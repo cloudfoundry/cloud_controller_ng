@@ -6,7 +6,7 @@ module VCAP::CloudController
       subject(:job) { ServiceOperationsInitialCleanup.new }
 
       let(:fake_orphan_mitigator) { double(VCAP::Services::ServiceBrokers::V2::OrphanMitigator) }
-      let(:fake_logger) { instance_double(Steno::Logger, info: nil) }
+      let(:fake_logger) { instance_double(Steno::Logger, info: nil, warn: nil) }
 
       it { is_expected.to be_a_valid_job }
 

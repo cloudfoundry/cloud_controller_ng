@@ -13,6 +13,9 @@ module CloudController
       attr_reader :root_dir
 
       DEFAULT_BATCH_SIZE = 1000
+      DEPRECATION_MESSAGE = '[DEPRECATION WARNING] The fog blobstore client is DEPRECATED and will be REMOVED. ' \
+                            "Please migrate to blobstore_type 'storage-cli' as soon as possible. " \
+                            'See https://github.com/cloudfoundry/community/blob/main/toc/rfc/rfc-0043-cc-blobstore-storage-cli.md for details.'.freeze
 
       def initialize(connection_config:,
                      directory_key:,
@@ -30,6 +33,7 @@ module CloudController
         @max_size = max_size
         @aws_storage_options = aws_storage_options
         @gcp_storage_options = gcp_storage_options
+        logger.warn('blobstore.fog-deprecated', message: DEPRECATION_MESSAGE)
       end
 
       def local?

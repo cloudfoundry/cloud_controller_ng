@@ -29,6 +29,11 @@ module CloudController
         Fog::Mock.reset
       end
 
+      it 'logs a deprecation warning on initialization' do
+        expect_any_instance_of(Steno::Logger).to receive(:warn).with('blobstore.fog-deprecated', hash_including(:message))
+        FogClient.new(connection_config:, directory_key:)
+      end
+
       describe 'conforms to blobstore client interface' do
         let(:deletable_blob) { instance_double(FogBlob, file: nil) }
 
