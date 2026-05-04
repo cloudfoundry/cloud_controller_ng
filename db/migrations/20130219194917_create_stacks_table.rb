@@ -6,7 +6,7 @@ Sequel.migration do
     create_table :stacks do
       VCAP::Migration.common(self)
 
-      String :name, null: false, case_insenstive: true
+      String :name, null: false
       String :description, null: false
 
       index :name, unique: true

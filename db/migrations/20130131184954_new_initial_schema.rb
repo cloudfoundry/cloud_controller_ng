@@ -106,7 +106,7 @@ Sequel.migration do
     create_table :frameworks do
       VCAP::Migration.common(self)
 
-      String :name,        null: false, case_insenstive: true
+      String :name,        null: false
       String :description, null: false
       String :internal_info, null: false, size: 2048
 
