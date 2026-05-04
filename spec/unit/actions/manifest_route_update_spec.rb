@@ -49,6 +49,13 @@ module VCAP::CloudController
             end
           end
 
+          context 'when no options are provided' do
+            it 'does not call RouteUpdate' do
+              expect(RouteUpdate).not_to receive(:new)
+              ManifestRouteUpdate.update(app.guid, message, user_audit_info)
+            end
+          end
+
           context 'when the new route has a protocol' do
             let(:message) do
               ManifestRoutesUpdateMessage.new(
