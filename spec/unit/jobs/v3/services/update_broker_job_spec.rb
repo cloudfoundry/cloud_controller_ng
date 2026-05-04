@@ -448,7 +448,7 @@ module VCAP
 
           context 'when database disconnects during state rollback' do
             let(:catalog_error) { StandardError.new('Catalog fetch failed') }
-            let(:mock_dataset) { instance_double(Sequel::Postgres::Dataset) }
+            let(:mock_dataset) { instance_double(Sequel::Dataset) }
 
             before do
               allow_any_instance_of(VCAP::CloudController::V3::ServiceBrokerCatalogUpdater).to receive(:refresh).and_raise(catalog_error)
