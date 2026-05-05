@@ -153,6 +153,10 @@ module VCAP::CloudController
       staging_security_groups: :nullify
     )
 
+    ACTIVE = 'active'.freeze
+    DELETING = 'deleting'.freeze
+    SPACE_STATUS_VALUES = [ACTIVE, DELETING].freeze
+
     # Unfortunately, because v2 non-recursive deletes expect labels and annotations to be
     # recursively deleted, we can't use association_dependencies like most other models.
     # The reason they are still deleted is because they would be stale metadata.
@@ -161,6 +165,10 @@ module VCAP::CloudController
       LabelDelete.delete(labels)
       AnnotationDelete.delete(annotations)
       super
+    end
+
+    def deleting?
+      status == DELETING
     end
 
     export_attributes :name, :organization_guid, :space_quota_definition_guid, :allow_ssh

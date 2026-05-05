@@ -6,12 +6,25 @@ module VCAP::CloudController
     POLLING_STATE = 'POLLING'.freeze
 
     one_to_many :warnings, class: 'VCAP::CloudController::JobWarningModel', key: :job_id
+    one_to_many :children, class: 'VCAP::CloudController::PollableJobModel', key: :parent_guid, primary_key: :guid
 
     plugin :serialization
     add_association_dependencies warnings: :destroy
 
     def complete?
-      state == VCAP::CloudController::PollableJobModel::COMPLETE_STATE
+      state == COMPLETE_STATE
+    end
+
+    def failed?
+      state == FAILED_STATE
+    end
+
+    def children_pending?
+      children_dataset.where(state: [PROCESSING_STATE, POLLING_STATE]).any?
+    end
+
+    def children_failed
+      children_dataset.where(state: FAILED_STATE).all
     end
 
     def resource_exists?
