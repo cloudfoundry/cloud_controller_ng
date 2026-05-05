@@ -98,6 +98,7 @@ class BuildsController < ApplicationController
       unauthorized! unless permission_queryer.can_update_build_state?
     else
       unauthorized! unless permission_queryer.can_write_to_active_space?(space.id)
+      being_deleted! if permission_queryer.is_space_deleting?(space.id)
       suspended! unless permission_queryer.is_space_active?(space.id)
     end
 

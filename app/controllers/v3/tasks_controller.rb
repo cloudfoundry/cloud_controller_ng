@@ -59,6 +59,7 @@ class TasksController < ApplicationController
 
     app_not_found! unless app && permission_queryer.can_read_from_space?(space.id, space.organization_id)
     unauthorized! unless permission_queryer.can_write_to_active_space?(space.id)
+    being_deleted! if permission_queryer.is_space_deleting?(space.id)
     suspended! unless permission_queryer.is_space_active?(space.id)
     droplet_not_found! if message.requested?(:droplet_guid) && droplet.nil?
 
@@ -80,6 +81,7 @@ class TasksController < ApplicationController
     task_not_found! unless task && permission_queryer.can_read_from_space?(space.id, space.organization_id)
 
     unauthorized! unless permission_queryer.can_manage_apps_in_active_space?(space.id)
+    being_deleted! if permission_queryer.is_space_deleting?(space.id)
     suspended! unless permission_queryer.is_space_active?(space.id)
     TaskCancel.new(configuration).cancel(task:, user_audit_info:)
 
@@ -95,6 +97,7 @@ class TasksController < ApplicationController
     task, space = TaskFetcher.new.fetch(task_guid: hashed_params[:task_guid])
     task_not_found! unless task && permission_queryer.can_read_from_space?(space.id, space.organization_id)
     unauthorized! unless permission_queryer.can_write_to_active_space?(space.id)
+    being_deleted! if permission_queryer.is_space_deleting?(space.id)
     suspended! unless permission_queryer.is_space_active?(space.id)
 
     task = TaskUpdate.new.update(task, message)

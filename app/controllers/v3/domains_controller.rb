@@ -85,6 +85,7 @@ class DomainsController < ApplicationController
     domain_not_found! unless domain
 
     unauthorized! unless can_write_to_active_org?(domain.owning_organization_id)
+    being_deleted! if permission_queryer.is_org_deleting?(domain.owning_organization_id)
     suspended! unless org_active?(domain.owning_organization_id)
 
     domain = DomainUpdate.new.update(domain:, message:)
@@ -119,6 +120,7 @@ class DomainsController < ApplicationController
     domain_not_found! unless domain
 
     unauthorized! unless can_write_to_active_org?(domain.owning_organization_id)
+    being_deleted! if permission_queryer.is_org_deleting?(domain.owning_organization_id)
     suspended! unless org_active?(domain.owning_organization_id)
 
     shared_orgs = verify_shared_organizations_guids!(message, domain.owning_organization_guid)
@@ -170,12 +172,13 @@ class DomainsController < ApplicationController
 
   def check_unshare_domain_permissions!(owning_org_id, shared_org_id)
     owning_org_writable = can_write_to_active_org?(owning_org_id)
-    return if owning_org_writable && org_active?(owning_org_id)
+    return if owning_org_writable && org_active?(owning_org_id) && !permission_queryer.is_org_deleting?(owning_org_id)
 
     shared_org_writable = can_write_to_active_org?(shared_org_id)
-    return if shared_org_writable && org_active?(shared_org_id)
+    return if shared_org_writable && org_active?(shared_org_id) && !permission_queryer.is_org_deleting?(shared_org_id)
 
     unauthorized! unless owning_org_writable || shared_org_writable
+    being_deleted! if permission_queryer.is_org_deleting?(owning_org_id) || permission_queryer.is_org_deleting?(shared_org_id)
     suspended!
   end
 
@@ -184,6 +187,7 @@ class DomainsController < ApplicationController
     unprocessable_org!(message.organization_guid) unless org
 
     unauthorized! unless can_write_to_active_org?(org.id)
+    being_deleted! if permission_queryer.is_org_deleting?(org.id)
     suspended! unless org_active?(org.id)
 
     FeatureFlag.raise_unless_enabled!(:private_domain_creation) unless permission_queryer.can_write_globally?
@@ -200,6 +204,7 @@ class DomainsController < ApplicationController
     organizations.each do |org|
       unprocessable!("Organization with guid '#{org.guid}' either does not exist, or you do not have access to it.") unless permission_queryer.can_read_from_org?(org.id)
       unprocessable!("You do not have sufficient permissions for organization '#{org.name}' to share domain.") unless can_write_to_active_org?(org.id)
+      being_deleted! if permission_queryer.is_org_deleting?(org.id)
       unprocessable!("Organization '#{org.name}' is suspended.") unless org_active?(org.id)
     end
 

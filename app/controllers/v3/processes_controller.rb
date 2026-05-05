@@ -144,6 +144,7 @@ class ProcessesController < ApplicationController
 
   def ensure_can_write
     unauthorized! unless permission_queryer.can_manage_apps_in_active_space?(@space.id)
+    being_deleted! if permission_queryer.is_space_deleting?(@space.id)
     suspended! unless permission_queryer.is_space_active?(@space.id)
   end
 

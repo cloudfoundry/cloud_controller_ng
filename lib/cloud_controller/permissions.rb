@@ -166,6 +166,20 @@ class VCAP::CloudController::Permissions
       empty?
   end
 
+  def is_space_deleting?(space_id)
+    space = VCAP::CloudController::Space.where(id: space_id).first
+    return false unless space
+
+    space.deleting? || space.organization&.status == VCAP::CloudController::Organization::DELETING
+  end
+
+  def is_org_deleting?(org_id)
+    org = VCAP::CloudController::Organization.where(id: org_id).first
+    return false unless org
+
+    org.status == VCAP::CloudController::Organization::DELETING
+  end
+
   def readable_space_guids
     readable_space_guids_query.select_map(:guid)
   end

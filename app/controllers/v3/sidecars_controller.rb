@@ -53,6 +53,7 @@ class SidecarsController < ApplicationController
     app, space = AppFetcher.new.fetch(hashed_params[:guid])
     resource_not_found!(:app) unless app && permission_queryer.can_read_from_space?(space.id, space.organization_id)
     unauthorized! unless permission_queryer.can_write_to_active_space?(space.id)
+    being_deleted! if permission_queryer.is_space_deleting?(space.id)
     suspended! unless permission_queryer.is_space_active?(space.id)
 
     message = SidecarCreateMessage.new(hashed_params[:body])
@@ -84,6 +85,7 @@ class SidecarsController < ApplicationController
     space = sidecar.app.space
     resource_not_found!(:sidecar) unless permission_queryer.can_read_from_space?(space.id, space.organization_id)
     unauthorized! unless permission_queryer.can_write_to_active_space?(space.id)
+    being_deleted! if permission_queryer.is_space_deleting?(space.id)
     suspended! unless permission_queryer.is_space_active?(space.id)
 
     message = SidecarUpdateMessage.new(hashed_params[:body])

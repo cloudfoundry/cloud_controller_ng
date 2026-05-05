@@ -67,6 +67,7 @@ class ServiceRouteBindingsController < ApplicationController
   def update
     route_binding_not_found! unless @route_binding.present? && can_read_from_space?(@route_binding.route.space)
     unauthorized! unless can_write_to_active_space?(@route_binding.route.space)
+    being_deleted! if permission_queryer.is_space_deleting?(@route_binding.route.space.id)
     suspended! unless is_space_active?(@route_binding.route.space)
 
     unprocessable!('The service route binding is being deleted') if delete_in_progress?(@route_binding)
@@ -113,6 +114,7 @@ class ServiceRouteBindingsController < ApplicationController
     not_found_with_message!(@route_binding) unless @route_binding.create_succeeded?
 
     unauthorized! unless can_write_to_active_space?(@route_binding.route.space)
+    being_deleted! if permission_queryer.is_space_deleting?(@route_binding.route.space.id)
     suspended! unless is_space_active?(@route_binding.route.space)
 
     fetcher = ServiceBindingRead.new
@@ -201,6 +203,7 @@ class ServiceRouteBindingsController < ApplicationController
     service_instance_not_found!(guid) unless service_instance && can_read_from_space?(service_instance.space)
 
     unauthorized! unless can_bind_in_active_space?(service_instance.space)
+    being_deleted! if permission_queryer.is_space_deleting?(service_instance.space.id)
     suspended! unless is_space_active?(service_instance.space)
 
     service_instance

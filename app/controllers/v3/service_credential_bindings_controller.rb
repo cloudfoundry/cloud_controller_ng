@@ -60,11 +60,13 @@ class ServiceCredentialBindingsController < ApplicationController
     when 'app'
       app = get_app!(message.app_guid)
       unauthorized! unless can_bind_in_active_space?(app.space)
+      being_deleted! if permission_queryer.is_space_deleting?(app.space.id)
       suspended! unless is_space_active?(app.space)
 
       create_app_binding(message, service_instance, app)
     when 'key'
       unauthorized! unless can_write_to_active_space?(service_instance.space)
+      being_deleted! if permission_queryer.is_space_deleting?(service_instance.space.id)
       suspended! unless is_space_active?(service_instance.space)
       create_key_binding(message, service_instance)
     end
@@ -76,6 +78,7 @@ class ServiceCredentialBindingsController < ApplicationController
   def update
     not_found! if service_credential_binding.blank?
     unauthorized! unless can_write_to_active_space?(binding_space)
+    being_deleted! if permission_queryer.is_space_deleting?(binding_space.id)
     suspended! unless is_space_active?(binding_space)
 
     unprocessable!('The service binding is being deleted') if delete_in_progress?(service_credential_binding)
