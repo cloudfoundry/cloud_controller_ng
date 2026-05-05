@@ -85,13 +85,14 @@ class AppsV3Controller < ApplicationController
     )
   end
 
-  def create
+  def create # rubocop:disable Metrics/CyclomaticComplexity
     message = AppCreateMessage.new(hashed_params[:body])
     unprocessable!(message.errors.full_messages) unless message.valid?
 
     space = Space.where(guid: message.space_guid).first
     unprocessable_space! unless space && permission_queryer.can_read_from_space?(space.id, space.organization_id)
     unauthorized! unless permission_queryer.can_write_to_active_space?(space.id)
+    being_deleted! if permission_queryer.is_space_deleting?(space.id)
     suspended! unless permission_queryer.is_space_active?(space.id)
     FeatureFlag.raise_unless_enabled!(:diego_docker) if message.lifecycle_type == VCAP::CloudController::PackageModel::DOCKER_TYPE
     lifecycle = AppLifecycleProvider.provide_for_create(message)
@@ -123,6 +124,7 @@ class AppsV3Controller < ApplicationController
 
     app_not_found! unless app && permission_queryer.can_read_from_space?(space.id, space.organization_id)
     unauthorized! unless permission_queryer.can_write_to_active_space?(space.id)
+    being_deleted! if permission_queryer.is_space_deleting?(space.id)
     suspended! unless permission_queryer.is_space_active?(space.id)
 
     lifecycle = AppLifecycleProvider.provide_for_update(message, app)
@@ -169,6 +171,7 @@ class AppsV3Controller < ApplicationController
     app_not_found! unless app && permission_queryer.can_read_from_space?(space.id, space.organization_id)
     unprocessable_lacking_droplet! unless app.droplet
     unauthorized! unless permission_queryer.can_manage_apps_in_active_space?(space.id)
+    being_deleted! if permission_queryer.is_space_deleting?(space.id)
     suspended! unless permission_queryer.is_space_active?(space.id)
 
     FeatureFlag.raise_unless_enabled!(:diego_docker) if app.lifecycle_type == DockerLifecycleDataModel::LIFECYCLE_TYPE
@@ -191,6 +194,7 @@ class AppsV3Controller < ApplicationController
     app, space = AppFetcher.new.fetch(hashed_params[:guid])
     app_not_found! unless app && permission_queryer.can_read_from_space?(space.id, space.organization_id)
     unauthorized! unless permission_queryer.can_manage_apps_in_active_space?(space.id)
+    being_deleted! if permission_queryer.is_space_deleting?(space.id)
     suspended! unless permission_queryer.is_space_active?(space.id)
 
     AppStop.stop(app:, user_audit_info:)
@@ -212,6 +216,7 @@ class AppsV3Controller < ApplicationController
     app_not_found! unless app && permission_queryer.can_read_from_space?(space.id, space.organization_id)
     unprocessable_lacking_droplet! unless app.droplet
     unauthorized! unless permission_queryer.can_manage_apps_in_active_space?(space.id)
+    being_deleted! if permission_queryer.is_space_deleting?(space.id)
     suspended! unless permission_queryer.is_space_active?(space.id)
 
     FeatureFlag.raise_unless_enabled!(:diego_docker) if app.lifecycle_type == DockerLifecycleDataModel::LIFECYCLE_TYPE
@@ -237,6 +242,7 @@ class AppsV3Controller < ApplicationController
     app, space = AppFetcher.new.fetch(hashed_params[:guid])
     app_not_found! unless app && permission_queryer.can_read_from_space?(space.id, space.organization_id)
     unauthorized! unless permission_queryer.can_delete_buildpack_cache?(space.id)
+    being_deleted! if permission_queryer.is_space_deleting?(space.id)
     suspended! unless permission_queryer.is_space_active?(space.id)
 
     delete_job = Jobs::V3::BuildpackCacheDelete.new(app.guid)
@@ -299,6 +305,7 @@ class AppsV3Controller < ApplicationController
 
     app_not_found! unless app && permission_queryer.can_read_from_space?(space.id, space.organization_id)
     unauthorized! unless permission_queryer.can_manage_apps_in_active_space?(space.id)
+    being_deleted! if permission_queryer.is_space_deleting?(space.id)
     suspended! unless permission_queryer.is_space_active?(space.id)
 
     message = UpdateEnvironmentVariablesMessage.new(hashed_params[:body])
@@ -317,6 +324,7 @@ class AppsV3Controller < ApplicationController
 
     app_not_found! unless app && permission_queryer.can_read_from_space?(space.id, space.organization_id)
     unauthorized! unless permission_queryer.can_manage_apps_in_active_space?(space.id)
+    being_deleted! if permission_queryer.is_space_deleting?(space.id)
     suspended! unless permission_queryer.is_space_active?(space.id)
     deployment_in_progress! if app.deploying?
 
