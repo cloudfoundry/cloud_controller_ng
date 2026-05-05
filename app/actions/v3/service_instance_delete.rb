@@ -24,9 +24,10 @@ module VCAP::CloudController
       PollingFinished = PollingStatus.new(true, nil).freeze
       ContinuePolling = ->(retry_after) { PollingStatus.new(false, retry_after) }
 
-      def initialize(service_instance, event_repo)
+      def initialize(service_instance, event_repo, parent_job_guid: nil)
         @service_instance = service_instance
         @service_event_repository = event_repo
+        @parent_job_guid = parent_job_guid
       end
 
       def blocking_operation_in_progress?
@@ -142,9 +143,9 @@ module VCAP::CloudController
       end
 
       def remove_associations
-        errors = delete_bindings(RouteBinding.where(service_instance:), user_audit_info: service_event_repository.user_audit_info)
-        errors += delete_bindings(service_instance.service_bindings, user_audit_info: service_event_repository.user_audit_info)
-        errors += delete_bindings(service_instance.service_keys, user_audit_info: service_event_repository.user_audit_info)
+        errors = delete_bindings(RouteBinding.where(service_instance:), user_audit_info: service_event_repository.user_audit_info, parent_guid: @parent_job_guid)
+        errors += delete_bindings(service_instance.service_bindings, user_audit_info: service_event_repository.user_audit_info, parent_guid: @parent_job_guid)
+        errors += delete_bindings(service_instance.service_keys, user_audit_info: service_event_repository.user_audit_info, parent_guid: @parent_job_guid)
         errors + unshare_all_spaces
       end
 

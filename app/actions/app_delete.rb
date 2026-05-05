@@ -12,6 +12,7 @@ require 'actions/process_delete'
 require 'actions/sidecar_delete'
 require 'actions/route_mapping_delete'
 require 'actions/staging_cancel'
+require 'actions/app_stop'
 require 'actions/mixins/bindings_delete'
 
 module VCAP::CloudController
@@ -30,13 +31,16 @@ module VCAP::CloudController
       end
     end
 
-    def initialize(user_audit_info)
+    def initialize(user_audit_info, parent_job_guid: nil)
       @user_audit_info = user_audit_info
+      @parent_job_guid = parent_job_guid
     end
 
     def delete(apps, record_event: true)
       apps.each do |app|
         logger.info("Deleting app: #{app.guid}")
+
+        AppStop.stop(app: app, user_audit_info: @user_audit_info) if app.desired_state != ProcessModel::STOPPED
 
         delete_non_transactional_subresources(app)
 
@@ -85,7 +89,7 @@ module VCAP::CloudController
     end
 
     def delete_non_transactional_subresources(app)
-      errors = delete_bindings(app.service_bindings, user_audit_info: @user_audit_info)
+      errors = delete_bindings(app.service_bindings, user_audit_info: @user_audit_info, parent_guid: @parent_job_guid)
       raise SubResourceError.new(errors) if errors.any?
     end
 
