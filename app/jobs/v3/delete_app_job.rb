@@ -1,11 +1,11 @@
 require 'jobs/reoccurring_job'
-require 'jobs/mixins/parent_job_mixin'
+require 'jobs/mixins/root_job_mixin'
 require 'actions/app_delete'
 
 module VCAP::CloudController
   module V3
     class DeleteAppJob < Jobs::ReoccurringJob
-      include Jobs::ParentJobMixin
+      include Jobs::RootJobMixin
 
       attr_reader :app_guid
 
@@ -18,12 +18,12 @@ module VCAP::CloudController
       def perform
         app = AppModel.first(guid: app_guid)
         return finish unless app
-        return if children_waiting?
+        return if sub_jobs_pending?
 
-        AppDelete.new(@user_audit_info, parent_job_guid: my_pollable_job_guid).delete([app])
+        AppDelete.new(@user_audit_info, root_job_guid: my_pollable_job_guid).delete([app])
         finish
       rescue AppDelete::AsyncBindingDeletionsTriggered
-        # Binding jobs already enqueued by BindingsDeleteMixin with parent_guid set — wait for them
+        # Binding jobs already enqueued by BindingsDeleteMixin with root_job_guid set — wait for them
         nil
       rescue CloudController::Errors::ApiError
         raise

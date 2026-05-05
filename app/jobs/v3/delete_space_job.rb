@@ -1,5 +1,5 @@
 require 'jobs/reoccurring_job'
-require 'jobs/mixins/parent_job_mixin'
+require 'jobs/mixins/root_job_mixin'
 require 'jobs/v3/delete_binding_job'
 require 'jobs/v3/delete_service_instance_job'
 require 'actions/app_delete'
@@ -9,10 +9,10 @@ require 'actions/service_instance_unshare'
 module VCAP::CloudController
   module V3
     class DeleteSpaceJob < Jobs::ReoccurringJob
-      include Jobs::ParentJobMixin
+      include Jobs::RootJobMixin
 
       MAX_POLL_INTERVAL = 60
-      MAX_CONCURRENT_CHILD_JOBS = 50
+      MAX_CONCURRENT_SUB_JOBS = 50
 
       attr_reader :space_guid, :warnings
 
@@ -34,10 +34,10 @@ module VCAP::CloudController
         space.update(status: Space::DELETING) unless space.deleting?
 
         delete_apps(space)
-        return if children_waiting? || space.app_models_dataset.any?
+        return if sub_jobs_pending? || space.app_models_dataset.any?
 
         delete_service_instances(space)
-        return if children_waiting? || space.service_instances_dataset.where(is_gateway_service: true).any?
+        return if sub_jobs_pending? || space.service_instances_dataset.where(is_gateway_service: true).any?
 
         cleanup_and_destroy(space)
         finish
@@ -81,10 +81,10 @@ module VCAP::CloudController
       end
 
       def delete_apps(space)
-        app_deleter = AppDelete.new(@user_audit_info, parent_job_guid: my_pollable_job_guid)
+        app_deleter = AppDelete.new(@user_audit_info, root_job_guid: my_pollable_job_guid)
 
         space.app_models_dataset.each do |app|
-          break if child_job_limit_reached?
+          break if sub_job_limit_reached?
 
           app_deleter.delete([app])
         rescue AppDelete::AsyncBindingDeletionsTriggered
@@ -96,13 +96,13 @@ module VCAP::CloudController
         service_event_repository = Repositories::ServiceEventRepository.new(@user_audit_info)
 
         space.service_instances_dataset.where(is_gateway_service: true).each do |si|
-          break if child_job_limit_reached?
+          break if sub_job_limit_reached?
 
-          deleter = ServiceInstanceDelete.new(si, service_event_repository, parent_job_guid: my_pollable_job_guid)
+          deleter = ServiceInstanceDelete.new(si, service_event_repository, root_job_guid: my_pollable_job_guid)
           result = deleter.delete
 
           unless result[:finished]
-            enqueue_child(DeleteServiceInstanceJob.new(si.guid, @user_audit_info))
+            enqueue_sub_job(DeleteServiceInstanceJob.new(si.guid, @user_audit_info))
             show_async_warning
           end
         rescue V3::ServiceInstanceDelete::UnbindingOperatationInProgress
@@ -140,11 +140,11 @@ module VCAP::CloudController
         my_pollable_job&.warnings_dataset&.destroy
       end
 
-      def child_job_limit_reached?
+      def sub_job_limit_reached?
         parent = my_pollable_job
         return false unless parent
 
-        parent.children_dataset.where(state: [PollableJobModel::PROCESSING_STATE, PollableJobModel::POLLING_STATE]).count >= MAX_CONCURRENT_CHILD_JOBS
+        parent.sub_jobs_dataset.where(state: [PollableJobModel::PROCESSING_STATE, PollableJobModel::POLLING_STATE]).count >= MAX_CONCURRENT_SUB_JOBS
       end
 
       def show_async_warning

@@ -7,9 +7,9 @@ module VCAP::CloudController
     class PollableJobWrapper < WrappingJob
       attr_reader :existing_guid
 
-      def initialize(handler, existing_guid: nil, parent_guid: nil)
+      def initialize(handler, existing_guid: nil, root_job_guid: nil)
         @existing_guid = existing_guid
-        @parent_guid = parent_guid
+        @root_job_guid = root_job_guid
         super(handler)
       end
 
@@ -38,7 +38,7 @@ module VCAP::CloudController
             resource_guid: @handler.resource_guid,
             resource_type: @handler.resource_type,
             user_guid: user_guid,
-            parent_guid: @parent_guid
+            root_job_guid: @root_job_guid
           )
         end
       end

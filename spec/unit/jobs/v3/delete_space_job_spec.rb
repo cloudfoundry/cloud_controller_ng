@@ -56,14 +56,14 @@ module VCAP::CloudController
 
           it 'stops the app on first cycle' do
             pollable_job = Jobs::Enqueuer.new(queue: Jobs::Queues.generic).enqueue_pollable(job)
-            # Simulate that BindingsDeleteMixin enqueued a child job with parent_guid
+            # Simulate that BindingsDeleteMixin enqueued a child job with root_job_guid
             PollableJobModel.create(
               delayed_job_guid: SecureRandom.uuid,
               state: PollableJobModel::PROCESSING_STATE,
               operation: 'service_bindings.delete',
               resource_guid: 'some-binding-guid',
               resource_type: 'service_bindings',
-              parent_guid: pollable_job.guid
+              root_job_guid: pollable_job.guid
             )
             job.perform
             app_model.reload
@@ -78,7 +78,7 @@ module VCAP::CloudController
               operation: 'service_bindings.delete',
               resource_guid: 'some-binding-guid',
               resource_type: 'service_bindings',
-              parent_guid: pollable_job.guid
+              root_job_guid: pollable_job.guid
             )
             job.perform
             expect(job.finished).to be(false)
@@ -93,7 +93,7 @@ module VCAP::CloudController
               operation: 'service_bindings.delete',
               resource_guid: 'some-binding-guid',
               resource_type: 'service_bindings',
-              parent_guid: pollable_job.guid
+              root_job_guid: pollable_job.guid
             )
             # On this cycle, check_children returns :waiting immediately (before delete_apps_inline)
             # The warning was shown on the previous cycle — test that @async_warning_shown persists
@@ -131,7 +131,7 @@ module VCAP::CloudController
             pollable_job = Jobs::Enqueuer.new(queue: Jobs::Queues.generic).enqueue_pollable(job)
             job.perform
 
-            child_jobs = PollableJobModel.where(parent_guid: pollable_job.guid)
+            child_jobs = PollableJobModel.where(root_job_guid: pollable_job.guid)
             expect(child_jobs.count).to eq(1)
             expect(child_jobs.first.operation).to eq('service_instance.delete')
           end
@@ -166,7 +166,7 @@ module VCAP::CloudController
               operation: 'app.delete',
               resource_guid: 'some-app-guid',
               resource_type: 'app',
-              parent_guid: pollable_job.guid
+              root_job_guid: pollable_job.guid
             )
 
             expect { job.perform }.to raise_error(CloudController::Errors::ApiError, /Child job/)
