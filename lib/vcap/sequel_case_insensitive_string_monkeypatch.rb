@@ -1,6 +1,4 @@
 require 'sequel'
-require 'sequel/adapters/postgres'
-require 'sequel/adapters/mysql2'
 
 # Add :case_insensitive as an option to the string type during migrations.
 # This results in case insensitive comparisions for indexing and querying, but
@@ -26,24 +24,28 @@ require 'sequel/adapters/mysql2'
 # In the above migration, name will will have case insensitive comparisions,
 # but case preserving data, whereas base64_data will be case sensitive.
 
-Sequel::Postgres::Database.class_eval do
-  def case_insensitive_string_column_type
-    'CIText'
-  end
+if defined?(Sequel::Postgres::Database)
+  Sequel::Postgres::Database.class_eval do
+    def case_insensitive_string_column_type
+      'CIText'
+    end
 
-  def case_insensitive_string_column_opts
-    {}
+    def case_insensitive_string_column_opts
+      {}
+    end
   end
 end
 
-Sequel::Mysql2::Database.class_eval do
-  # Mysql is case insensitive by default
-  def case_insensitive_string_column_type
-    'VARCHAR(255)'
-  end
+if defined?(Sequel::Mysql2::Database)
+  Sequel::Mysql2::Database.class_eval do
+    # Mysql is case insensitive by default
+    def case_insensitive_string_column_type
+      'VARCHAR(255)'
+    end
 
-  def case_insensitive_string_column_opts
-    { collate: 'utf8_general_ci' }
+    def case_insensitive_string_column_opts
+      { collate: 'utf8_general_ci' }
+    end
   end
 end
 
