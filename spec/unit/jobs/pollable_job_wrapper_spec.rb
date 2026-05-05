@@ -38,21 +38,21 @@ module VCAP::CloudController::Jobs
         expect(job_record.reload.state).to eq('COMPLETE')
       end
 
-      context 'when parent_guid is provided' do
-        let(:pollable_job) { PollableJobWrapper.new(job, parent_guid: 'parent-123') }
+      context 'when root_job_guid is provided' do
+        let(:pollable_job) { PollableJobWrapper.new(job, root_job_guid: 'parent-123') }
 
-        it 'stores parent_guid on the job record' do
+        it 'stores root_job_guid on the job record' do
           enqueued_job = VCAP::CloudController::Jobs::Enqueuer.new.enqueue(pollable_job)
           job_record = VCAP::CloudController::PollableJobModel.find(delayed_job_guid: enqueued_job.guid)
-          expect(job_record.parent_guid).to eq('parent-123')
+          expect(job_record.root_job_guid).to eq('parent-123')
         end
       end
 
-      context 'when parent_guid is not provided' do
-        it 'stores nil for parent_guid' do
+      context 'when root_job_guid is not provided' do
+        it 'stores nil for root_job_guid' do
           enqueued_job = VCAP::CloudController::Jobs::Enqueuer.new.enqueue(pollable_job)
           job_record = VCAP::CloudController::PollableJobModel.find(delayed_job_guid: enqueued_job.guid)
-          expect(job_record.parent_guid).to be_nil
+          expect(job_record.root_job_guid).to be_nil
         end
       end
 

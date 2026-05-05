@@ -168,55 +168,55 @@ module VCAP::CloudController
       end
     end
 
-    describe '#children' do
-      let(:parent_job) { PollableJobModel.make(state: 'PROCESSING') }
+    describe '#sub_jobs' do
+      let(:root_job) { PollableJobModel.make(state: 'PROCESSING') }
 
-      it 'returns child jobs linked by parent_guid' do
-        child = PollableJobModel.make(state: 'PROCESSING', parent_guid: parent_job.guid)
-        expect(parent_job.children).to include(child)
+      it 'returns child jobs linked by root_job_guid' do
+        child = PollableJobModel.make(state: 'PROCESSING', root_job_guid: root_job.guid)
+        expect(root_job.sub_jobs).to include(child)
       end
 
       it 'does not return unrelated jobs' do
         PollableJobModel.make(state: 'PROCESSING')
-        expect(parent_job.children).to be_empty
+        expect(root_job.sub_jobs).to be_empty
       end
     end
 
-    describe '#children_pending?' do
-      let(:parent_job) { PollableJobModel.make(state: 'PROCESSING') }
+    describe '#sub_jobs_pending?' do
+      let(:root_job) { PollableJobModel.make(state: 'PROCESSING') }
 
       it 'returns true when children are in PROCESSING state' do
-        PollableJobModel.make(state: 'PROCESSING', parent_guid: parent_job.guid)
-        expect(parent_job.children_pending?).to be(true)
+        PollableJobModel.make(state: 'PROCESSING', root_job_guid: root_job.guid)
+        expect(root_job.sub_jobs_pending?).to be(true)
       end
 
       it 'returns true when children are in POLLING state' do
-        PollableJobModel.make(state: 'POLLING', parent_guid: parent_job.guid)
-        expect(parent_job.children_pending?).to be(true)
+        PollableJobModel.make(state: 'POLLING', root_job_guid: root_job.guid)
+        expect(root_job.sub_jobs_pending?).to be(true)
       end
 
       it 'returns false when all children are COMPLETE' do
-        PollableJobModel.make(state: 'COMPLETE', parent_guid: parent_job.guid)
-        expect(parent_job.children_pending?).to be(false)
+        PollableJobModel.make(state: 'COMPLETE', root_job_guid: root_job.guid)
+        expect(root_job.sub_jobs_pending?).to be(false)
       end
 
       it 'returns false when there are no children' do
-        expect(parent_job.children_pending?).to be(false)
+        expect(root_job.sub_jobs_pending?).to be(false)
       end
     end
 
-    describe '#children_failed' do
-      let(:parent_job) { PollableJobModel.make(state: 'PROCESSING') }
+    describe '#sub_jobs_failed' do
+      let(:root_job) { PollableJobModel.make(state: 'PROCESSING') }
 
       it 'returns failed child jobs' do
-        failed_child = PollableJobModel.make(state: 'FAILED', parent_guid: parent_job.guid)
-        PollableJobModel.make(state: 'COMPLETE', parent_guid: parent_job.guid)
-        expect(parent_job.children_failed).to eq([failed_child])
+        failed_child = PollableJobModel.make(state: 'FAILED', root_job_guid: root_job.guid)
+        PollableJobModel.make(state: 'COMPLETE', root_job_guid: root_job.guid)
+        expect(root_job.sub_jobs_failed).to eq([failed_child])
       end
 
       it 'returns empty array when no children have failed' do
-        PollableJobModel.make(state: 'COMPLETE', parent_guid: parent_job.guid)
-        expect(parent_job.children_failed).to be_empty
+        PollableJobModel.make(state: 'COMPLETE', root_job_guid: root_job.guid)
+        expect(root_job.sub_jobs_failed).to be_empty
       end
     end
   end

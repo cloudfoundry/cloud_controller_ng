@@ -69,14 +69,14 @@ module VCAP::CloudController
           it 'enqueues a DeleteBindingJob as a child (via BindingsDeleteMixin)' do
             pollable_job = Jobs::Enqueuer.new(queue: Jobs::Queues.generic).enqueue_pollable(job)
 
-            # Simulate child job already enqueued by BindingsDeleteMixin with parent_guid
+            # Simulate child job already enqueued by BindingsDeleteMixin with root_job_guid
             PollableJobModel.create(
               delayed_job_guid: SecureRandom.uuid,
               state: PollableJobModel::PROCESSING_STATE,
               operation: 'service_bindings.delete',
               resource_guid: 'some-binding',
               resource_type: 'service_bindings',
-              parent_guid: pollable_job.guid
+              root_job_guid: pollable_job.guid
             )
 
             job.perform
@@ -100,7 +100,7 @@ module VCAP::CloudController
               operation: 'service_bindings.delete',
               resource_guid: binding.guid,
               resource_type: 'service_bindings',
-              parent_guid: pollable_job.guid
+              root_job_guid: pollable_job.guid
             )
 
             job.perform
@@ -120,7 +120,7 @@ module VCAP::CloudController
               operation: 'service_bindings.delete',
               resource_guid: 'some-binding-guid',
               resource_type: 'service_bindings',
-              parent_guid: pollable_job.guid
+              root_job_guid: pollable_job.guid
             )
           end
 

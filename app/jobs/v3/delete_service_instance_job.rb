@@ -1,12 +1,12 @@
 require 'services/service_brokers/v2/errors/service_broker_bad_response'
 require 'jobs/reoccurring_job'
-require 'jobs/mixins/parent_job_mixin'
+require 'jobs/mixins/root_job_mixin'
 require 'actions/v3/service_instance_delete'
 
 module VCAP::CloudController
   module V3
     class DeleteServiceInstanceJob < VCAP::CloudController::Jobs::ReoccurringJob
-      include Jobs::ParentJobMixin
+      include Jobs::RootJobMixin
 
       attr_reader :resource_guid
 
@@ -21,7 +21,7 @@ module VCAP::CloudController
 
         self.maximum_duration_seconds = service_instance.service_plan.try(:maximum_polling_duration)
 
-        return if children_waiting?
+        return if sub_jobs_pending?
 
         unless delete_in_progress?
           result = action.delete
@@ -34,7 +34,7 @@ module VCAP::CloudController
 
         self.polling_interval_seconds = result[:retry_after].to_i if result[:retry_after]
       rescue V3::ServiceInstanceDelete::UnbindingOperatationInProgress
-        # Binding jobs already enqueued by BindingsDeleteMixin with parent_guid set — wait for them
+        # Binding jobs already enqueued by BindingsDeleteMixin with root_job_guid set — wait for them
         nil
       rescue CloudController::Errors::ApiError => e
         raise e
@@ -80,7 +80,7 @@ module VCAP::CloudController
       end
 
       def action
-        ServiceInstanceDelete.new(service_instance, Repositories::ServiceEventRepository.new(user_audit_info), parent_job_guid: my_pollable_job_guid)
+        ServiceInstanceDelete.new(service_instance, Repositories::ServiceEventRepository.new(user_audit_info), root_job_guid: my_pollable_job_guid)
       end
     end
   end
