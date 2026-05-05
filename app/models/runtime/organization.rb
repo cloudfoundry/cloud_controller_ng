@@ -5,7 +5,8 @@ module VCAP::CloudController
     ORG_NAME_REGEX = /\A[[:alnum:][:punct:][:print:]]+\Z/
     ACTIVE = 'active'.freeze
     SUSPENDED = 'suspended'.freeze
-    ORG_STATUS_VALUES = [ACTIVE, SUSPENDED].freeze
+    DELETING = 'deleting'.freeze
+    ORG_STATUS_VALUES = [ACTIVE, SUSPENDED, DELETING].freeze
 
     one_to_many :spaces
 
@@ -260,6 +261,10 @@ module VCAP::CloudController
 
     def suspended?
       status == SUSPENDED
+    end
+
+    def deleting?
+      status == DELETING
     end
 
     def billing_enabled?
