@@ -160,6 +160,22 @@ RSpec.describe 'Roles Request' do
         it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS
       end
 
+      context 'when space is being deleted' do
+        let(:expected_codes_and_responses) do
+          h = super()
+          h.each do |role, response|
+            h[role] = { code: 422, errors: CF_BEING_DELETED } if response[:code].between?(200, 299)
+          end
+          h
+        end
+      
+        before do
+          space.update(status: VCAP::CloudController::Space::DELETING)
+        end
+      
+        it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS
+      end
+
       context 'when role already exists' do
         before do
           org.add_user(user_with_role)
@@ -277,6 +293,22 @@ RSpec.describe 'Roles Request' do
           org.update(status: VCAP::CloudController::Organization::SUSPENDED)
         end
 
+        it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS
+      end
+
+      context 'when space is being deleted' do
+        let(:expected_codes_and_responses) do
+          h = super()
+          h.each do |role, response|
+            h[role] = { code: 422, errors: CF_BEING_DELETED } if response[:code].between?(200, 299)
+          end
+          h
+        end
+      
+        before do
+          space.update(status: VCAP::CloudController::Space::DELETING)
+        end
+      
         it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS
       end
 
@@ -1879,6 +1911,22 @@ order_by=-created_at&created_ats[lt]=2028-05-26T18:47:01Z&guids=#{organization_a
 
         it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS
       end
+
+      context 'when space is being deleted' do
+        let(:expected_codes_and_responses) do
+          h = super()
+          h.each do |role, response|
+            h[role] = { code: 422, errors: CF_BEING_DELETED } if response[:code].between?(200, 299)
+          end
+          h
+        end
+      
+        before do
+          space.update(status: VCAP::CloudController::Space::DELETING)
+        end
+      
+        it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS
+      end
     end
 
     context 'when deleting an org role' do
@@ -1905,6 +1953,22 @@ order_by=-created_at&created_ats[lt]=2028-05-26T18:47:01Z&guids=#{organization_a
           org.update(status: VCAP::CloudController::Organization::SUSPENDED)
         end
 
+        it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS
+      end
+
+      context 'when space is being deleted' do
+        let(:expected_codes_and_responses) do
+          h = super()
+          h.each do |role, response|
+            h[role] = { code: 422, errors: CF_BEING_DELETED } if response[:code].between?(200, 299)
+          end
+          h
+        end
+      
+        before do
+          space.update(status: VCAP::CloudController::Space::DELETING)
+        end
+      
         it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS
       end
 

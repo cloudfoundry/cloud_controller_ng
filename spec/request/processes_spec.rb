@@ -980,6 +980,22 @@ RSpec.describe 'Processes' do
 
         it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS
       end
+
+      context 'when space is being deleted' do
+        let(:expected_codes_and_responses) do
+          h = super()
+          h.each do |role, response|
+            h[role] = { code: 422, errors: CF_BEING_DELETED } if response[:code].between?(200, 299)
+          end
+          h
+        end
+      
+        before do
+          space.update(status: VCAP::CloudController::Space::DELETING)
+        end
+      
+        it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS
+      end
     end
 
     it 'updates the process' do
@@ -1177,6 +1193,22 @@ RSpec.describe 'Processes' do
 
         it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS
       end
+
+      context 'when space is being deleted' do
+        let(:expected_codes_and_responses) do
+          h = super()
+          h.each do |role, response|
+            h[role] = { code: 422, errors: CF_BEING_DELETED } if response[:code].between?(200, 299)
+          end
+          h
+        end
+      
+        before do
+          space.update(status: VCAP::CloudController::Space::DELETING)
+        end
+      
+        it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS
+      end
     end
 
     context 'when the user is assigned the space_supporter role' do
@@ -1366,6 +1398,22 @@ RSpec.describe 'Processes' do
           org.update(status: VCAP::CloudController::Organization::SUSPENDED)
         end
 
+        it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS
+      end
+
+      context 'when space is being deleted' do
+        let(:expected_codes_and_responses) do
+          h = super()
+          h.each do |role, response|
+            h[role] = { code: 422, errors: CF_BEING_DELETED } if response[:code].between?(200, 299)
+          end
+          h
+        end
+      
+        before do
+          space.update(status: VCAP::CloudController::Space::DELETING)
+        end
+      
         it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS
       end
     end
