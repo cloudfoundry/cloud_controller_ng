@@ -29,6 +29,7 @@ class SpaceFeaturesController < ApplicationController
     resource_not_found!(:space) unless space && permission_queryer.can_read_from_space?(space.id, space.organization_id)
     resource_not_found!(:feature) unless hashed_params[:name] == SPACE_FEATURE
     unauthorized! unless permission_queryer.can_update_active_space?(space.id, space.organization_id)
+    being_deleted! if permission_queryer.is_space_deleting?(space.id)
     suspended! unless permission_queryer.is_space_active?(space.id)
 
     space.update(allow_ssh: message.enabled)

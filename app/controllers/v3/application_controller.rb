@@ -26,6 +26,10 @@ module V3ErrorsHelper
     raise CloudController::Errors::ApiError.new_from_details('OrgSuspended')
   end
 
+  def being_deleted!
+    raise CloudController::Errors::ApiError.new_from_details('UnprocessableEntity', 'Cannot modify resource: deletion is in progress')
+  end
+
   def resource_not_found_with_message!(message)
     raise CloudController::Errors::ApiError.new_from_details('ResourceNotFound', message)
   end

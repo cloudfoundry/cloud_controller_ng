@@ -83,6 +83,7 @@ class ServiceInstancesV3Controller < ApplicationController
     space = Space.first(guid: message.space_guid)
     unprocessable_space! unless space && can_read_from_space?(space)
     unauthorized! unless can_write_to_active_space?(space)
+    being_deleted! if permission_queryer.is_space_deleting?(space.id)
     suspended! unless is_space_active?(space)
 
     case message.type
@@ -133,6 +134,7 @@ class ServiceInstancesV3Controller < ApplicationController
     service_instance = ServiceInstance.first(guid: hashed_params[:guid])
     resource_not_found!(:service_instance) unless service_instance && can_read_service_instance?(service_instance)
     unauthorized! unless can_write_to_active_space?(service_instance.space)
+    being_deleted! if permission_queryer.is_space_deleting?(service_instance.space.id)
     suspended! unless is_space_active?(service_instance.space)
 
     message = VCAP::CloudController::ToManyRelationshipMessage.new(hashed_params[:body])
@@ -156,6 +158,7 @@ class ServiceInstancesV3Controller < ApplicationController
 
     resource_not_found!(:service_instance) unless service_instance && can_read_service_instance?(service_instance)
     unauthorized! unless can_write_to_active_space?(service_instance.space)
+    being_deleted! if permission_queryer.is_space_deleting?(service_instance.space.id)
     suspended! unless is_space_active?(service_instance.space)
 
     space_guid = hashed_params[:space_guid]
@@ -386,6 +389,7 @@ class ServiceInstancesV3Controller < ApplicationController
 
     service_instance_not_found! unless service_instance && can_read_service_instance?(service_instance)
     unauthorized! unless can_write_to_active_space?(service_instance.space)
+    being_deleted! if permission_queryer.is_space_deleting?(service_instance.space.id)
     suspended! unless is_space_active?(service_instance.space)
 
     service_instance

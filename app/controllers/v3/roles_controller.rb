@@ -99,6 +99,7 @@ class RolesController < ApplicationController
     unprocessable_space! unless space
 
     unauthorized! unless permission_queryer.can_update_active_space?(space.id, space.organization_id)
+    being_deleted! if permission_queryer.is_space_deleting?(space.id)
     suspended! unless permission_queryer.is_space_active?(space.id)
 
     user_guid = message.user_guid || lookup_user_guid_in_uaa(message.username, message.user_origin, creating_space_role: true)
@@ -116,6 +117,7 @@ class RolesController < ApplicationController
     org = Organization.find(guid: message.organization_guid)
     unprocessable_organization! unless org
     unauthorized! unless permission_queryer.can_write_to_active_org?(org.id)
+    being_deleted! if permission_queryer.is_org_deleting?(org.id)
     suspended! unless permission_queryer.is_org_active?(org.id)
 
     user_guid = if message.username && message.user_origin && message.user_origin != 'uaa' && org_managers_can_create_users?

@@ -80,6 +80,7 @@ class DeploymentsController < ApplicationController
 
     resource_not_found!(:deployment) unless deployment && permission_queryer.can_read_from_space?(deployment.app.space.id, deployment.app.space.organization_id)
     unauthorized! unless permission_queryer.can_write_to_active_space?(deployment.app.space.id)
+    being_deleted! if permission_queryer.is_space_deleting?(deployment.app.space.id)
     suspended! unless permission_queryer.is_space_active?(deployment.app.space.id)
 
     message = VCAP::CloudController::DeploymentUpdateMessage.new(hashed_params[:body])

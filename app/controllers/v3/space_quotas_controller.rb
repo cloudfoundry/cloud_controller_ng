@@ -44,6 +44,7 @@ class SpaceQuotasController < ApplicationController
     unprocessable_organization!(message.organization_guid) unless org
 
     unauthorized! unless permission_queryer.can_write_to_active_org?(org.id)
+    being_deleted! if permission_queryer.is_org_deleting?(org.id)
     suspended! unless permission_queryer.is_org_active?(org.id)
 
     space_quota = SpaceQuotasCreate.new(user_audit_info).create(message, organization: org)
@@ -64,6 +65,7 @@ class SpaceQuotasController < ApplicationController
 
     unauthorized! unless permission_queryer.can_write_globally? ||
                          (space_quota && permission_queryer.can_write_to_active_org?(space_quota.organization_id))
+    being_deleted! if space_quota && permission_queryer.is_org_deleting?(space_quota.organization_id)
     suspended! unless space_quota && permission_queryer.is_org_active?(space_quota.organization_id)
 
     message = VCAP::CloudController::OrganizationQuotasUpdateMessage.new(hashed_params[:body])
@@ -87,6 +89,7 @@ class SpaceQuotasController < ApplicationController
 
     unauthorized! unless permission_queryer.can_write_globally? ||
                          (space_quota && permission_queryer.can_write_to_active_org?(space_quota.organization_id))
+    being_deleted! if space_quota && permission_queryer.is_org_deleting?(space_quota.organization_id)
     suspended! unless space_quota && permission_queryer.is_org_active?(space_quota.organization_id)
 
     message = SpaceQuotaApplyMessage.new(hashed_params[:body])
@@ -104,7 +107,7 @@ class SpaceQuotasController < ApplicationController
     unprocessable!(e.message)
   end
 
-  def remove_from_space
+  def remove_from_space # rubocop:disable Metrics/CyclomaticComplexity
     space_quota = SpaceQuotaDefinition.first(guid: hashed_params[:guid])
 
     resource_not_found!(:space_quota) unless space_quota &&
@@ -112,6 +115,7 @@ class SpaceQuotasController < ApplicationController
 
     unauthorized! unless permission_queryer.can_write_globally? ||
                          (space_quota && permission_queryer.can_write_to_active_org?(space_quota.organization_id))
+    being_deleted! if space_quota && permission_queryer.is_org_deleting?(space_quota.organization_id)
     suspended! unless space_quota && permission_queryer.is_org_active?(space_quota.organization_id)
 
     space_guid = hashed_params[:space_guid]

@@ -171,18 +171,22 @@ class SecurityGroupsController < ApplicationController
   def check_unwritable_spaces(space_guids)
     unauthorized_space = false
     suspended_space = false
+    deleting_space = false
     space_guids.each do |space_guid|
       space = Space.find(guid: space_guid)
       if space
         if !permission_queryer.can_update_active_space?(space.id, space.organization_id)
           unauthorized_space = true
           break
+        elsif permission_queryer.is_space_deleting?(space.id)
+          deleting_space = true
         elsif !suspended_space && !permission_queryer.is_space_active?(space.id)
           suspended_space = true
         end
       end
     end
     unauthorized! if unauthorized_space
+    being_deleted! if deleting_space
     suspended! if suspended_space
   end
 

@@ -59,6 +59,7 @@ class ServiceBrokersController < ApplicationController
       space = Space.where(guid: message.space_guid).first
       unprocessable_space! unless space && permission_queryer.can_read_from_space?(space.id, space.organization_id)
       unauthorized! unless permission_queryer.can_write_to_active_space?(space.id)
+      being_deleted! if permission_queryer.is_space_deleting?(space.id)
       suspended! unless permission_queryer.is_space_active?(space.id)
     else
       unauthorized! unless permission_queryer.can_write_globally?
@@ -72,7 +73,7 @@ class ServiceBrokersController < ApplicationController
     unprocessable!(e.message)
   end
 
-  def update
+  def update # rubocop:disable Metrics/CyclomaticComplexity
     message = ServiceBrokerUpdateMessage.new(hashed_params[:body])
     unprocessable!(message.errors.full_messages) unless message.valid?
 
@@ -83,6 +84,7 @@ class ServiceBrokersController < ApplicationController
       space = service_broker.space
       broker_not_found! unless space && permission_queryer.can_read_from_space?(space.id, space.organization_id)
       unauthorized! unless permission_queryer.can_write_to_active_space?(space.id)
+      being_deleted! if permission_queryer.is_space_deleting?(space.id)
       suspended! unless permission_queryer.is_space_active?(space.id)
     else
       broker_not_found! unless permission_queryer.can_read_globally?
