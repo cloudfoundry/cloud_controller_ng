@@ -2,10 +2,6 @@ module VCAP::CloudController
   module Jobs
     module Runtime
       class DelayedJobsRecover < VCAP::CloudController::Jobs::CCJob
-        RECOVERABLE_OPERATIONS = %w[
-          service_instance.create
-        ].freeze
-
         def perform
           logger.info('Recover halted delayed jobs')
           recover
@@ -18,48 +14,52 @@ module VCAP::CloudController
         private
 
         def recover
-          # find delayed jobs where failed_at is set (permanently failed)
-          # and still within the max polling duration (not expired)
+          # Find stuck service instance create operations where the broker is still working
+          # but CC's polling job has permanently failed due to a transient error (e.g. brief db connection flip).
+          # Join path: service_instance_operations → service_instances → jobs → delayed_jobs.
+          #
+          # Filters:
+          #   - service_instance_operations.state='in progress': the broker has not yet reported a final state
+          #     (succeeded or failed) that CC could successfully persist; if CC had received and saved a final
+          #     state from the broker, this column would already be 'succeeded' or 'failed' — not 'in progress'
+          #   - service_instance_operations.type='create': scope to create operations only
+          #   - service_instance_operations.created_at > cutoff: operations beyond the max async polling window
+          #     are intentionally excluded — the broker has given up on them too, so re-enqueuing is pointless
+          #   - jobs.state IN (POLLING, FAILED): the pollable job has not reached a terminal success state;
+          #     POLLING covers the case where the failure hook itself couldn't write FAILED due to the DB flip
+          #   - jobs.operation='service_instance.create': prevents matching update/delete jobs for the same
+          #     service instance that happen to share the same resource_guid
+          #   - delayed_jobs.failed_at IS NOT NULL: the delayed job permanently failed (exhausted max_attempts);
+          #     jobs still alive or locked have failed_at=NULL and must not be touched
           cutoff_time = Time.now - default_maximum_duration_seconds
-          dead_delayed_jobs = Delayed::Job.
-                              exclude(failed_at: nil).
-                              where { created_at > cutoff_time }.
-                              order(:created_at).
-                              limit(batch_size)
+          stuck = ServiceInstanceOperation.
+                  join(:service_instances, id: Sequel[:service_instance_operations][:service_instance_id]).
+                  join(:jobs, resource_guid: Sequel[:service_instances][:guid]).
+                  join(:delayed_jobs, guid: Sequel[:jobs][:delayed_job_guid]).
+                  where(Sequel[:service_instance_operations][:state] => 'in progress').
+                  where(Sequel[:service_instance_operations][:type] => 'create').
+                  where { Sequel[:service_instance_operations][:created_at] > cutoff_time }.
+                  where(Sequel[:jobs][:state] => [PollableJobModel::POLLING_STATE, PollableJobModel::FAILED_STATE]).
+                  where(Sequel[:jobs][:operation] => 'service_instance.create').
+                  exclude(Sequel[:delayed_jobs][:failed_at] => nil).
+                  select(Sequel[:jobs][:guid].as(:pollable_guid), Sequel[:delayed_jobs][:guid].as(:dj_guid)).
+                  order(Sequel[:service_instance_operations][:created_at]).
+                  limit(batch_size)
 
-          dead_delayed_jobs.each do |delayed|
-            # pollable job state can be POLLING or FAILED depending on whether the failure
-            # hook managed to persist before the db connection was lost
-            pollable = PollableJobModel.where(delayed_job_guid: delayed.guid).
-                       where(state: [PollableJobModel::POLLING_STATE, PollableJobModel::FAILED_STATE]).
-                       first
-            next unless pollable
-            next unless RECOVERABLE_OPERATIONS.include?(pollable.operation)
+          stuck.each do |row|
+            delayed = Delayed::Job.first(guid: row[:dj_guid])
+            next unless delayed
 
-            # last_operation.state must be 'in progress'. This confirms the broker is still
-            # working on the operation and CC is the one that gave up, not the broker
-            entity = find_entity(pollable)
-            next unless entity
-            next unless entity.last_operation&.state == 'in progress'
-
-            reenqueue(pollable, delayed)
+            reenqueue(row[:pollable_guid], delayed)
           end
         end
 
-        def find_entity(pollable)
-          # TODO: resource_type field can be used
-          case pollable.operation
-          when 'service_instance.create'
-            ManagedServiceInstance.first(guid: pollable.resource_guid)
-          end
-        end
-
-        def reenqueue(pollable, delayed)
+        def reenqueue(pollable_guid, delayed)
           # re-verify atomically that the pollable job still points to this dead delayed_job.
           # if another process already re-enqueued a new job, pollable.delayed_job_guid was
           # updated to the new delayed_job's guid, so where clause returns nil and we skip safely.
           PollableJobModel.db.transaction do
-            pjob = PollableJobModel.where(guid: pollable.guid,
+            pjob = PollableJobModel.where(guid: pollable_guid,
                                           delayed_job_guid: delayed.guid,
                                           state: [PollableJobModel::POLLING_STATE, PollableJobModel::FAILED_STATE]).
                    for_update.first
@@ -68,7 +68,7 @@ module VCAP::CloudController
             # bring the pollable job into the clean polling state
             pjob.update(cf_api_error: nil, state: PollableJobModel::POLLING_STATE)
 
-            # unwrap the serialized handler and re-enqueue via the reoccurring job
+            # unwrap the serialized handler and re-enqueue via the reoccurring job's enqueue_next_job method
             inner_job = Jobs::Enqueuer.unwrap_job(delayed.payload_object)
             inner_job.send(:enqueue_next_job, pjob)
           end
