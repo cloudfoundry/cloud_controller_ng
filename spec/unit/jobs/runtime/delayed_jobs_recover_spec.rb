@@ -5,7 +5,7 @@ module VCAP::CloudController
     RSpec.describe DelayedJobsRecover, job_context: :worker do
       subject(:job) { DelayedJobsRecover.new }
 
-      let(:fake_logger) { instance_double(Steno::Logger, info: nil) }
+      let(:fake_logger) { instance_double(Steno::Logger, info: nil, warn: nil) }
       let(:max_poll_duration_minutes) { 60 }
 
       before do
