@@ -463,6 +463,7 @@ Rails/ActiveRecordAliases:
   Exclude:
     - 'app/actions/services/locks/updater_lock.rb'
     - 'app/actions/services/service_instance_update.rb'
+    - 'app/jobs/v3/delete_space_job.rb'
     - 'app/models/services/managed_service_instance.rb'
     - 'app/models/services/service_instance.rb'
     - 'spec/support/shared_examples/models/operations.rb'

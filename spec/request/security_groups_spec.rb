@@ -336,6 +336,22 @@ RSpec.describe 'Security_Groups Request' do
         it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS
       end
 
+      context 'when space is being deleted' do
+        let(:expected_codes_and_responses) do
+          h = super()
+          h.each do |role, response|
+            h[role] = { code: 422, errors: CF_BEING_DELETED } if response[:code].between?(200, 299)
+          end
+          h
+        end
+      
+        before do
+          space.update(status: VCAP::CloudController::Space::DELETING)
+        end
+      
+        it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS
+      end
+
       context 'when the security group does not exist' do
         it 'returns a 404' do
           post '/v3/security_groups/non-existent-group/relationships/running_spaces', {}.to_json, admin_header
@@ -498,6 +514,22 @@ RSpec.describe 'Security_Groups Request' do
           h
         end
 
+        it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS
+      end
+
+      context 'when space is being deleted' do
+        let(:expected_codes_and_responses) do
+          h = super()
+          h.each do |role, response|
+            h[role] = { code: 422, errors: CF_BEING_DELETED } if response[:code].between?(200, 299)
+          end
+          h
+        end
+      
+        before do
+          space.update(status: VCAP::CloudController::Space::DELETING)
+        end
+      
         it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS
       end
 

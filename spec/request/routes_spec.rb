@@ -2488,6 +2488,22 @@ RSpec.describe 'Routes Request' do
 
         it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS
       end
+
+      context 'when space is being deleted' do
+        let(:expected_codes_and_responses) do
+          h = super()
+          h.each do |role, response|
+            h[role] = { code: 422, errors: CF_BEING_DELETED } if response[:code].between?(200, 299)
+          end
+          h
+        end
+      
+        before do
+          space.update(status: VCAP::CloudController::Space::DELETING)
+        end
+      
+        it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS
+      end
     end
 
     context 'when the user is not a member in the routes org' do
@@ -2663,6 +2679,22 @@ RSpec.describe 'Routes Request' do
 
         it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS
       end
+
+      context 'when space is being deleted' do
+        let(:expected_codes_and_responses) do
+          h = super()
+          h.each do |role, response|
+            h[role] = { code: 422, errors: CF_BEING_DELETED } if response[:code].between?(200, 299)
+          end
+          h
+        end
+      
+        before do
+          space.update(status: VCAP::CloudController::Space::DELETING)
+        end
+      
+        it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS
+      end
     end
 
     describe 'when the user is not logged in' do
@@ -2809,6 +2841,22 @@ RSpec.describe 'Routes Request' do
           org.update(status: VCAP::CloudController::Organization::SUSPENDED)
         end
 
+        it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS
+      end
+
+      context 'when space is being deleted' do
+        let(:expected_codes_and_responses) do
+          h = super()
+          h.each do |role, response|
+            h[role] = { code: 422, errors: CF_BEING_DELETED } if response[:code].between?(200, 299)
+          end
+          h
+        end
+      
+        before do
+          space.update(status: VCAP::CloudController::Space::DELETING)
+        end
+      
         it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS
       end
 
@@ -3104,6 +3152,22 @@ RSpec.describe 'Routes Request' do
         it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS
       end
 
+      context 'when space is being deleted' do
+        let(:expected_codes_and_responses) do
+          h = super()
+          h.each do |role, response|
+            h[role] = { code: 422, errors: CF_BEING_DELETED } if response[:code].between?(200, 299)
+          end
+          h
+        end
+      
+        before do
+          space.update(status: VCAP::CloudController::Space::DELETING)
+        end
+      
+        it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS
+      end
+
       context 'when target organization is suspended' do
         let(:space_to_unshare) do
           space = VCAP::CloudController::Space.make
@@ -3330,6 +3394,22 @@ RSpec.describe 'Routes Request' do
           org.update(status: VCAP::CloudController::Organization::SUSPENDED)
         end
 
+        it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS
+      end
+
+      context 'when space is being deleted' do
+        let(:expected_codes_and_responses) do
+          h = super()
+          h.each do |role, response|
+            h[role] = { code: 422, errors: CF_BEING_DELETED } if response[:code].between?(200, 299)
+          end
+          h
+        end
+      
+        before do
+          space.update(status: VCAP::CloudController::Space::DELETING)
+        end
+      
         it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS
       end
 

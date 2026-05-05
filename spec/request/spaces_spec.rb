@@ -923,6 +923,22 @@ RSpec.describe 'Spaces' do
 
         it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS
       end
+
+      context 'when space is being deleted' do
+        let(:expected_codes_and_responses) do
+          h = super()
+          h.each do |role, response|
+            h[role] = { code: 422, errors: CF_BEING_DELETED } if response[:code].between?(200, 299)
+          end
+          h
+        end
+      
+        before do
+          space.update(status: VCAP::CloudController::Space::DELETING)
+        end
+      
+        it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS
+      end
     end
 
     context 'removing labels' do
@@ -1093,6 +1109,22 @@ RSpec.describe 'Spaces' do
 
         it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS
       end
+
+      context 'when space is being deleted' do
+        let(:expected_codes_and_responses) do
+          h = super()
+          h.each do |role, response|
+            h[role] = { code: 422, errors: CF_BEING_DELETED } if response[:code].between?(200, 299)
+          end
+          h
+        end
+      
+        before do
+          space.update(status: VCAP::CloudController::Space::DELETING)
+        end
+      
+        it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS
+      end
     end
 
     describe 'when the user is not logged in' do
@@ -1155,6 +1187,22 @@ RSpec.describe 'Spaces' do
           org.update(status: VCAP::CloudController::Organization::SUSPENDED)
         end
 
+        it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS
+      end
+
+      context 'when space is being deleted' do
+        let(:expected_codes_and_responses) do
+          h = super()
+          h.each do |role, response|
+            h[role] = { code: 422, errors: CF_BEING_DELETED } if response[:code].between?(200, 299)
+          end
+          h
+        end
+      
+        before do
+          space.update(status: VCAP::CloudController::Space::DELETING)
+        end
+      
         it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS
       end
     end

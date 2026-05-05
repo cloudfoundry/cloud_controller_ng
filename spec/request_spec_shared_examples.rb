@@ -29,6 +29,12 @@ CF_ORG_SUSPENDED = [
     code: 10_017 }
 ].freeze
 
+CF_BEING_DELETED = [
+  { detail: 'Cannot modify resource: deletion is in progress',
+    title: 'CF-UnprocessableEntity',
+    code: 10_008 }
+].freeze
+
 RSpec.shared_examples 'paginated response' do |endpoint|
   it 'returns pagination information' do
     expect_filtered_resources(endpoint, 'per_page=1', resources[0, 1])

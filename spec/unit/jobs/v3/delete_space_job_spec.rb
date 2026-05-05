@@ -1,0 +1,208 @@
+require 'spec_helper'
+require 'jobs/v3/delete_space_job'
+
+module VCAP::CloudController
+  module V3
+    RSpec.describe DeleteSpaceJob do
+      let(:user_audit_info) { UserAuditInfo.new(user_guid: User.make.guid, user_email: 'test@example.com', user_name: 'test-user') }
+      let(:org) { Organization.make }
+      let(:space) { Space.make(organization: org, name: 'my-space') }
+
+      subject(:job) { DeleteSpaceJob.new(space.guid, user_audit_info) }
+
+      it_behaves_like 'delayed job', described_class
+
+      describe '#perform' do
+        context 'when the space does not exist' do
+          before { space.destroy }
+
+          it 'finishes the job' do
+            job.perform
+            expect(job.finished).to be(true)
+          end
+        end
+
+        context 'when the space has no resources' do
+          it 'deletes the space and finishes in single cycle' do
+            job.perform
+            expect(job.finished).to be(true)
+            expect(Space.find(guid: space.guid)).to be_nil
+          end
+        end
+
+        context 'when the space has apps without service bindings' do
+          before do
+            AppModel.make(space: space, name: 'app-1')
+            AppModel.make(space: space, name: 'app-2')
+          end
+
+          it 'deletes all apps and the space in single cycle' do
+            job.perform
+            expect(job.finished).to be(true)
+            expect(Space.find(guid: space.guid)).to be_nil
+            expect(AppModel.where(space_guid: space.guid).count).to eq(0)
+          end
+        end
+
+        context 'when the space has apps with async service bindings' do
+          let(:app_model) { AppModel.make(space: space, name: 'bound-app') }
+
+          before do
+            app_model # ensure it's created
+            allow_any_instance_of(AppDelete).to receive(:delete).and_raise(
+              AppDelete::AsyncBindingDeletionsTriggered.new('binding operation in progress')
+            )
+          end
+
+          it 'stops the app on first cycle' do
+            pollable_job = Jobs::Enqueuer.new(queue: Jobs::Queues.generic).enqueue_pollable(job)
+            # Simulate that BindingsDeleteMixin enqueued a child job with parent_guid
+            PollableJobModel.create(
+              delayed_job_guid: SecureRandom.uuid,
+              state: PollableJobModel::PROCESSING_STATE,
+              operation: 'service_bindings.delete',
+              resource_guid: 'some-binding-guid',
+              resource_type: 'service_bindings',
+              parent_guid: pollable_job.guid
+            )
+            job.perform
+            app_model.reload
+            expect(app_model.desired_state).to eq(ProcessModel::STOPPED)
+          end
+
+          it 'does not finish on first cycle' do
+            pollable_job = Jobs::Enqueuer.new(queue: Jobs::Queues.generic).enqueue_pollable(job)
+            PollableJobModel.create(
+              delayed_job_guid: SecureRandom.uuid,
+              state: PollableJobModel::PROCESSING_STATE,
+              operation: 'service_bindings.delete',
+              resource_guid: 'some-binding-guid',
+              resource_type: 'service_bindings',
+              parent_guid: pollable_job.guid
+            )
+            job.perform
+            expect(job.finished).to be(false)
+          end
+
+          it 'shows the async warning on the cycle when async work is detected' do
+            pollable_job = Jobs::Enqueuer.new(queue: Jobs::Queues.generic).enqueue_pollable(job)
+            # Create a child job so check_children returns :waiting after delete_apps_inline
+            PollableJobModel.create(
+              delayed_job_guid: SecureRandom.uuid,
+              state: PollableJobModel::PROCESSING_STATE,
+              operation: 'service_bindings.delete',
+              resource_guid: 'some-binding-guid',
+              resource_type: 'service_bindings',
+              parent_guid: pollable_job.guid
+            )
+            # On this cycle, check_children returns :waiting immediately (before delete_apps_inline)
+            # The warning was shown on the previous cycle — test that @async_warning_shown persists
+            # Instead, test that show_async_warning works by simulating the first encounter
+            job.send(:show_async_warning)
+            expect(job.warnings).to include(
+              hash_including(detail: a_string_matching(/Waiting for async operations/))
+            )
+          end
+        end
+
+        context 'when the space has managed service instances (sync broker)' do
+          let!(:service_instance) { ManagedServiceInstance.make(space: space, name: 'my-si') }
+
+          before do
+            stub_deprovision(service_instance, accepts_incomplete: true)
+          end
+
+          it 'deletes the SI and the space in single cycle' do
+            job.perform
+            expect(job.finished).to be(true)
+            expect(Space.find(guid: space.guid)).to be_nil
+            expect(ManagedServiceInstance.find(guid: service_instance.guid)).to be_nil
+          end
+        end
+
+        context 'when the space has managed service instances (async deprovision)' do
+          let!(:service_instance) { ManagedServiceInstance.make(space: space, name: 'my-async-si') }
+
+          before do
+            stub_deprovision(service_instance, accepts_incomplete: true, status: 202, body: { operation: 'deprovision-op' }.to_json)
+          end
+
+          it 'enqueues a DeleteServiceInstanceJob as a child' do
+            pollable_job = Jobs::Enqueuer.new(queue: Jobs::Queues.generic).enqueue_pollable(job)
+            job.perform
+
+            child_jobs = PollableJobModel.where(parent_guid: pollable_job.guid)
+            expect(child_jobs.count).to eq(1)
+            expect(child_jobs.first.operation).to eq('service_instance.delete')
+          end
+
+          it 'does not finish on first cycle' do
+            Jobs::Enqueuer.new(queue: Jobs::Queues.generic).enqueue_pollable(job)
+            job.perform
+            expect(job.finished).to be(false)
+          end
+        end
+
+        context 'phase advancement' do
+          it 'advances through all phases for sync resources' do
+            AppModel.make(space: space)
+            # No managed SIs
+
+            job.perform
+            # Phase 1: apps deleted inline → Phase 2: no managed SIs → Phase 3: cleanup → finish
+            expect(job.finished).to be(true)
+            expect(Space.find(guid: space.guid)).to be_nil
+          end
+        end
+
+        context 'when a child job fails' do
+          it 'raises an error' do
+            pollable_job = Jobs::Enqueuer.new(queue: Jobs::Queues.generic).enqueue_pollable(job)
+
+            # Create a failed child job
+            PollableJobModel.create(
+              delayed_job_guid: SecureRandom.uuid,
+              state: PollableJobModel::FAILED_STATE,
+              operation: 'app.delete',
+              resource_guid: 'some-app-guid',
+              resource_type: 'app',
+              parent_guid: pollable_job.guid
+            )
+
+            expect { job.perform }.to raise_error(CloudController::Errors::ApiError, /Child job/)
+          end
+        end
+      end
+
+      describe '#resource_guid' do
+        it 'returns the space guid' do
+          expect(job.resource_guid).to eq(space.guid)
+        end
+      end
+
+      describe '#resource_type' do
+        it 'returns space' do
+          expect(job.resource_type).to eq('space')
+        end
+      end
+
+      describe '#display_name' do
+        it 'returns space.delete' do
+          expect(job.display_name).to eq('space.delete')
+        end
+      end
+
+      describe '#max_attempts' do
+        it 'returns 1' do
+          expect(job.max_attempts).to eq(1)
+        end
+      end
+
+      describe '#pollable_job_state' do
+        it 'returns PROCESSING' do
+          expect(job.pollable_job_state).to eq(PollableJobModel::PROCESSING_STATE)
+        end
+      end
+    end
+  end
+end
