@@ -60,8 +60,7 @@ module VCAP::CloudController
           # updated to the new delayed_job's guid, so where clause returns nil and we skip safely.
           PollableJobModel.db.transaction do
             pjob = PollableJobModel.where(guid: pollable_guid,
-                                          delayed_job_guid: delayed.guid,
-                                          state: [PollableJobModel::POLLING_STATE, PollableJobModel::FAILED_STATE]).
+                                          delayed_job_guid: delayed.guid).
                    for_update.first
             return unless pjob
 
