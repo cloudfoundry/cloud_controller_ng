@@ -213,14 +213,6 @@ class VCAP::CloudController::Permissions
     can_read_globally? || readable_org_guids_query.where(isolation_segment_models: isolation_segment).any?
   end
 
-  def readable_route_dataset
-    if can_read_globally?
-      VCAP::CloudController::Route.dataset
-    else
-      VCAP::CloudController::Route.user_visible(@user, can_read_globally?)
-    end
-  end
-
   def readable_services_space_guids
     if can_read_secrets_globally?
       VCAP::CloudController::Space.select_map(:guid)
