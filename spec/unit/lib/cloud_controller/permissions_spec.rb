@@ -1157,6 +1157,118 @@ module VCAP::CloudController
       end
     end
 
+    describe '#readable_users_query' do
+      context 'when user is an admin' do
+        it 'returns all users' do
+          set_current_user(user, { admin: true })
+          other_user = User.make
+
+          result = permissions.readable_users_query
+          guids = result.select_map(:guid)
+          expect(guids).to include(user.guid)
+          expect(guids).to include(other_user.guid)
+        end
+      end
+
+      context 'when user is a read-only admin' do
+        it 'returns all users' do
+          set_current_user(user, { admin_read_only: true })
+          other_user = User.make
+
+          guids = permissions.readable_users_query.select_map(:guid)
+          expect(guids).to include(user.guid)
+          expect(guids).to include(other_user.guid)
+        end
+      end
+
+      context 'when user has an org membership' do
+        let(:other_user) { User.make }
+        let(:unrelated_user) { User.make }
+        let(:other_org) { Organization.make }
+
+        before do
+          org.add_user(user)
+          org.add_user(other_user)
+          other_org.add_user(unrelated_user)
+        end
+
+        it 'returns users from the same org plus self' do
+          guids = permissions.readable_users_query.select_map(:guid)
+          expect(guids).to include(user.guid)
+          expect(guids).to include(other_user.guid)
+          expect(guids).not_to include(unrelated_user.guid)
+        end
+      end
+
+      context 'when user has no org membership' do
+        it 'returns only the current user' do
+          guids = permissions.readable_users_query.select_map(:guid)
+          expect(guids).to contain_exactly(user.guid)
+        end
+      end
+    end
+
+    describe '#can_read_from_space_as_space_member?' do
+      context 'user has no membership' do
+        context 'and user is an admin' do
+          it 'returns true' do
+            set_current_user(user, { admin: true })
+            expect(permissions.can_read_from_space_as_space_member?(space.id)).to be true
+          end
+        end
+
+        context 'and user is a read-only admin' do
+          it 'returns true' do
+            set_current_user(user, { admin_read_only: true })
+            expect(permissions.can_read_from_space_as_space_member?(space.id)).to be true
+          end
+        end
+
+        context 'and user is a global auditor' do
+          it 'returns true' do
+            set_current_user_as_global_auditor
+            expect(permissions.can_read_from_space_as_space_member?(space.id)).to be true
+          end
+        end
+
+        context 'and user is not an admin' do
+          it 'returns false' do
+            set_current_user(user)
+            expect(permissions.can_read_from_space_as_space_member?(space.id)).to be false
+          end
+        end
+      end
+
+      context 'user has valid membership' do
+        before { org.add_user(user) }
+
+        it 'returns true for space developer' do
+          space.add_developer(user)
+          expect(permissions.can_read_from_space_as_space_member?(space.id)).to be true
+        end
+
+        it 'returns true for space manager' do
+          space.add_manager(user)
+          expect(permissions.can_read_from_space_as_space_member?(space.id)).to be true
+        end
+
+        it 'returns true for space auditor' do
+          space.add_auditor(user)
+          expect(permissions.can_read_from_space_as_space_member?(space.id)).to be true
+        end
+
+        it 'returns true for space supporter' do
+          space.add_supporter(user)
+          expect(permissions.can_read_from_space_as_space_member?(space.id)).to be true
+        end
+
+        it 'returns false for org manager (not a space member role)' do
+          org.add_manager(user)
+          expect(permissions.can_read_from_space_as_space_member?(space.id)).to be false
+        end
+      end
+    end
+
     describe '#readable_space_quota_guids' do
       let(:org1) { Organization.make }
       let(:org2) { Organization.make }

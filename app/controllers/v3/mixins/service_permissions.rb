@@ -16,7 +16,7 @@ module VCAP::CloudController
     end
 
     def writable_space_scoped?(space)
-      space && space.has_developer?(current_user)
+      space && permission_queryer.can_write_to_active_space?(space.id)
     end
 
     def current_user_can_write?(resource)
@@ -24,7 +24,7 @@ module VCAP::CloudController
     end
 
     def visible_space_scoped?(space)
-      current_user && space && (space.has_member?(current_user) || space.has_supporter?(current_user))
+      current_user && space && permission_queryer.can_read_from_space_as_space_member?(space.id)
     end
 
     def visible_to_current_user?(service: nil, plan: nil)
