@@ -41,14 +41,18 @@ module VCAP::CloudController
         cleanup_and_destroy(space)
         finish
       rescue CloudController::Errors::ApiError
+        reset_space_status
         raise
       rescue StandardError => e
+        reset_space_status
         raise CloudController::Errors::ApiError.new_from_details('SpaceDeletionFailed', space&.name || space_guid, e.message)
       ensure
         deactivate_root_job_context
       end
 
-      def handle_timeout; end
+      def handle_timeout
+        reset_space_status
+      end
 
       def resource_guid
         space_guid
@@ -138,6 +142,11 @@ module VCAP::CloudController
 
       def set_async_warning
         @warnings = [{ detail: 'Waiting for async service operations to complete. Depending on the service broker, this could take several hours.' }]
+      end
+
+      def reset_space_status
+        space = Space.first(guid: space_guid)
+        space&.update(status: nil)
       end
     end
   end

@@ -1039,9 +1039,6 @@ RSpec.describe AppsV3Controller, type: :controller do
       allow_user_read_access_for(user, spaces: [space])
       allow_user_write_access(user, space:)
       VCAP::CloudController::BuildpackLifecycleDataModel.make(app: app_model, buildpacks: nil, stack: VCAP::CloudController::Stack.default.name)
-      allow(VCAP::CloudController::Jobs::DeleteActionJob).to receive(:new).and_call_original
-      allow(VCAP::CloudController::AppDelete).to receive(:new).and_return(app_delete_stub)
-      allow(AppsV3Controller::DeleteAppErrorTranslatorJob).to receive(:new).and_call_original
     end
 
     context 'when the app does not exist' do
@@ -1056,17 +1053,10 @@ RSpec.describe AppsV3Controller, type: :controller do
     it 'successfully deletes the app in a background job' do
       delete :destroy, params: { guid: app_model.guid }
 
-      app_delete_jobs = Delayed::Job.where(Sequel.lit("handler like '%AppDelete%'"))
+      app_delete_jobs = Delayed::Job.where(Sequel.lit("handler like '%DeleteAppJob%'"))
       expect(app_delete_jobs.count).to eq 1
-      app_delete_jobs.first
 
       expect(VCAP::CloudController::AppModel.find(guid: app_model.guid)).not_to be_nil
-      expect(VCAP::CloudController::Jobs::DeleteActionJob).to have_received(:new).with(
-        VCAP::CloudController::AppModel,
-        app_model.guid,
-        app_delete_stub
-      )
-      expect(AppsV3Controller::DeleteAppErrorTranslatorJob).to have_received(:new)
     end
 
     it 'creates a job to track the deletion and returns it in the location header' do
@@ -2313,34 +2303,6 @@ RSpec.describe AppsV3Controller, type: :controller do
 
         expect(response).to have_http_status(:not_found)
         expect(response.body).to include('ResourceNotFound')
-      end
-    end
-  end
-
-  describe 'DeleteAppErrorTranslatorJob' do
-    let(:error_translator) { AppsV3Controller::DeleteAppErrorTranslatorJob.new(job) }
-    let(:job) {}
-
-    context 'when the error is a SubResourceError' do
-      it 'translates it to CompoundError with underlying API errors' do
-        translated_error = error_translator.translate_error(VCAP::CloudController::AppDelete::SubResourceError.new([
-          StandardError.new('oops-1'),
-          StandardError.new('oops-2')
-        ]))
-
-        expect(translated_error).to be_a(CloudController::Errors::CompoundError)
-        expect(translated_error.underlying_errors).to contain_exactly(CloudController::Errors::ApiError.new_from_details('UnprocessableEntity', 'oops-1'),
-                                                                      CloudController::Errors::ApiError.new_from_details('UnprocessableEntity', 'oops-2'))
-      end
-    end
-
-    context 'when the error is not a SubResourceError' do
-      it 'justs return it' do
-        err = StandardError.new('oops')
-
-        translated_error = error_translator.translate_error(err)
-
-        expect(translated_error).to eq(err)
       end
     end
   end

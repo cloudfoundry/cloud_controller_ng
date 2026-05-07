@@ -1,6 +1,7 @@
 require 'cloud_controller/diego/lifecycles/app_lifecycle_provider'
 require 'cloud_controller/paging/pagination_options'
 require 'cloud_controller/telemetry_logger'
+require 'jobs/v3/delete_app_job'
 require 'actions/app_create'
 require 'actions/app_update'
 require 'actions/app_patch_environment_variables'
@@ -156,14 +157,11 @@ class AppsV3Controller < ApplicationController
     unauthorized! unless permission_queryer.can_write_to_active_space?(space.id)
     suspended! unless permission_queryer.is_space_active?(space.id)
 
-    delete_action = AppDelete.new(user_audit_info)
-    deletion_job  = VCAP::CloudController::Jobs::DeleteActionJob.new(AppModel, app.guid, delete_action)
+    deletion_job = VCAP::CloudController::V3::DeleteAppJob.new(app.guid, user_audit_info)
+    pollable_job = Jobs::Enqueuer.new(queue: Jobs::Queues.generic).enqueue_pollable(deletion_job)
 
-    job = Jobs::Enqueuer.new(queue: Jobs::Queues.generic).enqueue_pollable(deletion_job) do |pollable_job|
-      DeleteAppErrorTranslatorJob.new(pollable_job)
-    end
     VCAP::AppLogEmitter.emit(app.guid, "Enqueued job to delete app with guid #{app.guid}")
-    head HTTP::ACCEPTED, 'Location' => url_builder.build_url(path: "/v3/jobs/#{job.guid}")
+    head HTTP::ACCEPTED, 'Location' => url_builder.build_url(path: "/v3/jobs/#{pollable_job.guid}")
   end
 
   def start
@@ -374,18 +372,6 @@ class AppsV3Controller < ApplicationController
       read_basic_data: true,
       read_sensitive_data: permission_queryer.can_read_secrets_in_space?(space.id, space.organization_id)
     }
-  end
-
-  class DeleteAppErrorTranslatorJob < VCAP::CloudController::Jobs::ErrorTranslatorJob
-    include V3ErrorsHelper
-
-    def translate_error(e)
-      if e.instance_of?(VCAP::CloudController::AppDelete::SubResourceError)
-        underlying_errors = e.underlying_errors.map { |err| unprocessable(err.message) }
-        e = CloudController::Errors::CompoundError.new(underlying_errors)
-      end
-      e
-    end
   end
 
   private
