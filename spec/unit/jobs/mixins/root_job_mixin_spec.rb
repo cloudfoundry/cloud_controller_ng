@@ -41,7 +41,7 @@ module VCAP::CloudController
             operation: 'test.delete'
           )
 
-          expect(job.send(:my_pollable_job)).to eq(pollable_job)
+          expect(job.send(:root_job)).to eq(pollable_job)
         end
 
         it 'returns nil when no active job exists' do
@@ -51,11 +51,11 @@ module VCAP::CloudController
             operation: 'test.delete'
           )
 
-          expect(job.send(:my_pollable_job)).to be_nil
+          expect(job.send(:root_job)).to be_nil
         end
       end
 
-      describe '#enqueue_sub_job' do
+      describe '#activate_root_job_context' do
         let!(:root_pollable_job) do
           PollableJobModel.make(
             state: PollableJobModel::PROCESSING_STATE,
@@ -64,11 +64,14 @@ module VCAP::CloudController
           )
         end
 
-        it 'enqueues the job with root_job_guid set' do
+        it 'sets root_job_guid on the shared enqueuer so sub-jobs are linked' do
+          job.send(:activate_root_job_context)
           sub_job = test_job_class.new('sub-resource-guid')
-          sub_pollable_job = job.send(:enqueue_sub_job, sub_job)
+          sub_pollable_job = Jobs::GenericEnqueuer.shared.enqueue_pollable(sub_job)
 
           expect(sub_pollable_job.root_job_guid).to eq(root_pollable_job.guid)
+        ensure
+          job.send(:deactivate_root_job_context)
         end
       end
 
@@ -81,6 +84,14 @@ module VCAP::CloudController
           )
         end
 
+        before do
+          job.send(:activate_root_job_context)
+        end
+
+        after do
+          job.send(:deactivate_root_job_context)
+        end
+
         context 'when there are no sub-jobs' do
           it 'returns false' do
             expect(job.send(:sub_jobs_pending?)).to be(false)
@@ -90,6 +101,7 @@ module VCAP::CloudController
         context 'when sub-jobs are still running' do
           before do
             PollableJobModel.make(state: PollableJobModel::PROCESSING_STATE, root_job_guid: root_pollable_job.guid)
+            job.send(:activate_root_job_context)
           end
 
           it 'returns true' do
@@ -100,6 +112,7 @@ module VCAP::CloudController
         context 'when all sub-jobs are complete' do
           before do
             PollableJobModel.make(state: PollableJobModel::COMPLETE_STATE, root_job_guid: root_pollable_job.guid)
+            job.send(:activate_root_job_context)
           end
 
           it 'returns false' do
@@ -107,7 +120,7 @@ module VCAP::CloudController
           end
         end
 
-        context 'when a sub-job has failed' do
+        context 'when a sub-job has failed and none are active' do
           before do
             PollableJobModel.make(
               state: PollableJobModel::FAILED_STATE,
@@ -115,11 +128,33 @@ module VCAP::CloudController
               operation: 'service_instance.delete',
               resource_guid: 'failed-si-guid'
             )
+            job.send(:activate_root_job_context)
           end
 
           it 'raises an error with failure details' do
             expect { job.send(:sub_jobs_pending?) }.to raise_error(
-              CloudController::Errors::ApiError, /Child job\(s\) failed.*service_instance.delete failed-si-guid/
+              CloudController::Errors::ApiError, /Sub-job\(s\) failed.*service_instance.delete failed-si-guid/
+            )
+          end
+        end
+
+        context 'when a sub-job has failed but others are still active' do
+          before do
+            PollableJobModel.make(state: PollableJobModel::PROCESSING_STATE, root_job_guid: root_pollable_job.guid)
+            PollableJobModel.make(
+              state: PollableJobModel::FAILED_STATE,
+              root_job_guid: root_pollable_job.guid,
+              operation: 'service_instance.delete',
+              resource_guid: 'failed-si-guid'
+            )
+            job.send(:activate_root_job_context)
+          end
+
+          it 'returns true and adds a warning' do
+            job.instance_variable_set(:@warnings, [])
+            expect(job.send(:sub_jobs_pending?)).to be(true)
+            expect(job.instance_variable_get(:@warnings)).to include(
+              hash_including(detail: /sub-jobs have failed/)
             )
           end
         end

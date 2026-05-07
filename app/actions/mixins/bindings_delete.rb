@@ -9,7 +9,7 @@ module VCAP::CloudController
     module BindingsDeleteMixin
       private
 
-      def delete_bindings(bindings, user_audit_info:, root_job_guid: nil)
+      def delete_bindings(bindings, user_audit_info:)
         type = nil
         binding_delete_action = nil
 
@@ -20,7 +20,7 @@ module VCAP::CloudController
           result = binding_delete_action.delete(binding)
           unless result[:finished]
             polling_job = DeleteBindingJob.new(type, binding.guid, user_audit_info:)
-            Jobs::GenericEnqueuer.shared.enqueue_pollable(polling_job, root_job_guid:)
+            Jobs::GenericEnqueuer.shared.enqueue_pollable(polling_job)
             unbinding_operation_in_progress!(binding)
           end
         rescue StandardError => e

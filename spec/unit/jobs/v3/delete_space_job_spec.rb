@@ -50,7 +50,7 @@ module VCAP::CloudController
           before do
             app_model # ensure it's created
             allow_any_instance_of(AppDelete).to receive(:delete).and_raise(
-              AppDelete::AsyncBindingDeletionsTriggered.new('binding operation in progress')
+              AppDelete::SubResourceError.new([AppDelete::AsyncBindingDeletionsTriggered.new('async binding in progress')])
             )
           end
 
@@ -84,9 +84,8 @@ module VCAP::CloudController
             expect(job.finished).to be(false)
           end
 
-          it 'shows the async warning on the cycle when async work is detected' do
+          it 'sets a warning when async operations are detected' do
             pollable_job = Jobs::Enqueuer.new(queue: Jobs::Queues.generic).enqueue_pollable(job)
-            # Create a child job so check_children returns :waiting after delete_apps_inline
             PollableJobModel.create(
               delayed_job_guid: SecureRandom.uuid,
               state: PollableJobModel::PROCESSING_STATE,
@@ -95,12 +94,9 @@ module VCAP::CloudController
               resource_type: 'service_bindings',
               root_job_guid: pollable_job.guid
             )
-            # On this cycle, check_children returns :waiting immediately (before delete_apps_inline)
-            # The warning was shown on the previous cycle — test that @async_warning_shown persists
-            # Instead, test that show_async_warning works by simulating the first encounter
-            job.send(:show_async_warning)
+            job.perform
             expect(job.warnings).to include(
-              hash_including(detail: a_string_matching(/Waiting for async operations/))
+              hash_including(detail: a_string_matching(/Waiting for async service operations/))
             )
           end
         end
@@ -169,7 +165,7 @@ module VCAP::CloudController
               root_job_guid: pollable_job.guid
             )
 
-            expect { job.perform }.to raise_error(CloudController::Errors::ApiError, /Child job/)
+            expect { job.perform }.to raise_error(CloudController::Errors::ApiError, /Sub-job/)
           end
         end
       end

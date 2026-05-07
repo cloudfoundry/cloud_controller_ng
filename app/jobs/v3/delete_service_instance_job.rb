@@ -17,6 +17,8 @@ module VCAP::CloudController
       end
 
       def perform
+        activate_root_job_context
+
         return finish unless service_instance
 
         self.maximum_duration_seconds = service_instance.service_plan.try(:maximum_polling_duration)
@@ -34,12 +36,14 @@ module VCAP::CloudController
 
         self.polling_interval_seconds = result[:retry_after].to_i if result[:retry_after]
       rescue V3::ServiceInstanceDelete::UnbindingOperatationInProgress
-        # Binding jobs already enqueued by BindingsDeleteMixin with root_job_guid set — wait for them
+        # Binding jobs already enqueued by BindingsDeleteMixin — wait for them
         nil
       rescue CloudController::Errors::ApiError => e
         raise e
       rescue StandardError => e
         raise CloudController::Errors::ApiError.new_from_details('UnableToPerform', operation_type, e.message)
+      ensure
+        deactivate_root_job_context
       end
 
       def handle_timeout
@@ -80,7 +84,7 @@ module VCAP::CloudController
       end
 
       def action
-        ServiceInstanceDelete.new(service_instance, Repositories::ServiceEventRepository.new(user_audit_info), root_job_guid: my_pollable_job_guid)
+        ServiceInstanceDelete.new(service_instance, Repositories::ServiceEventRepository.new(user_audit_info))
       end
     end
   end
