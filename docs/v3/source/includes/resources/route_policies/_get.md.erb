@@ -1,0 +1,40 @@
+### Get a route policy
+
+```
+Example Request
+```
+
+```shell
+curl "https://api.example.org/v3/route_policies/a4ad8bc1-67a6-4ffa-95b7-f8cf04ad7d4f" \
+  -X GET \
+  -H "Authorization: bearer [token]"
+```
+
+```
+Example Response
+```
+
+```http
+HTTP/1.1 200 OK
+Content-Type: application/json
+
+<%= yield_content :single_route_policy %>
+```
+
+#### Definition
+`GET /v3/route_policies/:guid`
+
+#### Permitted roles
+
+Role | Notes
+----- | ---
+Admin |
+Admin Read-Only |
+Global Auditor |
+Org Manager |
+Org Auditor |
+Org Billing Manager |
+Space Auditor |
+Space Developer |
+Space Manager |
+Space Supporter |
