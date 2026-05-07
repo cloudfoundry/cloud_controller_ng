@@ -50,7 +50,7 @@ module VCAP::CloudController
         context 'when the app has async service bindings' do
           before do
             allow_any_instance_of(AppDelete).to receive(:delete).and_raise(
-              AppDelete::AsyncBindingDeletionsTriggered.new('binding operation in progress')
+              AppDelete::SubResourceError.new([AppDelete::AsyncBindingDeletionsTriggered.new('async binding in progress')])
             )
           end
 

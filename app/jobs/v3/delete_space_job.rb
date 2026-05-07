@@ -12,7 +12,7 @@ module VCAP::CloudController
       include Jobs::RootJobMixin
 
       MAX_POLL_INTERVAL = 60
-      MAX_CONCURRENT_SUB_JOBS = 50
+      MAX_SUB_JOBS = 50
 
       attr_reader :space_guid, :warnings
 
@@ -20,13 +20,12 @@ module VCAP::CloudController
         super()
         @space_guid = space_guid
         @user_audit_info = user_audit_info
-        @async_warning_shown = false
         @warnings = []
       end
 
       def perform
         @warnings = []
-        clear_warnings
+        activate_root_job_context
 
         space = Space.first(guid: space_guid)
         return finish unless space
@@ -34,10 +33,10 @@ module VCAP::CloudController
         space.update(status: Space::DELETING) unless space.deleting?
 
         delete_apps(space)
-        return if sub_jobs_pending? || space.app_models_dataset.any?
+        return set_async_warning if sub_jobs_pending? || space.app_models_dataset.any?
 
         delete_service_instances(space)
-        return if sub_jobs_pending? || space.service_instances_dataset.where(is_gateway_service: true).any?
+        return set_async_warning if sub_jobs_pending? || space.service_instances_dataset.where(is_gateway_service: true).any?
 
         cleanup_and_destroy(space)
         finish
@@ -45,6 +44,8 @@ module VCAP::CloudController
         raise
       rescue StandardError => e
         raise CloudController::Errors::ApiError.new_from_details('SpaceDeletionFailed', space&.name || space_guid, e.message)
+      ensure
+        deactivate_root_job_context
       end
 
       def handle_timeout; end
@@ -81,14 +82,16 @@ module VCAP::CloudController
       end
 
       def delete_apps(space)
-        app_deleter = AppDelete.new(@user_audit_info, root_job_guid: my_pollable_job_guid)
+        app_deleter = AppDelete.new(@user_audit_info)
 
         space.app_models_dataset.each do |app|
-          break if sub_job_limit_reached?
+          break if Jobs::GenericEnqueuer.shared.sub_job_count >= MAX_SUB_JOBS
 
           app_deleter.delete([app])
-        rescue AppDelete::AsyncBindingDeletionsTriggered
-          show_async_warning
+        rescue Sequel::NoExistingObject
+          nil
+        rescue AppDelete::SubResourceError => e
+          raise unless e.underlying_errors.all? { |err| err.is_a?(AppDelete::AsyncBindingDeletionsTriggered) }
         end
       end
 
@@ -96,17 +99,14 @@ module VCAP::CloudController
         service_event_repository = Repositories::ServiceEventRepository.new(@user_audit_info)
 
         space.service_instances_dataset.where(is_gateway_service: true).each do |si|
-          break if sub_job_limit_reached?
+          break if Jobs::GenericEnqueuer.shared.sub_job_count >= MAX_SUB_JOBS
 
-          deleter = ServiceInstanceDelete.new(si, service_event_repository, root_job_guid: my_pollable_job_guid)
+          deleter = ServiceInstanceDelete.new(si, service_event_repository)
           result = deleter.delete
 
-          unless result[:finished]
-            enqueue_sub_job(DeleteServiceInstanceJob.new(si.guid, @user_audit_info))
-            show_async_warning
-          end
-        rescue V3::ServiceInstanceDelete::UnbindingOperatationInProgress
-          show_async_warning
+          Jobs::GenericEnqueuer.shared.enqueue_pollable(DeleteServiceInstanceJob.new(si.guid, @user_audit_info)) unless result[:finished]
+        rescue Sequel::NoExistingObject, V3::ServiceInstanceDelete::UnbindingOperatationInProgress
+          nil
         end
       end
 
@@ -136,23 +136,8 @@ module VCAP::CloudController
         end
       end
 
-      def clear_warnings
-        my_pollable_job&.warnings_dataset&.destroy
-      end
-
-      def sub_job_limit_reached?
-        parent = my_pollable_job
-        return false unless parent
-
-        parent.sub_jobs_dataset.where(state: [PollableJobModel::PROCESSING_STATE, PollableJobModel::POLLING_STATE]).count >= MAX_CONCURRENT_SUB_JOBS
-      end
-
-      def show_async_warning
-        return if @async_warning_shown
-
-        # Maybe include the number of child jobs
-        @warnings = [{ detail: 'Waiting for async operations to complete. Depending on the service broker, this could take several hours.' }]
-        @async_warning_shown = true
+      def set_async_warning
+        @warnings = [{ detail: 'Waiting for async service operations to complete. Depending on the service broker, this could take several hours.' }]
       end
     end
   end

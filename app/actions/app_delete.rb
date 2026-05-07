@@ -31,9 +31,8 @@ module VCAP::CloudController
       end
     end
 
-    def initialize(user_audit_info, root_job_guid: nil)
+    def initialize(user_audit_info)
       @user_audit_info = user_audit_info
-      @root_job_guid = root_job_guid
     end
 
     def delete(apps, record_event: true)
@@ -89,7 +88,7 @@ module VCAP::CloudController
     end
 
     def delete_non_transactional_subresources(app)
-      errors = delete_bindings(app.service_bindings, user_audit_info: @user_audit_info, root_job_guid: @root_job_guid)
+      errors = delete_bindings(app.service_bindings, user_audit_info: @user_audit_info)
       raise SubResourceError.new(errors) if errors.any?
     end
 
