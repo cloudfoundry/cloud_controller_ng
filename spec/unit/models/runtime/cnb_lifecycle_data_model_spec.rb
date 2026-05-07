@@ -4,6 +4,23 @@ module VCAP::CloudController
   RSpec.describe CNBLifecycleDataModel do
     subject(:lifecycle_data) { CNBLifecycleDataModel.make([]) }
 
+    describe 'buildpack_lifecycle_buildpacks association' do
+      it 'orders by id via the default_order_by_id extension' do
+        lifecycle_data.reload
+
+        sqls = []
+        logger = Logger.new(StringIO.new)
+        logger.define_singleton_method(:info) { |msg| sqls << msg }
+        CNBLifecycleDataModel.db.loggers << logger
+
+        lifecycle_data.buildpack_lifecycle_buildpacks
+
+        CNBLifecycleDataModel.db.loggers.delete(logger)
+        sql = sqls.find { |s| s.include?('buildpack_lifecycle_buildpacks') }
+        expect(sql).to match(/ORDER BY .id./)
+      end
+    end
+
     describe '#stack' do
       it 'persists the stack' do
         lifecycle_data.stack = 'cflinuxfs4'

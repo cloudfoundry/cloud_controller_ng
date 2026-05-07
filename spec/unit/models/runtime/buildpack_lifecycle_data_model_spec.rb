@@ -11,6 +11,24 @@ module VCAP::CloudController
       let(:attr_salt) { :encrypted_buildpack_url_salt }
     end
 
+    describe 'buildpack_lifecycle_buildpacks association' do
+      it 'orders by id via the default_order_by_id extension' do
+        lifecycle_data.save
+        lifecycle_data.reload
+
+        sqls = []
+        logger = Logger.new(StringIO.new)
+        logger.define_singleton_method(:info) { |msg| sqls << msg }
+        BuildpackLifecycleDataModel.db.loggers << logger
+
+        lifecycle_data.buildpack_lifecycle_buildpacks
+
+        BuildpackLifecycleDataModel.db.loggers.delete(logger)
+        sql = sqls.find { |s| s.include?('buildpack_lifecycle_buildpacks') }
+        expect(sql).to match(/ORDER BY .id./)
+      end
+    end
+
     describe '#stack' do
       it 'persists the stack' do
         lifecycle_data.stack = 'cflinuxfs4'

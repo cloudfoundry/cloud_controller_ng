@@ -2,7 +2,8 @@
 
 # Sequel extension that adds default ORDER BY id to model queries.
 #
-# Hooks into fetch methods (all, each, first) to add ORDER BY id just before
+# Hooks into fetch methods (all, each, first) and placeholder_literalizer_loader
+# (used for optimized association loading) to add ORDER BY id just before
 # execution. This ensures ordering is only added to the final query, not to
 # subqueries or compound query parts.
 #
@@ -45,6 +46,13 @@ module Sequel
         return super unless ds
 
         ds.first(*, &)
+      end
+
+      def placeholder_literalizer_loader(&block)
+        super do |pl, ds|
+          result_ds = block.call(pl, ds)
+          result_ds.send(:default_order_by_id) || result_ds
+        end
       end
 
       private

@@ -153,4 +153,32 @@ RSpec.describe 'Sequel::DefaultOrderById' do
       end
     end
   end
+
+  describe 'association loading (placeholder_literalizer_loader)' do
+    let(:child_class) { Class.new(Sequel::Model(db[:test_default_order_join])) }
+
+    it 'adds ORDER BY id to association queries' do
+      child = child_class
+      parent_class = Class.new(Sequel::Model(db[:test_default_order_main])) do
+        define_singleton_method(:name) { 'TestParent' } # vcap_relations plugin derives reciprocal from self.name
+        one_to_many :children, class: child, key: :main_id
+      end
+      parent = parent_class.new
+      parent.values[:id] = 1
+      sql = capture_sql { parent.children }
+      expect(sql).to match(/ORDER BY .id./)
+    end
+
+    it 'does not override explicit association order' do
+      child = child_class
+      parent_class = Class.new(Sequel::Model(db[:test_default_order_main])) do
+        define_singleton_method(:name) { 'TestParent' }
+        one_to_many :children, class: child, key: :main_id, order: Sequel.desc(:id)
+      end
+      parent = parent_class.new
+      parent.values[:id] = 1
+      sql = capture_sql { parent.children }
+      expect(sql).to match(/ORDER BY .id. DESC/)
+    end
+  end
 end
