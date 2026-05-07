@@ -25,6 +25,7 @@ includes:
   - api_resources/revisions
   - api_resources/roles
   - api_resources/root
+  - api_resources/route_policies
   - api_resources/routes
   - api_resources/security_groups
   - api_resources/service_brokers
@@ -243,6 +244,13 @@ includes:
   - resources/root/header
   - resources/root/global_root
   - resources/root/v3_root
+  - resources/route_policies/header
+  - resources/route_policies/object
+  - resources/route_policies/create
+  - resources/route_policies/get
+  - resources/route_policies/list
+  - resources/route_policies/update
+  - resources/route_policies/delete
   - resources/routes/header
   - resources/routes/object
   - resources/routes/destination_object

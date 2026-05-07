@@ -1,0 +1,31 @@
+### Delete a route policy
+
+```
+Example Request
+```
+
+```shell
+curl "https://api.example.org/v3/route_policies/a4ad8bc1-67a6-4ffa-95b7-f8cf04ad7d4f" \
+  -X DELETE \
+  -H "Authorization: bearer [token]"
+```
+
+```
+Example Response
+```
+
+```http
+HTTP/1.1 204 No Content
+```
+
+#### Definition
+`DELETE /v3/route_policies/:guid`
+
+Deleting a route policy removes the access control for that specific source. If this was the only policy on the route, the route will become inaccessible (no callers will be allowed) until new policies are added or a `cf:any` policy is created.
+
+#### Permitted roles
+
+Role | Notes
+----- | ---
+Admin |
+Space Developer | Can delete policies for routes in spaces they can write to
