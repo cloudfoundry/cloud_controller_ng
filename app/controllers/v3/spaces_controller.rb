@@ -1,6 +1,7 @@
 require 'presenters/v3/paginated_list_presenter'
 require 'presenters/v3/space_presenter'
 require 'presenters/v3/space_usage_summary_presenter'
+require 'jobs/v3/delete_space_job'
 require 'messages/space_create_message'
 require 'messages/space_delete_unmapped_routes_message'
 require 'messages/space_update_message'
@@ -90,9 +91,7 @@ class SpacesV3Controller < ApplicationController
     unauthorized! unless permission_queryer.can_write_to_active_org?(space.organization_id)
     suspended! unless permission_queryer.is_org_active?(space.organization_id)
 
-    service_event_repository = VCAP::CloudController::Repositories::ServiceEventRepository.new(user_audit_info)
-    delete_action = SpaceDelete.new(user_audit_info, service_event_repository)
-    deletion_job = VCAP::CloudController::Jobs::DeleteActionJob.new(Space, space.guid, delete_action)
+    deletion_job = VCAP::CloudController::V3::DeleteSpaceJob.new(space.guid, user_audit_info)
     pollable_job = Jobs::Enqueuer.new(queue: Jobs::Queues.generic).enqueue_pollable(deletion_job)
 
     head :accepted, 'Location' => url_builder.build_url(path: "/v3/jobs/#{pollable_job.guid}")
