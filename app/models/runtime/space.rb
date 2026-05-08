@@ -171,6 +171,11 @@ module VCAP::CloudController
       status == DELETING
     end
 
+    def mark_deleting!
+      updated = Space.where(guid: guid).exclude(status: DELETING).update(status: DELETING)
+      raise CloudController::Errors::ApiError.new_from_details('UnprocessableEntity', 'Space deletion is already in progress') if updated.zero?
+    end
+
     export_attributes :name, :organization_guid, :space_quota_definition_guid, :allow_ssh
 
     import_attributes :name, :organization_guid, :developer_guids, :allow_ssh, :isolation_segment_guid,
