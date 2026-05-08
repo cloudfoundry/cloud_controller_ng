@@ -14,18 +14,10 @@ module VCAP::CloudController
     describe 'buildpack_lifecycle_buildpacks association' do
       it 'orders by id via the default_order_by_id extension' do
         lifecycle_data.save
-        lifecycle_data.reload
 
-        sqls = []
-        logger = Logger.new(StringIO.new)
-        logger.define_singleton_method(:info) { |msg| sqls << msg }
-        BuildpackLifecycleDataModel.db.loggers << logger
-
-        lifecycle_data.buildpack_lifecycle_buildpacks
-
-        BuildpackLifecycleDataModel.db.loggers.delete(logger)
-        sql = sqls.find { |s| s.include?('buildpack_lifecycle_buildpacks') }
-        expect(sql).to match(/ORDER BY .id./)
+        expect do
+          lifecycle_data.buildpack_lifecycle_buildpacks
+        end.to have_queried_db_times(/buildpack_lifecycle_buildpacks.*ORDER BY .id./i, 1)
       end
     end
 
