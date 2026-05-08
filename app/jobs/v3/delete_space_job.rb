@@ -30,7 +30,7 @@ module VCAP::CloudController
         space = Space.first(guid: space_guid)
         return finish unless space
 
-        space.update(status: Space::DELETING) unless space.deleting?
+        space.mark_deleting! if retry_number.zero?
 
         delete_apps(space)
         return set_async_warning if sub_jobs_pending? || space.app_models_dataset.any?
