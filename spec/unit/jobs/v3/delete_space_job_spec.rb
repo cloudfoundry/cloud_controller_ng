@@ -96,7 +96,7 @@ module VCAP::CloudController
             )
             job.perform
             expect(job.warnings).to include(
-              hash_including(detail: a_string_matching(/Waiting for async service operations/))
+              hash_including(detail: a_string_matching(/Deletion in progress/))
             )
           end
         end
@@ -197,6 +197,70 @@ module VCAP::CloudController
       describe '#pollable_job_state' do
         it 'returns PROCESSING' do
           expect(job.pollable_job_state).to eq(PollableJobModel::PROCESSING_STATE)
+        end
+      end
+
+      describe '#next_execution_in' do
+        let!(:pollable_job) { Jobs::Enqueuer.new(queue: Jobs::Queues.generic).enqueue_pollable(job) }
+
+        context 'when sub-jobs have a future run_at' do
+          before do
+            dj = Delayed::Job.create(guid: 'sub-dj-guid', handler: 'fake', run_at: Time.now + 120)
+            PollableJobModel.create(
+              delayed_job_guid: dj.guid,
+              state: PollableJobModel::POLLING_STATE,
+              operation: 'service_bindings.delete',
+              resource_guid: 'binding-guid',
+              resource_type: 'service_bindings',
+              root_job_guid: pollable_job.guid
+            )
+            job.send(:activate_root_job_context)
+          end
+
+          after { job.send(:deactivate_root_job_context) }
+
+          it 'returns time until sub-job run_at plus buffer' do
+            result = job.send(:next_execution_in)
+            expect(result).to be_within(2).of(125)
+          end
+        end
+
+        context 'when sub-job has been re-enqueued with a new delayed_job_guid' do
+          before do
+            # Simulate a sub-job that re-enqueued itself (new delayed_job row, updated guid on pollable job)
+            old_dj = Delayed::Job.create(guid: 'old-dj-guid', handler: 'fake', run_at: Time.now - 60)
+            new_dj = Delayed::Job.create(guid: 'new-dj-guid', handler: 'fake', run_at: Time.now + 300)
+            old_dj.destroy
+
+            PollableJobModel.create(
+              delayed_job_guid: new_dj.guid,
+              state: PollableJobModel::POLLING_STATE,
+              operation: 'service_instance.delete',
+              resource_guid: 'si-guid',
+              resource_type: 'service_instance',
+              root_job_guid: pollable_job.guid
+            )
+            job.send(:activate_root_job_context)
+          end
+
+          after { job.send(:deactivate_root_job_context) }
+
+          it 'reads fresh delayed_job_guid and schedules after the sub-job' do
+            result = job.send(:next_execution_in)
+            expect(result).to be_within(2).of(305)
+          end
+        end
+
+        context 'when no active sub-jobs exist' do
+          before { job.send(:activate_root_job_context) }
+
+          after { job.send(:deactivate_root_job_context) }
+
+          it 'falls back to base class interval plus buffer' do
+            result = job.send(:next_execution_in)
+            expected = TestConfig.config_instance.get(:broker_client_default_async_poll_interval_seconds) + 5
+            expect(result).to eq(expected)
+          end
         end
       end
     end

@@ -91,6 +91,12 @@ class SpacesV3Controller < ApplicationController
     unauthorized! unless permission_queryer.can_write_to_active_org?(space.organization_id)
     suspended! unless permission_queryer.is_org_active?(space.organization_id)
 
+    existing_job = VCAP::CloudController::PollableJobModel.find_active_delete(resource_guid: space.guid, operation: 'space.delete')
+    if existing_job
+      head :accepted, 'Location' => url_builder.build_url(path: "/v3/jobs/#{existing_job.guid}")
+      return
+    end
+
     deletion_job = VCAP::CloudController::V3::DeleteSpaceJob.new(space.guid, user_audit_info)
     pollable_job = Jobs::Enqueuer.new(queue: Jobs::Queues.generic).enqueue_pollable(deletion_job)
 

@@ -13,12 +13,26 @@ module VCAP::CloudController
 
       def activate_root_job_context
         job = root_job
-        counts = sub_job_state_counts(job)
-        Jobs::GenericEnqueuer.shared.activate_root_context(root_job_guid: job&.guid, sub_job_counts: counts)
+        sub_jobs = job ? job.sub_jobs_dataset.select(:state, :delayed_job_guid).all : []
+
+        active_states = [PollableJobModel::PROCESSING_STATE, PollableJobModel::POLLING_STATE]
+        @active_sub_job_guids = sub_jobs.select { |j| active_states.include?(j.state) }.map(&:delayed_job_guid)
+        failed_count = sub_jobs.count { |j| j.state == PollableJobModel::FAILED_STATE }
+
+        Jobs::GenericEnqueuer.shared.activate_root_context(
+          root_job_guid: job&.guid,
+          active_sub_job_guids: @active_sub_job_guids,
+          sub_jobs_failed: failed_count
+        )
       end
 
       def deactivate_root_job_context
+        @active_sub_job_guids = Jobs::GenericEnqueuer.shared.active_sub_job_guids.dup
         Jobs::GenericEnqueuer.shared.deactivate_root_context
+      end
+
+      def active_sub_job_guids
+        @active_sub_job_guids || []
       end
 
       def sub_jobs_pending?
@@ -46,17 +60,6 @@ module VCAP::CloudController
         raise CloudController::Errors::ApiError.new_from_details(
           'SpaceDeletionFailed', resource_guid, "Sub-job(s) failed: #{details}"
         )
-      end
-
-      def sub_job_state_counts(job)
-        return {} unless job
-
-        counts = job.sub_jobs_dataset.group_and_count(:state).as_hash(:state, :count)
-        {
-          active: (counts[PollableJobModel::PROCESSING_STATE] || 0) + (counts[PollableJobModel::POLLING_STATE] || 0),
-          failed: counts[PollableJobModel::FAILED_STATE] || 0,
-          completed: counts[PollableJobModel::COMPLETE_STATE] || 0
-        }
       end
     end
   end

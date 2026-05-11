@@ -11,7 +11,6 @@ module VCAP::CloudController
     class DeleteSpaceJob < Jobs::ReoccurringJob
       include Jobs::RootJobMixin
 
-      MAX_POLL_INTERVAL = 60
       MAX_SUB_JOBS = 50
 
       attr_reader :space_guid, :warnings
@@ -45,7 +44,8 @@ module VCAP::CloudController
         raise
       rescue StandardError => e
         reset_space_status
-        raise CloudController::Errors::ApiError.new_from_details('SpaceDeletionFailed', space&.name || space_guid, e.message)
+        raise CloudController::Errors::ApiError.new_from_details('SpaceDeletionFailed', space&.name || space_guid,
+                                                                 "#{e.message}\n#{e.backtrace&.first(10)&.join("\n")}")
       ensure
         deactivate_root_job_context
       end
@@ -74,15 +74,36 @@ module VCAP::CloudController
         1
       end
 
+      # Buffer added on top of the sub-jobs' next scheduled run_at so the root job
+      # always wakes up after its sub-jobs have had a chance to poll the broker.
+      # If a broker returns Retry-After: 600, the sub-job's run_at will be now+600s,
+      # and the root job will sleep 605s — not wasting cycles polling before that.
+      # Capped at broker_client_max_async_poll_interval_seconds — if an operator
+      # configured a maximum wait between async checks, the root job respects that.
+      ROOT_JOB_BUFFER_SECONDS = 5
+
       private
 
       attr_reader :user_audit_info
 
       def next_execution_in
-        configured = Config.config.get(:resource_deletion_poll_interval_seconds)
-        return configured if configured
+        max_interval = Config.config.get(:broker_client_max_async_poll_interval_seconds)
+        guids = fresh_sub_job_delayed_job_guids
+        if guids.any?
+          latest = Delayed::Job.where(guid: guids).max(:run_at)
+          return [(latest - Time.now).ceil + ROOT_JOB_BUFFER_SECONDS, max_interval].min if latest && latest > Time.now
+        end
+        [super + ROOT_JOB_BUFFER_SECONDS, max_interval].min
+      end
 
-        [Config.config.get(:broker_client_default_async_poll_interval_seconds), MAX_POLL_INTERVAL].min
+      # Re-read delayed_job_guids from DB because sub-jobs get new delayed_job rows
+      # each time they re-enqueue (ReoccurringJob creates a new Delayed::Job per cycle).
+      def fresh_sub_job_delayed_job_guids
+        job = root_job
+        return [] unless job
+
+        active_states = [PollableJobModel::PROCESSING_STATE, PollableJobModel::POLLING_STATE]
+        job.sub_jobs_dataset.where(state: active_states).select_map(:delayed_job_guid)
       end
 
       def delete_apps(space)
@@ -111,6 +132,8 @@ module VCAP::CloudController
           Jobs::GenericEnqueuer.shared.enqueue_pollable(DeleteServiceInstanceJob.new(si.guid, @user_audit_info)) unless result[:finished]
         rescue Sequel::NoExistingObject, V3::ServiceInstanceDelete::UnbindingOperatationInProgress
           nil
+        rescue CloudController::Errors::ApiError => e
+          raise unless e.name == 'AsyncServiceInstanceOperationInProgress'
         end
       end
 
@@ -141,7 +164,9 @@ module VCAP::CloudController
       end
 
       def set_async_warning
-        @warnings = [{ detail: 'Waiting for async service operations to complete. Depending on the service broker, this could take several hours.' }]
+        return unless retry_number.zero?
+
+        @warnings = [{ detail: 'Deletion in progress. Waiting for operations on service instances and bindings to complete.' }]
       end
 
       def reset_space_status

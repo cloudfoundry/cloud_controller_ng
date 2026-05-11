@@ -4,7 +4,7 @@ module VCAP::CloudController
 
     class GenericEnqueuer < Enqueuer
       attr_accessor :root_job_guid
-      attr_reader :sub_jobs_active, :sub_jobs_failed, :sub_jobs_completed
+      attr_reader :sub_jobs_failed, :active_sub_job_guids
 
       def self.shared(priority: nil)
         stored_instance = Thread.current[:generic_enqueuer]
@@ -24,11 +24,10 @@ module VCAP::CloudController
         reset_sub_job_state
       end
 
-      def activate_root_context(root_job_guid:, sub_job_counts: {})
+      def activate_root_context(root_job_guid:, active_sub_job_guids: [], sub_jobs_failed: 0)
         @root_job_guid = root_job_guid
-        @sub_jobs_active = sub_job_counts.fetch(:active, 0)
-        @sub_jobs_failed = sub_job_counts.fetch(:failed, 0)
-        @sub_jobs_completed = sub_job_counts.fetch(:completed, 0)
+        @active_sub_job_guids = active_sub_job_guids
+        @sub_jobs_failed = sub_jobs_failed
       end
 
       def deactivate_root_context
@@ -37,21 +36,24 @@ module VCAP::CloudController
       end
 
       def sub_job_count
-        @sub_jobs_active
+        @active_sub_job_guids.size
+      end
+
+      def sub_jobs_active
+        @active_sub_job_guids.size
       end
 
       def enqueue_pollable(job, existing_guid: nil, run_at: nil, priority_increment: nil, preserve_priority: false)
         result = super
-        @sub_jobs_active += 1 if root_job_guid
+        @active_sub_job_guids << result.delayed_job_guid if root_job_guid
         result
       end
 
       private
 
       def reset_sub_job_state
-        @sub_jobs_active = 0
+        @active_sub_job_guids = []
         @sub_jobs_failed = 0
-        @sub_jobs_completed = 0
       end
     end
   end
