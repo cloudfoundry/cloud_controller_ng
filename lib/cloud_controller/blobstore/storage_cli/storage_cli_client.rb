@@ -168,8 +168,29 @@ module CloudController
         properties = properties(key)
         return nil if properties.nil? || properties.empty?
 
-        signed_url = sign_url(partitioned_key(key), verb: 'get', expires_in_seconds: 3600)
-        StorageCliBlob.new(key, properties:, signed_url:)
+        # For DAV with lazy signing support, pass client reference for on-demand signing
+        # For other providers, generate signed URL eagerly
+        if supports_lazy_signing?
+          StorageCliBlob.new(key, properties: properties, storage_cli_client: self, expires_in_seconds: 3600)
+        else
+          signed_url = sign_url(partitioned_key(key), verb: 'get', expires_in_seconds: 3600)
+          StorageCliBlob.new(key, properties:, signed_url:)
+        end
+      end
+
+      def supports_lazy_signing?
+        # Only DAV with external signer needs lazy signing for internal vs public endpoints
+        @storage_type == 'dav'
+      end
+
+      def sign_internal_url(key, verb:, expires_in_seconds:)
+        stdout, _status = run_cli('sign-internal', partitioned_key(key), verb.to_s.downcase, "#{expires_in_seconds}s")
+        stdout.strip
+      end
+
+      def sign_public_url(key, verb:, expires_in_seconds:)
+        stdout, _status = run_cli('sign-public', partitioned_key(key), verb.to_s.downcase, "#{expires_in_seconds}s")
+        stdout.strip
       end
 
       def files_for(prefix, _ignored_directory_prefixes=[])
