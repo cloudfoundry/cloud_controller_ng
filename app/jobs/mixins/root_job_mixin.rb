@@ -56,9 +56,9 @@ module VCAP::CloudController
       def raise_sub_job_failure
         job = root_job
         failed_jobs = job.sub_jobs_dataset.where(state: PollableJobModel::FAILED_STATE).all
-        details = failed_jobs.map { |j| "#{j.operation} #{j.resource_guid}" }.join(', ')
+        details = failed_jobs.map { |j| "#{j.resource_type} #{j.resource_guid}" }.join(', ')
         raise CloudController::Errors::ApiError.new_from_details(
-          'SpaceDeletionFailed', resource_guid, "Sub-job(s) failed: #{details}"
+          'SpaceDeletionFailed', resource_guid, "Deletion of the following resources failed: #{details}"
         )
       end
     end
