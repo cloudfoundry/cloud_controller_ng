@@ -45,6 +45,13 @@ module VCAP::CloudController
           expect(dataset.all.first.associations.key?(:labels)).to be true
           expect(dataset.all.first.associations.key?(:annotations)).to be false
         end
+
+        it 'sets space to nil for global brokers and to the space object for space-scoped brokers' do
+          brokers = fetcher.fetch(message:).all.index_by(&:name)
+
+          expect(brokers[broker.name].associations[:space]).to be_nil
+          expect(brokers[space_scoped_broker_1.name].associations[:space]).to eq(space_1)
+        end
       end
 
       context 'when filtering by space GUIDs' do
