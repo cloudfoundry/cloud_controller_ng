@@ -32,10 +32,10 @@ module VCAP::CloudController
         space.mark_deleting! if retry_number.zero?
 
         delete_apps(space)
-        return set_async_warning if sub_jobs_pending? || space.app_models_dataset.any?
+        return set_async_warning if apps_pending?(space)
 
         delete_service_instances(space)
-        return set_async_warning if sub_jobs_pending? || space.service_instances_dataset.where(is_gateway_service: true).any?
+        return set_async_warning if service_instances_pending?(space)
 
         cleanup_and_destroy(space)
         finish
@@ -116,7 +116,7 @@ module VCAP::CloudController
         rescue Sequel::NoExistingObject
           nil
         rescue AppDelete::SubResourceError => e
-          raise unless e.underlying_errors.all? { |err| err.is_a?(AppDelete::AsyncBindingDeletionsTriggered) }
+          raise unless e.underlying_errors.all? { |err| async_binding_error?(err) }
         end
       end
 
@@ -172,6 +172,19 @@ module VCAP::CloudController
       def reset_space_status
         space = Space.first(guid: space_guid)
         space&.update(status: nil)
+      end
+
+      def apps_pending?(space)
+        sub_jobs_pending? || space.app_models_dataset.any?
+      end
+
+      def service_instances_pending?(space)
+        sub_jobs_pending? || space.service_instances_dataset.where(is_gateway_service: true).any?
+      end
+
+      def async_binding_error?(err)
+        err.is_a?(AppDelete::AsyncBindingDeletionsTriggered) ||
+          (err.is_a?(CloudController::Errors::ApiError) && err.name == 'AsyncServiceInstanceOperationInProgress')
       end
     end
   end
