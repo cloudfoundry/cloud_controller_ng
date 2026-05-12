@@ -165,7 +165,7 @@ module VCAP::CloudController
               root_job_guid: pollable_job.guid
             )
 
-            expect { job.perform }.to raise_error(CloudController::Errors::ApiError, /Sub-job/)
+            expect { job.perform }.to raise_error(CloudController::Errors::ApiError, /Deletion of the following resources failed/)
           end
         end
       end

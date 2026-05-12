@@ -126,6 +126,7 @@ module VCAP::CloudController
               state: PollableJobModel::FAILED_STATE,
               root_job_guid: root_pollable_job.guid,
               operation: 'service_instance.delete',
+              resource_type: 'service_instance',
               resource_guid: 'failed-si-guid'
             )
             job.send(:activate_root_job_context)
@@ -133,7 +134,7 @@ module VCAP::CloudController
 
           it 'raises an error with failure details' do
             expect { job.send(:sub_jobs_pending?) }.to raise_error(
-              CloudController::Errors::ApiError, /Sub-job\(s\) failed.*service_instance.delete failed-si-guid/
+              CloudController::Errors::ApiError, /Deletion of the following resources failed.*service_instance failed-si-guid/
             )
           end
         end
