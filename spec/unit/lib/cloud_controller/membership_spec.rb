@@ -489,6 +489,54 @@ module VCAP::CloudController
       end
     end
 
+    describe '#visible_user_ids_in_orgs' do
+      let(:org_roles) { Permissions::ROLES_FOR_ORG_READING }
+
+      context 'when the user has an org role' do
+        let(:other_user) { User.make }
+        let(:manager_user) { User.make }
+        let(:auditor_user) { User.make }
+        let(:billing_user) { User.make }
+
+        before do
+          organization.add_user(user)
+          organization.add_user(other_user)
+          organization.add_manager(manager_user)
+          organization.add_auditor(auditor_user)
+          organization.add_billing_manager(billing_user)
+        end
+
+        it 'returns user ids from all org role types in the org' do
+          result = membership.visible_user_ids_in_orgs(org_roles)
+          user_ids = result.select_map(:user_id)
+          expect(user_ids).to include(user.id, other_user.id, manager_user.id, auditor_user.id, billing_user.id)
+        end
+
+        it 'does not include users from other orgs' do
+          other_org = Organization.make
+          unrelated_user = User.make
+          other_org.add_user(unrelated_user)
+
+          user_ids = membership.visible_user_ids_in_orgs(org_roles).select_map(:user_id)
+          expect(user_ids).not_to include(unrelated_user.id)
+        end
+      end
+
+      context 'when the user has no org role' do
+        it 'returns an empty result set' do
+          result = membership.visible_user_ids_in_orgs(org_roles)
+          expect(result.select_map(:user_id)).to be_empty
+        end
+      end
+
+      context 'when roles contain only space roles (no org subqueries)' do
+        it 'returns nil' do
+          result = membership.visible_user_ids_in_orgs([Membership::SPACE_DEVELOPER])
+          expect(result).to be_nil
+        end
+      end
+    end
+
     describe '#authorized_space_guids' do
       let(:user) { User.make }
 

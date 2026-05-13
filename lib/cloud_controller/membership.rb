@@ -68,6 +68,17 @@ module VCAP::CloudController
       end&.select(:organization_id)
     end
 
+    def visible_user_ids_in_orgs(org_roles)
+      org_ids = member_org_ids(org_roles)
+      return nil unless org_ids
+
+      OrganizationUser.where(organization_id: org_ids).select(:user_id).
+        union(OrganizationManager.where(organization_id: org_ids).select(:user_id), from_self: false).
+        union(OrganizationAuditor.where(organization_id: org_ids).select(:user_id), from_self: false).
+        union(OrganizationBillingManager.where(organization_id: org_ids).select(:user_id), from_self: false).
+        select(:user_id)
+    end
+
     private
 
     def role_applies_to_space?(roles, space_id)
