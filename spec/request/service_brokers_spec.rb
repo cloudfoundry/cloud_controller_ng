@@ -319,7 +319,7 @@ RSpec.describe 'V3 service brokers' do
       it 'eager loads associated resources that the presenter specifies' do
         expect(VCAP::CloudController::ServiceBrokerListFetcher).to receive(:fetch).with(
           hash_including(
-            eager_loaded_associations: %i[labels annotations]
+            eager_loaded_associations: %i[labels annotations space]
           )
         ).and_call_original
 
