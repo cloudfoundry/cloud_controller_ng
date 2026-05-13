@@ -47,7 +47,7 @@ module VCAP::CloudController
         end
 
         it 'sets space to nil for global brokers and to the space object for space-scoped brokers' do
-          brokers = fetcher.fetch(message:).all.index_by(&:name)
+          brokers = fetcher.fetch(message: message, eager_loaded_associations: [:space]).all.index_by(&:name)
 
           expect(brokers[broker.name].associations[:space]).to be_nil
           expect(brokers[space_scoped_broker_1.name].associations[:space]).to eq(space_1)

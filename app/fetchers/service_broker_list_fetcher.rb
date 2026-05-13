@@ -5,7 +5,7 @@ module VCAP::CloudController
   class ServiceBrokerListFetcher < BaseListFetcher
     class << self
       def fetch(message:, permitted_space_guids: nil, eager_loaded_associations: [])
-        dataset = ServiceBroker.dataset.eager(eager_loaded_associations).eager(:space)
+        dataset = ServiceBroker.dataset.eager(eager_loaded_associations)
 
         dataset = dataset.join(:spaces, id: Sequel[:service_brokers][:space_id]) if permitted_space_guids || message.requested?(:space_guids)
 
