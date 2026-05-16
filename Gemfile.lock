@@ -319,7 +319,7 @@ GEM
       bigdecimal
     netaddr (2.0.6)
     netrc (0.11.0)
-    newrelic_rpm (10.4.0)
+    newrelic_rpm (10.5.0)
       logger
     nio4r (2.7.5)
     nokogiri (1.19.3)
