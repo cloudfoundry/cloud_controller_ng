@@ -334,7 +334,7 @@ GEM
       bigdecimal (>= 3.0)
       ostruct (>= 0.2)
     open3 (0.2.1)
-    openssl (4.0.1)
+    openssl (4.0.2)
     os (1.1.4)
     ostruct (0.6.3)
     parallel (2.1.0)
