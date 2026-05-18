@@ -51,6 +51,7 @@ GEM
       json (~> 2.7)
       logger
       mutex_m
+    cgi (0.5.1)
     clockwork (4.0.1)
       activesupport
       tzinfo
@@ -442,6 +443,7 @@ DEPENDENCIES
   bootsnap
   byebug
   cf-uaa-lib (~> 4.0.10)
+  cgi
   clockwork
   concurrent-ruby
   debug (~> 1.11)
