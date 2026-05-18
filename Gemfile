@@ -2,6 +2,7 @@ source 'https://rubygems.org'
 
 gem 'addressable'
 gem 'bootsnap', require: false
+gem 'cgi'
 gem 'clockwork', require: false
 gem 'cloudfront-signer'
 gem 'concurrent-ruby'

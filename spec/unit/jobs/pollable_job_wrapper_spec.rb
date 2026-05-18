@@ -346,7 +346,7 @@ module VCAP::CloudController::Jobs
           pg_error = /value too long for type character varying/
           mysql_error = /Data too long for column 'cf_api_error'/
           expect do
-            pollable_job.error(job, BigException.new(message: 'x' * 15_828))
+            pollable_job.error(job, BigException.new(message: 'x' * 16_000))
           end.to raise_error(::Sequel::DatabaseError, /#{pg_error}|#{mysql_error}/)
         end
       end

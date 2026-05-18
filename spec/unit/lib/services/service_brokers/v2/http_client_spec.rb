@@ -547,6 +547,7 @@ module VCAP::Services::ServiceBrokers::V2
         let(:request) { client.put(path, message) }
       end
     end
+
     describe '#patch' do
       let(:fake_logger) { instance_double(Steno::Logger, debug: nil, info: nil) }
       let(:http_method) { :patch }
