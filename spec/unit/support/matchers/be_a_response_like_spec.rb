@@ -70,13 +70,13 @@ RSpec.describe 'be_a_response_like matcher' do
   it 'fails when hash values within arrays do not match' do
     expect do
       expect({ 'a' => [{ 'b' => 1 }] }).to be_a_response_like({ 'a' => [{ 'b' => 2 }] })
-    end.to raise_expectation_not_met_with_key_change(expected: '- a[0]: {"b"=>2}', actual: '+ a[0]: {"b"=>1}')
+    end.to raise_expectation_not_met_with_key_change(expected: '- a[0]: {"b" => 2}', actual: '+ a[0]: {"b" => 1}')
   end
 
   it 'fails when hash keys within arrays do not match' do
     expect do
       expect({ 'a' => [{ 'b' => 1 }] }).to be_a_response_like({ 'a' => [{ 'c' => 1 }] })
-    end.to raise_expectation_not_met_with_key_change(expected: '- a[0]: {"c"=>1}', actual: '+ a[0]: {"b"=>1}')
+    end.to raise_expectation_not_met_with_key_change(expected: '- a[0]: {"c" => 1}', actual: '+ a[0]: {"b" => 1}')
   end
 
   it 'fails when actual is empty but expected is an empty array' do
@@ -88,14 +88,14 @@ RSpec.describe 'be_a_response_like matcher' do
   it 'fails when actual as a non-empty but expected is an empty array' do
     expect do
       expect({ 'a' => [{ 'b' => 1 }] }).to be_a_response_like({ 'a' => [] })
-    end.to raise_expectation_not_met_with_summary(/\+ a\[0\]: \{"b"=>1\}/)
+    end.to raise_expectation_not_met_with_summary(/\+ a\[0\]: \{"b" => 1\}/)
   end
 
   it 'fails on deeply nested value mismatches' do
     expect do
       expect({ 'a' => [{ 'a' => { 'a' => [{ 'a' => 1 }, { 'b' => 2 }] } }] }).to be_a_response_like({ 'a' => [{ 'a' => { 'a' => [{ 'a' => 1 }, { 'b' => 1 }] } }] })
-    end.to raise_expectation_not_met_with_key_change(expected: '- a[0].a.a[1]: {"b"=>1}',
-                                                     actual: '+ a[0].a.a[1]: {"b"=>2}')
+    end.to raise_expectation_not_met_with_key_change(expected: '- a[0].a.a[1]: {"b" => 1}',
+                                                     actual: '+ a[0].a.a[1]: {"b" => 2}')
   end
 
   def raise_expectation_not_met_with_summary(ptn)

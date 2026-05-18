@@ -1,7 +1,9 @@
 Sequel.migration do
-  change do
-    alter_table :asg_timestamps do
-      rename_column :'{:name=>:id}', :id
-    end
+  up do
+    # no op
+  end
+
+  down do
+    # no op
   end
 end
