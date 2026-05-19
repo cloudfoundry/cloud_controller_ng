@@ -55,13 +55,6 @@ module VCAP::CloudController
     buildpack_cache_sha256_checksum { Sham.guid }
   end
 
-  AppModel.blueprint(:kpack) do
-    name { Sham.name }
-    space { Space.make }
-    buildpack_lifecycle_data { nil.tap { |_| object.save } }
-    kpack_lifecycle_data { KpackLifecycleDataModel.make(app: object.save) }
-  end
-
   AppModel.blueprint(:cnb) do
     name { Sham.name }
     space { Space.make }
@@ -87,15 +80,6 @@ module VCAP::CloudController
     state    { VCAP::CloudController::DropletModel::STAGING_STATE }
     app { AppModel.make(droplet: DropletModel.make) }
     buildpack_lifecycle_data { nil.tap { |_| object.save } }
-  end
-
-  BuildModel.blueprint(:kpack) do
-    guid     { Sham.guid }
-    state    { VCAP::CloudController::DropletModel::STAGING_STATE }
-    app { AppModel.make(droplet: DropletModel.make) }
-    kpack_lifecycle_data { KpackLifecycleDataModel.make(build: object.save) }
-    package { PackageModel.make(app:) }
-    droplet { DropletModel.make(:docker, build: object.save) }
   end
 
   BuildModel.blueprint(:buildpack) do
@@ -164,7 +148,6 @@ module VCAP::CloudController
     app { AppModel.make(:cnb, droplet: object.save) }
     cnb_lifecycle_data { CNBLifecycleDataModel.make(droplet: object.save) }
     buildpack_lifecycle_data { nil.tap { |_| object.save } }
-    kpack_lifecycle_data { nil.tap { |_| object.save } }
   end
 
   DropletModel.blueprint(:docker) do
@@ -174,18 +157,6 @@ module VCAP::CloudController
     state { VCAP::CloudController::DropletModel::STAGED_STATE }
     app { AppModel.make(droplet: object.save) }
     buildpack_lifecycle_data { nil.tap { |_| object.save } }
-    kpack_lifecycle_data { nil.tap { |_| object.save } }
-  end
-
-  DropletModel.blueprint(:kpack) do
-    guid { Sham.guid }
-    droplet_hash { nil }
-    sha256_checksum { nil }
-    docker_receipt_image { nil }
-    app { AppModel.make(:kpack, droplet: object.save) }
-    state { VCAP::CloudController::DropletModel::STAGED_STATE }
-    buildpack_lifecycle_data { nil.tap { |_| object.save } }
-    kpack_lifecycle_data { KpackLifecycleDataModel.make(droplet: object.save) }
   end
 
   DeploymentModel.blueprint do
@@ -532,15 +503,6 @@ module VCAP::CloudController
     metadata { {} }
   end
 
-  ProcessModel.blueprint(:kpack) do
-    app { AppModel.make(:kpack, droplet: DropletModel.make(:kpack)) }
-    diego { true }
-    instances { 1 }
-    type { Sham.name }
-    metadata { {} }
-    state { 'STARTED' }
-  end
-
   ProcessModel.blueprint(:nonmatching_guid) do
     instances { 1 }
     type { 'web' }
@@ -708,11 +670,6 @@ module VCAP::CloudController
     app_guid { Sham.guid }
     droplet { DropletModel.make }
     build { BuildModel.make }
-  end
-
-  KpackLifecycleDataModel.blueprint do
-    build { BuildModel.make }
-    buildpacks { [] }
   end
 
   BuildpackLifecycleBuildpackModel.blueprint do

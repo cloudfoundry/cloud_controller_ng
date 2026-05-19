@@ -140,26 +140,8 @@ module VCAP::CloudController
         end
       end
 
-      context 'when there is kpack_lifecycle_data associated to the droplet' do
-        let(:droplet_model) { DropletModel.make(:kpack, app: nil) }
-        let!(:lifecycle_data) do
-          KpackLifecycleDataModel.make(droplet: droplet_model)
-        end
-
-        before do
-          droplet_model.kpack_lifecycle_data = lifecycle_data
-          droplet_model.save
-        end
-
-        it 'deletes the dependent kpack_lifecycle_data_models when a droplet is deleted' do
-          expect do
-            droplet_model.destroy
-          end.to change(KpackLifecycleDataModel, :count).by(-1)
-        end
-      end
-
       context 'when there is cnb_lifecycle_data associated to the droplet' do
-        let(:droplet_model) { DropletModel.make(:kpack, app: nil) }
+        let(:droplet_model) { DropletModel.make(:cnb, app: nil) }
         let!(:lifecycle_data) do
           CNBLifecycleDataModel.make(
             droplet: droplet_model,
