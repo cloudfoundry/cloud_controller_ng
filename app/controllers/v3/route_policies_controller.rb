@@ -5,6 +5,7 @@ require 'messages/route_policy_show_message'
 require 'presenters/v3/route_policy_presenter'
 require 'decorators/include_route_policy_source_decorator'
 require 'decorators/include_route_policy_route_decorator'
+require 'actions/route_policy_create'
 
 class RoutePoliciesController < ApplicationController
   def index
@@ -50,37 +51,18 @@ class RoutePoliciesController < ApplicationController
     route = find_and_authorize_route(message.route_guid)
     validate_route_domain(route)
 
-    route_policy = VCAP::CloudController::RoutePolicy.db.transaction do
-      # Lock existing route policies for this route to prevent concurrent inserts
-      # from violating cf:any exclusivity or uniqueness constraints
-      VCAP::CloudController::RoutePolicy.where(route_id: route.id).for_update.all
-
-      validate_source_exclusivity(route, message.source)
-
-      policy = VCAP::CloudController::RoutePolicy.new(
-        guid: SecureRandom.uuid,
-        source: message.source,
-        route_id: route.id,
-        created_at: Time.now.utc,
-        updated_at: Time.now.utc
-      )
-      policy.save
-      policy
-    end
+    route_policy = VCAP::CloudController::RoutePolicyCreate.new.create(route: route, message: message)
 
     render status: :created, json: Presenters::V3::RoutePolicyPresenter.new(route_policy)
-  rescue Sequel::UniqueConstraintViolation
-    unprocessable!("A route policy with source '#{message.source}' already exists for this route.")
+  rescue VCAP::CloudController::RoutePolicyCreate::Error => e
+    unprocessable!(e.message)
   end
 
   def update
     route_policy = VCAP::CloudController::RoutePolicy.find(guid: hashed_params[:guid])
     resource_not_found!(:route_policy) unless route_policy
 
-    route = route_policy.route
-    resource_not_found!(:route_policy) unless route && permission_queryer.can_read_from_space?(route.space.id, route.space.organization_id)
-    unauthorized! unless permission_queryer.can_write_to_active_space?(route.space.id)
-    suspended! unless permission_queryer.is_space_active?(route.space.id)
+    find_and_authorize_route_for_policy(route_policy)
 
     message = RoutePolicyUpdateMessage.new(hashed_params[:body])
     unprocessable!(message.errors.full_messages) unless message.valid?
@@ -94,10 +76,7 @@ class RoutePoliciesController < ApplicationController
     route_policy = VCAP::CloudController::RoutePolicy.find(guid: hashed_params[:guid])
     resource_not_found!(:route_policy) unless route_policy
 
-    route = route_policy.route
-    resource_not_found!(:route_policy) unless route && permission_queryer.can_read_from_space?(route.space.id, route.space.organization_id)
-    unauthorized! unless permission_queryer.can_write_to_active_space?(route.space.id)
-    suspended! unless permission_queryer.is_space_active?(route.space.id)
+    find_and_authorize_route_for_policy(route_policy)
 
     route_policy.destroy
     head :no_content
@@ -113,6 +92,13 @@ class RoutePoliciesController < ApplicationController
     route
   end
 
+  def find_and_authorize_route_for_policy(route_policy)
+    route = route_policy.route
+    resource_not_found!(:route_policy) unless route && permission_queryer.can_read_from_space?(route.space.id, route.space.organization_id)
+    unauthorized! unless permission_queryer.can_write_to_active_space?(route.space.id)
+    suspended! unless permission_queryer.is_space_active?(route.space.id)
+  end
+
   def validate_route_domain(route)
     if route.domain.internal?
       unprocessable!('Cannot create route policies for routes on internal domains. Internal routes use container-to-container networking and bypass GoRouter.')
@@ -120,18 +106,6 @@ class RoutePoliciesController < ApplicationController
     return if route.domain.enforce_route_policies
 
     unprocessable!("Cannot create route policies for route '#{route.guid}': the route's domain does not have enforce_route_policies enabled.")
-  end
-
-  def validate_source_exclusivity(route, source)
-    existing_sources = route.route_policies.map(&:source)
-
-    # Enforce cf:any exclusivity: if route already has a cf:any policy, reject new policies;
-    # if new policy is cf:any, reject if route already has any policies.
-    unprocessable!("Cannot add 'cf:any' source when other route policies already exist for this route.") if source == 'cf:any' && existing_sources.any?
-    unprocessable!("Cannot add source '#{source}': route already has a 'cf:any' policy.") if existing_sources.include?('cf:any') && source != 'cf:any'
-
-    # Uniqueness: source must be unique per route
-    unprocessable!("A route policy with source '#{source}' already exists for this route.") if existing_sources.include?(source)
   end
 
   def build_dataset(message)
