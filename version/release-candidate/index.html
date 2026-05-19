@@ -2132,7 +2132,7 @@ information for your packages, droplets, processes, tasks, and more.</p>
 <tr>
 <td><strong>name</strong></td>
 <td><em>string</em></td>
-<td>Name of the app</td>
+<td>Name of the app; must be unique within the space (case-insensitive)</td>
 </tr>
 <tr>
 <td><strong>relationships.space</strong></td>
@@ -2551,7 +2551,7 @@ information for your packages, droplets, processes, tasks, and more.</p>
 <tr>
 <td><strong>names</strong></td>
 <td><em>list of strings</em></td>
-<td>Comma-delimited list of app names to filter by</td>
+<td>Comma-delimited list of app names to filter by (case-insensitive)</td>
 </tr>
 <tr>
 <td><strong>space_guids</strong></td>
@@ -2566,7 +2566,7 @@ information for your packages, droplets, processes, tasks, and more.</p>
 <tr>
 <td><strong>stacks</strong></td>
 <td><em>list of strings</em></td>
-<td>Comma-delimited list of stack names to filter by</td>
+<td>Comma-delimited list of stack names to filter by (case-sensitive)</td>
 </tr>
 <tr>
 <td><strong>page</strong></td>
@@ -5939,7 +5939,7 @@ Buildpacks can also be explicitly specified on <a href="#apps">apps</a> and <a h
 <tr>
 <td><strong>name</strong></td>
 <td><em>string</em></td>
-<td>Name of the buildpack</td>
+<td>Name of the buildpack; must be unique per stack (case-sensitive)</td>
 </tr>
 </tbody></table>
 
@@ -6143,12 +6143,12 @@ Buildpacks can also be explicitly specified on <a href="#apps">apps</a> and <a h
 <tr>
 <td><strong>names</strong></td>
 <td><em>list of strings</em></td>
-<td>Comma-delimited list of buildpack names to filter by</td>
+<td>Comma-delimited list of buildpack names to filter by (case-sensitive)</td>
 </tr>
 <tr>
 <td><strong>stacks</strong></td>
 <td><em>list of strings</em></td>
-<td>Comma-delimited list of stack names to filter by</td>
+<td>Comma-delimited list of stack names to filter by (case-sensitive)</td>
 </tr>
 <tr>
 <td><strong>lifecycle</strong></td>
@@ -7540,7 +7540,7 @@ to specify how many instances are rolled out simultaneously.</p></li>
 <tr>
 <td><strong>name</strong></td>
 <td><em>string</em></td>
-<td>Name of the domain</td>
+<td>Name of the domain; must be unique (case-insensitive)</td>
 </tr>
 </tbody></table>
 
@@ -7795,7 +7795,7 @@ to specify how many instances are rolled out simultaneously.</p></li>
 <tr>
 <td><strong>names</strong></td>
 <td><em>list of strings</em></td>
-<td>Comma-delimited list of domain names to filter by</td>
+<td>Comma-delimited list of domain names to filter by (case-insensitive)</td>
 </tr>
 <tr>
 <td><strong>organization_guids</strong></td>
@@ -7935,7 +7935,7 @@ organization), and domains that have been shared with the organization.</p>
 <tr>
 <td><strong>names</strong></td>
 <td><em>list of strings</em></td>
-<td>Comma-delimited list of domain names to filter by</td>
+<td>Comma-delimited list of domain names to filter by (case-insensitive)</td>
 </tr>
 <tr>
 <td><strong>organization_guids</strong></td>
@@ -10464,7 +10464,7 @@ Environment variable names may not start with VCAP_. PORT is not a valid environ
 <tr>
 <td><strong>name</strong></td>
 <td><em>string</em></td>
-<td>Name of the isolation segment; isolation segment names must be unique across the entire system, and case is ignored when checking for uniqueness</td>
+<td>Name of the isolation segment; must be unique (case-insensitive)</td>
 </tr>
 <tr>
 <td><strong>metadata.labels</strong></td>
@@ -10677,7 +10677,7 @@ Environment variable names may not start with VCAP_. PORT is not a valid environ
 <tr>
 <td><strong>names</strong></td>
 <td><em>list of strings</em></td>
-<td>Comma-delimited list of isolation segment names to filter by</td>
+<td>Comma-delimited list of isolation segment names to filter by (case-insensitive)</td>
 </tr>
 <tr>
 <td><strong>organization_guids</strong></td>
@@ -11878,7 +11878,7 @@ specification</a>.</p>
 <tr>
 <td><strong>name</strong></td>
 <td><em>string</em></td>
-<td>Organization name</td>
+<td>Organization name; must be unique (case-insensitive)</td>
 </tr>
 </tbody></table>
 
@@ -12090,7 +12090,7 @@ specification</a>.</p>
 <tr>
 <td><strong>names</strong></td>
 <td><em>list of strings</em></td>
-<td>Comma-delimited list of organization names to filter by</td>
+<td>Comma-delimited list of organization names to filter by (case-insensitive)</td>
 </tr>
 <tr>
 <td><strong>guids</strong></td>
@@ -12249,7 +12249,7 @@ specification</a>.</p>
 <tr>
 <td><strong>names</strong></td>
 <td><em>list of strings</em></td>
-<td>Comma-delimited list of organization names to filter by</td>
+<td>Comma-delimited list of organization names to filter by (case-insensitive)</td>
 </tr>
 <tr>
 <td><strong>guids</strong></td>
@@ -13056,7 +13056,7 @@ Only isolation segments that are entitled to the organization are eligible to be
 <tr>
 <td><strong>name</strong></td>
 <td><em>string</em></td>
-<td>Name of the quota</td>
+<td>Name of the quota (case-insensitive)</td>
 </tr>
 </tbody></table>
 
@@ -13396,7 +13396,7 @@ Only isolation segments that are entitled to the organization are eligible to be
 <tr>
 <td><strong>names</strong></td>
 <td><em>list of strings</em></td>
-<td>Comma-delimited list of organization quota names to filter by</td>
+<td>Comma-delimited list of organization quota names to filter by (case-insensitive)</td>
 </tr>
 <tr>
 <td><strong>organization_guids</strong></td>
@@ -20506,7 +20506,7 @@ and unweighted destinations for a route is not allowed.</p>
 <tr>
 <td><strong>name</strong></td>
 <td><em>string</em></td>
-<td>Name of the security group</td>
+<td>Name of the security group; must be unique (case-sensitive)</td>
 </tr>
 </tbody></table>
 
@@ -20791,7 +20791,7 @@ and unweighted destinations for a route is not allowed.</p>
 <tr>
 <td><strong>names</strong></td>
 <td><em>list of strings</em></td>
-<td>Comma-delimited list of security group names to filter by</td>
+<td>Comma-delimited list of security group names to filter by (case-sensitive)</td>
 </tr>
 <tr>
 <td><strong>globally_enabled_running</strong></td>
@@ -21398,7 +21398,7 @@ and unweighted destinations for a route is not allowed.</p>
 <tr>
 <td><strong>names</strong></td>
 <td><em>list of strings</em></td>
-<td>Comma-delimited list of security group names to filter by</td>
+<td>Comma-delimited list of security group names to filter by (case-sensitive)</td>
 </tr>
 <tr>
 <td><strong>page</strong></td>
@@ -21572,7 +21572,7 @@ and unweighted destinations for a route is not allowed.</p>
 <tr>
 <td><strong>names</strong></td>
 <td><em>list of strings</em></td>
-<td>Comma-delimited list of security group names to filter by</td>
+<td>Comma-delimited list of security group names to filter by (case-sensitive)</td>
 </tr>
 <tr>
 <td><strong>page</strong></td>
@@ -21775,7 +21775,7 @@ The <code class="prettyprint">Location</code> header refers to the created job w
 <tr>
 <td><strong>name</strong></td>
 <td><em>string</em></td>
-<td>Name of the service broker</td>
+<td>Name of the service broker; must be unique (case-sensitive)</td>
 </tr>
 <tr>
 <td><strong>url</strong></td>
@@ -22054,7 +22054,7 @@ The <code class="prettyprint">Location</code> header refers to the created job w
 <tr>
 <td><strong>names</strong></td>
 <td><em>list of strings</em></td>
-<td>Comma-delimited list of service broker names to filter by</td>
+<td>Comma-delimited list of service broker names to filter by (case-sensitive)</td>
 </tr>
 <tr>
 <td><strong>page</strong></td>
@@ -22901,7 +22901,7 @@ They are only visible to members of that space.</p>
 <tr>
 <td><strong>names</strong></td>
 <td><em>list of strings</em></td>
-<td>Comma-delimited list of names to filter by</td>
+<td>Comma-delimited list of names to filter by (case-insensitive)</td>
 </tr>
 <tr>
 <td><strong>available</strong></td>
@@ -22921,7 +22921,7 @@ They are only visible to members of that space.</p>
 <tr>
 <td><strong>service_broker_names</strong></td>
 <td><em>list of strings</em></td>
-<td>Comma-delimited list of service broker names to filter by</td>
+<td>Comma-delimited list of service broker names to filter by (case-sensitive)</td>
 </tr>
 <tr>
 <td><strong>space_guids</strong></td>
@@ -23794,7 +23794,7 @@ Service offerings and service plans are created and updated when a service broke
 <tr>
 <td><strong>names</strong></td>
 <td><em>list of strings</em></td>
-<td>Comma-delimited list of names to filter by</td>
+<td>Comma-delimited list of names to filter by (case-insensitive)</td>
 </tr>
 <tr>
 <td><strong>available</strong></td>
@@ -23824,7 +23824,7 @@ Service offerings and service plans are created and updated when a service broke
 <tr>
 <td><strong>service_broker_names</strong></td>
 <td><em>list of strings</em></td>
-<td>Comma-delimited list of service broker names to filter by</td>
+<td>Comma-delimited list of service broker names to filter by (case-sensitive)</td>
 </tr>
 <tr>
 <td><strong>service_offering_guids</strong></td>
@@ -23834,7 +23834,7 @@ Service offerings and service plans are created and updated when a service broke
 <tr>
 <td><strong>service_offering_names</strong></td>
 <td><em>list of strings</em></td>
-<td>Comma-delimited list of service Offering names to filter by</td>
+<td>Comma-delimited list of service Offering names to filter by (case-insensitive)</td>
 </tr>
 <tr>
 <td><strong>service_instance_guids</strong></td>
@@ -24816,7 +24816,7 @@ accordingly to cases outlined in the <a href="https://github.com/openservicebrok
 <tr>
 <td><strong>name</strong></td>
 <td><em>string</em></td>
-<td>Name of the service instance</td>
+<td>Name of the service instance; must be unique within the space (case-sensitive)</td>
 </tr>
 <tr>
 <td><strong>relationships.space</strong></td>
@@ -24878,7 +24878,7 @@ accordingly to cases outlined in the <a href="https://github.com/openservicebrok
 <tr>
 <td><strong>name</strong></td>
 <td><em>string</em></td>
-<td>Name of the service instance</td>
+<td>Name of the service instance; must be unique within the space (case-sensitive)</td>
 </tr>
 <tr>
 <td><strong>relationships.space</strong></td>
@@ -25311,7 +25311,7 @@ accordingly to cases outlined in the <a href="https://github.com/openservicebrok
 <tr>
 <td><strong>names</strong></td>
 <td><em>list of strings</em></td>
-<td>Comma-delimited list of service instance names to filter by</td>
+<td>Comma-delimited list of service instance names to filter by (case-sensitive)</td>
 </tr>
 <tr>
 <td><strong>guids</strong></td>
@@ -25341,7 +25341,7 @@ accordingly to cases outlined in the <a href="https://github.com/openservicebrok
 <tr>
 <td><strong>service_plan_names</strong></td>
 <td><em>list of strings</em></td>
-<td>Comma-delimited list of service plan names to filter by</td>
+<td>Comma-delimited list of service plan names to filter by (case-insensitive)</td>
 </tr>
 <tr>
 <td><strong>page</strong></td>
@@ -26912,7 +26912,7 @@ accordingly to cases outlined in the <a href="https://github.com/openservicebrok
 <tr>
 <td><strong>names</strong></td>
 <td><em>list of strings</em></td>
-<td>Comma-delimited list of service credential binding names to filter by</td>
+<td>Comma-delimited list of service credential binding names to filter by (case-sensitive)</td>
 </tr>
 <tr>
 <td><strong>service_instance_guids</strong></td>
@@ -26922,7 +26922,7 @@ accordingly to cases outlined in the <a href="https://github.com/openservicebrok
 <tr>
 <td><strong>service_instance_names</strong></td>
 <td><em>list of strings</em></td>
-<td>Comma-delimited list of service instance names to filter by</td>
+<td>Comma-delimited list of service instance names to filter by (case-sensitive)</td>
 </tr>
 <tr>
 <td><strong>app_guids</strong></td>
@@ -26932,7 +26932,7 @@ accordingly to cases outlined in the <a href="https://github.com/openservicebrok
 <tr>
 <td><strong>app_names</strong></td>
 <td><em>strings</em></td>
-<td>Comma-delimited list of app names to filter by</td>
+<td>Comma-delimited list of app names to filter by (case-insensitive)</td>
 </tr>
 <tr>
 <td><strong>service_plan_guids</strong></td>
@@ -26942,7 +26942,7 @@ accordingly to cases outlined in the <a href="https://github.com/openservicebrok
 <tr>
 <td><strong>service_plan_names</strong></td>
 <td><em>list of strings</em></td>
-<td>Comma-delimited list of service plan names to filter by</td>
+<td>Comma-delimited list of service plan names to filter by (case-insensitive)</td>
 </tr>
 <tr>
 <td><strong>service_offering_guids</strong></td>
@@ -26952,7 +26952,7 @@ accordingly to cases outlined in the <a href="https://github.com/openservicebrok
 <tr>
 <td><strong>service_offering_names</strong></td>
 <td><em>list of strings</em></td>
-<td>Comma-delimited list of service offering names to filter by</td>
+<td>Comma-delimited list of service offering names to filter by (case-insensitive)</td>
 </tr>
 <tr>
 <td><strong>type</strong></td>
@@ -27626,7 +27626,7 @@ In order to bind to a user-provided service instance, the service instance must 
 <tr>
 <td><strong>service_instance_names</strong></td>
 <td><em>list of strings</em></td>
-<td>Comma-delimited list of service instance names to filter by</td>
+<td>Comma-delimited list of service instance names to filter by (case-sensitive)</td>
 </tr>
 <tr>
 <td><strong>label_selector</strong></td>
@@ -29256,7 +29256,7 @@ question and the associated space, service broker, and service offering.</p>
 <tr>
 <td><strong>name</strong></td>
 <td><em>string</em></td>
-<td>Space name</td>
+<td>Space name; must be unique within the organization (case-insensitive)</td>
 </tr>
 <tr>
 <td><strong>relationships.organization</strong></td>
@@ -29520,7 +29520,7 @@ question and the associated space, service broker, and service offering.</p>
 <tr>
 <td><strong>names</strong></td>
 <td><em>list of strings</em></td>
-<td>Comma-delimited list of space names to filter by</td>
+<td>Comma-delimited list of space names to filter by (case-insensitive)</td>
 </tr>
 <tr>
 <td><strong>guids</strong></td>
@@ -30494,7 +30494,7 @@ applications in the space may be accessed via SSH.</p>
 <tr>
 <td><strong>name</strong></td>
 <td><em>string</em></td>
-<td>Name of the quota</td>
+<td>Name of the quota; must be unique within the organization (case-sensitive)</td>
 </tr>
 <tr>
 <td><strong>relationships.organization</strong></td>
@@ -30850,7 +30850,7 @@ applications in the space may be accessed via SSH.</p>
 <tr>
 <td><strong>names</strong></td>
 <td><em>list of strings</em></td>
-<td>Comma-delimited list of space quota names to filter by</td>
+<td>Comma-delimited list of space quota names to filter by (case-sensitive)</td>
 </tr>
 <tr>
 <td><strong>organization_guids</strong></td>
@@ -31391,7 +31391,7 @@ Running applications remain available.</p>
 <tr>
 <td><strong>name</strong></td>
 <td><em>string</em></td>
-<td>Name of the stack; must be unique and no longer than 250 characters</td>
+<td>Name of the stack; must be unique (case-sensitive) and no longer than 250 characters</td>
 </tr>
 </tbody></table>
 
@@ -31585,7 +31585,7 @@ Running applications remain available.</p>
 <tr>
 <td><strong>names</strong></td>
 <td><em>list of strings</em></td>
-<td>Comma-delimited list of stack names to filter by</td>
+<td>Comma-delimited list of stack names to filter by (case-sensitive)</td>
 </tr>
 <tr>
 <td><strong>default</strong></td>
@@ -32524,7 +32524,7 @@ in the response based on the user&rsquo;s role.</p>
 <tr>
 <td><strong>names</strong></td>
 <td><em>list of strings</em></td>
-<td>Comma-delimited list of task names to filter by</td>
+<td>Comma-delimited list of task names to filter by (case-insensitive)</td>
 </tr>
 <tr>
 <td><strong>states</strong></td>
@@ -32726,7 +32726,7 @@ excluded in the response based on the user&rsquo;s role.</p>
 <tr>
 <td><strong>names</strong></td>
 <td><em>list of strings</em></td>
-<td>Comma-delimited list of task names to filter by</td>
+<td>Comma-delimited list of task names to filter by (case-insensitive)</td>
 </tr>
 <tr>
 <td><strong>states</strong></td>
