@@ -8,7 +8,7 @@ module VCAP::CloudController
         include VCAP::CloudController::Presenters::Mixins::MetadataPresentationHelpers
 
         def to_hash
-          {
+          hash = {
             guid: route_policy.guid,
             created_at: route_policy.created_at,
             updated_at: route_policy.updated_at,
@@ -20,6 +20,7 @@ module VCAP::CloudController
             relationships: build_relationships,
             links: build_links
           }
+          @decorators.reduce(hash) { |memo, d| d.decorate(memo, [route_policy]) }
         end
 
         private
