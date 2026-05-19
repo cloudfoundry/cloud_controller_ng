@@ -86,7 +86,7 @@ module VCAP::CloudController
         let(:request) { {} }
 
         context 'the app is buildpack type' do
-          let(:app) { AppModel.make(:buildpack) }
+          let(:app) { AppModel.make }
 
           it 'returns a AppBuildpackLifecycle' do
             expect(AppLifecycleProvider.provide_for_update(message, app)).to be_a(AppBuildpackLifecycle)

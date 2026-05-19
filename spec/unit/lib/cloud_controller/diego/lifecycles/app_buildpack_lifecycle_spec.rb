@@ -86,7 +86,7 @@ module VCAP::CloudController
     end
 
     describe '#update_lifecycle_data_model' do
-      let(:app) { AppModel.make(:buildpack) }
+      let(:app) { AppModel.make }
       let!(:ruby_buildpack) { Buildpack.make(name: 'ruby_buildpack') }
       let(:lifecycle_request_data) { { buildpacks: ['http://oj.com', 'ruby_buildpack'], stack: 'sweetness' } }
 

@@ -297,7 +297,7 @@ module VCAP::CloudController
       context 'when there is a droplet and it does not have the docker lifecycle' do
         let(:parent_app) { AppModel.make(:docker) }
         let(:task) { TaskModel.make(app: parent_app, droplet: droplet, state: TaskModel::SUCCEEDED_STATE) }
-        let(:droplet) { DropletModel.make(:buildpack, app: parent_app) }
+        let(:droplet) { DropletModel.make(app: parent_app) }
 
         it 'returns false' do
           expect(task.docker?).to be(false)
@@ -334,7 +334,7 @@ module VCAP::CloudController
       context 'when there is a droplet and it does not have the cnb lifecycle' do
         let(:parent_app) { AppModel.make(:cnb) }
         let(:task) { TaskModel.make(app: parent_app, droplet: droplet, state: TaskModel::SUCCEEDED_STATE) }
-        let(:droplet) { DropletModel.make(:buildpack, app: parent_app) }
+        let(:droplet) { DropletModel.make(app: parent_app) }
 
         it 'returns false' do
           expect(task.cnb?).to be(false)

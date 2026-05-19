@@ -50,24 +50,40 @@ module VCAP::CloudController
     add_association_dependencies labels: :destroy
     add_association_dependencies annotations: :destroy
 
-    def lifecycle_type
-      return Lifecycles::BUILDPACK if buildpack_lifecycle_data
-      return Lifecycles::CNB if cnb_lifecycle_data
+    def validate
+      super
+      validates_includes Lifecycles::TYPES, :lifecycle_type
+    end
 
-      Lifecycles::DOCKER
+    def before_create
+      # Inherit lifecycle_type from associated app if not explicitly set
+      self[:lifecycle_type] = app&.lifecycle_type if self[:lifecycle_type].blank?
+
+      super
+    end
+
+    def lifecycle_type
+      return self[:lifecycle_type] if self[:lifecycle_type].present?
+
+      # Fallback for records written before the lifecycle_type column
+      # existed. Remove once existing rows are backfilled (see #5067).
+      return BuildpackLifecycleDataModel::LIFECYCLE_TYPE if buildpack_lifecycle_data
+      return CNBLifecycleDataModel::LIFECYCLE_TYPE if cnb_lifecycle_data
+
+      DockerLifecycleDataModel::LIFECYCLE_TYPE
     end
 
     def buildpack_lifecycle?
-      lifecycle_type == Lifecycles::BUILDPACK
+      lifecycle_type == BuildpackLifecycleDataModel::LIFECYCLE_TYPE
     end
 
     def cnb_lifecycle?
-      lifecycle_type == Lifecycles::CNB
+      lifecycle_type == CNBLifecycleDataModel::LIFECYCLE_TYPE
     end
 
     def lifecycle_data
-      return buildpack_lifecycle_data if buildpack_lifecycle_data
-      return cnb_lifecycle_data if cnb_lifecycle_data
+      return buildpack_lifecycle_data if lifecycle_type == BuildpackLifecycleDataModel::LIFECYCLE_TYPE
+      return cnb_lifecycle_data if lifecycle_type == CNBLifecycleDataModel::LIFECYCLE_TYPE
 
       DockerLifecycleDataModel.new
     end

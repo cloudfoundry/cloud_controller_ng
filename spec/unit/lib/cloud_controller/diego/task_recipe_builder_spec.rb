@@ -163,7 +163,7 @@ module VCAP::CloudController
         end
 
         context 'with a buildpack backend' do
-          let(:droplet) { DropletModel.make(:buildpack, package:, app:) }
+          let(:droplet) { DropletModel.make(package:, app:) }
 
           let(:buildpack_staging_action) { ::Diego::Bbs::Models::RunAction.new }
           let(:lifecycle_environment_variables) { [::Diego::Bbs::Models::EnvironmentVariable.new(name: 'the-buildpack-env-var', value: 'the-buildpack-value')] }
@@ -500,7 +500,7 @@ module VCAP::CloudController
         end
 
         context 'with a buildpack backend' do
-          let(:droplet) { DropletModel.make(:buildpack, app:) }
+          let(:droplet) { DropletModel.make(app:) }
 
           let(:task_action_builder) do
             instance_double(

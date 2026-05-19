@@ -574,7 +574,7 @@ RSpec.describe AppsV3Controller, type: :controller do
   end
 
   describe '#update' do
-    let(:app_model) { VCAP::CloudController::AppModel.make(:buildpack) }
+    let(:app_model) { VCAP::CloudController::AppModel.make }
 
     let(:space) { app_model.space }
     let(:org) { space.organization }
@@ -1089,7 +1089,7 @@ RSpec.describe AppsV3Controller, type: :controller do
 
   describe '#start' do
     let(:app_model) { VCAP::CloudController::AppModel.make(droplet_guid: droplet.guid) }
-    let(:droplet) { VCAP::CloudController::DropletModel.make(:buildpack, state: VCAP::CloudController::DropletModel::STAGED_STATE) }
+    let(:droplet) { VCAP::CloudController::DropletModel.make(state: VCAP::CloudController::DropletModel::STAGED_STATE) }
     let(:space) { app_model.space }
     let(:org) { space.organization }
     let(:user) { set_current_user(VCAP::CloudController::User.make) }

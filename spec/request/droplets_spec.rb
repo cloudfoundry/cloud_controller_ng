@@ -833,7 +833,7 @@ RSpec.describe 'Droplets' do
     end
 
     context 'when a droplet does not have a buildpack lifecycle' do
-      let!(:droplet_without_lifecycle) { VCAP::CloudController::DropletModel.make(:buildpack, package_guid: VCAP::CloudController::PackageModel.make.guid) }
+      let!(:droplet_without_lifecycle) { VCAP::CloudController::DropletModel.make(package_guid: VCAP::CloudController::PackageModel.make.guid) }
 
       it 'is excluded' do
         get '/v3/droplets', nil, developer_headers
@@ -977,71 +977,21 @@ RSpec.describe 'Droplets' do
       end
     end
 
-    context 'filtering by timestamps' do
+    it_behaves_like 'list_endpoint_with_common_filters' do
       before do
-        VCAP::CloudController::DropletModel.plugin :timestamps, update_on_create: false
-
-        # Delete all the existing DropletModels so they don't overlap in timestamp with our queries
         VCAP::CloudController::DropletModel.dataset.delete
       end
 
-      # .make updates the resource after creating it, over writing our passed in updated_at timestamp
-      # Therefore we cannot use shared_examples as the updated_at will not be as written
-      let!(:resource_1) do
-        VCAP::CloudController::DropletModel.create(
-          state: VCAP::CloudController::DropletModel::STAGED_STATE,
-          created_at: '2020-05-26T18:47:01Z',
-          updated_at: '2020-05-26T18:47:01Z',
-          app: app_model
-        )
+      let(:resource_klass) { VCAP::CloudController::DropletModel }
+      let(:api_call) do
+        ->(headers, filters) { get "/v3/droplets?#{filters}", nil, headers }
       end
-      let!(:resource_2) do
-        VCAP::CloudController::DropletModel.create(
-          state: VCAP::CloudController::DropletModel::STAGED_STATE,
-          created_at: '2020-05-26T18:47:02Z',
-          updated_at: '2020-05-26T18:47:02Z',
-          app: app_model
-        )
-      end
-      let!(:resource_3) do
-        VCAP::CloudController::DropletModel.create(
-          state: VCAP::CloudController::DropletModel::STAGED_STATE,
-          created_at: '2020-05-26T18:47:03Z',
-          updated_at: '2020-05-26T18:47:03Z',
-          app: app_model
-        )
-      end
-      let!(:resource_4) do
-        VCAP::CloudController::DropletModel.create(
-          state: VCAP::CloudController::DropletModel::STAGED_STATE,
-          created_at: '2020-05-26T18:47:04Z',
-          updated_at: '2020-05-26T18:47:04Z',
-          app: app_model
-        )
-      end
-
-      after do
-        VCAP::CloudController::DropletModel.plugin :timestamps, update_on_create: true
-      end
-
-      it 'filters by the created at' do
-        get "/v3/droplets?created_ats[lt]=#{resource_3.created_at.iso8601}", nil, admin_headers
-
-        expect(last_response).to have_status_code(200)
-        expect(parsed_response['resources'].pluck('guid')).to contain_exactly(resource_1.guid, resource_2.guid)
-      end
-
-      it 'filters by the updated_at' do
-        get "/v3/droplets?updated_ats[lt]=#{resource_3.updated_at.iso8601}", nil, admin_headers
-
-        expect(last_response).to have_status_code(200)
-        expect(parsed_response['resources'].pluck('guid')).to contain_exactly(resource_1.guid, resource_2.guid)
-      end
+      let(:headers) { admin_headers }
     end
   end
 
   describe 'DELETE /v3/droplets/:guid' do
-    let!(:droplet) { VCAP::CloudController::DropletModel.make(:buildpack, app_guid: app_model.guid) }
+    let!(:droplet) { VCAP::CloudController::DropletModel.make(app_guid: app_model.guid) }
 
     let(:api_call) { ->(user_headers) { delete "/v3/droplets/#{droplet.guid}", nil, user_headers } }
     let(:db_check) do

@@ -49,6 +49,13 @@ module VCAP::CloudController
     serializes_via_json :process_types
     serializes_via_json :sidecars
 
+    def before_create
+      # Inherit lifecycle_type from associated app if not explicitly set
+      self[:lifecycle_type] = app&.lifecycle_type if self[:lifecycle_type].blank?
+
+      super
+    end
+
     def around_destroy
       yield
     rescue Sequel::ForeignKeyConstraintViolation => e
@@ -65,6 +72,7 @@ module VCAP::CloudController
     def validate
       super
       validates_includes DROPLET_STATES, :state, allow_missing: true
+      validates_includes Lifecycles::TYPES, :lifecycle_type
     end
 
     def set_buildpack_receipt(buildpack_key:, detect_output:, requested_buildpack:, buildpack_url: nil)
@@ -168,6 +176,10 @@ module VCAP::CloudController
     end
 
     def lifecycle_type
+      return self[:lifecycle_type] if self[:lifecycle_type].present?
+
+      # Fallback for records written before the lifecycle_type column
+      # existed. Remove once existing rows are backfilled (see #5067).
       return BuildpackLifecycleDataModel::LIFECYCLE_TYPE if buildpack_lifecycle_data
       return CNBLifecycleDataModel::LIFECYCLE_TYPE if cnb_lifecycle_data
 
@@ -175,8 +187,8 @@ module VCAP::CloudController
     end
 
     def lifecycle_data
-      return buildpack_lifecycle_data if buildpack_lifecycle_data
-      return cnb_lifecycle_data if cnb_lifecycle_data
+      return buildpack_lifecycle_data if lifecycle_type == BuildpackLifecycleDataModel::LIFECYCLE_TYPE
+      return cnb_lifecycle_data if lifecycle_type == CNBLifecycleDataModel::LIFECYCLE_TYPE
 
       DockerLifecycleDataModel.new
     end

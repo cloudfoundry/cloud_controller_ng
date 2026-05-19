@@ -7,7 +7,7 @@ module VCAP::CloudController
       RSpec.describe StagingActionBuilder do
         subject(:builder) { StagingActionBuilder.new(config, staging_details, lifecycle_data) }
 
-        let(:droplet) { DropletModel.make(:buildpack) }
+        let(:droplet) { DropletModel.make }
         let(:enable_declarative_asset_downloads) { false }
         let(:legacy_md5_buildpack_paths_enabled) { false }
         let(:config) do

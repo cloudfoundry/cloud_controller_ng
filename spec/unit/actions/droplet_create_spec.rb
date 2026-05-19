@@ -160,8 +160,6 @@ module VCAP::CloudController
 
     describe '#find_or_create_buildpack_droplet' do
       context 'buildpack lifecycle' do
-        let!(:buildpack_lifecycle_data) { BuildpackLifecycleDataModel.make(build:) }
-
         it 'sets it on the droplet' do
           expect do
             droplet_create.find_or_create_buildpack_droplet(build)
@@ -174,8 +172,8 @@ module VCAP::CloudController
           expect(droplet.package).to eq(package)
           expect(droplet.build).to eq(build)
 
-          buildpack_lifecycle_data.reload
-          expect(buildpack_lifecycle_data.droplet).to eq(droplet)
+          build.buildpack_lifecycle_data.reload
+          expect(build.buildpack_lifecycle_data.droplet).to eq(droplet)
 
           event = Event.last
           expect(event.type).to eq('audit.app.droplet.create')
@@ -206,8 +204,8 @@ module VCAP::CloudController
           expect(droplet.package).to eq(package)
           expect(droplet.build).to eq(build)
 
-          buildpack_lifecycle_data.reload
-          expect(buildpack_lifecycle_data.droplet).to eq(droplet)
+          build.buildpack_lifecycle_data.reload
+          expect(build.buildpack_lifecycle_data.droplet).to eq(droplet)
         end
 
         it 'is idempotent on repeated calls (no duplicate droplet, same GUID, no extra event)' do
@@ -221,8 +219,8 @@ module VCAP::CloudController
           # Ensure still only one droplet for this build
           expect(DropletModel.where(build_guid: build.guid).count).to eq(1)
 
-          buildpack_lifecycle_data.reload
-          expect(buildpack_lifecycle_data.droplet).to eq(first)
+          build.buildpack_lifecycle_data.reload
+          expect(build.buildpack_lifecycle_data.droplet).to eq(first)
         end
 
         it 'returns the pre-existing droplet when one already exists for the build' do
@@ -232,7 +230,7 @@ module VCAP::CloudController
             build: build,
             state: DropletModel::STAGING_STATE
           )
-          buildpack_lifecycle_data.update(droplet: existing)
+          build.buildpack_lifecycle_data.update(droplet: existing)
 
           expect do
             returned = droplet_create.find_or_create_buildpack_droplet(build)
@@ -273,7 +271,15 @@ module VCAP::CloudController
       end
 
       context 'cnb lifecycle' do
-        let!(:cnb_lifecycle_data) { CNBLifecycleDataModel.make(build:) }
+        let(:app) { AppModel.make(:cnb) }
+        let(:build) do
+          BuildModel.make(:cnb,
+                          app: app,
+                          package: package,
+                          created_by_user_guid: 'schneider',
+                          created_by_user_email: 'bob@loblaw.com',
+                          created_by_user_name: 'bobert')
+        end
 
         it 'sets it on the droplet' do
           expect do
@@ -287,8 +293,8 @@ module VCAP::CloudController
           expect(droplet.package).to eq(package)
           expect(droplet.build).to eq(build)
 
-          cnb_lifecycle_data.reload
-          expect(cnb_lifecycle_data.droplet).to eq(droplet)
+          build.cnb_lifecycle_data.reload
+          expect(build.cnb_lifecycle_data.droplet).to eq(droplet)
 
           event = Event.last
           expect(event.type).to eq('audit.app.droplet.create')
@@ -310,10 +316,7 @@ module VCAP::CloudController
 
         context 'when the build does not contain created_by fields' do
           let(:build) do
-            BuildModel.make(
-              app:,
-              package:
-            )
+            BuildModel.make(:cnb, app:, package:)
           end
 
           it 'sets the actor to UNKNOWN' do

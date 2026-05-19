@@ -27,7 +27,7 @@ RSpec.describe DropletsController, type: :controller do
     let(:source_app_guid) { VCAP::CloudController::AppModel.make(space_guid: source_space.guid).guid }
     let(:target_app_guid) { target_app.guid }
     let(:state) { 'STAGED' }
-    let!(:source_droplet) { VCAP::CloudController::DropletModel.make(:buildpack, state: state, app_guid: source_app_guid) }
+    let!(:source_droplet) { VCAP::CloudController::DropletModel.make(state: state, app_guid: source_app_guid) }
     let(:source_droplet_guid) { source_droplet.guid }
     let(:request_body) do
       {

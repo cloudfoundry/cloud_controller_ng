@@ -12,7 +12,7 @@ module VCAP::CloudController
       end
 
       droplet = DropletModel.new(
-        app_guid: app.guid,
+        app: app,
         state: DropletModel::AWAITING_UPLOAD_STATE,
         process_types: message.process_types || DEFAULT_PROCESS_TYPES,
         execution_metadata: ''
@@ -20,7 +20,7 @@ module VCAP::CloudController
 
       DropletModel.db.transaction do
         droplet.save
-        VCAP::CloudController::BuildpackLifecycleDataModel.create(
+        droplet.buildpack_lifecycle_data = VCAP::CloudController::BuildpackLifecycleDataModel.create(
           droplet:
         )
       end
@@ -84,7 +84,7 @@ module VCAP::CloudController
 
     def droplet_from_build(build)
       DropletModel.new(
-        app_guid: build.app_guid,
+        app: build.app,
         package_guid: build.package_guid,
         state: DropletModel::STAGING_STATE,
         build: build

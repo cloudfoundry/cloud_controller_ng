@@ -21,14 +21,15 @@ module VCAP::CloudController::Presenters::V3
         created_by_user_email: 'this user emailed in'
       )
     end
-    let!(:lifecycle_data) do
-      VCAP::CloudController::BuildpackLifecycleDataModel.make(buildpacks:, stack:, build:)
-    end
 
     describe '#to_hash' do
       let(:result) { BuildPresenter.new(build).to_hash }
 
       context 'buildpack lifecycle' do
+        before do
+          build.buildpack_lifecycle_data.update(buildpacks:, stack:)
+        end
+
         it 'presents the build as a hash' do
           links = {
             self: { href: "#{link_prefix}/v3/builds/#{build.guid}" },
@@ -80,9 +81,9 @@ module VCAP::CloudController::Presenters::V3
       end
 
       context 'docker lifecycle' do
-        before do
-          build.buildpack_lifecycle_data = nil
-        end
+        let(:app) { VCAP::CloudController::AppModel.make(:docker) }
+        let(:package) { VCAP::CloudController::PackageModel.make(:docker, app:) }
+        let(:build) { VCAP::CloudController::BuildModel.make(:docker, app:, package:) }
 
         it 'presents the build as a hash' do
           links = {
@@ -110,7 +111,6 @@ module VCAP::CloudController::Presenters::V3
       context 'when the droplet has finished staging' do
         let(:droplet) do
           VCAP::CloudController::DropletModel.make(
-            :buildpack,
             state: VCAP::CloudController::DropletModel::STAGED_STATE,
             package_guid: package.guid,
             app: app,

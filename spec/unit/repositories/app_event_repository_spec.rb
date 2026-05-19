@@ -532,7 +532,7 @@ module VCAP::CloudController
 
       context 'with a v3 app' do
         describe '#record_app_create' do
-          let(:app) { AppModel.make(:buildpack) }
+          let(:app) { AppModel.make }
           let(:request_attrs) do
             {
               'name' => 'new',

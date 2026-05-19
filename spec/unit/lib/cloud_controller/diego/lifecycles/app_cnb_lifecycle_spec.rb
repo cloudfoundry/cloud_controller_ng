@@ -82,7 +82,7 @@ module VCAP::CloudController
     end
 
     describe '#update_lifecycle_data_model' do
-      let(:app) { AppModel.make(:buildpack) }
+      let(:app) { AppModel.make }
       let(:lifecycle_request_data) { { buildpacks: ['http://oj.com', 'http://acme.com'], stack: 'sweetness' } }
 
       it 'updates the CNBLifecycleDataModel' do
