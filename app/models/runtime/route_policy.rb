@@ -3,8 +3,7 @@ module VCAP::CloudController
     many_to_one :route,
                 class: 'VCAP::CloudController::Route',
                 key: :route_id,
-                primary_key: :id,
-                without_guid_generation: true
+                primary_key: :id
 
     one_to_many :labels, class: 'VCAP::CloudController::RoutePolicyLabelModel', key: :resource_guid, primary_key: :guid
     one_to_many :annotations, class: 'VCAP::CloudController::RoutePolicyAnnotationModel', key: :resource_guid, primary_key: :guid
@@ -19,23 +18,23 @@ module VCAP::CloudController
 
     def after_create
       super
-      touch_associated_processes
+      notify_processes_of_route_update
     end
 
     def after_destroy
       super
-      touch_associated_processes
+      notify_processes_of_route_update
     end
 
     private
 
-    def touch_associated_processes
-      # Update the timestamp on all processes associated with this route
-      # This triggers Diego's ProcessesSync to pick up the route changes
+    def notify_processes_of_route_update
       return unless route
 
-      route.apps.each do |process|
-        process.update(updated_at: Time.now)
+      db.after_commit do
+        route.apps.each do |process|
+          ProcessRouteHandler.new(process).notify_backend_of_route_update
+        end
       end
     end
   end

@@ -41,8 +41,8 @@ module VCAP::CloudController
 
     describe 'callbacks' do
       describe 'after_create' do
-        it 'calls touch_associated_processes' do
-          expect_any_instance_of(RoutePolicy).to receive(:touch_associated_processes).and_call_original
+        it 'calls notify_processes_of_route_update' do
+          expect_any_instance_of(RoutePolicy).to receive(:notify_processes_of_route_update).and_call_original
 
           RoutePolicy.create(
             source: "cf:app:#{app_guid}",
@@ -76,13 +76,13 @@ module VCAP::CloudController
       end
 
       describe 'after_destroy' do
-        it 'calls touch_associated_processes' do
+        it 'calls notify_processes_of_route_update' do
           rule = RoutePolicy.create(
             source: "cf:app:#{app_guid}",
             route: route
           )
 
-          expect_any_instance_of(RoutePolicy).to receive(:touch_associated_processes).and_call_original
+          expect_any_instance_of(RoutePolicy).to receive(:notify_processes_of_route_update).and_call_original
 
           rule.destroy
         end
