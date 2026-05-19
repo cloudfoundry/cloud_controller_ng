@@ -1,6 +1,7 @@
 require 'messages/route_policy_create_message'
 require 'messages/route_policy_update_message'
 require 'messages/route_policies_list_message'
+require 'messages/route_policy_show_message'
 require 'presenters/v3/route_policy_presenter'
 require 'decorators/include_route_policy_source_decorator'
 require 'decorators/include_route_policy_route_decorator'
@@ -26,13 +27,20 @@ class RoutePoliciesController < ApplicationController
   end
 
   def show
+    message = RoutePolicyShowMessage.from_params(query_params)
+    unprocessable!(message.errors.full_messages) unless message.valid?
+
     route_policy = VCAP::CloudController::RoutePolicy.find(guid: hashed_params[:guid])
     resource_not_found!(:route_policy) unless route_policy
 
     route = route_policy.route
     resource_not_found!(:route_policy) unless route && permission_queryer.can_read_from_space?(route.space.id, route.space.organization_id)
 
-    render status: :ok, json: Presenters::V3::RoutePolicyPresenter.new(route_policy)
+    decorators = []
+    decorators << IncludeRoutePolicySourceDecorator if IncludeRoutePolicySourceDecorator.match?(message.include)
+    decorators << IncludeRoutePolicyRouteDecorator if IncludeRoutePolicyRouteDecorator.match?(message.include)
+
+    render status: :ok, json: Presenters::V3::RoutePolicyPresenter.new(route_policy, decorators: decorators)
   end
 
   def create

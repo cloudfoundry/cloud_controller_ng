@@ -251,6 +251,75 @@ RSpec.describe 'Route Policies' do
         expect(last_response.status).to eq(404)
       end
     end
+
+    context 'with include=source' do
+      let!(:frontend_app) { VCAP::CloudController::AppModel.make(space: space, name: 'frontend-app') }
+      let!(:app_policy) do
+        VCAP::CloudController::RoutePolicy.create(
+          guid: SecureRandom.uuid,
+          source: "cf:app:#{frontend_app.guid}",
+          route_id: mtls_route.id
+        )
+      end
+
+      it 'includes the resolved source app resource' do
+        get "/v3/route_policies/#{app_policy.guid}?include=source", nil, admin_header
+
+        expect(last_response.status).to eq(200)
+        parsed = Oj.load(last_response.body)
+
+        expect(parsed['included']).to be_a(Hash)
+        expect(parsed['included']['apps']).to be_an(Array)
+        app_included = parsed['included']['apps'].find { |a| a['guid'] == frontend_app.guid }
+        expect(app_included).to be_present
+        expect(app_included['name']).to eq('frontend-app')
+      end
+    end
+
+    context 'with include=route' do
+      it 'includes the associated route resource' do
+        get "/v3/route_policies/#{route_policy.guid}?include=route", nil, admin_header
+
+        expect(last_response.status).to eq(200)
+        parsed = Oj.load(last_response.body)
+
+        expect(parsed['included']).to be_a(Hash)
+        expect(parsed['included']['routes']).to be_an(Array)
+        route_included = parsed['included']['routes'].find { |r| r['guid'] == mtls_route.guid }
+        expect(route_included).to be_present
+      end
+    end
+
+    context 'with include=route,source' do
+      let!(:frontend_app) { VCAP::CloudController::AppModel.make(space: space, name: 'frontend-app') }
+      let!(:app_policy) do
+        VCAP::CloudController::RoutePolicy.create(
+          guid: SecureRandom.uuid,
+          source: "cf:app:#{frontend_app.guid}",
+          route_id: mtls_route.id
+        )
+      end
+
+      it 'includes both route and source resources' do
+        get "/v3/route_policies/#{app_policy.guid}?include=route,source", nil, admin_header
+
+        expect(last_response.status).to eq(200)
+        parsed = Oj.load(last_response.body)
+
+        expect(parsed['included']['routes']).to be_an(Array)
+        expect(parsed['included']['apps']).to be_an(Array)
+        expect(parsed['included']['routes'].find { |r| r['guid'] == mtls_route.guid }).to be_present
+        expect(parsed['included']['apps'].find { |a| a['guid'] == frontend_app.guid }).to be_present
+      end
+    end
+
+    context 'with an invalid include value' do
+      it 'returns 422' do
+        get "/v3/route_policies/#{route_policy.guid}?include=invalid_value", nil, admin_header
+
+        expect(last_response.status).to eq(422)
+      end
+    end
   end
 
   describe 'GET /v3/route_policies' do
