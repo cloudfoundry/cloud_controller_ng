@@ -59,7 +59,7 @@ module VCAP::CloudController
           page: 1,
           per_page: 5,
           order_by: 'created_at',
-                                                 include: %w[source route]
+          include: %w[source route]
         }
       end
 
@@ -81,7 +81,7 @@ module VCAP::CloudController
                                                  page: 1,
                                                  per_page: 5,
                                                  order_by: 'created_at',
-          include: %w[source route]
+                                                 include: %w[source route]
                                                })
         end.not_to raise_error
       end

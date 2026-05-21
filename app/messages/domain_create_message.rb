@@ -88,15 +88,27 @@ module VCAP::CloudController
     end
 
     def mutually_exclusive_fields
-      errors.add(:base, 'Cannot associate an internal domain with an organization') if requested?(:internal) && internal == true && requested?(:relationships)
-      errors.add(:base, 'Internal domains cannot be associated to a router group.') if requested?(:internal) && internal == true && requested?(:router_group)
-      errors.add(:base, 'Internal domains cannot have route policy enforcement. Internal routes bypass GoRouter.') if requested?(:internal) && internal == true &&
-                                                                                                                      requested?(:enforce_route_policies) && enforce_route_policies == true
-      errors.add(:base, 'Domains with a router group cannot have route policy enforcement. TCP routes do not support mTLS policy enforcement.') if requested?(:router_group) &&
-                                                                                                                                                   requested?(:enforce_route_policies) && enforce_route_policies == true
+      validate_internal_domain_exclusions
+      validate_router_group_exclusions
       return unless requested?(:relationships) && requested?(:router_group)
 
       errors.add(:base, 'Domains scoped to an organization cannot be associated to a router group.')
+    end
+
+    def validate_internal_domain_exclusions
+      return unless requested?(:internal) && internal == true
+
+      errors.add(:base, 'Cannot associate an internal domain with an organization') if requested?(:relationships)
+      errors.add(:base, 'Internal domains cannot be associated to a router group.') if requested?(:router_group)
+      return unless requested?(:enforce_route_policies) && enforce_route_policies == true
+
+      errors.add(:base, 'Internal domains cannot have route policy enforcement. Internal routes bypass GoRouter.')
+    end
+
+    def validate_router_group_exclusions
+      return unless requested?(:router_group) && requested?(:enforce_route_policies) && enforce_route_policies == true
+
+      errors.add(:base, 'Domains with a router group cannot have route policy enforcement. TCP routes do not support mTLS policy enforcement.')
     end
 
     def router_group_validation
