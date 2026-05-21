@@ -14,7 +14,7 @@ module VCAP::CloudController
           'page' => 1,
           'per_page' => 5,
           'order_by' => 'created_at',
-          'include' => 'source,route,app,space,organization'
+          'include' => 'source,route'
         }
       end
 
@@ -30,7 +30,7 @@ module VCAP::CloudController
         expect(message.page).to eq(1)
         expect(message.per_page).to eq(5)
         expect(message.order_by).to eq('created_at')
-        expect(message.include).to eq(%w[source route app space organization])
+        expect(message.include).to eq(%w[source route])
       end
 
       it 'converts requested keys to symbols' do
@@ -59,7 +59,7 @@ module VCAP::CloudController
           page: 1,
           per_page: 5,
           order_by: 'created_at',
-          include: %w[source route app space organization]
+                                                 include: %w[source route]
         }
       end
 
@@ -81,7 +81,7 @@ module VCAP::CloudController
                                                  page: 1,
                                                  per_page: 5,
                                                  order_by: 'created_at',
-                                                 include: %w[source route app space organization]
+          include: %w[source route]
                                                })
         end.not_to raise_error
       end
@@ -106,21 +106,21 @@ module VCAP::CloudController
           message = RoutePoliciesListMessage.from_params({ 'include' => 'route' })
           expect(message).to be_valid
 
-          message = RoutePoliciesListMessage.from_params({ 'include' => 'app' })
-          expect(message).to be_valid
-
-          message = RoutePoliciesListMessage.from_params({ 'include' => 'space' })
-          expect(message).to be_valid
-
-          message = RoutePoliciesListMessage.from_params({ 'include' => 'organization' })
-          expect(message).to be_valid
-
-          message = RoutePoliciesListMessage.from_params({ 'include' => 'source,route,app,space,organization' })
+          message = RoutePoliciesListMessage.from_params({ 'include' => 'source,route' })
           expect(message).to be_valid
         end
 
         it 'rejects invalid include values' do
           message = RoutePoliciesListMessage.from_params({ 'include' => 'invalid' })
+          expect(message).not_to be_valid
+
+          message = RoutePoliciesListMessage.from_params({ 'include' => 'app' })
+          expect(message).not_to be_valid
+
+          message = RoutePoliciesListMessage.from_params({ 'include' => 'space' })
+          expect(message).not_to be_valid
+
+          message = RoutePoliciesListMessage.from_params({ 'include' => 'organization' })
           expect(message).not_to be_valid
         end
       end

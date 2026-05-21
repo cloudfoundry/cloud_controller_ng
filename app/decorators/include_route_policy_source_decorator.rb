@@ -8,8 +8,7 @@ module VCAP::CloudController
     def self.match?(include_params)
       return false unless include_params
 
-      # Match if any of: source, app, space, organization
-      include_params.intersect?(%w[source app space organization])
+      include_params.include?('source')
     end
 
     def self.decorate(hash, route_policies)

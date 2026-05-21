@@ -57,7 +57,7 @@ curl "https://api.example.org/v3/route_policies?include=route,source" \
 | **per_page**             | _integer_                                        | Number of results per page; valid values are 1 through 5000
 | **order_by**             | _string_                                         | Value to sort by. Defaults to ascending; prepend with `-` to sort descending. Valid values are `created_at`, `updated_at`
 | **label_selector**       | _string_                                         | A query string containing a list of [label selector](#labels-and-selectors) requirements
-| **include**              | _string_                                         | Optionally include related resources in the response; valid values are `route`, `app`, `space`, `organization`, and `source` (which includes app, space, or organization based on the source type)
+| **include**              | _string_                                         | Optionally include related resources in the response; valid values are `route` and `source` (source includes the app, space, or organization based on the source type)
 | **created_ats**          | _[timestamp](#timestamps)_                       | Timestamp to filter by. When filtering on equality, several comma-delimited timestamps may be passed. Also supports filtering with [relational operators](#relational-operators)
 | **updated_ats**          | _[timestamp](#timestamps)_                       | Timestamp to filter by. When filtering on equality, several comma-delimited timestamps may be passed. Also supports filtering with [relational operators](#relational-operators)
 
@@ -68,7 +68,7 @@ curl "https://api.example.org/v3/route_policies?include=route,source" \
 - **Filter by source type**: `GET /v3/route_policies?sources=cf:any`
 - **Find policies referencing a specific app**: `GET /v3/route_policies?source_guids=d76446a1-f429-4444-8797-be2f78b75b08`
 - **Include source resources**: `GET /v3/route_policies?include=source` (batch-loads the app, space, or org referenced in each policy's source)
-- **Include route and app**: `GET /v3/route_policies?include=route,app`
+- **Include route and source**: `GET /v3/route_policies?include=route,source`
 
 #### Use cases
 
