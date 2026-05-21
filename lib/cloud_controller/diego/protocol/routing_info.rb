@@ -50,19 +50,19 @@ module VCAP::CloudController
           info['protocol'] = route_mapping.protocol
           info['options'] = r.options if r.options
 
-          add_mtls_options(info, r) if r.domain.enforce_route_policies
+          add_route_policy_options(info, r) if r.domain.enforce_route_policies
 
           info
         end
 
-        def add_mtls_options(info, route)
-          # Inject mTLS policy options for enforce_route_policies domains.
+        def add_route_policy_options(info, route)
+          # Inject route policy options for enforce_route_policies domains.
           # These are GoRouter-internal keys and are filtered from the /v3/routes API.
-          mtls_options = info['options']&.dup || {}
-          mtls_options['route_policy_scope'] = route.domain.route_policies_scope if route.domain.route_policies_scope
+          route_policy_options = {}
+          route_policy_options['route_policy_scope'] = route.domain.route_policies_scope if route.domain.route_policies_scope
           sources = route.route_policies.map(&:source)
-          mtls_options['route_policy_sources'] = sources.join(',') unless sources.empty?
-          info['options'] = mtls_options
+          route_policy_options['route_policy_sources'] = sources.join(',') unless sources.empty?
+          info['options'] = (info['options'] || {}).merge(route_policy_options)
         end
 
         def tcp_info(process_eager)
