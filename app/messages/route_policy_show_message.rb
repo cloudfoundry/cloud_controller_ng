@@ -5,7 +5,7 @@ module VCAP::CloudController
     register_allowed_keys [:include]
 
     validates_with NoAdditionalParamsValidator
-    validates_with IncludeParamValidator, valid_values: %w[source route app space organization]
+    validates_with IncludeParamValidator, valid_values: %w[source route]
 
     def self.from_params(params)
       super(params, %w[include])
