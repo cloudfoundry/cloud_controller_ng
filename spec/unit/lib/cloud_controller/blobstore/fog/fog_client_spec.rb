@@ -461,33 +461,6 @@ module CloudController
                 end
               end
             end
-
-            context 'AzureRM' do
-              let(:az_connection_config) do
-                {
-                  provider: 'AzureRM',
-                  environment: 'env',
-                  azure_storage_account_name: 'account',
-                  azure_storage_access_key: 'key'
-                }
-              end
-              let(:client_with_encryption) do
-                FogClient.new(connection_config: az_connection_config,
-                              directory_key: directory_key)
-              end
-
-              it 'has empty storage options' do
-                path = File.join(local_dir, 'empty_file.png')
-                FileUtils.touch(path)
-
-                client_with_encryption.cp_to_blobstore(path, 'abcdef123456')
-
-                expect(files).to have_received(:create).with(key: anything,
-                                                             body: anything,
-                                                             content_type: anything,
-                                                             public: anything)
-              end
-            end
           end
         end
 

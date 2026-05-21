@@ -40,11 +40,8 @@ gem 'actionview', '~> 8.1.3'
 gem 'activemodel', '~> 8.1.2'
 gem 'railties', '~> 8.1.1'
 
-gem 'azure-storage-blob', git: 'https://github.com/sethboyles/azure-storage-ruby.git', branch: 'x-ms-blob-content-type-fix-1.1'
-
 gem 'fog-aliyun'
 gem 'fog-aws'
-gem 'fog-azure-rm', git: 'https://github.com/fog/fog-azure-rm.git', branch: 'fog-arm-cf'
 gem 'fog-core', '~> 2.6.0'
 gem 'fog-google', '~> 1.29.4'
 gem 'fog-local'
