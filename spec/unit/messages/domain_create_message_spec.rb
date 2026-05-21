@@ -490,6 +490,44 @@ module VCAP::CloudController
           end
         end
       end
+
+      context 'enforce_route_policies with internal' do
+        context 'when both internal and enforce_route_policies are true' do
+          let(:params) { { name: 'name.com', internal: true, enforce_route_policies: true, route_policies_scope: 'any' } }
+
+          it 'is not valid' do
+            expect(subject).not_to be_valid
+            expect(subject.errors[:base]).to include('Internal domains cannot have route policy enforcement. Internal routes bypass GoRouter.')
+          end
+        end
+
+        context 'when internal is true and enforce_route_policies is false' do
+          let(:params) { { name: 'name.com', internal: true, enforce_route_policies: false } }
+
+          it 'is valid' do
+            expect(subject).to be_valid
+          end
+        end
+      end
+
+      context 'enforce_route_policies with router_group' do
+        context 'when both router_group and enforce_route_policies are set' do
+          let(:params) { { name: 'name.com', router_group: { guid: 'some-guid' }, enforce_route_policies: true, route_policies_scope: 'any' } }
+
+          it 'is not valid' do
+            expect(subject).not_to be_valid
+            expect(subject.errors[:base]).to include('Domains with a router group cannot have route policy enforcement. TCP routes do not support mTLS policy enforcement.')
+          end
+        end
+
+        context 'when router_group is set and enforce_route_policies is false' do
+          let(:params) { { name: 'name.com', router_group: { guid: 'some-guid' }, enforce_route_policies: false } }
+
+          it 'is valid' do
+            expect(subject).to be_valid
+          end
+        end
+      end
     end
 
     describe 'accessor methods' do
