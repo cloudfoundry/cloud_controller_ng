@@ -5,12 +5,12 @@ require 'messages/organization_quotas_list_message'
 module VCAP::CloudController
   RSpec.describe OrganizationQuotaListFetcher do
     let(:default_quota) { VCAP::CloudController::QuotaDefinition.default }
-    let!(:quota1) { QuotaDefinition.make(name: 'Mercury', guid: 'quota1-guid') }
-    let!(:quota2) { QuotaDefinition.make(name: 'Venus', guid: 'quota2-guid') }
-    let!(:quota3) { QuotaDefinition.make(name: 'Jupiter', guid: 'quota3-guid') }
+    let!(:quota1) { create(:quota_definition, name: 'Mercury', guid: 'quota1-guid') }
+    let!(:quota2) { create(:quota_definition, name: 'Venus', guid: 'quota2-guid') }
+    let!(:quota3) { create(:quota_definition, name: 'Jupiter', guid: 'quota3-guid') }
 
-    let(:org1) { Organization.make(name: 'org1', quota_definition: quota1) }
-    let(:org2) { Organization.make(name: 'org2', quota_definition: quota3) }
+    let(:org1) { create(:organization, name: 'org1', quota_definition: quota1) }
+    let(:org2) { create(:organization, name: 'org2', quota_definition: quota3) }
     let(:visible_org_guids_query) { Organization.where(id: visible_org_ids).select(:guid) }
     let(:visible_org_ids) { [org1.id, org2.id] }
 

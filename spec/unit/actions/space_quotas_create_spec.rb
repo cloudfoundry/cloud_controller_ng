@@ -5,15 +5,15 @@ require 'messages/space_quotas_create_message'
 module VCAP::CloudController
   RSpec.describe SpaceQuotasCreate do
     describe 'create' do
-      let(:user) { User.make }
+      let(:user) { create(:user) }
       let(:user_email) { 'user@example.com' }
       let(:user_name) { 'user-name' }
       let(:user_audit_info) { UserAuditInfo.new(user_guid: user.guid, user_email: user_email, user_name: user_name) }
 
       subject(:space_quotas_create) { SpaceQuotasCreate.new(user_audit_info) }
 
-      let(:org) { VCAP::CloudController::Organization.make(guid: 'some-org') }
-      let(:space) { VCAP::CloudController::Space.make(guid: 'some-space', organization: org) }
+      let(:org) { create(:organization, guid: 'some-org') }
+      let(:space) { create(:space, guid: 'some-space', organization: org) }
       let(:message) do
         VCAP::CloudController::SpaceQuotasCreateMessage.new({
                                                               name: 'my-name',
@@ -157,7 +157,7 @@ module VCAP::CloudController
         end
 
         context 'because the space exists in a different org' do
-          let(:invalid_space) { Space.make(guid: 'invalid-space-guid', organization: Organization.make) }
+          let(:invalid_space) { create(:space, guid: 'invalid-space-guid', organization: create(:organization)) }
 
           let(:message_with_invalid_space_guid) do
             VCAP::CloudController::SpaceQuotasCreateMessage.new({

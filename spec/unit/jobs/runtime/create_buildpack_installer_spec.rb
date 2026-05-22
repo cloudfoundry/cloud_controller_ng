@@ -54,14 +54,14 @@ module VCAP::CloudController
           end
 
           context 'when the requested stack does exist' do
-            let!(:existing_stack) { Stack.make(name: stack_name) }
+            let!(:existing_stack) { create(:stack, name: stack_name) }
 
             it_behaves_like 'creating a buildpack'
           end
         end
 
         context 'when the job raises an exception' do
-          let!(:existing_stack) { Stack.make(name: stack_name) }
+          let!(:existing_stack) { create(:stack, name: stack_name) }
 
           let(:error) { StandardError.new('same message') }
           let(:logger) { double(:logger) }
@@ -79,12 +79,12 @@ module VCAP::CloudController
         end
 
         context 'when config_index is provided' do
-          let!(:existing_stack) { Stack.make(name: stack_name) }
-          let!(:existing_buildpack1) { Buildpack.make(name: 'first_buildpack', stack: stack_name) }
-          let!(:existing_buildpack2) { Buildpack.make(name: 'second_buildpack', stack: stack_name) }
-          let!(:existing_buildpack3) { Buildpack.make(name: 'third_buildpack', stack: stack_name) }
-          let!(:existing_buildpack4) { Buildpack.make(name: 'fourth_buildpack', stack: stack_name) }
-          let!(:existing_buildpack5) { Buildpack.make(name: 'fifth_buildpack', stack: stack_name) }
+          let!(:existing_stack) { create(:stack, name: stack_name) }
+          let!(:existing_buildpack1) { create(:buildpack, name: 'first_buildpack', stack: stack_name) }
+          let!(:existing_buildpack2) { create(:buildpack, name: 'second_buildpack', stack: stack_name) }
+          let!(:existing_buildpack3) { create(:buildpack, name: 'third_buildpack', stack: stack_name) }
+          let!(:existing_buildpack4) { create(:buildpack, name: 'fourth_buildpack', stack: stack_name) }
+          let!(:existing_buildpack5) { create(:buildpack, name: 'fifth_buildpack', stack: stack_name) }
           let(:job_options) { { name: 'mybuildpack', stack: stack_name, file: zipfile, options: { enabled: true, locked: false }, config_index: 5 } }
 
           it 'moves the buildpack to position config_index + 1' do
@@ -95,7 +95,7 @@ module VCAP::CloudController
         end
 
         context 'when config_index is provided but options includes an explicit position' do
-          let!(:existing_stack) { Stack.make(name: stack_name) }
+          let!(:existing_stack) { create(:stack, name: stack_name) }
           let(:job_options) { { name: 'mybuildpack', stack: stack_name, file: zipfile, options: { enabled: true, locked: false, position: 7 }, config_index: 5 } }
 
           it 'uses the explicit position from options instead of config_index' do
@@ -106,7 +106,7 @@ module VCAP::CloudController
         end
 
         context 'when config_index is nil' do
-          let!(:existing_stack) { Stack.make(name: stack_name) }
+          let!(:existing_stack) { create(:stack, name: stack_name) }
           let(:job_options) { { name: 'mybuildpack', stack: stack_name, file: zipfile, options: { enabled: true, locked: false } } }
 
           it 'does not call move_to and uses default list position' do
@@ -117,7 +117,7 @@ module VCAP::CloudController
         end
 
         context 'when uploading the buildpack fails' do
-          let!(:existing_stack) { Stack.make(name: stack_name) }
+          let!(:existing_stack) { create(:stack, name: stack_name) }
 
           before do
             allow_any_instance_of(UploadBuildpack).to receive(:upload_buildpack).and_raise

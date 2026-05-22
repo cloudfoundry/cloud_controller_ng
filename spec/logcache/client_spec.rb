@@ -30,7 +30,7 @@ module Logcache
 
       describe '#container_metrics' do
         let(:instance_count) { 2 }
-        let!(:process) { VCAP::CloudController::ProcessModel.make(instances: instance_count) }
+        let!(:process) { create(:process_model, instances: instance_count) }
 
         before do
           expect(GRPC::Core::ChannelCredentials).to receive(:new).
@@ -74,7 +74,7 @@ module Logcache
       describe 'when logcache is unavailable' do
         let(:instance_count) { 0 }
         let(:bad_status) { GRPC::BadStatus.new(14) }
-        let!(:process) { VCAP::CloudController::ProcessModel.make(instances: instance_count) }
+        let!(:process) { create(:process_model, instances: instance_count) }
 
         before do
           expect(GRPC::Core::ChannelCredentials).to receive(:new).
@@ -105,7 +105,7 @@ module Logcache
       describe 'when logcache does not respond in a reasonable amount of time' do
         let(:instance_count) { 0 }
         let(:timeout_status) { GRPC::DeadlineExceeded.new }
-        let!(:process) { VCAP::CloudController::ProcessModel.make(instances: instance_count) }
+        let!(:process) { create(:process_model, instances: instance_count) }
 
         before do
           expect(GRPC::Core::ChannelCredentials).to receive(:new).
@@ -135,7 +135,7 @@ module Logcache
 
       describe 'when the logcache service has any other error' do
         let(:bad_status) { GRPC::BadStatus.new(13) }
-        let!(:process) { VCAP::CloudController::ProcessModel.make(instances: instance_count) }
+        let!(:process) { create(:process_model, instances: instance_count) }
         let(:instance_count) { 2 }
 
         before do
@@ -172,7 +172,7 @@ module Logcache
 
       describe '#container_metrics' do
         let(:instance_count) { 2 }
-        let!(:process) { VCAP::CloudController::ProcessModel.make(instances: instance_count) }
+        let!(:process) { create(:process_model, instances: instance_count) }
 
         before do
           expect(GRPC::Core::ChannelCredentials).not_to receive(:new)

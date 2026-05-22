@@ -46,24 +46,24 @@ RSpec.describe 'buildpacks' do
     end
 
     context 'when filtered by label_selector' do
-      let!(:buildpackA) { VCAP::CloudController::Buildpack.make(name: 'A') }
-      let!(:buildpackAFruit) { VCAP::CloudController::BuildpackLabelModel.make(key_name: 'fruit', value: 'strawberry', buildpack: buildpackA) }
-      let!(:buildpackAAnimal) { VCAP::CloudController::BuildpackLabelModel.make(key_name: 'animal', value: 'horse', buildpack: buildpackA) }
+      let!(:buildpackA) { create(:buildpack, name: 'A') }
+      let!(:buildpackAFruit) { create(:buildpack_label_model, key_name: 'fruit', value: 'strawberry', buildpack: buildpackA) }
+      let!(:buildpackAAnimal) { create(:buildpack_label_model, key_name: 'animal', value: 'horse', buildpack: buildpackA) }
 
-      let!(:buildpackB) { VCAP::CloudController::Buildpack.make(name: 'B') }
-      let!(:buildpackBEnv) { VCAP::CloudController::BuildpackLabelModel.make(key_name: 'env', value: 'prod', buildpack: buildpackB) }
-      let!(:buildpackBAnimal) { VCAP::CloudController::BuildpackLabelModel.make(key_name: 'animal', value: 'dog', buildpack: buildpackB) }
+      let!(:buildpackB) { create(:buildpack, name: 'B') }
+      let!(:buildpackBEnv) { create(:buildpack_label_model, key_name: 'env', value: 'prod', buildpack: buildpackB) }
+      let!(:buildpackBAnimal) { create(:buildpack_label_model, key_name: 'animal', value: 'dog', buildpack: buildpackB) }
 
-      let!(:buildpackC) { VCAP::CloudController::Buildpack.make(name: 'C') }
-      let!(:buildpackCEnv) { VCAP::CloudController::BuildpackLabelModel.make(key_name: 'env', value: 'prod', buildpack: buildpackC) }
-      let!(:buildpackCAnimal) { VCAP::CloudController::BuildpackLabelModel.make(key_name: 'animal', value: 'horse', buildpack: buildpackC) }
+      let!(:buildpackC) { create(:buildpack, name: 'C') }
+      let!(:buildpackCEnv) { create(:buildpack_label_model, key_name: 'env', value: 'prod', buildpack: buildpackC) }
+      let!(:buildpackCAnimal) { create(:buildpack_label_model, key_name: 'animal', value: 'horse', buildpack: buildpackC) }
 
-      let!(:buildpackD) { VCAP::CloudController::Buildpack.make(name: 'D') }
-      let!(:buildpackDEnv) { VCAP::CloudController::BuildpackLabelModel.make(key_name: 'env', value: 'prod', buildpack: buildpackD) }
+      let!(:buildpackD) { create(:buildpack, name: 'D') }
+      let!(:buildpackDEnv) { create(:buildpack_label_model, key_name: 'env', value: 'prod', buildpack: buildpackD) }
 
-      let!(:buildpackE) { VCAP::CloudController::Buildpack.make(name: 'E') }
-      let!(:buildpackEEnv) { VCAP::CloudController::BuildpackLabelModel.make(key_name: 'env', value: 'staging', buildpack: buildpackE) }
-      let!(:buildpackEAnimal) { VCAP::CloudController::BuildpackLabelModel.make(key_name: 'animal', value: 'dog', buildpack: buildpackE) }
+      let!(:buildpackE) { create(:buildpack, name: 'E') }
+      let!(:buildpackEEnv) { create(:buildpack_label_model, key_name: 'env', value: 'staging', buildpack: buildpackE) }
+      let!(:buildpackEAnimal) { create(:buildpack_label_model, key_name: 'animal', value: 'dog', buildpack: buildpackE) }
 
       it 'returns the matching buildpacks' do
         get '/v3/buildpacks?label_selector=!fruit,env=prod,animal in (dog,horse)', nil, admin_headers
@@ -75,9 +75,9 @@ RSpec.describe 'buildpacks' do
     end
 
     context 'when filtered by null stack' do
-      let!(:stack) { VCAP::CloudController::Stack.make }
-      let!(:buildpack_without_stack) { VCAP::CloudController::Buildpack.make(stack: nil) }
-      let!(:buildpack_with_stack) { VCAP::CloudController::Buildpack.make(stack: stack.name) }
+      let!(:stack) { create(:stack) }
+      let!(:buildpack_without_stack) { create(:buildpack, stack: nil) }
+      let!(:buildpack_with_stack) { create(:buildpack, stack: stack.name) }
 
       it 'returns the matching buildpacks' do
         get '/v3/buildpacks?stacks=', nil, admin_headers
@@ -89,16 +89,16 @@ RSpec.describe 'buildpacks' do
     end
 
     context 'When buildpacks exist' do
-      let!(:stack1) { VCAP::CloudController::Stack.make }
-      let!(:stack2) { VCAP::CloudController::Stack.make }
-      let!(:stack3) { VCAP::CloudController::Stack.make }
+      let!(:stack1) { create(:stack) }
+      let!(:stack2) { create(:stack) }
+      let!(:stack3) { create(:stack) }
 
-      let!(:buildpack4) { VCAP::CloudController::Buildpack.make(stack: stack1.name, position: 2, lifecycle: 'cnb') }
-      let!(:buildpack5) { VCAP::CloudController::Buildpack.make(stack: stack1.name, position: 1, lifecycle: 'cnb') }
+      let!(:buildpack4) { create(:buildpack, stack: stack1.name, position: 2, lifecycle: 'cnb') }
+      let!(:buildpack5) { create(:buildpack, stack: stack1.name, position: 1, lifecycle: 'cnb') }
 
-      let!(:buildpack1) { VCAP::CloudController::Buildpack.make(stack: stack1.name, position: 1) }
-      let!(:buildpack2) { VCAP::CloudController::Buildpack.make(stack: stack2.name, position: 3) }
-      let!(:buildpack3) { VCAP::CloudController::Buildpack.make(stack: stack3.name, position: 2) }
+      let!(:buildpack1) { create(:buildpack, stack: stack1.name, position: 1) }
+      let!(:buildpack2) { create(:buildpack, stack: stack2.name, position: 3) }
+      let!(:buildpack3) { create(:buildpack, stack: stack3.name, position: 2) }
 
       it 'returns a paginated list of buildpacks, sorted by lifecycle and position' do
         get '/v3/buildpacks?page=1&per_page=2', nil, headers
@@ -705,8 +705,8 @@ RSpec.describe 'buildpacks' do
     end
 
     context 'permissions' do
-      let(:org) { VCAP::CloudController::Organization.make }
-      let(:space) { VCAP::CloudController::Space.make(organization: org) }
+      let(:org) { create(:organization) }
+      let(:space) { create(:space, organization: org) }
       let(:api_call) { ->(user_headers) { get '/v3/buildpacks', nil, user_headers } }
       let(:expected_codes_and_responses) { Hash.new({ code: 200 }.freeze) }
 
@@ -730,7 +730,7 @@ RSpec.describe 'buildpacks' do
     end
 
     context 'when authenticated but not admin' do
-      let(:user) { VCAP::CloudController::User.make }
+      let(:user) { create(:user) }
       let(:headers) { headers_for(user) }
 
       it 'returns 403' do
@@ -743,11 +743,11 @@ RSpec.describe 'buildpacks' do
     end
 
     context 'when authenticated and admin' do
-      let(:user) { VCAP::CloudController::User.make }
+      let(:user) { create(:user) }
       let(:headers) { admin_headers_for(user) }
 
       context 'when successful' do
-        let(:stack) { VCAP::CloudController::Stack.make }
+        let(:stack) { create(:stack) }
         let(:params) do
           {
             name: 'the-r3al_Name',
@@ -812,9 +812,9 @@ RSpec.describe 'buildpacks' do
         end
 
         describe 'position' do
-          let!(:buildpack1) { VCAP::CloudController::Buildpack.make(position: 1) }
-          let!(:buildpack2) { VCAP::CloudController::Buildpack.make(position: 2) }
-          let!(:buildpack3) { VCAP::CloudController::Buildpack.make(position: 3) }
+          let!(:buildpack1) { create(:buildpack, position: 1) }
+          let!(:buildpack2) { create(:buildpack, position: 2) }
+          let!(:buildpack3) { create(:buildpack, position: 3) }
 
           context 'the position is not provided' do
             it 'defaults the position value to 1' do
@@ -863,7 +863,7 @@ RSpec.describe 'buildpacks' do
 
   describe 'GET /v3/buildpacks/:guid' do
     let(:params) { {} }
-    let(:buildpack) { VCAP::CloudController::Buildpack.make }
+    let(:buildpack) { create(:buildpack) }
 
     context 'when not authenticated' do
       it 'returns 401' do
@@ -876,9 +876,9 @@ RSpec.describe 'buildpacks' do
     end
 
     context 'when authenticated' do
-      let(:org) { VCAP::CloudController::Organization.make }
-      let(:space) { VCAP::CloudController::Space.make(organization: org) }
-      let(:user) { VCAP::CloudController::User.make }
+      let(:org) { create(:organization) }
+      let(:space) { create(:space, organization: org) }
+      let(:user) { create(:user) }
 
       before do
         space.organization.add_user(user)
@@ -928,7 +928,7 @@ RSpec.describe 'buildpacks' do
   end
 
   describe 'DELETE /v3/buildpacks/:guid' do
-    let(:buildpack) { VCAP::CloudController::Buildpack.make }
+    let(:buildpack) { create(:buildpack) }
 
     it 'deletes a buildpack asynchronously' do
       delete "/v3/buildpacks/#{buildpack.guid}", nil, admin_headers
@@ -952,7 +952,7 @@ RSpec.describe 'buildpacks' do
   end
 
   describe 'POST /v3/buildpacks/:guid/upload' do
-    let(:buildpack) { VCAP::CloudController::Buildpack.make }
+    let(:buildpack) { create(:buildpack) }
 
     before do
       allow_any_instance_of(VCAP::CloudController::BuildpackUploadMessage).to receive(:valid?).and_return(true)
@@ -979,7 +979,7 @@ RSpec.describe 'buildpacks' do
   end
 
   describe 'PATCH /v3/buildpacks/:guid' do
-    let(:buildpack) { VCAP::CloudController::Buildpack.make }
+    let(:buildpack) { create(:buildpack) }
 
     it 'updates a buildpack' do
       params = { enabled: false }

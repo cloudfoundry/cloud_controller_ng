@@ -4,23 +4,22 @@ require 'actions/update_route_destinations'
 module VCAP::CloudController
   RSpec.describe UpdateRouteDestinations do
     subject(:update_destinations) { UpdateRouteDestinations }
-    let(:space) { Space.make }
-    let(:app_model) { AppModel.make(guid: 'some-guid', space: space) }
-    let(:app_model2) { AppModel.make(guid: 'some-other-guid', space: space) }
-    let(:docker_app) { AppModel.make(:docker, guid: 'docker-app-guid', space: space) }
-    let(:route) { Route.make }
+    let(:space) { create(:space) }
+    let(:app_model) { create(:app_model, guid: 'some-guid', space: space) }
+    let(:app_model2) { create(:app_model, guid: 'some-other-guid', space: space) }
+    let(:docker_app) { create(:app_model, :docker, guid: 'docker-app-guid', space: space) }
+    let(:route) { create(:route) }
     let!(:existing_destination) do
-      VCAP::CloudController::RouteMappingModel.make(
-        app: app_model,
-        route: route,
-        process_type: 'existing',
-        app_port: 3001
-      )
+      create(:route_mapping_model,
+             app: app_model,
+             route: route,
+             process_type: 'existing',
+             app_port: 3001)
     end
-    let!(:process1) { ProcessModel.make(:process, guid: 'process1-guid', app: app_model, type: 'web', health_check_type: 'none') }
-    let!(:process2) { ProcessModel.make(:process, guid: 'process2-guid', app: app_model2, type: 'worker', health_check_type: 'none') }
-    let!(:process3) { ProcessModel.make(:process, guid: 'process3-guid', app: app_model, type: 'existing', health_check_type: 'none', ports: [3001]) }
-    let!(:docker_process) { ProcessModel.make(:process, app: docker_app, type: 'web') }
+    let!(:process1) { create(:process, :process, guid: 'process1-guid', app: app_model, type: 'web', health_check_type: 'none') }
+    let!(:process2) { create(:process, :process, guid: 'process2-guid', app: app_model2, type: 'worker', health_check_type: 'none') }
+    let!(:process3) { create(:process, :process, guid: 'process3-guid', app: app_model, type: 'existing', health_check_type: 'none', ports: [3001]) }
+    let!(:docker_process) { create(:process, :process, app: docker_app, type: 'web') }
     let(:process1_route_handler) { instance_double(ProcessRouteHandler, update_route_information: nil) }
     let(:process2_route_handler) { instance_double(ProcessRouteHandler, update_route_information: nil) }
     let(:process3_route_handler) { instance_double(ProcessRouteHandler, update_route_information: nil) }
@@ -145,12 +144,11 @@ module VCAP::CloudController
       context 'when a fully equal destination already exists' do
         context 'destination includes buildpack app' do
           let!(:same_destination) do
-            RouteMappingModel.make(
-              app: app_model,
-              route: route,
-              app_port: 8080,
-              process_type: 'web'
-            )
+            create(:route_mapping_model,
+                   app: app_model,
+                   route: route,
+                   app_port: 8080,
+                   process_type: 'web')
           end
 
           let(:params) do
@@ -184,12 +182,11 @@ module VCAP::CloudController
 
         context 'destination includes docker app' do
           let!(:same_destination) do
-            RouteMappingModel.make(
-              app: docker_app,
-              route: route,
-              app_port: ProcessModel::NO_APP_PORT_SPECIFIED,
-              process_type: 'web'
-            )
+            create(:route_mapping_model,
+                   app: docker_app,
+                   route: route,
+                   app_port: ProcessModel::NO_APP_PORT_SPECIFIED,
+                   process_type: 'web')
           end
 
           let(:params) do
@@ -313,12 +310,11 @@ module VCAP::CloudController
 
         before do
           99.times do |i|
-            VCAP::CloudController::RouteMappingModel.make(
-              app: app_model,
-              route: route,
-              process_type: 'existing',
-              app_port: 4001 + i
-            )
+            create(:route_mapping_model,
+                   app: app_model,
+                   route: route,
+                   process_type: 'existing',
+                   app_port: 4001 + i)
           end
         end
 
@@ -398,7 +394,7 @@ module VCAP::CloudController
         end
 
         context 'tcp routes' do
-          let(:tcp_route) { Route.make(:tcp) }
+          let(:tcp_route) { create(:route, :tcp) }
           let(:routing_api_client) { double('routing_api_client', router_group:) }
           let(:router_group) { double('router_group', type: 'tcp', guid: 'router-group-guid') }
 
@@ -467,13 +463,12 @@ module VCAP::CloudController
       context 'when a destination exists with a different http protocol' do
         context 'when existing protocol is http1 and new protocol is http2' do
           let!(:same_destination) do
-            RouteMappingModel.make(
-              app: app_model,
-              route: route,
-              app_port: 8080,
-              process_type: 'web',
-              protocol: 'http1'
-            )
+            create(:route_mapping_model,
+                   app: app_model,
+                   route: route,
+                   app_port: 8080,
+                   process_type: 'web',
+                   protocol: 'http1')
           end
 
           let(:params) do
@@ -499,13 +494,12 @@ module VCAP::CloudController
 
         context 'when existing protocol is http2 and new protocol is not set' do
           let!(:same_destination) do
-            RouteMappingModel.make(
-              app: app_model,
-              route: route,
-              app_port: 8080,
-              process_type: 'web',
-              protocol: 'http2'
-            )
+            create(:route_mapping_model,
+                   app: app_model,
+                   route: route,
+                   app_port: 8080,
+                   process_type: 'web',
+                   protocol: 'http2')
           end
 
           let(:params) do
@@ -644,12 +638,11 @@ module VCAP::CloudController
 
       context 'when a fully equal destination already exists' do
         let!(:same_destination) do
-          RouteMappingModel.make(
-            app: app_model,
-            route: route,
-            app_port: ProcessModel::DEFAULT_HTTP_PORT,
-            process_type: 'web'
-          )
+          create(:route_mapping_model,
+                 app: app_model,
+                 route: route,
+                 app_port: ProcessModel::DEFAULT_HTTP_PORT,
+                 process_type: 'web')
         end
 
         let(:params) do
@@ -709,12 +702,11 @@ module VCAP::CloudController
 
       context 'when adding over 100 destinations' do
         before do
-          VCAP::CloudController::RouteMappingModel.make(
-            app: app_model,
-            route: route,
-            process_type: 'existing',
-            app_port: 4001
-          )
+          create(:route_mapping_model,
+                 app: app_model,
+                 route: route,
+                 process_type: 'existing',
+                 app_port: 4001)
         end
 
         it 'rejects any inserts' do
@@ -760,15 +752,14 @@ module VCAP::CloudController
       end
 
       context 'when there are multiple routes with destinations to the same process' do
-        let(:other_route) { Route.make }
+        let(:other_route) { create(:route) }
 
         let!(:other_existing_destination) do
-          VCAP::CloudController::RouteMappingModel.make(
-            app: app_model,
-            route: other_route,
-            process_type: 'existing',
-            app_port: 3001
-          )
+          create(:route_mapping_model,
+                 app: app_model,
+                 route: other_route,
+                 process_type: 'existing',
+                 app_port: 3001)
         end
 
         before do
@@ -818,11 +809,10 @@ module VCAP::CloudController
       context 'when there are more than 100 destinations' do
         before do
           102.times do |i|
-            VCAP::CloudController::RouteMappingModel.make(
-              app: app_model,
-              route: route,
-              process_type: 'existing-' + i.to_s
-            )
+            create(:route_mapping_model,
+                   app: app_model,
+                   route: route,
+                   process_type: 'existing-' + i.to_s)
           end
         end
 

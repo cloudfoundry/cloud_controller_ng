@@ -8,11 +8,10 @@ RSpec.describe 'Jobs' do
   describe 'when getting a job that exists' do
     it 'returns a json representation of a generic job' do
       operation = 'app.delete'
-      job = VCAP::CloudController::PollableJobModel.make(
-        resource_type: 'app',
-        state: VCAP::CloudController::PollableJobModel::COMPLETE_STATE,
-        operation: operation
-      )
+      job = create(:pollable_job_model,
+                   resource_type: 'app',
+                   state: VCAP::CloudController::PollableJobModel::COMPLETE_STATE,
+                   operation: operation)
       job_guid = job.guid
 
       get "/v3/jobs/#{job_guid}", nil, user_headers
@@ -38,11 +37,10 @@ RSpec.describe 'Jobs' do
 
     it 'returns a json representation of a special case' do
       operation = 'app.delete'
-      job = VCAP::CloudController::PollableJobModel.make(
-        resource_type: 'organization_quota',
-        state: VCAP::CloudController::PollableJobModel::COMPLETE_STATE,
-        operation: operation
-      )
+      job = create(:pollable_job_model,
+                   resource_type: 'organization_quota',
+                   state: VCAP::CloudController::PollableJobModel::COMPLETE_STATE,
+                   operation: operation)
       job_guid = job.guid
 
       get "/v3/jobs/#{job_guid}", nil, user_headers
@@ -112,8 +110,10 @@ RSpec.describe 'Jobs' do
 
       def perform
         pollable_job = VCAP::CloudController::PollableJobModel.find_by_delayed_job_guid(@delayed_job_guid)
-        VCAP::CloudController::JobWarningModel.make(detail: 'warning-one', job_id: pollable_job.id)
-        VCAP::CloudController::JobWarningModel.make(detail: 'warning-two', job_id: pollable_job.id)
+        # rubocop:disable FactoryBot/SyntaxMethods -- TestJob is not an RSpec example group, so the syntax mixin is unavailable
+        FactoryBot.create(:job_warning_model, detail: 'warning-one', job_id: pollable_job.id)
+        FactoryBot.create(:job_warning_model, detail: 'warning-two', job_id: pollable_job.id)
+        # rubocop:enable FactoryBot/SyntaxMethods
       end
 
       def job_name_in_configuration
@@ -139,14 +139,13 @@ RSpec.describe 'Jobs' do
   end
 
   describe 'permissions' do
-    let(:org) { VCAP::CloudController::Organization.make }
-    let(:space) { VCAP::CloudController::Space.make(organization: org) }
+    let(:org) { create(:organization) }
+    let(:space) { create(:space, organization: org) }
     let(:job) do
-      VCAP::CloudController::PollableJobModel.make(
-        resource_type: 'app',
-        state: VCAP::CloudController::PollableJobModel::COMPLETE_STATE,
-        operation: 'app.delete'
-      )
+      create(:pollable_job_model,
+             resource_type: 'app',
+             state: VCAP::CloudController::PollableJobModel::COMPLETE_STATE,
+             operation: 'app.delete')
     end
 
     context 'when the user is not logged in' do

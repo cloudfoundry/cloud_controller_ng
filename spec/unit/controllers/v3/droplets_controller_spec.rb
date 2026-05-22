@@ -4,13 +4,13 @@ require 'rails_helper'
 
 RSpec.describe DropletsController, type: :controller do
   describe '#create' do
-    let(:app_model) { VCAP::CloudController::AppModel.make }
+    let(:app_model) { create(:app_model) }
     let(:package) do
-      VCAP::CloudController::PackageModel.make(app_guid: app_model.guid,
-                                               type: VCAP::CloudController::PackageModel::BITS_TYPE,
-                                               state: VCAP::CloudController::PackageModel::READY_STATE)
+      create(:package_model, app_guid: app_model.guid,
+                             type: VCAP::CloudController::PackageModel::BITS_TYPE,
+                             state: VCAP::CloudController::PackageModel::READY_STATE)
     end
-    let(:user) { set_current_user(user: VCAP::CloudController::User.make(guid: '1234'), email: 'dr@otter.com', user_name: 'dropper') }
+    let(:user) { set_current_user(user: create(:user, guid: '1234'), email: 'dr@otter.com', user_name: 'dropper') }
     let(:space) { app_model.space }
 
     before do
@@ -21,13 +21,13 @@ RSpec.describe DropletsController, type: :controller do
   end
 
   describe '#copy' do
-    let(:source_space) { VCAP::CloudController::Space.make }
-    let(:target_space) { VCAP::CloudController::Space.make }
-    let(:target_app) { VCAP::CloudController::AppModel.make(space_guid: target_space.guid) }
-    let(:source_app_guid) { VCAP::CloudController::AppModel.make(space_guid: source_space.guid).guid }
+    let(:source_space) { create(:space) }
+    let(:target_space) { create(:space) }
+    let(:target_app) { create(:app_model, space_guid: target_space.guid) }
+    let(:source_app_guid) { create(:app_model, space_guid: source_space.guid).guid }
     let(:target_app_guid) { target_app.guid }
     let(:state) { 'STAGED' }
-    let!(:source_droplet) { VCAP::CloudController::DropletModel.make(state: state, app_guid: source_app_guid) }
+    let!(:source_droplet) { create(:droplet_model, state: state, app_guid: source_app_guid) }
     let(:source_droplet_guid) { source_droplet.guid }
     let(:request_body) do
       {
@@ -36,7 +36,7 @@ RSpec.describe DropletsController, type: :controller do
         }
       }
     end
-    let(:user) { set_current_user(VCAP::CloudController::User.make) }
+    let(:user) { set_current_user(create(:user)) }
 
     before do
       allow_user_read_access_for(user, spaces: [source_space, target_space])
@@ -145,8 +145,8 @@ RSpec.describe DropletsController, type: :controller do
   end
 
   describe '#show' do
-    let(:droplet) { VCAP::CloudController::DropletModel.make }
-    let(:user) { set_current_user(VCAP::CloudController::User.make) }
+    let(:droplet) { create(:droplet_model) }
+    let(:user) { set_current_user(create(:user)) }
     let(:space) { droplet.space }
 
     before do
@@ -173,7 +173,7 @@ RSpec.describe DropletsController, type: :controller do
     context 'permissions' do
       context 'when the user does not have the read scope' do
         before do
-          set_current_user(VCAP::CloudController::User.make, scopes: [])
+          set_current_user(create(:user), scopes: [])
         end
 
         it 'returns a 403 NotAuthorized error' do
@@ -203,8 +203,8 @@ RSpec.describe DropletsController, type: :controller do
   end
 
   describe '#destroy' do
-    let(:droplet) { VCAP::CloudController::DropletModel.make }
-    let(:user) { set_current_user(VCAP::CloudController::User.make) }
+    let(:droplet) { create(:droplet_model) }
+    let(:user) { set_current_user(create(:user)) }
     let(:space) { droplet.space }
 
     before do
@@ -263,7 +263,7 @@ RSpec.describe DropletsController, type: :controller do
     context 'permissions' do
       context 'when the user does not have write scope' do
         before do
-          set_current_user(VCAP::CloudController::User.make, scopes: ['cloud_controller.read'])
+          set_current_user(create(:user), scopes: ['cloud_controller.read'])
         end
 
         it 'returns 403' do
@@ -304,13 +304,13 @@ RSpec.describe DropletsController, type: :controller do
   end
 
   describe '#index' do
-    let(:user) { set_current_user(VCAP::CloudController::User.make) }
-    let(:app) { VCAP::CloudController::AppModel.make }
+    let(:user) { set_current_user(create(:user)) }
+    let(:app) { create(:app_model) }
     let!(:space) { app.space }
-    let!(:user_droplet_1) { VCAP::CloudController::DropletModel.make(app_guid: app.guid) }
-    let!(:user_droplet_2) { VCAP::CloudController::DropletModel.make(app_guid: app.guid) }
-    let!(:staging_droplet) { VCAP::CloudController::DropletModel.make(app_guid: app.guid, state: VCAP::CloudController::DropletModel::STAGING_STATE) }
-    let!(:admin_droplet) { VCAP::CloudController::DropletModel.make }
+    let!(:user_droplet_1) { create(:droplet_model, app_guid: app.guid) }
+    let!(:user_droplet_2) { create(:droplet_model, app_guid: app.guid) }
+    let!(:staging_droplet) { create(:droplet_model, app_guid: app.guid, state: VCAP::CloudController::DropletModel::STAGING_STATE) }
+    let!(:admin_droplet) { create(:droplet_model) }
 
     before do
       allow_user_read_access_for(user, spaces: [space])
@@ -318,10 +318,10 @@ RSpec.describe DropletsController, type: :controller do
 
     context 'accessed as an app subresource' do
       it 'returns droplets for the app' do
-        app = VCAP::CloudController::AppModel.make(space:)
-        droplet_1 = VCAP::CloudController::DropletModel.make(app_guid: app.guid, state: VCAP::CloudController::DropletModel::STAGED_STATE)
-        droplet_2 = VCAP::CloudController::DropletModel.make(app_guid: app.guid, state: VCAP::CloudController::DropletModel::STAGED_STATE)
-        VCAP::CloudController::DropletModel.make
+        app = create(:app_model, space:)
+        droplet_1 = create(:droplet_model, app_guid: app.guid, state: VCAP::CloudController::DropletModel::STAGED_STATE)
+        droplet_2 = create(:droplet_model, app_guid: app.guid, state: VCAP::CloudController::DropletModel::STAGED_STATE)
+        create(:droplet_model)
 
         get :index, params: { app_guid: app.guid }
 
@@ -360,8 +360,8 @@ RSpec.describe DropletsController, type: :controller do
     end
 
     context 'accessed as a package subresource' do
-      let(:package) { VCAP::CloudController::PackageModel.make(app_guid: app.guid) }
-      let!(:droplet_1) { VCAP::CloudController::DropletModel.make(package_guid: package.guid, state: VCAP::CloudController::DropletModel::STAGED_STATE) }
+      let(:package) { create(:package_model, app_guid: app.guid) }
+      let!(:droplet_1) { create(:droplet_model, package_guid: package.guid, state: VCAP::CloudController::DropletModel::STAGED_STATE) }
 
       it 'returns droplets for the package' do
         get :index, params: { package_guid: package.guid }
@@ -442,7 +442,7 @@ RSpec.describe DropletsController, type: :controller do
     context 'permissions' do
       context 'when the user does not have read scope' do
         before do
-          set_current_user(VCAP::CloudController::User.make, scopes: [])
+          set_current_user(create(:user), scopes: [])
           disallow_user_global_read_access(user)
         end
 
@@ -471,8 +471,8 @@ RSpec.describe DropletsController, type: :controller do
   end
 
   describe '#update' do
-    let(:droplet) { VCAP::CloudController::DropletModel.make }
-    let(:user) { set_current_user(VCAP::CloudController::User.make) }
+    let(:droplet) { create(:droplet_model) }
+    let(:user) { set_current_user(create(:user)) }
     let(:space) { droplet.space }
 
     before do
@@ -498,7 +498,7 @@ RSpec.describe DropletsController, type: :controller do
     context 'permissions' do
       context 'when the user does not have write scope' do
         before do
-          set_current_user(VCAP::CloudController::User.make, scopes: ['cloud_controller.read'])
+          set_current_user(create(:user), scopes: ['cloud_controller.read'])
         end
 
         it 'returns 403' do

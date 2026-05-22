@@ -9,11 +9,9 @@ module VCAP::CloudController::Presenters::V3
 
     describe '#to_hash' do
       let(:domain) do
-        VCAP::CloudController::PrivateDomain.make(
-          name: 'my.domain.com',
-          internal: true,
-          owning_organization: org
-        )
+        create(:private_domain, name: 'my.domain.com',
+                                internal: true,
+                                owning_organization: org)
       end
 
       subject do
@@ -25,12 +23,12 @@ module VCAP::CloudController::Presenters::V3
       end
 
       context 'when the domain is private' do
-        let(:org) { VCAP::CloudController::Organization.make(guid: 'org') }
+        let(:org) { create(:organization, guid: 'org') }
 
         context 'and has shared organizations' do
-          let(:shared_org_1) { VCAP::CloudController::Organization.make(guid: 'org2') }
-          let(:shared_org_2) { VCAP::CloudController::Organization.make(guid: 'org3') }
-          let(:shared_org_3) { VCAP::CloudController::Organization.make(guid: 'org4') }
+          let(:shared_org_1) { create(:organization, guid: 'org2') }
+          let(:shared_org_2) { create(:organization, guid: 'org3') }
+          let(:shared_org_3) { create(:organization, guid: 'org4') }
 
           before do
             shared_org_1.add_private_domain(domain)
@@ -63,9 +61,9 @@ module VCAP::CloudController::Presenters::V3
         end
 
         context 'and has no visible shared organizations' do
-          let(:shared_org_1) { VCAP::CloudController::Organization.make(guid: 'org2') }
-          let(:shared_org_2) { VCAP::CloudController::Organization.make(guid: 'org3') }
-          let(:shared_org_3) { VCAP::CloudController::Organization.make(guid: 'org4') }
+          let(:shared_org_1) { create(:organization, guid: 'org2') }
+          let(:shared_org_2) { create(:organization, guid: 'org3') }
+          let(:shared_org_3) { create(:organization, guid: 'org4') }
 
           let(:visible_org_guids) { [] }
 

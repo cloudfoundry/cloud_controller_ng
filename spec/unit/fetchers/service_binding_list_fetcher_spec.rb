@@ -6,8 +6,8 @@ module VCAP::CloudController
     let(:fetcher) { ServiceBindingListFetcher }
 
     describe '#fetch_service_instance_bindings_in_space' do
-      let(:space) { Space.make }
-      let(:service_instance) { ServiceInstance.make(space:) }
+      let(:space) { create(:space) }
+      let(:service_instance) { create(:service_instance, space:) }
 
       it 'returns a Sequel::Dataset' do
         results = ServiceBindingListFetcher.fetch_service_instance_bindings_in_space(service_instance.guid, space.guid)
@@ -22,8 +22,8 @@ module VCAP::CloudController
       end
 
       context 'when a binding exists in a space' do
-        let!(:service_binding) { ServiceBinding.make(app: AppModel.make(space:), service_instance: service_instance) }
-        let!(:other_service_binding) { ServiceBinding.make }
+        let!(:service_binding) { create(:service_binding, app: create(:app_model, space:), service_instance: service_instance) }
+        let!(:other_service_binding) { create(:service_binding) }
 
         it 'returns the binding for the correct space' do
           results = ServiceBindingListFetcher.fetch_service_instance_bindings_in_space(service_instance.guid, space.guid)
@@ -32,9 +32,9 @@ module VCAP::CloudController
       end
 
       context 'when multiple bindings exist in a space' do
-        let!(:service_binding1) { ServiceBinding.make(app: AppModel.make(space:), service_instance: service_instance) }
-        let!(:service_binding2) { ServiceBinding.make(app: AppModel.make(space:), service_instance: service_instance) }
-        let!(:other_service_binding) { ServiceBinding.make }
+        let!(:service_binding1) { create(:service_binding, app: create(:app_model, space:), service_instance: service_instance) }
+        let!(:service_binding2) { create(:service_binding, app: create(:app_model, space:), service_instance: service_instance) }
+        let!(:other_service_binding) { create(:service_binding) }
 
         it 'returns the bindings for the correct space' do
           results = ServiceBindingListFetcher.fetch_service_instance_bindings_in_space(service_instance.guid, space.guid)
@@ -43,8 +43,8 @@ module VCAP::CloudController
       end
 
       context 'when multiple service instances exist' do
-        let!(:service_binding) { ServiceBinding.make(app: AppModel.make(space:), service_instance: service_instance) }
-        let!(:other_service_binding) { ServiceBinding.make(service_instance: ServiceInstance.make(space:)) }
+        let!(:service_binding) { create(:service_binding, app: create(:app_model, space:), service_instance: service_instance) }
+        let!(:other_service_binding) { create(:service_binding, service_instance: create(:service_instance, space:)) }
 
         it 'returns the binding for the correct service instance' do
           results = ServiceBindingListFetcher.fetch_service_instance_bindings_in_space(service_instance.guid, space.guid)

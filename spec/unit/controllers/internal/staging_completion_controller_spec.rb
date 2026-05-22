@@ -10,11 +10,11 @@ module VCAP::CloudController
     let(:buildpack_name) { 'the-pleasant-buildpack' }
     let(:buildpack_other_name) { 'valley' }
     let(:buildpack_version) { '3.1' }
-    let!(:buildpack) { Buildpack.make(name: buildpack_name, sha256_checksum: 'mammoth') }
+    let!(:buildpack) { create(:buildpack, name: buildpack_name, sha256_checksum: 'mammoth') }
     let(:buildpack2_name) { 'my-brilliant-buildpack' }
     let(:buildpack2_other_name) { 'launderette' }
     let(:buildpack2_version) { '95' }
-    let!(:buildpack2) { Buildpack.make(name: buildpack2_name, sha256_checksum: 'languid') }
+    let!(:buildpack2) { create(:buildpack, name: buildpack2_name, sha256_checksum: 'languid') }
 
     let(:buildpack_key) { buildpack.key }
     let(:detected_buildpack) { 'detected_buildpack' }
@@ -54,15 +54,15 @@ module VCAP::CloudController
 
     context 'staging a package through /droplet_completed (legacy for rolling deploy)' do
       let(:url) { "/internal/v3/staging/#{staging_guid}/droplet_completed" }
-      let(:staged_app) { AppModel.make }
-      let(:package) { PackageModel.make(state: 'READY', app_guid: staged_app.guid) }
-      let(:droplet) { DropletModel.make(package_guid: package.guid, app_guid: staged_app.guid, state: DropletModel::STAGING_STATE) }
+      let(:staged_app) { create(:app_model) }
+      let(:package) { create(:package_model, state: 'READY', app_guid: staged_app.guid) }
+      let(:droplet) { create(:droplet_model, package_guid: package.guid, app_guid: staged_app.guid, state: DropletModel::STAGING_STATE) }
       let(:staging_guid) { droplet.guid }
 
       context 'when it is a docker app' do
-        let(:staged_app) { AppModel.make(:docker) }
-        let(:package) { PackageModel.make(:docker, state: 'READY', app_guid: staged_app.guid) }
-        let(:droplet) { DropletModel.make(:docker, package_guid: package.guid, app_guid: staged_app.guid, state: DropletModel::STAGING_STATE) }
+        let(:staged_app) { create(:app_model, :docker) }
+        let(:package) { create(:package_model, :docker, state: 'READY', app_guid: staged_app.guid) }
+        let(:droplet) { create(:droplet_model, :docker, package_guid: package.guid, app_guid: staged_app.guid, state: DropletModel::STAGING_STATE) }
 
         it 'calls the stager with a build created from the droplet and the response' do
           expect_any_instance_of(Diego::Stager).to receive(:staging_complete).with(instance_of(BuildModel), staging_response, false)
@@ -205,10 +205,10 @@ module VCAP::CloudController
 
     describe '/build_completed' do
       let(:url) { "/internal/v3/staging/#{staging_guid}/build_completed" }
-      let(:staged_app) { AppModel.make }
-      let(:package) { PackageModel.make(state: 'READY', app_guid: staged_app.guid) }
-      let!(:droplet) { DropletModel.make }
-      let(:build) { BuildModel.make(package_guid: package.guid, app: staged_app) }
+      let(:staged_app) { create(:app_model) }
+      let(:package) { create(:package_model, state: 'READY', app_guid: staged_app.guid) }
+      let!(:droplet) { create(:droplet_model) }
+      let(:build) { create(:build_model, package_guid: package.guid, app: staged_app) }
       let(:staging_guid) { build.guid }
       let(:buildpacks) do
         [

@@ -7,8 +7,8 @@ module VCAP::RestAPI
 
     describe 'filtering by organization_guid' do
       it 'works for equals' do
-        expected_process = VCAP::CloudController::ProcessModel.make
-        VCAP::CloudController::ProcessModel.make
+        expected_process = create(:process_model).reload
+        create(:process_model)
 
         results = AppQuery.filtered_dataset_from_query_params(
           VCAP::CloudController::ProcessModel,
@@ -21,9 +21,9 @@ module VCAP::RestAPI
       end
 
       it 'works for IN' do
-        expected_process1 = VCAP::CloudController::ProcessModel.make
-        expected_process2 = VCAP::CloudController::ProcessModel.make
-        VCAP::CloudController::ProcessModel.make
+        expected_process1 = create(:process_model).reload
+        expected_process2 = create(:process_model).reload
+        create(:process_model)
 
         org_guids = [expected_process1.organization.guid, expected_process2.organization.guid].join(',')
 
@@ -40,8 +40,8 @@ module VCAP::RestAPI
 
     describe 'filtering by stack_guid' do
       it 'works for equals' do
-        expected_process = VCAP::CloudController::ProcessModel.make
-        VCAP::CloudController::ProcessModel.make
+        expected_process = create(:process_model)
+        create(:process_model)
 
         results = AppQuery.filtered_dataset_from_query_params(
           VCAP::CloudController::ProcessModel,
@@ -54,9 +54,9 @@ module VCAP::RestAPI
       end
 
       it 'works for IN' do
-        expected_process1 = VCAP::CloudController::ProcessModel.make
-        expected_process2 = VCAP::CloudController::ProcessModel.make
-        VCAP::CloudController::ProcessModel.make
+        expected_process1 = create(:process_model)
+        expected_process2 = create(:process_model)
+        create(:process_model)
 
         stack_guids = [
           VCAP::CloudController::Stack.find(name: expected_process1.app.lifecycle_data.stack).guid,
@@ -76,9 +76,9 @@ module VCAP::RestAPI
 
     describe 'filtering by name' do
       it 'works for equals' do
-        expected_process = VCAP::CloudController::ProcessModel.make
+        expected_process = create(:process_model)
         expected_process.app.update(name: 'expected-name')
-        VCAP::CloudController::ProcessModel.make
+        create(:process_model)
 
         results = AppQuery.filtered_dataset_from_query_params(
           VCAP::CloudController::ProcessModel,
@@ -91,11 +91,11 @@ module VCAP::RestAPI
       end
 
       it 'works for IN' do
-        expected_process1 = VCAP::CloudController::ProcessModel.make
+        expected_process1 = create(:process_model)
         expected_process1.app.update(name: 'expected-name1')
-        expected_process2 = VCAP::CloudController::ProcessModel.make
+        expected_process2 = create(:process_model)
         expected_process2.app.update(name: 'expected-name2')
-        VCAP::CloudController::ProcessModel.make
+        create(:process_model)
 
         results = AppQuery.filtered_dataset_from_query_params(
           VCAP::CloudController::ProcessModel,

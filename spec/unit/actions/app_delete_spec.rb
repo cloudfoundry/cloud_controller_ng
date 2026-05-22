@@ -4,11 +4,11 @@ require 'actions/app_delete'
 module VCAP::CloudController
   RSpec.describe AppDelete do
     subject(:app_delete) { AppDelete.new(user_audit_info) }
-    let(:user) { User.make }
+    let(:user) { create(:user) }
     let(:user_email) { 'user@example.com' }
     let(:user_audit_info) { UserAuditInfo.new(user_guid: user.guid, user_email: user_email) }
 
-    let!(:app) { AppModel.make }
+    let!(:app) { create(:app_model) }
     let!(:app_dataset) { [app] }
 
     describe '#delete' do
@@ -43,7 +43,7 @@ module VCAP::CloudController
 
       describe 'recursive deletion' do
         it 'deletes associated packages' do
-          package = PackageModel.make(app:)
+          package = create(:package_model, app:)
 
           expect do
             app_delete.delete(app_dataset)
@@ -53,7 +53,7 @@ module VCAP::CloudController
         end
 
         it 'deletes associated builds' do
-          build = BuildModel.make(app:)
+          build = create(:build_model, app:)
 
           expect do
             app_delete.delete(app_dataset)
@@ -75,7 +75,7 @@ module VCAP::CloudController
               beet: 'formanova'
             }
           end
-          let(:build) { BuildModel.make(app:) }
+          let(:build) { create(:build_model, app:) }
 
           before do
             LabelsUpdate.update(build, old_labels, BuildLabelModel)
@@ -93,7 +93,7 @@ module VCAP::CloudController
         end
 
         it 'deletes associated droplets' do
-          droplet = DropletModel.make(app:)
+          droplet = create(:droplet_model, app:)
           app.update(droplet_guid: droplet.guid)
 
           expect do
@@ -104,7 +104,7 @@ module VCAP::CloudController
         end
 
         it 'deletes associated processes' do
-          process = ProcessModel.make(app:)
+          process = create(:process, app:)
 
           expect do
             app_delete.delete(app_dataset)
@@ -114,8 +114,8 @@ module VCAP::CloudController
         end
 
         it 'deletes associated sidecars' do
-          sidecar = SidecarModel.make(app:)
-          sidecar_process_type = SidecarProcessTypeModel.make(sidecar:)
+          sidecar = create(:sidecar_model, app:)
+          sidecar_process_type = create(:sidecar_process_type_model, sidecar:)
 
           expect do
             app_delete.delete(app_dataset)
@@ -126,7 +126,7 @@ module VCAP::CloudController
         end
 
         it 'deletes associated deployments' do
-          deployment = DeploymentModel.make(app:)
+          deployment = create(:deployment_model, app:)
 
           expect do
             app_delete.delete(app_dataset)
@@ -136,7 +136,7 @@ module VCAP::CloudController
         end
 
         it 'deletes associated labels' do
-          label = AppLabelModel.make(app: app, key_name: 'test', value: 'bommel')
+          label = create(:app_label_model, app: app, key_name: 'test', value: 'bommel')
 
           expect do
             app_delete.delete(app_dataset)
@@ -146,7 +146,7 @@ module VCAP::CloudController
         end
 
         it 'deletes associated annotations' do
-          annotation = AppAnnotationModel.make(app: app, key_name: 'test', value: 'bommel')
+          annotation = create(:app_annotation_model, app: app, key_name: 'test', value: 'bommel')
 
           expect do
             app_delete.delete(app_dataset)
@@ -157,9 +157,9 @@ module VCAP::CloudController
 
         describe 'deleting associated routes' do
           let(:process_type) { 'web' }
-          let(:process) { ProcessModel.make(app: app, type: process_type) }
-          let(:route) { Route.make }
-          let!(:route_mapping) { RouteMappingModel.make(app: app, route: route, process_type: process_type, app_port: 8080) }
+          let(:process) { create(:process, app: app, type: process_type) }
+          let(:route) { create(:route) }
+          let!(:route_mapping) { create(:route_mapping_model, app: app, route: route, process_type: process_type, app_port: 8080) }
 
           it 'deletes associated route mappings' do
             expect do
@@ -171,7 +171,7 @@ module VCAP::CloudController
         end
 
         it 'deletes associated tasks' do
-          task_model = TaskModel.make(app: app, name: 'task1', state: TaskModel::SUCCEEDED_STATE)
+          task_model = create(:task_model, app: app, name: 'task1', state: TaskModel::SUCCEEDED_STATE)
 
           expect do
             app_delete.delete(app_dataset)
@@ -181,7 +181,7 @@ module VCAP::CloudController
         end
 
         it 'deletes associated revisions' do
-          revision = RevisionModel.make(app:)
+          revision = create(:revision_model, app:)
 
           expect do
             app_delete.delete(app_dataset)
@@ -201,7 +201,7 @@ module VCAP::CloudController
         end
 
         it 'deletes the associated sidecars' do
-          sidecar = SidecarModel.make(name: 'name', app: app)
+          sidecar = create(:sidecar_model, name: 'name', app: app)
 
           expect do
             app_delete.delete(app_dataset)
@@ -214,7 +214,7 @@ module VCAP::CloudController
           it 'deletes associated service bindings' do
             allow_any_instance_of(VCAP::Services::ServiceBrokers::V2::Client).to receive(:unbind).and_return({ async: false })
 
-            binding = ServiceBinding.make(app: app, service_instance: ManagedServiceInstance.make(space: app.space))
+            binding = create(:service_binding, app: app, service_instance: create(:managed_service_instance, space: app.space))
 
             expect do
               app_delete.delete(app_dataset)
@@ -232,7 +232,7 @@ module VCAP::CloudController
             end
 
             context 'with a single service binding' do
-              let!(:binding1) { ServiceBinding.make(app: app, service_instance: ManagedServiceInstance.make(space: app.space)) }
+              let!(:binding1) { create(:service_binding, app: app, service_instance: create(:managed_service_instance, space: app.space)) }
 
               it 'alwayses call the broker with accepts_incomplete true' do
                 expect(client).to receive(:unbind).with(binding1, user_guid: user_audit_info.user_guid, accepts_incomplete: true)
@@ -261,8 +261,8 @@ module VCAP::CloudController
             end
 
             context 'with multiple service bindings' do
-              let!(:binding1) { ServiceBinding.make(app: app, service_instance: ManagedServiceInstance.make(space: app.space)) }
-              let!(:binding2) { ServiceBinding.make(app: app, service_instance: ManagedServiceInstance.make(space: app.space)) }
+              let!(:binding1) { create(:service_binding, app: app, service_instance: create(:managed_service_instance, space: app.space)) }
+              let!(:binding2) { create(:service_binding, app: app, service_instance: create(:managed_service_instance, space: app.space)) }
 
               it 'returns some errors describing that the service bindings are being deleted asynchronously' do
                 expect { app_delete.delete(app_dataset) }.to raise_error(AppDelete::SubResourceError) do |err|
@@ -276,8 +276,8 @@ module VCAP::CloudController
           end
 
           context 'when service binding delete returns errors' do
-            let!(:binding1) { ServiceBinding.make(app: app, service_instance: ManagedServiceInstance.make(space: app.space)) }
-            let!(:binding2) { ServiceBinding.make(app: app, service_instance: ManagedServiceInstance.make(space: app.space)) }
+            let!(:binding1) { create(:service_binding, app: app, service_instance: create(:managed_service_instance, space: app.space)) }
+            let!(:binding2) { create(:service_binding, app: app, service_instance: create(:managed_service_instance, space: app.space)) }
 
             before do
               binding_delete_action = V3::ServiceCredentialBindingDelete

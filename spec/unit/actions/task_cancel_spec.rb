@@ -10,8 +10,8 @@ module VCAP::CloudController
         Config.new({})
       end
 
-      let(:app) { AppModel.make }
-      let(:task) { TaskModel.make(name: 'ursulina', command: 'echo hi', app_guid: app.guid, state: TaskModel::RUNNING_STATE) }
+      let(:app) { create(:app_model) }
+      let(:task) { create(:task_model, name: 'ursulina', command: 'echo hi', app: app, state: TaskModel::RUNNING_STATE) }
       let(:user_audit_info) { instance_double(VCAP::CloudController::UserAuditInfo).as_null_object }
       let(:bbs_client) { instance_double(VCAP::CloudController::Diego::BbsTaskClient, cancel_task: nil) }
 

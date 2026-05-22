@@ -9,7 +9,7 @@ module VCAP::CloudController
         end
       end
 
-      let(:app) { AppModel.make }
+      let(:app) { create(:app_model) }
       let(:annotations) do
         {
           'clodefloundry.org/release': 'stable'
@@ -23,7 +23,7 @@ module VCAP::CloudController
 
       context 'when lazily migrating old annotations' do
         let!(:annotation_model) do
-          AppAnnotationModel.make(resource_guid: app.guid, key_name: 'clodefloundry.org/release', value: 'stable2')
+          create(:app_annotation_model, resource_guid: app.guid, key_name: 'clodefloundry.org/release', value: 'stable2')
         end
       end
 
@@ -47,15 +47,15 @@ module VCAP::CloudController
         end
 
         let!(:old_annotation) do
-          AppAnnotationModel.make(resource_guid: app.guid, key_name: 'release', value: 'unstable')
+          create(:app_annotation_model, resource_guid: app.guid, key_name: 'release', value: 'unstable')
         end
 
         let!(:annotation_to_be_deleted) do
-          AppAnnotationModel.make(resource_guid: app.guid, key_name: 'please', value: 'delete me')
+          create(:app_annotation_model, resource_guid: app.guid, key_name: 'please', value: 'delete me')
         end
 
         let!(:prefixed_annotation_to_be_deleted) do
-          AppAnnotationModel.make(resource_guid: app.guid, key_prefix: 'pre.fix', key_name: 'release', value: 'delete me')
+          create(:app_annotation_model, resource_guid: app.guid, key_prefix: 'pre.fix', key_name: 'release', value: 'delete me')
         end
 
         it 'updates the old annotation' do
@@ -102,8 +102,8 @@ module VCAP::CloudController
         context 'app already has max annotations' do
           context 'annotations added exceeds max annotations' do
             let!(:app_with_annotations) do
-              AppAnnotationModel.make(resource_guid: app.guid, key_name: 'release1', value: 'veryunstable')
-              AppAnnotationModel.make(resource_guid: app.guid, key_name: 'release2', value: 'stillunstable')
+              create(:app_annotation_model, resource_guid: app.guid, key_name: 'release1', value: 'veryunstable')
+              create(:app_annotation_model, resource_guid: app.guid, key_name: 'release2', value: 'stillunstable')
             end
 
             let(:annotations) do
@@ -126,10 +126,10 @@ module VCAP::CloudController
 
         context 'annotations exceed max annotations' do
           let!(:app_with_annotations) do
-            AppAnnotationModel.make(resource_guid: app.guid, key_name: 'release', value: 'unstable')
-            AppAnnotationModel.make(resource_guid: app.guid, key_name: 'release1', value: 'veryunstable')
-            AppAnnotationModel.make(resource_guid: app.guid, key_name: 'release2', value: 'stillunstable')
-            AppAnnotationModel.make(resource_guid: app.guid, key_name: 'release3', value: 'help')
+            create(:app_annotation_model, resource_guid: app.guid, key_name: 'release', value: 'unstable')
+            create(:app_annotation_model, resource_guid: app.guid, key_name: 'release1', value: 'veryunstable')
+            create(:app_annotation_model, resource_guid: app.guid, key_name: 'release2', value: 'stillunstable')
+            create(:app_annotation_model, resource_guid: app.guid, key_name: 'release3', value: 'help')
           end
 
           context 'deleting old annotation' do

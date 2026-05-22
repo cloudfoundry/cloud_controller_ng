@@ -47,11 +47,11 @@ module VCAP::CloudController
       before do
         Domain.dataset.destroy # Seeded domains get in the way
 
-        @shared_domain = SharedDomain.make
+        @shared_domain = create(:shared_domain)
 
-        @obj_a = PrivateDomain.make(owning_organization: @org_a)
+        @obj_a = create(:private_domain, owning_organization: @org_a)
 
-        @obj_b = PrivateDomain.make(owning_organization: @org_b)
+        @obj_b = create(:private_domain, owning_organization: @org_b)
       end
 
       describe 'Org Level Permissions' do
@@ -146,14 +146,14 @@ module VCAP::CloudController
     end
 
     describe 'GET /v2/domains/:id' do
-      let(:user) { User.make }
-      let(:organization) { Organization.make }
+      let(:user) { create(:user) }
+      let(:organization) { create(:organization) }
 
       before { set_current_user(user) }
 
       context 'a space auditor' do
-        let(:space) { Space.make organization: }
-        let(:domain) { PrivateDomain.make(owning_organization: organization) }
+        let(:space) { create(:space, organization:) }
+        let(:domain) { create(:private_domain, owning_organization: organization) }
 
         before do
           organization.add_user user
@@ -176,7 +176,7 @@ module VCAP::CloudController
         end
 
         context 'when the domain has an owning organization' do
-          let(:domain) { PrivateDomain.make(owning_organization: organization) }
+          let(:domain) { create(:private_domain, owning_organization: organization) }
 
           it 'has its GUID and URL in the response body' do
             get "/v2/domains/#{domain.guid}"
@@ -189,7 +189,7 @@ module VCAP::CloudController
         end
 
         context 'when the domain is shared' do
-          let(:domain) { SharedDomain.make }
+          let(:domain) { create(:shared_domain) }
 
           it 'has its GUID as null, and no url key in the response body' do
             get "/v2/domains/#{domain.guid}"
@@ -207,10 +207,10 @@ module VCAP::CloudController
     end
 
     describe 'GET /v2/domains' do
-      let(:user) { User.make }
-      let(:space) { VCAP::CloudController::Space.make }
+      let(:user) { create(:user) }
+      let(:space) { create(:space) }
       let(:organization) { space.organization }
-      let!(:private_domain) { PrivateDomain.make(owning_organization: organization) }
+      let!(:private_domain) { create(:private_domain, owning_organization: organization) }
 
       context 'for space manager' do
         before do
@@ -261,9 +261,9 @@ module VCAP::CloudController
         end
 
         it 'shows the domains in the order they were seeded/created' do
-          domain1 = Domain.make(name: 'domain1.capi.land')
-          domain_internal = Domain.make(name: 'apps.internal', internal: true)
-          domain3 = Domain.make(name: 'domain3.capi.land')
+          domain1 = create(:domain, name: 'domain1.capi.land')
+          domain_internal = create(:domain, name: 'apps.internal', internal: true)
+          domain3 = create(:domain, name: 'domain3.capi.land')
 
           get '/v2/domains'
           expect(last_response.status).to eq(200), last_response.body
@@ -276,8 +276,8 @@ module VCAP::CloudController
 
     describe 'POST /v2/domains' do
       context 'as an org manager' do
-        let(:user) { User.make }
-        let(:organization) { Organization.make }
+        let(:user) { create(:user) }
+        let(:organization) { create(:organization) }
 
         let(:request_body) do
           Oj.dump({ name: 'blah.com', owning_organization_guid: organization.guid })
@@ -292,7 +292,7 @@ module VCAP::CloudController
 
         context 'when domain_creation feature_flag is disabled' do
           before do
-            FeatureFlag.make(name: 'private_domain_creation', enabled: false, error_message: nil)
+            create(:feature_flag, name: 'private_domain_creation', enabled: false, error_message: nil)
           end
 
           it 'returns FeatureDisabled' do
@@ -307,12 +307,12 @@ module VCAP::CloudController
     end
 
     describe 'DELETE /v2/domains/:id' do
-      let(:shared_domain) { SharedDomain.make }
+      let(:shared_domain) { create(:shared_domain) }
 
       before { set_current_user_as_admin }
 
       context 'when there are routes using the domain' do
-        let!(:route) { Route.make(domain: shared_domain) }
+        let!(:route) { create(:route, domain: shared_domain) }
 
         it 'does not delete the route' do
           expect do
@@ -330,8 +330,8 @@ module VCAP::CloudController
     end
 
     describe 'GET /v2/domains/:id/spaces' do
-      let!(:private_domain) { PrivateDomain.make }
-      let!(:space) { Space.make(organization: private_domain.owning_organization) }
+      let!(:private_domain) { create(:private_domain) }
+      let!(:space) { create(:space, organization: private_domain.owning_organization) }
 
       before { set_current_user_as_admin }
 

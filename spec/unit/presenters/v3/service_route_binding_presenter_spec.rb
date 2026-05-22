@@ -6,10 +6,10 @@ require 'actions/annotations_update'
 module VCAP
   module CloudController
     RSpec.describe Presenters::V3::ServiceRouteBindingPresenter do
-      let(:space) { VCAP::CloudController::Space.make }
+      let(:space) { create(:space) }
       let(:route_service_url) { 'https://route_service_url.com' }
-      let(:service_instance) { VCAP::CloudController::UserProvidedServiceInstance.make(space:, route_service_url:) }
-      let(:route) { Route.make(space:) }
+      let(:service_instance) { create(:user_provided_service_instance, space:, route_service_url:) }
+      let(:route) { create(:route, space:) }
       let(:guid) { Sham.guid }
       let(:binding) do
         RouteBinding.new.save_with_new_operation(
@@ -85,12 +85,10 @@ module VCAP
 
       context 'no last_operation' do
         let(:binding) do
-          RouteBinding.make(
-            guid:,
-            service_instance:,
-            route:,
-            route_service_url:
-          )
+          create(:route_binding, guid:,
+                                 service_instance:,
+                                 route:,
+                                 route_service_url:)
         end
 
         it 'still displays the last operation' do
@@ -126,9 +124,9 @@ module VCAP
       end
 
       describe 'links' do
-        let(:offering) { VCAP::CloudController::Service.make(requires: ['route_forwarding']) }
-        let(:plan) { VCAP::CloudController::ServicePlan.make(service: offering) }
-        let(:service_instance) { VCAP::CloudController::ManagedServiceInstance.make(space: space, service_plan: plan) }
+        let(:offering) { create(:service, requires: ['route_forwarding']) }
+        let(:plan) { create(:service_plan, service: offering) }
+        let(:service_instance) { create(:managed_service_instance, space: space, service_plan: plan) }
 
         it 'include parameters for managed service instance bindings' do
           presenter = described_class.new(binding)

@@ -5,8 +5,8 @@ module VCAP::CloudController
     it { is_expected.to have_timestamp_columns }
 
     it 'can be created' do
-      org = Organization.make(name: 'dora_org')
-      OrganizationLabelModel.make(resource_guid: org.guid, key_name: 'release', value: 'stable')
+      org = create(:organization, name: 'dora_org')
+      create(:organization_label_model, resource_guid: org.guid, key_name: 'release', value: 'stable')
       expect(OrganizationLabelModel.find(key_name: 'release').value).to eq 'stable'
     end
   end

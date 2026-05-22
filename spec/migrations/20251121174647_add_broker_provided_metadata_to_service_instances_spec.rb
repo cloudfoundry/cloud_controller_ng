@@ -12,7 +12,7 @@ RSpec.describe 'migration to add broker_provided_metadata column to service_inst
   end
 
   describe 'service_instances table' do
-    let(:space) { VCAP::CloudController::Space.make }
+    let(:space) { create(:space) }
 
     it 'adds broker_provided_metadata column with correct properties' do
       # Insert a service instance before migration to test preservation

@@ -10,10 +10,10 @@ module VCAP
           subject(:lifecycle_protocol) { LifecycleProtocol.new }
 
           it_behaves_like 'a lifecycle protocol' do
-            let(:app) { AppModel.make }
-            let(:package) { PackageModel.make(:docker, app:) }
-            let(:droplet) { DropletModel.make(package:, app:) }
-            let(:process) { ProcessModel.make(app:) }
+            let(:app) { create(:app_model) }
+            let(:package) { create(:package_model, :docker, app:) }
+            let(:droplet) { create(:droplet_model, package:, app:) }
+            let(:process) { create(:process_model, app:) }
 
             before do
               app.update(droplet_guid: droplet.guid)
@@ -29,15 +29,15 @@ module VCAP
           end
 
           describe '#lifecycle_data' do
-            let(:app) { AppModel.make }
+            let(:app) { create(:app_model) }
             let(:package) do
-              PackageModel.make(:docker,
-                                app: app,
-                                docker_image: 'registry/image-name:latest',
-                                docker_username: 'dockerusername',
-                                docker_password: 'dockerpassword')
+              create(:package_model, :docker,
+                     app: app,
+                     docker_image: 'registry/image-name:latest',
+                     docker_username: 'dockerusername',
+                     docker_password: 'dockerpassword')
             end
-            let(:droplet) { DropletModel.make(package_guid: package.guid) }
+            let(:droplet) { create(:droplet_model, package_guid: package.guid) }
             let(:staging_details) do
               Diego::StagingDetails.new.tap do |details|
                 details.staging_guid = droplet.guid
@@ -56,15 +56,15 @@ module VCAP
 
           describe '#desired_lrp_builder' do
             let(:config) { Config.new({}) }
-            let(:app) { AppModel.make(droplet:) }
+            let(:app) { create(:app_model, droplet:) }
             let(:droplet) do
-              DropletModel.make(:docker, {
-                                  state: DropletModel::STAGED_STATE,
-                                  docker_receipt_image: 'the-image',
-                                  execution_metadata: 'foobar'
-                                })
+              create(:droplet_model, :docker, {
+                       state: DropletModel::STAGED_STATE,
+                       docker_receipt_image: 'the-image',
+                       execution_metadata: 'foobar'
+                     })
             end
-            let(:process) { ProcessModel.make(app: app, diego: true, command: 'go go go', user: 'ContainerUser', metadata: {}) }
+            let(:process) { create(:process_model, app: app, diego: true, command: 'go go go', user: 'ContainerUser', metadata: {}) }
             let(:builder_opts) do
               {
                 ports: [8080],
@@ -90,8 +90,8 @@ module VCAP
               end
 
               context 'and theres a revision on the process' do
-                let(:new_droplet) { DropletModel.make(:docker, app: app, docker_receipt_image: 'trololol') }
-                let(:revision) { RevisionModel.make(app: app, droplet_guid: new_droplet.guid) }
+                let(:new_droplet) { create(:droplet_model, :docker, app: app, docker_receipt_image: 'trololol', set_as_current_droplet: false) }
+                let(:revision) { create(:revision_model, app: app, droplet_guid: new_droplet.guid) }
 
                 before do
                   process.update(revision:)
@@ -120,14 +120,14 @@ module VCAP
             end
 
             context 'when root user is allowed' do
-              let(:app) { AppModel.make(:docker, { droplet: }) }
+              let(:app) { create(:app_model, :docker, { droplet: }) }
 
               before do
                 TestConfig.override(allow_docker_root_user: true, additional_allowed_process_users: %w[root 0])
               end
 
               context 'and the process sets the root user' do
-                let(:process) { ProcessModel.make(:docker, { app: app, user: 'root' }) }
+                let(:process) { create(:process_model, :docker, { app: app, user: 'root' }) }
 
                 it 'creates a diego DesiredLrpBuilder' do
                   expect do
@@ -137,16 +137,16 @@ module VCAP
               end
 
               context 'and the process does not set a user' do
-                let(:process) { ProcessModel.make(:docker, { app: }) }
+                let(:process) { create(:process_model, :docker, { app: }) }
 
                 context 'and the droplet docker execution metadata sets the root user' do
                   let(:droplet_execution_metadata) { '{"entrypoint":["/image-entrypoint.sh"],"user":"root"}' }
                   let(:droplet) do
-                    DropletModel.make(:docker, {
-                                        state: DropletModel::STAGED_STATE,
-                                        docker_receipt_image: 'the-image',
-                                        execution_metadata: droplet_execution_metadata
-                                      })
+                    create(:droplet_model, :docker, {
+                             state: DropletModel::STAGED_STATE,
+                             docker_receipt_image: 'the-image',
+                             execution_metadata: droplet_execution_metadata
+                           })
                   end
 
                   it 'creates a diego DesiredLRPBuilder' do
@@ -159,11 +159,11 @@ module VCAP
                 context 'and the droplet docker execution metadata sets the 0 user' do
                   let(:droplet_execution_metadata) { '{"entrypoint":["/image-entrypoint.sh"],"user":"0"}' }
                   let(:droplet) do
-                    DropletModel.make(:docker, {
-                                        state: DropletModel::STAGED_STATE,
-                                        docker_receipt_image: 'the-image',
-                                        execution_metadata: droplet_execution_metadata
-                                      })
+                    create(:droplet_model, :docker, {
+                             state: DropletModel::STAGED_STATE,
+                             docker_receipt_image: 'the-image',
+                             execution_metadata: droplet_execution_metadata
+                           })
                   end
 
                   it 'creates a diego TaskActionBuilder' do
@@ -176,11 +176,11 @@ module VCAP
                 context 'and the droplet docker execution metadata does not set a user' do
                   let(:droplet_execution_metadata) { '{"entrypoint":["/image-entrypoint.sh"]}' }
                   let(:droplet) do
-                    DropletModel.make(:docker, {
-                                        state: DropletModel::STAGED_STATE,
-                                        docker_receipt_image: 'the-image',
-                                        execution_metadata: droplet_execution_metadata
-                                      })
+                    create(:droplet_model, :docker, {
+                             state: DropletModel::STAGED_STATE,
+                             docker_receipt_image: 'the-image',
+                             execution_metadata: droplet_execution_metadata
+                           })
                   end
 
                   it 'creates a diego TaskActionBuilder' do
@@ -193,23 +193,23 @@ module VCAP
             end
 
             context 'when root user IS NOT allowed' do
-              let(:app) { AppModel.make(:docker, { droplet: }) }
+              let(:app) { create(:app_model, :docker, { droplet: }) }
 
               before do
                 TestConfig.override(allow_docker_root_user: false, additional_allowed_process_users: %w[root 0])
               end
 
               context 'and the process does not set a user' do
-                let(:process) { ProcessModel.make(:docker, { app: }) }
+                let(:process) { create(:process_model, :docker, { app: }) }
 
                 context 'and the droplet docker execution metadata sets the root user' do
                   let(:droplet_execution_metadata) { '{"entrypoint":["/image-entrypoint.sh"],"user":"root"}' }
                   let(:droplet) do
-                    DropletModel.make(:docker, {
-                                        state: DropletModel::STAGED_STATE,
-                                        docker_receipt_image: 'the-image',
-                                        execution_metadata: droplet_execution_metadata
-                                      })
+                    create(:droplet_model, :docker, {
+                             state: DropletModel::STAGED_STATE,
+                             docker_receipt_image: 'the-image',
+                             execution_metadata: droplet_execution_metadata
+                           })
                   end
 
                   it 'raises an error' do
@@ -222,11 +222,11 @@ module VCAP
                 context 'and the droplet docker execution metadata sets the 0 user' do
                   let(:droplet_execution_metadata) { '{"entrypoint":["/image-entrypoint.sh"],"user":"0"}' }
                   let(:droplet) do
-                    DropletModel.make(:docker, {
-                                        state: DropletModel::STAGED_STATE,
-                                        docker_receipt_image: 'the-image',
-                                        execution_metadata: droplet_execution_metadata
-                                      })
+                    create(:droplet_model, :docker, {
+                             state: DropletModel::STAGED_STATE,
+                             docker_receipt_image: 'the-image',
+                             execution_metadata: droplet_execution_metadata
+                           })
                   end
 
                   it 'raises an error' do
@@ -239,11 +239,11 @@ module VCAP
                 context 'and the droplet docker execution metadata does not set a user' do
                   let(:droplet_execution_metadata) { '{"entrypoint":["/image-entrypoint.sh"]}' }
                   let(:droplet) do
-                    DropletModel.make(:docker, {
-                                        state: DropletModel::STAGED_STATE,
-                                        docker_receipt_image: 'the-image',
-                                        execution_metadata: droplet_execution_metadata
-                                      })
+                    create(:droplet_model, :docker, {
+                             state: DropletModel::STAGED_STATE,
+                             docker_receipt_image: 'the-image',
+                             execution_metadata: droplet_execution_metadata
+                           })
                   end
 
                   it 'raises an error' do
@@ -255,7 +255,7 @@ module VCAP
               end
 
               context 'and the process sets the root user' do
-                let(:process) { ProcessModel.make(:docker, { app: app, user: 'root' }) }
+                let(:process) { create(:process_model, :docker, { app: app, user: 'root' }) }
 
                 it 'raises an error' do
                   expect do
@@ -265,7 +265,7 @@ module VCAP
               end
 
               context 'and the process sets the 0 user' do
-                let(:process) { ProcessModel.make(:docker, { app: app, user: 0 }) }
+                let(:process) { create(:process_model, :docker, { app: app, user: 0 }) }
 
                 it 'raises an error' do
                   expect do
@@ -278,8 +278,8 @@ module VCAP
 
           describe '#task_action_builder' do
             let(:config) { Config.new({}) }
-            let(:droplet) { DropletModel.make(:docker, docker_receipt_image: 'repository/the-image') }
-            let(:task) { TaskModel.make(droplet:) }
+            let(:droplet) { create(:droplet_model, :docker, docker_receipt_image: 'repository/the-image') }
+            let(:task) { create(:task_model, droplet:) }
             let(:lifecycle_data) do
               {
                 droplet_path: 'repository/the-image'
@@ -301,17 +301,17 @@ module VCAP
               end
 
               context 'and the task does not set a user' do
-                let(:app) { AppModel.make(:docker, { droplet: }) }
-                let(:task) { TaskModel.make(:docker, { droplet:, app: }) }
+                let(:app) { create(:app_model, :docker, { droplet: }) }
+                let(:task) { create(:task_model, :docker, { droplet:, app: }) }
 
                 context 'and the droplet docker execution metadata sets the root user' do
                   let(:droplet_execution_metadata) { '{"entrypoint":["/image-entrypoint.sh"],"user":"root"}' }
                   let(:droplet) do
-                    DropletModel.make(:docker, {
-                                        state: DropletModel::STAGED_STATE,
-                                        docker_receipt_image: 'the-image',
-                                        execution_metadata: droplet_execution_metadata
-                                      })
+                    create(:droplet_model, :docker, {
+                             state: DropletModel::STAGED_STATE,
+                             docker_receipt_image: 'the-image',
+                             execution_metadata: droplet_execution_metadata
+                           })
                   end
 
                   it 'creates a diego TaskActionBuilder' do
@@ -324,11 +324,11 @@ module VCAP
                 context 'and the droplet docker execution metadata sets the 0 user' do
                   let(:droplet_execution_metadata) { '{"entrypoint":["/image-entrypoint.sh"],"user":"0"}' }
                   let(:droplet) do
-                    DropletModel.make(:docker, {
-                                        state: DropletModel::STAGED_STATE,
-                                        docker_receipt_image: 'the-image',
-                                        execution_metadata: droplet_execution_metadata
-                                      })
+                    create(:droplet_model, :docker, {
+                             state: DropletModel::STAGED_STATE,
+                             docker_receipt_image: 'the-image',
+                             execution_metadata: droplet_execution_metadata
+                           })
                   end
 
                   it 'creates a diego TaskActionBuilder' do
@@ -341,11 +341,11 @@ module VCAP
                 context 'and the droplet docker execution metadata does not set a user' do
                   let(:droplet_execution_metadata) { '{"entrypoint":["/image-entrypoint.sh"]}' }
                   let(:droplet) do
-                    DropletModel.make(:docker, {
-                                        state: DropletModel::STAGED_STATE,
-                                        docker_receipt_image: 'the-image',
-                                        execution_metadata: droplet_execution_metadata
-                                      })
+                    create(:droplet_model, :docker, {
+                             state: DropletModel::STAGED_STATE,
+                             docker_receipt_image: 'the-image',
+                             execution_metadata: droplet_execution_metadata
+                           })
                   end
 
                   it 'creates a diego TaskActionBuilder' do
@@ -363,17 +363,17 @@ module VCAP
               end
 
               context 'and the task does not set a user' do
-                let(:app) { AppModel.make(:docker, { droplet: }) }
-                let(:task) { TaskModel.make(:docker, { droplet:, app: }) }
+                let(:app) { create(:app_model, :docker, { droplet: }) }
+                let(:task) { create(:task_model, :docker, { droplet:, app: }) }
 
                 context 'and the droplet docker execution metadata sets the root user' do
                   let(:droplet_execution_metadata) { '{"entrypoint":["/image-entrypoint.sh"],"user":"root"}' }
                   let(:droplet) do
-                    DropletModel.make(:docker, {
-                                        state: DropletModel::STAGED_STATE,
-                                        docker_receipt_image: 'the-image',
-                                        execution_metadata: droplet_execution_metadata
-                                      })
+                    create(:droplet_model, :docker, {
+                             state: DropletModel::STAGED_STATE,
+                             docker_receipt_image: 'the-image',
+                             execution_metadata: droplet_execution_metadata
+                           })
                   end
 
                   it 'raises an error' do
@@ -386,11 +386,11 @@ module VCAP
                 context 'and the droplet docker execution metadata sets the 0 user' do
                   let(:droplet_execution_metadata) { '{"entrypoint":["/image-entrypoint.sh"],"user":"0"}' }
                   let(:droplet) do
-                    DropletModel.make(:docker, {
-                                        state: DropletModel::STAGED_STATE,
-                                        docker_receipt_image: 'the-image',
-                                        execution_metadata: droplet_execution_metadata
-                                      })
+                    create(:droplet_model, :docker, {
+                             state: DropletModel::STAGED_STATE,
+                             docker_receipt_image: 'the-image',
+                             execution_metadata: droplet_execution_metadata
+                           })
                   end
 
                   it 'raises an error' do
@@ -402,8 +402,8 @@ module VCAP
               end
 
               context 'and the task sets the root user' do
-                let(:app) { AppModel.make(:docker, { droplet: }) }
-                let(:task) { TaskModel.make(:docker, { droplet: droplet, app: app, user: 'root' }) }
+                let(:app) { create(:app_model, :docker, { droplet: }) }
+                let(:task) { create(:task_model, :docker, { droplet: droplet, app: app, user: 'root' }) }
 
                 it 'raises an error' do
                   expect do
@@ -413,8 +413,8 @@ module VCAP
               end
 
               context 'and the task sets the 0 user' do
-                let(:app) { AppModel.make(:docker, { droplet: }) }
-                let(:task) { TaskModel.make(:docker, { droplet: droplet, app: app, user: '0' }) }
+                let(:app) { create(:app_model, :docker, { droplet: }) }
+                let(:task) { create(:task_model, :docker, { droplet: droplet, app: app, user: '0' }) }
 
                 it 'raises an error' do
                   expect do

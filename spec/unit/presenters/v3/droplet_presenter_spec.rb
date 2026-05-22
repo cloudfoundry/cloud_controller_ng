@@ -4,16 +4,14 @@ require 'presenters/v3/droplet_presenter'
 module VCAP::CloudController::Presenters::V3
   RSpec.describe DropletPresenter do
     let(:droplet) do
-      VCAP::CloudController::DropletModel.make(
-        state: VCAP::CloudController::DropletModel::STAGED_STATE,
-        error_id: 'FAILED',
-        error_description: 'things went all sorts of bad',
-        process_types: { 'web' => 'npm start', 'worker' => 'start worker' },
-        execution_metadata: 'black-box-string',
-        package_guid: 'abcdefabcdef12345',
-        droplet_hash: 'droplet-sha1-checksum',
-        sha256_checksum: 'droplet-sha256-checksum'
-      )
+      create(:droplet_model, state: VCAP::CloudController::DropletModel::STAGED_STATE,
+                             error_id: 'FAILED',
+                             error_description: 'things went all sorts of bad',
+                             process_types: { 'web' => 'npm start', 'worker' => 'start worker' },
+                             execution_metadata: 'black-box-string',
+                             package_guid: 'abcdefabcdef12345',
+                             droplet_hash: 'droplet-sha1-checksum',
+                             sha256_checksum: 'droplet-sha256-checksum')
     end
 
     describe '#to_hash' do
@@ -114,7 +112,7 @@ module VCAP::CloudController::Presenters::V3
 
         describe 'links' do
           context 'when there is no package guid' do
-            let(:droplet) { VCAP::CloudController::DropletModel.make(package_guid: nil) }
+            let(:droplet) { create(:droplet_model, package_guid: nil) }
 
             it 'links to nil' do
               expect(result[:links][:package]).to be_nil
@@ -127,11 +125,11 @@ module VCAP::CloudController::Presenters::V3
         let(:buildpack1_name) { 'rosanna' }
         let(:buildpack1_other_name) { 'toto' }
         let(:buildpack1_version) { '1.9.82' }
-        let!(:buildpack1) { VCAP::CloudController::Buildpack.make(name: buildpack1_name, sha256_checksum: 'mammoth') }
+        let!(:buildpack1) { create(:buildpack, name: buildpack1_name, sha256_checksum: 'mammoth') }
         let(:buildpack2_name) { 'chris-cross' }
         let(:buildpack2_other_name) { 'sailing' }
         let(:buildpack2_version) { '1.9.79' }
-        let!(:buildpack2) { VCAP::CloudController::Buildpack.make(name: buildpack2_name, sha256_checksum: 'languid') }
+        let!(:buildpack2) { create(:buildpack, name: buildpack2_name, sha256_checksum: 'languid') }
         let(:buildpack_receipt_buildpack) { buildpack2_name }
         let(:buildpack_receipt_detect_output) { 'black cow' }
 
@@ -192,10 +190,8 @@ module VCAP::CloudController::Presenters::V3
 
       context 'docker lifecycle' do
         let(:droplet) do
-          VCAP::CloudController::DropletModel.make(
-            :docker,
-            state: VCAP::CloudController::DropletModel::STAGED_STATE
-          )
+          create(:droplet_model, :docker,
+                 state: VCAP::CloudController::DropletModel::STAGED_STATE)
         end
 
         before do
@@ -222,10 +218,8 @@ module VCAP::CloudController::Presenters::V3
 
       context 'cnb lifecycle' do
         let(:droplet) do
-          VCAP::CloudController::DropletModel.make(
-            :cnb,
-            state: VCAP::CloudController::DropletModel::STAGED_STATE
-          )
+          create(:droplet_model, :cnb,
+                 state: VCAP::CloudController::DropletModel::STAGED_STATE)
         end
         let(:first_buildpack) { 'docker://first-buildpack:latest' }
         let(:second_buildpack) { 'https://second-buildpack.io' }
@@ -254,28 +248,22 @@ module VCAP::CloudController::Presenters::V3
 
       context 'when there are labels and annotations for the droplet' do
         let!(:release_label) do
-          VCAP::CloudController::DropletLabelModel.make(
-            key_name: 'release',
-            value: 'stable',
-            resource_guid: droplet.guid
-          )
+          create(:droplet_label_model, key_name: 'release',
+                                       value: 'stable',
+                                       resource_guid: droplet.guid)
         end
 
         let!(:potato_label) do
-          VCAP::CloudController::DropletLabelModel.make(
-            key_prefix: 'maine.gov',
-            key_name: 'potato',
-            value: 'mashed',
-            resource_guid: droplet.guid
-          )
+          create(:droplet_label_model, key_prefix: 'maine.gov',
+                                       key_name: 'potato',
+                                       value: 'mashed',
+                                       resource_guid: droplet.guid)
         end
 
         let!(:annotation) do
-          VCAP::CloudController::DropletAnnotationModel.make(
-            resource_guid: droplet.guid,
-            key_name: 'contacts',
-            value: 'Bill tel(1111111) email(bill@fixme), Bob tel(222222) pager(3333333#555) email(bob@fixme)'
-          )
+          create(:droplet_annotation_model, resource_guid: droplet.guid,
+                                            key_name: 'contacts',
+                                            value: 'Bill tel(1111111) email(bill@fixme), Bob tel(222222) pager(3333333#555) email(bob@fixme)')
         end
 
         it 'includes the metadata on the presented droplet' do

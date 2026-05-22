@@ -5,10 +5,10 @@ require 'permissions_spec_helper'
 
 RSpec.describe AppManifestsController, type: :controller do
   describe '#show' do
-    let(:app_model) { VCAP::CloudController::AppModel.make }
+    let(:app_model) { create(:app_model) }
     let(:space) { app_model.space }
     let(:org) { space.organization }
-    let(:user) { VCAP::CloudController::User.make }
+    let(:user) { create(:user) }
 
     let(:expected_yml_manifest) do
       {

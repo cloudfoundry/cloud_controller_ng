@@ -2,7 +2,7 @@ require 'spec_helper'
 require 'presenters/v3/app_usage_event_presenter'
 
 RSpec.describe VCAP::CloudController::Presenters::V3::AppUsageEventPresenter do
-  let(:usage_event) { VCAP::CloudController::AppUsageEvent.make }
+  let(:usage_event) { create(:app_usage_event) }
 
   describe '#to_hash' do
     let(:result) { described_class.new(usage_event).to_hash }
@@ -34,12 +34,10 @@ RSpec.describe VCAP::CloudController::Presenters::V3::AppUsageEventPresenter do
 
     context 'when the usage event is for a task' do
       let(:usage_event) do
-        VCAP::CloudController::AppUsageEvent.make(
-          app_guid: '',
-          process_type: nil,
-          task_guid: 'task-guid',
-          task_name: 'some-task'
-        )
+        create(:app_usage_event, app_guid: '',
+                                 process_type: nil,
+                                 task_guid: 'task-guid',
+                                 task_name: 'some-task')
       end
 
       it 'displays null for the process.guid' do

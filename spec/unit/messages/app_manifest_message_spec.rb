@@ -246,7 +246,7 @@ module VCAP::CloudController
 
       describe 'buildpack' do
         context 'when providing a valid buildpack name' do
-          let(:buildpack) { Buildpack.make }
+          let(:buildpack) { create(:buildpack) }
           let(:params_from_yaml) { { name: 'eugene', buildpack: buildpack.name } }
 
           it 'is valid' do
@@ -295,8 +295,8 @@ module VCAP::CloudController
 
       describe 'buildpacks' do
         context 'when providing valid buildpack names' do
-          let(:buildpack) { Buildpack.make }
-          let(:buildpack2) { Buildpack.make }
+          let(:buildpack) { create(:buildpack) }
+          let(:buildpack2) { create(:buildpack) }
           let(:params_from_yaml) { { name: 'eugene', buildpacks: [buildpack.name, buildpack2.name] } }
 
           it 'is valid' do
@@ -307,7 +307,7 @@ module VCAP::CloudController
         end
 
         context 'when one of the buildpacks is not a string' do
-          let(:buildpack) { Buildpack.make }
+          let(:buildpack) { create(:buildpack) }
           let(:params_from_yaml) { { name: 'eugene', buildpacks: [buildpack.name, 99] } }
 
           it 'is not valid' do
@@ -320,7 +320,7 @@ module VCAP::CloudController
         end
 
         context 'when both buildpack and buildpacks are requested' do
-          let(:buildpack) { Buildpack.make }
+          let(:buildpack) { create(:buildpack) }
           let(:params_from_yaml) { { name: 'eugene', buildpacks: [buildpack.name], buildpack: 'some-buildpack' } }
 
           it 'is not valid' do
@@ -338,7 +338,7 @@ module VCAP::CloudController
 
         context 'when docker is enabled' do
           before do
-            FeatureFlag.make(name: 'diego_docker', enabled: true, error_message: nil)
+            create(:feature_flag, name: 'diego_docker', enabled: true, error_message: nil)
           end
 
           it 'is valid' do
@@ -350,7 +350,7 @@ module VCAP::CloudController
 
         context 'when docker is disabled' do
           before do
-            FeatureFlag.make(name: 'diego_docker', enabled: false, error_message: 'I am a banana')
+            create(:feature_flag, name: 'diego_docker', enabled: false, error_message: 'I am a banana')
           end
 
           it 'is not valid' do
@@ -1058,10 +1058,10 @@ module VCAP::CloudController
       describe 'combination errors' do
         context 'when docker and buildpack is provided' do
           before do
-            FeatureFlag.make(name: 'diego_docker', enabled: true, error_message: nil)
+            create(:feature_flag, name: 'diego_docker', enabled: true, error_message: nil)
           end
 
-          let(:buildpack) { Buildpack.make }
+          let(:buildpack) { create(:buildpack) }
           let(:params_from_yaml) { { name: 'eugene', buildpack: buildpack.name, docker: { image: 'my/image' } } }
 
           it 'is not valid' do
@@ -1076,11 +1076,11 @@ module VCAP::CloudController
 
         context 'when docker and buildpacks is provided' do
           before do
-            FeatureFlag.make(name: 'diego_docker', enabled: true, error_message: nil)
+            create(:feature_flag, name: 'diego_docker', enabled: true, error_message: nil)
           end
 
-          let(:buildpack) { Buildpack.make }
-          let(:buildpack2) { Buildpack.make }
+          let(:buildpack) { create(:buildpack) }
+          let(:buildpack2) { create(:buildpack) }
           let(:params_from_yaml) { { name: 'eugene', buildpacks: [buildpack.name, buildpack2.name], docker: { image: 'my/image' } } }
 
           it 'is not valid' do
@@ -1989,8 +1989,8 @@ module VCAP::CloudController
     end
 
     describe '#app_update_message' do
-      let(:buildpack) { VCAP::CloudController::Buildpack.make }
-      let(:stack) { VCAP::CloudController::Stack.make }
+      let(:buildpack) { create(:buildpack) }
+      let(:stack) { create(:stack) }
       let(:parsed_yaml) { { 'buildpack' => buildpack.name, 'stack' => stack.name } }
 
       context 'when neither buildpack or docker is specified' do
@@ -2081,7 +2081,7 @@ module VCAP::CloudController
 
         context 'when cnb is enabled' do
           before do
-            FeatureFlag.make(name: 'diego_cnb', enabled: true, error_message: nil)
+            create(:feature_flag, name: 'diego_cnb', enabled: true, error_message: nil)
           end
 
           it 'is valid' do
@@ -2147,7 +2147,7 @@ module VCAP::CloudController
 
         context 'when cnb is disabled' do
           before do
-            FeatureFlag.make(name: 'diego_cnb', enabled: false, error_message: 'I am a banana')
+            create(:feature_flag, name: 'diego_cnb', enabled: false, error_message: 'I am a banana')
           end
 
           it 'is not valid' do

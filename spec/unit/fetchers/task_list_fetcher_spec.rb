@@ -2,28 +2,28 @@ require 'spec_helper'
 
 module VCAP::CloudController
   RSpec.describe TaskListFetcher do
-    let(:space1) { Space.make }
-    let(:app_in_space1) { AppModel.make(space_guid: space1.guid) }
-    let(:app2_in_space1) { AppModel.make(space_guid: space1.guid) }
+    let(:space1) { create(:space) }
+    let(:app_in_space1) { create(:app_model, space: space1) }
+    let(:app2_in_space1) { create(:app_model, space: space1) }
 
-    let!(:task_in_space1) { TaskModel.make(app_guid: app_in_space1.guid) }
-    let!(:task2_in_space1) { TaskModel.make(app_guid: app_in_space1.guid) }
-    let!(:task_for_app2) { TaskModel.make(app_guid: app2_in_space1.guid) }
+    let!(:task_in_space1) { create(:task_model, app: app_in_space1) }
+    let!(:task2_in_space1) { create(:task_model, app: app_in_space1) }
+    let!(:task_for_app2) { create(:task_model, app: app2_in_space1) }
 
-    let!(:label_for_task_in_space1) { TaskLabelModel.make(resource_guid: task_in_space1.guid, key_name: 'key', value: 'value') }
-    let!(:label_for_task_in_space1_jr) { TaskLabelModel.make(resource_guid: task_in_space1.guid, key_name: 'key2', value: 'slimjim') }
+    let!(:label_for_task_in_space1) { create(:task_label_model, resource_guid: task_in_space1.guid, key_name: 'key', value: 'value') }
+    let!(:label_for_task_in_space1_jr) { create(:task_label_model, resource_guid: task_in_space1.guid, key_name: 'key2', value: 'slimjim') }
 
-    let(:space2) { Space.make }
-    let(:app_in_space2) { AppModel.make(space_guid: space2.guid) }
-    let!(:task_in_space2) { TaskModel.make(app_guid: app_in_space2.guid) }
-    let!(:failed_task_in_space2) { TaskModel.make(app_guid: app_in_space2.guid, state: TaskModel::FAILED_STATE) }
+    let(:space2) { create(:space) }
+    let(:app_in_space2) { create(:app_model, space: space2) }
+    let!(:task_in_space2) { create(:task_model, app: app_in_space2) }
+    let!(:failed_task_in_space2) { create(:task_model, app: app_in_space2, state: TaskModel::FAILED_STATE) }
 
-    let!(:label_for_task_in_space2) { TaskLabelModel.make(resource_guid: task_in_space2.guid, key_name: 'key', value: 'value') }
+    let!(:label_for_task_in_space2) { create(:task_label_model, resource_guid: task_in_space2.guid, key_name: 'key', value: 'value') }
 
-    let(:org2) { Organization.make }
-    let(:space_in_org2) { Space.make(organization_guid: org2.guid) }
-    let(:app_in_org2) { AppModel.make(space_guid: space_in_org2.guid) }
-    let!(:task_in_org2) { TaskModel.make(app_guid: app_in_org2.guid) }
+    let(:org2) { create(:organization) }
+    let(:space_in_org2) { create(:space, organization: org2) }
+    let(:app_in_org2) { create(:app_model, space: space_in_org2) }
+    let!(:task_in_org2) { create(:task_model, app: app_in_org2) }
 
     let(:pagination_options) { PaginationOptions.new({}) }
     let(:message) { TasksListMessage.from_params(filters) }

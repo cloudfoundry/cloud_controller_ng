@@ -18,7 +18,7 @@ module VCAP::CloudController
 
       describe '#get_resource' do
         let(:binding) do
-          ServiceBinding.make
+          create(:service_binding)
         end
 
         it 'returns the resource when it exists' do

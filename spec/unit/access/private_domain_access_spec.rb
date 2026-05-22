@@ -5,9 +5,9 @@ module VCAP::CloudController
     subject(:access) { PrivateDomainAccess.new(Security::AccessContext.new) }
     let(:scopes) { ['cloud_controller.read', 'cloud_controller.write'] }
 
-    let(:user) { VCAP::CloudController::User.make }
-    let(:org) { VCAP::CloudController::Organization.make }
-    let(:object) { VCAP::CloudController::PrivateDomain.make owning_organization: org }
+    let(:user) { create(:user) }
+    let(:org) { create(:organization) }
+    let(:object) { create(:private_domain, owning_organization: org) }
 
     before { set_current_user(user, scopes:) }
 
@@ -16,7 +16,7 @@ module VCAP::CloudController
     context 'admin' do
       include_context 'admin setup'
 
-      before { FeatureFlag.make(name: 'private_domain_creation', enabled: false) }
+      before { create(:feature_flag, name: 'private_domain_creation', enabled: false) }
 
       it_behaves_like 'full access'
     end
@@ -34,7 +34,7 @@ module VCAP::CloudController
 
       context 'when private_domain_creation FeatureFlag is disabled' do
         it 'cannot create a private domain' do
-          FeatureFlag.make(name: 'private_domain_creation', enabled: false, error_message: nil)
+          create(:feature_flag, name: 'private_domain_creation', enabled: false, error_message: nil)
           expect { subject.create?(object) }.to raise_error(CloudController::Errors::ApiError, /private_domain_creation/)
         end
       end
@@ -60,7 +60,7 @@ module VCAP::CloudController
 
     context 'user in a different organization (defensive)' do
       before do
-        different_organization = VCAP::CloudController::Organization.make
+        different_organization = create(:organization)
         different_organization.add_user(user)
       end
 
@@ -69,7 +69,7 @@ module VCAP::CloudController
 
     context 'manager in a different organization (defensive)' do
       before do
-        different_organization = VCAP::CloudController::Organization.make
+        different_organization = create(:organization)
         different_organization.add_manager(user)
       end
 

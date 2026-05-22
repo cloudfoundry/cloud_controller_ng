@@ -3,10 +3,10 @@ require 'spec_helper'
 module VCAP::CloudController
   RSpec.describe IncludeSpaceOrganizationDecorator do
     subject(:decorator) { IncludeSpaceOrganizationDecorator }
-    let(:organization1) { Organization.make(name: 'first-organization', created_at: Time.now.utc - 1.second) }
-    let(:organization2) { Organization.make(name: 'second-organization') }
-    let(:space1) { Space.make(name: 'first-space', organization: organization1) }
-    let(:space2) { Space.make(name: 'second-space', organization: organization2) }
+    let(:organization1) { create(:organization, name: 'first-organization', created_at: Time.now.utc - 1.second) }
+    let(:organization2) { create(:organization, name: 'second-organization') }
+    let(:space1) { create(:space, name: 'first-space', organization: organization1) }
+    let(:space2) { create(:space, name: 'second-space', organization: organization2) }
     let(:spaces) { [space1, space2] }
 
     it 'decorates the given hash with organizations from spaces in the correct order' do

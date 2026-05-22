@@ -11,7 +11,7 @@ module VCAP::CloudController::RestController
       let(:controller) { VCAP::CloudController::TestModelSecondLevelsController }
       let(:opts) { {} }
 
-      let(:instance) { VCAP::CloudController::TestModelSecondLevel.make }
+      let(:instance) { create(:test_model_second_level) }
 
       context 'when asked inline_relations_depth is more than max inline_relations_depth' do
         before do
@@ -51,7 +51,7 @@ module VCAP::CloudController::RestController
       end
 
       describe 'object transformer' do
-        let(:instance) { VCAP::CloudController::TestModel.make }
+        let(:instance) { create(:test_model) }
         let(:object_transformer) { double(:object_transformer) }
 
         before do
@@ -70,23 +70,23 @@ module VCAP::CloudController::RestController
       end
 
       context 'service_plan renderer' do
-        let(:user) { VCAP::CloudController::User.make }
-        let(:organization) { VCAP::CloudController::Organization.make }
-        let(:space) { VCAP::CloudController::Space.make(organization:) }
+        let(:user) { create(:user) }
+        let(:organization) { create(:organization) }
+        let(:space) { create(:space, organization:) }
         let(:controller) { VCAP::CloudController::ServicePlansController }
         let(:opts) { {} }
-        let(:broker) { VCAP::CloudController::ServiceBroker.make }
-        let(:service) { VCAP::CloudController::Service.make(service_broker: broker) }
-        let(:service_plan) { VCAP::CloudController::ServicePlan.make(service: service, public: false, active: false) }
+        let(:broker) { create(:service_broker) }
+        let(:service) { create(:service, service_broker: broker) }
+        let(:service_plan) { create(:service_plan, service: service, public: false, active: false) }
 
         before do
           space.organization.add_user(user)
           space.add_developer(user)
-          set_current_user_as_admin
+          set_current_user_as_admin(user: create(:user))
         end
 
         it 'renders a service plan accessible via user\'s service instance only' do
-          VCAP::CloudController::ManagedServiceInstance.make(space:, service_plan:)
+          create(:managed_service_instance, space:, service_plan:)
           set_current_user(user)
           result = Oj.load(subject.render_json_with_read_privileges(controller, service_plan, opts))
           expect(result['entity']['service_guid']).to eq(service.guid)

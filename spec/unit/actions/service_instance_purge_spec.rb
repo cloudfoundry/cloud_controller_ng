@@ -3,7 +3,7 @@ require 'actions/service_instance_purge'
 
 module VCAP::CloudController
   RSpec.describe ServiceInstancePurge do
-    let(:user_audit_info) { UserAuditInfo.new(user_guid: User.make.guid, user_email: 'email') }
+    let(:user_audit_info) { UserAuditInfo.new(user_guid: create(:user).guid, user_email: 'email') }
     let(:event_repository) { Repositories::ServiceEventRepository.new(user_audit_info) }
 
     subject { described_class.new(event_repository) }
@@ -29,8 +29,8 @@ module VCAP::CloudController
       end
 
       context 'when there are service bindings' do
-        let!(:service_binding_1) { ServiceBinding.make(service_instance:) }
-        let!(:service_binding_2) { ServiceBinding.make(service_instance:) }
+        let!(:service_binding_1) { create(:service_binding, service_instance:) }
+        let!(:service_binding_2) { create(:service_binding, service_instance:) }
 
         it 'records the service binding delete event' do
           subject.purge(service_instance)
@@ -51,10 +51,10 @@ module VCAP::CloudController
       end
 
       context 'when there are route bindings' do
-        let(:route_1) { Route.make(space: service_instance.space) }
-        let(:route_2) { Route.make(space: service_instance.space) }
-        let!(:route_binding_1) { RouteBinding.make(service_instance: service_instance, route: route_1) }
-        let!(:route_binding_2) { RouteBinding.make(service_instance: service_instance, route: route_2) }
+        let(:route_1) { create(:route, space: service_instance.space) }
+        let(:route_2) { create(:route, space: service_instance.space) }
+        let!(:route_binding_1) { create(:route_binding, service_instance: service_instance, route: route_1) }
+        let!(:route_binding_2) { create(:route_binding, service_instance: service_instance, route: route_2) }
 
         it 'records the service binding delete event' do
           subject.purge(service_instance)
@@ -77,13 +77,13 @@ module VCAP::CloudController
 
     describe '#purge' do
       context 'managed service instance' do
-        let(:service_instance) { ManagedServiceInstance.make(:routing) }
+        let(:service_instance) { create(:managed_service_instance, :routing) }
 
         it_behaves_like 'delete service instance'
 
         context 'when there are service keys' do
-          let!(:service_key_1) { ServiceKey.make(service_instance:) }
-          let!(:service_key_2) { ServiceKey.make(service_instance:) }
+          let!(:service_key_1) { create(:service_key, service_instance:) }
+          let!(:service_key_2) { create(:service_key, service_instance:) }
 
           it 'records the service key delete event' do
             subject.purge(service_instance)
@@ -104,7 +104,7 @@ module VCAP::CloudController
         end
 
         context 'when the service instance has shared spaces' do
-          let(:target_space) { Space.make }
+          let(:target_space) { create(:space) }
 
           before { service_instance.add_shared_space(target_space) }
 
@@ -122,8 +122,8 @@ module VCAP::CloudController
 
       context 'user provided service instance' do
         let(:service_instance) do
-          si = UserProvidedServiceInstance.make(:routing)
-          si.service_instance_operation = VCAP::CloudController::ServiceInstanceOperation.make(type: 'create', state: 'succeeded')
+          si = create(:user_provided_service_instance, :routing)
+          si.service_instance_operation = create(:service_instance_operation, type: 'create', state: 'succeeded')
           si
         end
 

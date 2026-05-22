@@ -6,9 +6,9 @@ module VCAP::CloudController
     module Docker
       RSpec.describe StagingCompletionHandler do
         let(:logger) { instance_double(Steno::Logger, info: nil, error: nil, warn: nil) }
-        let(:app) { AppModel.make(:docker) }
-        let(:package) { PackageModel.make(:docker, app:) }
-        let!(:build) { BuildModel.make(:docker, app: app, package: package, state: BuildModel::STAGING_STATE) }
+        let(:app) { create(:app_model, :docker) }
+        let(:package) { create(:package_model, :docker, app:) }
+        let!(:build) { create(:build_model, :docker, app: app, package: package, state: BuildModel::STAGING_STATE) }
         let(:runners) { instance_double(Runners) }
 
         subject(:handler) { StagingCompletionHandler.new(build, runners) }
@@ -17,7 +17,7 @@ module VCAP::CloudController
           FeatureFlag.create(name: 'diego_docker', enabled: true)
           allow(Steno).to receive(:logger).and_return(logger)
           allow(VCAP::AppLogEmitter).to receive(:emit_error)
-          set_current_user_as_admin(user: User.make(guid: '1234'), email: 'joe@joe.com', user_name: 'briggs')
+          set_current_user_as_admin(user: create(:user, guid: '1234'), email: 'joe@joe.com', user_name: 'briggs')
         end
 
         describe '#staging_complete' do
@@ -109,7 +109,7 @@ module VCAP::CloudController
 
             context 'when updating the droplet table fails' do
               let(:save_error) { StandardError.new('save-error') }
-              let!(:droplet) { DropletModel.make(app:, package:, build:) }
+              let!(:droplet) { create(:droplet_model, app:, package:, build:) }
 
               before do
                 allow_any_instance_of(DropletModel).to receive(:save_changes).and_raise(save_error)
@@ -131,7 +131,7 @@ module VCAP::CloudController
 
             context 'when a start is requested' do
               let(:runner) { instance_double(Diego::Runner, start: nil) }
-              let!(:web_process) { ProcessModel.make(app: app, type: 'web') }
+              let!(:web_process) { create(:process_model, app: app, type: 'web') }
 
               before do
                 allow(runners).to receive(:runner_for_process).and_return(runner)
@@ -150,7 +150,7 @@ module VCAP::CloudController
               end
 
               it 'records a buildpack set event for all processes' do
-                ProcessModel.make(app: app, type: 'other')
+                create(:process_model, app: app, type: 'other')
                 expect do
                   subject.staging_complete(payload, true)
                 end.to change { AppUsageEvent.where(state: 'BUILDPACK_SET').count }.to(2).from(0)
@@ -158,7 +158,7 @@ module VCAP::CloudController
 
               context 'when this is not the most recent staging result' do
                 before do
-                  DropletModel.make(app: app, package: package, created_at: Time.now + 1.year)
+                  create(:droplet_model, app: app, package: package, created_at: Time.now + 1.year, set_as_current_droplet: false)
                 end
 
                 it 'does not assign the current droplet' do
@@ -337,7 +337,7 @@ module VCAP::CloudController
             end
 
             context 'when a start is requested' do
-              let!(:web_process) { ProcessModel.make(app: app, type: 'web', state: 'STARTED') }
+              let!(:web_process) { create(:process_model, app: app, type: 'web', state: 'STARTED') }
 
               it 'stops the web process of the app' do
                 expect do

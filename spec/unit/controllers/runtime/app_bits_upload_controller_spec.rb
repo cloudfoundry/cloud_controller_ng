@@ -29,7 +29,7 @@ module VCAP::CloudController
 
       let(:config_override) { {} }
       let(:headers) { headers_for(user) }
-      let(:process) { ProcessModel.make }
+      let(:process) { create(:process_model) }
 
       def make_request
         put "/v2/apps/#{process.app.guid}/bits", req_body, form_headers(headers)
@@ -40,7 +40,7 @@ module VCAP::CloudController
         let(:req_body) { { resources: '[]', application: valid_zip } }
 
         it 'allows upload even if app_bits_upload flag is disabled' do
-          FeatureFlag.make(name: 'app_bits_upload', enabled: false)
+          create(:feature_flag, name: 'app_bits_upload', enabled: false)
           make_request
           expect(last_response.status).to eq(201)
         end
@@ -53,7 +53,7 @@ module VCAP::CloudController
           let(:req_body) { { resources: '[]', application: valid_zip } }
 
           before do
-            FeatureFlag.make(name: 'app_bits_upload', enabled: false, error_message: nil)
+            create(:feature_flag, name: 'app_bits_upload', enabled: false, error_message: nil)
             make_request
             process.refresh
           end
@@ -73,7 +73,7 @@ module VCAP::CloudController
 
         context 'when the app_bits_upload feature flag is enabled' do
           before do
-            FeatureFlag.make(name: 'app_bits_upload', enabled: true)
+            create(:feature_flag, name: 'app_bits_upload', enabled: true)
           end
 
           context 'with an empty request' do
@@ -361,7 +361,7 @@ module VCAP::CloudController
               let(:req_body) { { resources: Oj.dump([{ 'fn' => 'lol', 'sha1' => 'abc', 'size' => 2048, 'mode' => '300' }]), application: valid_zip } }
 
               before do
-                FeatureFlag.make(name: 'app_bits_upload', enabled: true)
+                create(:feature_flag, name: 'app_bits_upload', enabled: true)
               end
 
               it 'fails to upload' do
@@ -397,7 +397,7 @@ module VCAP::CloudController
       end
 
       context 'when the app is a docker app' do
-        let(:process) { ProcessModel.make(app: AppModel.make(:docker)) }
+        let(:process) { create(:process_model, app: create(:app_model, :docker)) }
         let(:req_body) { { resources: '[]', application: valid_zip } }
         let(:headers) { admin_headers }
 
@@ -412,7 +412,7 @@ module VCAP::CloudController
     end
 
     describe 'POST /v2/apps/:guid/copy_bits' do
-      let(:dest_process) { ProcessModel.make }
+      let(:dest_process) { create(:process_model) }
       let(:src_process) { ProcessModelFactory.make }
       let(:json_payload) { { 'source_app_guid' => src_process.app.guid }.to_json }
 

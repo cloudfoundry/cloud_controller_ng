@@ -4,7 +4,7 @@ require 'fetchers/droplet_fetcher'
 module VCAP::CloudController
   RSpec.describe DropletFetcher do
     describe '#fetch' do
-      let!(:droplet) { DropletModel.make }
+      let!(:droplet) { create(:droplet_model) }
       let(:space) { droplet.space }
 
       subject(:droplet_delete_fetcher) { DropletFetcher.new }

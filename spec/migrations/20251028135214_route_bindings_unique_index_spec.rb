@@ -6,11 +6,11 @@ RSpec.describe 'route bindings unique index', isolation: :truncation, type: :mig
     let(:migration_filename) { '20251028135214_route_bindings_unique_index.rb' }
   end
 
-  let(:space) { VCAP::CloudController::Space.make }
-  let(:service_instance_1) { VCAP::CloudController::ServiceInstance.make(space:) }
-  let(:service_instance_2) { VCAP::CloudController::ServiceInstance.make(space:) }
-  let(:route_1) { VCAP::CloudController::Route.make(space:) }
-  let(:route_2) { VCAP::CloudController::Route.make(space:) }
+  let(:space) { create(:space) }
+  let(:service_instance_1) { create(:service_instance, space:) }
+  let(:service_instance_2) { create(:service_instance, space:) }
+  let(:route_1) { create(:route, space:) }
+  let(:route_2) { create(:route, space:) }
 
   describe 'route_bindings table' do
     it 'removes duplicates, manages unique index, and handles idempotency' do

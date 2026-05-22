@@ -5,13 +5,13 @@ module VCAP::CloudController
   RSpec.describe IncludeRoleUserDecorator do
     subject(:decorator) { IncludeRoleUserDecorator }
 
-    let(:user1) { User.make(guid: 'user-1-guid', created_at: Time.now.utc - 1.second) }
-    let(:user2) { User.make(guid: 'user-2-guid') }
+    let(:user1) { create(:user, guid: 'user-1-guid', created_at: Time.now.utc - 1.second) }
+    let(:user2) { create(:user, guid: 'user-2-guid') }
 
     let(:roles) do
       [
-        SpaceDeveloper.make(user: user1),
-        OrganizationManager.make(user: user2)
+        create(:space_developer, user: user1),
+        create(:organization_manager, user: user2)
       ]
     end
 

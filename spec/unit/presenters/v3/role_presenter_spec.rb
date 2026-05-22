@@ -7,7 +7,7 @@ module VCAP::CloudController::Presenters::V3
 
     describe '#to_hash' do
       describe 'the role is space auditor' do
-        let(:role) { VCAP::CloudController::SpaceAuditor.make }
+        let(:role) { create(:space_auditor) }
         let(:result) { presenter.to_hash }
 
         it 'presents the role' do
@@ -25,7 +25,7 @@ module VCAP::CloudController::Presenters::V3
       end
 
       describe 'the role is space developer' do
-        let(:role) { VCAP::CloudController::SpaceDeveloper.make }
+        let(:role) { create(:space_developer) }
         let(:result) { presenter.to_hash }
 
         it 'presents the role' do
@@ -43,7 +43,7 @@ module VCAP::CloudController::Presenters::V3
       end
 
       describe 'the role is space developer' do
-        let(:role) { VCAP::CloudController::SpaceManager.make }
+        let(:role) { create(:space_manager) }
         let(:result) { presenter.to_hash }
 
         it 'presents the role' do
@@ -61,7 +61,7 @@ module VCAP::CloudController::Presenters::V3
       end
 
       describe 'the role is organization auditor' do
-        let(:role) { VCAP::CloudController::OrganizationAuditor.make }
+        let(:role) { create(:organization_auditor) }
         let(:result) { presenter.to_hash }
 
         it 'presents the role' do
@@ -79,7 +79,7 @@ module VCAP::CloudController::Presenters::V3
       end
 
       describe 'the role is organization manager' do
-        let(:role) { VCAP::CloudController::OrganizationManager.make }
+        let(:role) { create(:organization_manager) }
         let(:result) { presenter.to_hash }
 
         it 'presents the role' do
@@ -97,7 +97,7 @@ module VCAP::CloudController::Presenters::V3
       end
 
       describe 'the role is organization billing manager' do
-        let(:role) { VCAP::CloudController::OrganizationBillingManager.make }
+        let(:role) { create(:organization_billing_manager) }
         let(:result) { presenter.to_hash }
 
         it 'presents the role' do
@@ -115,7 +115,7 @@ module VCAP::CloudController::Presenters::V3
       end
 
       describe 'the role is organization user' do
-        let(:role) { VCAP::CloudController::OrganizationUser.make }
+        let(:role) { create(:organization_user) }
         let(:result) { presenter.to_hash }
 
         it 'presents the role' do
@@ -133,8 +133,8 @@ module VCAP::CloudController::Presenters::V3
       end
 
       describe 'when the user guid is weird' do
-        let(:user) { VCAP::CloudController::User.make(guid: ':---)') }
-        let(:role) { VCAP::CloudController::SpaceAuditor.make(user:) }
+        let(:user) { create(:user, guid: ':---)') }
+        let(:role) { create(:space_auditor, user:) }
         let(:result) { presenter.to_hash }
 
         it 'presents the role' do

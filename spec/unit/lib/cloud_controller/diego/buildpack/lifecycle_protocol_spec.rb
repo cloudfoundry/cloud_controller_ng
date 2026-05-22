@@ -21,10 +21,10 @@ module VCAP
           let(:droplet_download_url) { 'droplet-download-url' }
 
           it_behaves_like 'a lifecycle protocol' do
-            let(:app) { AppModel.make }
-            let(:package) { PackageModel.make(app_guid: app.guid) }
-            let(:droplet) { DropletModel.make(package_guid: package.guid, app_guid: app.guid) }
-            let(:process) { ProcessModel.make(app:) }
+            let(:app) { create(:app_model) }
+            let(:package) { create(:package_model, app_guid: app.guid) }
+            let(:droplet) { create(:droplet_model, package_guid: package.guid, app_guid: app.guid) }
+            let(:process) { create(:process_model, app:) }
             let(:staging_details) do
               Diego::StagingDetails.new.tap do |details|
                 details.staging_guid = droplet.guid
@@ -46,9 +46,9 @@ module VCAP
           end
 
           describe '#lifecycle_data' do
-            let(:app) { AppModel.make }
-            let(:package) { PackageModel.make(app:) }
-            let(:droplet) { DropletModel.make(package:, app:) }
+            let(:app) { create(:app_model) }
+            let(:package) { create(:package_model, app:) }
+            let(:droplet) { create(:droplet_model, package:, app:) }
             let(:buildpack) { nil }
             let(:buildpack_infos) { [BuildpackInfo.new(buildpack, VCAP::CloudController::Buildpack.find(name: buildpack))] }
 
@@ -131,8 +131,8 @@ module VCAP
 
           describe '#staging_action_builder' do
             let(:config) { Config.new({ some: 'config' }) }
-            let(:package) { PackageModel.make }
-            let(:droplet) { DropletModel.make }
+            let(:package) { create(:package_model) }
+            let(:droplet) { create(:droplet_model) }
             let(:staging_details) do
               StagingDetails.new.tap do |details|
                 details.lifecycle    = instance_double(BuildpackLifecycle, staging_stack: 'potato-stack', buildpack_infos: 'some buildpack info')
@@ -166,11 +166,11 @@ module VCAP
           end
 
           describe '#task_action_builder' do
-            let(:task) { TaskModel.make(user: 'ContainerUser') }
+            let(:task) { create(:task_model, user: 'ContainerUser') }
             let(:config) { Config.new({ some: 'config' }) }
 
             it 'returns a TaskActionBuilder' do
-              task.app.update(buildpack_lifecycle_data: BuildpackLifecycleDataModel.make(stack: 'potato-stack'))
+              task.app.update(buildpack_lifecycle_data: create(:buildpack_lifecycle_data_model, stack: 'potato-stack'))
 
               task_action_builder = instance_double(TaskActionBuilder)
               allow(TaskActionBuilder).to receive(:new).and_return task_action_builder
@@ -202,17 +202,15 @@ module VCAP
 
           describe '#desired_lrp_builder' do
             let(:config) { Config.new({}) }
-            let(:app) { AppModel.make(droplet:) }
-            let(:droplet) { DropletModel.make }
+            let(:app) { create(:app_model, droplet:) }
+            let(:droplet) { create(:droplet_model) }
             let(:process) do
-              ProcessModel.make(
-                type: 'worker',
-                app: app,
-                diego: true,
-                command: 'go go go',
-                metadata: {},
-                ports: [1234, 5678]
-              )
+              create(:process_model, type: 'worker',
+                                     app: app,
+                                     diego: true,
+                                     command: 'go go go',
+                                     metadata: {},
+                                     ports: [1234, 5678])
             end
             let(:builder_opts) do
               {
@@ -275,15 +273,13 @@ module VCAP
 
               context 'and theres a revision on the process' do
                 let(:new_droplet) do
-                  DropletModel.make(
-                    app: app,
-                    process_types: {
-                      'worker' => 'something else',
-                      'web' => 'not this'
-                    }
-                  )
+                  create(:droplet_model, app: app,
+                                         process_types: {
+                                           'worker' => 'something else',
+                                           'web' => 'not this'
+                                         })
                 end
-                let(:revision) { RevisionModel.make(app: app, droplet_guid: new_droplet.guid) }
+                let(:revision) { create(:revision_model, app: app, droplet_guid: new_droplet.guid) }
 
                 before do
                   process.update(revision:)

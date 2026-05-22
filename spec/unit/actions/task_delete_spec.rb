@@ -6,12 +6,12 @@ module VCAP::CloudController
     describe '#delete_for_app' do
       subject(:task_delete) { described_class.new(user_audit_info) }
 
-      let!(:app) { AppModel.make }
-      let!(:task1) { TaskModel.make(app: app, state: TaskModel::SUCCEEDED_STATE) }
-      let!(:task2) { TaskModel.make(app: app, state: TaskModel::FAILED_STATE) }
-      let!(:task3) { TaskModel.make(app: app, state: TaskModel::PENDING_STATE) }
-      let!(:task4) { TaskModel.make(app: app, state: TaskModel::RUNNING_STATE) }
-      let!(:task5) { TaskModel.make(app: app, state: TaskModel::CANCELING_STATE) }
+      let!(:app) { create(:app_model) }
+      let!(:task1) { create(:task_model, app: app, state: TaskModel::SUCCEEDED_STATE) }
+      let!(:task2) { create(:task_model, app: app, state: TaskModel::FAILED_STATE) }
+      let!(:task3) { create(:task_model, app: app, state: TaskModel::PENDING_STATE) }
+      let!(:task4) { create(:task_model, app: app, state: TaskModel::RUNNING_STATE) }
+      let!(:task5) { create(:task_model, app: app, state: TaskModel::CANCELING_STATE) }
       let(:user_audit_info) { instance_double(VCAP::CloudController::UserAuditInfo).as_null_object }
       let(:bbs_task_client) { instance_double(VCAP::CloudController::Diego::BbsTaskClient, cancel_task: nil) }
 
@@ -27,8 +27,8 @@ module VCAP::CloudController
       end
 
       it 'deletes associated labels' do
-        label1 = TaskLabelModel.make(task: task1, key_name: 'test', value: 'bommel')
-        label2 = TaskLabelModel.make(task: task2, key_name: 'test', value: 'bommel')
+        label1 = create(:task_label_model, task: task1, key_name: 'test', value: 'bommel')
+        label2 = create(:task_label_model, task: task2, key_name: 'test', value: 'bommel')
 
         expect do
           task_delete.delete_for_app(app.guid)
@@ -37,8 +37,8 @@ module VCAP::CloudController
       end
 
       it 'deletes associated annotations' do
-        annotation1 = TaskAnnotationModel.make(task: task1, key_name: 'test', value: 'bommel')
-        annotation2 = TaskAnnotationModel.make(task: task2, key_name: 'test', value: 'bommel')
+        annotation1 = create(:task_annotation_model, task: task1, key_name: 'test', value: 'bommel')
+        annotation2 = create(:task_annotation_model, task: task2, key_name: 'test', value: 'bommel')
 
         expect do
           task_delete.delete_for_app(app.guid)

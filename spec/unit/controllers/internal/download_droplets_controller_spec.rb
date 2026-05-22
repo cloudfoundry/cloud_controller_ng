@@ -29,9 +29,9 @@ module VCAP::CloudController
         CloudController::DependencyLocator.instance.droplet_blobstore
       end
 
-      let(:v3_app) { AppModel.make(droplet:) }
-      let(:process) { ProcessModel.make(app: v3_app) }
-      let(:droplet) { DropletModel.make(state: 'STAGED') }
+      let(:v3_app) { create(:app_model, droplet:) }
+      let(:process) { create(:process, app: v3_app) }
+      let(:droplet) { create(:droplet_model, state: 'STAGED') }
 
       before do
         Fog.unmock!
@@ -147,9 +147,9 @@ module VCAP::CloudController
         CloudController::DependencyLocator.instance.droplet_blobstore
       end
 
-      let(:v3_app) { AppModel.make(droplet:) }
-      let(:process) { ProcessModel.make(app: v3_app) }
-      let(:droplet) { DropletModel.make(state: 'STAGED') }
+      let(:v3_app) { create(:app_model, droplet:) }
+      let(:process) { create(:process, app: v3_app) }
+      let(:droplet) { create(:droplet_model, state: 'STAGED') }
 
       before do
         Fog.unmock!
@@ -167,7 +167,7 @@ module VCAP::CloudController
       end
 
       context 'when using with a revision' do
-        let(:new_droplet) { DropletModel.make(state: 'STAGED') }
+        let(:new_droplet) { create(:droplet_model, state: 'STAGED') }
 
         it 'succeeds when the the revisions droplet doesnt match the processes "desired" droplet' do
           upload_droplet
@@ -175,7 +175,7 @@ module VCAP::CloudController
           new_droplet.reload
 
           v3_app.update(revisions_enabled: true)
-          revision = RevisionModel.make(app: v3_app, droplet: new_droplet)
+          revision = create(:revision_model, app: v3_app, droplet: new_droplet)
           process.update(revision:)
 
           get "/internal/v4/droplets/#{process.guid}/#{new_droplet.checksum}/download"
@@ -254,7 +254,7 @@ module VCAP::CloudController
         end
 
         context 'when using with a revision' do
-          let(:new_droplet) { DropletModel.make(state: 'STAGED') }
+          let(:new_droplet) { create(:droplet_model, state: 'STAGED') }
 
           it 'succeeds when the the revisions droplet doesnt match the processes "desired" droplet' do
             upload_droplet
@@ -265,7 +265,7 @@ module VCAP::CloudController
             new_droplet.reload
 
             v3_app.update(revisions_enabled: true)
-            revision = RevisionModel.make(app: v3_app, droplet: new_droplet)
+            revision = create(:revision_model, app: v3_app, droplet: new_droplet)
             process.update(revision:)
 
             get "/internal/v4/droplets/#{process.guid}/#{new_droplet.checksum}/download"

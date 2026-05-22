@@ -4,18 +4,16 @@ require 'presenters/v3/security_group_presenter'
 module VCAP::CloudController::Presenters::V3
   RSpec.describe SecurityGroupPresenter do
     let(:security_group) do
-      VCAP::CloudController::SecurityGroup.make(
-        guid: 'security-group-guid',
-        staging_default: false,
-        running_default: true,
-        rules: [
-          {
-            protocol: 'tcp',
-            destination: '10.10.10.0/24',
-            ports: '443,80,8080'
-          }
-        ]
-      )
+      create(:security_group, guid: 'security-group-guid',
+                              staging_default: false,
+                              running_default: true,
+                              rules: [
+                                {
+                                  protocol: 'tcp',
+                                  destination: '10.10.10.0/24',
+                                  ports: '443,80,8080'
+                                }
+                              ])
     end
 
     before do
@@ -26,8 +24,8 @@ module VCAP::CloudController::Presenters::V3
     describe '#to_hash' do
       let(:result) { SecurityGroupPresenter.new(security_group, visible_space_guids:, all_spaces_visible:).to_hash }
 
-      let(:space1) { VCAP::CloudController::Space.make(guid: 'guid1') }
-      let(:space2) { VCAP::CloudController::Space.make(guid: 'guid2') }
+      let(:space1) { create(:space, guid: 'guid1') }
+      let(:space2) { create(:space, guid: 'guid2') }
       let(:visible_space_guids) { [space1.guid, space2.guid] }
       let(:all_spaces_visible) { false }
 

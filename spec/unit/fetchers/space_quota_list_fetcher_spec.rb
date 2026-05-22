@@ -4,16 +4,16 @@ require 'messages/space_quotas_list_message'
 
 module VCAP::CloudController
   RSpec.describe SpaceQuotaListFetcher do
-    let(:org1) { Organization.make(name: 'org1') }
-    let(:org3) { Organization.make(name: 'org3') }
+    let(:org1) { create(:organization, name: 'org1') }
+    let(:org3) { create(:organization, name: 'org3') }
 
-    let!(:quota1) { SpaceQuotaDefinition.make(name: 'quota1-name', guid: 'quota1-guid', organization: org1) }
-    let!(:quota2) { SpaceQuotaDefinition.make(name: 'quota2-name', guid: 'quota2-guid', organization: org1) }
-    let!(:quota3) { SpaceQuotaDefinition.make(name: 'quota3-name', guid: 'quota3-guid', organization: org3) }
-    let!(:quota_unreadable) { SpaceQuotaDefinition.make(name: 'quota_unreadable-name', guid: 'quota_unreadable-guid', organization: org1) }
+    let!(:quota1) { create(:space_quota_definition, name: 'quota1-name', guid: 'quota1-guid', organization: org1) }
+    let!(:quota2) { create(:space_quota_definition, name: 'quota2-name', guid: 'quota2-guid', organization: org1) }
+    let!(:quota3) { create(:space_quota_definition, name: 'quota3-name', guid: 'quota3-guid', organization: org3) }
+    let!(:quota_unreadable) { create(:space_quota_definition, name: 'quota_unreadable-name', guid: 'quota_unreadable-guid', organization: org1) }
 
-    let!(:space1) { Space.make(name: 'space1-name', organization: org1, space_quota_definition: quota1) }
-    let!(:space2) { Space.make(name: 'space2-name', organization: org1, space_quota_definition: quota2) }
+    let!(:space1) { create(:space, name: 'space1-name', organization: org1, space_quota_definition: quota1) }
+    let!(:space2) { create(:space, name: 'space2-name', organization: org1, space_quota_definition: quota2) }
 
     let(:readable_space_quota_guids) { [quota1.guid, quota2.guid, quota3.guid] }
 

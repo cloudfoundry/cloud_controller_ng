@@ -6,13 +6,11 @@ module VCAP::CloudController::Presenters::V3
     shared_examples_for(JobPresenter) do
       let(:api_error) { nil }
       let(:job) do
-        VCAP::CloudController::PollableJobModel.make(
-          state: VCAP::CloudController::PollableJobModel::COMPLETE_STATE,
-          operation: "#{resource_type}.my_async_operation",
-          resource_type: resource_type,
-          resource_guid: resource.guid,
-          cf_api_error: api_error
-        )
+        create(:pollable_job_model, state: VCAP::CloudController::PollableJobModel::COMPLETE_STATE,
+                                    operation: "#{resource_type}.my_async_operation",
+                                    resource_type: resource_type,
+                                    resource_guid: resource.guid,
+                                    cf_api_error: api_error)
       end
       let(:result) { JobPresenter.new(job).to_hash }
 
@@ -108,8 +106,8 @@ module VCAP::CloudController::Presenters::V3
 
         context 'when the job has a warning' do
           before do
-            VCAP::CloudController::JobWarningModel.make(job: job, detail: 'warning one')
-            VCAP::CloudController::JobWarningModel.make(job: job, detail: 'warning two')
+            create(:job_warning_model, job: job, detail: 'warning one')
+            create(:job_warning_model, job: job, detail: 'warning two')
           end
 
           it 'presents the list of warnings' do
@@ -122,35 +120,35 @@ module VCAP::CloudController::Presenters::V3
     context 'for apps' do
       it_behaves_like JobPresenter do
         let(:resource_type) { 'app' }
-        let(:resource) { VCAP::CloudController::AppModel.make }
+        let(:resource) { create(:app_model) }
       end
     end
 
     context 'for buildpacks' do
       it_behaves_like JobPresenter do
         let(:resource_type) { 'buildpack' }
-        let(:resource) { VCAP::CloudController::Buildpack.make }
+        let(:resource) { create(:buildpack) }
       end
     end
 
     context 'for droplets' do
       it_behaves_like JobPresenter do
         let(:resource_type) { 'droplet' }
-        let(:resource) { VCAP::CloudController::DropletModel.make(app: nil) }
+        let(:resource) { create(:droplet_model, app: nil, set_as_current_droplet: false) }
       end
     end
 
     context 'for packages' do
       it_behaves_like JobPresenter do
         let(:resource_type) { 'package' }
-        let(:resource) { VCAP::CloudController::PackageModel.make }
+        let(:resource) { create(:package_model) }
       end
     end
 
     context 'for service brokers' do
       it_behaves_like JobPresenter do
         let(:resource_type) { 'service_broker' }
-        let(:resource) { VCAP::CloudController::ServiceBroker.make }
+        let(:resource) { create(:service_broker) }
       end
     end
   end

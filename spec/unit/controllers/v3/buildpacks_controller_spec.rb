@@ -10,7 +10,7 @@ RSpec.describe BuildpacksController, type: :controller do
   end
 
   describe '#index' do
-    let(:user) { VCAP::CloudController::User.make }
+    let(:user) { create(:user) }
 
     describe 'permissions by role' do
       role_to_expected_http_response = {
@@ -28,8 +28,8 @@ RSpec.describe BuildpacksController, type: :controller do
 
       role_to_expected_http_response.each do |role, expected_return_value|
         context "as an #{role}" do
-          let(:org) { VCAP::CloudController::Organization.make }
-          let(:space) { VCAP::CloudController::Space.make(organization: org) }
+          let(:org) { create(:organization) }
+          let(:space) { create(:space, organization: org) }
 
           it "returns #{expected_return_value}" do
             set_current_user_as_role(role:, org:, space:, user:)
@@ -49,12 +49,12 @@ RSpec.describe BuildpacksController, type: :controller do
     end
 
     context 'when the user is logged in' do
-      let!(:stack1) { VCAP::CloudController::Stack.make }
-      let!(:stack2) { VCAP::CloudController::Stack.make }
+      let!(:stack1) { create(:stack) }
+      let!(:stack2) { create(:stack) }
 
-      let!(:buildpack1) { VCAP::CloudController::Buildpack.make(stack: stack1.name, position: 2) }
-      let!(:buildpack2) { VCAP::CloudController::Buildpack.make(stack: stack2.name, position: 1) }
-      let!(:buildpack3) { VCAP::CloudController::Buildpack.make(stack: stack1.name, lifecycle: 'cnb', position: 1) }
+      let!(:buildpack1) { create(:buildpack, stack: stack1.name, position: 2) }
+      let!(:buildpack2) { create(:buildpack, stack: stack2.name, position: 1) }
+      let!(:buildpack3) { create(:buildpack, stack: stack1.name, lifecycle: 'cnb', position: 1) }
 
       before do
         set_current_user(user)
@@ -120,13 +120,13 @@ RSpec.describe BuildpacksController, type: :controller do
   end
 
   describe '#destroy' do
-    let(:buildpack) { VCAP::CloudController::Buildpack.make }
-    let(:user) { VCAP::CloudController::User.make }
+    let(:buildpack) { create(:buildpack) }
+    let(:user) { create(:user) }
 
     describe 'permissions' do
       context 'when the user does not have the write scope' do
         before do
-          set_current_user(VCAP::CloudController::User.make, scopes: ['cloud_controller.read'])
+          set_current_user(create(:user), scopes: ['cloud_controller.read'])
         end
 
         it 'raises an ApiError with a 403 code' do
@@ -145,8 +145,8 @@ RSpec.describe BuildpacksController, type: :controller do
 
         role_to_expected_http_response.each do |role, expected_return_value|
           context "as an #{role}" do
-            let(:org) { VCAP::CloudController::Organization.make }
-            let(:space) { VCAP::CloudController::Space.make(organization: org) }
+            let(:org) { create(:organization) }
+            let(:space) { create(:space, organization: org) }
 
             it "returns #{expected_return_value}" do
               set_current_user_as_role(
@@ -172,8 +172,8 @@ RSpec.describe BuildpacksController, type: :controller do
 
         role_to_expected_http_response.each do |role, expected_return_value|
           context "as an #{role}" do
-            let(:org) { VCAP::CloudController::Organization.make }
-            let(:space) { VCAP::CloudController::Space.make(organization: org) }
+            let(:org) { create(:organization) }
+            let(:space) { create(:space, organization: org) }
 
             it "returns #{expected_return_value}" do
               set_current_user_as_role(
@@ -246,14 +246,14 @@ RSpec.describe BuildpacksController, type: :controller do
   end
 
   describe '#show' do
-    let(:user) { VCAP::CloudController::User.make }
+    let(:user) { create(:user) }
 
     before do
       set_current_user(user)
     end
 
     context 'when the buildpack exists' do
-      let(:buildpack) { VCAP::CloudController::Buildpack.make }
+      let(:buildpack) { create(:buildpack) }
 
       it 'renders a single buildpack details' do
         get :show, params: { guid: buildpack.guid }
@@ -273,14 +273,14 @@ RSpec.describe BuildpacksController, type: :controller do
 
   describe '#create' do
     before do
-      VCAP::CloudController::Buildpack.make
-      VCAP::CloudController::Buildpack.make
-      VCAP::CloudController::Buildpack.make
+      create(:buildpack)
+      create(:buildpack)
+      create(:buildpack)
     end
 
     context 'when authorized' do
-      let(:user) { VCAP::CloudController::User.make }
-      let(:stack) { VCAP::CloudController::Stack.make }
+      let(:user) { create(:user) }
+      let(:stack) { create(:stack) }
       let(:params) do
         {
           name: 'the-r3al_Name',
@@ -305,7 +305,7 @@ RSpec.describe BuildpacksController, type: :controller do
 
       context 'when params are correct' do
         context 'when the stack exists' do
-          let(:stack) { VCAP::CloudController::Stack.make }
+          let(:stack) { create(:stack) }
 
           it 'saves the buildpack in the database' do
             post :create, params: params, as: :json
@@ -366,15 +366,15 @@ RSpec.describe BuildpacksController, type: :controller do
   end
 
   describe '#update' do
-    let(:user) { VCAP::CloudController::User.make }
+    let(:user) { create(:user) }
     let(:buildpack) do
-      VCAP::CloudController::Buildpack.make(stack: nil)
+      create(:buildpack, stack: nil)
     end
 
     describe 'permissions' do
       context 'when the user does not have the write scope' do
         before do
-          set_current_user(VCAP::CloudController::User.make, scopes: ['cloud_controller.read'])
+          set_current_user(create(:user), scopes: ['cloud_controller.read'])
         end
 
         it 'raises an ApiError with a 403 code' do
@@ -393,8 +393,8 @@ RSpec.describe BuildpacksController, type: :controller do
 
         role_to_expected_http_response.each do |role, expected_return_value|
           context "as an #{role}" do
-            let(:org) { VCAP::CloudController::Organization.make }
-            let(:space) { VCAP::CloudController::Space.make(organization: org) }
+            let(:org) { create(:organization) }
+            let(:space) { create(:space, organization: org) }
 
             it "returns #{expected_return_value}" do
               set_current_user_as_role(
@@ -420,8 +420,8 @@ RSpec.describe BuildpacksController, type: :controller do
 
         role_to_expected_http_response.each do |role, expected_return_value|
           context "as an #{role}" do
-            let(:org) { VCAP::CloudController::Organization.make }
-            let(:space) { VCAP::CloudController::Space.make(organization: org) }
+            let(:org) { create(:organization) }
+            let(:space) { create(:space, organization: org) }
 
             it "returns #{expected_return_value}" do
               set_current_user_as_role(
@@ -450,7 +450,7 @@ RSpec.describe BuildpacksController, type: :controller do
         expect(buildpack.reload.enabled).to be false
       end
 
-      let(:user) { VCAP::CloudController::User.make }
+      let(:user) { create(:user) }
       let(:headers) { headers_for(user) }
 
       before do
@@ -468,7 +468,7 @@ RSpec.describe BuildpacksController, type: :controller do
 
       context 'when there are model level validation failures' do
         it 'returns 422' do
-          other_buildpack = VCAP::CloudController::Buildpack.make(stack: buildpack.stack)
+          other_buildpack = create(:buildpack, stack: buildpack.stack)
           patch :update, params: { guid: buildpack.guid, name: other_buildpack.name }, as: :json
 
           expect(response).to have_http_status :unprocessable_content
@@ -478,8 +478,8 @@ RSpec.describe BuildpacksController, type: :controller do
 
       it 'updates the updatable fields' do
         buildpack
-        other_buildpack = VCAP::CloudController::Buildpack.make
-        new_stack = VCAP::CloudController::Stack.make
+        other_buildpack = create(:buildpack)
+        new_stack = create(:stack)
         new_values = {
           name: 'new-name',
           stack: new_stack.name,
@@ -515,7 +515,7 @@ RSpec.describe BuildpacksController, type: :controller do
   describe '#upload' do
     let(:stat_double) { instance_double(File::Stat, size: 2) }
     let(:test_buildpack) { VCAP::CloudController::Buildpack.create_from_hash({ name: 'upload_binary_buildpack', stack: nil, position: 0 }) }
-    let(:user) { VCAP::CloudController::User.make }
+    let(:user) { create(:user) }
     let(:uploader) { instance_double(VCAP::CloudController::BuildpackUpload, upload_async: nil) }
     let(:buildpack_bits_path) { '/tmp/buildpack_bits_path' }
     let(:buildpack_bits_name) { 'buildpack.zip' }
@@ -532,7 +532,7 @@ RSpec.describe BuildpacksController, type: :controller do
 
       context 'when the user does not have the write scope' do
         before do
-          set_current_user(VCAP::CloudController::User.make, scopes: ['cloud_controller.read'])
+          set_current_user(create(:user), scopes: ['cloud_controller.read'])
         end
 
         it 'raises an ApiError with a 403 code' do
@@ -551,8 +551,8 @@ RSpec.describe BuildpacksController, type: :controller do
 
         role_to_expected_http_response.each do |role, expected_return_value|
           context "as an #{role}" do
-            let(:org) { VCAP::CloudController::Organization.make }
-            let(:space) { VCAP::CloudController::Space.make(organization: org) }
+            let(:org) { create(:organization) }
+            let(:space) { create(:space, organization: org) }
 
             it "returns #{expected_return_value}" do
               set_current_user_as_role(
@@ -578,8 +578,8 @@ RSpec.describe BuildpacksController, type: :controller do
 
         role_to_expected_http_response.each do |role, expected_return_value|
           context "as an #{role}" do
-            let(:org) { VCAP::CloudController::Organization.make }
-            let(:space) { VCAP::CloudController::Space.make(organization: org) }
+            let(:org) { create(:organization) }
+            let(:space) { create(:space, organization: org) }
 
             it "returns #{expected_return_value}" do
               set_current_user_as_role(
@@ -624,7 +624,7 @@ RSpec.describe BuildpacksController, type: :controller do
       end
 
       context 'when the buildpack is locked' do
-        let(:bp) { VCAP::CloudController::Buildpack.make(locked: true) }
+        let(:bp) { create(:buildpack, locked: true) }
 
         it 'returns a 422 and error message that the buildpack is locked' do
           post :upload, params: { guid: bp.guid, bits_path: buildpack_bits_path, bits_name: buildpack_bits_name }.merge({}), as: :json

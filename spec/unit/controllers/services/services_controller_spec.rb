@@ -44,9 +44,9 @@ module VCAP::CloudController
       include_context 'permissions'
 
       before do
-        5.times { ServicePlan.make }
-        @obj_a = ServicePlan.make.service
-        @obj_b = ServicePlan.make.service
+        create_list(:service_plan, 5)
+        @obj_a = create(:service_plan).service
+        @obj_b = create(:service_plan).service
       end
 
       describe 'Org Level Permissions' do
@@ -104,12 +104,12 @@ module VCAP::CloudController
     end
 
     describe 'GET /v2/services/:guid/service_plans' do
-      let!(:organization) { Organization.make }
-      let!(:space) { Space.make(organization:) }
-      let!(:user) { User.make }
-      let!(:broker) { ServiceBroker.make(space:) }
-      let!(:service) { Service.make(service_broker: broker) }
-      let!(:service_plan) { ServicePlan.make(service: service, public: false) }
+      let!(:organization) { create(:organization) }
+      let!(:space) { create(:space, organization:) }
+      let!(:user) { create(:user) }
+      let!(:broker) { create(:service_broker, space:) }
+      let!(:service) { create(:service, service_broker: broker) }
+      let!(:service_plan) { create(:service_plan, service: service, public: false) }
 
       before do
         organization.add_user user
@@ -135,12 +135,12 @@ module VCAP::CloudController
 
     describe 'GET /v2/services/:guid' do
       let(:broker_name) { 'broker-1' }
-      let!(:organization) { Organization.make }
-      let!(:space) { Space.make(organization:) }
-      let!(:user) { User.make }
-      let!(:broker) { ServiceBroker.make(space: space, name: broker_name) }
-      let!(:service) { Service.make(service_broker: broker) }
-      let!(:service_plan) { ServicePlan.make(service: service, public: false) }
+      let!(:organization) { create(:organization) }
+      let!(:space) { create(:space, organization:) }
+      let!(:user) { create(:user) }
+      let!(:broker) { create(:service_broker, space: space, name: broker_name) }
+      let!(:service) { create(:service, service_broker: broker) }
+      let!(:service_plan) { create(:service_plan, service: service, public: false) }
 
       before do
         organization.add_user(user)
@@ -163,7 +163,7 @@ module VCAP::CloudController
 
     describe 'GET /v2/services' do
       let(:organization) do
-        Organization.make.tap do |org|
+        create(:organization).tap do |org|
           org.add_user(user)
           org.add_manager(user)
           org.add_billing_manager(user)
@@ -171,44 +171,44 @@ module VCAP::CloudController
         end
       end
 
-      let(:user) { VCAP::CloudController::User.make }
+      let(:user) { create(:user) }
       let(:broker_name) { 'broker-1' }
-      let(:service_broker) { ServiceBroker.make(name: broker_name) }
+      let(:service_broker) { create(:service_broker, name: broker_name) }
       before { set_current_user(user) }
 
       let!(:public_and_active) do
         opts = { active: true, long_description: Sham.long_description, service_broker: service_broker }
-        Service.make(opts).tap do |svc|
-          ServicePlan.make(public: true, active: true, service: svc)
+        create(:service, opts).tap do |svc|
+          create(:service_plan, public: true, active: true, service: svc)
         end
       end
 
       let!(:public_and_inactive) do
         opts = { active: false, long_description: Sham.long_description, service_broker: service_broker }
-        Service.make(opts).tap do |svc|
-          ServicePlan.make(public: true, active: false, service: svc)
+        create(:service, opts).tap do |svc|
+          create(:service_plan, public: true, active: false, service: svc)
         end
       end
 
       let!(:private_and_active) do
         opts = { active: true, long_description: Sham.long_description, service_broker: service_broker }
-        Service.make(opts).tap do |svc|
-          ServicePlan.make(public: false, active: true, service: svc)
+        create(:service, opts).tap do |svc|
+          create(:service_plan, public: false, active: true, service: svc)
         end
       end
 
       let!(:private_and_inactive) do
         opts = { active: false, long_description: Sham.long_description, service_broker: service_broker }
-        Service.make(opts).tap do |svc|
-          ServicePlan.make(public: false, active: false, service: svc)
+        create(:service, opts).tap do |svc|
+          create(:service_plan, public: false, active: false, service: svc)
         end
       end
 
       let!(:private_with_visibility_to_user) do
         opts = { active: true, long_description: Sham.long_description, service_broker: service_broker }
-        Service.make(opts).tap do |svc|
-          plan = ServicePlan.make(public: false, active: true, service: svc)
-          ServicePlanVisibility.make(service_plan: plan, organization: organization)
+        create(:service, opts).tap do |svc|
+          plan = create(:service_plan, public: false, active: true, service: svc)
+          create(:service_plan_visibility, service_plan: plan, organization: organization)
         end
       end
 
@@ -246,10 +246,10 @@ module VCAP::CloudController
 
       context 'with private brokers' do
         it 'returns plans visible in any space they are a member of' do
-          space = Space.make(organization:)
-          private_broker = ServiceBroker.make(space:)
-          service = Service.make(service_broker: private_broker, active: true)
-          ServicePlan.make(service:)
+          space = create(:space, organization:)
+          private_broker = create(:service_broker, space:)
+          service = create(:service, service_broker: private_broker, active: true)
+          create(:service_plan, service:)
           space.add_developer(user)
 
           get '/v2/services'
@@ -273,7 +273,7 @@ module VCAP::CloudController
       context 'when the user has an invalid auth token' do
         context 'and when the hide_marketplace_from_unauthenticated_users feature flag is disabled' do
           it 'raises an InvalidAuthToken error' do
-            set_current_user(User.make, token: :invalid_token)
+            set_current_user(create(:user), token: :invalid_token)
             get '/v2/services'
 
             expect(last_response).to have_status_code 401
@@ -287,7 +287,7 @@ module VCAP::CloudController
           end
 
           it 'continues to raise an InvalidAuthToken error' do
-            set_current_user(User.make, token: :invalid_token)
+            set_current_user(create(:user), token: :invalid_token)
             get '/v2/services'
 
             expect(last_response).to have_status_code 401
@@ -332,13 +332,13 @@ module VCAP::CloudController
     end
 
     describe 'DELETE /v2/services/:guid' do
-      let!(:service) { Service.make(:v2) }
-      let!(:service_plan) { ServicePlan.make(service:) }
-      let!(:service_instance) { ManagedServiceInstance.make(service_plan:) }
-      let!(:service_binding) { ServiceBinding.make(service_instance:) }
-      let!(:service_key) { ServiceKey.make(service_instance:) }
+      let!(:service) { create(:service, :v2) }
+      let!(:service_plan) { create(:service_plan, service:) }
+      let!(:service_instance) { create(:managed_service_instance, service_plan:) }
+      let!(:service_binding) { create(:service_binding, service_instance:) }
+      let!(:service_key) { create(:service_key, service_instance:) }
       let(:email) { 'admin@example.com' }
-      let(:user) { User.make }
+      let(:user) { create(:user) }
 
       before { set_current_user(user, { email: email, admin: true }) }
 
@@ -383,7 +383,7 @@ module VCAP::CloudController
           delete "/v2/services/#{service.guid}"
           expect(last_response).to have_status_code 401
 
-          set_current_user(User.make)
+          set_current_user(create(:user))
           delete "/v2/services/#{service.guid}"
           expect(last_response).to have_status_code 403
         end

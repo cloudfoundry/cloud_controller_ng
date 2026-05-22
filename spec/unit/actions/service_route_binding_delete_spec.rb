@@ -37,7 +37,7 @@ module VCAP::CloudController
         let(:process) { ProcessModelFactory.make(space: route.space, state: 'STARTED') }
 
         it 'notifies diego' do
-          RouteMappingModel.make(app: process.app, route: route, process_type: process.type)
+          create(:route_mapping_model, app: process.app, route: route, process_type: process.type)
 
           perform_action
 
@@ -47,8 +47,8 @@ module VCAP::CloudController
     end
 
     RSpec.describe ServiceRouteBindingDelete do
-      let(:space) { Space.make }
-      let(:route) { Route.make(space:) }
+      let(:space) { create(:space) }
+      let(:route) { create(:route, space:) }
       let(:route_service_url) { 'https://route_service_url.com' }
       let(:last_operation_type) { 'create' }
       let(:last_operation_state) { 'succeeded' }
@@ -74,18 +74,18 @@ module VCAP::CloudController
       end
 
       describe '#blocking_operation_in_progress?' do
-        let(:service_offering) { Service.make(requires: ['route_forwarding']) }
-        let(:service_plan) { ServicePlan.make(service: service_offering) }
-        let(:service_instance) { ManagedServiceInstance.make(space:, service_plan:) }
+        let(:service_offering) { create(:service, requires: ['route_forwarding']) }
+        let(:service_plan) { create(:service_plan, service: service_offering) }
+        let(:service_instance) { create(:managed_service_instance, space:, service_plan:) }
 
         it_behaves_like 'blocking operation in progress'
       end
 
       describe '#delete' do
         context 'managed service instance' do
-          let(:service_offering) { Service.make(requires: ['route_forwarding']) }
-          let(:service_plan) { ServicePlan.make(service: service_offering) }
-          let(:service_instance) { ManagedServiceInstance.make(space:, service_plan:) }
+          let(:service_offering) { create(:service, requires: ['route_forwarding']) }
+          let(:service_plan) { create(:service_plan, service: service_offering) }
+          let(:service_instance) { create(:managed_service_instance, space:, service_plan:) }
 
           it_behaves_like 'service binding deletion', RouteBinding
 
@@ -122,7 +122,7 @@ module VCAP::CloudController
         end
 
         context 'user-provided service instance' do
-          let(:service_instance) { UserProvidedServiceInstance.make(space:, route_service_url:) }
+          let(:service_instance) { create(:user_provided_service_instance, space:, route_service_url:) }
           let(:perform_action) { action.delete(binding) }
 
           it_behaves_like 'successful route binding delete'
@@ -130,9 +130,9 @@ module VCAP::CloudController
       end
 
       describe '#poll' do
-        let(:service_offering) { Service.make(requires: ['route_forwarding']) }
-        let(:service_plan) { ServicePlan.make(service: service_offering) }
-        let(:service_instance) { ManagedServiceInstance.make(space:, service_plan:) }
+        let(:service_offering) { create(:service, requires: ['route_forwarding']) }
+        let(:service_plan) { create(:service_plan, service: service_offering) }
+        let(:service_instance) { create(:managed_service_instance, space:, service_plan:) }
 
         let(:description) { Sham.description }
         let(:state) { 'in progress' }

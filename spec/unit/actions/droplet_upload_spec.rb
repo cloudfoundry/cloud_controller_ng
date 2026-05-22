@@ -7,7 +7,7 @@ module VCAP::CloudController
     let(:user_audit_info) { UserAuditInfo.new(user_email: 'user-email', user_guid: 'user_guid') }
 
     describe '#upload_async' do
-      let(:droplet) { DropletModel.make }
+      let(:droplet) { create(:droplet_model) }
       let(:message) { DropletUploadMessage.new({ 'bits_path' => '/tmp/path' }) }
       let(:config) { Config.new({ name: 'local', index: '1' }) }
       let(:user_guid) { 'gooid' }

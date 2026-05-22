@@ -5,7 +5,7 @@ module CloudFoundry
     RSpec.describe ServiceBrokerRateLimiter, isolation: :truncation do
       let(:app) { double(:app) }
       let(:logger) { double }
-      let(:instance) { VCAP::CloudController::Service.make(instances_retrievable: true) }
+      let(:instance) { create(:service, instances_retrievable: true) }
       let(:path_info) { '/v2/service_instances' }
       let(:user_guid) { SecureRandom.uuid }
       let(:user_env) { { 'cf.user_guid' => user_guid, 'PATH_INFO' => path_info } }

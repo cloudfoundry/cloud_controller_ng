@@ -5,10 +5,10 @@ RSpec.describe 'fill role_guid and timestamps for organizations_users table', is
   let(:filename) { '20191218001034_fill_guid_and_timestamps_for_organizations_users.rb' }
 
   let(:db) { Sequel::Model.db }
-  let(:user) { VCAP::CloudController::User.make }
-  let(:user_2) { VCAP::CloudController::User.make }
-  let(:user_3) { VCAP::CloudController::User.make }
-  let(:organization) { VCAP::CloudController::Organization.make }
+  let(:user) { create(:user) }
+  let(:user_2) { create(:user) }
+  let(:user_3) { create(:user) }
+  let(:organization) { create(:organization) }
   let(:tmp_migrations_dir) { Dir.mktmpdir }
 
   before do

@@ -4,11 +4,11 @@ RSpec.describe OrganizationPresenter do
   describe '#to_hash' do
     subject { OrganizationPresenter.new(org) }
 
-    let(:org) { VCAP::CloudController::Organization.make }
+    let(:org) { create(:organization) }
 
     before do
-      VCAP::CloudController::Space.make(organization: org)
-      user = VCAP::CloudController::User.make
+      create(:space, organization: org)
+      user = create(:user)
       user.add_organization org
       user.add_managed_organization org
     end

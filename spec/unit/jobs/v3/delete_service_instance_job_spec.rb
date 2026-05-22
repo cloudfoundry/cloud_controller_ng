@@ -9,10 +9,10 @@ require 'actions/v3/service_instance_delete'
 module VCAP::CloudController
   module V3
     RSpec.describe DeleteServiceInstanceJob do
-      let(:user_audit_info) { UserAuditInfo.new(user_guid: User.make.guid, user_email: 'foo@example.com') }
-      let(:service_instance) { ManagedServiceInstance.make(service_plan:) }
-      let(:service_plan) { ServicePlan.make(service: service_offering) }
-      let(:service_offering) { Service.make }
+      let(:user_audit_info) { UserAuditInfo.new(user_guid: create(:user).guid, user_email: 'foo@example.com') }
+      let(:service_instance) { create(:managed_service_instance, service_plan:) }
+      let(:service_plan) { create(:service_plan, service: service_offering) }
+      let(:service_offering) { create(:service) }
 
       it_behaves_like 'delayed job', described_class
 
@@ -76,7 +76,7 @@ module VCAP::CloudController
 
               context 'when the plan defines a duration' do
                 let(:maximum_polling_duration) { 7465 }
-                let(:service_plan) { ServicePlan.make(service: service_offering, maximum_polling_duration: maximum_polling_duration) }
+                let(:service_plan) { create(:service_plan, service: service_offering, maximum_polling_duration: maximum_polling_duration) }
 
                 it 'sets to the plan value' do
                   expect(job.maximum_duration_seconds).to eq(7465)

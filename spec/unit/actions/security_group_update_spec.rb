@@ -9,12 +9,11 @@ module VCAP::CloudController
       let(:name) { 'my-security-group' }
 
       let!(:security_group) do
-        VCAP::CloudController::SecurityGroup.make(
-          name: 'original-name',
-          rules: [{ 'protocol' => 'udp', 'ports' => '8080', 'destination' => '198.41.191.47/1' }],
-          running_default: false,
-          staging_default: true
-        )
+        create(:security_group,
+               name: 'original-name',
+               rules: [{ 'protocol' => 'udp', 'ports' => '8080', 'destination' => '198.41.191.47/1' }],
+               running_default: false,
+               staging_default: true)
       end
 
       context 'when updating a security group' do
@@ -86,7 +85,7 @@ module VCAP::CloudController
       end
 
       context 'when a uniqueness error occurs due to the requested name' do
-        let!(:original) { VCAP::CloudController::SecurityGroup.make(name:) }
+        let!(:original) { create(:security_group, name:) }
 
         it 'raises a human-friendly error' do
           expect do

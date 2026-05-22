@@ -13,9 +13,9 @@ module VCAP::CloudController
     end
 
     describe '#create' do
-      let(:space) { VCAP::CloudController::Space.make(organization: org) }
-      let(:org) { VCAP::CloudController::Organization.make }
-      let(:domain) { VCAP::CloudController::PrivateDomain.make(owning_organization: org) }
+      let(:space) { create(:space, organization: org) }
+      let(:org) { create(:organization) }
+      let(:domain) { create(:private_domain, owning_organization: org) }
 
       context 'when successful' do
         let(:message) do
@@ -221,8 +221,8 @@ module VCAP::CloudController
       end
 
       context 'when the domain has an owning org that is different from the space\'s parent org' do
-        let(:other_org) { VCAP::CloudController::Organization.make }
-        let(:inaccessible_domain) { VCAP::CloudController::PrivateDomain.make(owning_organization: other_org) }
+        let(:other_org) { create(:organization) }
+        let(:inaccessible_domain) { create(:private_domain, owning_organization: other_org) }
 
         let(:message) do
           RouteCreateMessage.new({
@@ -245,7 +245,7 @@ module VCAP::CloudController
       end
 
       context 'when the domain already has a route' do
-        let!(:existing_route) { VCAP::CloudController::Route.make(host: '', space: space, domain: domain) }
+        let!(:existing_route) { create(:route, host: '', space: space, domain: domain) }
 
         let(:message) do
           RouteCreateMessage.new({
@@ -291,10 +291,10 @@ module VCAP::CloudController
       end
 
       context 'when the space quota for routes is maxed out' do
-        let!(:space_quota_definition) { SpaceQuotaDefinition.make(total_routes: 0, organization: org) }
+        let!(:space_quota_definition) { create(:space_quota_definition, total_routes: 0, organization: org) }
         let!(:space_with_quota) do
-          Space.make(space_quota_definition: space_quota_definition,
-                     organization: org)
+          create(:space, space_quota_definition: space_quota_definition,
+                         organization: org)
         end
 
         let(:message) do
@@ -318,12 +318,12 @@ module VCAP::CloudController
       end
 
       context 'when the org quota for routes is maxed out' do
-        let!(:org_quota_definition) { QuotaDefinition.make(total_routes: 0, total_reserved_route_ports: 0) }
-        let!(:org_with_quota) { Organization.make(quota_definition: org_quota_definition) }
+        let!(:org_quota_definition) { create(:quota_definition, total_routes: 0, total_reserved_route_ports: 0) }
+        let!(:org_with_quota) { create(:organization, quota_definition: org_quota_definition) }
         let!(:space_in_org_with_quota) do
-          Space.make(organization: org_with_quota)
+          create(:space, organization: org_with_quota)
         end
-        let(:domain_in_org_with_quota) { Domain.make(owning_organization: org_with_quota) }
+        let(:domain_in_org_with_quota) { create(:domain, owning_organization: org_with_quota) }
 
         let(:message) do
           RouteCreateMessage.new({
@@ -346,7 +346,7 @@ module VCAP::CloudController
       end
 
       context 'when the FQDN is too long' do
-        let(:domain_with_long_name) { Domain.make(owning_organization: org, name: "#{'a' * 60}.#{'b' * 60}.#{'c' * 60}.#{'d' * 60}.com") }
+        let(:domain_with_long_name) { create(:domain, owning_organization: org, name: "#{'a' * 60}.#{'b' * 60}.#{'c' * 60}.#{'d' * 60}.com") }
 
         let(:message) do
           RouteCreateMessage.new({
@@ -370,7 +370,7 @@ module VCAP::CloudController
       end
 
       context 'when the domain is unscoped' do
-        let(:shared_domain) { SharedDomain.make }
+        let(:shared_domain) { create(:shared_domain) }
 
         it 'requires host not to be empty' do
           message = RouteCreateMessage.new({
@@ -493,7 +493,7 @@ module VCAP::CloudController
 
       context 'when a route already exists' do
         it 'prevents conflict with hostless route on a matching domain' do
-          Route.make(domain: domain, host: '', space: space)
+          create(:route, domain: domain, host: '', space: space)
 
           message = RouteCreateMessage.new({
                                              host: '',
@@ -513,7 +513,7 @@ module VCAP::CloudController
         end
 
         it 'prevents conflict with matching route on host' do
-          Route.make(domain: domain, host: 'a-host', space: space)
+          create(:route, domain: domain, host: 'a-host', space: space)
 
           message = RouteCreateMessage.new({
                                              host: 'a-host',
@@ -533,7 +533,7 @@ module VCAP::CloudController
         end
 
         it 'prevents conflict with matching route on path' do
-          Route.make(domain: domain, host: 'a-host', path: '/a-path', space: space)
+          create(:route, domain: domain, host: 'a-host', path: '/a-path', space: space)
 
           message = RouteCreateMessage.new({
                                              host: 'a-host',
@@ -555,7 +555,7 @@ module VCAP::CloudController
       end
 
       context 'when the domain is internal' do
-        let(:internal_domain) { SharedDomain.make(internal: true) }
+        let(:internal_domain) { create(:shared_domain, internal: true) }
 
         it 'requires host not to be a wildcard' do
           message = RouteCreateMessage.new({
@@ -616,7 +616,7 @@ module VCAP::CloudController
       end
 
       context 'when using a reserved system hostname' do
-        let(:system_domain) { SharedDomain.make }
+        let(:system_domain) { create(:shared_domain) }
 
         before do
           VCAP::CloudController::Config.config.set(:system_domain, system_domain.name)
@@ -644,7 +644,7 @@ module VCAP::CloudController
 
       describe 'ports' do
         context 'when the domain supports ports (tcp)' do
-          let(:domain) { SharedDomain.make(router_group_guid: 'some-router-group') }
+          let(:domain) { create(:shared_domain, router_group_guid: 'some-router-group') }
           let(:message) do
             RouteCreateMessage.new({
                                      port: 1234,
@@ -680,7 +680,7 @@ module VCAP::CloudController
           end
 
           context 'when a route with the same domain and port exist' do
-            let!(:duplicate_route) { Route.make(domain: domain, host: '', port: 1234, space: space) }
+            let!(:duplicate_route) { create(:route, domain: domain, host: '', port: 1234, space: space) }
 
             it 'errors to prevent creating a duplicate route' do
               expect do
@@ -702,9 +702,9 @@ module VCAP::CloudController
           end
 
           context 'when the space quota limit on reserved ports has been maxed out' do
-            let!(:space_quota_definition) { SpaceQuotaDefinition.make(total_reserved_route_ports: 0, organization: org) }
+            let!(:space_quota_definition) { create(:space_quota_definition, total_reserved_route_ports: 0, organization: org) }
             let!(:space) do
-              Space.make(space_quota_definition: space_quota_definition, organization: org)
+              create(:space, space_quota_definition: space_quota_definition, organization: org)
             end
 
             it 'raises an error with a helpful message' do
@@ -715,10 +715,10 @@ module VCAP::CloudController
           end
 
           context 'when the org quota limit on reserved ports has been maxed out' do
-            let!(:org_quota_definition) { QuotaDefinition.make(total_reserved_route_ports: 0) }
-            let!(:org_with_quota) { Organization.make(quota_definition: org_quota_definition) }
-            let!(:space) { Space.make(organization: org_with_quota) }
-            let(:domain) { Domain.make(owning_organization: org_with_quota) }
+            let!(:org_quota_definition) { create(:quota_definition, total_reserved_route_ports: 0) }
+            let!(:org_with_quota) { create(:organization, quota_definition: org_quota_definition) }
+            let!(:space) { create(:space, organization: org_with_quota) }
+            let(:domain) { create(:domain, owning_organization: org_with_quota) }
 
             it 'raises an error with a helpful message' do
               expect do

@@ -4,7 +4,7 @@ RSpec.describe VCAP::Services::ServiceClientProvider do
   describe '#provide' do
     context 'service instances' do
       context 'when the instance is a UserProvidedServiceInstance' do
-        let(:service_instance) { VCAP::CloudController::UserProvidedServiceInstance.make }
+        let(:service_instance) { create(:user_provided_service_instance) }
 
         before do
           allow(VCAP::Services::ServiceBrokers::UserProvided::Client).to receive(:new).and_call_original
@@ -17,7 +17,7 @@ RSpec.describe VCAP::Services::ServiceClientProvider do
       end
 
       context 'when the instance is a ManagedServiceInstance' do
-        let(:service_instance) { VCAP::CloudController::ManagedServiceInstance.make }
+        let(:service_instance) { create(:managed_service_instance) }
         let(:expected_attrs) do
           {
             url: service_instance.service_broker.broker_url,
@@ -38,7 +38,7 @@ RSpec.describe VCAP::Services::ServiceClientProvider do
     end
 
     context 'service brokers' do
-      let(:broker) { VCAP::CloudController::ServiceBroker.make }
+      let(:broker) { create(:service_broker) }
       let(:expected_attrs) do
         {
           url: broker.broker_url,

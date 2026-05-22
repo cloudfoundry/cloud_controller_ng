@@ -12,8 +12,8 @@ module VCAP::CloudController
       end
 
       it 'deletes associated labels' do
-        label1 = RevisionLabelModel.make(revision: revision1, key_name: 'test', value: 'bommel')
-        label2 = RevisionLabelModel.make(revision: revision2, key_name: 'test', value: 'bommel')
+        label1 = create(:revision_label_model, revision: revision1, key_name: 'test', value: 'bommel')
+        label2 = create(:revision_label_model, revision: revision2, key_name: 'test', value: 'bommel')
 
         expect do
           revision_delete
@@ -22,8 +22,8 @@ module VCAP::CloudController
       end
 
       it 'deletes associated annotations' do
-        annotation1 = RevisionAnnotationModel.make(revision: revision1, key_name: 'test', value: 'bommel')
-        annotation2 = RevisionAnnotationModel.make(revision: revision2, key_name: 'test', value: 'bommel')
+        annotation1 = create(:revision_annotation_model, revision: revision1, key_name: 'test', value: 'bommel')
+        annotation2 = create(:revision_annotation_model, revision: revision2, key_name: 'test', value: 'bommel')
 
         expect do
           revision_delete
@@ -32,8 +32,8 @@ module VCAP::CloudController
       end
 
       it 'deletes associated process commands' do
-        process_command1 = RevisionProcessCommandModel.make(revision: revision1)
-        process_command2 = RevisionProcessCommandModel.make(revision: revision2)
+        process_command1 = create(:revision_process_command_model, revision: revision1)
+        process_command2 = create(:revision_process_command_model, revision: revision2)
 
         expect do
           revision_delete
@@ -42,10 +42,10 @@ module VCAP::CloudController
       end
 
       it 'deletes associated sidecars and sidecar process types' do
-        sidecar1 = RevisionSidecarModel.make(revision: revision1, revision_sidecar_process_type_guids: nil)
-        sidecar2 = RevisionSidecarModel.make(revision: revision2, revision_sidecar_process_type_guids: nil)
-        sidecar_process_type1 = RevisionSidecarProcessTypeModel.make(revision_sidecar: sidecar1)
-        sidecar_process_type2 = RevisionSidecarProcessTypeModel.make(revision_sidecar: sidecar2)
+        sidecar1 = create(:revision_sidecar_model, :no_process_types, revision: revision1)
+        sidecar2 = create(:revision_sidecar_model, :no_process_types, revision: revision2)
+        sidecar_process_type1 = create(:revision_sidecar_process_type_model, revision_sidecar: sidecar1)
+        sidecar_process_type2 = create(:revision_sidecar_process_type_model, revision_sidecar: sidecar2)
 
         expect do
           revision_delete
@@ -54,9 +54,9 @@ module VCAP::CloudController
       end
     end
 
-    let!(:app) { AppModel.make }
-    let!(:revision1) { RevisionModel.make(app: app, process_command_guids: nil) }
-    let!(:revision2) { RevisionModel.make(app: app, process_command_guids: nil) }
+    let!(:app) { create(:app_model) }
+    let!(:revision1) { create(:revision_model, :no_commands, app: app) }
+    let!(:revision2) { create(:revision_model, :no_commands, app: app) }
 
     describe '#delete' do
       it_behaves_like 'RevisionDelete action' do

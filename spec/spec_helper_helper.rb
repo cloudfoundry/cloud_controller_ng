@@ -19,8 +19,6 @@ module SpecHelperHelper
     ENV['PB_IGNORE_DEPRECATIONS'] = 'true'
     ENV['RAILS_ENV'] ||= 'test'
 
-    require 'machinist/sequel'
-    require 'machinist/object'
     require 'rack/test'
     require 'timecop'
 
@@ -47,7 +45,14 @@ module SpecHelperHelper
     # Moving SpecBootstrap.init into the init-block means that changes in code files aren't detected.
     VCAP::CloudController::SpecBootstrap.init(do_schema_migration: !ENV['NO_DB_MIGRATION'])
 
-    Dir[File.expand_path('support/**/*.rb', File.dirname(__FILE__))].each { |file| require file }
+    # FactoryBot factory definitions live under support/factory_definitions/
+    # and are loaded by FactoryBot.find_definitions (driven by support/factories.rb).
+    # Skip them here so factories.rb (which requires factory_bot) loads first.
+    Dir[File.expand_path('support/**/*.rb', File.dirname(__FILE__))].each do |file|
+      next if file.include?('/support/factory_definitions/')
+
+      require file
+    end
 
     # each-run here?
     RSpec.configure do |rspec_config|

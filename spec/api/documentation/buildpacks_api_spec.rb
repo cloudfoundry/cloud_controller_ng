@@ -3,7 +3,7 @@ require 'rspec_api_documentation/dsl'
 
 RSpec.resource 'Buildpacks', type: %i[api legacy_api] do
   let(:admin_auth_header) { admin_headers['HTTP_AUTHORIZATION'] }
-  let!(:buildpacks) { (1..3).map { |i| VCAP::CloudController::Buildpack.make(name: "name_#{i}", position: i) } }
+  let!(:buildpacks) { (1..3).map { |i| FactoryBot.create(:buildpack, name: "name_#{i}", position: i) } }
   let(:guid) { buildpacks.first.guid }
 
   authenticated_request

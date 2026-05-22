@@ -3,9 +3,9 @@ require 'spec_helper'
 module VCAP::CloudController
   RSpec.describe TaskFetcher do
     subject(:fetcher) { TaskFetcher.new }
-    let(:app) { AppModel.make(space_guid: space.guid) }
-    let(:space) { Space.make }
-    let(:task) { TaskModel.make(app_guid: app.guid) }
+    let(:app) { create(:app_model, space: space) }
+    let(:space) { create(:space) }
+    let(:task) { create(:task_model, app: app) }
 
     describe '#fetch_for_app' do
       it 'fetches the associated task, app, space' do

@@ -2,7 +2,7 @@ require 'spec_helper'
 
 module VCAP::Services::ServiceBrokers::V2
   RSpec.describe Client do
-    let(:service_broker) { VCAP::CloudController::ServiceBroker.make }
+    let(:service_broker) { create(:service_broker) }
 
     let(:client_attrs) do
       {
@@ -117,15 +117,13 @@ module VCAP::Services::ServiceBrokers::V2
     end
 
     describe '#provision' do
-      let(:plan) { VCAP::CloudController::ServicePlan.make }
-      let(:space) { VCAP::CloudController::Space.make }
-      let(:service_instance_operation) { VCAP::CloudController::ServiceInstanceOperation.make }
+      let(:plan) { create(:service_plan) }
+      let(:space) { create(:space) }
+      let(:service_instance_operation) { create(:service_instance_operation) }
       let(:instance) do
-        VCAP::CloudController::ManagedServiceInstance.make(
-          service_plan: plan,
-          space: space,
-          name: 'instance-007'
-        )
+        create(:managed_service_instance, service_plan: plan,
+                                          space: space,
+                                          name: 'instance-007')
       end
 
       let(:response_data) do
@@ -193,16 +191,16 @@ module VCAP::Services::ServiceBrokers::V2
       end
 
       context 'when annotations are set' do
-        let!(:private_org_annotation) { VCAP::CloudController::OrganizationAnnotationModel.make(key_name: 'foo', value: 'bar', resource_guid: instance.organization.guid) }
+        let!(:private_org_annotation) { create(:organization_annotation_model, key_name: 'foo', value: 'bar', resource_guid: instance.organization.guid) }
         let!(:public_org_annotation) do
-          VCAP::CloudController::OrganizationAnnotationModel.make(key_prefix: 'pre.fix', key_name: 'foo', value: 'bar', resource_guid: instance.organization.guid)
+          create(:organization_annotation_model, key_prefix: 'pre.fix', key_name: 'foo', value: 'bar', resource_guid: instance.organization.guid)
         end
-        let!(:private_space_annotation) { VCAP::CloudController::SpaceAnnotationModel.make(key_name: 'bar', value: 'wow', space: instance.space) }
-        let!(:public_space_annotation) { VCAP::CloudController::SpaceAnnotationModel.make(key_prefix: 'pre.fix', key_name: 'bar', value: 'wow', space: instance.space) }
-        let!(:public_legacy_space_annotation) { VCAP::CloudController::SpaceAnnotationModel.make(key_name: 'pre.fix/wow', value: 'bar', space: instance.space) }
-        let!(:private_instance_annotation) { VCAP::CloudController::ServiceInstanceAnnotationModel.make(key_name: 'baz', value: 'wow', service_instance: instance) }
+        let!(:private_space_annotation) { create(:space_annotation_model, key_name: 'bar', value: 'wow', space: instance.space) }
+        let!(:public_space_annotation) { create(:space_annotation_model, key_prefix: 'pre.fix', key_name: 'bar', value: 'wow', space: instance.space) }
+        let!(:public_legacy_space_annotation) { create(:space_annotation_model, key_name: 'pre.fix/wow', value: 'bar', space: instance.space) }
+        let!(:private_instance_annotation) { create(:service_instance_annotation_model, key_name: 'baz', value: 'wow', service_instance: instance) }
         let!(:public_instance_annotation) do
-          VCAP::CloudController::ServiceInstanceAnnotationModel.make(key_prefix: 'pre.fix', key_name: 'baz', value: 'wow', service_instance: instance)
+          create(:service_instance_annotation_model, key_prefix: 'pre.fix', key_name: 'baz', value: 'wow', service_instance: instance)
         end
 
         it 'sends the annotations in the context' do
@@ -520,13 +518,11 @@ module VCAP::Services::ServiceBrokers::V2
     end
 
     describe '#fetch_service_instance_last_operation' do
-      let(:plan) { VCAP::CloudController::ServicePlan.make }
-      let(:space) { VCAP::CloudController::Space.make }
+      let(:plan) { create(:service_plan) }
+      let(:space) { create(:space) }
       let(:instance) do
-        VCAP::CloudController::ManagedServiceInstance.make(
-          service_plan: plan,
-          space: space
-        )
+        create(:managed_service_instance, service_plan: plan,
+                                          space: space)
       end
 
       let(:response_data) do
@@ -715,23 +711,19 @@ module VCAP::Services::ServiceBrokers::V2
     end
 
     describe '#update' do
-      let(:old_plan) { VCAP::CloudController::ServicePlan.make }
-      let(:new_plan) { VCAP::CloudController::ServicePlan.make }
+      let(:old_plan) { create(:service_plan) }
+      let(:new_plan) { create(:service_plan) }
 
-      let(:space) { VCAP::CloudController::Space.make }
+      let(:space) { create(:space) }
       let(:last_operation) do
-        VCAP::CloudController::ServiceInstanceOperation.make(
-          type: 'create',
-          state: 'succeeded'
-        )
+        create(:service_instance_operation, type: 'create',
+                                            state: 'succeeded')
       end
 
       let(:instance) do
-        VCAP::CloudController::ManagedServiceInstance.make(
-          service_plan: old_plan,
-          space: space,
-          name: 'instance-007'
-        )
+        create(:managed_service_instance, service_plan: old_plan,
+                                          space: space,
+                                          name: 'instance-007')
       end
 
       let(:service_plan_guid) { new_plan.guid }
@@ -804,15 +796,15 @@ module VCAP::Services::ServiceBrokers::V2
 
       context 'when annotations are set' do
         let!(:public_org_annotation1) do
-          VCAP::CloudController::OrganizationAnnotationModel.make(key_prefix: 'pre.fix', key_name: 'foo', value: 'bar', resource_guid: instance.organization.guid)
+          create(:organization_annotation_model, key_prefix: 'pre.fix', key_name: 'foo', value: 'bar', resource_guid: instance.organization.guid)
         end
         let!(:public_org_annotation2) do
-          VCAP::CloudController::OrganizationAnnotationModel.make(key_prefix: 'pre.fix', key_name: 'bar', value: 'foo', resource_guid: instance.organization.guid)
+          create(:organization_annotation_model, key_prefix: 'pre.fix', key_name: 'bar', value: 'foo', resource_guid: instance.organization.guid)
         end
-        let!(:private_org_annotation) { VCAP::CloudController::OrganizationAnnotationModel.make(key_name: 'baz', value: 'wow', resource_guid: instance.organization.guid) }
-        let!(:public_space_annotation) { VCAP::CloudController::SpaceAnnotationModel.make(key_prefix: 'pre.fix', key_name: 'bar', value: 'wow', space: instance.space) }
-        let!(:public_legacy_space_annotation) { VCAP::CloudController::SpaceAnnotationModel.make(key_name: 'pre.fix/wow', value: 'bar', space: instance.space) }
-        let!(:private_space_annotation) { VCAP::CloudController::SpaceAnnotationModel.make(key_name: 'bar', value: 'wow', space: instance.space) }
+        let!(:private_org_annotation) { create(:organization_annotation_model, key_name: 'baz', value: 'wow', resource_guid: instance.organization.guid) }
+        let!(:public_space_annotation) { create(:space_annotation_model, key_prefix: 'pre.fix', key_name: 'bar', value: 'wow', space: instance.space) }
+        let!(:public_legacy_space_annotation) { create(:space_annotation_model, key_name: 'pre.fix/wow', value: 'bar', space: instance.space) }
+        let!(:private_space_annotation) { create(:space_annotation_model, key_name: 'bar', value: 'wow', space: instance.space) }
 
         it 'sends the annotations in the context' do
           client.update(instance, new_plan, previous_values: { plan_id: '1234' })
@@ -1210,12 +1202,10 @@ module VCAP::Services::ServiceBrokers::V2
     end
 
     describe '#create_service_key' do
-      let(:instance) { VCAP::CloudController::ManagedServiceInstance.make }
+      let(:instance) { create(:managed_service_instance) }
       let(:key) do
-        VCAP::CloudController::ServiceKey.make(
-          name: 'fake-service_key',
-          service_instance: instance
-        )
+        create(:service_key, name: 'fake-service_key',
+                             service_instance: instance)
       end
 
       let(:response_data) do
@@ -1420,14 +1410,12 @@ module VCAP::Services::ServiceBrokers::V2
     end
 
     describe '#bind' do
-      let(:instance) { VCAP::CloudController::ManagedServiceInstance.make }
-      let(:app) { VCAP::CloudController::AppModel.make(space: instance.space) }
+      let(:instance) { create(:managed_service_instance) }
+      let(:app) { create(:app_model, space: instance.space) }
       let(:binding) do
-        VCAP::CloudController::ServiceBinding.make(
-          service_instance: instance,
-          app: app,
-          type: 'app'
-        )
+        create(:service_binding, service_instance: instance,
+                                 app: app,
+                                 type: 'app')
       end
       let(:arbitrary_parameters) { {} }
 
@@ -1490,15 +1478,15 @@ module VCAP::Services::ServiceBrokers::V2
 
       context 'when annotations are set' do
         let!(:public_org_annotation1) do
-          VCAP::CloudController::OrganizationAnnotationModel.make(key_prefix: 'pre.fix', key_name: 'foo', value: 'bar', resource_guid: instance.organization.guid)
+          create(:organization_annotation_model, key_prefix: 'pre.fix', key_name: 'foo', value: 'bar', resource_guid: instance.organization.guid)
         end
         let!(:public_org_annotation2) do
-          VCAP::CloudController::OrganizationAnnotationModel.make(key_prefix: 'pre.fix', key_name: 'bar', value: 'foo', resource_guid: instance.organization.guid)
+          create(:organization_annotation_model, key_prefix: 'pre.fix', key_name: 'bar', value: 'foo', resource_guid: instance.organization.guid)
         end
-        let!(:private_org_annotation) { VCAP::CloudController::OrganizationAnnotationModel.make(key_name: 'baz', value: 'wow', resource_guid: instance.organization.guid) }
-        let!(:public_space_annotation) { VCAP::CloudController::SpaceAnnotationModel.make(key_prefix: 'pre.fix', key_name: 'bar', value: 'wow', space: instance.space) }
-        let!(:public_legacy_space_annotation) { VCAP::CloudController::SpaceAnnotationModel.make(key_name: 'pre.fix/wow', value: 'bar', space: instance.space) }
-        let!(:private_space_annotation) { VCAP::CloudController::SpaceAnnotationModel.make(key_name: 'bar', value: 'wow', space: instance.space) }
+        let!(:private_org_annotation) { create(:organization_annotation_model, key_name: 'baz', value: 'wow', resource_guid: instance.organization.guid) }
+        let!(:public_space_annotation) { create(:space_annotation_model, key_prefix: 'pre.fix', key_name: 'bar', value: 'wow', space: instance.space) }
+        let!(:public_legacy_space_annotation) { create(:space_annotation_model, key_name: 'pre.fix/wow', value: 'bar', space: instance.space) }
+        let!(:private_space_annotation) { create(:space_annotation_model, key_name: 'bar', value: 'wow', space: instance.space) }
 
         it 'sends the annotations in the context' do
           client.bind(binding)
@@ -1631,9 +1619,9 @@ module VCAP::Services::ServiceBrokers::V2
           end
 
           context 'when the app has annotations' do
-            let!(:annotation1) { VCAP::CloudController::AppAnnotationModel.make(key_name: 'baz', value: 'wow', app: app) }
-            let!(:annotation2) { VCAP::CloudController::AppAnnotationModel.make(key_prefix: 'prefix-here.org', key_name: 'foo', value: 'bar', app: app) }
-            let!(:annotation3) { VCAP::CloudController::AppAnnotationModel.make(key_name: 'prefix-here.org/wow', value: 'foo', app: app) }
+            let!(:annotation1) { create(:app_annotation_model, key_name: 'baz', value: 'wow', app: app) }
+            let!(:annotation2) { create(:app_annotation_model, key_prefix: 'prefix-here.org', key_name: 'foo', value: 'bar', app: app) }
+            let!(:annotation3) { create(:app_annotation_model, key_name: 'prefix-here.org/wow', value: 'foo', app: app) }
 
             it 'sends empty annotations object' do
               client.bind(binding)
@@ -1654,7 +1642,7 @@ module VCAP::Services::ServiceBrokers::V2
         end
 
         context 'key service binding' do
-          let(:binding) { VCAP::CloudController::ServiceKey.make }
+          let(:binding) { create(:service_key) }
 
           context 'when cc_service_key_client is configured' do
             it 'includes the optional credential_client_id parameter' do
@@ -1696,7 +1684,7 @@ module VCAP::Services::ServiceBrokers::V2
         end
 
         context 'route service binding' do
-          let(:binding) { VCAP::CloudController::RouteBinding.make }
+          let(:binding) { create(:route_binding) }
 
           it 'sends route bind resource' do
             client.bind(binding)
@@ -1813,7 +1801,7 @@ module VCAP::Services::ServiceBrokers::V2
       end
 
       context 'when binding fails' do
-        let(:instance) { VCAP::CloudController::ManagedServiceInstance.make }
+        let(:instance) { create(:managed_service_instance) }
         let(:uri) { 'some-uri.com/v2/service_instances/instance-guid/service_bindings/binding-guid' }
         let(:response) { HttpResponse.new(body: nil, message: nil, code: nil) }
 
@@ -1910,13 +1898,13 @@ module VCAP::Services::ServiceBrokers::V2
         end
 
         context 'app binding' do
-          let(:binding) { VCAP::CloudController::ServiceBinding.make }
+          let(:binding) { create(:service_binding) }
 
           it_behaves_like 'binding error handling'
         end
 
         context 'key binding' do
-          let(:binding) { VCAP::CloudController::ServiceKey.make }
+          let(:binding) { create(:service_key) }
 
           it_behaves_like 'binding error handling'
         end
@@ -1924,7 +1912,7 @@ module VCAP::Services::ServiceBrokers::V2
     end
 
     describe '#unbind' do
-      let(:binding) { VCAP::CloudController::ServiceBinding.make }
+      let(:binding) { create(:service_binding) }
 
       let(:response_data) { {} }
 
@@ -2065,7 +2053,7 @@ module VCAP::Services::ServiceBrokers::V2
         end
 
         context 'for a route binding' do
-          let(:binding) { VCAP::CloudController::RouteBinding.make }
+          let(:binding) { create(:route_binding) }
 
           it 'propagates the error as a ConcurrencyError' do
             expect { client.unbind(binding) }.to raise_error(Errors::ConcurrencyError)
@@ -2075,7 +2063,7 @@ module VCAP::Services::ServiceBrokers::V2
     end
 
     describe '#deprovision' do
-      let(:instance) { VCAP::CloudController::ManagedServiceInstance.make }
+      let(:instance) { create(:managed_service_instance) }
 
       let(:response_data) { {} }
 
@@ -2213,7 +2201,7 @@ module VCAP::Services::ServiceBrokers::V2
       end
 
       context 'when the broker returns an error' do
-        let(:instance) { VCAP::CloudController::ManagedServiceInstance.make }
+        let(:instance) { create(:managed_service_instance) }
         let(:code) { 204 }
         let(:response_data) do
           { 'description' => 'Could not delete instance' }
@@ -2259,14 +2247,12 @@ module VCAP::Services::ServiceBrokers::V2
     end
 
     describe '#fetch_service_binding' do
-      let(:instance) { VCAP::CloudController::ManagedServiceInstance.make }
-      let(:app) { VCAP::CloudController::AppModel.make(space: instance.space) }
+      let(:instance) { create(:managed_service_instance) }
+      let(:app) { create(:app_model, space: instance.space) }
       let(:binding) do
-        VCAP::CloudController::ServiceBinding.make(
-          service_instance: instance,
-          app: app,
-          type: 'app'
-        )
+        create(:service_binding, service_instance: instance,
+                                 app: app,
+                                 type: 'app')
       end
 
       let(:broker_response) { HttpResponse.new(code: 200, body: { foo: 'bar' }.to_json) }
@@ -2302,7 +2288,7 @@ module VCAP::Services::ServiceBrokers::V2
     end
 
     describe '#fetch_service_instance' do
-      let(:instance) { VCAP::CloudController::ManagedServiceInstance.make }
+      let(:instance) { create(:managed_service_instance) }
       let(:broker_response) { HttpResponse.new(code: 200, body: { foo: 'bar' }.to_json) }
 
       before do
@@ -2342,8 +2328,8 @@ module VCAP::Services::ServiceBrokers::V2
           'description' => '10%'
         }
       end
-      let(:service_binding) { VCAP::CloudController::ServiceBinding.make }
-      let(:binding_operation) { VCAP::CloudController::ServiceBindingOperation.make }
+      let(:service_binding) { create(:service_binding) }
+      let(:binding_operation) { create(:service_binding_operation) }
       let(:broker_response) { HttpResponse.new(code: code, body: response_body) }
       let(:response_body) { response_data.to_json }
       let(:code) { 200 }
@@ -2391,7 +2377,7 @@ module VCAP::Services::ServiceBrokers::V2
       end
 
       context 'when the broker provides operation data' do
-        let(:binding_operation) { VCAP::CloudController::ServiceBindingOperation.make(broker_provided_operation: '123') }
+        let(:binding_operation) { create(:service_binding_operation, broker_provided_operation: '123') }
 
         it 'makes a get request with the correct path' do
           client.fetch_service_binding_last_operation(service_binding)
@@ -2461,8 +2447,8 @@ module VCAP::Services::ServiceBrokers::V2
           'description' => '10%'
         }
       end
-      let(:service_binding) { VCAP::CloudController::ServiceBinding.make }
-      let(:binding_operation) { VCAP::CloudController::ServiceBindingOperation.make }
+      let(:service_binding) { create(:service_binding) }
+      let(:binding_operation) { create(:service_binding_operation) }
 
       let(:code) { 200 }
       let(:response_body) { response_data.to_json }
@@ -2496,7 +2482,7 @@ module VCAP::Services::ServiceBrokers::V2
         end
 
         context 'when the broker provides operation data' do
-          let(:binding_operation) { VCAP::CloudController::ServiceBindingOperation.make(broker_provided_operation: '123') }
+          let(:binding_operation) { create(:service_binding_operation, broker_provided_operation: '123') }
 
           it 'passes operation data in query params' do
             client.fetch_and_handle_service_binding_last_operation(service_binding)

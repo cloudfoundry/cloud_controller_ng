@@ -2,9 +2,9 @@ require 'spec_helper'
 require 'request_spec_shared_examples'
 
 RSpec.describe 'Security_Groups Request' do
-  let(:space) { VCAP::CloudController::Space.make(guid: 'space-guid') }
+  let(:space) { create(:space, guid: 'space-guid') }
   let(:org) { space.organization }
-  let(:user) { VCAP::CloudController::User.make(guid: 'user-guid') }
+  let(:user) { create(:user, guid: 'user-guid') }
   let(:admin_header) { admin_headers_for(user) }
   let(:default_rules) do
     [
@@ -200,7 +200,7 @@ RSpec.describe 'Security_Groups Request' do
   end
 
   describe 'POST /v3/security_groups/:security_group_guid/relationships/running_spaces' do
-    let(:security_group) { VCAP::CloudController::SecurityGroup.make }
+    let(:security_group) { create(:security_group) }
     let(:api_call) { ->(user_headers) { post "/v3/security_groups/#{security_group.guid}/relationships/running_spaces", params.to_json, user_headers } }
 
     context 'bind running security group to a space' do
@@ -246,7 +246,7 @@ RSpec.describe 'Security_Groups Request' do
           security_group.add_staging_space(space)
         end
 
-        let(:another_space) { VCAP::CloudController::Space.make(guid: 'another-space-guid') }
+        let(:another_space) { create(:space, guid: 'another-space-guid') }
         let(:params) do
           {
             data: [
@@ -365,7 +365,7 @@ RSpec.describe 'Security_Groups Request' do
   end
 
   describe 'POST /v3/security_groups/:security_group_guid/relationships/staging_spaces' do
-    let(:security_group) { VCAP::CloudController::SecurityGroup.make }
+    let(:security_group) { create(:security_group) }
     let(:api_call) { ->(user_headers) { post "/v3/security_groups/#{security_group.guid}/relationships/staging_spaces", params.to_json, user_headers } }
 
     context 'bind staging security group to a space' do
@@ -411,7 +411,7 @@ RSpec.describe 'Security_Groups Request' do
           security_group.add_staging_space(another_space)
         end
 
-        let(:another_space) { VCAP::CloudController::Space.make(guid: 'another-space-guid') }
+        let(:another_space) { create(:space, guid: 'another-space-guid') }
         let(:params) do
           {
             data: [
@@ -531,9 +531,9 @@ RSpec.describe 'Security_Groups Request' do
 
   describe 'GET /v3/security_groups' do
     let(:api_call) { ->(user_headers) { get '/v3/security_groups', nil, user_headers } }
-    let(:security_group_1) { VCAP::CloudController::SecurityGroup.make(guid: 'security_group_1_guid') }
-    let(:security_group_2) { VCAP::CloudController::SecurityGroup.make(guid: 'security_group_2_guid') }
-    let(:security_group_3) { VCAP::CloudController::SecurityGroup.make(running_default: true, guid: 'security_group_3_guid') }
+    let(:security_group_1) { create(:security_group, guid: 'security_group_1_guid') }
+    let(:security_group_2) { create(:security_group, guid: 'security_group_2_guid') }
+    let(:security_group_3) { create(:security_group, running_default: true, guid: 'security_group_3_guid') }
 
     before do
       security_group_2.add_staging_space(space)
@@ -804,7 +804,7 @@ RSpec.describe 'Security_Groups Request' do
     let(:api_call) { ->(user_headers) { get "/v3/security_groups/#{security_group.guid}", nil, user_headers } }
 
     context 'getting a security group NOT globally enabled NOR associated with any spaces' do
-      let(:security_group) { VCAP::CloudController::SecurityGroup.make }
+      let(:security_group) { create(:security_group) }
 
       let(:expected_response) do
         {
@@ -852,7 +852,7 @@ RSpec.describe 'Security_Groups Request' do
     end
 
     context 'getting a security group NOT globally enabled, associated with spaces' do
-      let(:security_group) { VCAP::CloudController::SecurityGroup.make }
+      let(:security_group) { create(:security_group) }
 
       before do
         security_group.add_staging_space(space)
@@ -924,7 +924,7 @@ RSpec.describe 'Security_Groups Request' do
     end
 
     context 'getting a security group globally enabled' do
-      let(:security_group) { VCAP::CloudController::SecurityGroup.make(running_default: true) }
+      let(:security_group) { create(:security_group, running_default: true) }
 
       let(:expected_response) do
         {
@@ -973,10 +973,10 @@ RSpec.describe 'Security_Groups Request' do
   describe 'PATCH /v3/security_groups/:guid' do
     let(:api_call) { ->(user_headers) { patch "/v3/security_groups/#{security_group.guid}", params.to_json, user_headers } }
     let!(:security_group) do
-      VCAP::CloudController::SecurityGroup.make({
-                                                  name: 'original-name',
-                                                  rules: []
-                                                })
+      create(:security_group, {
+               name: 'original-name',
+               rules: []
+             })
     end
 
     let(:params) do
@@ -997,7 +997,7 @@ RSpec.describe 'Security_Groups Request' do
     end
 
     context 'when the security group only globally enabled' do
-      let(:security_group) { VCAP::CloudController::SecurityGroup.make(running_default: true) }
+      let(:security_group) { create(:security_group, running_default: true) }
 
       let(:expected_response) do
         {
@@ -1181,7 +1181,7 @@ RSpec.describe 'Security_Groups Request' do
     end
 
     context 'when updating to a name that is already taken' do
-      let!(:another_security_group) { VCAP::CloudController::SecurityGroup.make(name: 'already-taken') }
+      let!(:another_security_group) { create(:security_group, name: 'already-taken') }
       let(:params) { { name: 'already-taken' } }
 
       it 'returns a 422 with a helpful message' do
@@ -1232,7 +1232,7 @@ RSpec.describe 'Security_Groups Request' do
   end
 
   describe 'DELETE /v3/security_groups/:security_group_guid/relationships/running_spaces/:space_guid' do
-    let(:security_group) { VCAP::CloudController::SecurityGroup.make }
+    let(:security_group) { create(:security_group) }
     let(:api_call) { ->(user_headers) { delete "/v3/security_groups/#{security_group.guid}/relationships/running_spaces/#{space.guid}", nil, user_headers } }
 
     context 'unbinding a running security group from a space' do
@@ -1331,7 +1331,7 @@ RSpec.describe 'Security_Groups Request' do
   end
 
   describe 'DELETE /v3/security_groups/:security_group_guid/relationships/staging_spaces/:space_guid' do
-    let(:security_group) { VCAP::CloudController::SecurityGroup.make }
+    let(:security_group) { create(:security_group) }
     let(:api_call) { ->(user_headers) { delete "/v3/security_groups/#{security_group.guid}/relationships/staging_spaces/#{space.guid}", nil, user_headers } }
 
     context 'unbinding a staging security group from a space' do
@@ -1450,7 +1450,7 @@ RSpec.describe 'Security_Groups Request' do
     end
 
     context 'when the security group is only globally enabled' do
-      let(:security_group) { VCAP::CloudController::SecurityGroup.make(running_default: true) }
+      let(:security_group) { create(:security_group, running_default: true) }
 
       let(:expected_codes_and_responses) do
         h = Hash.new({ code: 403 }.freeze)
@@ -1462,7 +1462,7 @@ RSpec.describe 'Security_Groups Request' do
     end
 
     context 'when the security group is applied to a space but not globally enabled' do
-      let(:security_group) { VCAP::CloudController::SecurityGroup.make }
+      let(:security_group) { create(:security_group) }
 
       let(:expected_codes_and_responses) do
         h = Hash.new({ code: 403 }.freeze)
@@ -1481,7 +1481,7 @@ RSpec.describe 'Security_Groups Request' do
     end
 
     context 'when the security group is neither globally enabled nor associated with any spaces' do
-      let(:security_group) { VCAP::CloudController::SecurityGroup.make }
+      let(:security_group) { create(:security_group) }
 
       let(:expected_codes_and_responses) do
         h = Hash.new({ code: 404 }.freeze)

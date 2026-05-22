@@ -21,7 +21,7 @@ module VCAP::CloudController
         let(:droplet_destinations) do
           { stack.to_sym => '/value/from/config/based/on/stack' }
         end
-        let(:task) { TaskModel.make command: command, name: 'my-task' }
+        let(:task) { create(:task_model, command: command, name: 'my-task') }
         let(:command) { 'echo "hello"' }
 
         let(:generated_environment) do

@@ -14,9 +14,9 @@ module VCAP::CloudController
     end
 
     describe '#create' do
-      let(:app) { AppModel.make }
+      let(:app) { create(:app_model) }
       let(:space) { app.space }
-      let(:droplet) { DropletModel.make(app_guid: app.guid, state: DropletModel::STAGED_STATE, process_types: { 'web' => 'start app' }) }
+      let(:droplet) { create(:droplet_model, app: app, state: DropletModel::STAGED_STATE, process_types: { 'web' => 'start app' }, set_as_current_droplet: false) }
       let(:command) { 'bundle exec rake panda' }
       let(:name) { 'my_task_name' }
       let(:message) do
@@ -243,7 +243,7 @@ module VCAP::CloudController
       end
 
       context 'when the app does not have an assigned droplet' do
-        let(:app_with_no_droplet) { AppModel.make }
+        let(:app_with_no_droplet) { create(:app_model) }
 
         it 'raises a NoAssignedDroplet error' do
           expect do
@@ -274,7 +274,7 @@ module VCAP::CloudController
       end
 
       context 'when a custom droplet is specified' do
-        let(:custom_droplet) { DropletModel.make(app_guid: app.guid, state: DropletModel::STAGED_STATE) }
+        let(:custom_droplet) { create(:droplet_model, app: app, state: DropletModel::STAGED_STATE, set_as_current_droplet: false) }
 
         it 'creates the task with the specified droplet' do
           task = task_create_action.create(app, message, user_audit_info, droplet: custom_droplet)
@@ -294,11 +294,11 @@ module VCAP::CloudController
       end
 
       describe 'process templates' do
-        let(:process) { VCAP::CloudController::ProcessModel.make(app: app, command: 'start') }
+        let(:process) { create(:process_model, app: app, command: 'start') }
 
         describe 'users' do
           context 'when there is a template and no user provided' do
-            let(:process) { VCAP::CloudController::ProcessModel.make(app: app, user: 'ContainerUser') }
+            let(:process) { create(:process_model, app: app, user: 'ContainerUser') }
             let(:message) { TaskCreateMessage.new name: name, disk_in_mb: 2048, memory_in_mb: 1024, template: { process: { guid: process.guid } } }
 
             it 'uses the user from the template' do
@@ -308,7 +308,7 @@ module VCAP::CloudController
           end
 
           context 'when there is a template and a user provided' do
-            let(:process) { VCAP::CloudController::ProcessModel.make(app: app, user: 'ContainerUser') }
+            let(:process) { create(:process_model, app: app, user: 'ContainerUser') }
             let(:message) { TaskCreateMessage.new name: name, user: 'vcap', template: { process: { guid: process.guid } } }
 
             it 'uses the user from the message' do
@@ -318,7 +318,7 @@ module VCAP::CloudController
           end
 
           context 'when there is a template without a user and no user is provided' do
-            let(:process) { VCAP::CloudController::ProcessModel.make(app:) }
+            let(:process) { create(:process_model, app:) }
             let(:message) { TaskCreateMessage.new name: name, template: { process: { guid: process.guid } } }
 
             it 'uses the user from the message' do
@@ -348,7 +348,7 @@ module VCAP::CloudController
           end
 
           context 'when the template process has no specified command and the message has no command requested' do
-            let(:process) { VCAP::CloudController::ProcessModel.make(app: app, type: 'web') }
+            let(:process) { create(:process_model, app: app, type: 'web') }
             let(:message) { TaskCreateMessage.new name: name, disk_in_mb: 2048, memory_in_mb: 1024, template: { process: { guid: process.guid } } }
 
             it 'uses the detected command from the process\'s droplet' do
@@ -364,7 +364,7 @@ module VCAP::CloudController
           end
 
           context 'when there is a template and the message does NOT specify memory_in_mb' do
-            let(:process) { VCAP::CloudController::ProcessModel.make(app: app, type: 'web', memory: 23) }
+            let(:process) { create(:process_model, app: app, type: 'web', memory: 23) }
             let(:message) { TaskCreateMessage.new(name: name, command: 'ok', disk_in_mb: 2048, template: { process: { guid: process.guid } }) }
 
             it 'uses the memory from the template process' do
@@ -374,7 +374,7 @@ module VCAP::CloudController
           end
 
           context 'when there is a template and the message specifies memory_in_mb' do
-            let(:process) { VCAP::CloudController::ProcessModel.make(app: app, type: 'web', memory: 23) }
+            let(:process) { create(:process_model, app: app, type: 'web', memory: 23) }
             let(:message) { TaskCreateMessage.new(name: name, command: 'ok', memory_in_mb: 2048, template: { process: { guid: process.guid } }) }
 
             it 'uses the memory from the template process' do
@@ -390,7 +390,7 @@ module VCAP::CloudController
           end
 
           context 'when there is a template and the message does not specify log_rate_limit_in_bytes_per_second' do
-            let(:process) { VCAP::CloudController::ProcessModel.make(app: app, type: 'web', log_rate_limit: 23) }
+            let(:process) { create(:process_model, app: app, type: 'web', log_rate_limit: 23) }
             let(:message) { TaskCreateMessage.new(name: name, command: 'ok', disk_in_mb: 2048, template: { process: { guid: process.guid } }) }
 
             it 'uses the memory from the template process' do
@@ -400,7 +400,7 @@ module VCAP::CloudController
           end
 
           context 'when there is a template and the message specifies log_rate_limit_in_bytes_per_second' do
-            let(:process) { VCAP::CloudController::ProcessModel.make(app: app, type: 'web', log_rate_limit: 23) }
+            let(:process) { create(:process_model, app: app, type: 'web', log_rate_limit: 23) }
             let(:message) { TaskCreateMessage.new(name: name, command: 'ok', log_rate_limit_in_bytes_per_second: 2048, template: { process: { guid: process.guid } }) }
 
             it 'uses the memory from the message' do
@@ -416,7 +416,7 @@ module VCAP::CloudController
           end
 
           context 'when there is a template and the message does NOT specify disk_in_mb' do
-            let(:process) { VCAP::CloudController::ProcessModel.make(app: app, type: 'web', disk_quota: 23) }
+            let(:process) { create(:process_model, app: app, type: 'web', disk_quota: 23) }
             let(:message) { TaskCreateMessage.new(name: name, command: 'ok', memory_in_mb: 2048, template: { process: { guid: process.guid } }) }
 
             it 'uses the memory from the template process' do
@@ -426,7 +426,7 @@ module VCAP::CloudController
           end
 
           context 'when there is a template and the message specifies disk_in_mb' do
-            let(:process) { VCAP::CloudController::ProcessModel.make(app: app, type: 'web', disk_quota: 23) }
+            let(:process) { create(:process_model, app: app, type: 'web', disk_quota: 23) }
             let(:message) { TaskCreateMessage.new(name: name, command: 'ok', disk_in_mb: 2048, template: { process: { guid: process.guid } }) }
 
             it 'uses the memory from the template process' do

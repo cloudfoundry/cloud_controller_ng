@@ -7,7 +7,7 @@ module VCAP::CloudController
     let(:user_email) { 'guy@place.io' }
     let(:user_audit_info) { UserAuditInfo.new(user_email:, user_guid:) }
 
-    let(:app) { AppModel.make(desired_state: 'STARTED') }
+    let(:app) { create(:app_model, desired_state: 'STARTED') }
     let!(:process1) { ProcessModelFactory.make(app: app, state: 'STARTED', type: 'this') }
     let!(:process2) { ProcessModelFactory.make(app: app, state: 'STARTED', type: 'that') }
 

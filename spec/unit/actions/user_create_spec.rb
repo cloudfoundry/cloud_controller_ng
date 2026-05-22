@@ -24,7 +24,7 @@ module VCAP::CloudController
     describe '#create' do
       context 'when there is a sequel validation error' do
         context 'when the error is a uniqueness error' do
-          let(:existing_user) { User.make }
+          let(:existing_user) { create(:user) }
           let(:message) { UserCreateMessage.new({ guid: existing_user.guid, metadata: metadata }) }
 
           it 'returns an informative error message' do

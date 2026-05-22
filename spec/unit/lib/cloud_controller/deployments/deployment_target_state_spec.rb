@@ -4,12 +4,12 @@ require 'cloud_controller/deployments/deployment_target_state'
 module VCAP::CloudController
   RSpec.describe DeploymentTargetState do
     subject(:target_state) { DeploymentTargetState.new(app, message) }
-    let(:app) { AppModel.make(environment_variables: { 'foo' => 'bar' }) }
-    let(:droplet) { DropletModel.make(app: app, process_types: { 'web' => 'command' }) }
+    let(:app) { create(:app_model, environment_variables: { 'foo' => 'bar' }) }
+    let(:droplet) { create(:droplet_model, app: app, process_types: { 'web' => 'command' }, set_as_current_droplet: false) }
 
     describe 'droplet' do
       context 'revision provided' do
-        let(:revision) { RevisionModel.make(droplet:) }
+        let(:revision) { create(:revision_model, droplet:) }
         let(:message) do
           DeploymentCreateMessage.new({
                                         relationships: { app: { data: { guid: app.guid } } },
@@ -107,7 +107,7 @@ module VCAP::CloudController
     describe 'environment_variables' do
       context 'a revision is provided' do
         let(:revision) do
-          RevisionModel.make(droplet: droplet, environment_variables: { 'baz' => 'qux' })
+          create(:revision_model, droplet: droplet, environment_variables: { 'baz' => 'qux' })
         end
         let(:message) do
           DeploymentCreateMessage.new({
@@ -137,7 +137,7 @@ module VCAP::CloudController
 
     describe 'rollback_target_revision' do
       context 'a revision is provided' do
-        let(:revision) { RevisionModel.make(droplet:) }
+        let(:revision) { create(:revision_model, droplet:) }
         let(:message) do
           DeploymentCreateMessage.new({
                                         relationships: { app: { data: { guid: app.guid } } },
@@ -203,11 +203,11 @@ module VCAP::CloudController
                                         revision: { guid: revision.guid }
                                       })
         end
-        let(:revision) { RevisionModel.make(droplet:, app:) }
+        let(:revision) { create(:revision_model, droplet:, app:) }
 
         context 'assigning environment variables' do
           let(:revision) do
-            RevisionModel.make(droplet: droplet, app: app, environment_variables: { 'baz' => 'qux' })
+            create(:revision_model, droplet: droplet, app: app, environment_variables: { 'baz' => 'qux' })
           end
 
           it 'assigns environment variables to the app' do
@@ -219,12 +219,10 @@ module VCAP::CloudController
 
         context 'assigning sidecars to the app' do
           let!(:revision_sidecar) do
-            RevisionSidecarModel.make(
-              revision: revision,
-              name: 'sidecar-name',
-              command: 'sidecar-command',
-              memory: 12
-            )
+            create(:revision_sidecar_model, revision: revision,
+                                            name: 'sidecar-name',
+                                            command: 'sidecar-command',
+                                            memory: 12)
           end
 
           it 'assigns the sidecar to the app' do
@@ -239,7 +237,7 @@ module VCAP::CloudController
         end
 
         context 'removing sidecars from the app' do
-          let!(:sidecar) { SidecarModel.make(app:) }
+          let!(:sidecar) { create(:sidecar_model, app:) }
 
           it 'removes the sidecars from the app' do
             subject.apply_to_app(app, user_audit_info)

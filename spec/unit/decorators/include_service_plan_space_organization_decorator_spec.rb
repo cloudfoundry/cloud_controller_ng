@@ -4,17 +4,17 @@ require 'decorators/include_service_plan_space_organization_decorator'
 module VCAP::CloudController
   RSpec.describe IncludeServicePlanSpaceOrganizationDecorator do
     describe '.decorate' do
-      let(:org1) { Organization.make(created_at: Time.now.utc - 1.second) }
-      let(:org2) { Organization.make }
+      let(:org1) { create(:organization, created_at: Time.now.utc - 1.second) }
+      let(:org2) { create(:organization) }
 
-      let(:space1) { Space.make(organization: org1, created_at: Time.now.utc - 1.second) }
-      let(:space2) { Space.make(organization: org2) }
+      let(:space1) { create(:space, organization: org1, created_at: Time.now.utc - 1.second) }
+      let(:space2) { create(:space, organization: org2) }
 
       let(:space_scoped_plan_1) { generate_space_scoped_plan(space1) }
       let(:space_scoped_plan_2) { generate_space_scoped_plan(space2) }
 
       context 'global plan' do
-        let(:plans) { [ServicePlan.make(public: true)] }
+        let(:plans) { [create(:service_plan, public: true)] }
 
         it 'does not add space or orgs' do
           hash = described_class.decorate({}, plans)
@@ -58,7 +58,7 @@ module VCAP::CloudController
       end
 
       context 'when plans share an org' do
-        let(:space3) { Space.make(organization: org2) }
+        let(:space3) { create(:space, organization: org2) }
         let(:space_scoped_plan_same_org) { generate_space_scoped_plan(space3) }
 
         it 'does not duplicate the org' do
@@ -80,8 +80,8 @@ module VCAP::CloudController
   end
 
   def generate_space_scoped_plan(space)
-    broker = VCAP::CloudController::ServiceBroker.make(space:)
-    offering = VCAP::CloudController::Service.make(service_broker: broker)
-    VCAP::CloudController::ServicePlan.make(service: offering)
+    broker = create(:service_broker, space:)
+    offering = create(:service, service_broker: broker)
+    create(:service_plan, service: offering)
   end
 end

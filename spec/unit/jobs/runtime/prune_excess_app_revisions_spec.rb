@@ -14,14 +14,14 @@ module VCAP::CloudController
       end
 
       describe '#perform' do
-        let(:app) { AppModel.make(name: 'app') }
+        let(:app) { create(:app_model, name: 'app') }
 
         it 'deletes all the revisions over the limit' do
           expect(RevisionModel.count).to eq(0)
 
           total = 50
           (1..50).each do |i|
-            RevisionModel.make(version: i, app: app, created_at: Time.now - total + i)
+            create(:revision_model, version: i, app: app, created_at: Time.now - total + i)
           end
 
           job.perform
@@ -42,7 +42,7 @@ module VCAP::CloudController
 
             total = 50
             (1..50).each do |i|
-              RevisionModel.make(version: i, app: app, created_at: Time.now - total + i)
+              create(:revision_model, version: i, app: app, created_at: Time.now - total + i)
             end
 
             job.perform
@@ -59,9 +59,9 @@ module VCAP::CloudController
 
           total = 50
           (1..50).each do |i|
-            revision = RevisionModel.make(version: i, app: app, created_at: Time.now - total + i)
-            RevisionAnnotationModel.make(revision: revision, key_name: i, value: i)
-            RevisionLabelModel.make(revision: revision, key_name: i, value: i)
+            revision = create(:revision_model, version: i, app: app, created_at: Time.now - total + i)
+            create(:revision_annotation_model, revision: revision, key_name: i, value: i)
+            create(:revision_label_model, revision: revision, key_name: i, value: i)
           end
 
           job.perform
@@ -79,7 +79,7 @@ module VCAP::CloudController
 
           process_commands = []
           50.times do |_i|
-            revision = RevisionModel.make(app:)
+            revision = create(:revision_model, app:)
             process_commands << revision.process_commands
           end
           process_commands.flatten!
@@ -93,8 +93,8 @@ module VCAP::CloudController
         end
 
         context 'multiple apps' do
-          let(:app_the_second) { AppModel.make(name: 'app_the_second') }
-          let(:app_the_third) { AppModel.make(name: 'app_the_third') }
+          let(:app_the_second) { create(:app_model, name: 'app_the_second') }
+          let(:app_the_third) { create(:app_model, name: 'app_the_third') }
 
           it 'prunes revisions on multiple apps' do
             expect(RevisionModel.count).to eq(0)
@@ -102,7 +102,7 @@ module VCAP::CloudController
             [app, app_the_second, app_the_third].each_with_index do |current_app, app_index|
               total = 50
               (1..total).each do |i|
-                RevisionModel.make(version: i + (1000 * app_index), app: current_app, created_at: Time.now - total + i)
+                create(:revision_model, version: i + (1000 * app_index), app: current_app, created_at: Time.now - total + i)
               end
             end
 
@@ -120,7 +120,7 @@ module VCAP::CloudController
         end
 
         context 'apps without revisions' do
-          let!(:app_without_revisions) { AppModel.make }
+          let!(:app_without_revisions) { create(:app_model) }
           let(:fake_logger) { instance_double(Steno::Logger, info: nil) }
 
           before do

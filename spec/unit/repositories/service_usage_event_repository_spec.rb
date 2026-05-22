@@ -12,7 +12,7 @@ module VCAP::CloudController
 
       describe '#find' do
         context 'when the event exists' do
-          let(:event) { ServiceUsageEvent.make }
+          let(:event) { create(:service_usage_event) }
 
           it 'returns the event' do
             expect(repository.find(event.guid)).to eq(event)
@@ -30,7 +30,7 @@ module VCAP::CloudController
         let(:custom_state) { 'CUSTOM' }
 
         context 'with managed service instance' do
-          let(:service_instance) { ManagedServiceInstance.make }
+          let(:service_instance) { create(:managed_service_instance) }
 
           it 'creates an event which matches the service instance and custom state' do
             event = repository.create_from_service_instance(service_instance, custom_state)
@@ -63,7 +63,7 @@ module VCAP::CloudController
         end
 
         context 'with user provided service instance' do
-          let(:service_instance) { UserProvidedServiceInstance.make }
+          let(:service_instance) { create(:user_provided_service_instance) }
 
           it 'creates an event if service instance does not have a service plan' do
             event = repository.create_from_service_instance(service_instance, custom_state)
@@ -76,13 +76,9 @@ module VCAP::CloudController
 
       describe '#purge_and_reseed_service_instances!!', isolation: :truncation do
         before do
-          3.times do
-            ManagedServiceInstance.make
-          end
+          create_list(:managed_service_instance, 3)
 
-          3.times do
-            UserProvidedServiceInstance.make
-          end
+          create_list(:user_provided_service_instance, 3)
 
           ManagedServiceInstance.each do |service_instance|
             service_broker = service_instance.service.service_broker
@@ -155,7 +151,7 @@ module VCAP::CloudController
       end
 
       describe '#delete_events_older_than' do
-        let!(:service_instance) { ManagedServiceInstance.make }
+        let!(:service_instance) { create(:managed_service_instance) }
         let(:cutoff_age_in_days) { 1 }
 
         before do

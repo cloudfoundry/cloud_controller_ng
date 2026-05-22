@@ -5,13 +5,13 @@ module VCAP::CloudController
   RSpec.describe RouteUnshare do
     let(:route_share) { RouteShare.new }
     let(:route_unshare) { RouteUnshare.new }
-    let(:route) { Route.make }
-    let(:target_space1) { Space.make }
-    let(:target_space2) { Space.make }
+    let(:route) { create(:route) }
+    let(:target_space1) { create(:space) }
+    let(:target_space2) { create(:space) }
     let(:user_audit_info) { UserAuditInfo.new(user_guid: 'user-guid-1', user_email: 'user@email.com') }
 
     describe '#unshare' do
-      let(:target_space3) { Space.make }
+      let(:target_space3) { create(:space) }
 
       before do
         allow_any_instance_of(Repositories::RouteEventRepository).to receive(:record_route_unshare)

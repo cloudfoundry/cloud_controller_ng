@@ -5,7 +5,7 @@ module VCAP::CloudController
     it { is_expected.to validates_includes DropletModel::DROPLET_STATES, :state, allow_missing: true }
 
     describe '#blobstore_key' do
-      let(:droplet) { DropletModel.make(droplet_hash: droplet_hash, app: nil) }
+      let(:droplet) { create(:droplet_model, droplet_hash: droplet_hash, app: nil) }
 
       context 'when the droplet has been uploaded' do
         let(:droplet_hash) { 'foobar' }
@@ -26,7 +26,7 @@ module VCAP::CloudController
 
     describe '#staged?' do
       context 'when the droplet has been staged' do
-        let!(:droplet_model) { DropletModel.make(state: 'STAGED', app: nil) }
+        let!(:droplet_model) { create(:droplet_model, state: 'STAGED', app: nil) }
 
         it 'returns true' do
           expect(droplet_model.staged?).to be true
@@ -34,7 +34,7 @@ module VCAP::CloudController
       end
 
       context 'when the droplet has not been staged' do
-        let!(:droplet_model) { DropletModel.make(state: 'STAGING', app: nil) }
+        let!(:droplet_model) { create(:droplet_model, state: 'STAGING', app: nil) }
 
         it 'returns false' do
           expect(droplet_model.staged?).to be false
@@ -43,7 +43,7 @@ module VCAP::CloudController
     end
 
     describe '#mark_as_staged' do
-      let!(:droplet_model) { DropletModel.make(app: nil) }
+      let!(:droplet_model) { create(:droplet_model, app: nil) }
 
       it 'changes the droplet state to STAGED' do
         droplet_model.mark_as_staged
@@ -52,7 +52,7 @@ module VCAP::CloudController
     end
 
     describe 'process_types' do
-      let(:droplet_model) { DropletModel.make(app: nil) }
+      let(:droplet_model) { create(:droplet_model, app: nil) }
 
       it 'is a persistable hash' do
         info                        = { web: 'started', worker: 'started' }
@@ -70,7 +70,7 @@ module VCAP::CloudController
       end
 
       context 'when there is buildpack_lifecycle_data associated to the droplet' do
-        let(:droplet_model) { DropletModel.make(app: nil) }
+        let(:droplet_model) { create(:droplet_model, app: nil) }
 
         it 'returns the string "buildpack"' do
           expect(droplet_model.lifecycle_type).to eq('buildpack')
@@ -78,7 +78,7 @@ module VCAP::CloudController
       end
 
       context 'when there is cnb_lifecycle_data associated to the droplet' do
-        let(:droplet_model) { DropletModel.make(:cnb, app: nil) }
+        let(:droplet_model) { create(:droplet_model, :cnb, app: nil) }
 
         it 'returns the string "cnb"' do
           expect(droplet_model.lifecycle_type).to eq('cnb')
@@ -86,7 +86,7 @@ module VCAP::CloudController
       end
 
       context 'when there is no lifecycle data associated to the droplet' do
-        let(:droplet_model) { DropletModel.make(:docker, app: nil) }
+        let(:droplet_model) { create(:droplet_model, :docker, app: nil) }
 
         it 'returns the string "docker"' do
           expect(droplet_model.lifecycle_type).to eq('docker')
@@ -96,13 +96,13 @@ module VCAP::CloudController
 
     describe '#before_create' do
       it 'inherits lifecycle_type from app if not set' do
-        app = AppModel.make(:cnb)
+        app = create(:app_model, :cnb)
         droplet = DropletModel.create(app: app, state: DropletModel::STAGING_STATE)
         expect(droplet[:lifecycle_type]).to eq('cnb')
       end
 
       it 'uses explicit lifecycle_type if set' do
-        app = AppModel.make
+        app = create(:app_model)
         droplet = DropletModel.create(app: app, state: DropletModel::STAGING_STATE, lifecycle_type: 'docker')
         expect(droplet[:lifecycle_type]).to eq('docker')
       end
@@ -111,14 +111,14 @@ module VCAP::CloudController
     describe 'validations' do
       it 'validates lifecycle_type is one of buildpack, cnb, or docker' do
         expect do
-          DropletModel.make(lifecycle_type: 'invalid')
+          create(:droplet_model, lifecycle_type: 'invalid')
         end.to raise_error(Sequel::ValidationFailed, /lifecycle_type/)
       end
 
       it 'accepts valid lifecycle_type values' do
         %w[buildpack cnb docker].each do |type|
           expect do
-            DropletModel.make(lifecycle_type: type)
+            create(:droplet_model, lifecycle_type: type)
           end.not_to raise_error
         end
       end
@@ -126,7 +126,7 @@ module VCAP::CloudController
 
     describe '#lifecycle_data' do
       context 'buildpack_lifecycle_data' do
-        let!(:droplet_model) { DropletModel.make(app: nil) }
+        let!(:droplet_model) { create(:droplet_model, app: nil) }
 
         it 'returns a buildpack lifecycle data model' do
           expect(droplet_model.lifecycle_data).to be_a(BuildpackLifecycleDataModel)
@@ -142,7 +142,7 @@ module VCAP::CloudController
       end
 
       context 'cnb_lifecycle_data' do
-        let!(:droplet_model) { DropletModel.make(:cnb, app: nil) }
+        let!(:droplet_model) { create(:droplet_model, :cnb, app: nil) }
 
         it 'returns a cnb lifecycle data model' do
           expect(droplet_model.lifecycle_data).to be_a(CNBLifecycleDataModel)
@@ -158,7 +158,7 @@ module VCAP::CloudController
       end
 
       context 'neither buildpack_lifecycle_data, nor cnb_lifecycle_data' do
-        let(:droplet_model) { DropletModel.make(:docker, app: nil) }
+        let(:droplet_model) { create(:droplet_model, :docker, app: nil) }
 
         it 'returns a docker lifecycle data model' do
           expect(droplet_model.lifecycle_data).to be_a(DockerLifecycleDataModel)
@@ -169,7 +169,7 @@ module VCAP::CloudController
     end
 
     describe '#set_buildpack_receipt' do
-      let!(:droplet_model) { DropletModel.make(state: 'STAGED', app: nil) }
+      let!(:droplet_model) { create(:droplet_model, state: 'STAGED', app: nil) }
 
       it 'records the output of the detect script' do
         droplet_model.set_buildpack_receipt(buildpack_key: nil, requested_buildpack: nil, detect_output: 'detect-output')
@@ -177,7 +177,7 @@ module VCAP::CloudController
       end
 
       describe 'admin buildpack' do
-        let(:buildpack) { Buildpack.make }
+        let(:buildpack) { create(:buildpack) }
         let(:buildpack_key) { buildpack.key }
 
         it 'records the admin buildpack info' do
@@ -217,7 +217,7 @@ module VCAP::CloudController
     end
 
     describe '#fail_to_stage!' do
-      subject(:droplet) { DropletModel.make(state: DropletModel::STAGING_STATE, app: nil) }
+      subject(:droplet) { create(:droplet_model, state: DropletModel::STAGING_STATE, app: nil) }
 
       it 'sets the state to FAILED' do
         expect { droplet.fail_to_stage! }.to change(droplet, :state).to(DropletModel::FAILED_STATE)
@@ -273,8 +273,8 @@ module VCAP::CloudController
     end
 
     describe '#droplet_checksum' do
-      let!(:droplet_model_with_both) { DropletModel.make(sha256_checksum: 'foo', droplet_hash: 'bar', app: nil) }
-      let!(:droplet_model_with_only_sha1) { DropletModel.make(sha256_checksum: nil, droplet_hash: 'baz', app: nil) }
+      let!(:droplet_model_with_both) { create(:droplet_model, sha256_checksum: 'foo', droplet_hash: 'bar', app: nil) }
+      let!(:droplet_model_with_only_sha1) { create(:droplet_model, sha256_checksum: nil, droplet_hash: 'baz', app: nil) }
 
       it 'returns the sha256_checksum when present' do
         expect(droplet_model_with_both.checksum).to eq('foo')
@@ -286,20 +286,16 @@ module VCAP::CloudController
     end
 
     describe '#labels' do
-      let!(:droplet) { DropletModel.make(app: nil) }
+      let!(:droplet) { create(:droplet_model, app: nil) }
       let!(:label) do
-        VCAP::CloudController::DropletLabelModel.make(
-          key_name: 'potato',
-          value: 'spielgasse',
-          resource_guid: droplet.guid
-        )
+        create(:droplet_label_model, key_name: 'potato',
+                                     value: 'spielgasse',
+                                     resource_guid: droplet.guid)
       end
       let!(:annotation) do
-        VCAP::CloudController::DropletAnnotationModel.make(
-          key_name: 'vegetable',
-          value: 'asparagus',
-          resource_guid: droplet.guid
-        )
+        create(:droplet_annotation_model, key_name: 'vegetable',
+                                          value: 'asparagus',
+                                          resource_guid: droplet.guid)
       end
 
       it 'can find the associated labels' do
@@ -312,11 +308,11 @@ module VCAP::CloudController
     end
 
     describe '#docker_user' do
-      let(:droplet_model) { DropletModel.make }
+      let(:droplet_model) { create(:droplet_model) }
 
       context 'when the droplet belongs to a Docker lifecycle app' do
         let(:droplet_execution_metadata) { '{"entrypoint":["/image-entrypoint.sh"],"user":"cnb"}' }
-        let(:droplet_model) { DropletModel.make(:docker, execution_metadata: droplet_execution_metadata) }
+        let(:droplet_model) { create(:droplet_model, :docker, execution_metadata: droplet_execution_metadata) }
 
         context 'when the droplet execution metadata specifies a user' do
           it 'returns the specified user' do

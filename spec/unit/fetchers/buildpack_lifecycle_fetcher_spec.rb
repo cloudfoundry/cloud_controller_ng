@@ -6,12 +6,12 @@ module VCAP::CloudController
     let(:fetcher) { BuildpackLifecycleFetcher.new }
 
     describe '#fetch' do
-      let!(:stack) { Stack.make }
-      let!(:stack2) { Stack.make }
+      let!(:stack) { create(:stack) }
+      let!(:stack2) { create(:stack) }
 
-      let!(:buildpack) { Buildpack.make(name: 'buildpack-1', stack: stack.name) }
-      let!(:buildpack2) { Buildpack.make(name: 'buildpack-2', stack: stack.name) }
-      let!(:buildpack3) { Buildpack.make(name: 'buildpack-2', stack: stack2.name) }
+      let!(:buildpack) { create(:buildpack, name: 'buildpack-1', stack: stack.name) }
+      let!(:buildpack2) { create(:buildpack, name: 'buildpack-2', stack: stack.name) }
+      let!(:buildpack3) { create(:buildpack, name: 'buildpack-2', stack: stack2.name) }
 
       it 'returns the stack and buildpack for the given stack' do
         returned_hash = BuildpackLifecycleFetcher.fetch([buildpack2.name, buildpack.name, 'http://buildpack.example.com'], stack.name)
@@ -24,8 +24,8 @@ module VCAP::CloudController
 
       context 'buildpacks with unknown stack exist' do
         context 'only buildpack with nil stack exists' do
-          let!(:stack3) { Stack.make }
-          let!(:buildpack4) { Buildpack.make(:nil_stack, name: 'buildpack-3') }
+          let!(:stack3) { create(:stack) }
+          let!(:buildpack4) { create(:buildpack, :nil_stack, name: 'buildpack-3') }
 
           it 'returns the stack and buildpack' do
             returned_hash = BuildpackLifecycleFetcher.fetch(['buildpack-3'], stack3.name)
@@ -38,7 +38,7 @@ module VCAP::CloudController
         end
 
         context 'buildpack with nil stack and matching stack both exist' do
-          let!(:buildpack4) { Buildpack.make(:nil_stack, name: 'buildpack-2') }
+          let!(:buildpack4) { create(:buildpack, :nil_stack, name: 'buildpack-2') }
 
           it 'chooses the buildpack with non-nil stack' do
             returned_hash = BuildpackLifecycleFetcher.fetch([buildpack2.name, buildpack.name, 'http://buildpack.example.com'], stack.name)

@@ -2,7 +2,7 @@ require 'spec_helper'
 
 module VCAP::CloudController
   RSpec.describe CNBLifecycleDataModel do
-    subject(:lifecycle_data) { CNBLifecycleDataModel.make([]) }
+    subject(:lifecycle_data) { create(:cnb_lifecycle_data_model) }
 
     describe 'buildpack_lifecycle_buildpacks association' do
       it 'orders by id via the default_order_by_id extension' do
@@ -22,10 +22,10 @@ module VCAP::CloudController
 
     describe '#buildpacks' do
       before do
-        Buildpack.make(name: 'another-buildpack')
-        Buildpack.make(name: 'new-buildpack')
-        Buildpack.make(name: 'ruby')
-        Buildpack.make(name: 'some-buildpack')
+        create(:buildpack, name: 'another-buildpack')
+        create(:buildpack, name: 'new-buildpack')
+        create(:buildpack, name: 'ruby')
+        create(:buildpack, name: 'some-buildpack')
       end
 
       context 'when passed in nil' do
@@ -173,8 +173,8 @@ module VCAP::CloudController
 
     describe '#valid?' do
       it 'cannot be associated with both an app and a build' do
-        build = BuildModel.make
-        app = AppModel.make
+        build = create(:build_model)
+        app = create(:app_model)
         lifecycle_data.build = build
         lifecycle_data.app = app
         expect(lifecycle_data.valid?).to be(false)
@@ -182,8 +182,8 @@ module VCAP::CloudController
       end
 
       it 'cannot be associated with both an app and a droplet' do
-        droplet = DropletModel.make
-        app = AppModel.make
+        droplet = create(:droplet_model)
+        app = create(:app_model)
         lifecycle_data.droplet = droplet
         lifecycle_data.app = app
         expect(lifecycle_data.valid?).to be(false)
@@ -191,7 +191,7 @@ module VCAP::CloudController
       end
 
       it 'cannot contain invalid buildpacks' do
-        app = AppModel.make
+        app = create(:app_model)
         lifecycle_data.app = app
         lifecycle_data.buildpacks = [nil, nil]
         expect(lifecycle_data.valid?).to be(false)
@@ -200,7 +200,7 @@ module VCAP::CloudController
       end
 
       it 'adds CNBLifecyleBuildpack errors to the BuildpackLifecycleBuildpacksDataModels' do
-        app = AppModel.make
+        app = create(:app_model)
         lifecycle_data.app = app
         lifecycle_data.buildpacks = ['https://example.com', 'invalid_buildpack_name']
         lifecycle_data.buildpack_lifecycle_buildpacks.each { |b| b.cnb_lifecycle_data = lifecycle_data }
@@ -211,7 +211,7 @@ module VCAP::CloudController
       end
 
       it 'is valid' do
-        app = AppModel.make
+        app = create(:app_model)
         lifecycle_data.app = app
         lifecycle_data.buildpacks = ['docker://gcr.io/acme', 'https://example.com']
         expect(lifecycle_data.valid?).to be(true)
@@ -220,21 +220,21 @@ module VCAP::CloudController
 
     describe 'associations' do
       it 'can be associated with a droplet' do
-        droplet = DropletModel.make
+        droplet = create(:droplet_model)
         lifecycle_data.droplet = droplet
         lifecycle_data.save
         expect(lifecycle_data.reload.droplet).to eq(droplet)
       end
 
       it 'can be associated with apps' do
-        app = AppModel.make
+        app = create(:app_model)
         lifecycle_data.app = app
         lifecycle_data.save
         expect(lifecycle_data.reload.app).to eq(app)
       end
 
       it 'can be associated with a build' do
-        build = BuildModel.make
+        build = create(:build_model)
         lifecycle_data.build = build
         lifecycle_data.save
         expect(lifecycle_data.reload.build).to eq(build)

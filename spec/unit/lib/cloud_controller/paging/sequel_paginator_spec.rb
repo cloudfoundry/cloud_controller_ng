@@ -10,13 +10,13 @@ module VCAP::CloudController
 
     describe '#get_page' do
       let(:dataset) { AppModel.dataset }
-      let!(:space) { Space.make }
-      let!(:app_model1) { AppModel.make(space:) }
-      let!(:app_model2) { AppModel.make }
-      let!(:app_model3) { AppModel.make }
-      let!(:app_model4) { AppModel.make }
-      let!(:space_manager_model) { SpaceManager.make }
-      let!(:space_developer_model) { SpaceDeveloper.make }
+      let!(:space) { create(:space) }
+      let!(:app_model1) { create(:app_model, space:) }
+      let!(:app_model2) { create(:app_model) }
+      let!(:app_model3) { create(:app_model) }
+      let!(:app_model4) { create(:app_model) }
+      let!(:space_manager_model) { create(:space_manager) }
+      let!(:space_developer_model) { create(:space_developer) }
       let(:page) { 1 }
       let(:per_page) { 1 }
 
@@ -63,7 +63,7 @@ module VCAP::CloudController
       end
 
       it 'works with a multi table result set' do
-        PackageModel.make(app: app_model1)
+        create(:package_model, app: app_model1)
         options = { page:, per_page: }
         pagination_options = PaginationOptions.new(options)
         new_dataset = dataset.join(PackageModel.table_name, "#{PackageModel.table_name}__app_guid": :"#{AppModel.table_name}__guid")
@@ -144,10 +144,10 @@ module VCAP::CloudController
       end
 
       it 'orders by secondary_default_order_by if using default order_by' do
-        Space.make(guid: '1')
-        Space.make(guid: '2')
-        Space.make(guid: '3')
-        Space.make(guid: '4')
+        create(:space, guid: '1')
+        create(:space, guid: '2')
+        create(:space, guid: '3')
+        create(:space, guid: '4')
         options = { page: page, per_page: 4, order_direction: 'asc' }
         app_model1.update(guid: '1', space_guid: '2', name: 'yourapp')
         app_model2.update(guid: '2', space_guid: '1', name: 'yourapp')
@@ -166,10 +166,10 @@ module VCAP::CloudController
       end
 
       it 'does not order by secondary_default_order_by if order_by is set' do
-        Space.make(guid: '1')
-        Space.make(guid: '2')
-        Space.make(guid: '3')
-        Space.make(guid: '4')
+        create(:space, guid: '1')
+        create(:space, guid: '2')
+        create(:space, guid: '3')
+        create(:space, guid: '4')
         options = { page: page, order_by: 'name', per_page: 4, order_direction: 'asc' }
         app_model1.update(guid: '1', space_guid: '2', name: 'yourapp')
         app_model2.update(guid: '2', space_guid: '1', name: 'yourapp')
@@ -294,10 +294,10 @@ module VCAP::CloudController
 
       context 'events table' do
         let(:dataset) { Event.dataset }
-        let!(:event_1) { Event.make(guid: '1', created_at: '2022-12-20T10:47:01Z') }
-        let!(:event_2) { Event.make(guid: '2', created_at: '2022-12-20T10:47:02Z') }
-        let!(:event_3) { Event.make(guid: '3', created_at: '2022-12-20T10:47:03Z') }
-        let!(:event_4) { Event.make(guid: '4', created_at: '2022-12-20T10:47:04Z') }
+        let!(:event_1) { create(:event, guid: '1', created_at: '2022-12-20T10:47:01Z') }
+        let!(:event_2) { create(:event, guid: '2', created_at: '2022-12-20T10:47:02Z') }
+        let!(:event_3) { create(:event, guid: '3', created_at: '2022-12-20T10:47:03Z') }
+        let!(:event_4) { create(:event, guid: '4', created_at: '2022-12-20T10:47:04Z') }
 
         it 'does not use window function' do
           options = { page:, per_page: }
@@ -313,10 +313,10 @@ module VCAP::CloudController
 
       context 'AppUsageEvents table' do
         before do
-          AppUsageEvent.make(guid: '1', created_at: '2022-12-20T10:47:01Z')
-          AppUsageEvent.make(guid: '2', created_at: '2022-12-20T10:47:02Z')
-          AppUsageEvent.make(guid: '3', created_at: '2022-12-20T10:47:03Z')
-          AppUsageEvent.make(guid: '4', created_at: '2022-12-20T10:47:04Z')
+          create(:app_usage_event, guid: '1', created_at: '2022-12-20T10:47:01Z')
+          create(:app_usage_event, guid: '2', created_at: '2022-12-20T10:47:02Z')
+          create(:app_usage_event, guid: '3', created_at: '2022-12-20T10:47:03Z')
+          create(:app_usage_event, guid: '4', created_at: '2022-12-20T10:47:04Z')
         end
 
         it 'does not use window function' do
@@ -333,10 +333,10 @@ module VCAP::CloudController
 
       context 'enable_paginate_window config flag' do
         let(:dataset) { AppModel.dataset }
-        let!(:app_1) { AppModel.make(guid: '1', created_at: '2024-05-15T17:23:01Z') }
-        let!(:app_2) { AppModel.make(guid: '2', created_at: '2024-05-15T17:23:02Z') }
-        let!(:app_3) { AppModel.make(guid: '3', created_at: '2024-05-15T17:23:03Z') }
-        let!(:app_4) { AppModel.make(guid: '4', created_at: '2024-05-15T17:23:04Z') }
+        let!(:app_1) { create(:app_model, guid: '1', created_at: '2024-05-15T17:23:01Z') }
+        let!(:app_2) { create(:app_model, guid: '2', created_at: '2024-05-15T17:23:02Z') }
+        let!(:app_3) { create(:app_model, guid: '3', created_at: '2024-05-15T17:23:03Z') }
+        let!(:app_4) { create(:app_model, guid: '4', created_at: '2024-05-15T17:23:04Z') }
 
         context 'not defined' do
           it 'uses window function if supported' do

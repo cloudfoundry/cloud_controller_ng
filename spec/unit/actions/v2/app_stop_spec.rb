@@ -6,7 +6,7 @@ module VCAP::CloudController
   RSpec.describe V2::AppStop do
     let(:cancel_action) { instance_double(StagingCancel, cancel: nil) }
 
-    let(:app) { AppModel.make(desired_state: 'STARTED') }
+    let(:app) { create(:app_model, desired_state: 'STARTED') }
     let!(:process1) { ProcessModelFactory.make(app: app, state: 'STARTED', type: 'this') }
     let!(:process2) { ProcessModelFactory.make(app: app, state: 'STARTED', type: 'that') }
 
@@ -30,7 +30,7 @@ module VCAP::CloudController
       end
 
       describe 'when there are builds staging' do
-        before { BuildModel.make(app: app, state: BuildModel::STAGING_STATE) }
+        before { create(:build_model, app: app, state: BuildModel::STAGING_STATE) }
 
         it 'does things' do
           V2::AppStop.stop(app, cancel_action)

@@ -215,7 +215,7 @@ module CloudController::Packager
 
         context 'when the resource_matching feature flag is disabled' do
           before do
-            VCAP::CloudController::FeatureFlag.make(name: 'resource_matching', enabled: false)
+            create(:feature_flag, name: 'resource_matching', enabled: false)
           end
 
           it 'does not upload any app bits to the app bit cache' do

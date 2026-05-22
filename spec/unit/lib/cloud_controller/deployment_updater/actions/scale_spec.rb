@@ -6,29 +6,25 @@ module VCAP::CloudController
     subject(:scale_action) { DeploymentUpdater::Actions::Scale.new(deployment, logger, target_total_instance_count) }
     let(:target_total_instance_count) { 6 }
 
-    let(:app) { AppModel.make(droplet: droplet, revisions_enabled: true) }
-    let(:droplet) { DropletModel.make }
+    let(:app) { create(:app_model, droplet: droplet, revisions_enabled: true) }
+    let(:droplet) { create(:droplet_model) }
     let!(:web_process) do
-      ProcessModel.make(
-        instances: current_web_instances,
-        created_at: 1.day.ago,
-        guid: 'guid-original',
-        app: app
-      )
+      create(:process_model, instances: current_web_instances,
+                             created_at: 1.day.ago,
+                             guid: 'guid-original',
+                             app: app)
     end
-    let!(:route_mapping) { RouteMappingModel.make(app: web_process.app, process_type: web_process.type) }
+    let!(:route_mapping) { create(:route_mapping_model, app: web_process.app, process_type: web_process.type) }
     let!(:deploying_web_process) do
-      ProcessModel.make(
-        app: web_process.app,
-        type: ProcessTypes::WEB,
-        instances: current_deploying_instances,
-        guid: 'guid-final',
-        revision: revision,
-        state: ProcessModel::STOPPED
-      )
+      create(:process_model, app: web_process.app,
+                             type: ProcessTypes::WEB,
+                             instances: current_deploying_instances,
+                             guid: 'guid-final',
+                             revision: revision,
+                             state: ProcessModel::STOPPED)
     end
-    let(:revision) { RevisionModel.make(app: app, droplet: droplet, version: 300) }
-    let!(:deploying_route_mapping) { RouteMappingModel.make(app: web_process.app, process_type: deploying_web_process.type) }
+    let(:revision) { create(:revision_model, app: app, droplet: droplet, version: 300) }
+    let!(:deploying_route_mapping) { create(:route_mapping_model, app: web_process.app, process_type: deploying_web_process.type) }
     let(:space) { web_process.space }
     let(:current_web_instances) { 6 }
     let(:current_deploying_instances) { 0 }
@@ -36,12 +32,10 @@ module VCAP::CloudController
     let(:state) { DeploymentModel::DEPLOYING_STATE }
 
     let(:deployment) do
-      DeploymentModel.make(
-        app: web_process.app,
-        deploying_web_process: deploying_web_process,
-        state: state,
-        max_in_flight: max_in_flight
-      )
+      create(:deployment_model, app: web_process.app,
+                                deploying_web_process: deploying_web_process,
+                                state: state,
+                                max_in_flight: max_in_flight)
     end
 
     let(:max_in_flight) { 1 }
@@ -100,12 +94,10 @@ module VCAP::CloudController
 
     context 'when the max_in_flight is set to 2' do
       let(:deployment) do
-        DeploymentModel.make(
-          app: web_process.app,
-          deploying_web_process: deploying_web_process,
-          state: 'DEPLOYING',
-          max_in_flight: 2
-        )
+        create(:deployment_model, app: web_process.app,
+                                  deploying_web_process: deploying_web_process,
+                                  state: 'DEPLOYING',
+                                  max_in_flight: 2)
       end
 
       it 'scales up the new web process by two' do
@@ -128,12 +120,10 @@ module VCAP::CloudController
     context 'when max_in_flight is larger than the number of remaining desired instances' do
       let(:current_deploying_instances) { 5 }
       let(:deployment) do
-        DeploymentModel.make(
-          app: web_process.app,
-          deploying_web_process: deploying_web_process,
-          state: 'DEPLOYING',
-          max_in_flight: 5
-        )
+        create(:deployment_model, app: web_process.app,
+                                  deploying_web_process: deploying_web_process,
+                                  state: 'DEPLOYING',
+                                  max_in_flight: 5)
       end
 
       let(:current_web_instances) { 1 }
@@ -157,12 +147,10 @@ module VCAP::CloudController
 
     context 'when the max_in_flight is more than the total number of process instances' do
       let(:deployment) do
-        DeploymentModel.make(
-          app: web_process.app,
-          deploying_web_process: deploying_web_process,
-          state: 'DEPLOYING',
-          max_in_flight: 100
-        )
+        create(:deployment_model, app: web_process.app,
+                                  deploying_web_process: deploying_web_process,
+                                  state: 'DEPLOYING',
+                                  max_in_flight: 100)
       end
 
       it 'scales up the new web process by the maximum number' do
@@ -187,12 +175,10 @@ module VCAP::CloudController
       let(:target_total_instance_count) { 6 }
 
       let(:droplet) do
-        DropletModel.make(
-          process_types: {
-            'clock' => 'droplet_clock_command',
-            'worker' => 'droplet_worker_command'
-          }
-        )
+        create(:droplet_model, process_types: {
+                 'clock' => 'droplet_clock_command',
+                 'worker' => 'droplet_worker_command'
+               })
       end
 
       subject(:scale_action) { DeploymentUpdater::Actions::Scale.new(deployment, logger, target_total_instance_count, interim_desired_instance_count) }
@@ -200,13 +186,11 @@ module VCAP::CloudController
       let(:current_deploying_instances) { interim_desired_instance_count }
 
       let!(:interim_deploying_web_process) do
-        ProcessModel.make(
-          app: web_process.app,
-          created_at: 1.hour.ago,
-          type: ProcessTypes::WEB,
-          instances: 1,
-          guid: 'guid-interim'
-        )
+        create(:process_model, app: web_process.app,
+                               created_at: 1.hour.ago,
+                               type: ProcessTypes::WEB,
+                               instances: 1,
+                               guid: 'guid-interim')
       end
 
       it 'returns true and leaves the deployment in a deploying state' do
@@ -229,13 +213,11 @@ module VCAP::CloudController
       let(:target_total_instance_count) { 6 }
 
       let!(:interim_deploying_web_process) do
-        ProcessModel.make(
-          app: web_process.app,
-          created_at: 1.hour.ago,
-          type: ProcessTypes::WEB,
-          instances: 3,
-          guid: 'guid-interim'
-        )
+        create(:process_model, app: web_process.app,
+                               created_at: 1.hour.ago,
+                               type: ProcessTypes::WEB,
+                               instances: 3,
+                               guid: 'guid-interim')
       end
 
       it 'does not destroy the web process, but scales it to 0' do
@@ -251,12 +233,10 @@ module VCAP::CloudController
 
       context 'when the max_in_flight is set to 10' do
         let(:deployment) do
-          DeploymentModel.make(
-            app: web_process.app,
-            deploying_web_process: deploying_web_process,
-            state: 'DEPLOYING',
-            max_in_flight: 10
-          )
+          create(:deployment_model, app: web_process.app,
+                                    deploying_web_process: deploying_web_process,
+                                    state: 'DEPLOYING',
+                                    max_in_flight: 10)
         end
 
         it 'does not destroy the web process, but scales it to 0' do
@@ -269,30 +249,24 @@ module VCAP::CloudController
     context 'when the oldest web process will be at zero instances' do
       let(:current_deploying_instances) { 3 }
       let!(:web_process) do
-        ProcessModel.make(
-          guid: 'web_process',
-          instances: 0,
-          app: app,
-          created_at: 1.day.ago - 11,
-          type: ProcessTypes::WEB
-        )
+        create(:process_model, guid: 'web_process',
+                               instances: 0,
+                               app: app,
+                               created_at: 1.day.ago - 11,
+                               type: ProcessTypes::WEB)
       end
       let!(:oldest_web_process_with_instances) do
-        ProcessModel.make(
-          guid: 'oldest_web_process_with_instances',
-          instances: 1,
-          app: app,
-          created_at: 1.day.ago - 10,
-          type: ProcessTypes::WEB
-        )
+        create(:process_model, guid: 'oldest_web_process_with_instances',
+                               instances: 1,
+                               app: app,
+                               created_at: 1.day.ago - 10,
+                               type: ProcessTypes::WEB)
       end
       let!(:other_web_process_with_instances) do
-        ProcessModel.make(
-          instances: 10,
-          app: app,
-          created_at: 1.hour.ago,
-          type: ProcessTypes::WEB
-        )
+        create(:process_model, instances: 10,
+                               app: app,
+                               created_at: 1.hour.ago,
+                               type: ProcessTypes::WEB)
       end
 
       it 'destroys the oldest web process and ignores the original web process' do
@@ -309,30 +283,24 @@ module VCAP::CloudController
       let(:max_in_flight) { 4 }
 
       let!(:web_process) do
-        ProcessModel.make(
-          guid: 'web_process',
-          instances: 10,
-          app: app,
-          created_at: 1.day.ago - 11,
-          type: ProcessTypes::WEB
-        )
+        create(:process_model, guid: 'web_process',
+                               instances: 10,
+                               app: app,
+                               created_at: 1.day.ago - 11,
+                               type: ProcessTypes::WEB)
       end
       let!(:oldest_web_process_with_instances) do
-        ProcessModel.make(
-          guid: 'oldest_web_process_with_instances',
-          instances: 10,
-          app: app,
-          created_at: 1.day.ago - 10,
-          type: ProcessTypes::WEB
-        )
+        create(:process_model, guid: 'oldest_web_process_with_instances',
+                               instances: 10,
+                               app: app,
+                               created_at: 1.day.ago - 10,
+                               type: ProcessTypes::WEB)
       end
       let!(:other_web_process_with_instances) do
-        ProcessModel.make(
-          instances: 10,
-          app: app,
-          created_at: 1.day.ago - 9,
-          type: ProcessTypes::WEB
-        )
+        create(:process_model, instances: 10,
+                               app: app,
+                               created_at: 1.day.ago - 9,
+                               type: ProcessTypes::WEB)
       end
 
       it 'scales down interim proceses so all instances equal original instance count + max in flight' do
@@ -390,30 +358,24 @@ module VCAP::CloudController
       let(:max_in_flight) { 4 }
 
       let!(:web_process) do
-        ProcessModel.make(
-          guid: 'web_process',
-          instances: 1,
-          app: app,
-          created_at: 1.day.ago - 11,
-          type: ProcessTypes::WEB
-        )
+        create(:process_model, guid: 'web_process',
+                               instances: 1,
+                               app: app,
+                               created_at: 1.day.ago - 11,
+                               type: ProcessTypes::WEB)
       end
       let!(:oldest_web_process_with_instances) do
-        ProcessModel.make(
-          guid: 'oldest_web_process_with_instances',
-          instances: 1,
-          app: app,
-          created_at: 1.day.ago - 10,
-          type: ProcessTypes::WEB
-        )
+        create(:process_model, guid: 'oldest_web_process_with_instances',
+                               instances: 1,
+                               app: app,
+                               created_at: 1.day.ago - 10,
+                               type: ProcessTypes::WEB)
       end
       let!(:other_web_process_with_instances) do
-        ProcessModel.make(
-          instances: 1,
-          app: app,
-          created_at: 1.day.ago - 10,
-          type: ProcessTypes::WEB
-        )
+        create(:process_model, instances: 1,
+                               app: app,
+                               created_at: 1.day.ago - 10,
+                               type: ProcessTypes::WEB)
       end
 
       it 'doesnt try to scale up or down the iterim processes' do
@@ -655,13 +617,11 @@ module VCAP::CloudController
 
     describe 'during an upgrade with leftover legacy webish processes' do
       let!(:deploying_web_process) do
-        ProcessModel.make(
-          app: web_process.app,
-          type: 'web-deployment-guid-legacy',
-          instances: current_deploying_instances,
-          guid: 'guid-legacy',
-          revision: revision
-        )
+        create(:process_model, app: web_process.app,
+                               type: 'web-deployment-guid-legacy',
+                               instances: current_deploying_instances,
+                               guid: 'guid-legacy',
+                               revision: revision)
       end
 
       it 'scales up the coerced web process by one' do
@@ -674,12 +634,10 @@ module VCAP::CloudController
 
       context 'when the max_in_flight is set to 10' do
         let(:deployment) do
-          DeploymentModel.make(
-            app: web_process.app,
-            deploying_web_process: deploying_web_process,
-            state: 'DEPLOYING',
-            max_in_flight: 10
-          )
+          create(:deployment_model, app: web_process.app,
+                                    deploying_web_process: deploying_web_process,
+                                    state: 'DEPLOYING',
+                                    max_in_flight: 10)
         end
 
         it 'scales up the coerced web process by the maximum original web process count' do
@@ -694,20 +652,16 @@ module VCAP::CloudController
 
     context 'when there is an interim deployment that has been SUPERSEDED (CANCELED)' do
       let!(:interim_canceling_web_process) do
-        ProcessModel.make(
-          app: app,
-          created_at: 1.hour.ago,
-          type: ProcessTypes::WEB,
-          instances: 1,
-          guid: 'guid-canceling'
-        )
+        create(:process_model, app: app,
+                               created_at: 1.hour.ago,
+                               type: ProcessTypes::WEB,
+                               instances: 1,
+                               guid: 'guid-canceling')
       end
       let!(:interim_canceled_superseded_deployment) do
-        DeploymentModel.make(
-          deploying_web_process: interim_canceling_web_process,
-          state: 'CANCELED',
-          status_reason: 'SUPERSEDED'
-        )
+        create(:deployment_model, deploying_web_process: interim_canceling_web_process,
+                                  state: 'CANCELED',
+                                  status_reason: 'SUPERSEDED')
       end
 
       it 'scales the canceled web process to zero' do
@@ -731,12 +685,10 @@ module VCAP::CloudController
 
     describe 'interim_desired_instance_count' do
       let(:deployment) do
-        DeploymentModel.make(
-          app: web_process.app,
-          deploying_web_process: deploying_web_process,
-          state: 'DEPLOYING',
-          max_in_flight: 100
-        )
+        create(:deployment_model, app: web_process.app,
+                                  deploying_web_process: deploying_web_process,
+                                  state: 'DEPLOYING',
+                                  max_in_flight: 100)
       end
 
       context 'when not passed in' do

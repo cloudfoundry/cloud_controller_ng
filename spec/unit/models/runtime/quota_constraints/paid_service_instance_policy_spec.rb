@@ -1,14 +1,14 @@
 require 'spec_helper'
 
 RSpec.describe PaidServiceInstancePolicy do
-  let(:org) { VCAP::CloudController::Organization.make quota_definition: quota }
-  let(:space) { VCAP::CloudController::Space.make organization: org }
-  let(:basic_service_plan) { VCAP::CloudController::ServicePlan.make(free: true) }
-  let(:paid_service_plan) { VCAP::CloudController::ServicePlan.make(free: false) }
+  let(:org) { create(:organization, quota_definition: quota) }
+  let(:space) { create(:space, organization: org) }
+  let(:basic_service_plan) { create(:service_plan, free: true) }
+  let(:paid_service_plan) { create(:service_plan, free: false) }
   let(:service_instance) do
-    VCAP::CloudController::ManagedServiceInstance.make_unsaved space: space, service_plan: @service_plan
+    build(:managed_service_instance, space: space, service_plan: @service_plan)
   end
-  let(:quota) { VCAP::CloudController::QuotaDefinition.make non_basic_services_allowed: }
+  let(:quota) { create(:quota_definition, non_basic_services_allowed:) }
   let(:error_name) { :random_error_name }
 
   let(:policy) { PaidServiceInstancePolicy.new(service_instance, quota, error_name) }

@@ -31,9 +31,9 @@ module VCAP::CloudController::Metrics
 
       describe 'number of tasks' do
         it 'updates the number of running tasks' do
-          VCAP::CloudController::TaskModel.make(state: VCAP::CloudController::TaskModel::RUNNING_STATE)
+          create(:task_model, state: VCAP::CloudController::TaskModel::RUNNING_STATE)
           VCAP::CloudController::TaskModel::TASK_STATES.each do |state|
-            VCAP::CloudController::TaskModel.make(state:)
+            create(:task_model, state:)
           end
 
           periodic_updater.update_task_stats
@@ -44,9 +44,9 @@ module VCAP::CloudController::Metrics
       end
 
       it 'updates the total memory allocated to tasks' do
-        VCAP::CloudController::TaskModel.make(state: VCAP::CloudController::TaskModel::RUNNING_STATE, memory_in_mb: 512)
+        create(:task_model, state: VCAP::CloudController::TaskModel::RUNNING_STATE, memory_in_mb: 512)
         VCAP::CloudController::TaskModel::TASK_STATES.each do |state|
-          VCAP::CloudController::TaskModel.make(state: state, memory_in_mb: 1)
+          create(:task_model, state: state, memory_in_mb: 1)
         end
 
         periodic_updater.update_task_stats

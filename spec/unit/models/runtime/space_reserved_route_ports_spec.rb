@@ -2,9 +2,9 @@ require 'spec_helper'
 
 module VCAP::CloudController
   RSpec.describe SpaceReservedRoutePorts do
-    let(:organization) { Organization.make }
-    let(:space_quota) { SpaceQuotaDefinition.make(organization:) }
-    let(:space) { Space.make(organization: organization, space_quota_definition: space_quota) }
+    let(:organization) { create(:organization) }
+    let(:space_quota) { create(:space_quota_definition, organization:) }
+    let(:space) { create(:space, organization: organization, space_quota_definition: space_quota) }
 
     subject(:space_routes) { SpaceReservedRoutePorts.new(space) }
 
@@ -25,11 +25,11 @@ module VCAP::CloudController
         end
 
         before do
-          domain = SharedDomain.make(router_group_guid: '123')
-          Route.make(host: '', space: space, domain: domain, port: 1234)
-          Route.make(host: '', space: space, domain: domain, port: 3455)
-          Route.make(host: '', space: space, domain: domain, port: 4444)
-          Route.make(space:)
+          domain = create(:shared_domain, router_group_guid: '123')
+          create(:route, host: '', space: space, domain: domain, port: 1234)
+          create(:route, host: '', space: space, domain: domain, port: 3455)
+          create(:route, host: '', space: space, domain: domain, port: 4444)
+          create(:route, space:)
         end
 
         it 'has return the number of reserved ports' do

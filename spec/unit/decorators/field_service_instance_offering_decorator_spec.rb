@@ -4,14 +4,14 @@ require 'decorators/field_service_instance_offering_decorator'
 module VCAP::CloudController
   RSpec.describe FieldServiceInstanceOfferingDecorator do
     describe '.decorate' do
-      let(:offering1) { Service.make(extra: '{"documentationUrl": "https://offering1.com"}', tags: %w[foo bar], created_at: Time.now.utc - 1.second) }
-      let(:offering2) { Service.make(extra: '{"documentationUrl": "https://offering2.com"}', tags: %w[baz]) }
+      let(:offering1) { create(:service, extra: '{"documentationUrl": "https://offering1.com"}', tags: %w[foo bar], created_at: Time.now.utc - 1.second) }
+      let(:offering2) { create(:service, extra: '{"documentationUrl": "https://offering2.com"}', tags: %w[baz]) }
 
-      let(:plan1) { ServicePlan.make(service: offering1) }
-      let(:plan2) { ServicePlan.make(service: offering2) }
+      let(:plan1) { create(:service_plan, service: offering1) }
+      let(:plan2) { create(:service_plan, service: offering2) }
 
-      let(:service_instance_1) { ManagedServiceInstance.make(service_plan: plan1) }
-      let(:service_instance_2) { ManagedServiceInstance.make(service_plan: plan2) }
+      let(:service_instance_1) { create(:managed_service_instance, service_plan: plan1) }
+      let(:service_instance_2) { create(:managed_service_instance, service_plan: plan2) }
 
       it 'can decorate with the service offering name' do
         undecorated_hash = { foo: 'bar', included: { monkeys: %w[zach greg] } }
@@ -158,8 +158,8 @@ module VCAP::CloudController
       end
 
       context 'when instances are from the same offering' do
-        let(:plan3) { ServicePlan.make(service: offering1) }
-        let(:service_instance_3) { ManagedServiceInstance.make(service_plan: plan3) }
+        let(:plan3) { create(:service_plan, service: offering1) }
+        let(:service_instance_3) { create(:managed_service_instance, service_plan: plan3) }
 
         it 'does not duplicate the offering' do
           decorator = described_class.new({ 'service_plan.service_offering': ['name'] })
@@ -169,7 +169,7 @@ module VCAP::CloudController
       end
 
       context 'for user provided service instances' do
-        let(:service_instance_3) { UserProvidedServiceInstance.make }
+        let(:service_instance_3) { create(:user_provided_service_instance) }
 
         it 'returns the unchanged hash' do
           undecorated_hash = { foo: 'bar' }

@@ -2,15 +2,13 @@ require 'spec_helper'
 
 module VCAP::CloudController
   RSpec.describe BuildModel do
-    let(:package) { PackageModel.make(state: PackageModel::READY_STATE) }
-    let(:build_model) { BuildModel.make(package:) }
+    let(:package) { create(:package_model, state: PackageModel::READY_STATE) }
+    let(:build_model) { create(:build_model, package:) }
 
     describe 'associations' do
       let!(:buildpack_lifecycle_data) do
-        BuildpackLifecycleDataModel.make(
-          build: build_model,
-          buildpacks: ['http://some-buildpack.com', 'http://another-buildpack.net']
-        )
+        create(:buildpack_lifecycle_data_model, build: build_model,
+                                                buildpacks: ['http://some-buildpack.com', 'http://another-buildpack.net'])
       end
 
       before do
@@ -19,8 +17,8 @@ module VCAP::CloudController
       end
 
       it 'has a foreign key to app' do
-        app = AppModel.make
-        BuildModel.make(app:)
+        app = create(:app_model)
+        create(:build_model, app:)
         expect do
           app.delete
         end.to raise_error Sequel::ForeignKeyConstraintViolation
@@ -28,10 +26,8 @@ module VCAP::CloudController
 
       describe 'space' do
         let!(:buildpack_lifecycle_data) do
-          BuildpackLifecycleDataModel.make(
-            build: build_model,
-            buildpacks: ['http://some-buildpack.com', 'http://another-buildpack.net']
-          )
+          create(:buildpack_lifecycle_data_model, build: build_model,
+                                                  buildpacks: ['http://some-buildpack.com', 'http://another-buildpack.net'])
         end
 
         before do
@@ -40,9 +36,9 @@ module VCAP::CloudController
         end
 
         it 'gets its space from the containing app' do
-          space = Space.make
-          app = AppModel.make(space:)
-          build = BuildModel.make(app:)
+          space = create(:space)
+          app = create(:app_model, space:)
+          build = create(:build_model, app:)
           expect(build.space).to eq(space)
         end
       end
@@ -55,7 +51,7 @@ module VCAP::CloudController
       end
 
       context 'when there is buildpack_lifecycle_data associated to the build' do
-        let(:build_model) { BuildModel.make(app: nil) }
+        let(:build_model) { create(:build_model, app: nil) }
 
         it 'returns the string "buildpack"' do
           expect(build_model.lifecycle_type).to eq('buildpack')
@@ -63,7 +59,7 @@ module VCAP::CloudController
       end
 
       context 'when there is cnb_lifecycle_data associated to the build' do
-        let(:build_model) { BuildModel.make(:cnb, app: nil) }
+        let(:build_model) { create(:build_model, :cnb, app: nil) }
 
         it 'returns the string "cnb"' do
           expect(build_model.lifecycle_type).to eq('cnb')
@@ -71,7 +67,7 @@ module VCAP::CloudController
       end
 
       context 'when there is no lifecycle data associated to the build' do
-        let(:build_model) { BuildModel.make(:docker, app: nil) }
+        let(:build_model) { create(:build_model, :docker, app: nil) }
 
         it 'returns the string "docker"' do
           expect(build_model.lifecycle_type).to eq('docker')
@@ -81,13 +77,13 @@ module VCAP::CloudController
 
     describe '#before_create' do
       it 'inherits lifecycle_type from app if not set' do
-        app = AppModel.make(:cnb)
+        app = create(:app_model, :cnb)
         build = BuildModel.create(app: app, state: BuildModel::STAGING_STATE)
         expect(build[:lifecycle_type]).to eq('cnb')
       end
 
       it 'uses explicit lifecycle_type if set' do
-        app = AppModel.make
+        app = create(:app_model)
         build = BuildModel.create(app: app, state: BuildModel::STAGING_STATE, lifecycle_type: 'docker')
         expect(build[:lifecycle_type]).to eq('docker')
       end
@@ -96,14 +92,14 @@ module VCAP::CloudController
     describe 'validations' do
       it 'validates lifecycle_type is one of buildpack, cnb, or docker' do
         expect do
-          BuildModel.make(lifecycle_type: 'invalid')
+          create(:build_model, lifecycle_type: 'invalid')
         end.to raise_error(Sequel::ValidationFailed, /lifecycle_type/)
       end
 
       it 'accepts valid lifecycle_type values' do
         %w[buildpack cnb docker].each do |type|
           expect do
-            BuildModel.make(lifecycle_type: type)
+            create(:build_model, lifecycle_type: type)
           end.not_to raise_error
         end
       end
@@ -111,7 +107,7 @@ module VCAP::CloudController
 
     describe '#lifecycle_data' do
       context 'buildpack_lifecycle_data' do
-        let!(:build_model) { BuildModel.make(app: nil) }
+        let!(:build_model) { create(:build_model, app: nil) }
 
         it 'returns a buildpack lifecycle data model' do
           expect(build_model.lifecycle_data).to be_a(BuildpackLifecycleDataModel)
@@ -127,7 +123,7 @@ module VCAP::CloudController
       end
 
       context 'cnb_lifecycle_data' do
-        let!(:build_model) { BuildModel.make(:cnb, app: nil) }
+        let!(:build_model) { create(:build_model, :cnb, app: nil) }
 
         it 'returns a cnb lifecycle data model' do
           expect(build_model.lifecycle_data).to be_a(CNBLifecycleDataModel)
@@ -143,7 +139,7 @@ module VCAP::CloudController
       end
 
       context 'neither buildpack_lifecycle_data, nor cnb_lifecycle_data' do
-        let(:build_model) { BuildModel.make(:docker, app: nil) }
+        let(:build_model) { create(:build_model, :docker, app: nil) }
 
         it 'returns a docker lifecycle data model' do
           expect(build_model.lifecycle_data).to be_a(DockerLifecycleDataModel)
@@ -209,7 +205,7 @@ module VCAP::CloudController
       end
 
       context 'when the build is already in the FAILED state' do
-        let(:previously_failed_build) { BuildModel.make(package: package, state: BuildModel::FAILED_STATE) }
+        let(:previously_failed_build) { create(:build_model, package: package, state: BuildModel::FAILED_STATE) }
 
         it 'creates an app usage event for STAGING_STOPPED' do
           expect do
@@ -290,10 +286,8 @@ module VCAP::CloudController
 
     describe '#record_staging_stopped' do
       let!(:buildpack_lifecycle_data) do
-        BuildpackLifecycleDataModel.make(
-          build: build_model,
-          buildpacks: ['http://some-buildpack.com', 'http://another-buildpack.net']
-        )
+        create(:buildpack_lifecycle_data_model, build: build_model,
+                                                buildpacks: ['http://some-buildpack.com', 'http://another-buildpack.net'])
       end
 
       before do
@@ -331,8 +325,8 @@ module VCAP::CloudController
       end
 
       describe 'metadata' do
-        let!(:label) { VCAP::CloudController::BuildLabelModel.make(key_name: 'string', value: 'string2', resource_guid: build_model.guid) }
-        let!(:annotation) { VCAP::CloudController::BuildAnnotationModel.make(key_name: 'string', value: 'string2', resource_guid: build_model.guid) }
+        let!(:label) { create(:build_label_model, key_name: 'string', value: 'string2', resource_guid: build_model.guid) }
+        let!(:annotation) { create(:build_annotation_model, key_name: 'string', value: 'string2', resource_guid: build_model.guid) }
 
         it 'can access its annotations and labels' do
           expect(label.resource_guid).to eq(build_model.guid)

@@ -13,17 +13,17 @@ module VCAP::CloudController
         services_event_repository: services_event_repo
       )
     end
-    let(:service_broker) { ServiceBroker.make }
+    let(:service_broker) { create(:service_broker) }
     let(:allow_context_updates) { false }
-    let(:service) { Service.make(plan_updateable: true, service_broker: service_broker, allow_context_updates: allow_context_updates) }
-    let(:old_service_plan) { ServicePlan.make(:v2, service:) }
+    let(:service) { create(:service, plan_updateable: true, service_broker: service_broker, allow_context_updates: allow_context_updates) }
+    let(:old_service_plan) { create(:service_plan, :v2, service:) }
     let(:new_plan_maintenance_info) {}
-    let(:new_service_plan) { ServicePlan.make(:v2, service: service, maintenance_info: new_plan_maintenance_info) }
+    let(:new_service_plan) { create(:service_plan, :v2, service: service, maintenance_info: new_plan_maintenance_info) }
     let(:service_instance) do
-      ManagedServiceInstance.make(service_plan: old_service_plan,
-                                  maintenance_info: old_service_plan.maintenance_info,
-                                  tags: [],
-                                  name: 'Old name')
+      create(:managed_service_instance, service_plan: old_service_plan,
+                                        maintenance_info: old_service_plan.maintenance_info,
+                                        tags: [],
+                                        name: 'Old name')
     end
 
     let(:updated_name) { 'New name' }
@@ -172,7 +172,7 @@ module VCAP::CloudController
       context 'arbitrary params are the only change' do
         let(:request_attrs) { { 'parameters' => updated_parameters } }
         let(:old_maintenance_info) { { 'version' => '5.0.0' } }
-        let(:old_service_plan) { ServicePlan.make(:v2, service: service, maintenance_info: old_maintenance_info) }
+        let(:old_service_plan) { create(:service_plan, :v2, service: service, maintenance_info: old_maintenance_info) }
 
         it 'sends a request to the broker updating only parameters' do
           service_instance_update.update_service_instance(service_instance, request_attrs)
@@ -435,7 +435,7 @@ module VCAP::CloudController
 
       let(:broker_body) { {} }
       let(:stub_opts) { { status: 200, body: broker_body.to_json } }
-      let(:service_instance) { ManagedServiceInstance.make(maintenance_info: old_maintenance_info) }
+      let(:service_instance) { create(:managed_service_instance, maintenance_info: old_maintenance_info) }
 
       before do
         stub_update(service_instance, stub_opts)
@@ -539,7 +539,7 @@ module VCAP::CloudController
       end
 
       context 'when the maintenance_info.version provided is the same as the one on the service instance' do
-        let(:service_instance) { ManagedServiceInstance.make(maintenance_info: new_maintenance_info.merge({ description: 'some description' })) }
+        let(:service_instance) { create(:managed_service_instance, maintenance_info: new_maintenance_info.merge({ description: 'some description' })) }
 
         it 'does NOT make a call to the broker' do
           service_instance_update.update_service_instance(service_instance, request_attrs)
@@ -551,7 +551,7 @@ module VCAP::CloudController
       end
 
       context 'when maintenance_info.version provided and does not exist on service_instance' do
-        let(:service_instance) { ManagedServiceInstance.make(maintenance_info: nil) }
+        let(:service_instance) { create(:managed_service_instance, maintenance_info: nil) }
 
         it 'updates the broker with new maintenance_info' do
           service_instance_update.update_service_instance(service_instance, request_attrs)

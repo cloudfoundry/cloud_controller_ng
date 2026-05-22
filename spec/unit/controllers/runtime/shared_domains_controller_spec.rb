@@ -153,7 +153,7 @@ module VCAP::CloudController
             RoutingApi::RouterGroup.new({ 'guid' => 'random-guid-2', 'type' => 'http' })
           ]
         end
-        let!(:domain) { SharedDomain.make(name: 'shareddomain.com', router_group_guid: 'router-group-guid1') }
+        let!(:domain) { create(:shared_domain, name: 'shareddomain.com', router_group_guid: 'router-group-guid1') }
 
         before do
           allow(routing_api_client).to receive_messages(enabled?: true, router_groups: router_groups)
@@ -174,7 +174,7 @@ module VCAP::CloudController
         end
 
         it 'includes router_group_type in the response' do
-          SharedDomain.make(name: 'shareddomain2.com')
+          create(:shared_domain, name: 'shareddomain2.com')
 
           get '/v2/shared_domains'
 

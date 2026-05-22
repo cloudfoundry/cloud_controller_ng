@@ -2,17 +2,17 @@ require 'spec_helper'
 require 'request_spec_shared_examples'
 
 RSpec.describe 'App Manifests' do
-  let(:user) { VCAP::CloudController::User.make }
+  let(:user) { create(:user) }
   let(:user_header) { headers_for(user, email: Sham.email, user_name: 'some-username') }
-  let(:space) { VCAP::CloudController::Space.make }
+  let(:space) { create(:space) }
   let(:org) { space.organization }
-  let(:shared_domain) { VCAP::CloudController::SharedDomain.make }
-  let(:route) { VCAP::CloudController::Route.make(domain: shared_domain, space: space, host: 'a_host') }
+  let(:shared_domain) { create(:shared_domain) }
+  let(:route) { create(:route, domain: shared_domain, space: space, host: 'a_host') }
   let(:second_route) do
-    VCAP::CloudController::Route.make(domain: shared_domain, space: space, path: '/path', host: 'b_host')
+    create(:route, domain: shared_domain, space: space, path: '/path', host: 'b_host')
   end
-  let(:app_model) { VCAP::CloudController::AppModel.make(space:) }
-  let!(:process) { VCAP::CloudController::ProcessModel.make(app: app_model) }
+  let(:app_model) { create(:app_model, space:) }
+  let!(:process) { create(:process, app: app_model) }
 
   before do
     space.organization.add_user(user)
@@ -21,15 +21,15 @@ RSpec.describe 'App Manifests' do
   end
 
   describe 'GET /v3/apps/:guid/manifest' do
-    let(:app_model) { VCAP::CloudController::AppModel.make(space: space, environment_variables: { 'one' => 'tomato', 'two' => 'potato' }) }
+    let(:app_model) { create(:app_model, space: space, environment_variables: { 'one' => 'tomato', 'two' => 'potato' }) }
 
-    let!(:service_binding) { VCAP::CloudController::ServiceBinding.make(app: app_model, service_instance: service_instance) }
-    let!(:service_binding2) { VCAP::CloudController::ServiceBinding.make(app: app_model, service_instance: service_instance2) }
-    let!(:service_instance) { VCAP::CloudController::ManagedServiceInstance.make(space: space, name: 'si-1') }
-    let!(:service_instance2) { VCAP::CloudController::ManagedServiceInstance.make(space: space, name: 'si-2') }
+    let!(:service_binding) { create(:service_binding, app: app_model, service_instance: service_instance) }
+    let!(:service_binding2) { create(:service_binding, app: app_model, service_instance: service_instance2) }
+    let!(:service_instance) { create(:managed_service_instance, space: space, name: 'si-1') }
+    let!(:service_instance2) { create(:managed_service_instance, space: space, name: 'si-2') }
 
-    let!(:route_mapping) { VCAP::CloudController::RouteMappingModel.make(app: app_model, route: route, protocol: nil) }
-    let!(:route_mapping2) { VCAP::CloudController::RouteMappingModel.make(app: app_model, route: second_route, protocol: nil) }
+    let!(:route_mapping) { create(:route_mapping_model, app: app_model, route: route, protocol: nil) }
+    let!(:route_mapping2) { create(:route_mapping_model, app: app_model, route: second_route, protocol: nil) }
 
     let!(:worker_process) do
       VCAP::CloudController::ProcessModelFactory.make(
@@ -45,15 +45,15 @@ RSpec.describe 'App Manifests' do
       )
     end
 
-    let!(:app_label) { VCAP::CloudController::AppLabelModel.make(resource_guid: app_model.guid, key_name: 'potato', value: 'idaho') }
-    let!(:app_annotation) { VCAP::CloudController::AppAnnotationModel.make(resource_guid: app_model.guid, key_name: 'style', value: 'mashed') }
+    let!(:app_label) { create(:app_label_model, resource_guid: app_model.guid, key_name: 'potato', value: 'idaho') }
+    let!(:app_annotation) { create(:app_annotation_model, resource_guid: app_model.guid, key_name: 'style', value: 'mashed') }
 
-    let!(:sidecar1) { VCAP::CloudController::SidecarModel.make(name: 'authenticator', command: './authenticator', app: app_model) }
-    let!(:sidecar2) { VCAP::CloudController::SidecarModel.make(name: 'my_sidecar', command: 'rackup', app: app_model) }
+    let!(:sidecar1) { create(:sidecar_model, name: 'authenticator', command: './authenticator', app: app_model) }
+    let!(:sidecar2) { create(:sidecar_model, name: 'my_sidecar', command: 'rackup', app: app_model) }
 
-    let!(:sidecar_process_type1) { VCAP::CloudController::SidecarProcessTypeModel.make(type: 'worker', sidecar: sidecar1, app_guid: app_model.guid) }
-    let!(:sidecar_process_type2) { VCAP::CloudController::SidecarProcessTypeModel.make(type: 'web', sidecar: sidecar1, app_guid: app_model.guid) }
-    let!(:sidecar_process_type3) { VCAP::CloudController::SidecarProcessTypeModel.make(type: 'other_worker', sidecar: sidecar2, app_guid: app_model.guid) }
+    let!(:sidecar_process_type1) { create(:sidecar_process_type_model, type: 'worker', sidecar: sidecar1, app_guid: app_model.guid) }
+    let!(:sidecar_process_type2) { create(:sidecar_process_type_model, type: 'web', sidecar: sidecar1, app_guid: app_model.guid) }
+    let!(:sidecar_process_type3) { create(:sidecar_process_type_model, type: 'other_worker', sidecar: sidecar2, app_guid: app_model.guid) }
 
     context 'permissions' do
       let(:api_call) { ->(user_headers) { get "/v3/apps/#{app_model.guid}/manifest", nil, user_headers } }
@@ -78,8 +78,8 @@ RSpec.describe 'App Manifests' do
     end
 
     context 'for a buildpack' do
-      let!(:buildpack) { VCAP::CloudController::Buildpack.make }
-      let!(:buildpack2) { VCAP::CloudController::Buildpack.make }
+      let!(:buildpack) { create(:buildpack) }
+      let!(:buildpack2) { create(:buildpack) }
 
       let(:expected_yml_manifest) do
         {
@@ -171,19 +171,18 @@ RSpec.describe 'App Manifests' do
 
     context 'for a docker app' do
       let(:docker_package) do
-        VCAP::CloudController::PackageModel.make(
-          :docker,
-          app: app_model,
-          docker_username: 'xXxMyL1ttlePwnyxXx'
-        )
+        create(:package_model,
+               :docker,
+               app: app_model,
+               docker_username: 'xXxMyL1ttlePwnyxXx')
       end
 
       let(:droplet) do
-        VCAP::CloudController::DropletModel.make app: app_model, package: docker_package
+        create(:droplet_model, app: app_model, package: docker_package)
       end
 
       let(:app_model) do
-        VCAP::CloudController::AppModel.make(:docker, space: space, environment_variables: { 'one' => 'tomato', 'two' => 'potato' })
+        create(:app_model, :docker, space: space, environment_variables: { 'one' => 'tomato', 'two' => 'potato' })
       end
 
       before do
@@ -275,9 +274,9 @@ RSpec.describe 'App Manifests' do
     end
 
     context 'for a protocol' do
-      let(:simple_app) { VCAP::CloudController::AppModel.make(space:) }
-      let!(:route_mapping) { VCAP::CloudController::RouteMappingModel.make(app: simple_app, route: route, protocol: 'http2') }
-      let!(:route_mapping2) { VCAP::CloudController::RouteMappingModel.make(app: simple_app, route: second_route, protocol: nil) }
+      let(:simple_app) { create(:app_model, space:) }
+      let!(:route_mapping) { create(:route_mapping_model, app: simple_app, route: route, protocol: 'http2') }
+      let!(:route_mapping2) { create(:route_mapping_model, app: simple_app, route: second_route, protocol: nil) }
 
       let(:expected_yml_manifest) do
         {

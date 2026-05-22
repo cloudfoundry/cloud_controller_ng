@@ -2,8 +2,8 @@ require 'spec_helper'
 require 'request_spec_shared_examples'
 
 RSpec.describe 'Sidecars' do
-  let(:app_model) { VCAP::CloudController::AppModel.make }
-  let(:user) { VCAP::CloudController::User.make }
+  let(:app_model) { create(:app_model) }
+  let(:user) { create(:user) }
   let(:user_header) { headers_for(user) }
 
   describe 'POST /v3/apps/:guid/sidecars' do
@@ -112,7 +112,7 @@ RSpec.describe 'Sidecars' do
     end
 
     describe 'validates sidecar memory' do
-      let!(:process) { VCAP::CloudController::ProcessModel.make(app_guid: app_model.guid, memory: 100, type: 'other_worker') }
+      let!(:process) { create(:process, app: app_model, memory: 100, type: 'other_worker') }
       let(:sidecar_params) do
         {
           name: 'sidecar_one',
@@ -170,9 +170,9 @@ RSpec.describe 'Sidecars' do
       app_model.space.add_developer(user)
     end
 
-    let!(:sidecar) { VCAP::CloudController::SidecarModel.make(name: 'My sidecar', command: 'rackdown', app: app_model, memory: 400) }
+    let!(:sidecar) { create(:sidecar_model, name: 'My sidecar', command: 'rackdown', app: app_model, memory: 400) }
     let!(:sidecar_process_type) do
-      VCAP::CloudController::SidecarProcessTypeModel.make(sidecar: sidecar, type: 'other_worker', app_guid: app_model.guid)
+      create(:sidecar_process_type_model, sidecar: sidecar, type: 'other_worker', app_guid: app_model.guid)
     end
 
     let(:sidecar_params) do
@@ -242,7 +242,7 @@ RSpec.describe 'Sidecars' do
     end
 
     describe 'duplicate name' do
-      let!(:other_sidecar) { VCAP::CloudController::SidecarModel.make(name: 'other sidecar', command: 'rackdown', app: app_model) }
+      let!(:other_sidecar) { create(:sidecar_model, name: 'other sidecar', command: 'rackdown', app: app_model) }
 
       let(:sidecar_params) do
         { name: 'My sidecar' }
@@ -311,7 +311,7 @@ RSpec.describe 'Sidecars' do
     end
 
     describe 'validates sidecar memory' do
-      let!(:process) { VCAP::CloudController::ProcessModel.make(app_guid: app_model.guid, memory: 500, type: 'other_worker') }
+      let!(:process) { create(:process, app: app_model, memory: 500, type: 'other_worker') }
       let(:sidecar_params) do
         {
           name: 'sidecar_one',
@@ -364,9 +364,9 @@ RSpec.describe 'Sidecars' do
   end
 
   describe 'GET /v3/sidecars/:guid' do
-    let(:sidecar) { VCAP::CloudController::SidecarModel.make(app: app_model, name: 'sidecar', command: 'smarch', memory: 300) }
-    let!(:sidecar_spider) { VCAP::CloudController::SidecarProcessTypeModel.make(sidecar: sidecar, type: 'spider') }
-    let!(:sidecar_web) { VCAP::CloudController::SidecarProcessTypeModel.make(sidecar: sidecar, type: 'web') }
+    let(:sidecar) { create(:sidecar_model, app: app_model, name: 'sidecar', command: 'smarch', memory: 300) }
+    let!(:sidecar_spider) { create(:sidecar_process_type_model, sidecar: sidecar, type: 'spider') }
+    let!(:sidecar_web) { create(:sidecar_process_type_model, sidecar: sidecar, type: 'web') }
 
     context 'as a permitted user' do
       before do
@@ -425,42 +425,40 @@ RSpec.describe 'Sidecars' do
   end
 
   describe 'GET /v3/processes/:process_guid/sidecars' do
-    let!(:sidecar1a) { VCAP::CloudController::SidecarModel.make(app: app_model, name: 'sidecar1a', command: 'missile1a') }
-    let!(:sidecar_worker1a) { VCAP::CloudController::SidecarProcessTypeModel.make(sidecar: sidecar1a, type: 'worker') }
-    let!(:sidecar_web1a) { VCAP::CloudController::SidecarProcessTypeModel.make(sidecar: sidecar1a, type: 'web') }
+    let!(:sidecar1a) { create(:sidecar_model, app: app_model, name: 'sidecar1a', command: 'missile1a') }
+    let!(:sidecar_worker1a) { create(:sidecar_process_type_model, sidecar: sidecar1a, type: 'worker') }
+    let!(:sidecar_web1a) { create(:sidecar_process_type_model, sidecar: sidecar1a, type: 'web') }
 
-    let!(:sidecar1b) { VCAP::CloudController::SidecarModel.make(app: app_model, name: 'sidecar1b', command: 'missile1b') }
-    let!(:sidecar_worker1b) { VCAP::CloudController::SidecarProcessTypeModel.make(sidecar: sidecar1b, type: 'worker') }
-    let!(:sidecar_web1b) { VCAP::CloudController::SidecarProcessTypeModel.make(sidecar: sidecar1b, type: 'web') }
+    let!(:sidecar1b) { create(:sidecar_model, app: app_model, name: 'sidecar1b', command: 'missile1b') }
+    let!(:sidecar_worker1b) { create(:sidecar_process_type_model, sidecar: sidecar1b, type: 'worker') }
+    let!(:sidecar_web1b) { create(:sidecar_process_type_model, sidecar: sidecar1b, type: 'web') }
 
-    let!(:sidecar1c) { VCAP::CloudController::SidecarModel.make(app: app_model, name: 'sidecar1c', command: 'missile1c') }
-    let!(:sidecar_worker1c) { VCAP::CloudController::SidecarProcessTypeModel.make(sidecar: sidecar1c, type: 'worker') }
-    let!(:sidecar_web1c) { VCAP::CloudController::SidecarProcessTypeModel.make(sidecar: sidecar1c, type: 'web') }
+    let!(:sidecar1c) { create(:sidecar_model, app: app_model, name: 'sidecar1c', command: 'missile1c') }
+    let!(:sidecar_worker1c) { create(:sidecar_process_type_model, sidecar: sidecar1c, type: 'worker') }
+    let!(:sidecar_web1c) { create(:sidecar_process_type_model, sidecar: sidecar1c, type: 'web') }
 
-    let!(:sidecar1d) { VCAP::CloudController::SidecarModel.make(app: app_model, name: 'sidecar1d', command: 'missile1d') }
-    let!(:sidecar_worker1d) { VCAP::CloudController::SidecarProcessTypeModel.make(sidecar: sidecar1d, type: 'fish') }
-    let!(:sidecar_web1d) { VCAP::CloudController::SidecarProcessTypeModel.make(sidecar: sidecar1d, type: 'cows') }
+    let!(:sidecar1d) { create(:sidecar_model, app: app_model, name: 'sidecar1d', command: 'missile1d') }
+    let!(:sidecar_worker1d) { create(:sidecar_process_type_model, sidecar: sidecar1d, type: 'fish') }
+    let!(:sidecar_web1d) { create(:sidecar_process_type_model, sidecar: sidecar1d, type: 'cows') }
 
     let!(:process1) do
-      VCAP::CloudController::ProcessModel.make(
-        :process,
-        app: app_model,
-        type: 'web',
-        command: 'rackup'
-      )
+      create(:process,
+             :process,
+             app: app_model,
+             type: 'web',
+             command: 'rackup')
     end
 
-    let!(:app_model2) { VCAP::CloudController::AppModel.make(space: app_model.space, name: 'app2') }
-    let!(:sidecar_for_app2) { VCAP::CloudController::SidecarModel.make(app: app_model2, name: 'sidecar2', command: 'missile2') }
-    let!(:sidecar_worker2) { VCAP::CloudController::SidecarProcessTypeModel.make(sidecar: sidecar_for_app2, type: 'worker') }
-    let!(:sidecar_web2) { VCAP::CloudController::SidecarProcessTypeModel.make(sidecar: sidecar_for_app2, type: 'web') }
+    let!(:app_model2) { create(:app_model, space: app_model.space, name: 'app2') }
+    let!(:sidecar_for_app2) { create(:sidecar_model, app: app_model2, name: 'sidecar2', command: 'missile2') }
+    let!(:sidecar_worker2) { create(:sidecar_process_type_model, sidecar: sidecar_for_app2, type: 'worker') }
+    let!(:sidecar_web2) { create(:sidecar_process_type_model, sidecar: sidecar_for_app2, type: 'web') }
     let!(:process2) do
-      VCAP::CloudController::ProcessModel.make(
-        :process,
-        app: app_model2,
-        type: 'web',
-        command: 'rackup'
-      )
+      create(:process,
+             :process,
+             app: app_model2,
+             type: 'web',
+             command: 'rackup')
     end
 
     context 'as a space developer' do
@@ -548,14 +546,13 @@ RSpec.describe 'Sidecars' do
       end
 
       context 'filtering on created_ats and updated_ats' do
-        let(:app_model3) { VCAP::CloudController::AppModel.make }
+        let(:app_model3) { create(:app_model) }
         let!(:process3) do
-          VCAP::CloudController::ProcessModel.make(
-            :process,
-            app: app_model3,
-            type: 'web',
-            command: 'rackup'
-          )
+          create(:process,
+                 :process,
+                 app: app_model3,
+                 type: 'web',
+                 command: 'rackup')
         end
 
         it_behaves_like 'list_endpoint_with_common_filters' do
@@ -564,7 +561,7 @@ RSpec.describe 'Sidecars' do
           let(:headers) { admin_headers }
           let(:api_call) do
             app_model3.sidecars_dataset.each do |sidecar|
-              VCAP::CloudController::SidecarProcessTypeModel.make(sidecar: sidecar, type: 'web')
+              create(:sidecar_process_type_model, sidecar: sidecar, type: 'web')
             end
             ->(headers, filters) { get "/v3/processes/#{process3.guid}/sidecars?#{filters}", nil, headers }
           end
@@ -611,12 +608,12 @@ RSpec.describe 'Sidecars' do
   end
 
   describe 'GET /v3/apps/:app_guid/sidecars' do
-    let!(:sidecar1) { VCAP::CloudController::SidecarModel.make(name: 'sidecar1', app: app_model) }
-    let!(:sidecar1_processes) { VCAP::CloudController::SidecarProcessTypeModel.make(sidecar: sidecar1, type: 'one') }
-    let!(:sidecar2) { VCAP::CloudController::SidecarModel.make(name: 'sidecar2', app: app_model) }
-    let!(:sidecar2_processes) { VCAP::CloudController::SidecarProcessTypeModel.make(sidecar: sidecar2, type: 'two') }
-    let!(:sidecar3) { VCAP::CloudController::SidecarModel.make(name: 'sidecar3', app: app_model) }
-    let!(:sidecar3_processes) { VCAP::CloudController::SidecarProcessTypeModel.make(sidecar: sidecar3, type: 'three') }
+    let!(:sidecar1) { create(:sidecar_model, name: 'sidecar1', app: app_model) }
+    let!(:sidecar1_processes) { create(:sidecar_process_type_model, sidecar: sidecar1, type: 'one') }
+    let!(:sidecar2) { create(:sidecar_model, name: 'sidecar2', app: app_model) }
+    let!(:sidecar2_processes) { create(:sidecar_process_type_model, sidecar: sidecar2, type: 'two') }
+    let!(:sidecar3) { create(:sidecar_model, name: 'sidecar3', app: app_model) }
+    let!(:sidecar3_processes) { create(:sidecar_process_type_model, sidecar: sidecar3, type: 'three') }
 
     context 'with a user in the space' do
       before do
@@ -693,7 +690,7 @@ RSpec.describe 'Sidecars' do
 
       it_behaves_like 'list_endpoint_with_common_filters' do
         let(:resource_klass) { VCAP::CloudController::SidecarModel }
-        let(:app_model2) { VCAP::CloudController::AppModel.make }
+        let(:app_model2) { create(:app_model) }
         let(:additional_resource_params) { { app: app_model2 } }
         let(:headers) { admin_headers }
         let(:api_call) do
@@ -741,9 +738,9 @@ RSpec.describe 'Sidecars' do
   end
 
   describe 'DELETE /v3/sidecars/:guid' do
-    let!(:sidecar) { VCAP::CloudController::SidecarModel.make(app: app_model, name: 'sidecar', command: 'smarch') }
-    let!(:sidecar_spider) { VCAP::CloudController::SidecarProcessTypeModel.make(sidecar: sidecar, type: 'spider') }
-    let!(:sidecar_web) { VCAP::CloudController::SidecarProcessTypeModel.make(sidecar: sidecar, type: 'web') }
+    let!(:sidecar) { create(:sidecar_model, app: app_model, name: 'sidecar', command: 'smarch') }
+    let!(:sidecar_spider) { create(:sidecar_process_type_model, sidecar: sidecar, type: 'spider') }
+    let!(:sidecar_web) { create(:sidecar_process_type_model, sidecar: sidecar, type: 'web') }
 
     before do
       app_model.space.organization.add_user(user)

@@ -1,5 +1,5 @@
 RSpec.shared_examples 'a model including the ServiceOperationMixin' do |service_class, operation_association, operation_class, service_key|
-  let(:service) { service_class.make }
+  let(:service) { create(service_class.name.demodulize.underscore.to_sym) }
 
   before do
     @service = service

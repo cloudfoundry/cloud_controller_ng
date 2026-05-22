@@ -3,7 +3,7 @@ require 'rspec_api_documentation/dsl'
 
 RSpec.resource 'Domains (deprecated)', type: %i[api legacy_api] do
   let(:admin_auth_header) { admin_headers['HTTP_AUTHORIZATION'] }
-  let!(:domain) { VCAP::CloudController::SharedDomain.make }
+  let!(:domain) { FactoryBot.create(:shared_domain) }
   let(:guid) { domain.guid }
 
   authenticated_request
@@ -33,7 +33,7 @@ RSpec.resource 'Domains (deprecated)', type: %i[api legacy_api] do
 
       context 'Creating a domain owned by an organization' do
         example 'Create a Domain owned by the given Organization' do
-          org_guid = VCAP::CloudController::Organization.make.guid
+          org_guid = create(:organization).guid
           payload = Oj.dump(
             {
               name: 'exmaple.com',
@@ -59,10 +59,10 @@ RSpec.resource 'Domains (deprecated)', type: %i[api legacy_api] do
     field :guid, 'The guid of the Domain', required: true
 
     describe 'Spaces' do
-      let!(:domain) { VCAP::CloudController::PrivateDomain.make }
+      let!(:domain) { create(:private_domain) }
 
       before do
-        VCAP::CloudController::Space.make(organization: domain.owning_organization)
+        create(:space, organization: domain.owning_organization)
       end
 
       standard_model_list :space, VCAP::CloudController::SpacesController, outer_model: :domain

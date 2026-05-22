@@ -11,7 +11,7 @@ module VCAP::Services::ServiceBrokers
     let(:basic_auth) { %w[cc auth1234] }
 
     describe 'initializing' do
-      let(:broker) { VCAP::CloudController::ServiceBroker.make }
+      let(:broker) { create(:service_broker) }
 
       its(:broker) { is_expected.to eq(broker) }
       its(:warnings) { is_expected.to eq([]) }
@@ -224,7 +224,7 @@ module VCAP::Services::ServiceBrokers
         before do
           allow(catalog).to receive(:valid?).and_return(true)
           allow(client_manager).to receive(:synchronize_clients_with_catalog) {
-            VCAP::CloudController::ServiceDashboardClient.make(uaa_id: 'my-uaa-id', service_broker_id: broker.id)
+            create(:service_dashboard_client, uaa_id: 'my-uaa-id', service_broker_id: broker.id)
           }
           allow(service_manager).to receive(:sync_services_and_plans).and_raise(CloudController::Errors::ApiError.new_from_details('ServiceBrokerCatalogInvalid', 'omg it broke'))
         end
@@ -318,12 +318,10 @@ module VCAP::Services::ServiceBrokers
     describe '#update' do
       let(:old_broker_host) { 'broker.example.com' }
       let!(:broker) do
-        VCAP::CloudController::ServiceBroker.make(
-          name: 'Cool Broker',
-          broker_url: "http://#{old_broker_host}",
-          auth_username: 'cc',
-          auth_password: 'auth1234'
-        )
+        create(:service_broker, name: 'Cool Broker',
+                                broker_url: "http://#{old_broker_host}",
+                                auth_username: 'cc',
+                                auth_password: 'auth1234')
       end
 
       let(:new_broker_host) { 'new-broker.com' }

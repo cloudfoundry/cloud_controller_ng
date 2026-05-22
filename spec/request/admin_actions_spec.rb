@@ -2,9 +2,9 @@ require 'spec_helper'
 require 'request_spec_shared_examples'
 
 RSpec.describe 'admin actions' do
-  let(:space) { VCAP::CloudController::Space.make }
+  let(:space) { create(:space) }
   let(:org) { space.organization }
-  let(:user) { VCAP::CloudController::User.make }
+  let(:user) { create(:user) }
   let(:admin_header) { admin_headers_for(user) }
 
   describe 'POST /v3/admin/actions/clear_buildpack_cache' do

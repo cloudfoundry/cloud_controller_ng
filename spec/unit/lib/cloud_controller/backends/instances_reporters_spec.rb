@@ -95,7 +95,7 @@ module VCAP::CloudController
     end
 
     describe '#stats_for_app' do
-      let(:app) { AppModel.make }
+      let(:app) { create(:app_model) }
 
       before do
         allow(diego_instances_stats_reporter).to receive(:stats_for_app).with(app)

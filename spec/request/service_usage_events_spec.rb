@@ -4,13 +4,13 @@ require 'request_spec_shared_examples'
 RSpec.describe 'Service Usage Events' do
   let(:user) { make_user }
   let(:admin_header) { admin_headers_for(user) }
-  let(:space) { VCAP::CloudController::Space.make }
+  let(:space) { create(:space) }
   let(:org) { space.organization }
 
   describe 'GET /v3/service_usage_events/:guid' do
     let(:api_call) { ->(user_headers) { get "/v3/service_usage_events/#{usage_event.guid}", nil, user_headers } }
 
-    let(:usage_event) { VCAP::CloudController::ServiceUsageEvent.make }
+    let(:usage_event) { create(:service_usage_event) }
 
     let(:usage_event_json) { build_usage_event_json(usage_event) }
 
@@ -56,19 +56,17 @@ RSpec.describe 'Service Usage Events' do
     let(:api_call) { ->(user_headers) { get '/v3/service_usage_events', nil, user_headers } }
 
     let!(:service_usage_event) do
-      VCAP::CloudController::ServiceUsageEvent.make(
-        created_at: Time.now,
-        service_instance_type: 'managed_service_instance',
-        service_guid: 'offering-guid'
-      )
+      create(:service_usage_event,
+             created_at: Time.now,
+             service_instance_type: 'managed_service_instance',
+             service_guid: 'offering-guid')
     end
 
     let!(:service_usage_event_2) do
-      VCAP::CloudController::ServiceUsageEvent.make(
-        created_at: Time.now,
-        service_instance_type: 'user_provided_service_instance',
-        service_guid: 'offering-guid-2'
-      )
+      create(:service_usage_event,
+             created_at: Time.now,
+             service_instance_type: 'user_provided_service_instance',
+             service_guid: 'offering-guid-2')
     end
 
     let(:service_usage_event_json) { build_usage_event_json(service_usage_event) }
@@ -122,10 +120,10 @@ RSpec.describe 'Service Usage Events' do
     end
 
     context 'filtering by timestamps' do
-      let!(:event_1) { VCAP::CloudController::ServiceUsageEvent.make(guid: '1', created_at: '2020-05-26T18:47:01Z') }
-      let!(:event_2) { VCAP::CloudController::ServiceUsageEvent.make(guid: '2', created_at: '2020-05-26T18:47:02Z') }
-      let!(:event_3) { VCAP::CloudController::ServiceUsageEvent.make(guid: '3', created_at: '2020-05-26T18:47:03Z') }
-      let!(:event_4) { VCAP::CloudController::ServiceUsageEvent.make(guid: '4', created_at: '2020-05-26T18:47:04Z') }
+      let!(:event_1) { create(:service_usage_event, guid: '1', created_at: '2020-05-26T18:47:01Z') }
+      let!(:event_2) { create(:service_usage_event, guid: '2', created_at: '2020-05-26T18:47:02Z') }
+      let!(:event_3) { create(:service_usage_event, guid: '3', created_at: '2020-05-26T18:47:03Z') }
+      let!(:event_4) { create(:service_usage_event, guid: '4', created_at: '2020-05-26T18:47:04Z') }
 
       it 'filters by the created at' do
         get "/v3/service_usage_events?created_ats[lt]=#{event_3.created_at.iso8601}", nil, admin_header
@@ -173,11 +171,11 @@ RSpec.describe 'Service Usage Events' do
     let(:api_call) { ->(user_headers) { post '/v3/service_usage_events/actions/destructively_purge_all_and_reseed', nil, user_headers } }
 
     let!(:service_instance) do
-      VCAP::CloudController::ServiceInstance.make
+      create(:service_instance)
     end
 
     let!(:usage_event) do
-      VCAP::CloudController::ServiceUsageEvent.make(guid: 'some-guid')
+      create(:service_usage_event, guid: 'some-guid')
     end
 
     let(:expected_codes_and_responses) do

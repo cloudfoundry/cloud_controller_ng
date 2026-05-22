@@ -3,10 +3,10 @@ require 'request_spec_shared_examples'
 require 'models/services/service_plan'
 
 RSpec.describe 'V3 service plan visibility' do
-  let(:user) { VCAP::CloudController::User.make }
-  let!(:org) { VCAP::CloudController::Organization.make }
-  let!(:other_org) { VCAP::CloudController::Organization.make }
-  let(:space) { VCAP::CloudController::Space.make(organization: org) }
+  let(:user) { create(:user) }
+  let!(:org) { create(:organization) }
+  let!(:other_org) { create(:organization) }
+  let(:space) { create(:space, organization: org) }
 
   describe 'GET /v3/service_plans/:guid/visibility' do
     let(:api_call) { ->(user_headers) { get "/v3/service_plans/#{guid}/visibility", {}, user_headers } }
@@ -23,7 +23,7 @@ RSpec.describe 'V3 service plan visibility' do
     end
 
     context 'for public plans' do
-      let!(:service_plan) { VCAP::CloudController::ServicePlan.make }
+      let!(:service_plan) { create(:service_plan) }
       let(:expected_codes_and_responses) do
         Hash.new(
           { code: 200,
@@ -35,7 +35,7 @@ RSpec.describe 'V3 service plan visibility' do
     end
 
     context 'for admin-only plans' do
-      let!(:service_plan) { VCAP::CloudController::ServicePlan.make(public: false) }
+      let!(:service_plan) { create(:service_plan, public: false) }
       let(:admin_only_response) do
         {
           code: 200,
@@ -55,9 +55,9 @@ RSpec.describe 'V3 service plan visibility' do
 
     context 'for space-scoped plans' do
       let!(:service_plan) do
-        broker = VCAP::CloudController::ServiceBroker.make(space:)
-        offering = VCAP::CloudController::Service.make(service_broker: broker)
-        VCAP::CloudController::ServicePlan.make(public: false, service: offering)
+        broker = create(:service_broker, space:)
+        offering = create(:service, service_broker: broker)
+        create(:service_plan, public: false, service: offering)
       end
 
       let(:response_object) do
@@ -96,12 +96,12 @@ RSpec.describe 'V3 service plan visibility' do
     end
 
     context 'for org-restricted plans' do
-      let(:other_org) { VCAP::CloudController::Organization.make }
+      let(:other_org) { create(:organization) }
 
       let!(:service_plan) do
-        plan = VCAP::CloudController::ServicePlan.make(public: false)
-        VCAP::CloudController::ServicePlanVisibility.make(organization: org, service_plan: plan)
-        VCAP::CloudController::ServicePlanVisibility.make(organization: other_org, service_plan: plan)
+        plan = create(:service_plan, public: false)
+        create(:service_plan_visibility, organization: org, service_plan: plan)
+        create(:service_plan_visibility, organization: other_org, service_plan: plan)
         plan
       end
 
@@ -155,7 +155,7 @@ RSpec.describe 'V3 service plan visibility' do
     let(:req_body) { { type: 'public' } }
 
     context 'when the plan current visibility is "admin"' do
-      let(:service_plan) { VCAP::CloudController::ServicePlan.make(public: false) }
+      let(:service_plan) { create(:service_plan, public: false) }
 
       let(:expected_codes_and_responses) do
         Hash.new({ code: 404 }.freeze).tap do |h|
@@ -189,7 +189,7 @@ RSpec.describe 'V3 service plan visibility' do
     end
 
     context 'when the plan current visibility is "public"' do
-      let(:service_plan) { VCAP::CloudController::ServicePlan.make(public: true) }
+      let(:service_plan) { create(:service_plan, public: true) }
       let(:expected_codes_and_responses) do
         Hash.new({ code: 403 }.freeze).tap do |h|
           h['admin'] = successful_response
@@ -221,14 +221,14 @@ RSpec.describe 'V3 service plan visibility' do
 
     context 'when the plan current visibility is "organization"' do
       let!(:service_plan) do
-        plan = VCAP::CloudController::ServicePlan.make(public: false)
-        VCAP::CloudController::ServicePlanVisibility.make(organization: org, service_plan: plan)
-        VCAP::CloudController::ServicePlanVisibility.make(organization: other_org, service_plan: plan)
+        plan = create(:service_plan, public: false)
+        create(:service_plan_visibility, organization: org, service_plan: plan)
+        create(:service_plan_visibility, organization: other_org, service_plan: plan)
         plan
       end
 
       context 'and another PATCH with organizations is sent' do
-        let(:third_org) { VCAP::CloudController::Organization.make }
+        let(:third_org) { create(:organization) }
 
         it 'fails if the list of orgs is empty' do
           body = { type: 'organization', organizations: [] }.to_json
@@ -269,8 +269,8 @@ RSpec.describe 'V3 service plan visibility' do
         end
 
         it 'returns a 404 for users of other orgs' do
-          new_org = VCAP::CloudController::Organization.make
-          user = VCAP::CloudController::User.make
+          new_org = create(:organization)
+          user = create(:user)
           user.add_organization(new_org)
           patch api_url, req_body.to_json, headers_for(user)
 
@@ -299,8 +299,8 @@ RSpec.describe 'V3 service plan visibility' do
         end
 
         it 'returns a 404 for users of other orgs' do
-          new_org = VCAP::CloudController::Organization.make
-          user = VCAP::CloudController::User.make
+          new_org = create(:organization)
+          user = create(:user)
           user.add_organization(new_org)
           patch api_url, req_body.to_json, headers_for(user)
 
@@ -311,13 +311,10 @@ RSpec.describe 'V3 service plan visibility' do
 
     context 'when the plan current visibility is "space"' do
       let(:service_plan) do
-        VCAP::CloudController::ServicePlan.make(
-          service: VCAP::CloudController::Service.make(
-            service_broker: VCAP::CloudController::ServiceBroker.make(
-              space: VCAP::CloudController::Space.make
-            )
-          )
-        )
+        create(:service_plan,
+               service: create(:service,
+                               service_broker: create(:service_broker,
+                                                      space: create(:space))))
       end
 
       it 'cannot be updated' do
@@ -328,7 +325,7 @@ RSpec.describe 'V3 service plan visibility' do
     end
 
     context 'regardless of the current plan visibility' do
-      let(:service_plan) { VCAP::CloudController::ServicePlan.make(public: true) }
+      let(:service_plan) { create(:service_plan, public: true) }
 
       context 'when the plan does not exist' do
         let(:guid) { 'invalid-plan-guid' }
@@ -363,14 +360,14 @@ RSpec.describe 'V3 service plan visibility' do
 
       context 'when type is "organization" but the org does not exist' do
         let(:service_plan) do
-          plan = VCAP::CloudController::ServicePlan.make(public: false)
-          VCAP::CloudController::ServicePlanVisibility.make(organization: org, service_plan: plan)
-          VCAP::CloudController::ServicePlanVisibility.make(organization: other_org, service_plan: plan)
+          plan = create(:service_plan, public: false)
+          create(:service_plan_visibility, organization: org, service_plan: plan)
+          create(:service_plan_visibility, organization: other_org, service_plan: plan)
           plan
         end
 
         it 'returns an error and rolls back any changes' do
-          third_org = VCAP::CloudController::Organization.make
+          third_org = create(:organization)
           body = { type: 'organization', organizations: [{ guid: third_org.guid }, { guid: 'invalid-guid' }] }.to_json
           patch api_url, body, admin_headers
 
@@ -384,15 +381,15 @@ RSpec.describe 'V3 service plan visibility' do
   end
 
   describe 'POST /v3/service_plans/:guid/visibility' do
-    let(:third_org) { VCAP::CloudController::Organization.make }
-    let(:yet_another_org) { VCAP::CloudController::Organization.make }
+    let(:third_org) { create(:organization) }
+    let(:yet_another_org) { create(:organization) }
     let(:api_url) { "/v3/service_plans/#{guid}/visibility" }
     let(:api_call) { ->(user_headers) { post api_url, req_body.to_json, user_headers } }
     let(:guid) { service_plan.guid }
     let(:service_plan) do
-      plan = VCAP::CloudController::ServicePlan.make(public: false)
-      VCAP::CloudController::ServicePlanVisibility.make(organization: org, service_plan: plan)
-      VCAP::CloudController::ServicePlanVisibility.make(organization: other_org, service_plan: plan)
+      plan = create(:service_plan, public: false)
+      create(:service_plan_visibility, organization: org, service_plan: plan)
+      create(:service_plan_visibility, organization: other_org, service_plan: plan)
       plan
     end
     let(:body) { { type: 'organization', organizations: [{ guid: third_org.guid }, { guid: yet_another_org.guid }] } }
@@ -451,7 +448,7 @@ RSpec.describe 'V3 service plan visibility' do
       end
 
       context 'when the current visibility type is not organization' do
-        let(:service_plan) { VCAP::CloudController::ServicePlan.make(public: true) }
+        let(:service_plan) { create(:service_plan, public: true) }
         let(:body) { { type: 'organization', organizations: [{ guid: org.guid }] } }
 
         it 'updates the visibility type AND add the orgs' do
@@ -474,7 +471,7 @@ RSpec.describe 'V3 service plan visibility' do
 
       context 'when an org in the list does not exist' do
         it 'returns an error and rolls back any changes' do
-          third_org = VCAP::CloudController::Organization.make
+          third_org = create(:organization)
           body = { type: 'organization', organizations: [{ guid: third_org.guid }, { guid: 'invalid-guid' }] }.to_json
           post api_url, body, admin_headers
 
@@ -498,13 +495,10 @@ RSpec.describe 'V3 service plan visibility' do
 
     context 'when the plan current visibility is "space"' do
       let(:service_plan) do
-        VCAP::CloudController::ServicePlan.make(
-          service: VCAP::CloudController::Service.make(
-            service_broker: VCAP::CloudController::ServiceBroker.make(
-              space: VCAP::CloudController::Space.make
-            )
-          )
-        )
+        create(:service_plan,
+               service: create(:service,
+                               service_broker: create(:service_broker,
+                                                      space: create(:space))))
       end
 
       it 'cannot be updated' do
@@ -554,8 +548,8 @@ RSpec.describe 'V3 service plan visibility' do
       it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS
 
       it 'returns a 404 for users of other orgs' do
-        new_org = VCAP::CloudController::Organization.make
-        user = VCAP::CloudController::User.make
+        new_org = create(:organization)
+        user = create(:user)
         user.add_organization(new_org)
         post api_url, req_body.to_json, headers_for(user)
 
@@ -571,9 +565,9 @@ RSpec.describe 'V3 service plan visibility' do
     let(:org_guid) { org.guid }
 
     let(:service_plan) do
-      plan = VCAP::CloudController::ServicePlan.make(public: false)
-      VCAP::CloudController::ServicePlanVisibility.make(organization: org, service_plan: plan)
-      VCAP::CloudController::ServicePlanVisibility.make(organization: other_org, service_plan: plan)
+      plan = create(:service_plan, public: false)
+      create(:service_plan_visibility, organization: org, service_plan: plan)
+      create(:service_plan_visibility, organization: other_org, service_plan: plan)
       plan
     end
 
@@ -587,7 +581,7 @@ RSpec.describe 'V3 service plan visibility' do
     end
 
     context 'when the plan is not visible on the organization' do
-      let(:third_org) { VCAP::CloudController::Organization.make }
+      let(:third_org) { create(:organization) }
       let(:org_guid) { third_org.guid }
 
       it 'returns a 404' do
@@ -606,7 +600,7 @@ RSpec.describe 'V3 service plan visibility' do
     end
 
     context 'when the plan is not org restricted' do
-      let(:service_plan) { VCAP::CloudController::ServicePlan.make(public: true) }
+      let(:service_plan) { create(:service_plan, public: true) }
 
       it 'returns a 422' do
         delete api_url, {}, admin_headers

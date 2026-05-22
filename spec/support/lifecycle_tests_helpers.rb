@@ -211,7 +211,7 @@ module LifecycleSpecHelper
   end
 
   def push_app(space_guid)
-    VCAP::CloudController::AppModel.make(name: 'my-app', space_guid: space_guid).guid
+    FactoryBot.create(:app_model, name: 'my-app', space_guid: space_guid).guid
   end
 
   def create_binding(request)

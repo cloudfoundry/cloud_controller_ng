@@ -8,11 +8,11 @@ module VCAP::CloudController
     module Services
       RSpec.describe ServiceBindingStateFetch, job_context: :worker do
         let(:operation_type) { 'create' }
-        let(:service_binding_operation) { ServiceBindingOperation.make(state: 'in progress', type: operation_type) }
+        let(:service_binding_operation) { create(:service_binding_operation, state: 'in progress', type: operation_type) }
         let(:maximum_polling_duration_for_plan) {}
-        let(:service_plan) { ServicePlan.make(maximum_polling_duration: maximum_polling_duration_for_plan) }
+        let(:service_plan) { create(:service_plan, maximum_polling_duration: maximum_polling_duration_for_plan) }
         let(:service_binding) do
-          service_binding = ServiceBinding.make(service_instance: ManagedServiceInstance.make(service_plan:))
+          service_binding = create(:service_binding, service_instance: create(:managed_service_instance, service_plan:))
           service_binding.service_binding_operation = service_binding_operation
           service_binding
         end
@@ -20,7 +20,7 @@ module VCAP::CloudController
 
         let(:max_duration) { 10_080 }
         let(:default_polling_interval) { 60 }
-        let(:user) { User.make }
+        let(:user) { create(:user) }
         let(:user_email) { 'fake@mail.foo' }
         let(:user_info) { UserAuditInfo.new(user_guid: user.guid, user_email: user_email) }
         let(:request_attrs) do

@@ -3,8 +3,8 @@ require_relative 'lifecycle_shared'
 
 module VCAP::CloudController
   RSpec.describe BuildpackLifecycle do
-    let(:app) { AppModel.create(name: 'some-app', space: Space.make) }
-    let!(:package) { PackageModel.make(type: PackageModel::BITS_TYPE, app: app) }
+    let(:app) { AppModel.create(name: 'some-app', space: create(:space)) }
+    let!(:package) { create(:package_model, type: PackageModel::BITS_TYPE, app: app) }
     let(:staging_message) { BuildCreateMessage.new(lifecycle: { data: request_data, type: 'buildpack' }) }
     let(:request_data) { {} }
 
@@ -21,12 +21,12 @@ module VCAP::CloudController
         end
 
         before do
-          Buildpack.make(name: 'cool-buildpack')
-          Buildpack.make(name: 'rad-buildpack')
+          create(:buildpack, name: 'cool-buildpack')
+          create(:buildpack, name: 'rad-buildpack')
         end
 
         it 'uses the buildpacks from the user' do
-          build = BuildModel.make
+          build = create(:build_model)
 
           expect do
             buildpack_lifecycle.create_lifecycle_data_model(build)
@@ -40,18 +40,18 @@ module VCAP::CloudController
       end
 
       context 'when the user does not specify buildpacks' do
-        let(:app) { AppModel.make(name: 'some-app', space: Space.make) }
+        let(:app) { create(:app_model, name: 'some-app', space: create(:space)) }
         let(:request_data) { {} }
 
         context 'when the app has buildpacks' do
           before do
-            Buildpack.make(name: 'cool-buildpack')
-            Buildpack.make(name: 'rad-buildpack')
+            create(:buildpack, name: 'cool-buildpack')
+            create(:buildpack, name: 'rad-buildpack')
             app.lifecycle_data.update(buildpacks: %w[cool-buildpack rad-buildpack])
           end
 
           it 'uses the buildpacks on the app' do
-            build = BuildModel.make
+            build = create(:build_model)
 
             expect do
               buildpack_lifecycle.create_lifecycle_data_model(build)
@@ -66,7 +66,7 @@ module VCAP::CloudController
 
         context 'when the app does not have buildpacks' do
           it 'does not assign any buildpacks' do
-            build = BuildModel.make
+            build = create(:build_model)
 
             expect do
               buildpack_lifecycle.create_lifecycle_data_model(build)
@@ -86,7 +86,7 @@ module VCAP::CloudController
         end
 
         it 'uses that stack' do
-          data_model = buildpack_lifecycle.create_lifecycle_data_model(BuildModel.make)
+          data_model = buildpack_lifecycle.create_lifecycle_data_model(create(:build_model))
           expect(data_model.stack).to eq('cool-stack')
         end
       end
@@ -96,18 +96,19 @@ module VCAP::CloudController
 
         context 'when the app has a stack' do
           before do
-            BuildpackLifecycleDataModel.make(app: app, stack: 'best-stack')
+            create(:buildpack_lifecycle_data_model, app: app, stack: 'best-stack')
+            app.refresh
           end
 
           it 'uses the stack from the app' do
-            data_model = buildpack_lifecycle.create_lifecycle_data_model(BuildModel.make)
+            data_model = buildpack_lifecycle.create_lifecycle_data_model(create(:build_model))
             expect(data_model.stack).to eq('best-stack')
           end
         end
 
         context 'when the app does not have a stack' do
           it 'uses the default stack' do
-            data_model = buildpack_lifecycle.create_lifecycle_data_model(BuildModel.make)
+            data_model = buildpack_lifecycle.create_lifecycle_data_model(create(:build_model))
             expect(data_model.stack).to eq(Stack.default.name)
           end
         end
@@ -138,7 +139,8 @@ module VCAP::CloudController
       context 'when the user does not specify a stack' do
         context 'and the app has a stack' do
           before do
-            BuildpackLifecycleDataModel.make(app: app, stack: 'cooler-stack')
+            create(:buildpack_lifecycle_data_model, app: app, stack: 'cooler-stack')
+            app.refresh
           end
 
           it 'uses the value set on the app' do

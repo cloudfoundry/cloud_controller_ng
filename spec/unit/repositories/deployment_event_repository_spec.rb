@@ -4,10 +4,10 @@ require 'repositories/deployment_event_repository'
 module VCAP::CloudController
   module Repositories
     RSpec.describe DeploymentEventRepository do
-      let(:app) { AppModel.make(name: 'popsicle') }
-      let(:user) { User.make }
-      let(:droplet) { DropletModel.make }
-      let(:deployment) { DeploymentModel.make(app_guid: app.guid, strategy: strategy) }
+      let(:app) { create(:app_model, name: 'popsicle') }
+      let(:user) { create(:user) }
+      let(:droplet) { create(:droplet_model) }
+      let(:deployment) { create(:deployment_model, app_guid: app.guid, strategy: strategy) }
       let(:email) { 'user-email' }
       let(:user_name) { 'user-name' }
       let(:user_audit_info) { UserAuditInfo.new(user_email: email, user_name: user_name, user_guid: user.guid) }
@@ -19,7 +19,7 @@ module VCAP::CloudController
 
       describe '#record_create_deployment' do
         context 'when a droplet is associated with the deployment' do
-          let(:deployment) { DeploymentModel.make(app_guid: app.guid, droplet_guid: droplet.guid, strategy: strategy) }
+          let(:deployment) { create(:deployment_model, app_guid: app.guid, droplet_guid: droplet.guid, strategy: strategy) }
 
           it 'creates a new audit.app.deployment.create event' do
             event = DeploymentEventRepository.record_create(deployment, droplet, user_audit_info, app.name,
@@ -46,7 +46,7 @@ module VCAP::CloudController
         end
 
         context 'when no droplet is associated with the deployment' do
-          let(:deployment) { DeploymentModel.make(app_guid: app.guid) }
+          let(:deployment) { create(:deployment_model, app_guid: app.guid) }
 
           it 'creates a new audit.app.deployment.create event' do
             event = DeploymentEventRepository.record_create(deployment, nil, user_audit_info, app.name,
@@ -73,7 +73,7 @@ module VCAP::CloudController
       end
 
       describe 'record_cancel_deployment' do
-        let(:deployment) { DeploymentModel.make(app_guid: app.guid) }
+        let(:deployment) { create(:deployment_model, app_guid: app.guid) }
 
         it 'creates a new audit.app.deployment.cancel event' do
           event = DeploymentEventRepository.record_cancel(deployment, droplet, user_audit_info, app.name,
@@ -99,7 +99,7 @@ module VCAP::CloudController
       end
 
       describe 'record_continue_deployment' do
-        let(:deployment) { DeploymentModel.make(app_guid: app.guid) }
+        let(:deployment) { create(:deployment_model, app_guid: app.guid) }
 
         it 'creates a new audit.app.deployment.continue event' do
           event = DeploymentEventRepository.record_continue(deployment, droplet, user_audit_info, app.name,

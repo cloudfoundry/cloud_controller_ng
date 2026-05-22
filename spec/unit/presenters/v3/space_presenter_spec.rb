@@ -3,39 +3,31 @@ require 'presenters/v3/space_presenter'
 
 module VCAP::CloudController::Presenters::V3
   RSpec.describe SpacePresenter do
-    let(:space) { VCAP::CloudController::Space.make }
+    let(:space) { create(:space) }
 
     let!(:release_label) do
-      VCAP::CloudController::SpaceLabelModel.make(
-        key_name: 'release',
-        value: 'stable',
-        resource_guid: space.guid
-      )
+      create(:space_label_model, key_name: 'release',
+                                 value: 'stable',
+                                 resource_guid: space.guid)
     end
 
     let!(:potato_label) do
-      VCAP::CloudController::SpaceLabelModel.make(
-        key_prefix: 'maine.gov',
-        key_name: 'potato',
-        value: 'mashed',
-        resource_guid: space.guid
-      )
+      create(:space_label_model, key_prefix: 'maine.gov',
+                                 key_name: 'potato',
+                                 value: 'mashed',
+                                 resource_guid: space.guid)
     end
 
     let!(:mountain_annotation) do
-      VCAP::CloudController::SpaceAnnotationModel.make(
-        key_name: 'altitude',
-        value: '14,411',
-        resource_guid: space.guid
-      )
+      create(:space_annotation_model, key_name: 'altitude',
+                                      value: '14,411',
+                                      resource_guid: space.guid)
     end
 
     let!(:plain_annotation) do
-      VCAP::CloudController::SpaceAnnotationModel.make(
-        key_name: 'grass',
-        value: 'yes',
-        resource_guid: space.guid
-      )
+      create(:space_annotation_model, key_name: 'grass',
+                                      value: 'yes',
+                                      resource_guid: space.guid)
     end
 
     describe '#to_hash' do
@@ -60,7 +52,7 @@ module VCAP::CloudController::Presenters::V3
       end
 
       context 'when the space has a space quota applied to it' do
-        let!(:space_quota) { VCAP::CloudController::SpaceQuotaDefinition.make(organization: space.organization) }
+        let!(:space_quota) { create(:space_quota_definition, organization: space.organization) }
 
         before do
           space_quota.add_space(space)

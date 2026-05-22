@@ -4,14 +4,14 @@ module VCAP::CloudController
   RSpec.describe ServiceInstanceAccess, type: :access do
     subject(:access) { ServiceInstanceAccess.new(Security::AccessContext.new) }
     let(:scopes) { ['cloud_controller.read', 'cloud_controller.write'] }
-    let(:user) { VCAP::CloudController::User.make }
+    let(:user) { create(:user) }
 
-    let(:org) { VCAP::CloudController::Organization.make }
-    let(:space) { VCAP::CloudController::Space.make(organization: org) }
-    let(:service) { VCAP::CloudController::Service.make }
+    let(:org) { create(:organization) }
+    let(:space) { create(:space, organization: org) }
+    let(:service) { create(:service) }
     let(:service_plan_active) { true }
-    let(:service_plan) { VCAP::CloudController::ServicePlan.make(service: service, active: service_plan_active) }
-    let(:service_instance) { VCAP::CloudController::ManagedServiceInstance.make(service_plan:, space:) }
+    let(:service_plan) { create(:service_plan, service: service, active: service_plan_active) }
+    let(:service_instance) { create(:managed_service_instance, service_plan:, space:) }
 
     before { set_current_user(user, scopes:) }
 
@@ -36,7 +36,7 @@ module VCAP::CloudController
       end
 
       context 'user provided service instance' do
-        let(:service_instance) { VCAP::CloudController::UserProvidedServiceInstance.make(space:) }
+        let(:service_instance) { create(:user_provided_service_instance, space:) }
 
         it 'does not delegate to the UserProvidedServiceInstanceAccess' do
           expect_any_instance_of(UserProvidedServiceInstanceAccess).not_to receive(:allowed?).with(service_instance)
@@ -48,7 +48,7 @@ module VCAP::CloudController
 
       context 'when the service_instance_creation feature flag is not set' do
         before do
-          FeatureFlag.make(name: 'service_instance_creation', enabled: false, error_message: nil)
+          create(:feature_flag, name: 'service_instance_creation', enabled: false, error_message: nil)
         end
 
         it_behaves_like 'full access' do
@@ -90,7 +90,7 @@ module VCAP::CloudController
 
       context 'when the service_instance_creation feature flag is not set' do
         before do
-          FeatureFlag.make(name: 'service_instance_creation', enabled: false, error_message: nil)
+          create(:feature_flag, name: 'service_instance_creation', enabled: false, error_message: nil)
         end
 
         it 'allows all operations except create' do
@@ -137,7 +137,7 @@ module VCAP::CloudController
     context 'space developer in a space that the service instance has been shared into' do
       before do
         org.add_user(user)
-        target_space = VCAP::CloudController::Space.make(organization: org)
+        target_space = create(:space, organization: org)
         target_space.add_developer(user)
         service_instance.add_shared_space(target_space)
       end
@@ -304,7 +304,7 @@ module VCAP::CloudController
 
     context 'user in a different organization (defensive)' do
       before do
-        different_organization = VCAP::CloudController::Organization.make
+        different_organization = create(:organization)
         different_organization.add_user(user)
       end
 
@@ -327,7 +327,7 @@ module VCAP::CloudController
 
     context 'manager in a different organization (defensive)' do
       before do
-        different_organization = VCAP::CloudController::Organization.make
+        different_organization = create(:organization)
         different_organization.add_manager(user)
       end
 
@@ -427,7 +427,7 @@ module VCAP::CloudController
       end
 
       context 'user provided service instance' do
-        let(:service_instance) { VCAP::CloudController::UserProvidedServiceInstance.make(space:) }
+        let(:service_instance) { create(:user_provided_service_instance, space:) }
 
         it 'delegates to the UserProvidedServiceInstanceAccess' do
           expect_any_instance_of(UserProvidedServiceInstanceAccess).to receive(:allowed?).with(service_instance)

@@ -6,7 +6,7 @@ RSpec.describe Database::BatchDelete do
     before do
       10.times do |t|
         date = t.days.ago
-        VCAP::CloudController::Event.make(created_at: date)
+        create(:event, created_at: date)
       end
     end
 

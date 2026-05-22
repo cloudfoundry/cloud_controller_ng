@@ -9,17 +9,16 @@ module VCAP::CloudController
       let(:environment_variables) { { 'FOO' => 'bar' } }
       let(:desired_state) { ProcessModel::STARTED }
       let(:app) do
-        AppModel.make(
-          :docker,
-          desired_state:,
-          environment_variables:
-        )
+        create(:app_model,
+               :docker,
+               desired_state:,
+               environment_variables:)
       end
 
-      let(:package) { PackageModel.make(app: app, state: PackageModel::READY_STATE) }
+      let(:package) { create(:package_model, app: app, state: PackageModel::READY_STATE) }
 
-      let!(:droplet) { DropletModel.make(app:) }
-      let!(:process) { ProcessModel.make(:process, state: desired_state, app: app) }
+      let!(:droplet) { create(:droplet_model, app:) }
+      let!(:process) { create(:process_model, :process, state: desired_state, app: app) }
       let(:runner) { instance_double(VCAP::CloudController::Diego::Runner) }
 
       before do
@@ -174,7 +173,7 @@ module VCAP::CloudController
       end
 
       context 'revision to set' do
-        let(:revision) { RevisionModel.make }
+        let(:revision) { create(:revision_model) }
 
         it 'sets the revision of the process if passed in' do
           ProcessRestart.restart(process: process, config: config, stop_in_runtime: false, revision: revision)

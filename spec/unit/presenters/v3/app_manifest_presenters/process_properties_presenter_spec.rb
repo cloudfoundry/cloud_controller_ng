@@ -3,7 +3,7 @@ require 'spec_helper'
 module VCAP::CloudController::Presenters::V3::AppManifestPresenters
   RSpec.describe ProcessPropertiesPresenter do
     describe 'command' do
-      let(:app) { VCAP::CloudController::AppModel.make }
+      let(:app) { create(:app_model) }
 
       context 'when a process does not have a user-specified command' do
         before do
@@ -35,17 +35,15 @@ module VCAP::CloudController::Presenters::V3::AppManifestPresenters
 
     describe '#process_hash' do
       let(:process) do
-        VCAP::CloudController::ProcessModel.make(
-          health_check_type: 'http',
-          health_check_http_endpoint: '/healthy',
-          health_check_invocation_timeout: 10,
-          health_check_interval: 5,
-          readiness_health_check_type: 'http',
-          readiness_health_check_http_endpoint: '/ready',
-          readiness_health_check_invocation_timeout: 20,
-          readiness_health_check_interval: 7,
-          health_check_timeout: 30
-        )
+        create(:process_model, health_check_type: 'http',
+                               health_check_http_endpoint: '/healthy',
+                               health_check_invocation_timeout: 10,
+                               health_check_interval: 5,
+                               readiness_health_check_type: 'http',
+                               readiness_health_check_http_endpoint: '/ready',
+                               readiness_health_check_invocation_timeout: 20,
+                               readiness_health_check_interval: 7,
+                               health_check_timeout: 30)
       end
 
       it 'renders a compact hash of the process' do
@@ -71,9 +69,7 @@ module VCAP::CloudController::Presenters::V3::AppManifestPresenters
       context 'nullable fields' do
         context 'when command is present' do
           let(:process) do
-            VCAP::CloudController::ProcessModel.make(
-              command: './start-command'
-            )
+            create(:process_model, command: './start-command')
           end
 
           it 'includes command in the hash' do
@@ -84,9 +80,7 @@ module VCAP::CloudController::Presenters::V3::AppManifestPresenters
 
         context 'when command is not present' do
           let(:process) do
-            VCAP::CloudController::ProcessModel.make(
-              command: nil
-            )
+            create(:process_model, command: nil)
           end
 
           it 'does not include command in the hash' do
@@ -97,9 +91,7 @@ module VCAP::CloudController::Presenters::V3::AppManifestPresenters
 
         context 'when user is present' do
           let(:process) do
-            VCAP::CloudController::ProcessModel.make(
-              user: 'ContainerUser'
-            )
+            create(:process_model, user: 'ContainerUser')
           end
 
           it 'includes user in the hash' do
@@ -110,9 +102,7 @@ module VCAP::CloudController::Presenters::V3::AppManifestPresenters
 
         context 'when user is not present' do
           let(:process) do
-            VCAP::CloudController::ProcessModel.make(
-              user: nil
-            )
+            create(:process_model, user: nil)
           end
 
           it 'does not include user in the hash' do

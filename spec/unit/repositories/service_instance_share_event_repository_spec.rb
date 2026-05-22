@@ -4,7 +4,7 @@ module VCAP
   module CloudController
     module Repositories
       RSpec.describe ServiceInstanceShareEventRepository do
-        let(:service_instance) { ServiceInstance.make }
+        let(:service_instance) { create(:service_instance) }
         let(:user_guid) { 'user-guid' }
         let(:user_email) { 'user-email' }
         let(:user_name) { 'user-name' }

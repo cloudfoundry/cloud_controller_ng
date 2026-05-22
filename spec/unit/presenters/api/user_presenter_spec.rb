@@ -4,7 +4,7 @@ RSpec.describe UserPresenter do
   describe '#to_hash' do
     subject { UserPresenter.new(user) }
 
-    let(:user) { VCAP::CloudController::User.make(admin: true) }
+    let(:user) { create(:user, admin: true) }
 
     it 'creates a valid JSON' do
       expect(subject.to_hash).to eq({

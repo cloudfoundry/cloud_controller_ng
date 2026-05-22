@@ -5,8 +5,8 @@ module VCAP::CloudController
   module Diego
     RSpec.describe InstancesStatsReporter do
       subject(:instances_reporter) { InstancesStatsReporter.new(bbs_instances_client, log_cache_client) }
-      let(:app) { AppModel.make }
-      let(:process) { ProcessModel.make(instances: desired_instances, app: app, state: ProcessModel::STARTED) }
+      let(:app) { create(:app_model) }
+      let(:process) { create(:process_model, instances: desired_instances, app: app, state: ProcessModel::STARTED) }
       let(:desired_instances) { 1 }
       let(:bbs_instances_client) { instance_double(BbsInstancesClient) }
       let(:log_cache_client) { instance_double(Logcache::ContainerMetricBatcher) }
@@ -799,7 +799,7 @@ module VCAP::CloudController
         end
 
         context 'with multiple processes' do
-          let(:second_process) { ProcessModel.make(state: ProcessModel::STARTED) }
+          let(:second_process) { create(:process_model, state: ProcessModel::STARTED) }
           let(:second_process_actual_lrp_0) do
             ::Diego::Bbs::Models::ActualLRP.new(
               actual_lrp_key: ::Diego::Bbs::Models::ActualLRPKey.new(process_guid: second_process.guid + 'version', index: 0),

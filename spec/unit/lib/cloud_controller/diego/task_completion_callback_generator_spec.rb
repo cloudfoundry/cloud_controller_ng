@@ -7,7 +7,7 @@ module VCAP::CloudController
       subject(:generator) { TaskCompletionCallbackGenerator.new(TestConfig.config_instance) }
 
       describe '#generate' do
-        let(:task) { TaskModel.make }
+        let(:task) { create(:task_model) }
         let(:kubernetes_config) { nil }
         let(:task_config) do
           {

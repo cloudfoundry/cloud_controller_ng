@@ -36,9 +36,8 @@ VCAP::CloudController::DB.load_models_without_migrations_check(db_config, logger
 
 if ENV['NEW_RELIC_ENV'] == 'development'
   $LOAD_PATH.unshift(File.expand_path('../../spec/support', __dir__))
-  require 'machinist/sequel'
-  require 'machinist/object'
-  require 'fakes/blueprints'
+  require 'factories'
+  require 'sham_shim'
 end
 
 module VCAP::CloudController

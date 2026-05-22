@@ -16,7 +16,7 @@ module VCAP::CloudController
       }
     end
 
-    let(:operation) { ServiceInstanceOperation.make(operation_attributes) }
+    let(:operation) { create(:service_instance_operation, operation_attributes) }
 
     before do
       operation.this.update(updated_at: updated_at_time, created_at: created_at_time)
@@ -55,13 +55,13 @@ module VCAP::CloudController
 
     describe 'when two are created with the same id' do
       describe 'when a ServiceInstanceOperation exists' do
-        let(:service_instance) { ServiceInstance.make }
+        let(:service_instance) { create(:service_instance) }
 
-        before { ServiceInstanceOperation.make(service_instance_id: service_instance.id) }
+        before { create(:service_instance_operation, service_instance_id: service_instance.id) }
 
         it 'raises an exception when creating another ServiceInstanceOperation' do
           expect do
-            ServiceInstanceOperation.make(service_instance_id: service_instance.id)
+            create(:service_instance_operation, service_instance_id: service_instance.id)
           end.to raise_error(Sequel::UniqueConstraintViolation)
         end
       end

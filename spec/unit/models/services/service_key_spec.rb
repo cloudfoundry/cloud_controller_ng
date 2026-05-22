@@ -16,14 +16,14 @@ module VCAP::CloudController
     it { is_expected.to have_timestamp_columns }
 
     describe 'Associations' do
-      it { is_expected.to have_associated :service_instance, associated_instance: ->(service_key) { ServiceInstance.make(space: service_key.space) } }
+      it { is_expected.to have_associated :service_instance, associated_instance: ->(service_key) { create(:service_instance, space: service_key.space) } }
     end
 
     describe 'uniqueness' do
       it 'enforces uniqueness of name and service_instance_id' do
-        existing = ServiceKey.make
+        existing = create(:service_key)
         expect do
-          ServiceKey.make(name: existing.name, service_instance: existing.service_instance)
+          create(:service_key, name: existing.name, service_instance: existing.service_instance)
         end.to raise_error(Sequel::ValidationFailed, /unique/)
       end
     end
@@ -35,7 +35,7 @@ module VCAP::CloudController
       it { is_expected.to validate_db_presence :credentials }
 
       context 'MaxServiceKeysPolicy' do
-        let(:service_key) { ServiceKey.make }
+        let(:service_key) { create(:service_key) }
         let(:existing_service_key_dataset) { double(Sequel::Dataset, count: 1) }
         let(:policy) { double(MaxServiceKeysPolicy) }
         let(:space_policy) { double(MaxServiceKeysPolicy) }
@@ -53,7 +53,7 @@ module VCAP::CloudController
         end
 
         context 'with a space quota' do
-          let(:space_quota) { SpaceQuotaDefinition.make(organization: service_key.service_instance.organization) }
+          let(:space_quota) { create(:space_quota_definition, organization: service_key.service_instance.organization) }
 
           before do
             quota = space_quota
@@ -88,14 +88,12 @@ module VCAP::CloudController
     end
 
     it_behaves_like 'a model with an encrypted attribute' do
-      let(:service_instance) { ManagedServiceInstance.make }
+      let(:service_instance) { create(:managed_service_instance) }
 
       def new_model
-        ServiceKey.make(
-          name: Sham.name,
-          service_instance: service_instance,
-          credentials: value_to_encrypt
-        )
+        create(:service_key, name: Sham.name,
+                             service_instance: service_instance,
+                             credentials: value_to_encrypt)
       end
 
       let(:encrypted_attr) { :credentials }
@@ -104,7 +102,7 @@ module VCAP::CloudController
 
     describe '#credhub_reference?' do
       context 'when it is not a credhub reference' do
-        let(:service_key) { ServiceKey.make }
+        let(:service_key) { create(:service_key) }
 
         it 'returns true' do
           expect(service_key.credhub_reference?).to be(false)
@@ -117,7 +115,7 @@ module VCAP::CloudController
             'credhub-ref' => '((/c/my-service-broker/my-service/faa677f5-25cd-4f1e-8921-14a9d5ab48b8/credentials))'
           }
         end
-        let(:service_key) { ServiceKey.make(credentials: credhub_ref) }
+        let(:service_key) { create(:service_key, credentials: credhub_ref) }
 
         it 'returns false' do
           expect(service_key.credhub_reference?).to be(true)
@@ -127,7 +125,7 @@ module VCAP::CloudController
 
     describe '#credhub_reference' do
       context 'when the service key has no credentials' do
-        let(:service_key) { ServiceKey.make(credentials: nil) }
+        let(:service_key) { create(:service_key, credentials: nil) }
 
         it 'returns nil' do
           expect(service_key.credhub_reference).to be_nil
@@ -135,7 +133,7 @@ module VCAP::CloudController
       end
 
       context 'when it does not have a credhub reference' do
-        let(:service_key) { ServiceKey.make }
+        let(:service_key) { create(:service_key) }
 
         it 'returns nil' do
           expect(service_key.credhub_reference).to be_nil
@@ -145,7 +143,7 @@ module VCAP::CloudController
       context 'when it has a credhub reference' do
         let(:credential_name) { '((/c/my-service-broker/my-service/faa677f5-25cd-4f1e-8921-14a9d5ab48b8/credentials))' }
         let(:credhub_ref) { { 'credhub-ref' => credential_name } }
-        let(:service_key) { ServiceKey.make(credentials: credhub_ref) }
+        let(:service_key) { create(:service_key, credentials: credhub_ref) }
 
         it 'returns false' do
           expect(service_key.credhub_reference).to eq(credential_name)
@@ -154,12 +152,12 @@ module VCAP::CloudController
     end
 
     describe 'user_visibility_filter' do
-      let!(:service_instance) { ManagedServiceInstance.make }
-      let!(:service_key) { ServiceKey.make(service_instance:) }
-      let!(:other_key) { ServiceKey.make }
+      let!(:service_instance) { create(:managed_service_instance) }
+      let!(:service_key) { create(:service_key, service_instance:) }
+      let!(:other_key) { create(:service_key) }
       let(:developer) { make_developer_for_space(service_instance.space) }
       let(:auditor) { make_auditor_for_space(service_instance.space) }
-      let(:other_user) { User.make }
+      let(:other_user) { create(:user, guid: SecureRandom.uuid) }
 
       it 'only open to the space developers' do
         visible_to_developer = ServiceKey.user_visible(developer)
@@ -173,7 +171,7 @@ module VCAP::CloudController
     end
 
     describe '#save_with_attributes_and_new_operation' do
-      let(:service_instance) { ServiceInstance.make }
+      let(:service_instance) { create(:service_instance) }
       let(:binding) do
         ServiceKey.new(
           service_instance: service_instance,
@@ -266,10 +264,10 @@ module VCAP::CloudController
 
     describe '#destroy' do
       it 'cascades deletion of related dependencies' do
-        binding = ServiceKey.make
-        ServiceKeyLabelModel.make(key_name: 'foo', value: 'bar', service_key: binding)
-        ServiceKeyAnnotationModel.make(key_name: 'baz', value: 'wow', service_key: binding)
-        last_operation = ServiceKeyOperation.make
+        binding = create(:service_key)
+        create(:service_key_label_model, key_name: 'foo', value: 'bar', service_key: binding)
+        create(:service_key_annotation_model, key_name: 'baz', value: 'wow', service_key: binding)
+        last_operation = create(:service_key_operation)
         binding.service_key_operation = last_operation
 
         binding.destroy

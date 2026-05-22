@@ -26,8 +26,8 @@ module VCAP::CloudController
 
     describe 'Creating' do
       context 'as an org manager' do
-        let(:user) { User.make }
-        let(:organization) { Organization.make }
+        let(:user) { create(:user) }
+        let(:organization) { create(:organization) }
 
         let(:request_body) do
           Oj.dump({ name: 'blah.com', owning_organization_guid: organization.guid })
@@ -41,7 +41,7 @@ module VCAP::CloudController
 
         context 'when domain_creation feature_flag is disabled' do
           before do
-            FeatureFlag.make(name: 'private_domain_creation', enabled: false, error_message: nil)
+            create(:feature_flag, name: 'private_domain_creation', enabled: false, error_message: nil)
           end
 
           it 'returns FeatureDisabled' do
@@ -56,10 +56,10 @@ module VCAP::CloudController
     end
 
     context 'list' do
-      let(:user) { User.make }
-      let(:space) { VCAP::CloudController::Space.make }
+      let(:user) { create(:user) }
+      let(:space) { create(:space) }
       let(:organization) { space.organization }
-      let!(:private_domain) { PrivateDomain.make(owning_organization: organization) }
+      let!(:private_domain) { create(:private_domain, owning_organization: organization) }
 
       context 'for space manager' do
         before do
@@ -102,10 +102,10 @@ module VCAP::CloudController
       end
 
       describe 'shared organizations associations' do
-        let(:private_domain) { PrivateDomain.make }
+        let(:private_domain) { create(:private_domain) }
 
         before do
-          Organization.make.add_private_domain(private_domain)
+          create(:organization).add_private_domain(private_domain)
         end
 
         it 'returns links for shared organizations' do
@@ -120,7 +120,7 @@ module VCAP::CloudController
     end
 
     describe 'Validation messages' do
-      let(:organization) { Organization.make }
+      let(:organization) { create(:organization) }
 
       it 'returns the OrgQuotaTotalPrivateDomainExceed message' do
         quota_definition = organization.quota_definition

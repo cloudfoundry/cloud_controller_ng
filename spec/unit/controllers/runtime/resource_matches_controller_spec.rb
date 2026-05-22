@@ -11,7 +11,7 @@ module VCAP::CloudController
     end
 
     def resource_match_request(verb, path, matches, non_matches)
-      user = User.make(admin: false, active: true)
+      user = create(:user, admin: false, active: true)
       req = Oj.dump(matches + non_matches)
 
       set_current_user(user)
@@ -25,7 +25,7 @@ module VCAP::CloudController
 
     describe 'when the app_bits_upload feature flag is enabled' do
       before do
-        FeatureFlag.make(name: 'app_bits_upload', enabled: true)
+        create(:feature_flag, name: 'app_bits_upload', enabled: true)
       end
 
       describe 'PUT /v2/resource_match' do
@@ -68,7 +68,7 @@ module VCAP::CloudController
 
     describe 'when the app_bits_upload feature flag is disabled' do
       before do
-        FeatureFlag.make(name: 'app_bits_upload', enabled: false)
+        create(:feature_flag, name: 'app_bits_upload', enabled: false)
       end
 
       it 'allows the upload if the user is an admin' do
@@ -79,7 +79,7 @@ module VCAP::CloudController
       end
 
       it 'returns FeatureDisabled unless the user is an admin' do
-        set_current_user(User.make)
+        set_current_user(create(:user))
 
         put '/v2/resource_match', '[]'
 
@@ -91,7 +91,7 @@ module VCAP::CloudController
 
     describe 'when the resource_matching flag is disabled' do
       before do
-        FeatureFlag.make(name: 'resource_matching', enabled: false)
+        create(:feature_flag, name: 'resource_matching', enabled: false)
       end
 
       it 'returns an empty list' do

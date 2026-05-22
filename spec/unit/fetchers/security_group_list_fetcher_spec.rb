@@ -8,11 +8,11 @@ module VCAP::CloudController
     let(:fetcher) { SecurityGroupListFetcher }
     let(:message) { SecurityGroupListMessage.from_params(filters) }
     let(:filters) { {} }
-    let!(:security_group_1) { SecurityGroup.make }
-    let!(:security_group_2) { SecurityGroup.make }
-    let!(:security_group_3) { SecurityGroup.make }
+    let!(:security_group_1) { create(:security_group) }
+    let!(:security_group_2) { create(:security_group) }
+    let!(:security_group_3) { create(:security_group) }
     let(:security_groups) {}
-    let(:associated_space) { Space.make }
+    let(:associated_space) { create(:space) }
 
     shared_examples 'eager loading' do
       it 'eager loads running and staging spaces' do

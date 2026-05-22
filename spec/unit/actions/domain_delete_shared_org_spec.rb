@@ -8,8 +8,8 @@ module VCAP::CloudController
 
     describe '#delete' do
       context 'when deleting a shared domain' do
-        let(:domain) { SharedDomain.make }
-        let(:shared_org1) { Organization.make }
+        let(:domain) { create(:shared_domain) }
+        let(:shared_org1) { create(:organization) }
 
         it 'raises an error' do
           expect do
@@ -21,8 +21,8 @@ module VCAP::CloudController
       end
 
       context 'when the org is the owning org' do
-        let(:shared_org1) { Organization.make }
-        let(:domain) { PrivateDomain.make(owning_organization: shared_org1) }
+        let(:shared_org1) { create(:organization) }
+        let(:domain) { create(:private_domain, owning_organization: shared_org1) }
 
         it 'raises an error' do
           expect do
@@ -34,8 +34,8 @@ module VCAP::CloudController
       end
 
       context 'when unsharing a private domain not shared with org' do
-        let(:domain) { PrivateDomain.make }
-        let(:shared_org1) { Organization.make }
+        let(:domain) { create(:private_domain) }
+        let(:shared_org1) { create(:organization) }
 
         it 'deletes shared orgs for private domain' do
           expect do
@@ -47,8 +47,8 @@ module VCAP::CloudController
       end
 
       context 'when unsharing a shared private domain' do
-        let(:domain) { PrivateDomain.make }
-        let(:shared_org1) { Organization.make }
+        let(:domain) { create(:private_domain) }
+        let(:shared_org1) { create(:organization) }
 
         before do
           domain.add_shared_organization(shared_org1)
@@ -62,9 +62,9 @@ module VCAP::CloudController
       end
 
       context 'when unsharing a private domain with routes in the org' do
-        let(:domain) { PrivateDomain.make }
-        let(:space) { Space.make }
-        let(:route) { Route.make(space:, domain:) }
+        let(:domain) { create(:private_domain) }
+        let(:space) { create(:space) }
+        let(:route) { create(:route, space:, domain:) }
 
         before do
           domain.add_shared_organization(space.organization)

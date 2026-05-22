@@ -42,7 +42,7 @@ RSpec.describe 'max memory policies' do
   describe TaskMaxMemoryPolicy do
     subject(:validator) { TaskMaxMemoryPolicy.new(task, org_or_space, error_name) }
 
-    let(:task) { VCAP::CloudController::TaskModel.make memory_in_mb: 150, state: VCAP::CloudController::TaskModel::RUNNING_STATE }
+    let(:task) { create(:task_model, memory_in_mb: 150, state: VCAP::CloudController::TaskModel::RUNNING_STATE) }
 
     context 'when not cancelling a task' do
       it 'registers error when quota is exceeded' do

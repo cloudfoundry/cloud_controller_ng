@@ -4,15 +4,15 @@ require 'messages/deployment_create_message'
 
 module VCAP::CloudController
   RSpec.describe DeploymentCreate do
-    let(:app) { AppModel.make(desired_state: ProcessModel::STARTED) }
+    let(:app) { create(:app_model, desired_state: ProcessModel::STARTED) }
 
-    let!(:web_process) { ProcessModel.make(app: app, instances: original_instances, memory: 500, disk_quota: 1024, log_rate_limit: 101, state: process_state) }
-    let(:original_droplet) { DropletModel.make(app: app, process_types: { 'web' => 'asdf' }) }
-    let(:next_droplet) { DropletModel.make(app: app, process_types: { 'web' => '1234' }) }
-    let!(:route1) { Route.make(space: app.space) }
-    let!(:route_mapping1) { RouteMappingModel.make(app: app, route: route1, process_type: web_process.type) }
-    let!(:route2) { Route.make(space: app.space) }
-    let!(:route_mapping2) { RouteMappingModel.make(app: app, route: route2, process_type: web_process.type) }
+    let!(:web_process) { create(:process, app: app, instances: original_instances, memory: 500, disk_quota: 1024, log_rate_limit: 101, state: process_state) }
+    let(:original_droplet) { create(:droplet_model, app: app, process_types: { 'web' => 'asdf' }, set_as_current_droplet: false) }
+    let(:next_droplet) { create(:droplet_model, app: app, process_types: { 'web' => '1234' }, set_as_current_droplet: false) }
+    let!(:route1) { create(:route, space: app.space) }
+    let!(:route_mapping1) { create(:route_mapping_model, app: app, route: route1, process_type: web_process.type) }
+    let!(:route2) { create(:route, space: app.space) }
+    let!(:route_mapping2) { create(:route_mapping_model, app: app, route: route2, process_type: web_process.type) }
     let(:user_audit_info) { UserAuditInfo.new(user_guid: '123', user_email: 'connor@example.com', user_name: 'braa') }
     let(:runner) { instance_double(Diego::Runner) }
 
@@ -49,16 +49,14 @@ module VCAP::CloudController
     describe '#create' do
       context 'when the old process has metadata' do
         before do
-          ProcessLabelModel.make(
-            key_name: 'freaky',
-            value: 'wednesday',
-            resource_guid: web_process.guid
-          )
-          ProcessAnnotationModel.make(
-            key_name: 'tokyo',
-            value: 'grapes',
-            resource_guid: web_process.guid
-          )
+          create(:process_label_model,
+                 key_name: 'freaky',
+                 value: 'wednesday',
+                 resource_guid: web_process.guid)
+          create(:process_annotation_model,
+                 key_name: 'tokyo',
+                 value: 'grapes',
+                 resource_guid: web_process.guid)
         end
 
         it 'assigns the old process metadata to the new process' do
@@ -119,7 +117,7 @@ module VCAP::CloudController
           end
 
           it 'has the reason for a droplet changed' do
-            RevisionModel.make(app: app, droplet_guid: app.droplet.guid, environment_variables: app.environment_variables)
+            create(:revision_model, app: app, droplet_guid: app.droplet.guid, environment_variables: app.environment_variables)
             DeploymentCreate.create(app:, message:, user_audit_info:)
 
             revision = RevisionModel.last
@@ -213,57 +211,55 @@ module VCAP::CloudController
 
           context 'when there are multiple web processes' do
             let!(:web_process) do
-              ProcessModel.make(
-                app: app,
-                type: ProcessTypes::WEB,
-                created_at: Time.now - 24.hours,
-                command: 'old command!',
-                instances: 3,
-                memory: 1,
-                file_descriptors: 3,
-                disk_quota: 5,
-                metadata: { foo: 'bar' },
-                detected_buildpack: 'ruby yo',
-                health_check_timeout: 7,
-                health_check_type: 'http',
-                health_check_http_endpoint: '/old_dawg',
-                health_check_invocation_timeout: 9,
-                health_check_interval: 10,
-                readiness_health_check_type: 'http',
-                readiness_health_check_http_endpoint: '/ready',
-                readiness_health_check_invocation_timeout: 21,
-                readiness_health_check_interval: 11,
-                log_rate_limit: 11,
-                enable_ssh: true,
-                ports: []
-              )
+              create(:process,
+                     app: app,
+                     type: ProcessTypes::WEB,
+                     created_at: Time.now - 24.hours,
+                     command: 'old command!',
+                     instances: 3,
+                     memory: 1,
+                     file_descriptors: 3,
+                     disk_quota: 5,
+                     metadata: { foo: 'bar' },
+                     detected_buildpack: 'ruby yo',
+                     health_check_timeout: 7,
+                     health_check_type: 'http',
+                     health_check_http_endpoint: '/old_dawg',
+                     health_check_invocation_timeout: 9,
+                     health_check_interval: 10,
+                     readiness_health_check_type: 'http',
+                     readiness_health_check_http_endpoint: '/ready',
+                     readiness_health_check_invocation_timeout: 21,
+                     readiness_health_check_interval: 11,
+                     log_rate_limit: 11,
+                     enable_ssh: true,
+                     ports: [])
             end
 
             let!(:newer_web_process) do
-              ProcessModel.make(
-                app: app,
-                type: ProcessTypes::WEB,
-                created_at: Time.now - 23.hours,
-                command: 'new command!',
-                instances: 4,
-                memory: 2,
-                file_descriptors: 4,
-                disk_quota: 6,
-                metadata: { qux: 'baz' },
-                detected_buildpack: 'golang',
-                health_check_timeout: 8,
-                health_check_type: 'port',
-                health_check_http_endpoint: '/new_cat',
-                health_check_invocation_timeout: 10,
-                health_check_interval: 11,
-                readiness_health_check_type: 'http',
-                readiness_health_check_http_endpoint: '/new_ready',
-                readiness_health_check_invocation_timeout: 22,
-                readiness_health_check_interval: 15,
-                log_rate_limit: 12,
-                enable_ssh: false,
-                ports: nil
-              )
+              create(:process,
+                     app: app,
+                     type: ProcessTypes::WEB,
+                     created_at: Time.now - 23.hours,
+                     command: 'new command!',
+                     instances: 4,
+                     memory: 2,
+                     file_descriptors: 4,
+                     disk_quota: 6,
+                     metadata: { qux: 'baz' },
+                     detected_buildpack: 'golang',
+                     health_check_timeout: 8,
+                     health_check_type: 'port',
+                     health_check_http_endpoint: '/new_cat',
+                     health_check_invocation_timeout: 10,
+                     health_check_interval: 11,
+                     readiness_health_check_type: 'http',
+                     readiness_health_check_http_endpoint: '/new_ready',
+                     readiness_health_check_invocation_timeout: 22,
+                     readiness_health_check_interval: 15,
+                     log_rate_limit: 12,
+                     enable_ssh: false,
+                     ports: nil)
             end
 
             it 'creates a process of web type with the same characteristics as the newer web process' do
@@ -352,8 +348,8 @@ module VCAP::CloudController
           end
 
           context 'when the app does not have a droplet set' do
-            let(:app_without_current_droplet) { AppModel.make }
-            let(:next_droplet) { DropletModel.make(app: app_without_current_droplet, process_types: { 'web' => 'asdf' }) }
+            let(:app_without_current_droplet) { create(:app_model) }
+            let(:next_droplet) { create(:droplet_model, app: app_without_current_droplet, process_types: { 'web' => 'asdf' }, set_as_current_droplet: false) }
 
             it 'sets the droplet on the deployment' do
               deployment = DeploymentCreate.create(app: app_without_current_droplet, message: message, user_audit_info: user_audit_info)
@@ -395,7 +391,7 @@ module VCAP::CloudController
           end
 
           context 'when the current droplet assignment fails' do
-            let(:unaffiliated_droplet) { DropletModel.make }
+            let(:unaffiliated_droplet) { create(:droplet_model) }
             let(:message) do
               DeploymentCreateMessage.new({
                                             relationships: { app: { data: { guid: app.guid } } },
@@ -413,18 +409,18 @@ module VCAP::CloudController
           context 'when there is an existing deployment' do
             let(:originally_desired_instance_count) { 10 }
             let!(:existing_deployment) do
-              DeploymentModel.make(
-                app: app,
-                state: existing_state,
-                droplet: nil,
-                previous_droplet: original_droplet,
-                original_web_process_instance_count: originally_desired_instance_count
-              )
+              create(:deployment_model,
+                     app: app,
+                     state: existing_state,
+                     droplet: nil,
+                     previous_droplet: original_droplet,
+                     original_web_process_instance_count: originally_desired_instance_count)
             end
 
             before do
               web_process.update(instances: 5)
               web_process.save
+              app.update(droplet: original_droplet)
             end
 
             context 'when the existing deployment is DEPLOYING' do
@@ -638,10 +634,10 @@ module VCAP::CloudController
               end
 
               context 'quota validations' do
-                let!(:web_process) { ProcessModel.make(app: app, instances: 3, memory: 999) }
+                let!(:web_process) { create(:process, app: app, instances: 3, memory: 999) }
 
                 before do
-                  app.organization.quota_definition = QuotaDefinition.make(app.organization, memory_limit: 10_000)
+                  app.organization.quota_definition = create(:quota_definition, memory_limit: 10_000)
                   app.organization.save
                 end
 
@@ -686,10 +682,10 @@ module VCAP::CloudController
               end
 
               context 'quota validations' do
-                let!(:web_process) { ProcessModel.make(app: app, instances: 3, memory: 999) }
+                let!(:web_process) { create(:process, app: app, instances: 3, memory: 999) }
 
                 before do
-                  app.organization.quota_definition = QuotaDefinition.make(app.organization, memory_limit: 10_000)
+                  app.organization.quota_definition = create(:quota_definition, memory_limit: 10_000)
                   app.organization.save
                 end
 
@@ -738,7 +734,7 @@ module VCAP::CloudController
 
         context 'when the same droplet is provided (zdt-restart)' do
           let!(:revision) do
-            RevisionModel.make(app: app, droplet_guid: app.droplet_guid)
+            create(:revision_model, app: app, droplet_guid: app.droplet_guid)
           end
 
           it 'does NOT creates a revision' do
@@ -875,10 +871,10 @@ module VCAP::CloudController
             end
 
             context 'quota validations' do
-              let!(:web_process) { ProcessModel.make(app: app, instances: 3, memory: 999, state: 'STOPPED') }
+              let!(:web_process) { create(:process, app: app, instances: 3, memory: 999, state: 'STOPPED') }
 
               before do
-                app.organization.quota_definition = QuotaDefinition.make(app.organization, memory_limit: 10_000)
+                app.organization.quota_definition = create(:quota_definition, memory_limit: 10_000)
                 app.organization.save
               end
 
@@ -932,10 +928,10 @@ module VCAP::CloudController
             end
 
             context 'quota validations' do
-              let!(:web_process) { ProcessModel.make(app: app, instances: 3, memory: 999, state: process_state) }
+              let!(:web_process) { create(:process, app: app, instances: 3, memory: 999, state: process_state) }
 
               before do
-                app.organization.quota_definition = QuotaDefinition.make(app.organization, memory_limit: 10_000)
+                app.organization.quota_definition = create(:quota_definition, memory_limit: 10_000)
                 app.organization.save
               end
 
@@ -981,7 +977,7 @@ module VCAP::CloudController
             end
 
             context 'quota validations' do
-              let!(:web_process) { ProcessModel.make(app: app, instances: 3, disk_quota: 999, state: process_state) }
+              let!(:web_process) { create(:process, app: app, instances: 3, disk_quota: 999, state: process_state) }
 
               before do
                 TestConfig.override(maximum_app_disk_in_mb: 1000)
@@ -1030,10 +1026,10 @@ module VCAP::CloudController
             end
 
             context 'quota validations' do
-              let!(:web_process) { ProcessModel.make(app: app, instances: 3, log_rate_limit: 999, memory: 999, state: process_state) }
+              let!(:web_process) { create(:process, app: app, instances: 3, log_rate_limit: 999, memory: 999, state: process_state) }
 
               before do
-                app.organization.quota_definition = QuotaDefinition.make(app.organization, log_rate_limit: 10_000)
+                app.organization.quota_definition = create(:quota_definition, log_rate_limit: 10_000)
                 app.organization.save
               end
 
@@ -1142,27 +1138,25 @@ module VCAP::CloudController
       end
 
       context 'when a revision is provided on the message (rollback)' do
-        let(:revision_droplet) { DropletModel.make(app: app, process_types: { 'web' => '1234' }) }
-        let(:rollback_droplet) { DropletModel.make(app: app, process_types: { 'web' => '5678' }) }
+        let(:revision_droplet) { create(:droplet_model, app: app, process_types: { 'web' => '1234' }, set_as_current_droplet: false) }
+        let(:rollback_droplet) { create(:droplet_model, app: app, process_types: { 'web' => '5678' }, set_as_current_droplet: false) }
 
         let!(:rollback_revision) do
-          RevisionModel.make(
-            app_guid: app.guid,
-            description: 'rollback revision',
-            droplet_guid: rollback_droplet.guid,
-            environment_variables: { 'foo' => 'var2' },
-            version: 2
-          )
+          create(:revision_model,
+                 app_guid: app.guid,
+                 description: 'rollback revision',
+                 droplet_guid: rollback_droplet.guid,
+                 environment_variables: { 'foo' => 'var2' },
+                 version: 2)
         end
 
         let!(:revision) do
-          RevisionModel.make(
-            app_guid: app.guid,
-            description: 'latest revision',
-            droplet_guid: revision_droplet.guid,
-            environment_variables: { 'foo' => 'var' },
-            version: 3
-          )
+          create(:revision_model,
+                 app_guid: app.guid,
+                 description: 'latest revision',
+                 droplet_guid: revision_droplet.guid,
+                 environment_variables: { 'foo' => 'var' },
+                 version: 3)
         end
 
         let(:message) do
@@ -1287,12 +1281,11 @@ module VCAP::CloudController
 
         context 'when trying to roll back to a revision where the code and config has not changed' do
           let!(:initial_revision) do
-            RevisionModel.make(
-              app_guid: app.guid,
-              droplet_guid: revision.droplet_guid,
-              environment_variables: revision.environment_variables,
-              version: 1
-            )
+            create(:revision_model,
+                   app_guid: app.guid,
+                   droplet_guid: revision.droplet_guid,
+                   environment_variables: revision.environment_variables,
+                   version: 1)
           end
 
           let(:message) do

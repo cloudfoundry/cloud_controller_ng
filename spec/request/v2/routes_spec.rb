@@ -1,8 +1,8 @@
 require 'spec_helper'
 
 RSpec.describe 'Routes' do
-  let(:user) { VCAP::CloudController::User.make }
-  let(:space) { VCAP::CloudController::Space.make }
+  let(:user) { create(:user) }
+  let(:space) { create(:space) }
 
   before do
     space.organization.add_user(user)
@@ -14,8 +14,8 @@ RSpec.describe 'Routes' do
   end
 
   describe 'GET /v2/routes' do
-    let!(:route) { VCAP::CloudController::Route.make(domain:, space:) }
-    let(:domain) { VCAP::CloudController::SharedDomain.make }
+    let!(:route) { create(:route, domain:, space:) }
+    let(:domain) { create(:shared_domain) }
 
     it 'lists all routes' do
       get '/v2/routes', nil, headers_for(user)
@@ -55,7 +55,7 @@ RSpec.describe 'Routes' do
 
     context 'with inline-relations-depth' do
       let!(:process) { VCAP::CloudController::ProcessModelFactory.make(space:) }
-      let!(:route_mapping) { VCAP::CloudController::RouteMappingModel.make(app: process.app, process_type: process.type, route: route) }
+      let!(:route_mapping) { create(:route_mapping_model, app: process.app, process_type: process.type, route: route) }
 
       it 'includes related records' do
         get '/v2/routes?inline-relations-depth=1', nil, headers_for(user)
@@ -189,10 +189,10 @@ RSpec.describe 'Routes' do
   end
 
   describe 'GET /v2/routes/:guid' do
-    let!(:route) { VCAP::CloudController::Route.make(domain:, space:) }
+    let!(:route) { create(:route, domain:, space:) }
 
     context 'with a shared domain' do
-      let(:domain) { VCAP::CloudController::SharedDomain.make }
+      let(:domain) { create(:shared_domain) }
 
       it 'maps domain_url to the shared domains controller' do
         get "/v2/routes/#{route.guid}", nil, headers_for(user)
@@ -225,7 +225,7 @@ RSpec.describe 'Routes' do
     end
 
     context 'with a private domain' do
-      let(:domain) { VCAP::CloudController::PrivateDomain.make(router_group_guid: 'tcp-group', owning_organization: space.organization) }
+      let(:domain) { create(:private_domain, router_group_guid: 'tcp-group', owning_organization: space.organization) }
 
       it 'maps domain_url to the shared domains controller' do
         get "/v2/routes/#{route.guid}", nil, headers_for(user)
@@ -239,7 +239,7 @@ RSpec.describe 'Routes' do
 
   describe 'POST /v2/routes' do
     it 'creates a route' do
-      domain = VCAP::CloudController::Domain.make
+      domain = create(:domain)
       post_params = Oj.dump({
                               domain_guid: domain.guid,
                               space_guid: space.guid,
@@ -278,8 +278,8 @@ RSpec.describe 'Routes' do
 
   describe 'GET /v2/routes/:guid/route_mappings' do
     let(:process) { VCAP::CloudController::ProcessModelFactory.make(space:) }
-    let(:route) { VCAP::CloudController::Route.make(space:) }
-    let!(:route_mapping) { VCAP::CloudController::RouteMappingModel.make(app: process.app, route: route, process_type: process.type) }
+    let(:route) { create(:route, space:) }
+    let!(:route_mapping) { create(:route_mapping_model, app: process.app, route: route, process_type: process.type) }
 
     it 'lists associated route mappings' do
       get "/v2/routes/#{route.guid}/route_mappings", nil, headers_for(user)
@@ -316,8 +316,8 @@ RSpec.describe 'Routes' do
 
   describe 'GET /v2/routes/:guid/apps' do
     let(:process) { VCAP::CloudController::ProcessModelFactory.make(space:) }
-    let(:route) { VCAP::CloudController::Route.make(space:) }
-    let!(:route_mapping) { VCAP::CloudController::RouteMappingModel.make(app: process.app, route: route, process_type: process.type) }
+    let(:route) { create(:route, space:) }
+    let!(:route_mapping) { create(:route_mapping_model, app: process.app, route: route, process_type: process.type) }
 
     it 'lists the associated apps' do
       get "/v2/routes/#{route.guid}/apps", nil, headers_for(user)

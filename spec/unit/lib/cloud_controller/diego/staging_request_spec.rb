@@ -3,7 +3,7 @@ require 'cloud_controller/diego/staging_request'
 
 module VCAP::CloudController::Diego
   RSpec.describe StagingRequest do
-    let(:isolation_segment_model) { VCAP::CloudController::IsolationSegmentModel.make }
+    let(:isolation_segment_model) { create(:isolation_segment_model) }
     let(:process) do
       VCAP::CloudController::ProcessModelFactory.make(
         stack: VCAP::CloudController::Stack.default,

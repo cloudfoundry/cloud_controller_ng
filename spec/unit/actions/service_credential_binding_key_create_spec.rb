@@ -10,8 +10,8 @@ module VCAP::CloudController
       let(:audit_hash) { { some_info: 'some_value' } }
       let(:user_guid) { Sham.uaa_id }
       let(:user_audit_info) { UserAuditInfo.new(user_email: 'run@lola.run', user_guid: user_guid) }
-      let(:org) { Organization.make }
-      let(:space) { Space.make(organization: org) }
+      let(:org) { create(:organization) }
+      let(:space) { create(:space, organization: org) }
       let(:binding_details) {}
       let(:name) { 'test-key' }
       let(:binding_event_repo) { instance_double(Repositories::ServiceGenericBindingEventRepository) }
@@ -55,7 +55,7 @@ module VCAP::CloudController
           end
 
           context 'when a key with the same name already exists' do
-            let!(:binding) { ServiceKey.make(service_instance: service_instance, name: message.name) }
+            let!(:binding) { create(:service_key, service_instance: service_instance, name: message.name) }
 
             context 'when no last key operation exists' do
               it 'raises an error' do
@@ -142,7 +142,7 @@ module VCAP::CloudController
         end
 
         context 'user-provided service instance' do
-          let(:service_instance) { UserProvidedServiceInstance.make }
+          let(:service_instance) { create(:user_provided_service_instance) }
 
           it 'raises error' do
             expect { action.precursor(service_instance, message:) }.to raise_error(
@@ -153,7 +153,7 @@ module VCAP::CloudController
         end
 
         context 'managed service instance' do
-          let(:service_instance) { ManagedServiceInstance.make(space:) }
+          let(:service_instance) { create(:managed_service_instance, space:) }
 
           context 'validations' do
             context 'when plan is not bindable' do
@@ -206,7 +206,7 @@ module VCAP::CloudController
             end
 
             context 'when the name is taken' do
-              let(:existing_service_key) { ServiceKey.make(service_instance: service_instance, name: message.name) }
+              let(:existing_service_key) { create(:service_key, service_instance: service_instance, name: message.name) }
 
               it 'raises an error' do
                 expect { action.precursor(service_instance, message:) }.to raise_error(
@@ -223,13 +223,13 @@ module VCAP::CloudController
         end
 
         context 'quotas' do
-          let(:service_instance) { ManagedServiceInstance.make(space:) }
+          let(:service_instance) { create(:managed_service_instance, space:) }
 
           context 'when service key limit has been reached for the space' do
             before do
-              quota = SpaceQuotaDefinition.make(total_service_keys: 1, organization: org)
+              quota = create(:space_quota_definition, total_service_keys: 1, organization: org)
               quota.add_space(space)
-              ServiceKey.make(service_instance:)
+              create(:service_key, service_instance:)
             end
 
             it 'raises an error' do
@@ -242,9 +242,9 @@ module VCAP::CloudController
 
           context 'when service key limit has been reached for the org' do
             before do
-              quotas = QuotaDefinition.make(total_service_keys: 1)
+              quotas = create(:quota_definition, total_service_keys: 1)
               quotas.add_organization(org)
-              ServiceKey.make(service_instance:)
+              create(:service_key, service_instance:)
             end
 
             it 'raises an error' do
@@ -257,7 +257,7 @@ module VCAP::CloudController
         end
 
         context 'when creating keys with the same name concurrently' do
-          let(:service_instance) { ManagedServiceInstance.make(space:) }
+          let(:service_instance) { create(:managed_service_instance, space:) }
 
           it 'ensures one creation is successful and the other fails due to name conflict' do
             # First request, should succeed
@@ -292,9 +292,9 @@ module VCAP::CloudController
 
         describe 'key specific behaviour' do
           context 'managed service instance' do
-            let(:service_offering) { Service.make(bindings_retrievable: true) }
-            let(:service_plan) { ServicePlan.make(service: service_offering) }
-            let(:service_instance) { ManagedServiceInstance.make(space:, service_plan:) }
+            let(:service_offering) { create(:service, bindings_retrievable: true) }
+            let(:service_plan) { create(:service_plan, service: service_offering) }
+            let(:service_instance) { create(:managed_service_instance, space:, service_plan:) }
             let(:broker_client) { instance_double(VCAP::Services::ServiceBrokers::V2::Client, bind: bind_response) }
 
             before do

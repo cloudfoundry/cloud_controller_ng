@@ -19,8 +19,8 @@ module CloudController::Presenters::V2
 
     describe 'ManagedServiceInstance' do
       describe '#entity_hash' do
-        let(:service_instance) { VCAP::CloudController::ManagedServiceInstance.make }
-        let(:service_plan) { VCAP::CloudController::ServicePlan.make }
+        let(:service_instance) { create(:managed_service_instance) }
+        let(:service_plan) { create(:service_plan) }
 
         before do
           service_instance.service_plan_id = service_plan.id
@@ -44,7 +44,7 @@ module CloudController::Presenters::V2
         end
 
         context 'when maintenance_info is available as string' do
-          let(:service_instance) { VCAP::CloudController::ManagedServiceInstance.make(maintenance_info: '{ "version": "2.0" }') }
+          let(:service_instance) { create(:managed_service_instance, maintenance_info: '{ "version": "2.0" }') }
 
           it 'includes `maintenance_info` in the entity' do
             expect(subject.entity_hash(controller, service_instance, opts, depth, parents, orphans)['maintenance_info']).to eq(
@@ -56,7 +56,7 @@ module CloudController::Presenters::V2
         end
 
         context 'when maintenance_info is available as Hash' do
-          let(:service_instance) { VCAP::CloudController::ManagedServiceInstance.make(maintenance_info: { version: '3.0' }) }
+          let(:service_instance) { create(:managed_service_instance, maintenance_info: { version: '3.0' }) }
 
           it 'includes `maintenance_info` in the entity' do
             expect(subject.entity_hash(controller, service_instance, opts, depth, parents, orphans)['maintenance_info']).to eq(
@@ -68,7 +68,7 @@ module CloudController::Presenters::V2
         end
 
         context 'when maintenance_info is invalid JSON' do
-          let(:service_instance) { VCAP::CloudController::ManagedServiceInstance.make(maintenance_info: 'invalid') }
+          let(:service_instance) { create(:managed_service_instance, maintenance_info: 'invalid') }
 
           it 'returns empty JSON object for maintenance_info' do
             expect(subject.entity_hash(controller, service_instance, opts, depth, parents, orphans)['maintenance_info']).to eq({})
@@ -79,7 +79,7 @@ module CloudController::Presenters::V2
 
     describe 'UserProvidedServiceInstance' do
       describe '#entity_hash' do
-        let(:service_instance) { VCAP::CloudController::UserProvidedServiceInstance.make }
+        let(:service_instance) { create(:user_provided_service_instance) }
 
         it 'returns the service instance entity' do
           expect(subject.entity_hash(controller, service_instance, opts, depth, parents, orphans)).to eq(

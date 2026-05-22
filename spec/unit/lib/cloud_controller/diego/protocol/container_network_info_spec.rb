@@ -4,11 +4,11 @@ module VCAP::CloudController
   module Diego
     class Protocol
       RSpec.describe ContainerNetworkInfo do
-        let(:app) { AppModel.make }
-        let!(:web_process) { ProcessModel.make(app: app, type: 'web') }
-        let!(:deploying_web_process) { ProcessModel.make(app: app, type: 'web') }
-        let!(:other_process) { ProcessModel.make(app: app, ports: [8765], type: 'meow') }
-        let!(:no_exposed_port_process) { ProcessModel.make(app: app, type: 'woof') }
+        let(:app) { create(:app_model) }
+        let!(:web_process) { create(:process_model, app: app, type: 'web') }
+        let!(:deploying_web_process) { create(:process_model, app: app, type: 'web') }
+        let!(:other_process) { create(:process_model, app: app, ports: [8765], type: 'meow') }
+        let!(:no_exposed_port_process) { create(:process_model, app: app, type: 'woof') }
         let!(:docker_process) { ProcessModelFactory.make(app: app, type: 'docker', ports: [1111, 2222]) }
         let(:ports_str) { '1111,2222,8080,8765' }
         let(:container_workload) { 'im-an-app!' }

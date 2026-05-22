@@ -11,8 +11,8 @@ module CloudController::Presenters::V2
     let(:orphans) { 'orphans' }
     let(:relations_presenter) { instance_double(RelationsPresenter, to_hash: relations_hash) }
     let(:relations_hash) { { 'relationship_key' => 'relationship_value' } }
-    let(:organization) { VCAP::CloudController::Organization.make }
-    let(:space) { VCAP::CloudController::Space.make(organization:) }
+    let(:organization) { create(:organization) }
+    let(:space) { create(:space, organization:) }
 
     describe '#entity_hash' do
       before do

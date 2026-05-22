@@ -3,7 +3,7 @@ require 'rspec_api_documentation/dsl'
 
 RSpec.resource 'Apps', type: %i[api legacy_api] do
   let(:admin_auth_header) { admin_headers['HTTP_AUTHORIZATION'] }
-  let(:admin_buildpack) { VCAP::CloudController::Buildpack.make }
+  let(:admin_buildpack) { FactoryBot.create(:buildpack) }
   let!(:processes) { 3.times { VCAP::CloudController::ProcessModelFactory.make } }
   let(:process) { VCAP::CloudController::ProcessModel.first }
   let(:guid) { process.guid }
@@ -138,7 +138,7 @@ RSpec.resource 'Apps', type: %i[api legacy_api] do
     post '/v2/apps/' do
       include_context 'fields', required: true
       example 'Creating an App' do
-        space_guid = VCAP::CloudController::Space.make.guid
+        space_guid = create(:space).guid
         ports      = [1024, 2000]
         client.post '/v2/apps', Oj.dump(required_fields.merge(space_guid: space_guid, diego: true, ports: ports)), headers
         expect(status).to eq(201)
@@ -150,7 +150,7 @@ RSpec.resource 'Apps', type: %i[api legacy_api] do
       end
 
       example 'Creating a Docker App' do
-        space_guid = VCAP::CloudController::Space.make.guid
+        space_guid = create(:space).guid
 
         data = required_fields.merge(space_guid: space_guid, name: 'docker_app', docker_image: 'cloudfoundry/diego-docker-app', diego: true)
         client.post '/v2/apps', Oj.dump(data), headers
@@ -182,12 +182,12 @@ RSpec.resource 'Apps', type: %i[api legacy_api] do
     include_context 'guid_parameter'
 
     describe 'Service Bindings' do
-      let!(:service_instance) { VCAP::CloudController::ManagedServiceInstance.make(space: process.space) }
-      let(:associated_service_instance) { VCAP::CloudController::ManagedServiceInstance.make(space: process.space) }
+      let!(:service_instance) { create(:managed_service_instance, space: process.space) }
+      let(:associated_service_instance) { create(:managed_service_instance, space: process.space) }
 
-      let(:service_binding) { VCAP::CloudController::ServiceBinding.make(service_instance:) }
+      let(:service_binding) { create(:service_binding, service_instance:) }
       let(:service_binding_guid) { service_binding.guid }
-      let!(:associated_service_binding) { VCAP::CloudController::ServiceBinding.make(app: process.app, service_instance: associated_service_instance) }
+      let!(:associated_service_binding) { create(:service_binding, app: process.app, service_instance: associated_service_instance) }
       let(:associated_service_binding_guid) { associated_service_binding.guid }
 
       before do
@@ -218,12 +218,12 @@ RSpec.resource 'Apps', type: %i[api legacy_api] do
 
     describe 'Routes' do
       before do
-        VCAP::CloudController::RouteMappingModel.make(app: process.app, route: associated_route, process_type: process.type)
+        create(:route_mapping_model, app: process.app, route: associated_route, process_type: process.type)
       end
 
-      let!(:route) { VCAP::CloudController::Route.make(space: process.space) }
+      let!(:route) { create(:route, space: process.space) }
       let(:route_guid) { route.guid }
-      let(:associated_route) { VCAP::CloudController::Route.make(space: process.space) }
+      let(:associated_route) { create(:route, space: process.space) }
       let(:associated_route_guid) { associated_route.guid }
 
       standard_model_list :route, VCAP::CloudController::RoutesController, outer_model: :app, exclude_parameters: ['organization_guid']

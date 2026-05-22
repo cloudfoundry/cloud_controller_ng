@@ -6,9 +6,9 @@ module VCAP::CloudController
     let(:config) { TestConfig.config_instance }
 
     describe '#validate_app' do
-      let!(:admin_buildpack) { Buildpack.make(name: 'admin-buildpack') }
-      let(:buildpack_lifecycle_data) { BuildpackLifecycleDataModel.make(buildpacks: ['admin-buildpack']) }
-      let(:app_model) { AppModel.make }
+      let!(:admin_buildpack) { create(:buildpack, name: 'admin-buildpack') }
+      let(:buildpack_lifecycle_data) { create(:buildpack_lifecycle_data_model, buildpacks: ['admin-buildpack']) }
+      let(:app_model) { create(:app_model) }
       let(:process_model) { ProcessModelFactory.make(:buildpack, app: app_model) }
 
       before do
@@ -16,7 +16,7 @@ module VCAP::CloudController
       end
 
       context 'when the app package hash is blank' do
-        before { PackageModel.make(package_hash: nil, sha256_checksum: '', app: process_model) }
+        before { create(:package_model, package_hash: nil, sha256_checksum: '', app: process_model) }
 
         it 'raises' do
           expect do
@@ -26,7 +26,7 @@ module VCAP::CloudController
       end
 
       context 'with a docker app' do
-        let(:app_model) { AppModel.make(:docker) }
+        let(:app_model) { create(:app_model, :docker) }
         let(:app) { ProcessModelFactory.make(app: app_model, docker_image: 'docker/image') }
 
         before { app_model.update(buildpack_lifecycle_data: nil) }
@@ -55,7 +55,7 @@ module VCAP::CloudController
       end
 
       context 'with a cnb app' do
-        let(:app_model) { AppModel.make(:cnb) }
+        let(:app_model) { create(:app_model, :cnb) }
         let(:app) { ProcessModelFactory.make(app: app_model, cnb: true) }
 
         before { app_model.update(buildpack_lifecycle_data: nil) }
@@ -88,7 +88,7 @@ module VCAP::CloudController
 
         context 'and an admin buildpack is specified' do
           let(:buildpack_lifecycle_data) do
-            BuildpackLifecycleDataModel.make(buildpacks: %w[https://buildpacks.gov admin-buildpack])
+            create(:buildpack_lifecycle_data_model, buildpacks: %w[https://buildpacks.gov admin-buildpack])
           end
 
           it 'raises an error' do
@@ -100,7 +100,7 @@ module VCAP::CloudController
 
         context 'and custom buildpacks are specified' do
           let(:buildpack_lifecycle_data) do
-            BuildpackLifecycleDataModel.make(buildpacks: %w[https://buildpacks.gov http://custom-buildpack.example.com])
+            create(:buildpack_lifecycle_data_model, buildpacks: %w[https://buildpacks.gov http://custom-buildpack.example.com])
           end
 
           it 'does not raise' do
@@ -113,7 +113,7 @@ module VCAP::CloudController
     end
 
     describe '#stager_for_build' do
-      let(:build) { BuildModel.make }
+      let(:build) { create(:build_model) }
 
       it 'finds a diego stager' do
         stager = stagers.stager_for_build(build)

@@ -8,9 +8,9 @@ module VCAP::CloudController
     let(:cancel_action) { instance_double(StagingCancel, cancel: nil) }
 
     describe '#delete_for_app' do
-      let!(:app) { AppModel.make }
-      let!(:build1) { BuildModel.make(app: app, state: BuildModel::STAGED_STATE) }
-      let!(:build2) { BuildModel.make(app: app, state: BuildModel::STAGING_STATE) }
+      let!(:app) { create(:app_model) }
+      let!(:build1) { create(:build_model, app: app, state: BuildModel::STAGED_STATE) }
+      let!(:build2) { create(:build_model, app: app, state: BuildModel::STAGING_STATE) }
 
       it 'deletes the builds' do
         expect do
@@ -26,8 +26,8 @@ module VCAP::CloudController
       end
 
       it 'deletes associated labels' do
-        label1 = BuildLabelModel.make(build: build1, key_name: 'test', value: 'bommel')
-        label2 = BuildLabelModel.make(build: build2, key_name: 'test', value: 'bommel')
+        label1 = create(:build_label_model, build: build1, key_name: 'test', value: 'bommel')
+        label2 = create(:build_label_model, build: build2, key_name: 'test', value: 'bommel')
 
         expect do
           build_delete.delete_for_app(app.guid)
@@ -36,8 +36,8 @@ module VCAP::CloudController
       end
 
       it 'deletes associated annotations' do
-        annotation1 = BuildAnnotationModel.make(build: build1, key_name: 'test', value: 'bommel')
-        annotation2 = BuildAnnotationModel.make(build: build2, key_name: 'test', value: 'bommel')
+        annotation1 = create(:build_annotation_model, build: build1, key_name: 'test', value: 'bommel')
+        annotation2 = create(:build_annotation_model, build: build2, key_name: 'test', value: 'bommel')
 
         expect do
           build_delete.delete_for_app(app.guid)
@@ -46,12 +46,10 @@ module VCAP::CloudController
       end
 
       it 'deletes associated buildpack lifecycle data/buildpack' do
-        lifecycle_buildpack1 = BuildpackLifecycleBuildpackModel.make(
-          buildpack_lifecycle_data: build1.buildpack_lifecycle_data, admin_buildpack_name: nil, buildpack_url: 'http://example.com/buildpack1'
-        )
-        lifecycle_buildpack2 = BuildpackLifecycleBuildpackModel.make(
-          buildpack_lifecycle_data: build2.buildpack_lifecycle_data, admin_buildpack_name: nil, buildpack_url: 'http://example.com/buildpack2'
-        )
+        lifecycle_buildpack1 = create(:buildpack_lifecycle_buildpack_model,
+                                      buildpack_lifecycle_data: build1.buildpack_lifecycle_data, admin_buildpack_name: nil, buildpack_url: 'http://example.com/buildpack1')
+        lifecycle_buildpack2 = create(:buildpack_lifecycle_buildpack_model,
+                                      buildpack_lifecycle_data: build2.buildpack_lifecycle_data, admin_buildpack_name: nil, buildpack_url: 'http://example.com/buildpack2')
 
         expect do
           build_delete.delete_for_app(app.guid)

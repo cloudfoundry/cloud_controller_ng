@@ -3,9 +3,9 @@ require 'fetchers/service_plan_fetcher'
 
 module VCAP::CloudController
   RSpec.describe ServicePlanFetcher do
-    let!(:plan_1) { ServicePlan.make }
-    let!(:plan_2) { ServicePlan.make }
-    let!(:plan_3) { ServicePlan.make }
+    let!(:plan_1) { create(:service_plan) }
+    let!(:plan_2) { create(:service_plan) }
+    let!(:plan_3) { create(:service_plan) }
 
     context 'when the plan does not exist' do
       it 'returns nil' do

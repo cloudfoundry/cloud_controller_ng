@@ -120,7 +120,7 @@ module VCAP::CloudController
             end
 
             3.times do
-              ManagedServiceInstance.make(space: current_user.default_space)
+              create(:managed_service_instance, space: current_user.default_space)
             end
           end
 

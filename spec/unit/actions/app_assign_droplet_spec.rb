@@ -6,7 +6,7 @@ module VCAP::CloudController
   RSpec.describe AppAssignDroplet do
     subject(:app_assign_droplet) { AppAssignDroplet.new(user_audit_info) }
 
-    let(:app_model) { AppModel.make desired_state: ProcessModel::STOPPED }
+    let(:app_model) { create(:app_model) }
     let(:user) { double(:user, guid: '1337') }
     let(:user_email) { 'cool_dude@hoopy_frood.com' }
     let(:user_audit_info) { UserAuditInfo.new(user_guid: user.guid, user_email: user_email) }
@@ -14,12 +14,11 @@ module VCAP::CloudController
 
     describe '#assign' do
       let(:droplet) do
-        DropletModel.make(
-          state: DropletModel::STAGED_STATE,
-          process_types: { web: 'x' },
-          sidecars: [{ name: 'sleep infinity', command: 'sleep infinity', process_types: ['web'] }],
-          app: app_model
-        )
+        create(:droplet_model,
+               app: app_model,
+               set_as_current_droplet: false,
+               process_types: { web: 'x' },
+               sidecars: [{ name: 'sleep infinity', command: 'sleep infinity', process_types: ['web'] }])
       end
       let(:droplet_guid) { droplet.guid }
       let(:message) { { 'droplet_guid' => droplet_guid } }
@@ -70,7 +69,7 @@ module VCAP::CloudController
       describe 'error cases' do
         context 'when the droplet is not associated with the application' do
           it 'raises an error' do
-            other_droplet = DropletModel.make
+            other_droplet = create(:droplet_model)
             expect do
               app_assign_droplet.assign(app_model, other_droplet)
             end.to raise_error AppAssignDroplet::InvalidDroplet, 'Unable to assign current droplet. Ensure the droplet exists and belongs to this app.'

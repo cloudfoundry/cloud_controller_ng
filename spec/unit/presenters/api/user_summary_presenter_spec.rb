@@ -4,13 +4,13 @@ RSpec.describe UserSummaryPresenter do
   describe '#to_hash' do
     subject { UserSummaryPresenter.new(user) }
 
-    let(:org) { VCAP::CloudController::Organization.make }
-    let(:managed_org) { VCAP::CloudController::Organization.make }
-    let(:billing_managed_org) { VCAP::CloudController::Organization.make }
-    let(:audited_org) { VCAP::CloudController::Organization.make }
-    let(:space) { VCAP::CloudController::Space.make(organization: org) }
-    let(:managed_space) { VCAP::CloudController::Space.make(organization: managed_org) }
-    let(:audited_space) { VCAP::CloudController::Space.make(organization: audited_org) }
+    let(:org) { create(:organization) }
+    let(:managed_org) { create(:organization) }
+    let(:billing_managed_org) { create(:organization) }
+    let(:audited_org) { create(:organization) }
+    let(:space) { create(:space, organization: org) }
+    let(:managed_space) { create(:space, organization: managed_org) }
+    let(:audited_space) { create(:space, organization: audited_org) }
     let(:user) do
       u = make_developer_for_space(space)
       u.add_organization(managed_org)

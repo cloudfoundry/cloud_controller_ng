@@ -27,7 +27,7 @@ module VCAP::CloudController
         end
 
         context 'when bbs and CC are in sync' do
-          let!(:task) { TaskModel.make(:running, created_at: 1.minute.ago) }
+          let!(:task) { create(:task_model, :running, created_at: 1.minute.ago) }
           let(:bbs_tasks) do
             [::Diego::Bbs::Models::Task.new(task_guid: task.guid)]
           end
@@ -46,10 +46,10 @@ module VCAP::CloudController
         end
 
         context 'when a running CC task is missing from BBS' do
-          let!(:running_task) { TaskModel.make(:running, created_at: 1.minute.ago) }
-          let!(:canceling_task) { TaskModel.make(:canceling, created_at: 1.minute.ago) }
-          let!(:start_event_for_running_task) { AppUsageEvent.make(task_guid: running_task.guid, state: 'TASK_STARTED') }
-          let!(:start_event_for_canceling_task) { AppUsageEvent.make(task_guid: canceling_task.guid, state: 'TASK_STARTED') }
+          let!(:running_task) { create(:task_model, :running, created_at: 1.minute.ago) }
+          let!(:canceling_task) { create(:task_model, :canceling, created_at: 1.minute.ago) }
+          let!(:start_event_for_running_task) { create(:app_usage_event, task_guid: running_task.guid, state: 'TASK_STARTED') }
+          let!(:start_event_for_canceling_task) { create(:app_usage_event, task_guid: canceling_task.guid, state: 'TASK_STARTED') }
           let(:bbs_tasks) { [] }
 
           before do
@@ -103,8 +103,8 @@ module VCAP::CloudController
         end
 
         context 'when bbs does not know about a pending/succeeded task' do
-          let!(:pending_task) { TaskModel.make(:pending, created_at: 1.minute.ago) }
-          let!(:succeeded_task) { TaskModel.make(:succeeded, created_at: 1.minute.ago) }
+          let!(:pending_task) { create(:task_model, :pending, created_at: 1.minute.ago) }
+          let!(:succeeded_task) { create(:task_model, :succeeded, created_at: 1.minute.ago) }
           let(:bbs_tasks) { [] }
 
           it 'does not change the succeeded task' do
@@ -123,11 +123,11 @@ module VCAP::CloudController
 
         context 'when a pending task has expired' do
           let!(:expired_pending_task) do
-            task = TaskModel.make(:pending)
+            task = create(:task_model, :pending)
             task.this.update(created_at: 10.minutes.ago)
             task.reload
           end
-          let!(:recent_pending_task) { TaskModel.make(:pending) }
+          let!(:recent_pending_task) { create(:task_model, :pending) }
           let(:bbs_tasks) { [] }
 
           it 'fails the expired pending task' do
@@ -194,7 +194,7 @@ module VCAP::CloudController
         end
 
         context 'when bbs knows about a running task that CC wants to cancel' do
-          let!(:canceling_task) { TaskModel.make(:canceling) }
+          let!(:canceling_task) { create(:task_model, :canceling) }
           let(:bbs_tasks) do
             [::Diego::Bbs::Models::Task.new(task_guid: canceling_task.guid)]
           end
@@ -308,7 +308,7 @@ module VCAP::CloudController
           before do
             stub_const('VCAP::CloudController::Diego::TasksSync::BATCH_SIZE', 5)
             (TasksSync::BATCH_SIZE + 1).times do |_|
-              task = TaskModel.make(:running, created_at: 1.minute.ago)
+              task = create(:task_model, :running, created_at: 1.minute.ago)
               bbs_tasks << ::Diego::Bbs::Models::Task.new(task_guid: task.guid)
             end
           end
@@ -322,7 +322,7 @@ module VCAP::CloudController
 
         context 'when a new task is created after cc initially fetches tasks from bbs' do
           context 'and the newly started task does not complete before checking to see if it should fail' do
-            let!(:cc_task) { TaskModel.make(guid: 'some-task-guid', state: TaskModel::RUNNING_STATE) }
+            let!(:cc_task) { create(:task_model, guid: 'some-task-guid', state: TaskModel::RUNNING_STATE) }
             let(:bbs_task) { ::Diego::Bbs::Models::Task.new(task_guid: 'some-task-guid', state: ::Diego::Bbs::Models::Task::State::Running) }
 
             before do
@@ -350,7 +350,7 @@ module VCAP::CloudController
 
           context 'and the newly started task completes before the iteration completes', isolation: :truncation do
             # Can't use transactions for isolation because we're using multiple threads
-            let!(:cc_task) { TaskModel.make(guid: 'some-task-guid', state: TaskModel::RUNNING_STATE) }
+            let!(:cc_task) { create(:task_model, guid: 'some-task-guid', state: TaskModel::RUNNING_STATE) }
             let(:bbs_tasks) { [] }
 
             before do

@@ -8,7 +8,7 @@ module VCAP::CloudController
 
     describe 'Associations' do
       it { is_expected.to have_associated :spaces }
-      it { is_expected.to have_associated :private_domains, associated_instance: ->(_org) { PrivateDomain.make } }
+      it { is_expected.to have_associated :private_domains, associated_instance: ->(_org) { create(:private_domain) } }
       it { is_expected.to have_associated :service_plan_visibilities }
       it { is_expected.to have_associated :quota_definition }
       it { is_expected.to have_associated :domains, class: SharedDomain }
@@ -16,42 +16,42 @@ module VCAP::CloudController
       it { is_expected.to have_associated :managers, class: User }
       it { is_expected.to have_associated :billing_managers, class: User }
       it { is_expected.to have_associated :auditors, class: User }
-      it { is_expected.to have_associated :space_quota_definitions, associated_instance: ->(org) { SpaceQuotaDefinition.make(organization: org) } }
+      it { is_expected.to have_associated :space_quota_definitions, associated_instance: ->(org) { create(:space_quota_definition, organization: org) } }
 
       it 'has associated owned_private domains' do
-        domain = PrivateDomain.make
+        domain = create(:private_domain)
         organization = domain.owning_organization
-        expect(organization.owned_private_domains).to include(domain)
+        expect(organization.reload.owned_private_domains).to include(domain)
       end
 
       it 'has associated apps' do
-        process = ProcessModel.make
+        process = create(:process_model)
         organization = process.space.organization
         expect(organization.apps).to include(process.reload)
       end
 
       it 'does not associate non-web v2 apps' do
-        app_model = AppModel.make
+        app_model = create(:app_model)
         org = app_model.space.organization
-        app1 = ProcessModel.make(type: 'web', app: app_model)
-        ProcessModel.make(type: 'other', app: app_model)
+        app1 = create(:process_model, type: 'web', app: app_model)
+        create(:process_model, type: 'other', app: app_model)
         expect(org.apps).to contain_exactly(app1)
       end
 
       it 'has associated app models' do
-        app_model = AppModel.make
+        app_model = create(:app_model)
         organization = app_model.space.organization
         expect(organization.app_models).to include(app_model.reload)
       end
 
       it 'has associated service_instances' do
-        service_instance = ManagedServiceInstance.make
+        service_instance = create(:managed_service_instance)
         organization = service_instance.space.organization
         expect(organization.service_instances).to include(service_instance.reload)
       end
 
       it 'has associated tasks' do
-        task = TaskModel.make
+        task = create(:task_model)
         organization = task.space.organization
 
         expect(organization.tasks).to include(task.reload)
@@ -61,10 +61,10 @@ module VCAP::CloudController
         let(:assigner) { IsolationSegmentAssign.new }
 
         it 'returns a list of all associated isolation segments guids' do
-          organization = Organization.make
-          iso_seg_1 = IsolationSegmentModel.make
-          iso_seg_2 = IsolationSegmentModel.make
-          iso_seg_3 = IsolationSegmentModel.make
+          organization = create(:organization)
+          iso_seg_1 = create(:isolation_segment_model)
+          iso_seg_2 = create(:isolation_segment_model)
+          iso_seg_3 = create(:isolation_segment_model)
 
           assigner.assign(iso_seg_1, [organization])
           assigner.assign(iso_seg_2, [organization])
@@ -76,15 +76,15 @@ module VCAP::CloudController
     end
 
     describe 'destroying' do
-      let(:org) { Organization.make }
+      let(:org) { create(:organization) }
 
       before do
         TestConfig.override(kubernetes: {})
       end
 
       context 'when there are isolation segments in the allowed list' do
-        let(:isolation_segment_model) { IsolationSegmentModel.make }
-        let(:isolation_segment_model2) { IsolationSegmentModel.make }
+        let(:isolation_segment_model) { create(:isolation_segment_model) }
+        let(:isolation_segment_model2) { create(:isolation_segment_model) }
         let(:assigner) { IsolationSegmentAssign.new }
 
         before do
@@ -106,11 +106,9 @@ module VCAP::CloudController
 
       context 'when there are organization labels' do
         let!(:organization_label_one) do
-          VCAP::CloudController::OrganizationLabelModel.make(
-            key_name: 'release',
-            value: 'stable',
-            resource_guid: org.guid
-          )
+          create(:organization_label_model, key_name: 'release',
+                                            value: 'stable',
+                                            resource_guid: org.guid)
         end
 
         it 'can find the associated labels' do
@@ -123,7 +121,7 @@ module VCAP::CloudController
 
     describe 'uniqueness' do
       it 'enforces uniqueness of name' do
-        existing_org = Organization.make
+        existing_org = create(:organization)
         expect do
           Organization.create(name: existing_org.name)
         end.to raise_error(Sequel::ValidationFailed, /unique/)
@@ -131,7 +129,7 @@ module VCAP::CloudController
     end
 
     describe 'Validations' do
-      let(:org) { Organization.make }
+      let(:org) { create(:organization) }
 
       it { is_expected.to validate_presence :name }
       it { is_expected.to strip_whitespace :name }
@@ -174,8 +172,8 @@ module VCAP::CloudController
       end
 
       describe 'isolation_segments' do
-        let(:isolation_segment_model) { IsolationSegmentModel.make }
-        let(:isolation_segment_model2) { IsolationSegmentModel.make }
+        let(:isolation_segment_model) { create(:isolation_segment_model) }
+        let(:isolation_segment_model2) { create(:isolation_segment_model) }
         let(:assigner) { IsolationSegmentAssign.new }
 
         context 'when adding isolation segments to the allowed list' do
@@ -201,13 +199,13 @@ module VCAP::CloudController
 
       describe 'space_quota_definitions' do
         it 'adds when in this org' do
-          quota = SpaceQuotaDefinition.make(organization: org)
+          quota = create(:space_quota_definition, organization: org)
 
           expect { org.add_space_quota_definition(quota) }.not_to raise_error
         end
 
         it 'does not add when quota is in a different org' do
-          quota = SpaceQuotaDefinition.make
+          quota = create(:space_quota_definition)
 
           expect { org.add_space_quota_definition(quota) }.to raise_error(Sequel::HookFailed)
         end
@@ -215,32 +213,32 @@ module VCAP::CloudController
 
       describe 'private_domains' do
         it 'allowed when the organization is not the owner' do
-          domain = PrivateDomain.make
+          domain = create(:private_domain)
 
           expect { org.add_private_domain(domain) }.not_to raise_error
         end
 
         it 'does not add when the organization is the owner' do
-          domain = PrivateDomain.make(owning_organization: org)
+          domain = create(:private_domain, owning_organization: org)
 
           org.add_private_domain(domain)
           expect(domain.shared_organizations).to eq([])
         end
 
         it 'lists all private domains owned and shared' do
-          owned_domain = PrivateDomain.make(owning_organization: org)
-          domain = PrivateDomain.make
+          owned_domain = create(:private_domain, owning_organization: org)
+          domain = create(:private_domain)
           org.add_private_domain(domain)
 
           expect(org.private_domains).to contain_exactly(owned_domain, domain)
         end
 
         it 'removes all associated routes when deleted' do
-          private_domain = PrivateDomain.make
-          space = Space.make
+          private_domain = create(:private_domain)
+          space = create(:space)
           org = space.organization
           org.add_private_domain(private_domain)
-          route = Route.make(space: space, domain: private_domain)
+          route = create(:route, space: space, domain: private_domain)
           TestConfig.override(kubernetes: {})
 
           expect do
@@ -278,7 +276,7 @@ module VCAP::CloudController
       end
 
       describe 'default_isolation_segment' do
-        let(:isolation_segment_model) { IsolationSegmentModel.make }
+        let(:isolation_segment_model) { create(:isolation_segment_model) }
         let(:assigner) { VCAP::CloudController::IsolationSegmentAssign.new }
 
         context 'assigning the default isolation segment' do
@@ -306,7 +304,7 @@ module VCAP::CloudController
             end
 
             context 'when there are spaces in the org' do
-              let!(:space) { Space.make(organization: org) }
+              let!(:space) { create(:space, organization: org) }
               let(:shared_segment) { IsolationSegmentModel.first(guid: IsolationSegmentModel::SHARED_ISOLATION_SEGMENT_GUID) }
 
               it 'sets the default Isolation Segment' do
@@ -324,7 +322,7 @@ module VCAP::CloudController
 
                 context 'and a space has an app' do
                   before do
-                    AppModel.make(space:)
+                    create(:app_model, space:)
                   end
 
                   it 'sets the default to the shared segment but does not affect running apps' do
@@ -341,7 +339,7 @@ module VCAP::CloudController
 
               context 'and a space has an app' do
                 it 'sets the default but does not affect running apps' do
-                  AppModel.make(space:)
+                  create(:app_model, space:)
                   expect do
                     org.update(default_isolation_segment_guid: isolation_segment_model.guid)
                   end.not_to raise_error
@@ -351,7 +349,7 @@ module VCAP::CloudController
                 end
 
                 it 'sets the default when assigning the shared segment as the default' do
-                  AppModel.make(space:)
+                  create(:app_model, space:)
                   expect do
                     assigner.assign(shared_segment, [org])
                   end.not_to raise_error
@@ -361,12 +359,12 @@ module VCAP::CloudController
                 end
 
                 context 'and the space has an assigned isolation segment' do
-                  let(:isolation_segment_model2) { IsolationSegmentModel.make }
+                  let(:isolation_segment_model2) { create(:isolation_segment_model) }
 
                   before do
                     assigner.assign(isolation_segment_model2, [org])
                     space.update(isolation_segment_model: isolation_segment_model2)
-                    AppModel.make(space:)
+                    create(:app_model, space:)
                   end
 
                   it 'sets the default Isolation Segment' do
@@ -396,7 +394,7 @@ module VCAP::CloudController
             end
 
             context 'and there are spaces in the organization' do
-              let!(:space) { Space.make(organization: org) }
+              let!(:space) { create(:space, organization: org) }
 
               it 'unassigns the default isolation segment' do
                 org.update(default_isolation_segment_model: nil)
@@ -407,7 +405,7 @@ module VCAP::CloudController
 
               context 'and the space has apps' do
                 before do
-                  AppModel.make(space:)
+                  create(:app_model, space:)
                 end
 
                 it 'removes the default isolation segment but does not affect running apps' do
@@ -436,13 +434,13 @@ module VCAP::CloudController
 
     context 'statuses' do
       describe 'when status == active' do
-        subject(:org) { Organization.make(status: 'active') }
+        subject(:org) { create(:organization, status: 'active') }
         it('is active') { expect(org).to be_active }
         it('is not suspended') { expect(org).not_to be_suspended }
       end
 
       describe 'when status == suspended' do
-        subject(:org) { Organization.make(status: 'suspended') }
+        subject(:org) { create(:organization, status: 'suspended') }
         it('is not active') { expect(org).not_to be_active }
         it('is suspended') { expect(org).to be_suspended }
       end
@@ -450,14 +448,14 @@ module VCAP::CloudController
 
     describe 'billing' do
       it 'is not enabled for billing when first created' do
-        expect(Organization.make.billing_enabled).to be(false)
+        expect(create(:organization).billing_enabled).to be(false)
       end
     end
 
     context 'memory quota' do
-      let(:quota) { QuotaDefinition.make(memory_limit: 500) }
-      let(:org) { Organization.make(quota_definition: quota) }
-      let(:space) { Space.make(organization: org) }
+      let(:quota) { create(:quota_definition, memory_limit: 500) }
+      let(:org) { create(:organization, quota_definition: quota) }
+      let(:space) { create(:space, organization: org) }
 
       it 'returns the memory available when no processes are running' do
         ProcessModelFactory.make(space: space, memory: 200, instances: 2)
@@ -476,8 +474,8 @@ module VCAP::CloudController
 
       it 'includes RUNNING tasks when returning remaining memory' do
         process = ProcessModelFactory.make(space: space, memory: 250, instances: 1, state: ProcessModel::STARTED, type: 'worker')
-        TaskModel.make(app: process.app, memory_in_mb: 25, state: TaskModel::RUNNING_STATE)
-        TaskModel.make(app: process.app, memory_in_mb: 25, state: TaskModel::RUNNING_STATE)
+        create(:task_model, app: process.app, memory_in_mb: 25, state: TaskModel::RUNNING_STATE)
+        create(:task_model, app: process.app, memory_in_mb: 25, state: TaskModel::RUNNING_STATE)
 
         expect(org.has_remaining_memory(200)).to be(true)
         expect(org.has_remaining_memory(201)).to be(false)
@@ -485,14 +483,14 @@ module VCAP::CloudController
 
       it 'includes PENDING tasks when determining available memory' do
         process = ProcessModelFactory.make(space: space, memory: 200, instances: 2, state: ProcessModel::STARTED)
-        TaskModel.make(app: process.app, memory_in_mb: 50, state: TaskModel::PENDING_STATE)
+        create(:task_model, app: process.app, memory_in_mb: 50, state: TaskModel::PENDING_STATE)
 
         expect(org.has_remaining_memory(50)).to be(true)
         expect(org.has_remaining_memory(51)).to be(false)
       end
 
       context 'when memory quota is unlimited (-1)' do
-        let(:quota) { QuotaDefinition.make(memory_limit: -1) }
+        let(:quota) { create(:quota_definition, memory_limit: -1) }
 
         it "indicates that there's more memory remaining" do
           expect(org.has_remaining_memory(1 << 63)).to be(true) # a very big number
@@ -501,9 +499,9 @@ module VCAP::CloudController
 
       it 'does NOT include non-RUNNING tasks when returning remaining memory' do
         process = ProcessModelFactory.make(space: space, memory: 250, instances: 1, state: ProcessModel::STARTED, type: 'worker')
-        TaskModel.make(app: process.app, memory_in_mb: 25, state: TaskModel::SUCCEEDED_STATE)
-        TaskModel.make(app: process.app, memory_in_mb: 25, state: TaskModel::FAILED_STATE)
-        TaskModel.make(app: process.app, memory_in_mb: 25, state: TaskModel::CANCELING_STATE)
+        create(:task_model, app: process.app, memory_in_mb: 25, state: TaskModel::SUCCEEDED_STATE)
+        create(:task_model, app: process.app, memory_in_mb: 25, state: TaskModel::FAILED_STATE)
+        create(:task_model, app: process.app, memory_in_mb: 25, state: TaskModel::CANCELING_STATE)
 
         expect(org.has_remaining_memory(250)).to be(true)
         expect(org.has_remaining_memory(251)).to be(false)
@@ -512,13 +510,13 @@ module VCAP::CloudController
 
     describe '#has_remaining_log_rate_limit' do
       let(:log_rate_limit) { 10 }
-      let(:quota) { QuotaDefinition.make(log_rate_limit:) }
-      let(:org) { Organization.make(quota_definition: quota) }
-      let(:org2) { Organization.make(quota_definition: quota) }
-      let(:space) { Space.make(organization: org) }
-      let(:space2) { Space.make(organization: org) }
-      let(:space_org2) { Space.make(organization: org2) }
-      let!(:app_model) { AppModel.make(space: space2) }
+      let(:quota) { create(:quota_definition, log_rate_limit:) }
+      let(:org) { create(:organization, quota_definition: quota) }
+      let(:org2) { create(:organization, quota_definition: quota) }
+      let(:space) { create(:space, organization: org) }
+      let(:space2) { create(:space, organization: org) }
+      let(:space_org2) { create(:space, organization: org2) }
+      let!(:app_model) { create(:app_model, space: space2) }
 
       context 'when the quota is unlimited' do
         let(:log_rate_limit) { QuotaDefinition::UNLIMITED }
@@ -545,21 +543,21 @@ module VCAP::CloudController
           expect(org.has_remaining_log_rate_limit(4)).to be_truthy
           expect(org.has_remaining_log_rate_limit(5)).to be_falsey
 
-          TaskModel.make(app: app_model, log_rate_limit: 1, state: TaskModel::RUNNING_STATE)
+          create(:task_model, app: app_model, log_rate_limit: 1, state: TaskModel::RUNNING_STATE)
           expect(org.has_remaining_log_rate_limit(3)).to be_truthy
           expect(org.has_remaining_log_rate_limit(4)).to be_falsey
         end
 
         it 'considers tasks in state PENDING' do
-          TaskModel.make(app: app_model, log_rate_limit: 2, state: TaskModel::PENDING_STATE)
+          create(:task_model, app: app_model, log_rate_limit: 2, state: TaskModel::PENDING_STATE)
           expect(org.has_remaining_log_rate_limit(8)).to be_truthy
           expect(org.has_remaining_log_rate_limit(9)).to be_falsey
         end
 
         it 'does not consider tasks in other states' do
-          TaskModel.make(app: app_model, log_rate_limit: 2, state: TaskModel::SUCCEEDED_STATE)
-          TaskModel.make(app: app_model, log_rate_limit: 2, state: TaskModel::FAILED_STATE)
-          TaskModel.make(app: app_model, log_rate_limit: 2, state: TaskModel::CANCELING_STATE)
+          create(:task_model, app: app_model, log_rate_limit: 2, state: TaskModel::SUCCEEDED_STATE)
+          create(:task_model, app: app_model, log_rate_limit: 2, state: TaskModel::FAILED_STATE)
+          create(:task_model, app: app_model, log_rate_limit: 2, state: TaskModel::CANCELING_STATE)
           expect(org.has_remaining_log_rate_limit(10)).to be_truthy
         end
 
@@ -577,8 +575,8 @@ module VCAP::CloudController
     end
 
     describe '#instance_memory_limit' do
-      let(:quota) { QuotaDefinition.make(instance_memory_limit: 50) }
-      let(:org) { Organization.make quota_definition: quota }
+      let(:quota) { create(:quota_definition, instance_memory_limit: 50) }
+      let(:org) { create(:organization, quota_definition: quota) }
 
       it 'returns the instance memory limit from the quota' do
         expect(org.instance_memory_limit).to eq(50)
@@ -594,8 +592,8 @@ module VCAP::CloudController
     end
 
     describe '#app_task_limit' do
-      let(:quota) { QuotaDefinition.make(app_task_limit: 2) }
-      let(:org) { Organization.make quota_definition: quota }
+      let(:quota) { create(:quota_definition, app_task_limit: 2) }
+      let(:org) { create(:organization, quota_definition: quota) }
 
       it 'returns the app task limit from the quota' do
         expect(org.app_task_limit).to eq(2)
@@ -611,10 +609,10 @@ module VCAP::CloudController
     end
 
     describe '#meets_max_task_limit?' do
-      let(:space) { Space.make }
+      let(:space) { create(:space) }
       let(:org) { space.organization }
-      let(:quota) { QuotaDefinition.make(app_task_limit: 2) }
-      let(:app_model) { AppModel.make(space_guid: space.guid) }
+      let(:quota) { create(:quota_definition, app_task_limit: 2) }
+      let(:app_model) { create(:app_model, space_guid: space.guid) }
 
       before do
         org.quota_definition = quota
@@ -626,8 +624,8 @@ module VCAP::CloudController
 
       context 'number of pending and running tasks equals the limit' do
         before do
-          TaskModel.make(app: app_model, state: TaskModel::RUNNING_STATE)
-          TaskModel.make(app: app_model, state: TaskModel::PENDING_STATE)
+          create(:task_model, app: app_model, state: TaskModel::RUNNING_STATE)
+          create(:task_model, app: app_model, state: TaskModel::PENDING_STATE)
         end
 
         it 'returns true' do
@@ -637,9 +635,9 @@ module VCAP::CloudController
 
       context 'number of pending and running tasks exceeds the limit' do
         before do
-          TaskModel.make(app: app_model, state: TaskModel::RUNNING_STATE)
-          TaskModel.make(app: app_model, state: TaskModel::PENDING_STATE)
-          TaskModel.make(app: app_model, state: TaskModel::PENDING_STATE)
+          create(:task_model, app: app_model, state: TaskModel::RUNNING_STATE)
+          create(:task_model, app: app_model, state: TaskModel::PENDING_STATE)
+          create(:task_model, app: app_model, state: TaskModel::PENDING_STATE)
         end
 
         it 'returns true' do
@@ -649,19 +647,19 @@ module VCAP::CloudController
     end
 
     describe '#destroy' do
-      subject(:org) { Organization.make }
+      subject(:org) { create(:organization) }
 
       let(:guid_pattern) { '[[:alnum:]-]+' }
 
       before { org.reload }
 
       it 'destroys all space quota definitions' do
-        sqd = SpaceQuotaDefinition.make(organization: org)
+        sqd = create(:space_quota_definition, organization: org)
         expect { org.destroy }.to change { SpaceQuotaDefinition[id: sqd.id] }.from(sqd).to(nil)
       end
 
       context 'when there are spaces in the org' do
-        let!(:space) { Space.make(organization: org) }
+        let!(:space) { create(:space, organization: org) }
 
         it 'raises a ForeignKeyConstraintViolation error' do
           expect { org.destroy }.to raise_error(Sequel::ForeignKeyConstraintViolation)
@@ -669,10 +667,10 @@ module VCAP::CloudController
       end
 
       context 'when there are service instances in the org' do
-        let(:space) { Space.make(organization: org) }
+        let(:space) { create(:space, organization: org) }
 
         before do
-          service_instance = ManagedServiceInstance.make(:v2, space:)
+          service_instance = create(:managed_service_instance, space:)
           broker = service_instance.service_broker
           uri = URI(broker.broker_url)
           uri.user = broker.auth_username
@@ -692,7 +690,7 @@ module VCAP::CloudController
       end
 
       it 'destroys all service plan visibilities' do
-        service_plan_visibility = ServicePlanVisibility.make(organization: org)
+        service_plan_visibility = create(:service_plan_visibility, organization: org)
         expect do
           org.destroy
         end.to change {
@@ -701,7 +699,7 @@ module VCAP::CloudController
       end
 
       it 'destroys owned private domains' do
-        domain = PrivateDomain.make(owning_organization: org)
+        domain = create(:private_domain, owning_organization: org)
 
         expect do
           org.destroy
@@ -711,7 +709,7 @@ module VCAP::CloudController
       end
 
       it 'destroys private domains' do
-        domain = PrivateDomain.make
+        domain = create(:private_domain)
         org.add_private_domain(domain)
 
         expect do
@@ -724,20 +722,20 @@ module VCAP::CloudController
 
     describe 'adding domains' do
       it 'does not add domains to the organization if it is a shared domain' do
-        shared_domain = SharedDomain.make
-        org = Organization.make
+        shared_domain = create(:shared_domain)
+        org = create(:organization)
         expect { org.add_domain(shared_domain) }.not_to(change { org.domains })
       end
 
       it 'does nothing if it is a private domain that belongs to the org' do
-        org = Organization.make
-        private_domain = PrivateDomain.make(owning_organization: org)
+        org = create(:organization)
+        private_domain = create(:private_domain, owning_organization: org)
         expect { org.add_domain(private_domain) }.not_to(change { org.domains.collect(&:id) })
       end
 
       it 'raises error if the private domain does not belongs to the organization' do
-        org = Organization.make
-        private_domain = PrivateDomain.make(owning_organization: Organization.make)
+        org = create(:organization)
+        private_domain = create(:private_domain, owning_organization: create(:organization))
         expect { org.add_domain(private_domain) }.to raise_error(Domain::UnauthorizedAccessToPrivateDomain)
       end
     end
@@ -746,10 +744,10 @@ module VCAP::CloudController
       before { SharedDomain.dataset.destroy }
 
       it 'is able to eager load domains' do
-        org = Organization.make
-        private_domain1 = PrivateDomain.make(owning_organization: org)
-        private_domain2 = PrivateDomain.make(owning_organization: org)
-        shared_domain = SharedDomain.make
+        org = create(:organization)
+        private_domain1 = create(:private_domain, owning_organization: org)
+        private_domain2 = create(:private_domain, owning_organization: org)
+        shared_domain = create(:shared_domain)
 
         expect do
           @eager_loaded_org = Organization.eager(:domains).where(id: org.id).all.first
@@ -765,12 +763,12 @@ module VCAP::CloudController
       end
 
       it 'has correct domains for each org' do
-        org1 = Organization.make
-        org2 = Organization.make
+        org1 = create(:organization)
+        org2 = create(:organization)
 
-        private_domain1 = PrivateDomain.make(owning_organization: org1)
-        private_domain2 = PrivateDomain.make(owning_organization: org2)
-        shared_domain = SharedDomain.make
+        private_domain1 = create(:private_domain, owning_organization: org1)
+        private_domain2 = create(:private_domain, owning_organization: org2)
+        shared_domain = create(:shared_domain)
 
         expect do
           @eager_loaded_orgs = Organization.eager(:domains).where(id: [org1.id, org2.id]).order_by(:id).all
@@ -783,10 +781,10 @@ module VCAP::CloudController
       end
 
       it 'passes in dataset to be loaded to eager_block option' do
-        org1 = Organization.make
+        org1 = create(:organization)
 
-        private_domain1 = PrivateDomain.make(owning_organization: org1)
-        PrivateDomain.make(owning_organization: org1)
+        private_domain1 = create(:private_domain, owning_organization: org1)
+        create(:private_domain, owning_organization: org1)
 
         eager_block = proc { |ds| ds.where(id: private_domain1.id) }
 
@@ -798,14 +796,14 @@ module VCAP::CloudController
       end
 
       it 'allow nested eager_load' do
-        org = Organization.make
-        space = Space.make(organization: org)
+        org = create(:organization)
+        space = create(:space, organization: org)
 
-        domain1 = PrivateDomain.make(owning_organization: org)
-        domain2 = PrivateDomain.make(owning_organization: org)
+        domain1 = create(:private_domain, owning_organization: org)
+        domain2 = create(:private_domain, owning_organization: org)
 
-        route1 = Route.make(domain: domain1, space: space)
-        route2 = Route.make(domain: domain2, space: space)
+        route1 = create(:route, domain: domain1, space: space)
+        route2 = create(:route, domain: domain2, space: space)
 
         expect do
           @eager_loaded_org = Organization.eager(domains: :routes).where(id: org.id).all.first
@@ -819,10 +817,10 @@ module VCAP::CloudController
     end
 
     describe 'removing a user' do
-      let(:org)     { Organization.make }
-      let(:user)    { User.make }
-      let(:space_1) { Space.make }
-      let(:space_2) { Space.make }
+      let(:org)     { create(:organization) }
+      let(:user)    { create(:user) }
+      let(:space_1) { create(:space) }
+      let(:space_2) { create(:space) }
 
       before do
         org.add_user(user)
@@ -928,7 +926,7 @@ module VCAP::CloudController
         end
 
         context 'when the user only has non-user org roles' do
-          let(:user) { User.make }
+          let(:user) { create(:user) }
 
           before do
             org.add_manager(user)
@@ -948,7 +946,7 @@ module VCAP::CloudController
         end
 
         context 'when the user only has an org-user role' do
-          let(:user) { User.make }
+          let(:user) { create(:user) }
 
           before do
             org.add_user(user)
@@ -988,10 +986,10 @@ module VCAP::CloudController
       end
 
       context 'when a quota is specified' do
-        let(:org) { Organization.make_unsaved(quota_definition: nil, quota_definition_guid: quota_definition_guid) }
+        let(:org) { build(:organization, quota_definition: nil, quota_definition_guid: quota_definition_guid) }
 
         context "and it's valid" do
-          let(:my_quota)  { QuotaDefinition.make }
+          let(:my_quota)  { create(:quota_definition) }
           let(:quota_definition_guid) { my_quota.guid }
 
           it 'uses what is provided' do
@@ -1013,9 +1011,9 @@ module VCAP::CloudController
     end
 
     describe '#has_user?' do
-      subject(:org) { Organization.make }
-      let(:user) { User.make }
-      let(:second_user) { User.make }
+      subject(:org) { create(:organization) }
+      let(:user) { create(:user) }
+      let(:second_user) { create(:user) }
 
       before do
         org.add_user(second_user)
@@ -1036,15 +1034,15 @@ module VCAP::CloudController
     end
 
     describe '#default_domain' do
-      let(:org) { Organization.make }
+      let(:org) { create(:organization) }
 
       before do
         Domain.dataset.destroy
       end
 
       context 'when there is a private domain' do
-        let(:private_domain1) { PrivateDomain.make(owning_organization: org) }
-        let(:private_domain2) { PrivateDomain.make }
+        let(:private_domain1) { create(:private_domain, owning_organization: org) }
+        let(:private_domain2) { create(:private_domain) }
 
         before do
           private_domain1
@@ -1056,15 +1054,15 @@ module VCAP::CloudController
         end
 
         context 'when there is an internal shared domain' do
-          let!(:internal_domain) { SharedDomain.make(internal: true) }
+          let!(:internal_domain) { create(:shared_domain, internal: true) }
 
           it 'returns the first private domain' do
             expect(org.default_domain).to eq(private_domain1)
           end
 
           context 'when there is a shared domain' do
-            let!(:shared_domain1) { SharedDomain.make }
-            let!(:shared_domain2) { SharedDomain.make }
+            let!(:shared_domain1) { create(:shared_domain) }
+            let!(:shared_domain2) { create(:shared_domain) }
 
             it 'returns the first shared domain' do
               expect(org.default_domain).to eq(shared_domain1)

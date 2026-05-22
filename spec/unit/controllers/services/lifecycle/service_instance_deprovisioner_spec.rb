@@ -4,11 +4,11 @@ require 'spec_helper'
 
 module VCAP::CloudController
   RSpec.describe ServiceInstanceDeprovisioner do
-    let(:event_repository) { Repositories::ServiceEventRepository.new(UserAuditInfo.new(user_guid: User.make.guid, user_email: 'email')) }
+    let(:event_repository) { Repositories::ServiceEventRepository.new(UserAuditInfo.new(user_guid: create(:user).guid, user_email: 'email')) }
     let(:deprovisioner) { ServiceInstanceDeprovisioner.new(event_repository) }
 
     describe '#deprovision_service_instance' do
-      let(:service_instance) { ManagedServiceInstance.make }
+      let(:service_instance) { create(:managed_service_instance) }
       let(:fake_job) { instance_double(Jobs::DeleteActionJob) }
       let(:fake_action) { instance_double(ServiceInstanceDelete, can_return_warnings?: true) }
       let(:some_boolean) { false }

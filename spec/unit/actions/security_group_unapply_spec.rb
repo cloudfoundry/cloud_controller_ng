@@ -6,8 +6,8 @@ module VCAP::CloudController
     describe '#unapply_running' do
       subject { SecurityGroupUnapply }
 
-      let(:space) { VCAP::CloudController::Space.make }
-      let(:security_group) { VCAP::CloudController::SecurityGroup.make }
+      let(:space) { create(:space) }
+      let(:security_group) { create(:security_group) }
 
       before do
         security_group.add_space(space)
@@ -47,8 +47,8 @@ module VCAP::CloudController
     describe '#unapply_staging' do
       subject { SecurityGroupUnapply }
 
-      let(:space) { VCAP::CloudController::Space.make }
-      let(:security_group) { VCAP::CloudController::SecurityGroup.make }
+      let(:space) { create(:space) }
+      let(:security_group) { create(:security_group) }
 
       before do
         security_group.add_staging_space(space)

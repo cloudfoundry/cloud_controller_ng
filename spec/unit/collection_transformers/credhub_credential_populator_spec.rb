@@ -3,14 +3,14 @@ require 'spec_helper'
 module VCAP::CloudController
   RSpec.describe CredhubCredentialPopulator do
     describe '#transform' do
-      let(:space) { Space.make }
+      let(:space) { create(:space) }
       let(:developer) { make_developer_for_space(space) }
-      let(:instance)  { ManagedServiceInstance.make(space:) }
+      let(:instance)  { create(:managed_service_instance, space:) }
       let(:service_keys) do
         [
-          ServiceKey.make(:credhub_reference, name: 'credhub-key-1', service_instance: instance),
-          ServiceKey.make(name: 'non-credhub-key-1', service_instance: instance, credentials: non_credhub_creds),
-          ServiceKey.make(:credhub_reference, name: 'credhub-key-2', service_instance: instance)
+          create(:service_key, :credhub_reference, name: 'credhub-key-1', service_instance: instance),
+          create(:service_key, name: 'non-credhub-key-1', service_instance: instance, credentials: non_credhub_creds),
+          create(:service_key, :credhub_reference, name: 'credhub-key-2', service_instance: instance)
         ]
       end
       let(:credhub_cred_1) { { 'username' => 'user' } }

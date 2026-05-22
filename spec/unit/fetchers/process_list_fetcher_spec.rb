@@ -11,9 +11,9 @@ module VCAP::CloudController
     describe '#fetch_all' do
       subject { ProcessListFetcher.fetch_all(message, eager_loaded_associations:) }
 
-      let!(:web) { ProcessModel.make(type: 'web') }
-      let!(:web2) { ProcessModel.make(type: 'web') }
-      let!(:worker) { ProcessModel.make(type: 'worker') }
+      let!(:web) { create(:process, type: 'web') }
+      let!(:web2) { create(:process, type: 'web') }
+      let!(:worker) { create(:process, type: 'worker') }
 
       it 'returns a Sequel::Dataset' do
         expect(subject).to be_a(Sequel::Dataset)
@@ -64,8 +64,8 @@ module VCAP::CloudController
         end
 
         context 'app guids' do
-          let!(:desired_process) { ProcessModel.make(app: desired_app) }
-          let(:desired_app) { AppModel.make }
+          let!(:desired_process) { create(:process, app: desired_app) }
+          let(:desired_app) { create(:app_model) }
           let(:filters) { { app_guids: [desired_app.guid] } }
 
           it 'only returns matching processes' do
@@ -85,7 +85,7 @@ module VCAP::CloudController
 
         context 'label selectors' do
           let(:filters) { { 'label_selector' => 'key=value' } }
-          let!(:label) { ProcessLabelModel.make(resource_guid: web2.guid, key_name: 'key', value: 'value') }
+          let!(:label) { create(:process_label_model, resource_guid: web2.guid, key_name: 'key', value: 'value') }
 
           it 'returns the correct set of packages' do
             results = subject.all
@@ -96,18 +96,18 @@ module VCAP::CloudController
     end
 
     describe '#fetch_for_spaces' do
-      let(:app1) { AppModel.make }
+      let(:app1) { create(:app_model) }
       let(:space1) { app1.space }
-      let!(:process_in_space1) { ProcessModel.make(app: app1, type: 'a') }
-      let!(:process2_in_space1) { ProcessModel.make(app: app1, type: 'b') }
-      let(:app2) { AppModel.make }
+      let!(:process_in_space1) { create(:process, app: app1, type: 'a') }
+      let!(:process2_in_space1) { create(:process, app: app1, type: 'b') }
+      let(:app2) { create(:app_model) }
       let(:space2) { app2.space }
-      let!(:process_in_space2) { ProcessModel.make(app: app2) }
+      let!(:process_in_space2) { create(:process, app: app2) }
       let(:space_guids) { [] }
 
       subject { ProcessListFetcher.fetch_for_spaces(message, space_guids:, eager_loaded_associations:) }
 
-      before { ProcessModel.make }
+      before { create(:process) }
 
       it 'returns a Sequel::Dataset' do
         expect(subject).to be_a(Sequel::Dataset)
@@ -146,7 +146,7 @@ module VCAP::CloudController
     end
 
     describe '#fetch_for_app' do
-      let(:app) { AppModel.make }
+      let(:app) { create(:app_model) }
       let(:filters) { { app_guid: app.guid } }
 
       subject { ProcessListFetcher.fetch_for_app(message, eager_loaded_associations:) }
@@ -161,7 +161,7 @@ module VCAP::CloudController
         let(:eager_loaded_associations) { [:labels] }
 
         it 'eager loads the specified resources for the processes' do
-          ProcessModel.make(:process, app:)
+          create(:process, :process, app:)
 
           _, processes_dataset = subject
           results = processes_dataset.all
@@ -172,9 +172,9 @@ module VCAP::CloudController
       end
 
       it 'returns the processes for the app' do
-        process1 = ProcessModel.make(:process, app:)
-        process2 = ProcessModel.make(:process, app:)
-        ProcessModel.make(:process)
+        process1 = create(:process, :process, app:)
+        process2 = create(:process, :process, app:)
+        create(:process, :process)
 
         _app, results = subject
         expect(results.all).to contain_exactly(process1, process2)

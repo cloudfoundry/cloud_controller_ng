@@ -15,7 +15,7 @@ RSpec.describe 'Rate Limiting' do
   end
 
   context 'as a user' do
-    let(:space) { VCAP::CloudController::Space.make }
+    let(:space) { create(:space) }
     let(:user)  { make_developer_for_space(space) }
 
     let(:user_headers) do
@@ -36,7 +36,7 @@ RSpec.describe 'Rate Limiting' do
   end
 
   context 'as a UAA client' do
-    let(:space) { VCAP::CloudController::Space.make }
+    let(:space) { create(:space) }
     let(:client)  do
       user = make_developer_for_space(space)
       user.update(is_oauth_client: true)

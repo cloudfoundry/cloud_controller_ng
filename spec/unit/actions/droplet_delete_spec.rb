@@ -3,22 +3,21 @@ require 'actions/droplet_delete'
 
 module VCAP::CloudController
   RSpec.describe DropletDelete do
-    let(:user) { User.make }
+    let(:user) { create(:user) }
     let(:user_email) { 'user@example.com' }
     let(:user_audit_info) { UserAuditInfo.new(user_email: 'user@example.com', user_guid: user.guid) }
 
     subject(:droplet_delete) { DropletDelete.new(user_audit_info) }
 
     describe '#delete' do
-      let!(:droplet) { DropletModel.make }
+      let!(:droplet) { create(:droplet_model) }
 
       let!(:label) do
-        VCAP::CloudController::DropletLabelModel.make(
-          key_prefix: 'indiana.edu',
-          key_name: 'state',
-          value: 'Indiana',
-          resource_guid: droplet.guid
-        )
+        create(:droplet_label_model,
+               key_prefix: 'indiana.edu',
+               key_name: 'state',
+               value: 'Indiana',
+               resource_guid: droplet.guid)
       end
 
       before do

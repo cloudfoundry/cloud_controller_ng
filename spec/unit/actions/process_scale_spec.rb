@@ -13,7 +13,7 @@ module VCAP::CloudController
       }
     end
     let(:message) { ProcessScaleMessage.new(valid_message_params) }
-    let(:app) { AppModel.make }
+    let(:app) { create(:app_model) }
     let!(:process) { ProcessModelFactory.make(disk_quota: 50, app: app) }
     let(:user_audit_info) { instance_double(UserAuditInfo).as_null_object }
 
@@ -129,7 +129,7 @@ module VCAP::CloudController
 
       context 'when the parent app is being deployed' do
         before do
-          VCAP::CloudController::DeploymentModel.make(app: app, state: 'DEPLOYING')
+          create(:deployment_model, app: app, state: 'DEPLOYING')
         end
 
         it 'succeeds if the process is not web' do

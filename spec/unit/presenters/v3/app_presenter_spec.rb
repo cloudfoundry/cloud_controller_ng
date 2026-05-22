@@ -4,16 +4,14 @@ require 'presenters/v3/app_presenter'
 module VCAP::CloudController::Presenters::V3
   RSpec.describe AppPresenter do
     let(:app) do
-      VCAP::CloudController::AppModel.make(
-        name: 'Davis',
-        environment_variables: { 'some' => 'stuff' },
-        desired_state: 'STOPPED',
-        droplet: VCAP::CloudController::DropletModel.make
-      )
+      create(:app_model, name: 'Davis',
+                         environment_variables: { 'some' => 'stuff' },
+                         desired_state: 'STOPPED',
+                         droplet: create(:droplet_model))
     end
 
     before do
-      VCAP::CloudController::Buildpack.make(name: 'limabean')
+      create(:buildpack, name: 'limabean')
       app.lifecycle_data.update(
         buildpacks: ['git://user:pass@github.com/repo', 'limabean'],
         stack: 'the-happiest-stack'
@@ -61,28 +59,22 @@ module VCAP::CloudController::Presenters::V3
 
       context 'when there are labels and annotations for the app' do
         let!(:release_label) do
-          VCAP::CloudController::AppLabelModel.make(
-            key_name: 'release',
-            value: 'stable',
-            resource_guid: app.guid
-          )
+          create(:app_label_model, key_name: 'release',
+                                   value: 'stable',
+                                   resource_guid: app.guid)
         end
 
         let!(:potato_label) do
-          VCAP::CloudController::AppLabelModel.make(
-            key_prefix: 'maine.gov',
-            key_name: 'potato',
-            value: 'mashed',
-            resource_guid: app.guid
-          )
+          create(:app_label_model, key_prefix: 'maine.gov',
+                                   key_name: 'potato',
+                                   value: 'mashed',
+                                   resource_guid: app.guid)
         end
 
         let!(:annotation) do
-          VCAP::CloudController::AppAnnotationModel.make(
-            resource_guid: app.guid,
-            key_name: 'contacts',
-            value: 'Bill tel(1111111) email(bill@fixme), Bob tel(222222) pager(3333333#555) email(bob@fixme)'
-          )
+          create(:app_annotation_model, resource_guid: app.guid,
+                                        key_name: 'contacts',
+                                        value: 'Bill tel(1111111) email(bill@fixme), Bob tel(222222) pager(3333333#555) email(bob@fixme)')
         end
 
         it 'includes the metadata on the presented app' do

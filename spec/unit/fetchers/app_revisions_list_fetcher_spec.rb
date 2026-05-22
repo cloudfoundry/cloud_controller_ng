@@ -4,13 +4,13 @@ require 'fetchers/app_revisions_list_fetcher'
 module VCAP::CloudController
   RSpec.describe AppRevisionsListFetcher do
     let(:fetcher) { AppRevisionsListFetcher }
-    let!(:app) { AppModel.make }
+    let!(:app) { create(:app_model) }
 
-    let(:expired_droplet) { DropletModel.make(:droplet, app: app, state: DropletModel::EXPIRED_STATE) }
-    let(:staged_droplet) { DropletModel.make(:droplet, app: app, state: DropletModel::STAGED_STATE) }
+    let(:expired_droplet) { create(:droplet_model, app: app, state: DropletModel::EXPIRED_STATE, set_as_current_droplet: false) }
+    let(:staged_droplet) { create(:droplet_model, app: app, state: DropletModel::STAGED_STATE, set_as_current_droplet: false) }
 
-    let!(:revision1) { RevisionModel.make(version: 21, droplet_guid: staged_droplet.guid, app: app) }
-    let!(:revision2) { RevisionModel.make(version: 34, droplet_guid: expired_droplet.guid, app: app) }
+    let!(:revision1) { create(:revision_model, version: 21, droplet: staged_droplet, app: app) }
+    let!(:revision2) { create(:revision_model, version: 34, droplet: expired_droplet, app: app) }
 
     describe '#fetch' do
       let(:message) { AppRevisionsListMessage.from_params(filters) }
@@ -45,8 +45,8 @@ module VCAP::CloudController
 
       context 'when a label_selector is provided' do
         let(:message) { AppRevisionsListMessage.from_params({ 'label_selector' => 'key=value' }) }
-        let!(:revision1label) { RevisionLabelModel.make(key_name: 'key', value: 'value', revision: revision1) }
-        let!(:revision2label) { RevisionLabelModel.make(key_name: 'key2', value: 'value2', revision: revision2) }
+        let!(:revision1label) { create(:revision_label_model, key_name: 'key', value: 'value', revision: revision1) }
+        let!(:revision2label) { create(:revision_label_model, key_name: 'key2', value: 'value2', revision: revision2) }
 
         it 'returns the correct set of revisions' do
           results = fetcher.fetch(app, message).all
@@ -56,10 +56,10 @@ module VCAP::CloudController
     end
 
     describe '#fetch_deployed' do
-      let!(:revision3) { RevisionModel.make(version: 35, app: app) }
+      let!(:revision3) { create(:revision_model, version: 35, app: app) }
 
-      let!(:process1) { ProcessModel.make(app: app, revision: revision1, type: 'web', state: 'STARTED') }
-      let!(:process2) { ProcessModel.make(app: app, revision: revision2, type: 'web', state: 'STOPPED') }
+      let!(:process1) { create(:process, app: app, revision: revision1, type: 'web', state: 'STARTED') }
+      let!(:process2) { create(:process, app: app, revision: revision2, type: 'web', state: 'STOPPED') }
 
       subject { fetcher.fetch_deployed(app) }
 
@@ -68,7 +68,7 @@ module VCAP::CloudController
       end
 
       it 'handles processes with no revisions' do
-        VCAP::CloudController::ProcessModel.make(app: app, type: 'web', state: 'STARTED')
+        create(:process, app: app, type: 'web', state: 'STARTED')
         expect(subject).to contain_exactly(revision1)
       end
     end

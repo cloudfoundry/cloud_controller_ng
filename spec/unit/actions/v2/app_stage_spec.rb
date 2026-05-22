@@ -9,13 +9,13 @@ module VCAP::CloudController
       subject(:action) { AppStage.new(stagers:) }
 
       describe '#stage' do
-        let(:buildpack) { BuildpackLifecycleBuildpackModel.make(:custom_buildpack, buildpack_url: 'http://github.com/myorg/awesome-buildpack') }
-        let(:buildpack_lifecycle_data) { BuildpackLifecycleDataModel.make(stack: 'my_stack', buildpack_lifecycle_buildpack_guids: [buildpack.guid]) }
+        let(:buildpack) { create(:buildpack_lifecycle_buildpack_model, :custom_buildpack, buildpack_url: 'http://github.com/myorg/awesome-buildpack') }
+        let(:buildpack_lifecycle_data) { create(:buildpack_lifecycle_data_model, stack: 'my_stack', buildpack_lifecycle_buildpack_guids: [buildpack.guid]) }
 
-        let(:app) { AppModel.make }
+        let(:app) { create(:app_model) }
 
-        let(:package) { PackageModel.make(app: app, state: PackageModel::READY_STATE) }
-        let(:build) { BuildModel.make(app: app, package: package, created_by_user_guid: 'user-guid') }
+        let(:package) { create(:package_model, app: app, state: PackageModel::READY_STATE) }
+        let(:build) { create(:build_model, app: app, package: package, created_by_user_guid: 'user-guid') }
         let(:build_create) { instance_double(BuildCreate, create_and_stage_without_event: build, staging_response: 'staging-response', warnings: []) }
 
         before do
@@ -24,7 +24,7 @@ module VCAP::CloudController
         end
 
         it 'delegates to BuildCreate with a BuildCreateMessage based on the process' do
-          process = ProcessModel.make(memory: 765, disk_quota: 1234, app: app)
+          process = create(:process_model, memory: 765, disk_quota: 1234, app: app)
           process.reload
 
           action.stage(process)
@@ -188,14 +188,15 @@ module VCAP::CloudController
 
           it 'logs build creates' do
             Timecop.freeze do
-              buildpack = BuildpackLifecycleBuildpackModel.make(:custom_buildpack, buildpack_url: 'http://github.com/myorg/awesome-buildpack')
-              buildpack_lifecycle_data = BuildpackLifecycleDataModel.make(stack: 'my_stack', buildpack_lifecycle_buildpack_guids: [buildpack.guid])
+              buildpack = create(:buildpack_lifecycle_buildpack_model, :custom_buildpack, buildpack_url: 'http://github.com/myorg/awesome-buildpack')
+              buildpack_lifecycle_data = create(:buildpack_lifecycle_data_model, stack: 'my_stack', buildpack_lifecycle_buildpack_guids: [buildpack.guid])
 
-              app = AppModel.make
+              app = create(:app_model)
               app.buildpack_lifecycle_data = buildpack_lifecycle_data
               app.save
-              process = ProcessModel.make(memory: 765, disk_quota: 1234, app: app)
-              PackageModel.make(app: process.app, state: PackageModel::READY_STATE)
+              process = create(:process_model, memory: 765, disk_quota: 1234, app: app)
+              create(:package_model, app: process.app, state: PackageModel::READY_STATE)
+              process.reload
 
               action.stage(process)
               expected_json = {
@@ -229,7 +230,7 @@ module VCAP::CloudController
           end
 
           context 'when stack is DEPRECATED' do
-            let(:deprecated_stack) { Stack.make(name: 'cflinuxfs3', state: 'DEPRECATED', description: 'EOL Dec 2025') }
+            let(:deprecated_stack) { create(:stack, name: 'cflinuxfs3', state: 'DEPRECATED', description: 'EOL Dec 2025') }
 
             before do
               process.app.buildpack_lifecycle_data.update(stack: deprecated_stack.name)
@@ -245,7 +246,7 @@ module VCAP::CloudController
           end
 
           context 'when stack is ACTIVE' do
-            let(:active_stack) { Stack.make(name: 'cflinuxfs5', state: 'ACTIVE') }
+            let(:active_stack) { create(:stack, name: 'cflinuxfs5', state: 'ACTIVE') }
 
             before do
               process.app.buildpack_lifecycle_data.update(stack: active_stack.name)
@@ -259,7 +260,7 @@ module VCAP::CloudController
           end
 
           context 'when stack is DISABLED' do
-            let(:disabled_stack) { Stack.make(name: 'cflinuxfs2', state: 'DISABLED', description: 'Migrate to cflinuxfs4') }
+            let(:disabled_stack) { create(:stack, name: 'cflinuxfs2', state: 'DISABLED', description: 'Migrate to cflinuxfs4') }
 
             before do
               process.app.buildpack_lifecycle_data.update(stack: disabled_stack.name)
@@ -275,7 +276,7 @@ module VCAP::CloudController
           end
 
           context 'when stack is RESTRICTED' do
-            let(:restricted_stack) { Stack.make(name: 'cflinuxfs3-restricted', state: 'RESTRICTED', description: 'No new apps') }
+            let(:restricted_stack) { create(:stack, name: 'cflinuxfs3-restricted', state: 'RESTRICTED', description: 'No new apps') }
 
             before do
               process.app.buildpack_lifecycle_data.update(stack: restricted_stack.name)
@@ -299,7 +300,7 @@ module VCAP::CloudController
 
             context 'for restaging existing app' do
               before do
-                BuildModel.make(app: process.app, state: 'STAGED')
+                create(:build_model, app: process.app, state: 'STAGED')
               end
 
               it 'allows staging with warnings' do

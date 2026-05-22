@@ -3,23 +3,21 @@ require 'presenters/v3/build_presenter'
 
 module VCAP::CloudController::Presenters::V3
   RSpec.describe BuildPresenter do
-    let(:app) { VCAP::CloudController::AppModel.make }
-    let(:package) { VCAP::CloudController::PackageModel.make(app:) }
-    let!(:happy_buildpack) { VCAP::CloudController::Buildpack.make(name: 'the-happiest-buildpack') }
+    let(:app) { create(:app_model) }
+    let(:package) { create(:package_model, app:) }
+    let!(:happy_buildpack) { create(:buildpack, name: 'the-happiest-buildpack') }
     let(:buildpacks) { [happy_buildpack.name, 'http://bob:secret@example.com/happy'] }
     let(:stack) { 'the-happiest-stack' }
     let(:build) do
-      VCAP::CloudController::BuildModel.make(
-        state: VCAP::CloudController::BuildModel::STAGING_STATE,
-        package: package,
-        app: app,
-        staging_memory_in_mb: 1024,
-        staging_disk_in_mb: 1024,
-        staging_log_rate_limit: 2048,
-        created_by_user_guid: 'happy user guid',
-        created_by_user_name: 'happier user name',
-        created_by_user_email: 'this user emailed in'
-      )
+      create(:build_model, state: VCAP::CloudController::BuildModel::STAGING_STATE,
+                           package: package,
+                           app: app,
+                           staging_memory_in_mb: 1024,
+                           staging_disk_in_mb: 1024,
+                           staging_log_rate_limit: 2048,
+                           created_by_user_guid: 'happy user guid',
+                           created_by_user_name: 'happier user name',
+                           created_by_user_email: 'this user emailed in')
     end
 
     describe '#to_hash' do
@@ -81,9 +79,9 @@ module VCAP::CloudController::Presenters::V3
       end
 
       context 'docker lifecycle' do
-        let(:app) { VCAP::CloudController::AppModel.make(:docker) }
-        let(:package) { VCAP::CloudController::PackageModel.make(:docker, app:) }
-        let(:build) { VCAP::CloudController::BuildModel.make(:docker, app:, package:) }
+        let(:app) { create(:app_model, :docker) }
+        let(:package) { create(:package_model, :docker, app:) }
+        let(:build) { create(:build_model, :docker, app:, package:) }
 
         it 'presents the build as a hash' do
           links = {
@@ -110,12 +108,10 @@ module VCAP::CloudController::Presenters::V3
 
       context 'when the droplet has finished staging' do
         let(:droplet) do
-          VCAP::CloudController::DropletModel.make(
-            state: VCAP::CloudController::DropletModel::STAGED_STATE,
-            package_guid: package.guid,
-            app: app,
-            build: build
-          )
+          create(:droplet_model, state: VCAP::CloudController::DropletModel::STAGED_STATE,
+                                 package_guid: package.guid,
+                                 app: app,
+                                 build: build)
         end
 
         before do

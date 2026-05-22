@@ -8,12 +8,12 @@ module VCAP::CloudController
 
     context 'service bindings' do
       let!(:bindings) do
-        service_instance = ManagedServiceInstance.make
-        app = AppModel.make(space: service_instance.space, created_at: Time.now.utc - 1.second)
+        service_instance = create(:managed_service_instance)
+        app = create(:app_model, space: service_instance.space, created_at: Time.now.utc - 1.second)
 
         [
-          ServiceBinding.make(service_instance:, app:),
-          ServiceBinding.make
+          create(:service_binding, service_instance:, app:),
+          create(:service_binding)
         ]
       end
 
@@ -38,7 +38,7 @@ module VCAP::CloudController
     end
 
     context 'service keys' do
-      let(:keys) { [ServiceKey.make] }
+      let(:keys) { [create(:service_key)] }
 
       it 'does not query the database' do
         expect do

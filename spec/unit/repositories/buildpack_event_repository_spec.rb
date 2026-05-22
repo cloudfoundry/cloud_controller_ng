@@ -5,8 +5,8 @@ module VCAP::CloudController
   module Repositories
     RSpec.describe BuildpackEventRepository do
       let(:request_attrs) { { 'name' => 'new-buildpack' } }
-      let(:user) { User.make }
-      let(:buildpack) { Buildpack.make }
+      let(:user) { create(:user) }
+      let(:buildpack) { create(:buildpack) }
       let(:user_email) { 'email address' }
       let(:user_name) { 'user name' }
       let(:user_audit_info) { UserAuditInfo.new(user_email: user_email, user_guid: user.guid, user_name: user_name) }

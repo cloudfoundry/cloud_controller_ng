@@ -2,23 +2,23 @@ require 'spec_helper'
 require 'request_spec_shared_examples'
 
 RSpec.describe 'Droplets' do
-  let(:space) { VCAP::CloudController::Space.make }
+  let(:space) { create(:space) }
   let(:org) { space.organization }
-  let(:user) { VCAP::CloudController::User.make }
-  let(:app_model) { VCAP::CloudController::AppModel.make(space_guid: space.guid, name: 'my-app') }
-  let(:other_app_model) { VCAP::CloudController::AppModel.make(space_guid: space.guid, name: 'my-app-3') }
+  let(:user) { create(:user) }
+  let(:app_model) { create(:app_model, space: space, name: 'my-app') }
+  let(:other_app_model) { create(:app_model, space: space, name: 'my-app-3') }
   let(:developer) { make_developer_for_space(space) }
   let(:developer_headers) { headers_for(developer, user_name:) }
   let(:user_name) { 'sundance kid' }
 
   let(:guid) { droplet_model.guid }
-  let(:package_model) { VCAP::CloudController::PackageModel.make(app_guid: app_model.guid) }
+  let(:package_model) { create(:package_model, app: app_model) }
   let(:app_guid) { droplet_model.app_guid }
 
   let(:parsed_response) { Oj.load(last_response.body) }
 
   describe 'POST /v3/droplets' do
-    let(:user) { VCAP::CloudController::User.make }
+    let(:user) { create(:user) }
 
     let(:params) do
       {
@@ -174,7 +174,7 @@ RSpec.describe 'Droplets' do
     end
 
     context 'when user cannot see the app' do
-      let(:other_user) { VCAP::CloudController::User.make }
+      let(:other_user) { create(:user) }
 
       before { set_current_user(other_user) }
 
@@ -186,7 +186,7 @@ RSpec.describe 'Droplets' do
     end
 
     context 'when the app has a docker lifecycle' do
-      let!(:docker_app) { VCAP::CloudController::AppModel.make(:docker, space:) }
+      let!(:docker_app) { create(:app_model, :docker, space:) }
 
       let(:docker_app_params) do
         {
@@ -209,17 +209,16 @@ RSpec.describe 'Droplets' do
   describe 'GET /v3/droplets/:guid' do
     context 'when the droplet has a buildpack lifecycle' do
       let!(:droplet_model) do
-        VCAP::CloudController::DropletModel.make(
-          state: VCAP::CloudController::DropletModel::STAGED_STATE,
-          app_guid: app_model.guid,
-          package_guid: package_model.guid,
-          buildpack_receipt_buildpack: 'http://buildpack.git.url.com',
-          error_description: 'example error',
-          execution_metadata: 'some-data',
-          droplet_hash: 'shalalala',
-          sha256_checksum: 'droplet-checksum-sha256',
-          process_types: { 'web' => 'start-command' }
-        )
+        create(:droplet_model,
+               state: VCAP::CloudController::DropletModel::STAGED_STATE,
+               app_guid: app_model.guid,
+               package_guid: package_model.guid,
+               buildpack_receipt_buildpack: 'http://buildpack.git.url.com',
+               error_description: 'example error',
+               execution_metadata: 'some-data',
+               droplet_hash: 'shalalala',
+               sha256_checksum: 'droplet-checksum-sha256',
+               process_types: { 'web' => 'start-command' })
       end
       let(:droplet_model_json) do
         {
@@ -281,16 +280,15 @@ RSpec.describe 'Droplets' do
 
     context 'when the droplet has a docker lifecycle' do
       let!(:droplet_model) do
-        VCAP::CloudController::DropletModel.make(
-          :docker,
-          state: VCAP::CloudController::DropletModel::STAGED_STATE,
-          app_guid: app_model.guid,
-          package_guid: package_model.guid,
-          error_description: 'example error',
-          execution_metadata: 'some-data',
-          process_types: { 'web' => 'start-command' },
-          docker_receipt_image: 'docker/foobar:baz'
-        )
+        create(:droplet_model,
+               :docker,
+               state: VCAP::CloudController::DropletModel::STAGED_STATE,
+               app_guid: app_model.guid,
+               package_guid: package_model.guid,
+               error_description: 'example error',
+               execution_metadata: 'some-data',
+               process_types: { 'web' => 'start-command' },
+               docker_receipt_image: 'docker/foobar:baz')
       end
       let(:droplet_model_json) do
         {
@@ -349,17 +347,16 @@ RSpec.describe 'Droplets' do
   describe 'GET /v3/droplets/:guid/download' do
     let(:worlds_smallest_tgz_file) { "\x1f\x8b\x08\x00\x5e\xc2\xc6\x5e\x00\x03\x63\x60\x18\x05\xa3\x60\x14\x8c\x54\x00\x00\x2e\xaf\xb5\xef\x00\x04\x00\x00" }
     let!(:droplet_model) do
-      VCAP::CloudController::DropletModel.make(
-        state: VCAP::CloudController::DropletModel::AWAITING_UPLOAD_STATE,
-        app_guid: app_model.guid,
-        package_guid: package_model.guid,
-        buildpack_receipt_buildpack: 'http://buildpack.git.url.com',
-        error_description: 'example error',
-        execution_metadata: 'some-data',
-        droplet_hash: OpenSSL::Digest::SHA1.hexdigest(worlds_smallest_tgz_file),
-        sha256_checksum: 'some-sha-256',
-        process_types: { 'web' => 'start-command' }
-      )
+      create(:droplet_model,
+             state: VCAP::CloudController::DropletModel::AWAITING_UPLOAD_STATE,
+             app_guid: app_model.guid,
+             package_guid: package_model.guid,
+             buildpack_receipt_buildpack: 'http://buildpack.git.url.com',
+             error_description: 'example error',
+             execution_metadata: 'some-data',
+             droplet_hash: OpenSSL::Digest::SHA1.hexdigest(worlds_smallest_tgz_file),
+             sha256_checksum: 'some-sha-256',
+             process_types: { 'web' => 'start-command' })
     end
 
     let(:droplet_file) do
@@ -474,7 +471,7 @@ RSpec.describe 'Droplets' do
 
     context "when the droplet has type 'docker'" do
       let!(:droplet_model) do
-        VCAP::CloudController::DropletModel.make(:docker)
+        create(:droplet_model, :docker)
       end
 
       it 'returns a 422 with a helpful error message' do
@@ -486,27 +483,25 @@ RSpec.describe 'Droplets' do
   end
 
   describe 'GET /v3/droplets' do
-    let(:buildpack) { VCAP::CloudController::Buildpack.make }
+    let(:buildpack) { create(:buildpack) }
     let(:package_model) do
-      VCAP::CloudController::PackageModel.make(
-        app_guid: app_model.guid,
-        type: VCAP::CloudController::PackageModel::BITS_TYPE
-      )
+      create(:package_model,
+             app_guid: app_model.guid,
+             type: VCAP::CloudController::PackageModel::BITS_TYPE)
     end
 
     let!(:droplet1) do
-      VCAP::CloudController::DropletModel.make(
-        app_guid: app_model.guid,
-        created_at: Time.at(1),
-        package_guid: package_model.guid,
-        droplet_hash: nil,
-        sha256_checksum: nil,
-        buildpack_receipt_buildpack: buildpack.name,
-        buildpack_receipt_buildpack_guid: buildpack.guid,
-        staging_disk_in_mb: 235,
-        error_description: 'example-error',
-        state: VCAP::CloudController::DropletModel::FAILED_STATE
-      )
+      create(:droplet_model,
+             app_guid: app_model.guid,
+             created_at: Time.at(1),
+             package_guid: package_model.guid,
+             droplet_hash: nil,
+             sha256_checksum: nil,
+             buildpack_receipt_buildpack: buildpack.name,
+             buildpack_receipt_buildpack_guid: buildpack.guid,
+             staging_disk_in_mb: 235,
+             error_description: 'example-error',
+             state: VCAP::CloudController::DropletModel::FAILED_STATE)
     end
     let(:droplet1_json) do
       {
@@ -546,18 +541,18 @@ RSpec.describe 'Droplets' do
       }
     end
     let!(:droplet2) do
-      VCAP::CloudController::DropletModel.make(
-        app_guid: app_model.guid,
-        created_at: Time.at(2),
-        package_guid: package_model.guid,
-        droplet_hash: 'my-hash',
-        sha256_checksum: 'droplet-checksum-sha256',
-        buildpack_receipt_buildpack: 'http://buildpack.git.url.com',
-        state: VCAP::CloudController::DropletModel::STAGED_STATE,
-        process_types: { 'web' => 'started' },
-        execution_metadata: 'black-box-secrets',
-        error_description: 'example-error'
-      )
+      create(:droplet_model,
+             app_guid: app_model.guid,
+             created_at: Time.at(2),
+             package_guid: package_model.guid,
+             droplet_hash: 'my-hash',
+             sha256_checksum: 'droplet-checksum-sha256',
+             buildpack_receipt_buildpack: 'http://buildpack.git.url.com',
+             state: VCAP::CloudController::DropletModel::STAGED_STATE,
+             process_types: { 'web' => 'started' },
+             execution_metadata: 'black-box-secrets',
+             error_description: 'example-error',
+             set_as_current_droplet: false)
     end
     let(:droplet2_json) do
       {
@@ -608,8 +603,8 @@ RSpec.describe 'Droplets' do
     end
 
     context 'eager loading' do
-      let!(:docker_droplet_1) { VCAP::CloudController::DropletModel.make(:docker, app_guid: app_model.guid) }
-      let!(:docker_droplet_2) { VCAP::CloudController::DropletModel.make(:docker, app_guid: app_model.guid) }
+      let!(:docker_droplet_1) { create(:droplet_model, :docker, app: app_model) }
+      let!(:docker_droplet_2) { create(:droplet_model, :docker, app: app_model) }
       let(:get_droplets) { -> { get '/v3/droplets', nil, developer_headers } }
 
       it 'eager loads associated data needed to present droplets' do
@@ -682,25 +677,23 @@ RSpec.describe 'Droplets' do
     end
 
     context 'when the user is a member in the droplets space' do
-      let(:other_space) { VCAP::CloudController::Space.make }
-      let(:other_app_model) { VCAP::CloudController::AppModel.make(space_guid: other_space.guid, name: 'my-other-app') }
+      let(:other_space) { create(:space) }
+      let(:other_app_model) { create(:app_model, space: other_space, name: 'my-other-app') }
       let(:other_package_model) do
-        VCAP::CloudController::PackageModel.make(
-          app_guid: other_app_model.guid,
-          type: VCAP::CloudController::PackageModel::BITS_TYPE
-        )
+        create(:package_model,
+               app_guid: other_app_model.guid,
+               type: VCAP::CloudController::PackageModel::BITS_TYPE)
       end
       let(:droplet_in_other_space) do
-        VCAP::CloudController::DropletModel.make(
-          app_guid: other_app_model.guid,
-          package_guid: other_package_model.guid,
-          droplet_hash: nil,
-          sha256_checksum: nil,
-          buildpack_receipt_buildpack: buildpack.name,
-          buildpack_receipt_buildpack_guid: buildpack.guid,
-          staging_disk_in_mb: 235,
-          state: VCAP::CloudController::DropletModel::STAGED_STATE
-        )
+        create(:droplet_model,
+               app_guid: other_app_model.guid,
+               package_guid: other_package_model.guid,
+               droplet_hash: nil,
+               sha256_checksum: nil,
+               buildpack_receipt_buildpack: buildpack.name,
+               buildpack_receipt_buildpack_guid: buildpack.guid,
+               staging_disk_in_mb: 235,
+               state: VCAP::CloudController::DropletModel::STAGED_STATE)
       end
       let(:droplet_in_other_space_json) do
         {
@@ -833,7 +826,7 @@ RSpec.describe 'Droplets' do
     end
 
     context 'when a droplet does not have a buildpack lifecycle' do
-      let!(:droplet_without_lifecycle) { VCAP::CloudController::DropletModel.make(package_guid: VCAP::CloudController::PackageModel.make.guid) }
+      let!(:droplet_without_lifecycle) { create(:droplet_model, package_guid: create(:package_model).guid) }
 
       it 'is excluded' do
         get '/v3/droplets', nil, developer_headers
@@ -842,11 +835,11 @@ RSpec.describe 'Droplets' do
     end
 
     context 'faceted list' do
-      let(:space2) { VCAP::CloudController::Space.make }
-      let(:app_model2) { VCAP::CloudController::AppModel.make(space:) }
-      let(:app_model3) { VCAP::CloudController::AppModel.make(space: space2) }
-      let!(:droplet3) { VCAP::CloudController::DropletModel.make(app: app_model2, state: VCAP::CloudController::DropletModel::FAILED_STATE) }
-      let!(:droplet4) { VCAP::CloudController::DropletModel.make(app: app_model3, state: VCAP::CloudController::DropletModel::FAILED_STATE) }
+      let(:space2) { create(:space) }
+      let(:app_model2) { create(:app_model, space:) }
+      let(:app_model3) { create(:app_model, space: space2) }
+      let!(:droplet3) { create(:droplet_model, app: app_model2, state: VCAP::CloudController::DropletModel::FAILED_STATE) }
+      let!(:droplet4) { create(:droplet_model, app: app_model3, state: VCAP::CloudController::DropletModel::FAILED_STATE) }
 
       let(:organization2) { space2.organization }
       let(:organization1) { space.organization }
@@ -949,24 +942,24 @@ RSpec.describe 'Droplets' do
     end
 
     context 'label_selector' do
-      let!(:dropletA) { VCAP::CloudController::DropletModel.make(app_guid: app_model.guid) }
-      let!(:dropletAFruit) { VCAP::CloudController::DropletLabelModel.make(key_name: 'fruit', value: 'strawberry', droplet: dropletA) }
-      let!(:dropletAAnimal) { VCAP::CloudController::DropletLabelModel.make(key_name: 'animal', value: 'horse', droplet: dropletA) }
+      let!(:dropletA) { create(:droplet_model, app: app_model, set_as_current_droplet: false) }
+      let!(:dropletAFruit) { create(:droplet_label_model, key_name: 'fruit', value: 'strawberry', droplet: dropletA) }
+      let!(:dropletAAnimal) { create(:droplet_label_model, key_name: 'animal', value: 'horse', droplet: dropletA) }
 
-      let!(:dropletB) { VCAP::CloudController::DropletModel.make(app_guid: app_model.guid) }
-      let!(:dropletBEnv) { VCAP::CloudController::DropletLabelModel.make(key_name: 'env', value: 'prod', droplet: dropletB) }
-      let!(:dropletBAnimal) { VCAP::CloudController::DropletLabelModel.make(key_name: 'animal', value: 'dog', droplet: dropletB) }
+      let!(:dropletB) { create(:droplet_model, app: app_model, set_as_current_droplet: false) }
+      let!(:dropletBEnv) { create(:droplet_label_model, key_name: 'env', value: 'prod', droplet: dropletB) }
+      let!(:dropletBAnimal) { create(:droplet_label_model, key_name: 'animal', value: 'dog', droplet: dropletB) }
 
-      let!(:dropletC) { VCAP::CloudController::DropletModel.make(app_guid: app_model.guid) }
-      let!(:dropletCEnv) { VCAP::CloudController::DropletLabelModel.make(key_name: 'env', value: 'prod', droplet: dropletC) }
-      let!(:dropletCAnimal) { VCAP::CloudController::DropletLabelModel.make(key_name: 'animal', value: 'horse', droplet: dropletC) }
+      let!(:dropletC) { create(:droplet_model, app: app_model, set_as_current_droplet: false) }
+      let!(:dropletCEnv) { create(:droplet_label_model, key_name: 'env', value: 'prod', droplet: dropletC) }
+      let!(:dropletCAnimal) { create(:droplet_label_model, key_name: 'animal', value: 'horse', droplet: dropletC) }
 
-      let!(:dropletD) { VCAP::CloudController::DropletModel.make(app_guid: app_model.guid) }
-      let!(:dropletDEnv) { VCAP::CloudController::DropletLabelModel.make(key_name: 'env', value: 'prod', droplet: dropletD) }
+      let!(:dropletD) { create(:droplet_model, app: app_model, set_as_current_droplet: false) }
+      let!(:dropletDEnv) { create(:droplet_label_model, key_name: 'env', value: 'prod', droplet: dropletD) }
 
-      let!(:dropletE) { VCAP::CloudController::DropletModel.make(app_guid: app_model.guid) }
-      let!(:dropletEEnv) { VCAP::CloudController::DropletLabelModel.make(key_name: 'env', value: 'staging', droplet: dropletE) }
-      let!(:dropletEAnimal) { VCAP::CloudController::DropletLabelModel.make(key_name: 'animal', value: 'dog', droplet: dropletE) }
+      let!(:dropletE) { create(:droplet_model, app: app_model, set_as_current_droplet: false) }
+      let!(:dropletEEnv) { create(:droplet_label_model, key_name: 'env', value: 'staging', droplet: dropletE) }
+      let!(:dropletEAnimal) { create(:droplet_label_model, key_name: 'animal', value: 'dog', droplet: dropletE) }
 
       it 'returns the matching droplets' do
         get '/v3/droplets?label_selector=!fruit,animal in (dog,horse),env=prod', nil, developer_headers
@@ -991,7 +984,7 @@ RSpec.describe 'Droplets' do
   end
 
   describe 'DELETE /v3/droplets/:guid' do
-    let!(:droplet) { VCAP::CloudController::DropletModel.make(app_guid: app_model.guid) }
+    let!(:droplet) { create(:droplet_model, app: app_model, set_as_current_droplet: false) }
 
     let(:api_call) { ->(user_headers) { delete "/v3/droplets/#{droplet.guid}", nil, user_headers } }
     let(:db_check) do
@@ -1053,64 +1046,62 @@ RSpec.describe 'Droplets' do
   end
 
   describe 'GET /v3/apps/:guid/droplets' do
-    let(:buildpack) { VCAP::CloudController::Buildpack.make }
+    let(:buildpack) { create(:buildpack) }
     let(:package_model) do
-      VCAP::CloudController::PackageModel.make(
-        app_guid: app_model.guid,
-        type: VCAP::CloudController::PackageModel::BITS_TYPE
-      )
+      create(:package_model,
+             app_guid: app_model.guid,
+             type: VCAP::CloudController::PackageModel::BITS_TYPE)
     end
 
     let!(:droplet1) do
-      VCAP::CloudController::DropletModel.make(
-        app_guid: app_model.guid,
-        created_at: Time.at(1),
-        package_guid: package_model.guid,
-        droplet_hash: nil,
-        sha256_checksum: nil,
-        buildpack_receipt_buildpack: buildpack.name,
-        buildpack_receipt_buildpack_guid: buildpack.guid,
-        staging_disk_in_mb: 235,
-        error_description: 'example-error',
-        state: VCAP::CloudController::DropletModel::FAILED_STATE
-      )
+      create(:droplet_model,
+             app_guid: app_model.guid,
+             created_at: Time.at(1),
+             package_guid: package_model.guid,
+             droplet_hash: nil,
+             sha256_checksum: nil,
+             buildpack_receipt_buildpack: buildpack.name,
+             buildpack_receipt_buildpack_guid: buildpack.guid,
+             staging_disk_in_mb: 235,
+             error_description: 'example-error',
+             state: VCAP::CloudController::DropletModel::FAILED_STATE,
+             set_as_current_droplet: false)
     end
-    let!(:droplet1Label) { VCAP::CloudController::DropletLabelModel.make(key_name: 'fruit', value: 'strawberry', droplet: droplet1) }
+    let!(:droplet1Label) { create(:droplet_label_model, key_name: 'fruit', value: 'strawberry', droplet: droplet1) }
     let!(:droplet2) do
-      VCAP::CloudController::DropletModel.make(
-        app_guid: app_model.guid,
-        created_at: Time.at(2),
-        package_guid: package_model.guid,
-        droplet_hash: 'my-hash',
-        sha256_checksum: 'droplet-checksum-sha256',
-        buildpack_receipt_buildpack: 'http://buildpack.git.url.com',
-        state: VCAP::CloudController::DropletModel::STAGED_STATE,
-        process_types: { 'web' => 'started' },
-        execution_metadata: 'black-box-secrets',
-        error_description: 'example-error'
-      )
+      create(:droplet_model,
+             app_guid: app_model.guid,
+             created_at: Time.at(2),
+             package_guid: package_model.guid,
+             droplet_hash: 'my-hash',
+             sha256_checksum: 'droplet-checksum-sha256',
+             buildpack_receipt_buildpack: 'http://buildpack.git.url.com',
+             state: VCAP::CloudController::DropletModel::STAGED_STATE,
+             process_types: { 'web' => 'started' },
+             execution_metadata: 'black-box-secrets',
+             error_description: 'example-error',
+             set_as_current_droplet: false)
     end
-    let!(:droplet2Label) { VCAP::CloudController::DropletLabelModel.make(key_name: 'seed', value: 'strawberry', droplet: droplet2) }
+    let!(:droplet2Label) { create(:droplet_label_model, key_name: 'seed', value: 'strawberry', droplet: droplet2) }
     let!(:droplet3) do
-      VCAP::CloudController::DropletModel.make(
-        app_guid: other_app_model.guid,
-        created_at: Time.at(2),
-        package_guid: other_package_model.guid,
-        droplet_hash: 'my-hash-3',
-        sha256_checksum: 'droplet-checksum-sha256-3',
-        buildpack_receipt_buildpack: 'http://buildpack.git.url.com',
-        state: VCAP::CloudController::DropletModel::STAGED_STATE,
-        process_types: { 'web' => 'started' },
-        execution_metadata: 'black-box-secrets-3',
-        error_description: 'example-error'
-      )
+      create(:droplet_model,
+             app_guid: other_app_model.guid,
+             created_at: Time.at(2),
+             package_guid: other_package_model.guid,
+             droplet_hash: 'my-hash-3',
+             sha256_checksum: 'droplet-checksum-sha256-3',
+             buildpack_receipt_buildpack: 'http://buildpack.git.url.com',
+             state: VCAP::CloudController::DropletModel::STAGED_STATE,
+             process_types: { 'web' => 'started' },
+             execution_metadata: 'black-box-secrets-3',
+             error_description: 'example-error',
+             set_as_current_droplet: false)
     end
-    let!(:droplet3Label) { VCAP::CloudController::DropletLabelModel.make(key_name: 'fruit', value: 'mango', droplet: droplet3) }
+    let!(:droplet3Label) { create(:droplet_label_model, key_name: 'fruit', value: 'mango', droplet: droplet3) }
     let(:other_package_model) do
-      VCAP::CloudController::PackageModel.make(
-        app_guid: other_app_model.guid,
-        type: VCAP::CloudController::PackageModel::BITS_TYPE
-      )
+      create(:package_model,
+             app_guid: other_app_model.guid,
+             type: VCAP::CloudController::PackageModel::BITS_TYPE)
     end
 
     let(:per_page) { 2 }
@@ -1300,66 +1291,61 @@ RSpec.describe 'Droplets' do
   end
 
   describe 'GET /v3/packages/:guid/droplets' do
-    let(:buildpack) { VCAP::CloudController::Buildpack.make }
+    let(:buildpack) { create(:buildpack) }
     let(:package_model) do
-      VCAP::CloudController::PackageModel.make(
-        app_guid: app_model.guid,
-        type: VCAP::CloudController::PackageModel::BITS_TYPE
-      )
+      create(:package_model,
+             app_guid: app_model.guid,
+             type: VCAP::CloudController::PackageModel::BITS_TYPE)
     end
     let(:other_package_model) do
-      VCAP::CloudController::PackageModel.make(
-        app_guid: other_app_model.guid,
-        type: VCAP::CloudController::PackageModel::BITS_TYPE
-      )
+      create(:package_model,
+             app_guid: other_app_model.guid,
+             type: VCAP::CloudController::PackageModel::BITS_TYPE)
     end
 
     let!(:droplet1) do
-      VCAP::CloudController::DropletModel.make(
-        app_guid: app_model.guid,
-        created_at: Time.at(1),
-        package_guid: package_model.guid,
-        droplet_hash: nil,
-        sha256_checksum: nil,
-        buildpack_receipt_buildpack: buildpack.name,
-        buildpack_receipt_buildpack_guid: buildpack.guid,
-        error_description: 'example-error',
-        state: VCAP::CloudController::DropletModel::FAILED_STATE
-      )
+      create(:droplet_model,
+             app_guid: app_model.guid,
+             created_at: Time.at(1),
+             package_guid: package_model.guid,
+             droplet_hash: nil,
+             sha256_checksum: nil,
+             buildpack_receipt_buildpack: buildpack.name,
+             buildpack_receipt_buildpack_guid: buildpack.guid,
+             error_description: 'example-error',
+             state: VCAP::CloudController::DropletModel::FAILED_STATE)
     end
 
     let!(:droplet2) do
-      VCAP::CloudController::DropletModel.make(
-        app_guid: app_model.guid,
-        created_at: Time.at(2),
-        package_guid: package_model.guid,
-        droplet_hash: 'my-hash',
-        sha256_checksum: 'droplet-checksum-sha256',
-        buildpack_receipt_buildpack: 'http://buildpack.git.url.com',
-        state: VCAP::CloudController::DropletModel::STAGED_STATE,
-        process_types: { 'web' => 'started' },
-        execution_metadata: 'black-box-secrets',
-        error_description: 'example-error'
-      )
+      create(:droplet_model,
+             app_guid: app_model.guid,
+             created_at: Time.at(2),
+             package_guid: package_model.guid,
+             droplet_hash: 'my-hash',
+             sha256_checksum: 'droplet-checksum-sha256',
+             buildpack_receipt_buildpack: 'http://buildpack.git.url.com',
+             state: VCAP::CloudController::DropletModel::STAGED_STATE,
+             process_types: { 'web' => 'started' },
+             execution_metadata: 'black-box-secrets',
+             error_description: 'example-error')
     end
 
     let!(:droplet3) do
-      VCAP::CloudController::DropletModel.make(
-        app_guid: other_app_model.guid,
-        created_at: Time.at(2),
-        package_guid: other_package_model.guid,
-        droplet_hash: 'my-hash-3',
-        sha256_checksum: 'droplet-checksum-sha256-3',
-        buildpack_receipt_buildpack: 'http://buildpack.git.url.com',
-        state: VCAP::CloudController::DropletModel::STAGED_STATE,
-        process_types: { 'web' => 'started' },
-        execution_metadata: 'black-box-secrets-3',
-        error_description: 'example-error'
-      )
+      create(:droplet_model,
+             app_guid: other_app_model.guid,
+             created_at: Time.at(2),
+             package_guid: other_package_model.guid,
+             droplet_hash: 'my-hash-3',
+             sha256_checksum: 'droplet-checksum-sha256-3',
+             buildpack_receipt_buildpack: 'http://buildpack.git.url.com',
+             state: VCAP::CloudController::DropletModel::STAGED_STATE,
+             process_types: { 'web' => 'started' },
+             execution_metadata: 'black-box-secrets-3',
+             error_description: 'example-error')
     end
-    let!(:droplet1Label) { VCAP::CloudController::DropletLabelModel.make(key_name: 'fruit', value: 'strawberry', droplet: droplet1) }
-    let!(:droplet2Label) { VCAP::CloudController::DropletLabelModel.make(key_name: 'limes', value: 'horse', droplet: droplet2) }
-    let!(:droplet3Label) { VCAP::CloudController::DropletLabelModel.make(key_name: 'fruit', value: 'strawberry', droplet: droplet3) }
+    let!(:droplet1Label) { create(:droplet_label_model, key_name: 'fruit', value: 'strawberry', droplet: droplet1) }
+    let!(:droplet2Label) { create(:droplet_label_model, key_name: 'limes', value: 'horse', droplet: droplet2) }
+    let!(:droplet3Label) { create(:droplet_label_model, key_name: 'fruit', value: 'strawberry', droplet: droplet3) }
 
     let(:per_page) { 2 }
     let(:order_by) { '-created_at' }
@@ -1496,20 +1482,19 @@ RSpec.describe 'Droplets' do
   end
 
   describe 'POST /v3/droplets?source_guid=:guid' do
-    let(:new_app) { VCAP::CloudController::AppModel.make(space_guid: space.guid) }
-    let(:package_model) { VCAP::CloudController::PackageModel.make(app_guid: app_model.guid) }
+    let(:new_app) { create(:app_model, space: space) }
+    let(:package_model) { create(:package_model, app: app_model) }
     let!(:og_droplet) do
-      VCAP::CloudController::DropletModel.make(
-        state: VCAP::CloudController::DropletModel::STAGED_STATE,
-        app_guid: app_model.guid,
-        package_guid: package_model.guid,
-        buildpack_receipt_buildpack: 'http://buildpack.git.url.com',
-        error_description: nil,
-        execution_metadata: 'some-data',
-        droplet_hash: 'shalalala',
-        sha256_checksum: 'droplet-checksum-sha256',
-        process_types: { 'web' => 'start-command' }
-      )
+      create(:droplet_model,
+             state: VCAP::CloudController::DropletModel::STAGED_STATE,
+             app_guid: app_model.guid,
+             package_guid: package_model.guid,
+             buildpack_receipt_buildpack: 'http://buildpack.git.url.com',
+             error_description: nil,
+             execution_metadata: 'some-data',
+             droplet_hash: 'shalalala',
+             sha256_checksum: 'droplet-checksum-sha256',
+             process_types: { 'web' => 'start-command' })
     end
     let(:app_guid) { droplet_model.app_guid }
     let(:copy_request_json) do
@@ -1582,10 +1567,9 @@ RSpec.describe 'Droplets' do
 
   describe 'POST /v3/droplets/:guid/upload' do
     let(:droplet) do
-      VCAP::CloudController::DropletModel.make(
-        app: app_model,
-        state: VCAP::CloudController::DropletModel::AWAITING_UPLOAD_STATE
-      )
+      create(:droplet_model,
+             app: app_model,
+             state: VCAP::CloudController::DropletModel::AWAITING_UPLOAD_STATE)
     end
 
     let(:api_call) { ->(user_headers) { post "/v3/droplets/#{droplet.guid}/upload", params.to_json, user_headers } }
@@ -1706,10 +1690,9 @@ RSpec.describe 'Droplets' do
 
     context 'when the droplet is not AWAITING_UPLOAD' do
       let(:staged_droplet) do
-        VCAP::CloudController::DropletModel.make(
-          app: app_model,
-          state: VCAP::CloudController::DropletModel::STAGED_STATE
-        )
+        create(:droplet_model,
+               app: app_model,
+               state: VCAP::CloudController::DropletModel::STAGED_STATE)
       end
 
       it 'returns 422 with a helpful error message' do
@@ -1736,17 +1719,16 @@ RSpec.describe 'Droplets' do
 
   describe 'PATCH v3/droplets/:guid' do
     let!(:og_droplet) do
-      VCAP::CloudController::DropletModel.make(
-        state: VCAP::CloudController::DropletModel::STAGED_STATE,
-        app_guid: app_model.guid,
-        package_guid: package_model.guid,
-        buildpack_receipt_buildpack: 'http://buildpack.git.url.com',
-        error_description: nil,
-        execution_metadata: 'some-data',
-        droplet_hash: 'shalalala',
-        sha256_checksum: 'droplet-checksum-sha256',
-        process_types: { 'web' => 'start-command' }
-      )
+      create(:droplet_model,
+             state: VCAP::CloudController::DropletModel::STAGED_STATE,
+             app_guid: app_model.guid,
+             package_guid: package_model.guid,
+             buildpack_receipt_buildpack: 'http://buildpack.git.url.com',
+             error_description: nil,
+             execution_metadata: 'some-data',
+             droplet_hash: 'shalalala',
+             sha256_checksum: 'droplet-checksum-sha256',
+             process_types: { 'web' => 'start-command' })
     end
     let(:update_request) do
       {
@@ -1870,17 +1852,16 @@ RSpec.describe 'Droplets' do
       end
 
       context 'when updating the image (on a docker droplet)' do
-        let(:app_model) { VCAP::CloudController::AppModel.make(:docker, space_guid: space.guid, name: 'my-docker-app') }
+        let(:app_model) { create(:app_model, :docker, space: space, name: 'my-docker-app') }
         let(:rebased_image_reference) { 'rebased-image-reference' }
         let!(:og_docker_droplet) do
-          VCAP::CloudController::DropletModel.make(
-            :docker,
-            state: VCAP::CloudController::DropletModel::STAGED_STATE,
-            app_guid: app_model.guid,
-            package_guid: package_model.guid,
-            droplet_hash: 'shalalala',
-            sha256_checksum: 'droplet-checksum-sha256'
-          )
+          create(:droplet_model,
+                 :docker,
+                 state: VCAP::CloudController::DropletModel::STAGED_STATE,
+                 app_guid: app_model.guid,
+                 package_guid: package_model.guid,
+                 droplet_hash: 'shalalala',
+                 sha256_checksum: 'droplet-checksum-sha256')
         end
         let(:guid) { og_docker_droplet.guid }
         let(:update_request) do
@@ -1925,7 +1906,7 @@ RSpec.describe 'Droplets' do
         end
 
         context 'when the the developer is looking in the wrong space' do
-          let(:wrong_developer) { make_developer_for_space(VCAP::CloudController::Space.make) }
+          let(:wrong_developer) { make_developer_for_space(create(:space)) }
           let(:wrong_developer_headers) { headers_for(wrong_developer, user_name: user_name, email: 'bob@loblaw.com') }
 
           it '404s' do

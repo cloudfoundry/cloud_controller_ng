@@ -5,16 +5,16 @@ module VCAP::CloudController
   RSpec.describe AppUpdate do
     subject(:app_update) { AppUpdate.new(user_audit_info, runners:) }
 
-    let(:app_model) { AppModel.make(name: app_name) }
-    let!(:web_process) { VCAP::CloudController::ProcessModel.make(app: app_model) }
-    let!(:worker_process) { VCAP::CloudController::ProcessModel.make(app: app_model) }
+    let(:app_model) { create(:app_model, name: app_name) }
+    let!(:web_process) { create(:process_model, app: app_model) }
+    let!(:worker_process) { create(:process_model, app: app_model) }
     let(:user_guid) { double(:user, guid: '1337') }
     let(:user_email) { 'cool_dude@hoopy_frood.com' }
     let(:user_audit_info) { UserAuditInfo.new(user_email:, user_guid:) }
     let(:buildpack) { 'http://original.com' }
     let(:app_name) { 'original name' }
-    let!(:ruby_buildpack) { Buildpack.make(name: 'ruby', stack: stack.name) }
-    let(:stack) { Stack.make(name: 'SUSE') }
+    let!(:ruby_buildpack) { create(:buildpack, name: 'ruby', stack: stack.name) }
+    let(:stack) { create(:stack, name: 'SUSE') }
     let(:runners) { instance_double(Runners, runner_for_process: runner) }
     let(:runner) { instance_double(Diego::Runner, update_metric_tags: nil) }
 
@@ -79,8 +79,8 @@ module VCAP::CloudController
         end
 
         context 'when app processes are started' do
-          let!(:web_process) { VCAP::CloudController::ProcessModel.make(app: app_model, state: VCAP::CloudController::ProcessModel::STARTED) }
-          let!(:worker_process) { VCAP::CloudController::ProcessModel.make(app: app_model, state: VCAP::CloudController::ProcessModel::STARTED) }
+          let!(:web_process) { create(:process_model, app: app_model, state: VCAP::CloudController::ProcessModel::STARTED) }
+          let!(:worker_process) { create(:process_model, app: app_model, state: VCAP::CloudController::ProcessModel::STARTED) }
 
           context 'when sending updates is disabled' do
             before do
@@ -220,8 +220,8 @@ module VCAP::CloudController
         end
 
         context 'when app processes are stopped' do
-          let!(:web_process) { VCAP::CloudController::ProcessModel.make(app: app_model, state: VCAP::CloudController::ProcessModel::STOPPED) }
-          let!(:worker_process) { VCAP::CloudController::ProcessModel.make(app: app_model, state: VCAP::CloudController::ProcessModel::STOPPED) }
+          let!(:web_process) { create(:process_model, app: app_model, state: VCAP::CloudController::ProcessModel::STOPPED) }
+          let!(:worker_process) { create(:process_model, app: app_model, state: VCAP::CloudController::ProcessModel::STOPPED) }
 
           it 'updates the apps name' do
             expect(app_model.name).to eq('original name')
@@ -336,8 +336,8 @@ module VCAP::CloudController
       end
 
       describe 'updating metadata' do
-        let!(:app_annotation) { AppAnnotationModel.make(app: app_model, key_name: 'existing_anno', value: 'original-value') }
-        let!(:delete_annotation) { AppAnnotationModel.make(app: app_model, key_name: 'please', value: 'delete this') }
+        let!(:app_annotation) { create(:app_annotation_model, app: app_model, key_name: 'existing_anno', value: 'original-value') }
+        let!(:delete_annotation) { create(:app_annotation_model, app: app_model, key_name: 'please', value: 'delete this') }
 
         let(:message) do
           AppUpdateMessage.new({
@@ -382,7 +382,7 @@ module VCAP::CloudController
       end
 
       describe 'stack state validation on stack change' do
-        let(:new_stack) { Stack.make(name: 'new-stack') }
+        let(:new_stack) { create(:stack, name: 'new-stack') }
         let(:message) do
           AppUpdateMessage.new({
                                  lifecycle: {
@@ -415,7 +415,7 @@ module VCAP::CloudController
           end
 
           context 'when app has previous builds' do
-            before { BuildModel.make(app: app_model, state: BuildModel::STAGED_STATE) }
+            before { create(:build_model, app: app_model, state: BuildModel::STAGED_STATE) }
 
             it 'allows the update' do
               expect(app_model.builds_dataset.count).to eq(1)

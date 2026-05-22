@@ -12,9 +12,9 @@ module VCAP::CloudController
       end
 
       describe 'droplets' do
-        let!(:buildpack_droplet) { DropletModel.make(droplet_hash: 'not-nil', docker_receipt_image: nil) }
-        let!(:docker_droplet) { DropletModel.make(droplet_hash: nil, docker_receipt_image: 'repo/test-app') }
-        let!(:staged_droplet) { DropletModel.make(state: DropletModel::STAGED_STATE) }
+        let!(:buildpack_droplet) { create(:droplet_model, droplet_hash: 'not-nil', docker_receipt_image: nil) }
+        let!(:docker_droplet) { create(:droplet_model, droplet_hash: nil, docker_receipt_image: 'repo/test-app') }
+        let!(:staged_droplet) { create(:droplet_model, state: DropletModel::STAGED_STATE) }
 
         context 'expired' do
           before do
@@ -43,8 +43,8 @@ module VCAP::CloudController
 
       describe 'packages' do
         context 'expired' do
-          let!(:expired_package) { PackageModel.make(state: PackageModel::EXPIRED_STATE) }
-          let!(:non_expired_package) { PackageModel.make(state: PackageModel::READY_STATE, package_hash: 'not-nil') }
+          let!(:expired_package) { create(:package_model, state: PackageModel::EXPIRED_STATE) }
+          let!(:non_expired_package) { create(:package_model, state: PackageModel::READY_STATE, package_hash: 'not-nil') }
 
           it 'enqueues a deletion job when package_hash is not nil' do
             expired_package.update(package_hash: 'not-nil')

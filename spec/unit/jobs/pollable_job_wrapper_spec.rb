@@ -109,7 +109,7 @@ module VCAP::CloudController::Jobs
       end
 
       context 'reusing a pollable job' do
-        let!(:existing) { VCAP::CloudController::PollableJobModel.make }
+        let!(:existing) { create(:pollable_job_model) }
         let(:pollable_job) { PollableJobWrapper.new(job, existing_guid: existing.guid) }
 
         it 'updates the existing database record with the new delayed job guid' do
@@ -179,7 +179,7 @@ module VCAP::CloudController::Jobs
         context 'when there is an associated job model' do
           it 'marks the job model failed and records errors' do
             enqueued_job = VCAP::CloudController::Jobs::Enqueuer.new.enqueue(pollable_job)
-            job_model = VCAP::CloudController::PollableJobModel.make(delayed_job_guid: enqueued_job.guid, state: 'PROCESSING')
+            job_model = create(:pollable_job_model, delayed_job_guid: enqueued_job.guid, state: 'PROCESSING')
 
             execute_all_jobs(expected_successes: 0, expected_failures: 1)
 
@@ -205,7 +205,7 @@ module VCAP::CloudController::Jobs
         describe '#failure' do
           let(:delayed_job) { instance_double(Delayed::Backend::Sequel::Job, guid: 'job-guid') }
           let!(:pollable_job) do
-            VCAP::CloudController::PollableJobModel.make(delayed_job_guid: 'job-guid', state: VCAP::CloudController::PollableJobModel::PROCESSING_STATE)
+            create(:pollable_job_model, delayed_job_guid: 'job-guid', state: VCAP::CloudController::PollableJobModel::PROCESSING_STATE)
           end
 
           context 'when handler implements recover_from_failure' do
@@ -281,7 +281,7 @@ module VCAP::CloudController::Jobs
 
         it 'records all warnings' do
           enqueued_job = VCAP::CloudController::Jobs::Enqueuer.new.enqueue(pollable_job)
-          job_model = VCAP::CloudController::PollableJobModel.make(delayed_job_guid: enqueued_job.guid, state: 'PROCESSING')
+          job_model = create(:pollable_job_model, delayed_job_guid: enqueued_job.guid, state: 'PROCESSING')
 
           execute_all_jobs(expected_successes: 1, expected_failures: 0)
 
@@ -297,7 +297,7 @@ module VCAP::CloudController::Jobs
 
         it 'has empty list of warnings' do
           enqueued_job = VCAP::CloudController::Jobs::Enqueuer.new.enqueue(pollable_job)
-          job_model = VCAP::CloudController::PollableJobModel.make(delayed_job_guid: enqueued_job.guid, state: 'PROCESSING')
+          job_model = create(:pollable_job_model, delayed_job_guid: enqueued_job.guid, state: 'PROCESSING')
 
           execute_all_jobs(expected_successes: 1, expected_failures: 0)
 

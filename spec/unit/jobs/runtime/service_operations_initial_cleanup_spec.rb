@@ -25,10 +25,10 @@ module VCAP::CloudController
       end
 
       describe 'perform' do
-        let!(:service_instance) { ManagedServiceInstance.make }
-        let!(:service_binding) { ServiceBinding.make }
-        let!(:service_key) { ServiceKey.make }
-        let!(:route_binding) { RouteBinding.make }
+        let!(:service_instance) { create(:managed_service_instance) }
+        let!(:service_binding) { create(:service_binding) }
+        let!(:service_key) { create(:service_key) }
+        let!(:route_binding) { create(:route_binding) }
 
         before do
           allow(Steno).to receive(:logger).and_return(fake_logger)
@@ -40,7 +40,7 @@ module VCAP::CloudController
         end
 
         context 'when there are no service instance operations in state create/initial' do
-          let!(:service_instance_operation) { ServiceInstanceOperation.make(service_instance_id: service_instance.id, type: 'create', state: 'succeeded') }
+          let!(:service_instance_operation) { create(:service_instance_operation, service_instance_id: service_instance.id, type: 'create', state: 'succeeded') }
 
           it 'does nothing' do
             job.perform
@@ -52,7 +52,7 @@ module VCAP::CloudController
         end
 
         context 'when there is one service instance operation in state create/initial' do
-          let!(:service_instance_operation) { ServiceInstanceOperation.make(service_instance_id: service_instance.id, type: 'create', state: 'initial') }
+          let!(:service_instance_operation) { create(:service_instance_operation, service_instance_id: service_instance.id, type: 'create', state: 'initial') }
 
           context 'and the service broker connection timeout has not yet passed' do
             it 'does nothing' do
@@ -86,7 +86,7 @@ module VCAP::CloudController
         end
 
         context 'when there are no service instance binding operations in state create/initial' do
-          let!(:service_binding_operation) { ServiceBindingOperation.make(service_binding_id: service_binding.id, type: 'create', state: 'succeeded') }
+          let!(:service_binding_operation) { create(:service_binding_operation, service_binding_id: service_binding.id, type: 'create', state: 'succeeded') }
 
           it 'does nothing' do
             job.perform
@@ -98,7 +98,7 @@ module VCAP::CloudController
         end
 
         context 'when there is one service instance binding operation in state create/initial' do
-          let!(:service_binding_operation) { ServiceBindingOperation.make(service_binding_id: service_binding.id, type: 'create', state: 'initial') }
+          let!(:service_binding_operation) { create(:service_binding_operation, service_binding_id: service_binding.id, type: 'create', state: 'initial') }
 
           context 'and the service broker connection timeout has not yet passed' do
             it 'does nothing' do
@@ -132,7 +132,7 @@ module VCAP::CloudController
         end
 
         context 'when there are no service key operations in state create/initial' do
-          let!(:service_key_operation) { ServiceKeyOperation.make(service_key_id: service_key.id, type: 'create', state: 'succeeded') }
+          let!(:service_key_operation) { create(:service_key_operation, service_key_id: service_key.id, type: 'create', state: 'succeeded') }
 
           it 'does nothing' do
             job.perform
@@ -144,7 +144,7 @@ module VCAP::CloudController
         end
 
         context 'when there is one service key operation in state create/initial' do
-          let!(:service_key_operation) { ServiceKeyOperation.make(service_key_id: service_key.id, type: 'create', state: 'initial') }
+          let!(:service_key_operation) { create(:service_key_operation, service_key_id: service_key.id, type: 'create', state: 'initial') }
 
           context 'and the service broker connection timeout has not yet passed' do
             it 'does nothing' do
@@ -178,7 +178,7 @@ module VCAP::CloudController
         end
 
         context 'when there are no route binding operations in state create/initial' do
-          let!(:route_binding_operation) { RouteBindingOperation.make(route_binding_id: route_binding.id, type: 'create', state: 'succeeded') }
+          let!(:route_binding_operation) { create(:route_binding_operation, route_binding_id: route_binding.id, type: 'create', state: 'succeeded') }
 
           it 'does nothing' do
             job.perform
@@ -190,7 +190,7 @@ module VCAP::CloudController
         end
 
         context 'when there is one route binding operation in state create/initial' do
-          let!(:route_binding_operation) { RouteBindingOperation.make(route_binding_id: route_binding.id, type: 'create', state: 'initial') }
+          let!(:route_binding_operation) { create(:route_binding_operation, route_binding_id: route_binding.id, type: 'create', state: 'initial') }
 
           context 'and the service broker connection timeout has not yet passed' do
             it 'does nothing' do

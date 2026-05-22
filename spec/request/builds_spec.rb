@@ -3,23 +3,22 @@ require 'request_spec_shared_examples'
 
 RSpec.describe 'Builds' do
   let(:bbs_stager_client) { instance_double(VCAP::CloudController::Diego::BbsStagerClient) }
-  let(:space) { VCAP::CloudController::Space.make }
+  let(:space) { create(:space) }
   let(:developer) { make_developer_for_space(space) }
   let(:developer_headers) { headers_for(developer, user_name: user_name, email: 'bob@loblaw.com') }
 
   let(:user_name) { 'bob the builder' }
   let(:parsed_response) { Oj.load(last_response.body) }
-  let(:app_model) { VCAP::CloudController::AppModel.make(space_guid: space.guid, name: 'my-app') }
-  let(:second_app_model) { VCAP::CloudController::AppModel.make(space_guid: space.guid, name: 'my-second-app') }
+  let(:app_model) { create(:app_model, space: space, name: 'my-app') }
+  let(:second_app_model) { create(:app_model, space: space, name: 'my-second-app') }
   let(:rails_logger) { double('rails_logger', info: nil) }
 
   describe 'POST /v3/builds' do
     let(:package) do
-      VCAP::CloudController::PackageModel.make(
-        app_guid: app_model.guid,
-        state: VCAP::CloudController::PackageModel::READY_STATE,
-        type: VCAP::CloudController::PackageModel::BITS_TYPE
-      )
+      create(:package_model,
+             app_guid: app_model.guid,
+             state: VCAP::CloudController::PackageModel::READY_STATE,
+             type: VCAP::CloudController::PackageModel::BITS_TYPE)
     end
     let(:diego_staging_response) do
       {
@@ -123,7 +122,7 @@ RSpec.describe 'Builds' do
     context 'permissions' do
       let(:api_call) { ->(user_headers) { post '/v3/builds', create_request.to_json, user_headers } }
       let(:org) { space.organization }
-      let(:user) { VCAP::CloudController::User.make }
+      let(:user) { create(:user) }
 
       let(:expected_codes_and_responses) do
         h = Hash.new(
@@ -201,7 +200,7 @@ RSpec.describe 'Builds' do
     end
 
     context 'when stack is DISABLED' do
-      let(:disabled_stack) { VCAP::CloudController::Stack.make(name: 'cflinuxfs3', state: 'DISABLED', description: 'cflinuxfs3 stack is now disabled') }
+      let(:disabled_stack) { create(:stack, name: 'cflinuxfs3', state: 'DISABLED', description: 'cflinuxfs3 stack is now disabled') }
       let(:create_request) do
         {
           lifecycle: {
@@ -228,7 +227,7 @@ RSpec.describe 'Builds' do
     end
 
     context 'when stack is RESTRICTED' do
-      let(:restricted_stack) { VCAP::CloudController::Stack.make(name: 'cflinuxfs3', state: 'RESTRICTED', description: 'No new apps') }
+      let(:restricted_stack) { create(:stack, name: 'cflinuxfs3', state: 'RESTRICTED', description: 'No new apps') }
       let(:create_request) do
         {
           lifecycle: {
@@ -259,7 +258,7 @@ RSpec.describe 'Builds' do
 
       context 'app has previous builds' do
         before do
-          VCAP::CloudController::BuildModel.make(app: app_model, state: VCAP::CloudController::BuildModel::STAGED_STATE)
+          create(:build_model, app: app_model, state: VCAP::CloudController::BuildModel::STAGED_STATE)
         end
 
         it 'returns 201 and creates build' do
@@ -275,7 +274,9 @@ RSpec.describe 'Builds' do
     end
 
     context 'when stack is DEPRECATED' do
-      let(:deprecated_stack) { VCAP::CloudController::Stack.make(name: 'cflinuxfs3', state: 'DEPRECATED', description: 'cflinuxfs3 stack is deprecated. Please migrate your application to cflinuxfs4') }
+      let(:deprecated_stack) do
+        create(:stack, name: 'cflinuxfs3', state: 'DEPRECATED', description: 'cflinuxfs3 stack is deprecated. Please migrate your application to cflinuxfs4')
+      end
       let(:create_request) do
         {
           lifecycle: {
@@ -315,7 +316,7 @@ RSpec.describe 'Builds' do
 
       context 'app has previous builds' do
         before do
-          VCAP::CloudController::BuildModel.make(app: app_model, state: VCAP::CloudController::BuildModel::STAGED_STATE)
+          create(:build_model, app: app_model, state: VCAP::CloudController::BuildModel::STAGED_STATE)
         end
 
         it 'returns 201 and stages the app' do
@@ -344,45 +345,41 @@ RSpec.describe 'Builds' do
 
   describe 'GET /v3/builds' do
     let(:build) do
-      VCAP::CloudController::BuildModel.make(
-        package: package,
-        app: app_model,
-        created_by_user_name: 'bob the builder',
-        created_by_user_guid: developer.guid,
-        created_by_user_email: 'bob@loblaw.com',
-        staging_memory_in_mb: 123,
-        staging_disk_in_mb: 456,
-        staging_log_rate_limit: 234
-      )
+      create(:build_model,
+             package: package,
+             app: app_model,
+             created_by_user_name: 'bob the builder',
+             created_by_user_guid: developer.guid,
+             created_by_user_email: 'bob@loblaw.com',
+             staging_memory_in_mb: 123,
+             staging_disk_in_mb: 456,
+             staging_log_rate_limit: 234)
     end
     let!(:second_build) do
-      VCAP::CloudController::BuildModel.make(
-        package: second_package,
-        app: app_model,
-        created_at: build.created_at - 1.day,
-        created_by_user_name: 'bob the builder',
-        created_by_user_guid: developer.guid,
-        created_by_user_email: 'bob@loblaw.com',
-        staging_memory_in_mb: 789,
-        staging_disk_in_mb: 12,
-        staging_log_rate_limit: 345
-      )
+      create(:build_model,
+             package: second_package,
+             app: app_model,
+             created_at: build.created_at - 1.day,
+             created_by_user_name: 'bob the builder',
+             created_by_user_guid: developer.guid,
+             created_by_user_email: 'bob@loblaw.com',
+             staging_memory_in_mb: 789,
+             staging_disk_in_mb: 12,
+             staging_log_rate_limit: 345)
     end
-    let(:package) { VCAP::CloudController::PackageModel.make(app_guid: app_model.guid) }
-    let(:second_package) { VCAP::CloudController::PackageModel.make(app_guid: app_model.guid) }
+    let(:package) { create(:package_model, app: app_model) }
+    let(:second_package) { create(:package_model, app: app_model) }
     let(:droplet) do
-      VCAP::CloudController::DropletModel.make(
-        state: VCAP::CloudController::DropletModel::STAGED_STATE,
-        package_guid: package.guid,
-        build: build
-      )
+      create(:droplet_model,
+             state: VCAP::CloudController::DropletModel::STAGED_STATE,
+             package_guid: package.guid,
+             build: build)
     end
     let(:second_droplet) do
-      VCAP::CloudController::DropletModel.make(
-        state: VCAP::CloudController::DropletModel::STAGED_STATE,
-        package_guid: second_package.guid,
-        build: second_build
-      )
+      create(:droplet_model,
+             state: VCAP::CloudController::DropletModel::STAGED_STATE,
+             package_guid: second_package.guid,
+             build: second_build)
     end
     let(:body) do
       { lifecycle: { type: 'buildpack', data: { buildpacks: ['http://github.com/myorg/awesome-buildpack'],
@@ -429,7 +426,7 @@ RSpec.describe 'Builds' do
       it_behaves_like 'permissions for list endpoint', ALL_PERMISSIONS do
         let(:api_call) { ->(user_headers) { get '/v3/builds', nil, user_headers } }
         let(:org) { space.organization }
-        let(:user) { VCAP::CloudController::User.make }
+        let(:user) { create(:user) }
 
         let(:expected_codes_and_responses) do
           h = Hash.new(
@@ -445,9 +442,9 @@ RSpec.describe 'Builds' do
     end
 
     context 'when there are other spaces the developer cannot see' do
-      let(:non_accessible_space) { VCAP::CloudController::Space.make }
-      let(:non_accessible_app_model) { VCAP::CloudController::AppModel.make(space_guid: non_accessible_space.guid, name: 'other-app') }
-      let!(:non_accessible_build) { VCAP::CloudController::BuildModel.make(app: non_accessible_app_model) }
+      let(:non_accessible_space) { create(:space) }
+      let(:non_accessible_app_model) { create(:app_model, space: non_accessible_space, name: 'other-app') }
+      let!(:non_accessible_build) { create(:build_model, app: non_accessible_app_model) }
 
       let(:per_page) { 2 }
       let(:order_by) { '-created_at' }
@@ -533,7 +530,7 @@ RSpec.describe 'Builds' do
       end
 
       it 'filters on label_selector' do
-        VCAP::CloudController::BuildLabelModel.make(key_name: 'fruit', value: 'strawberry', build: build)
+        create(:build_label_model, key_name: 'fruit', value: 'strawberry', build: build)
 
         get '/v3/builds?label_selector=fruit=strawberry', {}, developer_headers
 
@@ -563,24 +560,22 @@ RSpec.describe 'Builds' do
 
   describe 'GET /v3/builds/:guid' do
     let(:build) do
-      VCAP::CloudController::BuildModel.make(
-        package: package,
-        app: app_model,
-        staging_memory_in_mb: 123,
-        staging_disk_in_mb: 456,
-        staging_log_rate_limit: 789,
-        created_by_user_name: 'bob the builder',
-        created_by_user_guid: developer.guid,
-        created_by_user_email: 'bob@loblaw.com'
-      )
+      create(:build_model,
+             package: package,
+             app: app_model,
+             staging_memory_in_mb: 123,
+             staging_disk_in_mb: 456,
+             staging_log_rate_limit: 789,
+             created_by_user_name: 'bob the builder',
+             created_by_user_guid: developer.guid,
+             created_by_user_email: 'bob@loblaw.com')
     end
-    let(:package) { VCAP::CloudController::PackageModel.make(app_guid: app_model.guid) }
+    let(:package) { create(:package_model, app: app_model) }
     let(:droplet) do
-      VCAP::CloudController::DropletModel.make(
-        state: VCAP::CloudController::DropletModel::STAGED_STATE,
-        package_guid: package.guid,
-        build: build
-      )
+      create(:droplet_model,
+             state: VCAP::CloudController::DropletModel::STAGED_STATE,
+             package_guid: package.guid,
+             build: build)
     end
     let(:body) do
       { lifecycle: { type: 'buildpack', data: { buildpacks: ['http://github.com/myorg/awesome-buildpack'],
@@ -648,7 +643,7 @@ RSpec.describe 'Builds' do
     describe 'permissions' do
       it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS do
         let(:org) { space.organization }
-        let(:user) { VCAP::CloudController::User.make }
+        let(:user) { create(:user) }
         let(:api_call) { ->(user_headers) { get "v3/builds/#{build.guid}", nil, user_headers } }
 
         let(:expected_codes_and_responses) do
@@ -663,8 +658,8 @@ RSpec.describe 'Builds' do
   end
 
   describe 'PATCH /v3/builds/:guid' do
-    let(:package_model) { VCAP::CloudController::PackageModel.make(app_guid: app_model.guid) }
-    let(:build_model) { VCAP::CloudController::BuildModel.make(app: app_model, package: package_model) }
+    let(:package_model) { create(:package_model, app: app_model) }
+    let(:build_model) { create(:build_model, app: app_model, package: package_model) }
     let(:metadata) do
       {
         labels: {
@@ -719,7 +714,7 @@ RSpec.describe 'Builds' do
 
       describe 'permissions' do
         let(:org) { space.organization }
-        let(:user) { VCAP::CloudController::User.make }
+        let(:user) { create(:user) }
         let(:api_call) { ->(user_headers) { patch "/v3/builds/#{build_model.guid}", { metadata: }.to_json, user_headers } }
 
         let(:expected_codes_and_responses) do

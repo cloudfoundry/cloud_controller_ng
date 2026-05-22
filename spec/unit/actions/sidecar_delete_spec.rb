@@ -12,8 +12,8 @@ module VCAP::CloudController
       end
 
       it 'deletes associated sidecar process types' do
-        process_type1 = SidecarProcessTypeModel.make(sidecar: sidecar1)
-        process_type2 = SidecarProcessTypeModel.make(sidecar: sidecar2)
+        process_type1 = create(:sidecar_process_type_model, sidecar: sidecar1)
+        process_type2 = create(:sidecar_process_type_model, sidecar: sidecar2)
 
         expect do
           sidecar_delete
@@ -22,9 +22,9 @@ module VCAP::CloudController
       end
     end
 
-    let!(:app) { AppModel.make }
-    let!(:sidecar1) { SidecarModel.make(app:) }
-    let!(:sidecar2) { SidecarModel.make(app:) }
+    let!(:app) { create(:app_model) }
+    let!(:sidecar1) { create(:sidecar_model, app:) }
+    let!(:sidecar2) { create(:sidecar_model, app:) }
 
     describe '#delete' do
       it_behaves_like 'SidecarDelete action' do

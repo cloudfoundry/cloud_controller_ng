@@ -18,7 +18,7 @@ module VCAP::CloudController
           }
         }
       end
-      let(:revision) { RevisionModel.make }
+      let(:revision) { create(:revision_model) }
       let(:message) { RevisionsUpdateMessage.new(body) }
 
       it 'updates the revision metadata' do

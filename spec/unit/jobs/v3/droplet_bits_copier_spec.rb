@@ -11,8 +11,8 @@ module VCAP::CloudController
         CloudController::Blobstore::FogClient.new(connection_config: { provider: 'Local', local_root: blobstore_dir },
                                                   directory_key: 'droplet')
       end
-      let(:source_droplet) { DropletModel.make(droplet_hash: 'abcdef1234', sha256_checksum: '4321fedcba', state: DropletModel::STAGED_STATE, app: nil) }
-      let(:destination_droplet) { DropletModel.make(droplet_hash: nil, sha256_checksum: nil, state: DropletModel::STAGING_STATE, app: nil) }
+      let(:source_droplet) { create(:droplet_model, droplet_hash: 'abcdef1234', sha256_checksum: '4321fedcba', state: DropletModel::STAGED_STATE, set_as_current_droplet: false) }
+      let(:destination_droplet) { create(:droplet_model, droplet_hash: nil, sha256_checksum: nil, state: DropletModel::STAGING_STATE, set_as_current_droplet: false) }
 
       before do
         Fog.unmock!

@@ -4,8 +4,8 @@ require 'actions/v3/service_plan_visibility_delete'
 module VCAP::CloudController
   RSpec.describe ServicePlanVisibilityDelete do
     describe '.delete' do
-      let!(:visibility_1) { ServicePlanVisibility.make }
-      let!(:visibility_2) { ServicePlanVisibility.make }
+      let!(:visibility_1) { create(:service_plan_visibility) }
+      let!(:visibility_2) { create(:service_plan_visibility) }
 
       it 'deletes the service plan visibility' do
         ServicePlanVisibilityDelete.delete(visibility_1)

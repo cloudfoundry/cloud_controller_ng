@@ -4,18 +4,16 @@ require 'presenters/v3/route_destination_presenter'
 module VCAP::CloudController::Presenters::V3
   RSpec.describe RouteDestinationPresenter do
     subject(:presenter) { RouteDestinationPresenter.new(route_mapping) }
-    let(:app) { VCAP::CloudController::AppModel.make }
-    let(:route) { VCAP::CloudController::Route.make(space: app.space) }
+    let(:app) { create(:app_model) }
+    let(:route) { create(:route, space: app.space) }
 
     let(:route_mapping) do
-      VCAP::CloudController::RouteMappingModel.make(
-        app: app,
-        app_port: 1234,
-        route: route,
-        process_type: 'web',
-        weight: 55,
-        created_at: Time.at(1)
-      )
+      create(:route_mapping_model, app: app,
+                                   app_port: 1234,
+                                   route: route,
+                                   process_type: 'web',
+                                   weight: 55,
+                                   created_at: Time.at(1))
     end
 
     describe '#to_hash' do

@@ -11,8 +11,8 @@ module VCAP::CloudController
       let(:build_artifacts_cache_download_uri) { 'http://buildpack-artifacts-cache.example.com' }
 
       let(:blobstore_url_generator) { double('fake url generator') }
-      let(:stack) { Stack.make }
-      let(:stack2) { Stack.make }
+      let(:stack) { create(:stack) }
+      let(:stack2) { create(:stack) }
 
       let!(:java_buildpack) do
         VCAP::CloudController::Buildpack.create(name: 'java', stack: stack.name, key: 'java-buildpack-key', position: 1, sha256_checksum: 'checksum')
@@ -30,8 +30,8 @@ module VCAP::CloudController
       end
 
       describe '#buildpack_entries' do
-        let(:v3_app) { AppModel.make }
-        let(:package) { PackageModel.make(app_guid: v3_app.guid) }
+        let(:v3_app) { create(:app_model) }
+        let(:package) { create(:package_model, app_guid: v3_app.guid) }
         let(:buildpack_info) { BuildpackInfo.new(buildpack, VCAP::CloudController::Buildpack.find(name: buildpack)) }
         let(:buildpack_infos) { [buildpack_info] }
 

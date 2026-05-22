@@ -5,14 +5,14 @@ require 'field_decorator_spec_shared_examples'
 module VCAP::CloudController
   RSpec.describe FieldServiceInstanceOrganizationDecorator do
     describe '.decorate' do
-      let(:org1) { Organization.make(created_at: Time.now.utc - 1.second) }
-      let(:org2) { Organization.make }
+      let(:org1) { create(:organization, created_at: Time.now.utc - 1.second) }
+      let(:org2) { create(:organization) }
 
-      let(:space1) { Space.make(organization: org1) }
-      let(:space2) { Space.make(organization: org2) }
+      let(:space1) { create(:space, organization: org1) }
+      let(:space2) { create(:space, organization: org2) }
 
-      let(:service_instance_1) { ManagedServiceInstance.make(space: space1) }
-      let(:service_instance_2) { UserProvidedServiceInstance.make(space: space2) }
+      let(:service_instance_1) { create(:managed_service_instance, space: space1) }
+      let(:service_instance_2) { create(:user_provided_service_instance, space: space2) }
 
       before do
         allow(Permissions).to receive(:new).and_return(double(can_read_globally?: true))
@@ -63,8 +63,8 @@ module VCAP::CloudController
       end
 
       context 'when instances share an org' do
-        let(:space3) { Space.make(organization: org1) }
-        let(:service_instance_3) { ManagedServiceInstance.make(space: space3) }
+        let(:space3) { create(:space, organization: org1) }
+        let(:service_instance_3) { create(:managed_service_instance, space: space3) }
 
         it 'does not duplicate the org' do
           decorator = described_class.new({ 'space.organization': ['name'] })

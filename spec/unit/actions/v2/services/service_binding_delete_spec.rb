@@ -8,12 +8,12 @@ module VCAP::CloudController
     let(:user_guid) { 'user-guid' }
     let(:user_email) { 'user@example.com' }
     let(:client) { instance_double(VCAP::Services::ServiceBrokers::V2::Client) }
-    let(:service_binding) { ServiceBinding.make }
+    let(:service_binding) { create(:service_binding) }
     let(:service_binding_url_pattern) { %r{/v2/service_instances/#{service_instance.guid}/service_bindings/} }
     let(:service_instance) { service_binding.service_instance }
 
     describe '#foreground_delete_request' do
-      let(:service_binding) { ServiceBinding.make }
+      let(:service_binding) { create(:service_binding) }
       let(:service_instance) { service_binding.service_instance }
       let(:client) { instance_double(VCAP::Services::ServiceBrokers::V2::Client) }
       let(:service_binding_url_pattern) { %r{/v2/service_instances/#{service_instance.guid}/service_bindings/} }
@@ -45,7 +45,7 @@ module VCAP::CloudController
 
       context 'when the service instance has another operation in progress' do
         before do
-          service_binding.service_instance.service_instance_operation = ServiceInstanceOperation.make(state: 'in progress')
+          service_binding.service_instance.service_instance_operation = create(:service_instance_operation, state: 'in progress')
         end
 
         it 'raises an error' do
@@ -57,7 +57,7 @@ module VCAP::CloudController
 
       context 'when the service binding has create operation in progress' do
         before do
-          service_binding.service_binding_operation = ServiceBindingOperation.make(state: 'in progress', type: 'create')
+          service_binding.service_binding_operation = create(:service_binding_operation, state: 'in progress', type: 'create')
         end
 
         it 'deletes the binding' do
@@ -68,7 +68,7 @@ module VCAP::CloudController
 
       context 'when the service binding has anything other than create operation in progress' do
         before do
-          service_binding.service_binding_operation = ServiceBindingOperation.make(state: 'in progress', type: 'delete')
+          service_binding.service_binding_operation = create(:service_binding_operation, state: 'in progress', type: 'delete')
         end
 
         it 'raises an error' do
@@ -96,7 +96,7 @@ module VCAP::CloudController
     end
 
     describe '#background_delete_request' do
-      let(:service_binding) { ServiceBinding.make }
+      let(:service_binding) { create(:service_binding) }
 
       before do
         allow_any_instance_of(VCAP::Services::ServiceBrokers::V2::Client).to receive(:unbind).and_return({ async: false })
@@ -113,8 +113,8 @@ module VCAP::CloudController
     end
 
     describe '#delete' do
-      let(:service_binding1) { ServiceBinding.make }
-      let(:service_binding2) { ServiceBinding.make }
+      let(:service_binding1) { create(:service_binding) }
+      let(:service_binding2) { create(:service_binding) }
 
       before do
         allow(VCAP::Services::ServiceClientProvider).to receive(:provide).and_return(client)
@@ -160,7 +160,7 @@ module VCAP::CloudController
           end
 
           context 'when the binding already has an operation' do
-            let(:service_binding_operation) { ServiceBindingOperation.make }
+            let(:service_binding_operation) { create(:service_binding_operation) }
 
             it 'updates the binding operation in the model' do
               service_binding_delete.delete(service_binding)
@@ -257,7 +257,7 @@ module VCAP::CloudController
 
           context 'when delete is called with multiple bindings' do
             it 'returns warnings for all bindings' do
-              errors, warnings = service_binding_delete.delete([service_binding, ServiceBinding.make])
+              errors, warnings = service_binding_delete.delete([service_binding, create(:service_binding)])
               expect(warnings).to contain_exactly(expected_warning, expected_warning)
               expect(errors).to be_empty
             end

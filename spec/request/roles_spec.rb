@@ -2,14 +2,14 @@ require 'spec_helper'
 require 'request_spec_shared_examples'
 
 RSpec.describe 'Roles Request' do
-  let(:user) { VCAP::CloudController::User.make(guid: 'user_guid') }
+  let(:user) { create(:user, guid: 'user_guid') }
   let(:admin_header) { admin_headers_for(user) }
-  let(:org) { VCAP::CloudController::Organization.make(guid: 'big-org', created_at: Time.now.utc - 1.second) }
-  let(:space) { VCAP::CloudController::Space.make(guid: 'big-space', organization: org, created_at: Time.now.utc - 1.second) }
-  let(:user_with_role) { VCAP::CloudController::User.make(guid: 'user_with_role') }
+  let(:org) { create(:organization, guid: 'big-org', created_at: Time.now.utc - 1.second) }
+  let(:space) { create(:space, guid: 'big-space', organization: org, created_at: Time.now.utc - 1.second) }
+  let(:user_with_role) { create(:user, guid: 'user_with_role') }
   let(:user_guid) { user.guid }
   let(:space_guid) { space.guid }
-  let(:user_unaffiliated) { VCAP::CloudController::User.make(guid: 'user_no_role') }
+  let(:user_unaffiliated) { create(:user, guid: 'user_no_role') }
   let(:uaa_client) { instance_double(VCAP::CloudController::UaaClient) }
 
   before do
@@ -675,7 +675,7 @@ RSpec.describe 'Roles Request' do
 
       context 'when the flag to set roles by username is disabled' do
         before do
-          VCAP::CloudController::FeatureFlag.make(name: 'set_roles_by_username')
+          create(:feature_flag, name: 'set_roles_by_username')
         end
 
         let(:params) do
@@ -795,7 +795,7 @@ RSpec.describe 'Roles Request' do
 
         context 'when the flag to set roles by username is disabled' do
           before do
-            VCAP::CloudController::FeatureFlag.make(name: 'set_roles_by_username')
+            create(:feature_flag, name: 'set_roles_by_username')
           end
 
           let(:expected_codes_and_responses) do
@@ -1094,22 +1094,20 @@ RSpec.describe 'Roles Request' do
 
   describe 'GET /v3/roles' do
     let(:api_call) { ->(user_headers) { get '/v3/roles', nil, user_headers } }
-    let(:other_user) { VCAP::CloudController::User.make(guid: 'other-user-guid', created_at: Time.now.utc - 1.second) }
+    let(:other_user) { create(:user, guid: 'other-user-guid', created_at: Time.now.utc - 1.second) }
 
     let!(:space_auditor) do
-      VCAP::CloudController::SpaceAuditor.make(
-        space: space,
-        user: other_user,
-        created_at: Time.now - 5.minutes
-      )
+      create(:space_auditor,
+             space: space,
+             user: other_user,
+             created_at: Time.now - 5.minutes)
     end
 
     let!(:organization_auditor) do
-      VCAP::CloudController::OrganizationAuditor.make(
-        organization: org,
-        user: other_user,
-        created_at: Time.now
-      )
+      create(:organization_auditor,
+             organization: org,
+             user: other_user,
+             created_at: Time.now)
     end
 
     let(:space_auditor_response_object) do
@@ -1339,7 +1337,7 @@ RSpec.describe 'Roles Request' do
     end
 
     context 'listing roles with filters' do
-      let(:too_late_org_role) { OrganizationAuditor.make(user: other_user, organization: org, created_at: '2028-05-26T18:47:01Z') }
+      let(:too_late_org_role) { create(:organization_auditor, user: other_user, organization: org, created_at: '2028-05-26T18:47:01Z') }
       let(:api_call) do
         lambda { |user_headers|
           get "/v3/roles?user_guids=#{other_user.guid}&
@@ -1371,10 +1369,10 @@ order_by=-created_at&created_ats[lt]=2028-05-26T18:47:01Z&guids=#{organization_a
     end
 
     context 'listing roles with overlapping timestamps' do
-      let!(:user_jeff) { VCAP::CloudController::User.make(guid: 'jeff-guid') }
-      let!(:role_one) { VCAP::CloudController::OrganizationAuditor.make(guid: '1', user: user_jeff, organization: org, created_at: '2019-12-25T13:00:00Z') }
-      let!(:role_two) { VCAP::CloudController::SpaceAuditor.make(guid: '2', user: user_jeff, space: space, created_at: '2019-12-25T13:00:00Z') }
-      let!(:role_three) { VCAP::CloudController::SpaceManager.make(guid: '3', user: user_jeff, space: space, created_at: '2019-12-25T13:00:00Z') }
+      let!(:user_jeff) { create(:user, guid: 'jeff-guid') }
+      let!(:role_one) { create(:organization_auditor, guid: '1', user: user_jeff, organization: org, created_at: '2019-12-25T13:00:00Z') }
+      let!(:role_two) { create(:space_auditor, guid: '2', user: user_jeff, space: space, created_at: '2019-12-25T13:00:00Z') }
+      let!(:role_three) { create(:space_manager, guid: '3', user: user_jeff, space: space, created_at: '2019-12-25T13:00:00Z') }
 
       it 'sorts the the roles on a secondary key and keeps the same order between calls' do
         get('/v3/roles', nil, admin_header)
@@ -1485,9 +1483,9 @@ order_by=-created_at&created_ats[lt]=2028-05-26T18:47:01Z&guids=#{organization_a
       end
 
       context 'when there are multiple users with multiple roles' do
-        let(:another_user) { VCAP::CloudController::User.make(guid: 'another-user-guid') }
-        let(:another_org) { VCAP::CloudController::Organization.make }
-        let(:another_space) { VCAP::CloudController::Space.make }
+        let(:another_user) { create(:user, guid: 'another-user-guid') }
+        let(:another_org) { create(:organization) }
+        let(:another_space) { create(:space) }
 
         let(:another_user_response) do
           {
@@ -1560,36 +1558,32 @@ order_by=-created_at&created_ats[lt]=2028-05-26T18:47:01Z&guids=#{organization_a
         end
 
         let!(:organization_billing_manager) do
-          VCAP::CloudController::OrganizationBillingManager.make(
-            guid: 'organization_billing_manager-guid',
-            organization: org,
-            user: another_user,
-            created_at: Time.now - 3.minutes
-          )
+          create(:organization_billing_manager,
+                 guid: 'organization_billing_manager-guid',
+                 organization: org,
+                 user: another_user,
+                 created_at: Time.now - 3.minutes)
         end
 
         let!(:space_auditor) do
-          VCAP::CloudController::SpaceAuditor.make(
-            guid: 'space_auditor-guid',
-            space: space,
-            user: another_user
-          )
+          create(:space_auditor,
+                 guid: 'space_auditor-guid',
+                 space: space,
+                 user: another_user)
         end
 
         let!(:another_space_auditor) do
-          VCAP::CloudController::SpaceAuditor.make(
-            guid: 'another-space_auditor-guid',
-            space: another_space,
-            user: another_user
-          )
+          create(:space_auditor,
+                 guid: 'another-space_auditor-guid',
+                 space: another_space,
+                 user: another_user)
         end
 
         let!(:org_manager) do
-          VCAP::CloudController::OrganizationManager.make(
-            guid: 'organization_manager-guid',
-            organization: another_org,
-            user: another_user
-          )
+          create(:organization_manager,
+                 guid: 'organization_manager-guid',
+                 organization: another_org,
+                 user: another_user)
         end
 
         before do
@@ -1627,7 +1621,7 @@ order_by=-created_at&created_ats[lt]=2028-05-26T18:47:01Z&guids=#{organization_a
     let(:api_call) { ->(user_headers) { get "/v3/roles/#{role.guid}", nil, user_headers } }
 
     context 'when getting a space role' do
-      let(:role) { VCAP::CloudController::SpaceAuditor.make(user: user_with_role, space: space) }
+      let(:role) { create(:space_auditor, user: user_with_role, space: space) }
 
       let(:expected_response) do
         {
@@ -1670,7 +1664,7 @@ order_by=-created_at&created_ats[lt]=2028-05-26T18:47:01Z&guids=#{organization_a
     end
 
     context 'when getting a org role' do
-      let(:role) { VCAP::CloudController::OrganizationAuditor.make(user: user_with_role, organization: org) }
+      let(:role) { create(:organization_auditor, user: user_with_role, organization: org) }
 
       let(:expected_response) do
         {
@@ -1725,8 +1719,8 @@ order_by=-created_at&created_ats[lt]=2028-05-26T18:47:01Z&guids=#{organization_a
     end
 
     context 'getting a role with included resources' do
-      let(:org_role) { VCAP::CloudController::OrganizationAuditor.make(user: user_with_role, organization: org) }
-      let(:space_role) { VCAP::CloudController::SpaceAuditor.make(user: user_with_role, space: space) }
+      let(:org_role) { create(:organization_auditor, user: user_with_role, organization: org) }
+      let(:space_role) { create(:space_auditor, user: user_with_role, space: space) }
 
       let(:user_with_role_response) do
         {
@@ -1851,7 +1845,7 @@ order_by=-created_at&created_ats[lt]=2028-05-26T18:47:01Z&guids=#{organization_a
     end
 
     context 'when deleting a space role' do
-      let(:role) { VCAP::CloudController::SpaceAuditor.make(user: user_with_role, space: space) }
+      let(:role) { create(:space_auditor, user: user_with_role, space: space) }
 
       let(:expected_codes_and_responses) do
         h = Hash.new({ code: 403, errors: CF_NOT_AUTHORIZED }.freeze)
@@ -1882,7 +1876,7 @@ order_by=-created_at&created_ats[lt]=2028-05-26T18:47:01Z&guids=#{organization_a
     end
 
     context 'when deleting an org role' do
-      let(:role) { VCAP::CloudController::OrganizationAuditor.make(user: user_with_role, organization: org) }
+      let(:role) { create(:organization_auditor, user: user_with_role, organization: org) }
 
       let(:expected_codes_and_responses) do
         h = Hash.new({ code: 403, errors: CF_NOT_AUTHORIZED }.freeze)
@@ -1928,7 +1922,7 @@ order_by=-created_at&created_ats[lt]=2028-05-26T18:47:01Z&guids=#{organization_a
     end
 
     context 'when the user is not logged in' do
-      let(:role) { VCAP::CloudController::SpaceAuditor.make(user: user_with_role, space: space) }
+      let(:role) { create(:space_auditor, user: user_with_role, space: space) }
 
       it 'returns a 401' do
         delete "/v3/roles/#{role.guid}", nil, base_json_headers

@@ -6,30 +6,26 @@ module VCAP::CloudController::Presenters::V3
   RSpec.describe RouteDestinationsPresenter do
     subject(:presenter) { RouteDestinationsPresenter.new(route.route_mappings, route:) }
 
-    let!(:app) { VCAP::CloudController::AppModel.make }
-    let!(:process) { VCAP::CloudController::ProcessModel.make(app: app, type: 'some-type') }
-    let!(:route) { VCAP::CloudController::Route.make(space: app.space) }
+    let!(:app) { create(:app_model) }
+    let!(:process) { create(:process_model, app: app, type: 'some-type') }
+    let!(:route) { create(:route, space: app.space) }
 
     let!(:route_mapping) do
-      VCAP::CloudController::RouteMappingModel.make(
-        app: app,
-        app_port: 1234,
-        guid: 'guid-1',
-        route: route,
-        process_type: process.type,
-        weight: 55
-      )
+      create(:route_mapping_model, app: app,
+                                   app_port: 1234,
+                                   guid: 'guid-1',
+                                   route: route,
+                                   process_type: process.type,
+                                   weight: 55)
     end
 
     let!(:route_mapping2) do
-      VCAP::CloudController::RouteMappingModel.make(
-        app: app,
-        app_port: 5678,
-        guid: 'guid-2',
-        route: route,
-        process_type: 'other-process',
-        weight: 45
-      )
+      create(:route_mapping_model, app: app,
+                                   app_port: 5678,
+                                   guid: 'guid-2',
+                                   route: route,
+                                   process_type: 'other-process',
+                                   weight: 45)
     end
 
     describe '#to_hash' do
@@ -63,21 +59,17 @@ module VCAP::CloudController::Presenters::V3
 
       context 'ordering destinations' do
         let!(:route_mapping) do
-          VCAP::CloudController::RouteMappingModel.make(
-            app: app,
-            app_port: 1234,
-            route: route,
-            guid: 'guid-2'
-          )
+          create(:route_mapping_model, app: app,
+                                       app_port: 1234,
+                                       route: route,
+                                       guid: 'guid-2')
         end
 
         let!(:route_mapping2) do
-          VCAP::CloudController::RouteMappingModel.make(
-            app: app,
-            app_port: 5678,
-            route: route,
-            guid: 'guid-1'
-          )
+          create(:route_mapping_model, app: app,
+                                       app_port: 5678,
+                                       route: route,
+                                       guid: 'guid-1')
         end
 
         it 'sorts the destinations by guid' do

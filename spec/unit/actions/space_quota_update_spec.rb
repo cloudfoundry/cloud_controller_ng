@@ -4,8 +4,8 @@ require 'messages/space_quota_update_message'
 
 module VCAP::CloudController
   RSpec.describe SpaceQuotaUpdate do
-    let(:org) { VCAP::CloudController::Organization.make }
-    let(:user) { User.make }
+    let(:org) { create(:organization) }
+    let(:user) { create(:user) }
     let(:user_email) { 'user@example.com' }
     let(:user_name) { 'user-name' }
     let(:user_audit_info) { UserAuditInfo.new(user_guid: user.guid, user_email: user_email, user_name: user_name) }
@@ -13,11 +13,10 @@ module VCAP::CloudController
     describe 'update' do
       context 'when updating a space quota' do
         let!(:space_quota) do
-          VCAP::CloudController::SpaceQuotaDefinition.make(
-            name: 'space_quota_name',
-            non_basic_services_allowed: true,
-            organization: org
-          )
+          create(:space_quota_definition,
+                 name: 'space_quota_name',
+                 non_basic_services_allowed: true,
+                 organization: org)
         end
 
         let(:message) do
@@ -108,7 +107,7 @@ module VCAP::CloudController
 
           context 'when it is a uniqueness error' do
             let(:name) { 'victoria_space_quota' }
-            let!(:victoria_space_quota) { VCAP::CloudController::SpaceQuotaDefinition.make(name: name, organization: org) }
+            let!(:victoria_space_quota) { create(:space_quota_definition, name: name, organization: org) }
             let(:update_message) { VCAP::CloudController::SpaceQuotaUpdateMessage.new(name:) }
 
             it 'raises a human-friendly error' do
@@ -122,9 +121,9 @@ module VCAP::CloudController
         context 'when there are affected processes that have an unlimited log rate limit' do
           def create_spaces_with_unlimited_log_rate_process(count)
             count.downto(1) do |i|
-              space = VCAP::CloudController::Space.make(guid: "space-guid-#{i}", name: "space-name-#{i}", organization: org, space_quota_definition: space_quota)
-              app_model = VCAP::CloudController::AppModel.make(name: "app-#{i}", space: space)
-              VCAP::CloudController::ProcessModel.make(app: app_model, log_rate_limit: -1)
+              space = create(:space, guid: "space-guid-#{i}", name: "space-name-#{i}", organization: org, space_quota_definition: space_quota)
+              app_model = create(:app_model, name: "app-#{i}", space: space)
+              create(:process, app: app_model, log_rate_limit: -1)
             end
           end
 
@@ -168,11 +167,11 @@ module VCAP::CloudController
           end
 
           context 'and there is more than one affected process within a space' do
-            let!(:org) { VCAP::CloudController::Organization.make(guid: 'org-guid', name: 'org-name') }
-            let!(:space) { VCAP::CloudController::Space.make(guid: 'space-guid', name: 'space-name', organization: org, space_quota_definition: space_quota) }
-            let!(:app_model) { VCAP::CloudController::AppModel.make(name: 'app', space: space) }
-            let!(:process_1) { VCAP::CloudController::ProcessModel.make(app: app_model, log_rate_limit: -1) }
-            let!(:process_2) { VCAP::CloudController::ProcessModel.make(app: app_model, log_rate_limit: -1) }
+            let!(:org) { create(:organization, guid: 'org-guid', name: 'org-name') }
+            let!(:space) { create(:space, guid: 'space-guid', name: 'space-name', organization: org, space_quota_definition: space_quota) }
+            let!(:app_model) { create(:app_model, name: 'app', space: space) }
+            let!(:process_1) { create(:process, app: app_model, log_rate_limit: -1) }
+            let!(:process_2) { create(:process, app: app_model, log_rate_limit: -1) }
 
             it 'only names the space once in the error message' do
               expect do

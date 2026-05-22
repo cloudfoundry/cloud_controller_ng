@@ -11,7 +11,7 @@ module VCAP::CloudController
 
     describe 'uniqueness' do
       it 'enforces uniqueness of organization and service plan combination' do
-        existing = ServicePlanVisibility.make
+        existing = create(:service_plan_visibility)
         expect do
           ServicePlanVisibility.create(service_plan: existing.service_plan, organization: existing.organization)
         end.to raise_error(Sequel::ValidationFailed, /unique/)
@@ -24,11 +24,11 @@ module VCAP::CloudController
 
       context 'when the service plan visibility is for a private broker' do
         it 'returns a validation error' do
-          organization = Organization.make
-          space = Space.make(organization:)
-          private_broker = ServiceBroker.make(space:)
-          service = Service.make service_broker: private_broker, active: true
-          plan = ServicePlan.make(service: service, public: false)
+          organization = create(:organization)
+          space = create(:space, organization:)
+          private_broker = create(:service_broker, space:)
+          service = create(:service, service_broker: private_broker, active: true)
+          plan = create(:service_plan, service: service, public: false)
 
           expect do
             ServicePlanVisibility.create service_plan: plan, organization: organization
@@ -38,10 +38,10 @@ module VCAP::CloudController
 
       context 'when the service plan visibility is for a public plan' do
         it 'returns a validation error' do
-          organization = Organization.make
-          private_broker = ServiceBroker.make
-          service = Service.make service_broker: private_broker, active: true
-          plan = ServicePlan.make(service: service, public: true)
+          organization = create(:organization)
+          private_broker = create(:service_broker)
+          service = create(:service, service_broker: private_broker, active: true)
+          plan = create(:service_plan, service: service, public: true)
 
           expect do
             ServicePlanVisibility.create service_plan: plan, organization: organization
@@ -56,25 +56,25 @@ module VCAP::CloudController
     end
 
     describe '.visible_private_plan_ids_for_user(user)' do
-      let!(:user) { User.make }
-      let!(:org1) { Organization.make }
-      let!(:org2) { Organization.make }
-      let!(:org3) { Organization.make }
+      let!(:user) { create(:user) }
+      let!(:org1) { create(:organization) }
+      let!(:org2) { create(:organization) }
+      let!(:org3) { create(:organization) }
 
-      let!(:plan_visible_to_both) { ServicePlan.make(public: false) }
-      let!(:plan_visible_to_org1) { ServicePlan.make(public: false) }
-      let!(:plan_visible_to_org2) { ServicePlan.make(public: false) }
-      let!(:plan_hidden_from_both) { ServicePlan.make(public: false) }
-      let!(:plan_not_visible_to_users_org) { ServicePlan.make(public: false) }
+      let!(:plan_visible_to_both) { create(:service_plan, public: false) }
+      let!(:plan_visible_to_org1) { create(:service_plan, public: false) }
+      let!(:plan_visible_to_org2) { create(:service_plan, public: false) }
+      let!(:plan_hidden_from_both) { create(:service_plan, public: false) }
+      let!(:plan_not_visible_to_users_org) { create(:service_plan, public: false) }
 
       before do
         user.add_organization(org1)
         user.add_organization(org2)
-        ServicePlanVisibility.make(organization: org1, service_plan: plan_visible_to_both)
-        ServicePlanVisibility.make(organization: org2, service_plan: plan_visible_to_both)
-        ServicePlanVisibility.make(organization: org1, service_plan: plan_visible_to_org1)
-        ServicePlanVisibility.make(organization: org2, service_plan: plan_visible_to_org2)
-        ServicePlanVisibility.make(organization: org3, service_plan: plan_not_visible_to_users_org)
+        create(:service_plan_visibility, organization: org1, service_plan: plan_visible_to_both)
+        create(:service_plan_visibility, organization: org2, service_plan: plan_visible_to_both)
+        create(:service_plan_visibility, organization: org1, service_plan: plan_visible_to_org1)
+        create(:service_plan_visibility, organization: org2, service_plan: plan_visible_to_org2)
+        create(:service_plan_visibility, organization: org3, service_plan: plan_not_visible_to_users_org)
       end
 
       it "returns the list of ids for plans the user's orgs can see" do
@@ -84,12 +84,12 @@ module VCAP::CloudController
     end
 
     describe '.visible_private_plan_ids_for_organization' do
-      let!(:organization) { Organization.make }
-      let!(:visible_plan) { ServicePlan.make(public: false) }
-      let!(:hidden_plan) { ServicePlan.make(public: false) }
+      let!(:organization) { create(:organization) }
+      let!(:visible_plan) { create(:service_plan, public: false) }
+      let!(:hidden_plan) { create(:service_plan, public: false) }
 
       before do
-        ServicePlanVisibility.make(organization: organization, service_plan: visible_plan)
+        create(:service_plan_visibility, organization: organization, service_plan: visible_plan)
       end
 
       it "returns the list of ids for plans the user's orgs can see" do

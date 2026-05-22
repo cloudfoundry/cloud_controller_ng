@@ -2,12 +2,12 @@ require 'spec_helper'
 require 'request_spec_shared_examples'
 
 RSpec.describe 'V3 service instances' do
-  let(:user) { VCAP::CloudController::User.make }
-  let(:org) { VCAP::CloudController::Organization.make(created_at: Time.now.utc - 1.second) }
-  let!(:org_annotation) { VCAP::CloudController::OrganizationAnnotationModel.make(key_prefix: 'pre.fix', key_name: 'foo', value: 'bar', resource_guid: org.guid) }
-  let(:space) { VCAP::CloudController::Space.make(organization: org, created_at: Time.now.utc - 1.second) }
-  let!(:space_annotation) { VCAP::CloudController::SpaceAnnotationModel.make(key_prefix: 'pre.fix', key_name: 'baz', value: 'wow', space: space) }
-  let(:another_space) { VCAP::CloudController::Space.make }
+  let(:user) { create(:user) }
+  let(:org) { create(:organization, created_at: Time.now.utc - 1.second) }
+  let!(:org_annotation) { create(:organization_annotation_model, key_prefix: 'pre.fix', key_name: 'foo', value: 'bar', resource_guid: org.guid) }
+  let(:space) { create(:space, organization: org, created_at: Time.now.utc - 1.second) }
+  let!(:space_annotation) { create(:space_annotation_model, key_prefix: 'pre.fix', key_name: 'baz', value: 'wow', space: space) }
+  let(:another_space) { create(:space) }
   let(:parameters_mixed_data_types_as_json_string) do
     '{"boolean":true,"string":"a string","int":123,"float":3.14159,"optional":null,"object":{"a":"b"},"array":["c","d"]}'
   end
@@ -37,7 +37,7 @@ RSpec.describe 'V3 service instances' do
     end
 
     context 'managed service instance' do
-      let(:instance) { VCAP::CloudController::ManagedServiceInstance.make(space:) }
+      let(:instance) { create(:managed_service_instance, space:) }
       let(:guid) { instance.guid }
 
       let(:expected_codes_and_responses) do
@@ -48,7 +48,7 @@ RSpec.describe 'V3 service instances' do
     end
 
     context 'user-provided service instance' do
-      let(:instance) { VCAP::CloudController::UserProvidedServiceInstance.make(space:) }
+      let(:instance) { create(:user_provided_service_instance, space:) }
       let(:guid) { instance.guid }
 
       let(:expected_codes_and_responses) do
@@ -59,8 +59,8 @@ RSpec.describe 'V3 service instances' do
     end
 
     context 'shared service instance' do
-      let(:another_space) { VCAP::CloudController::Space.make }
-      let(:instance) { VCAP::CloudController::ManagedServiceInstance.make(space: another_space) }
+      let(:another_space) { create(:space) }
+      let(:instance) { create(:managed_service_instance, space: another_space) }
       let(:guid) { instance.guid }
 
       before do
@@ -75,7 +75,7 @@ RSpec.describe 'V3 service instances' do
     end
 
     context 'fields' do
-      let(:instance) { VCAP::CloudController::ManagedServiceInstance.make(space:) }
+      let(:instance) { create(:managed_service_instance, space:) }
       let(:guid) { instance.guid }
 
       it 'can include the organization name and guid fields' do
@@ -183,7 +183,7 @@ RSpec.describe 'V3 service instances' do
     end
 
     describe 'pagination' do
-      let!(:resources) { Array.new(2) { VCAP::CloudController::ServiceInstance.make } }
+      let!(:resources) { create_list(:service_instance, 2) }
 
       it_behaves_like 'paginated response', '/v3/service_instances'
 
@@ -204,32 +204,26 @@ RSpec.describe 'V3 service instances' do
 
     context 'given a mixture of managed, user-provided and shared service instances' do
       let!(:msi_1) do
-        VCAP::CloudController::ManagedServiceInstance.make(
-          service_plan: VCAP::CloudController::ServicePlan.make(
-            service: VCAP::CloudController::Service.make(
-              service_broker: VCAP::CloudController::ServiceBroker.make(created_at: Time.now.utc - 2.seconds),
-              created_at: Time.now.utc - 2.seconds
-            ),
-            created_at: Time.now.utc - 2.seconds
-          ),
-          space: space
-        )
+        create(:managed_service_instance,
+               service_plan: create(:service_plan,
+                                    service: create(:service,
+                                                    service_broker: create(:service_broker, created_at: Time.now.utc - 2.seconds),
+                                                    created_at: Time.now.utc - 2.seconds),
+                                    created_at: Time.now.utc - 2.seconds),
+               space: space)
       end
       let!(:msi_2) do
-        VCAP::CloudController::ManagedServiceInstance.make(
-          service_plan: VCAP::CloudController::ServicePlan.make(
-            service: VCAP::CloudController::Service.make(
-              service_broker: VCAP::CloudController::ServiceBroker.make(created_at: Time.now.utc - 1.second),
-              created_at: Time.now.utc - 1.second
-            ),
-            created_at: Time.now.utc - 1.second
-          ),
-          space: another_space
-        )
+        create(:managed_service_instance,
+               service_plan: create(:service_plan,
+                                    service: create(:service,
+                                                    service_broker: create(:service_broker, created_at: Time.now.utc - 1.second),
+                                                    created_at: Time.now.utc - 1.second),
+                                    created_at: Time.now.utc - 1.second),
+               space: another_space)
       end
-      let!(:upsi_1) { VCAP::CloudController::UserProvidedServiceInstance.make(space:) }
-      let!(:upsi_2) { VCAP::CloudController::UserProvidedServiceInstance.make(space: another_space) }
-      let!(:ssi) { VCAP::CloudController::ManagedServiceInstance.make(space: another_space) }
+      let!(:upsi_1) { create(:user_provided_service_instance, space:) }
+      let!(:upsi_2) { create(:user_provided_service_instance, space: another_space) }
+      let!(:ssi) { create(:managed_service_instance, space: another_space) }
 
       before do
         ssi.add_shared_space(space)
@@ -306,10 +300,10 @@ RSpec.describe 'V3 service instances' do
         end
 
         it 'filters by label' do
-          VCAP::CloudController::ServiceInstanceLabelModel.make(key_name: 'fruit', value: 'strawberry', service_instance: msi_1)
-          VCAP::CloudController::ServiceInstanceLabelModel.make(key_name: 'fruit', value: 'raspberry', service_instance: msi_2)
-          VCAP::CloudController::ServiceInstanceLabelModel.make(key_name: 'fruit', value: 'strawberry', service_instance: ssi)
-          VCAP::CloudController::ServiceInstanceLabelModel.make(key_name: 'fruit', value: 'strawberry', service_instance: upsi_2)
+          create(:service_instance_label_model, key_name: 'fruit', value: 'strawberry', service_instance: msi_1)
+          create(:service_instance_label_model, key_name: 'fruit', value: 'raspberry', service_instance: msi_2)
+          create(:service_instance_label_model, key_name: 'fruit', value: 'strawberry', service_instance: ssi)
+          create(:service_instance_label_model, key_name: 'fruit', value: 'strawberry', service_instance: upsi_2)
 
           get '/v3/service_instances?label_selector=fruit=strawberry', nil, admin_headers
 
@@ -536,7 +530,7 @@ RSpec.describe 'V3 service instances' do
     it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS do
       let(:api_call) { ->(user_headers) { get "/v3/service_instances/#{guid}/credentials", nil, user_headers } }
       let(:credentials) { { 'fake-key' => 'fake-value' } }
-      let(:instance) { VCAP::CloudController::UserProvidedServiceInstance.make(space:, credentials:) }
+      let(:instance) { create(:user_provided_service_instance, space:, credentials:) }
       let(:guid) { instance.guid }
 
       let(:expected_codes_and_responses) do
@@ -552,7 +546,7 @@ RSpec.describe 'V3 service instances' do
     end
 
     it 'responds with an empty obect when no credentials were set' do
-      upsi = VCAP::CloudController::UserProvidedServiceInstance.make(space: space, credentials: nil)
+      upsi = create(:user_provided_service_instance, space: space, credentials: nil)
       get "/v3/service_instances/#{upsi.guid}/credentials", nil, admin_headers
       expect(last_response).to have_status_code(200)
       expect(parsed_response).to match_json_response({})
@@ -564,13 +558,13 @@ RSpec.describe 'V3 service instances' do
     end
 
     it 'responds with 404 for a managed service instance' do
-      msi = VCAP::CloudController::ManagedServiceInstance.make(space:)
+      msi = create(:managed_service_instance, space:)
       get "/v3/service_instances/#{msi.guid}/credentials", nil, admin_headers
       expect(last_response).to have_status_code(404)
     end
 
     it 'records an audit event' do
-      upsi = VCAP::CloudController::UserProvidedServiceInstance.make(space: space, credentials: {})
+      upsi = create(:user_provided_service_instance, space: space, credentials: {})
       get "/v3/service_instances/#{upsi.guid}/credentials", nil, space_dev_headers
       expect(last_response).to have_status_code(200)
 
@@ -588,9 +582,9 @@ RSpec.describe 'V3 service instances' do
   end
 
   describe 'GET /v3/service_instances/:guid/parameters' do
-    let(:service) { VCAP::CloudController::Service.make(instances_retrievable: true) }
-    let(:service_plan) { VCAP::CloudController::ServicePlan.make(service:) }
-    let(:instance) { VCAP::CloudController::ManagedServiceInstance.make(space:, service_plan:) }
+    let(:service) { create(:service, instances_retrievable: true) }
+    let(:service_plan) { create(:service_plan, service:) }
+    let(:instance) { create(:managed_service_instance, space:, service_plan:) }
     let(:body) { {}.to_json }
     let(:response_code) { 200 }
 
@@ -646,7 +640,7 @@ RSpec.describe 'V3 service instances' do
     end
 
     context 'when the instance does not support retrievable instances' do
-      let(:service) { VCAP::CloudController::Service.make(instances_retrievable: false) }
+      let(:service) { create(:service, instances_retrievable: false) }
 
       it 'fails with an explanatory error' do
         get "/v3/service_instances/#{instance.guid}/parameters", nil, admin_headers
@@ -722,7 +716,7 @@ RSpec.describe 'V3 service instances' do
     context 'when the instance is shared' do
       it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS do
         let(:api_call) { ->(user_headers) { get "/v3/service_instances/#{guid}/parameters", nil, user_headers } }
-        let(:instance) { VCAP::CloudController::ManagedServiceInstance.make(space: another_space, service_plan: service_plan) }
+        let(:instance) { create(:managed_service_instance, space: another_space, service_plan: service_plan) }
         let(:parameters) { { 'some-key' => 'some-value' } }
         let(:body) { { 'parameters' => parameters }.to_json }
         let(:guid) { instance.guid }
@@ -857,7 +851,7 @@ RSpec.describe 'V3 service instances' do
 
     context 'when the instance is user-provided' do
       it 'responds with 404' do
-        upsi = VCAP::CloudController::UserProvidedServiceInstance.make(space:)
+        upsi = create(:user_provided_service_instance, space:)
 
         get "/v3/service_instances/#{upsi.guid}/parameters", nil, admin_headers
 
@@ -947,7 +941,7 @@ RSpec.describe 'V3 service instances' do
 
     context 'when the space is not readable' do
       it 'fails saying the space cannot be found' do
-        request_body[:relationships][:space][:data][:guid] = VCAP::CloudController::Space.make.guid
+        request_body[:relationships][:space][:data][:guid] = create(:space).guid
 
         api_call.call(space_dev_headers)
         expect(last_response).to have_status_code(422)
@@ -1029,7 +1023,7 @@ RSpec.describe 'V3 service instances' do
 
       context 'when the name has already been taken' do
         it 'fails when the same name is already used in this space' do
-          VCAP::CloudController::ServiceInstance.make(name:, space:)
+          create(:service_instance, name:, space:)
 
           api_call.call(admin_headers)
           expect(last_response).to have_status_code(422)
@@ -1043,7 +1037,7 @@ RSpec.describe 'V3 service instances' do
         end
 
         it 'succeeds when the same name is used in another space' do
-          VCAP::CloudController::ServiceInstance.make(name: name, space: another_space)
+          create(:service_instance, name: name, space: another_space)
 
           api_call.call(admin_headers)
           expect(last_response).to have_status_code(201)
@@ -1074,7 +1068,7 @@ RSpec.describe 'V3 service instances' do
           description: 'amazing version'
         }
       end
-      let(:service_plan) { VCAP::CloudController::ServicePlan.make(public: true, active: true, maintenance_info: maintenance_info) }
+      let(:service_plan) { create(:service_plan, public: true, active: true, maintenance_info: maintenance_info) }
       let(:service_plan_guid) { service_plan.guid }
       let(:request_body) do
         {
@@ -1178,7 +1172,7 @@ RSpec.describe 'V3 service instances' do
 
       context 'when the name has already been taken' do
         it 'fails when the same name is already used in this space' do
-          VCAP::CloudController::ServiceInstance.make(name:, space:)
+          create(:service_instance, name:, space:)
 
           api_call.call(admin_headers)
           expect(last_response).to have_status_code(422)
@@ -1192,7 +1186,7 @@ RSpec.describe 'V3 service instances' do
         end
 
         it 'succeeds when the same name is used in another space' do
-          VCAP::CloudController::ServiceInstance.make(name: name, space: another_space)
+          create(:service_instance, name: name, space: another_space)
 
           api_call.call(admin_headers)
           expect(last_response).to have_status_code(202)
@@ -1200,10 +1194,10 @@ RSpec.describe 'V3 service instances' do
       end
 
       context 'when the plan is org-restricted' do
-        let(:service_plan) { VCAP::CloudController::ServicePlan.make(public: false, active: true) }
+        let(:service_plan) { create(:service_plan, public: false, active: true) }
 
         before do
-          VCAP::CloudController::ServicePlanVisibility.make(service_plan: service_plan, organization: org)
+          create(:service_plan_visibility, service_plan: service_plan, organization: org)
         end
 
         it 'can be created in a space in that org' do
@@ -1306,7 +1300,7 @@ RSpec.describe 'V3 service instances' do
         end
 
         context 'not readable by the user' do
-          let(:service_plan) { VCAP::CloudController::ServicePlan.make(public: false, active: true) }
+          let(:service_plan) { create(:service_plan, public: false, active: true) }
 
           it 'fails saying the plan is invalid' do
             api_call.call(space_dev_headers)
@@ -1322,7 +1316,7 @@ RSpec.describe 'V3 service instances' do
         end
 
         context 'not enabled in that org' do
-          let(:service_plan) { VCAP::CloudController::ServicePlan.make(public: false, active: true) }
+          let(:service_plan) { create(:service_plan, public: false, active: true) }
 
           it 'fails saying the plan is invalid' do
             api_call.call(admin_headers)
@@ -1341,7 +1335,7 @@ RSpec.describe 'V3 service instances' do
         end
 
         context 'not active' do
-          let(:service_plan) { VCAP::CloudController::ServicePlan.make(public: true, active: false) }
+          let(:service_plan) { create(:service_plan, public: true, active: false) }
 
           it 'fails saying the plan is invalid' do
             api_call.call(admin_headers)
@@ -1359,9 +1353,9 @@ RSpec.describe 'V3 service instances' do
         end
 
         context 'space-scoped plan from a different space' do
-          let(:service_broker) { VCAP::CloudController::ServiceBroker.make(space: another_space) }
-          let(:service_offering) { VCAP::CloudController::Service.make(service_broker:) }
-          let(:service_plan) { VCAP::CloudController::ServicePlan.make(service: service_offering, active: true, public: false) }
+          let(:service_broker) { create(:service_broker, space: another_space) }
+          let(:service_offering) { create(:service, service_broker:) }
+          let(:service_plan) { create(:service_plan, service: service_offering, active: true, public: false) }
 
           it 'fails saying the plan is invalid' do
             api_call.call(space_dev_headers)
@@ -1536,8 +1530,8 @@ RSpec.describe 'V3 service instances' do
             end
 
             context 'it fetches dashboard url' do
-              let(:service) { VCAP::CloudController::Service.make(instances_retrievable: true) }
-              let(:service_plan) { VCAP::CloudController::ServicePlan.make(public: true, active: true, service: service) }
+              let(:service) { create(:service, instances_retrievable: true) }
+              let(:service_plan) { create(:service_plan, public: true, active: true, service: service) }
               let(:dashboard_url) { 'http:/some-new-dashboard-url.com' }
 
               it 'sets the service instance dashboard url' do
@@ -1583,8 +1577,8 @@ RSpec.describe 'V3 service instances' do
 
         describe 'volume mount and route service checks' do
           context 'when volume mount required' do
-            let(:service_offering) { VCAP::CloudController::Service.make(requires: %w[volume_mount]) }
-            let(:service_plan) { VCAP::CloudController::ServicePlan.make(service: service_offering) }
+            let(:service_offering) { create(:service, requires: %w[volume_mount]) }
+            let(:service_plan) { create(:service_plan, service: service_offering) }
 
             context 'volume mount disabled' do
               before do
@@ -1614,8 +1608,8 @@ RSpec.describe 'V3 service instances' do
           end
 
           context 'when route forwarding required' do
-            let(:service_offering) { VCAP::CloudController::Service.make(requires: %w[route_forwarding]) }
-            let(:service_plan) { VCAP::CloudController::ServicePlan.make(service: service_offering) }
+            let(:service_offering) { create(:service, requires: %w[route_forwarding]) }
+            let(:service_plan) { create(:service_plan, service: service_offering) }
 
             context 'route forwarding disabled' do
               before do
@@ -1650,10 +1644,10 @@ RSpec.describe 'V3 service instances' do
         describe 'space quotas' do
           context 'when the total services quota has been reached' do
             before do
-              quota = VCAP::CloudController::SpaceQuotaDefinition.make(total_services: 1, organization: org)
+              quota = create(:space_quota_definition, total_services: 1, organization: org)
               quota.add_space(space)
 
-              VCAP::CloudController::ManagedServiceInstance.make(space:)
+              create(:managed_service_instance, space:)
             end
 
             it 'returns an error' do
@@ -1670,10 +1664,10 @@ RSpec.describe 'V3 service instances' do
           end
 
           context 'when the paid services quota has been reached' do
-            let!(:service_plan) { VCAP::CloudController::ServicePlan.make(free: false, public: true, active: true) }
+            let!(:service_plan) { create(:service_plan, free: false, public: true, active: true) }
 
             before do
-              quota = VCAP::CloudController::SpaceQuotaDefinition.make(non_basic_services_allowed: false, organization: org)
+              quota = create(:space_quota_definition, non_basic_services_allowed: false, organization: org)
               quota.add_space(space)
             end
 
@@ -1694,9 +1688,9 @@ RSpec.describe 'V3 service instances' do
         describe 'organization quotas' do
           context 'when the total services quota has been reached' do
             before do
-              quota = VCAP::CloudController::QuotaDefinition.make(total_services: 1)
+              quota = create(:quota_definition, total_services: 1)
               quota.add_organization(org)
-              VCAP::CloudController::ManagedServiceInstance.make(space:)
+              create(:managed_service_instance, space:)
             end
 
             it 'returns an error' do
@@ -1713,10 +1707,10 @@ RSpec.describe 'V3 service instances' do
           end
 
           context 'when the paid services quota has been reached' do
-            let!(:service_plan) { VCAP::CloudController::ServicePlan.make(free: false, public: true, active: true) }
+            let!(:service_plan) { create(:service_plan, free: false, public: true, active: true) }
 
             before do
-              quota = VCAP::CloudController::QuotaDefinition.make(non_basic_services_allowed: false)
+              quota = create(:quota_definition, non_basic_services_allowed: false)
               quota.add_organization(org)
             end
 
@@ -1749,7 +1743,7 @@ RSpec.describe 'V3 service instances' do
     end
 
     context 'permissions' do
-      let(:guid) { VCAP::CloudController::ServiceInstance.make(space:).guid }
+      let(:guid) { create(:service_instance, space:).guid }
 
       it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS do
         let(:expected_codes_and_responses) { responses_for_space_restricted_update_endpoint(success_code: 200) }
@@ -1777,15 +1771,14 @@ RSpec.describe 'V3 service instances' do
     context 'managed service instance' do
       describe 'updates that do not require broker communication' do
         let!(:service_instance) do
-          si = VCAP::CloudController::ManagedServiceInstance.make(
-            guid: 'bommel',
-            tags: %w[foo bar],
-            space: space
-          )
-          VCAP::CloudController::ServiceInstanceAnnotationModel.make(service_instance: si, key_prefix: 'pre.fix', key_name: 'to_delete', value: 'value')
-          VCAP::CloudController::ServiceInstanceAnnotationModel.make(service_instance: si, key_prefix: 'pre.fix', key_name: 'fox', value: 'bushy')
-          VCAP::CloudController::ServiceInstanceLabelModel.make(service_instance: si, key_prefix: 'pre.fix', key_name: 'to_delete', value: 'value')
-          VCAP::CloudController::ServiceInstanceLabelModel.make(service_instance: si, key_prefix: 'pre.fix', key_name: 'tail', value: 'fluffy')
+          si = create(:managed_service_instance,
+                      guid: 'bommel',
+                      tags: %w[foo bar],
+                      space: space)
+          create(:service_instance_annotation_model, service_instance: si, key_prefix: 'pre.fix', key_name: 'to_delete', value: 'value')
+          create(:service_instance_annotation_model, service_instance: si, key_prefix: 'pre.fix', key_name: 'fox', value: 'bushy')
+          create(:service_instance_label_model, service_instance: si, key_prefix: 'pre.fix', key_name: 'to_delete', value: 'value')
+          create(:service_instance_label_model, service_instance: si, key_prefix: 'pre.fix', key_name: 'tail', value: 'fluffy')
           si
         end
 
@@ -1861,28 +1854,26 @@ RSpec.describe 'V3 service instances' do
       end
 
       describe 'updates that require broker communication' do
-        let(:service_offering) { VCAP::CloudController::Service.make }
+        let(:service_offering) { create(:service) }
         let(:original_service_plan) do
-          VCAP::CloudController::ServicePlan.make(
-            service: service_offering,
-            plan_updateable: true,
-            maintenance_info: { version: '1.1.1' }
-          )
+          create(:service_plan,
+                 service: service_offering,
+                 plan_updateable: true,
+                 maintenance_info: { version: '1.1.1' })
         end
-        let(:new_service_plan) { VCAP::CloudController::ServicePlan.make(service: service_offering) }
+        let(:new_service_plan) { create(:service_plan, service: service_offering) }
         let(:original_maintenance_info) { { version: '1.1.0' } }
         let!(:service_instance) do
-          si = VCAP::CloudController::ManagedServiceInstance.make(
-            guid: 'bommel',
-            tags: %w[foo bar],
-            space: space,
-            service_plan: original_service_plan,
-            maintenance_info: original_maintenance_info
-          )
-          VCAP::CloudController::ServiceInstanceAnnotationModel.make(service_instance: si, key_prefix: 'pre.fix', key_name: 'to_delete', value: 'value')
-          VCAP::CloudController::ServiceInstanceAnnotationModel.make(service_instance: si, key_prefix: 'pre.fix', key_name: 'fox', value: 'bushy')
-          VCAP::CloudController::ServiceInstanceLabelModel.make(service_instance: si, key_prefix: 'pre.fix', key_name: 'to_delete', value: 'value')
-          VCAP::CloudController::ServiceInstanceLabelModel.make(service_instance: si, key_prefix: 'pre.fix', key_name: 'tail', value: 'fluffy')
+          si = create(:managed_service_instance,
+                      guid: 'bommel',
+                      tags: %w[foo bar],
+                      space: space,
+                      service_plan: original_service_plan,
+                      maintenance_info: original_maintenance_info)
+          create(:service_instance_annotation_model, service_instance: si, key_prefix: 'pre.fix', key_name: 'to_delete', value: 'value')
+          create(:service_instance_annotation_model, service_instance: si, key_prefix: 'pre.fix', key_name: 'fox', value: 'bushy')
+          create(:service_instance_label_model, service_instance: si, key_prefix: 'pre.fix', key_name: 'to_delete', value: 'value')
+          create(:service_instance_label_model, service_instance: si, key_prefix: 'pre.fix', key_name: 'tail', value: 'fluffy')
           si
         end
         let(:guid) { service_instance.guid }
@@ -2185,7 +2176,7 @@ RSpec.describe 'V3 service instances' do
               end
 
               context 'it fetches dashboard url' do
-                let(:service_offering) { VCAP::CloudController::Service.make(instances_retrievable: true) }
+                let(:service_offering) { create(:service, instances_retrievable: true) }
                 let(:dashboard_url) { 'http:/some-new-dashboard-url.com' }
 
                 it 'sets the service instance dashboard url' do
@@ -2328,10 +2319,9 @@ RSpec.describe 'V3 service instances' do
 
       describe 'no changes requested' do
         let!(:service_instance) do
-          si = VCAP::CloudController::ManagedServiceInstance.make(
-            tags: %w[foo bar],
-            space: space
-          )
+          si = create(:managed_service_instance,
+                      tags: %w[foo bar],
+                      space: space)
           si
         end
 
@@ -2359,16 +2349,15 @@ RSpec.describe 'V3 service instances' do
 
       describe 'maintenance_info checks' do
         let!(:service_instance) do
-          VCAP::CloudController::ManagedServiceInstance.make(
-            space:,
-            service_plan:
-          )
+          create(:managed_service_instance,
+                 space:,
+                 service_plan:)
         end
         let(:guid) { service_instance.guid }
 
         context 'changing maintenance_info when the plan does not support it' do
-          let(:service_offering) { VCAP::CloudController::Service.make(plan_updateable: true) }
-          let(:service_plan) { VCAP::CloudController::ServicePlan.make(public: true, active: true, service: service_offering) }
+          let(:service_offering) { create(:service, plan_updateable: true) }
+          let(:service_plan) { create(:service_plan, public: true, active: true, service: service_offering) }
           let(:service_plan_guid) { service_plan.guid }
 
           let(:request_body) do
@@ -2396,14 +2385,13 @@ RSpec.describe 'V3 service instances' do
         end
 
         context 'maintenance_info conflict' do
-          let(:service_offering) { VCAP::CloudController::Service.make(plan_updateable: true) }
+          let(:service_offering) { create(:service, plan_updateable: true) }
           let(:service_plan) do
-            VCAP::CloudController::ServicePlan.make(
-              public: true,
-              active: true,
-              service: service_offering,
-              maintenance_info: { version: '2.1.0' }
-            )
+            create(:service_plan,
+                   public: true,
+                   active: true,
+                   service: service_offering,
+                   maintenance_info: { version: '2.1.0' })
           end
           let(:service_plan_guid) { service_plan.guid }
 
@@ -2432,23 +2420,21 @@ RSpec.describe 'V3 service instances' do
         end
 
         context 'changing maintenance_info alongside plan' do
-          let(:service_offering) { VCAP::CloudController::Service.make(plan_updateable: true) }
+          let(:service_offering) { create(:service, plan_updateable: true) }
           let(:service_plan) do
-            VCAP::CloudController::ServicePlan.make(
-              public: true,
-              active: true,
-              service: service_offering,
-              maintenance_info: { version: '2.2.0' }
-            )
+            create(:service_plan,
+                   public: true,
+                   active: true,
+                   service: service_offering,
+                   maintenance_info: { version: '2.2.0' })
           end
 
           let(:new_service_plan) do
-            VCAP::CloudController::ServicePlan.make(
-              public: true,
-              active: true,
-              service: service_offering,
-              maintenance_info: { version: '2.1.0' }
-            )
+            create(:service_plan,
+                   public: true,
+                   active: true,
+                   service: service_offering,
+                   maintenance_info: { version: '2.1.0' })
           end
 
           let(:new_service_plan_guid) { new_service_plan.guid }
@@ -2487,10 +2473,9 @@ RSpec.describe 'V3 service instances' do
 
       describe 'service plan checks' do
         let!(:service_instance) do
-          VCAP::CloudController::ManagedServiceInstance.make(
-            tags: %w[foo bar],
-            space: space
-          )
+          create(:managed_service_instance,
+                 tags: %w[foo bar],
+                 space: space)
         end
         let(:guid) { service_instance.guid }
 
@@ -2524,7 +2509,7 @@ RSpec.describe 'V3 service instances' do
         end
 
         context 'not readable by the user' do
-          let(:service_plan) { VCAP::CloudController::ServicePlan.make(public: false, active: true) }
+          let(:service_plan) { create(:service_plan, public: false, active: true) }
           let(:service_plan_guid) { service_plan.guid }
 
           it 'fails saying the plan is invalid' do
@@ -2541,7 +2526,7 @@ RSpec.describe 'V3 service instances' do
         end
 
         context 'not enabled in that org' do
-          let(:service_plan) { VCAP::CloudController::ServicePlan.make(public: false, active: true) }
+          let(:service_plan) { create(:service_plan, public: false, active: true) }
           let(:service_plan_guid) { service_plan.guid }
 
           it 'fails saying the plan is invalid' do
@@ -2561,7 +2546,7 @@ RSpec.describe 'V3 service instances' do
         end
 
         context 'not available' do
-          let(:service_plan) { VCAP::CloudController::ServicePlan.make(public: true, active: false) }
+          let(:service_plan) { create(:service_plan, public: true, active: false) }
           let(:service_plan_guid) { service_plan.guid }
 
           it 'fails saying the plan is invalid' do
@@ -2580,9 +2565,9 @@ RSpec.describe 'V3 service instances' do
         end
 
         context 'space-scoped plan from a different space' do
-          let(:service_broker) { VCAP::CloudController::ServiceBroker.make(space: another_space) }
-          let(:service_offering) { VCAP::CloudController::Service.make(service_broker:) }
-          let(:service_plan) { VCAP::CloudController::ServicePlan.make(service: service_offering, active: true, public: false) }
+          let(:service_broker) { create(:service_broker, space: another_space) }
+          let(:service_offering) { create(:service, service_broker:) }
+          let(:service_plan) { create(:service_plan, service: service_offering, active: true, public: false) }
           let(:service_plan_guid) { service_plan.guid }
 
           it 'fails saying the plan is invalid' do
@@ -2599,7 +2584,7 @@ RSpec.describe 'V3 service instances' do
         end
 
         context 'relates to a different service offering' do
-          let(:service_plan_guid) { VCAP::CloudController::ServicePlan.make.guid }
+          let(:service_plan_guid) { create(:service_plan).guid }
 
           it 'fails saying the plan relates to a different service offering' do
             api_call.call(admin_headers)
@@ -2620,14 +2605,13 @@ RSpec.describe 'V3 service instances' do
         context 'name is already used in this space' do
           let(:guid) { service_instance.guid }
           let!(:service_instance) do
-            VCAP::CloudController::ManagedServiceInstance.make(
-              tags: %w[foo bar],
-              space: space
-            )
+            create(:managed_service_instance,
+                   tags: %w[foo bar],
+                   space: space)
           end
 
           let!(:name) { 'test' }
-          let!(:other_si) { VCAP::CloudController::ServiceInstance.make(name:, space:) }
+          let!(:other_si) { create(:service_instance, name:, space:) }
           let(:request_body) { { name: } }
 
           it 'fails' do
@@ -2647,10 +2631,9 @@ RSpec.describe 'V3 service instances' do
 
       describe 'invalid request' do
         let!(:service_instance) do
-          si = VCAP::CloudController::ManagedServiceInstance.make(
-            tags: %w[foo bar],
-            space: space
-          )
+          si = create(:managed_service_instance,
+                      tags: %w[foo bar],
+                      space: space)
           si
         end
 
@@ -2683,17 +2666,16 @@ RSpec.describe 'V3 service instances' do
 
       describe 'when the SI plan is no longer active' do
         let(:version) { { version: '2.0.0' } }
-        let(:service_offering) { VCAP::CloudController::Service.make }
+        let(:service_offering) { create(:service) }
         let(:service_plan) do
-          VCAP::CloudController::ServicePlan.make(
-            public: true,
-            active: false,
-            maintenance_info: version,
-            service: service_offering
-          )
+          create(:service_plan,
+                 public: true,
+                 active: false,
+                 maintenance_info: version,
+                 service: service_offering)
         end
         let!(:service_instance) do
-          VCAP::CloudController::ManagedServiceInstance.make(space:, service_plan:)
+          create(:managed_service_instance, space:, service_plan:)
         end
         let(:guid) { service_instance.guid }
 
@@ -2733,7 +2715,7 @@ RSpec.describe 'V3 service instances' do
           let(:request_body) { { name: 'new-name' } }
 
           context 'and the service offering allows contextual updates' do
-            let(:service_offering) { VCAP::CloudController::Service.make(allow_context_updates: true) }
+            let(:service_offering) { create(:service, allow_context_updates: true) }
 
             it 'fails with a plan inaccessible message' do
               api_call.call(admin_headers)
@@ -2749,7 +2731,7 @@ RSpec.describe 'V3 service instances' do
           end
 
           context 'but the service offering does not allow contextual updates' do
-            let(:service_offering) { VCAP::CloudController::Service.make(allow_context_updates: false) }
+            let(:service_offering) { create(:service, allow_context_updates: false) }
 
             it 'succeeds' do
               api_call.call(admin_headers)
@@ -2762,22 +2744,21 @@ RSpec.describe 'V3 service instances' do
 
     context 'user-provided service instance' do
       let!(:service_instance) do
-        si = VCAP::CloudController::UserProvidedServiceInstance.make(
-          guid: 'bommel',
-          space: space,
-          name: 'foo',
-          credentials: {
-            foo: 'bar',
-            baz: 'qux'
-          },
-          syslog_drain_url: 'https://foo.com',
-          route_service_url: 'https://bar.com',
-          tags: %w[accounting mongodb]
-        )
-        VCAP::CloudController::ServiceInstanceAnnotationModel.make(service_instance: si, key_prefix: 'pre.fix', key_name: 'to_delete', value: 'value')
-        VCAP::CloudController::ServiceInstanceAnnotationModel.make(service_instance: si, key_prefix: 'pre.fix', key_name: 'fox', value: 'bushy')
-        VCAP::CloudController::ServiceInstanceLabelModel.make(service_instance: si, key_prefix: 'pre.fix', key_name: 'to_delete', value: 'value')
-        VCAP::CloudController::ServiceInstanceLabelModel.make(service_instance: si, key_prefix: 'pre.fix', key_name: 'tail', value: 'fluffy')
+        si = create(:user_provided_service_instance,
+                    guid: 'bommel',
+                    space: space,
+                    name: 'foo',
+                    credentials: {
+                      foo: 'bar',
+                      baz: 'qux'
+                    },
+                    syslog_drain_url: 'https://foo.com',
+                    route_service_url: 'https://bar.com',
+                    tags: %w[accounting mongodb])
+        create(:service_instance_annotation_model, service_instance: si, key_prefix: 'pre.fix', key_name: 'to_delete', value: 'value')
+        create(:service_instance_annotation_model, service_instance: si, key_prefix: 'pre.fix', key_name: 'fox', value: 'bushy')
+        create(:service_instance_label_model, service_instance: si, key_prefix: 'pre.fix', key_name: 'to_delete', value: 'value')
+        create(:service_instance_label_model, service_instance: si, key_prefix: 'pre.fix', key_name: 'tail', value: 'fluffy')
         si
       end
 
@@ -2870,7 +2851,7 @@ RSpec.describe 'V3 service instances' do
       end
 
       context 'when the name is already taken' do
-        let!(:duplicate_name) { VCAP::CloudController::UserProvidedServiceInstance.make(space: space, name: new_name) }
+        let!(:duplicate_name) { create(:user_provided_service_instance, space: space, name: new_name) }
 
         let(:request_body) do
           {
@@ -2894,9 +2875,8 @@ RSpec.describe 'V3 service instances' do
 
     context 'when an operation is in progress' do
       let(:service_instance) do
-        si = VCAP::CloudController::ManagedServiceInstance.make(
-          space:
-        )
+        si = create(:managed_service_instance,
+                    space:)
         si
       end
       let(:guid) { service_instance.guid }
@@ -3015,7 +2995,7 @@ RSpec.describe 'V3 service instances' do
     let(:api_call) { ->(user_headers) { delete "/v3/service_instances/#{instance.guid}?#{query_params}", '{}', user_headers } }
 
     context 'permissions' do
-      let!(:instance) { VCAP::CloudController::UserProvidedServiceInstance.make(space:) }
+      let!(:instance) { create(:user_provided_service_instance, space:) }
       let(:db_check) do
         lambda {
           expect(VCAP::CloudController::ServiceInstance.all).to be_empty
@@ -3031,18 +3011,18 @@ RSpec.describe 'V3 service instances' do
 
     context 'user provided service instances' do
       let!(:instance) do
-        si = VCAP::CloudController::UserProvidedServiceInstance.make(space: space, route_service_url: 'https://banana.example.com/')
-        si.service_instance_operation = VCAP::CloudController::ServiceInstanceOperation.make(type: 'create', state: 'succeeded')
+        si = create(:user_provided_service_instance, space: space, route_service_url: 'https://banana.example.com/')
+        si.service_instance_operation = create(:service_instance_operation, type: 'create', state: 'succeeded')
         si
       end
       let(:instance_labels) { VCAP::CloudController::ServiceInstanceLabelModel.where(service_instance: instance) }
       let(:instance_annotations) { VCAP::CloudController::ServiceInstanceAnnotationModel.where(service_instance: instance) }
 
       before do
-        VCAP::CloudController::ServiceInstanceLabelModel.make(key_name: 'fruit', value: 'banana', service_instance: instance)
-        VCAP::CloudController::ServiceInstanceLabelModel.make(key_name: 'spice', value: 'cinnamon', service_instance: instance)
-        VCAP::CloudController::ServiceInstanceAnnotationModel.make(key_name: 'contact', value: 'marie', service_instance: instance)
-        VCAP::CloudController::ServiceInstanceAnnotationModel.make(key_name: 'email', value: 'some@example.com', service_instance: instance)
+        create(:service_instance_label_model, key_name: 'fruit', value: 'banana', service_instance: instance)
+        create(:service_instance_label_model, key_name: 'spice', value: 'cinnamon', service_instance: instance)
+        create(:service_instance_annotation_model, key_name: 'contact', value: 'marie', service_instance: instance)
+        create(:service_instance_annotation_model, key_name: 'email', value: 'some@example.com', service_instance: instance)
       end
 
       it 'deletes the instance and removes any labels or annotations' do
@@ -3056,8 +3036,8 @@ RSpec.describe 'V3 service instances' do
       end
 
       it 'deletes any related bindings' do
-        VCAP::CloudController::RouteBinding.make(service_instance: instance)
-        VCAP::CloudController::ServiceBinding.make(service_instance: instance)
+        create(:route_binding, service_instance: instance)
+        create(:service_binding, service_instance: instance)
 
         api_call.call(admin_headers)
         expect(last_response).to have_status_code(204)
@@ -3071,8 +3051,8 @@ RSpec.describe 'V3 service instances' do
         let(:query_params) { 'purge=true' }
 
         before do
-          @binding = VCAP::CloudController::ServiceBinding.make(service_instance: instance)
-          @route = VCAP::CloudController::RouteBinding.make(service_instance: instance)
+          @binding = create(:service_binding, service_instance: instance)
+          @route = create(:route_binding, service_instance: instance)
         end
 
         it 'deletes the instance and the related resources' do
@@ -3089,7 +3069,7 @@ RSpec.describe 'V3 service instances' do
     end
 
     context 'managed service instance' do
-      let!(:instance) { VCAP::CloudController::ManagedServiceInstance.make(space:) }
+      let!(:instance) { create(:managed_service_instance, space:) }
       let(:broker_status_code) { 200 }
       let(:broker_response) { {} }
       let!(:stub_delete) do
@@ -3427,7 +3407,7 @@ RSpec.describe 'V3 service instances' do
 
         context 'when the service instance is shared' do
           let!(:shared_space) do
-            VCAP::CloudController::Space.make.tap do |s|
+            create(:space).tap do |s|
               instance.add_shared_space(s)
             end
           end
@@ -3440,8 +3420,8 @@ RSpec.describe 'V3 service instances' do
           end
 
           context 'when there is a binding in the shared space' do
-            let!(:application) { VCAP::CloudController::AppModel.make(space: shared_space) }
-            let!(:service_binding) { VCAP::CloudController::ServiceBinding.make(service_instance: instance, app: application) }
+            let!(:application) { create(:app_model, space: shared_space) }
+            let!(:service_binding) { create(:service_binding, service_instance: instance, app: application) }
 
             before do
               stub_request(:delete, "#{instance.service_broker.broker_url}/v2/service_instances/#{instance.guid}/service_bindings/#{service_binding.guid}").
@@ -3475,12 +3455,12 @@ RSpec.describe 'V3 service instances' do
         end
 
         context 'when there are bindings' do
-          let(:service_offering) { VCAP::CloudController::Service.make(requires: %w[route_forwarding]) }
-          let(:service_plan) { VCAP::CloudController::ServicePlan.make(service: service_offering) }
-          let(:instance) { VCAP::CloudController::ManagedServiceInstance.make(space:, service_plan:) }
-          let!(:route_binding) { VCAP::CloudController::RouteBinding.make(service_instance: instance) }
-          let!(:service_binding) { VCAP::CloudController::ServiceBinding.make(service_instance: instance) }
-          let!(:service_key) { VCAP::CloudController::ServiceKey.make(service_instance: instance) }
+          let(:service_offering) { create(:service, requires: %w[route_forwarding]) }
+          let(:service_plan) { create(:service_plan, service: service_offering) }
+          let(:instance) { create(:managed_service_instance, space:, service_plan:) }
+          let!(:route_binding) { create(:route_binding, service_instance: instance) }
+          let!(:service_binding) { create(:service_binding, service_instance: instance) }
+          let!(:service_key) { create(:service_key, service_instance: instance) }
 
           context 'and the broker responds synchronously to the bindings being deleted' do
             before do
@@ -3588,12 +3568,12 @@ RSpec.describe 'V3 service instances' do
 
       context 'when purge is true' do
         let(:query_params) { 'purge=true' }
-        let(:service_plan) { VCAP::CloudController::ServicePlan.make(service: service_offering) }
-        let(:instance) { VCAP::CloudController::ManagedServiceInstance.make(space:, service_plan:) }
+        let(:service_plan) { create(:service_plan, service: service_offering) }
+        let(:instance) { create(:managed_service_instance, space:, service_plan:) }
 
         context 'when broker is space scoped' do
-          let(:service_broker) { VCAP::CloudController::ServiceBroker.make(space:) }
-          let(:service_offering) { VCAP::CloudController::Service.make(requires: %w[route_forwarding], service_broker: service_broker) }
+          let(:service_broker) { create(:service_broker, space:) }
+          let(:service_offering) { create(:service, requires: %w[route_forwarding], service_broker: service_broker) }
 
           context 'as developer' do
             let(:space_dev_headers) do
@@ -3621,12 +3601,12 @@ RSpec.describe 'V3 service instances' do
         end
 
         context 'when broker is global' do
-          let(:service_offering) { VCAP::CloudController::Service.make(requires: %w[route_forwarding]) }
+          let(:service_offering) { create(:service, requires: %w[route_forwarding]) }
 
           before do
-            @binding = VCAP::CloudController::ServiceBinding.make(service_instance: instance)
-            @key = VCAP::CloudController::ServiceKey.make(service_instance: instance)
-            @route = VCAP::CloudController::RouteBinding.make(service_instance: instance)
+            @binding = create(:service_binding, service_instance: instance)
+            @key = create(:service_key, service_instance: instance)
+            @route = create(:route_binding, service_instance: instance)
           end
 
           context 'as developer' do
@@ -3793,8 +3773,8 @@ RSpec.describe 'V3 service instances' do
 
   describe 'POST /v3/service_instances/:guid/relationships/shared_spaces' do
     let(:api_call) { ->(user_headers) { post "/v3/service_instances/#{guid}/relationships/shared_spaces", request_body.to_json, user_headers } }
-    let(:target_space_1) { VCAP::CloudController::Space.make(organization: org) }
-    let(:target_space_2) { VCAP::CloudController::Space.make(organization: org) }
+    let(:target_space_1) { create(:space, organization: org) }
+    let(:target_space_2) { create(:space, organization: org) }
     let(:request_body) do
       {
         'data' => [
@@ -3803,7 +3783,7 @@ RSpec.describe 'V3 service instances' do
         ]
       }
     end
-    let(:service_instance) { VCAP::CloudController::ManagedServiceInstance.make(space:) }
+    let(:service_instance) { create(:managed_service_instance, space:) }
     let(:guid) { service_instance.guid }
     let(:space_dev_headers) do
       org.add_user(user)
@@ -3811,7 +3791,7 @@ RSpec.describe 'V3 service instances' do
       headers_for(user)
     end
     let!(:feature_flag) do
-      VCAP::CloudController::FeatureFlag.make(name: 'service_instance_sharing', enabled: true, error_message: nil)
+      create(:feature_flag, name: 'service_instance_sharing', enabled: true, error_message: nil)
     end
 
     before do
@@ -3829,7 +3809,7 @@ RSpec.describe 'V3 service instances' do
 
       context 'when target organization is suspended' do
         let(:target_space_1) do
-          space = VCAP::CloudController::Space.make
+          space = create(:space)
           space.organization.add_user(user)
           space.organization.update(status: VCAP::CloudController::Organization::SUSPENDED)
           space
@@ -3976,7 +3956,7 @@ RSpec.describe 'V3 service instances' do
       end
 
       context 'user does not have access to one of the target spaces' do
-        let(:no_access_target_space) { VCAP::CloudController::Space.make(organization: org) }
+        let(:no_access_target_space) { create(:space, organization: org) }
         let(:request_body) do
           {
             'data' => [
@@ -4006,7 +3986,7 @@ RSpec.describe 'V3 service instances' do
       end
 
       context 'owns the space' do
-        let(:no_access_target_space) { VCAP::CloudController::Space.make(organization: org) }
+        let(:no_access_target_space) { create(:space, organization: org) }
         let(:request_body) do
           {
             'data' => [
@@ -4038,7 +4018,7 @@ RSpec.describe 'V3 service instances' do
 
     describe 'errors while sharing' do
       context 'service instance is user provided' do
-        let(:service_instance) { VCAP::CloudController::UserProvidedServiceInstance.make(space:) }
+        let(:service_instance) { create(:user_provided_service_instance, space:) }
 
         it 'responds with 422 and the error' do
           api_call.call(space_dev_headers)
@@ -4059,8 +4039,8 @@ RSpec.describe 'V3 service instances' do
 
   describe 'DELETE /v3/service_instances/:guid/relationships/shared_spaces/:space_guid' do
     let(:api_call) { ->(user_headers) { delete "/v3/service_instances/#{guid}/relationships/shared_spaces/#{space_guid}", nil, user_headers } }
-    let(:target_space) { VCAP::CloudController::Space.make(organization: org) }
-    let(:service_instance) { VCAP::CloudController::ManagedServiceInstance.make(space:) }
+    let(:target_space) { create(:space, organization: org) }
+    let(:service_instance) { create(:managed_service_instance, space:) }
     let(:guid) { service_instance.guid }
     let(:space_guid) { target_space.guid }
     let(:space_dev_headers) do
@@ -4069,7 +4049,7 @@ RSpec.describe 'V3 service instances' do
       headers_for(user)
     end
     let!(:feature_flag) do
-      VCAP::CloudController::FeatureFlag.make(name: 'service_instance_sharing', enabled: true, error_message: nil)
+      create(:feature_flag, name: 'service_instance_sharing', enabled: true, error_message: nil)
     end
 
     before do
@@ -4109,11 +4089,11 @@ RSpec.describe 'V3 service instances' do
     end
 
     describe 'when there are bindings in the shared space' do
-      let(:app_1) { VCAP::CloudController::AppModel.make(space: target_space) }
-      let(:app_2) { VCAP::CloudController::AppModel.make(space: target_space) }
+      let(:app_1) { create(:app_model, space: target_space) }
+      let(:app_2) { create(:app_model, space: target_space) }
 
-      let(:binding_1) { VCAP::CloudController::ServiceBinding.make(service_instance: service_instance, app: app_1) }
-      let(:binding_2) { VCAP::CloudController::ServiceBinding.make(service_instance: service_instance, app: app_2) }
+      let(:binding_1) { create(:service_binding, service_instance: service_instance, app: app_1) }
+      let(:binding_2) { create(:service_binding, service_instance: service_instance, app: app_2) }
 
       context 'and the bindings can be deleted synchronously' do
         before do
@@ -4194,7 +4174,7 @@ RSpec.describe 'V3 service instances' do
       end
 
       context 'when instance was not shared to the space' do
-        let(:space_guid) { VCAP::CloudController::Space.make(organization: org).guid }
+        let(:space_guid) { create(:space, organization: org).guid }
 
         it 'responds with 204' do
           api_call.call(space_dev_headers)
@@ -4207,8 +4187,8 @@ RSpec.describe 'V3 service instances' do
 
   describe 'GET /v3/service_instances/:guid/relationships/shared_spaces' do
     let(:user_header) { headers_for(user) }
-    let(:instance) { VCAP::CloudController::ManagedServiceInstance.make(space:) }
-    let(:other_space) { VCAP::CloudController::Space.make }
+    let(:instance) { create(:managed_service_instance, space:) }
+    let(:other_space) { create(:space) }
 
     before do
       share_service_instance(instance, other_space)
@@ -4327,10 +4307,10 @@ RSpec.describe 'V3 service instances' do
 
   describe 'GET /v3/service_instances/:guid/relationships/shared_spaces/usage_summary' do
     let(:guid) { instance.guid }
-    let(:instance) { VCAP::CloudController::ManagedServiceInstance.make(space:) }
-    let(:space_1) { VCAP::CloudController::Space.make }
-    let(:space_2) { VCAP::CloudController::Space.make }
-    let(:space_3) { VCAP::CloudController::Space.make }
+    let(:instance) { create(:managed_service_instance, space:) }
+    let(:space_1) { create(:space) }
+    let(:space_2) { create(:space) }
+    let(:space_3) { create(:space) }
     let(:url) { "/v3/service_instances/#{guid}/relationships/shared_spaces/usage_summary" }
     let(:api_call) { ->(user_headers) { get url, nil, user_headers } }
     let(:bindings_on_space_1) { 1 }
@@ -4338,10 +4318,9 @@ RSpec.describe 'V3 service instances' do
 
     def create_bindings(instance, space:, count:)
       (1..count).each do
-        VCAP::CloudController::ServiceBinding.make(
-          app: VCAP::CloudController::AppModel.make(space:),
-          service_instance: instance
-        )
+        create(:service_binding,
+               app: create(:app_model, space:),
+               service_instance: instance)
       end
     end
 
@@ -4388,7 +4367,7 @@ RSpec.describe 'V3 service instances' do
 
     context 'when the user has access to the service through a shared space' do
       it 'responds with 200 ok' do
-        user = VCAP::CloudController::User.make
+        user = create(:user)
         set_current_user_as_role(role: 'space_developer', org: space_2.organization, space: space_2, user: user)
 
         api_call.call(headers_for(user))
@@ -4421,7 +4400,7 @@ RSpec.describe 'V3 service instances' do
     end
 
     context 'when the user is a member of the org or space the service instance exists in' do
-      let(:instance) { VCAP::CloudController::ManagedServiceInstance.make(space:) }
+      let(:instance) { create(:managed_service_instance, space:) }
       let(:guid) { instance.guid }
 
       let(:expected_codes_and_responses) do
@@ -4470,7 +4449,7 @@ RSpec.describe 'V3 service instances' do
     end
 
     context 'when the user is not a member of the org or space the service instance exists in' do
-      let(:instance) { VCAP::CloudController::ManagedServiceInstance.make }
+      let(:instance) { create(:managed_service_instance) }
       let(:guid) { instance.guid }
 
       let(:expected_codes_and_responses) do

@@ -4,14 +4,14 @@ require 'actions/process_create_from_app_droplet'
 module VCAP::CloudController
   RSpec.describe ProcessCreateFromAppDroplet do
     let(:droplet) { nil }
-    let(:app) { AppModel.make(droplet: droplet, name: 'my_app') }
+    let(:app) { create(:app_model, droplet: droplet, name: 'my_app') }
     let(:user_audit_info) { instance_double(UserAuditInfo).as_null_object }
 
     subject { ProcessCreateFromAppDroplet.new(user_audit_info) }
 
     describe '#create' do
       let(:process_types) { { web: 'thing', other: 'stuff' } }
-      let(:droplet) { DropletModel.make(state: DropletModel::STAGED_STATE, process_types: process_types) }
+      let(:droplet) { create(:droplet_model, state: DropletModel::STAGED_STATE, process_types: process_types) }
 
       context 'when the app has a droplet that has a process type' do
         it 'creates missing processes without setting their commands' do
@@ -25,7 +25,7 @@ module VCAP::CloudController
         end
 
         it 'does not delete existing processes' do
-          existing_process = ProcessModel.make(type: 'manifest-born-process', app: app)
+          existing_process = create(:process_model, type: 'manifest-born-process', app: app)
 
           subject.create(app)
 
@@ -33,15 +33,15 @@ module VCAP::CloudController
         end
 
         it 'does not update the process’s command' do
-          existing_process = ProcessModel.make(type: 'other', command: 'old', app: app, metadata: {})
+          existing_process = create(:process_model, type: 'other', command: 'old', app: app, metadata: {})
           expect do
             subject.create(app)
           end.not_to(change { existing_process.refresh.command })
         end
 
         context 'when the sidecar memory validation fails' do
-          let!(:sidecar) { SidecarModel.make(app: app, name: 'my_sidecar', command: 'athenz', memory: 2000) }
-          let!(:sidecar_process_type) { SidecarProcessTypeModel.make(sidecar: sidecar, type: 'other') }
+          let!(:sidecar) { create(:sidecar_model, app: app, name: 'my_sidecar', command: 'athenz', memory: 2000) }
+          let!(:sidecar_process_type) { create(:sidecar_process_type_model, sidecar: sidecar, type: 'other') }
 
           it 'translates the validation failure to a luxurious error' do
             expect do
@@ -79,8 +79,8 @@ module VCAP::CloudController
       end
 
       context 'when the app has a droplet, but the droplet does not have a process type' do
-        let(:droplet) { DropletModel.make(state: DropletModel::STAGED_STATE, process_types: nil) }
-        let(:app) { AppModel.make(droplet:) }
+        let(:droplet) { create(:droplet_model, state: DropletModel::STAGED_STATE, process_types: nil) }
+        let(:app) { create(:app_model, droplet:) }
 
         it 'raises procfile not found' do
           expect do

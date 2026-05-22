@@ -3,7 +3,7 @@ require 'service_plan_delete'
 
 module VCAP::CloudController
   RSpec.describe ServicePlanDelete do
-    let(:service_plan_model) { ServicePlan.make }
+    let(:service_plan_model) { create(:service_plan) }
 
     it 'can delete service plans' do
       subject.delete(service_plan_model)
@@ -15,7 +15,7 @@ module VCAP::CloudController
 
     context 'when the service plan has a service instance' do
       before do
-        ManagedServiceInstance.make(service_plan: service_plan_model)
+        create(:managed_service_instance, service_plan: service_plan_model)
       end
 
       it 'does not delete the service plan' do
