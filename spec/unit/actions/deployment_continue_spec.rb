@@ -4,22 +4,21 @@ require 'cloud_controller/deployment_updater/dispatcher'
 
 module VCAP::CloudController
   RSpec.describe DeploymentContinue do
-    let(:space) { Space.make }
+    let(:space) { create(:space) }
     let(:instance_count) { 6 }
-    let(:app) { AppModel.make }
-    let(:droplet) { DropletModel.make(app: app, process_types: { 'web' => 'the net' }) }
+    let(:app) { create(:app_model) }
+    let(:droplet) { create(:droplet_model, app: app, process_types: { 'web' => 'the net' }) }
     let(:original_web_process) { ProcessModelFactory.make(space: space, instances: 1, state: 'STARTED', app: app) }
     let(:deploying_web_process) { ProcessModelFactory.make(space: space, instances: instance_count, state: 'STARTED', app: app, type: 'web-deployment-deployment-guid') }
     let(:status_reason) { nil }
     let!(:deployment) do
-      VCAP::CloudController::DeploymentModel.make(
-        state: state,
-        status_value: status_value,
-        status_reason: status_reason,
-        droplet: droplet,
-        app: original_web_process.app,
-        deploying_web_process: deploying_web_process
-      )
+      create(:deployment_model,
+             state: state,
+             status_value: status_value,
+             status_reason: status_reason,
+             droplet: droplet,
+             app: original_web_process.app,
+             deploying_web_process: deploying_web_process)
     end
 
     let(:user_audit_info) { UserAuditInfo.new(user_guid: '1234', user_email: 'eric@example.com', user_name: 'eric') }
@@ -66,15 +65,14 @@ module VCAP::CloudController
 
         context 'and there are no remaining steps' do
           let!(:deployment) do
-            VCAP::CloudController::DeploymentModel.make(
-              state: state,
-              status_value: status_value,
-              status_reason: status_reason,
-              droplet: droplet,
-              app: original_web_process.app,
-              deploying_web_process: deploying_web_process,
-              canary_current_step: 2
-            )
+            create(:deployment_model,
+                   state: state,
+                   status_value: status_value,
+                   status_reason: status_reason,
+                   droplet: droplet,
+                   app: original_web_process.app,
+                   deploying_web_process: deploying_web_process,
+                   canary_current_step: 2)
           end
 
           it 'sets the deployments status to DEPLOYING' do
@@ -112,16 +110,15 @@ module VCAP::CloudController
 
         context 'and there are remaining steps' do
           let!(:deployment) do
-            VCAP::CloudController::DeploymentModel.make(
-              state: state,
-              status_value: status_value,
-              status_reason: status_reason,
-              droplet: droplet,
-              app: original_web_process.app,
-              deploying_web_process: deploying_web_process,
-              canary_current_step: 1,
-              canary_steps: [{ 'instance_weight' => 10 }, { 'instance_weight' => 40 }]
-            )
+            create(:deployment_model,
+                   state: state,
+                   status_value: status_value,
+                   status_reason: status_reason,
+                   droplet: droplet,
+                   app: original_web_process.app,
+                   deploying_web_process: deploying_web_process,
+                   canary_current_step: 1,
+                   canary_steps: [{ 'instance_weight' => 10 }, { 'instance_weight' => 40 }])
           end
 
           it 'sets the deployments status to PREPAUSED' do

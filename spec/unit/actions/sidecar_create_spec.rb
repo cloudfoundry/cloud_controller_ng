@@ -3,8 +3,8 @@ require 'actions/sidecar_create'
 
 module VCAP::CloudController
   RSpec.describe SidecarCreate do
-    let(:app) { AppModel.make }
-    let!(:process) { ProcessModel.make(app: app, memory: 500, type: 'web') }
+    let(:app) { create(:app_model) }
+    let!(:process) { create(:process_model, app: app, memory: 500, type: 'web') }
     let(:params) do
       {
         name: 'sidecar-name',
@@ -72,8 +72,8 @@ module VCAP::CloudController
         end
 
         context 'the memory allocated for the total sidecars exceeds the memory allocated for the associated process' do
-          let!(:first_sidecar) { SidecarModel.make(app_guid: app.guid, memory: 300) }
-          let!(:sptm) { SidecarProcessTypeModel.make(type: process.type, sidecar_guid: first_sidecar.guid, app_guid: app.guid) }
+          let!(:first_sidecar) { create(:sidecar_model, app_guid: app.guid, memory: 300) }
+          let!(:sptm) { create(:sidecar_process_type_model, type: process.type, sidecar_guid: first_sidecar.guid, app_guid: app.guid) }
           let(:params) do
             {
               name: 'sidecar-name',

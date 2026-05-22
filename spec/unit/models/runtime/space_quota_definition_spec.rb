@@ -2,26 +2,26 @@ require 'spec_helper'
 
 module VCAP::CloudController
   RSpec.describe SpaceQuotaDefinition, type: :model do
-    let(:space_quota_definition) { SpaceQuotaDefinition.make }
+    let(:space_quota_definition) { create(:space_quota_definition) }
 
     it { is_expected.to have_timestamp_columns }
 
     describe 'Associations' do
       it { is_expected.to have_associated :organization, associated_instance: ->(space_quota) { space_quota.organization } }
-      it { is_expected.to have_associated :spaces, associated_instance: ->(space_quota) { Space.make(organization: space_quota.organization) } }
+      it { is_expected.to have_associated :spaces, associated_instance: ->(space_quota) { create(:space, organization: space_quota.organization) } }
 
       context 'organization' do
         it 'fails when changing' do
-          expect { SpaceQuotaDefinition.make.organization = Organization.make }.to raise_error(CloudController::Errors::ApiError, /Cannot change organization/)
+          expect { create(:space_quota_definition).organization = create(:organization) }.to raise_error(CloudController::Errors::ApiError, /Cannot change organization/)
         end
       end
     end
 
     describe 'uniqueness' do
       it 'enforces uniqueness of name within an organization' do
-        existing_quota = SpaceQuotaDefinition.make
+        existing_quota = create(:space_quota_definition)
         expect do
-          SpaceQuotaDefinition.make(name: existing_quota.name, organization: existing_quota.organization)
+          create(:space_quota_definition, name: existing_quota.name, organization: existing_quota.organization)
         end.to raise_error(Sequel::ValidationFailed, /unique/)
       end
     end
@@ -195,7 +195,7 @@ module VCAP::CloudController
 
     describe '#destroy' do
       it 'nullifies space_quota_definition on space' do
-        space = Space.make(organization: space_quota_definition.organization)
+        space = create(:space, organization: space_quota_definition.organization)
         space.space_quota_definition = space_quota_definition
         space.save
         expect { space_quota_definition.destroy }.to change { space.reload.space_quota_definition }.from(space_quota_definition).to(nil)

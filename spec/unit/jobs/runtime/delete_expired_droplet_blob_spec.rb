@@ -4,7 +4,7 @@ module VCAP::CloudController
   module Jobs::Runtime
     RSpec.describe DeleteExpiredDropletBlob, job_context: :worker do
       subject(:job) { DeleteExpiredDropletBlob.new(droplet.guid) }
-      let(:droplet) { DropletModel.make }
+      let(:droplet) { create(:droplet_model) }
 
       it { is_expected.to be_a_valid_job }
 

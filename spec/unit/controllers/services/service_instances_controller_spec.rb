@@ -45,8 +45,8 @@ module VCAP::CloudController
       include_context 'permissions'
 
       before do
-        @obj_a = ManagedServiceInstance.make(space: @space_a)
-        @obj_b = ManagedServiceInstance.make(space: @space_b)
+        @obj_a = create(:managed_service_instance, space: @space_a)
+        @obj_b = create(:managed_service_instance, space: @space_b)
       end
 
       def self.user_sees_empty_enumerate(user_role, member_a_ivar, member_b_ivar)
@@ -85,11 +85,11 @@ module VCAP::CloudController
         end
 
         describe 'plans from a private broker' do
-          let(:space) { Space.make }
+          let(:space) { create(:space) }
           let(:organization) { space.organization }
-          let!(:private_broker) { ServiceBroker.make(space_guid: space.guid) }
-          let!(:service_from_a_private_broker) { Service.make(service_broker: private_broker) }
-          let!(:plan_from_a_private_broker) { ServicePlan.make(service: service_from_a_private_broker, public: false) }
+          let!(:private_broker) { create(:service_broker, space_guid: space.guid) }
+          let!(:service_from_a_private_broker) { create(:service, service_broker: private_broker) }
+          let!(:plan_from_a_private_broker) { create(:service_plan, service: service_from_a_private_broker, public: false) }
           let(:broker) { private_broker }
           let!(:developer) { make_developer_for_space(space) }
 
@@ -116,7 +116,7 @@ module VCAP::CloudController
           end
 
           it 'does not allow user to create a service instance for a private broker in a difference space as the broker' do
-            other_space = Space.make(organization:)
+            other_space = create(:space, organization:)
             other_space.add_developer developer
 
             payload = Oj.dump(
@@ -132,9 +132,9 @@ module VCAP::CloudController
         end
 
         describe 'plans with public:false' do
-          let!(:unprivileged_organization) { Organization.make }
-          let!(:private_plan) { ServicePlan.make(:v2, public: false) }
-          let!(:unprivileged_space) { Space.make(organization: unprivileged_organization) }
+          let!(:unprivileged_organization) { create(:organization) }
+          let!(:private_plan) { create(:service_plan, :v2, public: false) }
+          let!(:unprivileged_space) { create(:space, organization: unprivileged_organization) }
           let!(:developer) { make_developer_for_space(unprivileged_space) }
           let(:broker) { private_plan.service_broker }
 
@@ -166,14 +166,14 @@ module VCAP::CloudController
 
           describe 'a user who belongs to a privileged organization' do
             let!(:privileged_organization) do
-              Organization.make.tap do |org|
+              create(:organization).tap do |org|
                 ServicePlanVisibility.create(
                   organization: org,
                   service_plan: private_plan
                 )
               end
             end
-            let!(:privileged_space) { Space.make(organization: privileged_organization) }
+            let!(:privileged_space) { create(:space, organization: privileged_organization) }
 
             before do
               developer.add_organization(privileged_organization)
@@ -224,7 +224,7 @@ module VCAP::CloudController
                            enumerate: 1
 
           it 'prevents a developer from creating a service instance in an unauthorized space' do
-            plan = ServicePlan.make(:v2)
+            plan = create(:service_plan, :v2)
 
             req = Oj.dump(
               name: 'foo',
@@ -276,10 +276,10 @@ module VCAP::CloudController
       context 'with a v2 service' do
         let(:service_broker_url) { "http://example.com/v2/service_instances/#{ServiceInstance.last.guid}" }
         let(:service_broker_url_with_accepts_incomplete) { "#{service_broker_url}?accepts_incomplete=true" }
-        let(:service_broker) { ServiceBroker.make(broker_url: 'http://example.com', auth_username: 'auth_username', auth_password: 'auth_password') }
-        let(:service) { Service.make(service_broker:) }
-        let(:plan) { ServicePlan.make(:v2, service:) }
-        let(:space) { Space.make }
+        let(:service_broker) { create(:service_broker, broker_url: 'http://example.com', auth_username: 'auth_username', auth_password: 'auth_password') }
+        let(:service) { create(:service, service_broker:) }
+        let(:plan) { create(:service_plan, :v2, service:) }
+        let(:space) { create(:space) }
         let(:developer) { make_developer_for_space(space) }
         let(:response_body) do
           {
@@ -327,8 +327,8 @@ module VCAP::CloudController
         end
 
         context 'when the catalog response includes services that require route forwarding' do
-          let(:service) { Service.make(:routing, service_broker:) }
-          let(:plan) { ServicePlan.make(:v2, service:) }
+          let(:service) { create(:service, :routing, service_broker:) }
+          let(:plan) { create(:service_plan, :v2, service:) }
 
           context 'when route service is disabled' do
             before do
@@ -380,8 +380,8 @@ module VCAP::CloudController
         end
 
         context 'when the catalog response includes services that require volume mounts' do
-          let(:service) { Service.make(:volume_mount, service_broker:) }
-          let(:plan) { ServicePlan.make(:v2, service:) }
+          let(:service) { create(:service, :volume_mount, service_broker:) }
+          let(:plan) { create(:service_plan, :v2, service:) }
 
           context 'when volume mounts service is disabled' do
             before do
@@ -465,7 +465,7 @@ module VCAP::CloudController
         end
 
         context 'when the plan has maintenance_info' do
-          let(:plan) { ServicePlan.make(:v2, service: service, maintenance_info: { version: '2.0.0' }) }
+          let(:plan) { create(:service_plan, :v2, service: service, maintenance_info: { version: '2.0.0' }) }
 
           it 'passes along the maintenance_info to the service broker' do
             create_managed_service_instance(accepts_incomplete: 'false')
@@ -943,7 +943,7 @@ module VCAP::CloudController
           end
 
           context 'when a service instance has been shared into a target space' do
-            let(:source_space) { Space.make(organization: space.organization) }
+            let(:source_space) { create(:space, organization: space.organization) }
 
             before do
               source_space.add_developer(developer)
@@ -1110,7 +1110,7 @@ module VCAP::CloudController
         end
 
         context 'when the broker returns "maintenance_info" in the catalog' do
-          let(:plan) { ServicePlan.make(:v2, service: service, maintenance_info: { version: '2.0.0' }) }
+          let(:plan) { create(:service_plan, :v2, service: service, maintenance_info: { version: '2.0.0' }) }
 
           it 'stores it on a service instance level' do
             create_managed_service_instance
@@ -1124,7 +1124,7 @@ module VCAP::CloudController
     end
 
     describe 'GET', '/v2/managed_service_instances' do
-      let(:service_instance) { ManagedServiceInstance.make(gateway_name: Sham.name) }
+      let(:service_instance) { create(:managed_service_instance, gateway_name: Sham.name) }
       let(:space) { service_instance.space }
       let(:developer) { make_developer_for_space(space) }
 
@@ -1147,7 +1147,7 @@ module VCAP::CloudController
 
     describe 'GET /v2/service_instances' do
       context 'dashboard_url' do
-        let(:service_instance) { ManagedServiceInstance.make(gateway_name: Sham.name) }
+        let(:service_instance) { create(:managed_service_instance, gateway_name: Sham.name) }
         let(:space) { service_instance.space }
         let(:developer) { make_developer_for_space(space) }
 
@@ -1164,17 +1164,17 @@ module VCAP::CloudController
           before { set_current_user_as_admin }
 
           context 'when filtering by org guid' do
-            let(:org1) { Organization.make(guid: '1') }
-            let(:org2) { Organization.make(guid: '2') }
-            let(:org3) { Organization.make(guid: '3') }
-            let(:space1) { Space.make(organization: org1) }
-            let(:space2) { Space.make(organization: org2) }
-            let(:space3) { Space.make(organization: org3) }
+            let(:org1) { create(:organization, guid: '1') }
+            let(:org2) { create(:organization, guid: '2') }
+            let(:org3) { create(:organization, guid: '3') }
+            let(:space1) { create(:space, organization: org1) }
+            let(:space2) { create(:space, organization: org2) }
+            let(:space3) { create(:space, organization: org3) }
 
             context 'when the operator is ":"' do
               it 'successfully filters' do
-                instance1 = ManagedServiceInstance.make(name: 'instance-1', space: space1)
-                ManagedServiceInstance.make(name: 'instance-2', space: space2)
+                instance1 = create(:managed_service_instance, name: 'instance-1', space: space1)
+                create(:managed_service_instance, name: 'instance-2', space: space2)
 
                 get "v2/service_instances?q=organization_guid:#{org1.guid}"
 
@@ -1185,9 +1185,9 @@ module VCAP::CloudController
 
               context 'when filtering by other parameters as well' do
                 it 'filters by both parameters' do
-                  instance1 = ManagedServiceInstance.make(name: 'instance-1', space: space1)
-                  ManagedServiceInstance.make(name: 'instance-2', space: space1)
-                  ManagedServiceInstance.make(name: instance1.name, space: space2)
+                  instance1 = create(:managed_service_instance, name: 'instance-1', space: space1)
+                  create(:managed_service_instance, name: 'instance-2', space: space1)
+                  create(:managed_service_instance, name: instance1.name, space: space2)
 
                   get "v2/service_instances?q=organization_guid:#{org1.guid}&q=name:#{instance1.name}"
 
@@ -1201,9 +1201,9 @@ module VCAP::CloudController
 
             context 'when the operator is "IN"' do
               it 'successfully filters' do
-                instance1 = ManagedServiceInstance.make(name: 'inst1', space: space1)
-                instance2 = ManagedServiceInstance.make(name: 'inst2', space: space2)
-                ManagedServiceInstance.make(name: 'inst3', space: space3)
+                instance1 = create(:managed_service_instance, name: 'inst1', space: space1)
+                instance2 = create(:managed_service_instance, name: 'inst2', space: space2)
+                create(:managed_service_instance, name: 'inst3', space: space3)
 
                 get "v2/service_instances?q=organization_guid%20IN%20#{org1.guid},#{org2.guid}"
 
@@ -1216,9 +1216,9 @@ module VCAP::CloudController
             end
 
             context 'when the operator is a comparator' do
-              let!(:instance1) { ManagedServiceInstance.make(name: 'inst1', space: space1) }
-              let!(:instance2) { ManagedServiceInstance.make(name: 'inst2', space: space2) }
-              let!(:instance3) { ManagedServiceInstance.make(name: 'inst3', space: space3) }
+              let!(:instance1) { create(:managed_service_instance, name: 'inst1', space: space1) }
+              let!(:instance2) { create(:managed_service_instance, name: 'inst2', space: space2) }
+              let!(:instance3) { create(:managed_service_instance, name: 'inst3', space: space3) }
 
               it 'successfully filters on <' do
                 get "v2/service_instances?q=organization_guid<#{org2.guid}"
@@ -1261,8 +1261,8 @@ module VCAP::CloudController
 
             context 'when the query is missing an operator or a value' do
               it 'filters by org_guid = nil (to match behavior of filters other than org guid)' do
-                ManagedServiceInstance.make(name: 'instance-1', space: space1)
-                ManagedServiceInstance.make(name: 'instance-2', space: space2)
+                create(:managed_service_instance, name: 'instance-1', space: space1)
+                create(:managed_service_instance, name: 'instance-2', space: space2)
 
                 get 'v2/service_instances?q=organization_guid'
 
@@ -1274,17 +1274,17 @@ module VCAP::CloudController
           end
 
           context 'when filtering by other query parameters' do
-            let!(:org1) { Organization.make(guid: '1') }
-            let!(:org2) { Organization.make(guid: '2') }
-            let!(:org3) { Organization.make(guid: '3') }
-            let!(:space1) { Space.make(organization: org1) }
-            let!(:space2) { Space.make(organization: org2) }
-            let!(:space3) { Space.make(organization: org3) }
+            let!(:org1) { create(:organization, guid: '1') }
+            let!(:org2) { create(:organization, guid: '2') }
+            let!(:org3) { create(:organization, guid: '3') }
+            let!(:space1) { create(:space, organization: org1) }
+            let!(:space2) { create(:space, organization: org2) }
+            let!(:space3) { create(:space, organization: org3) }
 
-            let!(:instance1) { ManagedServiceInstance.make(name: 'instance-1', space: space1) }
-            let!(:instance2) { ManagedServiceInstance.make(name: 'instance-2', space: space1, gateway_name: "hall'") }
-            let!(:instance3) { ManagedServiceInstance.make(name: instance1.name, space: space2) }
-            let!(:instance4) { ManagedServiceInstance.make(name: 'instance-4', space: space3, gateway_name: 'oates') }
+            let!(:instance1) { create(:managed_service_instance, name: 'instance-1', space: space1) }
+            let!(:instance2) { create(:managed_service_instance, name: 'instance-2', space: space1, gateway_name: "hall'") }
+            let!(:instance3) { create(:managed_service_instance, name: instance1.name, space: space2) }
+            let!(:instance4) { create(:managed_service_instance, name: 'instance-4', space: space3, gateway_name: 'oates') }
 
             it 'filters by space_guid' do
               get "v2/service_instances?q=space_guid:#{space1.guid}"
@@ -1296,7 +1296,7 @@ module VCAP::CloudController
             end
 
             it 'filters by service_plan_guid' do
-              service_plan1 = ServicePlan.make(active: false)
+              service_plan1 = create(:service_plan, active: false)
               instance1.service_plan_id = service_plan1.id
               instance1.save
               get "v2/service_instances?q=service_plan_guid:#{service_plan1.guid}"
@@ -1308,8 +1308,8 @@ module VCAP::CloudController
             end
 
             context 'service bindings' do
-              let!(:service_binding_1) { ServiceBinding.make(service_instance: instance1) }
-              let!(:service_binding_2) { ServiceBinding.make(service_instance: instance2) }
+              let!(:service_binding_1) { create(:service_binding, service_instance: instance1) }
+              let!(:service_binding_2) { create(:service_binding, service_instance: instance2) }
 
               it 'filters by service_binding_guid' do
                 get "v2/service_instances?q=service_binding_guid:#{service_binding_1.guid}"
@@ -1322,8 +1322,8 @@ module VCAP::CloudController
             end
 
             context 'service keys' do
-              let!(:service_key_1) { ServiceKey.make(service_instance: instance1, name: 'hall') }
-              let!(:service_key_2) { ServiceKey.make(service_instance: instance2, name: 'oates') }
+              let!(:service_key_1) { create(:service_key, service_instance: instance1, name: 'hall') }
+              let!(:service_key_2) { create(:service_key, service_instance: instance2, name: 'oates') }
 
               it 'filters by service_key_guid' do
                 get "v2/service_instances?q=service_key_guid:#{service_key_1.guid}"
@@ -1336,10 +1336,10 @@ module VCAP::CloudController
             end
 
             context 'gateway_name' do
-              let!(:instance1) { ManagedServiceInstance.make(name: 'instance-1', space: space1) }
-              let!(:instance2) { ManagedServiceInstance.make(name: 'instance-2', space: space1, gateway_name: "hall'") }
-              let!(:instance3) { ManagedServiceInstance.make(name: instance1.name, space: space2) }
-              let!(:instance4) { ManagedServiceInstance.make(name: 'instance-4', space: space3, gateway_name: 'oates') }
+              let!(:instance1) { create(:managed_service_instance, name: 'instance-1', space: space1) }
+              let!(:instance2) { create(:managed_service_instance, name: 'instance-2', space: space1, gateway_name: "hall'") }
+              let!(:instance3) { create(:managed_service_instance, name: instance1.name, space: space2) }
+              let!(:instance4) { create(:managed_service_instance, name: 'instance-4', space: space3, gateway_name: 'oates') }
 
               it 'filters by gateway_name' do
                 get 'v2/service_instances?q=gateway_name:oates'
@@ -1352,7 +1352,7 @@ module VCAP::CloudController
             end
 
             it 'filters by service_binding_guid' do
-              service_plan1 = ServicePlan.make(active: false)
+              service_plan1 = create(:service_plan, active: false)
               instance1.service_plan_id = service_plan1.id
               instance1.save
               get "v2/service_instances?q=service_plan_guid:#{service_plan1.guid}"
@@ -1365,18 +1365,18 @@ module VCAP::CloudController
           end
 
           context 'when filtering by name' do
-            let!(:org1) { Organization.make(guid: '1') }
-            let!(:org2) { Organization.make(guid: '2') }
-            let!(:org3) { Organization.make(guid: '3') }
-            let!(:space1) { Space.make(organization: org1) }
-            let!(:space2) { Space.make(organization: org2) }
-            let!(:space3) { Space.make(organization: org3) }
+            let!(:org1) { create(:organization, guid: '1') }
+            let!(:org2) { create(:organization, guid: '2') }
+            let!(:org3) { create(:organization, guid: '3') }
+            let!(:space1) { create(:space, organization: org1) }
+            let!(:space2) { create(:space, organization: org2) }
+            let!(:space3) { create(:space, organization: org3) }
 
             context 'when the operator is ":"' do
               it 'successfully filters' do
-                instance1 = ManagedServiceInstance.make(name: 'instance-1', space: space1)
-                ManagedServiceInstance.make(name: 'instance-2', space: space1)
-                ManagedServiceInstance.make(name: instance1.name, space: space2)
+                instance1 = create(:managed_service_instance, name: 'instance-1', space: space1)
+                create(:managed_service_instance, name: 'instance-2', space: space1)
+                create(:managed_service_instance, name: instance1.name, space: space2)
 
                 get "v2/service_instances?&q=name:#{instance1.name}"
 
@@ -1389,9 +1389,9 @@ module VCAP::CloudController
 
             context 'when the operator is "IN"' do
               it 'successfully filters' do
-                instance1 = ManagedServiceInstance.make(name: 'instance-1', space: space1)
-                ManagedServiceInstance.make(name: 'instance-2', space: space1)
-                ManagedServiceInstance.make(name: instance1.name, space: space2)
+                instance1 = create(:managed_service_instance, name: 'instance-1', space: space1)
+                create(:managed_service_instance, name: 'instance-2', space: space1)
+                create(:managed_service_instance, name: instance1.name, space: space2)
 
                 get "v2/service_instances?&q=name%20IN%20#{instance1.name}"
 
@@ -1403,9 +1403,9 @@ module VCAP::CloudController
             end
 
             context 'when the operator is a comparator' do
-              let!(:instance1) { ManagedServiceInstance.make(name: 'inst1', space: space1) }
-              let!(:instance2) { ManagedServiceInstance.make(name: 'inst2', space: space2) }
-              let!(:instance3) { ManagedServiceInstance.make(name: 'inst3', space: space3) }
+              let!(:instance1) { create(:managed_service_instance, name: 'inst1', space: space1) }
+              let!(:instance2) { create(:managed_service_instance, name: 'inst2', space: space2) }
+              let!(:instance3) { create(:managed_service_instance, name: 'inst3', space: space3) }
 
               it 'successfully filters on <' do
                 get "v2/service_instances?q=name<#{instance2.name}"
@@ -1450,8 +1450,8 @@ module VCAP::CloudController
 
             context 'when the query is missing an operator or a value' do
               it 'filters by name = nil (to match behavior of filters other than name)' do
-                ManagedServiceInstance.make(name: 'instance-1', space: space1)
-                ManagedServiceInstance.make(name: 'instance-2', space: space2)
+                create(:managed_service_instance, name: 'instance-1', space: space1)
+                create(:managed_service_instance, name: 'instance-2', space: space2)
 
                 get 'v2/service_instances?q=name'
 
@@ -1465,8 +1465,8 @@ module VCAP::CloudController
       end
 
       context 'admin_read_only' do
-        let!(:instance1) { ManagedServiceInstance.make(name: 'inst1') }
-        let!(:instance2) { ManagedServiceInstance.make(name: 'inst2') }
+        let!(:instance1) { create(:managed_service_instance, name: 'inst1') }
+        let!(:instance2) { create(:managed_service_instance, name: 'inst2') }
 
         before { set_current_user_as_admin_read_only }
 
@@ -1484,16 +1484,16 @@ module VCAP::CloudController
         before { set_current_user_as_admin }
 
         let(:results_per_page) { 1 }
-        let(:service_instance) { ManagedServiceInstance.make(gateway_name: Sham.name) }
-        let(:org1) { Organization.make(guid: '1') }
-        let(:org2) { Organization.make(guid: '2') }
-        let(:space1) { Space.make(organization: org1) }
-        let(:space2) { Space.make(organization: org2) }
+        let(:service_instance) { create(:managed_service_instance, gateway_name: Sham.name) }
+        let(:org1) { create(:organization, guid: '1') }
+        let(:org2) { create(:organization, guid: '2') }
+        let(:space1) { create(:space, organization: org1) }
+        let(:space2) { create(:space, organization: org2) }
         let!(:instances) do
-          [ManagedServiceInstance.make(name: 'instance-1', space: space1),
-           ManagedServiceInstance.make(name: 'instance-2', space: space1),
-           ManagedServiceInstance.make(name: 'instance-3', space: space1),
-           ManagedServiceInstance.make(name: 'instance-4', space: space2)]
+          [create(:managed_service_instance, name: 'instance-1', space: space1),
+           create(:managed_service_instance, name: 'instance-2', space: space1),
+           create(:managed_service_instance, name: 'instance-3', space: space1),
+           create(:managed_service_instance, name: 'instance-4', space: space2)]
         end
 
         context 'at page 1' do
@@ -1558,10 +1558,10 @@ module VCAP::CloudController
     end
 
     describe 'GET', '/v2/managed_service_instances/:guid' do
-      let(:space) { Space.make }
+      let(:space) { create(:space) }
       let(:developer) { make_developer_for_space(space) }
-      let(:service_instance) { ManagedServiceInstance.make(space:) }
-      let(:service_plan) { ServicePlan.make(active: false) }
+      let(:service_instance) { create(:managed_service_instance, space:) }
+      let(:service_plan) { create(:service_plan, active: false) }
 
       it 'is deprecated' do
         set_current_user(developer)
@@ -1585,9 +1585,9 @@ module VCAP::CloudController
       let(:developer) { make_developer_for_space(space) }
 
       context 'with a managed service instance' do
-        let(:space) { Space.make }
-        let(:service_instance) { ManagedServiceInstance.make(space:) }
-        let(:service_plan) { ServicePlan.make(active: false) }
+        let(:space) { create(:space) }
+        let(:service_instance) { create(:managed_service_instance, space:) }
+        let(:service_plan) { create(:service_plan, active: false) }
 
         before do
           service_instance.dashboard_url = 'this.should.be.visible.com'
@@ -1627,7 +1627,7 @@ module VCAP::CloudController
       end
 
       context 'with a user provided service instance' do
-        let(:service_instance) { UserProvidedServiceInstance.make }
+        let(:service_instance) { create(:user_provided_service_instance) }
 
         before { set_current_user(developer) }
 
@@ -1662,16 +1662,15 @@ module VCAP::CloudController
 
     describe 'PUT /v2/service_instances/:service_instance_guid' do
       let(:service_broker_url) { "http://example.com/v2/service_instances/#{service_instance.guid}" }
-      let(:service_broker) { ServiceBroker.make(broker_url: 'http://example.com', auth_username: 'auth_username', auth_password: 'auth_password') }
-      let(:service) { Service.make(plan_updateable: true, service_broker: service_broker) }
-      let(:old_service_plan) { ServicePlan.make(:v2, service:) }
-      let(:new_service_plan) { ServicePlan.make(:v2, service:) }
+      let(:service_broker) { create(:service_broker, broker_url: 'http://example.com', auth_username: 'auth_username', auth_password: 'auth_password') }
+      let(:service) { create(:service, plan_updateable: true, service_broker: service_broker) }
+      let(:old_service_plan) { create(:service_plan, :v2, service:) }
+      let(:new_service_plan) { create(:service_plan, :v2, service:) }
       let(:service_instance) do
-        ManagedServiceInstance.make(
-          service_plan: old_service_plan,
-          dashboard_url: 'http://dashboard_url.com',
-          maintenance_info: { version: '1.2.3' }
-        )
+        create(:managed_service_instance,
+               service_plan: old_service_plan,
+               dashboard_url: 'http://dashboard_url.com',
+               maintenance_info: { version: '1.2.3' })
       end
 
       let(:body) do
@@ -1825,8 +1824,8 @@ module VCAP::CloudController
               name: 'new-name'
             )
           end
-          let(:last_operation) { ServiceInstanceOperation.make(state: 'succeeded') }
-          let(:service_instance) { ManagedServiceInstance.make(service_plan: old_service_plan) }
+          let(:last_operation) { create(:service_instance_operation, state: 'succeeded') }
+          let(:service_instance) { create(:managed_service_instance, service_plan: old_service_plan) }
 
           before do
             service_instance.service_instance_operation = last_operation
@@ -1929,8 +1928,8 @@ module VCAP::CloudController
         end
 
         context 'when the service instance is shared' do
-          let(:service_instance) { ManagedServiceInstance.make }
-          let(:target_space) { Space.make }
+          let(:service_instance) { create(:managed_service_instance) }
+          let(:target_space) { create(:space) }
           let(:target_space_developer) { make_developer_for_space(target_space) }
           let(:body) do
             {
@@ -2013,8 +2012,8 @@ module VCAP::CloudController
           end
 
           context 'and a developer in the target space tries to rename a service instance in the target space' do
-            let(:service_instance) { ManagedServiceInstance.make(name: 'r1') }
-            let(:target_space_service_instance) { ManagedServiceInstance.make(name: 'r2', space: target_space) }
+            let(:service_instance) { create(:managed_service_instance, name: 'r1') }
+            let(:target_space_service_instance) { create(:managed_service_instance, name: 'r2', space: target_space) }
 
             before do
               set_current_user(target_space_developer)
@@ -2054,7 +2053,7 @@ module VCAP::CloudController
         end
 
         context 'when the broker does not support service level plan updates but supports plan level updates' do
-          let(:old_service_plan) { ServicePlan.make(:v2, plan_updateable: true, service: service) }
+          let(:old_service_plan) { create(:service_plan, :v2, plan_updateable: true, service: service) }
 
           before { service.update(plan_updateable: false) }
 
@@ -2089,8 +2088,8 @@ module VCAP::CloudController
           end
 
           context 'when the service instance has an operation in progress' do
-            let(:last_operation) { ServiceInstanceOperation.make(state: 'in progress') }
-            let(:service_instance) { ManagedServiceInstance.make(service_plan: old_service_plan) }
+            let(:last_operation) { create(:service_instance_operation, state: 'in progress') }
+            let(:service_instance) { create(:managed_service_instance, service_plan: old_service_plan) }
 
             before do
               service_instance.service_instance_operation = last_operation
@@ -2108,7 +2107,7 @@ module VCAP::CloudController
             before { service.update(plan_updateable: false) }
 
             context 'and the broker does not declare plan_updateable on plan level' do
-              let(:old_service_plan) { ServicePlan.make(:v2, plan_updateable: nil) }
+              let(:old_service_plan) { create(:service_plan, :v2, plan_updateable: nil) }
 
               it 'returns an error response with a useful error to the user' do
                 put "/v2/service_instances/#{service_instance.guid}", body
@@ -2129,7 +2128,7 @@ module VCAP::CloudController
             end
 
             context 'and the broker does not support plan_updateable on plan level' do
-              let(:old_service_plan) { ServicePlan.make(:v2, plan_updateable: false) }
+              let(:old_service_plan) { create(:service_plan, :v2, plan_updateable: false) }
 
               it 'does not update the service plan in the database' do
                 put "/v2/service_instances/#{service_instance.guid}", body
@@ -2149,14 +2148,13 @@ module VCAP::CloudController
           end
 
           context 'when the new service plan is non-bindable' do
-            let(:new_service_plan) { ServicePlan.make(:v2, service: service, bindable: false) }
+            let(:new_service_plan) { create(:service_plan, :v2, service: service, bindable: false) }
 
             context 'and service bindings exist' do
               before do
-                ServiceBinding.make(
-                  app: AppModel.make(space: service_instance.space),
-                  service_instance: service_instance
-                )
+                create(:service_binding,
+                       app: create(:app_model, space: service_instance.space),
+                       service_instance: service_instance)
               end
 
               it 'does not update the service plan in the database' do
@@ -2185,7 +2183,7 @@ module VCAP::CloudController
           end
 
           context 'when the user has no read permissions to the space' do
-            let(:org_auditor) { User.make }
+            let(:org_auditor) { create(:user) }
 
             before do
               service_instance.space.organization.add_auditor(org_auditor)
@@ -2201,7 +2199,7 @@ module VCAP::CloudController
           end
 
           context 'when the user has read but not write permissions to the space' do
-            let(:space_auditor) { User.make }
+            let(:space_auditor) { create(:user) }
 
             before do
               service_instance.space.organization.add_user(space_auditor)
@@ -2233,9 +2231,9 @@ module VCAP::CloudController
           end
 
           context 'when the requested plan belongs to a different service' do
-            let(:other_broker) { ServiceBroker.make }
-            let(:other_service) { Service.make(plan_updateable: true, service_broker: other_broker) }
-            let(:other_plan) { ServicePlan.make(service: other_service) }
+            let(:other_broker) { create(:service_broker) }
+            let(:other_service) { create(:service, plan_updateable: true, service_broker: other_broker) }
+            let(:other_plan) { create(:service_plan, service: other_service) }
 
             let(:body) do
               Oj.dump(
@@ -2277,13 +2275,13 @@ module VCAP::CloudController
         end
 
         describe 'the space_guid parameter' do
-          let(:org) { Organization.make }
-          let(:space) { Space.make(organization: org) }
+          let(:org) { create(:organization) }
+          let(:space) { create(:space, organization: org) }
           let(:developer) { make_developer_for_space(space) }
-          let(:instance) { ManagedServiceInstance.make(space:) }
+          let(:instance) { create(:managed_service_instance, space:) }
 
           it 'prevents a developer from moving the service instance to a space for which he is also a space developer' do
-            space2 = Space.make(organization: org)
+            space2 = create(:space, organization: org)
             space2.add_developer(developer)
 
             move_req = Oj.dump(
@@ -2507,8 +2505,8 @@ module VCAP::CloudController
               name: 'new-name'
             )
           end
-          let(:last_operation) { ServiceInstanceOperation.make(state: 'succeeded') }
-          let(:service_instance) { ManagedServiceInstance.make(service_plan: old_service_plan) }
+          let(:last_operation) { create(:service_instance_operation, state: 'succeeded') }
+          let(:service_instance) { create(:managed_service_instance, service_plan: old_service_plan) }
 
           before do
             service_instance.service_instance_operation = last_operation
@@ -2559,8 +2557,8 @@ module VCAP::CloudController
           end
 
           context 'when the service instance has an operation in progress' do
-            let(:last_operation) { ServiceInstanceOperation.make(state: 'in progress') }
-            let(:service_instance) { ManagedServiceInstance.make(service_plan: old_service_plan) }
+            let(:last_operation) { create(:service_instance_operation, state: 'in progress') }
+            let(:service_instance) { create(:managed_service_instance, service_plan: old_service_plan) }
 
             before do
               service_instance.service_instance_operation = last_operation
@@ -2592,7 +2590,7 @@ module VCAP::CloudController
           end
 
           context 'when the broker did not declare support for plan upgrades' do
-            let(:old_service_plan) { ServicePlan.make(:v2) }
+            let(:old_service_plan) { create(:service_plan, :v2) }
 
             before { service.update(plan_updateable: false) }
 
@@ -2613,7 +2611,7 @@ module VCAP::CloudController
           end
 
           context 'when the user has read but not write permissions' do
-            let(:auditor) { User.make }
+            let(:auditor) { create(:user) }
 
             before do
               service_instance.space.organization.add_auditor(auditor)
@@ -2667,13 +2665,13 @@ module VCAP::CloudController
         end
 
         describe 'and the space_guid is provided' do
-          let(:org) { Organization.make }
-          let(:space) { Space.make(organization: org) }
+          let(:org) { create(:organization) }
+          let(:space) { create(:space, organization: org) }
           let(:developer) { make_developer_for_space(space) }
-          let(:instance) { ManagedServiceInstance.make(space:) }
+          let(:instance) { create(:managed_service_instance, space:) }
 
           it 'prevents a developer from moving the service instance to a space for which he is also a space developer' do
-            space2 = Space.make(organization: org)
+            space2 = create(:space, organization: org)
             space2.add_developer(developer)
 
             move_req = Oj.dump(
@@ -2701,7 +2699,7 @@ module VCAP::CloudController
         end
 
         context 'when maintenance_info is NOT provided in the request, but it exists for the new plan' do
-          let(:new_service_plan) { ServicePlan.make(:v2, service: service, maintenance_info: { version: '1.0.0' }) }
+          let(:new_service_plan) { create(:service_plan, :v2, service: service, maintenance_info: { version: '1.0.0' }) }
           let(:status) { 202 }
 
           context 'when the delayed job finishes successfully' do
@@ -2753,8 +2751,8 @@ module VCAP::CloudController
           { maintenance_info: { version: '2.0.0' } }.to_json
         end
         let(:old_maintenance_info) { { 'version' => '1.0.0' } }
-        let(:plan) { ServicePlan.make(:v2, service: service, maintenance_info: { version: '2.0.0' }) }
-        let(:service_instance) { ManagedServiceInstance.make(service_plan: plan, maintenance_info: old_maintenance_info) }
+        let(:plan) { create(:service_plan, :v2, service: service, maintenance_info: { version: '2.0.0' }) }
+        let(:service_instance) { create(:managed_service_instance, service_plan: plan, maintenance_info: old_maintenance_info) }
 
         context 'when the broker responds synchronously' do
           let(:status) { 200 }
@@ -2890,9 +2888,9 @@ module VCAP::CloudController
 
     describe 'DELETE /v2/service_instances/:service_instance_guid' do
       context 'with a managed service instance' do
-        let(:service) { Service.make(:v2) }
-        let(:service_plan) { ServicePlan.make(:v2, service:) }
-        let!(:service_instance) { ManagedServiceInstance.make(service_plan:) }
+        let(:service) { create(:service, :v2) }
+        let(:service_plan) { create(:service_plan, :v2, service:) }
+        let!(:service_instance) { create(:managed_service_instance, service_plan:) }
         let(:body) { '{}' }
         let(:status) { 200 }
         let(:developer) { make_developer_for_space(space) }
@@ -2951,7 +2949,7 @@ module VCAP::CloudController
         end
 
         context 'when the instance has bindings' do
-          let(:service_binding) { ServiceBinding.make(service_instance:) }
+          let(:service_binding) { create(:service_binding, service_instance:) }
 
           before do
             stub_unbind(service_binding)
@@ -3040,7 +3038,7 @@ module VCAP::CloudController
         end
 
         context 'when the instance has route bindings' do
-          let(:route_binding) { RouteBinding.make }
+          let(:route_binding) { create(:route_binding) }
           let(:service_instance) { route_binding.service_instance }
           let(:route) { route_binding.route }
 
@@ -3079,7 +3077,7 @@ module VCAP::CloudController
         end
 
         context 'when the instance has service keys' do
-          let!(:service_key) { ServiceKey.make(service_instance:) }
+          let!(:service_key) { create(:service_key, service_instance:) }
 
           context 'does not provide the recursive parameter' do
             it 'does not delete the associated service keys' do
@@ -3115,7 +3113,7 @@ module VCAP::CloudController
             end
 
             it 'does not delete the service instance if failed to delete the service key' do
-              service_key_1 = ServiceKey.make(service_instance:)
+              service_key_1 = create(:service_key, service_instance:)
               stub_unbind(service_key_1, status: 500)
 
               expect do
@@ -3129,9 +3127,9 @@ module VCAP::CloudController
         end
 
         context 'when the service instance has been shared' do
-          let(:originating_space) { Space.make }
-          let(:shared_to_space) { Space.make }
-          let!(:service_instance) { ManagedServiceInstance.make(space: originating_space) }
+          let(:originating_space) { create(:space) }
+          let(:shared_to_space) { create(:space) }
+          let!(:service_instance) { create(:managed_service_instance, space: originating_space) }
 
           before do
             service_instance.add_shared_space(shared_to_space)
@@ -3159,10 +3157,9 @@ module VCAP::CloudController
 
             context 'and there are bindings to the shared instance' do
               before do
-                ServiceBinding.make(
-                  app: AppModel.make(space: shared_to_space),
-                  service_instance: service_instance
-                )
+                create(:service_binding,
+                       app: create(:app_model, space: shared_to_space),
+                       service_instance: service_instance)
               end
 
               it 'gives the user an error' do
@@ -3592,7 +3589,7 @@ module VCAP::CloudController
         end
 
         context 'and the instance operation is update in progress' do
-          let(:last_operation) { ServiceInstanceOperation.make(state: 'in progress', type: 'update') }
+          let(:last_operation) { create(:service_instance_operation, state: 'in progress', type: 'update') }
 
           before do
             service_instance.service_instance_operation = last_operation
@@ -3606,7 +3603,7 @@ module VCAP::CloudController
         end
 
         context 'and the instance operation is create in progress' do
-          let(:last_operation) { ServiceInstanceOperation.make(state: 'in progress', type: 'create') }
+          let(:last_operation) { create(:service_instance_operation, state: 'in progress', type: 'create') }
 
           before do
             service_instance.service_instance_operation = last_operation
@@ -3645,8 +3642,8 @@ module VCAP::CloudController
           end
 
           context 'when the service instance has service bindings' do
-            let!(:service_binding_1) { ServiceBinding.make(service_instance:) }
-            let!(:service_binding_2) { ServiceBinding.make(service_instance:) }
+            let!(:service_binding_1) { create(:service_binding, service_instance:) }
+            let!(:service_binding_2) { create(:service_binding, service_instance:) }
 
             it 'deletes the service instance and all of its service bindings' do
               expect(ManagedServiceInstance.find(guid: service_instance.guid)).not_to be_nil
@@ -3661,8 +3658,8 @@ module VCAP::CloudController
           end
 
           context 'when the service instance as service keys' do
-            let!(:service_key_1) { ServiceKey.make(service_instance:) }
-            let!(:service_key_2) { ServiceKey.make(service_instance:) }
+            let!(:service_key_1) { create(:service_key, service_instance:) }
+            let!(:service_key_2) { create(:service_key, service_instance:) }
 
             it 'deletes the service instance and all of its service keys' do
               expect(ManagedServiceInstance.find(guid: service_instance.guid)).not_to be_nil
@@ -3695,7 +3692,7 @@ module VCAP::CloudController
       end
 
       context 'with a user provided service instance' do
-        let!(:service_instance) { UserProvidedServiceInstance.make }
+        let!(:service_instance) { create(:user_provided_service_instance) }
         let(:developer) { make_developer_for_space(service_instance.space) }
 
         before { set_current_user(developer, email: 'user@example.com') }
@@ -3724,7 +3721,7 @@ module VCAP::CloudController
         end
 
         context 'when the instance has bindings' do
-          let!(:service_binding) { ServiceBinding.make(service_instance:) }
+          let!(:service_binding) { create(:service_binding, service_instance:) }
 
           it 'does not delete the associated service bindings' do
             expect do
@@ -3757,14 +3754,14 @@ module VCAP::CloudController
     end
 
     describe 'GET /v2/service_instances/:service_instance_guid/routes' do
-      let(:space) { Space.make }
+      let(:space) { create(:space) }
       let(:manager) { make_manager_for_space(space) }
       let(:auditor) { make_auditor_for_space(space) }
       let(:developer) { make_developer_for_space(space) }
 
       context 'when the user is not a member of the space this instance exists in' do
-        let(:space_a) { Space.make }
-        let(:instance) { ManagedServiceInstance.make(space: space_a) }
+        let(:space_a) { create(:space) }
+        let(:instance) { create(:managed_service_instance, space: space_a) }
 
         def verify_forbidden(user)
           set_current_user(user)
@@ -3786,14 +3783,14 @@ module VCAP::CloudController
       end
 
       context 'when the user is a member of the space this instance exists in' do
-        let(:instance_a) { ManagedServiceInstance.make(:routing, space:) }
-        let(:instance_b) { ManagedServiceInstance.make(:routing, space:) }
-        let(:route_a) { Route.make(space:) }
-        let(:route_b) { Route.make(space:) }
-        let(:route_c) { Route.make(space:) }
-        let!(:route_binding_a) { RouteBinding.make(route: route_a, service_instance: instance_a) }
-        let!(:route_binding_b) { RouteBinding.make(route: route_b, service_instance: instance_a) }
-        let!(:route_binding_c) { RouteBinding.make(route: route_c, service_instance: instance_b) }
+        let(:instance_a) { create(:managed_service_instance, :routing, space:) }
+        let(:instance_b) { create(:managed_service_instance, :routing, space:) }
+        let(:route_a) { create(:route, space:) }
+        let(:route_b) { create(:route, space:) }
+        let(:route_c) { create(:route, space:) }
+        let!(:route_binding_a) { create(:route_binding, route: route_a, service_instance: instance_a) }
+        let!(:route_binding_b) { create(:route_binding, route: route_b, service_instance: instance_a) }
+        let!(:route_binding_c) { create(:route_binding, route: route_c, service_instance: instance_b) }
 
         context 'when the user is a SpaceAuditor' do
           it 'returns the routes that belong to the service instance' do
@@ -3846,10 +3843,10 @@ module VCAP::CloudController
     end
 
     describe 'PUT /v2/service_instances/:service_instance_guid/routes/:route_guid' do
-      let(:space) { Space.make }
+      let(:space) { create(:space) }
       let(:developer) { make_developer_for_space(space) }
-      let(:service_instance) { ManagedServiceInstance.make(:routing, space:) }
-      let(:route) { VCAP::CloudController::Route.make(space:) }
+      let(:service_instance) { create(:managed_service_instance, :routing, space:) }
+      let(:route) { create(:route, space:) }
       let(:opts) { {} }
       let(:service_binding_url_pattern) { %r{/v2/service_instances/#{service_instance.guid}/service_bindings/} }
 
@@ -3900,8 +3897,8 @@ module VCAP::CloudController
       end
 
       context 'when the route is internal' do
-        let(:domain) { SharedDomain.make(name: 'apps.internal', internal: true) }
-        let(:route) { Route.make(domain:, space:) }
+        let(:domain) { create(:shared_domain, name: 'apps.internal', internal: true) }
+        let(:route) { create(:route, domain:, space:) }
 
         it 'raises RouteServiceCannotBeBoundToInternalRoute' do
           put "/v2/service_instances/#{service_instance.guid}/routes/#{route.guid}"
@@ -3978,7 +3975,7 @@ module VCAP::CloudController
       end
 
       context 'when the service instance is not a route service' do
-        let(:service_instance) { ManagedServiceInstance.make(space:) }
+        let(:service_instance) { create(:managed_service_instance, space:) }
 
         it 'raises a 400 error' do
           put "/v2/service_instances/#{service_instance.guid}/routes/#{route.guid}"
@@ -4012,11 +4009,11 @@ module VCAP::CloudController
 
       context 'when the route has an associated service instance' do
         before do
-          RouteBinding.make service_instance:, route:
+          create(:route_binding, service_instance:, route:)
         end
 
         it 'raises RouteAlreadyBoundToServiceInstance' do
-          new_service_instance = ManagedServiceInstance.make(:routing, space:)
+          new_service_instance = create(:managed_service_instance, :routing, space:)
           get "/v2/service_instances/#{new_service_instance.guid}/routes"
           expect(last_response.status).to eq(200)
           expect(Oj.load(last_response.body)['total_results']).to be(0)
@@ -4058,7 +4055,7 @@ module VCAP::CloudController
       context 'when the route is mapped to an app' do
         before do
           first_process = ProcessModelFactory.make(diego: true, space: route.space, state: 'STARTED')
-          RouteMappingModel.make(app: first_process.app, route: route, process_type: first_process.type)
+          create(:route_mapping_model, app: first_process.app, route: route, process_type: first_process.type)
         end
 
         it 'successfully binds to the route' do
@@ -4069,7 +4066,7 @@ module VCAP::CloudController
         context 'and is mapped to multiple apps' do
           before do
             another_process = ProcessModelFactory.make(space: route.space, state: 'STARTED')
-            RouteMappingModel.make(app: another_process.app, route: route, process_type: another_process.type)
+            create(:route_mapping_model, app: another_process.app, route: route, process_type: another_process.type)
           end
 
           it 'successfully binds to the route' do
@@ -4137,8 +4134,8 @@ module VCAP::CloudController
       end
 
       context 'when the route and service_instance are not in the same space' do
-        let(:other_space) { Space.make(organization: space.organization) }
-        let(:service_instance) { ManagedServiceInstance.make(:routing, space: other_space) }
+        let(:other_space) { create(:space, organization: space.organization) }
+        let(:service_instance) { create(:managed_service_instance, :routing, space: other_space) }
 
         before do
           other_space.add_developer(developer)
@@ -4199,7 +4196,7 @@ module VCAP::CloudController
 
           context 'when the instance has a last_operation' do
             before do
-              service_instance.service_instance_operation = ServiceInstanceOperation.make(type: 'create', state: 'succeeded')
+              service_instance.service_instance_operation = create(:service_instance_operation, type: 'create', state: 'succeeded')
             end
 
             it 'rolls back the last_operation of the service instance' do
@@ -4233,15 +4230,15 @@ module VCAP::CloudController
     end
 
     describe 'DELETE /v2/service_instances/:service_instance_guid/routes/:route_guid' do
-      let(:space) { Space.make }
+      let(:space) { create(:space) }
       let(:developer) { make_developer_for_space(space) }
-      let(:service_instance) { ManagedServiceInstance.make(:routing, space:) }
-      let(:route) { Route.make(space:) }
+      let(:service_instance) { create(:managed_service_instance, :routing, space:) }
+      let(:route) { create(:route, space:) }
 
       before { set_current_user developer }
 
       context 'when a service has an associated route' do
-        let!(:route_binding) { RouteBinding.make(route:, service_instance:) }
+        let!(:route_binding) { create(:route_binding, route:, service_instance:) }
 
         before do
           stub_unbind(route_binding)
@@ -4324,10 +4321,10 @@ module VCAP::CloudController
     end
 
     describe 'GET /v2/service_instances/:service_instance_guid/permissions' do
-      let(:org) { Organization.make }
-      let(:space) { Space.make(organization: org) }
-      let(:instance) { ManagedServiceInstance.make(space:) }
-      let(:user) { User.make }
+      let(:org) { create(:organization) }
+      let(:space) { create(:space, organization: org) }
+      let(:instance) { create(:managed_service_instance, space:) }
+      let(:user) { create(:user) }
 
       context 'when the user is a member of the space this instance exists in' do
         describe 'permissions' do
@@ -4400,7 +4397,7 @@ module VCAP::CloudController
       end
 
       context 'when the user is NOT a member of the space this instance exists in' do
-        let(:instance) { ManagedServiceInstance.make }
+        let(:instance) { create(:managed_service_instance) }
 
         it 'returns a JSON payload indicating the user does not have permission to manage this instance' do
           set_current_user(user)
@@ -4433,9 +4430,9 @@ module VCAP::CloudController
     end
 
     describe 'GET /v2/service_instances/:service_instance_guid/shared_from' do
-      let(:org) { Organization.make }
-      let(:space) { Space.make(organization: org) }
-      let(:instance) { ManagedServiceInstance.make(space:) }
+      let(:org) { create(:organization) }
+      let(:space) { create(:space, organization: org) }
+      let(:instance) { create(:managed_service_instance, space:) }
 
       context 'when the service instance does not exist' do
         it 'returns a 404' do
@@ -4455,8 +4452,8 @@ module VCAP::CloudController
       end
 
       context 'when the service instance is shared' do
-        let(:other_org) { Organization.make }
-        let(:other_space) { Space.make(organization: other_org) }
+        let(:other_org) { create(:organization) }
+        let(:other_space) { create(:space, organization: other_org) }
 
         before do
           instance.add_shared_space(other_space)
@@ -4475,7 +4472,7 @@ module VCAP::CloudController
         end
 
         describe 'permissions' do
-          let(:user) { User.make }
+          let(:user) { create(:user) }
 
           context 'when the user is a member of the org/space this instance exists in' do
             {
@@ -4537,7 +4534,7 @@ module VCAP::CloudController
           end
 
           context 'when the user is NOT a member of the space this instance exists in' do
-            let(:instance) { ManagedServiceInstance.make }
+            let(:instance) { create(:managed_service_instance) }
 
             it 'returns a JSON payload indicating the user does not have permission to manage this instance' do
               set_current_user(user)
@@ -4550,9 +4547,9 @@ module VCAP::CloudController
     end
 
     describe 'GET /v2/service_instances/:service_instance_guid/shared_to' do
-      let(:org) { Organization.make }
-      let(:space) { Space.make(organization: org) }
-      let(:instance) { ManagedServiceInstance.make(space:) }
+      let(:org) { create(:organization) }
+      let(:space) { create(:space, organization: org) }
+      let(:instance) { create(:managed_service_instance, space:) }
 
       it 'returns the correct body' do
         set_current_user_as_admin
@@ -4570,8 +4567,8 @@ module VCAP::CloudController
       end
 
       context 'when the service instance is shared into multiple spaces' do
-        let(:space1) { Space.make }
-        let(:space2) { Space.make }
+        let(:space1) { create(:space) }
+        let(:space2) { create(:space) }
 
         before do
           instance.add_shared_space(space1)
@@ -4607,11 +4604,11 @@ module VCAP::CloudController
 
         context 'when there are apps bound to the shared service instance' do
           before do
-            ServiceBinding.make(service_instance: instance, app: AppModel.make(space: space1))
-            ServiceBinding.make(service_instance: instance, app: AppModel.make(space: space1))
-            ServiceBinding.make(service_instance: ServiceInstance.make(space: space1), app: AppModel.make(space: space1))
+            create(:service_binding, service_instance: instance, app: create(:app_model, space: space1))
+            create(:service_binding, service_instance: instance, app: create(:app_model, space: space1))
+            create(:service_binding, service_instance: create(:service_instance, space: space1), app: create(:app_model, space: space1))
 
-            ServiceBinding.make(service_instance: instance, app: AppModel.make(space: space2))
+            create(:service_binding, service_instance: instance, app: create(:app_model, space: space2))
           end
 
           it 'returns the correct bound_app_count' do
@@ -4631,9 +4628,9 @@ module VCAP::CloudController
       end
 
       describe 'permissions' do
-        let(:user) { User.make }
-        let(:target_org) { Organization.make }
-        let(:target_space) { Space.make(organization: target_org) }
+        let(:user) { create(:user) }
+        let(:target_org) { create(:organization) }
+        let(:target_space) { create(:space, organization: target_org) }
 
         before do
           instance.add_shared_space(target_space)
@@ -4713,8 +4710,8 @@ module VCAP::CloudController
         end
 
         context 'when the user is not a member of either the shared_from or shared_to space/org' do
-          let(:random_org) { Organization.make }
-          let(:random_space) { Space.make(organization: random_org) }
+          let(:random_org) { create(:organization) }
+          let(:random_space) { create(:space, organization: random_org) }
 
           {
             'space_developer' => 404,
@@ -4745,14 +4742,14 @@ module VCAP::CloudController
     end
 
     describe 'GET /v2/service_instances/:service_instance_guid/service_keys' do
-      let(:space) { Space.make }
+      let(:space) { create(:space) }
       let(:manager) { make_manager_for_space(space) }
       let(:auditor) { make_auditor_for_space(space) }
       let(:developer) { make_developer_for_space(space) }
 
       context 'when the user is not a member of the space this instance exists in' do
-        let(:space_a) { Space.make }
-        let(:instance) { ManagedServiceInstance.make(space: space_a) }
+        let(:space_a) { create(:space) }
+        let(:instance) { create(:managed_service_instance, space: space_a) }
 
         def verify_forbidden(user)
           set_current_user(user)
@@ -4784,12 +4781,12 @@ module VCAP::CloudController
       end
 
       context 'when the user is a member of the space this instance exists in' do
-        let(:instance_a) { ManagedServiceInstance.make(space:) }
-        let(:instance_b) { ManagedServiceInstance.make(space:) }
-        let!(:service_key_a) { ServiceKey.make(name: 'fake-key-a', service_instance: instance_a) }
-        let!(:service_key_b) { ServiceKey.make(name: 'fake-key-b', service_instance: instance_a) }
-        let!(:service_key_c) { ServiceKey.make(name: 'fake-key-c', service_instance: instance_b) }
-        let!(:service_key_credhub_ref) { ServiceKey.make(:credhub_reference, name: 'credhub-ref-service-key', service_instance: instance_b) }
+        let(:instance_a) { create(:managed_service_instance, space:) }
+        let(:instance_b) { create(:managed_service_instance, space:) }
+        let!(:service_key_a) { create(:service_key, name: 'fake-key-a', service_instance: instance_a) }
+        let!(:service_key_b) { create(:service_key, name: 'fake-key-b', service_instance: instance_a) }
+        let!(:service_key_c) { create(:service_key, name: 'fake-key-c', service_instance: instance_b) }
+        let!(:service_key_credhub_ref) { create(:service_key, :credhub_reference, name: 'credhub-ref-service-key', service_instance: instance_b) }
         let(:credhub_credentials) { { 'username' => 'admin_annie', 'password' => 'realsecur3' } }
 
         before do
@@ -4859,10 +4856,10 @@ module VCAP::CloudController
     end
 
     describe 'GET /v2/service_instances/:service_instance_guid/parameters' do
-      let(:space) { Space.make }
-      let(:service) { Service.make }
-      let(:service_plan) { ServicePlan.make(service:) }
-      let(:instance) { ManagedServiceInstance.make(space:, service_plan:) }
+      let(:space) { create(:space) }
+      let(:service) { create(:service) }
+      let(:service_plan) { create(:service_plan, service:) }
+      let(:instance) { create(:managed_service_instance, space:, service_plan:) }
       let(:developer) { make_developer_for_space(space) }
 
       before { set_current_user developer }
@@ -4877,7 +4874,7 @@ module VCAP::CloudController
       end
 
       context 'when instances_retrievable is set to true' do
-        let(:service) { Service.make(instances_retrievable: true) }
+        let(:service) { create(:service, instances_retrievable: true) }
         let(:body) { {}.to_json }
         let(:response_code) { 200 }
 
@@ -4947,7 +4944,7 @@ module VCAP::CloudController
         end
 
         context 'when the service instance has an operation in progress' do
-          let(:last_operation) { ServiceInstanceOperation.make(state: 'in progress') }
+          let(:last_operation) { create(:service_instance_operation, state: 'in progress') }
 
           before do
             instance.service_instance_operation = last_operation
@@ -4963,7 +4960,7 @@ module VCAP::CloudController
       end
 
       context 'when instances_retrievable is set to false' do
-        let(:service) { Service.make(instances_retrievable: false) }
+        let(:service) { create(:service, instances_retrievable: false) }
 
         it 'returns a 400 with error message' do
           get "/v2/service_instances/#{instance.guid}/parameters"
@@ -4973,7 +4970,7 @@ module VCAP::CloudController
         end
 
         context 'when the service instance has an operation in progress' do
-          let(:last_operation) { ServiceInstanceOperation.make(state: 'in progress') }
+          let(:last_operation) { create(:service_instance_operation, state: 'in progress') }
 
           before do
             instance.service_instance_operation = last_operation
@@ -4990,7 +4987,7 @@ module VCAP::CloudController
       end
 
       context 'when the service is user provided' do
-        let(:instance) { UserProvidedServiceInstance.make(space:) }
+        let(:instance) { create(:user_provided_service_instance, space:) }
 
         it 'returns a 400 with error message' do
           get "/v2/service_instances/#{instance.guid}/parameters"
@@ -5021,7 +5018,7 @@ module VCAP::CloudController
           'org_auditor' => 403,
           'org_billing_manager' => 403
         }.each do |role, expected_return_value|
-          let(:service) { Service.make(instances_retrievable: true) }
+          let(:service) { create(:service, instances_retrievable: true) }
 
           context "as an #{role}" do
             before do
@@ -5045,14 +5042,14 @@ module VCAP::CloudController
         end
 
         context 'when the service instance is shared' do
-          let(:target_space) { Space.make }
+          let(:target_space) { create(:space) }
 
           before do
             instance.add_shared_space(target_space)
           end
 
           %w[space_auditor space_developer space_manager].each do |role|
-            let(:service) { Service.make(instances_retrievable: true) }
+            let(:service) { create(:service, instances_retrievable: true) }
 
             context "as an #{role} in the target space, but with no permissions in the souce space" do
               before do
@@ -5075,11 +5072,11 @@ module VCAP::CloudController
     end
 
     describe 'GET /v2/service_instances/:service_instance_guid/routes/:route_guid/parameters' do
-      let(:space) { Space.make }
-      let(:service) { Service.make(:routing, bindings_retrievable: true) }
-      let(:service_plan) { ServicePlan.make(service:) }
-      let(:instance) { ManagedServiceInstance.make(space:, service_plan:) }
-      let(:route) { Route.make(space:) }
+      let(:space) { create(:space) }
+      let(:service) { create(:service, :routing, bindings_retrievable: true) }
+      let(:service_plan) { create(:service_plan, service:) }
+      let(:instance) { create(:managed_service_instance, space:, service_plan:) }
+      let(:route) { create(:route, space:) }
       let(:developer) { make_developer_for_space(space) }
 
       before { set_current_user developer }
@@ -5115,10 +5112,10 @@ module VCAP::CloudController
       end
 
       context 'when the route binding does exist' do
-        let!(:route_binding) { RouteBinding.make(service_instance: instance, route: route) }
+        let!(:route_binding) { create(:route_binding, service_instance: instance, route: route) }
 
         context 'when bindings_retrievable is set to false' do
-          let(:service) { Service.make(:routing, bindings_retrievable: false) }
+          let(:service) { create(:service, :routing, bindings_retrievable: false) }
 
           it 'returns a 400' do
             get "/v2/service_instances/#{instance.guid}/routes/#{route.guid}/parameters"
@@ -5205,7 +5202,7 @@ module VCAP::CloudController
           end
 
           context 'when the service instance is shared' do
-            let(:target_space) { Space.make }
+            let(:target_space) { create(:space) }
 
             before do
               instance.add_shared_space(target_space)
@@ -5257,29 +5254,27 @@ module VCAP::CloudController
     end
 
     describe 'Validation messages' do
-      let(:paid_quota) { QuotaDefinition.make(total_services: 1) }
+      let(:paid_quota) { create(:quota_definition, total_services: 1) }
       let(:free_quota_with_no_services) do
-        QuotaDefinition.make(
-          total_services: 0,
-          non_basic_services_allowed: false
-        )
+        create(:quota_definition,
+               total_services: 0,
+               non_basic_services_allowed: false)
       end
       let(:free_quota_with_one_service) do
-        QuotaDefinition.make(
-          total_services: 1,
-          non_basic_services_allowed: false
-        )
+        create(:quota_definition,
+               total_services: 1,
+               non_basic_services_allowed: false)
       end
-      let(:paid_plan) { ServicePlan.make(:v2) }
-      let(:free_plan) { ServicePlan.make(:v2, free: true) }
-      let(:org) { Organization.make(quota_definition: paid_quota) }
-      let(:space) { Space.make(organization: org) }
+      let(:paid_plan) { create(:service_plan, :v2) }
+      let(:free_plan) { create(:service_plan, :v2, free: true) }
+      let(:org) { create(:organization, quota_definition: paid_quota) }
+      let(:space) { create(:space, organization: org) }
       let(:developer) { make_developer_for_space(space) }
 
       before { set_current_user(developer) }
 
       it 'returns duplicate name message correctly' do
-        existing_service_instance = ManagedServiceInstance.make(space:)
+        existing_service_instance = create(:managed_service_instance, space:)
         service_instance_params = {
           name: existing_service_instance.name,
           space_guid: space.guid,
@@ -5292,7 +5287,7 @@ module VCAP::CloudController
       end
 
       it 'returns space quota exceeded message correctly' do
-        space.space_quota_definition = SpaceQuotaDefinition.make(total_services: 0, organization: space.organization)
+        space.space_quota_definition = create(:space_quota_definition, total_services: 0, organization: space.organization)
         space.save
         service_instance_params = {
           name: 'name',
@@ -5306,7 +5301,7 @@ module VCAP::CloudController
       end
 
       it 'returns service plan not allowed by space quota message correctly' do
-        space.space_quota_definition = SpaceQuotaDefinition.make(non_basic_services_allowed: false, organization: space.organization)
+        space.space_quota_definition = create(:space_quota_definition, non_basic_services_allowed: false, organization: space.organization)
         space.save
         service_instance_params = {
           name: 'name',
@@ -5376,9 +5371,9 @@ module VCAP::CloudController
 
       context 'invalid space guid' do
         it 'returns a user friendly error' do
-          org = Organization.make
-          space = Space.make(organization: org)
-          plan = ServicePlan.make(:v2, free: true)
+          org = create(:organization)
+          space = create(:space, organization: org)
+          plan = create(:service_plan, :v2, free: true)
 
           body = {
             'space_guid' => 'invalid_space_guid',
@@ -5395,8 +5390,8 @@ module VCAP::CloudController
       end
 
       it 'returns service does not support routes message correctly' do
-        route = Route.make
-        service_instance = ManagedServiceInstance.make
+        route = create(:route)
+        service_instance = create(:managed_service_instance)
 
         set_current_user_as_admin
         put "/v2/service_instances/#{service_instance.guid}/routes/#{route.guid}"

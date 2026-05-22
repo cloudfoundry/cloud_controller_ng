@@ -9,7 +9,7 @@ module VCAP::CloudController
       let(:user_audit_info) { UserAuditInfo.new(user_email: 'run@lola.run', user_guid: user_guid) }
       let(:action) { described_class.new(type, user_audit_info) }
       let(:binding_event_repo) { instance_double(Repositories::ServiceGenericBindingEventRepository) }
-      let(:space) { Space.make }
+      let(:space) { create(:space) }
 
       before do
         allow(Repositories::ServiceGenericBindingEventRepository).to receive(:new).with(audit_event).and_return(binding_event_repo)
@@ -42,7 +42,7 @@ module VCAP::CloudController
 
       RSpec.shared_examples 'managed service instance binding delete' do |klass|
         context 'managed service instance' do
-          let(:service_instance) { ManagedServiceInstance.make(space:) }
+          let(:service_instance) { create(:managed_service_instance, space:) }
 
           it_behaves_like 'service binding deletion', klass
 
@@ -80,7 +80,7 @@ module VCAP::CloudController
 
       RSpec.shared_examples 'polling last operation' do |klass|
         describe '#poll' do
-          let(:service_instance) { ManagedServiceInstance.make(space:) }
+          let(:service_instance) { create(:managed_service_instance, space:) }
           let(:description) { Sham.description }
           let(:state) { 'in progress' }
           let(:last_operation_response) do
@@ -195,7 +195,7 @@ module VCAP::CloudController
       describe 'app binding' do
         let(:audit_event) { 'service_binding' }
         let(:type) { :credential }
-        let(:app) { AppModel.make(space:) }
+        let(:app) { create(:app_model, space:) }
         let(:last_operation_type) { 'create' }
         let(:last_operation_state) { 'succeeded' }
         let(:binding) do
@@ -206,7 +206,7 @@ module VCAP::CloudController
         end
 
         describe '#blocking_operation_in_progress?' do
-          let(:service_instance) { ManagedServiceInstance.make(space:) }
+          let(:service_instance) { create(:managed_service_instance, space:) }
 
           it_behaves_like 'blocking operation in progress'
         end
@@ -215,7 +215,7 @@ module VCAP::CloudController
           it_behaves_like 'managed service instance binding delete', ServiceBinding
 
           context 'user-provided service instance' do
-            let(:service_instance) { UserProvidedServiceInstance.make(space:) }
+            let(:service_instance) { create(:user_provided_service_instance, space:) }
 
             it_behaves_like 'successful credential binding delete', ServiceBinding
           end
@@ -239,7 +239,7 @@ module VCAP::CloudController
         end
 
         describe '#blocking_operation_in_progress?' do
-          let(:service_instance) { ManagedServiceInstance.make(space:) }
+          let(:service_instance) { create(:managed_service_instance, space:) }
 
           it_behaves_like 'blocking operation in progress'
         end

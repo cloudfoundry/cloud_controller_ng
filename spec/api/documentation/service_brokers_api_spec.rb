@@ -3,10 +3,10 @@ require 'rspec_api_documentation/dsl'
 
 RSpec.resource 'Service Brokers', type: %i[api legacy_api] do
   let(:admin_auth_header) { admin_headers['HTTP_AUTHORIZATION'] }
-  let!(:service_brokers) { 3.times { VCAP::CloudController::ServiceBroker.make } }
+  let!(:service_brokers) { FactoryBot.create_list(:service_broker, 3) }
   let(:service_broker) { VCAP::CloudController::ServiceBroker.first }
   let(:guid) { service_broker.guid }
-  let(:space) { VCAP::CloudController::Space.make }
+  let(:space) { FactoryBot.create(:space) }
   let(:broker_catalog) do
     {
       'services' => [

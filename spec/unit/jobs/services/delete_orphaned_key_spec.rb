@@ -4,7 +4,7 @@ module VCAP::CloudController
   module Jobs::Services
     RSpec.describe DeleteOrphanedKey, job_context: :worker do
       let(:client) { instance_double(VCAP::Services::ServiceBrokers::V2::Client) }
-      let(:service_instance) { VCAP::CloudController::ManagedServiceInstance.make }
+      let(:service_instance) { create(:managed_service_instance) }
       let(:service_instance_guid) { service_instance.guid }
       let(:key_guid) { 'fake-key-guid' }
       let(:service_key_name) { 'fake-service-key-name' }

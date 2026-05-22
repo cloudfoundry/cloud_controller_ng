@@ -6,7 +6,7 @@ module VCAP::CloudController
       let(:event_repository) { double(:event_repository) }
       let(:event_creation_method) { :record_service_creation_event }
       let(:event_type) { 'audit.service.create' }
-      let(:model) { Service.make }
+      let(:model) { create(:service) }
       let(:params) { {} }
 
       subject(:audit_event_job) do

@@ -4,9 +4,9 @@ require 'actions/service_instance_unshare'
 module VCAP::CloudController
   RSpec.describe ServiceInstanceUnshare do
     let(:service_instance_unshare) { ServiceInstanceUnshare.new }
-    let(:service_instance) { ManagedServiceInstance.make }
+    let(:service_instance) { create(:managed_service_instance) }
     let(:user_audit_info) { UserAuditInfo.new(user_guid: 'user-guid-1', user_email: 'user@email.com') }
-    let(:target_space) { Space.make }
+    let(:target_space) { create(:space) }
     let(:accepts_incomplete) { true }
 
     before do
@@ -30,8 +30,8 @@ module VCAP::CloudController
       end
 
       context 'when the service plan is inactive' do
-        let(:service_plan) { ServicePlan.make(active: false) }
-        let(:service_instance) { ManagedServiceInstance.make(service_plan:) }
+        let(:service_plan) { create(:service_plan, active: false) }
+        let(:service_instance) { create(:managed_service_instance, service_plan:) }
 
         it 'unshares successfully' do
           service_instance_unshare.unshare(service_instance, target_space, user_audit_info)
@@ -40,9 +40,9 @@ module VCAP::CloudController
       end
 
       context 'when bindings exist in the target space' do
-        let(:app) { AppModel.make(space: target_space, name: 'myapp') }
+        let(:app) { create(:app_model, space: target_space, name: 'myapp') }
         let(:delete_binding_action) { instance_double(V3::ServiceCredentialBindingDelete) }
-        let(:service_binding) { ServiceBinding.make(app:, service_instance:) }
+        let(:service_binding) { create(:service_binding, app:, service_instance:) }
 
         before do
           allow(V3::ServiceCredentialBindingDelete).to receive(:new).with(:credential, user_audit_info) { delete_binding_action }
@@ -66,12 +66,12 @@ module VCAP::CloudController
         end
 
         context 'when bindings have delete operations in progress' do
-          let!(:app_1) { AppModel.make(space: target_space, name: 'myapp1') }
-          let!(:app_2) { AppModel.make(space: target_space, name: 'myapp2') }
-          let!(:app_3) { AppModel.make(space: target_space, name: 'myapp3') }
-          let!(:service_binding_1) { ServiceBinding.make(app: app_1, service_instance: service_instance) }
-          let!(:service_binding_2) { ServiceBinding.make(app: app_2, service_instance: service_instance) }
-          let!(:service_binding_3) { ServiceBinding.make(app: app_3, service_instance: service_instance) }
+          let!(:app_1) { create(:app_model, space: target_space, name: 'myapp1') }
+          let!(:app_2) { create(:app_model, space: target_space, name: 'myapp2') }
+          let!(:app_3) { create(:app_model, space: target_space, name: 'myapp3') }
+          let!(:service_binding_1) { create(:service_binding, app: app_1, service_instance: service_instance) }
+          let!(:service_binding_2) { create(:service_binding, app: app_2, service_instance: service_instance) }
+          let!(:service_binding_3) { create(:service_binding, app: app_3, service_instance: service_instance) }
 
           before do
             allow(delete_binding_action).to receive(:delete).and_return({ finished: false })
@@ -102,7 +102,7 @@ module VCAP::CloudController
             err = StandardError.new('some-error')
             allow(delete_binding_action).to receive(:delete).with(service_binding).and_raise(err)
 
-            service_binding.service_binding_operation = ServiceBindingOperation.make(state: 'in progress', type: 'delete')
+            service_binding.service_binding_operation = create(:service_binding_operation, state: 'in progress', type: 'delete')
           end
 
           it 'returns only the error from delete action' do
@@ -117,9 +117,9 @@ module VCAP::CloudController
     end
 
     context 'when bindings exist in the source space' do
-      let(:app) { AppModel.make(space: service_instance.space, name: 'myapp') }
+      let(:app) { create(:app_model, space: service_instance.space, name: 'myapp') }
       let(:delete_binding_action) { instance_double(ServiceBindingDelete) }
-      let(:service_binding) { ServiceBinding.make(app:, service_instance:) }
+      let(:service_binding) { create(:service_binding, app:, service_instance:) }
 
       it 'unshares without deleting the binding' do
         allow(ServiceBindingDelete).to receive(:new).with(user_audit_info, accepts_incomplete) { delete_binding_action }

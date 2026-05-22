@@ -3,9 +3,9 @@ require 'actions/services/locks/deleter_lock'
 
 module VCAP::CloudController
   RSpec.describe VCAP::CloudController::DeleterLock do
-    let(:service_instance) { ManagedServiceInstance.make }
+    let(:service_instance) { create(:managed_service_instance) }
     let(:deleter_lock) { DeleterLock.new service_instance }
-    let(:operation) { ServiceInstanceOperation.make(state: 'override me') }
+    let(:operation) { create(:service_instance_operation, state: 'override me') }
 
     # in MySQL, milliseconds will get truncated, so to make the test
     # deterministic we need to truncate them in the setup as well,
@@ -38,10 +38,8 @@ module VCAP::CloudController
     describe 'locking again' do
       context 'when previous operation is not create in progress' do
         let(:operation) do
-          ServiceInstanceOperation.make(
-            state: 'in progress',
-            type: 'NOT create'
-          )
+          create(:service_instance_operation, state: 'in progress',
+                                              type: 'NOT create')
         end
 
         it 'does not let you lock again' do
@@ -53,10 +51,8 @@ module VCAP::CloudController
 
       context 'when previous operation is create in progress' do
         let(:operation) do
-          ServiceInstanceOperation.make(
-            state: 'in progress',
-            type: 'create'
-          )
+          create(:service_instance_operation, state: 'in progress',
+                                              type: 'create')
         end
 
         it 'lets you lock again' do
@@ -68,10 +64,8 @@ module VCAP::CloudController
 
       context 'when previous operation is create not in progress' do
         let(:operation) do
-          ServiceInstanceOperation.make(
-            state: 'NOT in progress',
-            type: 'create'
-          )
+          create(:service_instance_operation, state: 'NOT in progress',
+                                              type: 'create')
         end
 
         it 'lets you lock again' do
@@ -105,10 +99,8 @@ module VCAP::CloudController
 
         context 'when previous operation is create and NOT in progress' do
           let(:operation) do
-            ServiceInstanceOperation.make(
-              state: 'NOT in progress',
-              type: 'create'
-            )
+            create(:service_instance_operation, state: 'NOT in progress',
+                                                type: 'create')
           end
 
           it 'sets the last operation of the service instance to delete failed' do
@@ -123,11 +115,9 @@ module VCAP::CloudController
 
         context 'when previous operation is create and in progress' do
           let(:operation) do
-            ServiceInstanceOperation.make(
-              state: 'in progress',
-              type: 'create',
-              created_at: previous_operation_time
-            )
+            create(:service_instance_operation, state: 'in progress',
+                                                type: 'create',
+                                                created_at: previous_operation_time)
           end
 
           it 'sets the last operation of the service instance to create in progress' do

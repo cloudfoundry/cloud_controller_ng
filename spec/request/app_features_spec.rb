@@ -2,21 +2,20 @@ require 'spec_helper'
 require 'request_spec_shared_examples'
 
 RSpec.describe 'App Features' do
-  let(:user) { VCAP::CloudController::User.make }
+  let(:user) { create(:user) }
   let(:user_header) { headers_for(user, email: Sham.email, user_name: 'some-username') }
   let(:admin_header) { admin_headers_for(user) }
-  let(:org) { VCAP::CloudController::Organization.make(created_at: 3.days.ago) }
-  let(:space) { VCAP::CloudController::Space.make(organization: org) }
+  let(:org) { create(:organization, created_at: 3.days.ago) }
+  let(:space) { create(:space, organization: org) }
   let(:service_binding_k8s_enabled) { true }
   let(:file_based_vcap_services_enabled) { false }
   let(:request_body_enabled) { { body: { enabled: true } } }
   let(:app_model) do
-    VCAP::CloudController::AppModel.make(
-      space: space,
-      enable_ssh: true,
-      service_binding_k8s_enabled: service_binding_k8s_enabled,
-      file_based_vcap_services_enabled: file_based_vcap_services_enabled
-    )
+    create(:app_model,
+           space: space,
+           enable_ssh: true,
+           service_binding_k8s_enabled: service_binding_k8s_enabled,
+           file_based_vcap_services_enabled: file_based_vcap_services_enabled)
   end
 
   describe 'GET /v3/apps/:guid/features' do

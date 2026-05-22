@@ -7,16 +7,16 @@ module VCAP::CloudController
     describe 'Associations' do
       it { is_expected.to have_associated :service }
       it { is_expected.to have_associated :service_instances, class: ManagedServiceInstance }
-      it { is_expected.to have_associated :service_plan_visibilities, { test_instance: ServicePlan.make(public: false) } }
+      it { is_expected.to have_associated :service_plan_visibilities, { test_instance: create(:service_plan, public: false) } }
       it { is_expected.to have_associated :labels, class: ServicePlanLabelModel }
       it { is_expected.to have_associated :annotations, class: ServicePlanAnnotationModel }
     end
 
     describe 'uniqueness' do
       it 'enforces uniqueness of name within a service' do
-        existing = ServicePlan.make
+        existing = create(:service_plan)
         expect do
-          ServicePlan.make(name: existing.name, service: existing.service)
+          create(:service_plan, name: existing.name, service: existing.service)
         end.to raise_error(Sequel::ValidationFailed, /already has a plan named/)
       end
     end
@@ -29,8 +29,8 @@ module VCAP::CloudController
       it { is_expected.to strip_whitespace :name }
 
       context 'when the unique_id is not unique across different services' do
-        let(:existing_service_plan) { ServicePlan.make }
-        let(:service_plan) { ServicePlan.make(unique_id: existing_service_plan.unique_id, service: Service.make) }
+        let(:existing_service_plan) { create(:service_plan) }
+        let(:service_plan) { create(:service_plan, unique_id: existing_service_plan.unique_id, service: create(:service)) }
 
         it 'is valid' do
           expect(service_plan).to be_valid
@@ -39,12 +39,12 @@ module VCAP::CloudController
 
       context 'for plans belonging to private brokers' do
         it 'does not allow the plan to be public' do
-          space = Space.make
-          private_broker = ServiceBroker.make(space:)
-          service = Service.make service_broker: private_broker
+          space = create(:space)
+          private_broker = create(:service_broker, space:)
+          service = create(:service, service_broker: private_broker)
 
           expect do
-            ServicePlan.make service: service, public: true
+            create(:service_plan, service: service, public: true)
           end.to raise_error Sequel::ValidationFailed, 'public may not be true for plans belonging to private service brokers'
         end
       end
@@ -90,20 +90,20 @@ module VCAP::CloudController
     describe '#save' do
       context 'before_filters' do
         it 'defaults public to true if a value is not supplied' do
-          service = Service.make
+          service = create(:service)
 
-          expect(ServicePlan.make(service: service, public: false).public).to be(false)
-          expect(ServicePlan.make(service: service, public: true).public).to be(true)
-          expect(ServicePlan.make(service:).public).to be(true)
+          expect(create(:service_plan, service: service, public: false).public).to be(false)
+          expect(create(:service_plan, service: service, public: true).public).to be(true)
+          expect(create(:service_plan, service:).public).to be(true)
         end
 
         it 'defaults to false if a value is not supplied but a private broker is' do
-          space = Space.make
-          private_broker = ServiceBroker.make space_id: space.id, space_guid: space.guid
-          service = Service.make service_broker: private_broker
+          space = create(:space)
+          private_broker = create(:service_broker, space_id: space.id, space_guid: space.guid)
+          service = create(:service, service_broker: private_broker)
 
-          expect(ServicePlan.make(service: service, public: false).public).to be(false)
-          expect(ServicePlan.make(service:).public).to be(false)
+          expect(create(:service_plan, service: service, public: false).public).to be(false)
+          expect(create(:service_plan, service:).public).to be(false)
         end
       end
 
@@ -112,7 +112,7 @@ module VCAP::CloudController
           let(:attrs) { { unique_id: nil } }
 
           it 'generates guid for the unique_id' do
-            plan = ServicePlan.make(attrs)
+            plan = create(:service_plan, attrs)
             expect(plan.unique_id).to be_a_guid
           end
         end
@@ -121,25 +121,25 @@ module VCAP::CloudController
           let(:attrs) { { unique_id: Sham.guid } }
 
           it 'persists the given unique_id' do
-            plan = ServicePlan.make(attrs)
+            plan = create(:service_plan, attrs)
             expect(plan.unique_id).to eq(attrs[:unique_id])
           end
         end
 
         context 'when a plan with the same name has already been added for this service' do
-          let(:service) { Service.make(label: 'my-service') }
+          let(:service) { create(:service, label: 'my-service') }
 
-          before { ServicePlan.make(name: 'dumbo', service_id: service.id) }
+          before { create(:service_plan, name: 'dumbo', service_id: service.id) }
 
           it 'throws a useful error' do
-            expect { ServicePlan.make(name: 'dumbo', service_id: service.id) }.
+            expect { create(:service_plan, name: 'dumbo', service_id: service.id) }.
               to raise_exception('Plan names must be unique within a service. Service my-service already has a plan named dumbo')
           end
         end
       end
 
       context 'on update' do
-        let(:plan) { ServicePlan.make }
+        let(:plan) { create(:service_plan) }
 
         context 'when the unique_id is unset' do
           before { plan.unique_id = nil }
@@ -162,12 +162,12 @@ module VCAP::CloudController
     end
 
     describe '#destroy' do
-      let(:service_plan) { ServicePlan.make(public: false) }
+      let(:service_plan) { create(:service_plan, public: false) }
 
       it 'destroys associated dependencies' do
-        service_plan_visibility = ServicePlanVisibility.make(service_plan:)
-        service_plan_label = ServicePlanLabelModel.make(resource_guid: service_plan.guid, key_name: 'flavor', value: 'pear')
-        service_plan_annotation = ServicePlanAnnotationModel.make(resource_guid: service_plan.guid, key_name: 'colour', value: 'purple')
+        service_plan_visibility = create(:service_plan_visibility, service_plan:)
+        service_plan_label = create(:service_plan_label_model, resource_guid: service_plan.guid, key_name: 'flavor', value: 'pear')
+        service_plan_annotation = create(:service_plan_annotation_model, resource_guid: service_plan.guid, key_name: 'colour', value: 'purple')
 
         service_plan.destroy
 
@@ -177,8 +177,8 @@ module VCAP::CloudController
       end
 
       it 'cannot be destroyed if associated service_instances exist' do
-        service_plan = ServicePlan.make
-        ManagedServiceInstance.make(service_plan:)
+        service_plan = create(:service_plan)
+        create(:managed_service_instance, service_plan:)
         expect do
           service_plan.destroy
         end.to raise_error Sequel::DatabaseError, /foreign key/
@@ -186,16 +186,16 @@ module VCAP::CloudController
     end
 
     describe '.plan_ids_from_private_brokers' do
-      let(:organization) { Organization.make }
-      let(:space_1) { Space.make(organization: organization, id: Space.count + 9998) }
-      let(:space_2) { Space.make(organization: organization, id: Space.count + 9999) }
-      let(:user) { User.make }
-      let(:broker_1) { ServiceBroker.make(space: space_1) }
-      let(:broker_2) { ServiceBroker.make(space: space_2) }
-      let(:service_1) { Service.make(service_broker: broker_1) }
-      let(:service_2) { Service.make(service_broker: broker_2) }
-      let!(:service_plan_1) { ServicePlan.make(service: service_1, public: false) }
-      let!(:service_plan_2) { ServicePlan.make(service: service_2, public: false) }
+      let(:organization) { create(:organization) }
+      let(:space_1) { create(:space, organization: organization, id: Space.count + 9998) }
+      let(:space_2) { create(:space, organization: organization, id: Space.count + 9999) }
+      let(:user) { create(:user) }
+      let(:broker_1) { create(:service_broker, space: space_1) }
+      let(:broker_2) { create(:service_broker, space: space_2) }
+      let(:service_1) { create(:service, service_broker: broker_1) }
+      let(:service_2) { create(:service, service_broker: broker_2) }
+      let!(:service_plan_1) { create(:service_plan, service: service_1, public: false) }
+      let!(:service_plan_2) { create(:service_plan, service: service_2, public: false) }
 
       before do
         organization.add_user user
@@ -208,9 +208,9 @@ module VCAP::CloudController
       end
 
       it "doesn't return plans for private services in spaces the user doesn't have roles in" do
-        broker = ServiceBroker.make
-        service = Service.make(service_broker: broker)
-        plan = ServicePlan.make(service: service, public: false)
+        broker = create(:service_broker)
+        service = create(:service, service_broker: broker)
+        plan = create(:service_plan, service: service, public: false)
 
         expect(ServicePlan.plan_ids_from_private_brokers(user).select_map(:service_plans__id)).not_to include plan
       end
@@ -218,21 +218,21 @@ module VCAP::CloudController
 
     describe '.plan_ids_for_visible_service_instances' do
       context 'when the service plans have service instances associated with them' do
-        let(:organization) { Organization.make }
-        let(:space) { Space.make(organization:) }
-        let(:other_space) { Space.make(organization:) }
-        let(:user) { User.make }
-        let(:broker) { ServiceBroker.make }
-        let(:service) { Service.make(service_broker: broker) }
-        let(:service_plan) { ServicePlan.make(service: service, public: true, active: true) }
-        let(:non_public_plan) { ServicePlan.make(service: service, public: false, active: true) }
-        let(:inactive_plan) { ServicePlan.make(service: service, public: true, active: false) }
-        let(:other_plan) { ServicePlan.make(service: service, public: true, active: true) }
-        let!(:service_instance) { ManagedServiceInstance.make(service_plan:, space:) }
-        let!(:service_instance2) { ManagedServiceInstance.make(service_plan: non_public_plan, space: space) }
-        let!(:service_instance3) { ManagedServiceInstance.make(service_plan: inactive_plan, space: space) }
-        let!(:user_provided_service_instance) { UserProvidedServiceInstance.make(space:) }
-        let!(:other_service_instance) { ManagedServiceInstance.make(service_plan: other_plan, space: other_space) }
+        let(:organization) { create(:organization) }
+        let(:space) { create(:space, organization:) }
+        let(:other_space) { create(:space, organization:) }
+        let(:user) { create(:user) }
+        let(:broker) { create(:service_broker) }
+        let(:service) { create(:service, service_broker: broker) }
+        let(:service_plan) { create(:service_plan, service: service, public: true, active: true) }
+        let(:non_public_plan) { create(:service_plan, service: service, public: false, active: true) }
+        let(:inactive_plan) { create(:service_plan, service: service, public: true, active: false) }
+        let(:other_plan) { create(:service_plan, service: service, public: true, active: true) }
+        let!(:service_instance) { create(:managed_service_instance, service_plan:, space:) }
+        let!(:service_instance2) { create(:managed_service_instance, service_plan: non_public_plan, space: space) }
+        let!(:service_instance3) { create(:managed_service_instance, service_plan: inactive_plan, space: space) }
+        let!(:user_provided_service_instance) { create(:user_provided_service_instance, space:) }
+        let!(:other_service_instance) { create(:managed_service_instance, service_plan: other_plan, space: other_space) }
 
         before do
           organization.add_user user
@@ -256,13 +256,13 @@ module VCAP::CloudController
 
     describe '.organization_visible' do
       it 'returns plans that are visible to the organization' do
-        hidden_private_plan = ServicePlan.make(public: false)
-        visible_public_plan = ServicePlan.make(public: true)
-        visible_private_plan = ServicePlan.make(public: false)
-        inactive_public_plan = ServicePlan.make(public: true, active: false)
+        hidden_private_plan = create(:service_plan, public: false)
+        visible_public_plan = create(:service_plan, public: true)
+        visible_private_plan = create(:service_plan, public: false)
+        inactive_public_plan = create(:service_plan, public: true, active: false)
 
-        organization = Organization.make
-        ServicePlanVisibility.make(organization: organization, service_plan: visible_private_plan)
+        organization = create(:organization)
+        create(:service_plan_visibility, organization: organization, service_plan: visible_private_plan)
 
         visible = ServicePlan.organization_visible(organization).all
         expect(visible).to include(visible_public_plan)
@@ -274,23 +274,23 @@ module VCAP::CloudController
 
     describe '.space_visible' do
       it 'returns plans that are visible to the space' do
-        hidden_private_plan = ServicePlan.make(public: false)
-        visible_public_plan = ServicePlan.make(public: true)
-        visible_private_plan = ServicePlan.make(public: false)
-        inactive_public_plan = ServicePlan.make(public: true, active: false)
+        hidden_private_plan = create(:service_plan, public: false)
+        visible_public_plan = create(:service_plan, public: true)
+        visible_private_plan = create(:service_plan, public: false)
+        inactive_public_plan = create(:service_plan, public: true, active: false)
 
-        organization = Organization.make
-        space = Space.make(organization:)
-        ServicePlanVisibility.make(organization: organization, service_plan: visible_private_plan)
+        organization = create(:organization)
+        space = create(:space, organization:)
+        create(:service_plan_visibility, organization: organization, service_plan: visible_private_plan)
 
-        space_scoped_broker1 = ServiceBroker.make(space:)
-        space_scoped_broker1_service = Service.make(service_broker: space_scoped_broker1)
-        space_scoped_broker1_plan = ServicePlan.make(service: space_scoped_broker1_service)
-        space_scoped_broker1_plan_inactive = ServicePlan.make(service: space_scoped_broker1_service, active: false)
+        space_scoped_broker1 = create(:service_broker, space:)
+        space_scoped_broker1_service = create(:service, service_broker: space_scoped_broker1)
+        space_scoped_broker1_plan = create(:service_plan, service: space_scoped_broker1_service)
+        space_scoped_broker1_plan_inactive = create(:service_plan, service: space_scoped_broker1_service, active: false)
 
-        space_scoped_broker2 = ServiceBroker.make(space: Space.make)
-        space_scoped_broker2_service = Service.make(service_broker: space_scoped_broker2)
-        space_scoped_broker2_plan = ServicePlan.make(service: space_scoped_broker2_service)
+        space_scoped_broker2 = create(:service_broker, space: create(:space))
+        space_scoped_broker2_service = create(:service, service_broker: space_scoped_broker2)
+        space_scoped_broker2_plan = create(:service_plan, service: space_scoped_broker2_service)
 
         visible = ServicePlan.space_visible(space).all
         expect(visible).to include(visible_public_plan)
@@ -306,11 +306,11 @@ module VCAP::CloudController
 
     describe '#visible_in_space?' do
       it 'returns true when included in .space_visible set' do
-        visible_private_plan = ServicePlan.make(public: false)
+        visible_private_plan = create(:service_plan, public: false)
 
-        organization = Organization.make
-        space = Space.make(organization:)
-        ServicePlanVisibility.make(organization: organization, service_plan: visible_private_plan)
+        organization = create(:organization)
+        space = create(:space, organization:)
+        create(:service_plan_visibility, organization: organization, service_plan: visible_private_plan)
 
         visible = ServicePlan.space_visible(space).all
         expect(visible).to include(visible_private_plan)
@@ -318,9 +318,9 @@ module VCAP::CloudController
       end
 
       it 'returns false when not included in .space_visible set' do
-        hidden_private_plan = ServicePlan.make(public: false)
-        organization = Organization.make
-        space = Space.make(organization:)
+        hidden_private_plan = create(:service_plan, public: false)
+        organization = create(:organization)
+        space = create(:space, organization:)
 
         visible = ServicePlan.space_visible(space).all
         expect(visible).not_to include(hidden_private_plan)
@@ -329,19 +329,19 @@ module VCAP::CloudController
     end
 
     describe '#bindable?' do
-      let(:service_plan) { ServicePlan.make(service: service, bindable: plan_bindable) }
+      let(:service_plan) { create(:service_plan, service: service, bindable: plan_bindable) }
 
       context 'when the plan does not specify if it is bindable' do
         let(:plan_bindable) { nil }
 
         context 'and the service is bindable' do
-          let(:service) { Service.make(bindable: true) }
+          let(:service) { create(:service, bindable: true) }
 
           specify { expect(service_plan).to be_bindable }
         end
 
         context 'and the service is unbindable' do
-          let(:service) { Service.make(bindable: false) }
+          let(:service) { create(:service, bindable: false) }
 
           specify { expect(service_plan).not_to be_bindable }
         end
@@ -351,13 +351,13 @@ module VCAP::CloudController
         let(:plan_bindable) { false }
 
         context 'and the service is bindable' do
-          let(:service) { Service.make(bindable: true) }
+          let(:service) { create(:service, bindable: true) }
 
           specify { expect(service_plan).not_to be_bindable }
         end
 
         context 'and the service is unbindable' do
-          let(:service) { Service.make(bindable: false) }
+          let(:service) { create(:service, bindable: false) }
 
           specify { expect(service_plan).not_to be_bindable }
         end
@@ -367,29 +367,29 @@ module VCAP::CloudController
         let(:plan_bindable) { true }
 
         context 'and the service is bindable' do
-          let(:service) { Service.make(bindable: true) }
+          let(:service) { create(:service, bindable: true) }
 
           specify { expect(service_plan).to be_bindable }
         end
 
         context 'and the service is unbindable' do
-          let(:service) { Service.make(bindable: false) }
+          let(:service) { create(:service, bindable: false) }
 
           specify { expect(service_plan).to be_bindable }
         end
       end
 
       context 'when the bindable value is returned as an integer (e.g. from a UNION query on MySQL)' do
-        let(:service) { Service.make(bindable: true) }
+        let(:service) { create(:service, bindable: true) }
 
         it 'returns true when the integer value is 1' do
-          service_plan = ServicePlan.make(service: service, bindable: true)
+          service_plan = create(:service_plan, service: service, bindable: true)
           allow(service_plan).to receive(:bindable).and_return(1)
           expect(service_plan.bindable?).to be(true)
         end
 
         it 'returns false when the integer value is 0' do
-          service_plan = ServicePlan.make(service: service, bindable: true)
+          service_plan = create(:service_plan, service: service, bindable: true)
           allow(service_plan).to receive(:bindable).and_return(0)
           expect(service_plan.bindable?).to be(false)
         end
@@ -397,19 +397,19 @@ module VCAP::CloudController
     end
 
     describe '#plan_updateable?' do
-      let(:service_plan) { ServicePlan.make(service:, plan_updateable:) }
+      let(:service_plan) { create(:service_plan, service:, plan_updateable:) }
 
       context 'when the plan does not specify if it is updateable' do
         let(:plan_updateable) { nil }
 
         context 'and the service is plan_updateable' do
-          let(:service) { Service.make(plan_updateable: true) }
+          let(:service) { create(:service, plan_updateable: true) }
 
           specify { expect(service_plan).to be_plan_updateable }
         end
 
         context 'and the service is not plan_updateable' do
-          let(:service) { Service.make(plan_updateable: false) }
+          let(:service) { create(:service, plan_updateable: false) }
 
           specify { expect(service_plan).not_to be_plan_updateable }
         end
@@ -419,13 +419,13 @@ module VCAP::CloudController
         let(:plan_updateable) { false }
 
         context 'and the service is plan_updateable' do
-          let(:service) { Service.make(plan_updateable: true) }
+          let(:service) { create(:service, plan_updateable: true) }
 
           specify { expect(service_plan).not_to be_plan_updateable }
         end
 
         context 'and the service is not plan_updateable' do
-          let(:service) { Service.make(plan_updateable: false) }
+          let(:service) { create(:service, plan_updateable: false) }
 
           specify { expect(service_plan).not_to be_plan_updateable }
         end
@@ -435,13 +435,13 @@ module VCAP::CloudController
         let(:plan_updateable) { true }
 
         context 'and the service is updateable' do
-          let(:service) { Service.make(plan_updateable: true) }
+          let(:service) { create(:service, plan_updateable: true) }
 
           specify { expect(service_plan).to be_plan_updateable }
         end
 
         context 'and the service is not updateable' do
-          let(:service) { Service.make(plan_updateable: false) }
+          let(:service) { create(:service, plan_updateable: false) }
 
           specify { expect(service_plan).to be_plan_updateable }
         end
@@ -451,23 +451,23 @@ module VCAP::CloudController
         let(:plan_updateable) { nil }
 
         context 'and the service updateable is also nil' do
-          let(:service) { Service.make(plan_updateable: nil) }
+          let(:service) { create(:service, plan_updateable: nil) }
 
           specify { expect(service_plan.plan_updateable?).to be(false) }
         end
       end
 
       context 'when the plan_updateable value is returned as an integer (e.g. from a UNION query on MySQL)' do
-        let(:service) { Service.make(plan_updateable: true) }
+        let(:service) { create(:service, plan_updateable: true) }
 
         it 'returns true when the integer value is 1' do
-          service_plan = ServicePlan.make(service: service, plan_updateable: true)
+          service_plan = create(:service_plan, service: service, plan_updateable: true)
           allow(service_plan).to receive(:plan_updateable).and_return(1)
           expect(service_plan.plan_updateable?).to be(true)
         end
 
         it 'returns false when the integer value is 0' do
-          service_plan = ServicePlan.make(service: service, plan_updateable: true)
+          service_plan = create(:service_plan, service: service, plan_updateable: true)
           allow(service_plan).to receive(:plan_updateable).and_return(0)
           expect(service_plan.plan_updateable?).to be(false)
         end
@@ -476,16 +476,16 @@ module VCAP::CloudController
 
     describe '#broker_space_scoped?' do
       it 'returns true if the plan belongs to a service that belongs to a private broker' do
-        space = Space.make
-        broker = ServiceBroker.make(space:)
-        service = Service.make service_broker: broker
-        plan = ServicePlan.make(service:)
+        space = create(:space)
+        broker = create(:service_broker, space:)
+        service = create(:service, service_broker: broker)
+        plan = create(:service_plan, service:)
 
         expect(plan).to be_broker_space_scoped
       end
 
       it 'returns false if the plan belongs to a service that belongs to a public broker' do
-        plan = ServicePlan.make
+        plan = create(:service_plan)
 
         expect(plan).not_to be_broker_space_scoped
       end
@@ -493,28 +493,26 @@ module VCAP::CloudController
 
     describe '.visibility_type' do
       it 'returns "public" for public plans' do
-        plan = ServicePlan.make(public: true)
+        plan = create(:service_plan, public: true)
 
         expect(plan.visibility_type).to eq('public')
       end
 
       it 'returns "admin" for private plans' do
-        plan = ServicePlan.make(public: false)
+        plan = create(:service_plan, public: false)
 
         expect(plan.visibility_type).to eq('admin')
       end
 
       it 'returns "space" for plans from space-scoped brokers' do
-        plan = ServicePlan.make(service: Service.make(service_broker: ServiceBroker.make(space: Space.make)))
+        plan = create(:service_plan, service: create(:service, service_broker: create(:service_broker, space: create(:space))))
 
         expect(plan.visibility_type).to eq('space')
       end
 
       it 'returns "organization" for org restricted plans' do
-        plan = ServicePlanVisibility.make(
-          service_plan: ServicePlan.make(public: false),
-          organization: Organization.make
-        ).service_plan
+        plan = create(:service_plan_visibility, service_plan: create(:service_plan, public: false),
+                                                organization: create(:organization)).service_plan
 
         expect(plan.visibility_type).to eq('organization')
       end

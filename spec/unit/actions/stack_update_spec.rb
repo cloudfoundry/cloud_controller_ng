@@ -3,7 +3,7 @@ require 'actions/stack_update'
 
 module VCAP::CloudController
   RSpec.describe StackUpdate do
-    let(:user) { User.make }
+    let(:user) { create(:user) }
     let(:user_email) { 'user@example.com' }
     let(:user_audit_info) { UserAuditInfo.new(user_guid: user.guid, user_email: user_email) }
 
@@ -22,7 +22,7 @@ module VCAP::CloudController
           }
         }
       end
-      let(:stack) { Stack.make }
+      let(:stack) { create(:stack) }
       let(:message) { StackUpdateMessage.new(body) }
 
       it 'updates the stack metadata' do
@@ -57,7 +57,7 @@ module VCAP::CloudController
     end
 
     context 'when updating state_reason' do
-      let(:stack) { Stack.make(state: 'ACTIVE') }
+      let(:stack) { create(:stack, state: 'ACTIVE') }
 
       it 'updates state_reason when provided' do
         message = StackUpdateMessage.new({

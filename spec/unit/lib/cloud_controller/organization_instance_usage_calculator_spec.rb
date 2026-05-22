@@ -3,10 +3,10 @@ require 'spec_helper'
 module VCAP::CloudController
   RSpec.describe OrganizationInstanceUsageCalculator do
     describe '#get_instance_usage' do
-      let!(:org) { Organization.make }
-      let!(:space1) { Space.make(organization: org) }
-      let!(:space2) { Space.make }
-      let!(:space3) { Space.make(organization: org) }
+      let!(:org) { create(:organization) }
+      let!(:space1) { create(:space, organization: org) }
+      let!(:space2) { create(:space) }
+      let!(:space3) { create(:space, organization: org) }
       let!(:started_process1) { ProcessModelFactory.make(space: space1, instances: 3, state: 'STARTED') }
       let!(:started_process2) { ProcessModelFactory.make(space: space1, instances: 6, state: 'STARTED') }
       let!(:started_process3) { ProcessModelFactory.make(space: space3, instances: 7, state: 'STARTED') }

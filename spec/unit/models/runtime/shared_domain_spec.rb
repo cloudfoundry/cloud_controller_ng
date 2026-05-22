@@ -2,7 +2,7 @@ require 'spec_helper'
 
 module VCAP::CloudController
   RSpec.describe SharedDomain, type: :model do
-    subject { SharedDomain.make name: 'test.example.com', router_group_guid: router_group_guid, router_group_type: 'tcp' }
+    subject { create(:shared_domain, name: 'test.example.com', router_group_guid: router_group_guid, router_group_type: 'tcp') }
 
     let(:router_group_guid) { 'my-router-group-guid' }
 
@@ -30,7 +30,7 @@ module VCAP::CloudController
 
       context 'when the name is foo.com and bar.foo.com is a shared domain' do
         before do
-          SharedDomain.make name: 'bar.foo.com'
+          create(:shared_domain, name: 'bar.foo.com')
           subject.name = 'foo.com'
         end
 
@@ -38,40 +38,40 @@ module VCAP::CloudController
       end
 
       it 'allows shared foo.com when private bar.foo.com exists' do
-        PrivateDomain.make name: 'bar.foo.com'
-        expect { SharedDomain.make name: 'foo.com' }.not_to raise_error
+        create(:private_domain, name: 'bar.foo.com')
+        expect { create(:shared_domain, name: 'foo.com') }.not_to raise_error
       end
 
       it 'allows shared foo.com when shared bar.foo.com exists' do
-        SharedDomain.make name: 'bar.foo.com'
-        expect { SharedDomain.make name: 'foo.com' }.not_to raise_error
+        create(:shared_domain, name: 'bar.foo.com')
+        expect { create(:shared_domain, name: 'foo.com') }.not_to raise_error
       end
 
       it 'allows shared bar.foo.com a when shared baz.bar.foo.com and foo.com exist' do
-        SharedDomain.make name: 'baz.bar.foo.com'
-        SharedDomain.make name: 'foo.com'
-        expect { SharedDomain.make name: 'bar.foo.com' }.not_to raise_error
+        create(:shared_domain, name: 'baz.bar.foo.com')
+        create(:shared_domain, name: 'foo.com')
+        expect { create(:shared_domain, name: 'bar.foo.com') }.not_to raise_error
       end
 
       it 'allows shared bar.foo.com a when private baz.bar.foo.com and shared foo.com exist' do
-        PrivateDomain.make name: 'baz.bar.foo.com'
-        SharedDomain.make name: 'foo.com'
-        expect { SharedDomain.make name: 'bar.foo.com' }.not_to raise_error
+        create(:private_domain, name: 'baz.bar.foo.com')
+        create(:shared_domain, name: 'foo.com')
+        expect { create(:shared_domain, name: 'bar.foo.com') }.not_to raise_error
       end
 
       it 'denies shared bar.foo.com when private foo.com exists' do
-        PrivateDomain.make name: 'foo.com'
-        expect { SharedDomain.make name: 'bar.foo.com' }.to raise_error(Sequel::ValidationFailed,
-                                                                        %(The domain name "bar.foo.com" cannot be created because "foo.com" is already reserved by another domain))
+        create(:private_domain, name: 'foo.com')
+        expected_msg = %(The domain name "bar.foo.com" cannot be created because "foo.com" is already reserved by another domain)
+        expect { create(:shared_domain, name: 'bar.foo.com') }.to raise_error(Sequel::ValidationFailed, expected_msg)
       end
 
       it 'denies shared foo.com when private foo.com exists' do
-        PrivateDomain.make name: 'foo.com'
-        expect { SharedDomain.make name: 'foo.com' }.to raise_error(Sequel::ValidationFailed, /name unique/)
+        create(:private_domain, name: 'foo.com')
+        expect { create(:shared_domain, name: 'foo.com') }.to raise_error(Sequel::ValidationFailed, /name unique/)
       end
 
       context 'when the domain is internal' do
-        subject { SharedDomain.make(name: 'test.example.com', internal: true) }
+        subject { create(:shared_domain, name: 'test.example.com', internal: true) }
 
         it { is_expected.to be_valid }
 
@@ -97,7 +97,7 @@ module VCAP::CloudController
       end
 
       it 'destroys the routes' do
-        route = Route.make(domain: subject)
+        route = create(:route, domain: subject)
 
         expect do
           subject.destroy
@@ -109,7 +109,7 @@ module VCAP::CloudController
       let(:router_group_type) { 'http' }
       let(:ra_client) { instance_double(VCAP::CloudController::RoutingApi::Client, router_group: rg) }
       let(:rg) { instance_double(VCAP::CloudController::RoutingApi::RouterGroup, type: router_group_type) }
-      let(:shared_domain) { SharedDomain.make(name: 'tcp.com', router_group_guid: '123') }
+      let(:shared_domain) { create(:shared_domain, name: 'tcp.com', router_group_guid: '123') }
 
       before do
         allow_any_instance_of(CloudController::DependencyLocator).to receive(:routing_api_client).and_return(ra_client)
@@ -142,7 +142,7 @@ module VCAP::CloudController
       end
 
       context 'when there is no router group guid' do
-        let(:shared_domain) { SharedDomain.make(name: 'tcp.com') }
+        let(:shared_domain) { create(:shared_domain, name: 'tcp.com') }
 
         it 'returns false' do
           expect(shared_domain.tcp?).to be(false)
@@ -153,7 +153,7 @@ module VCAP::CloudController
         let(:router_group_type) { 'http' }
         let(:ra_client) { instance_double(VCAP::CloudController::RoutingApi::Client, router_group: nil) }
         let(:rg) { instance_double(VCAP::CloudController::RoutingApi::RouterGroup, type: router_group_type) }
-        let(:shared_domain) { SharedDomain.make(name: 'tcp.com', router_group_guid: '123') }
+        let(:shared_domain) { create(:shared_domain, name: 'tcp.com', router_group_guid: '123') }
 
         it 'returns false' do
           expect(shared_domain.tcp?).to be(false)
@@ -210,7 +210,7 @@ module VCAP::CloudController
 
         context 'and it already exists' do
           before do
-            SharedDomain.make(router_group_guid: '123', name: 'wee.example.com')
+            create(:shared_domain, router_group_guid: '123', name: 'wee.example.com')
           end
 
           it 'returns the found domain' do
@@ -234,7 +234,7 @@ module VCAP::CloudController
       context 'when the domain already exists' do
         let(:is_internal) { false }
         let(:domain_name) { 'existing.example.com' }
-        let!(:existing_domain) { SharedDomain.make(name: domain_name, internal: is_internal) }
+        let!(:existing_domain) { create(:shared_domain, name: domain_name, internal: is_internal) }
         let(:attrs) { { name: domain_name } }
         let(:fake_logger) { instance_double(Steno::Logger, info: nil, warn: nil) }
 

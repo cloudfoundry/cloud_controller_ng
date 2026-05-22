@@ -4,41 +4,33 @@ require 'presenters/v3/organization_presenter'
 module VCAP::CloudController::Presenters::V3
   RSpec.describe OrganizationPresenter do
     let(:organization_quota) do
-      VCAP::CloudController::QuotaDefinition.make(guid: 'quota-guid')
+      create(:quota_definition, guid: 'quota-guid')
     end
     let(:organization) do
-      VCAP::CloudController::Organization.make(quota_definition: organization_quota)
+      create(:organization, quota_definition: organization_quota)
     end
     let!(:release_label) do
-      VCAP::CloudController::OrganizationLabelModel.make(
-        key_name: 'release',
-        value: 'stable',
-        resource_guid: organization.guid
-      )
+      create(:organization_label_model, key_name: 'release',
+                                        value: 'stable',
+                                        resource_guid: organization.guid)
     end
 
     let!(:potato_label) do
-      VCAP::CloudController::OrganizationLabelModel.make(
-        key_prefix: 'maine.gov',
-        key_name: 'potato',
-        value: 'mashed',
-        resource_guid: organization.guid
-      )
+      create(:organization_label_model, key_prefix: 'maine.gov',
+                                        key_name: 'potato',
+                                        value: 'mashed',
+                                        resource_guid: organization.guid)
     end
 
     let!(:organization_annotation_the_first) do
-      VCAP::CloudController::OrganizationAnnotationModel.make(
-        key_name: 'city',
-        value: 'Monticello',
-        resource_guid: organization.guid
-      )
+      create(:organization_annotation_model, key_name: 'city',
+                                             value: 'Monticello',
+                                             resource_guid: organization.guid)
     end
     let!(:organization_annotation_the_second) do
-      VCAP::CloudController::OrganizationAnnotationModel.make(
-        key_name: 'state',
-        value: 'Indiana',
-        resource_guid: organization.guid
-      )
+      create(:organization_annotation_model, key_name: 'state',
+                                             value: 'Indiana',
+                                             resource_guid: organization.guid)
     end
 
     describe '#to_hash' do

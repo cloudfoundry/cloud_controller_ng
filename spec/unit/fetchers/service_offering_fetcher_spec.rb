@@ -3,9 +3,9 @@ require 'fetchers/service_offering_fetcher'
 
 module VCAP::CloudController
   RSpec.describe ServiceOfferingFetcher do
-    let!(:offering_1) { Service.make }
-    let!(:offering_2) { Service.make }
-    let!(:offering_3) { Service.make }
+    let!(:offering_1) { create(:service) }
+    let!(:offering_2) { create(:service) }
+    let!(:offering_3) { create(:service) }
 
     context 'when the offering does not exist' do
       it 'returns nil' do

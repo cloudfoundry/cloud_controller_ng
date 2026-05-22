@@ -5,11 +5,11 @@ module VCAP::CloudController
     subject(:access) { DomainAccess.new(Security::AccessContext.new) }
     let(:token) { { 'scope' => ['cloud_controller.read', 'cloud_controller.write'] } }
 
-    let(:user) { User.make }
-    let(:org) { Organization.make }
-    let(:space) { Space.make(organization: org) }
+    let(:user) { create(:user) }
+    let(:org) { create(:organization) }
+    let(:space) { create(:space, organization: org) }
 
-    let(:object) { Domain.make }
+    let(:object) { create(:domain) }
 
     before do
       SecurityContext.set(user, token)
@@ -20,12 +20,12 @@ module VCAP::CloudController
     end
 
     context 'when the domain is a private domain' do
-      let(:object) { PrivateDomain.make(owning_organization: org) }
+      let(:object) { create(:private_domain, owning_organization: org) }
 
       context 'admin' do
         include_context 'admin setup'
 
-        before { FeatureFlag.make(name: 'private_domain_creation', enabled: false) }
+        before { create(:feature_flag, name: 'private_domain_creation', enabled: false) }
 
         it_behaves_like 'full access'
       end
@@ -33,7 +33,7 @@ module VCAP::CloudController
       context 'admin read only' do
         include_context 'admin read only setup'
 
-        before { FeatureFlag.make(name: 'private_domain_creation', enabled: false) }
+        before { create(:feature_flag, name: 'private_domain_creation', enabled: false) }
 
         it_behaves_like 'read only access'
       end
@@ -45,7 +45,7 @@ module VCAP::CloudController
 
         context 'when private_domain_creation FeatureFlag is disabled' do
           it 'cannot create a private domain' do
-            FeatureFlag.make(name: 'private_domain_creation', enabled: false, error_message: nil)
+            create(:feature_flag, name: 'private_domain_creation', enabled: false, error_message: nil)
             expect { subject.create?(object) }.to raise_error(CloudController::Errors::ApiError, /private_domain_creation/)
           end
         end
@@ -71,7 +71,7 @@ module VCAP::CloudController
 
       context 'user in a different organization (defensive)' do
         before do
-          different_organization = VCAP::CloudController::Organization.make
+          different_organization = create(:organization)
           different_organization.add_user(user)
         end
 
@@ -80,7 +80,7 @@ module VCAP::CloudController
 
       context 'manager in a different organization (defensive)' do
         before do
-          different_organization = VCAP::CloudController::Organization.make
+          different_organization = create(:organization)
           different_organization.add_manager(user)
         end
 
@@ -127,7 +127,7 @@ module VCAP::CloudController
     end
 
     context 'when the domain is a shared domain' do
-      let(:object) { SharedDomain.make }
+      let(:object) { create(:shared_domain) }
 
       it_behaves_like 'admin full access'
       it_behaves_like 'read only access'

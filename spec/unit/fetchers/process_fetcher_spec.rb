@@ -6,9 +6,9 @@ module VCAP::CloudController
     subject(:fetcher) { ProcessFetcher }
 
     describe '.fetch' do
-      let(:app) { AppModel.make }
+      let(:app) { create(:app_model) }
       let(:space) { app.space }
-      let!(:process) { ProcessModel.make(app:) }
+      let!(:process) { create(:process_model, app:) }
 
       it 'returns the process and space' do
         actual_process, actual_space = fetcher.fetch(process_guid: process.guid)
@@ -26,9 +26,9 @@ module VCAP::CloudController
     end
 
     describe 'fetch_for_app_by_type' do
-      let(:app) { AppModel.make }
+      let(:app) { create(:app_model) }
       let(:space) { app.space }
-      let!(:process) { ProcessModel.make(app:) }
+      let!(:process) { create(:process_model, app:) }
 
       it 'returns the process, app, space' do
         actual_process, actual_app, actual_space = fetcher.fetch_for_app_by_type(process_type: process.type, app_guid: app.guid)
@@ -47,10 +47,10 @@ module VCAP::CloudController
       end
 
       context 'when there are multiple matching processes by type' do
-        let!(:process_2) { ProcessModel.make(app: app, guid: 'process_2', created_at: process.created_at) }
-        let!(:process_3) { ProcessModel.make(app: app, guid: 'process_3', created_at: process.created_at + 2) }
-        let!(:process_4) { ProcessModel.make(app: app, guid: 'process_4', created_at: process.created_at + 3) }
-        let!(:process_5) { ProcessModel.make(app: app, guid: 'process_5', created_at: process.created_at + 2) }
+        let!(:process_2) { create(:process_model, app: app, guid: 'process_2', created_at: process.created_at) }
+        let!(:process_3) { create(:process_model, app: app, guid: 'process_3', created_at: process.created_at + 2) }
+        let!(:process_4) { create(:process_model, app: app, guid: 'process_4', created_at: process.created_at + 3) }
+        let!(:process_5) { create(:process_model, app: app, guid: 'process_5', created_at: process.created_at + 2) }
 
         it 'returns the newest one' do
           actual_process, actual_app, actual_space = fetcher.fetch_for_app_by_type(process_type: process.type, app_guid: app.guid)
@@ -61,8 +61,8 @@ module VCAP::CloudController
       end
 
       context 'when multiple matching processes were created simultaneously' do
-        let!(:process_2) { ProcessModel.make(app: app, guid: 'process_2', created_at: process.created_at) }
-        let!(:process_3) { ProcessModel.make(app: app, guid: 'process_3', created_at: process.created_at) }
+        let!(:process_2) { create(:process_model, app: app, guid: 'process_2', created_at: process.created_at) }
+        let!(:process_3) { create(:process_model, app: app, guid: 'process_3', created_at: process.created_at) }
 
         it 'returns the one with the higher id' do
           actual_process, actual_app, actual_space = fetcher.fetch_for_app_by_type(process_type: process.type, app_guid: app.guid)

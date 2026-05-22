@@ -10,8 +10,8 @@ module VCAP::CloudController
         CloudController::Blobstore::FogClient.new(connection_config: { provider: 'AWS', aws_access_key_id: 'fake', aws_secret_access_key: 'fake' },
                                                   directory_key: 'package')
       end
-      let(:source_package) { PackageModel.make(type: 'bits', package_hash: 'something', sha256_checksum: 'sha256') }
-      let(:destination_package) { PackageModel.make(type: 'bits') }
+      let(:source_package) { create(:package_model, type: 'bits', package_hash: 'something', sha256_checksum: 'sha256') }
+      let(:destination_package) { create(:package_model, type: 'bits') }
 
       before do
         package_blobstore.ensure_bucket_exists

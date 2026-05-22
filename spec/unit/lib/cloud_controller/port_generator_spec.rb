@@ -8,9 +8,9 @@ module VCAP::CloudController
     let(:router_group_guid1) { 'router-group-guid1' }
 
     let(:domain_guid1) { domain1.guid }
-    let(:domain1) { SharedDomain.make(router_group_guid: router_group_guid1) }
-    let(:space_quota) { SpaceQuotaDefinition.make }
-    let(:space) { Space.make(organization: space_quota.organization, space_quota_definition: space_quota) }
+    let(:domain1) { create(:shared_domain, router_group_guid: router_group_guid1) }
+    let(:space_quota) { create(:space_quota_definition) }
+    let(:space) { create(:space, organization: space_quota.organization, space_quota_definition: space_quota) }
     let(:dependency_double) { double('dependency_locator', routing_api_client:) }
 
     before do
@@ -28,7 +28,7 @@ module VCAP::CloudController
       it 'runs out of ports' do
         3.times do
           port = PortGenerator.generate_port(domain_guid1, Array(1024..1026))
-          Route.make(domain: domain1, port: port, space: space)
+          create(:route, domain: domain1, port: port, space: space)
         end
 
         port = PortGenerator.generate_port(domain_guid1, Array(1024..1026))
@@ -39,11 +39,11 @@ module VCAP::CloudController
         let(:router_group_guid2) { 'router-group-guid2' }
         let(:router_group2) { double('router_group2', type: router_group_type, guid: router_group_guid2) }
 
-        let(:domain2) { SharedDomain.make(router_group_guid: router_group_guid2) }
+        let(:domain2) { create(:shared_domain, router_group_guid: router_group_guid2) }
 
         it 'hands out the same port for multiple router groups' do
-          Route.make(domain: domain1, port: 60_001, space: space)
-          Route.make(domain: domain2, port: 60_001, space: space)
+          create(:route, domain: domain1, port: 60_001, space: space)
+          create(:route, domain: domain2, port: 60_001, space: space)
 
           port1 = PortGenerator.generate_port(domain2.guid, Array(60_001..60_002))
           port2 = PortGenerator.generate_port(domain2.guid, Array(60_001..60_002))

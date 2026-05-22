@@ -6,7 +6,7 @@ module VCAP::CloudController
       allow(Config).to receive(:config).and_return(config)
     end
 
-    let(:app) { AppModel.make }
+    let(:app) { create(:app_model) }
     let(:blobstore) do
       CloudController::DependencyLocator.instance.droplet_blobstore
     end
@@ -32,10 +32,10 @@ module VCAP::CloudController
 
     context 'with an app with few droplets / packages and one failed droplet / package' do
       it 'does not mark any as expired' do
-        3.times { DropletModel.make(state: DropletModel::STAGED_STATE, app_guid: app.guid) }
-        3.times { PackageModel.make(state: PackageModel::READY_STATE, app_guid: app.guid) }
-        DropletModel.make(state: DropletModel::FAILED_STATE, app_guid: app.guid)
-        PackageModel.make(state: PackageModel::FAILED_STATE, app_guid: app.guid)
+        3.times { create(:droplet_model, set_as_current_droplet: false, state: DropletModel::STAGED_STATE, app_guid: app.guid) }
+        3.times { create(:package_model, state: PackageModel::READY_STATE, app_guid: app.guid) }
+        create(:droplet_model, set_as_current_droplet: false, state: DropletModel::FAILED_STATE, app_guid: app.guid)
+        create(:package_model, state: PackageModel::FAILED_STATE, app_guid: app.guid)
         BitsExpiration.new.expire_droplets!(app)
         BitsExpiration.new.expire_packages!(app)
         expect(DropletModel.where(state: DropletModel::EXPIRED_STATE).count).to eq(0)
@@ -46,21 +46,19 @@ module VCAP::CloudController
     context 'with docker cf apps' do
       before do
         t        = Time.now
-        @current = DropletModel.make(
-          app_guid: app.guid,
-          created_at: t,
-          droplet_hash: nil,
-          docker_receipt_image: 'repo/test-app'
-        )
+        @current = create(:droplet_model, app_guid: app.guid,
+                                          set_as_current_droplet: false,
+                                          created_at: t,
+                                          droplet_hash: nil,
+                                          docker_receipt_image: 'repo/test-app')
         app.update(droplet: @current)
 
         10.times do |i|
-          DropletModel.make(
-            app_guid: app.guid,
-            created_at: t + i,
-            droplet_hash: nil,
-            docker_receipt_image: 'repo/test-app'
-          )
+          create(:droplet_model, app_guid: app.guid,
+                                 set_as_current_droplet: false,
+                                 created_at: t + i,
+                                 droplet_hash: nil,
+                                 docker_receipt_image: 'repo/test-app')
         end
       end
 
@@ -72,28 +70,25 @@ module VCAP::CloudController
     context 'with droplets' do
       before do
         t        = Time.now
-        @current = DropletModel.make(
-          app_guid: app.guid,
-          created_at: t,
-          droplet_hash: 'current_droplet_hash'
-        )
+        @current = create(:droplet_model, app_guid: app.guid,
+                                          set_as_current_droplet: false,
+                                          created_at: t,
+                                          droplet_hash: 'current_droplet_hash')
         app.update(droplet: @current)
 
         2.times do |i|
-          DropletModel.make(
-            app_guid: app.guid,
-            created_at: t + i,
-            droplet_hash: nil,
-            state: DropletModel::FAILED_STATE
-          )
+          create(:droplet_model, app_guid: app.guid,
+                                 set_as_current_droplet: false,
+                                 created_at: t + i,
+                                 droplet_hash: nil,
+                                 state: DropletModel::FAILED_STATE)
         end
 
         10.times do |i|
-          DropletModel.make(
-            app_guid: app.guid,
-            created_at: t + i + 2,
-            droplet_hash: 'current_droplet_hash'
-          )
+          create(:droplet_model, app_guid: app.guid,
+                                 set_as_current_droplet: false,
+                                 created_at: t + i + 2,
+                                 droplet_hash: 'current_droplet_hash')
         end
       end
 
@@ -132,30 +127,26 @@ module VCAP::CloudController
     context 'with packages' do
       before do
         t                = Time.now
-        @current_package = PackageModel.make(
-          package_hash: 'current_package_hash',
-          state: PackageModel::READY_STATE,
-          app_guid: app.guid,
-          created_at: t
-        )
-        @current = DropletModel.make(
-          app_guid: app.guid,
-          package_guid: @current_package.guid
-        )
+        @current_package = create(:package_model, package_hash: 'current_package_hash',
+                                                  state: PackageModel::READY_STATE,
+                                                  app_guid: app.guid,
+                                                  created_at: t)
+        @current = create(:droplet_model, app_guid: app.guid,
+                                          package_guid: @current_package.guid)
         app.update(droplet: @current)
 
         2.times do |i|
-          PackageModel.make(package_hash: nil,
-                            state: PackageModel::FAILED_STATE,
-                            app_guid: app.guid,
-                            created_at: t + i)
+          create(:package_model, package_hash: nil,
+                                 state: PackageModel::FAILED_STATE,
+                                 app_guid: app.guid,
+                                 created_at: t + i)
         end
 
         10.times do |i|
-          PackageModel.make(package_hash: 'real hash!',
-                            state: PackageModel::READY_STATE,
-                            app_guid: app.guid,
-                            created_at: t + i + 2)
+          create(:package_model, package_hash: 'real hash!',
+                                 state: PackageModel::READY_STATE,
+                                 app_guid: app.guid,
+                                 created_at: t + i + 2)
         end
       end
 

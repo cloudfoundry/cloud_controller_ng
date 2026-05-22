@@ -4,15 +4,15 @@ module VCAP::CloudController
   module Jobs
     RSpec.describe Jobs do
       context 'CreateServiceInstanceJob' do
-        let(:user) { User.make(guid: 'user-guid') }
+        let(:user) { create(:user, guid: 'user-guid') }
         let(:audit_info) { UserAuditInfo.new(user_email: 'user@bommel.com', user_guid: user.guid, user_name: 'user-name') }
 
-        let(:org) { VCAP::CloudController::Organization.make }
-        let(:space) { VCAP::CloudController::Space.make(organization: org) }
+        let(:org) { create(:organization) }
+        let(:space) { create(:space, organization: org) }
 
-        let(:service_offering) { VCAP::CloudController::Service.make }
-        let(:service_plan) { VCAP::CloudController::ServicePlan.make(service: service_offering) }
-        let(:service_instance) { VCAP::CloudController::ManagedServiceInstance.make(service_plan:, space:) }
+        let(:service_offering) { create(:service) }
+        let(:service_plan) { create(:service_plan, service: service_offering) }
+        let(:service_instance) { create(:managed_service_instance, service_plan:, space:) }
 
         let(:audit_hash) do
           {
@@ -101,12 +101,12 @@ module VCAP::CloudController
       end
 
       context 'SpaceApplyManifestActionJob serialization' do
-        let(:user) { User.make(guid: 'user-guid') }
+        let(:user) { create(:user, guid: 'user-guid') }
         let(:user_audit_info) { UserAuditInfo.new(user_email: 'user@bommel.com', user_guid: user.guid, user_name: 'user-name') }
         let(:apply_manifest_action) { AppApplyManifest.new(user_audit_info) }
-        let(:org) { Organization.make(guid: 'org-guid') }
-        let(:space) { Space.make(guid: 'space-guid', name: 'space-name', organization: org) }
-        let(:app) { AppModel.make(guid: 'app-guid', name: 'app-name', space: space) }
+        let(:org) { create(:organization, guid: 'org-guid') }
+        let(:space) { create(:space, guid: 'space-guid', name: 'space-name', organization: org) }
+        let(:app) { create(:app_model, guid: 'app-guid', name: 'app-name', space: space) }
         let(:app_manifest_message) do
           AppManifestMessage.create_from_yml({ name: app.name, instances: 4, routes: [{ route: 'app.bommel' }], buildpack: 'ruby', stack: 'cflinuxfs4' })
         end

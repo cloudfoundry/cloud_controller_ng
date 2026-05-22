@@ -3,9 +3,9 @@ require 'presenters/v3/organization_quota_presenter'
 
 module VCAP::CloudController::Presenters::V3
   RSpec.describe OrganizationQuotaPresenter do
-    let(:org) { VCAP::CloudController::Organization.make }
-    let(:org2) { VCAP::CloudController::Organization.make }
-    let(:organization_quota) { VCAP::CloudController::QuotaDefinition.make(guid: 'quota-guid') }
+    let(:org) { create(:organization) }
+    let(:org2) { create(:organization) }
+    let(:organization_quota) { create(:quota_definition, guid: 'quota-guid') }
     let(:all_orgs_visible) { false }
     let(:visible_org_guids) { [org.guid] }
     let(:visible_org_guids_query) { VCAP::CloudController::Organization.where(guid: visible_org_guids).select(:guid) }

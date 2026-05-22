@@ -12,16 +12,16 @@ module VCAP::CloudController
     free_mem_size = 1024
     num_apps = num_prod_apps + num_free_apps
 
-    let(:org) { Organization.make }
+    let(:org) { create(:organization) }
 
     before do
       @spaces = []
       num_spaces.times do
-        @spaces << Space.make(organization: org)
+        @spaces << create(:space, organization: org)
       end
 
       num_services.times do
-        ManagedServiceInstance.make(space: @spaces.first)
+        create(:managed_service_instance, space: @spaces.first)
       end
 
       num_free_apps.times do
@@ -103,7 +103,7 @@ module VCAP::CloudController
           org.add_user member
           org.add_user non_member
           num_visible_spaces.times do
-            Space.make(organization: org).tap do |s|
+            create(:space, organization: org).tap do |s|
               s.add_developer member
             end
           end
@@ -112,11 +112,11 @@ module VCAP::CloudController
         let(:num_visible_spaces) { 4 }
 
         let(:member) do
-          VCAP::CloudController::User.make(admin: false)
+          create(:user, admin: false)
         end
 
         let(:non_member) do
-          VCAP::CloudController::User.make(admin: false)
+          create(:user, admin: false)
         end
 
         context 'when the user is a member of the space' do

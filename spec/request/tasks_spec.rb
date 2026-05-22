@@ -2,20 +2,19 @@ require 'spec_helper'
 require 'request_spec_shared_examples'
 
 RSpec.describe 'Tasks' do
-  let(:org_quota_definition) { VCAP::CloudController::QuotaDefinition.make(log_rate_limit: org_log_rate_limit) }
-  let(:space_quota_definition) { VCAP::CloudController::SpaceQuotaDefinition.make(organization: org, log_rate_limit: space_log_rate_limit) }
+  let(:org_quota_definition) { create(:quota_definition, log_rate_limit: org_log_rate_limit) }
+  let(:space_quota_definition) { create(:space_quota_definition, organization: org, log_rate_limit: space_log_rate_limit) }
   let(:space_log_rate_limit) { -1 }
   let(:org_log_rate_limit) { -1 }
   let(:task_log_rate_limit_in_bytes_per_second) { -1 }
-  let(:user) { VCAP::CloudController::User.make }
-  let(:org) { VCAP::CloudController::Organization.make(quota_definition: org_quota_definition) }
-  let(:space) { VCAP::CloudController::Space.make(space_quota_definition: space_quota_definition, organization: org) }
-  let(:app_model) { VCAP::CloudController::AppModel.make(space_guid: space.guid) }
+  let(:user) { create(:user) }
+  let(:org) { create(:organization, quota_definition: org_quota_definition) }
+  let(:space) { create(:space, space_quota_definition: space_quota_definition, organization: org) }
+  let(:app_model) { create(:app_model, space: space) }
   let(:droplet) do
-    VCAP::CloudController::DropletModel.make(
-      app_guid: app_model.guid,
-      state: VCAP::CloudController::DropletModel::STAGED_STATE
-    )
+    create(:droplet_model,
+           app_guid: app_model.guid,
+           state: VCAP::CloudController::DropletModel::STAGED_STATE)
   end
   let(:developer_headers) { headers_for(user, email: user_email, user_name: user_name) }
   let(:user_email) { 'user@email.example.com' }
@@ -23,7 +22,7 @@ RSpec.describe 'Tasks' do
   let(:bbs_task_client) { instance_double(VCAP::CloudController::Diego::BbsTaskClient) }
 
   before do
-    VCAP::CloudController::FeatureFlag.make(name: 'task_creation', enabled: true, error_message: nil)
+    create(:feature_flag, name: 'task_creation', enabled: true, error_message: nil)
     app_model.droplet = droplet
     app_model.save
   end
@@ -100,29 +99,26 @@ RSpec.describe 'Tasks' do
       let(:user) { make_developer_for_space(space) }
 
       it 'returns a paginated list of tasks' do
-        task1 = VCAP::CloudController::TaskModel.make(
-          name: 'task one',
-          command: 'echo task',
-          user: 'TestUser',
-          app_guid: app_model.guid,
-          droplet: app_model.droplet,
-          memory_in_mb: 5,
-          disk_in_mb: 10,
-          log_rate_limit: 20
-        )
-        task2 = VCAP::CloudController::TaskModel.make(
-          name: 'task two',
-          command: 'echo task',
-          app_guid: app_model.guid,
-          droplet: app_model.droplet,
-          memory_in_mb: 100,
-          disk_in_mb: 500,
-          log_rate_limit: 1024
-        )
-        VCAP::CloudController::TaskModel.make(
-          app_guid: app_model.guid,
-          droplet: app_model.droplet
-        )
+        task1 = create(:task_model,
+                       name: 'task one',
+                       command: 'echo task',
+                       user: 'TestUser',
+                       app_guid: app_model.guid,
+                       droplet: app_model.droplet,
+                       memory_in_mb: 5,
+                       disk_in_mb: 10,
+                       log_rate_limit: 20)
+        task2 = create(:task_model,
+                       name: 'task two',
+                       command: 'echo task',
+                       app_guid: app_model.guid,
+                       droplet: app_model.droplet,
+                       memory_in_mb: 100,
+                       disk_in_mb: 500,
+                       log_rate_limit: 1024)
+        create(:task_model,
+               app_guid: app_model.guid,
+               droplet: app_model.droplet)
 
         get '/v3/tasks?per_page=2', nil, developer_headers
 
@@ -213,25 +209,23 @@ RSpec.describe 'Tasks' do
     it_behaves_like 'permissions for list endpoint', ALL_PERMISSIONS do
       let(:api_call) { ->(user_headers) { get '/v3/tasks', nil, user_headers } }
       let(:task1) do
-        VCAP::CloudController::TaskModel.make(
-          name: 'task one',
-          command: 'echo task',
-          user: 'TestUser',
-          app_guid: app_model.guid,
-          droplet: app_model.droplet
-        )
+        create(:task_model,
+               name: 'task one',
+               command: 'echo task',
+               user: 'TestUser',
+               app_guid: app_model.guid,
+               droplet: app_model.droplet)
       end
 
       let(:task2) do
-        VCAP::CloudController::TaskModel.make(
-          name: 'task two',
-          command: 'echo task',
-          app_guid: app_model.guid,
-          droplet: app_model.droplet,
-          memory_in_mb: 5,
-          disk_in_mb: 10,
-          log_rate_limit: 20
-        )
+        create(:task_model,
+               name: 'task two',
+               command: 'echo task',
+               app_guid: app_model.guid,
+               droplet: app_model.droplet,
+               memory_in_mb: 5,
+               disk_in_mb: 10,
+               log_rate_limit: 20)
       end
 
       let(:expected_response) do
@@ -319,27 +313,24 @@ RSpec.describe 'Tasks' do
       let(:user) { make_developer_for_space(space) }
 
       it 'returns a paginated list of tasks' do
-        task1 = VCAP::CloudController::TaskModel.make(
-          name: 'task one',
-          command: 'echo task',
-          app_guid: app_model.guid,
-          droplet: app_model.droplet,
-          memory_in_mb: 5,
-          state: VCAP::CloudController::TaskModel::SUCCEEDED_STATE
-        )
-        task2 = VCAP::CloudController::TaskModel.make(
-          name: 'task two',
-          command: 'echo task',
-          app_guid: app_model.guid,
-          droplet: app_model.droplet,
-          memory_in_mb: 100
-        )
-        VCAP::CloudController::TaskModel.make(
-          app_guid: app_model.guid,
-          droplet: app_model.droplet
-        )
-        VCAP::CloudController::TaskLabelModel.make(key_name: 'boomerang', value: 'gel', task: task1)
-        VCAP::CloudController::TaskLabelModel.make(key_name: 'boomerang', value: 'gunnison', task: task2)
+        task1 = create(:task_model,
+                       name: 'task one',
+                       command: 'echo task',
+                       app_guid: app_model.guid,
+                       droplet: app_model.droplet,
+                       memory_in_mb: 5,
+                       state: VCAP::CloudController::TaskModel::SUCCEEDED_STATE)
+        task2 = create(:task_model,
+                       name: 'task two',
+                       command: 'echo task',
+                       app_guid: app_model.guid,
+                       droplet: app_model.droplet,
+                       memory_in_mb: 100)
+        create(:task_model,
+               app_guid: app_model.guid,
+               droplet: app_model.droplet)
+        create(:task_label_model, key_name: 'boomerang', value: 'gel', task: task1)
+        create(:task_label_model, key_name: 'boomerang', value: 'gunnison', task: task2)
 
         query = {
           app_guids: app_model.guid,
@@ -373,27 +364,24 @@ RSpec.describe 'Tasks' do
       end
 
       it 'filters by label selectors' do
-        task1 = VCAP::CloudController::TaskModel.make(
-          name: 'task one',
-          command: 'echo task',
-          app_guid: app_model.guid,
-          droplet: app_model.droplet,
-          memory_in_mb: 5,
-          state: VCAP::CloudController::TaskModel::SUCCEEDED_STATE
-        )
-        VCAP::CloudController::TaskModel.make(
-          name: 'task two',
-          command: 'echo task',
-          app_guid: app_model.guid,
-          droplet: app_model.droplet,
-          memory_in_mb: 100
-        )
-        VCAP::CloudController::TaskModel.make(
-          app_guid: app_model.guid,
-          droplet: app_model.droplet
-        )
+        task1 = create(:task_model,
+                       name: 'task one',
+                       command: 'echo task',
+                       app_guid: app_model.guid,
+                       droplet: app_model.droplet,
+                       memory_in_mb: 5,
+                       state: VCAP::CloudController::TaskModel::SUCCEEDED_STATE)
+        create(:task_model,
+               name: 'task two',
+               command: 'echo task',
+               app_guid: app_model.guid,
+               droplet: app_model.droplet,
+               memory_in_mb: 100)
+        create(:task_model,
+               app_guid: app_model.guid,
+               droplet: app_model.droplet)
 
-        VCAP::CloudController::TaskLabelModel.make(key_name: 'boomerang', value: 'gel', task: task1)
+        create(:task_label_model, key_name: 'boomerang', value: 'gel', task: task1)
 
         get '/v3/tasks?label_selector=boomerang=gel', {}, developer_headers
 
@@ -419,15 +407,14 @@ RSpec.describe 'Tasks' do
   describe 'GET /v3/tasks/:guid' do
     it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS do
       let(:task) do
-        VCAP::CloudController::TaskModel.make(
-          name: 'task',
-          command: 'echo task',
-          app_guid: app_model.guid,
-          droplet: app_model.droplet,
-          memory_in_mb: 5,
-          disk_in_mb: 50,
-          log_rate_limit: 64
-        )
+        create(:task_model,
+               name: 'task',
+               command: 'echo task',
+               app_guid: app_model.guid,
+               droplet: app_model.droplet,
+               memory_in_mb: 5,
+               disk_in_mb: 50,
+               log_rate_limit: 64)
       end
       let(:api_call) { ->(user_headers) { get "/v3/tasks/#{task.guid}", nil, user_headers } }
       let(:expected_response) do
@@ -484,7 +471,7 @@ RSpec.describe 'Tasks' do
     end
 
     it 'returns a json representation of the task with the requested guid' do
-      task = VCAP::CloudController::TaskModel.make name: 'task', command: 'echo task', app_guid: app_model.guid
+      task = create(:task_model, name: 'task', command: 'echo task', app: app_model)
 
       put "/v3/tasks/#{task.guid}/cancel", nil, developer_headers
 
@@ -516,15 +503,14 @@ RSpec.describe 'Tasks' do
   describe 'PATCH /v3/tasks/:guid' do
     let(:user) { make_developer_for_space(space) }
     let(:task) do
-      VCAP::CloudController::TaskModel.make(
-        name: 'task',
-        command: 'echo task',
-        app_guid: app_model.guid,
-        droplet_guid: app_model.droplet.guid,
-        disk_in_mb: 50,
-        memory_in_mb: 5,
-        log_rate_limit: 10
-      )
+      create(:task_model,
+             name: 'task',
+             command: 'echo task',
+             app_guid: app_model.guid,
+             droplet_guid: app_model.droplet.guid,
+             disk_in_mb: 50,
+             memory_in_mb: 5,
+             log_rate_limit: 10)
     end
     let(:request_body) do
       {
@@ -621,7 +607,7 @@ RSpec.describe 'Tasks' do
   end
 
   describe 'POST /v3/tasks/:guid/actions/cancel' do
-    let(:task) { VCAP::CloudController::TaskModel.make name: 'task', command: 'echo task', app_guid: app_model.guid }
+    let(:task) { create(:task_model, name: 'task', command: 'echo task', app: app_model) }
     let(:api_call) { ->(user_headers) { post "/v3/tasks/#{task.guid}/actions/cancel", nil, user_headers } }
     let(:expected_response) do
       {
@@ -705,28 +691,25 @@ RSpec.describe 'Tasks' do
       let(:user) { make_developer_for_space(space) }
 
       it 'returns a paginated list of tasks' do
-        task1 = VCAP::CloudController::TaskModel.make(
-          name: 'task one',
-          command: 'echo task',
-          app_guid: app_model.guid,
-          droplet: app_model.droplet,
-          memory_in_mb: 5,
-          disk_in_mb: 50,
-          log_rate_limit: 64
-        )
-        task2 = VCAP::CloudController::TaskModel.make(
-          name: 'task two',
-          command: 'echo task',
-          app_guid: app_model.guid,
-          droplet: app_model.droplet,
-          memory_in_mb: 100,
-          disk_in_mb: 500,
-          log_rate_limit: 256
-        )
-        VCAP::CloudController::TaskModel.make(
-          app_guid: app_model.guid,
-          droplet: app_model.droplet
-        )
+        task1 = create(:task_model,
+                       name: 'task one',
+                       command: 'echo task',
+                       app_guid: app_model.guid,
+                       droplet: app_model.droplet,
+                       memory_in_mb: 5,
+                       disk_in_mb: 50,
+                       log_rate_limit: 64)
+        task2 = create(:task_model,
+                       name: 'task two',
+                       command: 'echo task',
+                       app_guid: app_model.guid,
+                       droplet: app_model.droplet,
+                       memory_in_mb: 100,
+                       disk_in_mb: 500,
+                       log_rate_limit: 256)
+        create(:task_model,
+               app_guid: app_model.guid,
+               droplet: app_model.droplet)
 
         get "/v3/apps/#{app_model.guid}/tasks?per_page=2", nil, developer_headers
 
@@ -822,23 +805,21 @@ RSpec.describe 'Tasks' do
     it_behaves_like 'permissions for list endpoint', ALL_PERMISSIONS do
       let(:api_call) { ->(user_headers) { get "/v3/apps/#{app_model.guid}/tasks", nil, user_headers } }
       let(:task1) do
-        VCAP::CloudController::TaskModel.make(
-          name: 'task one',
-          command: 'echo task',
-          app_guid: app_model.guid,
-          droplet: app_model.droplet
-        )
+        create(:task_model,
+               name: 'task one',
+               command: 'echo task',
+               app_guid: app_model.guid,
+               droplet: app_model.droplet)
       end
 
       let(:task2) do
-        VCAP::CloudController::TaskModel.make(
-          name: 'task two',
-          command: 'echo task',
-          app_guid: app_model.guid,
-          droplet: app_model.droplet,
-          memory_in_mb: 5,
-          disk_in_mb: 10
-        )
+        create(:task_model,
+               name: 'task two',
+               command: 'echo task',
+               app_guid: app_model.guid,
+               droplet: app_model.droplet,
+               memory_in_mb: 5,
+               disk_in_mb: 10)
       end
 
       let(:expected_response) do
@@ -923,13 +904,12 @@ RSpec.describe 'Tasks' do
 
     describe 'perms' do
       it 'exlcudes secrets when the user should not see them' do
-        VCAP::CloudController::TaskModel.make(
-          name: 'task one',
-          command: 'echo task',
-          app_guid: app_model.guid,
-          droplet: app_model.droplet,
-          memory_in_mb: 5
-        )
+        create(:task_model,
+               name: 'task one',
+               command: 'echo task',
+               app_guid: app_model.guid,
+               droplet: app_model.droplet,
+               memory_in_mb: 5)
 
         get "/v3/apps/#{app_model.guid}/tasks", nil, headers_for(make_auditor_for_space(space))
 
@@ -942,8 +922,8 @@ RSpec.describe 'Tasks' do
       let(:user) { make_developer_for_space(space) }
 
       it 'filters by name' do
-        expected_task = VCAP::CloudController::TaskModel.make(name: 'task one', app: app_model)
-        VCAP::CloudController::TaskModel.make(name: 'task two', app: app_model)
+        expected_task = create(:task_model, name: 'task one', app: app_model)
+        create(:task_model, name: 'task two', app: app_model)
 
         query = { names: 'task one' }
 
@@ -968,8 +948,8 @@ RSpec.describe 'Tasks' do
       end
 
       it 'filters by state' do
-        expected_task = VCAP::CloudController::TaskModel.make(state: VCAP::CloudController::TaskModel::SUCCEEDED_STATE, app: app_model)
-        VCAP::CloudController::TaskModel.make(state: VCAP::CloudController::TaskModel::FAILED_STATE, app: app_model)
+        expected_task = create(:task_model, state: VCAP::CloudController::TaskModel::SUCCEEDED_STATE, app: app_model)
+        create(:task_model, state: VCAP::CloudController::TaskModel::FAILED_STATE, app: app_model)
 
         query = { states: 'SUCCEEDED' }
 
@@ -994,8 +974,8 @@ RSpec.describe 'Tasks' do
       end
 
       it 'filters by sequence_id' do
-        expected_task = VCAP::CloudController::TaskModel.make(app: app_model)
-        VCAP::CloudController::TaskModel.make(app: app_model)
+        expected_task = create(:task_model, app: app_model)
+        create(:task_model, app: app_model)
 
         query = { sequence_ids: expected_task.sequence_id }
 
@@ -1195,10 +1175,9 @@ RSpec.describe 'Tasks' do
 
     context 'when requesting a specific droplet' do
       let(:non_assigned_droplet) do
-        VCAP::CloudController::DropletModel.make(
-          app_guid: app_model.guid,
-          state: VCAP::CloudController::DropletModel::STAGED_STATE
-        )
+        create(:droplet_model,
+               app_guid: app_model.guid,
+               state: VCAP::CloudController::DropletModel::STAGED_STATE)
       end
 
       it 'uses the requested droplet' do
@@ -1222,7 +1201,7 @@ RSpec.describe 'Tasks' do
     end
 
     context 'when the client specifies a template' do
-      let(:process) { VCAP::CloudController::ProcessModel.make(app: app_model, command: 'start', user: 'TestUser') }
+      let(:process) { create(:process_model, app: app_model, command: 'start', user: 'TestUser') }
 
       it 'uses the command from the template process' do
         body = {

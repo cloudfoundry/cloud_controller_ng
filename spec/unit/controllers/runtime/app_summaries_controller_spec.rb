@@ -8,13 +8,13 @@ module VCAP::CloudController
       @num_services  = 2
       @free_mem_size = 128
 
-      @shared_domain = SharedDomain.make
+      @shared_domain = create(:shared_domain)
       @shared_domain.save
 
-      @space = Space.make
+      @space = create(:space)
       @environment_json = { 'HELLO' => 'WORLD' }
-      @route1 = Route.make(space: @space)
-      @route2 = Route.make(space: @space)
+      @route1 = create(:route, space: @space)
+      @route2 = create(:route, space: @space)
       @services = []
 
       @process = ProcessModelFactory.make(
@@ -27,18 +27,17 @@ module VCAP::CloudController
       )
 
       @num_services.times do
-        instance                            = ManagedServiceInstance.make(space: @space)
-        instance.service_instance_operation = ServiceInstanceOperation.make(
-          type: 'create',
-          state: 'in progress',
-          description: 'description goes here'
-        )
+        instance                            = create(:managed_service_instance, space: @space)
+        instance.service_instance_operation = create(:service_instance_operation,
+                                                     type: 'create',
+                                                     state: 'in progress',
+                                                     description: 'description goes here')
         @services << instance
-        ServiceBinding.make(app: @process.app, service_instance: instance)
+        create(:service_binding, app: @process.app, service_instance: instance)
       end
 
-      RouteMappingModel.make(app: @process.app, route: @route1, process_type: @process.type)
-      RouteMappingModel.make(app: @process.app, route: @route2, process_type: @process.type)
+      create(:route_mapping_model, app: @process.app, route: @route1, process_type: @process.type)
+      create(:route_mapping_model, app: @process.app, route: @route2, process_type: @process.type)
 
       set_current_user_as_admin
     end

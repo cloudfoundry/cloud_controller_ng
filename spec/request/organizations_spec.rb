@@ -3,13 +3,13 @@ require 'request_spec_shared_examples'
 
 module VCAP::CloudController
   RSpec.describe 'Organizations' do
-    let(:user) { User.make }
+    let(:user) { create(:user) }
     let(:user_header) { headers_for(user) }
     let(:admin_header) { admin_headers_for(user) }
-    let!(:organization1) { Organization.make name: 'Apocalypse World' }
-    let!(:organization2) { Organization.make name: 'Dungeon World' }
-    let!(:organization3) { Organization.make name: 'The Sprawl' }
-    let!(:inaccessible_organization) { Organization.make name: 'D&D' }
+    let!(:organization1) { create(:organization, name: 'Apocalypse World') }
+    let!(:organization2) { create(:organization, name: 'Dungeon World') }
+    let!(:organization3) { create(:organization, name: 'The Sprawl') }
+    let!(:inaccessible_organization) { create(:organization, name: 'D&D') }
     let(:uaa_client) { instance_double(VCAP::CloudController::UaaClient) }
 
     before do
@@ -105,7 +105,7 @@ module VCAP::CloudController
 
       context 'when "user_org_creation" feature flag is enabled' do
         before do
-          VCAP::CloudController::FeatureFlag.make(name: 'user_org_creation', enabled: true)
+          create(:feature_flag, name: 'user_org_creation', enabled: true)
         end
 
         it 'lets ALL users create orgs' do
@@ -171,11 +171,11 @@ module VCAP::CloudController
       end
 
       context 'when a non-admin sets the suspended field' do
-        let(:org) { Organization.make }
-        let(:space) { Space.make(organization: org) }
+        let(:org) { create(:organization) }
+        let(:space) { create(:space, organization: org) }
 
         before do
-          VCAP::CloudController::FeatureFlag.make(name: 'user_org_creation', enabled: true)
+          create(:feature_flag, name: 'user_org_creation', enabled: true)
         end
 
         context 'with suspended: true' do
@@ -206,7 +206,7 @@ module VCAP::CloudController
 
     describe 'GET /v3/organizations' do
       describe 'query list parameters' do
-        let(:isolation_segment1) { IsolationSegmentModel.make(name: 'seg') }
+        let(:isolation_segment1) { create(:isolation_segment_model, name: 'seg') }
         let(:assigner) { IsolationSegmentAssign.new }
 
         before do
@@ -312,24 +312,24 @@ module VCAP::CloudController
       end
 
       context 'label_selector' do
-        let!(:orgA) { Organization.make(name: 'A') }
-        let!(:orgAFruit) { OrganizationLabelModel.make(key_name: 'fruit', value: 'strawberry', organization: orgA) }
-        let!(:orgAAnimal) { OrganizationLabelModel.make(key_name: 'animal', value: 'horse', organization: orgA) }
+        let!(:orgA) { create(:organization, name: 'A') }
+        let!(:orgAFruit) { create(:organization_label_model, key_name: 'fruit', value: 'strawberry', organization: orgA) }
+        let!(:orgAAnimal) { create(:organization_label_model, key_name: 'animal', value: 'horse', organization: orgA) }
 
-        let!(:orgB) { Organization.make(name: 'B') }
-        let!(:orgBEnv) { OrganizationLabelModel.make(key_name: 'env', value: 'prod', organization: orgB) }
-        let!(:orgBAnimal) { OrganizationLabelModel.make(key_name: 'animal', value: 'dog', organization: orgB) }
+        let!(:orgB) { create(:organization, name: 'B') }
+        let!(:orgBEnv) { create(:organization_label_model, key_name: 'env', value: 'prod', organization: orgB) }
+        let!(:orgBAnimal) { create(:organization_label_model, key_name: 'animal', value: 'dog', organization: orgB) }
 
-        let!(:orgC) { Organization.make(name: 'C') }
-        let!(:orgCEnv) { OrganizationLabelModel.make(key_name: 'env', value: 'prod', organization: orgC) }
-        let!(:orgCAnimal) { OrganizationLabelModel.make(key_name: 'animal', value: 'horse', organization: orgC) }
+        let!(:orgC) { create(:organization, name: 'C') }
+        let!(:orgCEnv) { create(:organization_label_model, key_name: 'env', value: 'prod', organization: orgC) }
+        let!(:orgCAnimal) { create(:organization_label_model, key_name: 'animal', value: 'horse', organization: orgC) }
 
-        let!(:orgD) { Organization.make(name: 'D') }
-        let!(:orgDEnv) { OrganizationLabelModel.make(key_name: 'env', value: 'prod', organization: orgD) }
+        let!(:orgD) { create(:organization, name: 'D') }
+        let!(:orgDEnv) { create(:organization_label_model, key_name: 'env', value: 'prod', organization: orgD) }
 
-        let!(:orgE) { Organization.make(name: 'E') }
-        let!(:orgEEnv) { OrganizationLabelModel.make(key_name: 'env', value: 'staging', organization: orgE) }
-        let!(:orgEAnimal) { OrganizationLabelModel.make(key_name: 'animal', value: 'dog', organization: orgE) }
+        let!(:orgE) { create(:organization, name: 'E') }
+        let!(:orgEEnv) { create(:organization_label_model, key_name: 'env', value: 'staging', organization: orgE) }
+        let!(:orgEAnimal) { create(:organization_label_model, key_name: 'animal', value: 'dog', organization: orgE) }
 
         it 'returns the matching orgs' do
           get '/v3/organizations?label_selector=!fruit,env=prod,animal in (dog,horse)', nil, admin_header
@@ -349,7 +349,7 @@ module VCAP::CloudController
 
         it_behaves_like 'permissions for list endpoint', ALL_PERMISSIONS do
           let(:api_call) { ->(user_headers) { get 'v3/organizations', nil, user_headers } }
-          let(:space) { VCAP::CloudController::Space.make }
+          let(:space) { create(:space) }
           let(:org) { space.organization }
           let(:expected_codes_and_responses) do
             h = Hash.new({ code: 200, response_guids: [org.guid] }.freeze)
@@ -364,7 +364,7 @@ module VCAP::CloudController
     end
 
     describe 'GET /v3/isolation_segments/:guid/organizations' do
-      let(:isolation_segment1) { IsolationSegmentModel.make(name: 'awesome_seg') }
+      let(:isolation_segment1) { create(:isolation_segment_model, name: 'awesome_seg') }
       let(:assigner) { IsolationSegmentAssign.new }
 
       before do
@@ -438,7 +438,7 @@ module VCAP::CloudController
     end
 
     describe 'GET /v3/organizations/:guid/relationships/default_isolation_segment' do
-      let(:isolation_segment) { IsolationSegmentModel.make(name: 'default_seg') }
+      let(:isolation_segment) { create(:isolation_segment_model, name: 'default_seg') }
       let(:assigner) { IsolationSegmentAssign.new }
 
       before do
@@ -469,7 +469,7 @@ module VCAP::CloudController
     end
 
     describe 'GET /v3/organizations/:guid/domains' do
-      let(:space) { Space.make }
+      let(:space) { create(:space) }
       let(:org) { space.organization }
 
       describe 'when the user is not logged in' do
@@ -480,9 +480,9 @@ module VCAP::CloudController
       end
 
       describe 'when the user is logged in' do
-        let!(:shared_domain) { SharedDomain.make(guid: 'shared-guid') }
-        let!(:owned_private_domain) { PrivateDomain.make(owning_organization_guid: org.guid, guid: 'owned-private') }
-        let!(:shared_private_domain) { PrivateDomain.make(owning_organization_guid: organization1.guid, guid: 'shared-private') }
+        let!(:shared_domain) { create(:shared_domain, guid: 'shared-guid') }
+        let!(:owned_private_domain) { create(:private_domain, owning_organization_guid: org.guid, guid: 'owned-private') }
+        let!(:shared_private_domain) { create(:private_domain, owning_organization_guid: organization1.guid, guid: 'shared-private') }
 
         let(:shared_domain_json) do
           {
@@ -671,12 +671,12 @@ module VCAP::CloudController
       end
 
       describe 'when filtering by labels' do
-        let!(:domain1) { PrivateDomain.make(name: 'dom1.com', owning_organization: org) }
-        let!(:domain1_label) { DomainLabelModel.make(resource_guid: domain1.guid, key_name: 'animal', value: 'dog') }
+        let!(:domain1) { create(:private_domain, name: 'dom1.com', owning_organization: org) }
+        let!(:domain1_label) { create(:domain_label_model, resource_guid: domain1.guid, key_name: 'animal', value: 'dog') }
 
-        let!(:domain2) { PrivateDomain.make(name: 'dom2.com', owning_organization: org) }
-        let!(:domain2_label) { DomainLabelModel.make(resource_guid: domain2.guid, key_name: 'animal', value: 'cow') }
-        let!(:domain2__exclusive_label) { DomainLabelModel.make(resource_guid: domain2.guid, key_name: 'santa', value: 'claus') }
+        let!(:domain2) { create(:private_domain, name: 'dom2.com', owning_organization: org) }
+        let!(:domain2_label) { create(:domain_label_model, resource_guid: domain2.guid, key_name: 'animal', value: 'cow') }
+        let!(:domain2__exclusive_label) { create(:domain_label_model, resource_guid: domain2.guid, key_name: 'santa', value: 'claus') }
 
         let(:base_link) { "/v3/organizations/#{org.guid}/domains" }
         let(:base_pagination_link) { "#{link_prefix}#{base_link}" }
@@ -850,7 +850,7 @@ module VCAP::CloudController
     end
 
     describe 'GET /v3/organizations/:guid/domains/default' do
-      let(:space) { Space.make }
+      let(:space) { create(:space) }
       let(:org) { space.organization }
       let(:api_call) { ->(user_headers) { get "/v3/organizations/#{org.guid}/domains/default", nil, user_headers } }
 
@@ -871,8 +871,8 @@ module VCAP::CloudController
       end
 
       context 'when domains exist' do
-        let!(:internal_domain) { SharedDomain.make(internal: true) } # used to ensure internal domains do not get returned in any case
-        let!(:tcp_domain) { SharedDomain.make(router_group_guid: 'default-tcp') }
+        let!(:internal_domain) { create(:shared_domain, internal: true) } # used to ensure internal domains do not get returned in any case
+        let!(:tcp_domain) { create(:shared_domain, router_group_guid: 'default-tcp') }
         let(:expected_codes_and_responses) do
           h = Hash.new(
             { code: 200,
@@ -882,8 +882,8 @@ module VCAP::CloudController
           h
         end
 
-        let(:shared_private_domain) { PrivateDomain.make(owning_organization_guid: organization1.guid) }
-        let(:owned_private_domain) { PrivateDomain.make(owning_organization_guid: org.guid) }
+        let(:shared_private_domain) { create(:private_domain, owning_organization_guid: organization1.guid) }
+        let(:owned_private_domain) { create(:private_domain, owning_organization_guid: org.guid) }
 
         before do
           org.add_private_domain(shared_private_domain)
@@ -937,7 +937,7 @@ module VCAP::CloudController
         end
 
         context 'when at least one non-internal shared domain exists' do
-          let!(:shared_domain) { SharedDomain.make }
+          let!(:shared_domain) { create(:shared_domain) }
 
           let(:domain_json) do
             {
@@ -972,7 +972,7 @@ module VCAP::CloudController
       end
 
       context 'when only internal domains exist' do
-        let!(:internal_domain) { SharedDomain.make(internal: true) } # used to ensure internal domains do not get returned in any case
+        let!(:internal_domain) { create(:shared_domain, internal: true) } # used to ensure internal domains do not get returned in any case
 
         let(:expected_codes_and_responses) do
           h = Hash.new(
@@ -985,7 +985,7 @@ module VCAP::CloudController
       end
 
       context 'when only tcp domains exist' do
-        let!(:tcp_domain) { SharedDomain.make(router_group_guid: 'default-tcp') }
+        let!(:tcp_domain) { create(:shared_domain, router_group_guid: 'default-tcp') }
 
         let(:expected_codes_and_responses) do
           h = Hash.new(
@@ -1010,12 +1010,12 @@ module VCAP::CloudController
     end
 
     describe 'GET /v3/organizations/:guid/usage_summary' do
-      let!(:org) { Organization.make }
-      let!(:space) { Space.make(organization: org) }
-      let!(:app1) { AppModel.make(space:) }
-      let!(:app2) { AppModel.make(space:) }
-      let!(:process1) { ProcessModel.make(:process, state: 'STARTED', app: app1, type: 'web', memory: 101) }
-      let!(:process2) { ProcessModel.make(:process, state: 'STARTED', app: app1, type: 'web', memory: 102, instances: 2) }
+      let!(:org) { create(:organization) }
+      let!(:space) { create(:space, organization: org) }
+      let!(:app1) { create(:app_model, space:) }
+      let!(:app2) { create(:app_model, space:) }
+      let!(:process1) { create(:process_model, :process, state: 'STARTED', app: app1, type: 'web', memory: 101) }
+      let!(:process2) { create(:process_model, :process, state: 'STARTED', app: app1, type: 'web', memory: 102, instances: 2) }
 
       before do
         ProcessModelFactory.make(space: space, memory: 200, instances: 2, state: 'STARTED', type: 'worker')
@@ -1061,7 +1061,7 @@ module VCAP::CloudController
       end
 
       context 'when the user cannot read from the org' do
-        let(:user) { set_current_user(VCAP::CloudController::User.make) }
+        let(:user) { set_current_user(create(:user)) }
 
         before do
           stub_readable_org_guids_for(user, [])
@@ -1076,7 +1076,7 @@ module VCAP::CloudController
 
     describe 'PATCH /v3/organizations/:guid/relationships/default_isolation_segment' do
       context 'as admin' do
-        let(:isolation_segment) { IsolationSegmentModel.make(name: 'default_seg') }
+        let(:isolation_segment) { create(:isolation_segment_model, name: 'default_seg') }
         let(:update_request) do
           {
             data: { guid: isolation_segment.guid }
@@ -1117,8 +1117,8 @@ module VCAP::CloudController
       end
 
       context 'when organization is suspended' do
-        let(:org) { Organization.make }
-        let(:space) { Space.make(organization: org) }
+        let(:org) { create(:organization) }
+        let(:space) { create(:space, organization: org) }
         let(:api_call) { ->(user_headers) { patch "/v3/organizations/#{org.guid}/relationships/default_isolation_segment", nil, user_headers } }
         let(:expected_codes_and_responses) do
           h = Hash.new({ code: 403, errors: CF_NOT_AUTHORIZED }.freeze)
@@ -1137,7 +1137,7 @@ module VCAP::CloudController
     end
 
     describe 'GET /v3/organizations/:guid' do
-      let(:space) { VCAP::CloudController::Space.make }
+      let(:space) { create(:space) }
       let(:org) { space.organization }
       let(:api_call) { ->(user_headers) { get "/v3/organizations/#{org.guid}", nil, user_headers } }
       let(:expected_response_object) do
@@ -1230,7 +1230,7 @@ module VCAP::CloudController
 
         context 'when the new name is already taken' do
           before do
-            Organization.make(name: 'new-name')
+            create(:organization, name: 'new-name')
           end
 
           it 'returns a 422 with a helpful error message' do
@@ -1280,8 +1280,8 @@ module VCAP::CloudController
         end
 
         context 'deleting labels' do
-          let!(:org1Fruit) { OrganizationLabelModel.make(key_name: 'fruit', value: 'strawberry', organization: organization1) }
-          let!(:org1Animal) { OrganizationLabelModel.make(key_name: 'animal', value: 'horse', organization: organization1) }
+          let!(:org1Fruit) { create(:organization_label_model, key_name: 'fruit', value: 'strawberry', organization: organization1) }
+          let!(:org1Animal) { create(:organization_label_model, key_name: 'animal', value: 'horse', organization: organization1) }
           let(:update_request) do
             {
               metadata: {
@@ -1323,8 +1323,8 @@ module VCAP::CloudController
       end
 
       context 'when organization is suspended' do
-        let(:org) { Organization.make }
-        let(:space) { Space.make(organization: org) }
+        let(:org) { create(:organization) }
+        let(:space) { create(:space, organization: org) }
         let(:api_call) { ->(user_headers) { patch "/v3/organizations/#{org.guid}", nil, user_headers } }
         let(:expected_codes_and_responses) do
           h = Hash.new({ code: 403, errors: CF_NOT_AUTHORIZED }.freeze)
@@ -1342,8 +1342,8 @@ module VCAP::CloudController
       end
 
       context 'when a non-admin mutates the suspended field' do
-        let(:org) { Organization.make }
-        let(:space) { Space.make(organization: org) }
+        let(:org) { create(:organization) }
+        let(:space) { create(:space, organization: org) }
 
         context 'on an active org with suspended: true' do
           let(:api_call) do
@@ -1396,22 +1396,22 @@ module VCAP::CloudController
     end
 
     describe 'DELETE /v3/organizations/:guid' do
-      let(:space) { Space.make }
+      let(:space) { create(:space) }
       let(:org) { space.organization }
-      let(:associated_user) { User.make(default_space: space) }
+      let(:associated_user) { create(:user, default_space: space) }
       let(:shared_service_instance) do
-        s = ServiceInstance.make
+        s = create(:service_instance)
         s.add_shared_space(space)
         s
       end
 
       before do
-        AppModel.make(space:)
-        Route.make(space:)
+        create(:app_model, space:)
+        create(:route, space:)
         org.add_user(associated_user)
         space.add_developer(associated_user)
-        ServiceInstance.make(space:)
-        ServiceBroker.make(space:)
+        create(:service_instance, space:)
+        create(:service_broker, space:)
       end
 
       let(:db_check) do
@@ -1479,7 +1479,9 @@ module VCAP::CloudController
       end
 
       describe 'when there is a shared private domain' do
-        let!(:shared_private_domain) { PrivateDomain.make(owning_organization_guid: org.guid, guid: 'shared-private', shared_organization_guids: [organization1.guid]) }
+        let!(:shared_private_domain) do
+          create(:private_domain, owning_organization_guid: org.guid, guid: 'shared-private', shared_organization_guids: [organization1.guid])
+        end
 
         it 'returns a 202' do
           delete "/v3/organizations/#{org.guid}", nil, admin_headers
@@ -1505,8 +1507,8 @@ module VCAP::CloudController
     end
 
     describe 'GET /v3/organizations/:guid/users' do
-      let(:other_org_user) { VCAP::CloudController::User.make(guid: 'other-org-user') }
-      let(:org_manager) { VCAP::CloudController::User.make(guid: 'org-manager') }
+      let(:other_org_user) { create(:user, guid: 'other-org-user') }
+      let(:org_manager) { create(:user, guid: 'org-manager') }
 
       before do
         allow(VCAP::CloudController::UaaClient).to receive(:new).and_return(uaa_client)
@@ -1657,7 +1659,7 @@ module VCAP::CloudController
         end
 
         context 'by labels' do
-          let!(:user_label) { VCAP::CloudController::UserLabelModel.make(resource_guid: user.guid, key_name: 'animal', value: 'dog') }
+          let!(:user_label) { create(:user_label_model, resource_guid: user.guid, key_name: 'animal', value: 'dog') }
 
           it 'returns a 200 and the filtered users for "in" label selector' do
             get "/v3/organizations/#{organization1.guid}/users?label_selector=animal in (dog)", nil, admin_header
@@ -1679,10 +1681,10 @@ module VCAP::CloudController
 
         # normally this would be under request_spec_shared_examples; we copy it here because this test brings up issues with UAA
         context 'by timestamps on creation' do
-          let!(:resource_1) { VCAP::CloudController::User.make(guid: '1', created_at: '2020-05-26T18:47:01Z') }
-          let!(:resource_2) { VCAP::CloudController::User.make(guid: '2', created_at: '2020-05-26T18:47:02Z') }
-          let!(:resource_3) { VCAP::CloudController::User.make(guid: '3', created_at: '2020-05-26T18:47:03Z') }
-          let!(:resource_4) { VCAP::CloudController::User.make(guid: '4', created_at: '2020-05-26T18:47:04Z') }
+          let!(:resource_1) { create(:user, guid: '1', created_at: '2020-05-26T18:47:01Z') }
+          let!(:resource_2) { create(:user, guid: '2', created_at: '2020-05-26T18:47:02Z') }
+          let!(:resource_3) { create(:user, guid: '3', created_at: '2020-05-26T18:47:03Z') }
+          let!(:resource_4) { create(:user, guid: '4', created_at: '2020-05-26T18:47:04Z') }
 
           before do
             organization1.add_user(resource_1)
@@ -1707,10 +1709,10 @@ module VCAP::CloudController
             allow(uaa_client).to receive(:users_for_ids).and_return({})
           end
 
-          let!(:resource_1) { VCAP::CloudController::User.make(guid: '1', updated_at: '2020-05-26T18:47:01Z') }
-          let!(:resource_2) { VCAP::CloudController::User.make(guid: '2', updated_at: '2020-05-26T18:47:02Z') }
-          let!(:resource_3) { VCAP::CloudController::User.make(guid: '3', updated_at: '2020-05-26T18:47:03Z') }
-          let!(:resource_4) { VCAP::CloudController::User.make(guid: '4', updated_at: '2020-05-26T18:47:04Z') }
+          let!(:resource_1) { create(:user, guid: '1', updated_at: '2020-05-26T18:47:01Z') }
+          let!(:resource_2) { create(:user, guid: '2', updated_at: '2020-05-26T18:47:02Z') }
+          let!(:resource_3) { create(:user, guid: '3', updated_at: '2020-05-26T18:47:03Z') }
+          let!(:resource_4) { create(:user, guid: '4', updated_at: '2020-05-26T18:47:04Z') }
 
           after do
             VCAP::CloudController::User.plugin :timestamps, update_on_create: true
@@ -1728,8 +1730,8 @@ module VCAP::CloudController
       end
 
       context 'no filters' do
-        let(:org) { Organization.make }
-        let(:space) { Space.make(organization: org) }
+        let(:org) { create(:organization) }
+        let(:space) { create(:space, organization: org) }
         let(:api_call) { ->(user_headers) { get "/v3/organizations/#{org.guid}/users", nil, user_headers } }
         let(:user_json) { build_user_json(user.guid, 'bob-mcjames', 'Okta') }
         let(:org_manager_json) { build_user_json(org_manager.guid, 'rob-mcjames', 'Okta') }

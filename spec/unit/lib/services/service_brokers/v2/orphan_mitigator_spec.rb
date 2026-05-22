@@ -3,11 +3,11 @@ require 'spec_helper'
 module VCAP::Services
   module ServiceBrokers::V2
     RSpec.describe OrphanMitigator do
-      let(:plan) { VCAP::CloudController::ServicePlan.make }
-      let(:space) { VCAP::CloudController::Space.make }
+      let(:plan) { create(:service_plan) }
+      let(:space) { create(:space) }
       let(:service_instance) { VCAP::CloudController::ManagedServiceInstance.new(service_plan: plan, space: space) }
-      let(:service_binding) { VCAP::CloudController::ServiceBinding.make }
-      let(:service_key) { VCAP::CloudController::ServiceKey.make }
+      let(:service_binding) { create(:service_binding) }
+      let(:service_key) { create(:service_key) }
       let(:name) { 'fake-name' }
 
       describe 'cleanup_failed_provision' do

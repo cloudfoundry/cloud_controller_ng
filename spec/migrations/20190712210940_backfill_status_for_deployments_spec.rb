@@ -10,7 +10,7 @@ RSpec.describe 'backfill status_value for deployments', isolation: :truncation, 
     )
   end
 
-  let(:app) { VCAP::CloudController::AppModel.make }
+  let(:app) { create(:app_model) }
 
   it 'backfills status_value based on deployment state' do
     # Create all deployment variations

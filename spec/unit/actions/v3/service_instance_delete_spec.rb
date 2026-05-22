@@ -19,7 +19,7 @@ module VCAP::CloudController
       describe '#blocking_operation_in_progress?' do
         describe 'managed service instance' do
           let!(:service_instance) do
-            VCAP::CloudController::ManagedServiceInstance.make.tap do |si|
+            create(:managed_service_instance).tap do |si|
               si.save_with_new_operation({}, { type: last_operation_type, state: last_operation_state })
             end
           end
@@ -63,7 +63,7 @@ module VCAP::CloudController
 
         describe 'user provided service instances' do
           let!(:service_instance) do
-            VCAP::CloudController::UserProvidedServiceInstance.make.tap do |si|
+            create(:user_provided_service_instance).tap do |si|
               si.save_with_new_operation({}, { type: 'create', state: 'succeeded' })
             end
           end
@@ -81,23 +81,22 @@ module VCAP::CloudController
 
         context 'user-provided service instances' do
           let!(:service_instance) do
-            si = VCAP::CloudController::UserProvidedServiceInstance.make(
-              guid: 'bommel',
-              name: 'foo',
-              credentials: {
-                foo: 'bar',
-                baz: 'qux'
-              },
-              syslog_drain_url: 'https://foo.com',
-              route_service_url: 'https://bar.com',
-              tags: %w[accounting mongodb]
-            )
-            VCAP::CloudController::ServiceInstanceLabelModel.make(service_instance: si, key_prefix: 'pre.fix', key_name: 'to_delete', value: 'value')
-            VCAP::CloudController::ServiceInstanceLabelModel.make(service_instance: si, key_prefix: 'pre.fix', key_name: 'tail', value: 'fluffy')
-            VCAP::CloudController::ServiceInstanceAnnotationModel.make(service_instance: si, key_prefix: 'pre.fix', key_name: 'to_delete', value: 'value')
-            VCAP::CloudController::ServiceInstanceAnnotationModel.make(service_instance: si, key_prefix: 'pre.fix', key_name: 'fox', value: 'bushy')
+            si = create(:user_provided_service_instance,
+                        guid: 'bommel',
+                        name: 'foo',
+                        credentials: {
+                          foo: 'bar',
+                          baz: 'qux'
+                        },
+                        syslog_drain_url: 'https://foo.com',
+                        route_service_url: 'https://bar.com',
+                        tags: %w[accounting mongodb])
+            create(:service_instance_label_model, service_instance: si, key_prefix: 'pre.fix', key_name: 'to_delete', value: 'value')
+            create(:service_instance_label_model, service_instance: si, key_prefix: 'pre.fix', key_name: 'tail', value: 'fluffy')
+            create(:service_instance_annotation_model, service_instance: si, key_prefix: 'pre.fix', key_name: 'to_delete', value: 'value')
+            create(:service_instance_annotation_model, service_instance: si, key_prefix: 'pre.fix', key_name: 'fox', value: 'bushy')
 
-            si.service_instance_operation = VCAP::CloudController::ServiceInstanceOperation.make(type: 'update', state: 'succeeded')
+            si.service_instance_operation = create(:service_instance_operation, type: 'update', state: 'succeeded')
             si
           end
           let(:deprovision_response) do
@@ -162,12 +161,12 @@ module VCAP::CloudController
               end
             end
 
-            let!(:route_binding_1) { RouteBinding.make(service_instance:) }
-            let!(:route_binding_2) { RouteBinding.make(service_instance:) }
-            let!(:route_binding_3) { RouteBinding.make(service_instance:) }
-            let!(:service_binding_1) { ServiceBinding.make(service_instance:) }
-            let!(:service_binding_2) { ServiceBinding.make(service_instance:) }
-            let!(:service_binding_3) { ServiceBinding.make(service_instance:) }
+            let!(:route_binding_1) { create(:route_binding, service_instance:) }
+            let!(:route_binding_2) { create(:route_binding, service_instance:) }
+            let!(:route_binding_3) { create(:route_binding, service_instance:) }
+            let!(:service_binding_1) { create(:service_binding, service_instance:) }
+            let!(:service_binding_2) { create(:service_binding, service_instance:) }
+            let!(:service_binding_3) { create(:service_binding, service_instance:) }
 
             before do
               allow(ServiceRouteBindingDelete).to receive(:new).and_return(delete_route_binding_action)
@@ -225,7 +224,7 @@ module VCAP::CloudController
         end
 
         context 'managed service instances' do
-          let!(:service_instance) { VCAP::CloudController::ManagedServiceInstance.make }
+          let!(:service_instance) { create(:managed_service_instance) }
 
           let(:deprovision_response) do
             {
@@ -408,15 +407,15 @@ module VCAP::CloudController
                 end
               end
 
-              let!(:service_binding_1) { ServiceBinding.make(service_instance:) }
-              let!(:service_binding_2) { ServiceBinding.make(service_instance:) }
-              let!(:service_binding_3) { ServiceBinding.make(service_instance:) }
-              let!(:service_key_1) { ServiceKey.make(service_instance:) }
-              let!(:service_key_2) { ServiceKey.make(service_instance:) }
-              let!(:service_key_3) { ServiceKey.make(service_instance:) }
-              let!(:shared_space_1) { Space.make.tap { |s| service_instance.add_shared_space(s) } }
-              let!(:shared_space_2) { Space.make.tap { |s| service_instance.add_shared_space(s) } }
-              let!(:shared_space_3) { Space.make.tap { |s| service_instance.add_shared_space(s) } }
+              let!(:service_binding_1) { create(:service_binding, service_instance:) }
+              let!(:service_binding_2) { create(:service_binding, service_instance:) }
+              let!(:service_binding_3) { create(:service_binding, service_instance:) }
+              let!(:service_key_1) { create(:service_key, service_instance:) }
+              let!(:service_key_2) { create(:service_key, service_instance:) }
+              let!(:service_key_3) { create(:service_key, service_instance:) }
+              let!(:shared_space_1) { create(:space).tap { |s| service_instance.add_shared_space(s) } }
+              let!(:shared_space_2) { create(:space).tap { |s| service_instance.add_shared_space(s) } }
+              let!(:shared_space_3) { create(:space).tap { |s| service_instance.add_shared_space(s) } }
 
               before do
                 allow(ServiceCredentialBindingDelete).to receive(:new) { |type, _| type == :credential ? delete_service_binding_action : delete_service_key_action }
@@ -490,10 +489,10 @@ module VCAP::CloudController
 
             context 'async broker response' do
               context 'route binding' do
-                let!(:service_offering) { Service.make(requires: %w[route_forwarding]) }
-                let!(:service_plan) { ServicePlan.make(service: service_offering) }
-                let!(:service_instance) { ManagedServiceInstance.make(service_plan:) }
-                let!(:route_binding) { RouteBinding.make(service_instance:) }
+                let!(:service_offering) { create(:service, requires: %w[route_forwarding]) }
+                let!(:service_plan) { create(:service_plan, service: service_offering) }
+                let!(:service_instance) { create(:managed_service_instance, service_plan:) }
+                let!(:route_binding) { create(:route_binding, service_instance:) }
                 let(:delete_route_binding_action) do
                   double(ServiceRouteBindingDelete).tap do |d|
                     allow(d).to receive(:delete).and_return({ finished: false })
@@ -517,7 +516,7 @@ module VCAP::CloudController
               end
 
               context 'service bindings' do
-                let!(:service_binding) { ServiceBinding.make(service_instance:) }
+                let!(:service_binding) { create(:service_binding, service_instance:) }
                 let(:delete_service_binding_action) do
                   double(ServiceCredentialBindingDelete).tap do |d|
                     allow(d).to receive(:delete).and_return({ finished: false })
@@ -541,7 +540,7 @@ module VCAP::CloudController
               end
 
               context 'service keys' do
-                let!(:service_key) { ServiceKey.make(service_instance:) }
+                let!(:service_key) { create(:service_key, service_instance:) }
                 let(:delete_service_binding_action) do
                   double(ServiceCredentialBindingDelete).tap do |d|
                     allow(d).to receive(:delete).and_return({ finished: false })
@@ -570,7 +569,7 @@ module VCAP::CloudController
 
       describe '#poll' do
         let!(:service_instance) do
-          VCAP::CloudController::ManagedServiceInstance.make.tap do |i|
+          create(:managed_service_instance).tap do |i|
             i.save_with_new_operation(
               {},
               {
@@ -749,7 +748,7 @@ module VCAP::CloudController
 
       describe '#update_last_operation_with_failure' do
         let!(:service_instance) do
-          ManagedServiceInstance.make.tap do |i|
+          create(:managed_service_instance).tap do |i|
             i.save_with_new_operation({}, {
                                         type: 'delete',
                                         state: 'in progress',

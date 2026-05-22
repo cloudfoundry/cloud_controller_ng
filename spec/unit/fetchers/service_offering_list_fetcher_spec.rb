@@ -19,14 +19,14 @@ module VCAP::CloudController
       end
 
       context 'service offering with both public and org restricted plans' do
-        let(:org) { Organization.make }
+        let(:org) { create(:organization) }
         let(:readable_orgs) { [org] }
 
         it 'shows unique results' do
-          service_offering = Service.make(label: "with-public-and-org-restricted-plans-#{Sham.name}")
-          ServicePlan.make(public: true, active: true, service: service_offering)
-          service_plan = ServicePlan.make(public: false, service: service_offering)
-          ServicePlanVisibility.make(organization: org, service_plan: service_plan)
+          service_offering = create(:service, label: "with-public-and-org-restricted-plans-#{Sham.name}")
+          create(:service_plan, public: true, active: true, service: service_offering)
+          service_plan = create(:service_plan, public: false, service: service_offering)
+          create(:service_plan_visibility, organization: org, service_plan: service_plan)
 
           service_offerings = fetcher.fetch(message, readable_orgs_query:).all
           expect(service_offerings).to contain_exactly(service_offering)
@@ -40,18 +40,18 @@ module VCAP::CloudController
         let!(:private_offering_1) { make_private_offering }
         let!(:private_offering_2) { make_private_offering }
 
-        let(:org_1) { Organization.make }
-        let(:org_2) { Organization.make }
-        let(:org_3) { Organization.make }
+        let(:org_1) { create(:organization) }
+        let(:org_2) { create(:organization) }
+        let(:org_3) { create(:organization) }
         let!(:org_restricted_offering_1) { make_org_restricted_offering(org_1) }
         let!(:org_restricted_offering_2) { make_org_restricted_offering(org_2) }
         let!(:org_restricted_offering_3) { make_org_restricted_offering(org_3) }
         let!(:org_restricted_offering_4) { make_org_restricted_offering(org_3) }
         let!(:org_restricted_offering_5) { make_org_restricted_offering(org_1, org_3) }
 
-        let(:space_1) { Space.make(organization: org_1) }
-        let(:space_2) { Space.make(organization: org_2) }
-        let(:space_3) { Space.make(organization: org_3) }
+        let(:space_1) { create(:space, organization: org_1) }
+        let(:space_2) { create(:space, organization: org_2) }
+        let(:space_3) { create(:space, organization: org_3) }
         let!(:space_scoped_offering_1) { make_space_scoped_offering(space_1) }
         let!(:space_scoped_offering_2) { make_space_scoped_offering(space_2) }
         let!(:space_scoped_offering_3) { make_space_scoped_offering(space_3) }
@@ -140,13 +140,13 @@ module VCAP::CloudController
       end
 
       describe 'filtering by organization_guids and space_guids' do
-        let(:org_1) { Organization.make }
-        let(:org_2) { Organization.make }
-        let(:org_3) { Organization.make }
-        let(:space_1_1) { Space.make(organization: org_1) }
-        let!(:space_1_2) { Space.make(organization: org_1) }
-        let(:space_2) { Space.make(organization: org_2) }
-        let(:space_3) { Space.make(organization: org_3) }
+        let(:org_1) { create(:organization) }
+        let(:org_2) { create(:organization) }
+        let(:org_3) { create(:organization) }
+        let(:space_1_1) { create(:space, organization: org_1) }
+        let!(:space_1_2) { create(:space, organization: org_1) }
+        let(:space_2) { create(:space, organization: org_2) }
+        let(:space_3) { create(:space, organization: org_3) }
 
         let!(:public_offering) { make_public_offering(number_of_plans: 2) }
 
@@ -373,10 +373,10 @@ module VCAP::CloudController
         let(:service_offerings) { ServiceOfferingListFetcher.fetch(message, omniscient: true).all }
 
         describe 'the `available` filter' do
-          let!(:service_offering_available) { ServicePlan.make(public: true, active: true).service }
+          let!(:service_offering_available) { create(:service_plan, public: true, active: true).service }
           let!(:service_offering_unavailable) do
-            offering = Service.make(active: false)
-            ServicePlan.make(public: true, active: true, service: offering)
+            offering = create(:service, active: false)
+            create(:service_plan, public: true, active: true, service: offering)
             offering
           end
 
@@ -398,10 +398,10 @@ module VCAP::CloudController
         end
 
         describe 'the `broker_catalog_ids` filter' do
-          let!(:service_offering_1) { VCAP::CloudController::ServicePlan.make(public: true).service }
-          let!(:service_offering_2) { VCAP::CloudController::ServicePlan.make(public: true).service }
-          let!(:service_offering_3) { VCAP::CloudController::ServicePlan.make(public: true).service }
-          let!(:service_offering_4) { VCAP::CloudController::ServicePlan.make(public: true).service }
+          let!(:service_offering_1) { create(:service_plan, public: true).service }
+          let!(:service_offering_2) { create(:service_plan, public: true).service }
+          let!(:service_offering_3) { create(:service_plan, public: true).service }
+          let!(:service_offering_4) { create(:service_plan, public: true).service }
 
           let(:message) do
             ServiceOfferingsListMessage.from_params({ broker_catalog_ids: [service_offering_1.unique_id, service_offering_4.unique_id].join(',') }.with_indifferent_access)
@@ -416,19 +416,19 @@ module VCAP::CloudController
         end
 
         describe 'the `service_broker_guids` filter' do
-          let!(:service_broker) { VCAP::CloudController::ServiceBroker.make }
+          let!(:service_broker) { create(:service_broker) }
           let!(:service_offering_1) do
-            offering = VCAP::CloudController::Service.make(service_broker:)
-            VCAP::CloudController::ServicePlan.make(public: true, service: offering)
+            offering = create(:service, service_broker:)
+            create(:service_plan, public: true, service: offering)
             offering
           end
           let!(:service_offering_2) do
-            offering = VCAP::CloudController::Service.make(service_broker:)
-            VCAP::CloudController::ServicePlan.make(public: true, service: offering)
+            offering = create(:service, service_broker:)
+            create(:service_plan, public: true, service: offering)
             offering
           end
-          let!(:service_offering_3) { VCAP::CloudController::ServicePlan.make.service }
-          let!(:service_offering_4) { VCAP::CloudController::ServicePlan.make.service }
+          let!(:service_offering_3) { create(:service_plan).service }
+          let!(:service_offering_4) { create(:service_plan).service }
 
           let(:service_broker_guids) { [service_broker.guid, service_offering_3.service_broker.guid] }
           let(:message) { ServiceOfferingsListMessage.from_params({ service_broker_guids: service_broker_guids.join(',') }.with_indifferent_access) }
@@ -443,19 +443,19 @@ module VCAP::CloudController
         end
 
         describe 'the `service_broker_names` filter' do
-          let!(:service_broker) { VCAP::CloudController::ServiceBroker.make }
+          let!(:service_broker) { create(:service_broker) }
           let!(:service_offering_1) do
-            offering = VCAP::CloudController::Service.make(service_broker:)
-            VCAP::CloudController::ServicePlan.make(public: true, service: offering)
+            offering = create(:service, service_broker:)
+            create(:service_plan, public: true, service: offering)
             offering
           end
           let!(:service_offering_2) do
-            offering = VCAP::CloudController::Service.make(service_broker:)
-            VCAP::CloudController::ServicePlan.make(public: true, service: offering)
+            offering = create(:service, service_broker:)
+            create(:service_plan, public: true, service: offering)
             offering
           end
-          let!(:service_offering_3) { VCAP::CloudController::ServicePlan.make.service }
-          let!(:service_offering_4) { VCAP::CloudController::ServicePlan.make.service }
+          let!(:service_offering_3) { create(:service_plan).service }
+          let!(:service_offering_4) { create(:service_plan).service }
 
           let(:service_broker_names) { [service_broker.name, service_offering_4.service_broker.name] }
           let(:message) { ServiceOfferingsListMessage.from_params({ service_broker_names: service_broker_names.join(',') }.with_indifferent_access) }
@@ -470,10 +470,10 @@ module VCAP::CloudController
         end
 
         describe 'the `names` filter' do
-          let!(:service_offering_1) { VCAP::CloudController::ServicePlan.make(public: true).service }
-          let!(:service_offering_2) { VCAP::CloudController::ServicePlan.make(public: true).service }
-          let!(:service_offering_3) { VCAP::CloudController::ServicePlan.make(public: true).service }
-          let!(:service_offering_4) { VCAP::CloudController::ServicePlan.make(public: true).service }
+          let!(:service_offering_1) { create(:service_plan, public: true).service }
+          let!(:service_offering_2) { create(:service_plan, public: true).service }
+          let!(:service_offering_3) { create(:service_plan, public: true).service }
+          let!(:service_offering_4) { create(:service_plan, public: true).service }
 
           let(:service_offering_names) { [service_offering_1.name, service_offering_3.name] }
           let(:message) { ServiceOfferingsListMessage.from_params({ names: service_offering_names.join(',') }.with_indifferent_access) }
@@ -487,15 +487,15 @@ module VCAP::CloudController
         end
 
         describe 'the `label_selector` filter' do
-          let!(:service_offering_1) { VCAP::CloudController::ServicePlan.make(public: true, active: true).service }
-          let!(:service_offering_2) { VCAP::CloudController::ServicePlan.make(public: true, active: true).service }
-          let!(:service_offering_3) { VCAP::CloudController::ServicePlan.make(public: true, active: true).service }
+          let!(:service_offering_1) { create(:service_plan, public: true, active: true).service }
+          let!(:service_offering_2) { create(:service_plan, public: true, active: true).service }
+          let!(:service_offering_3) { create(:service_plan, public: true, active: true).service }
           let(:message) { ServiceOfferingsListMessage.from_params({ label_selector: 'flavor=orange' }.with_indifferent_access) }
 
           before do
-            VCAP::CloudController::ServiceOfferingLabelModel.make(resource_guid: service_offering_1.guid, key_name: 'flavor', value: 'orange')
-            VCAP::CloudController::ServiceOfferingLabelModel.make(resource_guid: service_offering_2.guid, key_name: 'flavor', value: 'orange')
-            VCAP::CloudController::ServiceOfferingLabelModel.make(resource_guid: service_offering_3.guid, key_name: 'flavor', value: 'apple')
+            create(:service_offering_label_model, resource_guid: service_offering_1.guid, key_name: 'flavor', value: 'orange')
+            create(:service_offering_label_model, resource_guid: service_offering_2.guid, key_name: 'flavor', value: 'orange')
+            create(:service_offering_label_model, resource_guid: service_offering_3.guid, key_name: 'flavor', value: 'apple')
           end
 
           it 'filters the matching service offerings' do
@@ -517,27 +517,27 @@ module VCAP::CloudController
     end
 
     def make_public_offering(number_of_plans: 1)
-      service_offering = Service.make(label: "public-#{Sham.name}")
-      number_of_plans.times { ServicePlan.make(public: true, active: true, service: service_offering) }
+      service_offering = create(:service, label: "public-#{Sham.name}")
+      number_of_plans.times { create(:service_plan, public: true, active: true, service: service_offering) }
       service_offering
     end
 
     def make_private_offering
-      service_offering = Service.make(label: "private-#{Sham.name}")
-      ServicePlan.make(public: false, active: true, service: service_offering)
+      service_offering = create(:service, label: "private-#{Sham.name}")
+      create(:service_plan, public: false, active: true, service: service_offering)
       service_offering
     end
 
     def make_space_scoped_offering(space)
-      service_broker = ServiceBroker.make(space:)
-      Service.make(service_broker: service_broker, label: "space-scoped-#{Sham.name}")
+      service_broker = create(:service_broker, space:)
+      create(:service, service_broker: service_broker, label: "space-scoped-#{Sham.name}")
     end
 
     def make_org_restricted_offering(org1, org2=nil)
-      service_offering = Service.make(label: "org-restricted-#{Sham.name}")
-      service_plan = ServicePlan.make(public: false, service: service_offering)
-      ServicePlanVisibility.make(organization: org1, service_plan: service_plan)
-      ServicePlanVisibility.make(organization: org2, service_plan: service_plan) unless org2.nil?
+      service_offering = create(:service, label: "org-restricted-#{Sham.name}")
+      service_plan = create(:service_plan, public: false, service: service_offering)
+      create(:service_plan_visibility, organization: org1, service_plan: service_plan)
+      create(:service_plan_visibility, organization: org2, service_plan: service_plan) unless org2.nil?
       service_offering
     end
   end

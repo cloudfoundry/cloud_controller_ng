@@ -5,12 +5,12 @@ module VCAP::CloudController
     it { is_expected.to have_timestamp_columns }
 
     it 'cannot create top level domains' do
-      expect { Domain.make name: 'com' }.to raise_error(Sequel::ValidationFailed, /name.*alphanumeric characters and hyphens/)
+      expect { create(:domain, name: 'com') }.to raise_error(Sequel::ValidationFailed, /name.*alphanumeric characters and hyphens/)
     end
 
     it "can't be created if foo would become parent" do
-      PrivateDomain.make name: 'bar.foo.com'
-      expect { PrivateDomain.make name: 'foo.com' }.to raise_error(
+      create(:private_domain, name: 'bar.foo.com')
+      expect { create(:private_domain, name: 'foo.com') }.to raise_error(
         Sequel::ValidationFailed,
         /The domain name "foo.com" cannot be created because "bar.foo.com" is already reserved by another domain/
       )
@@ -18,20 +18,20 @@ module VCAP::CloudController
 
     describe 'Associations' do
       context 'routes' do
-        let(:space) { Space.make }
+        let(:space) { create(:space) }
 
         it {
           expect(subject).to have_associated :routes,
-                                             test_instance: SharedDomain.make,
-                                             associated_instance: ->(domain) { Route.make(space:, domain:) }
+                                             test_instance: create(:shared_domain),
+                                             associated_instance: ->(domain) { create(:route, space:, domain:) }
         }
       end
 
       context 'shared_organizations' do
-        let(:org) { Organization.make }
+        let(:org) { create(:organization) }
 
         it 'associates with shared organizations' do
-          domain = Domain.make(owning_organization_id: Organization.make.id)
+          domain = create(:domain, owning_organization_id: create(:organization).id)
           domain.add_shared_organization(org)
           expect(domain.shared_organizations).to include(org)
         end
@@ -40,7 +40,7 @@ module VCAP::CloudController
 
         context 'when the domain is a shared domain' do
           it 'fails validation' do
-            domain = Domain.make(owning_organization_id: nil)
+            domain = create(:domain, owning_organization_id: nil)
             expect { domain.add_shared_organization(org) }.to raise_error(Sequel::HookFailed)
             expect(domain.shared_organizations).not_to include(org)
           end
@@ -48,7 +48,7 @@ module VCAP::CloudController
 
         context 'when the domain is owned by the organization' do
           it 'fails validation' do
-            domain = Domain.make(owning_organization_id: org.id)
+            domain = create(:domain, owning_organization_id: org.id)
             expect { domain.add_shared_organization(org) }.to raise_error(Sequel::HookFailed)
             expect(domain.shared_organizations).not_to include(org)
           end
@@ -56,11 +56,11 @@ module VCAP::CloudController
       end
 
       context 'owning_organization' do
-        let(:org) { Organization.make }
+        let(:org) { create(:organization) }
 
         it do
           expect(subject).to have_associated :owning_organization,
-                                             test_instance: Domain.make(owning_organization: org),
+                                             test_instance: create(:domain, owning_organization: org),
                                              associated_instance: ->(_domain) { org }
         end
       end
@@ -68,30 +68,30 @@ module VCAP::CloudController
       context 'changing owning_organization' do
         context 'shared domains' do
           it 'prevents converting a shared domain into a private domain' do
-            shared = SharedDomain.make
-            expect { shared.owning_organization = Organization.make }.to raise_error(CloudController::Errors::ApiError, /the owning organization cannot be changed/)
+            shared = create(:shared_domain)
+            expect { shared.owning_organization = create(:organization) }.to raise_error(CloudController::Errors::ApiError, /the owning organization cannot be changed/)
           end
 
           it 'succeeds when setting the org to the same thing' do
-            shared = SharedDomain.make
+            shared = create(:shared_domain)
             expect { shared.owning_organization = nil }.not_to raise_error
           end
         end
 
         context 'private domains' do
           it 'prevents converting a private domain into a shared domain' do
-            private_domain = PrivateDomain.make
+            private_domain = create(:private_domain)
             expect { private_domain.owning_organization = nil }.to raise_error(CloudController::Errors::ApiError, /the owning organization cannot be changed/)
           end
 
           it 'prevents changing orgs on a private domain' do
-            private_domain = PrivateDomain.make
-            expect { private_domain.owning_organization = Organization.make }.to raise_error(CloudController::Errors::ApiError, /the owning organization cannot be changed/)
+            private_domain = create(:private_domain)
+            expect { private_domain.owning_organization = create(:organization) }.to raise_error(CloudController::Errors::ApiError, /the owning organization cannot be changed/)
           end
 
           it 'succeeds when setting the org to the same thing' do
-            org = Organization.make
-            private_domain = PrivateDomain.make(owning_organization: org)
+            org = create(:organization)
+            private_domain = create(:private_domain, owning_organization: org)
             expect { private_domain.owning_organization = org }.not_to raise_error
           end
         end
@@ -108,11 +108,11 @@ module VCAP::CloudController
       it { is_expected.to validate_uniqueness :name }
 
       describe 'route collisions' do
-        let!(:existing_domain) { SharedDomain.make(name: 'base.domain') }
-        let!(:existing_route) { Route.make(host: 'route', domain: existing_domain) }
+        let!(:existing_domain) { create(:shared_domain, name: 'base.domain') }
+        let!(:existing_route) { create(:route, host: 'route', domain: existing_domain) }
 
         it 'does not allow a new domain to overlap with an existing route' do
-          expect { Domain.make(name: 'something.route.base.domain') }.to raise_error(
+          expect { create(:domain, name: 'something.route.base.domain') }.to raise_error(
             Sequel::ValidationFailed,
             /The domain name "something.route.base.domain" cannot be created because "route.base.domain" is already reserved by a route/
           )
@@ -124,11 +124,11 @@ module VCAP::CloudController
       before { SharedDomain.dataset.destroy }
 
       it 'is able to eager load spaces' do
-        domain = PrivateDomain.make
+        domain = create(:private_domain)
         org = domain.owning_organization
 
-        space1 = Space.make(organization: org)
-        space2 = Space.make(organization: org)
+        space1 = create(:space, organization: org)
+        space2 = create(:space, organization: org)
 
         expect do
           @eager_loaded_domain = Domain.eager(:spaces_sti_eager_load).where(id: domain.id).all.first
@@ -144,14 +144,14 @@ module VCAP::CloudController
       end
 
       it 'has correct spaces for each domain' do
-        domain1 = PrivateDomain.make
-        domain2 = PrivateDomain.make
+        domain1 = create(:private_domain)
+        domain2 = create(:private_domain)
 
         org1 = domain1.owning_organization
         org2 = domain2.owning_organization
 
-        space1 = Space.make(organization: org1)
-        space2 = Space.make(organization: org2)
+        space1 = create(:space, organization: org1)
+        space2 = create(:space, organization: org2)
 
         expect do
           @eager_loaded_domains = Domain.eager(:spaces_sti_eager_load).where(id: [domain1.id, domain2.id]).order_by(:id).all
@@ -164,11 +164,11 @@ module VCAP::CloudController
       end
 
       it 'passes in dataset to be loaded to eager_block option' do
-        domain = PrivateDomain.make
+        domain = create(:private_domain)
         org = domain.owning_organization
 
-        space1 = Space.make(organization: org)
-        Space.make(organization: org)
+        space1 = create(:space, organization: org)
+        create(:space, organization: org)
 
         eager_block = proc { |ds| ds.where(id: space1.id) }
 
@@ -180,9 +180,9 @@ module VCAP::CloudController
       end
 
       it 'allow nested eager_load' do
-        domain = PrivateDomain.make
+        domain = create(:private_domain)
         org = domain.owning_organization
-        Space.make(organization: org)
+        create(:space, organization: org)
 
         expect do
           @eager_loaded_domain = Domain.eager(spaces_sti_eager_load: :organization).where(id: domain.id).all.first
@@ -194,7 +194,7 @@ module VCAP::CloudController
       end
 
       it 'copes with SharedDomain since they also are subclasses of Domain' do
-        domain = SharedDomain.make
+        domain = create(:shared_domain)
 
         expect do
           @eager_loaded_domain = Domain.eager(:spaces_sti_eager_load).where(id: domain.id).all.first

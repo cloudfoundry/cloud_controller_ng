@@ -1,10 +1,10 @@
 RSpec.shared_context 'permissions' do
   before do
-    @org_a = VCAP::CloudController::Organization.make
-    @org_a_manager = VCAP::CloudController::User.make
-    @org_a_member = VCAP::CloudController::User.make
-    @org_a_billing_manager = VCAP::CloudController::User.make
-    @org_a_auditor = VCAP::CloudController::User.make
+    @org_a = create(:organization)
+    @org_a_manager = create(:user)
+    @org_a_member = create(:user)
+    @org_a_billing_manager = create(:user)
+    @org_a_auditor = create(:user)
     @org_a.add_user(@org_a_manager)
     @org_a.add_user(@org_a_member)
     @org_a.add_user(@org_a_billing_manager)
@@ -13,7 +13,7 @@ RSpec.shared_context 'permissions' do
     @org_a.add_billing_manager(@org_a_billing_manager)
     @org_a.add_auditor(@org_a_auditor)
 
-    @space_a = VCAP::CloudController::Space.make(organization: @org_a)
+    @space_a = create(:space, organization: @org_a)
     @space_a_manager = make_user_for_space(@space_a)
     @space_a_developer = make_user_for_space(@space_a)
     @space_a_auditor = make_user_for_space(@space_a)
@@ -21,11 +21,11 @@ RSpec.shared_context 'permissions' do
     @space_a.add_developer(@space_a_developer)
     @space_a.add_auditor(@space_a_auditor)
 
-    @org_b = VCAP::CloudController::Organization.make
-    @org_b_manager = VCAP::CloudController::User.make
-    @org_b_member = VCAP::CloudController::User.make
-    @org_b_billing_manager = VCAP::CloudController::User.make
-    @org_b_auditor = VCAP::CloudController::User.make
+    @org_b = create(:organization)
+    @org_b_manager = create(:user)
+    @org_b_member = create(:user)
+    @org_b_billing_manager = create(:user)
+    @org_b_auditor = create(:user)
     @org_b.add_user(@org_b_manager)
     @org_b.add_user(@org_b_member)
     @org_b.add_user(@org_b_billing_manager)
@@ -34,7 +34,7 @@ RSpec.shared_context 'permissions' do
     @org_b.add_billing_manager(@org_b_billing_manager)
     @org_b.add_auditor(@org_b_auditor)
 
-    @space_b = VCAP::CloudController::Space.make(organization: @org_b)
+    @space_b = create(:space, organization: @org_b)
     @space_b_manager = make_user_for_space(@space_b)
     @space_b_developer = make_user_for_space(@space_b)
     @space_b_auditor = make_user_for_space(@space_b)

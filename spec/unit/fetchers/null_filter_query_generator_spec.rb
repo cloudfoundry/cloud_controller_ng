@@ -5,14 +5,14 @@ module VCAP::CloudController
     subject(:filter_generator) { NullFilterQueryGenerator }
 
     describe '.add_filter' do
-      let!(:stack1) { Stack.make }
-      let!(:stack2) { Stack.make }
-      let!(:stack3) { Stack.make }
+      let!(:stack1) { create(:stack) }
+      let!(:stack2) { create(:stack) }
+      let!(:stack3) { create(:stack) }
 
-      let!(:buildpack_with_stack1) { Buildpack.make(stack: stack1.name) }
-      let!(:buildpack_with_stack2) { Buildpack.make(stack: stack2.name) }
-      let!(:buildpack_with_stack3) { Buildpack.make(stack: stack3.name) }
-      let!(:buildpack_with_null_stack) { Buildpack.make(stack: nil) }
+      let!(:buildpack_with_stack1) { create(:buildpack, stack: stack1.name) }
+      let!(:buildpack_with_stack2) { create(:buildpack, stack: stack2.name) }
+      let!(:buildpack_with_stack3) { create(:buildpack, stack: stack3.name) }
+      let!(:buildpack_with_null_stack) { create(:buildpack, stack: nil) }
 
       context 'when no empty values included in filter' do
         let(:filter_values) { [stack1.name, stack2.name] }

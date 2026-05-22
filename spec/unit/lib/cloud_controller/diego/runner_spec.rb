@@ -95,7 +95,7 @@ module VCAP::CloudController
           let(:process) { ProcessModelFactory.make(state: 'STARTED') }
 
           before do
-            BuildModel.make(app: process.app, package: process.latest_package, state: BuildModel::STAGING_STATE)
+            create(:build_model, app: process.app, package: process.latest_package, state: BuildModel::STAGING_STATE)
             process.reload
           end
 
@@ -130,7 +130,7 @@ module VCAP::CloudController
           let(:process) { ProcessModelFactory.make(state: 'STARTED') }
 
           before do
-            BuildModel.make(app: process.app, package: process.latest_package, state: BuildModel::STAGING_STATE)
+            create(:build_model, app: process.app, package: process.latest_package, state: BuildModel::STAGING_STATE)
             process.reload
           end
 

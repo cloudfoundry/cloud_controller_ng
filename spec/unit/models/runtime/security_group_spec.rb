@@ -416,8 +416,8 @@ module VCAP::CloudController
         it { is_expected.to have_associated :spaces }
 
         it 'can be delete when it has associated spaces' do
-          security_group = SecurityGroup.make
-          security_group.add_space(Space.make)
+          security_group = create(:security_group)
+          security_group.add_space(create(:space))
 
           expect { security_group.destroy }.not_to raise_error
         end
@@ -426,11 +426,11 @@ module VCAP::CloudController
       end
 
       describe 'staging_spaces' do
-        it { is_expected.to have_associated :staging_spaces, associated_instance: ->(_) { Space.make } }
+        it { is_expected.to have_associated :staging_spaces, associated_instance: ->(_) { create(:space) } }
 
         it 'can be delete when it has associated staging_spaces' do
-          security_group = SecurityGroup.make
-          security_group.add_staging_space(Space.make)
+          security_group = create(:security_group)
+          security_group.add_staging_space(create(:space))
 
           expect { security_group.destroy }.not_to raise_error
         end
@@ -443,7 +443,7 @@ module VCAP::CloudController
       it { is_expected.to validate_presence :name }
 
       context 'name' do
-        subject(:sec_group) { SecurityGroup.make }
+        subject(:sec_group) { create(:security_group) }
 
         it 'allows standard ascii characters' do
           sec_group.name = "A -_- word 2!?()'\"&+."
@@ -972,14 +972,14 @@ module VCAP::CloudController
 
     describe 'security_group_model #around_save' do
       it 'raises validation error on unique constraint violation for security group' do
-        sg = SecurityGroup.make(name: 'sec')
+        sg = create(:security_group, name: 'sec')
         expect do
-          SecurityGroup.make(name: sg.name)
+          create(:security_group, name: sg.name)
         end.to raise_error(Sequel::ValidationFailed) { |error| expect(error.message).to match(/unique/) }
       end
 
       it 'raises the original error on other unique constraint violations' do
-        sg = SecurityGroup.make(name: 'sec1')
+        sg = create(:security_group, name: 'sec1')
 
         # Unlike other models, security_groups.guid does not have a unique index,
         # so we use the primary key (id) to trigger a UniqueConstraintViolation.
@@ -994,9 +994,9 @@ module VCAP::CloudController
     end
 
     describe '.user_visibility_filter' do
-      let(:security_group) { SecurityGroup.make }
-      let(:space) { Space.make }
-      let(:user) { User.make }
+      let(:security_group) { create(:security_group) }
+      let(:space) { create(:space) }
+      let(:user) { create(:user) }
 
       subject(:filtered_security_groups) do
         SecurityGroup.where(SecurityGroup.user_visibility_filter(user))

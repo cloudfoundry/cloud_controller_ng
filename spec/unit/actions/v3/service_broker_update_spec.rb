@@ -11,13 +11,12 @@ module VCAP
 
       let(:state) { ServiceBrokerStateEnum::AVAILABLE }
       let!(:existing_service_broker) do
-        ServiceBroker.make(
-          name: 'old-name',
-          broker_url: 'http://example.org/old-broker-url',
-          auth_username: 'old-admin',
-          auth_password: 'not-welcome',
-          state: state
-        )
+        create(:service_broker,
+               name: 'old-name',
+               broker_url: 'http://example.org/old-broker-url',
+               auth_username: 'old-admin',
+               auth_password: 'not-welcome',
+               state: state)
       end
 
       let(:user_audit_info) { instance_double(UserAuditInfo, { user_guid: Sham.guid }) }

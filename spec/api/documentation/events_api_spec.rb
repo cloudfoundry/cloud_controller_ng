@@ -96,9 +96,7 @@ RSpec.resource 'Events', type: %i[api legacy_api] do
   authenticated_request
 
   before do
-    3.times do
-      VCAP::CloudController::Event.make
-    end
+    FactoryBot.create_list(:event, 3)
   end
 
   let(:guid) { VCAP::CloudController::Event.first.guid }
@@ -123,20 +121,20 @@ RSpec.resource 'Events', type: %i[api legacy_api] do
   get '/v2/events' do
     standard_list_parameters VCAP::CloudController::EventsController
 
-    let(:test_app) { VCAP::CloudController::ProcessModel.make }
-    let(:test_v3app) { VCAP::CloudController::AppModel.make }
-    let(:test_assignee) { VCAP::CloudController::User.make }
-    let(:test_user) { VCAP::CloudController::User.make }
+    let(:test_app) { FactoryBot.create(:process_model) }
+    let(:test_v3app) { FactoryBot.create(:app_model) }
+    let(:test_assignee) { FactoryBot.create(:user) }
+    let(:test_user) { FactoryBot.create(:user) }
     let(:test_user_email) { 'user@example.com' }
-    let(:test_space) { VCAP::CloudController::Space.make }
-    let(:test_route) { VCAP::CloudController::Route.make }
-    let(:test_organization) { VCAP::CloudController::Organization.make }
+    let(:test_space) { FactoryBot.create(:space) }
+    let(:test_route) { FactoryBot.create(:route) }
+    let(:test_organization) { FactoryBot.create(:organization) }
 
-    let(:test_broker) { VCAP::CloudController::ServiceBroker.make }
-    let(:test_service) { VCAP::CloudController::Service.make(service_broker: test_broker) }
-    let(:test_plan) { VCAP::CloudController::ServicePlan.make(service: test_service, public: false) }
+    let(:test_broker) { FactoryBot.create(:service_broker) }
+    let(:test_service) { FactoryBot.create(:service, service_broker: test_broker) }
+    let(:test_plan) { FactoryBot.create(:service_plan, service: test_service, public: false) }
     let(:test_plan_visibility) do
-      VCAP::CloudController::ServicePlanVisibility.make(organization_guid: test_organization.guid, service_plan_guid: test_plan.guid)
+      FactoryBot.create(:service_plan_visibility, organization_guid: test_organization.guid, service_plan_guid: test_plan.guid)
     end
 
     let(:app_request) do
@@ -563,7 +561,7 @@ RSpec.resource 'Events', type: %i[api legacy_api] do
 
       VCAP::CloudController::ServiceDashboardClient.new(
         uaa_id: client_attrs['id'],
-        service_broker: VCAP::CloudController::ServiceBroker.make
+        service_broker: FactoryBot.create(:service_broker)
       ).save
 
       service_event_repository.record_service_dashboard_client_event(:create, client_attrs, test_broker)
@@ -592,7 +590,7 @@ RSpec.resource 'Events', type: %i[api legacy_api] do
 
       VCAP::CloudController::ServiceDashboardClient.new(
         uaa_id: client_attrs['id'],
-        service_broker: VCAP::CloudController::ServiceBroker.make
+        service_broker: FactoryBot.create(:service_broker)
       ).save
 
       service_event_repository.record_service_dashboard_client_event(:delete, client_attrs, test_broker)
@@ -860,7 +858,7 @@ RSpec.resource 'Events', type: %i[api legacy_api] do
         auth_username: 'panda',
         auth_password: 'password'
       }
-      broker = VCAP::CloudController::ServiceBroker.make(params)
+      broker = FactoryBot.create(:service_broker, params)
       service_event_repository.record_broker_event(:create, broker, params)
 
       client.get '/v2/events?q=type:audit.service_broker.create', {}, headers
@@ -889,7 +887,7 @@ RSpec.resource 'Events', type: %i[api legacy_api] do
         broker_url: 'http://www.pancakes.com',
         auth_password: 'password'
       }
-      broker = VCAP::CloudController::ServiceBroker.make
+      broker = FactoryBot.create(:service_broker)
       service_event_repository.record_broker_event(:update, broker, params)
 
       client.get '/v2/events?q=type:audit.service_broker.update', {}, headers
@@ -912,7 +910,7 @@ RSpec.resource 'Events', type: %i[api legacy_api] do
     end
 
     example 'List Service Broker Delete Events' do
-      broker = VCAP::CloudController::ServiceBroker.make
+      broker = FactoryBot.create(:service_broker)
       service_event_repository.record_broker_event(:delete, broker, {})
 
       client.get '/v2/events?q=type:audit.service_broker.delete', {}, headers
@@ -930,7 +928,7 @@ RSpec.resource 'Events', type: %i[api legacy_api] do
     end
 
     example 'List Service Instance Create Events' do
-      instance = VCAP::CloudController::ManagedServiceInstance.make
+      instance = FactoryBot.create(:managed_service_instance)
       service_event_repository.record_service_instance_event(:create, instance, {
                                                                'name' => instance.name,
                                                                'service_plan_guid' => instance.service_plan.guid,
@@ -958,7 +956,7 @@ RSpec.resource 'Events', type: %i[api legacy_api] do
     end
 
     example 'List Service Instance Update Events' do
-      instance = VCAP::CloudController::ManagedServiceInstance.make
+      instance = FactoryBot.create(:managed_service_instance)
       service_event_repository.record_service_instance_event(:update, instance, {
                                                                'service_plan_guid' => instance.service_plan.guid
                                                              })
@@ -982,7 +980,7 @@ RSpec.resource 'Events', type: %i[api legacy_api] do
     end
 
     example 'List Service Instance Delete Events' do
-      instance = VCAP::CloudController::ManagedServiceInstance.make
+      instance = FactoryBot.create(:managed_service_instance)
       service_event_repository.record_service_instance_event(:delete, instance, {})
 
       client.get '/v2/events?q=type:audit.service_instance.delete', {}, headers
@@ -1002,9 +1000,9 @@ RSpec.resource 'Events', type: %i[api legacy_api] do
     end
 
     example 'List Service Instance Bind Route Events' do
-      space    = VCAP::CloudController::Space.make
-      instance = VCAP::CloudController::ManagedServiceInstance.make(space:)
-      route    = VCAP::CloudController::Route.make(space:)
+      space    = FactoryBot.create(:space)
+      instance = FactoryBot.create(:managed_service_instance, space:)
+      route    = FactoryBot.create(:route, space:)
 
       service_event_repository.record_service_instance_event(:bind_route, instance, { route_guid: route.guid })
 
@@ -1027,9 +1025,9 @@ RSpec.resource 'Events', type: %i[api legacy_api] do
     end
 
     example 'List Service Instance Unbind Route Events' do
-      space    = VCAP::CloudController::Space.make
-      instance = VCAP::CloudController::ManagedServiceInstance.make(space:)
-      route    = VCAP::CloudController::Route.make(space:)
+      space    = FactoryBot.create(:space)
+      instance = FactoryBot.create(:managed_service_instance, space:)
+      route    = FactoryBot.create(:route, space:)
 
       service_event_repository.record_service_instance_event(:unbind_route, instance, { route_guid: route.guid })
 
@@ -1052,7 +1050,7 @@ RSpec.resource 'Events', type: %i[api legacy_api] do
     end
 
     example 'List User Provided Service Instance Create Events' do
-      instance = VCAP::CloudController::UserProvidedServiceInstance.make
+      instance = FactoryBot.create(:user_provided_service_instance)
       service_event_repository.record_user_provided_service_instance_event(:create, instance, {
                                                                              'name' => instance.name,
                                                                              'space_guid' => instance.space_guid
@@ -1078,7 +1076,7 @@ RSpec.resource 'Events', type: %i[api legacy_api] do
     end
 
     example 'List User Provided Service Instance Update Events' do
-      instance = VCAP::CloudController::UserProvidedServiceInstance.make
+      instance = FactoryBot.create(:user_provided_service_instance)
       service_event_repository.record_user_provided_service_instance_event(:update, instance, {
                                                                              'credentials' => { 'username' => 'myUser' }
                                                                            })
@@ -1102,7 +1100,7 @@ RSpec.resource 'Events', type: %i[api legacy_api] do
     end
 
     example 'List User Provided Service Instance Delete Events' do
-      instance = VCAP::CloudController::UserProvidedServiceInstance.make
+      instance = FactoryBot.create(:user_provided_service_instance)
       service_event_repository.record_user_provided_service_instance_event(:delete, instance, {})
 
       client.get '/v2/events?q=type:audit.user_provided_service_instance.delete', {}, headers
@@ -1122,10 +1120,10 @@ RSpec.resource 'Events', type: %i[api legacy_api] do
     end
 
     example 'List Service Binding Create Events' do
-      space           = VCAP::CloudController::Space.make
-      instance        = VCAP::CloudController::ManagedServiceInstance.make(space:)
+      space           = FactoryBot.create(:space)
+      instance        = FactoryBot.create(:managed_service_instance, space:)
       process         = VCAP::CloudController::ProcessModelFactory.make(space:)
-      service_binding = VCAP::CloudController::ServiceBinding.make(service_instance: instance, app: process.app)
+      service_binding = FactoryBot.create(:service_binding, service_instance: instance, app: process.app)
 
       VCAP::CloudController::Repositories::ServiceBindingEventRepository.record_create(service_binding, user_audit_info, { foo: 'bar' })
 
@@ -1148,10 +1146,10 @@ RSpec.resource 'Events', type: %i[api legacy_api] do
     end
 
     example 'List Service Binding Delete Events' do
-      space           = VCAP::CloudController::Space.make
-      instance        = VCAP::CloudController::ManagedServiceInstance.make(space:)
+      space           = FactoryBot.create(:space)
+      instance        = FactoryBot.create(:managed_service_instance, space:)
       process         = VCAP::CloudController::ProcessModelFactory.make(space:)
-      service_binding = VCAP::CloudController::ServiceBinding.make(service_instance: instance, app: process.app)
+      service_binding = FactoryBot.create(:service_binding, service_instance: instance, app: process.app)
 
       VCAP::CloudController::Repositories::ServiceBindingEventRepository.record_delete(service_binding, user_audit_info)
 
@@ -1175,9 +1173,9 @@ RSpec.resource 'Events', type: %i[api legacy_api] do
     end
 
     example 'List Service Key Create Events' do
-      space       = VCAP::CloudController::Space.make
-      instance    = VCAP::CloudController::ManagedServiceInstance.make(space:)
-      service_key = VCAP::CloudController::ServiceKey.make(service_instance: instance)
+      space       = FactoryBot.create(:space)
+      instance    = FactoryBot.create(:managed_service_instance, space:)
+      service_key = FactoryBot.create(:service_key, service_instance: instance)
 
       service_event_repository.record_service_key_event(:create, service_key)
 
@@ -1201,9 +1199,9 @@ RSpec.resource 'Events', type: %i[api legacy_api] do
     end
 
     example 'List Service Key Delete Events' do
-      space       = VCAP::CloudController::Space.make
-      instance    = VCAP::CloudController::ManagedServiceInstance.make(space:)
-      service_key = VCAP::CloudController::ServiceKey.make(service_instance: instance)
+      space       = FactoryBot.create(:space)
+      instance    = FactoryBot.create(:managed_service_instance, space:)
+      service_key = FactoryBot.create(:service_key, service_instance: instance)
 
       service_event_repository.record_service_key_event(:delete, service_key)
 

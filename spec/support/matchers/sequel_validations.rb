@@ -42,8 +42,10 @@ RSpec::Matchers.define :validate_uniqueness do |*attributes|
     "validate uniqueness of #{Array.wrap(attributes).join(' and ')}"
   end
   match do |_|
-    source_obj = described_class.make(*make_arguments)
-    duplicate_object = described_class.make(*make_arguments)
+    factory_name = described_class.name.demodulize.underscore.to_sym
+    args = Array(make_arguments)
+    source_obj = FactoryBot.create(factory_name, *args)
+    duplicate_object = FactoryBot.create(factory_name, *args)
     Array.wrap(attributes).each do |attr|
       duplicate_object[attr] = source_obj[attr]
     end

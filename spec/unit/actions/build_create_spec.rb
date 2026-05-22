@@ -48,12 +48,12 @@ module VCAP::CloudController
       }
     end
     let(:lifecycle) { BuildpackLifecycle.new(package, staging_message) }
-    let(:package) { PackageModel.make(app: app, state: PackageModel::READY_STATE) }
+    let(:package) { create(:package_model, app: app, state: PackageModel::READY_STATE) }
 
-    let(:space) { Space.make }
+    let(:space) { create(:space) }
     let(:org) { space.organization }
-    let(:app) { AppModel.make(space:) }
-    let!(:process) { ProcessModel.make(app: app, memory: 8192, disk_quota: 512, log_rate_limit: 7168) }
+    let(:app) { create(:app_model, space:) }
+    let!(:process) { create(:process_model, app: app, memory: 8192, disk_quota: 512, log_rate_limit: 7168) }
 
     let(:buildpack_git_url) { 'http://example.com/repo.git' }
     let(:stack) { Stack.default }
@@ -179,8 +179,8 @@ module VCAP::CloudController
           }
         end
         let(:lifecycle) { CNBLifecycle.new(package, staging_message) }
-        let(:app) { AppModel.make(:cnb, space:) }
-        let(:package) { PackageModel.make(app: app, state: PackageModel::READY_STATE) }
+        let(:app) { create(:app_model, :cnb, space:) }
+        let(:package) { create(:package_model, app: app, state: PackageModel::READY_STATE) }
 
         it 'creates a build' do
           build = nil
@@ -329,8 +329,8 @@ module VCAP::CloudController
 
         describe 'isolation segments' do
           let(:assigner) { VCAP::CloudController::IsolationSegmentAssign.new }
-          let(:isolation_segment_model) { VCAP::CloudController::IsolationSegmentModel.make }
-          let(:isolation_segment_model_2) { VCAP::CloudController::IsolationSegmentModel.make }
+          let(:isolation_segment_model) { create(:isolation_segment_model) }
+          let(:isolation_segment_model_2) { create(:isolation_segment_model) }
           let(:shared_isolation_segment) do
             VCAP::CloudController::IsolationSegmentModel.first(guid: VCAP::CloudController::IsolationSegmentModel::SHARED_ISOLATION_SEGMENT_GUID)
           end
@@ -419,7 +419,7 @@ module VCAP::CloudController
       end
 
       context 'when the package is not ready' do
-        let(:package) { PackageModel.make(app: app, state: PackageModel::PENDING_STATE) }
+        let(:package) { create(:package_model, app: app, state: PackageModel::PENDING_STATE) }
 
         it 'raises an InvalidPackage exception' do
           expect do
@@ -429,14 +429,13 @@ module VCAP::CloudController
       end
 
       context 'when any buildpack is disabled' do
-        let!(:disabled_buildpack) { Buildpack.make(enabled: false, name: 'disabled-buildpack') }
-        let!(:enabled_buildpack) { Buildpack.make(name: 'enabled-buildpack') }
+        let!(:disabled_buildpack) { create(:buildpack, enabled: false, name: 'disabled-buildpack') }
+        let!(:enabled_buildpack) { create(:buildpack, name: 'enabled-buildpack') }
         let!(:lifecycle_data_model) do
-          VCAP::CloudController::BuildpackLifecycleDataModel.make(
-            app: app,
-            buildpacks: [disabled_buildpack.name, enabled_buildpack.name, 'http://custom-buildpack.example'],
-            stack: stack.name
-          )
+          create(:buildpack_lifecycle_data_model,
+                 app: app,
+                 buildpacks: [disabled_buildpack.name, enabled_buildpack.name, 'http://custom-buildpack.example'],
+                 stack: stack.name)
         end
         let(:lifecycle_data) do
           {
@@ -453,7 +452,7 @@ module VCAP::CloudController
       end
 
       context 'when stack is DISABLED' do
-        let(:disabled_stack) { Stack.make(name: 'cflinuxfs3', state: 'DISABLED', description: 'Migrate to cflinuxfs4') }
+        let(:disabled_stack) { create(:stack, name: 'cflinuxfs3', state: 'DISABLED', description: 'Migrate to cflinuxfs4') }
         let(:lifecycle_data) do
           {
             stack: disabled_stack.name,
@@ -481,7 +480,7 @@ module VCAP::CloudController
       end
 
       context 'when stack is RESTRICTED' do
-        let(:restricted_stack) { Stack.make(name: 'cflinuxfs3', state: 'RESTRICTED', description: 'No new apps') }
+        let(:restricted_stack) { create(:stack, name: 'cflinuxfs3', state: 'RESTRICTED', description: 'No new apps') }
         let(:lifecycle_data) do
           {
             stack: restricted_stack.name,
@@ -512,7 +511,7 @@ module VCAP::CloudController
 
         context 'app has previous builds' do
           before do
-            BuildModel.make(app: app, state: BuildModel::STAGED_STATE)
+            create(:build_model, app: app, state: BuildModel::STAGED_STATE)
           end
 
           it 'allows restaging' do
@@ -533,7 +532,7 @@ module VCAP::CloudController
 
       context 'when there is already a staging in progress for the app' do
         it 'raises a StagingInProgress exception' do
-          BuildModel.make(state: BuildModel::STAGING_STATE, app: app)
+          create(:build_model, state: BuildModel::STAGING_STATE, app: app)
           expect do
             action.create_and_stage(package:, lifecycle:)
           end.to raise_error(BuildCreate::StagingInProgress)
@@ -565,7 +564,7 @@ module VCAP::CloudController
       end
 
       describe 'using custom buildpacks' do
-        let!(:app) { AppModel.make(space:) }
+        let!(:app) { create(:app_model, space:) }
 
         context 'when custom buildpacks are disabled' do
           before { TestConfig.override(disable_custom_buildpacks: true) }
@@ -578,7 +577,7 @@ module VCAP::CloudController
             before do
               app.update(buildpack_lifecycle_data: BuildpackLifecycleDataModel.create(
                 buildpacks: ['http://example.com/repo.git'],
-                stack: Stack.make.name
+                stack: create(:stack).name
               ))
             end
 
@@ -624,10 +623,9 @@ module VCAP::CloudController
         context 'when custom buildpacks are enabled' do
           context 'when the custom buildpack is inherited from the app' do
             let!(:app_lifecycle_data_model) do
-              BuildpackLifecycleDataModel.make(
-                buildpacks: ['http://example.com/repo.git'],
-                app: app
-              )
+              create(:buildpack_lifecycle_data_model,
+                     buildpacks: ['http://example.com/repo.git'],
+                     app: app)
             end
 
             let(:lifecycle_data) do

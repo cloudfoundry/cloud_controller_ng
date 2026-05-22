@@ -8,12 +8,12 @@ module VCAP::CloudController
     let(:user_audit_info) { UserAuditInfo.new(user_guid: user.guid, user_email: user_email) }
 
     describe '#delete' do
-      let!(:space) { Space.make(name: 'space-1') }
-      let!(:space_2) { Space.make(name: 'space-2') }
-      let!(:app) { AppModel.make(space_guid: space.guid) }
+      let!(:space) { create(:space, name: 'space-1') }
+      let!(:space_2) { create(:space, name: 'space-2') }
+      let!(:app) { create(:app_model, space: space) }
 
       let(:space_dataset) { Space.dataset }
-      let(:user) { User.make }
+      let(:user) { create(:user) }
       let(:user_email) { 'user@example.com' }
 
       before do
@@ -63,7 +63,7 @@ module VCAP::CloudController
         end
 
         describe 'service instances' do
-          let!(:service_instance) { ManagedServiceInstance.make(space: space_2) }
+          let!(:service_instance) { create(:managed_service_instance, space: space_2) }
 
           before do
             stub_deprovision(service_instance, accepts_incomplete: true)
@@ -91,13 +91,13 @@ module VCAP::CloudController
           end
 
           context 'when deletion of service instances fail' do
-            let!(:space_3) { Space.make(name: 'space-3') }
-            let!(:space_4) { Space.make(name: 'space-4') }
+            let!(:space_3) { create(:space, name: 'space-3') }
+            let!(:space_4) { create(:space, name: 'space-4') }
 
-            let!(:service_instance_1) { ManagedServiceInstance.make(space: space_3) } # deletion fail
-            let!(:service_instance_2) { ManagedServiceInstance.make(space: space_3) } # deletion fail
-            let!(:service_instance_3) { ManagedServiceInstance.make(space: space_3) } # deletion succeeds
-            let!(:service_instance_4) { ManagedServiceInstance.make(space: space_4) } # deletion fail
+            let!(:service_instance_1) { create(:managed_service_instance, space: space_3) } # deletion fail
+            let!(:service_instance_2) { create(:managed_service_instance, space: space_3) } # deletion fail
+            let!(:service_instance_3) { create(:managed_service_instance, space: space_3) } # deletion succeeds
+            let!(:service_instance_4) { create(:managed_service_instance, space: space_4) } # deletion fail
 
             before do
               stub_deprovision(service_instance_1, accepts_incomplete: true, status: 500)
@@ -145,7 +145,7 @@ module VCAP::CloudController
           end
 
           context 'when unsharing a service instance that has been shared to the space fails' do
-            let(:other_space) { Space.make }
+            let(:other_space) { create(:space) }
             let(:fake_shared_service) { instance_double(ManagedServiceInstance) }
 
             before do
@@ -174,7 +174,7 @@ module VCAP::CloudController
           end
 
           context 'when deletion of a service instance is "in progress"' do
-            let!(:service_instance) { ManagedServiceInstance.make(space: space_2) }
+            let!(:service_instance) { create(:managed_service_instance, space: space_2) }
 
             before do
               stub_deprovision(service_instance, accepts_incomplete: true, status: 202)
@@ -203,7 +203,7 @@ module VCAP::CloudController
             end
 
             context 'and there are multiple service instances deprovisioned with accepts_incomplete' do
-              let!(:service_instance_2) { ManagedServiceInstance.make(space:) } # deletion fail
+              let!(:service_instance_2) { create(:managed_service_instance, space:) } # deletion fail
 
               before do
                 stub_deprovision(service_instance_2, accepts_incomplete: true, status: 202)
@@ -224,11 +224,11 @@ module VCAP::CloudController
         end
 
         context 'when private brokers are associated with the space' do
-          let!(:service_to_be_deleted)      { VCAP::CloudController::Service.make(service_broker: broker_to_be_deleted) }
-          let!(:service_plan_to_be_deleted) { VCAP::CloudController::ServicePlan.make(service: service_to_be_deleted) }
-          let!(:broker_to_be_deleted)       { VCAP::CloudController::ServiceBroker.make(space_guid: space.guid) }
-          let!(:broker_to_be_deleted2) { VCAP::CloudController::ServiceBroker.make(space_guid: space.guid) }
-          let!(:service_instance_to_be_deleted) { ManagedServiceInstance.make(space: space, service_plan: service_plan_to_be_deleted) }
+          let!(:service_to_be_deleted)      { create(:service, service_broker: broker_to_be_deleted) }
+          let!(:service_plan_to_be_deleted) { create(:service_plan, service: service_to_be_deleted) }
+          let!(:broker_to_be_deleted)       { create(:service_broker, space_id: space.id) }
+          let!(:broker_to_be_deleted2) { create(:service_broker, space_id: space.id) }
+          let!(:service_instance_to_be_deleted) { create(:managed_service_instance, space: space, service_plan: service_plan_to_be_deleted) }
 
           before do
             stub_deprovision(service_instance_to_be_deleted, accepts_incomplete: true)
@@ -286,8 +286,8 @@ module VCAP::CloudController
         end
 
         describe 'routes and route mappings' do
-          let!(:process) { ProcessModel.make app: app, type: 'web' }
-          let!(:route) { Route.make space: }
+          let!(:process) { create(:process_model, app: app, type: 'web') }
+          let!(:route) { create(:route, space:) }
 
           it 'deletes routes in the space (by way of model association dependency)' do
             expect(route.exists?).to be true
@@ -299,18 +299,16 @@ module VCAP::CloudController
 
         describe 'label deletion' do
           let!(:space_label) do
-            VCAP::CloudController::SpaceLabelModel.make(
-              key_name: 'release',
-              value: 'stable',
-              resource_guid: space.guid
-            )
+            create(:space_label_model,
+                   key_name: 'release',
+                   value: 'stable',
+                   resource_guid: space.guid)
           end
           let!(:space2_label) do
-            VCAP::CloudController::SpaceLabelModel.make(
-              key_name: 'release',
-              value: 'stable',
-              resource_guid: space_2.guid
-            )
+            create(:space_label_model,
+                   key_name: 'release',
+                   value: 'stable',
+                   resource_guid: space_2.guid)
           end
 
           it 'deletes associated space labels' do
@@ -322,7 +320,7 @@ module VCAP::CloudController
         end
 
         describe 'roles' do
-          let(:user_with_role) { User.make }
+          let(:user_with_role) { create(:user) }
 
           before do
             space.organization.add_user(user_with_role)

@@ -3,12 +3,12 @@ require 'rspec_api_documentation/dsl'
 
 RSpec.resource 'Routes', type: %i[api legacy_api] do
   let(:admin_auth_header) { admin_headers['HTTP_AUTHORIZATION'] }
-  let(:space_quota) { VCAP::CloudController::SpaceQuotaDefinition.make }
-  let(:space) { VCAP::CloudController::Space.make(organization: space_quota.organization, space_quota_definition: space_quota) }
-  let(:domain) { VCAP::CloudController::SharedDomain.make(router_group_guid: 'tcp-group') }
+  let(:space_quota) { FactoryBot.create(:space_quota_definition) }
+  let(:space) { FactoryBot.create(:space, organization: space_quota.organization, space_quota_definition: space_quota) }
+  let(:domain) { FactoryBot.create(:shared_domain, router_group_guid: 'tcp-group') }
   let(:route_path) { '/apps/v1/path' }
-  let(:service_instance) { VCAP::CloudController::ManagedServiceInstance.make(:routing, space:) }
-  let(:route) { VCAP::CloudController::Route.make(domain:, space:) }
+  let(:service_instance) { FactoryBot.create(:managed_service_instance, :routing, space:) }
+  let(:route) { FactoryBot.create(:route, domain:, space:) }
   let(:guid) { route.guid }
 
   let(:routing_api_client) { double('routing_api_client', enabled?: true) }
@@ -50,7 +50,7 @@ RSpec.resource 'Routes', type: %i[api legacy_api] do
 
     context 'with a route binding' do
       before do
-        route_binding = VCAP::CloudController::RouteBinding.make(service_instance:, route:)
+        route_binding = create(:route_binding, service_instance:, route:)
         stub_unbind(route_binding)
       end
 
@@ -121,7 +121,7 @@ RSpec.resource 'Routes', type: %i[api legacy_api] do
       let(:app_guid) { process.guid }
 
       before do
-        VCAP::CloudController::RouteMappingModel.make(app: process.app, process_type: process.type, route: route)
+        create(:route_mapping_model, app: process.app, process_type: process.type, route: route)
       end
 
       parameter :app_guid, 'The guid of the app'
@@ -133,7 +133,7 @@ RSpec.resource 'Routes', type: %i[api legacy_api] do
   end
 
   describe 'Reserved Routes' do
-    let(:route) { VCAP::CloudController::Route.make(domain: domain, port: 61_000, host: '', space: space) }
+    let(:route) { create(:route, domain: domain, port: 61_000, host: '', space: space) }
 
     get '/v2/routes/reserved/domain/:domain_guid?host=:host&path=:path&port=:port' do
       request_parameter :host, 'The host portion of the route. Required for shared-domains.', required: false

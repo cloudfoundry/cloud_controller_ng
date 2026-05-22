@@ -5,27 +5,25 @@ require 'permissions_spec_helper'
 
 RSpec.describe BuildsController, type: :controller do
   describe '#index' do
-    let(:user) { set_current_user(VCAP::CloudController::User.make) }
-    let(:organization) { VCAP::CloudController::Organization.make }
-    let(:space) { VCAP::CloudController::Space.make(organization:) }
-    let(:app_model) { VCAP::CloudController::AppModel.make(space:) }
-    let(:package) { VCAP::CloudController::PackageModel.make(app_guid: app_model.guid) }
-    let(:build) { VCAP::CloudController::BuildModel.make(package: package, app: app_model) }
+    let(:user) { set_current_user(create(:user)) }
+    let(:organization) { create(:organization) }
+    let(:space) { create(:space, organization:) }
+    let(:app_model) { create(:app_model, space:) }
+    let(:package) { create(:package_model, app_guid: app_model.guid) }
+    let(:build) { create(:build_model, package: package, app: app_model) }
     let!(:droplet) do
-      VCAP::CloudController::DropletModel.make(
-        state: VCAP::CloudController::DropletModel::STAGED_STATE,
-        package_guid: package.guid,
-        build: build
-      )
+      create(:droplet_model,
+             state: VCAP::CloudController::DropletModel::STAGED_STATE,
+             package_guid: package.guid,
+             build: build)
     end
-    let(:package2) { VCAP::CloudController::PackageModel.make(app_guid: app_model.guid) }
-    let(:build2) { VCAP::CloudController::BuildModel.make(package: package2, app: app_model) }
+    let(:package2) { create(:package_model, app_guid: app_model.guid) }
+    let(:build2) { create(:build_model, package: package2, app: app_model) }
     let!(:droplet2) do
-      VCAP::CloudController::DropletModel.make(
-        state: VCAP::CloudController::DropletModel::STAGED_STATE,
-        package_guid: package2.guid,
-        build: build2
-      )
+      create(:droplet_model,
+             state: VCAP::CloudController::DropletModel::STAGED_STATE,
+             package_guid: package2.guid,
+             build: build2)
     end
 
     it 'eager loads associated resources that the presenter specifies' do
@@ -167,17 +165,16 @@ RSpec.describe BuildsController, type: :controller do
   end
 
   describe '#create' do
-    let(:user) { set_current_user(VCAP::CloudController::User.make) }
-    let(:org) { VCAP::CloudController::Organization.make }
-    let(:space) { VCAP::CloudController::Space.make(organization: org) }
+    let(:user) { set_current_user(create(:user)) }
+    let(:org) { create(:organization) }
+    let(:space) { create(:space, organization: org) }
     let(:stack) { VCAP::CloudController::Stack.default.name }
-    let(:app_model) { VCAP::CloudController::AppModel.make(space:) }
+    let(:app_model) { create(:app_model, space:) }
     let(:package) do
-      VCAP::CloudController::PackageModel.make(
-        app_guid: app_model.guid,
-        state: VCAP::CloudController::PackageModel::READY_STATE,
-        type: VCAP::CloudController::PackageModel::BITS_TYPE
-      )
+      create(:package_model,
+             app_guid: app_model.guid,
+             state: VCAP::CloudController::PackageModel::READY_STATE,
+             type: VCAP::CloudController::PackageModel::BITS_TYPE)
     end
     let(:stagers) { instance_double(VCAP::CloudController::Stagers) }
     let(:stager) { double(:stager, stage: nil) }
@@ -265,7 +262,7 @@ RSpec.describe BuildsController, type: :controller do
     end
 
     describe 'buildpack lifecycle' do
-      let(:buildpack) { VCAP::CloudController::Buildpack.make(stack:) }
+      let(:buildpack) { create(:buildpack, stack:) }
       let(:buildpack_request) { 'http://dan-and-zach-awesome-pack.com' }
       let(:buildpack_lifecycle) do
         {
@@ -392,12 +389,12 @@ RSpec.describe BuildsController, type: :controller do
     end
 
     describe 'docker lifecycle' do
-      let(:docker_app_model) { VCAP::CloudController::AppModel.make(:docker, space:) }
+      let(:docker_app_model) { create(:app_model, :docker, space:) }
       let(:package) do
-        VCAP::CloudController::PackageModel.make(:docker,
-                                                 app_guid: docker_app_model.guid,
-                                                 type: VCAP::CloudController::PackageModel::DOCKER_TYPE,
-                                                 state: VCAP::CloudController::PackageModel::READY_STATE)
+        create(:package_model, :docker,
+               app_guid: docker_app_model.guid,
+               type: VCAP::CloudController::PackageModel::DOCKER_TYPE,
+               state: VCAP::CloudController::PackageModel::READY_STATE)
       end
 
       let(:docker_lifecycle) do
@@ -419,7 +416,7 @@ RSpec.describe BuildsController, type: :controller do
 
       context 'when diego_docker is enabled' do
         before do
-          VCAP::CloudController::FeatureFlag.make(name: 'diego_docker', enabled: true, error_message: nil)
+          create(:feature_flag, name: 'diego_docker', enabled: true, error_message: nil)
         end
 
         it 'returns a 201 Created response and creates a build model with an associated package' do
@@ -447,7 +444,7 @@ RSpec.describe BuildsController, type: :controller do
 
       context 'when diego_docker feature flag is disabled' do
         before do
-          VCAP::CloudController::FeatureFlag.make(name: 'diego_docker', enabled: false, error_message: nil)
+          create(:feature_flag, name: 'diego_docker', enabled: false, error_message: nil)
         end
 
         it 'raises 403' do
@@ -461,12 +458,12 @@ RSpec.describe BuildsController, type: :controller do
     end
 
     describe 'cnb lifecycle' do
-      let(:cnb_app_model) { VCAP::CloudController::AppModel.make(:cnb, space:) }
+      let(:cnb_app_model) { create(:app_model, :cnb, space:) }
       let(:package) do
-        VCAP::CloudController::PackageModel.make(:cnb,
-                                                 app_guid: cnb_app_model.guid,
-                                                 type: VCAP::CloudController::PackageModel::BITS_TYPE,
-                                                 state: VCAP::CloudController::PackageModel::READY_STATE)
+        create(:package_model, :cnb,
+               app_guid: cnb_app_model.guid,
+               type: VCAP::CloudController::PackageModel::BITS_TYPE,
+               state: VCAP::CloudController::PackageModel::READY_STATE)
       end
 
       let(:cnb_lifecycle) do
@@ -488,7 +485,7 @@ RSpec.describe BuildsController, type: :controller do
 
       context 'when diego_cnb is enabled' do
         before do
-          VCAP::CloudController::FeatureFlag.make(name: 'diego_cnb', enabled: true, error_message: nil)
+          create(:feature_flag, name: 'diego_cnb', enabled: true, error_message: nil)
         end
 
         it 'returns a 201 Created response and creates a build model with an associated package' do
@@ -516,7 +513,7 @@ RSpec.describe BuildsController, type: :controller do
 
       context 'when diego_cnb feature flag is disabled' do
         before do
-          VCAP::CloudController::FeatureFlag.make(name: 'diego_cnb', enabled: false, error_message: nil)
+          create(:feature_flag, name: 'diego_cnb', enabled: false, error_message: nil)
         end
 
         it 'raises 403' do
@@ -749,19 +746,18 @@ RSpec.describe BuildsController, type: :controller do
   end
 
   describe '#update' do
-    let(:user) { set_current_user(VCAP::CloudController::User.make) }
-    let(:org) { VCAP::CloudController::Organization.make }
-    let(:space) { VCAP::CloudController::Space.make(organization: org) }
+    let(:user) { set_current_user(create(:user)) }
+    let(:org) { create(:organization) }
+    let(:space) { create(:space, organization: org) }
     let(:stack) { VCAP::CloudController::Stack.default.name }
-    let(:app_model) { VCAP::CloudController::AppModel.make(space:) }
+    let(:app_model) { create(:app_model, space:) }
     let(:package) do
-      VCAP::CloudController::PackageModel.make(
-        app_guid: app_model.guid,
-        state: VCAP::CloudController::PackageModel::READY_STATE,
-        type: VCAP::CloudController::PackageModel::BITS_TYPE
-      )
+      create(:package_model,
+             app_guid: app_model.guid,
+             state: VCAP::CloudController::PackageModel::READY_STATE,
+             type: VCAP::CloudController::PackageModel::BITS_TYPE)
     end
-    let(:build) { VCAP::CloudController::BuildModel.make(package: package, app: app_model) }
+    let(:build) { create(:build_model, package: package, app: app_model) }
     let(:new_labels) do
       {
         release: 'stable',
@@ -857,7 +853,7 @@ RSpec.describe BuildsController, type: :controller do
       end
 
       context 'permissions' do
-        let(:user) { set_current_user(VCAP::CloudController::User.make) }
+        let(:user) { set_current_user(create(:user)) }
 
         context 'when the user cannot read the app' do
           before do
@@ -892,18 +888,17 @@ RSpec.describe BuildsController, type: :controller do
   end
 
   describe '#show' do
-    let(:user) { set_current_user(VCAP::CloudController::User.make) }
-    let(:organization) { VCAP::CloudController::Organization.make }
-    let(:space) { VCAP::CloudController::Space.make(organization:) }
-    let(:app_model) { VCAP::CloudController::AppModel.make(space:) }
-    let(:package) { VCAP::CloudController::PackageModel.make(app_guid: app_model.guid) }
-    let(:build) { VCAP::CloudController::BuildModel.make(package: package, app: app_model) }
+    let(:user) { set_current_user(create(:user)) }
+    let(:organization) { create(:organization) }
+    let(:space) { create(:space, organization:) }
+    let(:app_model) { create(:app_model, space:) }
+    let(:package) { create(:package_model, app_guid: app_model.guid) }
+    let(:build) { create(:build_model, package: package, app: app_model) }
     let!(:droplet) do
-      VCAP::CloudController::DropletModel.make(
-        state: VCAP::CloudController::DropletModel::STAGED_STATE,
-        package_guid: package.guid,
-        build: build
-      )
+      create(:droplet_model,
+             state: VCAP::CloudController::DropletModel::STAGED_STATE,
+             package_guid: package.guid,
+             build: build)
     end
 
     context 'with sufficient permissions' do
@@ -975,7 +970,7 @@ RSpec.describe BuildsController, type: :controller do
 
       context 'when the user does not have the read scope' do
         before do
-          set_current_user(VCAP::CloudController::User.make, scopes: [])
+          set_current_user(create(:user), scopes: [])
         end
 
         it 'returns a 403 NotAuthorized error' do

@@ -3,13 +3,13 @@ require 'presenters/v3/route_presenter'
 
 module VCAP::CloudController::Presenters::V3
   RSpec.describe RoutePresenter do
-    let!(:app) { VCAP::CloudController::AppModel.make }
-    let(:space) { VCAP::CloudController::Space.make }
+    let!(:app) { create(:app_model) }
+    let(:space) { create(:space) }
     let(:options) { { loadbalancing: 'round-robin' } }
     let(:org) { space.organization }
     let(:route_host) { 'host' }
     let(:path) { '/path' }
-    let(:domain) { VCAP::CloudController::PrivateDomain.make(owning_organization: space.organization) }
+    let(:domain) { create(:private_domain, owning_organization: space.organization) }
 
     describe '#to_hash' do
       subject do
@@ -17,52 +17,42 @@ module VCAP::CloudController::Presenters::V3
       end
 
       let(:route) do
-        VCAP::CloudController::Route.make(
-          host: route_host,
-          path: path,
-          space: space,
-          domain: domain,
-          options: options
-        )
+        create(:route, host: route_host,
+                       path: path,
+                       space: space,
+                       domain: domain,
+                       options: options)
       end
 
       let!(:destination) do
-        VCAP::CloudController::RouteMappingModel.make(
-          app: app,
-          app_port: 1234,
-          route: route,
-          process_type: 'web',
-          weight: 55,
-          protocol: 'http1'
-        )
+        create(:route_mapping_model, app: app,
+                                     app_port: 1234,
+                                     route: route,
+                                     process_type: 'web',
+                                     weight: 55,
+                                     protocol: 'http1')
       end
 
       let!(:destination2) do
-        VCAP::CloudController::RouteMappingModel.make(
-          app: app,
-          app_port: 5678,
-          route: route,
-          process_type: 'other-process',
-          weight: 45,
-          protocol: 'http1'
-        )
+        create(:route_mapping_model, app: app,
+                                     app_port: 5678,
+                                     route: route,
+                                     process_type: 'other-process',
+                                     weight: 45,
+                                     protocol: 'http1')
       end
 
       let!(:route_label) do
-        VCAP::CloudController::RouteLabelModel.make(
-          resource_guid: route.guid,
-          key_prefix: 'pfx.com',
-          key_name: 'potato',
-          value: 'baked'
-        )
+        create(:route_label_model, resource_guid: route.guid,
+                                   key_prefix: 'pfx.com',
+                                   key_name: 'potato',
+                                   value: 'baked')
       end
 
       let!(:route_annotation) do
-        VCAP::CloudController::RouteAnnotationModel.make(
-          resource_guid: route.guid,
-          key_name: 'contacts',
-          value: 'Bill tel(1111111) email(bill@fixme), Bob tel(222222) pager(3333333#555) email(bob@fixme)'
-        )
+        create(:route_annotation_model, resource_guid: route.guid,
+                                        key_name: 'contacts',
+                                        value: 'Bill tel(1111111) email(bill@fixme), Bob tel(222222) pager(3333333#555) email(bob@fixme)')
       end
 
       it 'presents the route as json' do
@@ -119,12 +109,10 @@ module VCAP::CloudController::Presenters::V3
 
       context 'when the host is empty' do
         let(:route) do
-          VCAP::CloudController::Route.make(
-            host: '',
-            path: path,
-            space: space,
-            domain: domain
-          )
+          create(:route, host: '',
+                         path: path,
+                         space: space,
+                         domain: domain)
         end
 
         it 'formats the url correctly' do
@@ -134,12 +122,10 @@ module VCAP::CloudController::Presenters::V3
 
       context 'when options is empty' do
         let(:route) do
-          VCAP::CloudController::Route.make(
-            host: 'foobar',
-            path: path,
-            space: space,
-            domain: domain
-          )
+          create(:route, host: 'foobar',
+                         path: path,
+                         space: space,
+                         domain: domain)
         end
 
         it 'outputs empty options hash' do
@@ -149,13 +135,12 @@ module VCAP::CloudController::Presenters::V3
 
       context 'when options contains only internal mTLS keys' do
         let(:route) do
-          VCAP::CloudController::Route.make(
-            host: 'foobar',
-            path: path,
-            space: space,
-            domain: domain,
-            options: { 'route_policy_scope' => 'space', 'route_policy_sources' => 'cf:app:some-guid' }
-          )
+          create(:route,
+                 host: 'foobar',
+                 path: path,
+                 space: space,
+                 domain: domain,
+                 options: { 'route_policy_scope' => 'space', 'route_policy_sources' => 'cf:app:some-guid' })
         end
 
         it 'omits the options key entirely from the response' do
@@ -165,17 +150,16 @@ module VCAP::CloudController::Presenters::V3
 
       context 'when options contains a mix of public and internal keys' do
         let(:route) do
-          VCAP::CloudController::Route.make(
-            host: 'foobar',
-            path: path,
-            space: space,
-            domain: domain,
-            options: {
-              'loadbalancing' => 'round-robin',
-              'route_policy_scope' => 'space',
-              'route_policy_sources' => 'cf:app:some-guid'
-            }
-          )
+          create(:route,
+                 host: 'foobar',
+                 path: path,
+                 space: space,
+                 domain: domain,
+                 options: {
+                   'loadbalancing' => 'round-robin',
+                   'route_policy_scope' => 'space',
+                   'route_policy_sources' => 'cf:app:some-guid'
+                 })
         end
 
         it 'exposes only the public options' do

@@ -4,7 +4,7 @@ require 'actions/services/service_key_create'
 module VCAP::CloudController
   RSpec.describe ServiceKeyCreate do
     subject(:service_key_create) { ServiceKeyCreate.new(logger) }
-    let(:service_instance) { ManagedServiceInstance.make }
+    let(:service_instance) { create(:managed_service_instance) }
     let(:service_binding_url_pattern) { %r{/v2/service_instances/#{service_instance.guid}/service_bindings/} }
     let(:client) { instance_double(VCAP::Services::ServiceBrokers::V2::Client) }
 
@@ -35,7 +35,7 @@ module VCAP::CloudController
 
       context 'and the instance has another operation in progress' do
         it 'fails' do
-          service_instance.service_instance_operation = ServiceInstanceOperation.make state: 'in progress'
+          service_instance.service_instance_operation = create(:service_instance_operation, state: 'in progress')
           service_key_create = ServiceKeyCreate.new(logger)
           _, errors = service_key_create.create(service_instance, key_attrs, {})
           expect(errors.first).to be_instance_of CloudController::Errors::ApiError

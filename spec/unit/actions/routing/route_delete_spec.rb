@@ -14,7 +14,7 @@ module VCAP::CloudController
     let(:route_event_repository) { instance_double(Repositories::RouteEventRepository, record_route_delete_request: nil) }
     let(:user_audit_info) { UserAuditInfo.new(user_guid: 'user-guid', user_email: 'user-email') }
     let(:recursive) { false }
-    let!(:route) { Route.make }
+    let!(:route) { create(:route) }
 
     describe 'delete_unmapped_route' do
       it 'deletes the route' do
@@ -31,8 +31,8 @@ module VCAP::CloudController
 
       context 'when there are route mappings' do
         it 'does not deletes the mappings or route' do
-          route_mapping = RouteMappingModel.make(route:)
-          route_mapping_2 = RouteMappingModel.make(route:)
+          route_mapping = create(:route_mapping_model, route:)
+          route_mapping_2 = create(:route_mapping_model, route:)
 
           route_delete_action.delete_unmapped_route(route:)
 
@@ -43,7 +43,7 @@ module VCAP::CloudController
       end
 
       context 'when there is a service binding' do
-        let(:route_binding) { RouteBinding.make }
+        let(:route_binding) { create(:route_binding) }
         let(:route) { route_binding.route }
 
         it 'does not delete the route' do
@@ -80,8 +80,8 @@ module VCAP::CloudController
       end
 
       context 'when there are route mappings' do
-        let!(:route_mapping) { RouteMappingModel.make route: }
-        let!(:route_mapping_2) { RouteMappingModel.make route: }
+        let!(:route_mapping) { create(:route_mapping_model, route:) }
+        let!(:route_mapping_2) { create(:route_mapping_model, route:) }
 
         it 'deletes the mappings' do
           route_delete_action.delete_sync(route:, recursive:)
@@ -99,7 +99,7 @@ module VCAP::CloudController
       end
 
       context 'when there are route services bound to the route' do
-        let(:route_binding) { RouteBinding.make }
+        let(:route_binding) { create(:route_binding) }
         let(:route) { route_binding.route }
 
         context 'and it is a recursive delete' do

@@ -1,8 +1,8 @@
 require 'spec_helper'
 
 RSpec.describe 'ServiceInstances' do
-  let(:user) { VCAP::CloudController::User.make }
-  let(:space) { VCAP::CloudController::Space.make }
+  let(:user) { create(:user) }
+  let(:space) { create(:space) }
 
   before do
     space.organization.add_user(user)
@@ -10,7 +10,7 @@ RSpec.describe 'ServiceInstances' do
   end
 
   describe 'POST /v2/service_instances' do
-    let(:service_plan) { VCAP::CloudController::ServicePlan.make }
+    let(:service_plan) { create(:service_plan) }
 
     before do
       allow(VCAP::Services::ServiceBrokers::V2::Client).to receive(:new) do |*args, **kwargs, &block|
@@ -74,10 +74,10 @@ RSpec.describe 'ServiceInstances' do
   end
 
   describe 'PUT /v2/service_instances/:guid' do
-    let(:service) { VCAP::CloudController::Service.make(plan_updateable: true) }
-    let(:old_service_plan) { VCAP::CloudController::ServicePlan.make(service:) }
-    let(:new_service_plan) { VCAP::CloudController::ServicePlan.make(service:) }
-    let(:service_instance) { VCAP::CloudController::ManagedServiceInstance.make(space: space, service_plan: old_service_plan) }
+    let(:service) { create(:service, plan_updateable: true) }
+    let(:old_service_plan) { create(:service_plan, service:) }
+    let(:new_service_plan) { create(:service_plan, service:) }
+    let(:service_instance) { create(:managed_service_instance, space: space, service_plan: old_service_plan) }
 
     before do
       allow(VCAP::Services::ServiceBrokers::V2::Client).to receive(:new) do |*args, **kwargs, &block|
@@ -141,8 +141,8 @@ RSpec.describe 'ServiceInstances' do
   end
 
   describe 'GET /v2/service_instances/:service_instance_guid' do
-    let(:service_instance) { VCAP::CloudController::ManagedServiceInstance.make(space:) }
-    let(:service_plan) { VCAP::CloudController::ServicePlan.make(active: false) }
+    let(:service_instance) { create(:managed_service_instance, space:) }
+    let(:service_plan) { create(:service_plan, active: false) }
 
     before do
       service_instance.dashboard_url   = 'someurl.com'
@@ -295,9 +295,9 @@ RSpec.describe 'ServiceInstances' do
   end
 
   describe 'GET /v2/service_instances/:service_instance_guid/parameters' do
-    let(:service) { VCAP::CloudController::Service.make(instances_retrievable: true) }
-    let(:service_plan) { VCAP::CloudController::ServicePlan.make(service:) }
-    let(:service_instance) { VCAP::CloudController::ManagedServiceInstance.make(space:, service_plan:) }
+    let(:service) { create(:service, instances_retrievable: true) }
+    let(:service_plan) { create(:service_plan, service:) }
+    let(:service_instance) { create(:managed_service_instance, space:, service_plan:) }
 
     context 'with a managed service instance' do
       before do
@@ -336,11 +336,11 @@ RSpec.describe 'ServiceInstances' do
   end
 
   describe 'GET /v2/service_instances/:service_instance_guid/routes/:route_guid/parameters' do
-    let(:service) { VCAP::CloudController::Service.make(:routing, bindings_retrievable: true) }
-    let(:service_plan) { VCAP::CloudController::ServicePlan.make(service:) }
-    let(:service_instance) { VCAP::CloudController::ManagedServiceInstance.make(space:, service_plan:) }
-    let(:route) { VCAP::CloudController::Route.make(space:) }
-    let!(:route_binding) { VCAP::CloudController::RouteBinding.make(route:, service_instance:) }
+    let(:service) { create(:service, :routing, bindings_retrievable: true) }
+    let(:service_plan) { create(:service_plan, service:) }
+    let(:service_instance) { create(:managed_service_instance, space:, service_plan:) }
+    let(:route) { create(:route, space:) }
+    let!(:route_binding) { create(:route_binding, route:, service_instance:) }
 
     before do
       allow(VCAP::Services::ServiceBrokers::V2::Client).to receive(:new) do |*args, **kwargs, &block|
@@ -375,10 +375,10 @@ RSpec.describe 'ServiceInstances' do
   end
 
   describe 'GET /v2/service_instances/:service_instance_guid/shared_from' do
-    let(:service_instance) { VCAP::CloudController::ManagedServiceInstance.make(space:) }
+    let(:service_instance) { create(:managed_service_instance, space:) }
 
     before do
-      service_instance.add_shared_space(VCAP::CloudController::Space.make)
+      service_instance.add_shared_space(create(:space))
     end
 
     it 'returns data about the source space and org' do
@@ -395,7 +395,7 @@ RSpec.describe 'ServiceInstances' do
     end
 
     context 'when the user is a member of the space where a service instance has been shared to' do
-      let(:other_space) { VCAP::CloudController::Space.make }
+      let(:other_space) { create(:space) }
       let(:other_user) { make_developer_for_space(other_space) }
       let(:req_body) do
         {
@@ -406,7 +406,7 @@ RSpec.describe 'ServiceInstances' do
       end
 
       before do
-        VCAP::CloudController::FeatureFlag.make(name: 'service_instance_sharing', enabled: true, error_message: nil)
+        create(:feature_flag, name: 'service_instance_sharing', enabled: true, error_message: nil)
 
         other_space.organization.add_user(user)
         other_space.add_developer(user)
@@ -431,9 +431,9 @@ RSpec.describe 'ServiceInstances' do
   end
 
   describe 'GET /v2/service_instances/:service_instance_guid/shared_to' do
-    let(:service_instance) { VCAP::CloudController::ManagedServiceInstance.make(space:) }
-    let(:space1) { VCAP::CloudController::Space.make }
-    let(:space2) { VCAP::CloudController::Space.make }
+    let(:service_instance) { create(:managed_service_instance, space:) }
+    let(:space1) { create(:space) }
+    let(:space2) { create(:space) }
 
     before do
       service_instance.add_shared_space(space1)
@@ -472,8 +472,8 @@ RSpec.describe 'ServiceInstances' do
   end
 
   describe 'DELETE /v2/service_instance/:guid' do
-    let(:originating_space) { VCAP::CloudController::Space.make }
-    let(:service_instance) { VCAP::CloudController::ManagedServiceInstance.make(space: originating_space) }
+    let(:originating_space) { create(:space) }
+    let(:service_instance) { create(:managed_service_instance, space: originating_space) }
 
     context 'when the service instance has been shared' do
       before do
@@ -600,7 +600,7 @@ RSpec.describe 'ServiceInstances' do
   end
 
   describe 'PUT /v2/user_provided_service_instances/:guid' do
-    let(:service_instance) { VCAP::CloudController::UserProvidedServiceInstance.make(space:) }
+    let(:service_instance) { create(:user_provided_service_instance, space:) }
 
     it 'updates the user-provided service instance' do
       put_params = Oj.dump({

@@ -3,7 +3,7 @@ require 'spec_helper'
 module VCAP::CloudController
   module Jobs::V3
     RSpec.describe DropletUpload, job_context: :api do
-      let(:droplet) { DropletModel.make(state: 'STAGING', droplet_hash: nil, sha256_checksum: nil, app: nil) }
+      let(:droplet) { create(:droplet_model, state: 'STAGING', droplet_hash: nil, sha256_checksum: nil, set_as_current_droplet: false) }
       let(:file_content) { 'some_file_content' }
       let(:local_file) do
         Tempfile.new('local_file').tap do |f|

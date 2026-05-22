@@ -8,7 +8,7 @@ module VCAP::CloudController
       let(:user_email) { 'some-email' }
       let(:user_name) { 'some-username' }
       let(:user_audit_info) { UserAuditInfo.new(user_guid:, user_name:, user_email:) }
-      let(:service_binding) { ServiceBinding.make(name: 'some-binding-name') }
+      let(:service_binding) { create(:service_binding, name: 'some-binding-name') }
 
       describe '.record_start_create' do
         it 'creates an audit.service_binding.start_create event' do
@@ -55,7 +55,7 @@ module VCAP::CloudController
         end
 
         context 'when binding name is not set' do
-          let(:service_binding) { ServiceBinding.make(name: nil) }
+          let(:service_binding) { create(:service_binding, name: nil) }
 
           it 'records actee_name as empty' do
             event = ServiceBindingEventRepository.record_start_create(service_binding, user_audit_info, {})
@@ -109,7 +109,7 @@ module VCAP::CloudController
         end
 
         context 'when binding name is not set' do
-          let(:service_binding) { ServiceBinding.make(name: nil) }
+          let(:service_binding) { create(:service_binding, name: nil) }
 
           it 'records actee_name as empty' do
             event = ServiceBindingEventRepository.record_create(service_binding, user_audit_info, {})
@@ -141,7 +141,7 @@ module VCAP::CloudController
         end
 
         context 'when binding name is not set' do
-          let(:service_binding) { ServiceBinding.make(name: nil) }
+          let(:service_binding) { create(:service_binding, name: nil) }
 
           it 'records actee_name as empty' do
             event = ServiceBindingEventRepository.record_start_delete(service_binding, user_audit_info)
@@ -173,7 +173,7 @@ module VCAP::CloudController
         end
 
         context 'when binding name is not set' do
-          let(:service_binding) { ServiceBinding.make(name: nil) }
+          let(:service_binding) { create(:service_binding, name: nil) }
 
           it 'records actee_name as empty' do
             event = ServiceBindingEventRepository.record_delete(service_binding, user_audit_info)

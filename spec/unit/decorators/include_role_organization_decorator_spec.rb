@@ -5,12 +5,12 @@ module VCAP::CloudController
   RSpec.describe IncludeRoleOrganizationDecorator do
     subject(:decorator) { IncludeRoleOrganizationDecorator }
 
-    let(:organization1) { Organization.make(name: 'first-organization', created_at: Time.now.utc - 1.second) }
-    let(:organization2) { Organization.make(name: 'second-organization') }
+    let(:organization1) { create(:organization, name: 'first-organization', created_at: Time.now.utc - 1.second) }
+    let(:organization2) { create(:organization, name: 'second-organization') }
 
-    let(:org_user) { OrganizationUser.make(organization: organization1) }
-    let(:org_auditor) { OrganizationAuditor.make(organization: organization2) }
-    let(:space_manager) { SpaceManager.make }
+    let(:org_user) { create(:organization_user, organization: organization1) }
+    let(:org_auditor) { create(:organization_auditor, organization: organization2) }
+    let(:space_manager) { create(:space_manager) }
 
     # roles is an array of VCAP::CloudController::Role objects
     let(:roles) { Role.where(guid: [org_user, org_auditor, space_manager].map(&:guid)).all }

@@ -2,17 +2,17 @@ require 'spec_helper'
 
 module VCAP::CloudController
   RSpec.describe RoutePolicy, type: :model do
-    let(:space) { Space.make }
-    let(:domain) { SharedDomain.make(name: 'apps.identity') }
-    let(:route) { Route.make(space:, domain:) }
-    let(:app_model) { AppModel.make(space:) }
+    let(:space) { create(:space) }
+    let(:domain) { create(:shared_domain, name: 'apps.identity') }
+    let(:route) { create(:route, space:, domain:) }
+    let(:app_model) { create(:app_model, space:) }
     let(:process) do
-      ProcessModel.make(app: app_model, type: 'web')
+      create(:process_model, app: app_model, type: 'web')
     end
     let(:app_guid) { SecureRandom.uuid }
 
     before do
-      RouteMappingModel.make(app: app_model, route: route, process_type: 'web')
+      create(:route_mapping_model, app: app_model, route: route, process_type: 'web')
     end
 
     describe 'source virtual attribute' do
@@ -154,7 +154,7 @@ module VCAP::CloudController
         end
 
         it 'does not fail if route has no associated processes' do
-          route_without_processes = Route.make(space:, domain:)
+          route_without_processes = create(:route, space:, domain:)
 
           expect do
             RoutePolicy.create(
@@ -178,7 +178,7 @@ module VCAP::CloudController
         end
 
         it 'does not fail if route has no associated processes' do
-          route_without_processes = Route.make(space:, domain:)
+          route_without_processes = create(:route, space:, domain:)
           rule = RoutePolicy.create(
             source: "cf:app:#{app_guid}",
             route: route_without_processes

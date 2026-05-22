@@ -3,11 +3,11 @@ require 'spec_helper'
 module VCAP::CloudController
   RSpec.describe ServiceBrokerAccess, type: :access do
     subject(:access) { ServiceBrokerAccess.new(Security::AccessContext.new) }
-    let(:user) { VCAP::CloudController::User.make }
-    let(:org) { VCAP::CloudController::Organization.make }
-    let(:space) { VCAP::CloudController::Space.make(organization: org) }
-    let(:object) { VCAP::CloudController::ServiceBroker.make }
-    let(:broker_with_space) { VCAP::CloudController::ServiceBroker.make space: }
+    let(:user) { create(:user) }
+    let(:org) { create(:organization) }
+    let(:space) { create(:space, organization: org) }
+    let(:object) { create(:service_broker) }
+    let(:broker_with_space) { create(:service_broker, space:) }
 
     before { set_current_user(user) }
 
@@ -18,7 +18,7 @@ module VCAP::CloudController
       it_behaves_like 'full access'
 
       context 'when FeatureFlag space_scoped_private_broker_creation is false' do
-        before { FeatureFlag.make(name: 'space_scoped_private_broker_creation', enabled: false, error_message: nil) }
+        before { create(:feature_flag, name: 'space_scoped_private_broker_creation', enabled: false, error_message: nil) }
 
         it_behaves_like 'full access'
       end
@@ -47,13 +47,13 @@ module VCAP::CloudController
       it_behaves_like 'no access'
 
       context 'when FeatureFlag space_scoped_private_broker_creation is true' do
-        before { FeatureFlag.make(name: 'space_scoped_private_broker_creation', enabled: true, error_message: nil) }
+        before { create(:feature_flag, name: 'space_scoped_private_broker_creation', enabled: true, error_message: nil) }
 
         it { is_expected.to allow_op_on_object :create, broker_with_space }
       end
 
       context 'when FeatureFlag space_scoped_private_broker_creation is false' do
-        before { FeatureFlag.make(name: 'space_scoped_private_broker_creation', enabled: false, error_message: nil) }
+        before { create(:feature_flag, name: 'space_scoped_private_broker_creation', enabled: false, error_message: nil) }
 
         it 'does not allow the create' do
           expect { subject.create?(broker_with_space) }.to raise_error(CloudController::Errors::ApiError, /space_scoped_private_broker_creation/)
@@ -96,7 +96,7 @@ module VCAP::CloudController
 
     context 'user in a different organization (defensive)' do
       before do
-        different_organization = VCAP::CloudController::Organization.make
+        different_organization = create(:organization)
         different_organization.add_user(user)
       end
 
@@ -106,7 +106,7 @@ module VCAP::CloudController
 
     context 'manager in a different organization (defensive)' do
       before do
-        different_organization = VCAP::CloudController::Organization.make
+        different_organization = create(:organization)
         different_organization.add_manager(user)
       end
 

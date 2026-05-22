@@ -48,7 +48,7 @@ RSpec.describe 'Service Broker API integration' do
           end
 
           it 'sends the broker the X-Broker-Api-Originating-Identity header' do
-            user = VCAP::CloudController::User.make
+            user = create(:user)
 
             get("/v2/service_bindings/#{@binding_guid}/parameters",
                 {}.to_json,
@@ -249,7 +249,7 @@ RSpec.describe 'Service Broker API integration' do
     end
 
     describe 'update service dashboard url' do
-      let(:service_instance) { VCAP::CloudController::ManagedServiceInstance.make(space_guid: @space_guid, service_plan_guid: @plan_guid) }
+      let(:service_instance) { create(:managed_service_instance, space_guid: @space_guid, service_plan_guid: @plan_guid) }
       let(:catalog) { default_catalog(plan_updateable: true) }
 
       before do

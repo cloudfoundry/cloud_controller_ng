@@ -4,14 +4,14 @@ require 'actions/app_find_or_create_skeleton'
 module VCAP::CloudController
   RSpec.describe AppFindOrCreateSkeleton do
     let(:user_audit_info) { UserAuditInfo.new(user_email: 'gooid', user_guid: 'amelia@cats.com') }
-    let(:space) { Space.make }
+    let(:space) { create(:space) }
     let(:name) { 'banana' }
 
     subject(:action) { AppFindOrCreateSkeleton.new(user_audit_info) }
 
     context 'when the app exists' do
       let(:message) { AppManifestMessage.create_from_yml({ name: }) }
-      let!(:app) { AppModel.make(name:, space:) }
+      let!(:app) { create(:app_model, name:, space:) }
 
       it 'returns the existing app' do
         expect(action.find_or_create(message:, space:)).to eq app

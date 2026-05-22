@@ -9,13 +9,13 @@ module VCAP::CloudController
     let(:message) { IsolationSegmentsListMessage.from_params(filters) }
     subject { IsolationSegmentListFetcher.fetch_all(message) }
 
-    let!(:isolation_segment_model_1) { VCAP::CloudController::IsolationSegmentModel.make }
-    let!(:isolation_segment_model_2) { VCAP::CloudController::IsolationSegmentModel.make(name: 'frank') }
-    let!(:isolation_segment_model_3) { VCAP::CloudController::IsolationSegmentModel.make }
+    let!(:isolation_segment_model_1) { create(:isolation_segment_model) }
+    let!(:isolation_segment_model_2) { create(:isolation_segment_model, name: 'frank') }
+    let!(:isolation_segment_model_3) { create(:isolation_segment_model) }
 
-    let(:org1) { VCAP::CloudController::Organization.make }
-    let(:org2) { VCAP::CloudController::Organization.make }
-    let(:org3) { VCAP::CloudController::Organization.make }
+    let(:org1) { create(:organization) }
+    let(:org2) { create(:organization) }
+    let(:org3) { create(:organization) }
 
     let(:assigner) { VCAP::CloudController::IsolationSegmentAssign.new }
 
@@ -67,7 +67,7 @@ module VCAP::CloudController
 
         context 'filtering label selectors' do
           let(:filters) { { 'label_selector' => 'key=value' } }
-          let!(:label) { IsolationSegmentLabelModel.make(resource_guid: isolation_segment_model_3.guid, key_name: 'key', value: 'value') }
+          let!(:label) { create(:isolation_segment_label_model, resource_guid: isolation_segment_model_3.guid, key_name: 'key', value: 'value') }
 
           it 'returns the correct set of isosegs' do
             isolation_segment_models = subject.all

@@ -5,12 +5,12 @@ require 'permissions_spec_helper'
 
 RSpec.describe PackagesController, type: :controller do
   describe '#upload' do
-    let(:package) { VCAP::CloudController::PackageModel.make }
+    let(:package) { create(:package_model) }
     let(:space) { package.space }
     let(:org) { space.organization }
     let(:params) { { 'bits_path' => 'path/to/bits' } }
     let(:form_headers) { { 'CONTENT_TYPE' => 'application/x-www-form-urlencoded' } }
-    let(:user) { set_current_user(VCAP::CloudController::User.make) }
+    let(:user) { set_current_user(create(:user)) }
 
     before do
       @request.env.merge!(form_headers)
@@ -107,7 +107,7 @@ RSpec.describe PackagesController, type: :controller do
 
     context 'when app_bits_upload is disabled' do
       before do
-        VCAP::CloudController::FeatureFlag.make(name: 'app_bits_upload', enabled: false, error_message: nil)
+        create(:feature_flag, name: 'app_bits_upload', enabled: false, error_message: nil)
       end
 
       context 'non-admin user' do
@@ -239,10 +239,10 @@ RSpec.describe PackagesController, type: :controller do
   end
 
   describe '#download' do
-    let(:package) { VCAP::CloudController::PackageModel.make(state: 'READY') }
+    let(:package) { create(:package_model, state: 'READY') }
     let(:space) { package.space }
     let(:org) { space.organization }
-    let(:user) { set_current_user(VCAP::CloudController::User.make, email: 'utako') }
+    let(:user) { set_current_user(create(:user), email: 'utako') }
 
     before do
       blob = instance_double(CloudController::Blobstore::FogBlob, public_download_url: 'http://package.example.com')
@@ -299,7 +299,7 @@ RSpec.describe PackagesController, type: :controller do
     context 'permissions' do
       context 'user does not have read scope' do
         before do
-          set_current_user(VCAP::CloudController::User.make, scopes: ['cloud_controller.write'])
+          set_current_user(create(:user), scopes: ['cloud_controller.write'])
         end
 
         it 'returns an Unauthorized error' do
@@ -339,9 +339,9 @@ RSpec.describe PackagesController, type: :controller do
   end
 
   describe '#show' do
-    let(:package) { VCAP::CloudController::PackageModel.make }
+    let(:package) { create(:package_model) }
     let(:space) { package.space }
-    let(:user) { set_current_user(VCAP::CloudController::User.make) }
+    let(:user) { set_current_user(create(:user)) }
 
     before do
       allow_user_read_access_for(user, spaces: [space])
@@ -394,12 +394,12 @@ RSpec.describe PackagesController, type: :controller do
   end
 
   describe '#update' do
-    let!(:org) { VCAP::CloudController::Organization.make(name: "Harold's Farm") }
-    let!(:space) { VCAP::CloudController::Space.make(name: 'roosters', organization: org) }
-    let(:app_model) { VCAP::CloudController::AppModel.make(name: 'needed to put the package in the space', space: space) }
-    let(:package) { VCAP::CloudController::PackageModel.make(app: app_model) }
+    let!(:org) { create(:organization, name: "Harold's Farm") }
+    let!(:space) { create(:space, name: 'roosters', organization: org) }
+    let(:app_model) { create(:app_model, name: 'needed to put the package in the space', space: space) }
+    let(:package) { create(:package_model, app: app_model) }
 
-    let(:user) { set_current_user(VCAP::CloudController::User.make) }
+    let(:user) { set_current_user(create(:user)) }
     let(:labels) do
       {
         fruit: 'pears',
@@ -653,7 +653,7 @@ RSpec.describe PackagesController, type: :controller do
       end
 
       context 'permissions' do
-        let(:user) { set_current_user(VCAP::CloudController::User.make) }
+        let(:user) { set_current_user(create(:user)) }
 
         context 'when the user cannot read the app' do
           before do
@@ -686,8 +686,8 @@ RSpec.describe PackagesController, type: :controller do
   end
 
   describe '#destroy' do
-    let(:package) { VCAP::CloudController::PackageModel.make }
-    let(:user) { set_current_user(VCAP::CloudController::User.make) }
+    let(:package) { create(:package_model) }
+    let(:user) { set_current_user(create(:user)) }
     let(:space) { package.space }
     let(:package_delete_stub) { instance_double(VCAP::CloudController::PackageDelete) }
 
@@ -783,16 +783,16 @@ RSpec.describe PackagesController, type: :controller do
   end
 
   describe '#index' do
-    let(:user) { set_current_user(VCAP::CloudController::User.make) }
-    let(:app_model) { VCAP::CloudController::AppModel.make }
+    let(:user) { set_current_user(create(:user)) }
+    let(:app_model) { create(:app_model) }
     let(:space) { app_model.space }
-    let(:space1) { VCAP::CloudController::Space.make }
-    let(:space2) { VCAP::CloudController::Space.make }
-    let(:space3) { VCAP::CloudController::Space.make }
+    let(:space1) { create(:space) }
+    let(:space2) { create(:space) }
+    let(:space3) { create(:space) }
     let(:user_spaces) { [space, space1, space2, space3] }
-    let!(:user_package_1) { VCAP::CloudController::PackageModel.make(app_guid: app_model.guid) }
-    let!(:user_package_2) { VCAP::CloudController::PackageModel.make(app_guid: app_model.guid) }
-    let!(:admin_package) { VCAP::CloudController::PackageModel.make }
+    let!(:user_package_1) { create(:package_model, app_guid: app_model.guid) }
+    let!(:user_package_2) { create(:package_model, app_guid: app_model.guid) }
+    let!(:admin_package) { create(:package_model) }
 
     before do
       allow_user_read_access_for(user, spaces: user_spaces)
@@ -817,10 +817,10 @@ RSpec.describe PackagesController, type: :controller do
 
     context 'when accessed as an app subresource' do
       it 'uses the app as a filter' do
-        app = VCAP::CloudController::AppModel.make(space:)
-        package_1 = VCAP::CloudController::PackageModel.make(app_guid: app.guid)
-        package_2 = VCAP::CloudController::PackageModel.make(app_guid: app.guid)
-        VCAP::CloudController::PackageModel.make
+        app = create(:app_model, space:)
+        package_1 = create(:package_model, app_guid: app.guid)
+        package_2 = create(:package_model, app_guid: app.guid)
+        create(:package_model)
 
         get :index, params: { app_guid: app.guid }
 
@@ -830,7 +830,7 @@ RSpec.describe PackagesController, type: :controller do
       end
 
       it "doesn't allow filtering on space_guids in a nested query" do
-        app = VCAP::CloudController::AppModel.make(space: space, guid: 'speshal-app-guid')
+        app = create(:app_model, space: space, guid: 'speshal-app-guid')
 
         get :index, params: { app_guid: app.guid, page: 1, per_page: 10, states: 'AWAITING_UPLOAD',
                               space_guids: user_spaces.map(&:guid).join(',') }
@@ -840,10 +840,10 @@ RSpec.describe PackagesController, type: :controller do
       end
 
       it 'uses the app and pagination as query parameters' do
-        app = VCAP::CloudController::AppModel.make(space: space, guid: 'speshal-app-guid')
-        package_1 = VCAP::CloudController::PackageModel.make(app_guid: app.guid, guid: 'package-1')
-        package_2 = VCAP::CloudController::PackageModel.make(app_guid: app.guid, guid: 'package-2')
-        VCAP::CloudController::PackageModel.make
+        app = create(:app_model, space: space, guid: 'speshal-app-guid')
+        package_1 = create(:package_model, app_guid: app.guid, guid: 'package-1')
+        package_2 = create(:package_model, app_guid: app.guid, guid: 'package-2')
+        create(:package_model)
 
         get :index, params: { app_guids: app.guid, page: 1, per_page: 10, states: 'AWAITING_UPLOAD' }
 
@@ -946,7 +946,7 @@ RSpec.describe PackagesController, type: :controller do
 
       context 'when the user does not have the read scope' do
         before do
-          set_current_user(VCAP::CloudController::User.make, scopes: [])
+          set_current_user(create(:user), scopes: [])
         end
 
         it 'returns a 403 NotAuthorized error' do
@@ -961,7 +961,7 @@ RSpec.describe PackagesController, type: :controller do
 
   describe '#create' do
     context 'when creating a new package' do
-      let(:app_model) { VCAP::CloudController::AppModel.make }
+      let(:app_model) { create(:app_model) }
       let(:app_guid) { app_model.guid }
       let(:space) { app_model.space }
       let(:org) { space.organization }
@@ -971,7 +971,7 @@ RSpec.describe PackagesController, type: :controller do
           relationships: { app: { data: { guid: app_guid } } }
         }
       end
-      let(:user) { set_current_user(VCAP::CloudController::User.make) }
+      let(:user) { set_current_user(create(:user)) }
 
       before do
         allow_user_read_access_for(user, spaces: [space])
@@ -1034,7 +1034,7 @@ RSpec.describe PackagesController, type: :controller do
         end
 
         context 'when the existing app is a Docker app' do
-          let(:app_model) { VCAP::CloudController::AppModel.make(:docker) }
+          let(:app_model) { create(:app_model, :docker) }
 
           it 'returns 422' do
             post :create, params: request_body, as: :json
@@ -1088,7 +1088,7 @@ RSpec.describe PackagesController, type: :controller do
       end
 
       context 'docker' do
-        let(:app_model) { VCAP::CloudController::AppModel.make(:docker) }
+        let(:app_model) { create(:app_model, :docker) }
         let(:image) { 'registry/image:latest' }
         let(:docker_username) { 'naruto' }
         let(:docker_password) { 'oturan' }
@@ -1119,7 +1119,7 @@ RSpec.describe PackagesController, type: :controller do
         end
 
         context 'when the existing app is a buildpack app' do
-          let(:app_model) { VCAP::CloudController::AppModel.make }
+          let(:app_model) { create(:app_model) }
 
           it 'returns 422' do
             post :create, params: request_body, as: :json
@@ -1203,10 +1203,10 @@ RSpec.describe PackagesController, type: :controller do
     end
 
     context 'when copying an existing package' do
-      let(:source_app_model) { VCAP::CloudController::AppModel.make }
-      let(:original_package) { VCAP::CloudController::PackageModel.make(type: 'bits', app_guid: source_app_model.guid) }
-      let(:target_app_model) { VCAP::CloudController::AppModel.make }
-      let(:user) { set_current_user(VCAP::CloudController::User.make) }
+      let(:source_app_model) { create(:app_model) }
+      let(:original_package) { create(:package_model, type: 'bits', app_guid: source_app_model.guid) }
+      let(:target_app_model) { create(:app_model) }
+      let(:user) { set_current_user(create(:user)) }
       let(:source_space) { source_app_model.space }
       let(:destination_space) { target_app_model.space }
       let(:relationship_request_body) { { relationships: { app: { data: { guid: target_app_model.guid } } } } }
@@ -1233,7 +1233,7 @@ RSpec.describe PackagesController, type: :controller do
       context 'permissions' do
         context 'when the user does not have write scope' do
           before do
-            set_current_user(VCAP::CloudController::User.make, scopes: ['cloud_controller.read'])
+            set_current_user(create(:user), scopes: ['cloud_controller.read'])
           end
 
           it 'returns a 403 NotAuthorized error' do

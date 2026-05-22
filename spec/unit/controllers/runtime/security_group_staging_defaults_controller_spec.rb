@@ -4,7 +4,7 @@ require 'spec_helper'
 
 module VCAP::CloudController
   RSpec.describe SecurityGroupStagingDefaultsController do
-    before { set_current_user(User.make) }
+    before { set_current_user(create(:user)) }
 
     it 'allows admins to read staging security groups' do
       set_current_user_as_admin
@@ -13,8 +13,8 @@ module VCAP::CloudController
     end
 
     it 'only returns SecurityGroups that are staging defaults' do
-      SecurityGroup.make(staging_default: false)
-      staging_default = SecurityGroup.make(staging_default: true)
+      create(:security_group, staging_default: false)
+      staging_default = create(:security_group, staging_default: true)
 
       get '/v2/config/staging_security_groups'
       expect(decoded_response['total_results']).to eq(1)
@@ -25,7 +25,7 @@ module VCAP::CloudController
       before { set_current_user_as_admin }
 
       it 'sets staging_default to true on the security group and return the security group' do
-        security_group = SecurityGroup.make(staging_default: false)
+        security_group = create(:security_group, staging_default: false)
 
         put "/v2/config/staging_security_groups/#{security_group.guid}", {}
 
@@ -47,7 +47,7 @@ module VCAP::CloudController
       before { set_current_user_as_admin }
 
       it 'sets staging_default to false on the security group' do
-        security_group = SecurityGroup.make(staging_default: true)
+        security_group = create(:security_group, staging_default: true)
 
         delete "/v2/config/staging_security_groups/#{security_group.guid}"
 

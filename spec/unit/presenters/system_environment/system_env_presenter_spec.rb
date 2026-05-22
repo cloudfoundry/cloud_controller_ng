@@ -38,7 +38,7 @@ module VCAP::CloudController
 
     describe '#system_env' do
       context 'when there are no services' do
-        let(:app) { AppModel.make(environment_variables: { 'jesse' => 'awesome' }) }
+        let(:app) { create(:app_model, environment_variables: { 'jesse' => 'awesome' }) }
 
         it 'contains an empty vcap_services' do
           expect(system_env_presenter.system_env[:VCAP_SERVICES]).to eq({})
@@ -49,16 +49,16 @@ module VCAP::CloudController
       end
 
       context 'when there are services' do
-        let(:space) { Space.make }
-        let(:app) { AppModel.make(environment_variables: { 'jesse' => 'awesome' }, space: space) }
-        let(:service) { Service.make(label: 'elephantsql-n/a') }
-        let(:service_alt) { Service.make(label: 'giraffesql-n/a') }
-        let(:service_plan) { ServicePlan.make(service:) }
-        let(:service_plan_alt) { ServicePlan.make(service: service_alt) }
-        let(:service_instance) { ManagedServiceInstance.make(space: space, service_plan: service_plan, name: 'elephantsql-vip-uat', tags: ['excellent']) }
-        let(:service_instance_same_label) { ManagedServiceInstance.make(space: space, service_plan: service_plan, name: 'elephantsql-2') }
-        let(:service_instance_diff_label) { ManagedServiceInstance.make(space: space, service_plan: service_plan_alt, name: 'giraffesql-vip-uat') }
-        let!(:service_binding) { ServiceBinding.make(app: app, service_instance: service_instance, syslog_drain_url: 'logs.go-here.com') }
+        let(:space) { create(:space) }
+        let(:app) { create(:app_model, environment_variables: { 'jesse' => 'awesome' }, space: space) }
+        let(:service) { create(:service, label: 'elephantsql-n/a') }
+        let(:service_alt) { create(:service, label: 'giraffesql-n/a') }
+        let(:service_plan) { create(:service_plan, service:) }
+        let(:service_plan_alt) { create(:service_plan, service: service_alt) }
+        let(:service_instance) { create(:managed_service_instance, space: space, service_plan: service_plan, name: 'elephantsql-vip-uat', tags: ['excellent']) }
+        let(:service_instance_same_label) { create(:managed_service_instance, space: space, service_plan: service_plan, name: 'elephantsql-2') }
+        let(:service_instance_diff_label) { create(:managed_service_instance, space: space, service_plan: service_plan_alt, name: 'giraffesql-vip-uat') }
+        let!(:service_binding) { create(:service_binding, app: app, service_instance: service_instance, syslog_drain_url: 'logs.go-here.com') }
 
         it 'contains a populated vcap_services' do
           expect(system_env_presenter.system_env[:VCAP_SERVICES]).not_to eq({})
@@ -75,8 +75,8 @@ module VCAP::CloudController
         end
 
         context 'when a create service binding is in progress' do
-          let(:service_binding_operation) { ServiceBindingOperation.make(type: 'create', state: 'in progress') }
-          let!(:service_binding) { ServiceBinding.make(app:, service_instance:) }
+          let(:service_binding_operation) { create(:service_binding_operation, type: 'create', state: 'in progress') }
+          let!(:service_binding) { create(:service_binding, app:, service_instance:) }
 
           before do
             service_binding.service_binding_operation = service_binding_operation
@@ -88,8 +88,8 @@ module VCAP::CloudController
         end
 
         context 'when a service binding has successfully been asynchronously created' do
-          let(:service_binding_operation) { ServiceBindingOperation.make(state: 'succeeded') }
-          let!(:service_binding) { ServiceBinding.make(app:, service_instance:) }
+          let(:service_binding_operation) { create(:service_binding_operation, state: 'succeeded') }
+          let!(:service_binding) { create(:service_binding, app:, service_instance:) }
 
           before do
             service_binding.service_binding_operation = service_binding_operation
@@ -105,8 +105,8 @@ module VCAP::CloudController
         end
 
         context 'when a delete service binding is in progress' do
-          let(:service_binding_operation) { ServiceBindingOperation.make(type: 'delete', state: 'in progress') }
-          let!(:service_binding) { ServiceBinding.make(app:, service_instance:) }
+          let(:service_binding_operation) { create(:service_binding_operation, type: 'delete', state: 'in progress') }
+          let!(:service_binding) { create(:service_binding, app:, service_instance:) }
 
           before do
             service_binding.service_binding_operation = service_binding_operation
@@ -118,8 +118,8 @@ module VCAP::CloudController
         end
 
         context 'when a delete service binding failed' do
-          let(:service_binding_operation) { ServiceBindingOperation.make(type: 'delete', state: 'failed') }
-          let!(:service_binding) { ServiceBinding.make(app:, service_instance:) }
+          let(:service_binding_operation) { create(:service_binding_operation, type: 'delete', state: 'failed') }
+          let!(:service_binding) { create(:service_binding, app:, service_instance:) }
 
           before do
             service_binding.service_binding_operation = service_binding_operation
@@ -132,7 +132,7 @@ module VCAP::CloudController
 
         context 'when there are multiple service bindings for the same service instance' do
           it 'includes only the latest binding' do
-            newer_binding = ServiceBinding.make(app: app, service_instance: service_instance, syslog_drain_url: 'logs.go-here.com', created_at: Time.now.utc + 10.seconds)
+            newer_binding = create(:service_binding, app: app, service_instance: service_instance, syslog_drain_url: 'logs.go-here.com', created_at: Time.now.utc + 10.seconds)
 
             bindings = system_env_presenter.system_env[:VCAP_SERVICES][service.label.to_sym]
             expect(bindings).to have(1).items
@@ -141,10 +141,10 @@ module VCAP::CloudController
         end
 
         context 'when there are multiple service bindings for the same service offering and plan' do
-          let!(:service_instance_2) { ManagedServiceInstance.make(space: space, service_plan: service_plan, name: 'instance-2') }
-          let!(:service_instance_3) { ManagedServiceInstance.make(space: space, service_plan: service_plan, name: 'instance-3') }
-          let!(:service_binding_2) { ServiceBinding.make(app: app, service_instance: service_instance_2) }
-          let!(:service_binding_3) { ServiceBinding.make(app: app, service_instance: service_instance_3) }
+          let!(:service_instance_2) { create(:managed_service_instance, space: space, service_plan: service_plan, name: 'instance-2') }
+          let!(:service_instance_3) { create(:managed_service_instance, space: space, service_plan: service_plan, name: 'instance-3') }
+          let!(:service_binding_2) { create(:service_binding, app: app, service_instance: service_instance_2) }
+          let!(:service_binding_3) { create(:service_binding, app: app, service_instance: service_instance_3) }
 
           it 'returns bindings in natural order by id' do
             bindings = system_env_presenter.system_env[:VCAP_SERVICES][service.label.to_sym]
@@ -161,23 +161,21 @@ module VCAP::CloudController
         describe 'volume mounts' do
           context 'when the service binding has volume mounts' do
             let!(:service_binding) do
-              ServiceBinding.make(
-                app: app,
-                service_instance: service_instance,
-                syslog_drain_url: 'logs.go-here.com',
-                volume_mounts: [{
-                  container_dir: '/data/images',
-                  mode: 'r',
-                  device_type: 'shared',
-                  device: {
-                    driver: 'cephfs',
-                    volume_id: 'abc',
-                    mount_config: {
-                      key: 'value'
-                    }
-                  }
-                }]
-              )
+              create(:service_binding, app: app,
+                                       service_instance: service_instance,
+                                       syslog_drain_url: 'logs.go-here.com',
+                                       volume_mounts: [{
+                                         container_dir: '/data/images',
+                                         mode: 'r',
+                                         device_type: 'shared',
+                                         device: {
+                                           driver: 'cephfs',
+                                           volume_id: 'abc',
+                                           mount_config: {
+                                             key: 'value'
+                                           }
+                                         }
+                                       }])
             end
 
             it 'includes only the public volume information' do
@@ -195,7 +193,7 @@ module VCAP::CloudController
         end
 
         context 'when the service is user-provided' do
-          let(:service_instance) { UserProvidedServiceInstance.make(space: space, name: 'elephantsql-vip-uat') }
+          let(:service_instance) { create(:user_provided_service_instance, space: space, name: 'elephantsql-vip-uat') }
 
           it 'includes service binding and instance information' do
             expect(system_env_presenter.system_env[:VCAP_SERVICES][:'user-provided']).to have(1).items
@@ -207,8 +205,8 @@ module VCAP::CloudController
 
         describe 'grouping' do
           before do
-            ServiceBinding.make(app: app, service_instance: service_instance_same_label)
-            ServiceBinding.make(app: app, service_instance: service_instance_diff_label)
+            create(:service_binding, app: app, service_instance: service_instance_same_label)
+            create(:service_binding, app: app, service_instance: service_instance_diff_label)
           end
 
           it 'groups services by label' do

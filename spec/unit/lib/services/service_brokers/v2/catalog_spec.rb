@@ -2,7 +2,7 @@ require 'spec_helper'
 
 module VCAP::Services::ServiceBrokers::V2
   RSpec.describe Catalog do
-    let(:broker) { VCAP::CloudController::ServiceBroker.make }
+    let(:broker) { create(:service_broker) }
 
     def service_entry(opts={})
       {
@@ -127,14 +127,14 @@ module VCAP::Services::ServiceBrokers::V2
                 }
               end
               let(:broker) do
-                broker = VCAP::CloudController::ServiceBroker.make
-                old_service = VCAP::CloudController::Service.make(label: 'clashing-service-name', service_broker: broker)
-                old_plan = VCAP::CloudController::ServicePlan.make(service: old_service)
-                VCAP::CloudController::ManagedServiceInstance.make(service_plan: old_plan)
+                broker = create(:service_broker)
+                old_service = create(:service, label: 'clashing-service-name', service_broker: broker)
+                old_plan = create(:service_plan, service: old_service)
+                create(:managed_service_instance, service_plan: old_plan)
 
-                old_service = VCAP::CloudController::Service.make(label: 'clashing-service-name2', service_broker: broker)
-                old_plan = VCAP::CloudController::ServicePlan.make(service: old_service)
-                VCAP::CloudController::ManagedServiceInstance.make(service_plan: old_plan)
+                old_service = create(:service, label: 'clashing-service-name2', service_broker: broker)
+                old_plan = create(:service_plan, service: old_service)
+                create(:managed_service_instance, service_plan: old_plan)
 
                 broker
               end
@@ -158,9 +158,9 @@ module VCAP::Services::ServiceBrokers::V2
                   'services' => [build_service('id' => '1', 'name' => 'clashing-service-name')]
                 }
               end
-              let(:broker) { VCAP::CloudController::ServiceBroker.make }
-              let(:old_service) { VCAP::CloudController::Service.make(label: 'clashing-service-name', service_broker: broker) }
-              let!(:old_plan) { VCAP::CloudController::ServicePlan.make(service: old_service) }
+              let(:broker) { create(:service_broker) }
+              let(:old_service) { create(:service, label: 'clashing-service-name', service_broker: broker) }
+              let!(:old_plan) { create(:service_plan, service: old_service) }
 
               it 'is valid' do
                 catalog = Catalog.new(broker, new_catalog_hash)
@@ -171,15 +171,15 @@ module VCAP::Services::ServiceBrokers::V2
           end
 
           context 'when ids provided by the broker are the same' do
-            let(:broker) { VCAP::CloudController::ServiceBroker.make }
-            let(:old_service) { VCAP::CloudController::Service.make(label: 'clashing-service-name', service_broker: broker) }
+            let(:broker) { create(:service_broker) }
+            let(:old_service) { create(:service, label: 'clashing-service-name', service_broker: broker) }
             let(:new_catalog_hash) do
               {
                 'services' => [build_service('id' => old_service.unique_id, 'name' => old_service.label)]
               }
             end
-            let(:old_plan) { VCAP::CloudController::ServicePlan.make(service: old_service) }
-            let!(:instance) { VCAP::CloudController::ManagedServiceInstance.make(service_plan: old_plan) }
+            let(:old_plan) { create(:service_plan, service: old_service) }
+            let!(:instance) { create(:managed_service_instance, service_plan: old_plan) }
 
             it 'is valid' do
               catalog = Catalog.new(broker, new_catalog_hash)
@@ -195,13 +195,13 @@ module VCAP::Services::ServiceBrokers::V2
               'services' => [build_service('id' => '1'), build_service('id' => '2')]
             }
           end
-          let(:broker) { VCAP::CloudController::ServiceBroker.make }
+          let(:broker) { create(:service_broker) }
 
           let(:another_broker) do
-            broker = VCAP::CloudController::ServiceBroker.make
-            old_service = VCAP::CloudController::Service.make(name: '1', service_broker: broker)
-            old_plan = VCAP::CloudController::ServicePlan.make(service: old_service)
-            VCAP::CloudController::ManagedServiceInstance.make(service_plan: old_plan)
+            broker = create(:service_broker)
+            old_service = create(:service, name: '1', service_broker: broker)
+            old_plan = create(:service_plan, service: old_service)
+            create(:managed_service_instance, service_plan: old_plan)
 
             broker
           end

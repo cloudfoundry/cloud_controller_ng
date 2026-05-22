@@ -8,7 +8,7 @@ module VCAP::CloudController
 
       describe '#find' do
         context 'when the event exists' do
-          let(:event) { AppUsageEvent.make }
+          let(:event) { create(:app_usage_event) }
 
           it 'returns the event' do
             expect(repository.find(event.guid)).to eq(event)
@@ -23,7 +23,7 @@ module VCAP::CloudController
       end
 
       describe '#create_from_process' do
-        let(:parent_app) { AppModel.make(name: 'parent-app') }
+        let(:parent_app) { create(:app_model, name: 'parent-app') }
         let(:process) { ProcessModelFactory.make(app: parent_app, type: 'other') }
 
         it 'creates an event which matches the app' do
@@ -216,7 +216,7 @@ module VCAP::CloudController
       end
 
       describe '#create_from_task' do
-        let!(:task) { TaskModel.make(memory_in_mb: 222) }
+        let!(:task) { create(:task_model, memory_in_mb: 222) }
         let(:state) { 'TEST_STATE' }
 
         it 'creates an AppUsageEvent' do
@@ -264,7 +264,7 @@ module VCAP::CloudController
         context 'when the task exists' do
           let(:old_state) { TaskModel::RUNNING_STATE }
           let(:old_memory) { 256 }
-          let(:existing_task) { TaskModel.make(state: old_state, memory_in_mb: old_memory) }
+          let(:existing_task) { create(:task_model, state: old_state, memory_in_mb: old_memory) }
 
           context 'when the same attribute values are set' do
             before do
@@ -309,12 +309,12 @@ module VCAP::CloudController
       end
 
       describe '#create_from_build' do
-        let(:org) { Organization.make(guid: 'org-1') }
-        let(:space) { Space.make(guid: 'space-1', name: 'space-name', organization: org) }
-        let(:app_model) { AppModel.make(guid: 'app-1', name: 'frank-app', space: space) }
+        let(:org) { create(:organization, guid: 'org-1') }
+        let(:space) { create(:space, guid: 'space-1', name: 'space-name', organization: org) }
+        let(:app_model) { create(:app_model, guid: 'app-1', name: 'frank-app', space: space) }
         let(:package_state) { PackageModel::READY_STATE }
-        let(:package) { PackageModel.make(guid: 'package-1', app_guid: app_model.guid, state: package_state) }
-        let!(:build) { BuildModel.make(guid: 'build-1', package: package, app_guid: app_model.guid, state: BuildModel::STAGING_STATE) }
+        let(:package) { create(:package_model, guid: 'package-1', app_guid: app_model.guid, state: package_state) }
+        let!(:build) { create(:build_model, guid: 'build-1', package: package, app_guid: app_model.guid, state: BuildModel::STAGING_STATE) }
 
         let(:state) { 'TEST_STATE' }
 
@@ -332,8 +332,8 @@ module VCAP::CloudController
 
           it 'sets the attributes based on the build' do
             build.update(
-              droplet: DropletModel.make(buildpack_receipt_buildpack: 'le-buildpack'),
-              buildpack_lifecycle_data: BuildpackLifecycleDataModel.make
+              droplet: create(:droplet_model, buildpack_receipt_buildpack: 'le-buildpack'),
+              buildpack_lifecycle_data: create(:buildpack_lifecycle_data_model)
             )
             event = repository.create_from_build(build, state)
 
@@ -365,7 +365,7 @@ module VCAP::CloudController
           context 'when the build does NOT have an associated droplet but does have lifecycle data' do
             before do
               build.update(
-                buildpack_lifecycle_data: BuildpackLifecycleDataModel.make(buildpacks: ['http://git.url.example.com'])
+                buildpack_lifecycle_data: create(:buildpack_lifecycle_data_model, buildpacks: ['http://git.url.example.com'])
               )
             end
 
@@ -379,7 +379,7 @@ module VCAP::CloudController
             context 'when buildpack lifecycle info contains credentials in buildpack url' do
               before do
                 build.update(
-                  buildpack_lifecycle_data: BuildpackLifecycleDataModel.make(buildpacks: ['http://ping:pong@example.com'])
+                  buildpack_lifecycle_data: create(:buildpack_lifecycle_data_model, buildpacks: ['http://ping:pong@example.com'])
                 )
               end
 
@@ -394,24 +394,20 @@ module VCAP::CloudController
 
           context 'when the build has BOTH an associated droplet and lifecycle data' do
             let!(:build) do
-              BuildModel.make(
-                guid: 'build-1',
-                package_guid: package.guid,
-                app_guid: app_model.guid
-              )
+              create(:build_model, guid: 'build-1',
+                                   package_guid: package.guid,
+                                   app_guid: app_model.guid)
             end
             let!(:droplet) do
-              DropletModel.make(
-                buildpack_receipt_buildpack: 'a-buildpack',
-                buildpack_receipt_buildpack_guid: 'a-buildpack-guid',
-                build: build
-              )
+              create(:droplet_model, buildpack_receipt_buildpack: 'a-buildpack',
+                                     buildpack_receipt_buildpack_guid: 'a-buildpack-guid',
+                                     build: build)
             end
 
             before do
-              Buildpack.make(name: 'ruby_buildpack')
+              create(:buildpack, name: 'ruby_buildpack')
               build.update(
-                buildpack_lifecycle_data: BuildpackLifecycleDataModel.make(buildpacks: ['ruby_buildpack'])
+                buildpack_lifecycle_data: create(:buildpack_lifecycle_data_model, buildpacks: ['ruby_buildpack'])
               )
             end
 
@@ -426,12 +422,10 @@ module VCAP::CloudController
 
         context 'docker builds' do
           let!(:build) do
-            BuildModel.make(
-              :docker,
-              guid: 'build-1',
-              package_guid: package.guid,
-              app_guid: app_model.guid
-            )
+            create(:build_model, :docker,
+                   guid: 'build-1',
+                   package_guid: package.guid,
+                   app_guid: app_model.guid)
           end
 
           it 'does not include buildpack_guid or buildpack_name' do
@@ -445,12 +439,10 @@ module VCAP::CloudController
         context 'when the build is updating its state' do
           let(:old_build_state) { BuildModel::STAGED_STATE }
           let(:existing_build) do
-            BuildModel.make(
-              guid: 'existing-build',
-              state: old_build_state,
-              package: package,
-              app_guid: app_model.guid
-            )
+            create(:build_model, guid: 'existing-build',
+                                 state: old_build_state,
+                                 package: package,
+                                 app_guid: app_model.guid)
           end
 
           context 'when the same attribute values are set' do
@@ -494,7 +486,7 @@ module VCAP::CloudController
           end
 
           context 'when the build has no package' do
-            let(:existing_build) { BuildModel.make(guid: 'existing-build', state: old_build_state, app_guid: app_model.guid) }
+            let(:existing_build) { create(:build_model, guid: 'existing-build', state: old_build_state, app_guid: app_model.guid) }
 
             context 'when an attribute changes' do
               before do
@@ -602,7 +594,7 @@ module VCAP::CloudController
 
             context 'when the latest_droplet is FAILED' do
               before do
-                DropletModel.make(app: process.app, package: process.latest_package, state: DropletModel::FAILED_STATE)
+                create(:droplet_model, app: process.app, package: process.latest_package, state: DropletModel::FAILED_STATE)
                 process.reload
               end
 
@@ -616,7 +608,7 @@ module VCAP::CloudController
 
             context 'when the latest_droplet is not STAGED or FAILED' do
               before do
-                DropletModel.make(app: process.app, package: process.latest_package, state: DropletModel::STAGING_STATE)
+                create(:droplet_model, app: process.app, package: process.latest_package, state: DropletModel::STAGING_STATE)
                 process.reload
               end
 
@@ -661,7 +653,7 @@ module VCAP::CloudController
 
             context 'when a new package has been added to a previously staged app' do
               before do
-                PackageModel.make(app: process.app)
+                create(:package_model, app: process.app)
                 process.reload
               end
 
@@ -685,14 +677,14 @@ module VCAP::CloudController
           old = Time.now.utc - 999.days
 
           3.times do
-            event            = repository.create_from_process(ProcessModel.make)
+            event            = repository.create_from_process(create(:process_model))
             event.created_at = old
             event.save
           end
         end
 
         it 'deletes events created before the specified cutoff time' do
-          process = ProcessModel.make
+          process = create(:process_model)
           repository.create_from_process(process)
 
           expect do

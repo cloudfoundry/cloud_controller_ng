@@ -56,7 +56,7 @@ module VCAP::CloudController
           app_task_limit: 10
         }
       end
-      let(:existing_quota) { VCAP::CloudController::QuotaDefinition.make }
+      let(:existing_quota) { create(:quota_definition) }
 
       context 'when the user is a cf admin' do
         let(:quota_name) { 'quota 1' }
@@ -87,7 +87,7 @@ module VCAP::CloudController
       context 'when the user is not a cf admin' do
         let(:quota_name) { 'quota 2' }
 
-        before { set_current_user(User.make) }
+        before { set_current_user(create(:user)) }
 
         it 'does not allow creation of a quota def' do
           post '/v2/quota_definitions', Oj.dump(quota_attributes)
@@ -112,9 +112,9 @@ module VCAP::CloudController
     end
 
     describe 'Validation messages' do
-      let(:quota_definition) { QuotaDefinition.make }
+      let(:quota_definition) { create(:quota_definition) }
 
-      let(:quota_definition) { QuotaDefinition.make }
+      let(:quota_definition) { create(:quota_definition) }
 
       it 'allows a memory_limit of -1 (unlimited)' do
         set_current_user_as_admin

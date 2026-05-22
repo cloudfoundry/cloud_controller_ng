@@ -11,32 +11,28 @@ module VCAP::CloudController
 
       subject(:org_delete) { V2::OrganizationDelete.new(space_delete) }
       describe '#delete' do
-        let!(:org_1) { Organization.make }
-        let!(:org_2) { Organization.make }
-        let!(:space) { Space.make(organization: org_1) }
-        let!(:space_2) { Space.make(organization: org_1) }
-        let!(:app) { AppModel.make(space_guid: space.guid) }
-        let!(:service_instance) { ManagedServiceInstance.make(space:) }
-        let!(:service_instance_2) { ManagedServiceInstance.make(space: space_2) }
+        let!(:org_1) { create(:organization) }
+        let!(:org_2) { create(:organization) }
+        let!(:space) { create(:space, organization: org_1) }
+        let!(:space_2) { create(:space, organization: org_1) }
+        let!(:app) { create(:app_model, space_guid: space.guid) }
+        let!(:service_instance) { create(:managed_service_instance, space:) }
+        let!(:service_instance_2) { create(:managed_service_instance, space: space_2) }
 
         let!(:org1_label) do
-          OrganizationLabelModel.make(
-            key_prefix: 'indiana.edu',
-            key_name: 'state',
-            value: 'Indiana',
-            resource_guid: org_1.guid
-          )
+          create(:organization_label_model, key_prefix: 'indiana.edu',
+                                            key_name: 'state',
+                                            value: 'Indiana',
+                                            resource_guid: org_1.guid)
         end
         let!(:org1_annotation) do
-          OrganizationAnnotationModel.make(
-            key_name: 'city',
-            value: 'Monticello',
-            resource_guid: org_1.guid
-          )
+          create(:organization_annotation_model, key_name: 'city',
+                                                 value: 'Monticello',
+                                                 resource_guid: org_1.guid)
         end
 
         let!(:org_dataset) { Organization.where(guid: [org_1.guid, org_2.guid]) }
-        let(:user) { User.make }
+        let(:user) { create(:user) }
         let(:user_email) { 'user@example.com' }
 
         before do

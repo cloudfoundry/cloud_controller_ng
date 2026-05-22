@@ -9,7 +9,7 @@ RSpec.shared_examples 'operation' do
     }
   end
 
-  let(:operation) { described_class.make(operation_attributes) }
+  let(:operation) { create(described_class.name.demodulize.underscore.to_sym, operation_attributes) }
 
   before do
     operation.this.update(updated_at: updated_at_time, created_at: created_at_time)

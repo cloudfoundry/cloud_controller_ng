@@ -19,21 +19,21 @@ module UserHeaderHelpers
   # rubocop:disable all
   def set_user_with_header_as_admin(opts = {})
     # rubocop:enable all
-    user = opts.delete(:user) || VCAP::CloudController::User.make
+    user = opts.delete(:user) || FactoryBot.create(:user)
     set_user_with_header(user, { admin: true }.merge(opts))
   end
 
   # rubocop:disable all
   def set_user_with_header_as_admin_read_only(opts = {})
     # rubocop:enable all
-    user = opts.delete(:user) || VCAP::CloudController::User.make
+    user = opts.delete(:user) || FactoryBot.create(:user)
     set_user_with_header(user, { admin_read_only: true }.merge(opts))
   end
 
   # rubocop:disable all
   def set_user_with_header_as_global_auditor(opts = {})
     # rubocop:enable all
-    user = opts.delete(:user) || VCAP::CloudController::User.make
+    user = opts.delete(:user) || FactoryBot.create(:user)
     set_user_with_header(user, { global_auditor: true }.merge(opts))
   end
 
@@ -46,7 +46,7 @@ module UserHeaderHelpers
   # rubocop:disable all
   def set_user_with_header_as_reader_and_writer(opts = {})
     # rubocop:enable all
-    user = opts.delete(:user) || VCAP::CloudController::User.make
+    user = opts.delete(:user) || FactoryBot.create(:user)
     scopes = { scopes: %w[cloud_controller.read cloud_controller.write] }
     set_user_with_header(user, scopes.merge(opts))
   end
@@ -54,7 +54,7 @@ module UserHeaderHelpers
   # rubocop:disable all
   def set_user_with_header_as_reader(opts = {})
     # rubocop:enable all
-    user = opts.delete(:user) || VCAP::CloudController::User.make
+    user = opts.delete(:user) || FactoryBot.create(:user)
     scopes = { scopes: %w[cloud_controller.read] }
     set_user_with_header(user, scopes.merge(opts))
   end
@@ -62,7 +62,7 @@ module UserHeaderHelpers
   # rubocop:disable all
   def set_user_with_header_as_writer(opts = {})
     # rubocop:enable all
-    user = opts.delete(:user) || VCAP::CloudController::User.make
+    user = opts.delete(:user) || FactoryBot.create(:user)
     scopes = { scopes: %w[cloud_controller.write] }
     set_user_with_header(user, scopes.merge(opts))
   end
@@ -70,7 +70,7 @@ module UserHeaderHelpers
   # rubocop:disable all
   def set_user_with_header_as_service_permissions_reader(opts = {})
     # rubocop:enable all
-    user = opts.delete(:user) || VCAP::CloudController::User.make
+    user = opts.delete(:user) || FactoryBot.create(:user)
     scopes = { scopes: %w[cloud_controller_service_permissions.read] }
     set_user_with_header(user, scopes.merge(opts))
   end
@@ -78,7 +78,7 @@ module UserHeaderHelpers
   # rubocop:disable all
   def set_user_with_header_as_role(role:, org: nil, space: nil, user: nil, scopes: nil, user_name: nil, email: nil)
     # rubocop:enable all
-    current_user = user || VCAP::CloudController::User.make
+    current_user = user || FactoryBot.create(:user)
 
     scope_roles = %w[admin admin_read_only global_auditor reader_and_writer reader writer service_permissions_reader]
     org.add_user(current_user) if org && scope_roles.exclude?(role) && role.to_s != 'no_role'

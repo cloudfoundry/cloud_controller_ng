@@ -19,9 +19,9 @@ module CloudController::Presenters::V2
       end
 
       let(:volume_mount) { [{ 'container_dir' => 'mount' }] }
-      let(:service_broker) { VCAP::CloudController::ServiceBroker.make(name: 'broker-1') }
+      let(:service_broker) { create(:service_broker, name: 'broker-1') }
       let(:service) do
-        VCAP::CloudController::Service.make(service_broker:)
+        create(:service, service_broker:)
       end
 
       it 'returns the service binding entity' do

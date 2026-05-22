@@ -2,12 +2,12 @@ require 'spec_helper'
 require 'request_spec_shared_examples'
 
 RSpec.describe 'Deployments' do
-  let(:user) { VCAP::CloudController::User.make }
+  let(:user) { create(:user) }
   let(:space) { app_model.space }
   let(:org) { space.organization }
-  let(:app_model) { VCAP::CloudController::AppModel.make(desired_state: VCAP::CloudController::ProcessModel::STARTED) }
-  let(:droplet) { VCAP::CloudController::DropletModel.make(app: app_model, process_types: { web: 'webby' }) }
-  let!(:process_model) { VCAP::CloudController::ProcessModel.make(app: app_model) }
+  let(:app_model) { create(:app_model, desired_state: VCAP::CloudController::ProcessModel::STARTED) }
+  let(:droplet) { create(:droplet_model, app: app_model, process_types: { web: 'webby' }) }
+  let!(:process_model) { create(:process_model, app: app_model) }
   let(:admin_header) { headers_for(user, scopes: %w[cloud_controller.admin]) }
   let(:user_header) { headers_for(user, email: user_email, user_name: user_name) }
   let(:user_email) { Sham.email }
@@ -111,7 +111,7 @@ RSpec.describe 'Deployments' do
 
     context 'when a droplet is supplied with the request' do
       let(:user) { make_developer_for_space(space) }
-      let(:other_droplet) { VCAP::CloudController::DropletModel.make(app: app_model, process_types: { web: 'start-me-up' }) }
+      let(:other_droplet) { create(:droplet_model, app: app_model, process_types: { web: 'start-me-up' }, set_as_current_droplet: false) }
       let(:create_request) do
         {
           droplet: {
@@ -190,9 +190,9 @@ RSpec.describe 'Deployments' do
 
     context 'when a revision is supplied with the request' do
       let(:user) { make_developer_for_space(space) }
-      let(:other_droplet) { VCAP::CloudController::DropletModel.make(app: app_model, process_types: { web: 'webby' }) }
-      let!(:revision) { VCAP::CloudController::RevisionModel.make(app: app_model, droplet: other_droplet, created_at: 5.days.ago) }
-      let!(:revision2) { VCAP::CloudController::RevisionModel.make(app: app_model, droplet: droplet) }
+      let(:other_droplet) { create(:droplet_model, app: app_model, process_types: { web: 'webby' }, set_as_current_droplet: false) }
+      let!(:revision) { create(:revision_model, app: app_model, droplet: other_droplet, created_at: 5.days.ago) }
+      let!(:revision2) { create(:revision_model, app: app_model, droplet: droplet) }
 
       let(:create_request) do
         {
@@ -399,7 +399,7 @@ RSpec.describe 'Deployments' do
 
     context 'when revisions are enabled' do
       let(:user) { make_developer_for_space(space) }
-      let(:other_droplet) { VCAP::CloudController::DropletModel.make(app: app_model, process_types: { web: 'start-me-up' }) }
+      let(:other_droplet) { create(:droplet_model, app: app_model, process_types: { web: 'start-me-up' }, set_as_current_droplet: false) }
       let(:create_request) do
         {
           droplet: {
@@ -480,7 +480,7 @@ RSpec.describe 'Deployments' do
 
     context 'when the app is stopped' do
       let(:user) { make_developer_for_space(space) }
-      let(:other_droplet) { VCAP::CloudController::DropletModel.make(app: app_model, process_types: { web: 'start-me-up' }) }
+      let(:other_droplet) { create(:droplet_model, app: app_model, process_types: { web: 'start-me-up' }, set_as_current_droplet: false) }
       let(:create_request) do
         {
           droplet: {
@@ -572,9 +572,9 @@ RSpec.describe 'Deployments' do
     end
 
     context 'telemetry' do
-      let!(:other_droplet) { VCAP::CloudController::DropletModel.make(app: app_model, process_types: { web: 'webboo' }) }
-      let!(:revision) { VCAP::CloudController::RevisionModel.make(app: app_model, droplet: other_droplet, created_at: 5.days.ago) }
-      let!(:revision2) { VCAP::CloudController::RevisionModel.make(app: app_model, droplet: droplet) }
+      let!(:other_droplet) { create(:droplet_model, app: app_model, process_types: { web: 'webboo' }, set_as_current_droplet: false) }
+      let!(:revision) { create(:revision_model, app: app_model, droplet: other_droplet, created_at: 5.days.ago) }
+      let!(:revision2) { create(:revision_model, app: app_model, droplet: droplet) }
       let(:user) { make_developer_for_space(space) }
 
       let(:create_request) do
@@ -1183,7 +1183,7 @@ RSpec.describe 'Deployments' do
     end
 
     context 'memory_in_mb' do
-      let!(:process_model) { VCAP::CloudController::ProcessModel.make(app: app_model, instances: 10) }
+      let!(:process_model) { create(:process_model, app: app_model, instances: 10) }
       let(:user) { make_developer_for_space(space) }
       let(:memory_in_mb) { 500 }
       let(:create_request) do
@@ -1212,7 +1212,7 @@ RSpec.describe 'Deployments' do
 
       context 'when memory_in_mb violates a quota' do
         let(:memory_in_mb) { 1001 }
-        let(:quota) { VCAP::CloudController::QuotaDefinition.make(memory_limit: 10_000) }
+        let(:quota) { create(:quota_definition, memory_limit: 10_000) }
 
         before do
           org.quota_definition = quota
@@ -1249,7 +1249,7 @@ RSpec.describe 'Deployments' do
     end
 
     context 'disk_in_mb' do
-      let!(:process_model) { VCAP::CloudController::ProcessModel.make(app: app_model, instances: 10) }
+      let!(:process_model) { create(:process_model, app: app_model, instances: 10) }
       let(:user) { make_developer_for_space(space) }
       let(:disk_in_mb) { 500 }
       let(:create_request) do
@@ -1313,7 +1313,7 @@ RSpec.describe 'Deployments' do
     end
 
     context 'log_rate_limit_in_bytes_per_second' do
-      let!(:process_model) { VCAP::CloudController::ProcessModel.make(app: app_model, instances: 10) }
+      let!(:process_model) { create(:process_model, app: app_model, instances: 10) }
       let(:user) { make_developer_for_space(space) }
       let(:log_rate_limit_in_bytes_per_second) { 500 }
       let(:create_request) do
@@ -1342,7 +1342,7 @@ RSpec.describe 'Deployments' do
 
       context 'when log_rate_limit_in_bytes_per_second violates a quota' do
         let(:log_rate_limit_in_bytes_per_second) { 1001 }
-        let(:quota) { VCAP::CloudController::QuotaDefinition.make(log_rate_limit: 1000) }
+        let(:quota) { create(:quota_definition, log_rate_limit: 1000) }
 
         before do
           org.quota_definition = quota
@@ -1379,7 +1379,7 @@ RSpec.describe 'Deployments' do
     end
 
     context 'web_instances' do
-      let!(:process_model) { VCAP::CloudController::ProcessModel.make(app: app_model, instances: 10) }
+      let!(:process_model) { create(:process_model, app: app_model, instances: 10) }
       let(:user) { make_developer_for_space(space) }
       let(:web_instances) { 5 }
       let(:create_request) do
@@ -1408,7 +1408,7 @@ RSpec.describe 'Deployments' do
 
       context 'when web_instances violates a quota' do
         let(:web_instances) { 100_000 }
-        let(:quota) { VCAP::CloudController::QuotaDefinition.make(memory_limit: 1000) }
+        let(:quota) { create(:quota_definition, memory_limit: 1000) }
 
         before do
           org.quota_definition = quota
@@ -1446,7 +1446,7 @@ RSpec.describe 'Deployments' do
 
     context 'validation failures' do
       let(:user) { make_developer_for_space(space) }
-      let(:smol_quota) { VCAP::CloudController::QuotaDefinition.make(memory_limit: 1) }
+      let(:smol_quota) { create(:quota_definition, memory_limit: 1) }
       let(:create_request) do
         {
           relationships: {
@@ -1476,10 +1476,9 @@ RSpec.describe 'Deployments' do
   describe 'PATCH /v3/deployments/:guid' do
     let(:user) { make_developer_for_space(space) }
     let(:deployment) do
-      VCAP::CloudController::DeploymentModel.make(
-        app: app_model,
-        droplet: droplet
-      )
+      create(:deployment_model,
+             app: app_model,
+             droplet: droplet)
     end
     let(:update_request) do
       {
@@ -1584,13 +1583,12 @@ RSpec.describe 'Deployments' do
 
   describe 'GET /v3/deployments/:guid' do
     let(:api_call) { ->(user_headers) { get "/v3/deployments/#{deployment.guid}", nil, user_headers } }
-    let(:old_droplet) { VCAP::CloudController::DropletModel.make }
+    let(:old_droplet) { create(:droplet_model) }
     let(:deployment) do
-      VCAP::CloudController::DeploymentModelTestFactory.make(
-        app: app_model,
-        droplet: droplet,
-        previous_droplet: old_droplet
-      )
+      create(:deployment_model_test_factory,
+             app: app_model,
+             droplet: droplet,
+             previous_droplet: old_droplet)
     end
     let(:expected_response) do
       {
@@ -1651,15 +1649,14 @@ RSpec.describe 'Deployments' do
     context 'PAUSED deployment' do
       let(:user) { make_developer_for_space(space) }
       let(:deployment) do
-        VCAP::CloudController::DeploymentModelTestFactory.make(
-          app: app_model,
-          droplet: droplet,
-          previous_droplet: old_droplet,
-          strategy: 'canary',
-          state: VCAP::CloudController::DeploymentModel::PAUSED_STATE,
-          status_value: VCAP::CloudController::DeploymentModel::ACTIVE_STATUS_VALUE,
-          status_reason: VCAP::CloudController::DeploymentModel::PAUSED_STATUS_REASON
-        )
+        create(:deployment_model_test_factory,
+               app: app_model,
+               droplet: droplet,
+               previous_droplet: old_droplet,
+               strategy: 'canary',
+               state: VCAP::CloudController::DeploymentModel::PAUSED_STATE,
+               status_value: VCAP::CloudController::DeploymentModel::ACTIVE_STATUS_VALUE,
+               status_reason: VCAP::CloudController::DeploymentModel::PAUSED_STATUS_REASON)
       end
 
       it 'includes the continue action in the links' do
@@ -1684,12 +1681,11 @@ RSpec.describe 'Deployments' do
     context 'when a deployment has had an error' do
       let(:user) { make_developer_for_space(space) }
       let(:deployment) do
-        VCAP::CloudController::DeploymentModelTestFactory.make(
-          app: app_model,
-          droplet: droplet,
-          previous_droplet: old_droplet,
-          error: 'Quota error'
-        )
+        create(:deployment_model_test_factory,
+               app: app_model,
+               droplet: droplet,
+               previous_droplet: old_droplet,
+               error: 'Quota error')
       end
 
       it 'includes the error as part of the status details' do
@@ -1703,28 +1699,27 @@ RSpec.describe 'Deployments' do
   end
 
   describe 'GET /v3/deployments/' do
-    let(:user) {  VCAP::CloudController::User.make }
+    let(:user) {  create(:user) }
     let(:space) { app_model.space }
     let(:app_model) { droplet.app }
-    let(:droplet) { VCAP::CloudController::DropletModel.make(guid: 'droplet1') }
+    let(:droplet) { create(:droplet_model, guid: 'droplet1') }
     let!(:deployment) do
-      VCAP::CloudController::DeploymentModelTestFactory.make(
-        app: app_model,
-        droplet: app_model.droplet,
-        previous_droplet: app_model.droplet,
-        status_value: VCAP::CloudController::DeploymentModel::ACTIVE_STATUS_VALUE,
-        state: VCAP::CloudController::DeploymentModel::DEPLOYING_STATE,
-        status_reason: VCAP::CloudController::DeploymentModel::DEPLOYING_STATUS_REASON
-      )
+      create(:deployment_model_test_factory,
+             app: app_model,
+             droplet: app_model.droplet,
+             previous_droplet: app_model.droplet,
+             status_value: VCAP::CloudController::DeploymentModel::ACTIVE_STATUS_VALUE,
+             state: VCAP::CloudController::DeploymentModel::DEPLOYING_STATE,
+             status_reason: VCAP::CloudController::DeploymentModel::DEPLOYING_STATUS_REASON)
     end
 
     context 'with an admin who can see all deployments' do
       let(:admin_user_header) { headers_for(user, scopes: %w[cloud_controller.admin]) }
 
-      let(:droplet2) { VCAP::CloudController::DropletModel.make(guid: 'droplet2') }
-      let(:droplet3) { VCAP::CloudController::DropletModel.make(guid: 'droplet3') }
-      let(:droplet4) { VCAP::CloudController::DropletModel.make(guid: 'droplet4') }
-      let(:droplet5) { VCAP::CloudController::DropletModel.make(guid: 'droplet5') }
+      let(:droplet2) { create(:droplet_model, guid: 'droplet2') }
+      let(:droplet3) { create(:droplet_model, guid: 'droplet3') }
+      let(:droplet4) { create(:droplet_model, guid: 'droplet4') }
+      let(:droplet5) { create(:droplet_model, guid: 'droplet5') }
       let(:app2) { droplet2.app }
       let(:app3) { droplet3.app }
       let(:app4) { droplet4.app }
@@ -1738,44 +1733,44 @@ RSpec.describe 'Deployments' do
       end
 
       let!(:deployment2) do
-        VCAP::CloudController::DeploymentModelTestFactory.make(app: app2, droplet: droplet2,
-                                                               previous_droplet: droplet2,
-                                                               status_value: VCAP::CloudController::DeploymentModel::ACTIVE_STATUS_VALUE,
-                                                               state: VCAP::CloudController::DeploymentModel::CANCELING_STATE,
-                                                               status_reason: VCAP::CloudController::DeploymentModel::CANCELING_STATUS_REASON)
+        create(:deployment_model_test_factory, app: app2, droplet: droplet2,
+                                               previous_droplet: droplet2,
+                                               status_value: VCAP::CloudController::DeploymentModel::ACTIVE_STATUS_VALUE,
+                                               state: VCAP::CloudController::DeploymentModel::CANCELING_STATE,
+                                               status_reason: VCAP::CloudController::DeploymentModel::CANCELING_STATUS_REASON)
       end
 
       let!(:deployment3) do
-        VCAP::CloudController::DeploymentModelTestFactory.make(app: app3, droplet: droplet3,
-                                                               previous_droplet: droplet3,
-                                                               status_value: VCAP::CloudController::DeploymentModel::FINALIZED_STATUS_VALUE,
-                                                               state: VCAP::CloudController::DeploymentModel::DEPLOYED_STATE,
-                                                               status_reason: VCAP::CloudController::DeploymentModel::DEPLOYED_STATUS_REASON)
+        create(:deployment_model_test_factory, app: app3, droplet: droplet3,
+                                               previous_droplet: droplet3,
+                                               status_value: VCAP::CloudController::DeploymentModel::FINALIZED_STATUS_VALUE,
+                                               state: VCAP::CloudController::DeploymentModel::DEPLOYED_STATE,
+                                               status_reason: VCAP::CloudController::DeploymentModel::DEPLOYED_STATUS_REASON)
       end
 
       let!(:deployment4) do
-        VCAP::CloudController::DeploymentModelTestFactory.make(app: app4, droplet: droplet4,
-                                                               previous_droplet: droplet4,
-                                                               status_value: VCAP::CloudController::DeploymentModel::FINALIZED_STATUS_VALUE,
-                                                               state: VCAP::CloudController::DeploymentModel::CANCELED_STATE,
-                                                               status_reason: VCAP::CloudController::DeploymentModel::CANCELED_STATUS_REASON)
+        create(:deployment_model_test_factory, app: app4, droplet: droplet4,
+                                               previous_droplet: droplet4,
+                                               status_value: VCAP::CloudController::DeploymentModel::FINALIZED_STATUS_VALUE,
+                                               state: VCAP::CloudController::DeploymentModel::CANCELED_STATE,
+                                               status_reason: VCAP::CloudController::DeploymentModel::CANCELED_STATUS_REASON)
       end
 
       let!(:deployment5) do
-        VCAP::CloudController::DeploymentModelTestFactory.make(app: app5, droplet: droplet5,
-                                                               previous_droplet: droplet5,
-                                                               status_value: VCAP::CloudController::DeploymentModel::FINALIZED_STATUS_VALUE,
-                                                               state: VCAP::CloudController::DeploymentModel::DEPLOYED_STATE,
-                                                               status_reason: VCAP::CloudController::DeploymentModel::SUPERSEDED_STATUS_REASON)
+        create(:deployment_model_test_factory, app: app5, droplet: droplet5,
+                                               previous_droplet: droplet5,
+                                               status_value: VCAP::CloudController::DeploymentModel::FINALIZED_STATUS_VALUE,
+                                               state: VCAP::CloudController::DeploymentModel::DEPLOYED_STATE,
+                                               status_reason: VCAP::CloudController::DeploymentModel::SUPERSEDED_STATUS_REASON)
       end
 
       let!(:deployment6) do
-        VCAP::CloudController::DeploymentModelTestFactory.make(app: app5, droplet: droplet5,
-                                                               previous_droplet: droplet5,
-                                                               strategy: 'canary',
-                                                               status_value: VCAP::CloudController::DeploymentModel::ACTIVE_STATUS_VALUE,
-                                                               state: VCAP::CloudController::DeploymentModel::DEPLOYING_STATE,
-                                                               status_reason: VCAP::CloudController::DeploymentModel::DEPLOYING_STATUS_REASON)
+        create(:deployment_model_test_factory, app: app5, droplet: droplet5,
+                                               previous_droplet: droplet5,
+                                               strategy: 'canary',
+                                               status_value: VCAP::CloudController::DeploymentModel::ACTIVE_STATUS_VALUE,
+                                               state: VCAP::CloudController::DeploymentModel::DEPLOYING_STATE,
+                                               status_reason: VCAP::CloudController::DeploymentModel::DEPLOYING_STATUS_REASON)
       end
 
       def json_for_deployment(deployment, app_model, droplet, status_value, status_reason, cancel_link=true)
@@ -2036,16 +2031,14 @@ RSpec.describe 'Deployments' do
         end
 
         it 'returns a list of label filtered deployments' do
-          VCAP::CloudController::DeploymentLabelModel.make(
-            key_name: 'release',
-            value: 'stable',
-            resource_guid: deployment2.guid
-          )
-          VCAP::CloudController::DeploymentLabelModel.make(
-            key_name: 'release',
-            value: 'unstable',
-            resource_guid: deployment3.guid
-          )
+          create(:deployment_label_model,
+                 key_name: 'release',
+                 value: 'stable',
+                 resource_guid: deployment2.guid)
+          create(:deployment_label_model,
+                 key_name: 'release',
+                 value: 'unstable',
+                 resource_guid: deployment3.guid)
 
           get '/v3/deployments?label_selector=release=stable', nil, admin_user_header
           expect(last_response.status).to eq(200)
@@ -2059,9 +2052,9 @@ RSpec.describe 'Deployments' do
     context 'when there are other spaces the developer cannot see' do
       let(:user) { make_developer_for_space(space) }
       let(:another_app) { another_droplet.app }
-      let(:another_droplet) { VCAP::CloudController::DropletModel.make }
+      let(:another_droplet) { create(:droplet_model) }
       let!(:another_space) { another_app.space }
-      let!(:another_deployment) { VCAP::CloudController::DeploymentModelTestFactory.make(app: another_app, droplet: another_droplet) }
+      let!(:another_deployment) { create(:deployment_model_test_factory, app: another_app, droplet: another_droplet) }
 
       let(:user_header) { headers_for(user) }
 
@@ -2167,13 +2160,12 @@ RSpec.describe 'Deployments' do
   end
 
   describe 'POST /v3/deployments/:guid/actions/cancel' do
-    let(:old_droplet) { VCAP::CloudController::DropletModel.make(app: app_model, process_types: { 'web' => 'run' }) }
+    let(:old_droplet) { create(:droplet_model, app: app_model, process_types: { 'web' => 'run' }) }
     let(:deployment) do
-      VCAP::CloudController::DeploymentModelTestFactory.make(
-        app: app_model,
-        droplet: droplet,
-        previous_droplet: old_droplet
-      )
+      create(:deployment_model_test_factory,
+             app: app_model,
+             droplet: droplet,
+             previous_droplet: old_droplet)
     end
 
     context 'with a running deployment' do
@@ -2227,11 +2219,10 @@ RSpec.describe 'Deployments' do
   describe 'POST /v3/deployments/:guid/actions/continue' do
     let(:state) {}
     let(:deployment) do
-      VCAP::CloudController::DeploymentModelTestFactory.make(
-        app: app_model,
-        droplet: droplet,
-        state: state
-      )
+      create(:deployment_model_test_factory,
+             app: app_model,
+             droplet: droplet,
+             state: state)
     end
 
     context 'when the deployment is in paused state' do

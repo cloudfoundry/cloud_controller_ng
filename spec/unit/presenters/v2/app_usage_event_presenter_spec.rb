@@ -13,7 +13,7 @@ module CloudController::Presenters::V2
     let(:relations_hash) { { 'relationship_key' => 'relationship_value' } }
 
     describe '#entity_hash' do
-      let(:app_usage_event) { VCAP::CloudController::AppUsageEvent.make }
+      let(:app_usage_event) { create(:app_usage_event) }
 
       before do
         app_usage_event.buildpack_name = 'some-buildpack'

@@ -3,23 +3,23 @@ require 'fetchers/package_list_fetcher'
 
 module VCAP::CloudController
   RSpec.describe PackageListFetcher do
-    let(:space1) { Space.make }
-    let(:space2) { Space.make }
-    let(:space3) { Space.make }
+    let(:space1) { create(:space) }
+    let(:space2) { create(:space) }
+    let(:space3) { create(:space) }
     let(:org_1_guid) { space1.organization.guid }
     let(:org_2_guid) { space2.organization.guid }
     let(:org_3_guid) { space3.organization.guid }
-    let(:app_in_space1) { AppModel.make(space_guid: space1.guid) }
-    let(:app2_in_space1) { AppModel.make(space_guid: space1.guid) }
-    let(:app3_in_space2) { AppModel.make(space_guid: space2.guid) }
-    let(:app4_in_space3) { AppModel.make(space_guid: space3.guid) }
+    let(:app_in_space1) { create(:app_model, space: space1) }
+    let(:app2_in_space1) { create(:app_model, space: space1) }
+    let(:app3_in_space2) { create(:app_model, space: space2) }
+    let(:app4_in_space3) { create(:app_model, space: space3) }
 
-    let!(:package_in_space1) { PackageModel.make(app_guid: app_in_space1.guid, type: PackageModel::BITS_TYPE, state: PackageModel::FAILED_STATE) }
-    let!(:package2_in_space1) { PackageModel.make(app_guid: app_in_space1.guid, type: PackageModel::DOCKER_TYPE, state: PackageModel::READY_STATE) }
-    let!(:package_in_space3) { PackageModel.make(app_guid: app4_in_space3.guid, type: PackageModel::DOCKER_TYPE, state: PackageModel::FAILED_STATE) }
+    let!(:package_in_space1) { create(:package_model, app: app_in_space1, type: PackageModel::BITS_TYPE, state: PackageModel::FAILED_STATE) }
+    let!(:package2_in_space1) { create(:package_model, app: app_in_space1, type: PackageModel::DOCKER_TYPE, state: PackageModel::READY_STATE) }
+    let!(:package_in_space3) { create(:package_model, app: app4_in_space3, type: PackageModel::DOCKER_TYPE, state: PackageModel::FAILED_STATE) }
 
-    let!(:package_for_app2) { PackageModel.make(app_guid: app2_in_space1.guid, type: PackageModel::DOCKER_TYPE, state: PackageModel::CREATED_STATE) }
-    let!(:package_for_app3) { PackageModel.make(app_guid: app3_in_space2.guid, type: PackageModel::BITS_TYPE) }
+    let!(:package_for_app2) { create(:package_model, app: app2_in_space1, type: PackageModel::DOCKER_TYPE, state: PackageModel::CREATED_STATE) }
+    let!(:package_for_app3) { create(:package_model, app: app3_in_space2, type: PackageModel::BITS_TYPE) }
 
     subject(:fetcher) { PackageListFetcher }
     let(:message) { PackagesListMessage.from_params(filters) }
@@ -92,7 +92,7 @@ module VCAP::CloudController
 
         context 'filtering label selectors' do
           let(:filters) { { 'label_selector' => 'key=value' } }
-          let!(:label) { PackageLabelModel.make(resource_guid: package_for_app3.guid, key_name: 'key', value: 'value') }
+          let!(:label) { create(:package_label_model, resource_guid: package_for_app3.guid, key_name: 'key', value: 'value') }
 
           it 'returns the correct set of packages' do
             expect(results.all).to contain_exactly(package_for_app3)
@@ -101,7 +101,7 @@ module VCAP::CloudController
 
         context 'filtering org guids & label selectors' do
           let(:filters) { { 'label_selector' => 'key=value', organization_guids: [org_2_guid, org_3_guid] } }
-          let!(:label) { PackageLabelModel.make(resource_guid: package_for_app3.guid, key_name: 'key', value: 'value') }
+          let!(:label) { create(:package_label_model, resource_guid: package_for_app3.guid, key_name: 'key', value: 'value') }
 
           it 'returns the correct set of packages' do
             expect(results.all).to contain_exactly(package_for_app3)

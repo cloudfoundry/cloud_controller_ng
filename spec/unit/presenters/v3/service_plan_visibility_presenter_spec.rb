@@ -8,7 +8,7 @@ RSpec.describe VCAP::CloudController::Presenters::V3::ServicePlanVisibilityPrese
 
     context 'when service plan is public' do
       let(:service_plan) do
-        VCAP::CloudController::ServicePlan.make(public: true)
+        create(:service_plan, public: true)
       end
 
       it 'returns type public' do
@@ -20,13 +20,13 @@ RSpec.describe VCAP::CloudController::Presenters::V3::ServicePlanVisibilityPrese
 
     context 'when service plan is space scoped' do
       let(:space) do
-        VCAP::CloudController::Space.make
+        create(:space)
       end
 
       let!(:service_plan) do
-        broker = VCAP::CloudController::ServiceBroker.make(space:)
-        offering = VCAP::CloudController::Service.make(service_broker: broker)
-        VCAP::CloudController::ServicePlan.make(public: false, service: offering)
+        broker = create(:service_broker, space:)
+        offering = create(:service, service_broker: broker)
+        create(:service_plan, public: false, service: offering)
       end
 
       it 'returns type space' do
@@ -42,7 +42,7 @@ RSpec.describe VCAP::CloudController::Presenters::V3::ServicePlanVisibilityPrese
 
     context 'when service plan is visible for admin only' do
       let(:service_plan) do
-        VCAP::CloudController::ServicePlan.make(public: false)
+        create(:service_plan, public: false)
       end
 
       it 'returns type admin' do
@@ -54,14 +54,14 @@ RSpec.describe VCAP::CloudController::Presenters::V3::ServicePlanVisibilityPrese
 
     context 'when service plan is visible for a set of orgs only' do
       let(:service_plan) do
-        VCAP::CloudController::ServicePlan.make(public: false) do |plan|
-          VCAP::CloudController::ServicePlanVisibility.make(service_plan: plan, organization: org_1)
-          VCAP::CloudController::ServicePlanVisibility.make(service_plan: plan, organization: org_2)
+        create(:service_plan, public: false) do |plan|
+          create(:service_plan_visibility, service_plan: plan, organization: org_1)
+          create(:service_plan_visibility, service_plan: plan, organization: org_2)
         end
       end
 
-      let(:org_1) { VCAP::CloudController::Organization.make }
-      let(:org_2) { VCAP::CloudController::Organization.make }
+      let(:org_1) { create(:organization) }
+      let(:org_2) { create(:organization) }
       let(:visible_in_orgs) { [org_1, org_2] }
 
       it 'returns type organization' do

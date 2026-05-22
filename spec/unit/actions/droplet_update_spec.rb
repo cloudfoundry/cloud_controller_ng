@@ -3,7 +3,7 @@ require 'actions/droplet_delete'
 
 module VCAP::CloudController
   RSpec.describe DropletUpdate do
-    let(:user) { User.make }
+    let(:user) { create(:user) }
     let(:user_email) { 'user@example.com' }
     let(:user_audit_info) { UserAuditInfo.new(user_email: 'user@example.com', user_guid: user.guid) }
 
@@ -11,22 +11,20 @@ module VCAP::CloudController
 
     describe '#update' do
       context 'buildpack droplet update' do
-        let!(:droplet) { DropletModel.make(app: nil) }
+        let!(:droplet) { create(:droplet_model, app: nil) }
         let!(:label) do
-          VCAP::CloudController::DropletLabelModel.make(
-            key_prefix: 'indiana.edu',
-            key_name: 'state',
-            value: 'Indiana',
-            resource_guid: droplet.guid
-          )
+          create(:droplet_label_model,
+                 key_prefix: 'indiana.edu',
+                 key_name: 'state',
+                 value: 'Indiana',
+                 resource_guid: droplet.guid)
         end
 
         let!(:annotation) do
-          VCAP::CloudController::DropletAnnotationModel.make(
-            key_name: 'University',
-            value: 'Toronto',
-            resource_guid: droplet.guid
-          )
+          create(:droplet_annotation_model,
+                 key_name: 'University',
+                 value: 'Toronto',
+                 resource_guid: droplet.guid)
         end
 
         let(:message) do
@@ -57,7 +55,7 @@ module VCAP::CloudController
 
       context 'image updates' do
         context 'when the droplet is not STAGED' do
-          let!(:droplet) { DropletModel.make(:docker, state: VCAP::CloudController::DropletModel::STAGING_STATE, app: nil) }
+          let!(:droplet) { create(:droplet_model, :docker, state: VCAP::CloudController::DropletModel::STAGING_STATE, app: nil) }
 
           let(:message) do
             VCAP::CloudController::DropletUpdateMessage.new({
@@ -74,7 +72,7 @@ module VCAP::CloudController
         end
 
         context 'when the droplet type is buildpack' do
-          let!(:droplet) { DropletModel.make(app: nil) }
+          let!(:droplet) { create(:droplet_model, app: nil) }
 
           let(:message) do
             VCAP::CloudController::DropletUpdateMessage.new({
@@ -101,7 +99,7 @@ module VCAP::CloudController
 
         context 'when the droplet type is docker' do
           let!(:docker_droplet) do
-            VCAP::CloudController::DropletModel.make(:docker, app: nil)
+            create(:droplet_model, :docker, app: nil)
           end
 
           let(:message) do

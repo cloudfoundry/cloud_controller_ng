@@ -5,8 +5,8 @@ module VCAP::CloudController
   RSpec.describe SetDefaultIsolationSegment do
     subject(:set_default_isolation_segment) { SetDefaultIsolationSegment.new }
 
-    let(:org) { VCAP::CloudController::Organization.make }
-    let(:isolation_segment) { VCAP::CloudController::IsolationSegmentModel.make(name: 'JB') }
+    let(:org) { create(:organization) }
+    let(:isolation_segment) { create(:isolation_segment_model, name: 'JB') }
     let(:isolation_segment_guid) { isolation_segment.guid }
     let(:assigner) { VCAP::CloudController::IsolationSegmentAssign.new }
     let(:message) do
@@ -68,7 +68,7 @@ module VCAP::CloudController
 
         context 'when the org already has an assigned isolation segment' do
           before do
-            other_iso_seg = IsolationSegmentModel.make
+            other_iso_seg = create(:isolation_segment_model)
             assigner.assign(other_iso_seg, [org])
             org.update(default_isolation_segment_guid: other_iso_seg.guid)
             expect(org.default_isolation_segment_guid).not_to be_nil

@@ -3,16 +3,16 @@ require 'rails_helper'
 
 RSpec.describe PackagesController, type: :controller do
   describe '#index' do
-    let(:user) { set_current_user(VCAP::CloudController::User.make) }
-    let(:app_model) { VCAP::CloudController::AppModel.make }
+    let(:user) { set_current_user(create(:user)) }
+    let(:app_model) { create(:app_model) }
     let(:space) { app_model.space }
-    let(:space1) { VCAP::CloudController::Space.make }
-    let(:space2) { VCAP::CloudController::Space.make }
-    let(:space3) { VCAP::CloudController::Space.make }
+    let(:space1) { create(:space) }
+    let(:space2) { create(:space) }
+    let(:space3) { create(:space) }
     let(:user_spaces) { [space, space1, space2, space3] }
-    let!(:user_package_1) { VCAP::CloudController::PackageModel.make(app_guid: app_model.guid) }
-    let!(:user_package_2) { VCAP::CloudController::PackageModel.make(app_guid: app_model.guid) }
-    let!(:admin_package) { VCAP::CloudController::PackageModel.make }
+    let!(:user_package_1) { create(:package_model, app_guid: app_model.guid) }
+    let!(:user_package_2) { create(:package_model, app_guid: app_model.guid) }
+    let!(:admin_package) { create(:package_model) }
 
     let(:n) { 10 }
 
@@ -25,9 +25,9 @@ RSpec.describe PackagesController, type: :controller do
       )
       allow_user_read_access_for(user, spaces: user_spaces)
       n.times do |i|
-        app = VCAP::CloudController::AppModel.make(space: user_spaces.sample, guid: "app-guid-#{i}")
+        app = create(:app_model, space: user_spaces.sample, guid: "app-guid-#{i}")
         3.times do |j|
-          VCAP::CloudController::PackageModel.make(app_guid: app.guid, guid: "package-guid-#{i}-#{j}")
+          create(:package_model, app_guid: app.guid, guid: "package-guid-#{i}-#{j}")
         end
       end
     end

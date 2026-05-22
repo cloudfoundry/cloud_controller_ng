@@ -5,9 +5,9 @@ require 'cloud_controller/http_request_error'
 
 RSpec.shared_examples 'service binding creation' do |binding_model|
   describe '#bind' do
-    let(:service_offering) { VCAP::CloudController::Service.make(bindings_retrievable: true, requires: ['route_forwarding']) }
-    let(:service_plan) { VCAP::CloudController::ServicePlan.make(service: service_offering) }
-    let(:service_instance) { VCAP::CloudController::ManagedServiceInstance.make(space:, service_plan:) }
+    let(:service_offering) { create(:service, bindings_retrievable: true, requires: ['route_forwarding']) }
+    let(:service_plan) { create(:service_plan, service: service_offering) }
+    let(:service_instance) { create(:managed_service_instance, space:, service_plan:) }
     let(:broker_client) { instance_double(VCAP::Services::ServiceBrokers::V2::Client, bind: bind_response) }
 
     before do
@@ -91,7 +91,7 @@ RSpec.shared_examples 'service binding creation' do |binding_model|
       end
 
       context 'binding not retrievable' do
-        let(:service_offering) { VCAP::CloudController::Service.make(bindings_retrievable: false, requires: ['route_forwarding']) }
+        let(:service_offering) { create(:service, bindings_retrievable: false, requires: ['route_forwarding']) }
 
         it 'raises a BindingNotRetrievable error' do
           expect do
@@ -105,9 +105,9 @@ end
 
 RSpec.shared_examples 'polling service binding creation' do
   describe '#poll' do
-    let(:service_offering) { VCAP::CloudController::Service.make(bindings_retrievable: true, requires: ['route_forwarding']) }
-    let(:service_plan) { VCAP::CloudController::ServicePlan.make(service: service_offering) }
-    let(:service_instance) { VCAP::CloudController::ManagedServiceInstance.make(space:, service_plan:) }
+    let(:service_offering) { create(:service, bindings_retrievable: true, requires: ['route_forwarding']) }
+    let(:service_plan) { create(:service_plan, service: service_offering) }
+    let(:service_instance) { create(:managed_service_instance, space:, service_plan:) }
     let(:broker_provided_operation) { Sham.guid }
     let(:bind_response) { { async: true, operation: broker_provided_operation } }
     let(:description) { Sham.description }
@@ -299,9 +299,9 @@ RSpec.shared_examples 'polling service credential binding creation' do
     it_behaves_like 'polling service binding creation'
 
     describe 'credential bindings specific behaviour' do
-      let(:service_offering) { VCAP::CloudController::Service.make(bindings_retrievable: true, requires: ['route_forwarding']) }
-      let(:service_plan) { VCAP::CloudController::ServicePlan.make(service: service_offering) }
-      let(:service_instance) { VCAP::CloudController::ManagedServiceInstance.make(space:, service_plan:) }
+      let(:service_offering) { create(:service, bindings_retrievable: true, requires: ['route_forwarding']) }
+      let(:service_plan) { create(:service_plan, service: service_offering) }
+      let(:service_instance) { create(:managed_service_instance, space:, service_plan:) }
       let(:broker_provided_operation) { Sham.guid }
       let(:bind_response) { { async: true, operation: broker_provided_operation } }
       let(:description) { Sham.description }

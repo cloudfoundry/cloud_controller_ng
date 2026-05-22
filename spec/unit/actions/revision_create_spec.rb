@@ -4,18 +4,17 @@ require 'actions/revision_create'
 module VCAP::CloudController
   RSpec.describe RevisionCreate do
     let(:droplet) do
-      DropletModel.make(
-        app: app,
-        process_types: {
-          'web' => 'droplet_web_command',
-          'worker' => 'droplet_worker_command'
-        }
-      )
+      create(:droplet_model,
+             app: app,
+             process_types: {
+               'web' => 'droplet_web_command',
+               'worker' => 'droplet_worker_command'
+             })
     end
-    let(:app) { AppModel.make(revisions_enabled: true) }
+    let(:app) { create(:app_model, revisions_enabled: true) }
     let(:user_audit_info) { UserAuditInfo.new(user_guid: '456', user_email: 'mona@example.com', user_name: 'mona') }
-    let(:sidecar) { SidecarModel.make(app: app, command: 'sleep infinity', name: 'sleepy', memory: 12) }
-    let!(:sidecar_process_type) { SidecarProcessTypeModel.make(sidecar: sidecar, type: 'web') }
+    let(:sidecar) { create(:sidecar_model, app: app, command: 'sleep infinity', name: 'sleepy', memory: 12) }
+    let!(:sidecar_process_type) { create(:sidecar_process_type_model, sidecar: sidecar, type: 'web') }
 
     before do
       app.update(droplet:)
@@ -99,7 +98,7 @@ module VCAP::CloudController
 
       context 'when there are multiple revisions for an app' do
         it 'increments the version by 1' do
-          RevisionModel.make(app: app, version: 1, created_at: 4.days.ago)
+          create(:revision_model, app: app, version: 1, created_at: 4.days.ago)
 
           expect do
             RevisionCreate.create(
@@ -116,11 +115,11 @@ module VCAP::CloudController
         end
 
         it 'rolls over to version 1 when we pass version 9999' do
-          RevisionModel.make(app: app, version: 1, created_at: 5.days.ago)
-          RevisionModel.make(app: app, version: 2, created_at: 4.days.ago)
+          create(:revision_model, app: app, version: 1, created_at: 5.days.ago)
+          create(:revision_model, app: app, version: 2, created_at: 4.days.ago)
           # ...
-          RevisionModel.make(app: app, version: 9998, created_at: 3.days.ago)
-          RevisionModel.make(app: app, version: 9999, created_at: 2.days.ago)
+          create(:revision_model, app: app, version: 9998, created_at: 3.days.ago)
+          create(:revision_model, app: app, version: 9999, created_at: 2.days.ago)
 
           RevisionCreate.create(
             app: app,
@@ -134,11 +133,11 @@ module VCAP::CloudController
         end
 
         it 'replaces any existing revisions after rolling over' do
-          RevisionModel.make(app: app, version: 2, created_at: 4.days.ago)
+          create(:revision_model, app: app, version: 2, created_at: 4.days.ago)
           # ...
-          RevisionModel.make(app: app, version: 9998, created_at: 3.days.ago)
-          RevisionModel.make(app: app, version: 9999, created_at: 2.days.ago)
-          RevisionModel.make(app: app, version: 1, created_at: 1.day.ago)
+          create(:revision_model, app: app, version: 9998, created_at: 3.days.ago)
+          create(:revision_model, app: app, version: 9999, created_at: 2.days.ago)
+          create(:revision_model, app: app, version: 1, created_at: 1.day.ago)
 
           RevisionCreate.create(
             app: app,

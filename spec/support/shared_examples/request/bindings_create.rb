@@ -346,7 +346,7 @@ RSpec.shared_examples 'service credential binding create endpoint' do |klass, ch
         it_behaves_like 'binding last operation response handling', 'create'
 
         context 'binding not retrievable' do
-          let(:offering) { VCAP::CloudController::Service.make(bindings_retrievable: false) }
+          let(:offering) { create(:service, bindings_retrievable: false) }
 
           it 'fails the job with an appropriate error' do
             execute_all_jobs(expected_successes: 0, expected_failures: 1)

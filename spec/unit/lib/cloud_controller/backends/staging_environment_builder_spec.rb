@@ -6,16 +6,16 @@ module VCAP::CloudController
     let(:builder) { StagingEnvironmentBuilder.new }
 
     describe '#build' do
-      let(:app) { AppModel.make(environment_variables: { 'APP_VAR' => 'is here' }) }
+      let(:app) { create(:app_model, environment_variables: { 'APP_VAR' => 'is here' }) }
       let(:space) { app.space }
       let(:stack) { 'my-stack' }
       let(:memory_limit) { 12_340 }
       let(:staging_disk_in_mb) { 32_100 }
       let(:lifecycle) { instance_double(BuildpackLifecycle, staging_environment_variables: { 'CF_STACK' => stack }) }
-      let(:service) { Service.make(label: 'elephantsql-n/a') }
-      let(:service_plan) { ServicePlan.make(service:) }
-      let(:service_instance) { ManagedServiceInstance.make(space: space, service_plan: service_plan, name: 'elephantsql-vip-uat', tags: ['excellent']) }
-      let!(:service_binding) { ServiceBinding.make(app: app, service_instance: service_instance, syslog_drain_url: 'logs.go-here.com') }
+      let(:service) { create(:service, label: 'elephantsql-n/a') }
+      let(:service_plan) { create(:service_plan, service:) }
+      let(:service_instance) { create(:managed_service_instance, space: space, service_plan: service_plan, name: 'elephantsql-vip-uat', tags: ['excellent']) }
+      let!(:service_binding) { create(:service_binding, app: app, service_instance: service_instance, syslog_drain_url: 'logs.go-here.com') }
 
       before do
         staging_group = EnvironmentVariableGroup.staging
@@ -62,10 +62,10 @@ module VCAP::CloudController
 
       context 'when the app has a route associated with it' do
         it 'includes the uris as part of vcap_application' do
-          route1 = Route.make(space:)
-          route2 = Route.make(space:)
-          RouteMappingModel.make(app: app, route: route1)
-          RouteMappingModel.make(app: app, route: route2)
+          route1 = create(:route, space:)
+          route2 = create(:route, space:)
+          create(:route_mapping_model, app: app, route: route1)
+          create(:route_mapping_model, app: app, route: route2)
 
           environment_variables = builder.build(app, space, lifecycle, memory_limit, staging_disk_in_mb)
           expect(environment_variables['VCAP_APPLICATION'][:uris]).to contain_exactly(route1.fqdn, route2.fqdn)

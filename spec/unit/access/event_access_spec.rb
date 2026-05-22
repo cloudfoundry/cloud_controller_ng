@@ -4,10 +4,10 @@ module VCAP::CloudController
   RSpec.describe EventAccess, type: :access do
     subject(:access) { EventAccess.new(Security::AccessContext.new) }
 
-    let(:user) { VCAP::CloudController::User.make }
-    let(:org) { VCAP::CloudController::Organization.make }
-    let(:space) { VCAP::CloudController::Space.make(organization: org) }
-    let!(:object) { VCAP::CloudController::Event.make(space_guid: space.guid, organization_guid: org.guid) }
+    let(:user) { create(:user) }
+    let(:org) { create(:organization) }
+    let(:space) { create(:space, organization: org) }
+    let!(:object) { create(:event, space_guid: space.guid, organization_guid: org.guid) }
     let(:scopes) { nil }
 
     before { set_current_user(user, scopes:) }
@@ -62,7 +62,7 @@ module VCAP::CloudController
 
     context 'user in a different organization (defensive)' do
       before do
-        different_organization = VCAP::CloudController::Organization.make
+        different_organization = create(:organization)
         different_organization.add_user(user)
       end
 
@@ -71,7 +71,7 @@ module VCAP::CloudController
 
     context 'manager in a different organization (defensive)' do
       before do
-        different_organization = VCAP::CloudController::Organization.make
+        different_organization = create(:organization)
         different_organization.add_manager(user)
       end
 
@@ -152,7 +152,7 @@ module VCAP::CloudController
 
       context 'user in a different organization (defensive)' do
         before do
-          different_organization = VCAP::CloudController::Organization.make
+          different_organization = create(:organization)
           different_organization.add_user(user)
           space.destroy
         end
@@ -162,7 +162,7 @@ module VCAP::CloudController
 
       context 'manager in a different organization (defensive)' do
         before do
-          different_organization = VCAP::CloudController::Organization.make
+          different_organization = create(:organization)
           different_organization.add_manager(user)
           space.destroy
         end

@@ -2,9 +2,9 @@ require 'spec_helper'
 
 RSpec.describe 'Spaces' do
   let(:assigner) { VCAP::CloudController::IsolationSegmentAssign.new }
-  let(:isolation_segment) { VCAP::CloudController::IsolationSegmentModel.make }
-  let(:user) { VCAP::CloudController::User.make }
-  let(:org) { VCAP::CloudController::Organization.make }
+  let(:isolation_segment) { create(:isolation_segment_model) }
+  let(:user) { create(:user) }
+  let(:org) { create(:organization) }
 
   describe 'POST /v2/spaces' do
     let(:opts) do
@@ -64,8 +64,8 @@ RSpec.describe 'Spaces' do
 
   describe 'GET /v2/spaces' do
     context 'when a isolation segment is associated to the space' do
-      let(:isolation_segment) { VCAP::CloudController::IsolationSegmentModel.make }
-      let(:space) { VCAP::CloudController::Space.make(organization: org) }
+      let(:isolation_segment) { create(:isolation_segment_model) }
+      let(:space) { create(:space, organization: org) }
 
       before do
         assigner.assign(isolation_segment, [org])
@@ -121,8 +121,8 @@ RSpec.describe 'Spaces' do
 
   describe 'GET /v2/spaces/:guid' do
     context 'when a isolation segment is associated to the space' do
-      let(:isolation_segment) { VCAP::CloudController::IsolationSegmentModel.make }
-      let(:space) { VCAP::CloudController::Space.make(organization: org) }
+      let(:isolation_segment) { create(:isolation_segment_model) }
+      let(:space) { create(:space, organization: org) }
 
       before do
         assigner.assign(isolation_segment, [org])
@@ -171,9 +171,9 @@ RSpec.describe 'Spaces' do
   end
 
   describe 'GET /v2/spaces/:guid/service_instances' do
-    let(:originating_space) { VCAP::CloudController::Space.make }
-    let(:shared_service_instance) { VCAP::CloudController::ManagedServiceInstance.make(space: originating_space) }
-    let(:space) { VCAP::CloudController::Space.make }
+    let(:originating_space) { create(:space) }
+    let(:shared_service_instance) { create(:managed_service_instance, space: originating_space) }
+    let(:space) { create(:space) }
 
     before do
       originating_space.organization.add_user(user)
@@ -230,11 +230,11 @@ RSpec.describe 'Spaces' do
   end
 
   describe 'GET /v2/spaces/:guid/services' do
-    let!(:space) { VCAP::CloudController::Space.make(organization: org) }
-    let!(:service_1) { VCAP::CloudController::Service.make }
-    let!(:service_plan_1) { VCAP::CloudController::ServicePlan.make(service: service_1) }
-    let!(:service_2) { VCAP::CloudController::Service.make }
-    let!(:service_plan_2) { VCAP::CloudController::ServicePlan.make(service: service_2) }
+    let!(:space) { create(:space, organization: org) }
+    let!(:service_1) { create(:service) }
+    let!(:service_plan_1) { create(:service_plan, service: service_1) }
+    let!(:service_2) { create(:service) }
+    let!(:service_plan_2) { create(:service_plan, service: service_2) }
 
     before do
       space.organization.add_user(user)
@@ -252,12 +252,12 @@ RSpec.describe 'Spaces' do
   end
 
   describe 'GET /v2/spaces/:guid/summary' do
-    let!(:space) { VCAP::CloudController::Space.make(organization: org) }
-    let!(:app_model) { VCAP::CloudController::AppModel.make(space:) }
+    let!(:space) { create(:space, organization: org) }
+    let!(:app_model) { create(:app_model, space:) }
     let!(:process) { VCAP::CloudController::ProcessModelFactory.make(state: 'STARTED', app: app_model) }
     let(:maintenance_info) { { version: '1.0.0', desciption: 'this is description about the maintenance' } }
-    let!(:service_plan) { VCAP::CloudController::ServicePlan.make(maintenance_info:) }
-    let!(:service_instance) { VCAP::CloudController::ManagedServiceInstance.make(space:, service_plan:, maintenance_info:) }
+    let!(:service_plan) { create(:service_plan, maintenance_info:) }
+    let!(:service_instance) { create(:managed_service_instance, space:, service_plan:, maintenance_info:) }
     let(:build_client) { instance_double(HTTPClient, post: nil) }
 
     before do
@@ -344,7 +344,7 @@ RSpec.describe 'Spaces' do
   end
 
   describe 'DELETE /v2/spaces/:guid/unmapped_routes' do
-    let(:space) { VCAP::CloudController::Space.make(organization: org) }
+    let(:space) { create(:space, organization: org) }
     let(:process) { VCAP::CloudController::ProcessModelFactory.make(state: 'STARTED') }
 
     before do
@@ -353,14 +353,14 @@ RSpec.describe 'Spaces' do
     end
 
     it 'deletes orphaned routes, does not delete mapped or bound routes' do
-      unmapped_route = VCAP::CloudController::Route.make(space:)
+      unmapped_route = create(:route, space:)
 
-      mapped_route = VCAP::CloudController::Route.make(space:)
-      VCAP::CloudController::RouteMappingModel.make(app: process.app, route: mapped_route, app_port: 9090)
+      mapped_route = create(:route, space:)
+      create(:route_mapping_model, app: process.app, route: mapped_route, app_port: 9090)
 
-      bound_route = VCAP::CloudController::Route.make(space:)
-      service_instance = VCAP::CloudController::ManagedServiceInstance.make(:routing, space:)
-      VCAP::CloudController::RouteBinding.make(service_instance: service_instance, route: bound_route)
+      bound_route = create(:route, space:)
+      service_instance = create(:managed_service_instance, :routing, space:)
+      create(:route_binding, service_instance: service_instance, route: bound_route)
 
       delete "/v2/spaces/#{space.guid}/unmapped_routes", {}, headers_for(user)
 

@@ -2,13 +2,13 @@ require 'spec_helper'
 
 module VCAP::CloudController
   RSpec.describe VCAP::CloudController::UserProvidedServiceInstance, type: :model do
-    let(:service_instance) { VCAP::CloudController::UserProvidedServiceInstance.make }
+    let(:service_instance) { create(:user_provided_service_instance) }
 
     it_behaves_like 'a model with an encrypted attribute' do
       def new_model
         VCAP::CloudController::UserProvidedServiceInstance.create(
           name: Sham.name,
-          space: VCAP::CloudController::Space.make,
+          space: create(:space),
           credentials: value_to_encrypt
         )
       end
@@ -24,8 +24,8 @@ module VCAP::CloudController
 
       it do
         expect(subject).to have_associated :service_bindings, associated_instance: lambda { |service_instance|
-          app = VCAP::CloudController::AppModel.make(space: service_instance.space)
-          ServiceBinding.make(app: app, service_instance: service_instance, credentials: Sham.service_credentials)
+          app = create(:app_model, space: service_instance.space)
+          create(:service_binding, app: app, service_instance: service_instance, credentials: Sham.service_credentials)
         }
       end
     end
@@ -39,9 +39,9 @@ module VCAP::CloudController
       it { is_expected.to strip_whitespace :syslog_drain_url }
 
       it 'does not bind an app and a service instance from different app spaces' do
-        service_instance = VCAP::CloudController::UserProvidedServiceInstance.make
+        service_instance = create(:user_provided_service_instance)
         VCAP::CloudController::ProcessModelFactory.make(space: service_instance.space)
-        service_binding = VCAP::CloudController::ServiceBinding.make
+        service_binding = create(:service_binding)
         expect do
           service_instance.add_service_binding(service_binding)
         end.to raise_error VCAP::CloudController::ServiceInstance::InvalidServiceBinding
@@ -49,46 +49,46 @@ module VCAP::CloudController
 
       it 'raises an error if the route_service_url is not https' do
         expect do
-          VCAP::CloudController::UserProvidedServiceInstance.make(route_service_url: 'http://route.url.com')
+          create(:user_provided_service_instance, route_service_url: 'http://route.url.com')
         end.
           to raise_error(Sequel::ValidationFailed, 'service_instance route_service_url_not_https')
       end
 
       it 'raises an error if the route_service_url does not have a valid host' do
         expect do
-          VCAP::CloudController::UserProvidedServiceInstance.make(route_service_url: 'https://.com')
+          create(:user_provided_service_instance, route_service_url: 'https://.com')
         end.
           to raise_error(Sequel::ValidationFailed, 'service_instance route_service_url_invalid')
       end
 
       it 'raises an error if the route_service_url format is invalid' do
         expect do
-          VCAP::CloudController::UserProvidedServiceInstance.make(route_service_url: 'https\\route')
+          create(:user_provided_service_instance, route_service_url: 'https\\route')
         end.
           to raise_error(Sequel::ValidationFailed, 'service_instance route_service_url_invalid')
       end
 
       it 'accepts user-provided tags where combined length of all tags is exactly 2048 characters' do
         expect do
-          UserProvidedServiceInstance.make tags: max_tags
+          create(:user_provided_service_instance, tags: max_tags)
         end.not_to raise_error
       end
 
       it 'accepts user-provided tags where combined length of all tags is less than 2048 characters' do
         expect do
-          UserProvidedServiceInstance.make tags: max_tags[0..50]
+          create(:user_provided_service_instance, tags: max_tags[0..50])
         end.not_to raise_error
       end
 
       it 'does not accept user-provided tags with combined length of over 2048 characters' do
         expect do
-          UserProvidedServiceInstance.make tags: max_tags + ['z']
+          create(:user_provided_service_instance, tags: max_tags + ['z'])
         end.to raise_error(Sequel::ValidationFailed).with_message('tags too_long')
       end
 
       it 'does not accept a single user-provided tag of length greater than 2048 characters' do
         expect do
-          UserProvidedServiceInstance.make tags: ['a' * 2049]
+          create(:user_provided_service_instance, tags: ['a' * 2049])
         end.to raise_error(Sequel::ValidationFailed).with_message('tags too_long')
       end
     end
@@ -102,7 +102,7 @@ module VCAP::CloudController
       it 'saves with is_gateway_service false' do
         instance = VCAP::CloudController::UserProvidedServiceInstance.create(
           name: 'awesome-service',
-          space: VCAP::CloudController::Space.make,
+          space: create(:space),
           credentials: { 'foo' => 'bar' },
           route_service_url: 'https://route.url.com'
         )
@@ -110,7 +110,7 @@ module VCAP::CloudController
       end
 
       it 'creates a CREATED service usage event' do
-        instance = VCAP::CloudController::UserProvidedServiceInstance.make
+        instance = create(:user_provided_service_instance)
 
         event = ServiceUsageEvent.last
         expect(ServiceUsageEvent.count).to eq(1)
@@ -119,14 +119,14 @@ module VCAP::CloudController
       end
 
       it 'creates the service instance if the route_service_url is empty' do
-        VCAP::CloudController::UserProvidedServiceInstance.make(route_service_url: '')
+        create(:user_provided_service_instance, route_service_url: '')
         expect(ServiceInstance.count).to eq(1)
       end
     end
 
     describe '#delete' do
       it 'creates a DELETED service usage event' do
-        instance = VCAP::CloudController::UserProvidedServiceInstance.make
+        instance = create(:user_provided_service_instance)
         instance.destroy
 
         event = VCAP::CloudController::ServiceUsageEvent.last
@@ -139,7 +139,7 @@ module VCAP::CloudController
 
     describe '#tags' do
       let(:instance_tags) { %w[a b c] }
-      let(:service_instance) { UserProvidedServiceInstance.make(tags: instance_tags) }
+      let(:service_instance) { create(:user_provided_service_instance, tags: instance_tags) }
 
       it 'returns the instance tags' do
         expect(service_instance.tags).to eq instance_tags

@@ -41,8 +41,8 @@ module VCAP::CloudController
     end
 
     let(:message) { RouteUpdateMessage.new(body) }
-    let(:process) { ProcessModel.make }
-    let(:route_mapping) { RouteMappingModel.make(app: process.app) }
+    let(:process) { create(:process_model) }
+    let(:route_mapping) { create(:route_mapping_model, app: process.app) }
     let(:route) { route_mapping.route }
 
     subject { RouteUpdate.new }
@@ -192,7 +192,7 @@ module VCAP::CloudController
 
       context 'when the route has existing options for loadbalancing=hash' do
         before do
-          VCAP::CloudController::FeatureFlag.make(name: 'hash_based_routing', enabled: true)
+          create(:feature_flag, name: 'hash_based_routing', enabled: true)
           route[:options] = '{"loadbalancing": "hash", "hash_header": "foobar", "hash_balance": "2"}'
         end
 
@@ -399,7 +399,7 @@ module VCAP::CloudController
 
         context 'when hash_based_routing feature flag is enabled' do
           before do
-            VCAP::CloudController::FeatureFlag.make(name: 'hash_based_routing', enabled: true)
+            create(:feature_flag, name: 'hash_based_routing', enabled: true)
           end
 
           context 'when updating to hash loadbalancing without hash_header' do
@@ -516,7 +516,7 @@ module VCAP::CloudController
         before do
           TestConfig.override(max_route_options_size: 50)
           # Enable hash_based_routing feature to allow hash_header in options
-          VCAP::CloudController::FeatureFlag.make(name: 'hash_based_routing', enabled: true, error_message: nil)
+          create(:feature_flag, name: 'hash_based_routing', enabled: true, error_message: nil)
           route[:options] = '{"loadbalancing": "round-robin"}'
         end
 

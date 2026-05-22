@@ -16,9 +16,9 @@ module VCAP::CloudController
     end
 
     RSpec.describe DeleteActionJob, job_context: :worker do
-      let(:user) { User.make(admin: true) }
+      let(:user) { create(:user, admin: true) }
       let(:delete_action) { instance_double(SpaceDelete, delete: []) }
-      let(:space) { Space.make(name: Sham.guid) }
+      let(:space) { create(:space, name: Sham.guid) }
 
       subject(:job) { DeleteActionJob.new(Space, space.guid, delete_action) }
 
@@ -143,25 +143,25 @@ module VCAP::CloudController
 
       context 'when the resource is deleted externally before destroy' do
         it_behaves_like 'a delete action handling external deletion' do
-          let(:resource) { PackageModel.make }
+          let(:resource) { create(:package_model) }
           let(:delete_action) { PackageDelete.new(nil) }
           let(:delete_job) { DeleteActionJob.new(PackageModel, resource.guid, delete_action) }
         end
 
         it_behaves_like 'a delete action handling external deletion' do
-          let(:resource) { Space.make }
+          let(:resource) { create(:space) }
           let(:delete_action) { SpaceDelete.new(nil, nil) }
           let(:delete_job) { DeleteActionJob.new(Space, resource.guid, delete_action) }
         end
 
         it_behaves_like 'a delete action handling external deletion' do
-          let(:resource) { Route.make }
+          let(:resource) { create(:route) }
           let(:delete_action) { RouteDeleteAction.new(nil) }
           let(:delete_job) { DeleteActionJob.new(Route, resource.guid, delete_action) }
         end
 
         it_behaves_like 'a delete action handling external deletion' do
-          let(:resource) { User.make }
+          let(:resource) { create(:user) }
           let(:delete_action) { UserDeleteAction.new }
           let(:delete_job) { DeleteActionJob.new(User, resource.guid, delete_action) }
         end

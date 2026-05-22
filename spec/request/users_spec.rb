@@ -2,10 +2,10 @@ require 'spec_helper'
 require 'request_spec_shared_examples'
 
 RSpec.describe 'Users Request' do
-  let(:actee) { VCAP::CloudController::User.make(guid: actee_guid) }
-  let(:user) { VCAP::CloudController::User.make(guid: 'user') }
-  let(:client) { VCAP::CloudController::User.make(guid: 'client-user') }
-  let(:space) { VCAP::CloudController::Space.make }
+  let(:actee) { create(:user, guid: actee_guid) }
+  let(:user) { create(:user, guid: 'user') }
+  let(:client) { create(:user, guid: 'client-user') }
+  let(:space) { create(:space) }
   let(:org) { space.organization }
   let(:admin_header) { headers_for(user, scopes: %w[cloud_controller.admin]) }
   let(:uaa_client) { instance_double(VCAP::CloudController::UaaClient) }
@@ -264,8 +264,8 @@ RSpec.describe 'Users Request' do
       end
 
       context 'when filtering by usernames and origins' do
-        let(:user_in_different_origin) { VCAP::CloudController::User.make(guid: 'user_in_different_origin') }
-        let(:user_with_different_username) { VCAP::CloudController::User.make(guid: 'user_in_different_origin') }
+        let(:user_in_different_origin) { create(:user, guid: 'user_in_different_origin') }
+        let(:user_with_different_username) { create(:user, guid: 'user_in_different_origin') }
         let(:endpoint) { '/v3/users?usernames=bob-mcjames&origins=Okta' }
         let(:api_call) { ->(user_headers) { get endpoint, nil, user_headers } }
         let(:user_in_different_origin_json) do
@@ -360,9 +360,9 @@ RSpec.describe 'Users Request' do
       end
 
       context 'when filtering by labels' do
-        let!(:user_label) { VCAP::CloudController::UserLabelModel.make(resource_guid: user.guid, key_name: 'animal', value: 'dog') }
+        let!(:user_label) { create(:user_label_model, resource_guid: user.guid, key_name: 'animal', value: 'dog') }
 
-        let!(:actee_label) { VCAP::CloudController::UserLabelModel.make(resource_guid: actee.guid, key_name: 'animal', value: 'cow') }
+        let!(:actee_label) { create(:user_label_model, resource_guid: actee.guid, key_name: 'animal', value: 'cow') }
 
         it 'returns a 200 and the filtered routes for "in" label selector' do
           get '/v3/users?label_selector=animal in (dog)', nil, admin_header
@@ -390,10 +390,10 @@ RSpec.describe 'Users Request' do
           allow(uaa_client).to receive(:users_for_ids).and_return({})
         end
 
-        let!(:resource_1) { VCAP::CloudController::User.make(guid: '1', created_at: '2020-05-26T18:47:01Z') }
-        let!(:resource_2) { VCAP::CloudController::User.make(guid: '2', created_at: '2020-05-26T18:47:02Z') }
-        let!(:resource_3) { VCAP::CloudController::User.make(guid: '3', created_at: '2020-05-26T18:47:03Z') }
-        let!(:resource_4) { VCAP::CloudController::User.make(guid: '4', created_at: '2020-05-26T18:47:04Z') }
+        let!(:resource_1) { create(:user, guid: '1', created_at: '2020-05-26T18:47:01Z') }
+        let!(:resource_2) { create(:user, guid: '2', created_at: '2020-05-26T18:47:02Z') }
+        let!(:resource_3) { create(:user, guid: '3', created_at: '2020-05-26T18:47:03Z') }
+        let!(:resource_4) { create(:user, guid: '4', created_at: '2020-05-26T18:47:04Z') }
 
         it 'filters' do
           get "/v3/users?created_ats[lt]=#{resource_3.created_at.iso8601}", nil, admin_headers
@@ -413,10 +413,10 @@ RSpec.describe 'Users Request' do
           allow(uaa_client).to receive(:users_for_ids).and_return({})
         end
 
-        let!(:resource_1) { VCAP::CloudController::User.make(guid: '1', updated_at: '2020-05-26T18:47:01Z') }
-        let!(:resource_2) { VCAP::CloudController::User.make(guid: '2', updated_at: '2020-05-26T18:47:02Z') }
-        let!(:resource_3) { VCAP::CloudController::User.make(guid: '3', updated_at: '2020-05-26T18:47:03Z') }
-        let!(:resource_4) { VCAP::CloudController::User.make(guid: '4', updated_at: '2020-05-26T18:47:04Z') }
+        let!(:resource_1) { create(:user, guid: '1', updated_at: '2020-05-26T18:47:01Z') }
+        let!(:resource_2) { create(:user, guid: '2', updated_at: '2020-05-26T18:47:02Z') }
+        let!(:resource_3) { create(:user, guid: '3', updated_at: '2020-05-26T18:47:03Z') }
+        let!(:resource_4) { create(:user, guid: '4', updated_at: '2020-05-26T18:47:04Z') }
 
         after do
           VCAP::CloudController::User.plugin :timestamps, update_on_create: true
@@ -530,7 +530,7 @@ RSpec.describe 'Users Request' do
     end
 
     context 'when the user has a guid with strange characters' do
-      let(:weird_user) { VCAP::CloudController::User.make(guid: 'weird-/(%)') }
+      let(:weird_user) { create(:user, guid: 'weird-/(%)') }
 
       before do
         allow(uaa_client).to receive(:users_for_ids).with([weird_user.guid]).and_return({})
@@ -846,7 +846,7 @@ RSpec.describe 'Users Request' do
       end
 
       context 'with an existing user' do
-        let!(:existing_user) { VCAP::CloudController::User.make }
+        let!(:existing_user) { create(:user) }
 
         let(:params) do
           {
@@ -1157,7 +1157,7 @@ RSpec.describe 'Users Request' do
   end
 
   describe 'DELETE /v3/users/:guid' do
-    let(:user_to_delete) { VCAP::CloudController::User.make }
+    let(:user_to_delete) { create(:user) }
     let(:api_call) { ->(user_headers) { delete "/v3/users/#{user_to_delete.guid}", nil, user_headers } }
     let(:db_check) do
       lambda do

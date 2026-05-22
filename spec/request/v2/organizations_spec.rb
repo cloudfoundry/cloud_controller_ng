@@ -1,19 +1,19 @@
 require 'spec_helper'
 
 RSpec.describe 'Organizations' do
-  let(:user) { VCAP::CloudController::User.make }
-  let(:org) { VCAP::CloudController::Organization.make }
+  let(:user) { create(:user) }
+  let(:org) { create(:organization) }
 
   before do
     TestConfig.override(kubernetes: {})
   end
 
   describe 'GET /v2/organizations/:guid/services' do
-    let!(:space) { VCAP::CloudController::Space.make(organization: org) }
-    let!(:service_1) { VCAP::CloudController::Service.make }
-    let!(:service_plan_1) { VCAP::CloudController::ServicePlan.make(service: service_1) }
-    let!(:service_2) { VCAP::CloudController::Service.make }
-    let!(:service_plan_2) { VCAP::CloudController::ServicePlan.make(service: service_2) }
+    let!(:space) { create(:space, organization: org) }
+    let!(:service_1) { create(:service) }
+    let!(:service_plan_1) { create(:service_plan, service: service_1) }
+    let!(:service_2) { create(:service) }
+    let!(:service_plan_2) { create(:service_plan, service: service_2) }
 
     before do
       space.organization.add_user(user)
@@ -103,7 +103,7 @@ RSpec.describe 'Organizations' do
   describe 'PUT /v2/organizations/:guid' do
     context 'when the quota has a finite log rate limit and there are apps with unlimited log rates' do
       let(:admin_header) { headers_for(user, scopes: %w[cloud_controller.admin]) }
-      let(:org_quota) { VCAP::CloudController::QuotaDefinition.make(log_rate_limit: 100) }
+      let(:org_quota) { create(:quota_definition, log_rate_limit: 100) }
 
       let(:params) do
         {
@@ -111,9 +111,9 @@ RSpec.describe 'Organizations' do
         }
       end
 
-      let!(:space) { VCAP::CloudController::Space.make(organization: org) }
-      let!(:app_model) { VCAP::CloudController::AppModel.make(name: 'name1', space: space) }
-      let!(:process_model) { VCAP::CloudController::ProcessModel.make(app: app_model, log_rate_limit: -1) }
+      let!(:space) { create(:space, organization: org) }
+      let!(:app_model) { create(:app_model, name: 'name1', space: space) }
+      let!(:process_model) { create(:process_model, app: app_model, log_rate_limit: -1) }
 
       it 'returns 422' do
         put "/v2/organizations/#{org.guid}", params.to_json, admin_header
@@ -124,7 +124,7 @@ RSpec.describe 'Organizations' do
     end
 
     context 'when a OrgManager mutates the status field' do
-      let(:org_manager) { VCAP::CloudController::User.make }
+      let(:org_manager) { create(:user) }
       let(:org_manager_header) { headers_for(org_manager) }
       let(:admin_header) { headers_for(user, scopes: %w[cloud_controller.admin]) }
 

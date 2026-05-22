@@ -9,9 +9,9 @@ module VCAP::CloudController
 
     describe '#apply_running' do
       subject { SecurityGroupApply }
-      let(:org) { VCAP::CloudController::Organization.make }
-      let(:space) { VCAP::CloudController::Space.make(organization: org) }
-      let(:security_group) { VCAP::CloudController::SecurityGroup.make }
+      let(:org) { create(:organization) }
+      let(:space) { create(:space, organization: org) }
+      let(:security_group) { create(:security_group) }
       let(:message) do
         VCAP::CloudController::SecurityGroupApplyMessage.new({
                                                                data: [{ guid: space.guid }]
@@ -92,9 +92,9 @@ module VCAP::CloudController
 
     describe '#apply_staging' do
       subject { SecurityGroupApply }
-      let(:org) { VCAP::CloudController::Organization.make }
-      let(:space) { VCAP::CloudController::Space.make(organization: org) }
-      let(:security_group) { VCAP::CloudController::SecurityGroup.make }
+      let(:org) { create(:organization) }
+      let(:space) { create(:space, organization: org) }
+      let(:security_group) { create(:security_group) }
       let(:message) do
         VCAP::CloudController::SecurityGroupApplyMessage.new({
                                                                data: [{ guid: space.guid }]

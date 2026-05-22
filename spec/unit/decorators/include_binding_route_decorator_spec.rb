@@ -1,4 +1,4 @@
-require 'db_spec_helper'
+require 'spec_helper'
 require 'decorators/include_binding_route_decorator'
 
 module VCAP
@@ -7,12 +7,12 @@ module VCAP
       subject(:decorator) { described_class }
 
       let(:bindings) do
-        service_instance = ManagedServiceInstance.make(:routing)
-        route = Route.make(space: service_instance.space, created_at: Time.now.utc - 1.second)
+        service_instance = create(:managed_service_instance, :routing)
+        route = create(:route, space: service_instance.space, created_at: Time.now.utc - 1.second)
 
         [
-          RouteBinding.make(service_instance:, route:),
-          RouteBinding.make
+          create(:route_binding, service_instance:, route:),
+          create(:route_binding)
         ]
       end
 
@@ -38,10 +38,8 @@ module VCAP
       it 'does not include duplicates' do
         existing_route = bindings[0].route
 
-        bindings << RouteBinding.make(
-          route: existing_route,
-          service_instance: ManagedServiceInstance.make(:routing, space: existing_route.space)
-        )
+        bindings << create(:route_binding, route: existing_route,
+                                           service_instance: create(:managed_service_instance, :routing, space: existing_route.space))
 
         hash = subject.decorate({}, bindings)
         expect(hash[:included][:routes]).to have(2).items

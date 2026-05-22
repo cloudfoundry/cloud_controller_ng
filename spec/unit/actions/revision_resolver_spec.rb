@@ -4,18 +4,17 @@ require 'actions/revision_resolver'
 module VCAP::CloudController
   RSpec.describe RevisionResolver do
     let(:droplet) do
-      DropletModel.make(
-        app: app,
-        process_types: {
-          'web' => 'droplet_web_command',
-          'worker' => 'droplet_worker_command'
-        }
-      )
+      create(:droplet_model,
+             app: app,
+             process_types: {
+               'web' => 'droplet_web_command',
+               'worker' => 'droplet_worker_command'
+             })
     end
-    let(:app) { AppModel.make(revisions_enabled: true, environment_variables: { 'key' => 'value' }) }
+    let(:app) { create(:app_model, revisions_enabled: true, environment_variables: { 'key' => 'value' }) }
     let(:user_audit_info) { UserAuditInfo.new(user_guid: '456', user_email: 'mona@example.com', user_name: 'mona') }
-    let!(:older_web_process) { ProcessModel.make(app: app, type: 'web', created_at: 2.minutes.ago) }
-    let!(:worker_process) { ProcessModel.make(app: app, type: 'worker') }
+    let!(:older_web_process) { create(:process_model, app: app, type: 'web', created_at: 2.minutes.ago) }
+    let!(:worker_process) { create(:process_model, app: app, type: 'worker') }
 
     before do
       app.update(droplet:)
@@ -60,10 +59,10 @@ module VCAP::CloudController
 
       context 'when the latest revision is out of date' do
         it 'creates a revision from the app values with the appropriate description' do
-          RevisionModel.make(:custom_web_command,
-                             app: app,
-                             droplet: app.droplet,
-                             environment_variables: { 'foo' => 'bar' })
+          create(:revision_model, :custom_web_command,
+                 app: app,
+                 droplet: app.droplet,
+                 environment_variables: { 'foo' => 'bar' })
 
           expect do
             RevisionResolver.update_app_revision(app, user_audit_info)
@@ -78,14 +77,13 @@ module VCAP::CloudController
         end
 
         context 'when sidecars have been added' do
-          let!(:sidecar) { SidecarModel.make(app:) }
+          let!(:sidecar) { create(:sidecar_model, app:) }
 
           it 'creates a revision from the app values' do
-            RevisionModel.make(
-              app: app,
-              droplet: app.droplet,
-              environment_variables: app.environment_variables
-            )
+            create(:revision_model,
+                   app: app,
+                   droplet: app.droplet,
+                   environment_variables: app.environment_variables)
 
             expect do
               RevisionResolver.update_app_revision(app, user_audit_info)
@@ -99,11 +97,10 @@ module VCAP::CloudController
 
       context 'when the latest revisions is up to date' do
         it 'returns the latest_revision' do
-          RevisionModel.make(
-            app: app,
-            droplet: app.droplet,
-            environment_variables: app.environment_variables
-          )
+          create(:revision_model,
+                 app: app,
+                 droplet: app.droplet,
+                 environment_variables: app.environment_variables)
 
           revision = nil
           expect do
@@ -117,11 +114,11 @@ module VCAP::CloudController
 
     describe '.rollback_app_revision' do
       let(:initial_revision) do
-        RevisionModel.make(:custom_web_command,
-                           version: 1,
-                           droplet: droplet,
-                           app: app,
-                           environment_variables: { BISH: 'BASH', FOO: 'BAR' })
+        create(:revision_model, :custom_web_command,
+               version: 1,
+               droplet: droplet,
+               app: app,
+               environment_variables: { BISH: 'BASH', FOO: 'BAR' })
       end
 
       before do
@@ -145,12 +142,12 @@ module VCAP::CloudController
 
       context 'when revisions are enabled' do
         let!(:latest_revision) do
-          RevisionModel.make(:custom_web_command,
-                             app: app,
-                             droplet: app.droplet,
-                             environment_variables: { 'foo' => 'bar' },
-                             description: ['latest revision'],
-                             version: 2)
+          create(:revision_model, :custom_web_command,
+                 app: app,
+                 droplet: app.droplet,
+                 environment_variables: { 'foo' => 'bar' },
+                 description: ['latest revision'],
+                 version: 2)
         end
 
         context 'rolling back' do
@@ -166,8 +163,8 @@ module VCAP::CloudController
           end
 
           it 'does not copy metadata to the new rollback revision' do
-            RevisionAnnotationModel.make(revision: initial_revision, key_name: 'foo', value: 'bar')
-            RevisionLabelModel.make(revision: initial_revision, key_name: 'baz', value: 'qux')
+            create(:revision_annotation_model, revision: initial_revision, key_name: 'foo', value: 'bar')
+            create(:revision_label_model, revision: initial_revision, key_name: 'baz', value: 'qux')
 
             rollback_revision = RevisionResolver.rollback_app_revision(app, initial_revision, user_audit_info)
 

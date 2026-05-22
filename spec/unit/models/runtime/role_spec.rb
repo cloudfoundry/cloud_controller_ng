@@ -5,17 +5,17 @@ module VCAP::CloudController
     it { is_expected.to have_timestamp_columns }
 
     context 'when there are roles' do
-      let(:user) { User.make }
-      let(:org) { Organization.make }
-      let(:space) { Space.make }
-      let!(:organization_user) { OrganizationUser.make(user: user, organization: org) }
-      let!(:organization_manager) { OrganizationManager.make(organization: org) }
-      let!(:organization_billing_manager) { OrganizationBillingManager.make }
-      let!(:organization_auditor) { OrganizationAuditor.make }
-      let!(:space_developer) { SpaceDeveloper.make(user:, space:) }
-      let!(:space_auditor) { SpaceAuditor.make(space:) }
-      let!(:space_manager) { SpaceManager.make }
-      let!(:space_supporter) { SpaceSupporter.make }
+      let(:user) { create(:user) }
+      let(:org) { create(:organization) }
+      let(:space) { create(:space) }
+      let!(:organization_user) { create(:organization_user, user: user, organization: org) }
+      let!(:organization_manager) { create(:organization_manager, organization: org) }
+      let!(:organization_billing_manager) { create(:organization_billing_manager) }
+      let!(:organization_auditor) { create(:organization_auditor) }
+      let!(:space_developer) { create(:space_developer, user:, space:) }
+      let!(:space_auditor) { create(:space_auditor, space:) }
+      let!(:space_manager) { create(:space_manager) }
+      let!(:space_supporter) { create(:space_supporter) }
 
       it 'contains all the roles' do
         roles = VCAP::CloudController::Role.all.each_with_object({}) do |role, obj|
@@ -34,7 +34,7 @@ module VCAP::CloudController
 
       context 'optimized SQL queries' do
         before do
-          OrganizationUser.make
+          create(:organization_user)
         end
 
         it 'works for different filters' do

@@ -3,12 +3,12 @@ require 'spec_helper'
 module VCAP::CloudController
   module Jobs
     RSpec.describe SpaceApplyManifestActionJob, job_context: :worker do
-      let(:user) { User.make(admin: true) }
+      let(:user) { create(:user, admin: true) }
       let(:user_audit_info) { UserAuditInfo.new(user_email: 'user.email', user_guid: user.guid, user_name: 'user.name') }
       let(:apply_manifest_action) { instance_double(AppApplyManifest) }
-      let(:space) { Space.make }
-      let(:app1) { AppModel.make(name: 'steel', space: space) }
-      let(:app2) { AppModel.make(name: 'cut', space: space) }
+      let(:space) { create(:space) }
+      let(:app1) { create(:app_model, name: 'steel', space: space) }
+      let(:app2) { create(:app_model, name: 'cut', space: space) }
       let(:app_guid_message_hash) do
         {
           app1.guid => AppManifestMessage.create_from_yml({ name: app1.name, instances: 4, routes: [{ route: 'foo.example.com' }] }),

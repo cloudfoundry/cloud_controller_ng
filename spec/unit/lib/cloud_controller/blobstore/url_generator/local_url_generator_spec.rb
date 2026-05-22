@@ -34,7 +34,7 @@ module CloudController
       end
 
       describe 'admin buildpacks' do
-        let(:buildpack) { VCAP::CloudController::Buildpack.make }
+        let(:buildpack) { create(:buildpack) }
 
         it 'gives a local URI to the blobstore host/port' do
           uri = URI.parse(url_generator.admin_buildpack_download_url(buildpack))
@@ -77,7 +77,7 @@ module CloudController
       end
 
       describe 'droplet downloads' do
-        let(:droplet) { VCAP::CloudController::DropletModel.make }
+        let(:droplet) { create(:droplet_model) }
 
         it 'returns a url to cloud controller' do
           uri = URI.parse(url_generator.droplet_download_url(droplet))
@@ -103,7 +103,7 @@ module CloudController
       end
 
       describe 'package' do
-        let(:package) { VCAP::CloudController::PackageModel.make }
+        let(:package) { create(:package_model) }
 
         it 'gives a local URI to the blobstore host/port' do
           uri = URI.parse(url_generator.package_download_url(package))

@@ -2,9 +2,9 @@ require 'spec_helper'
 
 module VCAP::CloudController
   RSpec.describe UpdaterLock do
-    let(:service_instance) { ManagedServiceInstance.make }
+    let(:service_instance) { create(:managed_service_instance) }
     let(:updater_lock) { UpdaterLock.new(service_instance) }
-    let(:operation) { ServiceInstanceOperation.make(state: 'override me') }
+    let(:operation) { create(:service_instance_operation, state: 'override me') }
 
     before do
       service_instance.service_instance_operation = operation
@@ -37,7 +37,7 @@ module VCAP::CloudController
 
       context 'when the instance already has an operation in progress' do
         before do
-          service_instance.service_instance_operation = ServiceInstanceOperation.make(state: 'in progress')
+          service_instance.service_instance_operation = create(:service_instance_operation, state: 'in progress')
         end
 
         it 'raises an AsyncServiceInstanceOperationInProgress error' do
@@ -50,11 +50,11 @@ module VCAP::CloudController
       end
 
       context 'when the instance has a service binding with an operation in progress' do
-        let!(:service_binding_1) { ServiceBinding.make(service_instance:) }
-        let!(:service_binding_2) { ServiceBinding.make(service_instance:) }
+        let!(:service_binding_1) { create(:service_binding, service_instance:) }
+        let!(:service_binding_2) { create(:service_binding, service_instance:) }
 
         before do
-          service_binding_2.service_binding_operation = ServiceBindingOperation.make(state: 'in progress')
+          service_binding_2.service_binding_operation = create(:service_binding_operation, state: 'in progress')
         end
 
         it 'raises an ServiceBindingLockedError error' do
@@ -87,7 +87,7 @@ module VCAP::CloudController
       end
 
       describe 'unlocking synchronously' do
-        let(:new_service_plan) { ServicePlan.make }
+        let(:new_service_plan) { create(:service_plan) }
 
         it 'updates the last operation of the service instance to the new state' do
           updater_lock.synchronous_unlock!

@@ -4,7 +4,7 @@ require 'spec_helper'
 
 module VCAP::CloudController
   RSpec.describe VCAP::CloudController::OrganizationsController do
-    let(:org) { Organization.make }
+    let(:org) { create(:organization) }
     let(:assigner) { VCAP::CloudController::IsolationSegmentAssign.new }
     let(:user_email) { Sham.email }
     let(:uaa_client) { instance_double(UaaClient) }
@@ -86,7 +86,7 @@ module VCAP::CloudController
                            enumerate: 1
 
           it 'cannot update quota definition' do
-            quota = QuotaDefinition.make
+            quota = create(:quota_definition)
             expect(@org_a.quota_definition.guid).not_to eq(quota.guid)
 
             put "/v2/organizations/#{@org_a.guid}", Oj.dump(quota_definition_guid: quota.guid)
@@ -158,11 +158,11 @@ module VCAP::CloudController
     end
 
     describe 'setting the default isolation segment' do
-      let(:isolation_segment) { IsolationSegmentModel.make }
-      let(:isolation_segment2) { IsolationSegmentModel.make }
+      let(:isolation_segment) { create(:isolation_segment_model) }
+      let(:isolation_segment2) { create(:isolation_segment_model) }
 
       context 'when the user is neither admin nor org manager' do
-        let(:space) { Space.make(organization: org) }
+        let(:space) { create(:space, organization: org) }
         let!(:user) { set_current_user(make_developer_for_space(space)) }
 
         before do
@@ -240,7 +240,7 @@ module VCAP::CloudController
       end
 
       context 'when the user is an admin' do
-        let(:user) { set_current_user(User.make) }
+        let(:user) { set_current_user(create(:user)) }
 
         before do
           set_current_user_as_admin
@@ -261,11 +261,11 @@ module VCAP::CloudController
     end
 
     describe 'removing the default isolation segment' do
-      let(:isolation_segment) { IsolationSegmentModel.make }
-      let(:isolation_segment2) { IsolationSegmentModel.make }
+      let(:isolation_segment) { create(:isolation_segment_model) }
+      let(:isolation_segment2) { create(:isolation_segment_model) }
 
       context 'when the user is neither admin nor org manager' do
-        let(:space) { Space.make(organization: org) }
+        let(:space) { create(:space, organization: org) }
         let!(:user) { set_current_user(make_developer_for_space(space)) }
 
         before do
@@ -341,7 +341,7 @@ module VCAP::CloudController
       end
 
       context 'when the user is an admin' do
-        let(:user) { set_current_user(User.make) }
+        let(:user) { set_current_user(create(:user)) }
 
         before do
           set_current_user_as_admin
@@ -364,12 +364,12 @@ module VCAP::CloudController
     describe 'POST /v2/organizations' do
       context 'when user_org_creation feature_flag is disabled' do
         before do
-          FeatureFlag.make(name: 'user_org_creation', enabled: false)
+          create(:feature_flag, name: 'user_org_creation', enabled: false)
         end
 
         context 'as a non admin' do
           it 'returns NotAuthorized' do
-            set_current_user(User.make)
+            set_current_user(create(:user))
 
             post '/v2/organizations', Oj.dump({ name: 'my-org-name' })
 
@@ -392,7 +392,7 @@ module VCAP::CloudController
           end
 
           it 'does not set the default isolation segment on creation' do
-            isolation_segment = IsolationSegmentModel.make
+            isolation_segment = create(:isolation_segment_model)
 
             post '/v2/organizations', Oj.dump({
                                                 name: 'my-org-name',
@@ -421,11 +421,11 @@ module VCAP::CloudController
 
       context 'when user_org_creation feature_flag is enabled' do
         before do
-          FeatureFlag.make(name: 'user_org_creation', enabled: true)
+          create(:feature_flag, name: 'user_org_creation', enabled: true)
         end
 
         context 'as a non admin' do
-          let(:user) { User.make }
+          let(:user) { create(:user) }
 
           before do
             set_current_user(user, email: user_email)
@@ -456,7 +456,7 @@ module VCAP::CloudController
       end
 
       context 'setting roles at org creation time' do
-        let(:other_user) { User.make }
+        let(:other_user) { create(:user) }
         let(:name) { 'myorg' }
 
         before do
@@ -526,7 +526,7 @@ module VCAP::CloudController
     end
 
     describe 'PUT /v2/organizations/:guid' do
-      let(:org) { Organization.make }
+      let(:org) { create(:organization) }
 
       before do
         set_current_user_as_admin(email: user_email)
@@ -549,7 +549,7 @@ module VCAP::CloudController
 
     describe 'PUT /v2/organizations/:guid' do
       context 'setting roles at org update time' do
-        let(:other_user) { User.make }
+        let(:other_user) { create(:user) }
         let(:name) { 'myorg' }
         let(:uri) { "/v2/organizations/#{org.guid}" }
 
@@ -574,7 +574,7 @@ module VCAP::CloudController
           end
 
           context 'when there is already another org manager' do
-            let(:mgr) { User.make }
+            let(:mgr) { create(:user) }
 
             before do
               org.add_manager(mgr)
@@ -603,7 +603,7 @@ module VCAP::CloudController
         end
 
         context 'deassigning an org manager' do
-          let(:another_user) { User.make }
+          let(:another_user) { create(:user) }
 
           before do
             org.add_manager(other_user)
@@ -774,9 +774,9 @@ module VCAP::CloudController
 
     describe 'GET /v2/organizations/:guid/user_roles' do
       context 'when the user is admin' do
-        let(:mgr) { User.make(guid: 'mgr-lemon') }
-        let(:user) { User.make(guid: 'user-lime') }
-        let(:org) { Organization.make(manager_guids: [mgr.guid], user_guids: [mgr.guid, user.guid]) }
+        let(:mgr) { create(:user, guid: 'mgr-lemon') }
+        let(:user) { create(:user, guid: 'user-lime') }
+        let(:org) { create(:organization, manager_guids: [mgr.guid], user_guids: [mgr.guid, user.guid]) }
 
         before do
           allow(uaa_client).to receive(:usernames_for_ids).and_return({})
@@ -814,8 +814,8 @@ module VCAP::CloudController
       end
 
       context 'for a suspended organization as manager' do
-        let(:mgr) { User.make(guid: 'mgr-lemon') }
-        let(:org) { Organization.make(manager_guids: [mgr.guid], user_guids: [mgr.guid]) }
+        let(:mgr) { create(:user, guid: 'mgr-lemon') }
+        let(:org) { create(:organization, manager_guids: [mgr.guid], user_guids: [mgr.guid]) }
 
         before do
           allow(uaa_client).to receive(:usernames_for_ids).and_return({})
@@ -844,7 +844,7 @@ module VCAP::CloudController
 
       context 'when the user does not have permissions to read' do
         it 'returns a 403' do
-          set_current_user(User.make)
+          set_current_user(create(:user))
 
           get "/v2/organizations/#{org.guid}/user_roles"
           expect(last_response.status).to eq(403)
@@ -853,8 +853,8 @@ module VCAP::CloudController
     end
 
     describe 'GET', '/v2/organizations/:guid/services' do
-      let(:other_org) { Organization.make }
-      let(:space_one) { Space.make(organization: org) }
+      let(:other_org) { create(:organization) }
+      let(:space_one) { create(:space, organization: org) }
       let(:user) { make_developer_for_space(space_one) }
 
       before do
@@ -869,9 +869,9 @@ module VCAP::CloudController
 
       context 'with an offering that has private plans' do
         before do
-          @service = Service.make(active: true)
-          @service_plan = ServicePlan.make(service: @service, public: false)
-          ServicePlanVisibility.make(service_plan: @service.service_plans.first, organization: org)
+          @service = create(:service, active: true)
+          @service_plan = create(:service_plan, service: @service, public: false)
+          create(:service_plan_visibility, service_plan: @service.service_plans.first, organization: org)
         end
 
         it "removes the offering when the org does not have access to any of the service's plans" do
@@ -898,7 +898,7 @@ module VCAP::CloudController
         end
 
         it 'excludes plans that are not visible to the org' do
-          public_service_plan = ServicePlan.make(service: @service, public: true)
+          public_service_plan = create(:service_plan, service: @service, public: true)
 
           get "/v2/organizations/#{other_org.guid}/services?inline-relations-depth=1"
 
@@ -912,8 +912,8 @@ module VCAP::CloudController
 
       describe 'get /v2/organizations/:guid/services?q=active:<t|f>' do
         before do
-          @active = Array.new(3) { Service.make(active: true).tap { |svc| ServicePlan.make(service: svc) } }
-          @inactive = Array.new(2) { Service.make(active: false).tap { |svc| ServicePlan.make(service: svc) } }
+          @active = Array.new(3) { create(:service, active: true).tap { |svc| create(:service_plan, service: svc) } }
+          @inactive = Array.new(2) { create(:service, active: false).tap { |svc| create(:service_plan, service: svc) } }
         end
 
         it 'can remove inactive services' do
@@ -931,13 +931,13 @@ module VCAP::CloudController
 
       describe 'get /v2/organizations/:guid/services?q=service_broker_guid:<broker.guid>' do
         context 'with an offering that has public plans' do
-          let(:broker) { ServiceBroker.make }
-          let(:service) { Service.make(service_broker: broker, active: true) }
-          let(:service_plan) { ServicePlan.make(service: service, public: false) }
+          let(:broker) { create(:service_broker) }
+          let(:service) { create(:service, service_broker: broker, active: true) }
+          let(:service_plan) { create(:service_plan, service: service, public: false) }
 
           before do
             service.service_plans << service_plan
-            ServicePlanVisibility.make(service_plan: service.service_plans.first, organization: org)
+            create(:service_plan_visibility, service_plan: service.service_plans.first, organization: org)
           end
 
           it "returns the org's service" do
@@ -951,7 +951,7 @@ module VCAP::CloudController
 
     describe 'GET /v2/organizations/:guid/memory_usage' do
       before do
-        space = Space.make(organization: org)
+        space = create(:space, organization: org)
         ProcessModelFactory.make(space: space, memory: 200, instances: 2, state: 'STARTED', type: 'worker')
       end
 
@@ -966,7 +966,7 @@ module VCAP::CloudController
 
       context 'when the user does not have permissions to read' do
         it 'returns a 403' do
-          set_current_user(User.make)
+          set_current_user(create(:user))
 
           get "/v2/organizations/#{org.guid}/memory_usage"
           expect(last_response.status).to eq(403)
@@ -995,7 +995,7 @@ module VCAP::CloudController
 
       context 'when the user does not have permissions to read' do
         it 'returns a 403' do
-          set_current_user(User.make)
+          set_current_user(create(:user))
 
           get "/v2/organizations/#{org.guid}/instance_usage"
           expect(last_response.status).to eq(403)
@@ -1015,11 +1015,11 @@ module VCAP::CloudController
     end
 
     describe 'GET /v2/organizations/:guid/domains' do
-      let(:organization) { Organization.make }
+      let(:organization) { create(:organization) }
       let(:manager) { make_manager_for_org(organization) }
 
       before do
-        PrivateDomain.make(owning_organization: organization)
+        create(:private_domain, owning_organization: organization)
         set_current_user(manager)
       end
 
@@ -1033,8 +1033,8 @@ module VCAP::CloudController
       end
 
       context 'space roles' do
-        let(:organization) { Organization.make }
-        let(:space) { Space.make(organization:) }
+        let(:organization) { create(:organization) }
+        let(:space) { create(:space, organization:) }
 
         context 'space developers without org role' do
           let(:space_developer) { make_developer_for_space(space) }
@@ -1042,7 +1042,7 @@ module VCAP::CloudController
           before { set_current_user(space_developer) }
 
           it 'returns private domains' do
-            private_domain = PrivateDomain.make(owning_organization: organization)
+            private_domain = create(:private_domain, owning_organization: organization)
 
             get "/v2/organizations/#{organization.guid}/domains"
 
@@ -1066,13 +1066,13 @@ module VCAP::CloudController
     end
 
     describe 'Removing a user from the organization' do
-      let(:mgr) { User.make }
-      let(:user) { User.make }
+      let(:mgr) { create(:user) }
+      let(:user) { create(:user) }
       let(:org_users) { [user.guid] }
-      let(:org) { Organization.make(manager_guids: org_managers, user_guids: org_users) }
+      let(:org) { create(:organization, manager_guids: org_managers, user_guids: org_users) }
       let(:org_managers) { [mgr.guid] }
-      let(:org_space_empty) { Space.make(organization: org) }
-      let(:org_space_full) { Space.make(organization: org, manager_guids: [user.guid], developer_guids: [user.guid], auditor_guids: [user.guid]) }
+      let(:org_space_empty) { create(:space, organization: org) }
+      let(:org_space_full) { create(:space, organization: org, manager_guids: [user.guid], developer_guids: [user.guid], auditor_guids: [user.guid]) }
 
       before { set_current_user_as_admin }
 
@@ -1174,8 +1174,8 @@ module VCAP::CloudController
           end
 
           context 'multiple organizations' do
-            let(:org_2) { Organization.make(user_guids: [user.guid]) }
-            let(:org2_space) { Space.make(organization: org_2, developer_guids: [user.guid]) }
+            let(:org_2) { create(:organization, user_guids: [user.guid]) }
+            let(:org2_space) { create(:space, organization: org_2, developer_guids: [user.guid]) }
 
             it 'removes all user roles from one organization, but no the other' do
               org.add_space(org_space_full)
@@ -1212,8 +1212,8 @@ module VCAP::CloudController
         end
 
         describe 'removing the last user' do
-          let(:org) { Organization.make }
-          let(:user) { User.make }
+          let(:org) { create(:organization) }
+          let(:user) { create(:user) }
 
           before do
             org.add_user(user)
@@ -1264,12 +1264,12 @@ module VCAP::CloudController
 
       context 'PUT /v2/organizations/org_guid/private_domains/domain_guid' do
         context 'when PrivateDomain is shared' do
-          let(:org1) { Organization.make }
-          let(:org2) { Organization.make }
-          let(:private_domain) { PrivateDomain.make(owning_organization: org1) }
-          let(:user) { User.make }
-          let(:manager) { User.make }
-          let(:target_manager) { User.make }
+          let(:org1) { create(:organization) }
+          let(:org2) { create(:organization) }
+          let(:private_domain) { create(:private_domain, owning_organization: org1) }
+          let(:user) { create(:user) }
+          let(:manager) { create(:user) }
+          let(:target_manager) { create(:user) }
 
           before do
             org1.add_manager(manager)
@@ -1306,9 +1306,9 @@ module VCAP::CloudController
     end
 
     describe 'GET /v2/organizations/:guid/users' do
-      let(:mgr) { User.make }
-      let(:user) { User.make }
-      let(:org) { Organization.make(manager_guids: [mgr.guid], user_guids: [mgr.guid, user.guid]) }
+      let(:mgr) { create(:user) }
+      let(:user) { create(:user) }
+      let(:org) { create(:organization, manager_guids: [mgr.guid], user_guids: [mgr.guid, user.guid]) }
 
       before do
         allow(uaa_client).to receive(:usernames_for_ids).and_return({})
@@ -1334,7 +1334,7 @@ module VCAP::CloudController
         QuotaDefinition.default.organizations.each(&:destroy)
         QuotaDefinition.default.destroy
 
-        set_current_user(User.make)
+        set_current_user(create(:user))
       end
 
       it 'returns an OrganizationInvalid message' do
@@ -1346,7 +1346,7 @@ module VCAP::CloudController
     end
 
     describe 'deleting an organization' do
-      let(:org) { Organization.make }
+      let(:org) { create(:organization) }
 
       before do
         set_current_user_as_admin(email: user_email)
@@ -1372,14 +1372,14 @@ module VCAP::CloudController
 
       context 'with recursive=false' do
         it 'raises an error when the org has anything but labels it' do
-          Space.make(organization: org)
+          create(:space, organization: org)
           delete "/v2/organizations/#{org.guid}"
           expect(last_response).to have_status_code 400
           expect(decoded_response['error_code']).to eq 'CF-AssociationNotEmpty'
         end
 
         it 'deletes the associated labels' do
-          label = OrganizationLabelModel.make(key_name: 'some_key', value: 'some_value', resource_guid: org.guid)
+          label = create(:organization_label_model, key_name: 'some_key', value: 'some_value', resource_guid: org.guid)
           delete "/v2/organizations/#{org.guid}"
 
           expect(last_response).to have_status_code(204)
@@ -1390,8 +1390,8 @@ module VCAP::CloudController
 
       context 'with recursive=true' do
         it 'deletes the org and all of its spaces' do
-          space_1 = Space.make(organization: org)
-          space_2 = Space.make(organization: org)
+          space_1 = create(:space, organization: org)
+          space_2 = create(:space, organization: org)
 
           delete "/v2/organizations/#{org.guid}?recursive=true"
           expect(last_response).to have_status_code 204
@@ -1401,9 +1401,9 @@ module VCAP::CloudController
         end
 
         context 'when one of the spaces has a v3 app in it' do
-          let!(:space) { Space.make(organization: org) }
-          let!(:app_model) { AppModel.make(space_guid: space.guid) }
-          let(:user) { User.make }
+          let!(:space) { create(:space, organization: org) }
+          let!(:app_model) { create(:app_model, space_guid: space.guid) }
+          let(:user) { create(:user) }
 
           before { set_current_user(user, admin: true) }
 
@@ -1425,9 +1425,9 @@ module VCAP::CloudController
 
         context 'when there are users are managers and such' do
           before do
-            org.add_user(User.make)
-            org.add_manager(User.make)
-            org.add_billing_manager(User.make)
+            org.add_user(create(:user))
+            org.add_manager(create(:user))
+            org.add_billing_manager(create(:user))
           end
 
           OrganizationUserJoin = Sequel::Model(:organizations_users)
@@ -1454,8 +1454,8 @@ module VCAP::CloudController
             set_current_user_as_admin
           end
 
-          let!(:space) { Space.make(organization: org) }
-          let!(:service_instance) { ManagedServiceInstance.make(space:) }
+          let!(:space) { create(:space, organization: org) }
+          let!(:service_instance) { create(:managed_service_instance, space:) }
 
           it 'deletes the service instance' do
             delete "/v2/organizations/#{org.guid}?recursive=true"
@@ -1464,9 +1464,9 @@ module VCAP::CloudController
           end
 
           context 'and one of the instances fails to delete' do
-            let!(:service_instance_2) { ManagedServiceInstance.make(space:) }
-            let!(:service_instance_3) { ManagedServiceInstance.make(space:) }
-            let!(:service_binding) { ServiceBinding.make(service_instance:) }
+            let!(:service_instance_2) { create(:managed_service_instance, space:) }
+            let!(:service_instance_3) { create(:managed_service_instance, space:) }
+            let!(:service_binding) { create(:service_binding, service_instance:) }
 
             before do
               stub_deprovision(service_instance_2, status: 500, accepts_incomplete: true)
@@ -1491,19 +1491,19 @@ module VCAP::CloudController
         end
 
         context 'and async=true' do
-          let(:space) { Space.make(organization: org) }
-          let(:service_instance) { ManagedServiceInstance.make(space:) }
+          let(:space) { create(:space, organization: org) }
+          let(:service_instance) { create(:managed_service_instance, space:) }
 
           before do
             stub_deprovision(service_instance, accepts_incomplete: true)
-            set_current_user(User.make, admin: true)
+            set_current_user(create(:user), admin: true)
           end
 
           it 'successfully deletes the space in a background job' do
             space_guid = space.guid
-            app_guid = AppModel.make(space_guid:).guid
+            app_guid = create(:app_model, space_guid:).guid
             service_instance_guid = service_instance.guid
-            route_guid = Route.make(space_guid:).guid
+            route_guid = create(:route, space:).guid
 
             delete "/v2/organizations/#{org.guid}?recursive=true&async=true"
 
@@ -1582,7 +1582,7 @@ module VCAP::CloudController
 
       context 'when the user is not an admin' do
         it 'raises an error' do
-          set_current_user(User.make)
+          set_current_user(create(:user))
 
           delete "/v2/organizations/#{org.guid}"
           expect(last_response).to have_status_code 403
@@ -1594,8 +1594,8 @@ module VCAP::CloudController
       before { set_current_user_as_admin }
 
       context 'when PrivateDomain is owned by the organization' do
-        let(:organization) { Organization.make }
-        let(:private_domain) { PrivateDomain.make(owning_organization: organization) }
+        let(:organization) { create(:organization) }
+        let(:private_domain) { create(:private_domain, owning_organization: organization) }
 
         it 'fails' do
           delete "/v2/organizations/#{organization.guid}/private_domains/#{private_domain.guid}"
@@ -1604,14 +1604,14 @@ module VCAP::CloudController
       end
 
       context 'when PrivateDomain is shared' do
-        let(:space) { Space.make }
-        let(:private_domain) { PrivateDomain.make }
+        let(:space) { create(:space) }
+        let(:private_domain) { create(:private_domain) }
 
         it 'removes associated routes' do
-          private_domain = PrivateDomain.make
+          private_domain = create(:private_domain)
 
           space.organization.add_private_domain(private_domain)
-          Route.make(space: space, domain: private_domain)
+          create(:route, space: space, domain: private_domain)
 
           delete "/v2/organizations/#{space.organization.guid}/private_domains/#{private_domain.guid}"
           expect(last_response.status).to eq(204)
@@ -1622,7 +1622,7 @@ module VCAP::CloudController
     end
 
     describe 'DELETE /v2/organizations/:guid/managers/:user_guid' do
-      let(:org_manager) { User.make }
+      let(:org_manager) { create(:user) }
 
       before do
         org.add_manager org_manager
@@ -1653,7 +1653,7 @@ module VCAP::CloudController
       describe 'when there are other managers' do
         describe 'removing oneself' do
           before do
-            org.add_manager User.make
+            org.add_manager create(:user)
           end
 
           it 'is allowed' do
@@ -1666,7 +1666,7 @@ module VCAP::CloudController
     end
 
     describe 'DELETE /v2/organizations/:guid/billing_managers/:user_guid' do
-      let(:billing_manager) { User.make }
+      let(:billing_manager) { create(:user) }
 
       before do
         org.add_billing_manager billing_manager
@@ -1696,7 +1696,7 @@ module VCAP::CloudController
       describe 'when there are other billing managers' do
         describe 'removing oneself' do
           before do
-            org.add_billing_manager User.make
+            org.add_billing_manager create(:user)
           end
 
           it 'is allowed' do
@@ -1709,7 +1709,7 @@ module VCAP::CloudController
     end
 
     describe 'DELETE /v2/organizations/:guid/auditors/:user_guid' do
-      let(:auditor) { User.make }
+      let(:auditor) { create(:user) }
 
       before do
         org.add_auditor auditor
@@ -1736,7 +1736,7 @@ module VCAP::CloudController
         end
 
         context 'as the org manager' do
-          let(:org_manager) { User.make }
+          let(:org_manager) { create(:user) }
 
           before do
             org.add_manager org_manager
@@ -1750,7 +1750,7 @@ module VCAP::CloudController
         end
 
         context 'as a user' do
-          let(:user) { User.make }
+          let(:user) { create(:user) }
 
           before do
             org.add_user user
@@ -1769,7 +1769,7 @@ module VCAP::CloudController
       %i[user manager billing_manager auditor].each do |role|
         plural_role = role.to_s.pluralize
         describe "PUT /v2/organizations/:guid/#{plural_role}" do
-          let(:user) { User.make(username: 'larry_the_user') }
+          let(:user) { create(:user, username: 'larry_the_user') }
           let(:event_type) { "audit.user.organization_#{role}_add" }
 
           before do
@@ -1779,14 +1779,14 @@ module VCAP::CloudController
           end
 
           context 'origin' do
-            let(:user) { User.make(username: 'larry_the_user') }
-            let(:user2) { User.make(username: 'larry_the_user') }
+            let(:user) { create(:user, username: 'larry_the_user') }
+            let(:user2) { create(:user, username: 'larry_the_user') }
             let(:origin1) { 'larry_origin' }
             let(:origin2) { 'another_larry_origin' }
 
             context 'when an origin is specified' do
               context 'when the specified origin is not in the user\'s origins' do
-                let(:user) { User.make(username: 'fake@example.com') }
+                let(:user) { create(:user, username: 'fake@example.com') }
                 let(:fake_origin) { 'fake_origin' }
 
                 before do
@@ -1931,8 +1931,8 @@ module VCAP::CloudController
       %i[user manager billing_manager auditor].each do |role|
         plural_role = role.to_s.pluralize
         describe "POST /v2/organizations/:guid/#{role}" do
-          let(:user) { User.make(username: 'larry_the_user') }
-          let(:user2) { User.make(username: 'larry_the_user') }
+          let(:user) { create(:user, username: 'larry_the_user') }
+          let(:user2) { create(:user, username: 'larry_the_user') }
           let(:origin1) { 'larry_origin' }
           let(:origin2) { 'another_larry_origin' }
           let(:event_type) { "audit.user.organization_#{role}_add" }
@@ -2017,7 +2017,7 @@ module VCAP::CloudController
       %i[user manager billing_manager auditor].each do |role|
         plural_role = role.to_s.pluralize
         describe "DELETE /v2/organizations/:guid/#{plural_role}" do
-          let(:user) { User.make(username: 'larry_the_user') }
+          let(:user) { create(:user, username: 'larry_the_user') }
           let(:event_type) { "audit.user.organization_#{role}_remove" }
 
           before do
@@ -2118,7 +2118,7 @@ module VCAP::CloudController
           end
 
           context 'when recursive delete is requested' do
-            let(:space) { Space.make(organization: org) }
+            let(:space) { create(:space, organization: org) }
 
             before do
               org.add_user(user)
@@ -2162,8 +2162,8 @@ module VCAP::CloudController
       %i[user manager billing_manager auditor].each do |role|
         plural_role = role.to_s.pluralize
         describe "PUT /v2/organizations/:guid/#{plural_role}/:user_id" do
-          let(:user) { User.make(username: 'larry_the_user') }
-          let(:other_user) { User.make(username: 'joe_the_user') }
+          let(:user) { create(:user, username: 'larry_the_user') }
+          let(:other_user) { create(:user, username: 'joe_the_user') }
           let(:event_type) { "audit.user.organization_#{role}_add" }
 
           before do
@@ -2214,8 +2214,8 @@ module VCAP::CloudController
       %i[user manager billing_manager auditor].each do |role|
         plural_role = role.to_s.pluralize
         describe "DELETE /v2/organizations/:guid/#{plural_role}/:user_id" do
-          let(:user) { User.make(username: 'larry_the_user') }
-          let(:other_user) { User.make(username: 'joe_the_user') }
+          let(:user) { create(:user, username: 'larry_the_user') }
+          let(:other_user) { create(:user, username: 'joe_the_user') }
           let(:event_type) { "audit.user.organization_#{role}_remove" }
 
           before do

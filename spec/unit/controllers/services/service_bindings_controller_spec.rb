@@ -71,21 +71,19 @@ module VCAP::CloudController
 
       before do
         @process_a = ProcessModelFactory.make(space: @space_a)
-        @service_instance_a = ManagedServiceInstance.make
+        @service_instance_a = create(:managed_service_instance)
 
         @service_instance_a.add_shared_space(@space_a)
 
-        @obj_a = ServiceBinding.make(
-          app: @process_a.app,
-          service_instance: @service_instance_a
-        )
+        @obj_a = create(:service_binding,
+                        app: @process_a.app,
+                        service_instance: @service_instance_a)
 
         @process_b = ProcessModelFactory.make(space: @space_b)
-        @service_instance_b = ManagedServiceInstance.make(space: @space_b)
-        @obj_b = ServiceBinding.make(
-          app: @process_b.app,
-          service_instance: @service_instance_b
-        )
+        @service_instance_b = create(:managed_service_instance, space: @space_b)
+        @obj_b = create(:service_binding,
+                        app: @process_b.app,
+                        service_instance: @service_instance_b)
       end
 
       describe 'Org Level Permissions' do
@@ -174,7 +172,7 @@ module VCAP::CloudController
     end
 
     describe 'POST /v2/service_bindings/' do
-      let(:space) { Space.make }
+      let(:space) { create(:space) }
       let(:developer) { make_developer_for_space(space) }
       let(:process) { ProcessModelFactory.make(space:) }
 
@@ -288,7 +286,7 @@ module VCAP::CloudController
           end
 
           before do
-            set_current_user(User.make)
+            set_current_user(create(:user))
           end
 
           it 'returns 403' do
@@ -299,7 +297,7 @@ module VCAP::CloudController
 
         context 'when attempting to bind and the service binding already exists' do
           before do
-            ServiceBinding.make(app: process.app, service_instance: service_instance)
+            create(:service_binding, app: process.app, service_instance: service_instance)
           end
 
           it 'returns a ServiceBindingAppServiceTaken error' do
@@ -311,7 +309,7 @@ module VCAP::CloudController
       end
 
       context 'for user provided instances' do
-        let(:service_instance) { UserProvidedServiceInstance.make(space:, credentials:) }
+        let(:service_instance) { create(:user_provided_service_instance, space:, credentials:) }
         let(:req) do
           {
             app_guid: process.guid,
@@ -356,9 +354,9 @@ module VCAP::CloudController
 
       context 'for managed instances' do
         let(:broker) { service_instance.service.service_broker }
-        let(:service) { Service.make(bindings_retrievable: false) }
-        let(:service_plan) { ServicePlan.make(service:) }
-        let(:service_instance) { ManagedServiceInstance.make(space:, service_plan:) }
+        let(:service) { create(:service, bindings_retrievable: false) }
+        let(:service_plan) { create(:service_plan, service:) }
+        let(:service_instance) { create(:managed_service_instance, space:, service_plan:) }
         let(:req) do
           {
             app_guid: process.guid,
@@ -409,7 +407,7 @@ module VCAP::CloudController
             end
 
             context 'when bindings_retrievable is true' do
-              let(:service) { Service.make(bindings_retrievable: true) }
+              let(:service) { create(:service, bindings_retrievable: true) }
 
               context 'and the broker returns asynchronously' do
                 let(:bind_status) { 202 }
@@ -442,7 +440,7 @@ module VCAP::CloudController
                 end
 
                 context 'when bindings_retrievable is false' do
-                  let(:service) { Service.make(bindings_retrievable: false) }
+                  let(:service) { create(:service, bindings_retrievable: false) }
 
                   it 'throws invalid service binding error' do
                     expect(last_response).to have_status_code(400)
@@ -491,7 +489,7 @@ module VCAP::CloudController
 
             context 'and the broker is spec-incompliant and returns asynchronously anyway' do
               let(:bind_status) { 202 }
-              let(:service) { Service.make(bindings_retrievable: true) }
+              let(:service) { create(:service, bindings_retrievable: true) }
 
               it 'returns a 502 status code' do
                 post '/v2/service_bindings?accepts_incomplete=false', req.to_json
@@ -531,8 +529,8 @@ module VCAP::CloudController
         end
 
         context 'when the app is in a space that the service instance is shared to' do
-          let(:shared_from_space) { Space.make }
-          let(:service_instance) { ManagedServiceInstance.make(space: shared_from_space) }
+          let(:shared_from_space) { create(:space) }
+          let(:service_instance) { create(:managed_service_instance, space: shared_from_space) }
 
           before do
             service_instance.add_shared_space(space)
@@ -654,7 +652,7 @@ module VCAP::CloudController
         end
 
         context 'when volume_mount is required and volume_services_enabled is disabled' do
-          let(:service_instance) { ManagedServiceInstance.make(:volume_mount, space:) }
+          let(:service_instance) { create(:managed_service_instance, :volume_mount, space:) }
 
           before do
             TestConfig.config[:volume_services_enabled] = false
@@ -672,7 +670,7 @@ module VCAP::CloudController
         describe 'locking the instance as a result of binding' do
           context 'when the instance has a previous operation' do
             before do
-              service_instance.service_instance_operation = ServiceInstanceOperation.make(type: 'create', state: 'succeeded')
+              service_instance.service_instance_operation = create(:service_instance_operation, type: 'create', state: 'succeeded')
               service_instance.save
             end
 
@@ -724,7 +722,7 @@ module VCAP::CloudController
             end
 
             before do
-              ServiceBinding.make(app: process.app, service_instance: service_instance)
+              create(:service_binding, app: process.app, service_instance: service_instance)
             end
 
             it 'does not send a bind request to broker' do
@@ -761,7 +759,7 @@ module VCAP::CloudController
 
             context 'when the instance has a last_operation' do
               before do
-                service_instance.service_instance_operation = ServiceInstanceOperation.make(type: 'create', state: 'succeeded')
+                service_instance.service_instance_operation = create(:service_instance_operation, type: 'create', state: 'succeeded')
               end
 
               it 'rolls back the last_operation of the service instance' do
@@ -815,8 +813,8 @@ module VCAP::CloudController
     end
 
     describe 'DELETE /v2/service_bindings/:service_binding_guid' do
-      let(:service_binding) { ServiceBinding.make(service_instance: service_instance, app: process.app) }
-      let(:space) { Space.make }
+      let(:service_binding) { create(:service_binding, service_instance: service_instance, app: process.app) }
+      let(:space) { create(:space) }
       let(:developer) { make_developer_for_space(space) }
       let(:process) { ProcessModelFactory.make(space:) }
 
@@ -893,7 +891,7 @@ module VCAP::CloudController
 
         context 'when the user does not belong to the space' do
           it 'returns a 403' do
-            set_current_user(User.make)
+            set_current_user(create(:user))
 
             delete "/v2/service_bindings/#{service_binding.guid}"
             expect(last_response).to have_status_code(403)
@@ -909,7 +907,7 @@ module VCAP::CloudController
       end
 
       context 'for user provided instances' do
-        let(:service_instance) { UserProvidedServiceInstance.make(space:, credentials:) }
+        let(:service_instance) { create(:user_provided_service_instance, space:, credentials:) }
         let(:req) do
           {
             app_guid: process.guid,
@@ -922,7 +920,7 @@ module VCAP::CloudController
 
       context 'for managed instances' do
         let(:broker) { service_instance.service.service_broker }
-        let(:service_instance) { ManagedServiceInstance.make(space:) }
+        let(:service_instance) { create(:managed_service_instance, space:) }
         let(:req) do
           {
             app_guid: process.guid,
@@ -1092,7 +1090,7 @@ module VCAP::CloudController
 
           context 'when the instance has a last_operation' do
             before do
-              service_binding.service_instance.service_instance_operation = ServiceInstanceOperation.make(type: 'create', state: 'succeeded')
+              service_binding.service_instance.service_instance_operation = create(:service_instance_operation, type: 'create', state: 'succeeded')
               service_binding.service_instance.save
             end
 
@@ -1120,7 +1118,7 @@ module VCAP::CloudController
         end
 
         context 'when a binding has operation in progress' do
-          let(:last_operation) { ServiceBindingOperation.make(state: 'in progress') }
+          let(:last_operation) { create(:service_binding_operation, state: 'in progress') }
 
           before do
             service_binding.service_binding_operation = last_operation
@@ -1152,7 +1150,7 @@ module VCAP::CloudController
         end
 
         context 'when the instance operation is in progress' do
-          let(:last_operation) { ServiceInstanceOperation.make(state: 'in progress') }
+          let(:last_operation) { create(:service_instance_operation, state: 'in progress') }
 
           before do
             service_instance.service_instance_operation = last_operation
@@ -1184,16 +1182,16 @@ module VCAP::CloudController
     end
 
     describe 'GET', '/v2/service_bindings?inline-relations-depth=1', :regression do
-      let(:space) { Space.make }
-      let(:managed_service_instance) { ManagedServiceInstance.make(space:) }
-      let(:user_provided_service_instance) { UserProvidedServiceInstance.make(space:) }
+      let(:space) { create(:space) }
+      let(:managed_service_instance) { create(:managed_service_instance, space:) }
+      let(:user_provided_service_instance) { create(:user_provided_service_instance, space:) }
       let(:process) { ProcessModelFactory.make(space:) }
       let(:developer) { make_developer_for_space(space) }
 
       it 'returns both user provided and managed service instances' do
         set_current_user(developer)
-        ServiceBinding.make(service_instance: managed_service_instance, app: process.app)
-        ServiceBinding.make(service_instance: user_provided_service_instance, app: process.app, name: 'service-binding-name')
+        create(:service_binding, service_instance: managed_service_instance, app: process.app)
+        create(:service_binding, service_instance: user_provided_service_instance, app: process.app, name: 'service-binding-name')
 
         get '/v2/service_bindings?inline-relations-depth=1'
         expect(last_response.status).to be(200)
@@ -1218,9 +1216,9 @@ module VCAP::CloudController
 
         it 'can query service-bindings by name' do
           set_current_user(developer)
-          ServiceBinding.make(service_instance: managed_service_instance, app: process1.app, name: 'potato')
-          ServiceBinding.make(service_instance: managed_service_instance, app: process2.app, name: '3-ring')
-          ServiceBinding.make(service_instance: managed_service_instance, app: process3.app, name: 'potato')
+          create(:service_binding, service_instance: managed_service_instance, app: process1.app, name: 'potato')
+          create(:service_binding, service_instance: managed_service_instance, app: process2.app, name: '3-ring')
+          create(:service_binding, service_instance: managed_service_instance, app: process3.app, name: 'potato')
 
           get '/v2/service_bindings?inline-relations-depth=1&q=name:3-ring'
           expect(last_response.status).to eq(200), last_response.body
@@ -1247,9 +1245,9 @@ module VCAP::CloudController
 
           before do
             set_current_user(developer)
-            6.times { |i| ServiceBinding.make(service_instance: managed_service_instance, app: processes[i].app, name: 'potato') }
-            ServiceBinding.make(service_instance: managed_service_instance, app: processes[6].app, name: '3-ring')
-            ServiceBinding.make(service_instance: managed_service_instance, app: processes[7].app, name: '3-ring')
+            6.times { |i| create(:service_binding, service_instance: managed_service_instance, app: processes[i].app, name: 'potato') }
+            create(:service_binding, service_instance: managed_service_instance, app: processes[6].app, name: '3-ring')
+            create(:service_binding, service_instance: managed_service_instance, app: processes[7].app, name: '3-ring')
           end
 
           it 'can set the next_url and prev_url links' do
@@ -1315,15 +1313,15 @@ module VCAP::CloudController
       end
 
       context 'when there are service-instances in multiple spaces' do
-        let(:space1) { Space.make }
+        let(:space1) { create(:space) }
         let(:process1) { ProcessModelFactory.make(space: space1) }
         let(:developer1) { make_developer_for_space(space1) }
-        let(:si1) { ManagedServiceInstance.make(space: space1) }
+        let(:si1) { create(:managed_service_instance, space: space1) }
 
-        let(:space2) { Space.make }
+        let(:space2) { create(:space) }
         let(:process2) { ProcessModelFactory.make(space: space2) }
         let(:developer2) { make_developer_for_space(space2) }
-        let(:si2) { ManagedServiceInstance.make(space: space2) }
+        let(:si2) { create(:managed_service_instance, space: space2) }
 
         context 'when developer in one space tries to bind a service-instance from another space' do
           before do
@@ -1345,8 +1343,8 @@ module VCAP::CloudController
 
         context 'when both developers bind some service-instances' do
           before do
-            ServiceBinding.make(service_instance: si1, app: process1.app, name: 'binding')
-            ServiceBinding.make(service_instance: si2, app: process2.app, name: 'binding')
+            create(:service_binding, service_instance: si1, app: process1.app, name: 'binding')
+            create(:service_binding, service_instance: si2, app: process2.app, name: 'binding')
           end
 
           it 'developer1 can see only bindings in space1' do
@@ -1377,8 +1375,8 @@ module VCAP::CloudController
 
       context 'when the binding has a create operation in progress' do
         before do
-          binding = ServiceBinding.make(service_instance: managed_service_instance, app: process.app)
-          binding.service_binding_operation = ServiceBindingOperation.make(state: 'in progress', type: 'create', description: 'creating')
+          binding = create(:service_binding, service_instance: managed_service_instance, app: process.app)
+          binding.service_binding_operation = create(:service_binding_operation, state: 'in progress', type: 'create', description: 'creating')
           set_current_user(developer)
         end
 
@@ -1395,8 +1393,8 @@ module VCAP::CloudController
 
       context 'when the binding has a delete operation in progress' do
         before do
-          binding = ServiceBinding.make(service_instance: managed_service_instance, app: process.app)
-          binding.service_binding_operation = ServiceBindingOperation.make(state: 'in progress', type: 'delete', description: 'deleting')
+          binding = create(:service_binding, service_instance: managed_service_instance, app: process.app)
+          binding.service_binding_operation = create(:service_binding_operation, state: 'in progress', type: 'delete', description: 'deleting')
           set_current_user(developer)
         end
 
@@ -1413,20 +1411,20 @@ module VCAP::CloudController
     end
 
     describe 'GET', '/v2/service_bindings/:guid/parameters' do
-      let(:space) { Space.make }
+      let(:space) { create(:space) }
       let(:developer) { make_developer_for_space(space) }
 
       context 'when the service binding is valid' do
-        let(:service_plan) { ServicePlan.make(service:) }
-        let(:managed_service_instance) { ManagedServiceInstance.make(space:, service_plan:) }
+        let(:service_plan) { create(:service_plan, service:) }
+        let(:managed_service_instance) { create(:managed_service_instance, space:, service_plan:) }
         let(:process) { ProcessModelFactory.make(space:) }
 
         context 'when the service has bindings_retrievable set to false' do
-          let(:service) { Service.make(bindings_retrievable: false) }
+          let(:service) { create(:service, bindings_retrievable: false) }
 
           it 'returns a 400' do
             set_current_user(developer)
-            binding = ServiceBinding.make(service_instance: managed_service_instance, app: process.app)
+            binding = create(:service_binding, service_instance: managed_service_instance, app: process.app)
 
             get "/v2/service_bindings/#{binding.guid}/parameters"
             expect(last_response.status).to be(400)
@@ -1435,9 +1433,9 @@ module VCAP::CloudController
         end
 
         context 'when the service has bindings_retrievable set to true' do
-          let(:service) { Service.make(bindings_retrievable: true) }
+          let(:service) { create(:service, bindings_retrievable: true) }
           let(:broker) { service.service_broker }
-          let(:binding) { ServiceBinding.make(service_instance: managed_service_instance, app: process.app) }
+          let(:binding) { create(:service_binding, service_instance: managed_service_instance, app: process.app) }
           let(:body) { { 'parameters' => { 'foo' => true } }.to_json }
           let(:response_code) { 200 }
 
@@ -1523,7 +1521,7 @@ module VCAP::CloudController
           end
 
           context 'when the user has access to the binding of a shared service instance' do
-            let(:managed_service_instance) { ManagedServiceInstance.make(space: Space.make, service_plan: service_plan) }
+            let(:managed_service_instance) { create(:managed_service_instance, space: create(:space), service_plan: service_plan) }
 
             before do
               managed_service_instance.add_shared_space(space)
@@ -1537,8 +1535,8 @@ module VCAP::CloudController
           end
 
           context 'when the user who shared the service instance tries to access binding parameters in the shared to space' do
-            let(:source_space) { Space.make }
-            let(:managed_service_instance) { ManagedServiceInstance.make(space: source_space, service_plan: service_plan) }
+            let(:source_space) { create(:space) }
+            let(:managed_service_instance) { create(:managed_service_instance, space: source_space, service_plan: service_plan) }
             let(:developer) { make_developer_for_space(source_space) }
 
             before do
@@ -1552,7 +1550,7 @@ module VCAP::CloudController
           end
 
           context 'when the service binding has an operation in progress' do
-            let(:last_operation) { ServiceBindingOperation.make(state: 'in progress') }
+            let(:last_operation) { create(:service_binding_operation, state: 'in progress') }
 
             before do
               binding.service_binding_operation = last_operation
@@ -1567,7 +1565,7 @@ module VCAP::CloudController
           end
 
           context 'user permissions' do
-            let(:user) { User.make }
+            let(:user) { create(:user) }
             let(:body) { {}.to_json }
 
             {
@@ -1604,11 +1602,11 @@ module VCAP::CloudController
 
       context 'when the binding is for a user provided service' do
         let(:process) { ProcessModelFactory.make(space:) }
-        let(:user_provided_service_instance) { UserProvidedServiceInstance.make(space:) }
+        let(:user_provided_service_instance) { create(:user_provided_service_instance, space:) }
 
         it 'returns a 400' do
           set_current_user(developer)
-          binding = ServiceBinding.make(service_instance: user_provided_service_instance, app: process.app)
+          binding = create(:service_binding, service_instance: user_provided_service_instance, app: process.app)
 
           get "/v2/service_bindings/#{binding.guid}/parameters"
           expect(last_response.status).to be(400)
@@ -1626,7 +1624,7 @@ module VCAP::CloudController
       end
 
       context 'when the requested binding is a service key' do
-        let(:service_key) { ServiceKey.make }
+        let(:service_key) { create(:service_key) }
 
         it 'returns a 404' do
           set_current_user(developer)

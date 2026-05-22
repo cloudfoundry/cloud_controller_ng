@@ -1,5 +1,5 @@
 RSpec.shared_examples_for 'a lifecycle' do
-  let(:build) { VCAP::CloudController::BuildModel.make }
+  let(:build) { create(:build_model) }
 
   it 'creates a lifecycle data model' do
     expect do

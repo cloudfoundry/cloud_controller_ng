@@ -2,12 +2,12 @@ require 'spec_helper'
 
 module VCAP::CloudController
   RSpec.describe SidecarModel do
-    let(:sidecar) { SidecarModel.make }
+    let(:sidecar) { create(:sidecar_model) }
 
     describe '#process_types' do
       it 'returns the names of associated sidecar_process_types' do
-        SidecarProcessTypeModel.make(type: 'web', sidecar: sidecar)
-        SidecarProcessTypeModel.make(type: 'other worker', sidecar: sidecar)
+        create(:sidecar_process_type_model, type: 'web', sidecar: sidecar)
+        create(:sidecar_process_type_model, type: 'other worker', sidecar: sidecar)
 
         expect(sidecar.process_types).to eq ['web', 'other worker'].sort
       end
@@ -19,8 +19,8 @@ module VCAP::CloudController
     end
 
     describe 'sidecar model #around_save' do
-      let(:app_model) { AppModel.make }
-      let!(:sidecar) { SidecarModel.make(app_guid: app_model.guid, name: 'sidecar1', command: 'exec') }
+      let(:app_model) { create(:app_model) }
+      let!(:sidecar) { create(:sidecar_model, app_guid: app_model.guid, name: 'sidecar1', command: 'exec') }
 
       it 'raises validation error on unique constraint violation for sidecar' do
         expect do
@@ -36,9 +36,9 @@ module VCAP::CloudController
     end
 
     describe '#to_hash' do
-      let(:sidecar) { SidecarModel.make(name: 'sleepy', command: 'sleep forever') }
-      let!(:worker_process_type) { SidecarProcessTypeModel.make(sidecar: sidecar, type: 'web') }
-      let!(:web_process_type) { SidecarProcessTypeModel.make(sidecar: sidecar, type: 'worker') }
+      let(:sidecar) { create(:sidecar_model, name: 'sleepy', command: 'sleep forever') }
+      let!(:worker_process_type) { create(:sidecar_process_type_model, sidecar: sidecar, type: 'web') }
+      let!(:web_process_type) { create(:sidecar_process_type_model, sidecar: sidecar, type: 'worker') }
 
       it 'returns a hash of attributes' do
         expect(sidecar.to_hash).to eq({
@@ -50,8 +50,8 @@ module VCAP::CloudController
     end
 
     describe 'sidecar_process_types: #around_save' do
-      let(:sidecar) { SidecarModel.make }
-      let(:app) { AppModel.make }
+      let(:sidecar) { create(:sidecar_model) }
+      let(:app) { create(:app_model) }
 
       it 'raises validation error on unique constraint violation for sidecar_process_types' do
         SidecarProcessTypeModel.create(sidecar: sidecar, type: 'web', app_guid: app.guid, guid: SecureRandom.uuid)

@@ -5,9 +5,9 @@ module VCAP::CloudController
   RSpec.describe IncludeRoutePolicySourceDecorator do
     subject(:decorator) { IncludeRoutePolicySourceDecorator }
 
-    let(:domain) { SharedDomain.make(name: 'apps.identity', enforce_route_policies: true) }
-    let(:space) { Space.make }
-    let(:route) { Route.make(space:, domain:) }
+    let(:domain) { create(:shared_domain, name: 'apps.identity', enforce_route_policies: true) }
+    let(:space) { create(:space) }
+    let(:route) { create(:route, space:, domain:) }
 
     before do
       allow(Permissions).to receive(:new).and_return(instance_double(Permissions, can_read_globally?: true))
@@ -28,8 +28,8 @@ module VCAP::CloudController
     end
 
     describe '.decorate' do
-      let(:app1) { AppModel.make(space:) }
-      let(:space1) { Space.make }
+      let(:app1) { create(:app_model, space:) }
+      let(:space1) { create(:space) }
       let(:org1) { space1.organization }
       let(:policy_app) { RoutePolicy.create(source: "cf:app:#{app1.guid}", route_id: route.id) }
       let(:policy_space) { RoutePolicy.create(source: "cf:space:#{space1.guid}", route_id: route.id) }
@@ -56,9 +56,9 @@ module VCAP::CloudController
       end
 
       context 'when the user cannot read certain source resources' do
-        let(:other_space) { Space.make }
+        let(:other_space) { create(:space) }
         let(:other_org) { other_space.organization }
-        let(:other_app) { AppModel.make(space: other_space) }
+        let(:other_app) { create(:app_model, space: other_space) }
 
         let(:policy_readable_app) { RoutePolicy.create(source: "cf:app:#{app1.guid}", route_id: route.id) }
         let(:policy_unreadable_app) { RoutePolicy.create(source: "cf:app:#{other_app.guid}", route_id: route.id) }

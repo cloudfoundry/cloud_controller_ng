@@ -8,16 +8,16 @@ module VCAP::CloudController
     let(:all_spaces_visible) { false }
 
     describe '#apply' do
-      let(:user) { User.make }
+      let(:user) { create(:user) }
       let(:user_email) { 'user@example.com' }
       let(:user_name) { 'user-name' }
       let(:user_audit_info) { UserAuditInfo.new(user_guid: user.guid, user_email: user_email, user_name: user_name) }
 
       subject { SpaceQuotaApply.new(user_audit_info) }
 
-      let(:org) { VCAP::CloudController::Organization.make }
-      let(:space) { VCAP::CloudController::Space.make(organization: org) }
-      let(:space_quota) { VCAP::CloudController::SpaceQuotaDefinition.make(organization: org) }
+      let(:org) { create(:organization) }
+      let(:space) { create(:space, organization: org) }
+      let(:space_quota) { create(:space_quota_definition, organization: org) }
       let(:message) do
         VCAP::CloudController::SpaceQuotaApplyMessage.new({
                                                             data: [{ guid: space.guid }]
@@ -95,9 +95,9 @@ module VCAP::CloudController
 
       context 'when trying to set a log rate limit and there are apps with unlimited log rates' do
         let(:visible_space_guids) { [space.guid] }
-        let(:app_model) { VCAP::CloudController::AppModel.make(name: 'name1', space: space) }
-        let!(:process_model) { VCAP::CloudController::ProcessModel.make(app: app_model, log_rate_limit: -1) }
-        let(:space_quota) { VCAP::CloudController::SpaceQuotaDefinition.make(organization: org, log_rate_limit: 2000) }
+        let(:app_model) { create(:app_model, name: 'name1', space: space) }
+        let!(:process_model) { create(:process_model, app: app_model, log_rate_limit: -1) }
+        let(:space_quota) { create(:space_quota_definition, organization: org, log_rate_limit: 2000) }
 
         it 'raises an error' do
           expect do
@@ -109,7 +109,7 @@ module VCAP::CloudController
       end
 
       context "when the space is outside the space quota's org" do
-        let(:other_space) { VCAP::CloudController::Space.make }
+        let(:other_space) { create(:space) }
         let(:invalid_space_guid) { other_space.guid }
 
         let(:message_with_invalid_space_guid) do
@@ -138,7 +138,7 @@ module VCAP::CloudController
       end
 
       context 'when applying quota to multiple spaces' do
-        let(:space2) { VCAP::CloudController::Space.make(organization: org) }
+        let(:space2) { create(:space, organization: org) }
         let(:visible_space_guids) { [space.guid, space2.guid] }
         let(:message) do
           VCAP::CloudController::SpaceQuotaApplyMessage.new({

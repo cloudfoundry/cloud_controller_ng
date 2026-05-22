@@ -8,9 +8,6 @@ unless defined?(SPEC_HELPER_LOADED)
   require 'support/database_isolation'
   require 'sequel_plugins/sequel_plugins'
 
-  require 'machinist/sequel'
-  require 'machinist/object'
-
   VCAP::CloudController::SpecBootstrap.init(recreate_test_tables: false)
 
   require 'delayed_job_plugins/deserialization_retry'
@@ -18,7 +15,8 @@ unless defined?(SPEC_HELPER_LOADED)
   require 'delayed_job_plugins/before_enqueue_hook'
   require 'delayed_job_plugins/delayed_jobs_metrics'
 
-  require 'support/fakes/blueprints'
+  require 'support/factories'
+  require 'support/sham_shim'
 
   RSpec.configure do |rspec_config|
     rspec_config.before :suite do

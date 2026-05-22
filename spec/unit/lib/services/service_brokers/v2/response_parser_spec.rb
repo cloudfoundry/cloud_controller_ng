@@ -271,9 +271,9 @@ module VCAP::Services
           validators = opts[:validators]
 
           context "making a #{operation} request that returns code #{code} and body #{body}" do
-            let!(:syslog_service) { VCAP::CloudController::Service.make(:v2, requires: ['syslog_drain']) }
-            let!(:non_syslog_non_volume_mounts_service) { VCAP::CloudController::Service.make(:v2, requires: []) }
-            let!(:volume_mounts_service) { VCAP::CloudController::Service.make(:v2, requires: ['volume_mount']) }
+            let!(:syslog_service) { create(:service, :v2, requires: ['syslog_drain']) }
+            let!(:non_syslog_non_volume_mounts_service) { create(:service, :v2, requires: []) }
+            let!(:volume_mounts_service) { create(:service, :v2, requires: ['volume_mount']) }
             let(:response_parser) { ResponseParser.new('service-broker.com', log_errors: true, log_validators: true) }
             let(:fake_response) { instance_double(VCAP::Services::ServiceBrokers::V2::HttpResponse) }
             let(:body) { body }

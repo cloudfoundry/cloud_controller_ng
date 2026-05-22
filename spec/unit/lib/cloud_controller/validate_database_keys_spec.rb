@@ -15,12 +15,12 @@ module VCAP::CloudController
 
     describe '.can_decrypt_all_rows!' do
       let(:space) { Space.first }
-      let(:historical_app) { AppModel.make(space:) }
-      let(:app1) { AppModel.make }
-      let(:app2) { AppModel.make }
-      let(:app3) { AppModel.make }
-      let(:service_instance) { ServiceInstance.make(space:) }
-      let(:service_binding) { ServiceBinding.make(service_instance: service_instance, app: historical_app) }
+      let(:historical_app) { create(:app_model, space:) }
+      let(:app1) { create(:app_model) }
+      let(:app2) { create(:app_model) }
+      let(:app3) { create(:app_model) }
+      let(:service_instance) { create(:service_instance, space:) }
+      let(:service_binding) { create(:service_binding, service_instance: service_instance, app: historical_app) }
       let(:label1) { 'encryption_key_label_1' }
       let(:label2) { 'encryption_key_label_2' }
       let(:label3) { 'encryption_key_label_3' }

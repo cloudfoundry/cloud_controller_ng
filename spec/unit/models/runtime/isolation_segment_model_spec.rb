@@ -5,16 +5,16 @@ require 'isolation_segment_unassign'
 
 module VCAP::CloudController
   RSpec.describe IsolationSegmentModel do
-    let(:isolation_segment_model) { IsolationSegmentModel.make }
-    let(:isolation_segment_model_2) { IsolationSegmentModel.make }
+    let(:isolation_segment_model) { create(:isolation_segment_model) }
+    let(:isolation_segment_model_2) { create(:isolation_segment_model) }
 
     let(:assigner) { IsolationSegmentAssign.new }
     let(:unassigner) { IsolationSegmentUnassign.new }
 
     describe 'associations' do
       describe 'spaces' do
-        let(:space_1) { Space.make }
-        let(:space_2) { Space.make }
+        let(:space_1) { create(:space) }
+        let(:space_2) { create(:space) }
 
         context 'when the space is not part of an entitled organization' do
           it 'does not add the space' do
@@ -70,9 +70,9 @@ module VCAP::CloudController
       end
 
       describe 'organizations' do
-        let(:org) { Organization.make }
-        let(:org_1) { Organization.make }
-        let(:org_2) { Organization.make }
+        let(:org) { create(:organization) }
+        let(:org_1) { create(:organization) }
+        let(:org_2) { create(:organization) }
 
         it 'allows one isolation segment to be referenced by multiple organizations' do
           assigner.assign(isolation_segment_model, [org_1, org_2])
@@ -83,7 +83,7 @@ module VCAP::CloudController
         end
 
         it 'allows multiple isolation segments to be applied to one organization' do
-          isolation_segment_model_2 = IsolationSegmentModel.make
+          isolation_segment_model_2 = create(:isolation_segment_model)
 
           assigner.assign(isolation_segment_model, [org_1])
           assigner.assign(isolation_segment_model_2, [org_1])
@@ -114,59 +114,59 @@ module VCAP::CloudController
     describe 'validations' do
       it 'requires a name' do
         expect do
-          IsolationSegmentModel.make(name: nil)
+          create(:isolation_segment_model, name: nil)
         end.to raise_error(Sequel::ValidationFailed, 'Isolation Segment names can only contain non-blank unicode characters')
       end
 
       it 'requires a non blank name' do
         expect do
-          IsolationSegmentModel.make(name: '')
+          create(:isolation_segment_model, name: '')
         end.to raise_error(Sequel::ValidationFailed, 'Isolation Segment names can only contain non-blank unicode characters')
       end
 
       it 'requires a unique name' do
-        IsolationSegmentModel.make(name: 'segment1')
+        create(:isolation_segment_model, name: 'segment1')
 
         expect do
-          IsolationSegmentModel.make(name: 'segment1')
+          create(:isolation_segment_model, name: 'segment1')
         end.to raise_error(Sequel::ValidationFailed, 'Isolation Segment names are case insensitive and must be unique')
       end
 
       it 'uniqueness is case insensitive' do
-        IsolationSegmentModel.make(name: 'lowercase')
+        create(:isolation_segment_model, name: 'lowercase')
 
         expect do
-          IsolationSegmentModel.make(name: 'lowerCase')
+          create(:isolation_segment_model, name: 'lowerCase')
         end.to raise_error(Sequel::ValidationFailed, 'Isolation Segment names are case insensitive and must be unique')
       end
 
       it 'allows standard ascii characters' do
         expect do
-          IsolationSegmentModel.make(name: "A -_- word 2!?()'\"&+.")
+          create(:isolation_segment_model, name: "A -_- word 2!?()'\"&+.")
         end.not_to raise_error
       end
 
       it 'allows backslash characters' do
         expect do
-          IsolationSegmentModel.make(name: 'a \\ word')
+          create(:isolation_segment_model, name: 'a \\ word')
         end.not_to raise_error
       end
 
       it 'allows unicode characters' do
         expect do
-          IsolationSegmentModel.make(name: '防御力¡')
+          create(:isolation_segment_model, name: '防御力¡')
         end.not_to raise_error
       end
 
       it 'does not allow newline characters' do
         expect do
-          IsolationSegmentModel.make(name: "a \n word")
+          create(:isolation_segment_model, name: "a \n word")
         end.to raise_error(Sequel::ValidationFailed)
       end
 
       it 'does not allow escape characters' do
         expect do
-          IsolationSegmentModel.make(name: "a \e word")
+          create(:isolation_segment_model, name: "a \e word")
         end.to raise_error(Sequel::ValidationFailed)
       end
     end
@@ -186,8 +186,8 @@ module VCAP::CloudController
     end
 
     describe 'metadata' do
-      let!(:label) { VCAP::CloudController::IsolationSegmentLabelModel.make(key_name: 'string', value: 'string2', resource_guid: isolation_segment_model.guid) }
-      let!(:annotation) { VCAP::CloudController::IsolationSegmentAnnotationModel.make(key_name: 'string', value: 'string2', resource_guid: isolation_segment_model.guid) }
+      let!(:label) { create(:isolation_segment_label_model, key_name: 'string', value: 'string2', resource_guid: isolation_segment_model.guid) }
+      let!(:annotation) { create(:isolation_segment_annotation_model, key_name: 'string', value: 'string2', resource_guid: isolation_segment_model.guid) }
 
       it 'deletes metadata on destroy' do
         isolation_segment_model.destroy

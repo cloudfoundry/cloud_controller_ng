@@ -4,7 +4,7 @@ require 'spec_helper'
 
 module VCAP::CloudController
   RSpec.describe ServiceBrokersController, :services do
-    let(:broker) { ServiceBroker.make }
+    let(:broker) { create(:service_broker) }
     let(:catalog_json) do
       {
         'services' => [{
@@ -87,12 +87,12 @@ module VCAP::CloudController
     end
 
     describe 'GET /v2/service_brokers' do
-      let(:space_a) { Space.make }
-      let(:space_b) { Space.make }
-      let(:user) { User.make }
-      let!(:public_broker) { ServiceBroker.make }
-      let!(:space_a_broker) { ServiceBroker.make space: space_a }
-      let!(:space_b_broker) { ServiceBroker.make space: space_b }
+      let(:space_a) { create(:space) }
+      let(:space_b) { create(:space) }
+      let(:user) { create(:user) }
+      let!(:public_broker) { create(:service_broker) }
+      let!(:space_a_broker) { create(:service_broker, space: space_a) }
+      let!(:space_b_broker) { create(:service_broker, space: space_b) }
 
       before { set_current_user_as_admin }
 
@@ -178,7 +178,7 @@ module VCAP::CloudController
 
       let(:body) { body_hash.to_json }
       let(:errors) { instance_double(Sequel::Model::Errors, on: nil) }
-      let(:user) { User.make }
+      let(:user) { create(:user) }
 
       before { set_current_user_as_admin }
 
@@ -248,9 +248,9 @@ module VCAP::CloudController
       end
 
       describe 'adding a broker to a space only' do
-        let(:space) { Space.make }
+        let(:space) { create(:space) }
         let(:body) { body_hash.merge({ space_guid: space.guid }).to_json }
-        let(:user) { User.make }
+        let(:user) { create(:user) }
 
         before do
           space.organization.add_user user
@@ -272,7 +272,7 @@ module VCAP::CloudController
         end
 
         it 'returns a 403 if a user is not a SpaceDeveloper for the space' do
-          set_current_user(User.make)
+          set_current_user(create(:user))
 
           post '/v2/service_brokers', body
           expect(last_response.status).to eq(403)
@@ -308,8 +308,8 @@ module VCAP::CloudController
       end
 
       context 'when the user is a SpaceDeveloper' do
-        let(:user) { User.make }
-        let(:space) { Space.make }
+        let(:user) { create(:user) }
+        let(:space) { create(:space) }
 
         before do
           space.organization.add_user user
@@ -336,7 +336,7 @@ module VCAP::CloudController
 
         context 'when the broker url is taken' do
           before do
-            ServiceBroker.make(broker_url: body_hash[:broker_url])
+            create(:service_broker, broker_url: body_hash[:broker_url])
           end
 
           it 'creates the broker' do
@@ -361,7 +361,7 @@ module VCAP::CloudController
 
         context 'when the broker name is taken' do
           before do
-            ServiceBroker.make(name: body_hash[:name])
+            create(:service_broker, name: body_hash[:name])
           end
 
           it 'returns an error' do
@@ -593,8 +593,8 @@ module VCAP::CloudController
     end
 
     describe 'DELETE /v2/service_brokers/:guid' do
-      let!(:broker) { ServiceBroker.make(name: 'FreeWidgets', broker_url: 'http://example.com/', auth_password: 'secret') }
-      let(:user) { User.make }
+      let!(:broker) { create(:service_broker, name: 'FreeWidgets', broker_url: 'http://example.com/', auth_password: 'secret') }
+      let(:user) { create(:user) }
 
       before { set_current_user_as_admin }
 
@@ -633,9 +633,9 @@ module VCAP::CloudController
 
       context 'when a service instance exists', isolation: :truncation do
         it 'returns a 400 and an appropriate error message' do
-          service = Service.make(service_broker: broker)
-          service_plan = ServicePlan.make(service:)
-          ManagedServiceInstance.make(service_plan:)
+          service = create(:service, service_broker: broker)
+          service_plan = create(:service_plan, service:)
+          create(:managed_service_instance, service_plan:)
 
           delete "/v2/service_brokers/#{broker.guid}"
 
@@ -650,7 +650,7 @@ module VCAP::CloudController
 
       describe 'authentication' do
         it 'returns a forbidden status for non-admin users' do
-          set_current_user(User.make)
+          set_current_user(create(:user))
 
           delete "/v2/service_brokers/#{broker.guid}"
           expect(last_response).to be_forbidden
@@ -675,15 +675,14 @@ module VCAP::CloudController
       let(:body) { body_hash.to_json }
       let(:errors) { instance_double(Sequel::Model::Errors, on: nil) }
       let(:broker) do
-        ServiceBroker.make(
-          guid: '123',
-          name: 'My Custom Service',
-          broker_url: 'http://broker.example.com',
-          auth_username: 'me',
-          auth_password: 'abc123'
-        )
+        create(:service_broker,
+               guid: '123',
+               name: 'My Custom Service',
+               broker_url: 'http://broker.example.com',
+               auth_username: 'me',
+               auth_password: 'abc123')
       end
-      let(:user) { User.make }
+      let(:user) { create(:user) }
 
       before do
         attrs = {
@@ -768,7 +767,7 @@ module VCAP::CloudController
           end
 
           context 'when the broker name is taken' do
-            let!(:another_broker) { ServiceBroker.make(broker_url: 'http://example.com') }
+            let!(:another_broker) { create(:service_broker, broker_url: 'http://example.com') }
 
             before { body_hash[:name] = another_broker.name }
 
@@ -820,11 +819,11 @@ module VCAP::CloudController
               }]
             }
           end
-          let(:service) { Service.make(:v2, service_broker: broker) }
-          let(:service_plan) { ServicePlan.make(:v2, service:) }
+          let(:service) { create(:service, :v2, service_broker: broker) }
+          let(:service_plan) { create(:service_plan, :v2, service:) }
 
           before do
-            ManagedServiceInstance.make(:v2, service_plan:)
+            create(:managed_service_instance, :v2, service_plan:)
           end
 
           it 'includes the warnings in the response' do
@@ -837,7 +836,7 @@ module VCAP::CloudController
 
         describe 'authentication' do
           it 'returns a forbidden status for non-admin users' do
-            set_current_user(User.make)
+            set_current_user(create(:user))
             put "/v2/service_brokers/#{broker.guid}", body
 
             expect(last_response).to be_forbidden
@@ -845,18 +844,17 @@ module VCAP::CloudController
         end
 
         context 'when the user is a space developer' do
-          let(:space) { Space.make(id: 1) }
+          let(:space) { create(:space, id: 1) }
           let(:broker) do
-            ServiceBroker.make(
-              guid: '123',
-              name: 'My Custom Service',
-              broker_url: 'http://broker.example.com',
-              auth_username: 'me',
-              auth_password: 'abc123',
-              space_id: space.id
-            )
+            create(:service_broker,
+                   guid: '123',
+                   name: 'My Custom Service',
+                   broker_url: 'http://broker.example.com',
+                   auth_username: 'me',
+                   auth_password: 'abc123',
+                   space_id: space.id)
           end
-          let(:user) { User.make }
+          let(:user) { create(:user) }
 
           before do
             space.organization.add_user user
@@ -896,16 +894,15 @@ module VCAP::CloudController
           end
 
           context 'when the user is a space developer in another space' do
-            let(:space_outer) { Space.make(id: 2) }
+            let(:space_outer) { create(:space, id: 2) }
             let(:broker) do
-              ServiceBroker.make(
-                guid: '123',
-                name: 'My Custom Service',
-                broker_url: 'http://broker.example.com',
-                auth_username: 'me',
-                auth_password: 'abc123',
-                space_id: space_outer.id
-              )
+              create(:service_broker,
+                     guid: '123',
+                     name: 'My Custom Service',
+                     broker_url: 'http://broker.example.com',
+                     auth_username: 'me',
+                     auth_password: 'abc123',
+                     space_id: space_outer.id)
             end
 
             it 'does not update the broker' do

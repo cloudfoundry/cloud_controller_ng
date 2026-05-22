@@ -9,9 +9,9 @@ module VCAP::CloudController
     let(:filters) { {} }
 
     describe '#fetch_all' do
-      let!(:service_usage_event) { VCAP::CloudController::ServiceUsageEvent.make }
-      let!(:service_usage_event_2) { VCAP::CloudController::ServiceUsageEvent.make }
-      let!(:service_usage_event_3) { VCAP::CloudController::ServiceUsageEvent.make }
+      let!(:service_usage_event) { create(:service_usage_event) }
+      let!(:service_usage_event_2) { create(:service_usage_event) }
+      let!(:service_usage_event_3) { create(:service_usage_event) }
 
       it 'returns a Sequel::Dataset' do
         expect(subject).to be_a(Sequel::Dataset)

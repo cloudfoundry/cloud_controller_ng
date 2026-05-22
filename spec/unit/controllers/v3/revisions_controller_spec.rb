@@ -5,11 +5,11 @@ require 'permissions_spec_helper'
 
 RSpec.describe RevisionsController, type: :controller do
   describe '#show' do
-    let!(:droplet) { VCAP::CloudController::DropletModel.make(app: nil) }
-    let!(:app_model) { VCAP::CloudController::AppModel.make(droplet:) }
+    let!(:droplet) { create(:droplet_model, app: nil) }
+    let!(:app_model) { create(:app_model, droplet:) }
     let!(:space) { app_model.space }
-    let(:user) { VCAP::CloudController::User.make }
-    let!(:revision) { VCAP::CloudController::RevisionModel.make(app: app_model, version: 808, droplet: droplet) }
+    let(:user) { create(:user) }
+    let!(:revision) { create(:revision_model, app: app_model, version: 808, droplet: droplet) }
 
     before do
       set_current_user(user)
@@ -117,7 +117,7 @@ RSpec.describe RevisionsController, type: :controller do
     context 'permissions' do
       context 'when the user does not have cc read scope' do
         before do
-          set_current_user(VCAP::CloudController::User.make, scopes: [])
+          set_current_user(create(:user), scopes: [])
         end
 
         it 'raises an ApiError with a 403 code' do
@@ -146,10 +146,10 @@ RSpec.describe RevisionsController, type: :controller do
   end
 
   describe '#update' do
-    let!(:droplet) { VCAP::CloudController::DropletModel.make }
-    let!(:app_model) { VCAP::CloudController::AppModel.make(droplet:) }
+    let!(:droplet) { create(:droplet_model) }
+    let!(:app_model) { create(:app_model, droplet:) }
     let!(:space) { app_model.space }
-    let(:user) { VCAP::CloudController::User.make }
+    let(:user) { create(:user) }
     let(:labels) do
       {
         fruit: 'pears',
@@ -162,7 +162,7 @@ RSpec.describe RevisionsController, type: :controller do
         beet: 'formanova'
       }
     end
-    let(:revision) { VCAP::CloudController::RevisionModel.make(app: app_model, version: 808, droplet_guid: droplet.guid) }
+    let(:revision) { create(:revision_model, app: app_model, version: 808, droplet_guid: droplet.guid) }
     let!(:update_message) do
       {
         metadata: {
@@ -333,17 +333,16 @@ RSpec.describe RevisionsController, type: :controller do
   end
 
   describe '#show_environment_variables' do
-    let!(:droplet) { VCAP::CloudController::DropletModel.make }
-    let!(:app_model) { VCAP::CloudController::AppModel.make(droplet:) }
+    let!(:droplet) { create(:droplet_model) }
+    let!(:app_model) { create(:app_model, droplet:) }
     let!(:space) { app_model.space }
-    let(:user) { VCAP::CloudController::User.make }
+    let(:user) { create(:user) }
     let(:revision) do
-      VCAP::CloudController::RevisionModel.make(
-        app: app_model,
-        version: 808,
-        droplet_guid: droplet.guid,
-        environment_variables: { 'key' => 'value' }
-      )
+      create(:revision_model,
+             app: app_model,
+             version: 808,
+             droplet_guid: droplet.guid,
+             environment_variables: { 'key' => 'value' })
     end
 
     before do

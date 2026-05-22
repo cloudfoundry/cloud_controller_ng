@@ -14,7 +14,7 @@ RSpec.describe 'Service Broker API integration' do
       end
 
       context 'update' do
-        let(:service_instance) { VCAP::CloudController::ManagedServiceInstance.make(space_guid: @space_guid, service_plan_guid: @plan_guid) }
+        let(:service_instance) { create(:managed_service_instance, space_guid: @space_guid, service_plan_guid: @plan_guid) }
 
         before do
           @service_instance_guid = service_instance.guid
@@ -69,7 +69,7 @@ RSpec.describe 'Service Broker API integration' do
       end
 
       context 'delete' do
-        let(:service_instance) { VCAP::CloudController::ManagedServiceInstance.make(space_guid: @space_guid, service_plan_guid: @plan_guid) }
+        let(:service_instance) { create(:managed_service_instance, space_guid: @space_guid, service_plan_guid: @plan_guid) }
 
         before do
           @service_instance_guid = service_instance.guid

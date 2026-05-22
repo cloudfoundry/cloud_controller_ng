@@ -2,7 +2,7 @@ require 'spec_helper'
 
 module VCAP::CloudController
   RSpec.describe EnvironmentVariableGroup, type: :model do
-    subject(:env_group) { EnvironmentVariableGroup.make }
+    subject(:env_group) { create(:environment_variable_group) }
 
     it { is_expected.to have_timestamp_columns }
 
@@ -95,7 +95,7 @@ module VCAP::CloudController
       describe 'environment_variables' do
         it 'validates them' do
           expect do
-            EnvironmentVariableGroup.make(environment_json: { 'VCAP_SERVICES' => {} })
+            create(:environment_variable_group, environment_json: { 'VCAP_SERVICES' => {} })
           end.to raise_error(Sequel::ValidationFailed, /cannot start with VCAP_/)
         end
       end
@@ -105,7 +105,7 @@ module VCAP::CloudController
       let(:long_env) { { 'many_os' => 'o' * 10_000 } }
 
       it 'works with long serialized environments' do
-        var_group = EnvironmentVariableGroup.make(environment_json: long_env)
+        var_group = create(:environment_variable_group, environment_json: long_env)
         var_group.reload
         expect(var_group.environment_json).to eq(long_env)
       end
@@ -113,7 +113,7 @@ module VCAP::CloudController
       describe 'changing iteration count' do
         it 'does not update the encryption_iterations field until after decrypting existing data' do
           allow(Encryptor).to receive(:pbkdf2_hmac_iterations).and_return(2048)
-          var_group = EnvironmentVariableGroup.make(environment_json: { 'name' => 'value' })
+          var_group = create(:environment_variable_group, environment_json: { 'name' => 'value' })
 
           allow(Encryptor).to receive(:pbkdf2_hmac_iterations).and_return(12_345)
           var_group.update(environment_json: { 'name' => 'new_value' })

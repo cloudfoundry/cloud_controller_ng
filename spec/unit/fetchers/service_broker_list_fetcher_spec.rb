@@ -5,16 +5,16 @@ require 'messages/service_brokers_list_message'
 module VCAP::CloudController
   RSpec.describe ServiceBrokerListFetcher do
     describe '#fetch' do
-      let(:broker) { ServiceBroker.make }
+      let(:broker) { create(:service_broker) }
 
-      let(:space_1) { Space.make }
-      let(:space_scoped_broker_1) { ServiceBroker.make(space_guid: space_1.guid, name: 'broker-1') }
+      let(:space_1) { create(:space) }
+      let(:space_scoped_broker_1) { create(:service_broker, space: space_1, name: 'broker-1') }
 
-      let(:space_2) { Space.make }
-      let(:space_scoped_broker_2) { ServiceBroker.make(space_guid: space_2.guid, name: 'broker-2') }
+      let(:space_2) { create(:space) }
+      let(:space_scoped_broker_2) { create(:service_broker, space: space_2, name: 'broker-2') }
 
-      let(:space_3) { Space.make }
-      let(:space_scoped_broker_3) { ServiceBroker.make(space_guid: space_3.guid, name: 'broker-3') }
+      let(:space_3) { create(:space) }
+      let(:space_scoped_broker_3) { create(:service_broker, space: space_3, name: 'broker-3') }
 
       let(:fetcher) { described_class }
       let(:message) { ServiceBrokersListMessage.from_params(filters) }
@@ -183,8 +183,8 @@ module VCAP::CloudController
         let(:filters) { { 'label_selector' => 'dog in (chihuahua,scooby-doo)' } }
 
         before do
-          ServiceBrokerLabelModel.make(service_broker: broker, key_name: 'dog', value: 'scooby-doo')
-          ServiceBrokerLabelModel.make(service_broker: space_scoped_broker_1, key_name: 'dog', value: 'poodle')
+          create(:service_broker_label_model, service_broker: broker, key_name: 'dog', value: 'scooby-doo')
+          create(:service_broker_label_model, service_broker: space_scoped_broker_1, key_name: 'dog', value: 'poodle')
         end
 
         it 'includes the relevant brokers' do

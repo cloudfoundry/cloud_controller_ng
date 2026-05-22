@@ -1,9 +1,9 @@
 require 'spec_helper'
 
 RSpec.describe 'App visibility between API versions' do
-  let(:user) { VCAP::CloudController::User.make }
+  let(:user) { create(:user) }
   let(:user_header) { headers_for(user, email: Sham.email, user_name: 'some-username') }
-  let(:space) { VCAP::CloudController::Space.make }
+  let(:space) { create(:space) }
 
   before do
     space.organization.add_user(user)

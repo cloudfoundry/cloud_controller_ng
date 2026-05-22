@@ -11,10 +11,9 @@ module VCAP::CloudController
     end
 
     before do
-      ServiceUsageEvent.make(
-        service_instance_type: 'managed_service_instance',
-        guid: event_guid1
-      )
+      create(:service_usage_event,
+             service_instance_type: 'managed_service_instance',
+             guid: event_guid1)
       set_current_user_as_admin
     end
 
@@ -35,8 +34,8 @@ module VCAP::CloudController
         let(:event_guid2) { SecureRandom.uuid }
 
         before do
-          ServiceUsageEvent.make(guid: event_guid2)
-          ServiceUsageEvent.make
+          create(:service_usage_event, guid: event_guid2)
+          create(:service_usage_event)
         end
 
         it 'can filter by after_guid' do
@@ -79,13 +78,12 @@ module VCAP::CloudController
 
       context 'when filtering by service instance type' do
         before do
-          ServiceUsageEvent.make(
-            service_instance_type: 'user_provided_service_instance',
-            service_plan_guid: nil,
-            service_plan_name: nil,
-            service_guid: nil,
-            service_label: nil
-          )
+          create(:service_usage_event,
+                 service_instance_type: 'user_provided_service_instance',
+                 service_plan_guid: nil,
+                 service_plan_name: nil,
+                 service_guid: nil,
+                 service_label: nil)
         end
 
         it 'returns a list of service usage events of managed_service_instance type only' do
@@ -104,9 +102,9 @@ module VCAP::CloudController
 
         context 'and the response is multiple pages' do
           before do
-            ServiceUsageEvent.make(service_instance_type: 'managed_service_instance')
-            ServiceUsageEvent.make(service_instance_type: 'managed_service_instance')
-            ServiceUsageEvent.make(service_instance_type: 'managed_service_instance')
+            create(:service_usage_event, service_instance_type: 'managed_service_instance')
+            create(:service_usage_event, service_instance_type: 'managed_service_instance')
+            create(:service_usage_event, service_instance_type: 'managed_service_instance')
           end
 
           it 'maintains the service_instance_type in the next_url' do
@@ -131,8 +129,8 @@ module VCAP::CloudController
       end
 
       context 'when filtering by service guid' do
-        let(:service) { Service.make(:v2) }
-        let!(:event) { ServiceUsageEvent.make(service_guid: service.guid) }
+        let(:service) { create(:service, :v2) }
+        let!(:event) { create(:service_usage_event, service_guid: service.guid) }
 
         it 'can filter by service_guid' do
           get "/v2/service_usage_events?q=service_guid:#{service.guid}"
@@ -142,7 +140,7 @@ module VCAP::CloudController
         end
 
         context 'when the response is multiple pages' do
-          let!(:event2) { ServiceUsageEvent.make(service_guid: service.guid) }
+          let!(:event2) { create(:service_usage_event, service_guid: service.guid) }
 
           it 'includes service_guid in the next_url' do
             get "/v2/service_usage_events?q=service_guid:#{service.guid}&results-per-page=1"
@@ -166,7 +164,7 @@ module VCAP::CloudController
 
       context 'when the user is not an admin (i.e. is not authorized)' do
         it 'returns 403' do
-          set_current_user(User.make)
+          set_current_user(create(:user))
           get '/v2/service_usage_events'
           expect(last_response.status).to eq(403)
         end
@@ -183,7 +181,7 @@ module VCAP::CloudController
       end
 
       it 'returns 403 as a non-admin' do
-        set_current_user(User.make)
+        set_current_user(create(:user))
         url = "/v2/service_usage_events/#{event_guid1}"
         get url
         expect(last_response.status).to eq(403)
@@ -191,8 +189,8 @@ module VCAP::CloudController
     end
 
     describe 'POST /v2/service_usage_events/destructively_purge_all_and_reseed_existing_instance', isolation: :truncation do
-      let(:user) { User.make }
-      let(:instance) { ManagedServiceInstance.make }
+      let(:user) { create(:user) }
+      let(:instance) { create(:managed_service_instance) }
 
       it 'purge all existing events' do
         expect(ServiceUsageEvent.count).not_to eq(0)

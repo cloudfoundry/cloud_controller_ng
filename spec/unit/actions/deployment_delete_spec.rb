@@ -12,8 +12,8 @@ module VCAP::CloudController
       end
 
       it 'deletes associated labels' do
-        label1 = DeploymentLabelModel.make(deployment: deployment1, key_name: 'test', value: 'bommel')
-        label2 = DeploymentLabelModel.make(deployment: deployment2, key_name: 'test', value: 'bommel')
+        label1 = create(:deployment_label_model, deployment: deployment1, key_name: 'test', value: 'bommel')
+        label2 = create(:deployment_label_model, deployment: deployment2, key_name: 'test', value: 'bommel')
 
         expect do
           deployment_delete
@@ -22,8 +22,8 @@ module VCAP::CloudController
       end
 
       it 'deletes associated annotations' do
-        annotation1 = DeploymentAnnotationModel.make(deployment: deployment1, key_name: 'test', value: 'bommel')
-        annotation2 = DeploymentAnnotationModel.make(deployment: deployment2, key_name: 'test', value: 'bommel')
+        annotation1 = create(:deployment_annotation_model, deployment: deployment1, key_name: 'test', value: 'bommel')
+        annotation2 = create(:deployment_annotation_model, deployment: deployment2, key_name: 'test', value: 'bommel')
 
         expect do
           deployment_delete
@@ -32,8 +32,8 @@ module VCAP::CloudController
       end
 
       it 'deletes associated historical processes' do
-        process1 = DeploymentProcessModel.make(deployment: deployment1)
-        process2 = DeploymentProcessModel.make(deployment: deployment2)
+        process1 = create(:deployment_process_model, deployment: deployment1)
+        process2 = create(:deployment_process_model, deployment: deployment2)
 
         expect do
           deployment_delete
@@ -42,9 +42,9 @@ module VCAP::CloudController
       end
     end
 
-    let!(:app) { AppModel.make }
-    let!(:deployment1) { DeploymentModel.make(app:) }
-    let!(:deployment2) { DeploymentModel.make(app:) }
+    let!(:app) { create(:app_model) }
+    let!(:deployment1) { create(:deployment_model, app:) }
+    let!(:deployment2) { create(:deployment_model, app:) }
 
     describe '#delete' do
       it_behaves_like 'DeploymentDelete action' do

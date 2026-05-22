@@ -4,11 +4,11 @@ require 'actions/route_transfer_owner'
 module VCAP::CloudController
   RSpec.describe RouteTransferOwner do
     let(:route_share) { RouteShare.new }
-    let(:route) { Route.make domain: SharedDomain.make, space: original_owning_space }
-    let(:original_owning_space) { Space.make name: 'original_owning_space' }
-    let(:target_space) { Space.make name: 'target_space' }
-    let(:target_space_dup_name) { Space.make name: 'original_owning_space' }
-    let(:shared_space) { Space.make name: 'shared_space' }
+    let(:route) { create(:route, domain: create(:shared_domain), space: original_owning_space) }
+    let(:original_owning_space) { create(:space, name: 'original_owning_space') }
+    let(:target_space) { create(:space, name: 'target_space') }
+    let(:target_space_dup_name) { create(:space, name: 'original_owning_space') }
+    let(:shared_space) { create(:space, name: 'shared_space') }
     let(:user_audit_info) { UserAuditInfo.new(user_guid: 'user-guid-1', user_email: 'user@email.com') }
 
     describe '#transfer' do

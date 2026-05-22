@@ -8,8 +8,8 @@ module VCAP::CloudController
 
       let(:new_buildpack_options) { { enabled: true, locked: true, position: 1 } }
       let(:stack_name) { 'mystack' }
-      let(:existing_stack) { Stack.make(name: 'existing-stack') }
-      let!(:existing_buildpack) { Buildpack.make(name: 'mybuildpack', stack: nil, filename: nil, enabled: false) }
+      let(:existing_stack) { create(:stack, name: 'existing-stack') }
+      let!(:existing_buildpack) { create(:buildpack, name: 'mybuildpack', stack: nil, filename: nil, enabled: false) }
       let(:job_options) do
         {
           name: 'mybuildpack',
@@ -57,7 +57,7 @@ module VCAP::CloudController
           end
 
           context 'but that buildpack exists and is locked' do
-            let(:existing_buildpack) { Buildpack.make(name: 'lockedbuildpack', stack: existing_stack.name, locked: true) }
+            let(:existing_buildpack) { create(:buildpack, name: 'lockedbuildpack', stack: existing_stack.name, locked: true) }
 
             it 'does not update a locked buildpack' do
               job.perform
@@ -90,8 +90,8 @@ module VCAP::CloudController
           end
 
           context 'with an existing buildpack' do
-            let(:existing_stack) { Stack.make(name: 'existing-stack') }
-            let!(:existing_buildpack) { Buildpack.make(name: 'mybuildpack', stack: existing_stack.name) }
+            let(:existing_stack) { create(:stack, name: 'existing-stack') }
+            let!(:existing_buildpack) { create(:buildpack, name: 'mybuildpack', stack: existing_stack.name) }
 
             it 'does not update any values on the buildpack and re-raises the error' do
               expect do

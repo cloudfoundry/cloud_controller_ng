@@ -7,12 +7,12 @@ module VCAP::CloudController
       let(:logger) { instance_double(Steno::Logger) }
       let(:route_create) { RouteCreate.new(access_validator:, logger:) }
       let(:host) { 'some-host' }
-      let(:space_quota_definition) { SpaceQuotaDefinition.make }
+      let(:space_quota_definition) { create(:space_quota_definition) }
       let(:space) do
-        Space.make(space_quota_definition: space_quota_definition,
-                   organization: space_quota_definition.organization)
+        create(:space, space_quota_definition: space_quota_definition,
+                       organization: space_quota_definition.organization)
       end
-      let(:domain) { SharedDomain.make }
+      let(:domain) { create(:shared_domain) }
       let(:path) { '/some-path' }
       let(:route_hash) do
         {

@@ -12,18 +12,16 @@ module VCAP::CloudController
       let(:environment_variables) { { 'FOO' => 'bar' } }
       let(:desired_state) { ProcessModel::STARTED }
       let(:app) do
-        AppModel.make(
-          :docker,
-          desired_state:,
-          environment_variables:
-        )
+        create(:app_model, :docker,
+               desired_state:,
+               environment_variables:)
       end
 
-      let(:package) { PackageModel.make(app: app, state: PackageModel::READY_STATE) }
+      let(:package) { create(:package_model, app: app, state: PackageModel::READY_STATE) }
 
-      let!(:droplet) { DropletModel.make(app:) }
-      let!(:process1) { ProcessModel.make(:process, state: desired_state, app: app) }
-      let!(:process2) { ProcessModel.make(:process, state: desired_state, app: app) }
+      let!(:droplet) { create(:droplet_model, app:) }
+      let!(:process1) { create(:process_model, :process, state: desired_state, app: app) }
+      let!(:process2) { create(:process_model, :process, state: desired_state, app: app) }
       let(:runner) { instance_double(VCAP::CloudController::Diego::Runner) }
 
       before do
@@ -86,7 +84,7 @@ module VCAP::CloudController
         context 'when we need to make a new revision' do
           before do
             app.update(revisions_enabled: true)
-            app.update(droplet: DropletModel.make(app:))
+            app.update(droplet: create(:droplet_model, app:))
 
             allow(ProcessRestart).to receive(:restart).and_call_original
             allow(ProcessRestart).to receive(:restart).and_call_original

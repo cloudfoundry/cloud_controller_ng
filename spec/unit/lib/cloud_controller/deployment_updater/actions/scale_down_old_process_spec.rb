@@ -5,44 +5,36 @@ module VCAP::CloudController
   RSpec.describe DeploymentUpdater::Actions::ScaleDownOldProcess do
     subject(:finalize_action) { DeploymentUpdater::Actions::ScaleDownOldProcess.new(deployment) }
 
-    let(:app) { AppModel.make(revisions_enabled: true) }
-    let(:droplet) { DropletModel.make(app: app, process_types: { 'web' => 'serve', 'worker' => 'work' }) }
+    let(:app) { create(:app_model, revisions_enabled: true) }
+    let(:droplet) { create(:droplet_model, app: app, process_types: { 'web' => 'serve', 'worker' => 'work' }) }
 
     let(:state) { DeploymentModel::DEPLOYING_STATE }
 
     let!(:deploying_web_process) do
-      ProcessModel.make(
-        app: app,
-        type: ProcessTypes::WEB,
-        instances: 3
-      )
+      create(:process_model, app: app,
+                             type: ProcessTypes::WEB,
+                             instances: 3)
     end
 
     let!(:interim_web_process) do
-      ProcessModel.make(
-        app: app,
-        created_at: 1.hour.ago,
-        type: ProcessTypes::WEB,
-        instances: 3
-      )
+      create(:process_model, app: app,
+                             created_at: 1.hour.ago,
+                             type: ProcessTypes::WEB,
+                             instances: 3)
     end
 
     let!(:oldest_web_process) do
-      ProcessModel.make(
-        app: app,
-        created_at: 2.days.ago,
-        type: ProcessTypes::WEB,
-        instances: 3
-      )
+      create(:process_model, app: app,
+                             created_at: 2.days.ago,
+                             type: ProcessTypes::WEB,
+                             instances: 3)
     end
 
     let(:deployment) do
-      DeploymentModel.make(
-        app: app,
-        deploying_web_process: deploying_web_process,
-        state: state,
-        original_web_process_instance_count: 3
-      )
+      create(:deployment_model, app: app,
+                                deploying_web_process: deploying_web_process,
+                                state: state,
+                                original_web_process_instance_count: 3)
     end
 
     it 'scales a web process to the passed amount' do

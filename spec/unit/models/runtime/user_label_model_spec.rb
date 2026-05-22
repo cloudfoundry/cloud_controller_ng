@@ -5,8 +5,8 @@ module VCAP::CloudController
     it { is_expected.to have_timestamp_columns }
 
     it 'can be created' do
-      user = User.make(guid: 'dora')
-      UserLabelModel.make(resource_guid: user.guid, key_name: 'release', value: 'stable')
+      user = create(:user, guid: 'dora')
+      create(:user_label_model, resource_guid: user.guid, key_name: 'release', value: 'stable')
       expect(UserLabelModel.find(key_name: 'release').value).to eq 'stable'
     end
   end

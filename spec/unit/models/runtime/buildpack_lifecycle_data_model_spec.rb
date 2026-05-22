@@ -31,10 +31,10 @@ module VCAP::CloudController
 
     describe '#buildpacks' do
       before do
-        Buildpack.make(name: 'another-buildpack')
-        Buildpack.make(name: 'new-buildpack')
-        Buildpack.make(name: 'ruby')
-        Buildpack.make(name: 'some-buildpack')
+        create(:buildpack, name: 'another-buildpack')
+        create(:buildpack, name: 'new-buildpack')
+        create(:buildpack, name: 'ruby')
+        create(:buildpack, name: 'some-buildpack')
       end
 
       context 'when passed in nil' do
@@ -99,11 +99,11 @@ module VCAP::CloudController
             let(:buildpack1_name) { 'pleasant-valley-buildpack' }
             let(:buildpack1_other_name) { 'valley' }
             let(:buildpack1_version) { '3.1' }
-            let!(:buildpack1) { VCAP::CloudController::Buildpack.make(name: buildpack1_name, sha256_checksum: 'mammoth') }
+            let!(:buildpack1) { create(:buildpack, name: buildpack1_name, sha256_checksum: 'mammoth') }
             let(:buildpack2_name) { 'stepping-stone-buildpack' }
             let(:buildpack2_other_name) { 'gilooley' }
             let(:buildpack2_version) { '95' }
-            let!(:buildpack2) { VCAP::CloudController::Buildpack.make(name: buildpack2_name, sha256_checksum: 'languid') }
+            let!(:buildpack2) { create(:buildpack, name: buildpack2_name, sha256_checksum: 'languid') }
 
             let(:buildpack3_key) { 'git://my-buildpacks.tv/fred/barney.git' }
             let(:buildpack3_other_name) { 'hilltop' }
@@ -213,7 +213,7 @@ module VCAP::CloudController
       end
 
       context 'admin buildpack name' do
-        let(:buildpack) { Buildpack.make(name: 'ruby') }
+        let(:buildpack) { create(:buildpack, name: 'ruby') }
 
         it 'persists the buildpack' do
           lifecycle_data.buildpacks = ['ruby']
@@ -241,7 +241,7 @@ module VCAP::CloudController
       end
 
       context 'when the buildpacks are a mixture of admin and custom buildpacks' do
-        let(:admin_buildpack) { Buildpack.make(name: 'minbari') }
+        let(:admin_buildpack) { create(:buildpack, name: 'minbari') }
         let(:buildpack1_url) { 'http://example.com/buildpack1' }
         let(:buildpack2_url) { 'http://example.com/buildpack2' }
 
@@ -258,7 +258,7 @@ module VCAP::CloudController
 
       context 'when the buildpack is set via the legacy_* fields' do
         context 'when the buildpack is an admin buildpack' do
-          let(:admin_buildpack) { Buildpack.make(name: 'susperia') }
+          let(:admin_buildpack) { create(:buildpack, name: 'susperia') }
 
           before do
             lifecycle_data.legacy_admin_buildpack_name = admin_buildpack.name
@@ -284,7 +284,7 @@ module VCAP::CloudController
     end
 
     describe '#legacy_buildpack_model' do
-      let!(:admin_buildpack) { Buildpack.make(name: 'bob') }
+      let!(:admin_buildpack) { create(:buildpack, name: 'bob') }
 
       context 'when the buildpack is nil' do
         subject(:lifecycle_data) { BuildpackLifecycleDataModel.new(buildpacks: nil) }
@@ -390,7 +390,7 @@ module VCAP::CloudController
       let(:stack) { 'cflinuxfs4' }
 
       before do
-        Buildpack.make(name: 'ruby')
+        create(:buildpack, name: 'ruby')
         lifecycle_data.stack = stack
         lifecycle_data.buildpacks = buildpacks
         lifecycle_data.save
@@ -427,8 +427,8 @@ module VCAP::CloudController
 
     describe '#valid?' do
       it 'cannot be associated with both an app and a build' do
-        build = BuildModel.make
-        app = AppModel.make
+        build = create(:build_model)
+        app = create(:app_model)
         lifecycle_data.build = build
         lifecycle_data.app = app
         expect(lifecycle_data.valid?).to be(false)
@@ -436,8 +436,8 @@ module VCAP::CloudController
       end
 
       it 'cannot be associated with both an app and a droplet' do
-        droplet = DropletModel.make
-        app = AppModel.make
+        droplet = create(:droplet_model)
+        app = create(:app_model)
         lifecycle_data.droplet = droplet
         lifecycle_data.app = app
         expect(lifecycle_data.valid?).to be(false)
@@ -445,7 +445,7 @@ module VCAP::CloudController
       end
 
       it 'cannot contain invalid buildpacks' do
-        app = AppModel.make
+        app = create(:app_model)
         lifecycle_data.app = app
         lifecycle_data.buildpacks = [nil, nil]
         expect(lifecycle_data.valid?).to be(false)
@@ -454,7 +454,7 @@ module VCAP::CloudController
       end
 
       it 'adds BuildpackLifecyleBuildpack errors to the BuildpackLifecycleDataModels' do
-        app = AppModel.make
+        app = create(:app_model)
         lifecycle_data.app = app
         lifecycle_data.buildpacks = ['invalid_buildpack_name']
         expect(lifecycle_data.valid?).to be(false)
@@ -465,21 +465,21 @@ module VCAP::CloudController
 
     describe 'associations' do
       it 'can be associated with a droplet' do
-        droplet = DropletModel.make
+        droplet = create(:droplet_model)
         lifecycle_data.droplet = droplet
         lifecycle_data.save
         expect(lifecycle_data.reload.droplet).to eq(droplet)
       end
 
       it 'can be associated with apps' do
-        app = AppModel.make
+        app = create(:app_model)
         lifecycle_data.app = app
         lifecycle_data.save
         expect(lifecycle_data.reload.app).to eq(app)
       end
 
       it 'can be associated with a build' do
-        build = BuildModel.make
+        build = create(:build_model)
         lifecycle_data.build = build
         lifecycle_data.save
         expect(lifecycle_data.reload.build).to eq(build)

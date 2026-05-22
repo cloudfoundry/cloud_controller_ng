@@ -6,29 +6,25 @@ module VCAP::CloudController
     subject(:updater) { DeploymentUpdater::Updater.new(deployment, logger) }
     let(:a_day_ago) { Time.now - 1.day }
     let(:an_hour_ago) { Time.now - 1.hour }
-    let(:app) { AppModel.make(droplet: droplet, revisions_enabled: true) }
-    let(:droplet) { DropletModel.make }
+    let(:app) { create(:app_model, droplet: droplet, revisions_enabled: true) }
+    let(:droplet) { create(:droplet_model) }
     let!(:web_process) do
-      ProcessModel.make(
-        instances: current_web_instances,
-        created_at: a_day_ago,
-        guid: 'guid-original',
-        app: app
-      )
+      create(:process_model, instances: current_web_instances,
+                             created_at: a_day_ago,
+                             guid: 'guid-original',
+                             app: app)
     end
-    let!(:route_mapping) { RouteMappingModel.make(app: web_process.app, process_type: web_process.type) }
+    let!(:route_mapping) { create(:route_mapping_model, app: web_process.app, process_type: web_process.type) }
     let!(:deploying_web_process) do
-      ProcessModel.make(
-        app: web_process.app,
-        type: ProcessTypes::WEB,
-        instances: current_deploying_instances,
-        guid: 'guid-final',
-        revision: revision,
-        state: ProcessModel::STARTED
-      )
+      create(:process_model, app: web_process.app,
+                             type: ProcessTypes::WEB,
+                             instances: current_deploying_instances,
+                             guid: 'guid-final',
+                             revision: revision,
+                             state: ProcessModel::STARTED)
     end
-    let(:revision) { RevisionModel.make(app: app, droplet: droplet, version: 300) }
-    let!(:deploying_route_mapping) { RouteMappingModel.make(app: web_process.app, process_type: deploying_web_process.type) }
+    let(:revision) { create(:revision_model, app: app, droplet: droplet, version: 300) }
+    let!(:deploying_route_mapping) { create(:route_mapping_model, app: web_process.app, process_type: deploying_web_process.type) }
     let(:space) { web_process.space }
     let(:original_web_process_instance_count) { 6 }
     let(:current_web_instances) { 2 }
@@ -37,14 +33,12 @@ module VCAP::CloudController
     let(:state) { DeploymentModel::DEPLOYING_STATE }
 
     let(:deployment) do
-      DeploymentModel.make(
-        app: web_process.app,
-        deploying_web_process: deploying_web_process,
-        state: state,
-        original_web_process_instance_count: original_web_process_instance_count,
-        max_in_flight: max_in_flight,
-        web_instances: web_instances
-      )
+      create(:deployment_model, app: web_process.app,
+                                deploying_web_process: deploying_web_process,
+                                state: state,
+                                original_web_process_instance_count: original_web_process_instance_count,
+                                max_in_flight: max_in_flight,
+                                web_instances: web_instances)
     end
 
     let(:web_instances) { nil }
@@ -69,12 +63,10 @@ module VCAP::CloudController
     describe '#scale' do
       context 'when the deployment process has reached original_web_process_instance_count' do
         let(:droplet) do
-          DropletModel.make(
-            process_types: {
-              'clock' => 'droplet_clock_command',
-              'worker' => 'droplet_worker_command'
-            }
-          )
+          create(:droplet_model, process_types: {
+                   'clock' => 'droplet_clock_command',
+                   'worker' => 'droplet_worker_command'
+                 })
         end
 
         let(:all_instances_results) do
@@ -156,8 +148,8 @@ module VCAP::CloudController
       end
 
       context 'when an error occurs while scaling a deployment' do
-        let(:failing_process) { ProcessModel.make(app: web_process.app, type: 'failing', instances: 5) }
-        let(:deployment) { DeploymentModel.make(app: web_process.app, deploying_web_process: failing_process, state: 'DEPLOYING') }
+        let(:failing_process) { create(:process_model, app: web_process.app, type: 'failing', instances: 5) }
+        let(:deployment) { create(:deployment_model, app: web_process.app, deploying_web_process: failing_process, state: 'DEPLOYING') }
 
         before do
           allow(deployment).to receive(:app).and_raise(StandardError.new('Something real bad happened'))
@@ -193,31 +185,27 @@ module VCAP::CloudController
       let(:state) { DeploymentModel::PREPAUSED_STATE }
       let(:current_deploying_instances) { 1 }
       let(:deployment) do
-        DeploymentModel.make(
-          app: web_process.app,
-          deploying_web_process: deploying_web_process,
-          state: state,
-          strategy: 'canary',
-          original_web_process_instance_count: original_web_process_instance_count,
-          max_in_flight: 1
-        )
+        create(:deployment_model, app: web_process.app,
+                                  deploying_web_process: deploying_web_process,
+                                  state: state,
+                                  strategy: 'canary',
+                                  original_web_process_instance_count: original_web_process_instance_count,
+                                  max_in_flight: 1)
       end
 
       describe 'canary steps' do
         let(:max_in_flight) { 1 }
         let(:original_web_process_instance_count) { 10 }
         let(:deployment) do
-          DeploymentModel.make(
-            app: web_process.app,
-            deploying_web_process: deploying_web_process,
-            strategy: 'canary',
-            droplet: droplet,
-            state: state,
-            max_in_flight: max_in_flight,
-            original_web_process_instance_count: 10,
-            canary_steps: [{ instance_weight: 50 }, { instance_weight: 80 }],
-            canary_current_step: 1
-          )
+          create(:deployment_model, app: web_process.app,
+                                    deploying_web_process: deploying_web_process,
+                                    strategy: 'canary',
+                                    droplet: droplet,
+                                    state: state,
+                                    max_in_flight: max_in_flight,
+                                    original_web_process_instance_count: 10,
+                                    canary_steps: [{ instance_weight: 50 }, { instance_weight: 80 }],
+                                    canary_current_step: 1)
         end
 
         context 'when the current step instance count has been reached' do
@@ -439,7 +427,7 @@ module VCAP::CloudController
         context 'when the error is a quota error' do
           let(:web_instances) { nil }
           let(:max_in_flight) { 100 }
-          let!(:quota_definition) { QuotaDefinition.make(memory_limit: 1) }
+          let!(:quota_definition) { create(:quota_definition, memory_limit: 1) }
 
           before do
             org = app.organization

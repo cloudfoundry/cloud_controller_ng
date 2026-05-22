@@ -9,10 +9,10 @@ module VCAP::CloudController
     subject(:app_create) { AppCreate.new(user_audit_info) }
 
     describe '#create' do
-      let(:space) { Space.make }
+      let(:space) { create(:space) }
       let(:space_guid) { space.guid }
       let(:environment_variables) { { BAKED: 'POTATO' } }
-      let(:buildpack) { Buildpack.make }
+      let(:buildpack) { create(:buildpack) }
       let(:buildpack_identifier) { buildpack.name }
       let(:relationships) { { space: { data: { guid: space_guid } } } }
       let(:lifecycle_request) { { type: 'buildpack', data: { buildpacks: [buildpack_identifier], stack: 'cflinuxfs4' } } }
@@ -128,7 +128,7 @@ module VCAP::CloudController
       end
 
       describe 'buildpacks' do
-        let(:unready_buildpack) { Buildpack.make(name: 'unready', filename: nil) }
+        let(:unready_buildpack) { create(:buildpack, name: 'unready', filename: nil) }
         let(:lifecycle_request) { { type: 'buildpack', data: { buildpacks: [unready_buildpack.name], stack: 'cflinuxfs4' } } }
 
         it 'does not allow buildpacks that are not READY' do
@@ -190,7 +190,7 @@ module VCAP::CloudController
       end
 
       context 'when the app name is a duplicate within the space' do
-        let!(:existing_app) { AppModel.make(space: space, name: 'my-app') }
+        let!(:existing_app) { create(:app_model, space: space, name: 'my-app') }
 
         it 'fails the right way' do
           expect do
@@ -200,7 +200,7 @@ module VCAP::CloudController
       end
 
       describe 'stack state validation' do
-        let(:test_stack) { Stack.make(name: 'test-stack-for-validation') }
+        let(:test_stack) { create(:stack, name: 'test-stack-for-validation') }
         let(:lifecycle_request) { { type: 'buildpack', data: { buildpacks: [buildpack_identifier], stack: test_stack.name } } }
 
         context 'when stack is DISABLED' do

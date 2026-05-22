@@ -4,10 +4,10 @@ module VCAP::CloudController
   module Repositories
     RSpec.describe UserEventRepository do
       let(:request_attrs) { { 'name' => 'new-space' } }
-      let(:org) { Organization.make }
-      let(:space) { Space.make(organization: org) }
-      let(:assigner) { User.make }
-      let(:assignee) { User.make(username: 'frank') }
+      let(:org) { create(:organization) }
+      let(:space) { create(:space, organization: org) }
+      let(:assigner) { create(:user) }
+      let(:assignee) { create(:user, username: 'frank') }
       let(:assigner_email) { 'foo@bar.com' }
       let(:assigner_username) { 'Mr.Foo' }
       let(:request_attrs) { { 'some_key' => 'some_val' } }

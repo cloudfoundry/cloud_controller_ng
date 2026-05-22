@@ -3,7 +3,7 @@ require 'stringio'
 
 module VCAP::CloudController
   RSpec.describe RestController::ModelController do
-    let(:user) { User.make(active: true) }
+    let(:user) { create(:user, active: true) }
     let(:dep) do
       {
         object_renderer: nil,
@@ -110,7 +110,7 @@ module VCAP::CloudController
 
         expect(TestModel).to receive(:create_from_hash) {
           calls << :create_from_hash
-          TestModel.make
+          create(:test_model)
         }
 
         expect_any_instance_of(TestModelsController).to receive(:after_create).with(instance_of(TestModel)) do
@@ -179,7 +179,7 @@ module VCAP::CloudController
         let(:redact_request_attributes) { { 'redacted' => {} } }
 
         it 'attempts to redact the attributes' do
-          expect(TestModelRedact).to receive(:create_from_hash) { TestModelRedact.make }
+          expect(TestModelRedact).to receive(:create_from_hash) { create(:test_model_redact) }
           expect_any_instance_of(TestModelRedactController).to receive(:redact_attributes).with(:create, redact_request_attributes)
 
           set_current_user_as_admin
@@ -192,7 +192,7 @@ module VCAP::CloudController
 
     describe '#read' do
       context 'when the guid matches a record' do
-        let!(:model) { TestModel.make }
+        let!(:model) { create(:test_model) }
 
         it 'returns not authorized if user does not have access' do
           set_current_user(user)
@@ -217,7 +217,7 @@ module VCAP::CloudController
     end
 
     describe '#update' do
-      let!(:model) { TestModel.make }
+      let!(:model) { create(:test_model) }
       let(:fields) { { 'unique_value' => 'something' } }
 
       before { set_current_user_as_admin }
@@ -288,7 +288,7 @@ module VCAP::CloudController
       end
 
       context 'with attributes for redacting' do
-        let!(:model) { TestModelRedact.make }
+        let!(:model) { create(:test_model_redact) }
         let(:request_attributes) { { redacted: { secret: 'super secret data' } } }
         let(:redact_request_attributes) { { 'redacted' => { 'secret' => 'super secret data' } } }
 
@@ -302,7 +302,7 @@ module VCAP::CloudController
     end
 
     describe '#delete' do
-      let!(:model) { TestModel.make }
+      let!(:model) { create(:test_model) }
       let(:params) { {} }
 
       before { set_current_user_as_admin }
@@ -398,9 +398,9 @@ module VCAP::CloudController
 
     describe '#enumerate' do
       let(:timestamp) { Time.now.utc.change(usec: 0) }
-      let!(:model1) { TestModel.make(created_at: timestamp, sortable_value: 'zelda') }
-      let!(:model2) { TestModel.make(created_at: timestamp + 1.second, sortable_value: 'artichoke') }
-      let!(:model3) { TestModel.make(created_at: timestamp + 2.seconds, sortable_value: 'marigold') }
+      let!(:model1) { create(:test_model, created_at: timestamp, sortable_value: 'zelda') }
+      let!(:model2) { create(:test_model, created_at: timestamp + 1.second, sortable_value: 'artichoke') }
+      let!(:model3) { create(:test_model, created_at: timestamp + 2.seconds, sortable_value: 'marigold') }
 
       before { set_current_user_as_admin }
 
@@ -446,8 +446,8 @@ module VCAP::CloudController
 
       describe 'using query parameters' do
         it 'returns matching results when querying for equality' do
-          found_model = TestModel.make(unique_value: 'value1')
-          TestModel.make(unique_value: 'value2')
+          found_model = create(:test_model, unique_value: 'value1')
+          create(:test_model, unique_value: 'value2')
 
           get '/v2/test_models?q=unique_value:value1'
 
@@ -577,7 +577,7 @@ module VCAP::CloudController
         end
 
         it 'returns 400 error when validation fails on create' do
-          TestModel.make(unique_value: 'unique')
+          create(:test_model, unique_value: 'unique')
           post '/v2/test_models', Oj.dump({ required_attr: true, unique_value: 'unique' })
           expect(last_response.status).to eq(400)
           expect(decoded_response['code']).to eq 999_999_998
@@ -585,8 +585,8 @@ module VCAP::CloudController
         end
 
         it 'returns 400 error when validation fails on update' do
-          TestModel.make(unique_value: 'unique')
-          test_model = TestModel.make(unique_value: 'not-unique')
+          create(:test_model, unique_value: 'unique')
+          test_model = create(:test_model, unique_value: 'not-unique')
           put "/v2/test_models/#{test_model.guid}", Oj.dump({ unique_value: 'unique' })
           expect(last_response.status).to eq(400)
           expect(decoded_response['code']).to eq 999_999_998
@@ -599,9 +599,9 @@ module VCAP::CloudController
       before { set_current_user_as_admin }
 
       describe 'permissions' do
-        let(:model) { TestModel.make }
-        let(:associated_model1) { TestModelManyToOne.make }
-        let(:associated_model2) { TestModelManyToOne.make(test_model: model) }
+        let(:model) { create(:test_model) }
+        let(:associated_model1) { create(:test_model_many_to_one) }
+        let(:associated_model2) { create(:test_model_many_to_one, test_model: model) }
 
         context 'when adding an associated object' do
           it 'succeeds when user has access to both objects' do
@@ -649,9 +649,9 @@ module VCAP::CloudController
       end
 
       describe 'to_many' do
-        let(:model) { TestModel.make }
-        let(:associated_model1) { TestModelManyToMany.make }
-        let(:associated_model2) { TestModelManyToMany.make }
+        let(:model) { create(:test_model) }
+        let(:associated_model1) { create(:test_model_many_to_many) }
+        let(:associated_model2) { create(:test_model_many_to_many) }
 
         describe 'update' do
           it 'allows associating nested models' do
@@ -768,8 +768,8 @@ module VCAP::CloudController
       end
 
       describe 'to_one' do
-        let(:model) { TestModelManyToOne.make }
-        let(:associated_model) { TestModel.make }
+        let(:model) { create(:test_model_many_to_one) }
+        let(:associated_model) { create(:test_model) }
 
         before do
           model.test_model = associated_model

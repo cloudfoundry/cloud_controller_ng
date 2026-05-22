@@ -320,7 +320,7 @@ module VCAP::CloudController
       context 'hash options validation' do
         context 'when hash_based_routing feature flag is disabled' do
           before do
-            VCAP::CloudController::FeatureFlag.make(name: 'hash_based_routing', enabled: false)
+            create(:feature_flag, name: 'hash_based_routing', enabled: false)
           end
 
           context 'when a route contains loadbalancing=hash' do
@@ -430,7 +430,7 @@ module VCAP::CloudController
 
         context 'when hash_based_routing feature flag is enabled' do
           before do
-            VCAP::CloudController::FeatureFlag.make(name: 'hash_based_routing', enabled: true)
+            create(:feature_flag, name: 'hash_based_routing', enabled: true)
           end
 
           context 'when a route contains hash_header with hash loadbalancing' do

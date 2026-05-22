@@ -5,13 +5,13 @@ require 'messages/organization_quotas_update_message'
 module VCAP::CloudController
   RSpec.describe OrganizationQuotasUpdate do
     describe 'update' do
-      let(:user) { User.make }
+      let(:user) { create(:user) }
       let(:user_email) { 'user@example.com' }
       let(:user_name) { 'user-name' }
       let(:user_audit_info) { UserAuditInfo.new(user_guid: user.guid, user_email: user_email, user_name: user_name) }
 
       context 'when updating an organization quota' do
-        let!(:org_quota) { VCAP::CloudController::QuotaDefinition.make(name: 'org_quota_name', non_basic_services_allowed: true) }
+        let!(:org_quota) { create(:quota_definition, name: 'org_quota_name', non_basic_services_allowed: true) }
 
         let(:message) do
           VCAP::CloudController::OrganizationQuotasUpdateMessage.new({
@@ -110,7 +110,7 @@ module VCAP::CloudController
           end
 
           context 'when it is a uniqueness error' do
-            let(:victoria_org_quota) { VCAP::CloudController::QuotaDefinition.make(name: 'victoria_org_quota') }
+            let(:victoria_org_quota) { create(:quota_definition, name: 'victoria_org_quota') }
 
             let(:name) { 'victoria_org_quota' }
             let(:update_message) { VCAP::CloudController::OrganizationQuotasUpdateMessage.new(name:) }
@@ -134,10 +134,10 @@ module VCAP::CloudController
         context 'when there are affected processes that have an unlimited log rate limit' do
           def create_orgs_with_unlimited_log_rate_process(count)
             count.downto(1) do |i|
-              org = VCAP::CloudController::Organization.make(guid: "org-guid-#{i}", name: "org-name-#{i}", quota_definition: org_quota)
-              space = VCAP::CloudController::Space.make(guid: "space-guid-#{i}", organization: org)
-              app_model = VCAP::CloudController::AppModel.make(name: "app-#{i}", space: space)
-              VCAP::CloudController::ProcessModel.make(app: app_model, log_rate_limit: -1)
+              org = create(:organization, guid: "org-guid-#{i}", name: "org-name-#{i}", quota_definition: org_quota)
+              space = create(:space, guid: "space-guid-#{i}", organization: org)
+              app_model = create(:app_model, name: "app-#{i}", space: space)
+              create(:process_model, app: app_model, log_rate_limit: -1)
             end
           end
 
@@ -181,11 +181,11 @@ module VCAP::CloudController
           end
 
           context 'and there is more than one affected process within an org' do
-            let(:org) { VCAP::CloudController::Organization.make(guid: 'org-guid', name: 'org-name', quota_definition: org_quota) }
-            let(:space) { VCAP::CloudController::Space.make(guid: 'space-guid', organization: org) }
-            let(:app_model) { VCAP::CloudController::AppModel.make(name: 'app', space: space) }
-            let!(:process_1) { VCAP::CloudController::ProcessModel.make(app: app_model, log_rate_limit: -1) }
-            let!(:process_2) { VCAP::CloudController::ProcessModel.make(app: app_model, log_rate_limit: -1) }
+            let(:org) { create(:organization, guid: 'org-guid', name: 'org-name', quota_definition: org_quota) }
+            let(:space) { create(:space, guid: 'space-guid', organization: org) }
+            let(:app_model) { create(:app_model, name: 'app', space: space) }
+            let!(:process_1) { create(:process_model, app: app_model, log_rate_limit: -1) }
+            let!(:process_2) { create(:process_model, app: app_model, log_rate_limit: -1) }
 
             it 'only names the org once in the error message' do
               expect do

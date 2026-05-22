@@ -9,11 +9,11 @@ RSpec.describe 'v3 service route bindings' do
     headers_for(user)
   end
   let(:route_service_url) { 'https://route_service_url.com' }
-  let!(:space_annotation) { VCAP::CloudController::SpaceAnnotationModel.make(key_prefix: 'pre.fix', key_name: 'baz', value: 'wow', space: space) }
-  let(:space) { VCAP::CloudController::Space.make(organization: org) }
-  let!(:org_annotation) { VCAP::CloudController::OrganizationAnnotationModel.make(key_prefix: 'pre.fix', key_name: 'foo', value: 'bar', resource_guid: org.guid) }
-  let(:org) { VCAP::CloudController::Organization.make }
-  let(:user) { VCAP::CloudController::User.make }
+  let!(:space_annotation) { create(:space_annotation_model, key_prefix: 'pre.fix', key_name: 'baz', value: 'wow', space: space) }
+  let(:space) { create(:space, organization: org) }
+  let!(:org_annotation) { create(:organization_annotation_model, key_prefix: 'pre.fix', key_name: 'foo', value: 'bar', resource_guid: org.guid) }
+  let(:org) { create(:organization) }
+  let(:user) { create(:user) }
   let(:parameters_mixed_data_types_as_json_string) do
     '{"boolean":true,"string":"a string","int":123,"float":3.14159,"optional":null,"object":{"a":"b"},"array":["c","d"]}'
   end
@@ -32,7 +32,7 @@ RSpec.describe 'v3 service route bindings' do
   describe 'GET /v3/service_route_bindings' do
     # Because route bindings don't have names, we can't use the 'paginated response' shared example
     describe 'behaving like a paginated resource' do
-      let!(:resources) { Array.new(2) { VCAP::CloudController::RouteBinding.make } }
+      let!(:resources) { create_list(:route_binding, 2) }
 
       it 'returns pagination information' do
         get '/v3/service_route_bindings?per_page=1', nil, admin_headers
@@ -89,9 +89,9 @@ RSpec.describe 'v3 service route bindings' do
     end
 
     describe 'a mix of bindings' do
-      let(:route) { VCAP::CloudController::Route.make(space:) }
-      let(:service_instance_1) { VCAP::CloudController::UserProvidedServiceInstance.make(:routing, space:, route_service_url:) }
-      let(:service_instance_2) { VCAP::CloudController::ManagedServiceInstance.make(:routing, space:, route_service_url:) }
+      let(:route) { create(:route, space:) }
+      let(:service_instance_1) { create(:user_provided_service_instance, :routing, space:, route_service_url:) }
+      let(:service_instance_2) { create(:managed_service_instance, :routing, space:, route_service_url:) }
       let(:route_binding_1) do
         bind_service_to_route(service_instance_1, route)
       end
@@ -152,8 +152,8 @@ RSpec.describe 'v3 service route bindings' do
 
     describe 'filtering' do
       it 'can be filtered by service instance guids' do
-        VCAP::CloudController::RouteBinding.make
-        filtered_route_bindings = Array.new(2) { VCAP::CloudController::RouteBinding.make }
+        create(:route_binding)
+        filtered_route_bindings = create_list(:route_binding, 2)
         service_instance_guids = filtered_route_bindings.
                                  map(&:service_instance).
                                  map(&:guid).
@@ -167,8 +167,8 @@ RSpec.describe 'v3 service route bindings' do
       end
 
       it 'can be filtered by service instance names' do
-        VCAP::CloudController::RouteBinding.make
-        filtered_route_bindings = Array.new(2) { VCAP::CloudController::RouteBinding.make }
+        create(:route_binding)
+        filtered_route_bindings = create_list(:route_binding, 2)
         service_instance_names = filtered_route_bindings.
                                  map(&:service_instance).
                                  map(&:name).
@@ -182,8 +182,8 @@ RSpec.describe 'v3 service route bindings' do
       end
 
       it 'can be filtered by route guids' do
-        VCAP::CloudController::RouteBinding.make
-        filtered_route_bindings = Array.new(2) { VCAP::CloudController::RouteBinding.make }
+        create(:route_binding)
+        filtered_route_bindings = create_list(:route_binding, 2)
         route_guids = filtered_route_bindings.
                       map(&:route).
                       map(&:guid).
@@ -197,21 +197,21 @@ RSpec.describe 'v3 service route bindings' do
       end
 
       it 'filters by label' do
-        rb1 = VCAP::CloudController::RouteBinding.make
-        rb2 = VCAP::CloudController::RouteBinding.make
-        rb3 = VCAP::CloudController::RouteBinding.make
-        rb4 = VCAP::CloudController::RouteBinding.make
-        rb5 = VCAP::CloudController::RouteBinding.make
+        rb1 = create(:route_binding)
+        rb2 = create(:route_binding)
+        rb3 = create(:route_binding)
+        rb4 = create(:route_binding)
+        rb5 = create(:route_binding)
         filtered_route_bindings = [rb2, rb3]
-        VCAP::CloudController::RouteBindingLabelModel.make(key_name: 'fruit', value: 'strawberry', route_binding: rb1)
-        VCAP::CloudController::RouteBindingLabelModel.make(key_name: 'animal', value: 'horse', route_binding: rb1)
-        VCAP::CloudController::RouteBindingLabelModel.make(key_name: 'env', value: 'prod', route_binding: rb2)
-        VCAP::CloudController::RouteBindingLabelModel.make(key_name: 'animal', value: 'dog', route_binding: rb2)
-        VCAP::CloudController::RouteBindingLabelModel.make(key_name: 'env', value: 'prod', route_binding: rb3)
-        VCAP::CloudController::RouteBindingLabelModel.make(key_name: 'animal', value: 'horse', route_binding: rb3)
-        VCAP::CloudController::RouteBindingLabelModel.make(key_name: 'env', value: 'prod', route_binding: rb4)
-        VCAP::CloudController::RouteBindingLabelModel.make(key_name: 'env', value: 'staging', route_binding: rb5)
-        VCAP::CloudController::RouteBindingLabelModel.make(key_name: 'animal', value: 'dog', route_binding: rb5)
+        create(:route_binding_label_model, key_name: 'fruit', value: 'strawberry', route_binding: rb1)
+        create(:route_binding_label_model, key_name: 'animal', value: 'horse', route_binding: rb1)
+        create(:route_binding_label_model, key_name: 'env', value: 'prod', route_binding: rb2)
+        create(:route_binding_label_model, key_name: 'animal', value: 'dog', route_binding: rb2)
+        create(:route_binding_label_model, key_name: 'env', value: 'prod', route_binding: rb3)
+        create(:route_binding_label_model, key_name: 'animal', value: 'horse', route_binding: rb3)
+        create(:route_binding_label_model, key_name: 'env', value: 'prod', route_binding: rb4)
+        create(:route_binding_label_model, key_name: 'env', value: 'staging', route_binding: rb5)
+        create(:route_binding_label_model, key_name: 'animal', value: 'dog', route_binding: rb5)
 
         get '/v3/service_route_bindings?label_selector=!fruit,env=prod,animal in (dog,horse)', nil, admin_headers
 
@@ -229,12 +229,12 @@ RSpec.describe 'v3 service route bindings' do
 
     describe 'include' do
       context 'when including `service_instance`' do
-        let(:instance) { VCAP::CloudController::UserProvidedServiceInstance.make(:routing, created_at: Time.now.utc - 1.second) }
-        let(:other_instance) { VCAP::CloudController::UserProvidedServiceInstance.make(:routing) }
+        let(:instance) { create(:user_provided_service_instance, :routing, created_at: Time.now.utc - 1.second) }
+        let(:other_instance) { create(:user_provided_service_instance, :routing) }
 
         before do
-          VCAP::CloudController::RouteBinding.make(service_instance: instance)
-          2.times { VCAP::CloudController::RouteBinding.make(service_instance: other_instance) }
+          create(:route_binding, service_instance: instance)
+          2.times { create(:route_binding, service_instance: other_instance) }
         end
 
         it 'includes service instances`' do
@@ -258,15 +258,15 @@ RSpec.describe 'v3 service route bindings' do
       end
 
       it 'can include `route`' do
-        route = VCAP::CloudController::Route.make(created_at: Time.now.utc - 1.second)
-        other_route = VCAP::CloudController::Route.make
+        route = create(:route, created_at: Time.now.utc - 1.second)
+        other_route = create(:route)
 
-        si = VCAP::CloudController::ManagedServiceInstance.make(:routing, space: route.space)
-        VCAP::CloudController::RouteBinding.make(route: route, service_instance: si)
+        si = create(:managed_service_instance, :routing, space: route.space)
+        create(:route_binding, route: route, service_instance: si)
 
         2.times do
-          si = VCAP::CloudController::ManagedServiceInstance.make(:routing, space: other_route.space)
-          VCAP::CloudController::RouteBinding.make(route: other_route, service_instance: si)
+          si = create(:managed_service_instance, :routing, space: other_route.space)
+          create(:route_binding, route: other_route, service_instance: si)
         end
 
         get '/v3/service_route_bindings?include=route', nil, admin_headers
@@ -304,7 +304,7 @@ RSpec.describe 'v3 service route bindings' do
 
   describe 'GET /v3/service_route_bindings/:guid' do
     let(:api_call) { ->(user_headers) { get "/v3/service_route_bindings/#{guid}", nil, user_headers } }
-    let(:route) { VCAP::CloudController::Route.make(space:) }
+    let(:route) { create(:route, space:) }
     let(:route_binding) do
       VCAP::CloudController::RouteBinding.new.save_with_new_operation(
         { service_instance:, route:, route_service_url: },
@@ -335,7 +335,7 @@ RSpec.describe 'v3 service route bindings' do
     end
 
     context 'user-provided service instance' do
-      let(:service_instance) { VCAP::CloudController::UserProvidedServiceInstance.make(space:, route_service_url:) }
+      let(:service_instance) { create(:user_provided_service_instance, space:, route_service_url:) }
 
       before do
         VCAP::CloudController::LabelsUpdate.update(route_binding, metadata[:labels], VCAP::CloudController::RouteBindingLabelModel)
@@ -346,9 +346,9 @@ RSpec.describe 'v3 service route bindings' do
     end
 
     context 'managed service instance' do
-      let(:service_offering) { VCAP::CloudController::Service.make(requires: ['route_forwarding']) }
-      let(:service_plan) { VCAP::CloudController::ServicePlan.make(service: service_offering) }
-      let(:service_instance) { VCAP::CloudController::ManagedServiceInstance.make(space:, service_plan:) }
+      let(:service_offering) { create(:service, requires: ['route_forwarding']) }
+      let(:service_plan) { create(:service_plan, service: service_offering) }
+      let(:service_instance) { create(:managed_service_instance, space:, service_plan:) }
 
       before do
         VCAP::CloudController::LabelsUpdate.update(route_binding, metadata[:labels], VCAP::CloudController::RouteBindingLabelModel)
@@ -376,7 +376,7 @@ RSpec.describe 'v3 service route bindings' do
     end
 
     describe 'include' do
-      let(:service_instance) { VCAP::CloudController::ManagedServiceInstance.make(:routing, space:) }
+      let(:service_instance) { create(:managed_service_instance, :routing, space:) }
 
       before do
         VCAP::CloudController::LabelsUpdate.update(route_binding, metadata[:labels], VCAP::CloudController::RouteBindingLabelModel)
@@ -410,7 +410,7 @@ RSpec.describe 'v3 service route bindings' do
 
   describe 'POST /v3/service_route_bindings' do
     let(:api_call) { ->(user_headers) { post '/v3/service_route_bindings', request.to_json, user_headers } }
-    let(:route) { VCAP::CloudController::Route.make(space:) }
+    let(:route) { create(:route, space:) }
     let(:metadata) do
       {
         labels: { peanut: 'butter' },
@@ -501,7 +501,7 @@ RSpec.describe 'v3 service route bindings' do
       end
 
       context 'cannot read route' do
-        let(:route) { VCAP::CloudController::Route.make }
+        let(:route) { create(:route) }
 
         it 'fails with a 422 unprocessable' do
           api_call.call(space_dev_headers)
@@ -520,8 +520,8 @@ RSpec.describe 'v3 service route bindings' do
       end
 
       context 'route is internal' do
-        let(:domain) { VCAP::CloudController::SharedDomain.make(internal: true, name: 'my.domain.com') }
-        let(:route) { VCAP::CloudController::Route.make(domain:, space:) }
+        let(:domain) { create(:shared_domain, internal: true, name: 'my.domain.com') }
+        let(:route) { create(:route, domain:, space:) }
 
         it 'fails with a 422 unprocessable' do
           api_call.call(admin_headers)
@@ -540,7 +540,7 @@ RSpec.describe 'v3 service route bindings' do
       end
 
       context 'route and service instance in different spaces' do
-        let(:route) { VCAP::CloudController::Route.make }
+        let(:route) { create(:route) }
 
         it 'fails with a 422 unprocessable' do
           api_call.call(admin_headers)
@@ -559,13 +559,12 @@ RSpec.describe 'v3 service route bindings' do
       end
 
       context 'route is bound to a different service instance' do
-        let(:other_service_instance) { VCAP::CloudController::UserProvidedServiceInstance.make(space:, route_service_url:) }
+        let(:other_service_instance) { create(:user_provided_service_instance, space:, route_service_url:) }
 
         before do
-          VCAP::CloudController::RouteBinding.make(
-            route: route,
-            service_instance: other_service_instance
-          )
+          create(:route_binding,
+                 route: route,
+                 service_instance: other_service_instance)
         end
 
         it 'fails with a 422 unprocessable' do
@@ -584,10 +583,9 @@ RSpec.describe 'v3 service route bindings' do
 
       context 'binding already exists' do
         before do
-          VCAP::CloudController::RouteBinding.make(
-            route:,
-            service_instance:
-          )
+          create(:route_binding,
+                 route:,
+                 service_instance:)
         end
 
         it 'fails with a specific error' do
@@ -605,13 +603,12 @@ RSpec.describe 'v3 service route bindings' do
       end
 
       context 'service instance is bound to a different route' do
-        let(:other_route) { VCAP::CloudController::Route.make(space:) }
+        let(:other_route) { create(:route, space:) }
 
         before do
-          VCAP::CloudController::RouteBinding.make(
-            route: other_route,
-            service_instance: service_instance
-          )
+          create(:route_binding,
+                 route: other_route,
+                 service_instance: service_instance)
         end
 
         it 'succeeds' do
@@ -623,9 +620,9 @@ RSpec.describe 'v3 service route bindings' do
     end
 
     context 'managed service instance' do
-      let(:offering) { VCAP::CloudController::Service.make(bindings_retrievable: true, requires: ['route_forwarding']) }
-      let(:plan) { VCAP::CloudController::ServicePlan.make(service: offering) }
-      let(:service_instance) { VCAP::CloudController::ManagedServiceInstance.make(space: space, service_plan: plan) }
+      let(:offering) { create(:service, bindings_retrievable: true, requires: ['route_forwarding']) }
+      let(:plan) { create(:service_plan, service: offering) }
+      let(:service_instance) { create(:managed_service_instance, space: space, service_plan: plan) }
       let(:binding) { VCAP::CloudController::RouteBinding.last }
       let(:job) { VCAP::CloudController::PollableJobModel.last }
 
@@ -890,7 +887,7 @@ RSpec.describe 'v3 service route bindings' do
           end
 
           context 'binding not retrievable' do
-            let(:offering) { VCAP::CloudController::Service.make(bindings_retrievable: false, requires: ['route_forwarding']) }
+            let(:offering) { create(:service, bindings_retrievable: false, requires: ['route_forwarding']) }
 
             it 'fails the job with an appropriate error' do
               execute_all_jobs(expected_successes: 0, expected_failures: 1)
@@ -948,7 +945,7 @@ RSpec.describe 'v3 service route bindings' do
       end
 
       context 'service offering not configured for route binding' do
-        let(:offering) { VCAP::CloudController::Service.make(requires: []) }
+        let(:offering) { create(:service, requires: []) }
 
         it 'fails with a 422 unprocessable' do
           post '/v3/service_route_bindings', request.to_json, space_dev_headers
@@ -967,7 +964,7 @@ RSpec.describe 'v3 service route bindings' do
       end
 
       context 'service offering not bindable' do
-        let(:offering) { VCAP::CloudController::Service.make(bindable: false, requires: ['route_forwarding']) }
+        let(:offering) { create(:service, bindable: false, requires: ['route_forwarding']) }
 
         it 'fails with a 422 unprocessable' do
           post '/v3/service_route_bindings', request.to_json, space_dev_headers
@@ -986,7 +983,7 @@ RSpec.describe 'v3 service route bindings' do
       end
 
       context 'cannot read service instance' do
-        let(:service_instance) { VCAP::CloudController::ManagedServiceInstance.make(service_plan: plan) }
+        let(:service_instance) { create(:managed_service_instance, service_plan: plan) }
 
         it 'fails with a 422 unprocessable' do
           api_call.call(space_dev_headers)
@@ -1065,7 +1062,7 @@ RSpec.describe 'v3 service route bindings' do
     end
 
     context 'user-provided service instance' do
-      let(:service_instance) { VCAP::CloudController::UserProvidedServiceInstance.make(space:, route_service_url:) }
+      let(:service_instance) { create(:user_provided_service_instance, space:, route_service_url:) }
 
       it_behaves_like 'create route binding'
 
@@ -1145,7 +1142,7 @@ RSpec.describe 'v3 service route bindings' do
       end
 
       context 'service instance not configured for route binding' do
-        let(:service_instance) { VCAP::CloudController::UserProvidedServiceInstance.make(space:) }
+        let(:service_instance) { create(:user_provided_service_instance, space:) }
 
         it 'fails with a 422 unprocessable' do
           api_call.call(space_dev_headers)
@@ -1164,7 +1161,7 @@ RSpec.describe 'v3 service route bindings' do
       end
 
       context 'cannot read service instance' do
-        let(:service_instance) { VCAP::CloudController::UserProvidedServiceInstance.make }
+        let(:service_instance) { create(:user_provided_service_instance) }
 
         it 'fails with a 422 unprocessable' do
           api_call.call(space_dev_headers)
@@ -1188,7 +1185,7 @@ RSpec.describe 'v3 service route bindings' do
     let(:api_call) { ->(user_headers) { delete "/v3/service_route_bindings/#{guid}", nil, user_headers } }
 
     context 'route binding exists' do
-      let(:route) { VCAP::CloudController::Route.make(space:) }
+      let(:route) { create(:route, space:) }
       let(:binding) do
         VCAP::CloudController::RouteBinding.new.save_with_new_operation(
           { service_instance:, route:, route_service_url: },
@@ -1205,7 +1202,7 @@ RSpec.describe 'v3 service route bindings' do
       end
 
       context 'user-provided service instance' do
-        let(:service_instance) { VCAP::CloudController::UserProvidedServiceInstance.make(space:, route_service_url:) }
+        let(:service_instance) { create(:user_provided_service_instance, space:, route_service_url:) }
 
         let(:db_check) do
           lambda do
@@ -1246,9 +1243,9 @@ RSpec.describe 'v3 service route bindings' do
       end
 
       context 'managed service instance' do
-        let(:service_offering) { VCAP::CloudController::Service.make(requires: ['route_forwarding']) }
-        let(:service_plan) { VCAP::CloudController::ServicePlan.make(service: service_offering) }
-        let(:service_instance) { VCAP::CloudController::ManagedServiceInstance.make(space:, service_plan:) }
+        let(:service_offering) { create(:service, requires: ['route_forwarding']) }
+        let(:service_plan) { create(:service_plan, service: service_offering) }
+        let(:service_instance) { create(:managed_service_instance, space:, service_plan:) }
 
         let(:db_check) { -> {} }
         let(:job) { VCAP::CloudController::PollableJobModel.last }
@@ -1622,11 +1619,11 @@ RSpec.describe 'v3 service route bindings' do
   end
 
   describe 'GET /v3/service_route_bindings/:guid/parameters' do
-    let(:offering) { VCAP::CloudController::Service.make(requires: ['route_forwarding'], bindings_retrievable: true) }
-    let(:plan) { VCAP::CloudController::ServicePlan.make(service: offering) }
-    let(:service_instance) { VCAP::CloudController::ManagedServiceInstance.make(space: space, service_plan: plan) }
-    let(:route) { VCAP::CloudController::Route.make(space:) }
-    let(:app_model) { VCAP::CloudController::AppModel.make(space:) }
+    let(:offering) { create(:service, requires: ['route_forwarding'], bindings_retrievable: true) }
+    let(:plan) { create(:service_plan, service: offering) }
+    let(:service_instance) { create(:managed_service_instance, space: space, service_plan: plan) }
+    let(:route) { create(:route, space:) }
+    let(:app_model) { create(:app_model, space:) }
     let(:binding) { bind_service_to_route(service_instance, route) }
 
     let(:api_call) { ->(user_headers) { get "/v3/service_route_bindings/#{binding.guid}/parameters", nil, user_headers } }
@@ -1685,7 +1682,7 @@ RSpec.describe 'v3 service route bindings' do
       end
 
       context 'when bindings are not retrievable' do
-        let(:offering) { VCAP::CloudController::Service.make(requires: ['route_forwarding']) }
+        let(:offering) { create(:service, requires: ['route_forwarding']) }
 
         it 'returns the appropriate error' do
           api_call.call(admin_headers)
@@ -1816,7 +1813,7 @@ RSpec.describe 'v3 service route bindings' do
     end
 
     context 'user provided service instances' do
-      let(:service_instance) { VCAP::CloudController::UserProvidedServiceInstance.make(space: space, route_service_url: 'https://route.example.com') }
+      let(:service_instance) { create(:user_provided_service_instance, space: space, route_service_url: 'https://route.example.com') }
       let(:error_response) do
         {
           code: 'CF-BadRequest',
@@ -1870,10 +1867,10 @@ RSpec.describe 'v3 service route bindings' do
   describe 'PATCH /v3/service_route_bindings/:guid' do
     let(:api_call) { ->(user_headers) { patch "/v3/service_route_bindings/#{guid}", update_request_body.to_json, user_headers } }
 
-    let(:offering) { VCAP::CloudController::Service.make(requires: ['route_forwarding'], bindings_retrievable: true) }
-    let(:plan) { VCAP::CloudController::ServicePlan.make(service: offering) }
-    let(:service_instance) { VCAP::CloudController::ManagedServiceInstance.make(space: space, service_plan: plan, route_service_url: route_service_url) }
-    let(:route) { VCAP::CloudController::Route.make(space:) }
+    let(:offering) { create(:service, requires: ['route_forwarding'], bindings_retrievable: true) }
+    let(:plan) { create(:service_plan, service: offering) }
+    let(:service_instance) { create(:managed_service_instance, space: space, service_plan: plan, route_service_url: route_service_url) }
+    let(:route) { create(:route, space:) }
     let(:binding) { bind_service_to_route(service_instance, route) }
     let(:guid) { binding.guid }
     let(:labels) { { potato: 'sweet' } }

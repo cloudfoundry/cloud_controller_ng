@@ -4,15 +4,15 @@ module VCAP::CloudController
   RSpec.describe RouteMappingDelete do
     subject(:route_mapping_delete) { RouteMappingDelete.new(user_audit_info) }
     let(:logger) { instance_double(Steno::Logger) }
-    let(:user) { User.make }
+    let(:user) { create(:user) }
     let(:user_email) { 'user_email' }
     let(:user_audit_info) { UserAuditInfo.new(user_guid: user.guid, user_email: user_email) }
-    let(:space) { Space.make }
-    let(:app) { AppModel.make(space:) }
-    let(:process1) { ProcessModel.make(app: app, type: 'other') }
-    let(:process2) { ProcessModel.make(app: app, type: 'other') }
-    let(:route) { Route.make(space:) }
-    let!(:route_mapping) { RouteMappingModel.make(app: app, route: route, process_type: 'other', guid: 'go wild') }
+    let(:space) { create(:space) }
+    let(:app) { create(:app_model, space:) }
+    let(:process1) { create(:process_model, app: app, type: 'other') }
+    let(:process2) { create(:process_model, app: app, type: 'other') }
+    let(:route) { create(:route, space:) }
+    let!(:route_mapping) { create(:route_mapping_model, app: app, route: route, process_type: 'other', guid: 'go wild') }
     let(:process1_route_handler) { instance_double(ProcessRouteHandler, update_route_information: nil) }
     let(:process2_route_handler) { instance_double(ProcessRouteHandler, update_route_information: nil) }
     let(:event_repository) { instance_double(Repositories::AppEventRepository) }
@@ -41,7 +41,7 @@ module VCAP::CloudController
         end
 
         it 'can delete multiple route mappings' do
-          route_mapping_2 = RouteMappingModel.make(app:)
+          route_mapping_2 = create(:route_mapping_model, app:)
           route_mapping_delete.delete([route_mapping, route_mapping_2])
           expect(route_mapping).not_to exist
           expect(route_mapping_2).not_to exist
@@ -89,7 +89,7 @@ module VCAP::CloudController
         end
 
         it 'deletes only present route mappings' do
-          route_mapping_2 = RouteMappingModel.make(app:)
+          route_mapping_2 = create(:route_mapping_model, app:)
           expect { route_mapping_delete.delete([route_mapping, route_mapping_2]) }.not_to raise_error
           expect(route_mapping_2).not_to exist
         end

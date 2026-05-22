@@ -33,16 +33,16 @@ module VCAP::CloudController
       end
 
       context 'when a service instance is shared' do
-        let(:service_instance) { ManagedServiceInstance.make }
-        let(:target_space) { Space.make }
+        let(:service_instance) { create(:managed_service_instance) }
+        let(:target_space) { create(:space) }
 
         before do
           service_instance.add_shared_space(target_space)
         end
 
         context 'when there are bindings in the target space' do
-          let(:target_app) { AppModel.make(space: target_space) }
-          let!(:target_binding) { ServiceBinding.make(app: target_app, service_instance: service_instance) }
+          let(:target_app) { create(:app_model, space: target_space) }
+          let!(:target_binding) { create(:service_binding, app: target_app, service_instance: service_instance) }
 
           it 'issues an unbind and fails the instance deletion if the service instance is deleted recursively and accepts_incomplete is true' do
             delete("/v2/service_instances/#{service_instance.guid}", 'recursive=true&accepts_incomplete=true', admin_headers)
@@ -70,8 +70,8 @@ module VCAP::CloudController
 
           context 'and when there are bindings in the source space' do
             let(:source_space) { service_instance.space }
-            let(:source_app) { AppModel.make(space: source_space) }
-            let!(:source_binding) { ServiceBinding.make(app: source_app, service_instance: service_instance) }
+            let(:source_app) { create(:app_model, space: source_space) }
+            let!(:source_binding) { create(:service_binding, app: source_app, service_instance: service_instance) }
 
             it 'issues unbinds and fails the instance deletion if the service instance is deleted recursively and accepts_incomplete is true' do
               delete("/v2/service_instances/#{service_instance.guid}", 'recursive=true&accepts_incomplete=true', admin_headers)
@@ -121,15 +121,15 @@ module VCAP::CloudController
 
       context 'when DELETE /v3/apps/:guid is called' do
         context 'and multiple service bindings exist' do
-          let(:space) { Space.make }
-          let(:app_model) { VCAP::CloudController::AppModel.make(name: 'app_name', space: space) }
-          let(:package) { VCAP::CloudController::PackageModel.make(app: app_model) }
-          let!(:droplet) { VCAP::CloudController::DropletModel.make(package: package, app: app_model) }
-          let!(:process) { VCAP::CloudController::ProcessModel.make(app: app_model) }
-          let!(:deployment) { VCAP::CloudController::DeploymentModel.make(app: app_model) }
+          let(:space) { create(:space) }
+          let(:app_model) { create(:app_model, name: 'app_name', space: space) }
+          let(:package) { create(:package_model, app: app_model) }
+          let!(:droplet) { create(:droplet_model, package: package, app: app_model) }
+          let!(:process) { create(:process_model, app: app_model) }
+          let!(:deployment) { create(:deployment_model, app: app_model) }
 
-          let!(:service_binding1) { ServiceBinding.make(app: app_model, service_instance: ManagedServiceInstance.make(space:)) }
-          let!(:service_binding2) { ServiceBinding.make(app: app_model, service_instance: ManagedServiceInstance.make(space:)) }
+          let!(:service_binding1) { create(:service_binding, app: app_model, service_instance: create(:managed_service_instance, space:)) }
+          let!(:service_binding2) { create(:service_binding, app: app_model, service_instance: create(:managed_service_instance, space:)) }
 
           it 'returns a list of errors for the service bindings' do
             delete("/v3/apps/#{app_model.guid}", nil, admin_headers)
@@ -157,8 +157,8 @@ module VCAP::CloudController
         context 'and multiple service bindings exist' do
           let(:process) { ProcessModelFactory.make }
 
-          let!(:service_binding1) { ServiceBinding.make(app: process.app, service_instance: ManagedServiceInstance.make(space: process.space)) }
-          let!(:service_binding2) { ServiceBinding.make(app: process.app, service_instance: ManagedServiceInstance.make(space: process.space)) }
+          let!(:service_binding1) { create(:service_binding, app: process.app, service_instance: create(:managed_service_instance, space: process.space)) }
+          let!(:service_binding2) { create(:service_binding, app: process.app, service_instance: create(:managed_service_instance, space: process.space)) }
 
           it 'returns a concatenated error for the service bindings' do
             delete("/v2/apps/#{process.app.guid}", 'recursive=true', admin_headers)
@@ -180,8 +180,8 @@ module VCAP::CloudController
         context 'and multiple service bindings exist' do
           let(:process) { ProcessModelFactory.make }
 
-          let!(:service_binding1) { ServiceBinding.make(app: process.app, service_instance: ManagedServiceInstance.make(space: process.space)) }
-          let!(:service_binding2) { ServiceBinding.make(app: process.app, service_instance: ManagedServiceInstance.make(space: process.space)) }
+          let!(:service_binding1) { create(:service_binding, app: process.app, service_instance: create(:managed_service_instance, space: process.space)) }
+          let!(:service_binding2) { create(:service_binding, app: process.app, service_instance: create(:managed_service_instance, space: process.space)) }
 
           it 'returns a concatenated error for the service bindings' do
             delete("/v2/spaces/#{process.space.guid}", 'recursive=true', admin_headers)
@@ -203,8 +203,8 @@ module VCAP::CloudController
         context 'and multiple service bindings exist' do
           let(:process) { ProcessModelFactory.make }
 
-          let!(:service_binding1) { ServiceBinding.make(app: process.app, service_instance: ManagedServiceInstance.make(space: process.space)) }
-          let!(:service_binding2) { ServiceBinding.make(app: process.app, service_instance: ManagedServiceInstance.make(space: process.space)) }
+          let!(:service_binding1) { create(:service_binding, app: process.app, service_instance: create(:managed_service_instance, space: process.space)) }
+          let!(:service_binding2) { create(:service_binding, app: process.app, service_instance: create(:managed_service_instance, space: process.space)) }
 
           it 'returns a concatenated error for the service bindings' do
             delete("/v2/organizations/#{process.organization.guid}", 'recursive=true', admin_headers)
@@ -224,8 +224,8 @@ module VCAP::CloudController
 
       context 'when PUT /v2/service_instances/:guid is called and when an async binding operation is in progress' do
         let(:process) { ProcessModelFactory.make }
-        let(:service_binding) { ServiceBinding.make(app: process.app, service_instance: ManagedServiceInstance.make(space: process.space)) }
-        let!(:service_binding_operation) { ServiceBindingOperation.make(state: 'in progress', type: operation_type, service_binding_id: service_binding.id) }
+        let(:service_binding) { create(:service_binding, app: process.app, service_instance: create(:managed_service_instance, space: process.space)) }
+        let!(:service_binding_operation) { create(:service_binding_operation, state: 'in progress', type: operation_type, service_binding_id: service_binding.id) }
 
         let(:body) do
           {
@@ -270,8 +270,8 @@ module VCAP::CloudController
 
       context 'when DELETE /v2/service_instances/:guid is called and when an async binding operation is in progress' do
         let(:process) { ProcessModelFactory.make }
-        let(:service_binding) { ServiceBinding.make(app: process.app, service_instance: ManagedServiceInstance.make(space: process.space)) }
-        let!(:service_binding_operation) { ServiceBindingOperation.make(state: 'in progress', type: operation_type, service_binding_id: service_binding.id) }
+        let(:service_binding) { create(:service_binding, app: process.app, service_instance: create(:managed_service_instance, space: process.space)) }
+        let!(:service_binding_operation) { create(:service_binding_operation, state: 'in progress', type: operation_type, service_binding_id: service_binding.id) }
 
         context 'when the binding operation is create' do
           let(:operation_type) { 'create' }

@@ -2,7 +2,7 @@ require 'spec_helper'
 
 module VCAP::CloudController
   RSpec.describe PrivateDomain, type: :model do
-    let(:private_domain) { PrivateDomain.make name: 'test.example.com' }
+    let(:private_domain) { create(:private_domain, name: 'test.example.com') }
     let(:reserved) { nil }
 
     before do
@@ -13,8 +13,8 @@ module VCAP::CloudController
 
     describe 'Associations' do
       it 'has associated spaces' do
-        private_domain = PrivateDomain.make
-        space = Space.make(organization: private_domain.owning_organization)
+        private_domain = create(:private_domain)
+        space = create(:space, organization: private_domain.owning_organization)
         expect(private_domain.spaces).to include(space.reload)
       end
     end
@@ -33,70 +33,70 @@ module VCAP::CloudController
       end
 
       it 'denies private uaa.customer-app-domain1.com when customer-app-domain1.com is the system domain' do
-        expect { PrivateDomain.make name: 'uaa.customer-app-domain1.com' }.to raise_error(Sequel::ValidationFailed, /is already reserved by the system/)
+        expect { create(:private_domain, name: 'uaa.customer-app-domain1.com') }.to raise_error(Sequel::ValidationFailed, /is already reserved by the system/)
       end
 
       it 'allows private bar.foo.com when foo.com has the same owner' do
-        private_domain = PrivateDomain.make name: 'foo.com'
-        expect { PrivateDomain.make name: 'bar.foo.com', owning_organization_id: private_domain.owning_organization_id }.not_to raise_error
+        private_domain = create(:private_domain, name: 'foo.com')
+        expect { create(:private_domain, name: 'bar.foo.com', owning_organization_id: private_domain.owning_organization_id) }.not_to raise_error
       end
 
       it 'allows private foo.com a when bar.foo.com has the same owner' do
-        private_domain = PrivateDomain.make name: 'bar.foo.com'
-        expect { PrivateDomain.make name: 'foo.com', owning_organization_id: private_domain.owning_organization_id }.not_to raise_error
+        private_domain = create(:private_domain, name: 'bar.foo.com')
+        expect { create(:private_domain, name: 'foo.com', owning_organization_id: private_domain.owning_organization_id) }.not_to raise_error
       end
 
       it 'denies private foo.com when another org has bar.foo.com' do
-        PrivateDomain.make name: 'bar.foo.com'
-        expect { PrivateDomain.make name: 'foo.com' }.to raise_error(Sequel::ValidationFailed, /is already reserved by another domain/)
+        create(:private_domain, name: 'bar.foo.com')
+        expect { create(:private_domain, name: 'foo.com') }.to raise_error(Sequel::ValidationFailed, /is already reserved by another domain/)
       end
 
       it 'denies private foo.com when there is a shared bar.foo.com' do
-        SharedDomain.make name: 'bar.foo.com'
-        expect { PrivateDomain.make name: 'foo.com' }.to raise_error(Sequel::ValidationFailed, /is already reserved by another domain/)
+        create(:shared_domain, name: 'bar.foo.com')
+        expect { create(:private_domain, name: 'foo.com') }.to raise_error(Sequel::ValidationFailed, /is already reserved by another domain/)
       end
 
       it 'denies private foo.com when there is a shared foo.com' do
-        SharedDomain.make name: 'foo.com'
-        expect { PrivateDomain.make name: 'foo.com' }.to raise_error(Sequel::ValidationFailed, /name unique/)
+        create(:shared_domain, name: 'foo.com')
+        expect { create(:private_domain, name: 'foo.com') }.to raise_error(Sequel::ValidationFailed, /name unique/)
       end
 
       it 'allows private bar.foo.com a when private baz.bar.foo.com has the same owner and shared foo.com exist' do
-        private_domain = PrivateDomain.make name: 'baz.bar.foo.com'
-        SharedDomain.make name: 'foo.com'
-        expect { PrivateDomain.make name: 'bar.foo.com', owning_organization_id: private_domain.owning_organization_id }.not_to raise_error
+        private_domain = create(:private_domain, name: 'baz.bar.foo.com')
+        create(:shared_domain, name: 'foo.com')
+        expect { create(:private_domain, name: 'bar.foo.com', owning_organization_id: private_domain.owning_organization_id) }.not_to raise_error
       end
 
       it 'denies private bar.foo.com a when private baz.bar.foo.com has a different owner and shared foo.com exist' do
-        PrivateDomain.make name: 'baz.bar.foo.com'
-        SharedDomain.make name: 'foo.com'
+        create(:private_domain, name: 'baz.bar.foo.com')
+        create(:shared_domain, name: 'foo.com')
         error_msg = %(The domain name "bar.foo.com" cannot be created because "baz.bar.foo.com" is already reserved by another domain)
-        expect { PrivateDomain.make name: 'bar.foo.com' }.to raise_error(Sequel::ValidationFailed, error_msg)
+        expect { create(:private_domain, name: 'bar.foo.com') }.to raise_error(Sequel::ValidationFailed, error_msg)
       end
 
       it 'denies private bar.foo.com a when shared baz.bar.foo.com and foo.com exist' do
-        SharedDomain.make name: 'baz.bar.foo.com'
-        SharedDomain.make name: 'foo.com'
+        create(:shared_domain, name: 'baz.bar.foo.com')
+        create(:shared_domain, name: 'foo.com')
         error_msg = %(The domain name "bar.foo.com" cannot be created because "baz.bar.foo.com" is already reserved by another domain)
-        expect { PrivateDomain.make name: 'bar.foo.com' }.to raise_error(Sequel::ValidationFailed, error_msg)
+        expect { create(:private_domain, name: 'bar.foo.com') }.to raise_error(Sequel::ValidationFailed, error_msg)
       end
 
       context 'with reserved private domains' do
         let(:reserved) { File.join(Paths::FIXTURES, 'config/reserved_private_domains.dat') }
 
         it 'handles normal reserved domain names' do
-          expect { PrivateDomain.make name: 'com.ac' }.to raise_error(Sequel::ValidationFailed, /reserved/)
-          expect { PrivateDomain.make name: 'a.com.ac' }.not_to raise_error
-          expect { PrivateDomain.make name: 'scom.ac' }.not_to raise_error
+          expect { create(:private_domain, name: 'com.ac') }.to raise_error(Sequel::ValidationFailed, /reserved/)
+          expect { create(:private_domain, name: 'a.com.ac') }.not_to raise_error
+          expect { create(:private_domain, name: 'scom.ac') }.not_to raise_error
         end
 
         it 'handles wildcard reserved domain names' do
-          expect { PrivateDomain.make name: 'b.wild.card' }.to raise_error(Sequel::ValidationFailed, /reserved/)
-          expect { PrivateDomain.make name: 'a.b.wild.card' }.not_to raise_error
+          expect { create(:private_domain, name: 'b.wild.card') }.to raise_error(Sequel::ValidationFailed, /reserved/)
+          expect { create(:private_domain, name: 'a.b.wild.card') }.not_to raise_error
         end
 
         it 'handles exception reserved domain names' do
-          expect { PrivateDomain.make name: 'a.wild.card' }.not_to raise_error
+          expect { create(:private_domain, name: 'a.wild.card') }.not_to raise_error
         end
 
         context 'with a missing file' do
@@ -109,7 +109,7 @@ module VCAP::CloudController
       end
 
       describe 'total allowed private domains' do
-        let(:organization) { Organization.make }
+        let(:organization) { create(:organization) }
         let(:org_quota) { organization.quota_definition }
 
         subject(:domain) { PrivateDomain.new(name: 'foo.com', owning_organization: organization) }
@@ -166,7 +166,7 @@ module VCAP::CloudController
     end
 
     describe '#in_suspended_org?' do
-      let(:org) { Organization.make }
+      let(:org) { create(:organization) }
       let(:private_domain) { PrivateDomain.new(owning_organization: org) }
 
       context 'when in a suspended organization' do
@@ -187,14 +187,14 @@ module VCAP::CloudController
     end
 
     describe '#destroy' do
-      let(:space) { Space.make(organization: private_domain.owning_organization) }
+      let(:space) { create(:space, organization: private_domain.owning_organization) }
 
       before do
         TestConfig.override(kubernetes: {})
       end
 
       it 'destroys the routes' do
-        route = Route.make(domain: private_domain, space: space)
+        route = create(:route, domain: private_domain, space: space)
 
         expect do
           private_domain.destroy
@@ -223,7 +223,7 @@ module VCAP::CloudController
 
       context 'when not the owner' do
         it 'returns true when allowed to share the domain' do
-          org = Organization.make
+          org = create(:organization)
           private_domain.add_shared_organization(org)
           expect(private_domain.usable_by_organization?(org)).to be true
         end

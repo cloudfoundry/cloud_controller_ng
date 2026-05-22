@@ -5,9 +5,9 @@ require 'messages/role_create_message'
 module VCAP::CloudController
   RSpec.describe RoleCreate do
     let(:db) { Sequel::Model.db }
-    let(:space) { Space.make }
+    let(:space) { create(:space) }
     let(:org) { space.organization }
-    let(:user) { User.make }
+    let(:user) { create(:user) }
     let(:user_audit_info) { UserAuditInfo.new(user_email: 'amelia@cats.com', user_guid: 'gooid') }
     let(:uaa_client) { instance_double(VCAP::CloudController::UaaClient) }
 

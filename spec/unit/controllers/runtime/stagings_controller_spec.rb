@@ -239,7 +239,7 @@ module VCAP::CloudController
 
     before do
       TestConfig.override(**staging_config)
-      set_current_user_as_admin(user: User.make(guid: '1234'), email: 'joe@joe.com', user_name: 'briggs')
+      set_current_user_as_admin(user: create(:user, guid: '1234'), email: 'joe@joe.com', user_name: 'briggs')
       allow_any_instance_of(BitsExpiration).to receive(:expire_packages!)
     end
 
@@ -270,7 +270,7 @@ module VCAP::CloudController
     end
 
     describe 'GET /staging/packages/:guid' do
-      let(:package) { PackageModel.make }
+      let(:package) { create(:package_model) }
 
       before { authorize(staging_user, staging_password) }
 
@@ -330,15 +330,14 @@ module VCAP::CloudController
 
       it_behaves_like 'a Build to Droplet stager' do
         let(:file_content) { 'droplet content' }
-        let(:package) { PackageModel.make(app: process) }
+        let(:package) { create(:package_model, app: process) }
         let(:build) do
-          BuildModel.make(
-            package: package,
-            app: process,
-            created_by_user_guid: '1234',
-            created_by_user_email: 'joe@joe.com',
-            created_by_user_name: 'briggs'
-          )
+          create(:build_model,
+                 package: package,
+                 app: process,
+                 created_by_user_guid: '1234',
+                 created_by_user_email: 'joe@joe.com',
+                 created_by_user_name: 'briggs')
         end
         let(:droplet) { nil }
 
@@ -361,7 +360,7 @@ module VCAP::CloudController
       end
 
       it_behaves_like 'a legacy Droplet stager to support rolling deploys' do
-        let(:droplet) { DropletModel.make }
+        let(:droplet) { create(:droplet_model) }
         let(:file_content) { 'droplet content' }
 
         let(:upload_req) do
@@ -374,8 +373,8 @@ module VCAP::CloudController
 
       it_behaves_like 'droplet staging error handling' do
         let(:file_content) { 'droplet content' }
-        let(:package) { PackageModel.make(app: process) }
-        let(:build) { BuildModel.make(package: package, app: process) }
+        let(:package) { create(:package_model, app: process) }
+        let(:build) { create(:build_model, package: package, app: process) }
         let(:droplet) { nil }
         let(:upload_req) do
           { upload: { droplet: Rack::Test::UploadedFile.new(temp_file_with_content(file_content)) } }
@@ -393,7 +392,7 @@ module VCAP::CloudController
       let(:upload_req) do
         { upload: { droplet: Rack::Test::UploadedFile.new(temp_file_with_content(file_content)) } }
       end
-      let(:app_model) { AppModel.make }
+      let(:app_model) { create(:app_model) }
       let(:stack) { Sham.name }
 
       context 'with a valid app' do
@@ -442,7 +441,7 @@ module VCAP::CloudController
     end
 
     describe 'GET /staging/v3/buildpack_cache/:stack/:app_guid/download' do
-      let(:app_model) { AppModel.make }
+      let(:app_model) { create(:app_model) }
       let(:stack) { Sham.name }
 
       before { authorize staging_user, staging_password }
@@ -467,7 +466,7 @@ module VCAP::CloudController
     end
 
     describe 'GET /staging/v3/droplets/:guid/download' do
-      let(:droplet) { DropletModel.make }
+      let(:droplet) { create(:droplet_model) }
 
       before { authorize(staging_user, staging_password) }
 

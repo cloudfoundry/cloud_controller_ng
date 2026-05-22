@@ -4,11 +4,11 @@ require 'actions/service_instance_share'
 module VCAP::CloudController
   RSpec.describe ServiceInstanceShare do
     let(:service_instance_share) { ServiceInstanceShare.new }
-    let(:service_instance) { ManagedServiceInstance.make }
-    let(:user_provided_service_instance) { UserProvidedServiceInstance.make }
+    let(:service_instance) { create(:managed_service_instance) }
+    let(:user_provided_service_instance) { create(:user_provided_service_instance) }
     let(:user_audit_info) { UserAuditInfo.new(user_guid: 'user-guid-1', user_email: 'user@email.com') }
-    let(:target_space1) { Space.make }
-    let(:target_space2) { Space.make }
+    let(:target_space1) { create(:space) }
+    let(:target_space2) { create(:space) }
 
     describe '#create' do
       it 'creates share' do
@@ -97,8 +97,8 @@ module VCAP::CloudController
       end
 
       context 'when a service instance already exists in the target space with the same name as the service being shared' do
-        let(:service_instance) { ManagedServiceInstance.make(name: 'banana') }
-        let!(:target_space_service_instance) { ManagedServiceInstance.make(name: 'banana', space: target_space1) }
+        let(:service_instance) { create(:managed_service_instance, name: 'banana') }
+        let!(:target_space_service_instance) { create(:managed_service_instance, name: 'banana', space: target_space1) }
 
         it 'raises an api error' do
           expect do
@@ -109,8 +109,8 @@ module VCAP::CloudController
       end
 
       context 'when a service instance with the same name has already been shared with the target space' do
-        let(:service_instance1) { ManagedServiceInstance.make(name: 'banana') }
-        let(:service_instance2) { ManagedServiceInstance.make(name: 'banana') }
+        let(:service_instance1) { create(:managed_service_instance, name: 'banana') }
+        let(:service_instance2) { create(:managed_service_instance, name: 'banana') }
 
         before do
           service_instance_share.create(service_instance1, [Space.first(guid: target_space1.guid)], user_audit_info)
@@ -164,8 +164,8 @@ module VCAP::CloudController
       end
 
       context 'when the service plan is inactive' do
-        let(:service_plan) { ServicePlan.make(active: false, name: 'service-plan-name') }
-        let(:service_instance) { ManagedServiceInstance.make(service_plan:) }
+        let(:service_plan) { create(:service_plan, active: false, name: 'service-plan-name') }
+        let(:service_instance) { create(:managed_service_instance, service_plan:) }
 
         it 'raises an api error' do
           error_msg = 'The service instance could not be shared as the service-plan-name plan is inactive.'
@@ -176,13 +176,13 @@ module VCAP::CloudController
       end
 
       context 'when the service plan is from a private space-scoped broker' do
-        let(:source_org) { Organization.make(name: 'source-org') }
-        let(:source_space) { Space.make(name: 'source-space', organization: source_org) }
-        let(:broker) { ServiceBroker.make(space: source_space) }
-        let(:service) { Service.make(service_broker: broker, label: 'space-scoped-service') }
-        let(:service_plan) { ServicePlan.make(service: service, name: 'my-plan') }
-        let(:service_instance) { ManagedServiceInstance.make(service_plan:) }
-        let(:target_space1) { Space.make(name: 'target-space', organization: source_org) }
+        let(:source_org) { create(:organization, name: 'source-org') }
+        let(:source_space) { create(:space, name: 'source-space', organization: source_org) }
+        let(:broker) { create(:service_broker, space: source_space) }
+        let(:service) { create(:service, service_broker: broker, label: 'space-scoped-service') }
+        let(:service_plan) { create(:service_plan, service: service, name: 'my-plan') }
+        let(:service_instance) { create(:managed_service_instance, service_plan:) }
+        let(:target_space1) { create(:space, name: 'target-space', organization: source_org) }
 
         it 'raises an api error' do
           error_msg = 'Access to service space-scoped-service and plan my-plan is not enabled in source-org/target-space.'
@@ -193,8 +193,8 @@ module VCAP::CloudController
       end
 
       context 'when the service plan is not public' do
-        let(:service_plan) { ServicePlan.make(public: false) }
-        let(:service_instance) { ManagedServiceInstance.make(service_plan:) }
+        let(:service_plan) { create(:service_plan, public: false) }
+        let(:service_instance) { create(:managed_service_instance, service_plan:) }
 
         it 'raises an api error if service access disabled in both source and target' do
           error_msg = "Access to service #{service_instance.service.label} and plan #{service_instance.service_plan.name} is not " \
@@ -205,12 +205,12 @@ module VCAP::CloudController
         end
 
         context 'and when the source org has service plan access enabled but the target org has service plan access disabled' do
-          let(:source_org) { Organization.make }
-          let(:space) { Space.make(organization: source_org) }
-          let(:service_instance) { ManagedServiceInstance.make(service_plan:, space:) }
+          let(:source_org) { create(:organization) }
+          let(:space) { create(:space, organization: source_org) }
+          let(:service_instance) { create(:managed_service_instance, service_plan:, space:) }
 
           before do
-            ServicePlanVisibility.make(organization: source_org, service_plan: service_instance.service_plan)
+            create(:service_plan_visibility, organization: source_org, service_plan: service_instance.service_plan)
           end
 
           it 'raises an api error' do
@@ -223,12 +223,12 @@ module VCAP::CloudController
         end
 
         context 'and when the source org has service plan access disabled but the target org has service plan access enabled' do
-          let(:source_org) { Organization.make }
-          let(:space) { Space.make(organization: source_org) }
-          let(:service_instance) { ManagedServiceInstance.make(service_plan:, space:) }
+          let(:source_org) { create(:organization) }
+          let(:space) { create(:space, organization: source_org) }
+          let(:service_instance) { create(:managed_service_instance, service_plan:, space:) }
 
           before do
-            ServicePlanVisibility.make(organization: target_space1.organization, service_plan: service_instance.service_plan)
+            create(:service_plan_visibility, organization: target_space1.organization, service_plan: service_instance.service_plan)
           end
 
           it 'creates the share' do
@@ -238,13 +238,13 @@ module VCAP::CloudController
         end
 
         context 'and when source org has had service plan access enabled and the target org has service plan access enabled' do
-          let(:source_org) { Organization.make }
-          let(:space) { Space.make(organization: source_org) }
-          let(:service_instance) { ManagedServiceInstance.make(service_plan:, space:) }
+          let(:source_org) { create(:organization) }
+          let(:space) { create(:space, organization: source_org) }
+          let(:service_instance) { create(:managed_service_instance, service_plan:, space:) }
 
           before do
-            ServicePlanVisibility.make(organization: target_space1.organization, service_plan: service_instance.service_plan)
-            ServicePlanVisibility.make(organization: source_org, service_plan: service_instance.service_plan)
+            create(:service_plan_visibility, organization: target_space1.organization, service_plan: service_instance.service_plan)
+            create(:service_plan_visibility, organization: source_org, service_plan: service_instance.service_plan)
           end
 
           it 'creates the share' do

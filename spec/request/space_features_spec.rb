@@ -3,9 +3,9 @@ require 'request_spec_shared_examples'
 require 'controllers/v3/space_features_controller'
 
 RSpec.describe 'Space Features' do
-  let(:user) { VCAP::CloudController::User.make }
+  let(:user) { create(:user) }
   let(:user_header) { headers_for(user, email: Sham.email, user_name: 'some-username') }
-  let(:space) { VCAP::CloudController::Space.make(allow_ssh: true) }
+  let(:space) { create(:space, allow_ssh: true) }
   let(:org) { space.organization }
 
   describe 'GET /v3/spaces/:guid/features' do

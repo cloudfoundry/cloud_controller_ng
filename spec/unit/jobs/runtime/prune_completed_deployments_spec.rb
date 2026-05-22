@@ -14,14 +14,14 @@ module VCAP::CloudController
       end
 
       describe '#perform' do
-        let(:app) { AppModel.make(name: 'app') }
+        let(:app) { create(:app_model, name: 'app') }
 
         it 'deletes all the deployed deployments over the limit' do
           expect(DeploymentModel.count).to eq(0)
 
           total = 8
           (1..total).each do |i|
-            DeploymentModel.make(id: i, state: DeploymentModel::DEPLOYED_STATE, app: app, created_at: Time.now - total + i)
+            create(:deployment_model, id: i, state: DeploymentModel::DEPLOYED_STATE, app: app, created_at: Time.now - total + i)
           end
 
           job.perform
@@ -35,7 +35,7 @@ module VCAP::CloudController
 
           total = 8
           (1..total).each do |i|
-            DeploymentModel.make(id: i, state: DeploymentModel::CANCELED_STATE, app: app, created_at: Time.now - total + i)
+            create(:deployment_model, id: i, state: DeploymentModel::CANCELED_STATE, app: app, created_at: Time.now - total + i)
           end
 
           job.perform
@@ -49,7 +49,7 @@ module VCAP::CloudController
 
           total = 8
           (1..total).each do |i|
-            DeploymentModel.make(id: i, state: DeploymentModel::DEPLOYING_STATE, app: app, created_at: Time.now - total + i)
+            create(:deployment_model, id: i, state: DeploymentModel::DEPLOYING_STATE, app: app, created_at: Time.now - total + i)
           end
 
           job.perform
@@ -63,7 +63,7 @@ module VCAP::CloudController
 
           total = 8
           (1..total).each do |i|
-            DeploymentModel.make(id: i, state: DeploymentModel::PREPAUSED_STATE, app: app, created_at: Time.now - total + i)
+            create(:deployment_model, id: i, state: DeploymentModel::PREPAUSED_STATE, app: app, created_at: Time.now - total + i)
           end
 
           job.perform
@@ -77,7 +77,7 @@ module VCAP::CloudController
 
           total = 8
           (1..total).each do |i|
-            DeploymentModel.make(id: i, state: DeploymentModel::PAUSED_STATE, app: app, created_at: Time.now - total + i)
+            create(:deployment_model, id: i, state: DeploymentModel::PAUSED_STATE, app: app, created_at: Time.now - total + i)
           end
 
           job.perform
@@ -91,7 +91,7 @@ module VCAP::CloudController
 
           total = 8
           (1..total).each do |i|
-            DeploymentModel.make(id: i, state: DeploymentModel::CANCELING_STATE, app: app, created_at: Time.now - total + i)
+            create(:deployment_model, id: i, state: DeploymentModel::CANCELING_STATE, app: app, created_at: Time.now - total + i)
           end
 
           job.perform
@@ -103,13 +103,13 @@ module VCAP::CloudController
         it 'does not delete in-flight deployments over the limit' do
           total = 12
           (1..4).each do |i|
-            DeploymentModel.make(id: i, state: DeploymentModel::DEPLOYED_STATE, app: app, created_at: Time.now - total + i)
+            create(:deployment_model, id: i, state: DeploymentModel::DEPLOYED_STATE, app: app, created_at: Time.now - total + i)
           end
           (5..8).each do |i|
-            DeploymentModel.make(id: i, state: DeploymentModel::DEPLOYING_STATE, app: app, created_at: Time.now - total + i)
+            create(:deployment_model, id: i, state: DeploymentModel::DEPLOYING_STATE, app: app, created_at: Time.now - total + i)
           end
           (9..12).each do |i|
-            DeploymentModel.make(id: i, state: DeploymentModel::DEPLOYED_STATE, app: app, created_at: Time.now - total + i)
+            create(:deployment_model, id: i, state: DeploymentModel::DEPLOYED_STATE, app: app, created_at: Time.now - total + i)
           end
 
           job.perform
@@ -125,9 +125,9 @@ module VCAP::CloudController
 
           total = 8
           (1..total).each do |i|
-            deployment = DeploymentModel.make(id: i, state: DeploymentModel::DEPLOYED_STATE, app: app, created_at: Time.now - total + i)
-            DeploymentAnnotationModel.make(deployment: deployment, key_name: i, value: i)
-            DeploymentLabelModel.make(deployment: deployment, key_name: i, value: i)
+            deployment = create(:deployment_model, id: i, state: DeploymentModel::DEPLOYED_STATE, app: app, created_at: Time.now - total + i)
+            create(:deployment_annotation_model, deployment: deployment, key_name: i, value: i)
+            create(:deployment_label_model, deployment: deployment, key_name: i, value: i)
           end
 
           job.perform
@@ -144,8 +144,8 @@ module VCAP::CloudController
           expect(DeploymentModel.count).to eq(0)
 
           8.times do
-            d = DeploymentModel.make(state: DeploymentModel::DEPLOYED_STATE, app: app)
-            DeploymentProcessModel.make(deployment: d)
+            d = create(:deployment_model, state: DeploymentModel::DEPLOYED_STATE, app: app)
+            create(:deployment_process_model, deployment: d)
           end
 
           expect do
@@ -154,8 +154,8 @@ module VCAP::CloudController
         end
 
         context 'multiple apps' do
-          let(:app_the_second) { AppModel.make(name: 'app_the_second') }
-          let(:app_the_third) { AppModel.make(name: 'app_the_third') }
+          let(:app_the_second) { create(:app_model, name: 'app_the_second') }
+          let(:app_the_third) { create(:app_model, name: 'app_the_third') }
 
           it 'prunes deployments on multiple apps' do
             expect(DeploymentModel.count).to eq(0)
@@ -163,7 +163,7 @@ module VCAP::CloudController
             [app, app_the_second, app_the_third].each_with_index do |current_app, app_index|
               total = 8
               (1..total).each do |i|
-                DeploymentModel.make(id: i + (1000 * app_index), state: DeploymentModel::DEPLOYED_STATE, app: current_app, created_at: Time.now - total + i)
+                create(:deployment_model, id: i + (1000 * app_index), state: DeploymentModel::DEPLOYED_STATE, app: current_app, created_at: Time.now - total + i)
               end
             end
 
@@ -181,7 +181,7 @@ module VCAP::CloudController
         end
 
         context 'apps without deployments' do
-          let!(:app_without_deployments) { AppModel.make }
+          let!(:app_without_deployments) { create(:app_model) }
           let(:fake_logger) { instance_double(Steno::Logger, info: nil) }
 
           before do

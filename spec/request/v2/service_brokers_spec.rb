@@ -3,7 +3,7 @@ require 'spec_helper'
 RSpec.describe 'ServiceBrokers' do
   describe 'PUT /v2/service_brokers' do
     context 'when ccng fails to parse the service broker endpoint' do
-      let!(:service_broker) { VCAP::CloudController::ServiceBroker.make }
+      let!(:service_broker) { create(:service_broker) }
 
       before do
         stub_request(:get, 'https://broker.example.com/v2/catalog').
@@ -28,7 +28,7 @@ RSpec.describe 'ServiceBrokers' do
     end
 
     context 'when the service broker endpoint returns an error' do
-      let!(:service_broker) { VCAP::CloudController::ServiceBroker.make }
+      let!(:service_broker) { create(:service_broker) }
 
       before do
         stub_request(:get, 'https://broker.example.com/v2/catalog').

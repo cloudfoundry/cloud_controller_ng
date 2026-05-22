@@ -42,8 +42,8 @@ module VCAP::CloudController
       include_context 'permissions'
 
       before do
-        @obj_a = UserProvidedServiceInstance.make(space: @space_a)
-        @obj_b = UserProvidedServiceInstance.make(space: @space_b)
+        @obj_a = create(:user_provided_service_instance, space: @space_a)
+        @obj_b = create(:user_provided_service_instance, space: @space_b)
       end
 
       def self.user_sees_empty_enumerate(user_role, member_a_ivar, member_b_ivar)
@@ -117,7 +117,7 @@ module VCAP::CloudController
     end
 
     describe 'GET', '/v2/user_provided_service_instances/' do
-      let(:service_instance) { UserProvidedServiceInstance.make(gateway_name: Sham.name) }
+      let(:service_instance) { create(:user_provided_service_instance, gateway_name: Sham.name) }
       let(:space) { service_instance.space }
       let(:developer) { make_developer_for_space(space) }
 
@@ -131,7 +131,7 @@ module VCAP::CloudController
 
       context 'filtering' do
         let(:first_found_instance) { decoded_response.fetch('resources').first }
-        let(:service_instance) { UserProvidedServiceInstance.make(name: 'other') }
+        let(:service_instance) { create(:user_provided_service_instance, name: 'other') }
 
         it 'allows filtering by service name' do
           get "v2/user_provided_service_instances?q=name:#{service_instance.name}"
@@ -170,20 +170,20 @@ module VCAP::CloudController
         end
 
         context 'when filtering by org guid' do
-          let(:org1) { Organization.make(guid: '1') }
-          let(:org2) { Organization.make(guid: '2') }
-          let(:org3) { Organization.make(guid: '3') }
-          let(:space1) { Space.make(organization: org1) }
-          let(:space2) { Space.make(organization: org2) }
-          let(:space3) { Space.make(organization: org3) }
+          let(:org1) { create(:organization, guid: '1') }
+          let(:org2) { create(:organization, guid: '2') }
+          let(:org3) { create(:organization, guid: '3') }
+          let(:space1) { create(:space, organization: org1) }
+          let(:space2) { create(:space, organization: org2) }
+          let(:space3) { create(:space, organization: org3) }
 
           before { set_current_user_as_admin }
 
           context 'when the operator is ":"' do
             context 'when the details fit on the first page' do
               it 'successfully filters' do
-                instance1 = UserProvidedServiceInstance.make(name: 'instance-1', space: space1)
-                UserProvidedServiceInstance.make(name: 'instance-2', space: space2)
+                instance1 = create(:user_provided_service_instance, name: 'instance-1', space: space1)
+                create(:user_provided_service_instance, name: 'instance-2', space: space2)
 
                 get "v2/user_provided_service_instances?q=organization_guid:#{org1.guid}"
 
@@ -196,10 +196,10 @@ module VCAP::CloudController
             context 'with pagination' do
               let(:results_per_page) { 1 }
               let!(:instances) do
-                [UserProvidedServiceInstance.make(name: 'instance-1', space: space1),
-                 UserProvidedServiceInstance.make(name: 'instance-2', space: space1),
-                 UserProvidedServiceInstance.make(name: 'instance-3', space: space1),
-                 UserProvidedServiceInstance.make(name: 'instance-4', space: space2)]
+                [create(:user_provided_service_instance, name: 'instance-1', space: space1),
+                 create(:user_provided_service_instance, name: 'instance-2', space: space1),
+                 create(:user_provided_service_instance, name: 'instance-3', space: space1),
+                 create(:user_provided_service_instance, name: 'instance-4', space: space2)]
               end
 
               context 'at page 1' do
@@ -264,9 +264,9 @@ module VCAP::CloudController
 
             context 'when filtering by other parameters as well' do
               it 'filters by both parameters' do
-                instance1 = UserProvidedServiceInstance.make(name: 'instance-1', space: space1)
-                UserProvidedServiceInstance.make(name: 'instance-2', space: space1)
-                UserProvidedServiceInstance.make(name: instance1.name, space: space2)
+                instance1 = create(:user_provided_service_instance, name: 'instance-1', space: space1)
+                create(:user_provided_service_instance, name: 'instance-2', space: space1)
+                create(:user_provided_service_instance, name: instance1.name, space: space2)
 
                 get "v2/user_provided_service_instances?q=organization_guid:#{org1.guid}&q=name:#{instance1.name}"
 
@@ -280,9 +280,9 @@ module VCAP::CloudController
 
           context 'when the operator is "IN"' do
             it 'successfully filters' do
-              instance1 = UserProvidedServiceInstance.make(name: 'inst1', space: space1)
-              instance2 = UserProvidedServiceInstance.make(name: 'inst2', space: space2)
-              UserProvidedServiceInstance.make(name: 'inst3', space: space3)
+              instance1 = create(:user_provided_service_instance, name: 'inst1', space: space1)
+              instance2 = create(:user_provided_service_instance, name: 'inst2', space: space2)
+              create(:user_provided_service_instance, name: 'inst3', space: space3)
 
               get "v2/user_provided_service_instances?q=organization_guid%20IN%20#{org1.guid},#{org2.guid}"
 
@@ -296,8 +296,8 @@ module VCAP::CloudController
 
           context 'when the query is missing an operator or a value' do
             it 'filters by org_guid = nil (to match behavior of filters other than org guid)' do
-              UserProvidedServiceInstance.make(name: 'instance-1', space: space1)
-              UserProvidedServiceInstance.make(name: 'instance-2', space: space2)
+              create(:user_provided_service_instance, name: 'instance-1', space: space1)
+              create(:user_provided_service_instance, name: 'instance-2', space: space2)
 
               get 'v2/user_provided_service_instances?q=organization_guid'
 
@@ -313,7 +313,7 @@ module VCAP::CloudController
     describe 'POST', '/v2/user_provided_service_instances' do
       let(:email) { 'email@example.com' }
       let(:developer) { make_developer_for_space(space) }
-      let(:space) { Space.make }
+      let(:space) { create(:space) }
       let(:req) do
         {
           'name' => 'my-upsi',
@@ -341,7 +341,7 @@ module VCAP::CloudController
 
       context 'when the new service instance name is taken' do
         let(:service_instance_attrs) { { name: 'foo', space: space } }
-        let(:service_instance) { UserProvidedServiceInstance.make(service_instance_attrs) }
+        let(:service_instance) { create(:user_provided_service_instance, service_instance_attrs) }
 
         let(:req_dup) do
           {
@@ -547,7 +547,7 @@ module VCAP::CloudController
     describe 'PUT', '/v2/user_provided_service_instances/:guid' do
       let(:email) { 'email@example.com' }
       let(:developer) { make_developer_for_space(space) }
-      let(:space) { Space.make }
+      let(:space) { create(:space) }
       let(:req) do
         {
           'name' => 'my-upsi',
@@ -556,7 +556,7 @@ module VCAP::CloudController
         }
       end
 
-      let!(:service_instance) { UserProvidedServiceInstance.make(space:) }
+      let!(:service_instance) { create(:user_provided_service_instance, space:) }
 
       before { set_current_user(developer) }
 
@@ -598,8 +598,8 @@ module VCAP::CloudController
       context 'when the updated service instance name is taken' do
         let(:service_instance_attrs_foo) { { name: 'foo', space: space } }
         let(:service_instance_attrs_bar) { { name: 'bar', space: space } }
-        let(:service_instance_foo)  { UserProvidedServiceInstance.make(service_instance_attrs_foo) }
-        let(:service_instance_bar)  { UserProvidedServiceInstance.make(service_instance_attrs_bar) }
+        let(:service_instance_foo)  { create(:user_provided_service_instance, service_instance_attrs_foo) }
+        let(:service_instance_bar)  { create(:user_provided_service_instance, service_instance_attrs_bar) }
 
         it 'fails and returns service instance name is taken' do
           put "/v2/user_provided_service_instances/#{service_instance_foo.guid}",
@@ -624,13 +624,13 @@ module VCAP::CloudController
       end
 
       describe 'the space_guid parameter' do
-        let(:org) { Organization.make }
-        let(:space) { Space.make(organization: org) }
+        let(:org) { create(:organization) }
+        let(:space) { create(:space, organization: org) }
         let(:developer) { make_developer_for_space(space) }
-        let(:instance) { UserProvidedServiceInstance.make(space:) }
+        let(:instance) { create(:user_provided_service_instance, space:) }
 
         it 'prevents a developer from moving the service instance to a space for which he is also a space developer' do
-          space2 = Space.make(organization: org)
+          space2 = create(:space, organization: org)
           space2.add_developer(developer)
 
           move_req = Oj.dump(
@@ -656,7 +656,7 @@ module VCAP::CloudController
       end
 
       context 'when the service instance has a binding' do
-        let!(:binding) { ServiceBinding.make service_instance: }
+        let!(:binding) { create(:service_binding, service_instance:) }
 
         it 'propagates the updated credentials to the binding' do
           put "/v2/user_provided_service_instances/#{service_instance.guid}", req.to_json
@@ -669,8 +669,8 @@ module VCAP::CloudController
     describe 'DELETE', '/v2/user_provided_service_instances/:guid' do
       let(:email) { 'email@example.com' }
       let(:developer) { make_developer_for_space(space) }
-      let(:space) { Space.make }
-      let!(:service_instance) { UserProvidedServiceInstance.make(space:) }
+      let(:space) { create(:space) }
+      let!(:service_instance) { create(:user_provided_service_instance, space:) }
 
       before { set_current_user(developer, email:) }
 
@@ -700,11 +700,11 @@ module VCAP::CloudController
     end
 
     describe 'PUT', '/v2/user_provided_service_instances/:guid/routes/:route_guid' do
-      let(:space) { Space.make }
+      let(:space) { create(:space) }
       let(:developer) { make_developer_for_space(space) }
-      let(:route) { VCAP::CloudController::Route.make(space:) }
+      let(:route) { create(:route, space:) }
       let(:opts) { {} }
-      let(:service_instance) { UserProvidedServiceInstance.make(:routing, space:) }
+      let(:service_instance) { create(:user_provided_service_instance, :routing, space:) }
 
       before do
         TestConfig.config[:route_services_enabled] = true
@@ -791,11 +791,11 @@ module VCAP::CloudController
 
       context 'when the route has an associated service instance' do
         before do
-          RouteBinding.make service_instance:, route:
+          create(:route_binding, service_instance:, route:)
         end
 
         it 'raises RouteAlreadyBoundToServiceInstance' do
-          new_service_instance = UserProvidedServiceInstance.make(:routing, space:)
+          new_service_instance = create(:user_provided_service_instance, :routing, space:)
           get "/v2/user_provided_service_instances/#{new_service_instance.guid}/routes"
           expect(last_response.status).to eq(200)
           expect(Oj.load(last_response.body)['total_results']).to be(0)
@@ -829,11 +829,11 @@ module VCAP::CloudController
       end
 
       context 'when the route is internal' do
-        let(:domain) { SharedDomain.make(name: 'apps.internal', internal: true) }
-        let(:route) { Route.make(domain:, space:) }
+        let(:domain) { create(:shared_domain, name: 'apps.internal', internal: true) }
+        let(:route) { create(:route, domain:, space:) }
 
         it 'raises RouteServiceCannotBeBoundToInternalRoute' do
-          new_service_instance = UserProvidedServiceInstance.make(:routing, space:)
+          new_service_instance = create(:user_provided_service_instance, :routing, space:)
           put "/v2/user_provided_service_instances/#{new_service_instance.guid}/routes/#{route.guid}"
           expect(last_response.status).to eq(400), last_response.body
           expect(Oj.load(last_response.body)['description']).
@@ -843,7 +843,7 @@ module VCAP::CloudController
 
       context 'when attempting to bind to a service with no route_service_url' do
         before do
-          service_instance = UserProvidedServiceInstance.make(space:)
+          service_instance = create(:user_provided_service_instance, space:)
           put "/v2/user_provided_service_instances/#{service_instance.guid}/routes/#{route.guid}"
         end
 
@@ -855,7 +855,7 @@ module VCAP::CloudController
 
       context 'when attempting to bind to a service with an empty route_service_url' do
         before do
-          service_instance = UserProvidedServiceInstance.make(route_service_url: '', space: space)
+          service_instance = create(:user_provided_service_instance, route_service_url: '', space: space)
           put "/v2/user_provided_service_instances/#{service_instance.guid}/routes/#{route.guid}"
         end
 
@@ -866,8 +866,8 @@ module VCAP::CloudController
       end
 
       context 'when the route and service_instance are not in the same space' do
-        let(:other_space) { Space.make(organization: space.organization) }
-        let(:service_instance) { UserProvidedServiceInstance.make(:routing, space: other_space) }
+        let(:other_space) { create(:space, organization: space.organization) }
+        let(:service_instance) { create(:user_provided_service_instance, :routing, space: other_space) }
 
         before do
           other_space.add_developer(developer)
@@ -884,15 +884,15 @@ module VCAP::CloudController
     end
 
     describe 'DELETE', '/v2/user_provided_service_instances/:service_instance_guid/routes/:route_guid' do
-      let(:space) { Space.make }
+      let(:space) { create(:space) }
       let(:developer) { make_developer_for_space(space) }
-      let(:service_instance) { UserProvidedServiceInstance.make(:routing, space:) }
-      let(:route) { Route.make(space:) }
+      let(:service_instance) { create(:user_provided_service_instance, :routing, space:) }
+      let(:route) { create(:route, space:) }
 
       before { set_current_user(developer) }
 
       context 'when a service has an associated route' do
-        let!(:route_binding) { RouteBinding.make(route:, service_instance:) }
+        let!(:route_binding) { create(:route_binding, route:, service_instance:) }
 
         it 'deletes the association between the route and the service instance' do
           set_current_user(developer, email: 'developer@example.com')

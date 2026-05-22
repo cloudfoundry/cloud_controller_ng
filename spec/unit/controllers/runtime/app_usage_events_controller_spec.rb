@@ -5,7 +5,7 @@ require 'spec_helper'
 module VCAP::CloudController
   RSpec.describe AppUsageEventsController do
     before do
-      @event1 = AppUsageEvent.make
+      @event1 = create(:app_usage_event)
       set_current_user_as_admin
     end
 
@@ -19,8 +19,8 @@ module VCAP::CloudController
 
       context 'when filtering by after_guid' do
         before do
-          @event2 = AppUsageEvent.make
-          @event3 = AppUsageEvent.make
+          @event2 = create(:app_usage_event)
+          @event3 = create(:app_usage_event)
         end
 
         it 'can filter by after_guid' do
@@ -83,7 +83,7 @@ module VCAP::CloudController
       end
 
       it 'returns 403 as a non-admin' do
-        set_current_user(User.make)
+        set_current_user(create(:user))
 
         expect do
           post '/v2/app_usage_events/destructively_purge_all_and_reseed_started_apps'

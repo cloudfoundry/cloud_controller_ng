@@ -40,7 +40,7 @@ module VCAP::CloudController
           let(:token_information) { { 'user_id' => user_id, 'client_id' => 'foobar' } }
 
           context 'when the specified user already exists (without information about client-ness)' do
-            let!(:user) { User.make(guid: user_id, is_oauth_client: nil) }
+            let!(:user) { create(:user, guid: user_id, is_oauth_client: nil) }
 
             it 'sets that user on security context' do
               configurer.configure(auth_token)
@@ -52,7 +52,7 @@ module VCAP::CloudController
           end
 
           context 'when the specified user already exists as a client' do
-            let!(:user) { User.make(guid: user_id, is_oauth_client: true) }
+            let!(:user) { create(:user, guid: user_id, is_oauth_client: true) }
 
             it 'sets invalid token' do
               configurer.configure(auth_token)
@@ -76,7 +76,7 @@ module VCAP::CloudController
 
           context 'when the specified user is created after verifying it does not exist' do
             it 'finds the created user' do
-              User.make(guid: user_id)
+              create(:user, guid: user_id)
               allow(User).to receive(:find) do
                 allow(User).to receive(:find).and_call_original
                 nil
@@ -89,7 +89,7 @@ module VCAP::CloudController
 
         context 'when only a client_id is present' do
           let(:token_information) { { 'client_id' => user_id } }
-          let!(:user) { User.make(guid: user_id) }
+          let!(:user) { create(:user, guid: user_id) }
           let(:uaa_client) { double(UaaClient) }
 
           before do
@@ -143,7 +143,7 @@ module VCAP::CloudController
             end
 
             context 'theres a user with the same id' do
-              let!(:user) { User.make(guid: user_id, is_oauth_client: false) }
+              let!(:user) { create(:user, guid: user_id, is_oauth_client: false) }
 
               before do
                 expect(uaa_client).not_to receive(:usernames_for_ids)

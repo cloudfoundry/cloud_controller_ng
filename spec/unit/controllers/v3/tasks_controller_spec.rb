@@ -5,17 +5,16 @@ require 'rails_helper'
 RSpec.describe TasksController, type: :controller do
   let(:client) { instance_double(VCAP::CloudController::Diego::BbsTaskClient, desire_task: nil) }
   let(:tasks_enabled) { true }
-  let(:app_model) { VCAP::CloudController::AppModel.make }
+  let(:app_model) { create(:app_model) }
   let(:space) { app_model.space }
   let(:org) { space.organization }
-  let(:user) { set_current_user(VCAP::CloudController::User.make) }
+  let(:user) { set_current_user(create(:user)) }
 
   describe '#create' do
     let(:droplet) do
-      VCAP::CloudController::DropletModel.make(
-        app_guid: app_model.guid,
-        state: VCAP::CloudController::DropletModel::STAGED_STATE
-      )
+      create(:droplet_model,
+             app_guid: app_model.guid,
+             state: VCAP::CloudController::DropletModel::STAGED_STATE)
     end
 
     let(:request_body) do
@@ -29,7 +28,7 @@ RSpec.describe TasksController, type: :controller do
     before do
       allow_user_read_access_for(user, spaces: [space])
       allow_user_write_access(user, space:)
-      VCAP::CloudController::FeatureFlag.make(name: 'task_creation', enabled: tasks_enabled, error_message: nil)
+      create(:feature_flag, name: 'task_creation', enabled: tasks_enabled, error_message: nil)
 
       app_model.droplet = droplet
       app_model.save
@@ -312,8 +311,8 @@ RSpec.describe TasksController, type: :controller do
 
       context 'when a custom droplet guid is provided' do
         let(:custom_droplet) do
-          VCAP::CloudController::DropletModel.make(app_guid: app_model.guid,
-                                                   state: VCAP::CloudController::DropletModel::STAGED_STATE)
+          create(:droplet_model, app_guid: app_model.guid,
+                                 state: VCAP::CloudController::DropletModel::STAGED_STATE)
         end
 
         it 'successfully creates a task on the specifed droplet' do
@@ -343,7 +342,7 @@ RSpec.describe TasksController, type: :controller do
         end
 
         context 'and the droplet does not belong to the app' do
-          let(:custom_droplet) { VCAP::CloudController::DropletModel.make(state: VCAP::CloudController::DropletModel::STAGED_STATE) }
+          let(:custom_droplet) { create(:droplet_model, state: VCAP::CloudController::DropletModel::STAGED_STATE) }
 
           it 'returns a 404' do
             post :create, params: { app_guid: app_model.guid }.merge(
@@ -362,7 +361,7 @@ RSpec.describe TasksController, type: :controller do
   end
 
   describe '#show' do
-    let!(:task) { VCAP::CloudController::TaskModel.make name: 'mytask', app_guid: app_model.guid, memory_in_mb: 2048 }
+    let!(:task) { create(:task_model, name: 'mytask', app_guid: app_model.guid, memory_in_mb: 2048) }
 
     before do
       allow_user_read_access_for(user, spaces: [space])
@@ -434,9 +433,9 @@ RSpec.describe TasksController, type: :controller do
     end
 
     it 'returns tasks the user has read access' do
-      task_1 = VCAP::CloudController::TaskModel.make(app_guid: app_model.guid)
-      task_2 = VCAP::CloudController::TaskModel.make(app_guid: app_model.guid)
-      VCAP::CloudController::TaskModel.make
+      task_1 = create(:task_model, app_guid: app_model.guid)
+      task_2 = create(:task_model, app_guid: app_model.guid)
+      create(:task_model)
 
       get :index
 
@@ -457,8 +456,8 @@ RSpec.describe TasksController, type: :controller do
       let(:params) { { 'page' => page, 'per_page' => per_page } }
 
       it 'paginates the response' do
-        VCAP::CloudController::TaskModel.make(app_guid: app_model.guid)
-        VCAP::CloudController::TaskModel.make(app_guid: app_model.guid)
+        create(:task_model, app_guid: app_model.guid)
+        create(:task_model, app_guid: app_model.guid)
 
         get(:index, params:)
 
@@ -474,9 +473,9 @@ RSpec.describe TasksController, type: :controller do
       end
 
       it 'uses the app as a filter' do
-        task_1 = VCAP::CloudController::TaskModel.make(app_guid: app_model.guid)
-        task_2 = VCAP::CloudController::TaskModel.make(app_guid: app_model.guid)
-        VCAP::CloudController::TaskModel.make
+        task_1 = create(:task_model, app_guid: app_model.guid)
+        task_2 = create(:task_model, app_guid: app_model.guid)
+        create(:task_model)
 
         get :index, params: { app_guid: app_model.guid }
 
@@ -497,7 +496,7 @@ RSpec.describe TasksController, type: :controller do
         end
 
         it 'excludes secrets' do
-          VCAP::CloudController::TaskModel.make(app: app_model)
+          create(:task_model, app: app_model)
 
           get :index, params: { app_guid: app_model.guid }
 
@@ -548,9 +547,9 @@ RSpec.describe TasksController, type: :controller do
       end
 
       it 'returns a 200 and all tasks' do
-        task_1 = VCAP::CloudController::TaskModel.make(app_guid: app_model.guid)
-        task_2 = VCAP::CloudController::TaskModel.make(app_guid: app_model.guid)
-        task_3 = VCAP::CloudController::TaskModel.make
+        task_1 = create(:task_model, app_guid: app_model.guid)
+        task_2 = create(:task_model, app_guid: app_model.guid)
+        task_3 = create(:task_model)
 
         get :index
 
@@ -586,7 +585,7 @@ RSpec.describe TasksController, type: :controller do
   end
 
   describe '#cancel' do
-    let!(:task) { VCAP::CloudController::TaskModel.make name: 'usher', app_guid: app_model.guid }
+    let!(:task) { create(:task_model, name: 'usher', app_guid: app_model.guid) }
 
     before do
       allow_user_read_access_for(user, spaces: [space])
@@ -658,7 +657,7 @@ RSpec.describe TasksController, type: :controller do
   end
 
   describe '#update' do
-    let(:task) { VCAP::CloudController::TaskModel.make(app: app_model) }
+    let(:task) { create(:task_model, app: app_model) }
 
     before do
       allow_user_read_access_for(user, spaces: [space])

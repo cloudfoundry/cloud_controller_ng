@@ -2,10 +2,10 @@ require 'spec_helper'
 
 RSpec.describe 'Staging Security Groups' do
   describe 'PUT /v2/spaces/:guid/staging_security_groups/:security_group_guid' do
-    let(:org) { VCAP::CloudController::Organization.make }
-    let(:space) { VCAP::CloudController::Space.make(organization: org) }
-    let(:security_group) { VCAP::CloudController::SecurityGroup.make }
-    let(:user) { VCAP::CloudController::User.make }
+    let(:org) { create(:organization) }
+    let(:space) { create(:space, organization: org) }
+    let(:security_group) { create(:security_group) }
+    let(:user) { create(:user) }
 
     before do
       space.organization.add_user(user)
@@ -26,10 +26,10 @@ RSpec.describe 'Staging Security Groups' do
   end
 
   describe 'DELETE /v2/spaces/:guid/staging_security_groups/:security_group_guid' do
-    let(:org) { VCAP::CloudController::Organization.make }
-    let(:space) { VCAP::CloudController::Space.make(organization: org) }
-    let(:security_group) { VCAP::CloudController::SecurityGroup.make }
-    let(:user) { VCAP::CloudController::User.make }
+    let(:org) { create(:organization) }
+    let(:space) { create(:space, organization: org) }
+    let(:security_group) { create(:security_group) }
+    let(:user) { create(:user) }
 
     before do
       space.organization.add_user(user)
@@ -51,21 +51,20 @@ RSpec.describe 'Staging Security Groups' do
   end
 
   describe 'PUT /v2/security_groups/:guid/staging_spaces/:space_guid' do
-    let(:org) { VCAP::CloudController::Organization.make }
-    let(:space) { VCAP::CloudController::Space.make(organization: org) }
+    let(:org) { create(:organization) }
+    let(:space) { create(:space, organization: org) }
     let(:security_group) do
-      VCAP::CloudController::SecurityGroup.make(
-        name: 'my-group-name',
-        rules: [
-          {
-            'protocol' => 'tcp',
-            'ports' => '443',
-            'destination' => '192.168.10.0/24'
-          }
-        ]
-      )
+      create(:security_group,
+             name: 'my-group-name',
+             rules: [
+               {
+                 'protocol' => 'tcp',
+                 'ports' => '443',
+                 'destination' => '192.168.10.0/24'
+               }
+             ])
     end
-    let(:user) { VCAP::CloudController::User.make }
+    let(:user) { create(:user) }
 
     before do
       space.organization.add_user(user)
@@ -106,10 +105,10 @@ RSpec.describe 'Staging Security Groups' do
   end
 
   describe 'GET /v2/security_groups/:guid/staging_spaces/:space_guid' do
-    let(:org) { VCAP::CloudController::Organization.make }
-    let(:space) { VCAP::CloudController::Space.make(organization: org) }
-    let(:security_group) { VCAP::CloudController::SecurityGroup.make }
-    let(:user) { VCAP::CloudController::User.make }
+    let(:org) { create(:organization) }
+    let(:space) { create(:space, organization: org) }
+    let(:security_group) { create(:security_group) }
+    let(:user) { create(:user) }
 
     before do
       space.organization.add_user(user)
@@ -130,10 +129,10 @@ RSpec.describe 'Staging Security Groups' do
   end
 
   describe 'DELETE /v2/security_groups/:guid/staging_spaces/:space_guid' do
-    let(:org) { VCAP::CloudController::Organization.make }
-    let(:space) { VCAP::CloudController::Space.make(organization: org) }
-    let(:security_group) { VCAP::CloudController::SecurityGroup.make }
-    let(:user) { VCAP::CloudController::User.make }
+    let(:org) { create(:organization) }
+    let(:space) { create(:space, organization: org) }
+    let(:security_group) { create(:security_group) }
+    let(:user) { create(:user) }
 
     before do
       space.organization.add_user(user)

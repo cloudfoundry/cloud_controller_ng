@@ -20,32 +20,32 @@ module VCAP::CloudController
 
     describe 'Validations' do
       it 'must have a service instance' do
-        binding.route = Route.make
+        binding.route = create(:route)
         binding.valid?
         expect(binding.errors[:service_instance]).to eq [:presence]
       end
 
       it 'must have a route' do
-        binding.service_instance = ManagedServiceInstance.make
+        binding.service_instance = create(:managed_service_instance)
         binding.valid?
         expect(binding.errors[:route]).to eq [:presence]
       end
 
       it 'requires a service instance to have route_forwarding enabled' do
-        space = Space.make
-        binding.route = Route.make(space:)
-        binding.service_instance = ManagedServiceInstance.make(space:)
+        space = create(:space)
+        binding.route = create(:route, space:)
+        binding.service_instance = create(:managed_service_instance, space:)
 
         binding.valid?
         expect(binding.errors[:service_instance]).to eq [:route_binding_not_allowed]
       end
 
       it 'requires a service instance and route be in the same space' do
-        space = Space.make
-        other_space = Space.make
+        space = create(:space)
+        other_space = create(:space)
 
-        service_instance = ManagedServiceInstance.make(:routing, space:)
-        route = Route.make space: other_space
+        service_instance = create(:managed_service_instance, :routing, space:)
+        route = create(:route, space: other_space)
 
         binding.service_instance = service_instance
         binding.route = route
@@ -55,11 +55,11 @@ module VCAP::CloudController
       end
 
       context 'when a unique constraint violation occurs' do
-        let(:space) { Space.make }
-        let(:service_offering) { Service.make(requires: ['route_forwarding']) }
-        let(:service_plan) { ServicePlan.make(service: service_offering) }
-        let(:service_instance) { ManagedServiceInstance.make(space:, service_plan:) }
-        let(:route) { Route.make(space:) }
+        let(:space) { create(:space) }
+        let(:service_offering) { create(:service, requires: ['route_forwarding']) }
+        let(:service_plan) { create(:service_plan, service: service_offering) }
+        let(:service_instance) { create(:managed_service_instance, space:, service_plan:) }
+        let(:route) { create(:route, space:) }
 
         before { RouteBinding.create(service_instance:, route:) }
 
@@ -73,7 +73,7 @@ module VCAP::CloudController
         end
 
         it 'raises other unique constraint violations normally' do
-          another_route = Route.make(space:)
+          another_route = create(:route, space:)
           binding_with_duplicate_guid = RouteBinding.new(
             guid: RouteBinding.first.guid,
             service_instance: service_instance,
@@ -85,11 +85,11 @@ module VCAP::CloudController
     end
 
     describe '#save_with_new_operation' do
-      let(:space) { Space.make }
-      let(:service_offering) { Service.make(requires: ['route_forwarding']) }
-      let(:service_plan) { ServicePlan.make(service: service_offering) }
-      let(:service_instance) { ManagedServiceInstance.make(space:, service_plan:) }
-      let(:route) { Route.make(space:) }
+      let(:space) { create(:space) }
+      let(:service_offering) { create(:service, requires: ['route_forwarding']) }
+      let(:service_plan) { create(:service_plan, service: service_offering) }
+      let(:service_instance) { create(:managed_service_instance, space:, service_plan:) }
+      let(:route) { create(:route, space:) }
       let(:route_service_url) { 'https://foo.com' }
       let(:route_binding) do
         RouteBinding.new(

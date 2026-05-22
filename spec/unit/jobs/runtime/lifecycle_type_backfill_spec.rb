@@ -19,9 +19,9 @@ module VCAP::CloudController
 
       describe '#perform' do
         context 'when the lifecycle_type column is missing on every table' do
-          let!(:app) { AppModel.make }
-          let!(:droplet) { DropletModel.make }
-          let!(:build) { BuildModel.make }
+          let!(:app) { create(:app_model) }
+          let!(:droplet) { create(:droplet_model) }
+          let!(:build) { create(:build_model) }
 
           before do
             db[:apps].where(guid: app.guid).update(lifecycle_type: nil)
@@ -49,9 +49,9 @@ module VCAP::CloudController
 
         context 'when no rows have NULL lifecycle_type on any table' do
           before do
-            AppModel.make
-            DropletModel.make
-            BuildModel.make
+            create(:app_model)
+            create(:droplet_model)
+            create(:build_model)
           end
 
           it 'does not issue any UPDATE statements' do
@@ -60,9 +60,9 @@ module VCAP::CloudController
         end
 
         context 'when there are apps with NULL lifecycle_type' do
-          let(:buildpack_app) { AppModel.make }
-          let(:cnb_app) { AppModel.make(:cnb) }
-          let(:docker_app) { AppModel.make(:docker) }
+          let(:buildpack_app) { create(:app_model) }
+          let(:cnb_app) { create(:app_model, :cnb) }
+          let(:docker_app) { create(:app_model, :docker) }
 
           before do
             db[:apps].where(guid: [buildpack_app.guid, cnb_app.guid, docker_app.guid]).update(lifecycle_type: nil)
@@ -83,9 +83,9 @@ module VCAP::CloudController
         end
 
         context 'when there are droplets with NULL lifecycle_type' do
-          let(:buildpack_droplet) { DropletModel.make }
-          let(:cnb_droplet) { DropletModel.make(:cnb) }
-          let(:docker_droplet) { DropletModel.make(:docker) }
+          let(:buildpack_droplet) { create(:droplet_model) }
+          let(:cnb_droplet) { create(:droplet_model, :cnb) }
+          let(:docker_droplet) { create(:droplet_model, :docker) }
 
           before do
             db[:droplets].where(guid: [buildpack_droplet.guid, cnb_droplet.guid, docker_droplet.guid]).update(lifecycle_type: nil)
@@ -106,9 +106,9 @@ module VCAP::CloudController
         end
 
         context 'when there are builds with NULL lifecycle_type' do
-          let(:buildpack_build) { BuildModel.make }
-          let(:cnb_build) { BuildModel.make(:cnb) }
-          let(:docker_build) { BuildModel.make(:docker) }
+          let(:buildpack_build) { create(:build_model) }
+          let(:cnb_build) { create(:build_model, :cnb) }
+          let(:docker_build) { create(:build_model, :docker) }
 
           before do
             db[:builds].where(guid: [buildpack_build.guid, cnb_build.guid, docker_build.guid]).update(lifecycle_type: nil)
@@ -132,7 +132,7 @@ module VCAP::CloudController
           subject(:job) { LifecycleTypeBackfill.new(batch_size: 2, batches_per_run: 2) }
 
           before do
-            5.times { AppModel.make }
+            create_list(:app_model, 5)
             db[:apps].update(lifecycle_type: nil)
           end
 
@@ -151,7 +151,7 @@ module VCAP::CloudController
           subject(:job) { LifecycleTypeBackfill.new(batch_size: 2, batches_per_run: 2) }
 
           before do
-            AppModel.make
+            create(:app_model)
             db[:apps].update(lifecycle_type: nil)
           end
 
@@ -169,7 +169,7 @@ module VCAP::CloudController
           subject(:job) { LifecycleTypeBackfill.new(batch_size: 2, batches_per_run: -1) }
 
           before do
-            5.times { AppModel.make }
+            create_list(:app_model, 5)
             db[:apps].update(lifecycle_type: nil)
           end
 

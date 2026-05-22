@@ -4,12 +4,11 @@ require 'actions/sidecar_synchronize_from_app_droplet'
 module VCAP::CloudController
   RSpec.describe SidecarSynchronizeFromAppDroplet do
     describe '#synchronize' do
-      let(:app) { AppModel.make(droplet: droplet, name: 'my_app', sidecar_guids: app_sidecars.map(&:guid)) }
+      let(:app) { create(:app_model, droplet: droplet, name: 'my_app', sidecar_guids: app_sidecars.map(&:guid)) }
       let(:droplet) do
-        DropletModel.make(
-          state: DropletModel::STAGED_STATE,
-          sidecars: droplet_sidecars
-        )
+        create(:droplet_model,
+               state: DropletModel::STAGED_STATE,
+               sidecars: droplet_sidecars)
       end
 
       let(:app_sidecars) { [] }
@@ -33,10 +32,9 @@ module VCAP::CloudController
 
         context 'when the droplet has no sidecars' do
           let(:droplet) do
-            DropletModel.make(
-              state: DropletModel::STAGED_STATE,
-              sidecars: nil
-            )
+            create(:droplet_model,
+                   state: DropletModel::STAGED_STATE,
+                   sidecars: nil)
           end
 
           it 'neither errors nor creates sidecars' do
@@ -52,8 +50,8 @@ module VCAP::CloudController
       context 'the app has both origin-buildpack and origin-user sidecars' do
         let(:app_sidecars) do
           [
-            SidecarModel.make(name: 'user-sidecar', origin: SidecarModel::ORIGIN_USER),
-            SidecarModel.make(name: 'buildpack-sidecar', origin: SidecarModel::ORIGIN_BUILDPACK)
+            create(:sidecar_model, name: 'user-sidecar', origin: SidecarModel::ORIGIN_USER),
+            create(:sidecar_model, name: 'buildpack-sidecar', origin: SidecarModel::ORIGIN_BUILDPACK)
           ]
         end
 
@@ -76,7 +74,7 @@ module VCAP::CloudController
           context 'but a droplet sidecar name matches an user-origin sidecar name' do
             let(:app_sidecars) do
               [
-                SidecarModel.make(name: 'conflicted-sidecar', command: 'previous-sidecar-command', origin: SidecarModel::ORIGIN_USER)
+                create(:sidecar_model, name: 'conflicted-sidecar', command: 'previous-sidecar-command', origin: SidecarModel::ORIGIN_USER)
               ]
             end
 
@@ -100,7 +98,7 @@ module VCAP::CloudController
           context 'but a droplet sidecar name matches a buildpack-origin sidecar name' do
             let(:app_sidecars) do
               [
-                SidecarModel.make(name: 'buildpack-sidecar', command: 'previous-buildpack-command', origin: SidecarModel::ORIGIN_BUILDPACK)
+                create(:sidecar_model, name: 'buildpack-sidecar', command: 'previous-buildpack-command', origin: SidecarModel::ORIGIN_BUILDPACK)
               ]
             end
 

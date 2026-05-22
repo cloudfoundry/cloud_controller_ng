@@ -86,6 +86,8 @@ GEM
     erubi (1.13.1)
     excon (1.5.0)
       logger
+    factory_bot (6.6.0)
+      activesupport (>= 6.1.0)
     faraday (0.17.6)
       multipart-post (>= 1.2, < 3)
     ffi (1.17.4)
@@ -224,7 +226,6 @@ GEM
     loofah (2.25.1)
       crass (~> 1.0.2)
       nokogiri (>= 1.12.0)
-    machinist (1.0.6)
     method_source (1.1.0)
     mime-types (3.7.0)
       logger
@@ -561,6 +562,7 @@ DEPENDENCIES
   concurrent-ruby
   debug (~> 1.11)
   digest-xxhash
+  factory_bot (~> 6.5)
   fluent-logger
   fog-aliyun
   fog-aws
@@ -572,7 +574,6 @@ DEPENDENCIES
   json-diff
   json-schema
   listen
-  machinist (~> 1.0.6)
   mime-types (~> 3.7)
   mock_redis
   multipart-parser

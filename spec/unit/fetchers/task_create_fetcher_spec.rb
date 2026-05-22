@@ -3,8 +3,8 @@ require 'spec_helper'
 module VCAP::CloudController
   RSpec.describe TaskCreateFetcher do
     let(:fetcher) { TaskCreateFetcher.new }
-    let(:app) { AppModel.make(space_guid: space.guid) }
-    let(:space) { Space.make }
+    let(:app) { create(:app_model, space: space) }
+    let(:space) { create(:space) }
 
     it 'fetches the associated app and space' do
       returned_app, returned_space = fetcher.fetch(app_guid: app.guid)
@@ -14,13 +14,13 @@ module VCAP::CloudController
 
     context 'when a droplet_guid is specified' do
       it 'fetches the correct process' do
-        droplet = DropletModel.make(app_guid: app.guid)
+        droplet = create(:droplet_model, app: app)
         _returned_app, _returned_space, returned_droplet = fetcher.fetch(app_guid: app.guid, droplet_guid: droplet.guid)
         expect(returned_droplet.guid).to eq(droplet.guid)
       end
 
       it 'does not return the droplet if it belongs to another app' do
-        droplet = DropletModel.make
+        droplet = create(:droplet_model)
         _returned_app, _returned_space, returned_droplet = fetcher.fetch(app_guid: app.guid, droplet_guid: droplet.guid)
         expect(returned_droplet).to be_nil
       end

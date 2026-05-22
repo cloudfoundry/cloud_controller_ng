@@ -3,9 +3,9 @@ require 'isolation_segment_assign'
 
 module VCAP::CloudController
   RSpec.describe IsolationSegmentAssign do
-    let(:isolation_segment_model) { IsolationSegmentModel.make }
-    let(:org) { Organization.make }
-    let(:org2) { Organization.make }
+    let(:isolation_segment_model) { create(:isolation_segment_model) }
+    let(:org) { create(:organization) }
+    let(:org2) { create(:organization) }
 
     describe 'sorting the organizations passed in for assignment' do
       it 'sorts them correctly when org2 has a lower index than org' do
@@ -45,7 +45,7 @@ module VCAP::CloudController
     end
 
     context 'and other isolation segments are already assigned to the org' do
-      let(:isolation_segment_model2) { IsolationSegmentModel.make }
+      let(:isolation_segment_model2) { create(:isolation_segment_model) }
 
       before do
         subject.assign(isolation_segment_model, [org])

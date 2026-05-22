@@ -3,7 +3,7 @@ require 'actions/v2/services/service_binding_read'
 
 module VCAP::CloudController
   RSpec.describe ServiceBindingRead do
-    let(:service) { Service.make(bindings_retrievable: true) }
+    let(:service) { create(:service, bindings_retrievable: true) }
     let(:fake_broker_client) { instance_double(VCAP::Services::ServiceBrokers::V2::Client) }
 
     before do
@@ -39,7 +39,7 @@ module VCAP::CloudController
       end
 
       context 'when the broker has bindings_retrievable disabled' do
-        let(:service) { Service.make(bindings_retrievable: false) }
+        let(:service) { create(:service, bindings_retrievable: false) }
 
         it 'does not try to provide broker client' do
           expect(VCAP::Services::ServiceClientProvider).not_to receive(:provide)
@@ -61,17 +61,17 @@ module VCAP::CloudController
 
     describe '#fetch_parameters' do
       context 'managed service instance' do
-        let(:service_plan) { ServicePlan.make(service:) }
-        let(:managed_service_instance) { ManagedServiceInstance.make(service_plan:) }
+        let(:service_plan) { create(:service_plan, service:) }
+        let(:managed_service_instance) { create(:managed_service_instance, service_plan:) }
 
         context 'an app binding' do
-          let(:service_binding) { ServiceBinding.make(service_instance: managed_service_instance) }
+          let(:service_binding) { create(:service_binding, service_instance: managed_service_instance) }
 
           it_behaves_like 'a managed service instance binding'
 
           context 'when an operation is still in progress' do
             it 'raises "ServiceBindingLockedError"' do
-              service_binding.service_binding_operation = ServiceBindingOperation.make(state: 'in progress')
+              service_binding.service_binding_operation = create(:service_binding_operation, state: 'in progress')
               service
 
               action = ServiceBindingRead.new
@@ -84,15 +84,15 @@ module VCAP::CloudController
         end
 
         context 'a key binding' do
-          let(:service_binding) { ServiceKey.make(service_instance: managed_service_instance) }
+          let(:service_binding) { create(:service_key, service_instance: managed_service_instance) }
 
           it_behaves_like 'a managed service instance binding'
         end
       end
 
       context 'user provided service instance' do
-        let(:user_provided_service_instance) { UserProvidedServiceInstance.make }
-        let(:service_binding) { ServiceBinding.make(service_instance: user_provided_service_instance) }
+        let(:user_provided_service_instance) { create(:user_provided_service_instance) }
+        let(:service_binding) { create(:service_binding, service_instance: user_provided_service_instance) }
 
         it 'does not try to provide broker client' do
           expect(VCAP::Services::ServiceClientProvider).not_to receive(:provide)

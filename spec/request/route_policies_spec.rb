@@ -2,31 +2,29 @@ require 'spec_helper'
 require 'request_spec_shared_examples'
 
 RSpec.describe 'Route Policies' do
-  let(:user) { VCAP::CloudController::User.make }
+  let(:user) { create(:user) }
   let(:admin_header) { admin_headers_for(user) }
-  let(:org) { VCAP::CloudController::Organization.make }
-  let(:space) { VCAP::CloudController::Space.make(organization: org) }
+  let(:org) { create(:organization) }
+  let(:space) { create(:space, organization: org) }
 
   let(:mtls_domain) do
-    VCAP::CloudController::PrivateDomain.make(
-      owning_organization: org,
-      enforce_route_policies: true,
-      route_policies_scope: 'space'
-    )
+    create(:private_domain,
+           owning_organization: org,
+           enforce_route_policies: true,
+           route_policies_scope: 'space')
   end
   let(:regular_domain) do
-    VCAP::CloudController::PrivateDomain.make(owning_organization: org)
+    create(:private_domain, owning_organization: org)
   end
   let(:internal_domain) do
-    VCAP::CloudController::PrivateDomain.make(
-      owning_organization: org,
-      internal: true
-    )
+    create(:private_domain,
+           owning_organization: org,
+           internal: true)
   end
 
-  let(:mtls_route) { VCAP::CloudController::Route.make(space: space, domain: mtls_domain) }
-  let(:regular_route) { VCAP::CloudController::Route.make(space: space, domain: regular_domain) }
-  let(:internal_route) { VCAP::CloudController::Route.make(space: space, domain: internal_domain) }
+  let(:mtls_route) { create(:route, space: space, domain: mtls_domain) }
+  let(:regular_route) { create(:route, space: space, domain: regular_domain) }
+  let(:internal_route) { create(:route, space: space, domain: internal_domain) }
 
   let(:valid_uuid) { '11111111-2222-3333-4444-555555555555' }
 
@@ -272,7 +270,7 @@ RSpec.describe 'Route Policies' do
     end
 
     context 'with include=source' do
-      let!(:frontend_app) { VCAP::CloudController::AppModel.make(space: space, name: 'frontend-app') }
+      let!(:frontend_app) { create(:app_model, space: space, name: 'frontend-app') }
       let!(:app_policy) do
         VCAP::CloudController::RoutePolicy.create(
           guid: SecureRandom.uuid,
@@ -310,7 +308,7 @@ RSpec.describe 'Route Policies' do
     end
 
     context 'with include=route,source' do
-      let!(:frontend_app) { VCAP::CloudController::AppModel.make(space: space, name: 'frontend-app') }
+      let!(:frontend_app) { create(:app_model, space: space, name: 'frontend-app') }
       let!(:app_policy) do
         VCAP::CloudController::RoutePolicy.create(
           guid: SecureRandom.uuid,
@@ -353,7 +351,7 @@ RSpec.describe 'Route Policies' do
       VCAP::CloudController::RoutePolicy.create(
         guid: SecureRandom.uuid,
         source: 'cf:any',
-        route_id: VCAP::CloudController::Route.make(space: space, domain: mtls_domain).id
+        route_id: create(:route, space: space, domain: mtls_domain).id
       )
     end
 
@@ -399,16 +397,15 @@ RSpec.describe 'Route Policies' do
     end
 
     describe 'filtering by space_guids' do
-      let(:other_org) { VCAP::CloudController::Organization.make }
-      let(:other_space) { VCAP::CloudController::Space.make(organization: other_org) }
+      let(:other_org) { create(:organization) }
+      let(:other_space) { create(:space, organization: other_org) }
       let(:other_mtls_domain) do
-        VCAP::CloudController::PrivateDomain.make(
-          owning_organization: other_org,
-          enforce_route_policies: true,
-          route_policies_scope: 'space'
-        )
+        create(:private_domain,
+               owning_organization: other_org,
+               enforce_route_policies: true,
+               route_policies_scope: 'space')
       end
-      let(:other_route) { VCAP::CloudController::Route.make(space: other_space, domain: other_mtls_domain) }
+      let(:other_route) { create(:route, space: other_space, domain: other_mtls_domain) }
       let!(:rule_in_other_space) do
         VCAP::CloudController::RoutePolicy.create(
           guid: SecureRandom.uuid,
@@ -452,7 +449,7 @@ RSpec.describe 'Route Policies' do
       end
 
       it 'returns empty when space has no access rules' do
-        empty_space = VCAP::CloudController::Space.make(organization: org)
+        empty_space = create(:space, organization: org)
         org.add_user(user)
         empty_space.add_developer(user)
 
@@ -465,16 +462,15 @@ RSpec.describe 'Route Policies' do
     end
 
     describe 'filtering by both route_guids and space_guids' do
-      let(:other_org) { VCAP::CloudController::Organization.make }
-      let(:other_space) { VCAP::CloudController::Space.make(organization: other_org) }
+      let(:other_org) { create(:organization) }
+      let(:other_space) { create(:space, organization: other_org) }
       let(:other_mtls_domain) do
-        VCAP::CloudController::PrivateDomain.make(
-          owning_organization: other_org,
-          enforce_route_policies: true,
-          route_policies_scope: 'space'
-        )
+        create(:private_domain,
+               owning_organization: other_org,
+               enforce_route_policies: true,
+               route_policies_scope: 'space')
       end
-      let(:other_route) { VCAP::CloudController::Route.make(space: other_space, domain: other_mtls_domain) }
+      let(:other_route) { create(:route, space: other_space, domain: other_mtls_domain) }
       let!(:rule_in_other_space) do
         VCAP::CloudController::RoutePolicy.create(
           guid: SecureRandom.uuid,
@@ -500,8 +496,8 @@ RSpec.describe 'Route Policies' do
     end
 
     describe 'filtering by source_guids' do
-      let(:app1) { VCAP::CloudController::AppModel.make(space: space) }
-      let(:app2) { VCAP::CloudController::AppModel.make(space: space) }
+      let(:app1) { create(:app_model, space: space) }
+      let(:app2) { create(:app_model, space: space) }
       let!(:rule_app1) do
         VCAP::CloudController::RoutePolicy.create(
           source: "cf:app:#{app1.guid}",
@@ -534,7 +530,7 @@ RSpec.describe 'Route Policies' do
       end
 
       it 'does not return cf:any policies for a GUID query' do
-        any_route = VCAP::CloudController::Route.make(space: space, domain: mtls_domain)
+        any_route = create(:route, space: space, domain: mtls_domain)
         VCAP::CloudController::RoutePolicy.create(source: 'cf:any', route_id: any_route.id)
 
         get "/v3/route_policies?source_guids=#{app1.guid}", nil, admin_header
@@ -547,8 +543,8 @@ RSpec.describe 'Route Policies' do
     end
 
     describe 'filtering by sources' do
-      let(:app1) { VCAP::CloudController::AppModel.make(space: space) }
-      let(:another_route) { VCAP::CloudController::Route.make(space: space, domain: mtls_domain) }
+      let(:app1) { create(:app_model, space: space) }
+      let(:another_route) { create(:route, space: space, domain: mtls_domain) }
       let!(:rule_typed) do
         VCAP::CloudController::RoutePolicy.create(
           source: "cf:app:#{app1.guid}",
@@ -584,7 +580,7 @@ RSpec.describe 'Route Policies' do
     end
 
     describe 'filtering by label_selector' do
-      let(:another_route) { VCAP::CloudController::Route.make(space: space, domain: mtls_domain) }
+      let(:another_route) { create(:route, space: space, domain: mtls_domain) }
       let!(:labelled_policy) do
         policy = VCAP::CloudController::RoutePolicy.create(source: 'cf:any', route_id: mtls_route.id)
         VCAP::CloudController::RoutePolicyLabelModel.create(resource_guid: policy.guid, key_name: 'env', value: 'prod')
@@ -606,9 +602,9 @@ RSpec.describe 'Route Policies' do
     end
 
     context 'with include=source' do
-      let!(:frontend_app) { VCAP::CloudController::AppModel.make(space: space, name: 'frontend-app') }
-      let!(:other_space) { VCAP::CloudController::Space.make(organization: org, name: 'other-space') }
-      let!(:other_org) { VCAP::CloudController::Organization.make(name: 'other-org') }
+      let!(:frontend_app) { create(:app_model, space: space, name: 'frontend-app') }
+      let!(:other_space) { create(:space, organization: org, name: 'other-space') }
+      let!(:other_org) { create(:organization, name: 'other-org') }
 
       let!(:app_rule) do
         VCAP::CloudController::RoutePolicy.create(
@@ -686,7 +682,7 @@ RSpec.describe 'Route Policies' do
         VCAP::CloudController::RoutePolicy.create(
           guid: SecureRandom.uuid,
           source: "cf:app:#{frontend_app.guid}",
-          route_id: VCAP::CloudController::Route.make(space: space, domain: mtls_domain).id
+          route_id: create(:route, space: space, domain: mtls_domain).id
         )
 
         get '/v3/route_policies?include=source', nil, admin_header
@@ -703,7 +699,7 @@ RSpec.describe 'Route Policies' do
         VCAP::CloudController::RoutePolicy.create(
           guid: SecureRandom.uuid,
           source: 'cf:any',
-          route_id: VCAP::CloudController::Route.make(space: space, domain: mtls_domain).id
+          route_id: create(:route, space: space, domain: mtls_domain).id
         )
 
         get '/v3/route_policies?include=source', nil, admin_header
@@ -714,7 +710,7 @@ RSpec.describe 'Route Policies' do
     end
 
     context 'with include=route' do
-      let(:route2) { VCAP::CloudController::Route.make(space: space, domain: mtls_domain) }
+      let(:route2) { create(:route, space: space, domain: mtls_domain) }
 
       let!(:rule_on_route1) do
         VCAP::CloudController::RoutePolicy.create(
@@ -773,7 +769,7 @@ RSpec.describe 'Route Policies' do
       end
 
       it 'combines include=route with include=source' do
-        test_app = VCAP::CloudController::AppModel.make(space: space, name: 'test-app')
+        test_app = create(:app_model, space: space, name: 'test-app')
         VCAP::CloudController::RoutePolicy.create(
           guid: SecureRandom.uuid,
           source: "cf:app:#{test_app.guid}",

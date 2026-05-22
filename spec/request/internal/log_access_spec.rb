@@ -2,10 +2,10 @@ require 'spec_helper'
 require 'request_spec_shared_examples'
 
 RSpec.describe 'Internal Log Access Endpoint' do
-  let(:user) { VCAP::CloudController::User.make }
-  let(:space) { VCAP::CloudController::Space.make }
+  let(:user) { create(:user) }
+  let(:space) { create(:space) }
   let(:org) { space.organization }
-  let(:app_model) { VCAP::CloudController::AppModel.make(space:) }
+  let(:app_model) { create(:app_model, space:) }
 
   describe 'GET /internal/v4/log_access/:app_guid' do
     context 'permissions' do

@@ -4,9 +4,9 @@ require 'repositories/package_event_repository'
 module VCAP::CloudController
   module Repositories
     RSpec.describe PackageEventRepository do
-      let(:app) { AppModel.make(name: 'potato') }
+      let(:app) { create(:app_model, name: 'potato') }
       let(:user_guid) { 'user_guid' }
-      let(:package) { PackageModel.make(app_guid: app.guid) }
+      let(:package) { create(:package_model, app_guid: app.guid) }
       let(:email) { 'user-email' }
       let(:user_name) { 'user-name' }
       let(:user_audit_info) { UserAuditInfo.new(user_email: email, user_name: user_name, user_guid: user_guid) }

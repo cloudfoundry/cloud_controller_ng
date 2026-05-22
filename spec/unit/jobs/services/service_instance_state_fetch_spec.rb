@@ -7,18 +7,18 @@ module VCAP::CloudController
   module Jobs
     module Services
       RSpec.describe ServiceInstanceStateFetch, job_context: :worker do
-        let(:proposed_service_plan) { ServicePlan.make }
+        let(:proposed_service_plan) { create(:service_plan) }
         let(:proposed_maintenance_info) { { 'version' => '2.0' } }
         let(:maximum_polling_duration_for_plan) {}
-        let(:service_plan) { ServicePlan.make(maximum_polling_duration: maximum_polling_duration_for_plan) }
+        let(:service_plan) { create(:service_plan, maximum_polling_duration: maximum_polling_duration_for_plan) }
         let(:service_instance) do
-          operation = ServiceInstanceOperation.make(proposed_changes: {
-                                                      name: 'new-fake-name',
-                                                      service_plan_guid: proposed_service_plan.guid,
-                                                      maintenance_info: proposed_maintenance_info
-                                                    })
+          operation = create(:service_instance_operation, proposed_changes: {
+                               name: 'new-fake-name',
+                               service_plan_guid: proposed_service_plan.guid,
+                               maintenance_info: proposed_maintenance_info
+                             })
           operation.save
-          service_instance = ManagedServiceInstance.make(service_plan:)
+          service_instance = create(:managed_service_instance, service_plan:)
           service_instance.save
 
           service_instance.service_instance_operation = operation
@@ -28,7 +28,7 @@ module VCAP::CloudController
         let(:broker) { service_instance.service_broker }
         let(:name) { 'fake-name' }
 
-        let(:user) { User.make }
+        let(:user) { create(:user) }
         let(:user_email) { 'fake@mail.foo' }
 
         let(:status) { 200 }

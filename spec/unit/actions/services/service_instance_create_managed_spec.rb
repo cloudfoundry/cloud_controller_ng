@@ -10,8 +10,8 @@ module VCAP::CloudController
     subject(:create_action) { ServiceInstanceCreate.new(event_repository, logger) }
 
     describe '#create' do
-      let(:space) { Space.make }
-      let(:service_plan) { ServicePlan.make }
+      let(:space) { create(:space) }
+      let(:service_plan) { create(:service_plan) }
       let(:request_attrs) do
         {
           'space_guid' => space.guid,
@@ -120,7 +120,7 @@ module VCAP::CloudController
       end
 
       context 'when the service plan contains maintenance_info' do
-        let(:service_plan) { ServicePlan.make(maintenance_info: { 'version' => '2.0' }) }
+        let(:service_plan) { create(:service_plan, maintenance_info: { 'version' => '2.0' }) }
         let(:request_attrs) do
           {
             'space_guid' => space.guid,

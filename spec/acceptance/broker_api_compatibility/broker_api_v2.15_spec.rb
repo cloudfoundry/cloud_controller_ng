@@ -59,7 +59,7 @@ RSpec.describe 'Service Broker API integration' do
         end
 
         context 'when deprovisioning a service instance' do
-          let(:service_instance) { VCAP::CloudController::ManagedServiceInstance.make(space_guid: @space_guid, service_plan_guid: @plan_guid) }
+          let(:service_instance) { create(:managed_service_instance, space_guid: @space_guid, service_plan_guid: @plan_guid) }
 
           before do
             @service_instance_guid = service_instance.guid
@@ -81,7 +81,7 @@ RSpec.describe 'Service Broker API integration' do
         end
 
         context 'when updating a service instance' do
-          let(:service_instance) { VCAP::CloudController::ManagedServiceInstance.make(space_guid: @space_guid, service_plan_guid: @plan_guid) }
+          let(:service_instance) { create(:managed_service_instance, space_guid: @space_guid, service_plan_guid: @plan_guid) }
 
           before do
             @service_instance_guid = service_instance.guid
@@ -105,7 +105,7 @@ RSpec.describe 'Service Broker API integration' do
 
       describe 'service bindings' do
         context 'when creating a service binding' do
-          let(:service_instance) { VCAP::CloudController::ManagedServiceInstance.make(space_guid: @space_guid, service_plan_guid: @plan_guid) }
+          let(:service_instance) { create(:managed_service_instance, space_guid: @space_guid, service_plan_guid: @plan_guid) }
 
           before do
             @service_instance_guid = service_instance.guid
@@ -128,7 +128,7 @@ RSpec.describe 'Service Broker API integration' do
         end
 
         context 'when removing a service binding' do
-          let(:service_instance) { VCAP::CloudController::ManagedServiceInstance.make(space_guid: @space_guid, service_plan_guid: @plan_guid) }
+          let(:service_instance) { create(:managed_service_instance, space_guid: @space_guid, service_plan_guid: @plan_guid) }
 
           before do
             @service_instance_guid = service_instance.guid
@@ -182,7 +182,7 @@ RSpec.describe 'Service Broker API integration' do
         end
 
         context 'when updating a service instance' do
-          let(:service_instance) { VCAP::CloudController::ManagedServiceInstance.make(space_guid: @space_guid, service_plan_guid: @plan_guid) }
+          let(:service_instance) { create(:managed_service_instance, space_guid: @space_guid, service_plan_guid: @plan_guid) }
 
           before do
             @service_instance_guid = service_instance.guid
@@ -201,7 +201,7 @@ RSpec.describe 'Service Broker API integration' do
         end
 
         context 'when deleting a service instance' do
-          let(:service_instance) { VCAP::CloudController::ManagedServiceInstance.make(space_guid: @space_guid, service_plan_guid: @plan_guid) }
+          let(:service_instance) { create(:managed_service_instance, space_guid: @space_guid, service_plan_guid: @plan_guid) }
 
           before do
             @service_instance_guid = service_instance.guid
@@ -222,7 +222,7 @@ RSpec.describe 'Service Broker API integration' do
 
       describe 'service bindings' do
         context 'when creating a service binding' do
-          let(:service_instance) { VCAP::CloudController::ManagedServiceInstance.make(space_guid: @space_guid, service_plan_guid: @plan_guid) }
+          let(:service_instance) { create(:managed_service_instance, space_guid: @space_guid, service_plan_guid: @plan_guid) }
 
           before do
             @service_instance_guid = service_instance.guid
@@ -240,7 +240,7 @@ RSpec.describe 'Service Broker API integration' do
         end
 
         context 'when removing a service binding' do
-          let(:service_instance) { VCAP::CloudController::ManagedServiceInstance.make(space_guid: @space_guid, service_plan_guid: @plan_guid) }
+          let(:service_instance) { create(:managed_service_instance, space_guid: @space_guid, service_plan_guid: @plan_guid) }
 
           before do
             @service_instance_guid = service_instance.guid
@@ -403,7 +403,7 @@ RSpec.describe 'Service Broker API integration' do
       end
 
       context 'for bind route service' do
-        let(:route) { VCAP::CloudController::Route.make(space: @space) }
+        let(:route) { create(:route, space: @space) }
 
         before do
           create_route_binding(route)
@@ -514,11 +514,9 @@ RSpec.describe 'Service Broker API integration' do
 
       context 'when updating the service with the provided maintenance_info' do
         let(:service_instance) do
-          VCAP::CloudController::ManagedServiceInstance.make(
-            space_guid: @space_guid,
-            service_plan_guid: @plan_guid,
-            maintenance_info: { 'version' => '1.0.0' }
-          )
+          create(:managed_service_instance, space_guid: @space_guid,
+                                            service_plan_guid: @plan_guid,
+                                            maintenance_info: { 'version' => '1.0.0' })
         end
 
         before do

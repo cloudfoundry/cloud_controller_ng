@@ -9,8 +9,8 @@ module VCAP::CloudController
     let(:filters) { {} }
 
     describe '#fetch_for_route' do
-      let!(:route1) { Route.make }
-      let!(:route2) { Route.make }
+      let!(:route1) { create(:route) }
+      let!(:route2) { create(:route) }
 
       it 'returns a Sequel::Dataset' do
         results = fetcher.fetch_for_route(route: route1)
@@ -18,10 +18,10 @@ module VCAP::CloudController
       end
 
       it 'returns only the destinations for the requested route' do
-        dest1_for_route1 = RouteMappingModel.make(route: route1)
-        dest2_for_route1 = RouteMappingModel.make(route: route1)
+        dest1_for_route1 = create(:route_mapping_model, route: route1)
+        dest2_for_route1 = create(:route_mapping_model, route: route1)
 
-        RouteMappingModel.make(route: route2)
+        create(:route_mapping_model, route: route2)
 
         results = fetcher.fetch_for_route(route: route1).all
         expect(results).to contain_exactly(dest1_for_route1, dest2_for_route1)
@@ -29,9 +29,9 @@ module VCAP::CloudController
 
       context 'filter' do
         context 'app_guids' do
-          let(:space) { Space.make }
-          let!(:destination1) { RouteMappingModel.make(app: AppModel.make(space:), route: route1) }
-          let!(:destination2) { RouteMappingModel.make(app: AppModel.make(space:), route: route1) }
+          let(:space) { create(:space) }
+          let!(:destination1) { create(:route_mapping_model, app: create(:app_model, space:), route: route1) }
+          let!(:destination2) { create(:route_mapping_model, app: create(:app_model, space:), route: route1) }
           let(:filters) { { app_guids: [destination1.app.guid] } }
 
           it 'only returns destinations for the requested app guids' do
@@ -42,10 +42,10 @@ module VCAP::CloudController
         end
 
         context 'guids' do
-          let(:space) { Space.make }
-          let!(:destination1) { RouteMappingModel.make(app: AppModel.make(space:), route: route1) }
-          let!(:destination2) { RouteMappingModel.make(app: AppModel.make(space:), route: route1) }
-          let!(:destination3) { RouteMappingModel.make(app: AppModel.make(space:), route: route1) }
+          let(:space) { create(:space) }
+          let!(:destination1) { create(:route_mapping_model, app: create(:app_model, space:), route: route1) }
+          let!(:destination2) { create(:route_mapping_model, app: create(:app_model, space:), route: route1) }
+          let!(:destination3) { create(:route_mapping_model, app: create(:app_model, space:), route: route1) }
           let(:filters) { { guids: [destination1.guid, destination2.guid] } }
 
           it 'only returns destinations for the requested destination guids' do

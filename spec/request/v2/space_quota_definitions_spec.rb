@@ -1,17 +1,17 @@
 require 'spec_helper'
 
 RSpec.describe 'SpaceQuotaDefinitions' do
-  let(:user) { VCAP::CloudController::User.make }
-  let(:org) { VCAP::CloudController::Organization.make }
+  let(:user) { create(:user) }
+  let(:org) { create(:organization) }
 
   describe 'PUT /v2/space_quota_definitions/guid/spaces/space_guid' do
     context 'when the quota has a finite log rate limit and there are apps with unlimited log rates' do
       let(:admin_header) { headers_for(user, scopes: %w[cloud_controller.admin]) }
-      let(:space_quota) { VCAP::CloudController::SpaceQuotaDefinition.make(organization: org, log_rate_limit: 100) }
+      let(:space_quota) { create(:space_quota_definition, organization: org, log_rate_limit: 100) }
 
-      let!(:space) { VCAP::CloudController::Space.make(organization: org) }
-      let!(:app_model) { VCAP::CloudController::AppModel.make(name: 'name1', space: space) }
-      let!(:process_model) { VCAP::CloudController::ProcessModel.make(app: app_model, log_rate_limit: -1) }
+      let!(:space) { create(:space, organization: org) }
+      let!(:app_model) { create(:app_model, name: 'name1', space: space) }
+      let!(:process_model) { create(:process_model, app: app_model, log_rate_limit: -1) }
 
       it 'returns 422' do
         put "/v2/space_quota_definitions/#{space_quota.guid}/spaces/#{space.guid}", nil, admin_header

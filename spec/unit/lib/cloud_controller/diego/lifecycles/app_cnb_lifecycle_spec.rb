@@ -12,7 +12,7 @@ module VCAP::CloudController
     it_behaves_like 'a app lifecycle'
 
     describe '#create_lifecycle_data_model' do
-      let!(:app) { AppModel.make }
+      let!(:app) { create(:app_model) }
 
       it 'creates CNBLifecycleDataModel' do
         expect do
@@ -43,7 +43,7 @@ module VCAP::CloudController
           let(:lifecycle_request_data) { { buildpacks: ['docker://nodejs', 'http://buildpack.com', 'http://other.com'] } }
 
           before do
-            Buildpack.make(name: 'custom-bp', lifecycle: 'cnb')
+            create(:buildpack, name: 'custom-bp', lifecycle: 'cnb')
           end
 
           it 'uses all of the buildpacks' do
@@ -82,7 +82,7 @@ module VCAP::CloudController
     end
 
     describe '#update_lifecycle_data_model' do
-      let(:app) { AppModel.make }
+      let(:app) { create(:app_model) }
       let(:lifecycle_request_data) { { buildpacks: ['http://oj.com', 'http://acme.com'], stack: 'sweetness' } }
 
       it 'updates the CNBLifecycleDataModel' do
@@ -106,8 +106,8 @@ module VCAP::CloudController
 
       context 'with buildpacks' do
         before do
-          Buildpack.make(name: 'foo', lifecycle: 'cnb')
-          Buildpack.make(name: 'bar', lifecycle: 'cnb')
+          create(:buildpack, name: 'foo', lifecycle: 'cnb')
+          create(:buildpack, name: 'bar', lifecycle: 'cnb')
         end
 
         let(:lifecycle_request_data) { { buildpacks: ['foo', 'bar', 'docker://nodejs:latest'] } }

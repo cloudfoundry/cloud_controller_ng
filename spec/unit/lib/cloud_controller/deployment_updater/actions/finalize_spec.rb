@@ -5,88 +5,72 @@ module VCAP::CloudController
   RSpec.describe DeploymentUpdater::Actions::Finalize do
     subject(:finalize_action) { DeploymentUpdater::Actions::Finalize.new(deployment) }
 
-    let(:app) { AppModel.make(revisions_enabled: true) }
-    let(:droplet) { DropletModel.make(app: app, process_types: { 'web' => 'serve', 'worker' => 'work' }) }
+    let(:app) { create(:app_model, revisions_enabled: true) }
+    let(:droplet) { create(:droplet_model, app: app, process_types: { 'web' => 'serve', 'worker' => 'work' }) }
 
     let(:state) { DeploymentModel::DEPLOYING_STATE }
 
     let!(:old_web_process) do
-      ProcessModel.make(
-        instances: 3,
-        created_at: 3.hours.ago,
-        type: ProcessTypes::WEB,
-        guid: 'guid-original',
-        app: app
-      )
+      create(:process_model, instances: 3,
+                             created_at: 3.hours.ago,
+                             type: ProcessTypes::WEB,
+                             guid: 'guid-original',
+                             app: app)
     end
 
     let!(:old_worker_process) do
-      ProcessModel.make(
-        instances: 3,
-        type: 'worker',
-        command: 'old_command',
-        guid: 'worker-guid-original',
-        app: app
-      )
+      create(:process_model, instances: 3,
+                             type: 'worker',
+                             command: 'old_command',
+                             guid: 'worker-guid-original',
+                             app: app)
     end
 
     let!(:old_nonweb_process) do
-      ProcessModel.make(
-        instances: 3,
-        type: 'nonweb',
-        command: nil,
-        guid: 'nonweb-guid-original',
-        app: app
-      )
+      create(:process_model, instances: 3,
+                             type: 'nonweb',
+                             command: nil,
+                             guid: 'nonweb-guid-original',
+                             app: app)
     end
 
-    let(:revision) { RevisionModel.make(:no_commands, app: app, droplet: droplet, version: 300) }
+    let(:revision) { create(:revision_model, :no_commands, app: app, droplet: droplet, version: 300) }
 
     let!(:web_process_command) do
-      RevisionProcessCommandModel.make(
-        revision: revision,
-        process_type: 'web',
-        process_command: 'new_web_command'
-      )
+      create(:revision_process_command_model, revision: revision,
+                                              process_type: 'web',
+                                              process_command: 'new_web_command')
     end
 
     let!(:worker_process_command) do
-      RevisionProcessCommandModel.make(
-        revision: revision,
-        process_type: 'worker',
-        process_command: 'new_worker_command'
-      )
+      create(:revision_process_command_model, revision: revision,
+                                              process_type: 'worker',
+                                              process_command: 'new_worker_command')
     end
 
     let!(:deploying_web_process) do
-      ProcessModel.make(
-        app: app,
-        type: ProcessTypes::WEB,
-        instances: 3,
-        guid: 'guid-final',
-        revision: revision,
-        state: ProcessModel::STOPPED
-      )
+      create(:process_model, app: app,
+                             type: ProcessTypes::WEB,
+                             instances: 3,
+                             guid: 'guid-final',
+                             revision: revision,
+                             state: ProcessModel::STOPPED)
     end
 
     let!(:interim_deploying_web_process) do
-      ProcessModel.make(
-        app: app,
-        created_at: 1.hour.ago,
-        type: ProcessTypes::WEB,
-        instances: 1,
-        guid: 'guid-interim'
-      )
+      create(:process_model, app: app,
+                             created_at: 1.hour.ago,
+                             type: ProcessTypes::WEB,
+                             instances: 1,
+                             guid: 'guid-interim')
     end
 
     let(:deployment) do
-      DeploymentModel.make(
-        app: app,
-        deploying_web_process: deploying_web_process,
-        state: state,
-        original_web_process_instance_count: 3,
-        max_in_flight: 1
-      )
+      create(:deployment_model, app: app,
+                                deploying_web_process: deploying_web_process,
+                                state: state,
+                                original_web_process_instance_count: 3,
+                                max_in_flight: 1)
     end
 
     let(:diego_instances_reporter) { instance_double(Diego::InstancesReporter) }

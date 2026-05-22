@@ -3,9 +3,9 @@ require 'rspec_api_documentation/dsl'
 
 RSpec.resource 'Users', type: %i[api legacy_api] do
   let(:admin_auth_header) { admin_headers['HTTP_AUTHORIZATION'] }
-  let!(:user) { VCAP::CloudController::User.make(default_space: space) }
+  let!(:user) { FactoryBot.create(:user, default_space: space) }
   let(:guid) { user.guid }
-  let(:space) { VCAP::CloudController::Space.make }
+  let(:space) { FactoryBot.create(:space) }
 
   authenticated_request
 
@@ -44,7 +44,7 @@ RSpec.resource 'Users', type: %i[api legacy_api] do
       include_context 'updatable_fields'
 
       example 'Updating a User' do
-        new_space = VCAP::CloudController::Space.make
+        new_space = create(:space)
         client.put "/v2/users/#{guid}", Oj.dump({ default_space_guid: new_space.guid }), headers
 
         expect(status).to eq 201
@@ -64,9 +64,9 @@ RSpec.resource 'Users', type: %i[api legacy_api] do
         space.organization.add_user(user)
       end
 
-      let!(:associated_space) { VCAP::CloudController::Space.make }
+      let!(:associated_space) { create(:space) }
       let(:associated_space_guid) { associated_space.guid }
-      let(:space) { VCAP::CloudController::Space.make }
+      let(:space) { create(:space) }
       let(:space_guid) { space.guid }
 
       standard_model_list :space, VCAP::CloudController::SpacesController, outer_model: :user
@@ -87,9 +87,9 @@ RSpec.resource 'Users', type: %i[api legacy_api] do
         managed_space.organization.add_user(user)
       end
 
-      let!(:associated_managed_space) { VCAP::CloudController::Space.make }
+      let!(:associated_managed_space) { create(:space) }
       let(:associated_managed_space_guid) { associated_managed_space.guid }
-      let(:managed_space) { VCAP::CloudController::Space.make }
+      let(:managed_space) { create(:space) }
       let(:managed_space_guid) { managed_space.guid }
 
       standard_model_list :space, VCAP::CloudController::SpacesController, outer_model: :user, path: :managed_spaces
@@ -110,9 +110,9 @@ RSpec.resource 'Users', type: %i[api legacy_api] do
         audited_space.organization.add_user(user)
       end
 
-      let!(:associated_audited_space) { VCAP::CloudController::Space.make }
+      let!(:associated_audited_space) { create(:space) }
       let(:associated_audited_space_guid) { associated_audited_space.guid }
-      let(:audited_space) { VCAP::CloudController::Space.make }
+      let(:audited_space) { create(:space) }
       let(:audited_space_guid) { audited_space.guid }
 
       standard_model_list :space, VCAP::CloudController::SpacesController, outer_model: :user, path: :audited_spaces
@@ -130,9 +130,9 @@ RSpec.resource 'Users', type: %i[api legacy_api] do
         associated_organization.add_user(user)
       end
 
-      let!(:associated_organization) { VCAP::CloudController::Organization.make }
+      let!(:associated_organization) { create(:organization) }
       let(:associated_organization_guid) { associated_organization.guid }
-      let(:organization) { VCAP::CloudController::Organization.make }
+      let(:organization) { create(:organization) }
       let(:organization_guid) { organization.guid }
 
       standard_model_list :organization, VCAP::CloudController::OrganizationsController, outer_model: :user
@@ -153,9 +153,9 @@ RSpec.resource 'Users', type: %i[api legacy_api] do
         associated_managed_organization.add_manager(user)
       end
 
-      let!(:associated_managed_organization) { VCAP::CloudController::Organization.make }
+      let!(:associated_managed_organization) { create(:organization) }
       let(:associated_managed_organization_guid) { associated_managed_organization.guid }
-      let(:managed_organization) { VCAP::CloudController::Organization.make }
+      let(:managed_organization) { create(:organization) }
       let(:managed_organization_guid) { managed_organization.guid }
 
       standard_model_list :organization, VCAP::CloudController::OrganizationsController, outer_model: :user, path: :managed_organizations
@@ -175,9 +175,9 @@ RSpec.resource 'Users', type: %i[api legacy_api] do
         associated_billing_managed_organization.add_billing_manager(user)
       end
 
-      let!(:associated_billing_managed_organization) { VCAP::CloudController::Organization.make }
+      let!(:associated_billing_managed_organization) { create(:organization) }
       let(:associated_billing_managed_organization_guid) { associated_billing_managed_organization.guid }
-      let(:billing_managed_organization) { VCAP::CloudController::Organization.make }
+      let(:billing_managed_organization) { create(:organization) }
       let(:billing_managed_organization_guid) { billing_managed_organization.guid }
 
       standard_model_list :organization, VCAP::CloudController::OrganizationsController, outer_model: :user, path: :billing_managed_organizations
@@ -197,9 +197,9 @@ RSpec.resource 'Users', type: %i[api legacy_api] do
         associated_audited_organization.add_auditor(user)
       end
 
-      let!(:associated_audited_organization) { VCAP::CloudController::Organization.make }
+      let!(:associated_audited_organization) { create(:organization) }
       let(:associated_audited_organization_guid) { associated_audited_organization.guid }
-      let(:audited_organization) { VCAP::CloudController::Organization.make }
+      let(:audited_organization) { create(:organization) }
       let(:audited_organization_guid) { audited_organization.guid }
 
       standard_model_list :organization, VCAP::CloudController::OrganizationsController, outer_model: :user, path: :audited_organizations

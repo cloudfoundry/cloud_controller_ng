@@ -15,7 +15,7 @@ RSpec.describe 'Rate Limiting' do
   end
 
   context 'as a user' do
-    let(:space) { VCAP::CloudController::Space.make }
+    let(:space) { create(:space) }
     let(:user)  { make_developer_for_space(space) }
 
     let(:user_headers) do
@@ -36,7 +36,7 @@ RSpec.describe 'Rate Limiting' do
   end
 
   context 'as a UAA client' do
-    let(:space) { VCAP::CloudController::Space.make }
+    let(:space) { create(:space) }
     let(:client)  do
       user = make_developer_for_space(space)
       user.update(is_oauth_client: true)
@@ -75,7 +75,7 @@ RSpec.describe 'Rate Limiting' do
   end
 
   context 'as an admin' do
-    let(:admin_headers) { admin_headers_for(VCAP::CloudController::User.make) }
+    let(:admin_headers) { admin_headers_for(create(:user)) }
 
     context 'when admin_limit is -1 (default, unlimited)' do
       it 'is not rate limited' do
@@ -115,7 +115,7 @@ RSpec.describe 'Rate Limiting' do
       it 'does not affect regular users' do
         4.times { get '/v3/spaces', nil, admin_headers }
 
-        space = VCAP::CloudController::Space.make
+        space = create(:space)
         user = make_developer_for_space(space)
         user_headers = headers_for(user)
 

@@ -14,21 +14,21 @@ module VCAP::CloudController
     let(:user_audit_info) { instance_double(UserAuditInfo).as_null_object }
 
     describe '#update' do
-      let!(:app) { AppModel.make }
-      let!(:process) { ProcessModel.make(app:) }
-      let!(:another_process) { ProcessModel.make(app:) }
+      let!(:app) { create(:app_model) }
+      let!(:process) { create(:process_model, app:) }
+      let!(:another_process) { create(:process_model, app:) }
 
       before do
         TestConfig.override(kubernetes: {})
       end
 
       context 'when the route already exists' do
-        let(:domain) { VCAP::CloudController::SharedDomain.make(name: 'tomato.avocado-toast.com') }
-        let!(:route) { Route.make(host: 'potato', domain: domain, path: '/some-path', space: app.space) }
+        let(:domain) { create(:shared_domain, name: 'tomato.avocado-toast.com') }
+        let!(:route) { create(:route, host: 'potato', domain: domain, path: '/some-path', space: app.space) }
 
         context 'when the route is already mapped to the app' do
           let!(:route_mapping) do
-            RouteMappingModel.make(app: app, route: route, app_port: VCAP::CloudController::ProcessModel::DEFAULT_HTTP_PORT)
+            create(:route_mapping_model, app: app, route: route, app_port: VCAP::CloudController::ProcessModel::DEFAULT_HTTP_PORT)
           end
 
           it 'does not attempt to re-map the route to the app' do
@@ -39,7 +39,7 @@ module VCAP::CloudController
 
           context 'and a protocol is NOT provided' do
             let!(:route_mapping) do
-              RouteMappingModel.make(app: app, route: route, protocol: 'http2', app_port: VCAP::CloudController::ProcessModel::DEFAULT_HTTP_PORT)
+              create(:route_mapping_model, app: app, route: route, protocol: 'http2', app_port: VCAP::CloudController::ProcessModel::DEFAULT_HTTP_PORT)
             end
 
             it 'does NOT change the route mapping protocol back to the default (manifests are NOT declarative)' do
@@ -66,8 +66,8 @@ module VCAP::CloudController
             end
 
             before do
-              route2 = Route.make(host: 'potatotwo', domain: domain, path: '/some-path', space: app.space)
-              RouteMappingModel.make(app: app, route: route2)
+              route2 = create(:route, host: 'potatotwo', domain: domain, path: '/some-path', space: app.space)
+              create(:route_mapping_model, app: app, route: route2)
             end
 
             it 'updates (or recreates) the route mapping with the new protocol' do
@@ -119,7 +119,7 @@ module VCAP::CloudController
           end
 
           context 'when the route and app are in different spaces' do
-            let!(:outside_app) { AppModel.make }
+            let!(:outside_app) { create(:app_model) }
 
             it 'raises a route invalid error' do
               expect do
@@ -131,7 +131,7 @@ module VCAP::CloudController
 
           context 'when the route is shared' do
             let!(:route_share) { RouteShare.new }
-            let!(:outside_app) { AppModel.make }
+            let!(:outside_app) { create(:app_model) }
             let!(:shared_route) { route_share.create(route, [outside_app.space], user_audit_info) }
 
             it 'succeeds after route share' do
@@ -146,7 +146,7 @@ module VCAP::CloudController
       context 'when the route does not already exist' do
         context 'when the domain exists' do
           before do
-            VCAP::CloudController::SharedDomain.make(name: 'tomato.avocado-toast.com')
+            create(:shared_domain, name: 'tomato.avocado-toast.com')
           end
 
           it 'creates and maps the route to the app' do
@@ -197,7 +197,7 @@ module VCAP::CloudController
             end
 
             before do
-              VCAP::CloudController::PrivateDomain.make(owning_organization: app.space.organization, name: 'private.avocado-toast.com')
+              create(:private_domain, owning_organization: app.space.organization, name: 'private.avocado-toast.com')
             end
 
             it 'creates and maps the route to the app' do
@@ -224,7 +224,7 @@ module VCAP::CloudController
             end
 
             before do
-              VCAP::CloudController::PrivateDomain.make(owning_organization: app.space.organization, name: 'private.avocado-toast.com')
+              create(:private_domain, owning_organization: app.space.organization, name: 'private.avocado-toast.com')
             end
 
             it 'creates and maps the route to the app' do
@@ -260,7 +260,7 @@ module VCAP::CloudController
           context 'when the route is a tcp route' do
             let(:ra_client) { instance_double(VCAP::CloudController::RoutingApi::Client, router_group: rg) }
             let(:rg) { instance_double(VCAP::CloudController::RoutingApi::RouterGroup, type: 'tcp', reservable_ports: [1234, 1235]) }
-            let!(:tcp_domain) { SharedDomain.make(name: 'tcp.tomato.avocado-toast.com', router_group_guid: '123') }
+            let!(:tcp_domain) { create(:shared_domain, name: 'tcp.tomato.avocado-toast.com', router_group_guid: '123') }
             let(:message) do
               ManifestRoutesUpdateMessage.new(
                 routes: [
@@ -288,9 +288,9 @@ module VCAP::CloudController
             end
 
             context 'but there is another tcp route with a different port' do
-              let!(:other_route) { Route.make(domain: tcp_domain, host: '', space: app.space, port: 1235) }
+              let!(:other_route) { create(:route, domain: tcp_domain, host: '', space: app.space, port: 1235) }
               let!(:other_route_mapping) do
-                RouteMappingModel.make(app: app, route: other_route)
+                create(:route_mapping_model, app: app, route: other_route)
               end
 
               it 'creates and maps the route to the app' do
@@ -329,7 +329,7 @@ module VCAP::CloudController
 
           context 'when route creation feature is disabled' do
             before do
-              VCAP::CloudController::FeatureFlag.make(name: 'route_creation', enabled: false, error_message: 'nope')
+              create(:feature_flag, name: 'route_creation', enabled: false, error_message: 'nope')
             end
 
             it 'raises an unauthorized error' do
@@ -351,7 +351,7 @@ module VCAP::CloudController
 
         context 'when the organization of the app does not have access to the domain' do
           before do
-            VCAP::CloudController::PrivateDomain.make(name: 'tomato.avocado-toast.com')
+            create(:private_domain, name: 'tomato.avocado-toast.com')
           end
 
           it 'raises an error' do
@@ -363,8 +363,8 @@ module VCAP::CloudController
       end
 
       context 'when multiple domains exist' do
-        let!(:specific_domain) { VCAP::CloudController::SharedDomain.make(name: 'tomato.avocado-toast.com') }
-        let!(:broader_domain) { VCAP::CloudController::SharedDomain.make(name: 'avocado-toast.com') }
+        let!(:specific_domain) { create(:shared_domain, name: 'tomato.avocado-toast.com') }
+        let!(:broader_domain) { create(:shared_domain, name: 'avocado-toast.com') }
 
         it 'creates the route in the most specific domain' do
           ManifestRouteUpdate.update(app.guid, message, user_audit_info)
@@ -377,7 +377,7 @@ module VCAP::CloudController
 
       context 'when there is no host provided' do
         before do
-          VCAP::CloudController::SharedDomain.make(name: 'potato.tomato.avocado-toast.com')
+          create(:shared_domain, name: 'potato.tomato.avocado-toast.com')
         end
 
         it('raises an error indicating that a host must be provided') do
@@ -388,7 +388,7 @@ module VCAP::CloudController
       end
 
       context 'when the host is invalid' do
-        let!(:domain) { VCAP::CloudController::SharedDomain.make(name: 'avocado-toast.com') }
+        let!(:domain) { create(:shared_domain, name: 'avocado-toast.com') }
         let(:message) do
           ManifestRoutesUpdateMessage.new(
             routes: [
@@ -405,10 +405,10 @@ module VCAP::CloudController
       end
 
       context 'when route options are provided' do
-        let!(:domain) { VCAP::CloudController::SharedDomain.make(name: 'tomato.avocado-toast.com') }
+        let!(:domain) { create(:shared_domain, name: 'tomato.avocado-toast.com') }
 
         before do
-          VCAP::CloudController::FeatureFlag.make(name: 'hash_based_routing', enabled: true)
+          create(:feature_flag, name: 'hash_based_routing', enabled: true)
         end
 
         context 'when creating a new route with loadbalancing options' do
@@ -510,7 +510,7 @@ module VCAP::CloudController
         end
 
         context 'when updating an existing route with new loadbalancing options' do
-          let!(:route) { Route.make(host: 'potato', domain: domain, path: '/some-path', space: app.space) }
+          let!(:route) { create(:route, host: 'potato', domain: domain, path: '/some-path', space: app.space) }
           let(:message) do
             ManifestRoutesUpdateMessage.new(
               routes: [
@@ -534,13 +534,12 @@ module VCAP::CloudController
 
         context 'when updating an existing route from round-robin to hash' do
           let!(:route) do
-            Route.make(
-              host: 'potato',
-              domain: domain,
-              path: '/some-path',
-              space: app.space,
-              options: { loadbalancing: 'round-robin' }
-            )
+            create(:route,
+                   host: 'potato',
+                   domain: domain,
+                   path: '/some-path',
+                   space: app.space,
+                   options: { loadbalancing: 'round-robin' })
           end
 
           let(:message) do
@@ -567,17 +566,16 @@ module VCAP::CloudController
 
         context 'when updating an existing hash route with new hash_header' do
           let!(:route) do
-            Route.make(
-              host: 'potato',
-              domain: domain,
-              path: '/some-path',
-              space: app.space,
-              options: {
-                loadbalancing: 'hash',
-                hash_header: 'X-Old-Header',
-                hash_balance: '2.0'
-              }
-            )
+            create(:route,
+                   host: 'potato',
+                   domain: domain,
+                   path: '/some-path',
+                   space: app.space,
+                   options: {
+                     loadbalancing: 'hash',
+                     hash_header: 'X-Old-Header',
+                     hash_balance: '2.0'
+                   })
           end
 
           let(:message) do
@@ -601,17 +599,16 @@ module VCAP::CloudController
 
         context 'when updating an existing hash route with new hash_balance' do
           let!(:route) do
-            Route.make(
-              host: 'potato',
-              domain: domain,
-              path: '/some-path',
-              space: app.space,
-              options: {
-                loadbalancing: 'hash',
-                hash_header: 'X-User-ID',
-                hash_balance: '2.0'
-              }
-            )
+            create(:route,
+                   host: 'potato',
+                   domain: domain,
+                   path: '/some-path',
+                   space: app.space,
+                   options: {
+                     loadbalancing: 'hash',
+                     hash_header: 'X-User-ID',
+                     hash_balance: '2.0'
+                   })
           end
 
           let(:message) do
@@ -635,17 +632,16 @@ module VCAP::CloudController
 
         context 'when updating an existing hash route to remove loadbalancing' do
           let!(:route) do
-            Route.make(
-              host: 'potato',
-              domain: domain,
-              path: '/some-path',
-              space: app.space,
-              options: {
-                loadbalancing: 'hash',
-                hash_header: 'X-User-ID',
-                hash_balance: '2.0'
-              }
-            )
+            create(:route,
+                   host: 'potato',
+                   domain: domain,
+                   path: '/some-path',
+                   space: app.space,
+                   options: {
+                     loadbalancing: 'hash',
+                     hash_header: 'X-User-ID',
+                     hash_balance: '2.0'
+                   })
           end
 
           let(:message) do

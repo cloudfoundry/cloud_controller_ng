@@ -4,7 +4,7 @@ require 'actions/process_create'
 module VCAP::CloudController
   RSpec.describe ProcessCreate do
     subject(:process_create) { ProcessCreate.new(user_audit_info) }
-    let(:app) { AppModel.make }
+    let(:app) { create(:app_model) }
     let(:user_audit_info) { instance_double(UserAuditInfo).as_null_object }
 
     describe '#create' do
@@ -46,13 +46,12 @@ module VCAP::CloudController
       end
 
       it 'adds existing routes to the process' do
-        route = Route.make(space: app.space)
-        destination = RouteMappingModel.make(
-          route: route,
-          app: app,
-          process_type: 'web',
-          app_port: 3121
-        )
+        route = create(:route, space: app.space)
+        destination = create(:route_mapping_model,
+                             route: route,
+                             app: app,
+                             process_type: 'web',
+                             app_port: 3121)
 
         process = process_create.create(app, message)
 
@@ -61,14 +60,13 @@ module VCAP::CloudController
       end
 
       it 'validates number of ports when adding existing routes to a new process' do
-        route = Route.make(space: app.space)
+        route = create(:route, space: app.space)
         11.times do |i|
-          RouteMappingModel.make(
-            route: route,
-            app: app,
-            process_type: 'web',
-            app_port: 3120 + i
-          )
+          create(:route_mapping_model,
+                 route: route,
+                 app: app,
+                 process_type: 'web',
+                 app_port: 3120 + i)
         end
 
         expect do
@@ -77,8 +75,8 @@ module VCAP::CloudController
       end
 
       it 'validates sidecar memory usage' do
-        sidecar = SidecarModel.make(app: app, name: 'my_sidecar', command: 'athenz', memory: 2000)
-        SidecarProcessTypeModel.make(sidecar: sidecar, type: message[:type])
+        sidecar = create(:sidecar_model, app: app, name: 'my_sidecar', command: 'athenz', memory: 2000)
+        create(:sidecar_process_type_model, sidecar: sidecar, type: message[:type])
 
         expect do
           process_create.create(app, message)
