@@ -22,32 +22,32 @@ module VCAP::CloudController
       # All filter conditions are satisfied: sio is in progress/create/within cutoff,
       # pjob is FAILED with operation=service_instance.create, delayed_job has failed_at set.
       # Override individual parameters to break a single filter and test exclusion.
-      def make_stuck_scenario(
-        sio_state: 'in progress',
-        sio_type: 'create',
-        sio_created_at: Time.now,
-        pjob_state: PollableJobModel::FAILED_STATE,
-        dj_failed_at: Time.now
+      def prepare_stuck_service_instance(
+        service_instance_state: 'in progress',
+        service_instance_type: 'create',
+        service_instance_created_at: Time.now,
+        pollable_job_state: PollableJobModel::FAILED_STATE,
+        delayed_job_failed_at: Time.now
       )
         service_instance = ManagedServiceInstance.make
 
         ServiceInstanceOperation.make(
           service_instance_id: service_instance.id,
-          type: sio_type,
-          state: sio_state,
-          created_at: sio_created_at
+          type: service_instance_type,
+          state: service_instance_state,
+          created_at: service_instance_created_at
         )
 
         dj = Delayed::Job.create!(
           guid: SecureRandom.uuid,
           handler: 'fake',
           run_at: Time.now,
-          failed_at: dj_failed_at,
+          failed_at: delayed_job_failed_at,
           queue: 'cc-generic'
         )
 
         pjob = PollableJobModel.make(
-          state: pjob_state,
+          state: pollable_job_state,
           operation: 'service_instance.create',
           resource_guid: service_instance.guid,
           resource_type: 'service_instances',
@@ -62,14 +62,14 @@ module VCAP::CloudController
       describe '#perform' do
         context 'when sio state is not in progress' do
           it 'does not mitigate when state is succeeded' do
-            scenario = make_stuck_scenario(sio_state: 'succeeded')
+            scenario = prepare_stuck_service_instance(service_instance_state: 'succeeded')
             job.perform
             expect(scenario[:service_instance].last_operation.reload.state).to eq('succeeded')
             expect(fake_mitigator).not_to have_received(:cleanup_failed_provision)
           end
 
           it 'does not mitigate when state is failed' do
-            scenario = make_stuck_scenario(sio_state: 'failed')
+            scenario = prepare_stuck_service_instance(service_instance_state: 'failed')
             job.perform
             expect(scenario[:service_instance].last_operation.reload.state).to eq('failed')
             expect(fake_mitigator).not_to have_received(:cleanup_failed_provision)
@@ -78,7 +78,7 @@ module VCAP::CloudController
 
         context 'when sio type is not create' do
           it 'does not mitigate' do
-            scenario = make_stuck_scenario(sio_type: 'delete')
+            scenario = prepare_stuck_service_instance(service_instance_type: 'delete')
             job.perform
             expect(scenario[:service_instance].last_operation.reload.state).to eq('in progress')
             expect(fake_mitigator).not_to have_received(:cleanup_failed_provision)
@@ -87,7 +87,7 @@ module VCAP::CloudController
 
         context 'when sio created_at is beyond the max polling window' do
           it 'does not mitigate' do
-            scenario = make_stuck_scenario(sio_created_at: Time.now - (max_poll_duration_minutes + 1).minutes)
+            scenario = prepare_stuck_service_instance(service_instance_created_at: Time.now - (max_poll_duration_minutes + 1).minutes)
             job.perform
             expect(scenario[:service_instance].last_operation.reload.state).to eq('in progress')
             expect(fake_mitigator).not_to have_received(:cleanup_failed_provision)
@@ -96,7 +96,7 @@ module VCAP::CloudController
 
         context 'when delayed_job.failed_at is nil (job still running or locked)' do
           it 'does not mitigate' do
-            scenario = make_stuck_scenario(dj_failed_at: nil)
+            scenario = prepare_stuck_service_instance(delayed_job_failed_at: nil)
             job.perform
             expect(scenario[:service_instance].last_operation.reload.state).to eq('in progress')
             expect(fake_mitigator).not_to have_received(:cleanup_failed_provision)
@@ -105,7 +105,7 @@ module VCAP::CloudController
 
         context 'when pollable job state is COMPLETE' do
           it 'does not mitigate' do
-            scenario = make_stuck_scenario(pjob_state: PollableJobModel::COMPLETE_STATE)
+            scenario = prepare_stuck_service_instance(pollable_job_state: PollableJobModel::COMPLETE_STATE)
             job.perform
             expect(scenario[:service_instance].last_operation.reload.state).to eq('in progress')
             expect(fake_mitigator).not_to have_received(:cleanup_failed_provision)
@@ -114,7 +114,7 @@ module VCAP::CloudController
 
         context 'when pollable job state is PROCESSING' do
           it 'does not mitigate' do
-            scenario = make_stuck_scenario(pjob_state: PollableJobModel::PROCESSING_STATE)
+            scenario = prepare_stuck_service_instance(pollable_job_state: PollableJobModel::PROCESSING_STATE)
             job.perform
             expect(scenario[:service_instance].last_operation.reload.state).to eq('in progress')
             expect(fake_mitigator).not_to have_received(:cleanup_failed_provision)
@@ -123,7 +123,7 @@ module VCAP::CloudController
 
         context 'when pollable job operation is not service_instance.create' do
           it 'does not mitigate' do
-            scenario = make_stuck_scenario
+            scenario = prepare_stuck_service_instance
             scenario[:pjob].update(operation: 'service_instance.update')
             job.perform
             expect(scenario[:service_instance].last_operation.reload.state).to eq('in progress')
@@ -133,7 +133,7 @@ module VCAP::CloudController
 
         context 'when a service instance create job is stuck with state FAILED' do
           it 'sets operation to failed, pollable job to FAILED, and triggers orphan mitigation' do
-            scenario = make_stuck_scenario
+            scenario = prepare_stuck_service_instance
             job.perform
             expect(scenario[:service_instance].last_operation.reload.state).to eq('failed')
             expect(scenario[:pjob].reload.state).to eq(PollableJobModel::FAILED_STATE)
@@ -143,7 +143,7 @@ module VCAP::CloudController
 
         context 'when a service instance create job is stuck with state POLLING (DB flip before failure hook)' do
           it 'sets operation to failed, pollable job to FAILED, and triggers orphan mitigation' do
-            scenario = make_stuck_scenario(pjob_state: PollableJobModel::POLLING_STATE)
+            scenario = prepare_stuck_service_instance(pollable_job_state: PollableJobModel::POLLING_STATE)
             job.perform
             expect(scenario[:service_instance].last_operation.reload.state).to eq('failed')
             expect(scenario[:pjob].reload.state).to eq(PollableJobModel::FAILED_STATE)
@@ -153,7 +153,7 @@ module VCAP::CloudController
 
         context 'when there are multiple stuck jobs within the batch size' do
           it 'mitigates each one' do
-            3.times { make_stuck_scenario }
+            3.times { prepare_stuck_service_instance }
             job.perform
             expect(ServiceInstanceOperation.where(state: 'failed').count).to eq(3)
           end
@@ -161,7 +161,7 @@ module VCAP::CloudController
 
         context 'when there are more stuck jobs than the batch size' do
           it 'processes only up to BATCH_SIZE jobs per run' do
-            (ServiceOperationsCreateInProgressCleanup::BATCH_SIZE + 1).times { make_stuck_scenario }
+            (ServiceOperationsCreateInProgressCleanup::BATCH_SIZE + 1).times { prepare_stuck_service_instance }
             job.perform
             expect(ServiceInstanceOperation.where(state: 'failed').count).to eq(ServiceOperationsCreateInProgressCleanup::BATCH_SIZE)
           end
@@ -221,7 +221,7 @@ module VCAP::CloudController
       describe '#mitigate_orphan' do
         context 'when another process already mitigated (skip_locked returns nil)' do
           it 'does nothing' do
-            scenario = make_stuck_scenario
+            scenario = prepare_stuck_service_instance
 
             expect do
               job.send(:mitigate_orphan, ServiceInstanceOperation, ServiceInstance,
@@ -233,7 +233,7 @@ module VCAP::CloudController
 
         context 'when the operation is stuck in progress' do
           it 'sets the operation state from in progress to failed' do
-            scenario = make_stuck_scenario
+            scenario = prepare_stuck_service_instance
             op = scenario[:service_instance].last_operation
 
             expect do
@@ -243,7 +243,7 @@ module VCAP::CloudController
           end
 
           it 'sets the pollable job state to FAILED' do
-            scenario = make_stuck_scenario(pjob_state: PollableJobModel::POLLING_STATE)
+            scenario = prepare_stuck_service_instance(pollable_job_state: PollableJobModel::POLLING_STATE)
             op = scenario[:service_instance].last_operation
 
             expect do
