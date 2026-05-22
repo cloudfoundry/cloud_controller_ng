@@ -55,6 +55,9 @@ pollable_jobs:
 service_operations_initial_cleanup:
   frequency_in_seconds: 300
 
+service_operations_create_in_progress_cleanup:
+  frequency_in_seconds: 300
+
 completed_tasks:
   cutoff_age_in_days: 31
 
@@ -369,8 +372,6 @@ diego_sync:
 pending_droplets:
   frequency_in_seconds: 300
   expiration_in_seconds: 42
-delayed_jobs_recover:
-  frequency_in_seconds: 600
 pending_builds:
   expiration_in_seconds: 42
   frequency_in_seconds: 300
