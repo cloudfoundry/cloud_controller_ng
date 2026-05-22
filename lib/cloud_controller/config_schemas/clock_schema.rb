@@ -34,7 +34,7 @@ module VCAP::CloudController
           completed_tasks: {
             cutoff_age_in_days: Integer
           },
-          delayed_jobs_recover: {
+          service_operations_create_in_progress_cleanup: {
             frequency_in_seconds: Integer
           },
           default_health_check_timeout: Integer,
