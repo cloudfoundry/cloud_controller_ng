@@ -1,4 +1,7 @@
-require 'spec_helper'
+require 'lightweight_spec_helper'
+require 'utils/hash_utils'
+require 'messages/authentication_message'
+require 'messages/basic_credentials_message'
 require 'messages/validators/authentication_validator'
 
 module VCAP::CloudController::Validators

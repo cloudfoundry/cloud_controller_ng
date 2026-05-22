@@ -1,4 +1,6 @@
-require 'spec_helper'
+require 'lightweight_spec_helper'
+require 'timecop'
+require 'cloud_controller/uaa/uaa_token_cache'
 
 module VCAP::CloudController
   RSpec.describe UaaTokenCache do

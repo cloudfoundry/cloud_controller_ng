@@ -4,7 +4,7 @@ require 'cloud_controller/byte_quantity'
 # Licensed under the MIT License
 # https://github.com/goodmustache/palm_civet
 
-require 'spec_helper'
+require 'lightweight_spec_helper'
 
 module VCAP::CloudController
   RSpec.describe ByteQuantity do
