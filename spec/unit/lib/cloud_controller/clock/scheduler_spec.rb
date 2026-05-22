@@ -165,7 +165,7 @@ module VCAP::CloudController
         expect(clock).to receive(:schedule_frequent_worker_job) do |args, &block|
           expect(args).to eql(name: 'service_operations_create_in_progress_cleanup', interval: 600)
           expect(Jobs::Runtime::ServiceOperationsCreateInProgressCleanup).to receive(:new).and_call_original
-          expect(block.call).to be_instance_of(Jobs::Runtime::DelayedJobsRecover)
+          expect(block.call).to be_instance_of(Jobs::Runtime::ServiceOperationsCreateInProgressCleanup)
         end
 
         schedule.start
