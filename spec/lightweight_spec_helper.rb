@@ -1,5 +1,6 @@
 $LOAD_PATH.push(File.expand_path(File.join(__dir__, '..', 'app')))
 $LOAD_PATH.push(File.expand_path(File.join(__dir__, '..', 'lib')))
+$LOAD_PATH.push(File.expand_path(File.join(__dir__, '..', 'middleware')))
 
 require 'active_support/all'
 require 'active_model'
@@ -27,7 +28,7 @@ end
 class StubConfig
   def self.prepare(example, **data)
     config = new(data)
-    example.allow(TestConfig).to example.receive(:config).and_return(config)
+    example.allow(TestConfig).to example.receive(:config).and_return(config) if defined?(TestConfig)
     example.allow(VCAP::CloudController::Config).to example.receive(:config).and_return(config)
   end
 
@@ -35,8 +36,8 @@ class StubConfig
     @data = data
   end
 
-  def get(key)
-    data[key]
+  def get(*keys)
+    keys.inject(data) { |memo, key| memo.is_a?(Hash) ? memo[key] : nil }
   end
 
   alias_method :[], :get
