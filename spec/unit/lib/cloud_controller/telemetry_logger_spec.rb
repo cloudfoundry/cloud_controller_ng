@@ -1,8 +1,12 @@
 require 'lightweight_spec_helper'
+require 'support/time_helpers'
+require 'vcap/request'
 require 'cloud_controller/telemetry_logger'
 
 module VCAP::CloudController
   RSpec.describe TelemetryLogger do
+    include TimeHelpers
+
     let(:file) { Tempfile.new('telemetry.log') }
 
     before do
