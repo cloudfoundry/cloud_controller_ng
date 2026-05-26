@@ -232,7 +232,7 @@ GEM
       google-protobuf (~> 4.26)
       googleapis-common-protos-types (~> 1.21)
       grpc (~> 1.41)
-    googleapis-common-protos-types (1.22.0)
+    googleapis-common-protos-types (1.23.0)
       google-protobuf (~> 4.26)
     googleauth (1.8.1)
       faraday (>= 0.17.3, < 3.a)
