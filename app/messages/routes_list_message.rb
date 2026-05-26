@@ -16,7 +16,7 @@ module VCAP::CloudController
     ]
 
     validates_with NoAdditionalParamsValidator
-    validates_with IncludeParamValidator, valid_values: ['domain', 'space', 'space.organization']
+    validates_with IncludeParamValidator, valid_values: ['domain', 'space', 'space.organization', 'route_policies']
 
     validates :hosts, allow_nil: true, array: true
     validates :paths, allow_nil: true, array: true
