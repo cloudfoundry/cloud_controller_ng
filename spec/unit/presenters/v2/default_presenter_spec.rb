@@ -1,4 +1,9 @@
-require 'spec_helper'
+require 'lightweight_spec_helper'
+require 'sequel'
+require 'sequel_plugins/vcap_serialization'
+require 'presenters/v2/base_presenter'
+require 'presenters/v2/default_presenter'
+require 'presenters/v2/relations_presenter'
 
 module CloudController::Presenters::V2
   RSpec.describe DefaultPresenter do

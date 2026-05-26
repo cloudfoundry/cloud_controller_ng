@@ -1,8 +1,17 @@
-require 'db_spec_helper'
+require 'lightweight_spec_helper'
+require 'support/bootstrap/test_config'
 require 'presenters/v3/to_many_relationship_presenter'
 
 module VCAP::CloudController::Presenters::V3
   RSpec.describe ToManyRelationshipPresenter do
+    before do
+      StubConfig.prepare(
+        self,
+        external_protocol: 'http',
+        external_domain: 'api.example.org'
+      )
+    end
+
     class ToManyRelationship
       def initialize(guid)
         @guid = guid

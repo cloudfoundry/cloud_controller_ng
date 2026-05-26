@@ -1,4 +1,4 @@
-require 'db_spec_helper'
+require 'lightweight_spec_helper'
 require 'presenters/v3/relationship_presenter'
 
 module VCAP::CloudController::Presenters::V3
