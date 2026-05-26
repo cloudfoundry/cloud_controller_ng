@@ -1,4 +1,10 @@
-require 'spec_helper'
+require 'lightweight_spec_helper'
+require 'oj'
+require 'services/validation_errors'
+require 'services/service_brokers/null_client'
+require 'services/service_brokers/v2/catalog_validation_helper'
+require 'services/service_brokers/v2/schema'
+require 'services/service_brokers/v2/parameters_schema'
 
 module VCAP::Services::ServiceBrokers::V2
   RSpec.describe ParametersSchema do

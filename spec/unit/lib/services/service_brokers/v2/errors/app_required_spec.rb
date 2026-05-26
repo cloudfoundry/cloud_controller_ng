@@ -1,4 +1,19 @@
-require 'spec_helper'
+require 'lightweight_spec_helper'
+require 'oj'
+require 'cloud_controller/structured_error'
+require 'cloud_controller/http_response_error'
+
+module VCAP
+  module Services
+    module ServiceBrokers
+      module V2
+      end
+    end
+  end
+end
+
+require 'services/service_brokers/v2/http_response'
+require 'services/service_brokers/v2/errors/app_required'
 
 module VCAP::Services
   module ServiceBrokers

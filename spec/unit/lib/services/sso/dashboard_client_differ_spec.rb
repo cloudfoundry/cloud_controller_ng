@@ -1,4 +1,15 @@
-require 'spec_helper'
+require 'lightweight_spec_helper'
+require 'rspec/collection_matchers'
+
+module VCAP::Services; end
+module VCAP::Services::SSO; end
+
+require 'services/sso/commands/create_client_command'
+require 'services/sso/commands/update_client_command'
+require 'services/sso/commands/delete_client_command'
+require 'services/sso/commands/claim_client_command'
+require 'services/sso/commands/unclaim_client_command'
+require 'services/sso/dashboard_client_differ'
 
 module VCAP::Services::SSO
   RSpec.describe DashboardClientDiffer do
