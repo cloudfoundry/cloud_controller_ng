@@ -5,7 +5,7 @@ module VCAP::CloudController
         BATCH_SIZE = 10
 
         def perform
-          logger.info("Cleaning up 'create' type service operations stuck 'in progress'")
+          logger.info("Cleaning up service 'create' operations stuck in 'in progress'")
           cleanup_operations(ServiceInstanceOperation, ServiceInstance, :service_instance_id, 'service_instance.create',      :cleanup_failed_provision)
           cleanup_operations(ServiceBindingOperation,  ServiceBinding,  :service_binding_id,  'service_bindings.create',      :cleanup_failed_bind)
           cleanup_operations(ServiceKeyOperation,      ServiceKey,      :service_key_id,      'service_keys.create',          :cleanup_failed_key)
@@ -105,7 +105,7 @@ module VCAP::CloudController
         end
 
         def logger
-          @logger ||= Steno.logger('cc.background.service-operations-in-progress-cleanup')
+          @logger ||= Steno.logger('cc.background.service-operations-create-in-progress-cleanup')
         end
 
         def job_name_in_configuration
