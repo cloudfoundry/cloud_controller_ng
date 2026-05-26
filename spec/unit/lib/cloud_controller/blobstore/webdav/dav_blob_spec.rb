@@ -1,4 +1,9 @@
-require 'spec_helper'
+require 'lightweight_spec_helper'
+require 'httpclient'
+require 'timecop'
+require 'cloud_controller/blobstore/blob'
+require 'cloud_controller/blobstore/webdav/dav_blob'
+require 'cloud_controller/blobstore/webdav/nginx_secure_link_signer'
 require_relative '../blob_shared'
 
 module CloudController

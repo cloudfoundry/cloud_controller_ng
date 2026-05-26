@@ -1,4 +1,13 @@
-require 'spec_helper'
+require 'lightweight_spec_helper'
+require 'oj'
+require 'diego/bbs/bbs'
+require 'cloud_controller/errors/api_error'
+require 'cloud_controller/diego/constants'
+require 'cloud_controller/diego/lifecycle_bundle_uri_generator'
+require 'cloud_controller/diego/normal_env_hash_to_diego_env_array_philosopher'
+require 'cloud_controller/diego/docker/desired_lrp_builder'
+require 'cloud_controller/diego/docker/docker_uri_converter'
+require 'cloud_controller/diego/bbs_environment_builder'
 
 module VCAP::CloudController
   module Diego
@@ -16,14 +25,12 @@ module VCAP::CloudController
           }
         end
         let(:config) do
-          Config.new({
-                       diego: {
-                         lifecycle_bundles: {
-                           docker: 'http://docker.example.com/path/to/lifecycle.tgz'
-                         },
-                         enable_declarative_asset_downloads: enable_declarative_asset_downloads
-                       }
-                     })
+          StubConfig.new(diego: {
+                           lifecycle_bundles: {
+                             docker: 'http://docker.example.com/path/to/lifecycle.tgz'
+                           },
+                           enable_declarative_asset_downloads: enable_declarative_asset_downloads
+                         })
         end
         let(:ports) { [] }
         let(:additional_env_vars) { [] }
