@@ -13,7 +13,10 @@ module VCAP::Services::SSO::Commands
 
     describe '#db_command' do
       before do
-        stub_const('VCAP::CloudController::ServiceDashboardClient', Class.new)
+        fake_client_class = Class.new do
+          def self.release_client(client_id); end
+        end
+        stub_const('VCAP::CloudController::ServiceDashboardClient', fake_client_class)
         allow(VCAP::CloudController::ServiceDashboardClient).to receive(:release_client)
       end
 
