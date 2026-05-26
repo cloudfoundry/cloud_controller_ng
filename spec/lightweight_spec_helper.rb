@@ -51,8 +51,6 @@ RSpec.configure do |rspec_config|
   rspec_config.expose_dsl_globally = false
 
   rspec_config.before do
-    if defined?(VCAP::CloudController::Config) && VCAP::CloudController::Config.config.nil?
-      allow(VCAP::CloudController::Config).to receive(:config).and_return(StubConfig.new({}))
-    end
+    allow(VCAP::CloudController::Config).to receive(:config).and_return(StubConfig.new({})) if defined?(VCAP::CloudController::Config) && VCAP::CloudController::Config.config.nil?
   end
 end

@@ -5,7 +5,7 @@ require 'cloud_controller/diego/bbs_task_client'
 
 module VCAP::CloudController
   module Diego
-    class TaskRecipeBuilder; end unless defined?(TaskRecipeBuilder)
+    TaskRecipeBuilder = Class.new unless defined?(TaskRecipeBuilder)
   end
 end
 

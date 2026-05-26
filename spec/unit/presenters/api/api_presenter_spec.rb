@@ -2,7 +2,7 @@ require 'lightweight_spec_helper'
 require 'oj'
 require 'presenters/api/api_presenter'
 
-Oj.default_options = { mode: :compat } unless Oj.default_options[:mode] == :rails || Oj.default_options[:mode] == :compat
+Oj.default_options = { mode: :compat } unless %i[rails compat].include?(Oj.default_options[:mode])
 
 RSpec.describe ApiPresenter do
   subject(:presenter) { ApiPresenter.new(record) }
