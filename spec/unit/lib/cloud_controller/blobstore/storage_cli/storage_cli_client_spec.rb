@@ -1,9 +1,9 @@
-require 'fog_spec_helper'
+require 'spec_helper'
 require 'cloud_controller/blobstore/storage_cli/storage_cli_client'
 
 module CloudController
   module Blobstore
-    RSpec.describe StorageCliClient, :fog_isolation do
+    RSpec.describe StorageCliClient do
       describe 'client init' do
         it 'init the correct client when JSON has provider azurebs (native storage-cli type)' do
           droplets_cfg = Tempfile.new(['droplets', '.json'])

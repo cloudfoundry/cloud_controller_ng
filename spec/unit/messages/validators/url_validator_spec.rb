@@ -1,4 +1,4 @@
-require 'lightweight_spec_helper'
+require 'spec_helper'
 require 'messages/validators/url_validator'
 
 module VCAP::CloudController::Validators

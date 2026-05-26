@@ -1,9 +1,9 @@
-require 'fog_spec_helper'
+require 'spec_helper'
 require_relative '../client_shared'
 
 module CloudController
   module Blobstore
-    RSpec.describe DavClient, :fog_isolation do
+    RSpec.describe DavClient do
       subject(:client) do
         DavClient.new(
           directory_key: directory_key,

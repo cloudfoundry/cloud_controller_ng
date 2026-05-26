@@ -1,5 +1,4 @@
-require 'lightweight_spec_helper'
-require 'utils/hash_utils'
+require 'spec_helper'
 require 'messages/service_binding_create_message'
 
 module VCAP::CloudController

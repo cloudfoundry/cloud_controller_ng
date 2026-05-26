@@ -1,12 +1,4 @@
-require 'lightweight_spec_helper'
-require 'diego/bbs/bbs'
-require 'diego/action_builder'
-require 'cloud_controller/diego/constants'
-require 'cloud_controller/diego/lifecycle_bundle_uri_generator'
-require 'cloud_controller/diego/staging_details'
-require 'cloud_controller/diego/normal_env_hash_to_diego_env_array_philosopher'
-require 'cloud_controller/diego/bbs_environment_builder'
-require 'cloud_controller/diego/docker/staging_action_builder'
+require 'spec_helper'
 
 module VCAP::CloudController
   module Diego
@@ -15,28 +7,23 @@ module VCAP::CloudController
         subject(:builder) { StagingActionBuilder.new(config, staging_details) }
 
         let(:config) do
-          c = StubConfig.new(diego: {
-                               docker_staging_stack: 'docker-staging-stack',
-                               lifecycle_bundles: {
-                                 docker: 'the-docker-bundle'
-                               },
-                               enable_declarative_asset_downloads: enable_declarative_asset_downloads,
-                               insecure_docker_registry_list: insecure_docker_registry_list
-                             },
-                             staging: {
-                               minimum_staging_file_descriptor_limit: 4
-                             })
-          c
+          Config.new({
+                       diego: {
+                         docker_staging_stack: 'docker-staging-stack',
+                         lifecycle_bundles: {
+                           docker: 'the-docker-bundle'
+                         },
+                         enable_declarative_asset_downloads: enable_declarative_asset_downloads,
+                         insecure_docker_registry_list: []
+                       },
+                       staging: {
+                         minimum_staging_file_descriptor_limit: 4
+                       }
+                     })
         end
-        let(:insecure_docker_registry_list) { [] }
-        let(:package) do
-          double(:package, image: 'the-docker-image', docker_username: docker_username, docker_password: docker_password)
-        end
-        let(:docker_username) { nil }
-        let(:docker_password) { nil }
         let(:staging_details) do
           StagingDetails.new.tap do |details|
-            details.package = package
+            details.package = PackageModel.new(docker_image: 'the-docker-image')
             details.environment_variables = env
           end
         end
@@ -67,7 +54,9 @@ module VCAP::CloudController
           end
 
           context 'when there are insecure docker registries' do
-            let(:insecure_docker_registry_list) { %w[registry-1 registry-2] }
+            before do
+              config.set(:diego, config.get(:diego).deep_merge(insecure_docker_registry_list: %w[registry-1 registry-2]))
+            end
 
             it 'includes them in the run action args' do
               result = builder.action
@@ -78,8 +67,16 @@ module VCAP::CloudController
           end
 
           context 'where there are docker credentials' do
-            let(:docker_username) { 'dockerusername' }
-            let(:docker_password) { 'dockerpassword' }
+            let(:staging_details) do
+              StagingDetails.new.tap do |details|
+                details.package = PackageModel.new(
+                  docker_image: 'the-docker-image',
+                  docker_username: 'dockerusername',
+                  docker_password: 'dockerpassword'
+                )
+                details.environment_variables = env
+              end
+            end
 
             it 'includes them in the run action args' do
               result = builder.action

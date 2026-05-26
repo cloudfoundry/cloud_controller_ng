@@ -1,15 +1,5 @@
-require 'lightweight_spec_helper'
+require 'spec_helper'
 require 'securerandom'
-require 'services/validation_errors'
-require 'services/service_brokers/null_client'
-require 'services/service_brokers/v2/catalog_validation_helper'
-require 'services/service_brokers/v2/schema'
-require 'services/service_brokers/v2/parameters_schema'
-require 'services/service_brokers/v2/service_binding_schema'
-require 'services/service_brokers/v2/service_instance_schema'
-require 'services/service_brokers/v2/catalog_schemas'
-require 'services/service_brokers/v2/catalog_service'
-require 'services/service_brokers/v2/catalog_plan'
 
 module VCAP::Services::ServiceBrokers::V2
   RSpec.describe CatalogPlan do

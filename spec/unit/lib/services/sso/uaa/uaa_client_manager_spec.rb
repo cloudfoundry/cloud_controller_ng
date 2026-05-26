@@ -1,16 +1,4 @@
-require 'lightweight_spec_helper'
-require 'webmock/rspec'
-require 'steno/steno'
-require 'uaa'
-
-module VCAP::Services; end
-module VCAP::Services::SSO; end
-module VCAP::Services::SSO::UAA; end
-
-require 'cloud_controller/uaa/errors'
-require 'cloud_controller/uaa/uaa_client'
-require 'services/sso/commands/delete_client_command'
-require 'services/sso/uaa/uaa_client_manager'
+require 'spec_helper'
 
 module VCAP::Services::SSO::UAA
   RSpec.describe UaaClientManager do
@@ -23,25 +11,19 @@ module VCAP::Services::SSO::UAA
     end
 
     describe '#modify_transaction' do
-      let(:uaa_uri) { 'https://uaa.service.cf.internal' }
+      let(:uaa_uri) { VCAP::CloudController::Config.config.get(:uaa, :internal_url) }
       let(:tx_url) { uaa_uri + '/oauth/clients/tx/modify' }
       let(:auth_header) { 'bearer ACCESSTOKENSTUFF' }
       let(:token_info) { double('info', auth_header:) }
       let(:token_issuer) { double('issuer', client_credentials_grant: token_info) }
 
       before do
-        StubConfig.prepare(self,
-                           uaa: { internal_url: uaa_uri, ca_file: 'spec/fixtures/certs/uaa_ca.crt', client_timeout: 60 },
-                           uaa_client_name: 'cc-service-dashboards',
-                           uaa_client_secret: 'some-sekret',
-                           uaa_client_scope: 'openid,cloud_controller_service_permissions.read')
-
         stub_request(:post, tx_url)
 
         opts = {
           skip_ssl_validation: false,
           ssl_ca_file: 'spec/fixtures/certs/uaa_ca.crt',
-          http_timeout: 60
+          http_timeout: TestConfig.config_instance.get(:uaa, :client_timeout)
         }
 
         allow(CF::UAA::TokenIssuer).to receive(:new).with(uaa_uri, 'cc-service-dashboards', 'some-sekret', opts).
@@ -306,11 +288,8 @@ module VCAP::Services::SSO::UAA
         let(:client_manager) { UaaClientManager.new }
 
         before do
-          StubConfig.prepare(self,
-                             uaa: { internal_url: uaa_uri, ca_file: 'spec/fixtures/certs/uaa_ca.crt', client_timeout: 60 },
-                             uaa_client_name: 'cc-service-dashboards',
-                             uaa_client_secret: 'some-sekret',
-                             uaa_client_scope: configured_scope)
+          allow(VCAP::CloudController::Config.config.config_hash).to receive(:[]).with(anything).and_call_original
+          allow(VCAP::CloudController::Config.config.config_hash).to receive(:[]).with(:uaa_client_scope).and_return(configured_scope)
 
           client_manager.modify_transaction(changeset)
         end

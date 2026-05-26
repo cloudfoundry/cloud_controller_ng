@@ -1,13 +1,4 @@
-require 'lightweight_spec_helper'
-require 'find'
-require 'tempfile'
-require 'tmpdir'
-require 'fileutils'
-require 'securerandom'
-require 'steno/steno'
-require 'cloud_controller/blobstore/local/local_client'
-require 'cloud_controller/blobstore/local/local_blob'
-require 'cloud_controller/blobstore/errors'
+require 'spec_helper'
 require_relative '../client_shared'
 
 module CloudController

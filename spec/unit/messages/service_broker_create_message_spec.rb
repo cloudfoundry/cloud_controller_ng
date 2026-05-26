@@ -1,9 +1,4 @@
-require 'lightweight_spec_helper'
-require 'active_model'
-require 'rspec/collection_matchers'
-require 'messages/service_broker_create_message'
-require 'messages/validators/url_validator'
-require 'messages/validators/authentication_validator'
+require 'spec_helper'
 
 module VCAP::CloudController
   RSpec.describe ServiceBrokerCreateMessage do

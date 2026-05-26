@@ -1,5 +1,4 @@
-require 'lightweight_spec_helper'
-require 'utils/hash_utils'
+require 'spec_helper'
 require 'messages/validators/metadata_validator'
 
 module VCAP::CloudController::Validators

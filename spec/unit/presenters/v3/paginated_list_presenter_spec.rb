@@ -1,23 +1,10 @@
-require 'lightweight_spec_helper'
-require 'support/link_helpers'
+require 'spec_helper'
 require 'presenters/v3/paginated_list_presenter'
 require 'presenters/helpers/censorship'
-require 'cloud_controller/paging/paginated_result'
-require 'cloud_controller/paging/pagination_options'
 
 module VCAP::CloudController::Presenters
   module V3
     RSpec.describe PaginatedListPresenter do
-      include LinkHelpers
-
-      before do
-        StubConfig.prepare(
-          self,
-          external_protocol: 'http',
-          external_domain: 'api.example.org'
-        )
-      end
-
       subject(:presenter) do
         PaginatedListPresenter.new(
           presenter: MonkeyPresenter,

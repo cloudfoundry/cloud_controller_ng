@@ -1,4 +1,4 @@
-require 'lightweight_spec_helper'
+require 'spec_helper'
 require 'messages/droplet_copy_message'
 
 module VCAP::CloudController

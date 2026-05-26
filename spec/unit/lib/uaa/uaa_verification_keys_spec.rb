@@ -1,10 +1,5 @@
-require 'lightweight_spec_helper'
-require 'timecop'
-require 'steno/steno'
-require 'uaa'
+require 'spec_helper'
 require 'cloud_controller/uaa/uaa_verification_keys'
-require 'cloud_controller/uaa/errors'
-require 'cloud_controller/errors/api_error'
 
 module VCAP::CloudController
   RSpec.describe UaaVerificationKeys do

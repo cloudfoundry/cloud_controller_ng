@@ -1,24 +1,9 @@
-require 'lightweight_spec_helper'
-require 'cloud_controller/diego/lifecycles/lifecycles'
+require 'spec_helper'
 require 'cloud_controller/diego/lifecycle_protocol'
-require 'cloud_controller/diego/buildpack/lifecycle_protocol'
 require 'cloud_controller/diego/cnb/lifecycle_protocol'
-require 'cloud_controller/diego/docker/lifecycle_protocol'
-
-module CloudController
-  class DependencyLocator
-  end
-end unless defined?(::CloudController::DependencyLocator)
 
 module VCAP::CloudController::Diego
   RSpec.describe LifecycleProtocol do
-    before do
-      dependency_locator = double(:dependency_locator,
-                                  blobstore_url_generator: double(:blobstore_url_generator),
-                                  droplet_url_generator: double(:droplet_url_generator))
-      allow(::CloudController::DependencyLocator).to receive(:instance).and_return(dependency_locator)
-    end
-
     describe '.protocol_for_type' do
       subject(:protocol) { LifecycleProtocol.protocol_for_type(type) }
 

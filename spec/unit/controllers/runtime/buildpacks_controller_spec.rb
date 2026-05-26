@@ -1,9 +1,9 @@
-require 'fog_spec_helper'
+require 'spec_helper'
 
 ## NOTICE: Prefer request specs over controller specs as per ADR #0003 ##
 
 module VCAP::CloudController
-  RSpec.describe VCAP::CloudController::BuildpacksController, :fog_isolation do
+  RSpec.describe VCAP::CloudController::BuildpacksController do
     def ordered_buildpacks
       Buildpack.order(:position).map { |bp| [bp.name, bp.position] }
     end

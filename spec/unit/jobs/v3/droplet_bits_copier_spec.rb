@@ -1,8 +1,8 @@
-require 'fog_spec_helper'
+require 'spec_helper'
 
 module VCAP::CloudController
   module Jobs::V3
-    RSpec.describe DropletBitsCopier, :fog_isolation do
+    RSpec.describe DropletBitsCopier do
       subject(:job) { DropletBitsCopier.new(source_droplet.guid, destination_droplet.guid) }
 
       let(:droplet_bits_path) { File.expand_path('../../../fixtures/good.zip', File.dirname(__FILE__)) }

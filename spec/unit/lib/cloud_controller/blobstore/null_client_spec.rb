@@ -1,9 +1,5 @@
-require 'lightweight_spec_helper'
-require 'find'
-require 'tempfile'
-require 'securerandom'
+require 'spec_helper'
 require 'cloud_controller/blobstore/null_client'
-require 'cloud_controller/blobstore/blob'
 require_relative 'client_shared'
 
 module CloudController

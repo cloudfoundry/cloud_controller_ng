@@ -1,11 +1,11 @@
-require 'fog_spec_helper'
+require 'spec_helper'
 require 'cloud_controller/blobstore/retryable_client'
 require 'cloud_controller/blobstore/null_client'
 require_relative 'client_shared'
 
 module CloudController
   module Blobstore
-    RSpec.describe RetryableClient, :fog_isolation do
+    RSpec.describe RetryableClient do
       subject(:client) do
         RetryableClient.new(
           client: wrapped_client,

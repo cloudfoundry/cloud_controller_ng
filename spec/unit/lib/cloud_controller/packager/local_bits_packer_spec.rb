@@ -1,8 +1,8 @@
-require 'fog_spec_helper'
+require 'spec_helper'
 require 'cloud_controller/packager/local_bits_packer'
 
 module CloudController::Packager
-  RSpec.describe LocalBitsPacker, :fog_isolation do
+  RSpec.describe LocalBitsPacker do
     subject(:packer) { LocalBitsPacker.new }
 
     let(:uploaded_files_path) { File.join(local_tmp_dir, 'good.zip') }

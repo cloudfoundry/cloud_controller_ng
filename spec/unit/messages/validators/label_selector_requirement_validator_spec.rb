@@ -1,5 +1,4 @@
-require 'lightweight_spec_helper'
-require 'models/helpers/label_selector_requirement'
+require 'spec_helper'
 require 'messages/validators/label_selector_requirement_validator'
 
 module VCAP::CloudController::Validators

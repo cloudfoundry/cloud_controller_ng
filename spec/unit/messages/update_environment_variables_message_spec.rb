@@ -1,4 +1,4 @@
-require 'lightweight_spec_helper'
+require 'spec_helper'
 require 'messages/update_environment_variables_message'
 
 module VCAP::CloudController

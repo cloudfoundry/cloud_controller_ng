@@ -56,19 +56,3 @@ RSpec.configure do |rspec_config|
     end
   end
 end
-
-# errors_on helper from rspec-collection_matchers gem
-# Enables: expect(message.errors_on(:attribute)).to include("error message")
-# This extension is added when ActiveModel::Validations is loaded
-if defined?(ActiveModel::Validations)
-  module ::ActiveModel::Validations
-    def errors_on(attribute, options={})
-      valid_args = [options[:context]].compact
-      valid?(*valid_args)
-
-      [errors[attribute]].flatten.compact
-    end
-
-    alias_method :error_on, :errors_on
-  end
-end

@@ -1,7 +1,7 @@
-require 'fog_spec_helper'
+require 'spec_helper'
 
 module VCAP::CloudController
-  RSpec.describe ResourcePool, :fog_isolation do
+  RSpec.describe ResourcePool do
     include_context 'resource pool'
 
     describe '#match_resources' do

@@ -1,9 +1,5 @@
-require 'lightweight_spec_helper'
-require 'cef_logs'
-require 'action_dispatch'
-require 'rack/auth/basic'
-require 'cloud_controller/constants'
-require 'timecop'
+require 'spec_helper'
+require 'request_logs'
 
 module CloudFoundry
   module Middleware
