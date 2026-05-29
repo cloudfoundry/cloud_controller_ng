@@ -267,6 +267,8 @@ rate_limiter:
   global_general_limit: 20000
   per_process_unauthenticated_limit: 100
   global_unauthenticated_limit: 1000
+  per_process_admin_limit: -1
+  global_admin_limit: -1
   reset_interval_in_minutes: 60
 
 rate_limiter_v2_api:

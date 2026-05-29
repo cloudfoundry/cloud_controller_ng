@@ -12,6 +12,8 @@ module CloudFoundry
             global_general_limit:,
             per_process_unauthenticated_limit:,
             global_unauthenticated_limit:,
+            per_process_admin_limit:,
+            global_admin_limit:,
             interval:
           }
         )
@@ -23,6 +25,8 @@ module CloudFoundry
       let(:global_general_limit) { 1000 }
       let(:per_process_unauthenticated_limit) { 10 }
       let(:global_unauthenticated_limit) { 100 }
+      let(:per_process_admin_limit) { -1 }
+      let(:global_admin_limit) { -1 }
       let(:interval) { 60 }
       let(:logger) { double('logger', info: nil) }
       let(:expires_in) { 10.minutes.to_i }
@@ -230,19 +234,42 @@ module CloudFoundry
       end
 
       context 'when user has admin or admin_read_only scopes' do
-        let(:per_process_general_limit) { 1 }
-
         before do
           allow(VCAP::CloudController::SecurityContext).to receive(:admin_read_only?).and_return(true)
         end
 
-        it 'does not rate limit' do
-          2.times { middleware.call(user_1_env) }
-          status, response_headers, = middleware.call(user_1_env)
-          expect(response_headers).not_to include('X-RateLimit-Remaining')
-          expect(status).to eq(200)
-          expect(app).to have_received(:call).at_least(:once)
-          expect(expiring_request_counter).not_to have_received(:increment)
+        context 'when admin_limit is -1 (default, unlimited)' do
+          it 'does not rate limit' do
+            2.times { middleware.call(user_1_env) }
+            status, response_headers, = middleware.call(user_1_env)
+            expect(response_headers).not_to include('X-RateLimit-Remaining')
+            expect(status).to eq(200)
+            expect(app).to have_received(:call).at_least(:once)
+            expect(expiring_request_counter).not_to have_received(:increment)
+          end
+        end
+
+        context 'when admin_limit is set to a positive value' do
+          let(:per_process_admin_limit) { 2 }
+          let(:global_admin_limit) { 20 }
+
+          it 'rate limits admin users using the admin limits' do
+            _, response_headers, = middleware.call(user_1_env)
+            expect(response_headers['X-RateLimit-Limit']).to eq(global_admin_limit.to_s)
+          end
+
+          it 'returns 429 when admin limit is exceeded' do
+            allow(expiring_request_counter).to receive(:increment).and_return([per_process_admin_limit + 1, expires_in])
+            status, = middleware.call(user_1_env.merge('PATH_INFO' => '/v3/foo'))
+            expect(status).to eq(429)
+          end
+
+          it 'does not rate limit regular users with admin limits' do
+            allow(VCAP::CloudController::SecurityContext).to receive(:admin_read_only?).and_return(false)
+            allow(VCAP::CloudController::SecurityContext).to receive(:admin?).and_return(false)
+            _, response_headers, = middleware.call(user_1_env)
+            expect(response_headers['X-RateLimit-Limit']).to eq(global_general_limit.to_s)
+          end
         end
       end
 

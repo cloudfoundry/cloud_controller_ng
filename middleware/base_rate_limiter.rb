@@ -141,7 +141,10 @@ module CloudFoundry
       end
 
       def exceeded_rate_limit(count, env)
-        count > per_process_request_limit(env)
+        limit = per_process_request_limit(env)
+        return false if limit == -1
+
+        count > limit
       end
 
       def estimate_remaining(env, new_count)
