@@ -56,7 +56,7 @@ service_operations_initial_cleanup:
   frequency_in_seconds: 300
 
 service_operations_create_in_progress_cleanup:
-  frequency_in_seconds: 300
+  frequency_in_seconds: 3600 #1h
 
 completed_tasks:
   cutoff_age_in_days: 31

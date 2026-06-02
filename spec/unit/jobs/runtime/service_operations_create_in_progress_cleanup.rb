@@ -57,6 +57,12 @@ module VCAP::CloudController
         { service_instance: service_instance, pjob: pjob, delayed_job: dj }
       end
 
+      shared_examples 'does not trigger orphan mitigation' do
+        before { job.perform }
+
+        it { expect(fake_mitigator).not_to have_received(:cleanup_failed_provision) }
+      end
+
       it { is_expected.to be_a_valid_job }
 
       describe '#perform' do
@@ -77,58 +83,42 @@ module VCAP::CloudController
         end
 
         context 'when sio type is not create' do
-          it 'does not mitigate' do
-            scenario = prepare_stuck_service_instance(service_instance_type: 'delete')
-            job.perform
-            expect(scenario[:service_instance].last_operation.reload.state).to eq('in progress')
-            expect(fake_mitigator).not_to have_received(:cleanup_failed_provision)
-          end
+          before { prepare_stuck_service_instance(service_instance_type: 'delete') }
+
+          it_behaves_like 'does not trigger orphan mitigation'
         end
 
         context 'when sio created_at is beyond the max polling window' do
-          it 'does not mitigate' do
-            scenario = prepare_stuck_service_instance(service_instance_created_at: Time.now - (max_poll_duration_minutes + 1).minutes)
-            job.perform
-            expect(scenario[:service_instance].last_operation.reload.state).to eq('in progress')
-            expect(fake_mitigator).not_to have_received(:cleanup_failed_provision)
-          end
+          before { prepare_stuck_service_instance(service_instance_created_at: Time.now - (max_poll_duration_minutes + 1).minutes) }
+
+          it_behaves_like 'does not trigger orphan mitigation'
         end
 
         context 'when delayed_job.failed_at is nil (job still running or locked)' do
-          it 'does not mitigate' do
-            scenario = prepare_stuck_service_instance(delayed_job_failed_at: nil)
-            job.perform
-            expect(scenario[:service_instance].last_operation.reload.state).to eq('in progress')
-            expect(fake_mitigator).not_to have_received(:cleanup_failed_provision)
-          end
+          before { prepare_stuck_service_instance(delayed_job_failed_at: nil) }
+
+          it_behaves_like 'does not trigger orphan mitigation'
         end
 
         context 'when pollable job state is COMPLETE' do
-          it 'does not mitigate' do
-            scenario = prepare_stuck_service_instance(pollable_job_state: PollableJobModel::COMPLETE_STATE)
-            job.perform
-            expect(scenario[:service_instance].last_operation.reload.state).to eq('in progress')
-            expect(fake_mitigator).not_to have_received(:cleanup_failed_provision)
-          end
+          before { prepare_stuck_service_instance(pollable_job_state: PollableJobModel::COMPLETE_STATE) }
+
+          it_behaves_like 'does not trigger orphan mitigation'
         end
 
         context 'when pollable job state is PROCESSING' do
-          it 'does not mitigate' do
-            scenario = prepare_stuck_service_instance(pollable_job_state: PollableJobModel::PROCESSING_STATE)
-            job.perform
-            expect(scenario[:service_instance].last_operation.reload.state).to eq('in progress')
-            expect(fake_mitigator).not_to have_received(:cleanup_failed_provision)
-          end
+          before { prepare_stuck_service_instance(pollable_job_state: PollableJobModel::PROCESSING_STATE) }
+
+          it_behaves_like 'does not trigger orphan mitigation'
         end
 
         context 'when pollable job operation is not service_instance.create' do
-          it 'does not mitigate' do
+          before do
             scenario = prepare_stuck_service_instance
             scenario[:pjob].update(operation: 'service_instance.update')
-            job.perform
-            expect(scenario[:service_instance].last_operation.reload.state).to eq('in progress')
-            expect(fake_mitigator).not_to have_received(:cleanup_failed_provision)
           end
+
+          it_behaves_like 'does not trigger orphan mitigation'
         end
 
         context 'when a service instance create job is stuck with state FAILED' do
