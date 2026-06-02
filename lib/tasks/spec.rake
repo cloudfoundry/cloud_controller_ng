@@ -7,7 +7,7 @@ namespace :spec do
       run_specs(ARGV[1])
     else
       run_specs_parallel('spec')
-      # Run isolated specs separately since they might affect other tests
+      run_migration_specs_parallel
       run_specs('spec/isolated_specs')
     end
   end
@@ -32,6 +32,7 @@ namespace :spec do
       run_specs(ARGV[1], 'NO_DB_MIGRATION=true')
     else
       run_specs_parallel('spec', 'NO_DB_MIGRATION=true')
+      run_migration_specs_parallel('NO_DB_MIGRATION=true')
       # Run isolated specs separately since they might affect other tests
       run_specs('spec/isolated_specs', 'NO_DB_MIGRATION=true')
     end
@@ -44,12 +45,24 @@ namespace :spec do
   def run_specs_parallel(path, env_vars='')
     command = <<~CMD
       #{env_vars} bundle exec parallel_rspec \
-      --test-options '--order rand' \
+      --test-options '--order rand --profile 20 --format ParallelTests::RSpec::RuntimeLogger --out tmp/parallel_runtime_rspec_main.log' \
+      --runtime-log tmp/parallel_runtime_rspec_main.log \
       --single spec/integration/ \
       --single spec/acceptance/ \
       --isolate \
-      --exclude-pattern 'spec/isolated_specs/' \
+      --exclude-pattern '(spec/isolated_specs/|spec/migrations/)' \
       -- #{path}
+    CMD
+
+    sh command
+  end
+
+  def run_migration_specs_parallel(env_vars='')
+    command = <<~CMD
+      #{env_vars} bundle exec parallel_rspec \
+      --test-options '--order rand --profile 20 --format ParallelTests::RSpec::RuntimeLogger --out tmp/parallel_runtime_rspec_migrations.log' \
+      --runtime-log tmp/parallel_runtime_rspec_migrations.log \
+      -- spec/migrations
     CMD
 
     sh command

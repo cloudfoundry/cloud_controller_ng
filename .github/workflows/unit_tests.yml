@@ -49,6 +49,12 @@ jobs:
         image: ${{ matrix.image }}
         env:
           POSTGRES_PASSWORD: rootpassword
+        # Test-only durability tuning: skip the work that backs durability.
+        command: >-
+          postgres
+          -c fsync=off
+          -c synchronous_commit=off
+          -c full_page_writes=off
         options: >-
           --tmpfs /var/lib/postgresql/data:rw,size=2g
           --health-cmd pg_isready
@@ -61,8 +67,22 @@ jobs:
     - uses: hmarr/debug-action@v3
     - uses: actions/checkout@v6
     - uses: ./.github/workflows/composite/setup
+    - name: Restore parallel_rspec runtime logs
+      uses: actions/cache/restore@v4
+      with:
+        path: tmp/parallel_runtime_rspec_*.log
+        key: parallel-runtime-postgres-${{ matrix.image }}-${{ github.run_id }}
+        restore-keys: |
+          parallel-runtime-postgres-${{ matrix.image }}-
+          parallel-runtime-postgres-
     - name: Run tests
       run: DB=postgres POSTGRES_CONNECTION_PREFIX="postgres://postgres:rootpassword@localhost:5432" bundle exec rake spec
+    - name: Save parallel_rspec runtime logs
+      if: always()
+      uses: actions/cache/save@v4
+      with:
+        path: tmp/parallel_runtime_rspec_*.log
+        key: parallel-runtime-postgres-${{ matrix.image }}-${{ github.run_id }}
     - uses: ravsamhq/notify-slack-action@v2
       if: github.event_name == 'push'
       with:
@@ -84,6 +104,11 @@ jobs:
         env:
           MYSQL_DATABASE: cc_test
           MYSQL_ROOT_PASSWORD: password
+        # Test-only durability tuning: skip the redo/binlog/doublewrite work.
+        command: >-
+          --innodb-flush-log-at-trx-commit=0
+          --sync-binlog=0
+          --innodb-doublewrite=OFF
         options: >-
           --tmpfs /var/lib/mysql:rw,size=2g
           --health-cmd="mysqladmin ping"
@@ -96,8 +121,22 @@ jobs:
     - uses: hmarr/debug-action@v3
     - uses: actions/checkout@v6
     - uses: ./.github/workflows/composite/setup
+    - name: Restore parallel_rspec runtime logs
+      uses: actions/cache/restore@v4
+      with:
+        path: tmp/parallel_runtime_rspec_*.log
+        key: parallel-runtime-mysql-${{ matrix.image }}-${{ github.run_id }}
+        restore-keys: |
+          parallel-runtime-mysql-${{ matrix.image }}-
+          parallel-runtime-mysql-
     - name: Run tests
       run: DB=mysql MYSQL_CONNECTION_PREFIX="mysql2://root:password@127.0.0.1:3306" bundle exec rake spec
+    - name: Save parallel_rspec runtime logs
+      if: always()
+      uses: actions/cache/save@v4
+      with:
+        path: tmp/parallel_runtime_rspec_*.log
+        key: parallel-runtime-mysql-${{ matrix.image }}-${{ github.run_id }}
     - uses: ravsamhq/notify-slack-action@v2
       if: github.event_name == 'push'
       with:

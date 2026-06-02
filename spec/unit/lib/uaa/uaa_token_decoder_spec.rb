@@ -1,6 +1,9 @@
 require 'spec_helper'
 require 'cloud_controller/uaa/uaa_token_decoder'
 
+# Generate RSA-2048 keys once and reuse across examples; key randomness is irrelevant here.
+RSA_TEST_KEYS = Array.new(4) { OpenSSL::PKey::RSA.new(2048) }.freeze
+
 module VCAP::CloudController
   RSpec.describe UaaTokenDecoder do
     subject { UaaTokenDecoder.new(uaa_config) }
@@ -202,7 +205,7 @@ module VCAP::CloudController
           allow(uaa_info).to receive_messages(validation_keys_hash: { 'key1' => { 'value' => rsa_key.public_key.to_pem } })
         end
 
-        let(:rsa_key) { OpenSSL::PKey::RSA.new(2048) }
+        let(:rsa_key) { RSA_TEST_KEYS[0] }
 
         context 'when token is valid' do
           let(:token_content) do
@@ -230,7 +233,7 @@ module VCAP::CloudController
             end
 
             describe 're-fetching key' do
-              let(:old_rsa_key) { OpenSSL::PKey::RSA.new(2048) }
+              let(:old_rsa_key) { RSA_TEST_KEYS[1] }
 
               it 'retries to decode token with newly fetched asymmetric key' do
                 allow(uaa_info).to receive(:validation_keys_hash).and_return(
@@ -376,7 +379,7 @@ module VCAP::CloudController
         end
 
         context 'when multiple asymmetric keys are used' do
-          let(:bad_rsa_key) { OpenSSL::PKey::RSA.new(2048) }
+          let(:bad_rsa_key) { RSA_TEST_KEYS[1] }
           let(:token_content) do
             {
               'aud' => 'resource-id',
@@ -410,7 +413,7 @@ module VCAP::CloudController
           end
 
           it 're-fetches keys when none of the keys are valid' do
-            other_bad_key = OpenSSL::PKey::RSA.new(2048)
+            other_bad_key = RSA_TEST_KEYS[2]
             allow(uaa_info).to receive(:validation_keys_hash).and_return(
               {
                 'bad_key' => { 'value' => bad_rsa_key.public_key.to_pem },
@@ -427,8 +430,8 @@ module VCAP::CloudController
           end
 
           it 'fails when re-fetched keys are also not valid' do
-            other_bad_key = OpenSSL::PKey::RSA.new(2048)
-            final_bad_key = OpenSSL::PKey::RSA.new(2048)
+            other_bad_key = RSA_TEST_KEYS[2]
+            final_bad_key = RSA_TEST_KEYS[3]
             allow(uaa_info).to receive(:validation_keys_hash).and_return(
               {
                 'bad_key' => { 'value' => bad_rsa_key.public_key.to_pem },
