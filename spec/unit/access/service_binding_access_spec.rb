@@ -131,7 +131,7 @@ module VCAP::CloudController
       it { is_expected.not_to allow_op_on_object :read_for_update, object }
 
       context 'when the organization is suspended' do
-        before { allow(object).to receive(:in_suspended_org?).and_return(true) }
+        before { allow(object.space.organization).to receive(:suspended?).and_return(true) }
 
         it { is_expected.to allow_op_on_object :read, object }
         it { is_expected.not_to allow_op_on_object :read_for_update, object }

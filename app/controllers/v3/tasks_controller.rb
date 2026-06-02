@@ -59,7 +59,7 @@ class TasksController < ApplicationController
 
     app_not_found! unless app && permission_queryer.can_read_from_space?(space.id, space.organization_id)
     unauthorized! unless permission_queryer.can_write_to_active_space?(space.id)
-    suspended! unless permission_queryer.is_space_active?(space.id)
+    require_writable_space!(space)
     droplet_not_found! if message.requested?(:droplet_guid) && droplet.nil?
 
     task = TaskCreate.new(configuration).create(app, message, user_audit_info, droplet:)
@@ -80,7 +80,7 @@ class TasksController < ApplicationController
     task_not_found! unless task && permission_queryer.can_read_from_space?(space.id, space.organization_id)
 
     unauthorized! unless permission_queryer.can_manage_apps_in_active_space?(space.id)
-    suspended! unless permission_queryer.is_space_active?(space.id)
+    require_writable_space!(space)
     TaskCancel.new(configuration).cancel(task:, user_audit_info:)
 
     render status: :accepted, json: Presenters::V3::TaskPresenter.new(task.reload)
@@ -95,7 +95,7 @@ class TasksController < ApplicationController
     task, space = TaskFetcher.new.fetch(task_guid: hashed_params[:task_guid])
     task_not_found! unless task && permission_queryer.can_read_from_space?(space.id, space.organization_id)
     unauthorized! unless permission_queryer.can_write_to_active_space?(space.id)
-    suspended! unless permission_queryer.is_space_active?(space.id)
+    require_writable_space!(space)
 
     task = TaskUpdate.new.update(task, message)
     render status: :ok, json: Presenters::V3::TaskPresenter.new(task)

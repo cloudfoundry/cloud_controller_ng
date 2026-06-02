@@ -589,6 +589,48 @@ module VCAP::CloudController
       end
     end
 
+    describe 'status' do
+      let(:space) { Space.make }
+
+      it "allows 'active', 'suspended', and 'deleting'" do
+        %w[active suspended deleting].each do |status|
+          space.status = status
+          expect { space.save }.not_to raise_error
+          expect(space.status).to eq(status)
+        end
+      end
+
+      it 'does not allow arbitrary status values' do
+        space.status = 'unknown'
+        expect { space.save }.to raise_error(Sequel::ValidationFailed)
+      end
+
+      it 'defaults to active' do
+        expect(Space.make.status).to eq('active')
+      end
+
+      describe 'when status == active' do
+        subject(:space) { Space.make(status: 'active') }
+        it('is active') { expect(space).to be_active }
+        it('is not suspended') { expect(space).not_to be_suspended }
+        it('is not deleting') { expect(space).not_to be_deleting }
+      end
+
+      describe 'when status == suspended' do
+        subject(:space) { Space.make(status: 'suspended') }
+        it('is not active') { expect(space).not_to be_active }
+        it('is suspended') { expect(space).to be_suspended }
+        it('is not deleting') { expect(space).not_to be_deleting }
+      end
+
+      describe 'when status == deleting' do
+        subject(:space) { Space.make(status: 'deleting') }
+        it('is not active') { expect(space).not_to be_active }
+        it('is not suspended') { expect(space).not_to be_suspended }
+        it('is deleting') { expect(space).to be_deleting }
+      end
+    end
+
     describe '#destroy' do
       subject(:space) { Space.make }
 

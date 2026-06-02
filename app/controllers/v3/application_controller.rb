@@ -26,6 +26,14 @@ module V3ErrorsHelper
     raise CloudController::Errors::ApiError.new_from_details('OrgSuspended')
   end
 
+  def space_suspended!
+    raise CloudController::Errors::ApiError.new_from_details('SpaceSuspended')
+  end
+
+  def resource_being_deleted!(resource_name)
+    raise CloudController::Errors::ApiError.new_from_details('ResourceBeingDeleted', resource_name)
+  end
+
   def resource_not_found_with_message!(message)
     raise CloudController::Errors::ApiError.new_from_details('ResourceNotFound', message)
   end
@@ -148,6 +156,33 @@ class ApplicationController < ActionController::Base
 
   def permission_queryer
     @permission_queryer ||= VCAP::CloudController::Permissions.new(VCAP::CloudController::SecurityContext.current_user)
+  end
+
+  def require_writable_org!(org)
+    require_writable_org_id!(org.id)
+  end
+
+  def require_writable_org_id!(org_id)
+    case permission_queryer.writable_org_state(org_id)
+    when :active
+      nil
+    when :deleting
+      resource_being_deleted!('organization')
+    when :suspended
+      suspended!
+    end
+  end
+
+  def require_writable_space!(space)
+    org_state = permission_queryer.writable_org_state(space.organization_id)
+    return resource_being_deleted!('organization') if org_state == :deleting
+
+    space_state = permission_queryer.writable_space_state(space.id)
+    return resource_being_deleted!('space') if space_state == :deleting
+
+    return suspended! if org_state == :suspended
+
+    space_suspended! if space_state == :suspended
   end
 
   def add_warning_headers(warnings)

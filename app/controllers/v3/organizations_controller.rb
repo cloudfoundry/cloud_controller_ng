@@ -200,7 +200,7 @@ class OrganizationsV3Controller < ApplicationController
     org = fetch_org(guid)
     org_not_found! unless org && permission_queryer.can_read_from_org?(org.id)
     unauthorized! unless permission_queryer.can_write_to_active_org?(org.id)
-    suspended! unless permission_queryer.is_org_active?(org.id)
+    require_writable_org!(org)
     org
   end
 

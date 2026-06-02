@@ -29,6 +29,24 @@ CF_ORG_SUSPENDED = [
     code: 10_017 }
 ].freeze
 
+CF_SPACE_SUSPENDED = [
+  { detail: 'The space is suspended',
+    title: 'CF-SpaceSuspended',
+    code: 10_019 }
+].freeze
+
+CF_ORGANIZATION_BEING_DELETED = [
+  { detail: 'The organization is being deleted',
+    title: 'CF-ResourceBeingDeleted',
+    code: 10_020 }
+].freeze
+
+CF_SPACE_BEING_DELETED = [
+  { detail: 'The space is being deleted',
+    title: 'CF-ResourceBeingDeleted',
+    code: 10_020 }
+].freeze
+
 RSpec.shared_examples 'paginated response' do |endpoint|
   it 'returns pagination information' do
     expect_filtered_resources(endpoint, 'per_page=1', resources[0, 1])

@@ -71,10 +71,10 @@ class RolesController < ApplicationController
 
     if role.for_space?
       unauthorized! unless permission_queryer.can_update_active_space?(role.space_id, role.space.organization_id)
-      suspended! unless permission_queryer.is_space_active?(role.space_id)
+      require_writable_space!(role.space)
     else
       unauthorized! unless permission_queryer.can_write_to_active_org?(role.organization_id)
-      suspended! unless permission_queryer.is_org_active?(role.organization_id)
+      require_writable_org!(role.organization)
 
       if role.type == VCAP::CloudController::RoleTypes::ORGANIZATION_USER
         org = Organization.find(id: role.organization_id)
@@ -99,7 +99,7 @@ class RolesController < ApplicationController
     unprocessable_space! unless space
 
     unauthorized! unless permission_queryer.can_update_active_space?(space.id, space.organization_id)
-    suspended! unless permission_queryer.is_space_active?(space.id)
+    require_writable_space!(space)
 
     user_guid = message.user_guid || lookup_user_guid_in_uaa(message.username, message.user_origin, creating_space_role: true)
     user = fetch_readable_user(user_guid)
@@ -116,7 +116,7 @@ class RolesController < ApplicationController
     org = Organization.find(guid: message.organization_guid)
     unprocessable_organization! unless org
     unauthorized! unless permission_queryer.can_write_to_active_org?(org.id)
-    suspended! unless permission_queryer.is_org_active?(org.id)
+    require_writable_org!(org)
 
     user_guid = if message.username && message.user_origin && message.user_origin != 'uaa' && org_managers_can_create_users?
                   create_or_get_uaa_user(message)

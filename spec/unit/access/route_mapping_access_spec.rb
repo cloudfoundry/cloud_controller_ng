@@ -39,6 +39,33 @@ module VCAP::CloudController
 
         it_behaves_like 'read only access'
       end
+
+      context 'when the organization is deleting' do
+        before do
+          org.status = 'deleting'
+          org.save
+        end
+
+        it_behaves_like 'read only access'
+      end
+
+      context 'when the space is suspended' do
+        before do
+          space.status = 'suspended'
+          space.save
+        end
+
+        it_behaves_like 'read only access'
+      end
+
+      context 'when the space is deleting' do
+        before do
+          space.status = 'deleting'
+          space.save
+        end
+
+        it_behaves_like 'read only access'
+      end
     end
   end
 end

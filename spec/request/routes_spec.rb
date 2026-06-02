@@ -3119,7 +3119,7 @@ RSpec.describe 'Routes Request' do
             h[r] = {
               code: 422,
               errors: [{
-                detail: "Unable to unshare route '#{route.uri}' from space '#{space_to_unshare.guid}'. The target organization is suspended.",
+                detail: "Unable to unshare route '#{route.uri}' from space '#{space_to_unshare.guid}'. The target organization or space is suspended.",
                 title: 'CF-UnprocessableEntity',
                 code: 10_008
               }]
@@ -3347,7 +3347,7 @@ RSpec.describe 'Routes Request' do
             h[r] = {
               code: 422,
               errors: [{
-                detail: "Unable to transfer owner of route '#{route.uri}' to space '#{suspended_space.guid}'. The target organization is suspended.",
+                detail: "Unable to transfer owner of route '#{route.uri}' to space '#{suspended_space.guid}'. The target organization or space is suspended.",
                 title: 'CF-UnprocessableEntity',
                 code: 10_008
               }]

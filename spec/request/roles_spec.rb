@@ -1437,6 +1437,7 @@ order_by=-created_at&created_ats[lt]=2028-05-26T18:47:01Z&guids=#{organization_a
           created_at: iso8601,
           updated_at: iso8601,
           name: space.name,
+          suspended: false,
           relationships: {
             organization: {
               data: { guid: org.guid }
@@ -1513,6 +1514,7 @@ order_by=-created_at&created_ats[lt]=2028-05-26T18:47:01Z&guids=#{organization_a
             created_at: iso8601,
             updated_at: iso8601,
             name: another_space.name,
+            suspended: false,
             relationships: {
               organization: {
                 data: { guid: another_space.organization.guid }
@@ -1777,6 +1779,7 @@ order_by=-created_at&created_ats[lt]=2028-05-26T18:47:01Z&guids=#{organization_a
           created_at: iso8601,
           updated_at: iso8601,
           name: space.name,
+          suspended: false,
           relationships: {
             organization: {
               data: { guid: org.guid }

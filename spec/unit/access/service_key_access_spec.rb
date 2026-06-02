@@ -98,7 +98,25 @@ module VCAP::CloudController
       it { is_expected.to allow_op_on_object(:read_env, object) }
 
       context 'when the organization is suspended' do
-        before { allow(object).to receive(:in_suspended_org?).and_return(true) }
+        before { allow(object.service_instance.space.organization).to receive(:suspended?).and_return(true) }
+
+        it_behaves_like 'read only access'
+      end
+
+      context 'when the organization is deleting' do
+        before { allow(object.service_instance.space.organization).to receive(:deleting?).and_return(true) }
+
+        it_behaves_like 'read only access'
+      end
+
+      context 'when the space is suspended' do
+        before { allow(object.service_instance.space).to receive(:suspended?).and_return(true) }
+
+        it_behaves_like 'read only access'
+      end
+
+      context 'when the space is deleting' do
+        before { allow(object.service_instance.space).to receive(:deleting?).and_return(true) }
 
         it_behaves_like 'read only access'
       end

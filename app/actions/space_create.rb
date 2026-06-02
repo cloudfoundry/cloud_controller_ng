@@ -10,7 +10,11 @@ module VCAP::CloudController
     def create(org, message)
       space = nil
       Space.db.transaction do
-        space = VCAP::CloudController::Space.create(name: message.name, organization: org)
+        space = VCAP::CloudController::Space.create(
+          name: message.name,
+          organization: org,
+          status: message.suspended ? Space::SUSPENDED : Space::ACTIVE
+        )
         MetadataUpdate.update(space, message)
         Repositories::SpaceEventRepository.new.record_space_create(space, user_audit_info, message.audit_hash)
       end

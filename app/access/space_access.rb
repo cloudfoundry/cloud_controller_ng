@@ -44,7 +44,8 @@ module VCAP::CloudController
 
     def create?(space, _params=nil)
       return true if context.queryer.can_write_globally?
-      return false if space.in_suspended_org?
+      return false if space.organization.suspended? || space.organization.deleting?
+      return false if (space.suspended? || space.deleting?) && !space.organization.managers.include?(context.user)
 
       context.queryer.can_write_to_active_org?(space.organization_id)
     end
@@ -57,7 +58,8 @@ module VCAP::CloudController
 
     def read_for_update?(space, _params=nil)
       return true if context.queryer.can_write_globally?
-      return false if space.in_suspended_org?
+      return false if space.organization.suspended? || space.organization.deleting?
+      return false if (space.suspended? || space.deleting?) && !space.organization.managers.include?(context.user)
 
       context.queryer.can_write_to_active_org?(space.organization_id) || context.queryer.can_update_active_space?(space.id, space.organization_id)
     end

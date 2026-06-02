@@ -85,7 +85,7 @@ class DomainsController < ApplicationController
     domain_not_found! unless domain
 
     unauthorized! unless can_write_to_active_org?(domain.owning_organization_id)
-    suspended! unless org_active?(domain.owning_organization_id)
+    require_writable_org_id!(domain.owning_organization_id)
 
     domain = DomainUpdate.new.update(domain:, message:)
 
@@ -100,7 +100,7 @@ class DomainsController < ApplicationController
     domain_not_found! unless domain
 
     unauthorized! unless can_write_to_active_org?(domain.owning_organization_id)
-    suspended! unless org_active?(domain.owning_organization_id)
+    require_writable_org_id!(domain.owning_organization_id)
 
     unprocessable!('This domain is shared with other organizations. Unshare before deleting.') unless domain.shared_organizations_dataset.empty?
 
@@ -119,7 +119,7 @@ class DomainsController < ApplicationController
     domain_not_found! unless domain
 
     unauthorized! unless can_write_to_active_org?(domain.owning_organization_id)
-    suspended! unless org_active?(domain.owning_organization_id)
+    require_writable_org_id!(domain.owning_organization_id)
 
     shared_orgs = verify_shared_organizations_guids!(message, domain.owning_organization_guid)
 
@@ -176,7 +176,9 @@ class DomainsController < ApplicationController
     return if shared_org_writable && org_active?(shared_org_id)
 
     unauthorized! unless owning_org_writable || shared_org_writable
-    suspended!
+
+    require_writable_org_id!(owning_org_id) if owning_org_writable
+    require_writable_org_id!(shared_org_id)
   end
 
   def check_create_private_domain_permissions!(message)
@@ -184,7 +186,7 @@ class DomainsController < ApplicationController
     unprocessable_org!(message.organization_guid) unless org
 
     unauthorized! unless can_write_to_active_org?(org.id)
-    suspended! unless org_active?(org.id)
+    require_writable_org!(org)
 
     FeatureFlag.raise_unless_enabled!(:private_domain_creation) unless permission_queryer.can_write_globally?
   end
@@ -221,7 +223,7 @@ class DomainsController < ApplicationController
   end
 
   def org_active?(org_id)
-    permission_queryer.is_org_active?(org_id)
+    permission_queryer.writable_org_state(org_id) == :active
   end
 
   def domain_not_found!

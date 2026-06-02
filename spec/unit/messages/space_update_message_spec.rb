@@ -88,6 +88,23 @@ module VCAP::CloudController
           expect(message).to be_valid
         end
       end
+
+      describe 'suspended' do
+        it 'validates that it is a boolean' do
+          body = { suspended: 1 }
+          message = SpaceUpdateMessage.new(body)
+
+          expect(message).not_to be_valid
+          expect(message.errors.full_messages).to include('Suspended must be a boolean')
+        end
+
+        it 'is not required' do
+          body = {}
+          message = SpaceUpdateMessage.new(body)
+
+          expect(message).to be_valid
+        end
+      end
     end
   end
 end

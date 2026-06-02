@@ -170,6 +170,70 @@ module VCAP::CloudController
       end
     end
 
+    %i[deleting].each do |org_state|
+      describe "when the parent organization is #{org_state}" do
+        before do
+          org.update(status: org_state.to_s)
+        end
+
+        write_table = {
+          unauthenticated: false,
+          reader_and_writer: false,
+          reader: false,
+          writer: false,
+
+          admin: true,
+          admin_read_only: false,
+          global_auditor: false,
+
+          space_developer: false,
+          space_manager: false,
+          space_auditor: false,
+          org_user: false,
+          org_manager: false,
+          org_auditor: false,
+          org_billing_manager: false
+        }
+
+        it_behaves_like('an access control', :create, write_table)
+        it_behaves_like('an access control', :delete, write_table)
+        it_behaves_like('an access control', :read_for_update, write_table)
+        it_behaves_like('an access control', :update, write_table)
+      end
+    end
+
+    %i[suspended deleting].each do |space_state|
+      describe "when the space is #{space_state}" do
+        before do
+          object.update(status: space_state.to_s)
+        end
+
+        write_table = {
+          unauthenticated: false,
+          reader_and_writer: false,
+          reader: false,
+          writer: false,
+
+          admin: true,
+          admin_read_only: false,
+          global_auditor: false,
+
+          space_developer: false,
+          space_manager: false,
+          space_auditor: false,
+          org_user: false,
+          org_manager: true,
+          org_auditor: false,
+          org_billing_manager: false
+        }
+
+        it_behaves_like('an access control', :create, write_table)
+        it_behaves_like('an access control', :delete, write_table)
+        it_behaves_like('an access control', :read_for_update, write_table)
+        it_behaves_like('an access control', :update, write_table)
+      end
+    end
+
     describe 'when the parent organization is not suspended' do
       index_table = {
         unauthenticated: false,

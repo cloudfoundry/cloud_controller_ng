@@ -52,6 +52,18 @@ module VCAP::CloudController
         end
       end
 
+      it 'creates an active space by default' do
+        message = VCAP::CloudController::SpaceCreateMessage.new(name: 'my-space', relationships: relationships)
+        space = SpaceCreate.new(user_audit_info:).create(org, message)
+        expect(space.suspended?).to be false
+      end
+
+      it 'creates a suspended space when requested' do
+        message = VCAP::CloudController::SpaceCreateMessage.new(name: 'my-space', relationships: relationships, suspended: true)
+        space = SpaceCreate.new(user_audit_info:).create(org, message)
+        expect(space.suspended?).to be true
+      end
+
       context 'when a model validation fails' do
         it 'raises an error' do
           errors = Sequel::Model::Errors.new

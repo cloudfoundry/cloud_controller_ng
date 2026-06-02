@@ -51,6 +51,7 @@ RSpec.describe 'Spaces' do
           'created_at' => iso8601,
           'updated_at' => iso8601,
           'name' => 'space1',
+          'suspended' => false,
           'relationships' => {
             'organization' => {
               'data' => { 'guid' => created_space.organization_guid }
@@ -123,6 +124,7 @@ RSpec.describe 'Spaces' do
         {
           'guid' => space1.guid,
           'name' => 'Catan',
+          'suspended' => false,
           'created_at' => iso8601,
           'updated_at' => iso8601,
           'relationships' => {
@@ -199,6 +201,7 @@ RSpec.describe 'Spaces' do
           {
             'guid' => space1.guid,
             'name' => 'Catan',
+            'suspended' => false,
             'created_at' => iso8601,
             'updated_at' => iso8601,
             'relationships' => {
@@ -305,6 +308,7 @@ RSpec.describe 'Spaces' do
               {
                 'guid' => space1.guid,
                 'name' => 'Catan',
+                'suspended' => false,
                 'created_at' => iso8601,
                 'updated_at' => iso8601,
                 'relationships' => {
@@ -324,6 +328,7 @@ RSpec.describe 'Spaces' do
               {
                 'guid' => space2.guid,
                 'name' => 'Ticket to Ride',
+                'suspended' => false,
                 'created_at' => iso8601,
                 'updated_at' => iso8601,
                 'relationships' => {
@@ -838,6 +843,7 @@ RSpec.describe 'Spaces' do
         {
           guid: space.guid,
           name: 'codenames',
+          suspended: false,
           created_at: iso8601,
           updated_at: iso8601,
           relationships: {
@@ -938,6 +944,7 @@ RSpec.describe 'Spaces' do
           {
             'guid' => space1.guid,
             'name' => space1.name,
+            'suspended' => false,
             'created_at' => iso8601,
             'updated_at' => iso8601,
             'relationships' => {
@@ -972,6 +979,7 @@ RSpec.describe 'Spaces' do
           {
             'guid' => space1.guid,
             'name' => space1.name,
+            'suspended' => false,
             'created_at' => iso8601,
             'updated_at' => iso8601,
             'relationships' => {
@@ -991,6 +999,38 @@ RSpec.describe 'Spaces' do
             'links' => build_space_links(space1)
           }
         )
+      end
+    end
+
+    context 'when the space is being deleted' do
+      before do
+        space1.update(status: VCAP::CloudController::Space::DELETING)
+      end
+
+      it 'rejects an admin attempt to set suspended:false' do
+        patch "/v3/spaces/#{space1.guid}", { suspended: false }.to_json, admin_header
+
+        expect(last_response.status).to eq(422)
+        expect(parsed_response['errors'][0]['detail']).to include("Space '#{space1.name}' is being deleted and cannot be reactivated.")
+      end
+    end
+
+    context 'updating the suspended attribute' do
+      it 'allows an admin to suspend a space' do
+        patch "/v3/spaces/#{space1.guid}", { suspended: true }.to_json, admin_header
+
+        expect(last_response.status).to eq(200)
+        expect(parsed_response['suspended']).to be(true)
+        expect(space1.reload.status).to eq(VCAP::CloudController::Space::SUSPENDED)
+      end
+
+      it 'allows an admin to unsuspend a suspended space' do
+        space1.update(status: VCAP::CloudController::Space::SUSPENDED)
+        patch "/v3/spaces/#{space1.guid}", { suspended: false }.to_json, admin_header
+
+        expect(last_response.status).to eq(200)
+        expect(parsed_response['suspended']).to be(false)
+        expect(space1.reload.status).to eq(VCAP::CloudController::Space::ACTIVE)
       end
     end
   end

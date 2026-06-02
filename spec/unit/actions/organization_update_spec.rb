@@ -101,6 +101,13 @@ module VCAP::CloudController
           expect(updated_org).to be_suspended
         end
 
+        it 'reactivates a suspended organization' do
+          org.update(status: Organization::SUSPENDED)
+          message = VCAP::CloudController::OrganizationUpdateMessage.new({ suspended: false })
+          updated_org = org_update.update(org, message)
+          expect(updated_org.reload.status).to eq(Organization::ACTIVE)
+        end
+
         context 'when model validation fails' do
           it 'errors' do
             errors = Sequel::Model::Errors.new
@@ -138,6 +145,17 @@ module VCAP::CloudController
         it 'does not change labels' do
           updated_org = org_update.update(org, message)
           expect(updated_org.reload.labels).to be_empty
+        end
+      end
+
+      context 'when reactivating a deleting organization' do
+        it 'rejects the update' do
+          org.update(status: Organization::DELETING)
+          message = VCAP::CloudController::OrganizationUpdateMessage.new({ suspended: false })
+
+          expect do
+            org_update.update(org, message)
+          end.to raise_error(OrganizationUpdate::Error, /is being deleted and cannot be reactivated/)
         end
       end
     end

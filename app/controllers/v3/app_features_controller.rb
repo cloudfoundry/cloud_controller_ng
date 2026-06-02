@@ -47,7 +47,7 @@ class AppFeaturesController < ApplicationController
     else
       unauthorized! unless permission_queryer.can_write_to_active_space?(space.id)
     end
-    suspended! unless permission_queryer.is_space_active?(space.id)
+    require_writable_space!(space)
 
     message = VCAP::CloudController::AppFeatureUpdateMessage.new(hashed_params['body'])
     unprocessable!(message.errors.full_messages) unless message.valid?

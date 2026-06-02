@@ -149,21 +149,50 @@ class VCAP::CloudController::Permissions
     membership.role_applies?(ROLES_FOR_ORG_WRITING, nil, org_id)
   end
 
-  def is_org_active?(org_id)
-    return true if can_write_globally? # admins can modify suspended orgs
+  def org_state(org_id)
+    status = VCAP::CloudController::Organization.where(id: org_id).get(:status)
+    return :active if status.nil?
 
-    !VCAP::CloudController::Organization.
-      where(id: org_id, status: VCAP::CloudController::Organization::ACTIVE).
-      empty?
+    status.to_sym
   end
 
-  def is_space_active?(space_id)
-    return true if can_write_globally? # admins can modify suspended orgs
+  def writable_org_state(org_id)
+    return :active if can_write_globally? # admins can modify suspended/deleting orgs
 
-    !VCAP::CloudController::Organization.
-      join(:spaces, organization_id: :id).
-      where(spaces__id: space_id, organizations__status: VCAP::CloudController::Organization::ACTIVE).
-      empty?
+    org_state(org_id)
+  end
+
+  def space_state(space_id)
+    space = VCAP::CloudController::Space.where(id: space_id).select(:status, :organization_id).first
+    return :active if space.nil?
+
+    org = org_state(space.organization_id)
+    return :deleting if org == :deleting
+    return :deleting if space.status == VCAP::CloudController::Space::DELETING
+    return :suspended if org == :suspended
+    return :suspended if space.status == VCAP::CloudController::Space::SUSPENDED
+
+    :active
+  end
+
+  def writable_space_state(space_id)
+    return :active if can_write_globally? # admins can modify suspended/deleting spaces
+
+    space = VCAP::CloudController::Space.where(id: space_id).select(:status, :organization_id).first
+    return :active if space.nil?
+
+    # Org state is never bypassed by org managers — a suspended/deleting org locks out everyone except admins
+    org = org_state(space.organization_id)
+    return :deleting if org == :deleting
+    return :suspended if org == :suspended
+
+    # Org managers can manage spaces in their active orgs even if the space itself is suspended/deleting
+    return :active if membership.role_applies?(VCAP::CloudController::Membership::ORG_MANAGER, nil, space.organization_id)
+
+    return :deleting if space.status == VCAP::CloudController::Space::DELETING
+    return :suspended if space.status == VCAP::CloudController::Space::SUSPENDED
+
+    :active
   end
 
   def readable_space_guids
