@@ -137,7 +137,7 @@ GEM
     drb (2.2.3)
     erb (6.0.4)
     erubi (1.13.1)
-    excon (1.4.2)
+    excon (1.5.0)
       logger
     faraday (0.17.6)
       multipart-post (>= 1.2, < 3)
