@@ -265,8 +265,7 @@ module CloudFoundry
           end
 
           it 'does not rate limit regular users with admin limits' do
-            allow(VCAP::CloudController::SecurityContext).to receive(:admin_read_only?).and_return(false)
-            allow(VCAP::CloudController::SecurityContext).to receive(:admin?).and_return(false)
+            allow(VCAP::CloudController::SecurityContext).to receive_messages(admin_read_only?: false, admin?: false)
             _, response_headers, = middleware.call(user_1_env)
             expect(response_headers['X-RateLimit-Limit']).to eq(global_general_limit.to_s)
           end
