@@ -123,6 +123,15 @@ class VCAP::CloudController::Permissions
     end
   end
 
+  # Id-only variant of readable_orgs_query for callers filtering by a raw organization_id FK column.
+  def readable_org_ids_query
+    if can_read_globally?
+      VCAP::CloudController::Organization.dataset.select(:id)
+    else
+      membership.authorized_org_ids_subquery(ROLES_FOR_ORG_READING)
+    end
+  end
+
   def readable_org_guids_for_domains_query
     if can_read_globally?
       VCAP::CloudController::Organization.select(:guid)
@@ -166,6 +175,13 @@ class VCAP::CloudController::Permissions
     raise 'must not be called for users that can read globally' if can_read_globally?
 
     membership.authorized_spaces_subquery(ROLES_FOR_SPACE_READING)
+  end
+
+  # Id-only variant of readable_spaces_query for callers filtering by a raw space_id FK column.
+  def readable_space_ids_query
+    raise 'must not be called for users that can read globally' if can_read_globally?
+
+    membership.authorized_space_ids_subquery(ROLES_FOR_SPACE_READING)
   end
 
   def readable_space_guids_query

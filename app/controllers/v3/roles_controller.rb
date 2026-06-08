@@ -173,8 +173,8 @@ class RolesController < ApplicationController
     if permission_queryer.can_read_globally?
       Role
     else
-      readable_by_space = { space_id: permission_queryer.readable_spaces_query.select(:id) }
-      readable_by_org = { organization_id: permission_queryer.readable_orgs_query.select(:id) }
+      readable_by_space = { space_id: permission_queryer.readable_space_ids_query }
+      readable_by_org = { organization_id: permission_queryer.readable_org_ids_query }
       Role.where { Sequel.|(readable_by_space, readable_by_org) }
     end
   end
