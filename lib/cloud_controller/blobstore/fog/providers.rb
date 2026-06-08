@@ -6,7 +6,6 @@ require 'fog/core'
 original = Fog::Logger[:deprecation]
 Fog::Logger[:deprecation] = nil
 
-require 'fog/aliyun'
 require 'fog/aws'
 require 'fog/local'
 require 'fog/google'
