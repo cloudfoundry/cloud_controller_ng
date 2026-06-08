@@ -77,7 +77,7 @@ group :test do
   gem 'rubocop', '~> 1.87.0'
   gem 'rubocop-capybara'
   gem 'rubocop-factory_bot'
-  gem 'rubocop-rails', '~> 2.34'
+  gem 'rubocop-rails', '~> 2.35'
   gem 'rubocop-rspec', '~> 3.9'
   gem 'rubocop-rspec_rails'
   gem 'rubocop-sequel', '~> 0.4.1'
