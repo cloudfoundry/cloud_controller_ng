@@ -1,8 +1,7 @@
 /v3/info:
   get:
     summary: Get platform info
-    description: |-
-      Get information about the platform.
+    description: Get information about the platform.
     operationId: getPlatformInfo
     tags:
       - Info
@@ -47,33 +46,54 @@
                   properties:
                     self:
                       allOf:
-                        - $ref: '../components/schemas/Link.yaml'
+                        - $ref: ../components/schemas/Link.yaml
                         - description: Link to the current endpoint
                     support:
                       allOf:
-                        - $ref: '../components/schemas/Link.yaml'
+                        - $ref: ../components/schemas/Link.yaml
                         - description: Link to the support website for the platform
-      '403':
-        $ref: '../components/responses/Forbidden.yaml'
-      '404':
-        $ref: '../components/responses/NotFound.yaml'
-      '500':
-        $ref: '../components/responses/500.yaml'
+            examples:
+              default:
+                summary: default
+                value:
+                  build: ''
+                  cli_version:
+                    minimum: ''
+                    recommended: ''
+                  custom: {}
+                  description: ''
+                  name: ''
+                  version: 0
+                  osbapi_version: ''
+                  rate_limits:
+                    enabled: false
+                    general_limit: 2000
+                    reset_interval_in_minutes: 30
+                  links:
+                    self:
+                      href: http://api.example.com/v3/info
+                    support:
+                      href: ''
       '400':
-        $ref: '../components/responses/BadRequest.yaml'
-      '502':
-        $ref: '../components/responses/BadGateway.yaml'
-      '503':
-        $ref: '../components/responses/ServiceUnavailable.yaml'
-      '422':
-        $ref: '../components/responses/UnprocessableEntity.yaml'
+        $ref: ../components/responses/BadRequest.yaml
+      '403':
+        $ref: ../components/responses/Forbidden.yaml
+      '404':
+        $ref: ../components/responses/NotFound.yaml
       '409':
-        $ref: '../components/responses/Conflict.yaml'
+        $ref: ../components/responses/Conflict.yaml
+      '422':
+        $ref: ../components/responses/UnprocessableEntity.yaml
+      '500':
+        $ref: ../components/responses/500.yaml
+      '502':
+        $ref: ../components/responses/BadGateway.yaml
+      '503':
+        $ref: ../components/responses/ServiceUnavailable.yaml
 /v3/info/usage_summary:
   get:
     summary: Get platform usage summary
-    description: |-
-      This endpoint retrieves a high-level summary of usage across the entire Cloud Foundry installation.
+    description: This endpoint retrieves a high-level summary of usage across the entire Cloud Foundry installation.
     operationId: getPlatformUsageSummary
     tags:
       - Info
@@ -119,13 +139,29 @@
                   properties:
                     self:
                       allOf:
-                        - $ref: '../components/schemas/Link.yaml'
+                        - $ref: ../components/schemas/Link.yaml
                         - description: Link to the current endpoint
+            examples:
+              default:
+                summary: default
+                value:
+                  usage_summary:
+                    started_instances: 294
+                    memory_in_mb: 123945
+                    routes: 300
+                    service_instances: 50
+                    reserved_ports: 10
+                    domains: 5
+                    per_app_tasks: 0
+                    service_keys: 20
+                  links:
+                    self:
+                      href: http://api.example.com/v3/info/usage_summary
       '401':
-        $ref: '../components/responses/Unauthorized.yaml'
+        $ref: ../components/responses/Unauthorized.yaml
       '403':
-        $ref: '../components/responses/Forbidden.yaml'
+        $ref: ../components/responses/Forbidden.yaml
       '404':
-        $ref: '../components/responses/NotFound.yaml'
+        $ref: ../components/responses/NotFound.yaml
       '500':
-        $ref: '../components/responses/500.yaml'
+        $ref: ../components/responses/500.yaml

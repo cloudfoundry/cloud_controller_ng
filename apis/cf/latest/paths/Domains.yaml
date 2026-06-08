@@ -4,131 +4,168 @@
     description: Retrieve all domains the user has access to.
     operationId: listDomains
     tags:
-    - Domains
+      - Domains
     parameters:
-    - $ref: '../components/parameters/Page.yaml'
-    - $ref: '../components/parameters/PerPage.yaml'
-    - $ref: '../components/parameters/OrderBy.yaml'
-    - $ref: '../components/parameters/CreatedAts.yaml'
-    - $ref: '../components/parameters/UpdatedAts.yaml'
-    - $ref: '../components/parameters/LabelSelector.yaml'
-    - name: guids
-      in: query
-      schema:
-        type: array
-        items:
-          type: string
-      description: Comma-delimited list of GUIDs to filter by
-    - name: names
-      in: query
-      schema:
-        type: array
-        items:
-          type: string
-      description: Comma-delimited list of domain names to filter by
-    - name: organization_guids
-      in: query
-      schema:
-        type: array
-        items:
-          type: string
-      description: Comma-delimited list of owning organization GUIDs to filter by
+      - $ref: ../components/parameters/Page.yaml
+      - $ref: ../components/parameters/PerPage.yaml
+      - $ref: ../components/parameters/OrderBy.yaml
+      - $ref: ../components/parameters/CreatedAts.yaml
+      - $ref: ../components/parameters/UpdatedAts.yaml
+      - $ref: ../components/parameters/LabelSelector.yaml
+      - name: guids
+        in: query
+        schema:
+          type: array
+          items:
+            type: string
+        description: Comma-delimited list of GUIDs to filter by
+      - name: names
+        in: query
+        schema:
+          type: array
+          items:
+            type: string
+        description: Comma-delimited list of domain names to filter by
+      - name: organization_guids
+        in: query
+        schema:
+          type: array
+          items:
+            type: string
+        description: Comma-delimited list of owning organization GUIDs to filter by
     responses:
       '200':
         description: OK
         content:
           application/json:
             schema:
-              $ref: '../components/schemas/DomainList.yaml'
-      '401':
-        $ref: '../components/responses/Unauthorized.yaml'
-      '403':
-        $ref: '../components/responses/Forbidden.yaml'
+              $ref: ../components/schemas/DomainList.yaml
+            examples:
+              default:
+                summary: default
+                value:
+                  pagination:
+                    total_results: 3
+                    total_pages: 2
+                    first:
+                      href: https://api.example.org?page=1&per_page=2
+                    last:
+                      href: https://api.example.org?page=2&per_page=2
+                    next:
+                      href: https://api.example.org?page=2&per_page=2
+                    previous: null
+                  resources:
+                    - guid: 123e4567-e89b-12d3-a456-426614174000
+                      created_at: '2019-03-08T01:06:19Z'
+                      updated_at: '2019-03-08T01:06:19Z'
+                      name: test-domain.com
+                      internal: false
+                      router_group:
+                        guid: 123e4567-e89b-12d3-a456-426614174000
+                      supported_protocols:
+                        - tcp
+                      metadata:
+                        labels: {}
+                        annotations: {}
+                      relationships:
+                        organization:
+                          data: null
+                        shared_organizations:
+                          data: []
+                      links:
+                        self:
+                          href: https://api.example.org/v3/domains/3a5d3d89-3f89-4f05-8188-8a2b298c79d5
+                        route_reservations:
+                          href: https://api.example.org/v3/domains/3a5d3d89-3f89-4f05-8188-8a2b298c79d5/route_reservations
+                        router_group:
+                          href: https://api.example.org/routing/v1/router_groups/5806148f-cce6-4d86-7fbd-aa269e3f6f3f
       '400':
-        $ref: '../components/responses/BadRequest.yaml'
-      '500':
-        $ref: '../components/responses/500.yaml'
-      '502':
-        $ref: '../components/responses/BadGateway.yaml'
-      '503':
-        $ref: '../components/responses/ServiceUnavailable.yaml'
-      '422':
-        $ref: '../components/responses/UnprocessableEntity.yaml'
+        $ref: ../components/responses/BadRequest.yaml
+      '401':
+        $ref: ../components/responses/Unauthorized.yaml
+      '403':
+        $ref: ../components/responses/Forbidden.yaml
       '409':
-        $ref: '../components/responses/Conflict.yaml'
+        $ref: ../components/responses/Conflict.yaml
+      '422':
+        $ref: ../components/responses/UnprocessableEntity.yaml
+      '500':
+        $ref: ../components/responses/500.yaml
+      '502':
+        $ref: ../components/responses/BadGateway.yaml
+      '503':
+        $ref: ../components/responses/ServiceUnavailable.yaml
   post:
     summary: Create a domain
     description: Create a domain.
     operationId: createDomain
     tags:
-    - Domains
+      - Domains
     requestBody:
-      $ref: '../components/requestBodies/DomainCreateRequestBody.yaml'
+      $ref: ../components/requestBodies/DomainCreateRequestBody.yaml
     responses:
       '201':
         description: Successfully created domain
         content:
           application/json:
             schema:
-              $ref: '../components/schemas/Domain.yaml'
+              $ref: ../components/schemas/Domain.yaml
         links:
           organization:
             operationId: getOrganization
             parameters:
               guid: $response.body#/relationships/organization/data/guid
-            description: Retrieve the organization for this domain (private domains
-              only)
+            description: Retrieve the organization for this domain (private domains only)
       '400':
-        $ref: '../components/responses/BadRequest.yaml'
+        $ref: ../components/responses/BadRequest.yaml
       '401':
-        $ref: '../components/responses/Unauthorized.yaml'
+        $ref: ../components/responses/Unauthorized.yaml
       '403':
-        $ref: '../components/responses/Forbidden.yaml'
-      '422':
-        $ref: '../components/responses/UnprocessableEntity.yaml'
-      '503':
-        $ref: '../components/responses/ServiceUnavailable.yaml'
-      '500':
-        $ref: '../components/responses/500.yaml'
+        $ref: ../components/responses/Forbidden.yaml
       '409':
-        $ref: '../components/responses/Conflict.yaml'
+        $ref: ../components/responses/Conflict.yaml
+      '422':
+        $ref: ../components/responses/UnprocessableEntity.yaml
+      '500':
+        $ref: ../components/responses/500.yaml
+      '503':
+        $ref: ../components/responses/ServiceUnavailable.yaml
 /v3/domains/{guid}:
   get:
     summary: Get a domain
     description: Retrieve a domain.
     operationId: getDomain
     tags:
-    - Domains
+      - Domains
     parameters:
-    - $ref: '../components/parameters/Guid.yaml'
+      - $ref: ../components/parameters/Guid.yaml
     responses:
       '200':
         description: Successfully retrieved domain
         content:
           application/json:
             schema:
-              $ref: '../components/schemas/Domain.yaml'
+              $ref: ../components/schemas/Domain.yaml
         links:
           organization:
             operationId: getOrganization
             parameters:
               guid: $response.body#/relationships/organization/data/guid
-            description: Retrieve the organization for this domain (private domains
-              only)
+            description: Retrieve the organization for this domain (private domains only)
       '401':
-        $ref: '../components/responses/Unauthorized.yaml'
-      '404':
-        $ref: '../components/responses/NotFound.yaml'
+        $ref: ../components/responses/Unauthorized.yaml
       '403':
-        $ref: '../components/responses/Forbidden.yaml'
+        $ref: ../components/responses/Forbidden.yaml
+      '404':
+        $ref: ../components/responses/NotFound.yaml
   patch:
     summary: Update a domain
     description: Update a domain.
     operationId: updateDomain
     tags:
-    - Domains
+      - Domains
     parameters:
-    - $ref: '../components/parameters/Guid.yaml'
+      - $ref: ../components/parameters/Guid.yaml
     requestBody:
       description: Domain object that needs to be updated
       required: true
@@ -138,39 +175,48 @@
             type: object
             properties:
               metadata:
-                $ref: '../components/schemas/Metadata.yaml'
+                $ref: ../components/schemas/Metadata.yaml
             description: Request schema for updating a domain
+          examples:
+            default:
+              summary: default
+              value:
+                metadata:
+                  labels:
+                    key: value
+                  annotations:
+                    note: detailed information
     responses:
       '200':
         description: Successfully updated domain
         content:
           application/json:
             schema:
-              $ref: '../components/schemas/Domain.yaml'
-      '401':
-        $ref: '../components/responses/Unauthorized.yaml'
-      '403':
-        $ref: '../components/responses/Forbidden.yaml'
-      '404':
-        $ref: '../components/responses/NotFound.yaml'
-      '422':
-        $ref: '../components/responses/UnprocessableEntity.yaml'
+              $ref: ../components/schemas/Domain.yaml
       '400':
-        $ref: '../components/responses/BadRequest.yaml'
-      '500':
-        $ref: '../components/responses/500.yaml'
-      '503':
-        $ref: '../components/responses/ServiceUnavailable.yaml'
+        $ref: ../components/responses/BadRequest.yaml
+      '401':
+        $ref: ../components/responses/Unauthorized.yaml
+      '403':
+        $ref: ../components/responses/Forbidden.yaml
+      '404':
+        $ref: ../components/responses/NotFound.yaml
       '409':
-        $ref: '../components/responses/Conflict.yaml'
+        $ref: ../components/responses/Conflict.yaml
+      '422':
+        $ref: ../components/responses/UnprocessableEntity.yaml
+      '500':
+        $ref: ../components/responses/500.yaml
+      '503':
+        $ref: ../components/responses/ServiceUnavailable.yaml
   delete:
     summary: Delete a domain
     description: Delete a domain.
     operationId: deleteDomain
     tags:
-    - Domains
+      - Domains
     parameters:
-    - $ref: '../components/parameters/Guid.yaml'
+      - $ref: ../components/parameters/Guid.yaml
     responses:
       '202':
         description: Accepted
@@ -181,26 +227,24 @@
               type: string
               format: uri
       '401':
-        $ref: '../components/responses/Unauthorized.yaml'
-      '404':
-        $ref: '../components/responses/NotFound.yaml'
+        $ref: ../components/responses/Unauthorized.yaml
       '403':
-        $ref: '../components/responses/Forbidden.yaml'
+        $ref: ../components/responses/Forbidden.yaml
+      '404':
+        $ref: ../components/responses/NotFound.yaml
       '422':
-        $ref: '../components/responses/UnprocessableEntity.yaml'
+        $ref: ../components/responses/UnprocessableEntity.yaml
       '500':
-        $ref: '../components/responses/500.yaml'
+        $ref: ../components/responses/500.yaml
 /v3/domains/{guid}/relationships/shared_organizations:
   post:
     summary: Share a domain
-    description: This endpoint shares an organization-scoped domain to other organizations
-      specified by a list of organization guids. This will allow any of the other
-      organizations to use the organization-scoped domain.
+    description: This endpoint shares an organization-scoped domain to other organizations specified by a list of organization guids. This will allow any of the other organizations to use the organization-scoped domain.
     operationId: shareDomain
     tags:
-    - Domains
+      - Domains
     parameters:
-    - $ref: '../components/parameters/Guid.yaml'
+      - $ref: ../components/parameters/Guid.yaml
     requestBody:
       description: List of organizations to share the domain with
       required: true
@@ -212,9 +256,15 @@
               data:
                 type: array
                 items:
-                  $ref: '../components/schemas/Relationship.yaml'
-            description: Organization relationships; each organization will be entitled
-              to manage this isolation segment
+                  $ref: ../components/schemas/Relationship.yaml
+            description: Organization relationships; each organization will be entitled to manage this isolation segment
+          examples:
+            default:
+              summary: default
+              value:
+                data:
+                  - guid: 123e4567-e89b-12d3-a456-426614174000
+                  - guid: 123e4567-e89b-12d3-a456-426614174000
     responses:
       '200':
         description: Successfully shared domain
@@ -231,79 +281,119 @@
                     guid:
                       type: string
                       format: uuid
+            examples:
+              default:
+                summary: default
+                value:
+                  data:
+                    - guid: 123e4567-e89b-12d3-a456-426614174000
+                    - guid: 123e4567-e89b-12d3-a456-426614174000
       '401':
-        $ref: '../components/responses/Unauthorized.yaml'
-      '404':
-        $ref: '../components/responses/NotFound.yaml'
-      '422':
-        $ref: '../components/responses/UnprocessableEntity.yaml'
+        $ref: ../components/responses/Unauthorized.yaml
       '403':
-        $ref: '../components/responses/Forbidden.yaml'
+        $ref: ../components/responses/Forbidden.yaml
+      '404':
+        $ref: ../components/responses/NotFound.yaml
+      '422':
+        $ref: ../components/responses/UnprocessableEntity.yaml
 /v3/organizations/{guid}/domains:
   get:
     summary: List domains for an organization
-    description: 'Retrieve all domains available in an organization for the current
-      user. This will return unscoped domains (those without an owning organization),
-      domains that are scoped to the given organization (owned by the given organization),
-      and domains that have been shared with the organization.
+    description: |-
+      Retrieve all domains available in an organization for the current user. This will return unscoped domains (those without an owning organization), domains that are scoped to the given organization (owned by the given organization), and domains that have been shared with the organization.
 
-
-      To retrieve the default domain for an organization, use the [get default domain](#get-default-domain)
-      endpoint.'
+      To retrieve the default domain for an organization, use the [get default domain](#get-default-domain) endpoint.
     operationId: listDomainsForOrganization
     tags:
-    - Domains
+      - Domains
     parameters:
-    - $ref: '../components/parameters/Guid.yaml'
-    - $ref: '../components/parameters/Page.yaml'
-    - $ref: '../components/parameters/PerPage.yaml'
-    - $ref: '../components/parameters/OrderBy.yaml'
-    - name: names
-      in: query
-      schema:
-        type: array
-        items:
-          type: string
-      description: Comma-delimited list of domain names to filter by
+      - $ref: ../components/parameters/Guid.yaml
+      - $ref: ../components/parameters/Page.yaml
+      - $ref: ../components/parameters/PerPage.yaml
+      - $ref: ../components/parameters/OrderBy.yaml
+      - name: names
+        in: query
+        schema:
+          type: array
+          items:
+            type: string
+        description: Comma-delimited list of domain names to filter by
     responses:
       '200':
         description: OK
         content:
           application/json:
             schema:
-              $ref: '../components/schemas/DomainList.yaml'
+              $ref: ../components/schemas/DomainList.yaml
+            examples:
+              default:
+                summary: default
+                value:
+                  pagination:
+                    total_results: 3
+                    total_pages: 2
+                    first:
+                      href: https://api.example.org?page=1&per_page=2
+                    last:
+                      href: https://api.example.org?page=2&per_page=2
+                    next:
+                      href: https://api.example.org?page=2&per_page=2
+                    previous: null
+                  resources:
+                    - guid: 123e4567-e89b-12d3-a456-426614174000
+                      created_at: '2019-03-08T01:06:19Z'
+                      updated_at: '2019-03-08T01:06:19Z'
+                      name: test-domain.com
+                      internal: false
+                      router_group:
+                        guid: 123e4567-e89b-12d3-a456-426614174000
+                      supported_protocols:
+                        - tcp
+                      metadata:
+                        labels: {}
+                        annotations: {}
+                      relationships:
+                        organization:
+                          data: null
+                        shared_organizations:
+                          data: []
+                      links:
+                        self:
+                          href: https://api.example.org/v3/domains/3a5d3d89-3f89-4f05-8188-8a2b298c79d5
+                        route_reservations:
+                          href: https://api.example.org/v3/domains/3a5d3d89-3f89-4f05-8188-8a2b298c79d5/route_reservations
+                        router_group:
+                          href: https://api.example.org/routing/v1/router_groups/5806148f-cce6-4d86-7fbd-aa269e3f6f3f
       '401':
-        $ref: '../components/responses/Unauthorized.yaml'
-      '404':
-        $ref: '../components/responses/NotFound.yaml'
+        $ref: ../components/responses/Unauthorized.yaml
       '403':
-        $ref: '../components/responses/Forbidden.yaml'
+        $ref: ../components/responses/Forbidden.yaml
+      '404':
+        $ref: ../components/responses/NotFound.yaml
 /v3/domains/{guid}/route_reservations:
   get:
     summary: Check reserved routes for a domain
-    description: Check if a specific route for a domain exists, regardless of the
-      user’s visibility for the route in case the route belongs to a space the user
-      does not belong to.
+    description: Check if a specific route for a domain exists, regardless of the user’s visibility for the route in case the route belongs to a space the user does not belong to.
     operationId: checkReservedRoutesForDomain
     tags:
-    - Domains
+      - Domains
     parameters:
-    - $ref: '../components/parameters/Guid.yaml'
-    - name: host
-      in: query
-      schema:
-        type: string
-      description: Hostname to filter by
-    - name: path
-      in: query
-      schema:
-        type: string
-      description: Path to filter by
-    - name: port
-      in: query
-      schema:
-        type: integer
-      description: Port to filter by
+      - $ref: ../components/parameters/Guid.yaml
+      - name: host
+        in: query
+        schema:
+          type: string
+        description: Hostname to filter by
+      - name: path
+        in: query
+        schema:
+          type: string
+        description: Path to filter by
+      - name: port
+        in: query
+        schema:
+          type: integer
+        description: Port to filter by
     responses:
       '200':
         description: OK
@@ -314,38 +404,41 @@
               properties:
                 matching_route:
                   type: boolean
+            examples:
+              default:
+                summary: default
+                value:
+                  matching_route: true
       '401':
-        $ref: '../components/responses/Unauthorized.yaml'
-      '404':
-        $ref: '../components/responses/NotFound.yaml'
+        $ref: ../components/responses/Unauthorized.yaml
       '403':
-        $ref: '../components/responses/Forbidden.yaml'
+        $ref: ../components/responses/Forbidden.yaml
+      '404':
+        $ref: ../components/responses/NotFound.yaml
 /v3/domains/{guid}/relationships/shared_organizations/{org_guid}:
   delete:
     summary: Unshare a domain
-    description: This endpoint removes an organization from the list of organizations
-      an organization-scoped domain is shared with. This prevents the organization
-      from using the organization-scoped domain.
+    description: This endpoint removes an organization from the list of organizations an organization-scoped domain is shared with. This prevents the organization from using the organization-scoped domain.
     operationId: unshareDomain
     tags:
-    - Domains
+      - Domains
     parameters:
-    - $ref: '../components/parameters/Guid.yaml'
-    - name: org_guid
-      in: path
-      required: true
-      schema:
-        type: string
-        format: uuid
-      description: The GUID of the organization to unshare the domain from
+      - $ref: ../components/parameters/Guid.yaml
+      - name: org_guid
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+        description: The GUID of the organization to unshare the domain from
     responses:
       '204':
         description: Successfully unshared domain
       '401':
-        $ref: '../components/responses/Unauthorized.yaml'
-      '404':
-        $ref: '../components/responses/NotFound.yaml'
-      '422':
-        $ref: '../components/responses/UnprocessableEntity.yaml'
+        $ref: ../components/responses/Unauthorized.yaml
       '403':
-        $ref: '../components/responses/Forbidden.yaml'
+        $ref: ../components/responses/Forbidden.yaml
+      '404':
+        $ref: ../components/responses/NotFound.yaml
+      '422':
+        $ref: ../components/responses/UnprocessableEntity.yaml

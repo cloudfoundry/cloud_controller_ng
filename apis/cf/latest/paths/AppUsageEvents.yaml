@@ -4,104 +4,182 @@
     description: Retrieve all app usage events.
     operationId: listAppUsageEvents
     tags:
-    - App Usage Events
+      - App Usage Events
     parameters:
-    - $ref: '../components/parameters/Page.yaml'
-    - $ref: '../components/parameters/PerPage.yaml'
-    - $ref: '../components/parameters/OrderBy.yaml'
-    - name: after_guid
-      in: query
-      schema:
-        type: string
-      description: Filters out events before and including the event with the given
-        guid
-    - name: guids
-      in: query
-      schema:
-        type: array
-        items:
+      - $ref: ../components/parameters/Page.yaml
+      - $ref: ../components/parameters/PerPage.yaml
+      - $ref: ../components/parameters/OrderBy.yaml
+      - name: after_guid
+        in: query
+        schema:
           type: string
-      description: Comma-delimited list of usage event guids to filter by
-    - $ref: '../components/parameters/CreatedAts.yaml'
+        description: Filters out events before and including the event with the given guid
+      - name: guids
+        in: query
+        schema:
+          type: array
+          items:
+            type: string
+        description: Comma-delimited list of usage event guids to filter by
+      - $ref: ../components/parameters/CreatedAts.yaml
     responses:
       '200':
         description: OK
         content:
           application/json:
             schema:
-              $ref: '../components/schemas/AppUsageEventList.yaml'
-      '401':
-        $ref: '../components/responses/Unauthorized.yaml'
-      '404':
-        $ref: '../components/responses/NotFound.yaml'
-      '403':
-        $ref: '../components/responses/Forbidden.yaml'
-      '422':
-        $ref: '../components/responses/UnprocessableEntity.yaml'
+              $ref: ../components/schemas/AppUsageEventList.yaml
+            examples:
+              default:
+                summary: default
+                value:
+                  pagination:
+                    total_results: 2
+                    total_pages: 2
+                    first:
+                      href: https://api.example.org<%= path %>?page=1&per_page=1
+                    last:
+                      href: https://api.example.org<%= path %>?page=2&per_page=1
+                    next:
+                      href: https://api.example.org<%= path %>?page=2&per_page=1
+                    previous: null
+                  resources:
+                    - guid: 123e4567-e89b-12d3-a456-426614174000
+                      created_at: '2020-05-28T16:41:23Z'
+                      updated_at: '2020-05-28T16:41:26Z'
+                      state:
+                        current: STARTED
+                        previous: STOPPED
+                      app:
+                        guid: 123e4567-e89b-12d3-a456-426614174000
+                        name: name-1982
+                      process:
+                        guid: 123e4567-e89b-12d3-a456-426614174000
+                        type: type-1983
+                      space:
+                        guid: 123e4567-e89b-12d3-a456-426614174000
+                        name: name-1664
+                      organization:
+                        guid: 123e4567-e89b-12d3-a456-426614174000
+                      buildpack:
+                        guid: 123e4567-e89b-12d3-a456-426614174000
+                        name: label-64
+                      task:
+                        guid: 123e4567-e89b-12d3-a456-426614174000
+                        name: name-2929
+                      memory_in_mb_per_instance:
+                        current: 512
+                        previous: 256
+                      instance_count:
+                        current: 10
+                        previous: 5
+                      links:
+                        self:
+                          href: https://api.example.org/v3/app_usage_events/a595fe2f-01ff-4965-a50c-290258ab8582
       '400':
-        $ref: '../components/responses/BadRequest.yaml'
-      '500':
-        $ref: '../components/responses/500.yaml'
-      '502':
-        $ref: '../components/responses/BadGateway.yaml'
-      '503':
-        $ref: '../components/responses/ServiceUnavailable.yaml'
+        $ref: ../components/responses/BadRequest.yaml
+      '401':
+        $ref: ../components/responses/Unauthorized.yaml
+      '403':
+        $ref: ../components/responses/Forbidden.yaml
+      '404':
+        $ref: ../components/responses/NotFound.yaml
       '409':
-        $ref: '../components/responses/Conflict.yaml'
+        $ref: ../components/responses/Conflict.yaml
+      '422':
+        $ref: ../components/responses/UnprocessableEntity.yaml
+      '500':
+        $ref: ../components/responses/500.yaml
+      '502':
+        $ref: ../components/responses/BadGateway.yaml
+      '503':
+        $ref: ../components/responses/ServiceUnavailable.yaml
 /v3/app_usage_events/{guid}:
   get:
     summary: Get an app usage event
     description: Retrieve a specific app usage event.
     operationId: getAppUsageEvent
     tags:
-    - App Usage Events
+      - App Usage Events
     parameters:
-    - $ref: '../components/parameters/Guid.yaml'
+      - $ref: ../components/parameters/Guid.yaml
     responses:
       '200':
         description: OK
         content:
           application/json:
             schema:
-              $ref: '../components/schemas/AppUsageEvent.yaml'
+              $ref: ../components/schemas/AppUsageEvent.yaml
+            examples:
+              default:
+                summary: default
+                value:
+                  guid: 123e4567-e89b-12d3-a456-426614174000
+                  created_at: '2020-05-28T16:41:23Z'
+                  updated_at: '2020-05-28T16:41:26Z'
+                  state:
+                    current: STARTED
+                    previous: STOPPED
+                  app:
+                    guid: 123e4567-e89b-12d3-a456-426614174000
+                    name: name-1982
+                  process:
+                    guid: 123e4567-e89b-12d3-a456-426614174000
+                    type: type-1983
+                  space:
+                    guid: 123e4567-e89b-12d3-a456-426614174000
+                    name: name-1664
+                  organization:
+                    guid: 123e4567-e89b-12d3-a456-426614174000
+                  buildpack:
+                    guid: 123e4567-e89b-12d3-a456-426614174000
+                    name: label-64
+                  task:
+                    guid: 123e4567-e89b-12d3-a456-426614174000
+                    name: name-2929
+                  memory_in_mb_per_instance:
+                    current: 512
+                    previous: 256
+                  instance_count:
+                    current: 10
+                    previous: 5
+                  links:
+                    self:
+                      href: https://api.example.org/v3/app_usage_events/a595fe2f-01ff-4965-a50c-290258ab8582
       '401':
-        $ref: '../components/responses/Unauthorized.yaml'
-      '404':
-        $ref: '../components/responses/NotFound.yaml'
+        $ref: ../components/responses/Unauthorized.yaml
       '403':
-        $ref: '../components/responses/Forbidden.yaml'
+        $ref: ../components/responses/Forbidden.yaml
+      '404':
+        $ref: ../components/responses/NotFound.yaml
 /v3/app_usage_events/actions/destructively_purge_all_and_reseed:
   post:
     summary: Purge and seed app usage events
-    description: 'Destroys all existing events. Populates new usage events, one for
-      each
-
+    description: |-
+      Destroys all existing events. Populates new usage events, one for each
       started app. All populated events will have a created_at value of
-
       current time. There is the potential race condition if apps are
-
       currently being started, stopped, or scaled. The seeded usage events
-
-      will have the same guid as the app.'
+      will have the same guid as the app.
     operationId: purgeAndSeedAppUsageEvents
     tags:
-    - App Usage Events
+      - App Usage Events
     responses:
       '200':
         description: OK
-      '401':
-        $ref: '../components/responses/Unauthorized.yaml'
-      '404':
-        $ref: '../components/responses/NotFound.yaml'
-      '403':
-        $ref: '../components/responses/Forbidden.yaml'
-      '422':
-        $ref: '../components/responses/UnprocessableEntity.yaml'
       '400':
-        $ref: '../components/responses/BadRequest.yaml'
-      '500':
-        $ref: '../components/responses/500.yaml'
-      '503':
-        $ref: '../components/responses/ServiceUnavailable.yaml'
+        $ref: ../components/responses/BadRequest.yaml
+      '401':
+        $ref: ../components/responses/Unauthorized.yaml
+      '403':
+        $ref: ../components/responses/Forbidden.yaml
+      '404':
+        $ref: ../components/responses/NotFound.yaml
       '409':
-        $ref: '../components/responses/Conflict.yaml'
+        $ref: ../components/responses/Conflict.yaml
+      '422':
+        $ref: ../components/responses/UnprocessableEntity.yaml
+      '500':
+        $ref: ../components/responses/500.yaml
+      '503':
+        $ref: ../components/responses/ServiceUnavailable.yaml

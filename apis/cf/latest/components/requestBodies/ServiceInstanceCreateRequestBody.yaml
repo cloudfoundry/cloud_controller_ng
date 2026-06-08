@@ -40,14 +40,14 @@ content:
             - space
           properties:
             space:
-              $ref: '../schemas/RelationshipToOne.yaml'
+              $ref: ../schemas/RelationshipToOne.yaml
               description: The space in which to create the service instance
             service_plan:
-              $ref: '../schemas/RelationshipToOne.yaml'
+              $ref: ../schemas/RelationshipToOne.yaml
               description: The service plan from which to create the service instance
           description: Relationships for the service instance
         metadata:
-          $ref: '../schemas/Metadata.yaml'
+          $ref: ../schemas/Metadata.yaml
     examples:
       managed_service_instance:
         summary: Managed service instance
@@ -69,10 +69,10 @@ content:
           relationships:
             space:
               data:
-                guid: "7304bc3c-7010-11ea-8840-48bf6bec2d78"
+                guid: 7304bc3c-7010-11ea-8840-48bf6bec2d78
             service_plan:
               data:
-                guid: "e0e4417c-74ee-11ea-a604-48bf6bec2d78"
+                guid: e0e4417c-74ee-11ea-a604-48bf6bec2d78
       user_provided_service_instance:
         summary: User-provided service instance
         value:
@@ -85,8 +85,8 @@ content:
             - foo
             - bar
             - baz
-          syslog_drain_url: "https://syslog.com/drain"
-          route_service_url: "https://route.com/service"
+          syslog_drain_url: https://syslog.com/drain
+          route_service_url: https://route.com/service
           metadata:
             annotations:
               foo: bar
@@ -95,4 +95,27 @@ content:
           relationships:
             space:
               data:
-                guid: "7304bc3c-7010-11ea-8840-48bf6bec2d78"
+                guid: 7304bc3c-7010-11ea-8840-48bf6bec2d78
+      default:
+        summary: default
+        value:
+          type: user-provided
+          name: my_service_instance
+          credentials:
+            foo: bar
+            baz: qux
+          tags:
+            - foo
+            - bar
+            - baz
+          syslog_drain_url: https://syslog.com/drain
+          route_service_url: https://route.com/service
+          metadata:
+            annotations:
+              foo: bar
+            labels:
+              baz: qux
+          relationships:
+            space:
+              data:
+                guid: 123e4567-e89b-12d3-a456-426614174000

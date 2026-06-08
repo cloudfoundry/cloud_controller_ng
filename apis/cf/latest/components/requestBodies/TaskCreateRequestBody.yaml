@@ -38,5 +38,12 @@ content:
                 - guid
               description: The guid of the process that will be used as a template
         metadata:
-          $ref: '../schemas/Metadata.yaml'
+          $ref: ../schemas/Metadata.yaml
       description: Request schema for creating a task
+    examples:
+      default:
+        summary: default
+        value:
+          template:
+            process:
+              guid: 123e4567-e89b-12d3-a456-426614174000

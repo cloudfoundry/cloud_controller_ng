@@ -4,88 +4,145 @@
     description: Retrieve all processes.
     operationId: listProcesses
     tags:
-    - Processes
+      - Processes
     parameters:
-    - $ref: '../components/parameters/Page.yaml'
-    - $ref: '../components/parameters/PerPage.yaml'
-    - $ref: '../components/parameters/OrderBy.yaml'
-    - $ref: '../components/parameters/CreatedAts.yaml'
-    - $ref: '../components/parameters/UpdatedAts.yaml'
-    - $ref: '../components/parameters/LabelSelector.yaml'
-    - name: guids
-      in: query
-      schema:
-        type: array
-        items:
-          type: string
-      description: Comma-delimited list of process guids to filter by
-    - name: types
-      in: query
-      schema:
-        type: array
-        items:
-          type: string
-      description: Comma-delimited list of process types to filter by
-    - name: app_guids
-      in: query
-      schema:
-        type: array
-        items:
-          type: string
-      description: Comma-delimited list of app guids to filter by
-    - name: space_guids
-      in: query
-      schema:
-        type: array
-        items:
-          type: string
-      description: Comma-delimited list of space guids to filter by
-    - name: organization_guids
-      in: query
-      schema:
-        type: array
-        items:
-          type: string
-      description: Comma-delimited list of organization guids to filter by
+      - $ref: ../components/parameters/Page.yaml
+      - $ref: ../components/parameters/PerPage.yaml
+      - $ref: ../components/parameters/OrderBy.yaml
+      - $ref: ../components/parameters/CreatedAts.yaml
+      - $ref: ../components/parameters/UpdatedAts.yaml
+      - $ref: ../components/parameters/LabelSelector.yaml
+      - name: guids
+        in: query
+        schema:
+          type: array
+          items:
+            type: string
+        description: Comma-delimited list of process guids to filter by
+      - name: types
+        in: query
+        schema:
+          type: array
+          items:
+            type: string
+        description: Comma-delimited list of process types to filter by
+      - name: app_guids
+        in: query
+        schema:
+          type: array
+          items:
+            type: string
+        description: Comma-delimited list of app guids to filter by
+      - name: space_guids
+        in: query
+        schema:
+          type: array
+          items:
+            type: string
+        description: Comma-delimited list of space guids to filter by
+      - name: organization_guids
+        in: query
+        schema:
+          type: array
+          items:
+            type: string
+        description: Comma-delimited list of organization guids to filter by
     responses:
       '200':
         description: OK
         content:
           application/json:
             schema:
-              $ref: '../components/schemas/ProcessList.yaml'
-      '401':
-        $ref: '../components/responses/Unauthorized.yaml'
-      '403':
-        $ref: '../components/responses/Forbidden.yaml'
+              $ref: ../components/schemas/ProcessList.yaml
       '400':
-        $ref: '../components/responses/BadRequest.yaml'
-      '500':
-        $ref: '../components/responses/500.yaml'
-      '502':
-        $ref: '../components/responses/BadGateway.yaml'
-      '503':
-        $ref: '../components/responses/ServiceUnavailable.yaml'
-      '422':
-        $ref: '../components/responses/UnprocessableEntity.yaml'
+        $ref: ../components/responses/BadRequest.yaml
+      '401':
+        $ref: ../components/responses/Unauthorized.yaml
+      '403':
+        $ref: ../components/responses/Forbidden.yaml
       '409':
-        $ref: '../components/responses/Conflict.yaml'
+        $ref: ../components/responses/Conflict.yaml
+      '422':
+        $ref: ../components/responses/UnprocessableEntity.yaml
+      '500':
+        $ref: ../components/responses/500.yaml
+      '502':
+        $ref: ../components/responses/BadGateway.yaml
+      '503':
+        $ref: ../components/responses/ServiceUnavailable.yaml
 /v3/processes/{guid}:
   get:
     summary: Get a process
     description: Get a process.
     operationId: getProcess
     tags:
-    - Processes
+      - Processes
     parameters:
-    - $ref: '../components/parameters/Guid.yaml'
+      - $ref: ../components/parameters/Guid.yaml
     responses:
       '200':
         description: OK
         content:
           application/json:
             schema:
-              $ref: '../components/schemas/Process.yaml'
+              $ref: ../components/schemas/Process.yaml
+            examples:
+              default:
+                summary: default
+                value:
+                  guid: 123e4567-e89b-12d3-a456-426614174000
+                  type: web
+                  command: rackup
+                  user: vcap
+                  instances: 5
+                  memory_in_mb: 256
+                  disk_in_mb: 1024
+                  log_rate_limit_in_bytes_per_second: 1024
+                  health_check:
+                    type: port
+                    data:
+                      timeout: null
+                  readiness_health_check:
+                    type: process
+                    data:
+                      invocation_timeout: null
+                  process_instances:
+                    - index: 0
+                      state: RUNNING
+                      since: 123456789
+                    - index: 1
+                      state: STARTING
+                      since: 123
+                    - index: 2
+                      state: DOWN
+                      since: 456
+                  relationships:
+                    app:
+                      data:
+                        guid: 123e4567-e89b-12d3-a456-426614174000
+                    revision:
+                      data:
+                        guid: 123e4567-e89b-12d3-a456-426614174000
+                  metadata:
+                    labels: {}
+                    annotations: {}
+                  created_at: '2016-03-23T18:48:22Z'
+                  updated_at: '2016-03-23T18:48:42Z'
+                  version: e9df685c-0464-4aa7-b5f0-8ed843077c13
+                  links:
+                    self:
+                      href: https://api.example.org/v3/processes/6a901b7c-9417-4dc1-8189-d3234aa0ab82
+                    scale:
+                      href: https://api.example.org/v3/processes/6a901b7c-9417-4dc1-8189-d3234aa0ab82/actions/scale
+                      method: POST
+                    app:
+                      href: https://api.example.org/v3/apps/ccc25a0f-c8f4-4b39-9f1b-de9f328d0ee5
+                    space:
+                      href: https://api.example.org/v3/spaces/2f35885d-0c9d-4423-83ad-fd05066f8576
+                    stats:
+                      href: https://api.example.org/v3/processes/6a901b7c-9417-4dc1-8189-d3234aa0ab82/stats
+                    process_instances:
+                      href: https://api.example.org/v3/processes/6a901b7c-9417-4dc1-8189-d3234aa0ab82/process_instances
         links:
           app:
             operationId: getApp
@@ -98,28 +155,28 @@
               guid: $response.body#/relationships/revision/data/guid
             description: Retrieve the revision for this process
       '401':
-        $ref: '../components/responses/Unauthorized.yaml'
-      '404':
-        $ref: '../components/responses/NotFound.yaml'
+        $ref: ../components/responses/Unauthorized.yaml
       '403':
-        $ref: '../components/responses/Forbidden.yaml'
+        $ref: ../components/responses/Forbidden.yaml
+      '404':
+        $ref: ../components/responses/NotFound.yaml
   patch:
     summary: Update a process
     description: Update a process.
     operationId: updateProcess
     tags:
-    - Processes
+      - Processes
     parameters:
-    - $ref: '../components/parameters/Guid.yaml'
+      - $ref: ../components/parameters/Guid.yaml
     requestBody:
-      $ref: '../components/requestBodies/ProcessUpdateRequestBody.yaml'
+      $ref: ../components/requestBodies/ProcessUpdateRequestBody.yaml
     responses:
       '200':
         description: OK
         content:
           application/json:
             schema:
-              $ref: '../components/schemas/Process.yaml'
+              $ref: ../components/schemas/Process.yaml
         links:
           app:
             operationId: getApp
@@ -131,33 +188,31 @@
             parameters:
               guid: $response.body#/relationships/revision/data/guid
             description: Retrieve the revision for this process
-      '401':
-        $ref: '../components/responses/Unauthorized.yaml'
-      '404':
-        $ref: '../components/responses/NotFound.yaml'
-      '422':
-        $ref: '../components/responses/UnprocessableEntity.yaml'
-      '403':
-        $ref: '../components/responses/Forbidden.yaml'
       '400':
-        $ref: '../components/responses/BadRequest.yaml'
-      '500':
-        $ref: '../components/responses/500.yaml'
-      '503':
-        $ref: '../components/responses/ServiceUnavailable.yaml'
+        $ref: ../components/responses/BadRequest.yaml
+      '401':
+        $ref: ../components/responses/Unauthorized.yaml
+      '403':
+        $ref: ../components/responses/Forbidden.yaml
+      '404':
+        $ref: ../components/responses/NotFound.yaml
       '409':
-        $ref: '../components/responses/Conflict.yaml'
+        $ref: ../components/responses/Conflict.yaml
+      '422':
+        $ref: ../components/responses/UnprocessableEntity.yaml
+      '500':
+        $ref: ../components/responses/500.yaml
+      '503':
+        $ref: ../components/responses/ServiceUnavailable.yaml
 /v3/processes/{guid}/process_instances:
   get:
     summary: List instances for a process
-    description: Retrieve the instances for a process. Unlike the stats endpoint,
-      this returns a simplified view with only the index, state, and uptime of each
-      instance.
+    description: Retrieve the instances for a process. Unlike the stats endpoint, this returns a simplified view with only the index, state, and uptime of each instance.
     operationId: listProcessInstances
     tags:
-    - Processes
+      - Processes
     parameters:
-    - $ref: '../components/parameters/Guid.yaml'
+      - $ref: ../components/parameters/Guid.yaml
     responses:
       '200':
         description: OK
@@ -176,10 +231,10 @@
                       state:
                         type: string
                         enum:
-                        - RUNNING
-                        - CRASHED
-                        - STARTING
-                        - DOWN
+                          - RUNNING
+                          - CRASHED
+                          - STARTING
+                          - DOWN
                       since:
                         type: number
                         format: double
@@ -187,48 +242,119 @@
                   type: object
                   properties:
                     self:
-                      $ref: '../components/schemas/Link.yaml'
+                      $ref: ../components/schemas/Link.yaml
                     process:
-                      $ref: '../components/schemas/Link.yaml'
+                      $ref: ../components/schemas/Link.yaml
+            examples:
+              default:
+                summary: default
+                value:
+                  resources:
+                    - index: 0
+                      state: RUNNING
+                      since: 123456789
+                    - index: 1
+                      state: STARTING
+                      since: 123
+                    - index: 2
+                      state: DOWN
+                      since: 456
+                  links:
+                    self:
+                      href: https://api.example.org/v3/processes/6a901b7c-9417-4dc1-8189-d3234aa0ab82/process_instances
+                    process:
+                      href: https://api.example.org/v3/processes/6a901b7c-9417-4dc1-8189-d3234aa0ab82
       '401':
-        $ref: '../components/responses/Unauthorized.yaml'
-      '404':
-        $ref: '../components/responses/NotFound.yaml'
+        $ref: ../components/responses/Unauthorized.yaml
       '403':
-        $ref: '../components/responses/Forbidden.yaml'
+        $ref: ../components/responses/Forbidden.yaml
+      '404':
+        $ref: ../components/responses/NotFound.yaml
 /v3/processes/{guid}/stats:
   get:
     summary: Get stats for a process
     description: Get stats for a process.
     operationId: getProcessStats
     tags:
-    - Processes
+      - Processes
     parameters:
-    - $ref: '../components/parameters/Guid.yaml'
+      - $ref: ../components/parameters/Guid.yaml
     responses:
       '200':
         description: OK
         content:
           application/json:
             schema:
-              $ref: '../components/schemas/ProcessStats.yaml'
+              $ref: ../components/schemas/ProcessStats.yaml
+            examples:
+              default:
+                summary: default
+                value:
+                  resources:
+                    - type: web
+                      index: 0
+                      instance_guid: 123e4567-e89b-12d3-a456-426614174000
+                      state: RUNNING
+                      routable: true
+                      usage:
+                        time: '2016-03-23T23:17:30.476314154Z'
+                        cpu: 0.00038711029163348665
+                        cpu_entitlement: 0.01117396940977856
+                        mem: 19177472
+                        disk: 69705728
+                        log_rate: 0
+                      host: 10.244.16.10
+                      instance_internal_ip: 10.255.93.167
+                      instance_ports:
+                        - external: 64546
+                          internal: 8080
+                          external_tls_proxy_port: 61002
+                          internal_tls_proxy_port: 61003
+                      uptime: 9042
+                      mem_quota: 268435456
+                      disk_quota: 1073741824
+                      fds_quota: 16384
+                      isolation_segment: example_iso_segment
+                      log_rate_limit: null
+                      details: null
+                    - type: web
+                      index: 1
+                      state: STARTING
+                      routable: false
+                      usage:
+                        cpu: 0
+                        cpu_entitlement: 0
+                        disk: 0
+                        log_rate: 0
+                        mem: 0
+                        time: '2016-03-23T21:34:04+00:00'
+                      disk_quota: null
+                      fds_quota: 16384
+                      host: ''
+                      instance_internal_ip: ''
+                      instance_ports: null
+                      isolation_segment: null
+                      log_rate_limit: null
+                      mem_quota: null
+                      uptime: 0
+                      details: null
       '401':
-        $ref: '../components/responses/Unauthorized.yaml'
-      '404':
-        $ref: '../components/responses/NotFound.yaml'
-      '503':
-        $ref: '../components/responses/ServiceUnavailable.yaml'
+        $ref: ../components/responses/Unauthorized.yaml
       '403':
-        $ref: '../components/responses/Forbidden.yaml'
+        $ref: ../components/responses/Forbidden.yaml
+      '404':
+        $ref: ../components/responses/NotFound.yaml
+      '503':
+        $ref: ../components/responses/ServiceUnavailable.yaml
 /v3/processes/{guid}/actions/scale:
   post:
     summary: Scale a process
     description: Scale a process.
     operationId: scaleProcess
     tags:
-    - Processes
+      - Processes
     parameters:
-    - $ref: '../components/parameters/Guid.yaml'
+      - $ref: ../components/parameters/Guid.yaml
     requestBody:
       content:
         application/json:
@@ -236,205 +362,212 @@
             properties:
               instances:
                 type:
-                - integer
-                - 'null'
+                  - integer
+                  - 'null'
                 description: The number of instances to run
               memory_in_mb:
                 type:
-                - integer
-                - 'null'
+                  - integer
+                  - 'null'
                 description: The memory in MB allocated per instance
               disk_in_mb:
                 type:
-                - integer
-                - 'null'
+                  - integer
+                  - 'null'
                 description: The disk in MB allocated per instance
               log_rate_limit_in_bytes_per_second:
                 type:
-                - integer
-                - 'null'
+                  - integer
+                  - 'null'
                 description: The log rate limit in bytes per second per instance
+          examples:
+            default:
+              summary: default
+              value:
+                instances: 5
+                memory_in_mb: 256
+                disk_in_mb: 1024
+                log_rate_limit_in_bytes_per_second: 1024
     responses:
       '202':
         description: Accepted
         content:
           application/json:
             schema:
-              $ref: '../components/schemas/Process.yaml'
-      '401':
-        $ref: '../components/responses/Unauthorized.yaml'
-      '404':
-        $ref: '../components/responses/NotFound.yaml'
-      '422':
-        $ref: '../components/responses/UnprocessableEntity.yaml'
-      '403':
-        $ref: '../components/responses/Forbidden.yaml'
+              $ref: ../components/schemas/Process.yaml
       '400':
-        $ref: '../components/responses/BadRequest.yaml'
-      '500':
-        $ref: '../components/responses/500.yaml'
-      '503':
-        $ref: '../components/responses/ServiceUnavailable.yaml'
+        $ref: ../components/responses/BadRequest.yaml
+      '401':
+        $ref: ../components/responses/Unauthorized.yaml
+      '403':
+        $ref: ../components/responses/Forbidden.yaml
+      '404':
+        $ref: ../components/responses/NotFound.yaml
       '409':
-        $ref: '../components/responses/Conflict.yaml'
+        $ref: ../components/responses/Conflict.yaml
+      '422':
+        $ref: ../components/responses/UnprocessableEntity.yaml
+      '500':
+        $ref: ../components/responses/500.yaml
+      '503':
+        $ref: ../components/responses/ServiceUnavailable.yaml
 /v3/processes/{guid}/instances/{index}:
   delete:
     summary: Terminate a process instance
-    description: 'Terminate an instance of a specific process. Health management will
-      eventually restart the instance.
+    description: |-
+      Terminate an instance of a specific process. Health management will eventually restart the instance.
 
-
-      This allows a user to stop a single misbehaving instance of a process.'
+      This allows a user to stop a single misbehaving instance of a process.
     operationId: terminateProcessInstance
     tags:
-    - Processes
+      - Processes
     parameters:
-    - $ref: '../components/parameters/Guid.yaml'
-    - name: index
-      in: path
-      required: true
-      schema:
-        type: integer
+      - $ref: ../components/parameters/Guid.yaml
+      - name: index
+        in: path
+        required: true
+        schema:
+          type: integer
     responses:
       '204':
         description: No Content
       '401':
-        $ref: '../components/responses/Unauthorized.yaml'
-      '404':
-        $ref: '../components/responses/NotFound.yaml'
+        $ref: ../components/responses/Unauthorized.yaml
       '403':
-        $ref: '../components/responses/Forbidden.yaml'
+        $ref: ../components/responses/Forbidden.yaml
+      '404':
+        $ref: ../components/responses/NotFound.yaml
       '422':
-        $ref: '../components/responses/UnprocessableEntity.yaml'
+        $ref: ../components/responses/UnprocessableEntity.yaml
       '500':
-        $ref: '../components/responses/500.yaml'
+        $ref: ../components/responses/500.yaml
 /v3/apps/{guid}/processes:
   get:
     summary: List processes for an app
     description: Retrieves all processes belonging to an app.
     operationId: listAppProcesses
     tags:
-    - Processes
+      - Processes
     parameters:
-    - $ref: '../components/parameters/Guid.yaml'
-    - $ref: '../components/parameters/Page.yaml'
-    - $ref: '../components/parameters/PerPage.yaml'
-    - $ref: '../components/parameters/OrderBy.yaml'
+      - $ref: ../components/parameters/Guid.yaml
+      - $ref: ../components/parameters/Page.yaml
+      - $ref: ../components/parameters/PerPage.yaml
+      - $ref: ../components/parameters/OrderBy.yaml
     responses:
       '200':
         description: OK
         content:
           application/json:
             schema:
-              $ref: '../components/schemas/ProcessList.yaml'
+              $ref: ../components/schemas/ProcessList.yaml
       '401':
-        $ref: '../components/responses/Unauthorized.yaml'
-      '404':
-        $ref: '../components/responses/NotFound.yaml'
+        $ref: ../components/responses/Unauthorized.yaml
       '403':
-        $ref: '../components/responses/Forbidden.yaml'
+        $ref: ../components/responses/Forbidden.yaml
+      '404':
+        $ref: ../components/responses/NotFound.yaml
 /v3/apps/{guid}/processes/{type}:
   get:
     summary: Get a process for an app
     description: Get a specific process for an app.
     operationId: getProcessForApp
     tags:
-    - Processes
+      - Processes
     parameters:
-    - $ref: '../components/parameters/Guid.yaml'
-    - name: type
-      in: path
-      required: true
-      schema:
-        type: string
+      - $ref: ../components/parameters/Guid.yaml
+      - name: type
+        in: path
+        required: true
+        schema:
+          type: string
     responses:
       '200':
         description: OK
         content:
           application/json:
             schema:
-              $ref: '../components/schemas/Process.yaml'
+              $ref: ../components/schemas/Process.yaml
       '401':
-        $ref: '../components/responses/Unauthorized.yaml'
-      '404':
-        $ref: '../components/responses/NotFound.yaml'
+        $ref: ../components/responses/Unauthorized.yaml
       '403':
-        $ref: '../components/responses/Forbidden.yaml'
+        $ref: ../components/responses/Forbidden.yaml
+      '404':
+        $ref: ../components/responses/NotFound.yaml
   patch:
     summary: Update a process for an app
     description: Update a specific process for an app.
     operationId: updateProcessForApp
     tags:
-    - Processes
+      - Processes
     parameters:
-    - $ref: '../components/parameters/Guid.yaml'
-    - name: type
-      in: path
-      required: true
-      schema:
-        type: string
+      - $ref: ../components/parameters/Guid.yaml
+      - name: type
+        in: path
+        required: true
+        schema:
+          type: string
     requestBody:
-      $ref: '../components/requestBodies/ProcessUpdateRequestBody.yaml'
+      $ref: ../components/requestBodies/ProcessUpdateRequestBody.yaml
     responses:
       '200':
         description: OK
         content:
           application/json:
             schema:
-              $ref: '../components/schemas/Process.yaml'
+              $ref: ../components/schemas/Process.yaml
       '400':
-        $ref: '../components/responses/BadRequest.yaml'
+        $ref: ../components/responses/BadRequest.yaml
       '401':
-        $ref: '../components/responses/Unauthorized.yaml'
+        $ref: ../components/responses/Unauthorized.yaml
       '403':
-        $ref: '../components/responses/Forbidden.yaml'
+        $ref: ../components/responses/Forbidden.yaml
       '404':
-        $ref: '../components/responses/NotFound.yaml'
+        $ref: ../components/responses/NotFound.yaml
       '422':
-        $ref: '../components/responses/UnprocessableEntity.yaml'
+        $ref: ../components/responses/UnprocessableEntity.yaml
 /v3/apps/{guid}/processes/{type}/stats:
   get:
     summary: Get stats for a process for an app
     description: Get stats for a specific process for an app.
     operationId: getProcessStatsForApp
     tags:
-    - Processes
+      - Processes
     parameters:
-    - $ref: '../components/parameters/Guid.yaml'
-    - name: type
-      in: path
-      required: true
-      schema:
-        type: string
+      - $ref: ../components/parameters/Guid.yaml
+      - name: type
+        in: path
+        required: true
+        schema:
+          type: string
     responses:
       '200':
         description: OK
         content:
           application/json:
             schema:
-              $ref: '../components/schemas/ProcessStats.yaml'
+              $ref: ../components/schemas/ProcessStats.yaml
       '401':
-        $ref: '../components/responses/Unauthorized.yaml'
-      '404':
-        $ref: '../components/responses/NotFound.yaml'
-      '503':
-        $ref: '../components/responses/ServiceUnavailable.yaml'
+        $ref: ../components/responses/Unauthorized.yaml
       '403':
-        $ref: '../components/responses/Forbidden.yaml'
+        $ref: ../components/responses/Forbidden.yaml
+      '404':
+        $ref: ../components/responses/NotFound.yaml
+      '503':
+        $ref: ../components/responses/ServiceUnavailable.yaml
 /v3/apps/{guid}/processes/{type}/actions/scale:
   post:
     summary: Scale a process for an app
     description: Scale a specific process for an app.
     operationId: scaleProcessForApp
     tags:
-    - Processes
+      - Processes
     parameters:
-    - $ref: '../components/parameters/Guid.yaml'
-    - name: type
-      in: path
-      required: true
-      schema:
-        type: string
+      - $ref: ../components/parameters/Guid.yaml
+      - name: type
+        in: path
+        required: true
+        schema:
+          type: string
     requestBody:
       content:
         application/json:
@@ -442,23 +575,23 @@
             properties:
               instances:
                 type:
-                - integer
-                - 'null'
+                  - integer
+                  - 'null'
                 description: The number of instances to run
               memory_in_mb:
                 type:
-                - integer
-                - 'null'
+                  - integer
+                  - 'null'
                 description: The memory in MB allocated per instance
               disk_in_mb:
                 type:
-                - integer
-                - 'null'
+                  - integer
+                  - 'null'
                 description: The disk in MB allocated per instance
               log_rate_limit_in_bytes_per_second:
                 type:
-                - integer
-                - 'null'
+                  - integer
+                  - 'null'
                 description: The log rate limit in bytes per second per instance
     responses:
       '202':
@@ -466,42 +599,42 @@
         content:
           application/json:
             schema:
-              $ref: '../components/schemas/Process.yaml'
+              $ref: ../components/schemas/Process.yaml
       '401':
-        $ref: '../components/responses/Unauthorized.yaml'
-      '404':
-        $ref: '../components/responses/NotFound.yaml'
-      '422':
-        $ref: '../components/responses/UnprocessableEntity.yaml'
+        $ref: ../components/responses/Unauthorized.yaml
       '403':
-        $ref: '../components/responses/Forbidden.yaml'
+        $ref: ../components/responses/Forbidden.yaml
+      '404':
+        $ref: ../components/responses/NotFound.yaml
+      '422':
+        $ref: ../components/responses/UnprocessableEntity.yaml
 /v3/apps/{guid}/processes/{type}/instances/{index}:
   delete:
     summary: Terminate a process instance for an app
     description: Terminate a specific process instance for an app.
     operationId: terminateProcessInstanceForApp
     tags:
-    - Processes
+      - Processes
     parameters:
-    - $ref: '../components/parameters/Guid.yaml'
-    - name: type
-      in: path
-      required: true
-      schema:
-        type: string
-    - name: index
-      in: path
-      required: true
-      schema:
-        type: integer
+      - $ref: ../components/parameters/Guid.yaml
+      - name: type
+        in: path
+        required: true
+        schema:
+          type: string
+      - name: index
+        in: path
+        required: true
+        schema:
+          type: integer
     responses:
       '204':
         description: No Content
       '401':
-        $ref: '../components/responses/Unauthorized.yaml'
-      '404':
-        $ref: '../components/responses/NotFound.yaml'
+        $ref: ../components/responses/Unauthorized.yaml
       '403':
-        $ref: '../components/responses/Forbidden.yaml'
+        $ref: ../components/responses/Forbidden.yaml
+      '404':
+        $ref: ../components/responses/NotFound.yaml
       '422':
-        $ref: '../components/responses/UnprocessableEntity.yaml'
+        $ref: ../components/responses/UnprocessableEntity.yaml

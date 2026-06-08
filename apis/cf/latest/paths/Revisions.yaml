@@ -4,48 +4,48 @@
     description: Retrieve a revision.
     operationId: getRevision
     tags:
-    - Revisions
+      - Revisions
     parameters:
-    - $ref: '../components/parameters/Guid.yaml'
+      - $ref: ../components/parameters/Guid.yaml
     responses:
       '200':
         description: Successfully retrieved revision
         content:
           application/json:
             schema:
-              $ref: '../components/schemas/Revision.yaml'
+              $ref: ../components/schemas/Revision.yaml
         links:
           app:
             operationId: getApp
             parameters:
               guid: $response.body#/relationships/app/data/guid
             description: Retrieve the app for this revision
-      '401':
-        $ref: '../components/responses/Unauthorized.yaml'
-      '404':
-        $ref: '../components/responses/NotFound.yaml'
-      '403':
-        $ref: '../components/responses/Forbidden.yaml'
       '400':
-        $ref: '../components/responses/BadRequest.yaml'
-      '500':
-        $ref: '../components/responses/500.yaml'
-      '502':
-        $ref: '../components/responses/BadGateway.yaml'
-      '503':
-        $ref: '../components/responses/ServiceUnavailable.yaml'
-      '422':
-        $ref: '../components/responses/UnprocessableEntity.yaml'
+        $ref: ../components/responses/BadRequest.yaml
+      '401':
+        $ref: ../components/responses/Unauthorized.yaml
+      '403':
+        $ref: ../components/responses/Forbidden.yaml
+      '404':
+        $ref: ../components/responses/NotFound.yaml
       '409':
-        $ref: '../components/responses/Conflict.yaml'
+        $ref: ../components/responses/Conflict.yaml
+      '422':
+        $ref: ../components/responses/UnprocessableEntity.yaml
+      '500':
+        $ref: ../components/responses/500.yaml
+      '502':
+        $ref: ../components/responses/BadGateway.yaml
+      '503':
+        $ref: ../components/responses/ServiceUnavailable.yaml
   patch:
     summary: Update a revision
     description: Update a revision.
     operationId: updateRevision
     tags:
-    - Revisions
+      - Revisions
     parameters:
-    - $ref: '../components/parameters/Guid.yaml'
+      - $ref: ../components/parameters/Guid.yaml
     requestBody:
       description: Revision object that needs to be updated
       required: true
@@ -55,46 +55,55 @@
             type: object
             properties:
               metadata:
-                $ref: '../components/schemas/Metadata.yaml'
+                $ref: ../components/schemas/Metadata.yaml
             description: Request schema for updating a revision
+          examples:
+            default:
+              summary: default
+              value:
+                metadata:
+                  labels:
+                    key: value
+                  annotations:
+                    note: detailed information
     responses:
       '200':
         description: Successfully updated revision
         content:
           application/json:
             schema:
-              $ref: '../components/schemas/Revision.yaml'
+              $ref: ../components/schemas/Revision.yaml
         links:
           app:
             operationId: getApp
             parameters:
               guid: $response.body#/relationships/app/data/guid
             description: Retrieve the app for this revision
-      '401':
-        $ref: '../components/responses/Unauthorized.yaml'
-      '404':
-        $ref: '../components/responses/NotFound.yaml'
-      '422':
-        $ref: '../components/responses/UnprocessableEntity.yaml'
-      '403':
-        $ref: '../components/responses/Forbidden.yaml'
       '400':
-        $ref: '../components/responses/BadRequest.yaml'
-      '500':
-        $ref: '../components/responses/500.yaml'
-      '503':
-        $ref: '../components/responses/ServiceUnavailable.yaml'
+        $ref: ../components/responses/BadRequest.yaml
+      '401':
+        $ref: ../components/responses/Unauthorized.yaml
+      '403':
+        $ref: ../components/responses/Forbidden.yaml
+      '404':
+        $ref: ../components/responses/NotFound.yaml
       '409':
-        $ref: '../components/responses/Conflict.yaml'
+        $ref: ../components/responses/Conflict.yaml
+      '422':
+        $ref: ../components/responses/UnprocessableEntity.yaml
+      '500':
+        $ref: ../components/responses/500.yaml
+      '503':
+        $ref: ../components/responses/ServiceUnavailable.yaml
 /v3/revisions/{guid}/environment_variables:
   get:
     summary: Get environment variables for a revision
     description: Retrieve the environment variables that are associated with the revision.
     operationId: getRevisionEnvironmentVariables
     tags:
-    - Revisions
+      - Revisions
     parameters:
-    - $ref: '../components/parameters/Guid.yaml'
+      - $ref: ../components/parameters/Guid.yaml
     responses:
       '200':
         description: Successfully retrieved revision environment variables
@@ -112,75 +121,177 @@
                   type: object
                   properties:
                     self:
-                      $ref: '../components/schemas/Link.yaml'
+                      $ref: ../components/schemas/Link.yaml
                     revision:
-                      $ref: '../components/schemas/Link.yaml'
+                      $ref: ../components/schemas/Link.yaml
                     app:
-                      $ref: '../components/schemas/Link.yaml'
+                      $ref: ../components/schemas/Link.yaml
+            examples:
+              default:
+                summary: default
+                value:
+                  var:
+                    RAILS_ENV: production
+                  links:
+                    self:
+                      href: https://api.example.org/v3/revisions/[guid]/environment_variables
+                    revision:
+                      href: https://api.example.org/v3/revisions/[guid]
+                    app:
+                      href: https://api.example.org/v3/apps/[app_guid]
       '401':
-        $ref: '../components/responses/Unauthorized.yaml'
-      '404':
-        $ref: '../components/responses/NotFound.yaml'
+        $ref: ../components/responses/Unauthorized.yaml
       '403':
-        $ref: '../components/responses/Forbidden.yaml'
+        $ref: ../components/responses/Forbidden.yaml
+      '404':
+        $ref: ../components/responses/NotFound.yaml
 /v3/apps/{guid}/revisions:
   get:
     summary: List revisions for an app
     description: Retrieve revisions for an app the user has access to.
     operationId: listRevisionsForApp
     tags:
-    - Revisions
+      - Revisions
     parameters:
-    - $ref: '../components/parameters/Guid.yaml'
-    - $ref: '../components/parameters/Page.yaml'
-    - $ref: '../components/parameters/PerPage.yaml'
-    - $ref: '../components/parameters/OrderBy.yaml'
-    - $ref: '../components/parameters/LabelSelector.yaml'
-    - $ref: '../components/parameters/CreatedAts.yaml'
-    - $ref: '../components/parameters/UpdatedAts.yaml'
-    - name: versions
-      in: query
-      schema:
-        type: array
-        items:
-          type: string
-      description: Comma-delimited list of revision versions to filter by
+      - $ref: ../components/parameters/Guid.yaml
+      - $ref: ../components/parameters/Page.yaml
+      - $ref: ../components/parameters/PerPage.yaml
+      - $ref: ../components/parameters/OrderBy.yaml
+      - $ref: ../components/parameters/LabelSelector.yaml
+      - $ref: ../components/parameters/CreatedAts.yaml
+      - $ref: ../components/parameters/UpdatedAts.yaml
+      - name: versions
+        in: query
+        schema:
+          type: array
+          items:
+            type: string
+        description: Comma-delimited list of revision versions to filter by
     responses:
       '200':
         description: Successfully retrieved revisions for app
         content:
           application/json:
             schema:
-              $ref: '../components/schemas/RevisionList.yaml'
+              $ref: ../components/schemas/RevisionList.yaml
+            examples:
+              default:
+                summary: default
+                value:
+                  pagination:
+                    total_results: 1
+                    total_pages: 1
+                    first:
+                      href: https://api.example.org/v3/apps/1cb006ee-fb05-47e1-b541-c34179ddc446/revisions?page=1&per_page=50
+                    last:
+                      href: https://api.example.org/v3/apps/1cb006ee-fb05-47e1-b541-c34179ddc446/revisions?page=1&per_page=50
+                    next: null
+                    previous: null
+                  resources:
+                    - guid: 123e4567-e89b-12d3-a456-426614174000
+                      version: 1
+                      droplet:
+                        guid: 123e4567-e89b-12d3-a456-426614174000
+                      processes:
+                        web:
+                          command: bundle exec rackup
+                      sidecars:
+                        - name: auth-sidecar
+                          command: bundle exec sidecar
+                          process_types:
+                            - web
+                          memory_in_mb: 300
+                      description: Initial revision.
+                      deployable: true
+                      relationships:
+                        app:
+                          data:
+                            guid: 123e4567-e89b-12d3-a456-426614174000
+                      created_at: '2017-02-01T01:33:58Z'
+                      updated_at: '2017-02-01T01:33:58Z'
+                      metadata:
+                        labels: {}
+                        annotations: {}
+                      links:
+                        self:
+                          href: https://api.example.org/v3/revisions/885735b5-aea4-4cf5-8e44-961af0e41920
+                        app:
+                          href: https://api.example.org/v3/apps/1cb006ee-fb05-47e1-b541-c34179ddc446
+                        environment_variables:
+                          href: https://api.example.org/v3/revisions/885735b5-aea4-4cf5-8e44-961af0e41920/environment_variables
       '401':
-        $ref: '../components/responses/Unauthorized.yaml'
-      '404':
-        $ref: '../components/responses/NotFound.yaml'
+        $ref: ../components/responses/Unauthorized.yaml
       '403':
-        $ref: '../components/responses/Forbidden.yaml'
+        $ref: ../components/responses/Forbidden.yaml
+      '404':
+        $ref: ../components/responses/NotFound.yaml
 /v3/apps/{guid}/revisions/deployed:
   get:
     summary: List deployed revisions for an app
-    description: Retrieve deployed revisions for an app the user has access to. Deployed
-      revisions are revisions that are linked to started processes in the app.
+    description: Retrieve deployed revisions for an app the user has access to. Deployed revisions are revisions that are linked to started processes in the app.
     operationId: listDeployedRevisionsForApp
     tags:
-    - Revisions
+      - Revisions
     parameters:
-    - $ref: '../components/parameters/Guid.yaml'
-    - $ref: '../components/parameters/Page.yaml'
-    - $ref: '../components/parameters/PerPage.yaml'
-    - $ref: '../components/parameters/OrderBy.yaml'
+      - $ref: ../components/parameters/Guid.yaml
+      - $ref: ../components/parameters/Page.yaml
+      - $ref: ../components/parameters/PerPage.yaml
+      - $ref: ../components/parameters/OrderBy.yaml
     responses:
       '200':
         description: Successfully retrieved deployed revisions for app
         content:
           application/json:
             schema:
-              $ref: '../components/schemas/RevisionList.yaml'
+              $ref: ../components/schemas/RevisionList.yaml
+            examples:
+              default:
+                summary: default
+                value:
+                  pagination:
+                    total_results: 1
+                    total_pages: 1
+                    first:
+                      href: https://api.example.org/v3/apps/1cb006ee-fb05-47e1-b541-c34179ddc446/revisions?page=1&per_page=50
+                    last:
+                      href: https://api.example.org/v3/apps/1cb006ee-fb05-47e1-b541-c34179ddc446/revisions?page=1&per_page=50
+                    next: null
+                    previous: null
+                  resources:
+                    - guid: 123e4567-e89b-12d3-a456-426614174000
+                      version: 1
+                      droplet:
+                        guid: 123e4567-e89b-12d3-a456-426614174000
+                      processes:
+                        web:
+                          command: bundle exec rackup
+                      sidecars:
+                        - name: auth-sidecar
+                          command: bundle exec sidecar
+                          process_types:
+                            - web
+                          memory_in_mb: 300
+                      description: Initial revision.
+                      deployable: true
+                      relationships:
+                        app:
+                          data:
+                            guid: 123e4567-e89b-12d3-a456-426614174000
+                      created_at: '2017-02-01T01:33:58Z'
+                      updated_at: '2017-02-01T01:33:58Z'
+                      metadata:
+                        labels: {}
+                        annotations: {}
+                      links:
+                        self:
+                          href: https://api.example.org/v3/revisions/885735b5-aea4-4cf5-8e44-961af0e41920
+                        app:
+                          href: https://api.example.org/v3/apps/1cb006ee-fb05-47e1-b541-c34179ddc446
+                        environment_variables:
+                          href: https://api.example.org/v3/revisions/885735b5-aea4-4cf5-8e44-961af0e41920/environment_variables
       '401':
-        $ref: '../components/responses/Unauthorized.yaml'
-      '404':
-        $ref: '../components/responses/NotFound.yaml'
+        $ref: ../components/responses/Unauthorized.yaml
       '403':
-        $ref: '../components/responses/Forbidden.yaml'
+        $ref: ../components/responses/Forbidden.yaml
+      '404':
+        $ref: ../components/responses/NotFound.yaml

@@ -53,11 +53,20 @@ content:
           type: object
           properties:
             organization:
-              $ref: '../schemas/RelationshipToOne.yaml'
+              $ref: ../schemas/RelationshipToOne.yaml
             spaces:
-              $ref: '../schemas/RelationshipToMany.yaml'
+              $ref: ../schemas/RelationshipToMany.yaml
           description: Relationships for the space quota
         metadata:
-          $ref: '../schemas/Metadata.yaml'
+          $ref: ../schemas/Metadata.yaml
       required:
         - name
+    examples:
+      default:
+        summary: default
+        value:
+          name: production
+          relationships:
+            organization:
+              data:
+                guid: 123e4567-e89b-12d3-a456-426614174000

@@ -4,115 +4,178 @@
     description: Retrieve all service usage events the user has access to.
     operationId: listServiceUsageEvents
     tags:
-    - Service Usage Events
+      - Service Usage Events
     parameters:
-    - $ref: '../components/parameters/Page.yaml'
-    - $ref: '../components/parameters/PerPage.yaml'
-    - $ref: '../components/parameters/OrderBy.yaml'
-    - $ref: '../components/parameters/CreatedAts.yaml'
-    - name: after_guid
-      in: query
-      description: Filters out events before and including the event with the given
-        guid.
-      schema:
-        type: string
-    - name: guids
-      in: query
-      description: Comma-delimited list of usage event guids to filter by.
-      schema:
-        type: array
-        items:
+      - $ref: ../components/parameters/Page.yaml
+      - $ref: ../components/parameters/PerPage.yaml
+      - $ref: ../components/parameters/OrderBy.yaml
+      - $ref: ../components/parameters/CreatedAts.yaml
+      - name: after_guid
+        in: query
+        description: Filters out events before and including the event with the given guid.
+        schema:
           type: string
-    - name: service_instance_types
-      in: query
-      description: Comma-delimited list of service instance types to filter by; valid
-        values are `managed_service_instance` and `user_provided_service_instance`
-      schema:
-        type: array
-        items:
-          type: string
-          enum:
-          - managed_service_instance
-          - user_provided_service_instance
-    - name: service_offering_guids
-      in: query
-      description: Comma-delimited list of service offering guids to filter by
-      schema:
-        type: array
-        items:
-          type: string
+      - name: guids
+        in: query
+        description: Comma-delimited list of usage event guids to filter by.
+        schema:
+          type: array
+          items:
+            type: string
+      - name: service_instance_types
+        in: query
+        description: Comma-delimited list of service instance types to filter by; valid values are `managed_service_instance` and `user_provided_service_instance`
+        schema:
+          type: array
+          items:
+            type: string
+            enum:
+              - managed_service_instance
+              - user_provided_service_instance
+      - name: service_offering_guids
+        in: query
+        description: Comma-delimited list of service offering guids to filter by
+        schema:
+          type: array
+          items:
+            type: string
     responses:
       '200':
         description: OK
         content:
           application/json:
             schema:
-              $ref: '../components/schemas/ServiceUsageEventList.yaml'
-      '401':
-        $ref: '../components/responses/Unauthorized.yaml'
-      '403':
-        $ref: '../components/responses/Forbidden.yaml'
-      '422':
-        $ref: '../components/responses/UnprocessableEntity.yaml'
+              $ref: ../components/schemas/ServiceUsageEventList.yaml
+            examples:
+              default:
+                summary: default
+                value:
+                  pagination:
+                    total_results: 2
+                    total_pages: 2
+                    first:
+                      href: https://api.example.org<%= path %>?page=1&per_page=1
+                    last:
+                      href: https://api.example.org<%= path %>?page=2&per_page=1
+                    next:
+                      href: https://api.example.org<%= path %>?page=2&per_page=1
+                    previous: null
+                  resources:
+                    - guid: 123e4567-e89b-12d3-a456-426614174000
+                      created_at: '2020-05-28T12:34:56Z'
+                      updated_at: '2020-05-28T12:34:56Z'
+                      state: CREATED
+                      space:
+                        guid: 123e4567-e89b-12d3-a456-426614174000
+                        name: name-1664
+                      organization:
+                        guid: 123e4567-e89b-12d3-a456-426614174000
+                      service_instance:
+                        guid: 123e4567-e89b-12d3-a456-426614174000
+                        name: name-1982
+                        type: managed_service_instance
+                      service_plan:
+                        guid: 123e4567-e89b-12d3-a456-426614174000
+                        name: name-1983
+                      service_offering:
+                        guid: 123e4567-e89b-12d3-a456-426614174000
+                        name: label-64
+                      service_broker:
+                        guid: 123e4567-e89b-12d3-a456-426614174000
+                        name: name-2929
+                      links:
+                        self:
+                          href: https://api.example.org/v3/service_usage_events/c9976002-96f4-435a-888e-db1e1178df62
       '400':
-        $ref: '../components/responses/BadRequest.yaml'
-      '500':
-        $ref: '../components/responses/500.yaml'
-      '502':
-        $ref: '../components/responses/BadGateway.yaml'
-      '503':
-        $ref: '../components/responses/ServiceUnavailable.yaml'
+        $ref: ../components/responses/BadRequest.yaml
+      '401':
+        $ref: ../components/responses/Unauthorized.yaml
+      '403':
+        $ref: ../components/responses/Forbidden.yaml
       '409':
-        $ref: '../components/responses/Conflict.yaml'
+        $ref: ../components/responses/Conflict.yaml
+      '422':
+        $ref: ../components/responses/UnprocessableEntity.yaml
+      '500':
+        $ref: ../components/responses/500.yaml
+      '502':
+        $ref: ../components/responses/BadGateway.yaml
+      '503':
+        $ref: ../components/responses/ServiceUnavailable.yaml
 /v3/service_usage_events/{guid}:
   get:
     summary: Get a service usage event
     description: Retrieve a service usage event.
     operationId: getServiceUsageEvent
     tags:
-    - Service Usage Events
+      - Service Usage Events
     parameters:
-    - $ref: '../components/parameters/Guid.yaml'
+      - $ref: ../components/parameters/Guid.yaml
     responses:
       '200':
         description: OK
         content:
           application/json:
             schema:
-              $ref: '../components/schemas/ServiceUsageEvent.yaml'
+              $ref: ../components/schemas/ServiceUsageEvent.yaml
+            examples:
+              default:
+                summary: default
+                value:
+                  guid: 123e4567-e89b-12d3-a456-426614174000
+                  created_at: '2020-05-28T12:34:56Z'
+                  updated_at: '2020-05-28T12:34:56Z'
+                  state: CREATED
+                  space:
+                    guid: 123e4567-e89b-12d3-a456-426614174000
+                    name: name-1664
+                  organization:
+                    guid: 123e4567-e89b-12d3-a456-426614174000
+                  service_instance:
+                    guid: 123e4567-e89b-12d3-a456-426614174000
+                    name: name-1982
+                    type: managed_service_instance
+                  service_plan:
+                    guid: 123e4567-e89b-12d3-a456-426614174000
+                    name: name-1983
+                  service_offering:
+                    guid: 123e4567-e89b-12d3-a456-426614174000
+                    name: label-64
+                  service_broker:
+                    guid: 123e4567-e89b-12d3-a456-426614174000
+                    name: name-2929
+                  links:
+                    self:
+                      href: https://api.example.org/v3/service_usage_events/c9976002-96f4-435a-888e-db1e1178df62
       '401':
-        $ref: '../components/responses/Unauthorized.yaml'
-      '404':
-        $ref: '../components/responses/NotFound.yaml'
+        $ref: ../components/responses/Unauthorized.yaml
       '403':
-        $ref: '../components/responses/Forbidden.yaml'
+        $ref: ../components/responses/Forbidden.yaml
+      '404':
+        $ref: ../components/responses/NotFound.yaml
 /v3/service_usage_events/actions/destructively_purge_all_and_reseed:
   post:
     summary: Purge and seed service usage events
-    description: Destroys all existing events. Populates new usage events, one for
-      each existing service instance. All populated events will have a `created_at`
-      value of current time. There is the potential race condition if service instances
-      are currently being created or deleted. The seeded usage events will have the
-      same guid as the service instance.
+    description: Destroys all existing events. Populates new usage events, one for each existing service instance. All populated events will have a `created_at` value of current time. There is the potential race condition if service instances are currently being created or deleted. The seeded usage events will have the same guid as the service instance.
     operationId: purgeAndSeedServiceUsageEvents
     tags:
-    - Service Usage Events
+      - Service Usage Events
     responses:
       '200':
         description: OK
-      '401':
-        $ref: '../components/responses/Unauthorized.yaml'
-      '404':
-        $ref: '../components/responses/NotFound.yaml'
-      '403':
-        $ref: '../components/responses/Forbidden.yaml'
-      '422':
-        $ref: '../components/responses/UnprocessableEntity.yaml'
       '400':
-        $ref: '../components/responses/BadRequest.yaml'
-      '500':
-        $ref: '../components/responses/500.yaml'
-      '503':
-        $ref: '../components/responses/ServiceUnavailable.yaml'
+        $ref: ../components/responses/BadRequest.yaml
+      '401':
+        $ref: ../components/responses/Unauthorized.yaml
+      '403':
+        $ref: ../components/responses/Forbidden.yaml
+      '404':
+        $ref: ../components/responses/NotFound.yaml
       '409':
-        $ref: '../components/responses/Conflict.yaml'
+        $ref: ../components/responses/Conflict.yaml
+      '422':
+        $ref: ../components/responses/UnprocessableEntity.yaml
+      '500':
+        $ref: ../components/responses/500.yaml
+      '503':
+        $ref: ../components/responses/ServiceUnavailable.yaml

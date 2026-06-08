@@ -18,4 +18,13 @@ content:
         memory_in_mb:
           type: integer
           description: Memory limit for the sidecar in MB
-
+    examples:
+      default:
+        summary: default
+        value:
+          name: auth-sidecar
+          command: bundle exec rackup
+          process_types:
+            - web
+            - worker
+          memory_in_mb: 300

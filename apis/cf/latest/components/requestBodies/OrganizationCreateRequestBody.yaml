@@ -12,7 +12,12 @@ content:
           type: boolean
           description: Whether an organization is suspended or not
         metadata:
-          $ref: '../schemas/Metadata.yaml'
+          $ref: ../schemas/Metadata.yaml
       required:
         - name
       description: Request schema for creating an organization
+    examples:
+      default:
+        summary: default
+        value:
+          name: my-organization

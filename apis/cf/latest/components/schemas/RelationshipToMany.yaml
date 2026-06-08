@@ -4,5 +4,12 @@ properties:
     type: array
     items:
       $ref: './Relationship.yaml'
+  links:
+    type: object
+    properties:
+      self:
+        $ref: './Link.yaml'
+      related:
+        $ref: './Link.yaml'
 description: |
   Some relationships relate a resource to several other resources. For example, an isolation segment can be entitled to multiple organizations.

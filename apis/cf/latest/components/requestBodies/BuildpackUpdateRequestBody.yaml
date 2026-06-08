@@ -21,5 +21,14 @@ content:
           type: string
           description: The name of the stack that the buildpack will use
         metadata:
-          $ref: '../schemas/Metadata.yaml'
+          $ref: ../schemas/Metadata.yaml
       description: Request schema for updating a buildpack
+    examples:
+      default:
+        summary: default
+        value:
+          name: ruby_buildpack
+          position: 42
+          enabled: true
+          locked: false
+          stack: windows64

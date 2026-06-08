@@ -28,12 +28,33 @@ content:
           type: object
           properties:
             app:
-              $ref: '../schemas/RelationshipToOne.yaml'
+              $ref: ../schemas/RelationshipToOne.yaml
               description: A relationship to an app
           required:
             - app
         metadata:
-          $ref: '../schemas/Metadata.yaml'
+          $ref: ../schemas/Metadata.yaml
       required:
         - relationships
       description: Request schema for creating a package
+    examples:
+      buildpack_app:
+        summary: buildpack app
+        value:
+          type: bits
+          relationships:
+            app:
+              data:
+                guid: 123e4567-e89b-12d3-a456-426614174000
+      docker_app:
+        summary: Docker app
+        value:
+          type: docker
+          relationships:
+            app:
+              data:
+                guid: 123e4567-e89b-12d3-a456-426614174000
+          data:
+            image: registry/image:latest
+            username: username
+            password: password

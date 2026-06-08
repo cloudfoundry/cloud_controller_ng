@@ -28,7 +28,7 @@ content:
           type: object
           properties:
             service_plan:
-              $ref: '../schemas/RelationshipToOne.yaml'
+              $ref: ../schemas/RelationshipToOne.yaml
               description: The service plan from which to create the service instance
           description: Relationships for the service instance
         maintenance_info:
@@ -41,7 +41,7 @@ content:
               description: Must be a semantic version value and it must match the version in the maintenance_info for the service instance plan in the updated broker catalog
           description: If provided, must have the `version` field; `version` must be a semantic version value and it must match the `version` in the `maintenance_info` for the service instance plan in the updated broker catalog. Any other value for `version` will cause a `MaintenanceInfoConflict` error
         metadata:
-          $ref: '../schemas/Metadata.yaml'
+          $ref: ../schemas/Metadata.yaml
     examples:
       managed_service_instance:
         summary: Update managed service instance
@@ -57,7 +57,7 @@ content:
           relationships:
             service_plan:
               data:
-                guid: "f2b6ba9c-a4d2-11ea-8ae6-48bf6bec2d78"
+                guid: f2b6ba9c-a4d2-11ea-8ae6-48bf6bec2d78
           metadata:
             annotations:
               note: detailed information
@@ -67,7 +67,7 @@ content:
         summary: Upgrade managed service instance
         value:
           maintenance_info:
-            version: "2.1.1"
+            version: 2.1.1
       user_provided_service_instance:
         summary: Update user-provided service instance
         value:
@@ -79,8 +79,26 @@ content:
             - foo
             - bar
             - baz
-          syslog_drain_url: "https://syslog.com/drain"
-          route_service_url: "https://route.com/service"
+          syslog_drain_url: https://syslog.com/drain
+          route_service_url: https://route.com/service
+          metadata:
+            annotations:
+              foo: bar
+            labels:
+              baz: qux
+      default:
+        summary: default
+        value:
+          name: my_service_instance
+          credentials:
+            foo: bar
+            baz: qux
+          tags:
+            - foo
+            - bar
+            - baz
+          syslog_drain_url: https://syslog.com/drain
+          route_service_url: https://route.com/service
           metadata:
             annotations:
               foo: bar

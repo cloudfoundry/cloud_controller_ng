@@ -37,24 +37,49 @@
                 description: List of resources to check for in the resource cache
             required:
               - resources
+          examples:
+            default:
+              summary: default
+              value:
+                resources:
+                  - checksum:
+                      value: 002d760bea1be268e27077412e11a320d0f164d3
+                    size_in_bytes: 36
+                    path: C:\path\to\file
+                    mode: '645'
+                  - checksum:
+                      value: a9993e364706816aba3e25717850c26c9cd0d89d
+                    size_in_bytes: 1
+                    path: path/to/file
+                    mode: '644'
     responses:
       '201':
         description: Created
         content:
           application/json:
             schema:
-              $ref: '../components/schemas/ResourceMatch.yaml'
-      '401':
-        $ref: '../components/responses/Unauthorized.yaml'
-      '403':
-        $ref: '../components/responses/Forbidden.yaml'
-      '422':
-        $ref: '../components/responses/UnprocessableEntity.yaml'
+              $ref: ../components/schemas/ResourceMatch.yaml
+            examples:
+              default:
+                summary: default
+                value:
+                  resources:
+                    - checksum:
+                        value: a9993e364706816aba3e25717850c26c9cd0d89d
+                      size_in_bytes: 1
+                      path: path/to/file
+                      mode: '644'
       '400':
-        $ref: '../components/responses/BadRequest.yaml'
-      '500':
-        $ref: '../components/responses/500.yaml'
-      '503':
-        $ref: '../components/responses/ServiceUnavailable.yaml'
+        $ref: ../components/responses/BadRequest.yaml
+      '401':
+        $ref: ../components/responses/Unauthorized.yaml
+      '403':
+        $ref: ../components/responses/Forbidden.yaml
       '409':
-        $ref: '../components/responses/Conflict.yaml'
+        $ref: ../components/responses/Conflict.yaml
+      '422':
+        $ref: ../components/responses/UnprocessableEntity.yaml
+      '500':
+        $ref: ../components/responses/500.yaml
+      '503':
+        $ref: ../components/responses/ServiceUnavailable.yaml

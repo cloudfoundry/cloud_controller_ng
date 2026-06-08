@@ -4,181 +4,354 @@
     description: Retrieve all stacks.
     operationId: listStacks
     tags:
-    - Stacks
+      - Stacks
     parameters:
-    - $ref: '../components/parameters/Page.yaml'
-    - $ref: '../components/parameters/PerPage.yaml'
-    - $ref: '../components/parameters/OrderBy.yaml'
-    - $ref: '../components/parameters/CreatedAts.yaml'
-    - $ref: '../components/parameters/UpdatedAts.yaml'
-    - $ref: '../components/parameters/LabelSelector.yaml'
-    - name: names
-      in: query
-      schema:
-        type: array
-        items:
-          type: string
-      description: Comma-delimited list of stack names to filter by
+      - $ref: ../components/parameters/Page.yaml
+      - $ref: ../components/parameters/PerPage.yaml
+      - $ref: ../components/parameters/OrderBy.yaml
+      - $ref: ../components/parameters/CreatedAts.yaml
+      - $ref: ../components/parameters/UpdatedAts.yaml
+      - $ref: ../components/parameters/LabelSelector.yaml
+      - name: names
+        in: query
+        schema:
+          type: array
+          items:
+            type: string
+        description: Comma-delimited list of stack names to filter by
     responses:
       '200':
         description: OK
         content:
           application/json:
             schema:
-              $ref: '../components/schemas/StackList.yaml'
-      '401':
-        $ref: '../components/responses/Unauthorized.yaml'
-      '403':
-        $ref: '../components/responses/Forbidden.yaml'
+              $ref: ../components/schemas/StackList.yaml
+            examples:
+              default:
+                summary: default
+                value:
+                  pagination:
+                    total_results: 3
+                    total_pages: 2
+                    first:
+                      href: https://api.example.org?page=1&per_page=2
+                    last:
+                      href: https://api.example.org?page=2&per_page=2
+                    next:
+                      href: https://api.example.org?page=2&per_page=2
+                    previous: null
+                  resources:
+                    - guid: 123e4567-e89b-12d3-a456-426614174000
+                      created_at: '2018-11-09T22:43:28Z'
+                      updated_at: '2018-11-09T22:43:28Z'
+                      name: my-stack-1
+                      build_rootfs_image: my-stack-1-build
+                      run_rootfs_image: my-stack-1-run
+                      description: This is my first stack!
+                      state: ACTIVE
+                      state_reason: null
+                      default: true
+                      metadata:
+                        labels: {}
+                        annotations: {}
+                      links:
+                        self:
+                          href: https://api.example.org/11c916c9-c2f9-440e-8e73-102e79c4704d
+                    - guid: 123e4567-e89b-12d3-a456-426614174000
+                      created_at: '2018-11-09T22:43:29Z'
+                      updated_at: '2018-11-09T22:43:29Z'
+                      name: my-stack-2
+                      description: This is my second stack!
+                      build_rootfs_image: my-stack-2-build
+                      run_rootfs_image: my-stack-2-run
+                      state: DEPRECATED
+                      state_reason: Stack deprecated and will be removed in future release
+                      default: false
+                      metadata:
+                        labels: {}
+                        annotations: {}
+                      links:
+                        self:
+                          href: https://api.example.org/81c916c9-c2f9-440e-8e73-102e79c4704h
       '400':
-        $ref: '../components/responses/BadRequest.yaml'
-      '500':
-        $ref: '../components/responses/500.yaml'
-      '502':
-        $ref: '../components/responses/BadGateway.yaml'
-      '503':
-        $ref: '../components/responses/ServiceUnavailable.yaml'
-      '422':
-        $ref: '../components/responses/UnprocessableEntity.yaml'
+        $ref: ../components/responses/BadRequest.yaml
+      '401':
+        $ref: ../components/responses/Unauthorized.yaml
+      '403':
+        $ref: ../components/responses/Forbidden.yaml
       '409':
-        $ref: '../components/responses/Conflict.yaml'
+        $ref: ../components/responses/Conflict.yaml
+      '422':
+        $ref: ../components/responses/UnprocessableEntity.yaml
+      '500':
+        $ref: ../components/responses/500.yaml
+      '502':
+        $ref: ../components/responses/BadGateway.yaml
+      '503':
+        $ref: ../components/responses/ServiceUnavailable.yaml
   post:
     summary: Create a stack
     description: Create a stack.
     operationId: createStack
     tags:
-    - Stacks
+      - Stacks
     requestBody:
-      $ref: '../components/requestBodies/StackCreateRequestBody.yaml'
+      $ref: ../components/requestBodies/StackCreateRequestBody.yaml
     responses:
       '201':
         description: Created
         content:
           application/json:
             schema:
-              $ref: '../components/schemas/Stack.yaml'
-      '401':
-        $ref: '../components/responses/Unauthorized.yaml'
-      '422':
-        $ref: '../components/responses/UnprocessableEntity.yaml'
-      '403':
-        $ref: '../components/responses/Forbidden.yaml'
+              $ref: ../components/schemas/Stack.yaml
       '400':
-        $ref: '../components/responses/BadRequest.yaml'
-      '500':
-        $ref: '../components/responses/500.yaml'
-      '503':
-        $ref: '../components/responses/ServiceUnavailable.yaml'
+        $ref: ../components/responses/BadRequest.yaml
+      '401':
+        $ref: ../components/responses/Unauthorized.yaml
+      '403':
+        $ref: ../components/responses/Forbidden.yaml
       '409':
-        $ref: '../components/responses/Conflict.yaml'
+        $ref: ../components/responses/Conflict.yaml
+      '422':
+        $ref: ../components/responses/UnprocessableEntity.yaml
+      '500':
+        $ref: ../components/responses/500.yaml
+      '503':
+        $ref: ../components/responses/ServiceUnavailable.yaml
 /v3/stacks/{guid}:
   get:
     summary: Get a stack
     description: Get a stack.
     operationId: getStack
     tags:
-    - Stacks
+      - Stacks
     parameters:
-    - $ref: '../components/parameters/Guid.yaml'
+      - $ref: ../components/parameters/Guid.yaml
     responses:
       '200':
         description: OK
         content:
           application/json:
             schema:
-              $ref: '../components/schemas/Stack.yaml'
+              $ref: ../components/schemas/Stack.yaml
       '401':
-        $ref: '../components/responses/Unauthorized.yaml'
-      '404':
-        $ref: '../components/responses/NotFound.yaml'
+        $ref: ../components/responses/Unauthorized.yaml
       '403':
-        $ref: '../components/responses/Forbidden.yaml'
+        $ref: ../components/responses/Forbidden.yaml
+      '404':
+        $ref: ../components/responses/NotFound.yaml
   patch:
     summary: Update a stack
     description: Update a stack.
     operationId: updateStack
     tags:
-    - Stacks
+      - Stacks
     parameters:
-    - $ref: '../components/parameters/Guid.yaml'
+      - $ref: ../components/parameters/Guid.yaml
     requestBody:
       content:
         application/json:
           schema:
             properties:
               metadata:
-                $ref: '../components/schemas/Metadata.yaml'
+                $ref: ../components/schemas/Metadata.yaml
+          examples:
+            default:
+              summary: default
+              value:
+                metadata:
+                  labels:
+                    key: value
+                  annotations:
+                    note: detailed information
+                state: ACTIVE
+                state_reason: Optional plain text describing the stack state change
     responses:
       '200':
         description: OK
         content:
           application/json:
             schema:
-              $ref: '../components/schemas/Stack.yaml'
-      '401':
-        $ref: '../components/responses/Unauthorized.yaml'
-      '404':
-        $ref: '../components/responses/NotFound.yaml'
-      '422':
-        $ref: '../components/responses/UnprocessableEntity.yaml'
-      '403':
-        $ref: '../components/responses/Forbidden.yaml'
+              $ref: ../components/schemas/Stack.yaml
       '400':
-        $ref: '../components/responses/BadRequest.yaml'
-      '500':
-        $ref: '../components/responses/500.yaml'
-      '503':
-        $ref: '../components/responses/ServiceUnavailable.yaml'
+        $ref: ../components/responses/BadRequest.yaml
+      '401':
+        $ref: ../components/responses/Unauthorized.yaml
+      '403':
+        $ref: ../components/responses/Forbidden.yaml
+      '404':
+        $ref: ../components/responses/NotFound.yaml
       '409':
-        $ref: '../components/responses/Conflict.yaml'
+        $ref: ../components/responses/Conflict.yaml
+      '422':
+        $ref: ../components/responses/UnprocessableEntity.yaml
+      '500':
+        $ref: ../components/responses/500.yaml
+      '503':
+        $ref: ../components/responses/ServiceUnavailable.yaml
   delete:
     summary: Delete a stack
     description: Delete a stack.
     operationId: deleteStack
     tags:
-    - Stacks
+      - Stacks
     parameters:
-    - $ref: '../components/parameters/Guid.yaml'
+      - $ref: ../components/parameters/Guid.yaml
     responses:
       '204':
         description: No Content
       '401':
-        $ref: '../components/responses/Unauthorized.yaml'
-      '404':
-        $ref: '../components/responses/NotFound.yaml'
+        $ref: ../components/responses/Unauthorized.yaml
       '403':
-        $ref: '../components/responses/Forbidden.yaml'
+        $ref: ../components/responses/Forbidden.yaml
+      '404':
+        $ref: ../components/responses/NotFound.yaml
       '422':
-        $ref: '../components/responses/UnprocessableEntity.yaml'
+        $ref: ../components/responses/UnprocessableEntity.yaml
       '500':
-        $ref: '../components/responses/500.yaml'
+        $ref: ../components/responses/500.yaml
 /v3/stacks/{guid}/apps:
   get:
     summary: List apps on a stack
     description: Retrieve all apps using a given stack.
     operationId: listAppsOnStack
     tags:
-    - Stacks
+      - Stacks
     parameters:
-    - $ref: '../components/parameters/Guid.yaml'
-    - $ref: '../components/parameters/Page.yaml'
-    - $ref: '../components/parameters/PerPage.yaml'
-    - $ref: '../components/parameters/OrderBy.yaml'
-    - $ref: '../components/parameters/CreatedAts.yaml'
-    - $ref: '../components/parameters/UpdatedAts.yaml'
-    - $ref: '../components/parameters/LabelSelector.yaml'
+      - $ref: ../components/parameters/Guid.yaml
+      - $ref: ../components/parameters/Page.yaml
+      - $ref: ../components/parameters/PerPage.yaml
+      - $ref: ../components/parameters/OrderBy.yaml
+      - $ref: ../components/parameters/CreatedAts.yaml
+      - $ref: ../components/parameters/UpdatedAts.yaml
+      - $ref: ../components/parameters/LabelSelector.yaml
     responses:
       '200':
         description: OK
         content:
           application/json:
             schema:
-              $ref: '../components/schemas/AppList.yaml'
-      '401':
-        $ref: '../components/responses/Unauthorized.yaml'
-      '404':
-        $ref: '../components/responses/NotFound.yaml'
-      '403':
-        $ref: '../components/responses/Forbidden.yaml'
+              $ref: ../components/schemas/AppList.yaml
+            examples:
+              default:
+                summary: default
+                value:
+                  pagination:
+                    total_results: 3
+                    total_pages: 2
+                    first:
+                      href: https://api.example.org?page=1&per_page=2
+                    last:
+                      href: https://api.example.org?page=2&per_page=2
+                    next:
+                      href: https://api.example.org?page=2&per_page=2
+                    previous: null
+                  resources:
+                    - guid: 123e4567-e89b-12d3-a456-426614174000
+                      name: my_app
+                      state: STARTED
+                      created_at: '2016-03-17T21:41:30Z'
+                      updated_at: '2016-03-18T11:32:30Z'
+                      lifecycle:
+                        type: buildpack
+                        data:
+                          buildpacks:
+                            - java_buildpack
+                          stack: cflinuxfs4
+                      relationships:
+                        space:
+                          data:
+                            guid: 123e4567-e89b-12d3-a456-426614174000
+                        current_droplet:
+                          data:
+                            guid: 123e4567-e89b-12d3-a456-426614174000
+                      links:
+                        self:
+                          href: https://api.example.org/v3/apps/1cb006ee-fb05-47e1-b541-c34179ddc446
+                        space:
+                          href: https://api.example.org/v3/spaces/2f35885d-0c9d-4423-83ad-fd05066f8576
+                        processes:
+                          href: https://api.example.org/v3/apps/1cb006ee-fb05-47e1-b541-c34179ddc446/processes
+                        packages:
+                          href: https://api.example.org/v3/apps/1cb006ee-fb05-47e1-b541-c34179ddc446/packages
+                        environment_variables:
+                          href: https://api.example.org/v3/apps/1cb006ee-fb05-47e1-b541-c34179ddc446/environment_variables
+                        current_droplet:
+                          href: https://api.example.org/v3/apps/1cb006ee-fb05-47e1-b541-c34179ddc446/droplets/current
+                        droplets:
+                          href: https://api.example.org/v3/apps/1cb006ee-fb05-47e1-b541-c34179ddc446/droplets
+                        tasks:
+                          href: https://api.example.org/v3/apps/1cb006ee-fb05-47e1-b541-c34179ddc446/tasks
+                        start:
+                          href: https://api.example.org/v3/apps/1cb006ee-fb05-47e1-b541-c34179ddc446/actions/start
+                          method: POST
+                        stop:
+                          href: https://api.example.org/v3/apps/1cb006ee-fb05-47e1-b541-c34179ddc446/actions/stop
+                          method: POST
+                        revisions:
+                          href: https://api.example.org/v3/apps/1cb006ee-fb05-47e1-b541-c34179ddc446/revisions
+                        deployed_revisions:
+                          href: https://api.example.org/v3/apps/1cb006ee-fb05-47e1-b541-c34179ddc446/revisions/deployed
+                        features:
+                          href: https://api.example.org/v3/apps/1cb006ee-fb05-47e1-b541-c34179ddc446/features
+                      metadata:
+                        labels: {}
+                        annotations: {}
+                    - guid: 123e4567-e89b-12d3-a456-426614174000
+                      name: my_app2
+                      state: STOPPED
+                      created_at: '1970-01-01T00:00:02Z'
+                      updated_at: '2016-06-08T16:41:26Z'
+                      lifecycle:
+                        type: buildpack
+                        data:
+                          buildpacks:
+                            - ruby_buildpack
+                          stack: cflinuxfs4
+                      relationships:
+                        space:
+                          data:
+                            guid: 123e4567-e89b-12d3-a456-426614174000
+                        droplet:
+                          data:
+                            guid: 123e4567-e89b-12d3-a456-426614174000
+                      links:
+                        self:
+                          href: https://api.example.org/02b4ec9b-94c7-4468-9c23-4e906191a0f8
+                        space:
+                          href: https://api.example.org/v3/spaces/2f35885d-0c9d-4423-83ad-fd05066f8576
+                        processes:
+                          href: https://api.example.org/02b4ec9b-94c7-4468-9c23-4e906191a0f8/processes
+                        packages:
+                          href: https://api.example.org/02b4ec9b-94c7-4468-9c23-4e906191a0f8/packages
+                        environment_variables:
+                          href: https://api.example.org/02b4ec9b-94c7-4468-9c23-4e906191a0f8/environment_variables
+                        current_droplet:
+                          href: https://api.example.org/02b4ec9b-94c7-4468-9c23-4e906191a0f8/droplets/current
+                        droplets:
+                          href: https://api.example.org/02b4ec9b-94c7-4468-9c23-4e906191a0f8/droplets
+                        tasks:
+                          href: https://api.example.org/02b4ec9b-94c7-4468-9c23-4e906191a0f8/tasks
+                        start:
+                          href: https://api.example.org/02b4ec9b-94c7-4468-9c23-4e906191a0f8/actions/start
+                          method: POST
+                        stop:
+                          href: https://api.example.org/02b4ec9b-94c7-4468-9c23-4e906191a0f8/actions/stop
+                          method: POST
+                        revisions:
+                          href: https://api.example.org//02b4ec9b-94c7-4468-9c23-4e906191a0f8/revisions
+                        deployed_revisions:
+                          href: https://api.example.org//02b4ec9b-94c7-4468-9c23-4e906191a0f8/revisions/deployed
+                        features:
+                          href: https://api.example.org//02b4ec9b-94c7-4468-9c23-4e906191a0f8/features
+                      metadata:
+                        labels: {}
+                        annotations: {}
       '400':
-        $ref: '../components/responses/BadRequest.yaml'
+        $ref: ../components/responses/BadRequest.yaml
+      '401':
+        $ref: ../components/responses/Unauthorized.yaml
+      '403':
+        $ref: ../components/responses/Forbidden.yaml
+      '404':
+        $ref: ../components/responses/NotFound.yaml

@@ -4,83 +4,129 @@
     description: Retrieve all deployments.
     operationId: listDeployments
     tags:
-    - Deployments
+      - Deployments
     parameters:
-    - $ref: '../components/parameters/Page.yaml'
-    - $ref: '../components/parameters/PerPage.yaml'
-    - $ref: '../components/parameters/OrderBy.yaml'
-    - $ref: '../components/parameters/CreatedAts.yaml'
-    - $ref: '../components/parameters/UpdatedAts.yaml'
-    - $ref: '../components/parameters/LabelSelector.yaml'
-    - name: app_guids
-      in: query
-      schema:
-        type: array
-        items:
-          type: string
-      description: Comma-delimited list of app GUIDs to filter by
-    - name: states
-      in: query
-      schema:
-        type: array
-        items:
-          type: string
-      description: Comma-delimited list of states to filter by
-    - name: status_reasons
-      in: query
-      schema:
-        type: array
-        items:
-          type: string
-          enum:
-          - DEPLOYING
-          - PAUSED
-          - CANCELING
-          - DEPLOYED
-          - CANCELED
-          - SUPERSEDED
-      description: Comma-delimited list of status reasons to filter by
-    - name: status_values
-      in: query
-      schema:
-        type: array
-        items:
-          type: string
-          enum:
-          - ACTIVE
-          - FINALIZED
-      description: Comma-delimited list of status values to filter by
+      - $ref: ../components/parameters/Page.yaml
+      - $ref: ../components/parameters/PerPage.yaml
+      - $ref: ../components/parameters/OrderBy.yaml
+      - $ref: ../components/parameters/CreatedAts.yaml
+      - $ref: ../components/parameters/UpdatedAts.yaml
+      - $ref: ../components/parameters/LabelSelector.yaml
+      - name: app_guids
+        in: query
+        schema:
+          type: array
+          items:
+            type: string
+        description: Comma-delimited list of app GUIDs to filter by
+      - name: states
+        in: query
+        schema:
+          type: array
+          items:
+            type: string
+        description: Comma-delimited list of states to filter by
+      - name: status_reasons
+        in: query
+        schema:
+          type: array
+          items:
+            type: string
+            enum:
+              - DEPLOYING
+              - PAUSED
+              - CANCELING
+              - DEPLOYED
+              - CANCELED
+              - SUPERSEDED
+        description: Comma-delimited list of status reasons to filter by
+      - name: status_values
+        in: query
+        schema:
+          type: array
+          items:
+            type: string
+            enum:
+              - ACTIVE
+              - FINALIZED
+        description: Comma-delimited list of status values to filter by
     responses:
       '200':
         description: OK
         content:
           application/json:
             schema:
-              $ref: '../components/schemas/DeploymentList.yaml'
-      '401':
-        $ref: '../components/responses/Unauthorized.yaml'
-      '403':
-        $ref: '../components/responses/Forbidden.yaml'
+              $ref: ../components/schemas/DeploymentList.yaml
+            examples:
+              default:
+                summary: default
+                value:
+                  pagination:
+                    total_results: 1
+                    total_pages: 1
+                    first:
+                      href: https://api.example.org?page=1&per_page=2
+                    last:
+                      href: https://api.example.org?page=1&per_page=2
+                    next: null
+                    previous: null
+                  resources:
+                    - guid: 123e4567-e89b-12d3-a456-426614174000
+                      status:
+                        value: FINALIZED
+                        reason: DEPLOYED
+                        details:
+                          last_successful_healthcheck: '2018-04-25T22:42:10Z'
+                          last_status_change: '2018-04-25T22:42:10Z'
+                      strategy: rolling
+                      options:
+                        max_in_flight: 1
+                      droplet:
+                        guid: 123e4567-e89b-12d3-a456-426614174000
+                      previous_droplet:
+                        guid: 123e4567-e89b-12d3-a456-426614174000
+                      new_processes:
+                        - guid: 123e4567-e89b-12d3-a456-426614174000
+                          type: web-deployment-59c3d133-2b83-46f3-960e-7765a129aea4
+                      revision:
+                        guid: 123e4567-e89b-12d3-a456-426614174000
+                        version: 1
+                      created_at: '2018-04-25T22:42:10Z'
+                      updated_at: '2018-04-25T22:42:10Z'
+                      metadata:
+                        labels: {}
+                        annotations: {}
+                      relationships:
+                        app:
+                          data:
+                            guid: 123e4567-e89b-12d3-a456-426614174000
+                      links:
+                        self:
+                          href: https://api.example.org/v3/deployments/59c3d133-2b83-46f3-960e-7765a129aea4
+                        app:
+                          href: https://api.example.org/v3/apps/305cea31-5a44-45ca-b51b-e89c7a8ef8b2
       '400':
-        $ref: '../components/responses/BadRequest.yaml'
-      '500':
-        $ref: '../components/responses/500.yaml'
-      '502':
-        $ref: '../components/responses/BadGateway.yaml'
-      '503':
-        $ref: '../components/responses/ServiceUnavailable.yaml'
-      '422':
-        $ref: '../components/responses/UnprocessableEntity.yaml'
+        $ref: ../components/responses/BadRequest.yaml
+      '401':
+        $ref: ../components/responses/Unauthorized.yaml
+      '403':
+        $ref: ../components/responses/Forbidden.yaml
       '409':
-        $ref: '../components/responses/Conflict.yaml'
+        $ref: ../components/responses/Conflict.yaml
+      '422':
+        $ref: ../components/responses/UnprocessableEntity.yaml
+      '500':
+        $ref: ../components/responses/500.yaml
+      '502':
+        $ref: ../components/responses/BadGateway.yaml
+      '503':
+        $ref: ../components/responses/ServiceUnavailable.yaml
   post:
     summary: Create a deployment
-    description: When you create a new deployment you can either provide a specific
-      droplet or revision to deploy. If no revision or droplet is provided, the droplet
-      associated with the app is deployed.
+    description: When you create a new deployment you can either provide a specific droplet or revision to deploy. If no revision or droplet is provided, the droplet associated with the app is deployed.
     operationId: createDeployment
     tags:
-    - Deployments
+      - Deployments
     requestBody:
       description: Deployment object that needs to be created
       required: true
@@ -90,12 +136,12 @@
             type: object
             properties:
               relationships:
-                $ref: '../components/schemas/Relationships.yaml'
+                $ref: ../components/schemas/Relationships.yaml
               strategy:
                 type: string
                 enum:
-                - rolling
-                - canary
+                  - rolling
+                  - canary
               options:
                 type: object
                 properties:
@@ -130,18 +176,29 @@
                               type: integer
                               description: The percentage of instances to be deployed as part of the canary process in this step
               droplet:
-                $ref: '../components/schemas/Relationship.yaml'
+                $ref: ../components/schemas/Relationship.yaml
               revision:
-                $ref: '../components/schemas/Relationship.yaml'
+                $ref: ../components/schemas/Relationship.yaml
               metadata:
-                $ref: '../components/schemas/Metadata.yaml'
+                $ref: ../components/schemas/Metadata.yaml
+          examples:
+            default:
+              summary: default
+              value:
+                revision:
+                  guid: 123e4567-e89b-12d3-a456-426614174000
+                strategy: rolling
+                relationships:
+                  app:
+                    data:
+                      guid: 123e4567-e89b-12d3-a456-426614174000
     responses:
       '201':
         description: Successfully created deployment
         content:
           application/json:
             schema:
-              $ref: '../components/schemas/Deployment.yaml'
+              $ref: ../components/schemas/Deployment.yaml
         links:
           app:
             operationId: getApp
@@ -159,35 +216,35 @@
               guid: $response.body#/previous_droplet/data/guid
             description: Retrieve the previous droplet for this deployment
       '400':
-        $ref: '../components/responses/BadRequest.yaml'
+        $ref: ../components/responses/BadRequest.yaml
       '401':
-        $ref: '../components/responses/Unauthorized.yaml'
+        $ref: ../components/responses/Unauthorized.yaml
       '403':
-        $ref: '../components/responses/Forbidden.yaml'
-      '422':
-        $ref: '../components/responses/UnprocessableEntity.yaml'
-      '500':
-        $ref: '../components/responses/500.yaml'
-      '503':
-        $ref: '../components/responses/ServiceUnavailable.yaml'
+        $ref: ../components/responses/Forbidden.yaml
       '409':
-        $ref: '../components/responses/Conflict.yaml'
+        $ref: ../components/responses/Conflict.yaml
+      '422':
+        $ref: ../components/responses/UnprocessableEntity.yaml
+      '500':
+        $ref: ../components/responses/500.yaml
+      '503':
+        $ref: ../components/responses/ServiceUnavailable.yaml
 /v3/deployments/{guid}:
   get:
     summary: Get a deployment
     description: Retrieve a deployment.
     operationId: getDeployment
     tags:
-    - Deployments
+      - Deployments
     parameters:
-    - $ref: '../components/parameters/Guid.yaml'
+      - $ref: ../components/parameters/Guid.yaml
     responses:
       '200':
         description: Successfully retrieved deployment
         content:
           application/json:
             schema:
-              $ref: '../components/schemas/Deployment.yaml'
+              $ref: ../components/schemas/Deployment.yaml
         links:
           app:
             operationId: getApp
@@ -205,19 +262,19 @@
               guid: $response.body#/previous_droplet/data/guid
             description: Retrieve the previous droplet for this deployment
       '401':
-        $ref: '../components/responses/Unauthorized.yaml'
-      '404':
-        $ref: '../components/responses/NotFound.yaml'
+        $ref: ../components/responses/Unauthorized.yaml
       '403':
-        $ref: '../components/responses/Forbidden.yaml'
+        $ref: ../components/responses/Forbidden.yaml
+      '404':
+        $ref: ../components/responses/NotFound.yaml
   patch:
     summary: Update a deployment
     description: Update a deployment.
     operationId: updateDeployment
     tags:
-    - Deployments
+      - Deployments
     parameters:
-    - $ref: '../components/parameters/Guid.yaml'
+      - $ref: ../components/parameters/Guid.yaml
     requestBody:
       description: Deployment object that needs to be updated
       required: true
@@ -227,76 +284,85 @@
             type: object
             properties:
               metadata:
-                $ref: '../components/schemas/Metadata.yaml'
+                $ref: ../components/schemas/Metadata.yaml
             description: Request schema for updating a deployment
+          examples:
+            default:
+              summary: default
+              value:
+                metadata:
+                  labels:
+                    key: value
+                  annotations:
+                    note: detailed information
     responses:
       '200':
         description: Successfully updated deployment
         content:
           application/json:
             schema:
-              $ref: '../components/schemas/Deployment.yaml'
-      '401':
-        $ref: '../components/responses/Unauthorized.yaml'
-      '404':
-        $ref: '../components/responses/NotFound.yaml'
-      '403':
-        $ref: '../components/responses/Forbidden.yaml'
-      '422':
-        $ref: '../components/responses/UnprocessableEntity.yaml'
+              $ref: ../components/schemas/Deployment.yaml
       '400':
-        $ref: '../components/responses/BadRequest.yaml'
-      '500':
-        $ref: '../components/responses/500.yaml'
-      '503':
-        $ref: '../components/responses/ServiceUnavailable.yaml'
+        $ref: ../components/responses/BadRequest.yaml
+      '401':
+        $ref: ../components/responses/Unauthorized.yaml
+      '403':
+        $ref: ../components/responses/Forbidden.yaml
+      '404':
+        $ref: ../components/responses/NotFound.yaml
       '409':
-        $ref: '../components/responses/Conflict.yaml'
+        $ref: ../components/responses/Conflict.yaml
+      '422':
+        $ref: ../components/responses/UnprocessableEntity.yaml
+      '500':
+        $ref: ../components/responses/500.yaml
+      '503':
+        $ref: ../components/responses/ServiceUnavailable.yaml
 /v3/deployments/{guid}/actions/cancel:
   post:
     summary: Cancel a deployment
     description: Cancel a deployment.
     operationId: cancelDeployment
     tags:
-    - Deployments
+      - Deployments
     parameters:
-    - $ref: '../components/parameters/Guid.yaml'
+      - $ref: ../components/parameters/Guid.yaml
     responses:
       '200':
         description: Successfully canceled deployment
         content:
           application/json:
             schema:
-              $ref: '../components/schemas/Deployment.yaml'
+              $ref: ../components/schemas/Deployment.yaml
       '401':
-        $ref: '../components/responses/Unauthorized.yaml'
-      '404':
-        $ref: '../components/responses/NotFound.yaml'
+        $ref: ../components/responses/Unauthorized.yaml
       '403':
-        $ref: '../components/responses/Forbidden.yaml'
+        $ref: ../components/responses/Forbidden.yaml
+      '404':
+        $ref: ../components/responses/NotFound.yaml
       '422':
-        $ref: '../components/responses/UnprocessableEntity.yaml'
+        $ref: ../components/responses/UnprocessableEntity.yaml
 /v3/deployments/{guid}/actions/continue:
   post:
     summary: Continue a deployment
     description: Continue a deployment.
     operationId: continueDeployment
     tags:
-    - Deployments
+      - Deployments
     parameters:
-    - $ref: '../components/parameters/Guid.yaml'
+      - $ref: ../components/parameters/Guid.yaml
     responses:
       '200':
         description: Successfully continued deployment
         content:
           application/json:
             schema:
-              $ref: '../components/schemas/Deployment.yaml'
+              $ref: ../components/schemas/Deployment.yaml
       '401':
-        $ref: '../components/responses/Unauthorized.yaml'
-      '404':
-        $ref: '../components/responses/NotFound.yaml'
+        $ref: ../components/responses/Unauthorized.yaml
       '403':
-        $ref: '../components/responses/Forbidden.yaml'
+        $ref: ../components/responses/Forbidden.yaml
+      '404':
+        $ref: ../components/responses/NotFound.yaml
       '422':
-        $ref: '../components/responses/UnprocessableEntity.yaml'
+        $ref: ../components/responses/UnprocessableEntity.yaml

@@ -4,104 +4,192 @@
     description: Retrieve all packages.
     operationId: listPackages
     tags:
-    - Packages
+      - Packages
     parameters:
-    - $ref: '../components/parameters/Page.yaml'
-    - $ref: '../components/parameters/PerPage.yaml'
-    - $ref: '../components/parameters/OrderBy.yaml'
-    - $ref: '../components/parameters/CreatedAts.yaml'
-    - $ref: '../components/parameters/UpdatedAts.yaml'
-    - $ref: '../components/parameters/LabelSelector.yaml'
-    - name: guids
-      in: query
-      schema:
-        type: array
-        items:
-          type: string
-      description: Comma-delimited list of package guids to filter by
-    - name: states
-      in: query
-      schema:
-        type: array
-        items:
-          type: string
-          enum:
-          - AWAITING_UPLOAD
-          - PROCESSING_UPLOAD
-          - READY
-          - FAILED
-          - COPYING
-          - EXPIRED
-      description: Comma-delimited list of package states to filter by
-    - name: types
-      in: query
-      schema:
-        type: array
-        items:
-          type: string
-          enum:
-          - bits
-          - docker
-      description: Comma-delimited list of package types to filter by
-    - name: app_guids
-      in: query
-      schema:
-        type: array
-        items:
-          type: string
-      description: Comma-delimited list of app guids to filter by
-    - name: space_guids
-      in: query
-      schema:
-        type: array
-        items:
-          type: string
-      description: Comma-delimited list of space guids to filter by
-    - name: organization_guids
-      in: query
-      schema:
-        type: array
-        items:
-          type: string
-      description: Comma-delimited list of organization guids to filter by
+      - $ref: ../components/parameters/Page.yaml
+      - $ref: ../components/parameters/PerPage.yaml
+      - $ref: ../components/parameters/OrderBy.yaml
+      - $ref: ../components/parameters/CreatedAts.yaml
+      - $ref: ../components/parameters/UpdatedAts.yaml
+      - $ref: ../components/parameters/LabelSelector.yaml
+      - name: guids
+        in: query
+        schema:
+          type: array
+          items:
+            type: string
+        description: Comma-delimited list of package guids to filter by
+      - name: states
+        in: query
+        schema:
+          type: array
+          items:
+            type: string
+            enum:
+              - AWAITING_UPLOAD
+              - PROCESSING_UPLOAD
+              - READY
+              - FAILED
+              - COPYING
+              - EXPIRED
+        description: Comma-delimited list of package states to filter by
+      - name: types
+        in: query
+        schema:
+          type: array
+          items:
+            type: string
+            enum:
+              - bits
+              - docker
+        description: Comma-delimited list of package types to filter by
+      - name: app_guids
+        in: query
+        schema:
+          type: array
+          items:
+            type: string
+        description: Comma-delimited list of app guids to filter by
+      - name: space_guids
+        in: query
+        schema:
+          type: array
+          items:
+            type: string
+        description: Comma-delimited list of space guids to filter by
+      - name: organization_guids
+        in: query
+        schema:
+          type: array
+          items:
+            type: string
+        description: Comma-delimited list of organization guids to filter by
     responses:
       '200':
         description: List of packages
         content:
           application/json:
             schema:
-              $ref: '../components/schemas/PackageList.yaml'
-      '401':
-        $ref: '../components/responses/Unauthorized.yaml'
-      '403':
-        $ref: '../components/responses/Forbidden.yaml'
+              $ref: ../components/schemas/PackageList.yaml
+            examples:
+              default:
+                summary: default
+                value:
+                  pagination:
+                    total_results: 2
+                    total_pages: 1
+                    first:
+                      href: https://api.example.org?types=bits%2Cdocker&page=1&per_page=2
+                    last:
+                      href: https://api.example.org?types=bits%2Cdocker&page=1&per_page=2
+                    next: null
+                    previous: null
+                  resources:
+                    - guid: 123e4567-e89b-12d3-a456-426614174000
+                      type: bits
+                      data:
+                        checksum:
+                          type: sha256
+                          value: null
+                        error: null
+                      state: AWAITING_UPLOAD
+                      created_at: '2015-11-03T00:53:54Z'
+                      updated_at: '2016-06-08T16:41:26Z'
+                      relationships:
+                        app:
+                          data:
+                            guid: 123e4567-e89b-12d3-a456-426614174000
+                      links:
+                        self:
+                          href: https://api.example.org/v3/packages/a57fd932-85db-483a-a27e-b00efbb3b0a4
+                        upload:
+                          href: https://api.example.org/v3/packages/a57fd932-85db-483a-a27e-b00efbb3b0a4/upload
+                          method: POST
+                        download:
+                          href: https://api.example.org/v3/packages/a57fd932-85db-483a-a27e-b00efbb3b0a4/download
+                          method: GET
+                        app:
+                          href: https://api.example.org/v3/apps/fa3558ce-1c4d-46fc-9776-54b9c8021745
+                      metadata:
+                        labels: {}
+                        annotations: {}
+                    - guid: 123e4567-e89b-12d3-a456-426614174000
+                      type: docker
+                      data:
+                        image: registry/image:latest
+                        username: username
+                        password: '***'
+                      state: READY
+                      created_at: '2015-11-03T00:53:54Z'
+                      updated_at: '2016-06-08T16:41:26Z'
+                      relationships:
+                        app:
+                          data:
+                            guid: 123e4567-e89b-12d3-a456-426614174000
+                      links:
+                        self:
+                          href: https://api.example.org/v3/packages/8f1f294d-cef8-4c11-9f0b-3bcdc0bd2691
+                        app:
+                          href: https://api.example.org/v3/apps/fa3558ce-1c4d-46fc-9776-54b9c8021745
+                      metadata:
+                        labels: {}
+                        annotations: {}
       '400':
-        $ref: '../components/responses/BadRequest.yaml'
-      '500':
-        $ref: '../components/responses/500.yaml'
-      '502':
-        $ref: '../components/responses/BadGateway.yaml'
-      '503':
-        $ref: '../components/responses/ServiceUnavailable.yaml'
-      '422':
-        $ref: '../components/responses/UnprocessableEntity.yaml'
+        $ref: ../components/responses/BadRequest.yaml
+      '401':
+        $ref: ../components/responses/Unauthorized.yaml
+      '403':
+        $ref: ../components/responses/Forbidden.yaml
       '409':
-        $ref: '../components/responses/Conflict.yaml'
+        $ref: ../components/responses/Conflict.yaml
+      '422':
+        $ref: ../components/responses/UnprocessableEntity.yaml
+      '500':
+        $ref: ../components/responses/500.yaml
+      '502':
+        $ref: ../components/responses/BadGateway.yaml
+      '503':
+        $ref: ../components/responses/ServiceUnavailable.yaml
   post:
     summary: Create a package
     description: Create a package.
     operationId: createPackage
     tags:
-    - Packages
+      - Packages
     requestBody:
-      $ref: '../components/requestBodies/PackageCreateRequestBody.yaml'
+      $ref: ../components/requestBodies/PackageCreateRequestBody.yaml
     responses:
       '201':
         description: Successfully created package
         content:
           application/json:
             schema:
-              $ref: '../components/schemas/Package.yaml'
+              $ref: ../components/schemas/Package.yaml
+            examples:
+              docker_app:
+                summary: Docker app
+                value:
+                  guid: 123e4567-e89b-12d3-a456-426614174000
+                  type: docker
+                  data:
+                    image: registry/image:latest
+                    username: username
+                    password: '***'
+                  state: READY
+                  created_at: '2015-11-03T00:53:54Z'
+                  updated_at: '2016-06-08T16:41:26Z'
+                  relationships:
+                    app:
+                      data:
+                        guid: 123e4567-e89b-12d3-a456-426614174000
+                  links:
+                    self:
+                      href: https://api.example.org/v3/packages/4cb65058-f04f-458f-aca1-5f4e43de6407
+                    app:
+                      href: https://api.example.org/v3/apps/d8b8148d-5798-44de-821a-64b85b15e968
+                  metadata:
+                    labels: {}
+                    annotations: {}
         links:
           app:
             operationId: getApp
@@ -109,35 +197,35 @@
               guid: $response.body#/relationships/app/data/guid
             description: Retrieve the app for this package
       '400':
-        $ref: '../components/responses/BadRequest.yaml'
+        $ref: ../components/responses/BadRequest.yaml
       '401':
-        $ref: '../components/responses/Unauthorized.yaml'
+        $ref: ../components/responses/Unauthorized.yaml
       '403':
-        $ref: '../components/responses/Forbidden.yaml'
-      '422':
-        $ref: '../components/responses/UnprocessableEntity.yaml'
-      '500':
-        $ref: '../components/responses/500.yaml'
-      '503':
-        $ref: '../components/responses/ServiceUnavailable.yaml'
+        $ref: ../components/responses/Forbidden.yaml
       '409':
-        $ref: '../components/responses/Conflict.yaml'
+        $ref: ../components/responses/Conflict.yaml
+      '422':
+        $ref: ../components/responses/UnprocessableEntity.yaml
+      '500':
+        $ref: ../components/responses/500.yaml
+      '503':
+        $ref: ../components/responses/ServiceUnavailable.yaml
 /v3/packages/{guid}:
   get:
     summary: Get a package
     description: Retrieve a package.
     operationId: getPackage
     tags:
-    - Packages
+      - Packages
     parameters:
-    - $ref: '../components/parameters/Guid.yaml'
+      - $ref: ../components/parameters/Guid.yaml
     responses:
       '200':
         description: Successfully retrieved package
         content:
           application/json:
             schema:
-              $ref: '../components/schemas/Package.yaml'
+              $ref: ../components/schemas/Package.yaml
         links:
           app:
             operationId: getApp
@@ -145,21 +233,21 @@
               guid: $response.body#/relationships/app/data/guid
             description: Retrieve the app for this package
       '401':
-        $ref: '../components/responses/Unauthorized.yaml'
-      '404':
-        $ref: '../components/responses/NotFound.yaml'
-      '422':
-        $ref: '../components/responses/UnprocessableEntity.yaml'
+        $ref: ../components/responses/Unauthorized.yaml
       '403':
-        $ref: '../components/responses/Forbidden.yaml'
+        $ref: ../components/responses/Forbidden.yaml
+      '404':
+        $ref: ../components/responses/NotFound.yaml
+      '422':
+        $ref: ../components/responses/UnprocessableEntity.yaml
   patch:
     summary: Update a package
     description: Update a package.
     operationId: updatePackage
     tags:
-    - Packages
+      - Packages
     parameters:
-    - $ref: '../components/parameters/Guid.yaml'
+      - $ref: ../components/parameters/Guid.yaml
     requestBody:
       description: Package object that needs to be updated
       required: true
@@ -169,46 +257,53 @@
             type: object
             properties:
               metadata:
-                $ref: '../components/schemas/Metadata.yaml'
+                $ref: ../components/schemas/Metadata.yaml
               username:
                 type: string
-                description: The username for the image’s registry. Only possible
-                  for Docker package.
+                description: The username for the image’s registry. Only possible for Docker package.
               password:
                 type: string
-                description: The password for the image’s registry. Only possible
-                  for Docker package.
+                description: The password for the image’s registry. Only possible for Docker package.
+          examples:
+            default:
+              summary: default
+              value:
+                metadata:
+                  labels:
+                    key: value
+                  annotations:
+                    note: detailed information
     responses:
       '200':
         description: Successfully updated package
         content:
           application/json:
             schema:
-              $ref: '../components/schemas/Package.yaml'
-      '401':
-        $ref: '../components/responses/Unauthorized.yaml'
-      '403':
-        $ref: '../components/responses/Forbidden.yaml'
-      '404':
-        $ref: '../components/responses/NotFound.yaml'
-      '422':
-        $ref: '../components/responses/UnprocessableEntity.yaml'
+              $ref: ../components/schemas/Package.yaml
       '400':
-        $ref: '../components/responses/BadRequest.yaml'
-      '500':
-        $ref: '../components/responses/500.yaml'
-      '503':
-        $ref: '../components/responses/ServiceUnavailable.yaml'
+        $ref: ../components/responses/BadRequest.yaml
+      '401':
+        $ref: ../components/responses/Unauthorized.yaml
+      '403':
+        $ref: ../components/responses/Forbidden.yaml
+      '404':
+        $ref: ../components/responses/NotFound.yaml
       '409':
-        $ref: '../components/responses/Conflict.yaml'
+        $ref: ../components/responses/Conflict.yaml
+      '422':
+        $ref: ../components/responses/UnprocessableEntity.yaml
+      '500':
+        $ref: ../components/responses/500.yaml
+      '503':
+        $ref: ../components/responses/ServiceUnavailable.yaml
   delete:
     summary: Delete a package
     description: Delete a package.
     operationId: deletePackage
     tags:
-    - Packages
+      - Packages
     parameters:
-    - $ref: '../components/parameters/Guid.yaml'
+      - $ref: ../components/parameters/Guid.yaml
     responses:
       '202':
         description: Accepted
@@ -219,68 +314,151 @@
               type: string
               format: uri
       '401':
-        $ref: '../components/responses/Unauthorized.yaml'
-      '404':
-        $ref: '../components/responses/NotFound.yaml'
+        $ref: ../components/responses/Unauthorized.yaml
       '403':
-        $ref: '../components/responses/Forbidden.yaml'
+        $ref: ../components/responses/Forbidden.yaml
+      '404':
+        $ref: ../components/responses/NotFound.yaml
       '422':
-        $ref: '../components/responses/UnprocessableEntity.yaml'
+        $ref: ../components/responses/UnprocessableEntity.yaml
       '500':
-        $ref: '../components/responses/500.yaml'
+        $ref: ../components/responses/500.yaml
 /v3/packages/{guid}/droplets:
   get:
     summary: List droplets for a package
     description: Retrieve a list of droplets belonging to a package.
     operationId: listPackageDroplets
     tags:
-    - Packages
-    - Droplets
+      - Packages
+      - Droplets
     parameters:
-    - $ref: '../components/parameters/Guid.yaml'
-    - $ref: '../components/parameters/Page.yaml'
-    - $ref: '../components/parameters/PerPage.yaml'
-    - $ref: '../components/parameters/OrderBy.yaml'
-    - $ref: '../components/parameters/LabelSelector.yaml'
-    - name: guids
-      in: query
-      schema:
-        type: array
-        items:
-          type: string
-      description: Comma-delimited list of droplet guids to filter by
-    - name: states
-      in: query
-      schema:
-        type: array
-        items:
-          type: string
-      description: Comma-delimited list of droplet states to filter by
+      - $ref: ../components/parameters/Guid.yaml
+      - $ref: ../components/parameters/Page.yaml
+      - $ref: ../components/parameters/PerPage.yaml
+      - $ref: ../components/parameters/OrderBy.yaml
+      - $ref: ../components/parameters/LabelSelector.yaml
+      - name: guids
+        in: query
+        schema:
+          type: array
+          items:
+            type: string
+        description: Comma-delimited list of droplet guids to filter by
+      - name: states
+        in: query
+        schema:
+          type: array
+          items:
+            type: string
+        description: Comma-delimited list of droplet states to filter by
     responses:
       '200':
         description: List of droplets for the package
         content:
           application/json:
             schema:
-              $ref: '../components/schemas/DropletList.yaml'
+              $ref: ../components/schemas/DropletList.yaml
+            examples:
+              default:
+                summary: default
+                value:
+                  pagination:
+                    total_results: 2
+                    total_pages: 1
+                    first:
+                      href: https://api.example.org?page=1&per_page=50
+                    last:
+                      href: https://api.example.org?page=1&per_page=50
+                    next: null
+                    previous: null
+                  resources:
+                    - guid: 123e4567-e89b-12d3-a456-426614174000
+                      state: STAGED
+                      error: null
+                      lifecycle:
+                        type: buildpack
+                        data: {}
+                      image: null
+                      execution_metadata: PRIVATE DATA HIDDEN
+                      process_types:
+                        redacted_message: 123e4567-e89b-12d3-a456-426614174000
+                      checksum:
+                        type: sha256
+                        value: e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855
+                      buildpacks:
+                        - name: ruby_buildpack
+                          detect_output: ruby 1.6.14
+                          version: 1.1.1.
+                          buildpack_name: ruby
+                      stack: cflinuxfs4
+                      created_at: '2016-03-28T23:39:34Z'
+                      updated_at: '2016-03-28T23:39:47Z'
+                      relationships:
+                        app:
+                          data:
+                            guid: 123e4567-e89b-12d3-a456-426614174000
+                      links:
+                        self:
+                          href: https://api.example.org/v3/droplets/585bc3c1-3743-497d-88b0-403ad6b56d16
+                        package:
+                          href: https://api.example.org/v3/packages/8222f76a-9e09-4360-b3aa-1ed329945e92
+                        app:
+                          href: https://api.example.org/v3/apps/7b34f1cf-7e73-428a-bb5a-8a17a8058396
+                        assign_current_droplet:
+                          href: https://api.example.org/v3/apps/7b34f1cf-7e73-428a-bb5a-8a17a8058396/relationships/current_droplet
+                          method: PATCH
+                        download:
+                          href: https://api.example.org/v3/droplets/585bc3c1-3743-497d-88b0-403ad6b56d16/download
+                      metadata:
+                        labels: {}
+                        annotations: {}
+                    - guid: 123e4567-e89b-12d3-a456-426614174000
+                      state: STAGED
+                      error: null
+                      lifecycle:
+                        type: docker
+                        data: {}
+                      execution_metadata: 123e4567-e89b-12d3-a456-426614174000
+                      process_types:
+                        redacted_message: 123e4567-e89b-12d3-a456-426614174000
+                      image: cloudfoundry/diego-docker-app-custom:latest
+                      checksum: null
+                      buildpacks: null
+                      stack: null
+                      created_at: '2016-03-17T00:00:01Z'
+                      updated_at: '2016-03-17T21:41:32Z'
+                      relationships:
+                        app:
+                          data:
+                            guid: 123e4567-e89b-12d3-a456-426614174000
+                      links:
+                        self:
+                          href: https://api.example.org/v3/droplets/fdf3851c-def8-4de1-87f1-6d4543189e22
+                        package:
+                          href: https://api.example.org/v3/packages/c5725684-a02f-4e59-bc67-8f36ae944688
+                        app:
+                          href: https://api.example.org/v3/apps/7b34f1cf-7e73-428a-bb5a-8a17a8058396
+                        assign_current_droplet:
+                          href: https://api.example.org/v3/apps/7b34f1cf-7e73-428a-bb5a-8a17a8058396/relationships/current_droplet
+                          method: PATCH
+                      metadata:
+                        labels: {}
+                        annotations: {}
       '401':
-        $ref: '../components/responses/Unauthorized.yaml'
-      '404':
-        $ref: '../components/responses/NotFound.yaml'
+        $ref: ../components/responses/Unauthorized.yaml
       '403':
-        $ref: '../components/responses/Forbidden.yaml'
+        $ref: ../components/responses/Forbidden.yaml
+      '404':
+        $ref: ../components/responses/NotFound.yaml
 /v3/packages/{guid}/upload:
   post:
     summary: Upload package bits
-    description: This upload endpoint takes a multi-part form requests for packages
-      of type `bits`. The request requires either a [.zip file](https://en.wikipedia.org/wiki/Zip_(file_format))
-      uploaded under the `bits` field or a list of [resource match objects](#the-resource-match-object)
-      under the `resources` field. These field may be used together.
+    description: This upload endpoint takes a multi-part form requests for packages of type `bits`. The request requires either a [.zip file](https://en.wikipedia.org/wiki/Zip_(file_format)) uploaded under the `bits` field or a list of [resource match objects](#the-resource-match-object) under the `resources` field. These field may be used together.
     operationId: uploadPackageBits
     tags:
-    - Packages
+      - Packages
     parameters:
-    - $ref: '../components/parameters/Guid.yaml'
+      - $ref: ../components/parameters/Guid.yaml
     requestBody:
       content:
         multipart/form-data:
@@ -328,7 +506,7 @@
         content:
           application/json:
             schema:
-              $ref: '../components/schemas/Package.yaml'
+              $ref: ../components/schemas/Package.yaml
       '202':
         description: Upload initiated
         headers:
@@ -339,54 +517,49 @@
         content:
           application/json:
             schema:
-              $ref: '../components/schemas/Package.yaml'
+              $ref: ../components/schemas/Package.yaml
       '401':
-        $ref: '../components/responses/Unauthorized.yaml'
+        $ref: ../components/responses/Unauthorized.yaml
       '403':
-        $ref: '../components/responses/Forbidden.yaml'
+        $ref: ../components/responses/Forbidden.yaml
       '404':
-        $ref: '../components/responses/NotFound.yaml'
+        $ref: ../components/responses/NotFound.yaml
       '422':
-        $ref: '../components/responses/UnprocessableEntity.yaml'
+        $ref: ../components/responses/UnprocessableEntity.yaml
 /v3/packages/{guid}/download:
   get:
     summary: Download package bits
-    description: 'This endpoint downloads the bits of an existing package.
+    description: |-
+      This endpoint downloads the bits of an existing package.
 
-
-      When using a remote blobstore, such as AWS, the response is a redirect to the
-      actual location of the bits. If the client is automatically following redirects,
-      then the OAuth token that was used to communicate with Cloud Controller will
-      be replayed on the new redirect request. Some blobstores may reject the request
-      in that case. Clients may need to follow the redirect without including the
-      OAuth token.'
+      When using a remote blobstore, such as AWS, the response is a redirect to the actual location of the bits. If the client is automatically following redirects, then the OAuth token that was used to communicate with Cloud Controller will be replayed on the new redirect request. Some blobstores may reject the request in that case. Clients may need to follow the redirect without including the OAuth token.
     operationId: downloadPackageBits
     tags:
-    - Packages
+      - Packages
     parameters:
-    - $ref: '../components/parameters/Guid.yaml'
+      - $ref: ../components/parameters/Guid.yaml
     responses:
       '302':
         description: Redirect to download location
-      '404':
-        $ref: '../components/responses/NotFound.yaml'
       '403':
-        $ref: '../components/responses/Forbidden.yaml'
+        $ref: ../components/responses/Forbidden.yaml
+      '404':
+        $ref: ../components/responses/NotFound.yaml
 /v3/packages?source_guid={source_guid}:
   post:
     summary: Copy a package
     description: This endpoint copies the bits of a source package to a target package.
     operationId: copyPackage
     tags:
-    - Packages
+      - Packages
     parameters:
-    - name: source_guid
-      in: query
-      required: true
-      schema:
-        type: string
-        format: uuid
-      description: The GUID of the package to copy from
+      - name: source_guid
+        in: query
+        required: true
+        schema:
+          type: string
+          format: uuid
+        description: The GUID of the package to copy from
     requestBody:
       description: Destination app for the copied package
       required: true
@@ -396,9 +569,9 @@
             type: object
             properties:
               relationships:
-                $ref: '../components/schemas/Relationships.yaml'
+                $ref: ../components/schemas/Relationships.yaml
             required:
-            - relationships
+              - relationships
             description: Request schema for copying a package
     responses:
       '201':
@@ -406,68 +579,110 @@
         content:
           application/json:
             schema:
-              $ref: '../components/schemas/Package.yaml'
+              $ref: ../components/schemas/Package.yaml
       '401':
-        $ref: '../components/responses/Unauthorized.yaml'
-      '404':
-        $ref: '../components/responses/NotFound.yaml'
+        $ref: ../components/responses/Unauthorized.yaml
       '403':
-        $ref: '../components/responses/Forbidden.yaml'
+        $ref: ../components/responses/Forbidden.yaml
+      '404':
+        $ref: ../components/responses/NotFound.yaml
       '422':
-        $ref: '../components/responses/UnprocessableEntity.yaml'
+        $ref: ../components/responses/UnprocessableEntity.yaml
 /v3/apps/{guid}/packages:
   get:
     summary: List packages for an app
     description: Retrieve packages for an app that the user has access to.
     operationId: listAppPackages
     tags:
-    - Packages
+      - Packages
     parameters:
-    - $ref: '../components/parameters/Guid.yaml'
-    - name: guids
-      in: query
-      schema:
-        type: array
-        items:
-          type: string
-      description: Comma-delimited list of app GUIDs to filter by
-    - $ref: '../components/parameters/Page.yaml'
-    - $ref: '../components/parameters/PerPage.yaml'
-    - $ref: '../components/parameters/OrderBy.yaml'
-    - name: states
-      in: query
-      schema:
-        type: array
-        items:
-          type: string
-          enum:
-          - AWAITING_UPLOAD
-          - PROCESSING_UPLOAD
-          - READY
-          - FAILED
-          - COPYING
-          - EXPIRED
-      description: Comma-delimited list of package states to filter by
-    - name: types
-      in: query
-      schema:
-        type: array
-        items:
-          type: string
-          enum:
-          - bits
-          - docker
-      description: Comma-delimited list of package types to filter by
+      - $ref: ../components/parameters/Guid.yaml
+      - name: guids
+        in: query
+        schema:
+          type: array
+          items:
+            type: string
+        description: Comma-delimited list of app GUIDs to filter by
+      - $ref: ../components/parameters/Page.yaml
+      - $ref: ../components/parameters/PerPage.yaml
+      - $ref: ../components/parameters/OrderBy.yaml
+      - name: states
+        in: query
+        schema:
+          type: array
+          items:
+            type: string
+            enum:
+              - AWAITING_UPLOAD
+              - PROCESSING_UPLOAD
+              - READY
+              - FAILED
+              - COPYING
+              - EXPIRED
+        description: Comma-delimited list of package states to filter by
+      - name: types
+        in: query
+        schema:
+          type: array
+          items:
+            type: string
+            enum:
+              - bits
+              - docker
+        description: Comma-delimited list of package types to filter by
     responses:
       '200':
         description: OK
         content:
           application/json:
             schema:
-              $ref: '../components/schemas/PackageList.yaml'
+              $ref: ../components/schemas/PackageList.yaml
+            examples:
+              default:
+                summary: default
+                value:
+                  pagination:
+                    total_results: 1
+                    total_pages: 1
+                    first:
+                      href: https://api.example.org/v3/apps/f2efe391-2b5b-4836-8518-ad93fa9ebf69/packages?states=READY&page=1&per_page=50
+                    last:
+                      href: https://api.example.org/v3/apps/f2efe391-2b5b-4836-8518-ad93fa9ebf69/packages?states=READY&page=1&per_page=50
+                    next: null
+                    previous: null
+                  resources:
+                    - guid: 123e4567-e89b-12d3-a456-426614174000
+                      type: bits
+                      data:
+                        error: null
+                        checksum:
+                          type: sha256
+                          value: null
+                      state: READY
+                      created_at: '2016-03-17T21:41:09Z'
+                      updated_at: '2016-06-08T16:41:26Z'
+                      relationships:
+                        app:
+                          data:
+                            guid: 123e4567-e89b-12d3-a456-426614174000
+                      links:
+                        self:
+                          href: https://api.example.org/v3/packages/752edab0-2147-4f58-9c25-cd72ad8c3561
+                        upload:
+                          href: https://api.example.org/v3/packages/752edab0-2147-4f58-9c25-cd72ad8c3561/upload
+                          method: POST
+                        download:
+                          href: https://api.example.org/v3/packages/752edab0-2147-4f58-9c25-cd72ad8c3561/download
+                          method: GET
+                        app:
+                          href: https://api.example.org/v3/apps/f2efe391-2b5b-4836-8518-ad93fa9ebf69
+                      metadata:
+                        labels: {}
+                        annotations: {}
       '401':
-        $ref: '../components/responses/Unauthorized.yaml'
-      '404':
-        $ref: '../components/responses/NotFound.yaml'
+        $ref: ../components/responses/Unauthorized.yaml
       '403':
-        $ref: '../components/responses/Forbidden.yaml'
+        $ref: ../components/responses/Forbidden.yaml
+      '404':
+        $ref: ../components/responses/NotFound.yaml

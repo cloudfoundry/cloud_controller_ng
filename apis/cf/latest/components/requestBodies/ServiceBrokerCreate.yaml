@@ -16,7 +16,8 @@ content:
           properties:
             type:
               type: string
-              enum: [basic]
+              enum:
+                - basic
               description: Type of authentication
             credentials:
               type: object
@@ -36,10 +37,25 @@ content:
           type: object
           properties:
             space:
-              $ref: '../schemas/RelationshipToOne.yaml'
+              $ref: ../schemas/RelationshipToOne.yaml
           description: Relationships for the service broker
         metadata:
-          $ref: '../schemas/Metadata.yaml'
+          $ref: ../schemas/Metadata.yaml
       required:
         - name
         - url
+    examples:
+      default:
+        summary: default
+        value:
+          name: my_service_broker
+          url: https://example.service-broker.com
+          authentication:
+            type: basic
+            credentials:
+              username: us3rn4me
+              password: p4ssw0rd
+          relationships:
+            space:
+              data:
+                guid: 123e4567-e89b-12d3-a456-426614174000

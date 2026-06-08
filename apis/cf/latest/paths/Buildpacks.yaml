@@ -4,141 +4,174 @@
     description: Retrieve all buildpacks.
     operationId: listBuildpacks
     tags:
-    - Buildpacks
+      - Buildpacks
     parameters:
-    - $ref: '../components/parameters/Page.yaml'
-    - $ref: '../components/parameters/PerPage.yaml'
-    - $ref: '../components/parameters/OrderBy.yaml'
-    - $ref: '../components/parameters/CreatedAts.yaml'
-    - $ref: '../components/parameters/UpdatedAts.yaml'
-    - $ref: '../components/parameters/LabelSelector.yaml'
-    - name: names
-      in: query
-      schema:
-        type: array
-        items:
-          type: string
-      description: 'Comma-delimited list of buildpack names to filter by
-
-        '
-    - name: stacks
-      in: query
-      schema:
-        type: array
-        items:
-          type: string
-      description: 'Comma-delimited list of stacks to filter by
-
-        '
+      - $ref: ../components/parameters/Page.yaml
+      - $ref: ../components/parameters/PerPage.yaml
+      - $ref: ../components/parameters/OrderBy.yaml
+      - $ref: ../components/parameters/CreatedAts.yaml
+      - $ref: ../components/parameters/UpdatedAts.yaml
+      - $ref: ../components/parameters/LabelSelector.yaml
+      - name: names
+        in: query
+        schema:
+          type: array
+          items:
+            type: string
+        description: |
+          Comma-delimited list of buildpack names to filter by
+      - name: stacks
+        in: query
+        schema:
+          type: array
+          items:
+            type: string
+        description: |
+          Comma-delimited list of stacks to filter by
     responses:
       '200':
         description: OK
         content:
           application/json:
             schema:
-              $ref: '../components/schemas/BuildpackList.yaml'
-      '401':
-        $ref: '../components/responses/Unauthorized.yaml'
-      '403':
-        $ref: '../components/responses/Forbidden.yaml'
-      '500':
-        $ref: '../components/responses/500.yaml'
+              $ref: ../components/schemas/BuildpackList.yaml
+            examples:
+              default:
+                summary: default
+                value:
+                  pagination:
+                    total_results: 3
+                    total_pages: 2
+                    first:
+                      href: https://api.example.org/v3/buildpacks?page=1&per_page=2
+                    last:
+                      href: https://api.example.org/v3/buildpacks?page=2&per_page=2
+                    next:
+                      href: https://api.example.org/v3/buildpacks?page=2&per_page=2
+                    previous: null
+                  resources:
+                    - guid: 123e4567-e89b-12d3-a456-426614174000
+                      created_at: '2016-03-18T23:26:46Z'
+                      updated_at: '2016-10-17T20:00:42Z'
+                      name: my-buildpack
+                      state: AWAITING_UPLOAD
+                      filename: null
+                      stack: my-stack
+                      position: 1
+                      lifecycle: cnb
+                      enabled: true
+                      locked: false
+                      metadata:
+                        labels: {}
+                        annotations: {}
+                      links:
+                        self:
+                          href: https://api.example.org/v3/buildpacks/fd35633f-5c5c-4e4e-a5a9-0722c970a9d2
+                        upload:
+                          href: https://api.example.org/v3/buildpacks/fd35633f-5c5c-4e4e-a5a9-0722c970a9d2/upload
+                          method: POST
       '400':
-        $ref: '../components/responses/BadRequest.yaml'
-      '502':
-        $ref: '../components/responses/BadGateway.yaml'
-      '503':
-        $ref: '../components/responses/ServiceUnavailable.yaml'
-      '422':
-        $ref: '../components/responses/UnprocessableEntity.yaml'
+        $ref: ../components/responses/BadRequest.yaml
+      '401':
+        $ref: ../components/responses/Unauthorized.yaml
+      '403':
+        $ref: ../components/responses/Forbidden.yaml
       '409':
-        $ref: '../components/responses/Conflict.yaml'
+        $ref: ../components/responses/Conflict.yaml
+      '422':
+        $ref: ../components/responses/UnprocessableEntity.yaml
+      '500':
+        $ref: ../components/responses/500.yaml
+      '502':
+        $ref: ../components/responses/BadGateway.yaml
+      '503':
+        $ref: ../components/responses/ServiceUnavailable.yaml
   post:
     summary: Create a buildpack
     description: Create a buildpack.
     operationId: createBuildpack
     tags:
-    - Buildpacks
+      - Buildpacks
     requestBody:
-      $ref: '../components/requestBodies/BuildpackCreateRequestBody.yaml'
+      $ref: ../components/requestBodies/BuildpackCreateRequestBody.yaml
     responses:
       '201':
-        $ref: '../components/responses/BuildpackCreateResponse.yaml'
+        $ref: ../components/responses/BuildpackCreateResponse.yaml
       '400':
-        $ref: '../components/responses/BadRequest.yaml'
+        $ref: ../components/responses/BadRequest.yaml
       '401':
-        $ref: '../components/responses/Unauthorized.yaml'
+        $ref: ../components/responses/Unauthorized.yaml
       '403':
-        $ref: '../components/responses/Forbidden.yaml'
-      '422':
-        $ref: '../components/responses/UnprocessableEntity.yaml'
-      '500':
-        $ref: '../components/responses/500.yaml'
-      '503':
-        $ref: '../components/responses/ServiceUnavailable.yaml'
+        $ref: ../components/responses/Forbidden.yaml
       '409':
-        $ref: '../components/responses/Conflict.yaml'
+        $ref: ../components/responses/Conflict.yaml
+      '422':
+        $ref: ../components/responses/UnprocessableEntity.yaml
+      '500':
+        $ref: ../components/responses/500.yaml
+      '503':
+        $ref: ../components/responses/ServiceUnavailable.yaml
 /v3/buildpacks/{guid}:
   get:
     summary: Get a buildpack
     description: Retrieve a buildpack.
     operationId: getBuildpack
     tags:
-    - Buildpacks
+      - Buildpacks
     parameters:
-    - $ref: '../components/parameters/Guid.yaml'
+      - $ref: ../components/parameters/Guid.yaml
     responses:
       '200':
-        $ref: '../components/responses/BuildpackGetResponse.yaml'
+        $ref: ../components/responses/BuildpackGetResponse.yaml
       '400':
-        $ref: '../components/responses/BadRequest.yaml'
+        $ref: ../components/responses/BadRequest.yaml
       '401':
-        $ref: '../components/responses/Unauthorized.yaml'
+        $ref: ../components/responses/Unauthorized.yaml
       '403':
-        $ref: '../components/responses/Forbidden.yaml'
+        $ref: ../components/responses/Forbidden.yaml
       '404':
-        $ref: '../components/responses/NotFound.yaml'
+        $ref: ../components/responses/NotFound.yaml
   patch:
     summary: Update a buildpack
     description: Update a buildpack.
     operationId: updateBuildpack
     tags:
-    - Buildpacks
+      - Buildpacks
     parameters:
-    - $ref: '../components/parameters/Guid.yaml'
+      - $ref: ../components/parameters/Guid.yaml
     requestBody:
-      $ref: '../components/requestBodies/BuildpackUpdateRequestBody.yaml'
+      $ref: ../components/requestBodies/BuildpackUpdateRequestBody.yaml
     responses:
       '200':
         description: Successfully updated buildpack
         content:
           application/json:
             schema:
-              $ref: '../components/schemas/Buildpack.yaml'
+              $ref: ../components/schemas/Buildpack.yaml
       '400':
-        $ref: '../components/responses/BadRequest.yaml'
+        $ref: ../components/responses/BadRequest.yaml
       '401':
-        $ref: '../components/responses/Unauthorized.yaml'
+        $ref: ../components/responses/Unauthorized.yaml
       '403':
-        $ref: '../components/responses/Forbidden.yaml'
+        $ref: ../components/responses/Forbidden.yaml
       '404':
-        $ref: '../components/responses/NotFound.yaml'
-      '422':
-        $ref: '../components/responses/UnprocessableEntity.yaml'
-      '500':
-        $ref: '../components/responses/500.yaml'
-      '503':
-        $ref: '../components/responses/ServiceUnavailable.yaml'
+        $ref: ../components/responses/NotFound.yaml
       '409':
-        $ref: '../components/responses/Conflict.yaml'
+        $ref: ../components/responses/Conflict.yaml
+      '422':
+        $ref: ../components/responses/UnprocessableEntity.yaml
+      '500':
+        $ref: ../components/responses/500.yaml
+      '503':
+        $ref: ../components/responses/ServiceUnavailable.yaml
   delete:
     summary: Delete a buildpack
     description: Delete a buildpack.
     operationId: deleteBuildpack
     tags:
-    - Buildpacks
+      - Buildpacks
     parameters:
-    - $ref: '../components/parameters/Guid.yaml'
+      - $ref: ../components/parameters/Guid.yaml
     responses:
       '202':
         description: Accepted
@@ -149,25 +182,24 @@
               type: string
               format: uri
       '401':
-        $ref: '../components/responses/Unauthorized.yaml'
-      '404':
-        $ref: '../components/responses/NotFound.yaml'
+        $ref: ../components/responses/Unauthorized.yaml
       '403':
-        $ref: '../components/responses/Forbidden.yaml'
+        $ref: ../components/responses/Forbidden.yaml
+      '404':
+        $ref: ../components/responses/NotFound.yaml
       '422':
-        $ref: '../components/responses/UnprocessableEntity.yaml'
+        $ref: ../components/responses/UnprocessableEntity.yaml
       '500':
-        $ref: '../components/responses/500.yaml'
+        $ref: ../components/responses/500.yaml
 /v3/buildpacks/{guid}/upload:
   post:
     summary: Upload buildpack bits
-    description: Upload a zip file containing a Cloud Foundry compatible buildpack.
-      The file must be sent as part of a multi-part form.
+    description: Upload a zip file containing a Cloud Foundry compatible buildpack. The file must be sent as part of a multi-part form.
     operationId: uploadBuildpack
     tags:
-    - Buildpacks
+      - Buildpacks
     parameters:
-    - $ref: '../components/parameters/Guid.yaml'
+      - $ref: ../components/parameters/Guid.yaml
     requestBody:
       description: The buildpack file to be uploaded
       required: true
@@ -199,7 +231,7 @@
         content:
           application/json:
             schema:
-              $ref: '../components/schemas/Buildpack.yaml'
+              $ref: ../components/schemas/Buildpack.yaml
       '202':
         description: Upload initiated
         headers:
@@ -210,12 +242,12 @@
         content:
           application/json:
             schema:
-              $ref: '../components/schemas/Buildpack.yaml'
+              $ref: ../components/schemas/Buildpack.yaml
       '401':
-        $ref: '../components/responses/Unauthorized.yaml'
-      '404':
-        $ref: '../components/responses/NotFound.yaml'
-      '422':
-        $ref: '../components/responses/UnprocessableEntity.yaml'
+        $ref: ../components/responses/Unauthorized.yaml
       '403':
-        $ref: '../components/responses/Forbidden.yaml'
+        $ref: ../components/responses/Forbidden.yaml
+      '404':
+        $ref: ../components/responses/NotFound.yaml
+      '422':
+        $ref: ../components/responses/UnprocessableEntity.yaml

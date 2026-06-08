@@ -14,19 +14,28 @@ content:
           additionalProperties:
             type: string
         lifecycle:
-          $ref: '../schemas/Lifecycle.yaml'
+          $ref: ../schemas/Lifecycle.yaml
           description: Provides the lifecycle object for the application
         relationships:
           type: object
           properties:
             space:
-              $ref: '../schemas/RelationshipToOne.yaml'
+              $ref: ../schemas/RelationshipToOne.yaml
               description: A relationship to a space
           required:
             - space
         metadata:
-          $ref: '../schemas/Metadata.yaml'
+          $ref: ../schemas/Metadata.yaml
       required:
         - name
         - relationships
       description: Request schema for creating an app
+    examples:
+      default:
+        summary: default
+        value:
+          name: my_app
+          relationships:
+            space:
+              data:
+                guid: 123e4567-e89b-12d3-a456-426614174000

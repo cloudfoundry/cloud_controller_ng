@@ -4,128 +4,165 @@
     description: This endpoint lists roles that the user has access to.
     operationId: listRoles
     tags:
-    - Roles
+      - Roles
     parameters:
-    - $ref: '../components/parameters/Page.yaml'
-    - $ref: '../components/parameters/PerPage.yaml'
-    - $ref: '../components/parameters/OrderBy.yaml'
-    - $ref: '../components/parameters/CreatedAts.yaml'
-    - $ref: '../components/parameters/UpdatedAts.yaml'
-    - $ref: '../components/parameters/LabelSelector.yaml'
-    - name: guids
-      in: query
-      description: Comma-delimited list of role guids to filter by
-      schema:
-        type: array
-        items:
-          type: string
-    - name: types
-      in: query
-      description: Comma-delimited list of role types to filter by
-      schema:
-        type: array
-        items:
-          type: string
-          enum:
-          - organization_user
-          - organization_auditor
-          - organization_manager
-          - organization_billing_manager
-          - space_auditor
-          - space_developer
-          - space_manager
-          - space_supporter
-    - name: organization_guids
-      in: query
-      description: Comma-delimited list of organization guids to filter by
-      schema:
-        type: array
-        items:
-          type: string
-    - name: space_guids
-      in: query
-      description: Comma-delimited list of space guids to filter by
-      schema:
-        type: array
-        items:
-          type: string
-    - name: user_guids
-      in: query
-      description: Comma-delimited list of user guids to filter by
-      schema:
-        type: array
-        items:
-          type: string
-    - name: include
-      in: query
-      description: Optionally include additional related resources in the response;
-        valid values are `user`, `space`, and `organization`.
-      schema:
-        type: array
-        items:
-          type: string
-          enum:
-          - user
-          - space
-          - organization
+      - $ref: ../components/parameters/Page.yaml
+      - $ref: ../components/parameters/PerPage.yaml
+      - $ref: ../components/parameters/OrderBy.yaml
+      - $ref: ../components/parameters/CreatedAts.yaml
+      - $ref: ../components/parameters/UpdatedAts.yaml
+      - $ref: ../components/parameters/LabelSelector.yaml
+      - name: guids
+        in: query
+        description: Comma-delimited list of role guids to filter by
+        schema:
+          type: array
+          items:
+            type: string
+      - name: types
+        in: query
+        description: Comma-delimited list of role types to filter by
+        schema:
+          type: array
+          items:
+            type: string
+            enum:
+              - organization_user
+              - organization_auditor
+              - organization_manager
+              - organization_billing_manager
+              - space_auditor
+              - space_developer
+              - space_manager
+              - space_supporter
+      - name: organization_guids
+        in: query
+        description: Comma-delimited list of organization guids to filter by
+        schema:
+          type: array
+          items:
+            type: string
+      - name: space_guids
+        in: query
+        description: Comma-delimited list of space guids to filter by
+        schema:
+          type: array
+          items:
+            type: string
+      - name: user_guids
+        in: query
+        description: Comma-delimited list of user guids to filter by
+        schema:
+          type: array
+          items:
+            type: string
+      - name: include
+        in: query
+        description: Optionally include additional related resources in the response; valid values are `user`, `space`, and `organization`.
+        schema:
+          type: array
+          items:
+            type: string
+            enum:
+              - user
+              - space
+              - organization
     responses:
       '200':
-        $ref: '../components/responses/RoleListResponse.yaml'
+        $ref: ../components/responses/RoleListResponse.yaml
       '400':
-        $ref: '../components/responses/BadRequest.yaml'
+        $ref: ../components/responses/BadRequest.yaml
       '401':
-        $ref: '../components/responses/Unauthorized.yaml'
+        $ref: ../components/responses/Unauthorized.yaml
       '403':
-        $ref: '../components/responses/Forbidden.yaml'
-      '422':
-        $ref: '../components/responses/UnprocessableEntity.yaml'
-      '500':
-        $ref: '../components/responses/500.yaml'
-      '502':
-        $ref: '../components/responses/BadGateway.yaml'
-      '503':
-        $ref: '../components/responses/ServiceUnavailable.yaml'
+        $ref: ../components/responses/Forbidden.yaml
       '409':
-        $ref: '../components/responses/Conflict.yaml'
+        $ref: ../components/responses/Conflict.yaml
+      '422':
+        $ref: ../components/responses/UnprocessableEntity.yaml
+      '500':
+        $ref: ../components/responses/500.yaml
+      '502':
+        $ref: ../components/responses/BadGateway.yaml
+      '503':
+        $ref: ../components/responses/ServiceUnavailable.yaml
   post:
     summary: Create a role
-    description: 'This endpoint creates a new role for a user in an organization or
-      space.
+    description: |-
+      This endpoint creates a new role for a user in an organization or space.
 
+      To create an organization role you must be an admin or organization manager in the organization associated with the role.
 
-      To create an organization role you must be an admin or organization manager
-      in the organization associated with the role.
+      To create a space role you must be an admin, an organization manager in the parent organization of the space associated with the role, or a space manager in the space associated with the role.
 
+      For a user to be assigned a space role, the user must already have an organization role in the parent organization.
 
-      To create a space role you must be an admin, an organization manager in the
-      parent organization of the space associated with the role, or a space manager
-      in the space associated with the role.
+      If the associated user is valid but does not exist in Cloud Controller’s database, a user resource will be created automatically.
 
-
-      For a user to be assigned a space role, the user must already have an organization
-      role in the parent organization.
-
-
-      If the associated user is valid but does not exist in Cloud Controller’s database,
-      a user resource will be created automatically.
-
-
-      If CAPI property `cc.allow_user_creation_by_org_manager` is enabled, the organization
-      role is being created by username + origin and the user does not exist in UAA
-      yet, the user will be created. The origin must be different from `uaa` in this
-      case.'
+      If CAPI property `cc.allow_user_creation_by_org_manager` is enabled, the organization role is being created by username + origin and the user does not exist in UAA yet, the user will be created. The origin must be different from `uaa` in this case.
     operationId: createRole
     tags:
-    - Roles
+      - Roles
     requestBody:
-      $ref: '../components/requestBodies/RoleCreate.yaml'
+      $ref: ../components/requestBodies/RoleCreate.yaml
     responses:
       '201':
         description: Role created
         content:
           application/json:
             schema:
-              $ref: '../components/schemas/Role.yaml'
+              $ref: ../components/schemas/Role.yaml
+            examples:
+              by_user_guid:
+                summary: by user guid
+                value:
+                  guid: 123e4567-e89b-12d3-a456-426614174000
+                  created_at: '2019-10-10T17:19:12Z'
+                  updated_at: '2019-10-10T17:19:12Z'
+                  type: organization_auditor
+                  relationships:
+                    user:
+                      data:
+                        guid: 123e4567-e89b-12d3-a456-426614174000
+                    user_group:
+                      data: null
+                    organization:
+                      data:
+                        guid: 123e4567-e89b-12d3-a456-426614174000
+                    space:
+                      data: null
+                  links:
+                    self:
+                      href: https://api.example.org/v3/roles/40557c70-d1bd-4976-a2ab-a85f5e882418
+                    user:
+                      href: https://api.example.org/v3/users/59eadb5f-fc13-414f-84ba-77a35e239cc8
+                    organization:
+                      href: https://api.example.org/v3/organizations/05c5da3b-6cbc-421c-87c3-20bb3c41ab7c
+              by_username_and_origin:
+                summary: by username and origin
+                value:
+                  guid: 123e4567-e89b-12d3-a456-426614174000
+                  created_at: '2019-10-10T17:19:12Z'
+                  updated_at: '2019-10-10T17:19:12Z'
+                  type: organization_auditor
+                  relationships:
+                    user:
+                      data:
+                        guid: 123e4567-e89b-12d3-a456-426614174000
+                    user_group:
+                      data: null
+                    organization:
+                      data:
+                        guid: 123e4567-e89b-12d3-a456-426614174000
+                    space:
+                      data: null
+                  links:
+                    self:
+                      href: https://api.example.org/v3/roles/40557c70-d1bd-4976-a2ab-a85f5e882418
+                    user:
+                      href: https://api.example.org/v3/users/59eadb5f-fc13-414f-84ba-77a35e239cc8
+                    organization:
+                      href: https://api.example.org/v3/organizations/05c5da3b-6cbc-421c-87c3-20bb3c41ab7c
         links:
           user:
             operationId: getUser
@@ -136,57 +173,81 @@
             operationId: getOrganization
             parameters:
               guid: $response.body#/relationships/organization/data/guid
-            description: Retrieve the organization for this role (if organization
-              role)
+            description: Retrieve the organization for this role (if organization role)
           space:
             operationId: getSpace
             parameters:
               guid: $response.body#/relationships/space/data/guid
             description: Retrieve the space for this role (if space role)
       '400':
-        $ref: '../components/responses/BadRequest.yaml'
+        $ref: ../components/responses/BadRequest.yaml
       '401':
-        $ref: '../components/responses/Unauthorized.yaml'
+        $ref: ../components/responses/Unauthorized.yaml
       '403':
-        $ref: '../components/responses/Forbidden.yaml'
-      '422':
-        $ref: '../components/responses/UnprocessableEntity.yaml'
-      '429':
-        $ref: '../components/responses/TooManyRequests.yaml'
-      '500':
-        $ref: '../components/responses/500.yaml'
-      '503':
-        $ref: '../components/responses/ServiceUnavailable.yaml'
+        $ref: ../components/responses/Forbidden.yaml
       '409':
-        $ref: '../components/responses/Conflict.yaml'
+        $ref: ../components/responses/Conflict.yaml
+      '422':
+        $ref: ../components/responses/UnprocessableEntity.yaml
+      '429':
+        $ref: ../components/responses/TooManyRequests.yaml
+      '500':
+        $ref: ../components/responses/500.yaml
+      '503':
+        $ref: ../components/responses/ServiceUnavailable.yaml
 /v3/roles/{guid}:
   get:
     summary: Get a role
     description: This endpoint gets an individual role resource.
     operationId: getRole
     tags:
-    - Roles
+      - Roles
     parameters:
-    - $ref: '../components/parameters/Guid.yaml'
-    - name: include
-      in: query
-      description: Optionally include additional related resources in the response;
-        valid values are `user`, `space`, and `organization`.
-      schema:
-        type: array
-        items:
-          type: string
-          enum:
-          - user
-          - space
-          - organization
+      - $ref: ../components/parameters/Guid.yaml
+      - name: include
+        in: query
+        description: Optionally include additional related resources in the response; valid values are `user`, `space`, and `organization`.
+        schema:
+          type: array
+          items:
+            type: string
+            enum:
+              - user
+              - space
+              - organization
     responses:
       '200':
         description: Role retrieved
         content:
           application/json:
             schema:
-              $ref: '../components/schemas/Role.yaml'
+              $ref: ../components/schemas/Role.yaml
+            examples:
+              default:
+                summary: default
+                value:
+                  guid: 123e4567-e89b-12d3-a456-426614174000
+                  created_at: '2019-10-10T17:19:12Z'
+                  updated_at: '2019-10-10T17:19:12Z'
+                  type: organization_auditor
+                  relationships:
+                    user:
+                      data:
+                        guid: 123e4567-e89b-12d3-a456-426614174000
+                    user_group:
+                      data: null
+                    organization:
+                      data:
+                        guid: 123e4567-e89b-12d3-a456-426614174000
+                    space:
+                      data: null
+                  links:
+                    self:
+                      href: https://api.example.org/v3/roles/40557c70-d1bd-4976-a2ab-a85f5e882418
+                    user:
+                      href: https://api.example.org/v3/users/59eadb5f-fc13-414f-84ba-77a35e239cc8
+                    organization:
+                      href: https://api.example.org/v3/organizations/05c5da3b-6cbc-421c-87c3-20bb3c41ab7c
         links:
           user:
             operationId: getUser
@@ -197,27 +258,26 @@
             operationId: getOrganization
             parameters:
               guid: $response.body#/relationships/organization/data/guid
-            description: Retrieve the organization for this role (if organization
-              role)
+            description: Retrieve the organization for this role (if organization role)
           space:
             operationId: getSpace
             parameters:
               guid: $response.body#/relationships/space/data/guid
             description: Retrieve the space for this role (if space role)
       '401':
-        $ref: '../components/responses/Unauthorized.yaml'
-      '404':
-        $ref: '../components/responses/NotFound.yaml'
+        $ref: ../components/responses/Unauthorized.yaml
       '403':
-        $ref: '../components/responses/Forbidden.yaml'
+        $ref: ../components/responses/Forbidden.yaml
+      '404':
+        $ref: ../components/responses/NotFound.yaml
   delete:
     summary: Delete a role
     description: This endpoint deletes an individual role.
     operationId: deleteRole
     tags:
-    - Roles
+      - Roles
     parameters:
-    - $ref: '../components/parameters/Guid.yaml'
+      - $ref: ../components/parameters/Guid.yaml
     responses:
       '202':
         description: Accepted
@@ -228,12 +288,12 @@
               type: string
               format: uri
       '401':
-        $ref: '../components/responses/Unauthorized.yaml'
+        $ref: ../components/responses/Unauthorized.yaml
       '403':
-        $ref: '../components/responses/Forbidden.yaml'
+        $ref: ../components/responses/Forbidden.yaml
       '404':
-        $ref: '../components/responses/NotFound.yaml'
+        $ref: ../components/responses/NotFound.yaml
       '422':
-        $ref: '../components/responses/UnprocessableEntity.yaml'
+        $ref: ../components/responses/UnprocessableEntity.yaml
       '500':
-        $ref: '../components/responses/500.yaml'
+        $ref: ../components/responses/500.yaml

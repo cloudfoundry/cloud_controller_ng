@@ -1,178 +1,346 @@
 /v3/service_offerings:
   get:
     summary: List service offerings
-    description: This endpoint retrieves the service offerings the user has access
-      to.
+    description: This endpoint retrieves the service offerings the user has access to.
     operationId: listServiceOfferings
     tags:
-    - Service Offerings
+      - Service Offerings
     parameters:
-    - $ref: '../components/parameters/Page.yaml'
-    - $ref: '../components/parameters/PerPage.yaml'
-    - $ref: '../components/parameters/OrderBy.yaml'
-    - name: names
-      in: query
-      schema:
-        type: array
-        items:
-          type: string
-      description: Comma-delimited list of service offering names to filter by
-    - name: available
-      in: query
-      schema:
-        type: boolean
-      description: Filter by the `available` property; valid values are `true` or
-        `false`
-    - name: service_broker_guids
-      in: query
-      schema:
-        type: array
-        items:
-          type: string
-      description: Comma-delimited list of service broker GUIDs to filter by
-    - name: space_guids
-      in: query
-      schema:
-        type: array
-        items:
-          type: string
-      description: Comma-delimited list of space guids to filter by
-    - name: organization_guids
-      in: query
-      schema:
-        type: array
-        items:
-          type: string
-      description: Comma-delimited list of organization guids to filter by
-    - name: service_broker_names
-      in: query
-      schema:
-        type: array
-        items:
-          type: string
-      description: Comma-delimited list of service broker names to filter by
-    - $ref: '../components/parameters/LabelSelector.yaml'
-    - name: fields
-      in: query
-      schema:
-        type: object
-      description: Fields to include in the response
-    - $ref: '../components/parameters/CreatedAts.yaml'
-    - $ref: '../components/parameters/UpdatedAts.yaml'
+      - $ref: ../components/parameters/Page.yaml
+      - $ref: ../components/parameters/PerPage.yaml
+      - $ref: ../components/parameters/OrderBy.yaml
+      - name: names
+        in: query
+        schema:
+          type: array
+          items:
+            type: string
+        description: Comma-delimited list of service offering names to filter by
+      - name: available
+        in: query
+        schema:
+          type: boolean
+        description: Filter by the `available` property; valid values are `true` or `false`
+      - name: service_broker_guids
+        in: query
+        schema:
+          type: array
+          items:
+            type: string
+        description: Comma-delimited list of service broker GUIDs to filter by
+      - name: space_guids
+        in: query
+        schema:
+          type: array
+          items:
+            type: string
+        description: Comma-delimited list of space guids to filter by
+      - name: organization_guids
+        in: query
+        schema:
+          type: array
+          items:
+            type: string
+        description: Comma-delimited list of organization guids to filter by
+      - name: service_broker_names
+        in: query
+        schema:
+          type: array
+          items:
+            type: string
+        description: Comma-delimited list of service broker names to filter by
+      - $ref: ../components/parameters/LabelSelector.yaml
+      - name: fields
+        in: query
+        schema:
+          type: object
+        description: Fields to include in the response
+      - $ref: ../components/parameters/CreatedAts.yaml
+      - $ref: ../components/parameters/UpdatedAts.yaml
     responses:
       '200':
         description: OK
         content:
           application/json:
             schema:
-              $ref: '../components/schemas/ServiceOfferingList.yaml'
-      '401':
-        $ref: '../components/responses/Unauthorized.yaml'
-      '403':
-        $ref: '../components/responses/Forbidden.yaml'
+              $ref: ../components/schemas/ServiceOfferingList.yaml
+            examples:
+              default:
+                summary: default
+                value:
+                  pagination:
+                    total_results: 3
+                    total_pages: 2
+                    first:
+                      href: https://api.example.org?page=1&per_page=2
+                    last:
+                      href: https://api.example.org?page=2&per_page=2
+                    next:
+                      href: https://api.example.org?page=2&per_page=2
+                    previous: null
+                  resources:
+                    - guid: 123e4567-e89b-12d3-a456-426614174000
+                      name: my_service_offering
+                      description: Provides my service
+                      available: true
+                      tags:
+                        - relational
+                        - caching
+                      requires: []
+                      created_at: '2019-11-28T13:44:02Z'
+                      updated_at: '2019-11-28T13:44:02Z'
+                      shareable: true
+                      documentation_url: https://some-documentation-link.io
+                      broker_catalog:
+                        id: db730a8c-11e5-11ea-838a-0f4fff3b1cfb
+                        metadata:
+                          shareable: true
+                        features:
+                          plan_updateable: true
+                          bindable: true
+                          instances_retrievable: true
+                          bindings_retrievable: true
+                          allow_context_updates: false
+                      relationships:
+                        service_broker:
+                          data:
+                            guid: 123e4567-e89b-12d3-a456-426614174000
+                      metadata:
+                        labels: {}
+                        annotations: {}
+                      links:
+                        self:
+                          href: https://api.example.org/v3/service_offerings/bf7eb420-11e5-11ea-b7db-4b5d5e7976a
+                        service_plans:
+                          href: https://api.example.org/v3/service_plans?service_offering_guids=bf7eb420-11e5-11ea-b7db-4b5d5e7976a
+                        service_broker:
+                          href: https://api.example.org/v3/service_brokers/13c60e38-11e7-11ea-9106-33ee3c5bd4d7
+                    - guid: 123e4567-e89b-12d3-a456-426614174000
+                      name: other_service_offering
+                      description: Provides another service
+                      available: true
+                      tags:
+                        - caching
+                      requires: []
+                      created_at: '2019-11-29T16:44:02Z'
+                      updated_at: '2019-11-29T16:44:02Z'
+                      shareable: true
+                      documentation_url: https://some-other-documentation-link.io
+                      broker_catalog:
+                        id: 3cb11822-12bb-11ea-beb1-a350dc7453b9
+                        metadata:
+                          shareable: true
+                        features:
+                          plan_updateable: true
+                          bindable: true
+                          instances_retrievable: true
+                          bindings_retrievable: true
+                          allow_context_updates: false
+                      relationships:
+                        service_broker:
+                          data:
+                            guid: 123e4567-e89b-12d3-a456-426614174000
+                      metadata:
+                        labels: {}
+                        annotations: {}
+                      links:
+                        self:
+                          href: https://api.example.org/v3/service_offerings/20e6cd62-12bb-11ea-90d1-7bfec2c75bcd
+                        service_plans:
+                          href: https://api.example.org/v3/service_plans?service_offering_guids=20e6cd62-12bb-11ea-90d1-7bfec2c75bcd
+                        service_broker:
+                          href: https://api.example.org/v3/service_brokers/13c60e38-11e7-11ea-9106-33ee3c5bd4d7
       '400':
-        $ref: '../components/responses/BadRequest.yaml'
-      '500':
-        $ref: '../components/responses/500.yaml'
-      '502':
-        $ref: '../components/responses/BadGateway.yaml'
-      '503':
-        $ref: '../components/responses/ServiceUnavailable.yaml'
-      '422':
-        $ref: '../components/responses/UnprocessableEntity.yaml'
+        $ref: ../components/responses/BadRequest.yaml
+      '401':
+        $ref: ../components/responses/Unauthorized.yaml
+      '403':
+        $ref: ../components/responses/Forbidden.yaml
       '409':
-        $ref: '../components/responses/Conflict.yaml'
+        $ref: ../components/responses/Conflict.yaml
+      '422':
+        $ref: ../components/responses/UnprocessableEntity.yaml
+      '500':
+        $ref: ../components/responses/500.yaml
+      '502':
+        $ref: ../components/responses/BadGateway.yaml
+      '503':
+        $ref: ../components/responses/ServiceUnavailable.yaml
 /v3/service_offerings/{guid}:
   get:
     summary: Get a service offering
     description: This endpoint retrieves the service offering by GUID.
     operationId: getServiceOffering
     tags:
-    - Service Offerings
+      - Service Offerings
     parameters:
-    - $ref: '../components/parameters/Guid.yaml'
+      - $ref: ../components/parameters/Guid.yaml
     responses:
       '200':
         description: OK
         content:
           application/json:
             schema:
-              $ref: '../components/schemas/ServiceOffering.yaml'
+              $ref: ../components/schemas/ServiceOffering.yaml
+            examples:
+              default:
+                summary: default
+                value:
+                  guid: 123e4567-e89b-12d3-a456-426614174000
+                  name: my_service_offering
+                  description: Provides my service
+                  available: true
+                  tags:
+                    - relational
+                    - caching
+                  requires: []
+                  created_at: '2019-11-28T13:44:02Z'
+                  updated_at: '2019-11-28T13:44:02Z'
+                  shareable: true
+                  documentation_url: https://some-documentation-link.io
+                  broker_catalog:
+                    id: db730a8c-11e5-11ea-838a-0f4fff3b1cfb
+                    metadata:
+                      shareable: true
+                    features:
+                      plan_updateable: true
+                      bindable: true
+                      instances_retrievable: true
+                      bindings_retrievable: true
+                      allow_context_updates: false
+                  relationships:
+                    service_broker:
+                      data:
+                        guid: 123e4567-e89b-12d3-a456-426614174000
+                  metadata:
+                    labels: {}
+                    annotations: {}
+                  links:
+                    self:
+                      href: https://api.example.org/v3/service_offerings/bf7eb420-11e5-11ea-b7db-4b5d5e7976a
+                    service_plans:
+                      href: https://api.example.org/v3/service_plans?service_offering_guids=bf7eb420-11e5-11ea-b7db-4b5d5e7976a
+                    service_broker:
+                      href: https://api.example.org/v3/service_brokers/13c60e38-11e7-11ea-9106-33ee3c5bd4d7
       '401':
-        $ref: '../components/responses/Unauthorized.yaml'
-      '404':
-        $ref: '../components/responses/NotFound.yaml'
+        $ref: ../components/responses/Unauthorized.yaml
       '403':
-        $ref: '../components/responses/Forbidden.yaml'
+        $ref: ../components/responses/Forbidden.yaml
+      '404':
+        $ref: ../components/responses/NotFound.yaml
   patch:
     summary: Update a service offering
     description: This endpoint updates a service offering with labels and annotations.
     operationId: updateServiceOffering
     tags:
-    - Service Offerings
+      - Service Offerings
     parameters:
-    - $ref: '../components/parameters/Guid.yaml'
+      - $ref: ../components/parameters/Guid.yaml
     requestBody:
       content:
         application/json:
           schema:
             properties:
               metadata:
-                $ref: '../components/schemas/Metadata.yaml'
+                $ref: ../components/schemas/Metadata.yaml
+          examples:
+            default:
+              summary: default
+              value:
+                metadata:
+                  labels:
+                    key: value
+                  annotations:
+                    note: detailed information
     responses:
       '200':
         description: OK
         content:
           application/json:
             schema:
-              $ref: '../components/schemas/ServiceOffering.yaml'
-      '401':
-        $ref: '../components/responses/Unauthorized.yaml'
-      '404':
-        $ref: '../components/responses/NotFound.yaml'
-      '422':
-        $ref: '../components/responses/UnprocessableEntity.yaml'
-      '403':
-        $ref: '../components/responses/Forbidden.yaml'
+              $ref: ../components/schemas/ServiceOffering.yaml
+            examples:
+              default:
+                summary: default
+                value:
+                  guid: 123e4567-e89b-12d3-a456-426614174000
+                  name: my_service_offering
+                  description: Provides my service
+                  available: true
+                  tags:
+                    - relational
+                    - caching
+                  requires: []
+                  created_at: '2019-11-28T13:44:02Z'
+                  updated_at: '2019-11-28T13:44:02Z'
+                  shareable: true
+                  documentation_url: https://some-documentation-link.io
+                  broker_catalog:
+                    id: db730a8c-11e5-11ea-838a-0f4fff3b1cfb
+                    metadata:
+                      shareable: true
+                    features:
+                      plan_updateable: true
+                      bindable: true
+                      instances_retrievable: true
+                      bindings_retrievable: true
+                      allow_context_updates: false
+                  relationships:
+                    service_broker:
+                      data:
+                        guid: 123e4567-e89b-12d3-a456-426614174000
+                  metadata:
+                    labels: {}
+                    annotations: {}
+                  links:
+                    self:
+                      href: https://api.example.org/v3/service_offerings/bf7eb420-11e5-11ea-b7db-4b5d5e7976a
+                    service_plans:
+                      href: https://api.example.org/v3/service_plans?service_offering_guids=bf7eb420-11e5-11ea-b7db-4b5d5e7976a
+                    service_broker:
+                      href: https://api.example.org/v3/service_brokers/13c60e38-11e7-11ea-9106-33ee3c5bd4d7
       '400':
-        $ref: '../components/responses/BadRequest.yaml'
-      '500':
-        $ref: '../components/responses/500.yaml'
-      '503':
-        $ref: '../components/responses/ServiceUnavailable.yaml'
+        $ref: ../components/responses/BadRequest.yaml
+      '401':
+        $ref: ../components/responses/Unauthorized.yaml
+      '403':
+        $ref: ../components/responses/Forbidden.yaml
+      '404':
+        $ref: ../components/responses/NotFound.yaml
       '409':
-        $ref: '../components/responses/Conflict.yaml'
+        $ref: ../components/responses/Conflict.yaml
+      '422':
+        $ref: ../components/responses/UnprocessableEntity.yaml
+      '500':
+        $ref: ../components/responses/500.yaml
+      '503':
+        $ref: ../components/responses/ServiceUnavailable.yaml
   delete:
     summary: Delete a service offering
-    description: 'This endpoint deletes a service offering. This is typically used
-      to remove orphan service offerings from the Cloud Foundry database when they
-      have been removed from the service broker catalog, or when the service broker
-      has been removed.
+    description: |-
+      This endpoint deletes a service offering. This is typically used to remove orphan service offerings from the Cloud Foundry database when they have been removed from the service broker catalog, or when the service broker has been removed.
 
-
-      Note that this operation only affects the Cloud Foundry database, and no attempt
-      is made to contact the service broker.'
+      Note that this operation only affects the Cloud Foundry database, and no attempt is made to contact the service broker.
     operationId: deleteServiceOffering
     tags:
-    - Service Offerings
+      - Service Offerings
     parameters:
-    - $ref: '../components/parameters/Guid.yaml'
-    - name: purge
-      in: query
-      schema:
-        type: boolean
-      description: If `true`, any service plans, instances, and bindings associated
-        with this service offering will also be deleted
+      - $ref: ../components/parameters/Guid.yaml
+      - name: purge
+        in: query
+        schema:
+          type: boolean
+        description: If `true`, any service plans, instances, and bindings associated with this service offering will also be deleted
     responses:
       '204':
         description: No Content
       '401':
-        $ref: '../components/responses/Unauthorized.yaml'
+        $ref: ../components/responses/Unauthorized.yaml
       '403':
-        $ref: '../components/responses/Forbidden.yaml'
+        $ref: ../components/responses/Forbidden.yaml
       '404':
-        $ref: '../components/responses/NotFound.yaml'
+        $ref: ../components/responses/NotFound.yaml
       '422':
-        $ref: '../components/responses/UnprocessableEntity.yaml'
+        $ref: ../components/responses/UnprocessableEntity.yaml
       '500':
-        $ref: '../components/responses/500.yaml'
+        $ref: ../components/responses/500.yaml

@@ -24,7 +24,16 @@ content:
           type: boolean
           description: Whether or not the buildpack is locked to prevent updating the bits
         metadata:
-          $ref: '../schemas/Metadata.yaml'
+          $ref: ../schemas/Metadata.yaml
       required:
         - name
       description: Request schema for creating a buildpack
+    examples:
+      default:
+        summary: default
+        value:
+          name: ruby_buildpack
+          position: 42
+          enabled: true
+          locked: false
+          stack: windows64

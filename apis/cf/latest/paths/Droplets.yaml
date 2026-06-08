@@ -4,105 +4,229 @@
     description: Retrieve all droplets.
     operationId: listDroplets
     tags:
-    - Droplets
+      - Droplets
     parameters:
-    - $ref: '../components/parameters/Page.yaml'
-    - $ref: '../components/parameters/PerPage.yaml'
-    - $ref: '../components/parameters/OrderBy.yaml'
-    - $ref: '../components/parameters/CreatedAts.yaml'
-    - $ref: '../components/parameters/UpdatedAts.yaml'
-    - $ref: '../components/parameters/LabelSelector.yaml'
-    - name: guids
-      in: query
-      schema:
-        type: array
-        items:
-          type: string
-      description: 'Comma-delimited list of droplet GUIDs to filter by
-
-        '
-    - name: states
-      in: query
-      schema:
-        type: array
-        items:
-          type: string
-          enum:
-          - AWAITING_UPLOAD
-          - PROCESSING_UPLOAD
-          - STAGED
-          - COPYING
-          - FAILED
-          - EXPIRED
-      description: 'Comma-delimited list of droplet states to filter by
-
-        '
-    - name: app_guids
-      in: query
-      schema:
-        type: array
-        items:
-          type: string
-      description: 'Comma-delimited list of app GUIDs to filter by
-
-        '
-    - name: space_guids
-      in: query
-      schema:
-        type: array
-        items:
-          type: string
-      description: 'Comma-delimited list of space GUIDs to filter by
-
-        '
-    - name: organization_guids
-      in: query
-      schema:
-        type: array
-        items:
-          type: string
-      description: 'Comma-delimited list of organization GUIDs to filter by
-
-        '
+      - $ref: ../components/parameters/Page.yaml
+      - $ref: ../components/parameters/PerPage.yaml
+      - $ref: ../components/parameters/OrderBy.yaml
+      - $ref: ../components/parameters/CreatedAts.yaml
+      - $ref: ../components/parameters/UpdatedAts.yaml
+      - $ref: ../components/parameters/LabelSelector.yaml
+      - name: guids
+        in: query
+        schema:
+          type: array
+          items:
+            type: string
+        description: |
+          Comma-delimited list of droplet GUIDs to filter by
+      - name: states
+        in: query
+        schema:
+          type: array
+          items:
+            type: string
+            enum:
+              - AWAITING_UPLOAD
+              - PROCESSING_UPLOAD
+              - STAGED
+              - COPYING
+              - FAILED
+              - EXPIRED
+        description: |
+          Comma-delimited list of droplet states to filter by
+      - name: app_guids
+        in: query
+        schema:
+          type: array
+          items:
+            type: string
+        description: |
+          Comma-delimited list of app GUIDs to filter by
+      - name: space_guids
+        in: query
+        schema:
+          type: array
+          items:
+            type: string
+        description: |
+          Comma-delimited list of space GUIDs to filter by
+      - name: organization_guids
+        in: query
+        schema:
+          type: array
+          items:
+            type: string
+        description: |
+          Comma-delimited list of organization GUIDs to filter by
     responses:
       '200':
         description: OK
         content:
           application/json:
             schema:
-              $ref: '../components/schemas/DropletList.yaml'
-      '401':
-        $ref: '../components/responses/Unauthorized.yaml'
-      '403':
-        $ref: '../components/responses/Forbidden.yaml'
-      '500':
-        $ref: '../components/responses/500.yaml'
+              $ref: ../components/schemas/DropletList.yaml
+            examples:
+              default:
+                summary: default
+                value:
+                  pagination:
+                    total_results: 2
+                    total_pages: 1
+                    first:
+                      href: https://api.example.org?page=1&per_page=50
+                    last:
+                      href: https://api.example.org?page=1&per_page=50
+                    next: null
+                    previous: null
+                  resources:
+                    - guid: 123e4567-e89b-12d3-a456-426614174000
+                      state: STAGED
+                      error: null
+                      lifecycle:
+                        type: buildpack
+                        data: {}
+                      image: null
+                      execution_metadata: PRIVATE DATA HIDDEN
+                      process_types:
+                        redacted_message: 123e4567-e89b-12d3-a456-426614174000
+                      checksum:
+                        type: sha256
+                        value: e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855
+                      buildpacks:
+                        - name: ruby_buildpack
+                          detect_output: ruby 1.6.14
+                          version: 1.1.1.
+                          buildpack_name: ruby
+                      stack: cflinuxfs4
+                      created_at: '2016-03-28T23:39:34Z'
+                      updated_at: '2016-03-28T23:39:47Z'
+                      relationships:
+                        app:
+                          data:
+                            guid: 123e4567-e89b-12d3-a456-426614174000
+                      links:
+                        self:
+                          href: https://api.example.org/v3/droplets/585bc3c1-3743-497d-88b0-403ad6b56d16
+                        package:
+                          href: https://api.example.org/v3/packages/8222f76a-9e09-4360-b3aa-1ed329945e92
+                        app:
+                          href: https://api.example.org/v3/apps/7b34f1cf-7e73-428a-bb5a-8a17a8058396
+                        assign_current_droplet:
+                          href: https://api.example.org/v3/apps/7b34f1cf-7e73-428a-bb5a-8a17a8058396/relationships/current_droplet
+                          method: PATCH
+                        download:
+                          href: https://api.example.org/v3/droplets/585bc3c1-3743-497d-88b0-403ad6b56d16/download
+                      metadata:
+                        labels: {}
+                        annotations: {}
+                    - guid: 123e4567-e89b-12d3-a456-426614174000
+                      state: STAGED
+                      error: null
+                      lifecycle:
+                        type: docker
+                        data: {}
+                      execution_metadata: 123e4567-e89b-12d3-a456-426614174000
+                      process_types:
+                        redacted_message: 123e4567-e89b-12d3-a456-426614174000
+                      image: cloudfoundry/diego-docker-app-custom:latest
+                      checksum: null
+                      buildpacks: null
+                      stack: null
+                      created_at: '2016-03-17T00:00:01Z'
+                      updated_at: '2016-03-17T21:41:32Z'
+                      relationships:
+                        app:
+                          data:
+                            guid: 123e4567-e89b-12d3-a456-426614174000
+                      links:
+                        self:
+                          href: https://api.example.org/v3/droplets/fdf3851c-def8-4de1-87f1-6d4543189e22
+                        package:
+                          href: https://api.example.org/v3/packages/c5725684-a02f-4e59-bc67-8f36ae944688
+                        app:
+                          href: https://api.example.org/v3/apps/7b34f1cf-7e73-428a-bb5a-8a17a8058396
+                        assign_current_droplet:
+                          href: https://api.example.org/v3/apps/7b34f1cf-7e73-428a-bb5a-8a17a8058396/relationships/current_droplet
+                          method: PATCH
+                      metadata:
+                        labels: {}
+                        annotations: {}
       '400':
-        $ref: '../components/responses/BadRequest.yaml'
-      '502':
-        $ref: '../components/responses/BadGateway.yaml'
-      '503':
-        $ref: '../components/responses/ServiceUnavailable.yaml'
-      '422':
-        $ref: '../components/responses/UnprocessableEntity.yaml'
+        $ref: ../components/responses/BadRequest.yaml
+      '401':
+        $ref: ../components/responses/Unauthorized.yaml
+      '403':
+        $ref: ../components/responses/Forbidden.yaml
       '409':
-        $ref: '../components/responses/Conflict.yaml'
+        $ref: ../components/responses/Conflict.yaml
+      '422':
+        $ref: ../components/responses/UnprocessableEntity.yaml
+      '500':
+        $ref: ../components/responses/500.yaml
+      '502':
+        $ref: ../components/responses/BadGateway.yaml
+      '503':
+        $ref: ../components/responses/ServiceUnavailable.yaml
   post:
     summary: Create a droplet
-    description: This endpoint is only for creating a droplet without a package. To
-      create a droplet based on a package, see [Create a build](#create-a-build).
+    description: This endpoint is only for creating a droplet without a package. To create a droplet based on a package, see [Create a build](#create-a-build).
     operationId: createDroplet
     tags:
-    - Droplets
+      - Droplets
     requestBody:
-      $ref: '../components/requestBodies/DropletCreateRequestBody.yaml'
+      $ref: ../components/requestBodies/DropletCreateRequestBody.yaml
     responses:
       '201':
         description: Droplet created
         content:
           application/json:
             schema:
-              $ref: '../components/schemas/Droplet.yaml'
+              $ref: ../components/schemas/Droplet.yaml
+            examples:
+              default:
+                summary: default
+                value:
+                  guid: 123e4567-e89b-12d3-a456-426614174000
+                  state: AWAITING_UPLOAD
+                  error: null
+                  lifecycle:
+                    type: buildpack
+                    data: {}
+                  execution_metadata: ''
+                  process_types:
+                    rake: bundle exec rake
+                    web: bundle exec rackup config.ru -p $PORT
+                  checksum:
+                    type: sha256
+                    value: e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855
+                  buildpacks:
+                    - name: ruby_buildpack
+                      detect_output: ruby 1.6.14
+                      version: 1.1.1.
+                      buildpack_name: ruby
+                  stack: cflinuxfs4
+                  image: null
+                  created_at: '2016-03-28T23:39:34Z'
+                  updated_at: '2016-03-28T23:39:47Z'
+                  relationships:
+                    app:
+                      data:
+                        guid: 123e4567-e89b-12d3-a456-426614174000
+                  links:
+                    self:
+                      href: https://api.example.org/v3/droplets/585bc3c1-3743-497d-88b0-403ad6b56d16
+                    app:
+                      href: https://api.example.org/v3/apps/7b34f1cf-7e73-428a-bb5a-8a17a8058396
+                    assign_current_droplet:
+                      href: https://api.example.org/v3/apps/7b34f1cf-7e73-428a-bb5a-8a17a8058396/relationships/current_droplet
+                      method: PATCH
+                    upload:
+                      href: https://api.example.org/v3/droplets/585bc3c1-3743-497d-88b0-403ad6b56d16/upload
+                      method: POST
+                  metadata:
+                    labels: {}
+                    annotations: {}
         links:
           app:
             operationId: getApp
@@ -110,37 +234,82 @@
               guid: $response.body#/relationships/app/data/guid
             description: Retrieve the app for this droplet
       '400':
-        $ref: '../components/responses/BadRequest.yaml'
+        $ref: ../components/responses/BadRequest.yaml
       '401':
-        $ref: '../components/responses/Unauthorized.yaml'
+        $ref: ../components/responses/Unauthorized.yaml
       '403':
-        $ref: '../components/responses/Forbidden.yaml'
+        $ref: ../components/responses/Forbidden.yaml
       '404':
-        $ref: '../components/responses/NotFound.yaml'
-      '422':
-        $ref: '../components/responses/UnprocessableEntity.yaml'
-      '500':
-        $ref: '../components/responses/500.yaml'
-      '503':
-        $ref: '../components/responses/ServiceUnavailable.yaml'
+        $ref: ../components/responses/NotFound.yaml
       '409':
-        $ref: '../components/responses/Conflict.yaml'
+        $ref: ../components/responses/Conflict.yaml
+      '422':
+        $ref: ../components/responses/UnprocessableEntity.yaml
+      '500':
+        $ref: ../components/responses/500.yaml
+      '503':
+        $ref: ../components/responses/ServiceUnavailable.yaml
 /v3/droplets/{guid}:
   get:
     summary: Get a droplet
     description: Retrieve a droplet.
     operationId: getDroplet
     tags:
-    - Droplets
+      - Droplets
     parameters:
-    - $ref: '../components/parameters/Guid.yaml'
+      - $ref: ../components/parameters/Guid.yaml
     responses:
       '200':
         description: Droplet retrieved
         content:
           application/json:
             schema:
-              $ref: '../components/schemas/Droplet.yaml'
+              $ref: ../components/schemas/Droplet.yaml
+            examples:
+              default:
+                summary: default
+                value:
+                  guid: 123e4567-e89b-12d3-a456-426614174000
+                  state: STAGED
+                  error: null
+                  lifecycle:
+                    type: buildpack
+                    data: {}
+                  execution_metadata: ''
+                  process_types:
+                    rake: bundle exec rake
+                    web: bundle exec rackup config.ru -p $PORT
+                  checksum:
+                    type: sha256
+                    value: e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855
+                  buildpacks:
+                    - name: ruby_buildpack
+                      detect_output: ruby 1.6.14
+                      version: 1.1.1.
+                      buildpack_name: ruby
+                  stack: cflinuxfs4
+                  image: null
+                  created_at: '2016-03-28T23:39:34Z'
+                  updated_at: '2016-03-28T23:39:47Z'
+                  relationships:
+                    app:
+                      data:
+                        guid: 123e4567-e89b-12d3-a456-426614174000
+                  links:
+                    self:
+                      href: https://api.example.org/v3/droplets/585bc3c1-3743-497d-88b0-403ad6b56d16
+                    package:
+                      href: https://api.example.org/v3/packages/8222f76a-9e09-4360-b3aa-1ed329945e92
+                    app:
+                      href: https://api.example.org/v3/apps/7b34f1cf-7e73-428a-bb5a-8a17a8058396
+                    assign_current_droplet:
+                      href: https://api.example.org/v3/apps/7b34f1cf-7e73-428a-bb5a-8a17a8058396/relationships/current_droplet
+                      method: PATCH
+                    download:
+                      href: https://api.example.org/v3/droplets/585bc3c1-3743-497d-88b0-403ad6b56d16/download
+                  metadata:
+                    labels: {}
+                    annotations: {}
         links:
           app:
             operationId: getApp
@@ -148,19 +317,19 @@
               guid: $response.body#/relationships/app/data/guid
             description: Retrieve the app for this droplet
       '400':
-        $ref: '../components/responses/BadRequest.yaml'
+        $ref: ../components/responses/BadRequest.yaml
       '403':
-        $ref: '../components/responses/Forbidden.yaml'
+        $ref: ../components/responses/Forbidden.yaml
       '404':
-        $ref: '../components/responses/NotFound.yaml'
+        $ref: ../components/responses/NotFound.yaml
   patch:
     summary: Update a droplet
     description: Update a droplet.
     operationId: updateDroplet
     tags:
-    - Droplets
+      - Droplets
     parameters:
-    - $ref: '../components/parameters/Guid.yaml'
+      - $ref: ../components/parameters/Guid.yaml
     requestBody:
       description: Droplet object that needs to be updated
       required: true
@@ -170,44 +339,52 @@
             type: object
             properties:
               metadata:
-                $ref: '../components/schemas/Metadata.yaml'
+                $ref: ../components/schemas/Metadata.yaml
               image:
                 type: string
                 description: Image reference where the built complete image was stored
-            required:
-            - image
+            required: []
             description: Request schema for updating a droplet
+          examples:
+            default:
+              summary: default
+              value:
+                metadata:
+                  labels:
+                    key: value
+                  annotations:
+                    note: detailed information
     responses:
       '200':
-        $ref: '../components/responses/DropletGetResponse.yaml'
+        $ref: ../components/responses/DropletGetResponse.yaml
       '400':
-        $ref: '../components/responses/BadRequest.yaml'
+        $ref: ../components/responses/BadRequest.yaml
       '401':
-        $ref: '../components/responses/Unauthorized.yaml'
+        $ref: ../components/responses/Unauthorized.yaml
       '403':
-        $ref: '../components/responses/Forbidden.yaml'
+        $ref: ../components/responses/Forbidden.yaml
       '404':
-        $ref: '../components/responses/NotFound.yaml'
+        $ref: ../components/responses/NotFound.yaml
+      '409':
+        $ref: ../components/responses/Conflict.yaml
       '422':
         description: Unprocessable Entity
         content:
           application/json:
             schema:
-              $ref: '../components/schemas/Error.yaml'
+              $ref: ../components/schemas/Error.yaml
       '500':
-        $ref: '../components/responses/500.yaml'
+        $ref: ../components/responses/500.yaml
       '503':
-        $ref: '../components/responses/ServiceUnavailable.yaml'
-      '409':
-        $ref: '../components/responses/Conflict.yaml'
+        $ref: ../components/responses/ServiceUnavailable.yaml
   delete:
     summary: Delete a droplet
     description: Delete a droplet.
     operationId: deleteDroplet
     tags:
-    - Droplets
+      - Droplets
     parameters:
-    - $ref: '../components/parameters/Guid.yaml'
+      - $ref: ../components/parameters/Guid.yaml
     responses:
       '202':
         description: Accepted
@@ -220,37 +397,29 @@
         content:
           application/json:
             schema:
-              $ref: '../components/schemas/Job.yaml'
+              $ref: ../components/schemas/Job.yaml
       '401':
-        $ref: '../components/responses/Unauthorized.yaml'
-      '404':
-        $ref: '../components/responses/NotFound.yaml'
+        $ref: ../components/responses/Unauthorized.yaml
       '403':
-        $ref: '../components/responses/Forbidden.yaml'
+        $ref: ../components/responses/Forbidden.yaml
+      '404':
+        $ref: ../components/responses/NotFound.yaml
       '422':
-        $ref: '../components/responses/UnprocessableEntity.yaml'
+        $ref: ../components/responses/UnprocessableEntity.yaml
       '500':
-        $ref: '../components/responses/500.yaml'
+        $ref: ../components/responses/500.yaml
 /v3/droplets/{guid}/download:
   get:
     summary: Download droplet bits
-    description: 'Download a gzip compressed tarball file containing a Cloud Foundry
-      compatible droplet.
-
-      When using a remote blobstore, such as AWS, the response is a redirect to the
-      actual location of the bits. If the client is automatically following redirects,
-      then the OAuth token that was used to communicate with Cloud Controller will
-      be relayed on the new redirect request. Some blobstores may reject the request
-      in that case. Clients may need to follow the redirect without including the
-      OAuth token.
-
-      Only droplets that are in the `STAGED` state and have lifecycle type `buildpack`
-      can be downloaded.'
+    description: |-
+      Download a gzip compressed tarball file containing a Cloud Foundry compatible droplet.
+      When using a remote blobstore, such as AWS, the response is a redirect to the actual location of the bits. If the client is automatically following redirects, then the OAuth token that was used to communicate with Cloud Controller will be relayed on the new redirect request. Some blobstores may reject the request in that case. Clients may need to follow the redirect without including the OAuth token.
+      Only droplets that are in the `STAGED` state and have lifecycle type `buildpack` can be downloaded.
     operationId: downloadDroplet
     tags:
-    - Droplets
+      - Droplets
     parameters:
-    - $ref: '../components/parameters/Guid.yaml'
+      - $ref: ../components/parameters/Guid.yaml
     responses:
       '200':
         description: OK
@@ -265,25 +434,24 @@
       '302':
         description: Redirect to download location
       '401':
-        $ref: '../components/responses/Unauthorized.yaml'
-      '404':
-        $ref: '../components/responses/NotFound.yaml'
+        $ref: ../components/responses/Unauthorized.yaml
       '403':
-        $ref: '../components/responses/Forbidden.yaml'
+        $ref: ../components/responses/Forbidden.yaml
+      '404':
+        $ref: ../components/responses/NotFound.yaml
       '422':
-        $ref: '../components/responses/UnprocessableEntity.yaml'
+        $ref: ../components/responses/UnprocessableEntity.yaml
       '502':
-        $ref: '../components/responses/BadGateway.yaml'
+        $ref: ../components/responses/BadGateway.yaml
 /v3/droplets/{guid}/upload:
   post:
     summary: Upload droplet bits
-    description: Upload a gzip compressed tarball file containing a Cloud Foundry
-      compatible droplet. The file must be sent as part of a multi-part form.
+    description: Upload a gzip compressed tarball file containing a Cloud Foundry compatible droplet. The file must be sent as part of a multi-part form.
     operationId: uploadDroplet
     tags:
-    - Droplets
+      - Droplets
     parameters:
-    - $ref: '../components/parameters/Guid.yaml'
+      - $ref: ../components/parameters/Guid.yaml
     requestBody:
       description: The droplet file to be uploaded
       required: true
@@ -329,7 +497,7 @@
                           type: string
     responses:
       '200':
-        $ref: '../components/responses/DropletGetResponse.yaml'
+        $ref: ../components/responses/DropletGetResponse.yaml
       '202':
         description: Upload initiated
         headers:
@@ -340,12 +508,12 @@
         content:
           application/json:
             schema:
-              $ref: '../components/schemas/Droplet.yaml'
+              $ref: ../components/schemas/Droplet.yaml
       '401':
-        $ref: '../components/responses/Unauthorized.yaml'
-      '404':
-        $ref: '../components/responses/NotFound.yaml'
-      '422':
-        $ref: '../components/responses/UnprocessableEntity.yaml'
+        $ref: ../components/responses/Unauthorized.yaml
       '403':
-        $ref: '../components/responses/Forbidden.yaml'
+        $ref: ../components/responses/Forbidden.yaml
+      '404':
+        $ref: ../components/responses/NotFound.yaml
+      '422':
+        $ref: ../components/responses/UnprocessableEntity.yaml

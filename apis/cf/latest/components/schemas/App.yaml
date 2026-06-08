@@ -42,6 +42,24 @@ allOf:
           droplets:
             $ref: './Link.yaml'
             description: The URL to get the droplets for this app
+          tasks:
+            $ref: './Link.yaml'
+            description: The URL to get the tasks for this app
+          start:
+            $ref: './Link.yaml'
+            description: The URL to start the app
+          stop:
+            $ref: './Link.yaml'
+            description: The URL to stop the app
+          revisions:
+            $ref: './Link.yaml'
+            description: The URL to get the revisions for this app
+          deployed_revisions:
+            $ref: './Link.yaml'
+            description: The URL to get the deployed revisions for this app
+          features:
+            $ref: './Link.yaml'
+            description: The URL to get the features for this app
       included:
         $ref: './IncludedResources.yaml'
         description: Additional related resources included in the response when using the include parameter

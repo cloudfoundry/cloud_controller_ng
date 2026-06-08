@@ -17,12 +17,33 @@ content:
           type: object
           properties:
             domain:
-              $ref: '../schemas/RelationshipToOne.yaml'
+              $ref: ../schemas/RelationshipToOne.yaml
               description: A relationship to the domain of the route
             space:
-              $ref: '../schemas/RelationshipToOne.yaml'
+              $ref: ../schemas/RelationshipToOne.yaml
               description: A relationship to the space containing the route; routes can only be mapped to destinations in that space
         metadata:
-          $ref: '../schemas/Metadata.yaml'
+          $ref: ../schemas/Metadata.yaml
       required:
         - relationships
+    examples:
+      default:
+        summary: default
+        value:
+          host: a-hostname
+          path: /some_path
+          port: 6666
+          relationships:
+            domain:
+              data:
+                guid: 123e4567-e89b-12d3-a456-426614174000
+            space:
+              data:
+                guid: 123e4567-e89b-12d3-a456-426614174000
+          options:
+            loadbalancing: round-robin
+          metadata:
+            labels:
+              key: value
+            annotations:
+              note: detailed information

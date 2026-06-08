@@ -17,7 +17,8 @@ content:
           properties:
             type:
               type: string
-              enum: [basic]
+              enum:
+                - basic
               description: Authentication type
             credentials:
               type: object
@@ -36,4 +37,20 @@ content:
             - type
             - credentials
         metadata:
-          $ref: '../schemas/Metadata.yaml'
+          $ref: ../schemas/Metadata.yaml
+    examples:
+      default:
+        summary: default
+        value:
+          name: my_service_broker
+          url: https://example.service-broker.com
+          authentication:
+            type: basic
+            credentials:
+              username: us3rn4me
+              password: p4ssw0rd
+          metadata:
+            labels:
+              key: value
+            annotations:
+              note: detailed information

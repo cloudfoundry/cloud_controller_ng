@@ -12,5 +12,10 @@ content:
           type: boolean
           description: Whether an organization is suspended or not
         metadata:
-          $ref: '../schemas/Metadata.yaml'
+          $ref: ../schemas/Metadata.yaml
       description: Request schema for updating an organization
+    examples:
+      default:
+        summary: default
+        value:
+          name: my-organization
