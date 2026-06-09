@@ -163,6 +163,16 @@ module VCAP::CloudController
       end
     end
 
+    describe '#readable_org_ids_query' do
+      it 'returns subquery from membership' do
+        membership = instance_double(Membership)
+        subquery = instance_double(Sequel::Dataset)
+        expect(Membership).to receive(:new).with(user).and_return(membership)
+        expect(membership).to receive(:authorized_org_ids_subquery).with(Permissions::ROLES_FOR_ORG_READING).and_return(subquery)
+        expect(permissions.readable_org_ids_query).to be(subquery)
+      end
+    end
+
     describe '#readable_org_guids_for_domains_query' do
       context 'when user has valid membership' do
         let(:membership) { instance_double(Membership) }
@@ -385,6 +395,16 @@ module VCAP::CloudController
         expect(Membership).to receive(:new).with(user).and_return(membership)
         expect(membership).to receive(:authorized_spaces_subquery).with(Permissions::ROLES_FOR_SPACE_READING).and_return(subquery)
         expect(permissions.readable_spaces_query).to be(subquery)
+      end
+    end
+
+    describe '#readable_space_ids_query' do
+      it 'returns subquery from membership' do
+        membership = instance_double(Membership)
+        subquery = instance_double(Sequel::Dataset)
+        expect(Membership).to receive(:new).with(user).and_return(membership)
+        expect(membership).to receive(:authorized_space_ids_subquery).with(Permissions::ROLES_FOR_SPACE_READING).and_return(subquery)
+        expect(permissions.readable_space_ids_query).to be(subquery)
       end
     end
 
