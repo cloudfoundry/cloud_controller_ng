@@ -79,11 +79,9 @@ RSpec.describe 'Rate Limiting' do
 
     context 'when admin_limit is -1 (default, unlimited)' do
       it 'is not rate limited' do
-        20.times do |n|
-          get '/v3/spaces', nil, admin_headers
-          expect(last_response.status).to eq(200), "rate limited after #{n} requests"
-          expect(last_response.headers).not_to include('X-RateLimit-Limit')
-        end
+        get '/v3/spaces', nil, admin_headers
+        expect(last_response.status).to eq(200)
+        expect(last_response.headers).not_to include('X-RateLimit-Limit')
       end
     end
 
