@@ -32,6 +32,19 @@ module VCAP::CloudController
       Organization.where(id: authorized_org_ids_subquery(roles))
     end
 
+    def authorized_org_ids_subquery(roles)
+      space_ids_query = member_space_ids(roles)
+      org_ids_query   = member_org_ids(roles)
+
+      org_ids_via_space_roles = Space.where(id: space_ids_query).select(:organization_id) if space_ids_query
+
+      if org_ids_query && org_ids_via_space_roles
+        org_ids_query.union(org_ids_via_space_roles, from_self: false)
+      else
+        org_ids_query || org_ids_via_space_roles
+      end
+    end
+
     def authorized_space_guids(roles)
       authorized_space_guids_subquery(roles).select_map(:guid)
     end
@@ -44,33 +57,16 @@ module VCAP::CloudController
       Space.where(id: authorized_space_ids_subquery(roles)).select(:id, :guid)
     end
 
-    # Like authorized_spaces_subquery but returns a flat id-only UNION (no Space.where wrapper).
-    # Use when the caller filters by a raw space_id FK column to avoid an extra subplan over `spaces`.
     def authorized_space_ids_subquery(roles)
       space_ids_query = member_space_ids(roles)
       org_ids_query   = member_org_ids(roles)
 
-      space_ids_via_orgs = Space.where(organization_id: org_ids_query).select(:id) if org_ids_query
+      space_ids_via_org_roles = Space.where(organization_id: org_ids_query).select(:id) if org_ids_query
 
-      if space_ids_query && space_ids_via_orgs
-        space_ids_query.union(space_ids_via_orgs, from_self: false)
+      if space_ids_query && space_ids_via_org_roles
+        space_ids_query.union(space_ids_via_org_roles, from_self: false)
       else
-        space_ids_query || space_ids_via_orgs
-      end
-    end
-
-    # Like authorized_orgs_subquery but returns a flat id-only UNION (no Organization.where wrapper).
-    # Use when the caller filters by a raw organization_id FK column.
-    def authorized_org_ids_subquery(roles)
-      space_ids_query = member_space_ids(roles)
-      org_ids_query   = member_org_ids(roles)
-
-      org_ids_via_space_roles = Space.where(id: space_ids_query).select(:organization_id) if space_ids_query
-
-      if org_ids_query && org_ids_via_space_roles
-        org_ids_query.union(org_ids_via_space_roles, from_self: false)
-      else
-        org_ids_query || org_ids_via_space_roles
+        space_ids_query || space_ids_via_org_roles
       end
     end
 
