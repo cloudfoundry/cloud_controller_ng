@@ -108,6 +108,7 @@ GEM
       httpclient (~> 2.8, >= 2.8.2.4)
       json (~> 2.7)
       mutex_m
+    cgi (0.5.1)
     clockwork (4.0.1)
       activesupport
       tzinfo
@@ -615,6 +616,7 @@ DEPENDENCIES
   bootsnap
   byebug
   cf-uaa-lib (~> 4.0.9)
+  cgi
   clockwork
   cloudfront-signer
   codeclimate-test-reporter (>= 1.0.8)
