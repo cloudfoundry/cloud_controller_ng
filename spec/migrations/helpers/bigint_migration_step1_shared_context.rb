@@ -10,6 +10,9 @@ RSpec.shared_context 'bigint migration step1' do
   let(:skip_bigint_id_migration) { nil }
 
   before do
+    # Default so config reads from other migrations during the shared after-hook's forward run
+    # (e.g. the WAS_RUNNING backfill's skip? check) don't trip these strict argument matchers.
+    allow_any_instance_of(VCAP::CloudController::Config).to receive(:get).and_call_original
     allow_any_instance_of(VCAP::CloudController::Config).to receive(:get).with(:skip_bigint_id_migration).and_return(skip_bigint_id_migration)
     allow_any_instance_of(VCAP::CloudController::Config).to receive(:get).with(:migration_psql_concurrent_statement_timeout_in_seconds).and_return(300)
   end
