@@ -5,35 +5,6 @@ module CloudController
   module Blobstore
     RSpec.describe StorageCliClient do
       describe 'client init' do
-        # DEPRECATED: Legacy fog provider tests - remove after migration window
-        # START LEGACY FOG SUPPORT TESTS
-        it 'init the correct client when JSON has provider AzureRM (legacy fog name)' do
-          droplets_cfg = Tempfile.new(['droplets', '.json'])
-          droplets_cfg.write({ provider: 'AzureRM',
-                               account_key: 'bommelkey',
-                               account_name: 'bommel',
-                               container_name: 'bommelcontainer',
-                               environment: 'BommelCloud' }.to_json)
-          droplets_cfg.flush
-
-          config_double = instance_double(VCAP::CloudController::Config)
-          allow(VCAP::CloudController::Config).to receive(:config).and_return(config_double)
-          allow(config_double).to receive(:get).with(:storage_cli_config_file_droplets).and_return(droplets_cfg.path)
-
-          client = StorageCliClient.new(
-            directory_key: 'dummy-key',
-            root_dir: 'dummy-root',
-            resource_type: 'droplets'
-          )
-          expect(client.instance_variable_get(:@storage_type)).to eq('azurebs')
-          expect(client.instance_variable_get(:@resource_type)).to eq('droplets')
-          expect(client.instance_variable_get(:@root_dir)).to eq('dummy-root')
-          expect(client.instance_variable_get(:@directory_key)).to eq('dummy-key')
-
-          droplets_cfg.close!
-        end
-        # END LEGACY FOG SUPPORT TESTS
-
         it 'init the correct client when JSON has provider azurebs (native storage-cli type)' do
           droplets_cfg = Tempfile.new(['droplets', '.json'])
           droplets_cfg.write({ provider: 'azurebs',
@@ -168,7 +139,7 @@ module CloudController
 
         before do
           [droplets_cfg, buildpacks_cfg, packages_cfg, resource_pool_cfg].each do |f|
-            f.write({ provider: 'AzureRM',
+            f.write({ provider: 'azurebs',
                       account_key: 'bommelkey',
                       account_name: 'bommel',
                       container_name: 'bommelcontainer',
@@ -247,8 +218,8 @@ module CloudController
 
         it 'raises when provider is missing from config file' do
           File.write(packages_cfg.path, {
-            AzureRM_storage_access_key: 'bommelkey',
-            AzureRM_storage_account_name: 'bommel',
+            account_key: 'bommelkey',
+            account_name: 'bommel',
             container_name: 'bommelcontainer',
             environment: 'BommelCloud'
           }.to_json)
@@ -266,7 +237,7 @@ module CloudController
         describe 'Json operations' do
           let(:droplets_cfg) do
             f = Tempfile.new(['droplets', '.json'])
-            f.write({ provider: 'AzureRM',
+            f.write({ provider: 'azurebs',
                       account_key: 'bommelkey',
                       account_name: 'bommel',
                       container_name: 'bommelcontainer',
@@ -304,7 +275,7 @@ module CloudController
         describe 'with valid client' do
           let(:client) do
             droplets_cfg = Tempfile.new(['droplets', '.json'])
-            droplets_cfg.write({ provider: 'AzureRM',
+            droplets_cfg.write({ provider: 'azurebs',
                                  account_key: 'bommelkey',
                                  account_name: 'bommel',
                                  container_name: 'bommelcontainer',
@@ -341,7 +312,7 @@ module CloudController
       describe 'client operations' do
         let!(:tmp_cfg) do
           f = Tempfile.new(['storage_cli_config', '.json'])
-          f.write({ provider: 'AzureRM',
+          f.write({ provider: 'azurebs',
                     account_name: 'some-account-name',
                     account_key: 'some-access-key',
                     container_name: directory_key,
