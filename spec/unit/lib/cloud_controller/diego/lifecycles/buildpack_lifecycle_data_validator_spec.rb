@@ -4,8 +4,8 @@ require 'cloud_controller/diego/lifecycles/buildpack_lifecycle_data_validator'
 module VCAP::CloudController
   RSpec.describe BuildpackLifecycleDataValidator do
     subject(:validator) { BuildpackLifecycleDataValidator.new({ stack:, buildpack_infos: }) }
-    let(:stack) { Stack.make }
-    let(:buildpack) { Buildpack.make }
+    let(:stack) { create(:stack) }
+    let(:buildpack) { create(:buildpack) }
     let(:buildpack_name_or_url) { buildpack.name }
     let(:buildpack_info) { BuildpackInfo.new(buildpack_name_or_url, buildpack) }
     let(:buildpack_infos) { [buildpack_info] }
@@ -75,7 +75,7 @@ module VCAP::CloudController
 
       context 'when given an invalid BuildpackInfo' do
         let(:buildpack_infos) { [buildpack_info, BuildpackInfo.new('invalid-bp', nil)] }
-        let(:stack) { Stack.make(name: 'existing_stack') }
+        let(:stack) { create(:stack, name: 'existing_stack') }
 
         it 'includes an error for the invalid buildpack' do
           expect(validator).not_to be_valid

@@ -3,8 +3,8 @@ require 'spec_helper'
 module VCAP::CloudController
   RSpec.describe FeatureFlagAccess, type: :access do
     subject(:access) { FeatureFlagAccess.new(Security::AccessContext.new) }
-    let(:user) { VCAP::CloudController::User.make }
-    let(:object) { VCAP::CloudController::FeatureFlag.make }
+    let(:user) { create(:user) }
+    let(:object) { create(:feature_flag) }
 
     it_behaves_like 'admin full access'
     it_behaves_like 'admin read only access'

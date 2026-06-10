@@ -4,11 +4,11 @@ require 'fetchers/service_instance_fetcher'
 module VCAP::CloudController
   RSpec.describe ServiceInstanceFetcher do
     describe '#fetch' do
-      let(:org) { Organization.make }
-      let(:space) { Space.make(organization: org) }
-      let(:service) { Service.make(:v2) }
-      let(:plan) { ServicePlan.make(service:) }
-      let(:service_instance) { ManagedServiceInstance.make(space: space, service_plan: plan) }
+      let(:org) { create(:organization) }
+      let(:space) { create(:space, organization: org) }
+      let(:service) { create(:service, :v2) }
+      let(:plan) { create(:service_plan, service:) }
+      let(:service_instance) { create(:managed_service_instance, space: space, service_plan: plan) }
 
       it 'returns the instance, the space, the plan, and the service' do
         fetcher = ServiceInstanceFetcher.new
@@ -19,7 +19,7 @@ module VCAP::CloudController
       end
 
       context 'when the instance is user-provided' do
-        let(:service_instance) { UserProvidedServiceInstance.make(space:) }
+        let(:service_instance) { create(:user_provided_service_instance, space:) }
 
         it 'returns just the instance and the space' do
           fetcher = ServiceInstanceFetcher.new

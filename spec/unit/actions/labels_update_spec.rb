@@ -10,7 +10,7 @@ module VCAP::CloudController
         end
       end
 
-      let(:app) { AppModel.make }
+      let(:app) { create(:app_model) }
       let(:labels) do
         {
           release: 'stable',
@@ -49,8 +49,8 @@ module VCAP::CloudController
         context 'app already has max labels' do
           context 'labels added exceeds max labels' do
             let!(:app_with_labels) do
-              AppLabelModel.make(resource_guid: app.guid, key_name: 'release1', value: 'veryunstable')
-              AppLabelModel.make(resource_guid: app.guid, key_name: 'release2', value: 'stillunstable')
+              create(:app_label_model, resource_guid: app.guid, key_name: 'release1', value: 'veryunstable')
+              create(:app_label_model, resource_guid: app.guid, key_name: 'release2', value: 'stillunstable')
             end
 
             let(:labels) do
@@ -73,10 +73,10 @@ module VCAP::CloudController
 
         context 'labels exceed max labels' do
           let!(:app_with_labels) do
-            AppLabelModel.make(resource_guid: app.guid, key_name: 'release', value: 'unstable')
-            AppLabelModel.make(resource_guid: app.guid, key_name: 'release1', value: 'veryunstable')
-            AppLabelModel.make(resource_guid: app.guid, key_name: 'release2', value: 'stillunstable')
-            AppLabelModel.make(resource_guid: app.guid, key_name: 'release3', value: 'help')
+            create(:app_label_model, resource_guid: app.guid, key_name: 'release', value: 'unstable')
+            create(:app_label_model, resource_guid: app.guid, key_name: 'release1', value: 'veryunstable')
+            create(:app_label_model, resource_guid: app.guid, key_name: 'release2', value: 'stillunstable')
+            create(:app_label_model, resource_guid: app.guid, key_name: 'release3', value: 'help')
           end
 
           context 'deleting old label' do
@@ -130,10 +130,10 @@ module VCAP::CloudController
         end
 
         let!(:old_label) do
-          AppLabelModel.make(resource_guid: app.guid, key_name: 'release', value: 'unstable')
+          create(:app_label_model, resource_guid: app.guid, key_name: 'release', value: 'unstable')
         end
         let!(:old_label_with_prefix) do
-          AppLabelModel.make(resource_guid: app.guid, key_prefix: 'joyofcooking.com', key_name: 'potato', value: 'fried')
+          create(:app_label_model, resource_guid: app.guid, key_prefix: 'joyofcooking.com', key_name: 'potato', value: 'fried')
         end
 
         it 'updates the old label' do
@@ -154,13 +154,13 @@ module VCAP::CloudController
         end
 
         let!(:delete_me_label) do
-          AppLabelModel.make(resource_guid: app.guid, key_name: 'release', value: 'unstable')
+          create(:app_label_model, resource_guid: app.guid, key_name: 'release', value: 'unstable')
         end
         let!(:prefixed_delete_me_label) do
-          AppLabelModel.make(resource_guid: app.guid, key_prefix: 'pre.fix', key_name: 'release', value: 'unstable')
+          create(:app_label_model, resource_guid: app.guid, key_prefix: 'pre.fix', key_name: 'release', value: 'unstable')
         end
         let!(:keep_me_label) do
-          AppLabelModel.make(resource_guid: app.guid, key_name: 'potato', value: 'mashed')
+          create(:app_label_model, resource_guid: app.guid, key_name: 'potato', value: 'mashed')
         end
 
         it 'deletes labels that are nil' do
@@ -184,7 +184,7 @@ module VCAP::CloudController
     describe 'organization labels' do
       subject(:result) { LabelsUpdate.update(org, labels, OrganizationLabelModel) }
 
-      let(:org) { Organization.make }
+      let(:org) { create(:organization) }
       let(:labels) do
         {
           release: 'stable',
@@ -217,10 +217,10 @@ module VCAP::CloudController
         end
 
         let!(:old_label) do
-          OrganizationLabelModel.make(resource_guid: org.guid, key_name: 'release', value: 'unstable')
+          create(:organization_label_model, resource_guid: org.guid, key_name: 'release', value: 'unstable')
         end
         let!(:old_label_with_prefix) do
-          OrganizationLabelModel.make(resource_guid: org.guid, key_prefix: 'joyofcooking.com', key_name: 'potato', value: 'fried')
+          create(:organization_label_model, resource_guid: org.guid, key_prefix: 'joyofcooking.com', key_name: 'potato', value: 'fried')
         end
 
         it 'updates the old label' do
@@ -240,10 +240,10 @@ module VCAP::CloudController
         end
 
         let!(:delete_me_label) do
-          OrganizationLabelModel.make(resource_guid: org.guid, key_name: 'release', value: 'unstable')
+          create(:organization_label_model, resource_guid: org.guid, key_name: 'release', value: 'unstable')
         end
         let!(:keep_me_label) do
-          OrganizationLabelModel.make(resource_guid: org.guid, key_name: 'potato', value: 'mashed')
+          create(:organization_label_model, resource_guid: org.guid, key_name: 'potato', value: 'mashed')
         end
 
         it 'deletes labels that are nil' do

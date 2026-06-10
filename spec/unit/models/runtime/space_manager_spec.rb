@@ -2,8 +2,8 @@ require 'spec_helper'
 
 module VCAP::CloudController
   RSpec.describe SpaceManager, type: :model do
-    let(:space) { Space.make }
-    let(:user) { User.make }
+    let(:space) { create(:space) }
+    let(:user) { create(:user) }
 
     describe 'uniqueness' do
       it 'prevents duplicate space_id and user_id combination' do

@@ -17,13 +17,13 @@ module VCAP::CloudController
         end
 
         it 'logs the number of returned rows over threshold' do
-          10.times { Space.make }
+          create_list(:space, 10)
           Space.all
           expect(logs.string).to match 'Loaded 10 records for query SELECT \* FROM [`"]spaces[`"]'
         end
 
         it 'does not log the number of returned rows under threshold' do
-          2.times { Space.make }
+          create_list(:space, 2)
           Space.all
           expect(logs.string).not_to match 'Loaded'
         end
@@ -35,7 +35,7 @@ module VCAP::CloudController
         end
 
         it 'does not log' do
-          2.times { Space.make }
+          create_list(:space, 2)
           Space.all
           expect(logs.string).not_to match 'Loaded'
         end
@@ -47,7 +47,7 @@ module VCAP::CloudController
         end
 
         it 'does not log the number of returned rows under threshold' do
-          2.times { Space.make }
+          create_list(:space, 2)
           Space.all
           expect(logs.string).not_to match 'Loaded'
         end

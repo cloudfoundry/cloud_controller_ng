@@ -9,9 +9,9 @@ module VCAP::RestAPI
       context 'equals operation (:)' do
         it 'works with a single app guid' do
           app_guid = 'some_app_guid'
-          app_model = VCAP::CloudController::AppModel.make(guid: app_guid)
+          app_model = create(:app_model, guid: app_guid)
 
-          route_mapping = VCAP::CloudController::RouteMappingModel.make(app: app_model, app_port: 1)
+          route_mapping = create(:route_mapping_model, app: app_model, app_port: 1)
 
           results = AppQuery.filtered_dataset_from_query_params(
             VCAP::CloudController::RouteMappingModel,
@@ -38,11 +38,11 @@ module VCAP::RestAPI
       context 'IN operation' do
         it 'works for IN with a single app guid' do
           app_guid = 'some_app_guid'
-          app_model = VCAP::CloudController::AppModel.make(guid: app_guid)
+          app_model = create(:app_model, guid: app_guid)
 
-          route_mapping_1 = VCAP::CloudController::RouteMappingModel.make(app: app_model, app_port: 1)
-          route_mapping_2 = VCAP::CloudController::RouteMappingModel.make(app: app_model, app_port: 2)
-          VCAP::CloudController::RouteMappingModel.make(app_guid: 'different_app_guid')
+          route_mapping_1 = create(:route_mapping_model, app: app_model, app_port: 1)
+          route_mapping_2 = create(:route_mapping_model, app: app_model, app_port: 2)
+          create(:route_mapping_model, app: create(:app_model, guid: 'different_app_guid'))
 
           results = RouteMappingQuery.filtered_dataset_from_query_params(
             VCAP::CloudController::RouteMappingModel,
@@ -56,15 +56,15 @@ module VCAP::RestAPI
 
         it 'works for IN with multiple app guids' do
           app_guid1 = 'some_app_guid1'
-          app_model1 = VCAP::CloudController::AppModel.make(guid: app_guid1)
-          route_mapping_1 = VCAP::CloudController::RouteMappingModel.make(app: app_model1, app_port: 1)
-          route_mapping_2 = VCAP::CloudController::RouteMappingModel.make(app: app_model1, app_port: 2)
+          app_model1 = create(:app_model, guid: app_guid1)
+          route_mapping_1 = create(:route_mapping_model, app: app_model1, app_port: 1)
+          route_mapping_2 = create(:route_mapping_model, app: app_model1, app_port: 2)
 
           app_guid2 = 'some_app_guid2'
-          app_model2 = VCAP::CloudController::AppModel.make(guid: app_guid2)
-          route_mapping_3 = VCAP::CloudController::RouteMappingModel.make(app: app_model2, app_port: 3)
+          app_model2 = create(:app_model, guid: app_guid2)
+          route_mapping_3 = create(:route_mapping_model, app: app_model2, app_port: 3)
 
-          VCAP::CloudController::RouteMappingModel.make(app_guid: 'different_app_guid')
+          create(:route_mapping_model, app: create(:app_model, guid: 'different_app_guid'))
 
           results = RouteMappingQuery.filtered_dataset_from_query_params(
             VCAP::CloudController::RouteMappingModel,

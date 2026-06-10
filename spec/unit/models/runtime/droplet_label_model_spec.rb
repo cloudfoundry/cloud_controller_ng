@@ -5,8 +5,8 @@ module VCAP::CloudController
     it { is_expected.to have_timestamp_columns }
 
     it 'can be created' do
-      droplet = DropletModel.make
-      DropletLabelModel.make(resource_guid: droplet.guid, key_name: 'release', value: 'stable')
+      droplet = create(:droplet_model)
+      create(:droplet_label_model, resource_guid: droplet.guid, key_name: 'release', value: 'stable')
       expect(DropletLabelModel.find(key_name: 'release').value).to eq 'stable'
     end
   end

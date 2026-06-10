@@ -3,7 +3,7 @@ require 'actions/v2/app_create'
 
 module VCAP::CloudController
   RSpec.describe V2::AppCreate do
-    let(:space) { Space.make }
+    let(:space) { create(:space) }
     let(:access_validator) { double('access_validator', validate_access: true) }
 
     subject(:app_create) { V2::AppCreate.new(access_validator:) }
@@ -22,7 +22,7 @@ module VCAP::CloudController
         }
       end
 
-      let(:stack) { Stack.make(name: 'stacks-on-stacks') }
+      let(:stack) { create(:stack, name: 'stacks-on-stacks') }
 
       it 'creates the app' do
         process = app_create.create(request_attrs)
@@ -91,7 +91,7 @@ module VCAP::CloudController
         end
 
         it 'does allow a buildpack name' do
-          admin_buildpack            = Buildpack.make
+          admin_buildpack            = create(:buildpack)
           request_attrs['buildpack'] = admin_buildpack.name
           expect { app_create.create(request_attrs) }.not_to raise_error
         end
@@ -220,7 +220,7 @@ module VCAP::CloudController
 
       describe 'stack state validation' do
         context 'when stack is DISABLED' do
-          let(:disabled_stack) { Stack.make(name: 'disabled-stack', state: StackStates::STACK_DISABLED) }
+          let(:disabled_stack) { create(:stack, name: 'disabled-stack', state: StackStates::STACK_DISABLED) }
           let(:request_attrs) do
             {
               'name' => 'maria',
@@ -242,7 +242,7 @@ module VCAP::CloudController
         end
 
         context 'when stack is RESTRICTED' do
-          let(:restricted_stack) { Stack.make(name: 'restricted-stack', state: StackStates::STACK_RESTRICTED) }
+          let(:restricted_stack) { create(:stack, name: 'restricted-stack', state: StackStates::STACK_RESTRICTED) }
           let(:request_attrs) do
             {
               'name' => 'maria',
@@ -264,7 +264,7 @@ module VCAP::CloudController
         end
 
         context 'when stack is DEPRECATED' do
-          let(:deprecated_stack) { Stack.make(name: 'deprecated-stack', state: StackStates::STACK_DEPRECATED) }
+          let(:deprecated_stack) { create(:stack, name: 'deprecated-stack', state: StackStates::STACK_DEPRECATED) }
           let(:request_attrs) do
             {
               'name' => 'maria',
@@ -284,7 +284,7 @@ module VCAP::CloudController
         end
 
         context 'when stack is ACTIVE' do
-          let(:active_stack) { Stack.make(name: 'active-stack', state: StackStates::STACK_ACTIVE) }
+          let(:active_stack) { create(:stack, name: 'active-stack', state: StackStates::STACK_ACTIVE) }
           let(:request_attrs) do
             {
               'name' => 'maria',

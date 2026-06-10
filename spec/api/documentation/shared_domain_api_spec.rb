@@ -4,8 +4,8 @@ require 'rspec_api_documentation/dsl'
 RSpec.resource 'Shared Domains', type: %i[api legacy_api] do
   let(:admin_auth_header) { admin_headers['HTTP_AUTHORIZATION'] }
   let(:guid) { VCAP::CloudController::SharedDomain.first.guid }
-  let!(:domains) { 3.times { VCAP::CloudController::SharedDomain.make } }
-  let!(:tcp_domains) { VCAP::CloudController::SharedDomain.make router_group_guid: 'my-random-guid' }
+  let!(:domains) { FactoryBot.create_list(:shared_domain, 3) }
+  let!(:tcp_domains) { FactoryBot.create(:shared_domain, router_group_guid: 'my-random-guid') }
 
   authenticated_request
 
@@ -57,7 +57,7 @@ RSpec.resource 'Shared Domains', type: %i[api legacy_api] do
       let(:q) { 'name:shared-domain.com' }
 
       before do
-        VCAP::CloudController::SharedDomain.make name: 'shared-domain.com', router_group_guid: 'my-random-guid'
+        create(:shared_domain, name: 'shared-domain.com', router_group_guid: 'my-random-guid')
       end
 
       example 'Filtering Shared Domains by name' do

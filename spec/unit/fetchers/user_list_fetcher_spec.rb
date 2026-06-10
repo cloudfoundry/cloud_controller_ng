@@ -6,8 +6,8 @@ module VCAP::CloudController
     describe '#fetch_all' do
       subject { UserListFetcher.fetch_all(message, User.dataset) }
 
-      let!(:user1) { User.make }
-      let!(:user2) { User.make }
+      let!(:user1) { create(:user) }
+      let!(:user2) { create(:user) }
       let(:message) { UsersListMessage.from_params(filters) }
 
       context 'when no filters are specified' do
@@ -55,13 +55,13 @@ module VCAP::CloudController
       end
 
       context 'when fetching users by label selector' do
-        let!(:org1) { Organization.make(guid: 'org1') }
+        let!(:org1) { create(:organization, guid: 'org1') }
         let!(:user_label) do
-          VCAP::CloudController::UserLabelModel.make(resource_guid: user1.guid, key_name: 'dog', value: 'scooby-doo')
+          create(:user_label_model, resource_guid: user1.guid, key_name: 'dog', value: 'scooby-doo')
         end
 
         let!(:sad_user_label) do
-          VCAP::CloudController::UserLabelModel.make(resource_guid: user2.guid, key_name: 'dog', value: 'poodle')
+          create(:user_label_model, resource_guid: user2.guid, key_name: 'dog', value: 'poodle')
         end
 
         let(:results) { UserListFetcher.fetch_all(message, User.dataset).all }
@@ -78,13 +78,13 @@ module VCAP::CloudController
         end
 
         context 'and other filters are present' do
-          let!(:happiest_user) { User.make }
+          let!(:happiest_user) { create(:user) }
           let(:message) do
             UsersListMessage.from_params({ 'guids' => happiest_user.guid, 'label_selector' => 'dog in (chihuahua,scooby-doo)' })
           end
 
           let!(:happiest_user_label) do
-            VCAP::CloudController::UserLabelModel.make(resource_guid: happiest_user.guid, key_name: 'dog', value: 'scooby-doo')
+            create(:user_label_model, resource_guid: happiest_user.guid, key_name: 'dog', value: 'scooby-doo')
           end
 
           it 'returns the desired app' do

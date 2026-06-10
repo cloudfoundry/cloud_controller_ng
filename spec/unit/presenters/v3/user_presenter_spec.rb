@@ -5,24 +5,20 @@ require 'presenters/helpers/censorship'
 module VCAP::CloudController::Presenters::V3
   RSpec.describe UserPresenter do
     describe '#to_hash' do
-      let(:user) { VCAP::CloudController::User.make }
+      let(:user) { create(:user) }
       let(:uaa_user_mapping) { { user.guid => { 'origin' => 'some-origin', 'username' => 'some-username' } } }
 
       let!(:user_label) do
-        VCAP::CloudController::UserLabelModel.make(
-          resource_guid: user.guid,
-          key_prefix: 'maine.gov',
-          key_name: 'potato',
-          value: 'mashed'
-        )
+        create(:user_label_model, resource_guid: user.guid,
+                                  key_prefix: 'maine.gov',
+                                  key_name: 'potato',
+                                  value: 'mashed')
       end
 
       let!(:user_annotation) do
-        VCAP::CloudController::UserAnnotationModel.make(
-          resource_guid: user.guid,
-          key_name: 'contacts',
-          value: 'Bill tel(1111111) email(bill@fixme), Bob tel(222222) pager(3333333#555) email(bob@fixme)'
-        )
+        create(:user_annotation_model, resource_guid: user.guid,
+                                       key_name: 'contacts',
+                                       value: 'Bill tel(1111111) email(bill@fixme), Bob tel(222222) pager(3333333#555) email(bob@fixme)')
       end
 
       context 'when the user is a UAA user' do

@@ -33,7 +33,7 @@ RSpec.describe 'Service Broker API integration' do
     describe 'Last Operation for instances that have already been provisioned' do
       let(:broker_response_status) { 200 }
       let(:broker_response_body) { { state: 'succeeded' }.to_json }
-      let!(:service_instance) { VCAP::CloudController::ManagedServiceInstance.make(space_guid: @space_guid, service_plan_guid: @plan_guid) }
+      let!(:service_instance) { create(:managed_service_instance, space_guid: @space_guid, service_plan_guid: @plan_guid) }
       let(:operation_data) { nil }
       let(:basic_auth) { [stubbed_broker_username, stubbed_broker_password] }
 

@@ -22,7 +22,7 @@ module VCAP::CloudController
           'error' => 'nothing bad'
         }
       end
-      let(:package) { PackageModel.make(state: PackageModel::PENDING_STATE) }
+      let(:package) { create(:package_model, state: PackageModel::PENDING_STATE) }
       let(:message) { InternalPackageUpdateMessage.new(body) }
 
       it 'updates the package' do
@@ -36,7 +36,7 @@ module VCAP::CloudController
       end
 
       context 'when the package is already in READY_STATE' do
-        let(:package) { PackageModel.make(state: PackageModel::READY_STATE) }
+        let(:package) { create(:package_model, state: PackageModel::READY_STATE) }
 
         it 'raises InvalidPackage' do
           expect do
@@ -46,7 +46,7 @@ module VCAP::CloudController
       end
 
       context 'when the package is already in FAILED_STATE' do
-        let(:package) { PackageModel.make(state: PackageModel::FAILED_STATE) }
+        let(:package) { create(:package_model, state: PackageModel::FAILED_STATE) }
 
         it 'raises InvalidPackage' do
           expect do
@@ -60,11 +60,10 @@ module VCAP::CloudController
 
         context 'and the current state is COPYING' do
           let(:package) do
-            PackageModel.make(
-              state: PackageModel::COPYING_STATE,
-              package_hash: 'existing-sha1',
-              sha256_checksum: 'existing-sha256'
-            )
+            create(:package_model,
+                   state: PackageModel::COPYING_STATE,
+                   package_hash: 'existing-sha1',
+                   sha256_checksum: 'existing-sha256')
           end
 
           it 'does not require checksums in the message' do
@@ -80,7 +79,7 @@ module VCAP::CloudController
         context 'and the current state is not COPYING' do
           [PackageModel::PENDING_STATE, PackageModel::CREATED_STATE, PackageModel::EXPIRED_STATE].each do |package_state|
             it 'requires checksums in the message' do
-              package = PackageModel.make(state: package_state)
+              package = create(:package_model, state: package_state)
               expect do
                 package_update.update(package, message)
               end.to raise_error(InternalPackageUpdate::InvalidPackage, 'Checksums required when setting state to READY')

@@ -1,7 +1,7 @@
 require 'spec_helper'
 
 RSpec.describe 'Metrics' do
-  let(:user) { VCAP::CloudController::User.make }
+  let(:user) { create(:user) }
   let(:user_header) { headers_for(user) }
   let(:metrics_webserver) { VCAP::CloudController::ApiMetricsWebserver.new }
   let(:periodic_updater) { CloudController::DependencyLocator.instance.periodic_updater }
@@ -38,9 +38,7 @@ RSpec.describe 'Metrics' do
       cc_total_users = Prometheus::Client.registry.get(:cc_total_users)
       cc_total_users.set(0) unless cc_total_users.nil?
 
-      10.times do
-        VCAP::CloudController::User.make
-      end
+      create_list(:user, 10)
       periodic_updater.update_user_count
     end
 

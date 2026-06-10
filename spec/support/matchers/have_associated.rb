@@ -4,7 +4,7 @@ RSpec::Matchers.define :have_associated do |association, options={}|
   end
   match do |_|
     instance = options[:test_instance]
-    instance ||= described_class.make
+    instance ||= FactoryBot.create(described_class.name.demodulize.underscore.to_sym)
     associated_instance = get_associated_instance(instance, association, options)
 
     if association[-1] == 's'
@@ -21,7 +21,7 @@ RSpec::Matchers.define :have_associated do |association, options={}|
       options[:associated_instance].call(instance)
     else
       associated_class = options[:class] || "VCAP::CloudController::#{association.to_s.classify}".constantize
-      associated_class.make
+      FactoryBot.create(associated_class.name.demodulize.underscore.to_sym)
     end
   end
 end

@@ -6,18 +6,18 @@ module VCAP::CloudController
     let(:fetcher) { BuildpackListFetcher }
 
     describe '#fetch_all' do
-      let!(:stack1) { Stack.make }
-      let!(:stack2) { Stack.make }
-      let!(:stack3) { Stack.make }
+      let!(:stack1) { create(:stack) }
+      let!(:stack2) { create(:stack) }
+      let!(:stack3) { create(:stack) }
 
-      let!(:buildpack1) { Buildpack.make(stack: stack1.name) }
-      let!(:buildpack2) { Buildpack.make(stack: stack2.name) }
-      let!(:buildpack3) { Buildpack.make(stack: stack3.name) }
-      let!(:buildpack4) { Buildpack.make(stack: stack1.name) }
-      let!(:buildpack5) { Buildpack.make(stack: stack1.name, lifecycle: 'cnb') }
-      let!(:buildpack6) { Buildpack.make(stack: stack2.name, lifecycle: 'cnb') }
-      let!(:buildpack7) { Buildpack.make(stack: nil, lifecycle: 'cnb') }
-      let!(:buildpack_without_stack) { Buildpack.make(stack: nil) }
+      let!(:buildpack1) { create(:buildpack, stack: stack1.name) }
+      let!(:buildpack2) { create(:buildpack, stack: stack2.name) }
+      let!(:buildpack3) { create(:buildpack, stack: stack3.name) }
+      let!(:buildpack4) { create(:buildpack, stack: stack1.name) }
+      let!(:buildpack5) { create(:buildpack, stack: stack1.name, lifecycle: 'cnb') }
+      let!(:buildpack6) { create(:buildpack, stack: stack2.name, lifecycle: 'cnb') }
+      let!(:buildpack7) { create(:buildpack, stack: nil, lifecycle: 'cnb') }
+      let!(:buildpack_without_stack) { create(:buildpack, stack: nil) }
 
       let(:message) { BuildpacksListMessage.from_params(filters) }
 
@@ -50,7 +50,7 @@ module VCAP::CloudController
             'label_selector' => 'key=value'
           }
         end
-        let!(:label) { BuildpackLabelModel.make(resource_guid: buildpack1.guid, key_name: 'key', value: 'value') }
+        let!(:label) { create(:buildpack_label_model, resource_guid: buildpack1.guid, key_name: 'key', value: 'value') }
 
         it 'returns all of the desired buildpacks' do
           expect(subject).to contain_exactly(buildpack1)

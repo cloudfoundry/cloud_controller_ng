@@ -10,7 +10,7 @@ module VCAP::CloudController
 
     describe 'update' do
       context 'updating the process' do
-        let(:process) { ProcessModel.make }
+        let(:process) { create(:process_model) }
         let(:app) { process.app }
         let(:request_attrs) do
           {
@@ -49,11 +49,11 @@ module VCAP::CloudController
 
         context 'when the app is deploying' do
           before do
-            VCAP::CloudController::DeploymentModel.make(app: app, state: 'DEPLOYING')
+            create(:deployment_model, app: app, state: 'DEPLOYING')
           end
 
           context 'when the process is of type web' do
-            let(:process) { ProcessModel.make(type: 'web') }
+            let(:process) { create(:process_model, type: 'web') }
 
             it 'raises an error and does NOT update the web process' do
               request_attrs = {
@@ -106,7 +106,7 @@ module VCAP::CloudController
           end
 
           context 'when the process is NOT of type web' do
-            let(:process) { ProcessModel.make(type: 'totes-not-web') }
+            let(:process) { create(:process_model, type: 'totes-not-web') }
 
             it 'still updates the non-web processes' do
               app_update.update(app, process, request_attrs)
@@ -128,9 +128,9 @@ module VCAP::CloudController
       end
 
       it 'updates the app' do
-        process = ProcessModel.make
+        process = create(:process_model)
         app     = process.app
-        stack   = Stack.make(name: 'stack-name')
+        stack   = create(:stack, name: 'stack-name')
 
         request_attrs = {
           'name' => 'maria',
@@ -157,18 +157,16 @@ module VCAP::CloudController
       end
 
       context 'with revisions enabled' do
-        let!(:process) { ProcessModel.make }
+        let!(:process) { create(:process_model) }
         let!(:app) { process.app }
-        let!(:package) { PackageModel.make(app: app, package_hash: 'some-hash', state: PackageModel::READY_STATE) }
+        let!(:package) { create(:package_model, app: app, package_hash: 'some-hash', state: PackageModel::READY_STATE) }
         let!(:droplet) do
-          DropletModel.make(
-            app: app,
-            state: DropletModel::STAGED_STATE,
-            package: package,
-            process_types: {
-              'web' => 'webby'
-            }
-          )
+          create(:droplet_model, app: app,
+                                 state: DropletModel::STAGED_STATE,
+                                 package: package,
+                                 process_types: {
+                                   'web' => 'webby'
+                                 })
         end
 
         before do
@@ -191,9 +189,9 @@ module VCAP::CloudController
 
       context 'no valid package or droplet' do
         let(:current_state) { 'STARTED' }
-        let(:process) { ProcessModel.make(state: current_state) }
+        let(:process) { create(:process_model, state: current_state) }
         let(:app) { process.app }
-        let(:new_stack) { Stack.make }
+        let(:new_stack) { create(:stack) }
         let(:request_attrs) do
           {
             'instances' => 2,
@@ -250,7 +248,7 @@ module VCAP::CloudController
 
       context 'updating buildpack' do
         context 'when custom buildpacks are disabled' do
-          let(:process) { ProcessModel.make }
+          let(:process) { create(:process_model) }
           let(:app) { process.app }
 
           before { TestConfig.override(disable_custom_buildpacks: true) }
@@ -272,7 +270,7 @@ module VCAP::CloudController
           end
 
           it 'does allow a buildpack name' do
-            admin_buildpack = Buildpack.make
+            admin_buildpack = create(:buildpack)
             request_attrs   = { 'buildpack' => admin_buildpack.name }
 
             expect do
@@ -299,7 +297,7 @@ module VCAP::CloudController
 
         describe 'empty values (that trigger autodetect)' do
           it 'allows buildpack to be set to nil' do
-            process = ProcessModel.make
+            process = create(:process_model)
             app     = process.app
 
             request_attrs = {
@@ -312,7 +310,7 @@ module VCAP::CloudController
           end
 
           it 'allows buildpack to be set to empty string' do
-            process = ProcessModel.make
+            process = create(:process_model)
             app     = process.app
 
             request_attrs = {
@@ -327,8 +325,8 @@ module VCAP::CloudController
       end
 
       describe 'setting stack' do
-        let(:new_stack) { Stack.make }
-        let(:process) { ProcessModel.make }
+        let(:new_stack) { create(:stack) }
+        let(:process) { create(:process_model) }
         let(:app) { process.app }
         let(:request_attrs) { { 'stack_guid' => new_stack.guid } }
 
@@ -361,7 +359,7 @@ module VCAP::CloudController
           let(:process) { ProcessModelFactory.make(state: 'STARTED') }
 
           before do
-            PackageModel.make(app: app, package_hash: 'some-hash', state: PackageModel::READY_STATE)
+            create(:package_model, app: app, package_hash: 'some-hash', state: PackageModel::READY_STATE)
             process.reload
           end
 
@@ -378,7 +376,7 @@ module VCAP::CloudController
         end
 
         context 'when the app was never staged' do
-          let(:process) { ProcessModel.make }
+          let(:process) { create(:process_model) }
 
           it 'does not mark the app for staging' do
             expect(process).not_to be_staged
@@ -395,7 +393,7 @@ module VCAP::CloudController
 
       describe 'changing lifecycle types' do
         context 'when changing from docker to buildpack' do
-          let(:process) { ProcessModel.make(app: AppModel.make(:docker)) }
+          let(:process) { create(:process_model, app: create(:app_model, :docker)) }
           let(:app) { process.app }
 
           it 'raises an error setting buildpack' do
@@ -416,7 +414,7 @@ module VCAP::CloudController
         end
 
         context 'when changing from buildpack to docker' do
-          let(:process) { ProcessModel.make(app: AppModel.make) }
+          let(:process) { create(:process_model, app: create(:app_model)) }
           let(:app) { process.app }
 
           it 'raises an error' do
@@ -430,7 +428,7 @@ module VCAP::CloudController
       end
 
       describe 'updating docker_image' do
-        let(:process) { ProcessModelFactory.make(app: AppModel.make(:docker), docker_image: 'repo/original-image') }
+        let(:process) { ProcessModelFactory.make(app: create(:app_model, :docker), docker_image: 'repo/original-image') }
         let!(:original_package) { process.latest_package }
         let(:app_stage) { instance_double(V2::AppStage, stage: nil, warnings: []) }
 
@@ -505,7 +503,7 @@ module VCAP::CloudController
       end
 
       describe 'updating docker_credentials' do
-        let(:process) { ProcessModelFactory.make(app: AppModel.make(:docker), docker_image: 'repo/original-image') }
+        let(:process) { ProcessModelFactory.make(app: create(:app_model, :docker), docker_image: 'repo/original-image') }
         let!(:original_package) { process.latest_package }
         let(:app_stage) { instance_double(V2::AppStage, stage: nil, warnings: []) }
 
@@ -531,7 +529,7 @@ module VCAP::CloudController
         end
 
         context 'when docker_image is not requested and the app does not have a docker_image' do
-          let(:process) { ProcessModelFactory.make(app: AppModel.make(:docker)) }
+          let(:process) { ProcessModelFactory.make(app: create(:app_model, :docker)) }
 
           it 'raises an error' do
             request_attrs = { 'docker_credentials' => {
@@ -558,7 +556,7 @@ module VCAP::CloudController
 
           context 'when the app needs staging' do
             before do
-              PackageModel.make(app: app, state: PackageModel::READY_STATE, package_hash: 'some-hash')
+              create(:package_model, app: app, state: PackageModel::READY_STATE, package_hash: 'some-hash')
               process.reload
             end
 
@@ -641,7 +639,7 @@ module VCAP::CloudController
       end
 
       context 'when starting an app without a package' do
-        let(:process) { ProcessModel.make(instances: 1) }
+        let(:process) { create(:process_model, instances: 1) }
 
         it 'raises an error' do
           expect do
@@ -651,7 +649,7 @@ module VCAP::CloudController
 
         context 'and there is a staged droplet' do
           before do
-            process.app.update(droplet: DropletModel.make(app: process.app, state: DropletModel::STAGED_STATE))
+            process.app.update(droplet: create(:droplet_model, app: process.app, state: DropletModel::STAGED_STATE))
           end
 
           it 'does not raise an error' do
@@ -665,7 +663,7 @@ module VCAP::CloudController
       describe 'starting and stopping' do
         let(:app) { process.app }
         let(:process) { ProcessModelFactory.make(instances: 1, state: state) }
-        let(:sibling_process) { ProcessModel.make(instances: 1, state: state, app: app, type: 'worker') }
+        let(:sibling_process) { create(:process_model, instances: 1, state: state, app: app, type: 'worker') }
 
         context 'starting' do
           let(:state) { 'STOPPED' }
@@ -717,11 +715,11 @@ module VCAP::CloudController
       end
 
       describe 'stack state validation on stack change' do
-        let(:process) { ProcessModel.make }
+        let(:process) { create(:process_model) }
         let(:app) { process.app }
 
         context 'when stack is DISABLED' do
-          let(:disabled_stack) { Stack.make(name: 'disabled-stack', state: StackStates::STACK_DISABLED) }
+          let(:disabled_stack) { create(:stack, name: 'disabled-stack', state: StackStates::STACK_DISABLED) }
 
           it 'raises StackValidationFailed error' do
             expect do
@@ -734,7 +732,7 @@ module VCAP::CloudController
         end
 
         context 'when stack is RESTRICTED' do
-          let(:restricted_stack) { Stack.make(name: 'restricted-stack', state: StackStates::STACK_RESTRICTED) }
+          let(:restricted_stack) { create(:stack, name: 'restricted-stack', state: StackStates::STACK_RESTRICTED) }
 
           context 'when app has no builds' do
             it 'raises StackValidationFailed error' do
@@ -749,7 +747,7 @@ module VCAP::CloudController
           end
 
           context 'when app has previous builds' do
-            before { BuildModel.make(app: app, state: BuildModel::STAGED_STATE) }
+            before { create(:build_model, app: app, state: BuildModel::STAGED_STATE) }
 
             it 'allows the update' do
               expect(app.builds_dataset.count).to eq(1)
@@ -761,7 +759,7 @@ module VCAP::CloudController
         end
 
         context 'when stack is DEPRECATED' do
-          let(:deprecated_stack) { Stack.make(name: 'deprecated-stack', state: StackStates::STACK_DEPRECATED) }
+          let(:deprecated_stack) { create(:stack, name: 'deprecated-stack', state: StackStates::STACK_DEPRECATED) }
 
           it 'updates the app with warnings' do
             app_update.update(app, process, { 'stack_guid' => deprecated_stack.guid })
@@ -771,7 +769,7 @@ module VCAP::CloudController
         end
 
         context 'when stack is ACTIVE' do
-          let(:active_stack) { Stack.make(name: 'active-stack', state: StackStates::STACK_ACTIVE) }
+          let(:active_stack) { create(:stack, name: 'active-stack', state: StackStates::STACK_ACTIVE) }
 
           it 'updates the app without warnings' do
             app_update.update(app, process, { 'stack_guid' => active_stack.guid })
@@ -787,7 +785,7 @@ module VCAP::CloudController
         end
 
         context 'when app is docker-based' do
-          let(:docker_process) { ProcessModelFactory.make(app: AppModel.make(:docker), docker_image: 'repo/original-image') }
+          let(:docker_process) { ProcessModelFactory.make(app: create(:app_model, :docker), docker_image: 'repo/original-image') }
           let(:docker_app) { docker_process.app }
 
           it 'skips stack validation when updating docker image' do

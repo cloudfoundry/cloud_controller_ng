@@ -6,10 +6,10 @@ module VCAP::Services::ServiceBrokers
     let(:services_events_repository) do
       VCAP::CloudController::Repositories::ServiceEventRepository.new(VCAP::CloudController::UserAuditInfo.new(user_guid: user.guid, user_email: email))
     end
-    let(:broker) { VCAP::CloudController::ServiceBroker.make }
+    let(:broker) { create(:service_broker) }
     let(:dashboard_client_manager) { instance_double(VCAP::Services::SSO::DashboardClientManager) }
     let(:security_context) { class_double(VCAP::CloudController::SecurityContext, current_user: user, current_user_email: email) }
-    let(:user) { VCAP::CloudController::User.make }
+    let(:user) { create(:user) }
     let(:email) { 'email@example.com' }
 
     before do
@@ -42,8 +42,8 @@ module VCAP::Services::ServiceBrokers
       end
 
       it 'records service and service plan deletion events' do
-        service = VCAP::CloudController::Service.make(service_broker: broker)
-        plan = VCAP::CloudController::ServicePlan.make(service:)
+        service = create(:service, service_broker: broker)
+        plan = create(:service_plan, service:)
 
         remover.delete(brokers)
 
@@ -77,8 +77,8 @@ module VCAP::Services::ServiceBrokers
       end
 
       it 'records service and service_plan deletion events' do
-        service = VCAP::CloudController::Service.make(service_broker: broker)
-        plan = VCAP::CloudController::ServicePlan.make(service:)
+        service = create(:service, service_broker: broker)
+        plan = create(:service_plan, service:)
 
         remover.remove(broker)
 

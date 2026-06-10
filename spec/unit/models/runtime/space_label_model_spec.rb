@@ -5,8 +5,8 @@ module VCAP::CloudController
     it { is_expected.to have_timestamp_columns }
 
     it 'can be created' do
-      space = Space.make(name: 'dora_space')
-      SpaceLabelModel.make(resource_guid: space.guid, key_name: 'release', value: 'stable')
+      space = create(:space, name: 'dora_space')
+      create(:space_label_model, resource_guid: space.guid, key_name: 'release', value: 'stable')
       expect(SpaceLabelModel.find(key_name: 'release').value).to eq 'stable'
     end
   end

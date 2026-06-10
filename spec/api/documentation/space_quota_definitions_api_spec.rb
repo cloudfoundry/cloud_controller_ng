@@ -3,7 +3,7 @@ require 'rspec_api_documentation/dsl'
 
 RSpec.resource 'Space Quota Definitions', type: %i[api legacy_api] do
   let(:admin_auth_header) { admin_headers['HTTP_AUTHORIZATION'] }
-  let(:space_quota_definition) { VCAP::CloudController::SpaceQuotaDefinition.make }
+  let(:space_quota_definition) { FactoryBot.create(:space_quota_definition) }
   let!(:guid) { space_quota_definition.guid }
 
   authenticated_request
@@ -46,7 +46,7 @@ RSpec.resource 'Space Quota Definitions', type: %i[api legacy_api] do
   post '/v2/space_quota_definitions' do
     include_context 'updatable_fields', required: true
     example 'Creating a Space Quota Definition' do
-      organization_guid = VCAP::CloudController::Organization.make.guid
+      organization_guid = FactoryBot.create(:organization).guid
       client.post '/v2/space_quota_definitions', Oj.dump(
         required_fields.merge(organization_guid: organization_guid,
                               total_reserved_route_ports: 5,
@@ -78,7 +78,7 @@ RSpec.resource 'Space Quota Definitions', type: %i[api legacy_api] do
     include_context 'guid_parameter'
 
     describe 'Spaces' do
-      let(:associated_space) { VCAP::CloudController::Space.make(organization_guid: space_quota_definition.organization_guid) }
+      let(:associated_space) { create(:space, organization: space_quota_definition.organization) }
       let(:associated_space_guid) { associated_space.guid }
 
       before do
@@ -89,7 +89,7 @@ RSpec.resource 'Space Quota Definitions', type: %i[api legacy_api] do
       nested_model_remove :space, :space_quota_definition
 
       describe 'Associate Spaces' do
-        let!(:space) { VCAP::CloudController::Space.make(organization_guid: space_quota_definition.organization_guid) }
+        let!(:space) { create(:space, organization: space_quota_definition.organization) }
         let(:space_guid) { space.guid }
 
         parameter :space_guid, 'The guid of the space'

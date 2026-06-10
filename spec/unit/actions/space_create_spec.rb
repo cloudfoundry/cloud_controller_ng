@@ -5,7 +5,7 @@ require 'models/runtime/space'
 module VCAP::CloudController
   RSpec.describe SpaceCreate do
     describe 'create' do
-      let(:org) { VCAP::CloudController::Organization.make }
+      let(:org) { create(:organization) }
       let(:relationships) { { organization: { data: { guid: org.guid } } } }
       let(:user_audit_info) { UserAuditInfo.new(user_email: 'gooid', user_guid: 'amelia@cats.com', user_name: 'amelia') }
 

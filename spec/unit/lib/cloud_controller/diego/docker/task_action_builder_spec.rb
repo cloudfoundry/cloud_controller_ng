@@ -17,7 +17,7 @@ module VCAP::CloudController
                      })
         end
 
-        let(:task) { TaskModel.make(:docker, command: command, name: 'my-task') }
+        let(:task) { create(:task_model, :docker, command: command, name: 'my-task') }
         let(:lifecycle_data) do
           {
             droplet_path: 'user/image'

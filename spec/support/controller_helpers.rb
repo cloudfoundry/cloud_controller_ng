@@ -97,7 +97,7 @@ module ControllerHelpers
 
   def admin_headers
     unless @admin_headers
-      user = User.make_unsaved
+      user = FactoryBot.build(:user)
       @admin_headers = headers_for(user, scopes: %w[cloud_controller.admin])
     end
     @admin_headers
@@ -105,7 +105,7 @@ module ControllerHelpers
 
   def admin_read_only_headers
     unless @admin_read_only_headers
-      user = User.make_unsaved
+      user = FactoryBot.build(:user)
       @admin_read_only_headers = headers_for(user, scopes: %w[cloud_controller.admin_read_only])
     end
     @admin_read_only_headers
@@ -113,7 +113,7 @@ module ControllerHelpers
 
   def global_auditor_headers
     unless @global_auditor_headers
-      user = User.make_unsaved
+      user = FactoryBot.build(:user)
       @global_auditor_headers = headers_for(user, scopes: %w[cloud_controller.global_auditor])
     end
     @global_auditor_headers
@@ -121,7 +121,7 @@ module ControllerHelpers
 
   def build_state_updater_headers
     unless @build_state_updater_headers
-      user = User.make_unsaved
+      user = FactoryBot.build(:user)
       @build_state_updater_headers = headers_for(user, scopes: %w[cloud_controller.write cloud_controller.update_build_state])
     end
     @build_state_updater_headers

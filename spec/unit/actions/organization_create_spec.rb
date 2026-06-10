@@ -4,7 +4,7 @@ require 'actions/organization_create'
 module VCAP::CloudController
   RSpec.describe OrganizationCreate do
     describe 'create' do
-      let(:user) { User.make }
+      let(:user) { create(:user) }
       let(:user_email) { 'user@example.com' }
       let(:user_audit_info) { UserAuditInfo.new(user_guid: user.guid, user_email: user_email) }
       let(:uaa_client) { instance_double(VCAP::CloudController::UaaClient) }

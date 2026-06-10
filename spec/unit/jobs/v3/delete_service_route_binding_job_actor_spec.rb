@@ -23,7 +23,7 @@ module VCAP::CloudController
 
       describe '#get_resource' do
         let(:binding) do
-          RouteBinding.make
+          create(:route_binding)
         end
 
         it 'returns the resource when it exists' do

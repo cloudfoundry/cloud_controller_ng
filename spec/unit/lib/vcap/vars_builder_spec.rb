@@ -4,14 +4,14 @@ require 'vcap/vars_builder'
 module VCAP::CloudController
   RSpec.describe 'VarsBuilder' do
     describe 'vcap_application' do
-      let(:space) { VCAP::CloudController::Space.make }
-      let(:v3_app_model) { AppModel.make(name: 'v3-app-name', space: space) }
+      let(:space) { create(:space) }
+      let(:v3_app_model) { create(:app_model, name: 'v3-app-name', space: space) }
       let(:process) { ProcessModelFactory.make(app: v3_app_model, memory: 259, disk_quota: 799, file_descriptors: 1234) }
 
       before do
-        shared_domain = SharedDomain.make(name: 'shared.domain')
-        route_with_path = Route.make(space: space, domain: shared_domain, host: 'some-host', path: '/some-path')
-        RouteMappingModel.make(app: v3_app_model, route: route_with_path)
+        shared_domain = create(:shared_domain, name: 'shared.domain')
+        route_with_path = create(:route, space: space, domain: shared_domain, host: 'some-host', path: '/some-path')
+        create(:route_mapping_model, app: v3_app_model, route: route_with_path)
       end
 
       describe 'building hash for a v2 app model (ProcessModel)' do

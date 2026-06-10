@@ -3,13 +3,13 @@ require 'spec_helper'
 module VCAP::CloudController
   RSpec.describe IncludeOrganizationDecorator do
     subject(:decorator) { IncludeOrganizationDecorator }
-    let(:organization1) { Organization.make(name: 'first-organization', created_at: Time.now.utc - 1.second) }
-    let(:organization2) { Organization.make(name: 'second-organization') }
+    let(:organization1) { create(:organization, name: 'first-organization', created_at: Time.now.utc - 1.second) }
+    let(:organization2) { create(:organization, name: 'second-organization') }
 
-    let(:space1) { Space.make(name: 'first-space', organization: organization1) }
-    let(:space2) { Space.make(name: 'second-space', organization: organization2) }
+    let(:space1) { create(:space, name: 'first-space', organization: organization1) }
+    let(:space2) { create(:space, name: 'second-space', organization: organization2) }
 
-    let(:apps) { [AppModel.make(space: space1), AppModel.make(space: space2), AppModel.make(space: space1)] }
+    let(:apps) { [create(:app_model, space: space1), create(:app_model, space: space2), create(:app_model, space: space1)] }
 
     it 'decorates the given hash with organizations from apps in the correct order' do
       wreathless_hash = { foo: 'bar' }

@@ -3,8 +3,8 @@ require 'rspec_api_documentation/dsl'
 
 RSpec.resource 'Service Bindings', type: %i[api legacy_api] do
   let(:admin_auth_header) { admin_headers['HTTP_AUTHORIZATION'] }
-  let!(:service_binding) { VCAP::CloudController::ServiceBinding.make }
-  let!(:v2_app) { VCAP::CloudController::ProcessModel.make(app: service_binding.app, type: 'web') }
+  let!(:service_binding) { FactoryBot.create(:service_binding) }
+  let!(:v2_app) { FactoryBot.create(:process, app: service_binding.app, type: 'web') }
   let(:guid) { service_binding.guid }
   authenticated_request
 
@@ -34,8 +34,8 @@ RSpec.resource 'Service Bindings', type: %i[api legacy_api] do
     field :parameters, 'Arbitrary parameters to pass along to the service broker. Must be a JSON object', required: false
 
     example 'Create a Service Binding' do
-      space = VCAP::CloudController::Space.make
-      service_instance_guid = VCAP::CloudController::ServiceInstance.make(space:).guid
+      space = FactoryBot.create(:space)
+      service_instance_guid = FactoryBot.create(:service_instance, space:).guid
       process_guid = VCAP::CloudController::ProcessModelFactory.make(space:).guid
       request_json = Oj.dump({ service_instance_guid: service_instance_guid, app_guid: process_guid, parameters: { the_service_broker: 'wants this object' } })
 

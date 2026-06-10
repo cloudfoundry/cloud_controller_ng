@@ -2,21 +2,21 @@ require 'spec_helper'
 require 'request_spec_shared_examples'
 
 RSpec.describe 'Revisions' do
-  let(:user) { VCAP::CloudController::User.make }
+  let(:user) { create(:user) }
   let(:user_header) { headers_for(user, email: user_email, user_name: user_name) }
-  let(:org) { VCAP::CloudController::Organization.make(created_at: 3.days.ago) }
-  let(:space) { VCAP::CloudController::Space.make(organization: org) }
-  let(:stack) { VCAP::CloudController::Stack.make }
+  let(:org) { create(:organization, created_at: 3.days.ago) }
+  let(:space) { create(:space, organization: org) }
+  let(:stack) { create(:stack) }
   let(:user_email) { Sham.email }
   let(:user_name) { 'some-username' }
-  let(:app_model) { VCAP::CloudController::AppModel.make(name: 'app_name', space: space) }
-  let!(:revision) { VCAP::CloudController::RevisionModel.make(app: app_model, version: 42) }
+  let(:app_model) { create(:app_model, name: 'app_name', space: space) }
+  let!(:revision) { create(:revision_model, app: app_model, version: 42) }
 
   describe 'GET /v3/revisions/:revguid' do
-    let(:droplet) { VCAP::CloudController::DropletModel.make(process_types: { 'web' => 'bake rackup' }) }
-    let(:revision) { VCAP::CloudController::RevisionModel.make(app: app_model, version: 42, droplet: droplet) }
-    let!(:revision_worker_process_command) { VCAP::CloudController::RevisionProcessCommandModel.make(revision: revision, process_type: 'worker', process_command: './work') }
-    let!(:revision_sidecar) { VCAP::CloudController::RevisionSidecarModel.make(revision: revision, name: 'my-sidecar', command: 'run-sidecar', memory: 300) }
+    let(:droplet) { create(:droplet_model, process_types: { 'web' => 'bake rackup' }) }
+    let(:revision) { create(:revision_model, app: app_model, version: 42, droplet: droplet) }
+    let!(:revision_worker_process_command) { create(:revision_process_command_model, revision: revision, process_type: 'worker', process_command: './work') }
+    let!(:revision_sidecar) { create(:revision_sidecar_model, revision: revision, name: 'my-sidecar', command: 'run-sidecar', memory: 300) }
     let(:api_call) { ->(user_headers) { get "/v3/revisions/#{revision.guid}", nil, user_headers } }
     let(:revision_model_response_object) do
       {
@@ -76,7 +76,7 @@ RSpec.describe 'Revisions' do
   end
 
   describe 'GET /v3/apps/:guid/revisions' do
-    let!(:revision2) { VCAP::CloudController::RevisionModel.make(app: app_model, version: 43, description: 'New droplet deployed') }
+    let!(:revision2) { create(:revision_model, app: app_model, version: 43, description: 'New droplet deployed') }
 
     context 'gets all revisions for an app' do
       it_behaves_like 'permissions for list endpoint', ALL_PERMISSIONS do
@@ -202,7 +202,7 @@ RSpec.describe 'Revisions' do
 
       context 'filtering' do
         it 'gets a list of revisions matching the provided versions' do
-          revision3 = VCAP::CloudController::RevisionModel.make(app: app_model, version: 44, description: 'Rollback to revision 42')
+          revision3 = create(:revision_model, app: app_model, version: 44, description: 'Rollback to revision 42')
 
           get "/v3/apps/#{app_model.guid}/revisions?per_page=2&versions=42,44", nil, user_header
           expect(last_response.status).to eq(200)
@@ -301,18 +301,18 @@ RSpec.describe 'Revisions' do
         end
 
         context 'label_selector' do
-          let!(:revisionA) { VCAP::CloudController::RevisionModel.make(app: app_model) }
-          let!(:revisionB) { VCAP::CloudController::RevisionModel.make(app: app_model) }
-          let!(:revisionC) { VCAP::CloudController::RevisionModel.make(app: app_model) }
+          let!(:revisionA) { create(:revision_model, app: app_model) }
+          let!(:revisionB) { create(:revision_model, app: app_model) }
+          let!(:revisionC) { create(:revision_model, app: app_model) }
 
-          let!(:revAFruit) { VCAP::CloudController::RevisionLabelModel.make(key_name: 'fruit', value: 'strawberry', resource_guid: revisionA.guid) }
-          let!(:revAAnimal) { VCAP::CloudController::RevisionLabelModel.make(key_name: 'animal', value: 'horse', resource_guid: revisionA.guid) }
+          let!(:revAFruit) { create(:revision_label_model, key_name: 'fruit', value: 'strawberry', resource_guid: revisionA.guid) }
+          let!(:revAAnimal) { create(:revision_label_model, key_name: 'animal', value: 'horse', resource_guid: revisionA.guid) }
 
-          let!(:revBEnv) { VCAP::CloudController::RevisionLabelModel.make(key_name: 'env', value: 'prod', resource_guid: revisionB.guid) }
-          let!(:revBAnimal) { VCAP::CloudController::RevisionLabelModel.make(key_name: 'animal', value: 'dog', resource_guid: revisionB.guid) }
+          let!(:revBEnv) { create(:revision_label_model, key_name: 'env', value: 'prod', resource_guid: revisionB.guid) }
+          let!(:revBAnimal) { create(:revision_label_model, key_name: 'animal', value: 'dog', resource_guid: revisionB.guid) }
 
-          let!(:revCEnv) { VCAP::CloudController::RevisionLabelModel.make(key_name: 'env', value: 'prod', resource_guid: revisionC.guid) }
-          let!(:revCAnimal) { VCAP::CloudController::RevisionLabelModel.make(key_name: 'animal', value: 'horse', resource_guid: revisionC.guid) }
+          let!(:revCEnv) { create(:revision_label_model, key_name: 'env', value: 'prod', resource_guid: revisionC.guid) }
+          let!(:revCAnimal) { create(:revision_label_model, key_name: 'animal', value: 'horse', resource_guid: revisionC.guid) }
 
           it 'returns the matching revisions' do
             get "/v3/apps/#{app_model.guid}/revisions?label_selector=!fruit,env=prod,animal in (dog,horse)", nil, user_header
@@ -441,11 +441,10 @@ RSpec.describe 'Revisions' do
     end
 
     let!(:revision2) do
-      VCAP::CloudController::RevisionModel.make(
-        app: app_model,
-        version: 43,
-        environment_variables: { 'key' => 'value' }
-      )
+      create(:revision_model,
+             app: app_model,
+             version: 43,
+             environment_variables: { 'key' => 'value' })
     end
 
     it 'gets the environment variables for the revision' do
@@ -469,11 +468,11 @@ RSpec.describe 'Revisions' do
   end
 
   describe 'GET /v3/apps/:guid/revisions/deployed' do
-    let!(:revision2) { VCAP::CloudController::RevisionModel.make(app: app_model, version: 43, description: 'New droplet deployed') }
-    let!(:revision3) { VCAP::CloudController::RevisionModel.make(app: app_model, version: 44, description: 'New environment variables') }
-    let!(:process) { VCAP::CloudController::ProcessModel.make(app: app_model, revision: revision, type: 'web', state: 'STARTED') }
-    let!(:process2) { VCAP::CloudController::ProcessModel.make(app: app_model, revision: revision2, type: 'worker', state: 'STARTED') }
-    let!(:process3) { VCAP::CloudController::ProcessModel.make(app: app_model, revision: revision3, type: 'web', state: 'STOPPED') }
+    let!(:revision2) { create(:revision_model, app: app_model, version: 43, description: 'New droplet deployed') }
+    let!(:revision3) { create(:revision_model, app: app_model, version: 44, description: 'New environment variables') }
+    let!(:process) { create(:process, app: app_model, revision: revision, type: 'web', state: 'STARTED') }
+    let!(:process2) { create(:process, app: app_model, revision: revision2, type: 'worker', state: 'STARTED') }
+    let!(:process3) { create(:process, app: app_model, revision: revision3, type: 'web', state: 'STOPPED') }
 
     it_behaves_like 'permissions for list endpoint', ALL_PERMISSIONS do
       let(:api_call) { ->(user_headers) { get "/v3/apps/#{app_model.guid}/revisions/deployed?per_page=2", nil, user_headers } }

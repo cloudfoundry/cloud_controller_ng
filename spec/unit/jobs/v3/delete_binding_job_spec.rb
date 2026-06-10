@@ -14,7 +14,7 @@ module VCAP::CloudController
       end
 
       context 'route' do
-        let(:route) { VCAP::CloudController::Route.make(space:) }
+        let(:route) { create(:route, space:) }
         let(:binding) do
           RouteBinding.new.save_with_attributes_and_new_operation(
             {
@@ -37,7 +37,7 @@ module VCAP::CloudController
             {
               type: 'app',
               service_instance: service_instance,
-              app: AppModel.make(space: service_instance.space),
+              app: create(:app_model, space: service_instance.space),
               credentials: {
                 test: 'secretPassword'
               }

@@ -4,23 +4,23 @@ require 'actions/droplet_copy'
 module VCAP::CloudController
   RSpec.describe DropletCopy do
     let(:droplet_copy) { DropletCopy.new(source_droplet) }
-    let(:source_space) { VCAP::CloudController::Space.make }
-    let!(:target_app) { VCAP::CloudController::AppModel.make(name: 'target-app-name') }
-    let!(:source_app) { VCAP::CloudController::AppModel.make(name: 'source-app-name', space: source_space) }
+    let(:source_space) { create(:space) }
+    let!(:target_app) { create(:app_model, name: 'target-app-name') }
+    let!(:source_app) { create(:app_model, name: 'source-app-name', space: source_space) }
     let(:lifecycle_type) { :buildpack }
     let!(:source_droplet) do
-      VCAP::CloudController::DropletModel.make(lifecycle_type,
-                                               app_guid: source_app.guid,
-                                               droplet_hash: 'abcdef',
-                                               sha256_checksum: 'droplet-sha256-checksum',
-                                               process_types: { web: 'bundle exec rails s' },
-                                               buildpack_receipt_buildpack_guid: 'buildpack-guid',
-                                               buildpack_receipt_buildpack: 'buildpack',
-                                               state: VCAP::CloudController::DropletModel::STAGED_STATE,
-                                               execution_metadata: 'execution_metadata',
-                                               docker_receipt_image: 'docker/image',
-                                               docker_receipt_username: 'dockerusername',
-                                               docker_receipt_password: 'dockerpassword')
+      create(:droplet_model, lifecycle_type,
+             app_guid: source_app.guid,
+             droplet_hash: 'abcdef',
+             sha256_checksum: 'droplet-sha256-checksum',
+             process_types: { web: 'bundle exec rails s' },
+             buildpack_receipt_buildpack_guid: 'buildpack-guid',
+             buildpack_receipt_buildpack: 'buildpack',
+             state: VCAP::CloudController::DropletModel::STAGED_STATE,
+             execution_metadata: 'execution_metadata',
+             docker_receipt_image: 'docker/image',
+             docker_receipt_username: 'dockerusername',
+             docker_receipt_password: 'dockerpassword')
     end
     let(:user_audit_info) { UserAuditInfo.new(user_email: 'user-email', user_guid: 'user_guid') }
 
@@ -73,7 +73,7 @@ module VCAP::CloudController
       end
 
       context 'when source and destination lifecycle types do not match' do
-        let!(:target_app) { VCAP::CloudController::AppModel.make(:docker, name: 'target-app-name') }
+        let!(:target_app) { create(:app_model, :docker, name: 'target-app-name') }
 
         it 'raises' do
           expect do
@@ -111,7 +111,7 @@ module VCAP::CloudController
 
       context 'when lifecycle is docker' do
         let(:lifecycle_type) { :docker }
-        let!(:target_app) { VCAP::CloudController::AppModel.make(:docker, name: 'target-app-name') }
+        let!(:target_app) { create(:app_model, :docker, name: 'target-app-name') }
 
         before do
           source_droplet.update(docker_receipt_image: 'urvashi/reddy')

@@ -3,28 +3,26 @@ require 'actions/deployment_update'
 
 module VCAP::CloudController
   RSpec.describe DeploymentUpdate do
-    let(:user) { User.make }
+    let(:user) { create(:user) }
     let(:user_email) { 'user@example.com' }
     let(:user_audit_info) { UserAuditInfo.new(user_email: 'user@example.com', user_guid: user.guid) }
 
     describe '#update' do
-      let!(:deployment) { DeploymentModel.make }
+      let!(:deployment) { create(:deployment_model) }
 
       let!(:label) do
-        VCAP::CloudController::DeploymentLabelModel.make(
-          key_prefix: 'indiana.edu',
-          key_name: 'state',
-          value: 'Indiana',
-          resource_guid: deployment.guid
-        )
+        create(:deployment_label_model,
+               key_prefix: 'indiana.edu',
+               key_name: 'state',
+               value: 'Indiana',
+               resource_guid: deployment.guid)
       end
 
       let!(:annotation) do
-        VCAP::CloudController::DeploymentAnnotationModel.make(
-          key_name: 'University',
-          value: 'Toronto',
-          resource_guid: deployment.guid
-        )
+        create(:deployment_annotation_model,
+               key_name: 'University',
+               value: 'Toronto',
+               resource_guid: deployment.guid)
       end
 
       let(:message) do

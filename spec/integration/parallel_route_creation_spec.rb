@@ -12,8 +12,8 @@ module VCAP::CloudController
           threads << Thread.new do
             user_audit_info = UserAuditInfo.new(user_email: Sham.email, user_guid: Sham.guid)
             message = RouteCreateMessage.new(host: Sham.host)
-            space = Space.make
-            domain = SharedDomain.make(internal: true)
+            space = create(:space)
+            domain = create(:shared_domain, internal: true)
 
             route = nil
             expect do

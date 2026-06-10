@@ -4,13 +4,13 @@ module VCAP::CloudController
   RSpec.describe ServiceKeyAccess, type: :access do
     subject(:access) { ServiceKeyAccess.new(Security::AccessContext.new) }
     let(:scopes) { ['cloud_controller.read', 'cloud_controller.write'] }
-    let(:user) { VCAP::CloudController::User.make }
-    let(:service) { VCAP::CloudController::Service.make }
-    let(:org) { VCAP::CloudController::Organization.make }
-    let(:space) { VCAP::CloudController::Space.make(organization: org) }
-    let(:service_instance) { VCAP::CloudController::ManagedServiceInstance.make(space:) }
+    let(:user) { create(:user) }
+    let(:service) { create(:service) }
+    let(:org) { create(:organization) }
+    let(:space) { create(:space, organization: org) }
+    let(:service_instance) { create(:managed_service_instance, space:) }
 
-    let(:object) { VCAP::CloudController::ServiceKey.make(name: 'fake-key', service_instance: service_instance) }
+    let(:object) { create(:service_key, name: 'fake-key', service_instance: service_instance) }
 
     before { set_current_user(user, scopes:) }
 

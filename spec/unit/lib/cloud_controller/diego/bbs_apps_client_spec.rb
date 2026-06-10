@@ -8,7 +8,7 @@ module VCAP::CloudController::Diego
     describe '#desire_app' do
       let(:bbs_client) { instance_double(::Diego::Client, desire_lrp: lrp_response) }
       let(:lrp) { ::Diego::Bbs::Models::DesiredLRP.new process_guid: lrp_process_guid }
-      let(:process) { VCAP::CloudController::ProcessModel.make }
+      let(:process) { create(:process_model) }
       let(:lrp_process_guid) { ProcessGuid.from_process process }
       let(:lrp_response) { ::Diego::Bbs::Models::DesiredLRPLifecycleResponse.new(error: lifecycle_error) }
       let(:lifecycle_error) { nil }

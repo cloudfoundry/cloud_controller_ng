@@ -6,9 +6,9 @@ RSpec.resource 'App Usage Events', type: %i[api legacy_api] do
 
   authenticated_request
   let(:guid) { VCAP::CloudController::AppUsageEvent.first.guid }
-  let!(:event1) { VCAP::CloudController::AppUsageEvent.make }
-  let!(:event2) { VCAP::CloudController::AppUsageEvent.make }
-  let!(:event3) { VCAP::CloudController::AppUsageEvent.make }
+  let!(:event1) { FactoryBot.create(:app_usage_event) }
+  let!(:event2) { FactoryBot.create(:app_usage_event) }
+  let!(:event3) { FactoryBot.create(:app_usage_event) }
   describe 'Standard endpoints' do
     standard_model_get :app_usage_event
 

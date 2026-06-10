@@ -7,12 +7,12 @@ module VCAP::CloudController
       subject(:route_mapping_create) { RouteMappingCreate.new(user_audit_info, route, process, request_attrs, logger) }
 
       let(:space) { app.space }
-      let(:app) { AppModel.make }
+      let(:app) { create(:app_model) }
       let(:user_guid) { 'user-guid' }
       let(:user_email) { '1@2.3' }
       let(:user_audit_info) { UserAuditInfo.new(user_email:, user_guid:) }
-      let(:process) { ProcessModel.make(:process, app: app, type: process_type, ports: ports, health_check_type: 'none') }
-      let!(:process2) { ProcessModel.make(:process, app: app, type: process_type, ports: ports, health_check_type: 'none') }
+      let(:process) { create(:process_model, :process, app: app, type: process_type, ports: ports, health_check_type: 'none') }
+      let!(:process2) { create(:process_model, :process, app: app, type: process_type, ports: ports, health_check_type: 'none') }
       let(:process_type) { 'web' }
       let(:ports) { [8888] }
       let(:requested_port) { 8888 }
@@ -24,7 +24,7 @@ module VCAP::CloudController
       end
 
       describe '#add' do
-        let(:route) { Route.make(space:) }
+        let(:route) { create(:route, space:) }
 
         it 'maps the route' do
           expect do
@@ -114,7 +114,7 @@ module VCAP::CloudController
         context 'when the process is web' do
           let(:process_type) { 'web' }
 
-          let(:process) { ProcessModel.make(diego: true, app: app, type: process_type, ports: [1234, 5678], health_check_type: 'none') }
+          let(:process) { create(:process_model, diego: true, app: app, type: process_type, ports: [1234, 5678], health_check_type: 'none') }
 
           context 'requesting available port' do
             let(:requested_port) { 5678 }
@@ -224,7 +224,7 @@ module VCAP::CloudController
           end
 
           context 'for a different process type' do
-            let(:worker_process) { ProcessModel.make(:process, app: app, type: 'worker', ports: [8888]) }
+            let(:worker_process) { create(:process_model, :process, app: app, type: 'worker', ports: [8888]) }
 
             it 'allows a new route mapping' do
               RouteMappingCreate.new(user_audit_info, route, worker_process, request_attrs, logger).add
@@ -246,7 +246,7 @@ module VCAP::CloudController
         end
 
         context 'when the app and route are in different spaces' do
-          let(:route) { Route.make(space: Space.make) }
+          let(:route) { create(:route, space: create(:space)) }
 
           it 'raises InvalidRouteMapping' do
             expect do
@@ -257,7 +257,7 @@ module VCAP::CloudController
         end
 
         context 'when the route is bound to a route service' do
-          let(:route_binding) { RouteBinding.make }
+          let(:route_binding) { create(:route_binding) }
           let(:route) { route_binding.route }
 
           let(:process) { ProcessModelFactory.make(space: route.space, diego: true, ports: ports) }
@@ -277,8 +277,8 @@ module VCAP::CloudController
           let(:routing_api_client) { double('routing_api_client', router_group:) }
           let(:router_group) { double('router_group', type: 'tcp', guid: router_group_guid) }
           let(:dependency_double) { double('dependency_locator', routing_api_client:) }
-          let(:tcp_domain) { SharedDomain.make(name: 'tcpdomain.com', router_group_guid: router_group_guid) }
-          let(:route) { Route.make(domain: tcp_domain, port: 5155, space: space) }
+          let(:tcp_domain) { create(:shared_domain, name: 'tcpdomain.com', router_group_guid: router_group_guid) }
+          let(:route) { create(:route, domain: tcp_domain, port: 5155, space: space) }
 
           before do
             allow(CloudController::DependencyLocator).to receive(:instance).and_return(dependency_double)

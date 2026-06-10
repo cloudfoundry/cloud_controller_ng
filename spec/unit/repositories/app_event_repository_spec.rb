@@ -25,7 +25,7 @@ module VCAP::CloudController
         end
 
         let(:process) { ProcessModelFactory.make(instances: 2, memory: 99, space: space) }
-        let(:space) { Space.make }
+        let(:space) { create(:space) }
 
         it 'records the expected fields on the event and logs the event' do
           expected_request_field = {
@@ -115,7 +115,7 @@ module VCAP::CloudController
       end
 
       describe '#record_app_delete' do
-        let(:space) { Space.make }
+        let(:space) { create(:space) }
         let(:process) { ProcessModelFactory.make(space:) }
 
         it 'creates a new audit.app.delete-request event' do
@@ -147,8 +147,8 @@ module VCAP::CloudController
       end
 
       describe '#record_app_map_droplet' do
-        let(:space) { Space.make }
-        let(:app) { AppModel.make(space:) }
+        let(:space) { create(:space) }
+        let(:app) { create(:app_model, space:) }
 
         it 'creates a new audit.app.droplet.mapped event' do
           event = app_event_repository.record_app_map_droplet(app, space, user_audit_info, { a: 1 })
@@ -166,8 +166,8 @@ module VCAP::CloudController
       end
 
       describe '#record_app_apply_manifest' do
-        let(:space) { Space.make }
-        let(:app) { AppModel.make(space:) }
+        let(:space) { create(:space) }
+        let(:app) { create(:app_model, space:) }
         let(:metadata) { { 'applications' => [{ 'name' => 'blah', 'instances' => 2 }] }.to_yaml }
 
         it 'creates a new audit.app.apply_manifest event' do
@@ -227,10 +227,10 @@ module VCAP::CloudController
       end
 
       describe '#record_map_route' do
-        let(:space) { Space.make }
-        let(:app) { AppModel.make(space:) }
-        let(:route) { Route.make }
-        let(:route_mapping) { RouteMappingModel.make(route: route, app: app, process_type: 'potato') }
+        let(:space) { create(:space) }
+        let(:app) { create(:app_model, space:) }
+        let(:route) { create(:route) }
+        let(:route_mapping) { create(:route_mapping_model, route: route, app: app, process_type: 'potato') }
 
         it 'creates a new app.map_route audit event' do
           event = app_event_repository.record_map_route(user_audit_info, route_mapping)
@@ -271,10 +271,10 @@ module VCAP::CloudController
         end
 
         context 'when given route mapping information' do
-          let(:app) { AppModel.make(space: route.space) }
+          let(:app) { create(:app_model, space: route.space) }
 
           context 'when the route mapping is unweighted' do
-            let(:route_mapping) { RouteMappingModel.make(route: route, app: app, process_type: 'potato') }
+            let(:route_mapping) { create(:route_mapping_model, route: route, app: app, process_type: 'potato') }
 
             it 'creates a new app.map_route audit event with appropriate metadata' do
               event = app_event_repository.record_map_route(user_audit_info, route_mapping)
@@ -287,7 +287,7 @@ module VCAP::CloudController
           end
 
           context 'when the route mapping has a weight' do
-            let(:route_mapping) { RouteMappingModel.make(route: route, app: app, process_type: 'potato', weight: 100) }
+            let(:route_mapping) { create(:route_mapping_model, route: route, app: app, process_type: 'potato', weight: 100) }
 
             it 'creates a new app.map_route audit event with appropriate metadata' do
               event = app_event_repository.record_map_route(user_audit_info, route_mapping)
@@ -300,7 +300,7 @@ module VCAP::CloudController
           end
 
           context 'when the route mapping has no protocol' do
-            let(:route_mapping) { RouteMappingModel.make(route: route, app: app, process_type: 'potato') }
+            let(:route_mapping) { create(:route_mapping_model, route: route, app: app, process_type: 'potato') }
 
             it 'creates a new app.map_route audit event with appropriate metadata' do
               event = app_event_repository.record_map_route(user_audit_info, route_mapping)
@@ -313,7 +313,7 @@ module VCAP::CloudController
           end
 
           context 'when the route mapping has a protocol' do
-            let(:route_mapping) { RouteMappingModel.make(route: route, app: app, process_type: 'potato', protocol: 'http2') }
+            let(:route_mapping) { create(:route_mapping_model, route: route, app: app, process_type: 'potato', protocol: 'http2') }
 
             it 'creates a new app.map_route audit event with appropriate metadata' do
               event = app_event_repository.record_map_route(user_audit_info, route_mapping)
@@ -328,10 +328,10 @@ module VCAP::CloudController
       end
 
       describe '#record_unmap_route' do
-        let(:space) { Space.make }
-        let(:app) { AppModel.make(space:) }
-        let(:route) { Route.make }
-        let(:route_mapping) { RouteMappingModel.make(route: route, guid: 'twice_baked', app: app, process_type: 'potato', weight: 100) }
+        let(:space) { create(:space) }
+        let(:app) { create(:app_model, space:) }
+        let(:route) { create(:route) }
+        let(:route_mapping) { create(:route_mapping_model, route: route, guid: 'twice_baked', app: app, process_type: 'potato', weight: 100) }
 
         it 'creates a new app.unmap_route audit event' do
           event = app_event_repository.record_unmap_route(user_audit_info, route_mapping)
@@ -465,7 +465,7 @@ module VCAP::CloudController
       end
 
       context 'obfuscation' do
-        let(:space) { Space.make }
+        let(:space) { create(:space) }
 
         context 'v2' do
           let(:attrs) { { 'buildpack' => buildpack } }
@@ -493,7 +493,7 @@ module VCAP::CloudController
         end
 
         context 'v3' do
-          let(:app) { AppModel.make }
+          let(:app) { create(:app_model) }
           let(:buildpack) { 'schmython' }
           let(:attrs) do
             {
@@ -532,7 +532,7 @@ module VCAP::CloudController
 
       context 'with a v3 app' do
         describe '#record_app_create' do
-          let(:app) { AppModel.make }
+          let(:app) { create(:app_model) }
           let(:request_attrs) do
             {
               'name' => 'new',
@@ -557,7 +557,7 @@ module VCAP::CloudController
         end
 
         describe '#record_app_start' do
-          let(:app) { AppModel.make }
+          let(:app) { create(:app_model) }
 
           it 'creates a new audit.app.start event' do
             event = app_event_repository.record_app_start(app, user_audit_info)
@@ -578,7 +578,7 @@ module VCAP::CloudController
         end
 
         describe '#record_app_stop' do
-          let(:app) { AppModel.make }
+          let(:app) { create(:app_model) }
 
           it 'creates a new audit.app.stop event' do
             event = app_event_repository.record_app_stop(app, user_audit_info)
@@ -599,7 +599,7 @@ module VCAP::CloudController
         end
 
         describe '#record_app_restart' do
-          let(:app) { AppModel.make }
+          let(:app) { create(:app_model) }
 
           it 'creates a new audit.app.restart event' do
             event = app_event_repository.record_app_restart(app, user_audit_info)

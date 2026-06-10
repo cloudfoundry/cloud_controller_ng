@@ -3,72 +3,58 @@ require 'presenters/v3/revision_presenter'
 
 module VCAP::CloudController::Presenters::V3
   RSpec.describe RevisionPresenter do
-    let(:app_model) { VCAP::CloudController::AppModel.make }
+    let(:app_model) { create(:app_model) }
     let!(:droplet) do
-      VCAP::CloudController::DropletModel.make(
-        app: app_model,
-        process_types: {
-          'web' => 'droplet_web_command',
-          'worker' => 'droplet_worker_command'
-        }
-      )
+      create(:droplet_model, app: app_model,
+                             process_types: {
+                               'web' => 'droplet_web_command',
+                               'worker' => 'droplet_worker_command'
+                             })
     end
     let(:revision) do
-      VCAP::CloudController::RevisionModel.make(:custom_web_command,
-                                                app: app_model,
-                                                version: 300,
-                                                droplet_guid: droplet.guid,
-                                                description: 'Initial revision')
+      create(:revision_model, :custom_web_command,
+             app: app_model,
+             version: 300,
+             droplet_guid: droplet.guid,
+             description: 'Initial revision')
     end
 
     let!(:revision_sidecar) do
-      VCAP::CloudController::RevisionSidecarModel.make(
-        revision: revision,
-        name: 'my-sidecar',
-        command: 'bake rackup',
-        memory: 300
-      )
+      create(:revision_sidecar_model, revision: revision,
+                                      name: 'my-sidecar',
+                                      command: 'bake rackup',
+                                      memory: 300)
     end
 
     let!(:revision_web_process_command2) do
-      VCAP::CloudController::RevisionProcessCommandModel.make(
-        revision_guid: revision.guid,
-        process_type: 'non_droplet_worker',
-        process_command: './work'
-      )
+      create(:revision_process_command_model, revision_guid: revision.guid,
+                                              process_type: 'non_droplet_worker',
+                                              process_command: './work')
     end
 
     let!(:release_label) do
-      VCAP::CloudController::RevisionLabelModel.make(
-        key_name: 'release',
-        value: 'stable',
-        resource_guid: revision.guid
-      )
+      create(:revision_label_model, key_name: 'release',
+                                    value: 'stable',
+                                    resource_guid: revision.guid)
     end
 
     let!(:potato_label) do
-      VCAP::CloudController::RevisionLabelModel.make(
-        key_prefix: 'canberra.au',
-        key_name: 'potato',
-        value: 'mashed',
-        resource_guid: revision.guid
-      )
+      create(:revision_label_model, key_prefix: 'canberra.au',
+                                    key_name: 'potato',
+                                    value: 'mashed',
+                                    resource_guid: revision.guid)
     end
 
     let!(:mountain_annotation) do
-      VCAP::CloudController::RevisionAnnotationModel.make(
-        key_name: 'altitude',
-        value: '14,412',
-        resource_guid: revision.guid
-      )
+      create(:revision_annotation_model, key_name: 'altitude',
+                                         value: '14,412',
+                                         resource_guid: revision.guid)
     end
 
     let!(:plain_annotation) do
-      VCAP::CloudController::RevisionAnnotationModel.make(
-        key_name: 'maize',
-        value: 'hfcs',
-        resource_guid: revision.guid
-      )
+      create(:revision_annotation_model, key_name: 'maize',
+                                         value: 'hfcs',
+                                         resource_guid: revision.guid)
     end
 
     describe '#to_hash' do
@@ -101,14 +87,12 @@ module VCAP::CloudController::Presenters::V3
 
       context 'when the droplet is not staged' do
         let(:droplet) do
-          VCAP::CloudController::DropletModel.make(
-            app: app_model,
-            state: VCAP::CloudController::DropletModel::EXPIRED_STATE,
-            process_types: {
-              'web' => 'droplet_web_command',
-              'worker' => 'droplet_worker_command'
-            }
-          )
+          create(:droplet_model, app: app_model,
+                                 state: VCAP::CloudController::DropletModel::EXPIRED_STATE,
+                                 process_types: {
+                                   'web' => 'droplet_web_command',
+                                   'worker' => 'droplet_worker_command'
+                                 })
         end
 
         it 'returns deployable is false' do

@@ -17,8 +17,8 @@ module VCAP
       end
 
       describe 'app and key bindings' do
-        let(:space) { VCAP::CloudController::Space.make }
-        let(:instance) { VCAP::CloudController::ManagedServiceInstance.make(space:) }
+        let(:space) { create(:space) }
+        let(:instance) { create(:managed_service_instance, space:) }
 
         let(:key_details) do
           {
@@ -33,8 +33,8 @@ module VCAP
             volume_mounts: %w[ccc ddd]
           }
         end
-        let!(:key_binding) { VCAP::CloudController::ServiceKey.make(service_instance: instance, **key_details) }
-        let!(:app_binding) { VCAP::CloudController::ServiceBinding.make(service_instance: instance, name: Sham.name, **app_binding_details) }
+        let!(:key_binding) { create(:service_key, service_instance: instance, **key_details) }
+        let!(:app_binding) { create(:service_binding, service_instance: instance, name: Sham.name, **app_binding_details) }
 
         it 'eager loads the specified resources' do
           dataset = fetcher.fetch(readable_spaces_query: nil, message: message, eager_loaded_associations: [:labels_sti_eager_load])
@@ -61,11 +61,11 @@ module VCAP
         end
 
         context 'when limiting to a space' do
-          let(:other_space) { VCAP::CloudController::Space.make }
-          let(:other_instance) { VCAP::CloudController::ManagedServiceInstance.make(space: other_space) }
+          let(:other_space) { create(:space) }
+          let(:other_instance) { create(:managed_service_instance, space: other_space) }
           let(:readable_spaces_query) { VCAP::CloudController::Space.where(id: [space].map(&:id)) }
-          let!(:key_other_binding) { VCAP::CloudController::ServiceKey.make(service_instance: other_instance) }
-          let!(:app_other_binding) { VCAP::CloudController::ServiceBinding.make(service_instance: other_instance) }
+          let!(:key_other_binding) { create(:service_key, service_instance: other_instance) }
+          let!(:app_other_binding) { create(:service_binding, service_instance: other_instance) }
 
           it 'returns only the bindings within that space' do
             bindings = fetcher.fetch(readable_spaces_query:, message:).all
@@ -76,9 +76,9 @@ module VCAP
         end
 
         describe 'filters' do
-          let(:another_instance) { VCAP::CloudController::ManagedServiceInstance.make(space:) }
-          let!(:another_key) { VCAP::CloudController::ServiceKey.make(service_instance: another_instance) }
-          let!(:another_binding) { VCAP::CloudController::ServiceBinding.make(service_instance: another_instance, name: Sham.name) }
+          let(:another_instance) { create(:managed_service_instance, space:) }
+          let!(:another_key) { create(:service_key, service_instance: another_instance) }
+          let!(:another_binding) { create(:service_binding, service_instance: another_instance, name: Sham.name) }
 
           context 'service instance name' do
             let(:params) { { 'service_instance_names' => instance.name } }
@@ -163,15 +163,15 @@ module VCAP
 
           context 'label selector' do
             before do
-              ServiceKeyLabelModel.make(key_name: 'fruit', value: 'strawberry', service_key: key_binding)
-              ServiceKeyLabelModel.make(key_name: 'tier', value: 'backend', service_key: key_binding)
+              create(:service_key_label_model, key_name: 'fruit', value: 'strawberry', service_key: key_binding)
+              create(:service_key_label_model, key_name: 'tier', value: 'backend', service_key: key_binding)
 
-              ServiceKeyLabelModel.make(key_name: 'fruit', value: 'lemon', service_key: another_key)
+              create(:service_key_label_model, key_name: 'fruit', value: 'lemon', service_key: another_key)
 
-              ServiceBindingLabelModel.make(key_name: 'tier', value: 'worker', service_binding: app_binding)
+              create(:service_binding_label_model, key_name: 'tier', value: 'worker', service_binding: app_binding)
 
-              ServiceBindingLabelModel.make(key_name: 'fruit', value: 'strawberry', service_binding: another_binding)
-              ServiceBindingLabelModel.make(key_name: 'tier', value: 'worker', service_binding: another_binding)
+              create(:service_binding_label_model, key_name: 'fruit', value: 'strawberry', service_binding: another_binding)
+              create(:service_binding_label_model, key_name: 'tier', value: 'worker', service_binding: another_binding)
             end
 
             let(:params) { { 'label_selector' => 'fruit=strawberry,tier in (backend,worker)' } }
@@ -232,7 +232,7 @@ module VCAP
       end
 
       describe 'fetching app bindings' do
-        let!(:app_binding) { VCAP::CloudController::ServiceBinding.make }
+        let!(:app_binding) { create(:service_binding) }
 
         it 'allows the last operation to be accessed' do
           app_binding.save_with_new_operation(

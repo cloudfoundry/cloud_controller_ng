@@ -2,7 +2,7 @@ require 'spec_helper'
 require 'presenters/v3/buildpack_presenter'
 
 RSpec.describe VCAP::CloudController::Presenters::V3::BuildpackPresenter do
-  let(:buildpack) { VCAP::CloudController::Buildpack.make }
+  let(:buildpack) { create(:buildpack) }
 
   describe '#to_hash' do
     let(:result) { described_class.new(buildpack).to_hash }

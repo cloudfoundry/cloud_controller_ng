@@ -4,13 +4,13 @@ require 'request_spec_shared_examples'
 NON_SPACE_PERMISSIONS = (ALL_PERMISSIONS - %w[space_developer space_manager space_auditor space_supporter]).freeze
 
 RSpec.describe 'Spaces' do
-  let(:user) { VCAP::CloudController::User.make }
+  let(:user) { create(:user) }
   let(:user_header) { headers_for(user) }
   let(:admin_header) { admin_headers_for(user) }
-  let(:org) { VCAP::CloudController::Organization.make name: 'Boardgames', created_at: 2.days.ago }
-  let!(:space1) { VCAP::CloudController::Space.make name: 'Catan', organization: org }
-  let!(:space2) { VCAP::CloudController::Space.make name: 'Ticket to Ride', organization: org }
-  let!(:space3) { VCAP::CloudController::Space.make name: 'Agricola', organization: org }
+  let(:org) { create(:organization, name: 'Boardgames', created_at: 2.days.ago) }
+  let!(:space1) { create(:space, name: 'Catan', organization: org) }
+  let!(:space2) { create(:space, name: 'Ticket to Ride', organization: org) }
+  let!(:space3) { create(:space, name: 'Agricola', organization: org) }
 
   before do
     TestConfig.override(kubernetes: {})
@@ -183,7 +183,7 @@ RSpec.describe 'Spaces' do
     end
 
     context 'when the space has a quota applied to it' do
-      let(:space_quota) { VCAP::CloudController::SpaceQuotaDefinition.make(organization: space1.organization) }
+      let(:space_quota) { create(:space_quota_definition, organization: space1.organization) }
 
       before do
         space1.add_developer(user)
@@ -347,29 +347,29 @@ RSpec.describe 'Spaces' do
     end
 
     context 'when a label_selector is provided' do
-      let!(:spaceA) { VCAP::CloudController::Space.make(organization: org) }
-      let!(:spaceAFruit) { VCAP::CloudController::SpaceLabelModel.make(key_name: 'fruit', value: 'strawberry', space: spaceA) }
-      let!(:spaceAAnimal) { VCAP::CloudController::SpaceLabelModel.make(key_name: 'animal', value: 'horse', space: spaceA) }
+      let!(:spaceA) { create(:space, organization: org) }
+      let!(:spaceAFruit) { create(:space_label_model, key_name: 'fruit', value: 'strawberry', space: spaceA) }
+      let!(:spaceAAnimal) { create(:space_label_model, key_name: 'animal', value: 'horse', space: spaceA) }
 
-      let!(:spaceB) { VCAP::CloudController::Space.make(organization: org) }
-      let!(:spaceBEnv) { VCAP::CloudController::SpaceLabelModel.make(key_name: 'env', value: 'prod', space: spaceB) }
-      let!(:spaceBAnimal) { VCAP::CloudController::SpaceLabelModel.make(key_name: 'animal', value: 'dog', space: spaceB) }
+      let!(:spaceB) { create(:space, organization: org) }
+      let!(:spaceBEnv) { create(:space_label_model, key_name: 'env', value: 'prod', space: spaceB) }
+      let!(:spaceBAnimal) { create(:space_label_model, key_name: 'animal', value: 'dog', space: spaceB) }
 
-      let!(:spaceC) { VCAP::CloudController::Space.make(organization: org) }
-      let!(:spaceCEnv) { VCAP::CloudController::SpaceLabelModel.make(key_name: 'env', value: 'prod', space: spaceC) }
-      let!(:spaceCAnimal) { VCAP::CloudController::SpaceLabelModel.make(key_name: 'animal', value: 'horse', space: spaceC) }
+      let!(:spaceC) { create(:space, organization: org) }
+      let!(:spaceCEnv) { create(:space_label_model, key_name: 'env', value: 'prod', space: spaceC) }
+      let!(:spaceCAnimal) { create(:space_label_model, key_name: 'animal', value: 'horse', space: spaceC) }
 
-      let!(:spaceD) { VCAP::CloudController::Space.make(organization: org) }
-      let!(:spaceDEnv) { VCAP::CloudController::SpaceLabelModel.make(key_name: 'env', value: 'prod', space: spaceD) }
+      let!(:spaceD) { create(:space, organization: org) }
+      let!(:spaceDEnv) { create(:space_label_model, key_name: 'env', value: 'prod', space: spaceD) }
 
-      let!(:spaceE) { VCAP::CloudController::Space.make(organization: org) }
-      let!(:spaceEEnv) { VCAP::CloudController::SpaceLabelModel.make(key_name: 'env', value: 'staging', space: spaceE) }
-      let!(:spaceEAnimal) { VCAP::CloudController::SpaceLabelModel.make(key_name: 'animal', value: 'dog', space: spaceE) }
+      let!(:spaceE) { create(:space, organization: org) }
+      let!(:spaceEEnv) { create(:space_label_model, key_name: 'env', value: 'staging', space: spaceE) }
+      let!(:spaceEAnimal) { create(:space_label_model, key_name: 'animal', value: 'dog', space: spaceE) }
 
-      let!(:orgF) { VCAP::CloudController::Organization.make(name: 'orgF', guid: 'orgF') }
-      let!(:spaceF) { VCAP::CloudController::Space.make(organization: orgF, guid: 'spaceF') }
-      let!(:spaceFEnv) { VCAP::CloudController::SpaceLabelModel.make(key_name: 'env', value: 'prod', space: spaceF) }
-      let!(:spaceFAnimal) { VCAP::CloudController::SpaceLabelModel.make(key_name: 'animal', value: 'cat', space: spaceF) }
+      let!(:orgF) { create(:organization, name: 'orgF', guid: 'orgF') }
+      let!(:spaceF) { create(:space, organization: orgF, guid: 'spaceF') }
+      let!(:spaceFEnv) { create(:space_label_model, key_name: 'env', value: 'prod', space: spaceF) }
+      let!(:spaceFAnimal) { create(:space_label_model, key_name: 'animal', value: 'cat', space: spaceF) }
 
       it 'returns the correct spaces' do
         get '/v3/spaces?label_selector=!fruit,env=prod,animal in (dog,horse)', nil, admin_header
@@ -390,8 +390,8 @@ RSpec.describe 'Spaces' do
 
     context('including org') do
       # space with org1
-      let!(:other_org_space) { VCAP::CloudController::Space.make name: 'Agricola', organization: org2 }
-      let!(:org2) { VCAP::CloudController::Organization.make name: 'Videogames', created_at: 1.day.ago }
+      let!(:other_org_space) { create(:space, name: 'Agricola', organization: org2) }
+      let!(:org2) { create(:organization, name: 'Videogames', created_at: 1.day.ago) }
 
       it 'can includes all orgs for spaces' do
         get '/v3/spaces?include=organization', nil, admin_header
@@ -501,9 +501,9 @@ RSpec.describe 'Spaces' do
   end
 
   describe 'GET /v3/spaces/:space_guid/staging_security_groups' do
-    let!(:space) { VCAP::CloudController::Space.make }
+    let!(:space) { create(:space) }
     let!(:org) { space.organization }
-    let(:security_group) { VCAP::CloudController::SecurityGroup.make name: 'my_super_sec_group' }
+    let(:security_group) { create(:security_group, name: 'my_super_sec_group') }
 
     before do
       security_group.add_staging_space(space)
@@ -546,7 +546,7 @@ RSpec.describe 'Spaces' do
           }
         }]
       end
-      let(:other_sec_group) { VCAP::CloudController::SecurityGroup.make }
+      let(:other_sec_group) { create(:security_group) }
 
       it 'returns the filtered list' do
         get "/v3/spaces/#{space.guid}/staging_security_groups?names=my_super_sec_group", nil, admin_header
@@ -633,8 +633,8 @@ RSpec.describe 'Spaces' do
 
         ]
       end
-      let(:unaffiliated_sec_group) { VCAP::CloudController::SecurityGroup.make }
-      let(:global_sec_group) { VCAP::CloudController::SecurityGroup.make staging_default: true, name: 'global' }
+      let(:unaffiliated_sec_group) { create(:security_group) }
+      let(:global_sec_group) { create(:security_group, staging_default: true, name: 'global') }
 
       let(:expected_codes_and_responses) do
         h = Hash.new({ code: 404 }.freeze)
@@ -654,9 +654,9 @@ RSpec.describe 'Spaces' do
   end
 
   describe 'GET /v3/spaces/:space_guid/running_security_groups' do
-    let!(:space) { VCAP::CloudController::Space.make }
+    let!(:space) { create(:space) }
     let!(:org) { space.organization }
-    let(:security_group) { VCAP::CloudController::SecurityGroup.make name: 'my_super_sec_group' }
+    let(:security_group) { create(:security_group, name: 'my_super_sec_group') }
 
     before do
       security_group.add_space(space)
@@ -699,7 +699,7 @@ RSpec.describe 'Spaces' do
           }
         }]
       end
-      let(:other_sec_group) { VCAP::CloudController::SecurityGroup.make }
+      let(:other_sec_group) { create(:security_group) }
 
       it 'returns the filtered list' do
         get "/v3/spaces/#{space.guid}/running_security_groups?names=my_super_sec_group", nil, admin_header
@@ -786,8 +786,8 @@ RSpec.describe 'Spaces' do
 
         ]
       end
-      let(:unaffiliated_sec_group) { VCAP::CloudController::SecurityGroup.make }
-      let(:global_sec_group) { VCAP::CloudController::SecurityGroup.make running_default: true, name: 'global' }
+      let(:unaffiliated_sec_group) { create(:security_group) }
+      let(:global_sec_group) { create(:security_group, running_default: true, name: 'global') }
       let(:expected_codes_and_responses) do
         h = Hash.new({ code: 404 }.freeze)
         h['admin'] = { code: 200, response_objects: response_object }
@@ -807,8 +807,8 @@ RSpec.describe 'Spaces' do
 
   describe 'PATCH /v3/spaces/:guid' do
     context 'updating the space to a duplicate name' do
-      let(:space1) { VCAP::CloudController::Space.make(name: 'space1', organization: org) }
-      let!(:space2) { VCAP::CloudController::Space.make(name: 'space2', organization: org) }
+      let(:space1) { create(:space, name: 'space1', organization: org) }
+      let!(:space2) { create(:space, name: 'space2', organization: org) }
 
       it 'returns a 422 with a helpful error message' do
         patch "/v3/spaces/#{space1.guid}", { name: 'space2' }.to_json, admin_header
@@ -819,7 +819,7 @@ RSpec.describe 'Spaces' do
     end
 
     context 'updates the requested space' do
-      let(:space) { VCAP::CloudController::Space.make }
+      let(:space) { create(:space) }
       let(:org) { space.organization }
 
       request_body = {
@@ -926,8 +926,8 @@ RSpec.describe 'Spaces' do
     end
 
     context 'removing labels' do
-      let!(:space1Label) { VCAP::CloudController::SpaceLabelModel.make(key_name: 'fruit', value: 'mango', space: space1) }
-      let!(:space1Label) { VCAP::CloudController::SpaceLabelModel.make(key_name: 'animal', value: 'monkey', space: space1) }
+      let!(:space1Label) { create(:space_label_model, key_name: 'fruit', value: 'mango', space: space1) }
+      let!(:space1Label) { create(:space_label_model, key_name: 'animal', value: 'monkey', space: space1) }
 
       it 'removes a label from a space when the value is set to null' do
         patch "/v3/spaces/#{space1.guid}", { metadata: { labels: { fruit: nil } } }.to_json, admin_header
@@ -961,7 +961,7 @@ RSpec.describe 'Spaces' do
     end
 
     context 'updating labels' do
-      let!(:space1_label) { VCAP::CloudController::SpaceLabelModel.make(key_name: 'fruit', value: 'mango', space: space1) }
+      let!(:space1_label) { create(:space_label_model, key_name: 'fruit', value: 'mango', space: space1) }
 
       it 'Updates the spaces label' do
         patch "/v3/spaces/#{space1.guid}", { metadata: { labels: { fruit: 'strawberry' } } }.to_json, admin_header
@@ -996,22 +996,22 @@ RSpec.describe 'Spaces' do
   end
 
   describe 'DELETE /v3/spaces/:guid' do
-    let(:space) { VCAP::CloudController::Space.make }
+    let(:space) { create(:space) }
     let(:org) { space.organization }
-    let(:associated_user) { VCAP::CloudController::User.make(default_space: space) }
+    let(:associated_user) { create(:user, default_space: space) }
     let(:shared_service_instance) do
-      s = VCAP::CloudController::ServiceInstance.make
+      s = create(:service_instance)
       s.add_shared_space(space)
       s
     end
 
     before do
-      VCAP::CloudController::AppModel.make(space:)
-      VCAP::CloudController::Route.make(space:)
+      create(:app_model, space:)
+      create(:route, space:)
       org.add_user(associated_user)
       space.add_developer(associated_user)
-      VCAP::CloudController::ServiceInstance.make(space:)
-      VCAP::CloudController::ServiceBroker.make(space:)
+      create(:service_instance, space:)
+      create(:service_broker, space:)
     end
 
     let(:db_check) do
@@ -1104,13 +1104,13 @@ RSpec.describe 'Spaces' do
   end
 
   describe 'DELETE /v3/spaces/:guid/routes?unmapped=true' do
-    let(:space) { VCAP::CloudController::Space.make }
+    let(:space) { create(:space) }
     let(:org) { space.organization }
-    let(:domain) { VCAP::CloudController::PrivateDomain.make(owning_organization: org) }
-    let!(:unmapped_route) { VCAP::CloudController::Route.make(space:, domain:) }
-    let!(:mapped_route) { VCAP::CloudController::Route.make(space: space, domain: domain, host: 'mapped') }
-    let(:app_model) { VCAP::CloudController::AppModel.make(space:) }
-    let!(:destination) { VCAP::CloudController::RouteMappingModel.make(route: mapped_route, app: app_model) }
+    let(:domain) { create(:private_domain, owning_organization: org) }
+    let!(:unmapped_route) { create(:route, space:, domain:) }
+    let!(:mapped_route) { create(:route, space: space, domain: domain, host: 'mapped') }
+    let(:app_model) { create(:app_model, space:) }
+    let!(:destination) { create(:route_mapping_model, route: mapped_route, app: app_model) }
 
     let(:api_call) { ->(user_headers) { delete "/v3/spaces/#{space.guid}/routes?unmapped=true", nil, user_headers } }
 
@@ -1169,9 +1169,9 @@ RSpec.describe 'Spaces' do
   end
 
   describe 'GET /v3/spaces/:guid/relationships/isolation_segment' do
-    let(:isolation_segment) { VCAP::CloudController::IsolationSegmentModel.make(name: 'seg') }
-    let(:org) { VCAP::CloudController::Organization.make(name: 'iso farm') }
-    let(:space) { VCAP::CloudController::Space.make name: 'space', organization: org }
+    let(:isolation_segment) { create(:isolation_segment_model, name: 'seg') }
+    let(:org) { create(:organization, name: 'iso farm') }
+    let(:space) { create(:space, name: 'space', organization: org) }
     let(:assigner) { VCAP::CloudController::IsolationSegmentAssign.new }
 
     before do
@@ -1232,9 +1232,9 @@ RSpec.describe 'Spaces' do
   end
 
   describe 'PATCH /v3/spaces/:guid/relationships/isolation_segment' do
-    let(:isolation_segment) { VCAP::CloudController::IsolationSegmentModel.make(name: 'seg') }
-    let(:org) { VCAP::CloudController::Organization.make(name: 'iso farm') }
-    let(:space) { VCAP::CloudController::Space.make name: 'space', organization: org }
+    let(:isolation_segment) { create(:isolation_segment_model, name: 'seg') }
+    let(:org) { create(:organization, name: 'iso farm') }
+    let(:space) { create(:space, name: 'space', organization: org) }
     let(:assigner) { VCAP::CloudController::IsolationSegmentAssign.new }
 
     before do
@@ -1267,7 +1267,7 @@ RSpec.describe 'Spaces' do
 
   describe 'GET /v3/spaces/:guid/users' do
     let(:uaa_client) { instance_double(VCAP::CloudController::UaaClient) }
-    let(:client) { VCAP::CloudController::User.make(guid: 'client-user') }
+    let(:client) { create(:user, guid: 'client-user') }
 
     context 'filters' do
       before do
@@ -1359,8 +1359,8 @@ RSpec.describe 'Spaces' do
       end
 
       context 'by usernames and origins' do
-        let(:user_in_different_origin) { VCAP::CloudController::User.make(guid: 'user_in_different_origin') }
-        let(:user_with_different_username) { VCAP::CloudController::User.make(guid: 'user_with_different_username') }
+        let(:user_in_different_origin) { create(:user, guid: 'user_in_different_origin') }
+        let(:user_with_different_username) { create(:user, guid: 'user_with_different_username') }
 
         before do
           org.add_user(user_in_different_origin)
@@ -1396,7 +1396,7 @@ RSpec.describe 'Spaces' do
       end
 
       context 'by labels' do
-        let!(:user_label) { VCAP::CloudController::UserLabelModel.make(resource_guid: user.guid, key_name: 'animal', value: 'dog') }
+        let!(:user_label) { create(:user_label_model, resource_guid: user.guid, key_name: 'animal', value: 'dog') }
 
         it 'returns a 200 and the filtered users for "in" label selector' do
           get "/v3/spaces/#{space1.guid}/users?label_selector=animal in (dog)", nil, admin_header
@@ -1418,10 +1418,10 @@ RSpec.describe 'Spaces' do
 
       # normally this would be under request_spec_shared_examples; we copy it here because this test brings up issues with UAA
       context 'by timestamps on creation' do
-        let!(:resource_1) { VCAP::CloudController::User.make(guid: '1', created_at: '2020-05-26T18:47:01Z') }
-        let!(:resource_2) { VCAP::CloudController::User.make(guid: '2', created_at: '2020-05-26T18:47:02Z') }
-        let!(:resource_3) { VCAP::CloudController::User.make(guid: '3', created_at: '2020-05-26T18:47:03Z') }
-        let!(:resource_4) { VCAP::CloudController::User.make(guid: '4', created_at: '2020-05-26T18:47:04Z') }
+        let!(:resource_1) { create(:user, guid: '1', created_at: '2020-05-26T18:47:01Z') }
+        let!(:resource_2) { create(:user, guid: '2', created_at: '2020-05-26T18:47:02Z') }
+        let!(:resource_3) { create(:user, guid: '3', created_at: '2020-05-26T18:47:03Z') }
+        let!(:resource_4) { create(:user, guid: '4', created_at: '2020-05-26T18:47:04Z') }
 
         before do
           org.add_user(resource_1)
@@ -1449,10 +1449,10 @@ RSpec.describe 'Spaces' do
           allow(uaa_client).to receive(:users_for_ids).and_return({})
         end
 
-        let!(:resource_1) { VCAP::CloudController::User.make(guid: '1', updated_at: '2020-05-26T18:47:01Z') }
-        let!(:resource_2) { VCAP::CloudController::User.make(guid: '2', updated_at: '2020-05-26T18:47:02Z') }
-        let!(:resource_3) { VCAP::CloudController::User.make(guid: '3', updated_at: '2020-05-26T18:47:03Z') }
-        let!(:resource_4) { VCAP::CloudController::User.make(guid: '4', updated_at: '2020-05-26T18:47:04Z') }
+        let!(:resource_1) { create(:user, guid: '1', updated_at: '2020-05-26T18:47:01Z') }
+        let!(:resource_2) { create(:user, guid: '2', updated_at: '2020-05-26T18:47:02Z') }
+        let!(:resource_3) { create(:user, guid: '3', updated_at: '2020-05-26T18:47:03Z') }
+        let!(:resource_4) { create(:user, guid: '4', updated_at: '2020-05-26T18:47:04Z') }
 
         after do
           VCAP::CloudController::User.plugin :timestamps, update_on_create: true

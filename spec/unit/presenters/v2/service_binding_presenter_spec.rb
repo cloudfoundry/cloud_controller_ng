@@ -20,11 +20,9 @@ module CloudController::Presenters::V2
 
       let(:volume_mount) { [{ 'container_dir' => 'mount' }] }
       let(:service_binding) do
-        VCAP::CloudController::ServiceBinding.make(
-          credentials: { 'secret' => 'key' },
-          syslog_drain_url: 'syslog://drain.example.com',
-          volume_mounts: volume_mount
-        )
+        create(:service_binding, credentials: { 'secret' => 'key' },
+                                 syslog_drain_url: 'syslog://drain.example.com',
+                                 volume_mounts: volume_mount)
       end
 
       it 'returns the service binding entity' do
@@ -54,7 +52,7 @@ module CloudController::Presenters::V2
 
       context 'when there is operation associated with this binding' do
         context 'and the operation type is create' do
-          let(:binding_operation) { VCAP::CloudController::ServiceBindingOperation.make(type: 'create', state: 'in progress', description: '10% complete') }
+          let(:binding_operation) { create(:service_binding_operation, type: 'create', state: 'in progress', description: '10% complete') }
 
           before do
             service_binding.service_binding_operation = binding_operation
@@ -74,7 +72,7 @@ module CloudController::Presenters::V2
         end
 
         context 'and the operation type is delete' do
-          let(:binding_operation) { VCAP::CloudController::ServiceBindingOperation.make(type: 'delete', state: 'in progress', description: '10% complete') }
+          let(:binding_operation) { create(:service_binding_operation, type: 'delete', state: 'in progress', description: '10% complete') }
 
           before do
             service_binding.service_binding_operation = binding_operation
@@ -96,12 +94,10 @@ module CloudController::Presenters::V2
 
       context 'when a name is provided' do
         let(:service_binding) do
-          VCAP::CloudController::ServiceBinding.make(
-            credentials: { 'secret' => 'key' },
-            syslog_drain_url: 'syslog://drain.example.com',
-            volume_mounts: volume_mount,
-            name: 'some-binding-name'
-          )
+          create(:service_binding, credentials: { 'secret' => 'key' },
+                                   syslog_drain_url: 'syslog://drain.example.com',
+                                   volume_mounts: volume_mount,
+                                   name: 'some-binding-name')
         end
 
         it 'returns the service binding entity' do

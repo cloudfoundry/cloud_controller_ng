@@ -5,16 +5,16 @@ module VCAP::CloudController
     subject(:access) { ServiceBindingAccess.new(Security::AccessContext.new) }
     let(:scopes) { ['cloud_controller.read', 'cloud_controller.write'] }
 
-    let(:user) { VCAP::CloudController::User.make }
-    let(:service) { VCAP::CloudController::Service.make }
-    let(:org) { VCAP::CloudController::Organization.make }
-    let(:space) { VCAP::CloudController::Space.make(organization: org) }
-    let(:app) { VCAP::CloudController::AppModel.make(space:) }
-    let(:service_instance) { VCAP::CloudController::ManagedServiceInstance.make }
+    let(:user) { create(:user) }
+    let(:service) { create(:service) }
+    let(:org) { create(:organization) }
+    let(:space) { create(:space, organization: org) }
+    let(:app) { create(:app_model, space:) }
+    let(:service_instance) { create(:managed_service_instance) }
 
     let(:object) do
       service_instance.add_shared_space(app.space)
-      ServiceBinding.make(service_instance:, app:)
+      create(:service_binding, service_instance:, app:)
     end
 
     before { set_current_user(user, scopes:) }

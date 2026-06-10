@@ -19,12 +19,10 @@ module CloudController::Presenters::V2
       end
 
       let(:service_plan) do
-        VCAP::CloudController::ServicePlan.make(
-          create_instance_schema:,
-          update_instance_schema:,
-          create_binding_schema:,
-          maintenance_info:
-        )
+        create(:service_plan, create_instance_schema:,
+                              update_instance_schema:,
+                              create_binding_schema:,
+                              maintenance_info:)
       end
 
       let(:maintenance_info) { { version: '2.0' } }

@@ -5,7 +5,7 @@ require 'messages/buildpack_create_message'
 module VCAP::CloudController
   RSpec.describe BuildpackCreate do
     describe 'create' do
-      let(:user) { User.make }
+      let(:user) { create(:user) }
       let(:user_email) { 'user@example.com' }
       let(:user_name) { 'user-name' }
       let(:user_audit_info) { UserAuditInfo.new(user_guid: user.guid, user_email: user_email, user_name: user_name) }

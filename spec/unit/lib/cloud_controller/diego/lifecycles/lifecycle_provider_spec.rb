@@ -2,7 +2,7 @@ require 'spec_helper'
 
 module VCAP::CloudController
   RSpec.describe LifecycleProvider do
-    let(:package) { PackageModel.make }
+    let(:package) { create(:package_model) }
     let(:message) { BuildCreateMessage.new(request) }
 
     context 'when lifecycle type is requested on the message' do
@@ -35,10 +35,10 @@ module VCAP::CloudController
 
     context 'when lifecycle type is not requested on the message' do
       let(:request) { {} }
-      let(:package) { PackageModel.make(app_guid: app.guid) }
+      let(:package) { create(:package_model, app_guid: app.guid) }
 
       context 'when the app defaults to buildpack' do
-        let(:app) { AppModel.make }
+        let(:app) { create(:app_model) }
 
         it 'returns a BuildpackLifecycle' do
           expect(LifecycleProvider.provide(package, message)).to be_a(BuildpackLifecycle)
@@ -46,7 +46,7 @@ module VCAP::CloudController
       end
 
       context 'when the app defaults to docker' do
-        let(:app) { AppModel.make(:docker) }
+        let(:app) { create(:app_model, :docker) }
 
         it 'returns a DockerLifecycle' do
           expect(LifecycleProvider.provide(package, message)).to be_a(DockerLifecycle)
@@ -54,7 +54,7 @@ module VCAP::CloudController
       end
 
       context 'when the app defaults to cnb' do
-        let(:app) { AppModel.make(:cnb) }
+        let(:app) { create(:app_model, :cnb) }
 
         it 'returns a CNBLifecycle' do
           expect(LifecycleProvider.provide(package, message)).to be_a(CNBLifecycle)

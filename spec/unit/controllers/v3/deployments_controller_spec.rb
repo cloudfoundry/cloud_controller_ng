@@ -5,10 +5,10 @@ require 'messages/deployment_create_message'
 ## NOTICE: Prefer request specs over controller specs as per ADR #0003 ##
 
 RSpec.describe DeploymentsController, type: :controller do
-  let(:user) { VCAP::CloudController::User.make }
-  let(:app) { VCAP::CloudController::AppModel.make(desired_state: VCAP::CloudController::ProcessModel::STARTED) }
-  let!(:process_model) { VCAP::CloudController::ProcessModel.make(app:) }
-  let(:droplet) { VCAP::CloudController::DropletModel.make(app: app, process_types: { 'web' => 'spider' }) }
+  let(:user) { create(:user) }
+  let(:app) { create(:app_model, desired_state: VCAP::CloudController::ProcessModel::STARTED) }
+  let!(:process_model) { create(:process_model, app:) }
+  let(:droplet) { create(:droplet_model, app: app, process_types: { 'web' => 'spider' }) }
   let(:app_guid) { app.guid }
   let(:space) { app.space }
   let(:org) { space.organization }
@@ -57,10 +57,9 @@ RSpec.describe DeploymentsController, type: :controller do
 
         context 'the app does not have a current droplet' do
           let(:app_without_droplet) do
-            VCAP::CloudController::AppModel.make(
-              desired_state: VCAP::CloudController::ProcessModel::STARTED,
-              space: space
-            )
+            create(:app_model,
+                   desired_state: VCAP::CloudController::ProcessModel::STARTED,
+                   space: space)
           end
 
           let(:request_body) do
@@ -86,7 +85,7 @@ RSpec.describe DeploymentsController, type: :controller do
       end
 
       context 'when a droplet is provided' do
-        let(:other_droplet) { VCAP::CloudController::DropletModel.make(app: app, process_types: { web: 'start-me-up' }) }
+        let(:other_droplet) { create(:droplet_model, app: app, process_types: { web: 'start-me-up' }) }
         let(:request_body) do
           {
             droplet: {
@@ -181,7 +180,7 @@ RSpec.describe DeploymentsController, type: :controller do
         end
 
         context 'the droplet is not associated with the application' do
-          let(:unassociated_droplet) { VCAP::CloudController::DropletModel.make }
+          let(:unassociated_droplet) { create(:droplet_model) }
           let(:request_body) do
             {
               droplet: {
@@ -243,12 +242,12 @@ RSpec.describe DeploymentsController, type: :controller do
       end
 
       context 'when a revision is provided' do
-        let(:newer_droplet) { VCAP::CloudController::DropletModel.make(app: app, process_types: { 'web' => 'rackup' }) }
+        let(:newer_droplet) { create(:droplet_model, app: app, process_types: { 'web' => 'rackup' }) }
         let!(:earlier_revision) do
-          VCAP::CloudController::RevisionModel.make(app: app, droplet_guid: droplet.guid, created_at: 5.days.ago, version: 2, description: 'earlier revision')
+          create(:revision_model, app: app, droplet_guid: droplet.guid, created_at: 5.days.ago, version: 2, description: 'earlier revision')
         end
         let!(:later_revision) do
-          VCAP::CloudController::RevisionModel.make(app: app, droplet_guid: newer_droplet.guid, version: 3, description: 'later revision')
+          create(:revision_model, app: app, droplet_guid: newer_droplet.guid, version: 3, description: 'later revision')
         end
 
         let(:request_body) do
@@ -283,12 +282,12 @@ RSpec.describe DeploymentsController, type: :controller do
 
         context 'when the provided revision specifies start commands' do
           let!(:earlier_revision) do
-            VCAP::CloudController::RevisionModel.make(:custom_web_command,
-                                                      app: app,
-                                                      droplet_guid: newer_droplet.guid, # same droplet as currently associated revision
-                                                      created_at: 5.days.ago,
-                                                      version: 2,
-                                                      description: 'reassigned earlier_revision')
+            create(:revision_model, :custom_web_command,
+                   app: app,
+                   droplet_guid: newer_droplet.guid, # same droplet as currently associated revision
+                   created_at: 5.days.ago,
+                   version: 2,
+                   description: 'reassigned earlier_revision')
           end
 
           it 'uses the process commands from the revision to create a new revision' do
@@ -330,7 +329,7 @@ RSpec.describe DeploymentsController, type: :controller do
       end
 
       context 'when both a revision and a droplet are provided' do
-        let!(:revision) { VCAP::CloudController::RevisionModel.make(app:) }
+        let!(:revision) { create(:revision_model, app:) }
         let(:request_body) do
           {
             droplet: {
@@ -446,7 +445,7 @@ RSpec.describe DeploymentsController, type: :controller do
   end
 
   describe '#show' do
-    let(:deployment) { VCAP::CloudController::DeploymentModel.make(state: 'DEPLOYING', app: app, droplet: droplet) }
+    let(:deployment) { create(:deployment_model, state: 'DEPLOYING', app: app, droplet: droplet) }
 
     describe 'for a valid user' do
       before do
@@ -468,7 +467,7 @@ RSpec.describe DeploymentsController, type: :controller do
       end
 
       context 'when the current droplet changes on the app' do
-        let(:new_droplet) { VCAP::CloudController::DropletModel.make }
+        let(:new_droplet) { create(:droplet_model) }
 
         it 'shows the droplet guid for the droplet the deployment was created with' do
           app.update(droplet: new_droplet)
@@ -507,8 +506,8 @@ RSpec.describe DeploymentsController, type: :controller do
   end
 
   describe '#index' do
-    let!(:deployment) { VCAP::CloudController::DeploymentModel.make(state: 'DEPLOYING', app: app) }
-    let!(:another_deployment) { VCAP::CloudController::DeploymentModel.make(state: 'DEPLOYING', app: app) }
+    let!(:deployment) { create(:deployment_model, state: 'DEPLOYING', app: app) }
+    let!(:another_deployment) { create(:deployment_model, state: 'DEPLOYING', app: app) }
 
     context 'permissions' do
       describe 'authorization' do
@@ -621,8 +620,8 @@ RSpec.describe DeploymentsController, type: :controller do
         context 'when querying by states' do
           let(:states_list) { 'DEPLOYED,CANCELED' }
           let(:params) { { states: states_list } }
-          let!(:deployed_deployment) { VCAP::CloudController::DeploymentModel.make(state: 'DEPLOYED', app: app) }
-          let!(:canceled_deployment) { VCAP::CloudController::DeploymentModel.make(state: 'CANCELED', app: app) }
+          let!(:deployed_deployment) { create(:deployment_model, state: 'DEPLOYED', app: app) }
+          let!(:canceled_deployment) { create(:deployment_model, state: 'CANCELED', app: app) }
 
           it 'gets only the requested deployments' do
             get(:index, params:)
@@ -644,11 +643,10 @@ RSpec.describe DeploymentsController, type: :controller do
 
   describe '#cancel' do
     let!(:deployment) do
-      VCAP::CloudController::DeploymentModel.make(
-        state: 'DEPLOYING',
-        app: app,
-        previous_droplet: VCAP::CloudController::DropletModel.make(app: app, process_types: { 'web' => 'www' })
-      )
+      create(:deployment_model,
+             state: 'DEPLOYING',
+             app: app,
+             previous_droplet: create(:droplet_model, app: app, process_types: { 'web' => 'www' }))
     end
 
     before do
@@ -701,8 +699,8 @@ RSpec.describe DeploymentsController, type: :controller do
   end
 
   describe '#update' do
-    let(:deployment) { VCAP::CloudController::DeploymentModel.make(app:) }
-    let(:user) { set_current_user(VCAP::CloudController::User.make) }
+    let(:deployment) { create(:deployment_model, app:) }
+    let(:user) { set_current_user(create(:user)) }
 
     before do
       allow_user_read_access_for(user, spaces: [space])

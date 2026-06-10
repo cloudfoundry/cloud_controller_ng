@@ -12,11 +12,11 @@ RSpec.shared_examples 'delete binding job' do |binding_type|
     )
   end
 
-  let(:space) { VCAP::CloudController::Space.make }
-  let(:service_offering) { VCAP::CloudController::Service.make(requires: ['route_forwarding']) }
+  let(:space) { create(:space) }
+  let(:service_offering) { create(:service, requires: ['route_forwarding']) }
   let(:maximum_polling_duration) { nil }
-  let(:service_plan) { VCAP::CloudController::ServicePlan.make(service: service_offering, maximum_polling_duration: maximum_polling_duration) }
-  let(:service_instance) { VCAP::CloudController::ManagedServiceInstance.make(service_plan:, space:) }
+  let(:service_plan) { create(:service_plan, service: service_offering, maximum_polling_duration: maximum_polling_duration) }
+  let(:service_instance) { create(:managed_service_instance, service_plan:, space:) }
   let(:user_info) { instance_double(Object) }
 
   describe '#perform' do

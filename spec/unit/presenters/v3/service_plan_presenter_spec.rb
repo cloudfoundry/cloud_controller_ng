@@ -10,24 +10,20 @@ RSpec.describe VCAP::CloudController::Presenters::V3::ServicePlanPresenter do
     }
   end
   let(:service_plan) do
-    VCAP::CloudController::ServicePlan.make(maintenance_info:)
+    create(:service_plan, maintenance_info:)
   end
 
   let!(:potato_label) do
-    VCAP::CloudController::ServicePlanLabelModel.make(
-      key_prefix: 'canberra.au',
-      key_name: 'potato',
-      value: 'mashed',
-      resource_guid: service_plan.guid
-    )
+    create(:service_plan_label_model, key_prefix: 'canberra.au',
+                                      key_name: 'potato',
+                                      value: 'mashed',
+                                      resource_guid: service_plan.guid)
   end
 
   let!(:mountain_annotation) do
-    VCAP::CloudController::ServicePlanAnnotationModel.make(
-      key_name: 'altitude',
-      value: '14,412',
-      resource_guid: service_plan.guid
-    )
+    create(:service_plan_annotation_model, key_name: 'altitude',
+                                           value: '14,412',
+                                           resource_guid: service_plan.guid)
   end
 
   describe '#to_hash' do
@@ -103,7 +99,7 @@ RSpec.describe VCAP::CloudController::Presenters::V3::ServicePlanPresenter do
 
     context 'when `active` is false' do
       let(:service_plan) do
-        VCAP::CloudController::ServicePlan.make(active: false)
+        create(:service_plan, active: false)
       end
 
       it 'presents the service plan with available false' do
@@ -113,7 +109,7 @@ RSpec.describe VCAP::CloudController::Presenters::V3::ServicePlanPresenter do
 
     context 'when `free` is false' do
       let(:service_plan) do
-        VCAP::CloudController::ServicePlan.make(free: false)
+        create(:service_plan, free: false)
       end
 
       it 'presents the service plan with free false' do
@@ -123,7 +119,7 @@ RSpec.describe VCAP::CloudController::Presenters::V3::ServicePlanPresenter do
 
     context 'when plan has `maximum_polling_duration`' do
       let(:service_plan) do
-        VCAP::CloudController::ServicePlan.make(maximum_polling_duration: 60)
+        create(:service_plan, maximum_polling_duration: 60)
       end
 
       it 'presents the service plan with maximum_polling_duration' do
@@ -133,7 +129,7 @@ RSpec.describe VCAP::CloudController::Presenters::V3::ServicePlanPresenter do
 
     context 'when `bindable` is false' do
       let(:service_plan) do
-        VCAP::CloudController::ServicePlan.make(bindable: false)
+        create(:service_plan, bindable: false)
       end
 
       it 'presents the service plan with bindable false' do
@@ -143,7 +139,7 @@ RSpec.describe VCAP::CloudController::Presenters::V3::ServicePlanPresenter do
 
     context 'when `plan_updateable` is false' do
       let(:service_plan) do
-        VCAP::CloudController::ServicePlan.make(plan_updateable: false)
+        create(:service_plan, plan_updateable: false)
       end
 
       it 'presents the service plan with plan_updateable false' do
@@ -153,7 +149,7 @@ RSpec.describe VCAP::CloudController::Presenters::V3::ServicePlanPresenter do
 
     context 'when plan has `extra`' do
       let(:service_plan) do
-        VCAP::CloudController::ServicePlan.make(extra: '{"some_key": "some-value"}')
+        create(:service_plan, extra: '{"some_key": "some-value"}')
       end
 
       it 'presents the service plan with metadata' do
@@ -164,7 +160,7 @@ RSpec.describe VCAP::CloudController::Presenters::V3::ServicePlanPresenter do
     context 'when plan has costs' do
       it 'flattens different currencies in the same unit' do
         service_plan =
-          VCAP::CloudController::ServicePlan.make(extra: '{"costs": [
+          create(:service_plan, extra: '{"costs": [
           {
             "amount": {
               "usd": 649.0,
@@ -202,7 +198,7 @@ RSpec.describe VCAP::CloudController::Presenters::V3::ServicePlanPresenter do
 
       it 'handles currency symbols' do
         service_plan =
-          VCAP::CloudController::ServicePlan.make(extra: '{"costs": [
+          create(:service_plan, extra: '{"costs": [
           {
             "amount": {
               "$": 0.06
@@ -221,7 +217,7 @@ RSpec.describe VCAP::CloudController::Presenters::V3::ServicePlanPresenter do
 
     context 'when plan has no cost' do
       let(:service_plan) do
-        VCAP::CloudController::ServicePlan.make
+        create(:service_plan)
       end
 
       it 'presents the service plan with cost' do
@@ -337,7 +333,7 @@ RSpec.describe VCAP::CloudController::Presenters::V3::ServicePlanPresenter do
           }']
       ].each do |scenario, extra|
         it "returns empty cost array when #{scenario}" do
-          service_plan = VCAP::CloudController::ServicePlan.make(extra:)
+          service_plan = create(:service_plan, extra:)
 
           result = described_class.new(service_plan).to_hash.deep_symbolize_keys
 
@@ -348,7 +344,7 @@ RSpec.describe VCAP::CloudController::Presenters::V3::ServicePlanPresenter do
 
     context 'when plan has no `maintenance_info`' do
       let(:service_plan) do
-        VCAP::CloudController::ServicePlan.make
+        create(:service_plan)
       end
 
       it 'presents the service plan with empty maintenance_info' do
@@ -374,7 +370,7 @@ RSpec.describe VCAP::CloudController::Presenters::V3::ServicePlanPresenter do
 
       context 'when plan has create service_instance schema' do
         let(:service_plan) do
-          VCAP::CloudController::ServicePlan.make(create_instance_schema: schema)
+          create(:service_plan, create_instance_schema: schema)
         end
 
         it 'presents the service plan create service_instance with the schema' do
@@ -386,7 +382,7 @@ RSpec.describe VCAP::CloudController::Presenters::V3::ServicePlanPresenter do
 
       context 'when plan has update service_instance schema' do
         let(:service_plan) do
-          VCAP::CloudController::ServicePlan.make(update_instance_schema: schema)
+          create(:service_plan, update_instance_schema: schema)
         end
 
         it 'presents the service plan update service_instance with the schema' do
@@ -398,7 +394,7 @@ RSpec.describe VCAP::CloudController::Presenters::V3::ServicePlanPresenter do
 
       context 'when plan has create service_binding schema' do
         let(:service_plan) do
-          VCAP::CloudController::ServicePlan.make(create_binding_schema: schema)
+          create(:service_plan, create_binding_schema: schema)
         end
 
         it 'presents the service plan update service_instance with the schema' do
@@ -410,10 +406,10 @@ RSpec.describe VCAP::CloudController::Presenters::V3::ServicePlanPresenter do
     end
 
     context 'when service plan is from a space-scoped broker' do
-      let(:space) { VCAP::CloudController::Space.make }
-      let(:service_broker) { VCAP::CloudController::ServiceBroker.make(space:) }
-      let(:service_offering) { VCAP::CloudController::Service.make(service_broker:) }
-      let(:service_plan) { VCAP::CloudController::ServicePlan.make(service: service_offering) }
+      let(:space) { create(:space) }
+      let(:service_broker) { create(:service_broker, space:) }
+      let(:service_offering) { create(:service, service_broker:) }
+      let(:service_plan) { create(:service_plan, service: service_offering) }
 
       it 'includes a space relationship and link' do
         expect(result).to include({
@@ -437,7 +433,7 @@ RSpec.describe VCAP::CloudController::Presenters::V3::ServicePlanPresenter do
 
       let(:result) { described_class.new(service_plan, decorators: [FakeDecorator]).to_hash.deep_symbolize_keys }
 
-      let(:service_plan) { VCAP::CloudController::ServicePlan.make }
+      let(:service_plan) { create(:service_plan) }
 
       it 'uses the decorator' do
         expect(result[:included]).to match({ resource: { guid: service_plan.guid } })

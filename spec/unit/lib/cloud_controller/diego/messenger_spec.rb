@@ -20,8 +20,8 @@ module VCAP::CloudController
       describe '#send_stage_request' do
         let(:statsd_updater) { instance_double(VCAP::CloudController::Metrics::StatsdUpdater) }
         let(:prometheus_updater) { instance_double(VCAP::CloudController::Metrics::PrometheusUpdater) }
-        let(:package) { PackageModel.make }
-        let(:droplet) { DropletModel.make(package:) }
+        let(:package) { create(:package_model) }
+        let(:droplet) { create(:droplet_model, package:) }
         let(:staging_guid) { droplet.guid }
         let(:staging_details) do
           VCAP::CloudController::Diego::StagingDetails.new.tap do |sd|

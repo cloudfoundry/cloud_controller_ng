@@ -5,7 +5,7 @@ require 'presenters/v3/app_file_based_vcap_services_feature_presenter'
 
 module VCAP::CloudController::Presenters::V3
   RSpec.describe AppSshFeaturePresenter do
-    let(:app) { VCAP::CloudController::AppModel.make }
+    let(:app) { create(:app_model) }
 
     describe '#to_hash' do
       it 'presents the app feature as json' do
@@ -18,7 +18,7 @@ module VCAP::CloudController::Presenters::V3
   end
 
   RSpec.describe AppServiceBindingK8sFeaturePresenter do
-    let(:app) { VCAP::CloudController::AppModel.make }
+    let(:app) { create(:app_model) }
 
     describe '#to_hash' do
       it 'presents the app feature as json' do
@@ -31,7 +31,7 @@ module VCAP::CloudController::Presenters::V3
   end
 
   RSpec.describe AppFileBasedVcapServicesFeaturePresenter do
-    let(:app) { VCAP::CloudController::AppModel.make }
+    let(:app) { create(:app_model) }
 
     describe '#to_hash' do
       it 'presents the app feature as json' do

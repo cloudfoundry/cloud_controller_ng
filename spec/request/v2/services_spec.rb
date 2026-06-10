@@ -1,8 +1,8 @@
 require 'spec_helper'
 
 RSpec.describe 'Services' do
-  let(:user) { VCAP::CloudController::User.make }
-  let(:space) { VCAP::CloudController::Space.make }
+  let(:user) { create(:user) }
+  let(:space) { create(:space) }
 
   before do
     space.organization.add_user(user)
@@ -10,10 +10,10 @@ RSpec.describe 'Services' do
   end
 
   describe 'GET /v2/services' do
-    let!(:service_1) { VCAP::CloudController::Service.make }
-    let!(:service_plan_1) { VCAP::CloudController::ServicePlan.make(service: service_1) }
-    let!(:service_2) { VCAP::CloudController::Service.make }
-    let!(:service_plan_2) { VCAP::CloudController::ServicePlan.make(service: service_2) }
+    let!(:service_1) { create(:service) }
+    let!(:service_plan_1) { create(:service_plan, service: service_1) }
+    let!(:service_2) { create(:service) }
+    let!(:service_plan_2) { create(:service_plan, service: service_2) }
 
     it 'lists services' do
       get '/v2/services', nil, headers_for(user)
@@ -96,8 +96,8 @@ RSpec.describe 'Services' do
   end
 
   describe 'GET /v2/services/:guid' do
-    let!(:service) { VCAP::CloudController::Service.make }
-    let!(:service_plan) { VCAP::CloudController::ServicePlan.make(service:) }
+    let!(:service) { create(:service) }
+    let!(:service_plan) { create(:service_plan, service:) }
 
     it 'displays the service' do
       get "/v2/services/#{service.guid}", nil, headers_for(user)

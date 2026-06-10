@@ -19,19 +19,15 @@ module VCAP
           end
 
           let!(:label) do
-            ServiceBrokerLabelModel.make(
-              service_broker: broker,
-              key_name: 'potato',
-              value: 'yam'
-            )
+            create(:service_broker_label_model, service_broker: broker,
+                                                key_name: 'potato',
+                                                value: 'yam')
           end
 
           let!(:annotation) do
-            ServiceBrokerAnnotationModel.make(
-              service_broker: broker,
-              key_name: 'style',
-              value: 'mashed'
-            )
+            create(:service_broker_annotation_model, service_broker: broker,
+                                                     key_name: 'style',
+                                                     value: 'mashed')
           end
 
           let(:update_broker_request) do
@@ -294,9 +290,7 @@ module VCAP
               before do
                 uaa_conflicting_catalog
 
-                VCAP::CloudController::ServiceDashboardClient.make(
-                  uaa_id: 'some-uaa-id'
-                )
+                create(:service_dashboard_client, uaa_id: 'some-uaa-id')
               end
 
               it 'errors when there are uaa synchronization errors' do

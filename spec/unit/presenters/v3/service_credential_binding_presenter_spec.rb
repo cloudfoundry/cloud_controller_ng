@@ -6,12 +6,12 @@ require 'actions/annotations_update'
 module VCAP
   module CloudController
     RSpec.describe Presenters::V3::ServiceCredentialBindingPresenter do
-      let(:instance) { ManagedServiceInstance.make(guid: 'instance-guid') }
-      let(:app) { AppModel.make(guid: 'app-guid', space: instance.space) }
+      let(:instance) { create(:managed_service_instance, guid: 'instance-guid') }
+      let(:app) { create(:app_model, guid: 'app-guid', space: instance.space) }
 
       describe 'app bindings' do
         let(:credential_binding) do
-          ServiceBinding.make(name: 'some-name', guid: 'some-guid', app: app, service_instance: instance).tap do |binding|
+          create(:service_binding, name: 'some-name', guid: 'some-guid', app: app, service_instance: instance).tap do |binding|
             binding.save_with_attributes_and_new_operation(
               {},
               {
@@ -86,8 +86,8 @@ module VCAP
         end
 
         context 'when name is not set' do
-          let(:instance) { ServiceInstance.make(name: 'smashed-avocado') }
-          let(:credential_binding) { ServiceBinding.make(service_instance: instance) }
+          let(:instance) { create(:service_instance, name: 'smashed-avocado') }
+          let(:credential_binding) { create(:service_binding, service_instance: instance) }
 
           it 'returns null as the binding name' do
             presenter = described_class.new(credential_binding)
@@ -97,7 +97,7 @@ module VCAP
 
         context 'no last_operation' do
           let(:credential_binding) do
-            ServiceBinding.make(name: 'some-name', guid: 'some-guid', app: app, service_instance: instance)
+            create(:service_binding, name: 'some-name', guid: 'some-guid', app: app, service_instance: instance)
           end
 
           it 'still displays the last operation' do
@@ -117,7 +117,7 @@ module VCAP
 
       describe 'key bindings' do
         let(:credential_binding) do
-          ServiceKey.make(name: 'some-name', guid: 'some-guid', service_instance: instance).tap do |binding|
+          create(:service_key, name: 'some-name', guid: 'some-guid', service_instance: instance).tap do |binding|
             binding.save_with_attributes_and_new_operation(
               {},
               {
@@ -185,7 +185,7 @@ module VCAP
 
         context 'no last_operation' do
           let(:credential_binding) do
-            ServiceKey.make(name: 'some-name', guid: 'some-guid', service_instance: instance)
+            create(:service_key, name: 'some-name', guid: 'some-guid', service_instance: instance)
           end
 
           it 'still displays the last operation' do
@@ -204,8 +204,8 @@ module VCAP
       end
 
       describe 'for user provided service instances' do
-        let(:instance) { UserProvidedServiceInstance.make(guid: 'instance-guid') }
-        let(:credential_binding) { ServiceKey.make(name: 'some-name', guid: 'some-guid', service_instance: instance) }
+        let(:instance) { create(:user_provided_service_instance, guid: 'instance-guid') }
+        let(:credential_binding) { create(:service_key, name: 'some-name', guid: 'some-guid', service_instance: instance) }
 
         it 'does not include links.parameters' do
           presenter = described_class.new(credential_binding)
@@ -223,7 +223,7 @@ module VCAP
         end
 
         let(:credential_binding) do
-          ServiceBinding.make(name: 'some-name', guid: 'some-guid', app: app, service_instance: instance)
+          create(:service_binding, name: 'some-name', guid: 'some-guid', app: app, service_instance: instance)
         end
 
         let(:result) { described_class.new(credential_binding, decorators: [decorator]).to_hash.deep_symbolize_keys }

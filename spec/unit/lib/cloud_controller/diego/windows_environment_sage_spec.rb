@@ -3,7 +3,7 @@ require 'cloud_controller/diego/windows_environment_sage'
 
 module VCAP::CloudController::Diego
   RSpec.describe WindowsEnvironmentSage do
-    let(:parent_app) { VCAP::CloudController::AppModel.make }
+    let(:parent_app) { create(:app_model) }
     let(:credential_refs) { [] }
 
     describe '.ponder' do

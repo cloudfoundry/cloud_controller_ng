@@ -7,7 +7,7 @@ RSpec.describe 'Environment group variables' do
     VCAP::CloudController::EnvironmentVariableGroup.find(name: 'staging').update(environment_json: { 'foo' => 'wendys', 'baz' => 'whitecastle' })
   end
 
-  let(:user) { VCAP::CloudController::User.make }
+  let(:user) { create(:user) }
   let(:user_header) { headers_for(user, email: Sham.email, user_name: 'some-username') }
   let(:admin_header) { admin_headers_for(user) }
 
@@ -74,8 +74,8 @@ RSpec.describe 'Environment group variables' do
     end
 
     context 'when the user is logged in' do
-      let(:org) { VCAP::CloudController::Organization.make }
-      let(:space) { VCAP::CloudController::Space.make(organization: org) }
+      let(:org) { create(:organization) }
+      let(:space) { create(:space, organization: org) }
       let(:api_call) { ->(user_headers) { get '/v3/environment_variable_groups/running', nil, user_headers } }
       let(:expected_codes_and_responses) { Hash.new({ code: 200 }.freeze) }
 
@@ -171,7 +171,7 @@ RSpec.describe 'Environment group variables' do
     end
 
     context 'when the user is logged in' do
-      let(:space) { VCAP::CloudController::Space.make }
+      let(:space) { create(:space) }
       let(:org) { space.organization }
       let(:api_call) { ->(user_headers) { patch '/v3/environment_variable_groups/staging', params.to_json, user_headers } }
 

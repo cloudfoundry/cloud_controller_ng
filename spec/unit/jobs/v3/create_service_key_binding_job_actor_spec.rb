@@ -18,7 +18,7 @@ module VCAP::CloudController
 
       describe '#get_resource' do
         let(:binding) do
-          ServiceKey.make
+          create(:service_key)
         end
 
         it 'returns the resource when it exists' do

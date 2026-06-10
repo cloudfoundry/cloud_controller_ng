@@ -17,7 +17,7 @@ module VCAP::CloudController
         }
       end
       let(:update_request_body) { new_metadata }
-      let(:resource) { Service.make }
+      let(:resource) { create(:service) }
       let(:message) { MetadataUpdateMessage.new(update_request_body) }
 
       context 'when the resource has no metadata' do
@@ -49,8 +49,8 @@ module VCAP::CloudController
 
       context 'when the resource has existing metadata' do
         before do
-          VCAP::CloudController::ServiceOfferingLabelModel.make(resource_guid: resource.guid, key_name: 'freaky', value: 'tuesday')
-          VCAP::CloudController::ServiceOfferingAnnotationModel.make(resource_guid: resource.guid, key_name: 'tokyo', value: 'apples')
+          create(:service_offering_label_model, resource_guid: resource.guid, key_name: 'freaky', value: 'tuesday')
+          create(:service_offering_annotation_model, resource_guid: resource.guid, key_name: 'tokyo', value: 'apples')
         end
 
         context 'and no metadata is specified' do

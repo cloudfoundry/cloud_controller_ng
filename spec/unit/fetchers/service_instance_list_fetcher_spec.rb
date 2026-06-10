@@ -9,14 +9,14 @@ module VCAP::CloudController
     let(:fetcher) { described_class }
 
     describe '#fetch' do
-      let(:space_1) { Space.make }
-      let(:space_2) { Space.make }
-      let(:space_3) { Space.make }
-      let!(:msi_1) { ManagedServiceInstance.make(space: space_1) }
-      let!(:msi_2) { ManagedServiceInstance.make(space: space_2) }
-      let!(:msi_3) { ManagedServiceInstance.make(space: space_3) }
-      let!(:upsi) { UserProvidedServiceInstance.make(space: space_1) }
-      let!(:ssi) { ManagedServiceInstance.make(space: space_3) }
+      let(:space_1) { create(:space) }
+      let(:space_2) { create(:space) }
+      let(:space_3) { create(:space) }
+      let!(:msi_1) { create(:managed_service_instance, space: space_1) }
+      let!(:msi_2) { create(:managed_service_instance, space: space_2) }
+      let!(:msi_3) { create(:managed_service_instance, space: space_3) }
+      let!(:upsi) { create(:user_provided_service_instance, space: space_1) }
+      let!(:ssi) { create(:managed_service_instance, space: space_3) }
 
       before do
         ssi.add_shared_space(space_2)
@@ -84,7 +84,7 @@ module VCAP::CloudController
           let(:filters) { { 'label_selector' => 'key=value' } }
 
           before do
-            ServiceInstanceLabelModel.make(resource_guid: msi_2.guid, key_name: 'key', value: 'value')
+            create(:service_instance_label_model, resource_guid: msi_2.guid, key_name: 'key', value: 'value')
           end
 
           it 'returns instances with matching labels' do
@@ -114,7 +114,7 @@ module VCAP::CloudController
         end
 
         context 'by service_plan_names' do
-          let!(:msi_4) { ManagedServiceInstance.make(space: space_1, service_plan: msi_1.service_plan) }
+          let!(:msi_4) { create(:managed_service_instance, space: space_1, service_plan: msi_1.service_plan) }
           let(:filters) { { service_plan_names: [msi_1.service_plan.name, msi_2.service_plan.name, 'non-existent'] } }
 
           it 'returns instances with matching service plan names' do
@@ -124,7 +124,7 @@ module VCAP::CloudController
         end
 
         context 'by service_plan_guids' do
-          let!(:msi_4) { ManagedServiceInstance.make(space: space_1, service_plan: msi_1.service_plan) }
+          let!(:msi_4) { create(:managed_service_instance, space: space_1, service_plan: msi_1.service_plan) }
           let(:filters) { { service_plan_guids: [msi_1.service_plan.guid, msi_2.service_plan.guid, 'non-existent'] } }
 
           it 'returns instances with matching service plan guids' do

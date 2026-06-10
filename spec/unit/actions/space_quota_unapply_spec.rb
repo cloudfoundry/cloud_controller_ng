@@ -4,16 +4,16 @@ require 'actions/space_quota_unapply'
 module VCAP::CloudController
   RSpec.describe SpaceQuotaUnapply do
     describe '#unapply' do
-      let(:user) { User.make }
+      let(:user) { create(:user) }
       let(:user_email) { 'user@example.com' }
       let(:user_name) { 'user-name' }
       let(:user_audit_info) { UserAuditInfo.new(user_guid: user.guid, user_email: user_email, user_name: user_name) }
 
       subject { SpaceQuotaUnapply.new(user_audit_info) }
 
-      let(:org) { VCAP::CloudController::Organization.make }
-      let(:space_quota) { VCAP::CloudController::SpaceQuotaDefinition.make(organization: org) }
-      let!(:space) { VCAP::CloudController::Space.make(organization: org, space_quota_definition: space_quota) }
+      let(:org) { create(:organization) }
+      let(:space_quota) { create(:space_quota_definition, organization: org) }
+      let!(:space) { create(:space, organization: org, space_quota_definition: space_quota) }
 
       context 'when removing a quota from a space' do
         it 'disassociates the given space from the quota' do

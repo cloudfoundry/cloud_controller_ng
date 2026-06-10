@@ -6,9 +6,9 @@ module VCAP::CloudController
     RSpec.describe BuildpackBits, job_context: :api do
       let(:uploaded_path) { 'tmp/random-nginx-filename-1020930' }
       let(:filename) { 'buildpack.zip' }
-      let!(:buildpack) { Buildpack.make }
+      let!(:buildpack) { create(:buildpack) }
       let(:buildpack_guid) { buildpack.guid }
-      let(:user) { User.make }
+      let(:user) { create(:user) }
       let(:user_email) { 'user@example.com' }
       let(:user_name) { 'user-name' }
       let(:user_audit_info) { UserAuditInfo.new(user_guid: user.guid, user_email: user_email, user_name: user_name) }

@@ -5,14 +5,14 @@ require 'services'
 require 'messages/service_broker_update_message'
 
 RSpec.describe 'V3 service brokers' do
-  let(:user) { VCAP::CloudController::User.make }
+  let(:user) { create(:user) }
   let(:global_broker_id) { 'global-service-id' }
   let(:space_broker_id) { 'space-service-id' }
-  let(:org) { VCAP::CloudController::Organization.make }
-  let(:space) { VCAP::CloudController::Space.make(organization: org) }
+  let(:org) { create(:organization) }
+  let(:space) { create(:space, organization: org) }
   let(:space_developer_alternate_space_headers) do
-    user = VCAP::CloudController::User.make
-    space = VCAP::CloudController::Space.make(organization: org)
+    user = create(:user)
+    space = create(:space, organization: org)
     org.add_user(user)
     space.add_developer(user)
 
@@ -99,7 +99,7 @@ RSpec.describe 'V3 service brokers' do
     end
 
     it_behaves_like 'paginated response', '/v3/service_brokers' do
-      let!(:resources) { Array.new(2) { VCAP::CloudController::ServiceBroker.make } }
+      let!(:resources) { create_list(:service_broker, 2) }
     end
 
     it_behaves_like 'list query endpoint' do
@@ -216,7 +216,7 @@ RSpec.describe 'V3 service brokers' do
     end
 
     describe 'spaced-scoped service brokers' do
-      let!(:space_scoped_service_broker) { VCAP::CloudController::ServiceBroker.make(space:) }
+      let!(:space_scoped_service_broker) { create(:service_broker, space:) }
       let(:space_scoped_service_broker_json) do
         {
           guid: space_scoped_service_broker.guid,
@@ -274,8 +274,8 @@ RSpec.describe 'V3 service brokers' do
     end
 
     describe 'filters' do
-      let!(:global_service_broker) { VCAP::CloudController::ServiceBroker.make(name: 'test-broker-foo') }
-      let!(:space_scoped_service_broker) { VCAP::CloudController::ServiceBroker.make(name: 'test-broker-bar', space: space) }
+      let!(:global_service_broker) { create(:service_broker, name: 'test-broker-foo') }
+      let!(:space_scoped_service_broker) { create(:service_broker, name: 'test-broker-bar', space: space) }
 
       context 'when requesting with a space guid filter' do
         it 'returns 200 OK and a body containing one broker matching the space guid filter' do
@@ -297,8 +297,8 @@ RSpec.describe 'V3 service brokers' do
 
       context 'when filtering on labels' do
         it 'filters by label selectors' do
-          VCAP::CloudController::ServiceBrokerLabelModel.make(resource_guid: global_service_broker.guid, key_name: 'boomerang', value: 'gel')
-          VCAP::CloudController::ServiceBrokerLabelModel.make(resource_guid: space_scoped_service_broker.guid, key_name: 'boomerang', value: 'soi')
+          create(:service_broker_label_model, resource_guid: global_service_broker.guid, key_name: 'boomerang', value: 'gel')
+          create(:service_broker_label_model, resource_guid: space_scoped_service_broker.guid, key_name: 'boomerang', value: 'soi')
 
           expect_filtered_brokers('label_selector=boomerang=gel', [global_service_broker])
         end
@@ -357,7 +357,7 @@ RSpec.describe 'V3 service brokers' do
     end
 
     context 'when the service broker is global' do
-      let!(:global_service_broker_v3) { VCAP::CloudController::ServiceBroker.make }
+      let!(:global_service_broker_v3) { create(:service_broker) }
       let(:api_call) { ->(user_headers) { get "/v3/service_brokers/#{global_service_broker_v3.guid}", nil, user_headers } }
 
       let(:global_service_broker_v3_json) do
@@ -403,7 +403,7 @@ RSpec.describe 'V3 service brokers' do
     end
 
     context 'when the service broker is space scoped' do
-      let!(:space_scoped_service_broker) { VCAP::CloudController::ServiceBroker.make(space:) }
+      let!(:space_scoped_service_broker) { create(:service_broker, space:) }
       let(:api_call) { ->(user_headers) { get "/v3/service_brokers/#{space_scoped_service_broker.guid}", nil, user_headers } }
 
       let(:space_scoped_service_broker_json) do
@@ -466,14 +466,13 @@ RSpec.describe 'V3 service brokers' do
 
   describe 'PATCH /v3/service_brokers/:guid' do
     let!(:broker) do
-      VCAP::CloudController::ServiceBroker.make(
-        name: 'broker name',
-        broker_url: 'http://example.org/broker-url',
-        auth_username: 'admin',
-        auth_password: 'welcome'
-      ) do |broker|
-        VCAP::CloudController::ServiceBrokerLabelModel.make(resource_guid: broker.guid, key_name: 'potato', value: 'yam')
-        VCAP::CloudController::ServiceBrokerAnnotationModel.make(resource_guid: broker.guid, key_name: 'style', value: 'mashed')
+      create(:service_broker,
+             name: 'broker name',
+             broker_url: 'http://example.org/broker-url',
+             auth_username: 'admin',
+             auth_password: 'welcome') do |broker|
+        create(:service_broker_label_model, resource_guid: broker.guid, key_name: 'potato', value: 'yam')
+        create(:service_broker_annotation_model, resource_guid: broker.guid, key_name: 'style', value: 'mashed')
       end
     end
 
@@ -513,13 +512,12 @@ RSpec.describe 'V3 service brokers' do
 
       context 'space-scoped service broker' do
         let!(:broker) do
-          VCAP::CloudController::ServiceBroker.make(
-            name: 'old-name',
-            broker_url: 'http://example.org/old-broker-url',
-            auth_username: 'old-admin',
-            auth_password: 'not-welcome',
-            space: space
-          )
+          create(:service_broker,
+                 name: 'old-name',
+                 broker_url: 'http://example.org/old-broker-url',
+                 auth_username: 'old-admin',
+                 auth_password: 'not-welcome',
+                 space: space)
         end
         let(:api_call) { ->(user_headers) { patch "/v3/service_brokers/#{broker.guid}", update_request_body.to_json, user_headers } }
 
@@ -659,7 +657,7 @@ RSpec.describe 'V3 service brokers' do
 
       context 'when a broker with the same name exists' do
         before do
-          VCAP::CloudController::ServiceBroker.make(name: 'another broker')
+          create(:service_broker, name: 'another broker')
         end
 
         it 'returns 422 and meaningful error and does not create a broker' do
@@ -670,8 +668,8 @@ RSpec.describe 'V3 service brokers' do
       end
 
       context 'when there is a sql validation error while syncing' do
-        let!(:service_offering) { VCAP::CloudController::Service.make(service_broker: broker, unique_id: global_broker_id + '-1') }
-        let!(:service_plan) { VCAP::CloudController::ServicePlan.make(service: service_offering, name: 'plan_name-1', unique_id: Sham.guid) }
+        let!(:service_offering) { create(:service, service_broker: broker, unique_id: global_broker_id + '-1') }
+        let!(:service_plan) { create(:service_plan, service: service_offering, name: 'plan_name-1', unique_id: Sham.guid) }
 
         before do
           stub_request(:get, 'http://example.org/new-broker-url/v2/catalog').
@@ -742,9 +740,8 @@ RSpec.describe 'V3 service brokers' do
 
             stub_uaa_for(global_broker_id)
 
-            VCAP::CloudController::ManagedServiceInstance.make(
-              service_plan: VCAP::CloudController::ServicePlan.find(name: 'plan_name-1')
-            )
+            create(:managed_service_instance,
+                   service_plan: VCAP::CloudController::ServicePlan.find(name: 'plan_name-1'))
           end
 
           it 'updates the job status and populates warnings field' do
@@ -901,7 +898,7 @@ RSpec.describe 'V3 service brokers' do
     end
 
     context 'when updating credentials and the encryption_key_label is invalid' do
-      let(:broker) { VCAP::CloudController::ServiceBroker.make }
+      let(:broker) { create(:service_broker) }
       let(:api_call) do
         lambda { |headers|
           patch "/v3/service_brokers/#{broker.guid}", { authentication: {
@@ -1261,9 +1258,8 @@ RSpec.describe 'V3 service brokers' do
 
     context 'when synchronizing UAA clients fails' do
       before do
-        VCAP::CloudController::ServiceDashboardClient.make(
-          uaa_id: dashboard_client['id']
-        )
+        create(:service_dashboard_client,
+               uaa_id: dashboard_client['id'])
 
         create_broker_successfully(global_broker_request_body, with: admin_headers)
 
@@ -1318,7 +1314,7 @@ RSpec.describe 'V3 service brokers' do
 
     context 'when a broker with the same name exists' do
       before do
-        VCAP::CloudController::ServiceBroker.make(name: global_broker_request_body[:name])
+        create(:service_broker, name: global_broker_request_body[:name])
         create_broker(global_broker_with_identical_name_body, with: admin_headers)
       end
 
@@ -1367,7 +1363,7 @@ RSpec.describe 'V3 service brokers' do
           relationships: {
             space: {
               data: {
-                guid: VCAP::CloudController::Space.make.guid
+                guid: create(:space).guid
               }
             }
           }
@@ -1375,7 +1371,7 @@ RSpec.describe 'V3 service brokers' do
       end
 
       let(:space_developer_headers) do
-        user = VCAP::CloudController::User.make
+        user = create(:user)
         org.add_user(user)
         space.add_developer(user)
         headers_for(user)
@@ -1504,7 +1500,7 @@ RSpec.describe 'V3 service brokers' do
         end
 
         context 'space-scoped broker' do
-          let(:broker) { VCAP::CloudController::ServiceBroker.make(space_id: space.id) }
+          let(:broker) { create(:service_broker, space_id: space.id) }
 
           it_behaves_like 'permissions for delete endpoint', ALL_PERMISSIONS do
             let(:expected_codes_and_responses) { responses_for_space_restricted_async_delete_endpoint }

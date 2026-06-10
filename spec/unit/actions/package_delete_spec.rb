@@ -10,7 +10,7 @@ module VCAP::CloudController
 
     describe '#delete' do
       context 'when the package exists' do
-        let!(:package) { PackageModel.make }
+        let!(:package) { create(:package_model) }
 
         it 'deletes the package record' do
           expect do
@@ -57,7 +57,7 @@ module VCAP::CloudController
         end
 
         it 'deletes associated labels' do
-          label = PackageLabelModel.make(resource_guid: package.guid, key_name: 'test', value: 'bommel')
+          label = create(:package_label_model, resource_guid: package.guid, key_name: 'test', value: 'bommel')
           expect do
             package_delete.delete([package])
           end.to change(PackageLabelModel, :count).by(-1)
@@ -66,7 +66,7 @@ module VCAP::CloudController
         end
 
         it 'deletes associated annotations' do
-          annotation = PackageAnnotationModel.make(resource_guid: package.guid, key_name: 'test', value: 'bommel')
+          annotation = create(:package_annotation_model, resource_guid: package.guid, key_name: 'test', value: 'bommel')
           expect do
             package_delete.delete([package])
           end.to change(PackageAnnotationModel, :count).by(-1)
@@ -76,7 +76,7 @@ module VCAP::CloudController
       end
 
       context 'when passed a set of packages' do
-        let!(:packages) { [PackageModel.make, PackageModel.make] }
+        let!(:packages) { create_list(:package_model, 2) }
 
         it 'bulk deletes them' do
           expect do

@@ -80,7 +80,7 @@ module VCAP::CloudController
       end
     end
 
-    let(:user) { User.make }
+    let(:user) { create(:user) }
 
     before do
       allow_any_instance_of(TestController).to receive(:logger).and_return(logger)

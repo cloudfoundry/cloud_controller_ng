@@ -3,13 +3,13 @@ require 'fetchers/space_list_fetcher'
 
 module VCAP::CloudController
   RSpec.describe SpaceListFetcher do
-    let(:org1) { Organization.make(name: 'org1') }
-    let(:org2) { Organization.make(name: 'org2') }
+    let(:org1) { create(:organization, name: 'org1') }
+    let(:org2) { create(:organization, name: 'org2') }
 
-    let!(:space1) { Space.make(name: 'Lamb', organization: org1) }
-    let!(:space2) { Space.make(name: 'Alpaca', organization: org2) }
-    let!(:space3) { Space.make(name: 'Horse', organization: org1) }
-    let!(:space4) { Space.make(name: 'Buffalo', organization: org2) }
+    let!(:space1) { create(:space, name: 'Lamb', organization: org1) }
+    let!(:space2) { create(:space, name: 'Alpaca', organization: org2) }
+    let!(:space3) { create(:space, name: 'Horse', organization: org1) }
+    let!(:space4) { create(:space, name: 'Buffalo', organization: org2) }
 
     let(:message) { SpacesListMessage.from_params({}) }
 
@@ -98,8 +98,8 @@ module VCAP::CloudController
             { organization_guids: [org2.guid], 'label_selector' => 'key2=value2' }
           )
         end
-        let!(:space1label) { SpaceLabelModel.make(key_name: 'key', value: 'value', space: space1) }
-        let!(:space2label) { SpaceLabelModel.make(key_name: 'key2', value: 'value2', space: space2) }
+        let!(:space1label) { create(:space_label_model, key_name: 'key', value: 'value', space: space1) }
+        let!(:space2label) { create(:space_label_model, key_name: 'key2', value: 'value2', space: space2) }
 
         it 'returns the correct set of spaces' do
           results = fetcher.fetch_all(message:).all
@@ -111,8 +111,8 @@ module VCAP::CloudController
         let(:message) do
           SpacesListMessage.from_params({ 'label_selector' => 'key=value' })
         end
-        let!(:space1label) { SpaceLabelModel.make(key_name: 'key', value: 'value', space: space1) }
-        let!(:space2label) { SpaceLabelModel.make(key_name: 'key2', value: 'value2', space: space2) }
+        let!(:space1label) { create(:space_label_model, key_name: 'key', value: 'value', space: space1) }
+        let!(:space2label) { create(:space_label_model, key_name: 'key2', value: 'value2', space: space2) }
 
         it 'returns the correct set of spaces' do
           results = fetcher.fetch_all(message:).all

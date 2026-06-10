@@ -2,9 +2,9 @@ require 'spec_helper'
 require 'request_spec_shared_examples'
 
 RSpec.describe 'Route Destinations Request' do
-  let(:user) { VCAP::CloudController::User.make }
+  let(:user) { create(:user) }
   let(:admin_header) { admin_headers_for(user) }
-  let(:space) { VCAP::CloudController::Space.make }
+  let(:space) { create(:space) }
   let(:org) { space.organization }
 
   before do
@@ -12,10 +12,10 @@ RSpec.describe 'Route Destinations Request' do
   end
 
   context 'buildpack table test' do
-    let(:app_model) { VCAP::CloudController::AppModel.make(:docker, space:) }
-    let!(:process_model) { VCAP::CloudController::ProcessModel.make(:docker, app: app_model, type: 'web') }
-    let(:route1) { VCAP::CloudController::Route.make(space:) }
-    let(:route2) { VCAP::CloudController::Route.make(space:) }
+    let(:app_model) { create(:app_model, :docker, space:) }
+    let!(:process_model) { create(:process, :docker, app: app_model, type: 'web') }
+    let(:route1) { create(:route, space:) }
+    let(:route2) { create(:route, space:) }
 
     [
       # case,  dst1 specified port,   dst2 specified port,   dst1 actual port,   dst2 actual port,   exposed ports,
@@ -63,10 +63,10 @@ RSpec.describe 'Route Destinations Request' do
   end
 
   context 'docker table test' do
-    let(:app_model) { VCAP::CloudController::AppModel.make(:docker, space:) }
-    let!(:process_model) { VCAP::CloudController::ProcessModel.make(:docker, app: app_model, type: 'web') }
-    let(:route1) { VCAP::CloudController::Route.make(space:) }
-    let(:route2) { VCAP::CloudController::Route.make(space:) }
+    let(:app_model) { create(:app_model, :docker, space:) }
+    let!(:process_model) { create(:process, :docker, app: app_model, type: 'web') }
+    let(:route1) { create(:route, space:) }
+    let(:route2) { create(:route, space:) }
 
     [
       # case,  dst1 specified port,   dst2 specified port,   docker ports,   dst1 actual port,   dst2 actual port,   exposed ports,
@@ -97,14 +97,13 @@ RSpec.describe 'Route Destinations Request' do
         post "/v3/routes/#{route2.guid}/destinations", { destinations: [params2] }.to_json, admin_header
         expect(last_response.status).to eq(200)
 
-        droplet = VCAP::CloudController::DropletModel.make(
-          :docker,
-          app: app_model,
-          execution_metadata: {
-            ports: docker_ports.map { |dp| { Port: dp, Protocol: 'tcp' } }
-          }.to_json,
-          state: VCAP::CloudController::DropletModel::STAGED_STATE
-        )
+        droplet = create(:droplet_model,
+                         :docker,
+                         app: app_model,
+                         execution_metadata: {
+                           ports: docker_ports.map { |dp| { Port: dp, Protocol: 'tcp' } }
+                         }.to_json,
+                         state: VCAP::CloudController::DropletModel::STAGED_STATE)
         app_model.update(droplet:)
 
         get "/v3/routes/#{route1.guid}/destinations", nil, admin_header
@@ -128,9 +127,9 @@ RSpec.describe 'Route Destinations Request' do
   end
 
   describe 'GET /v3/routes/:guid/destinations' do
-    let(:route) { VCAP::CloudController::Route.make(space:) }
-    let(:app_model) { VCAP::CloudController::AppModel.make(space:) }
-    let!(:destination) { VCAP::CloudController::RouteMappingModel.make(app: app_model, route: route, process_type: 'web') }
+    let(:route) { create(:route, space:) }
+    let(:app_model) { create(:app_model, space:) }
+    let!(:destination) { create(:route_mapping_model, app: app_model, route: route, process_type: 'web') }
     let(:api_call) { ->(user_headers) { get "/v3/routes/#{route.guid}/destinations", nil, user_headers } }
     let(:response_json) do
       {
@@ -198,8 +197,8 @@ RSpec.describe 'Route Destinations Request' do
     end
 
     context 'filters' do
-      let(:app_model2) { VCAP::CloudController::AppModel.make(space:) }
-      let!(:destination2) { VCAP::CloudController::RouteMappingModel.make(app: app_model2, route: route, process_type: 'web') }
+      let(:app_model2) { create(:app_model, space:) }
+      let!(:destination2) { create(:route_mapping_model, app: app_model2, route: route, process_type: 'web') }
 
       context 'when filtering on app_guids' do
         it 'returns only the destinations for the requested app_guids' do
@@ -218,17 +217,16 @@ RSpec.describe 'Route Destinations Request' do
   end
 
   describe 'POST /v3/routes/:guid/destinations' do
-    let(:route) { VCAP::CloudController::Route.make(space:) }
-    let(:app_model) { VCAP::CloudController::AppModel.make(space:) }
+    let(:route) { create(:route, space:) }
+    let(:app_model) { create(:app_model, space:) }
     let(:user_header) { headers_for(user) }
     let!(:existing_destination) do
-      VCAP::CloudController::RouteMappingModel.make(
-        guid: '00000000', # early guid to ensure order
-        app: app_model,
-        route: route,
-        process_type: 'worker',
-        app_port: VCAP::CloudController::ProcessModel::DEFAULT_HTTP_PORT
-      )
+      create(:route_mapping_model,
+             guid: '00000000', # early guid to ensure order
+             app: app_model,
+             route: route,
+             process_type: 'worker',
+             app_port: VCAP::CloudController::ProcessModel::DEFAULT_HTTP_PORT)
     end
     let(:params) do
       {
@@ -374,7 +372,7 @@ RSpec.describe 'Route Destinations Request' do
       end
 
       context "when the app is in the route's shared space" do
-        let(:app_model) { VCAP::CloudController::AppModel.make }
+        let(:app_model) { create(:app_model) }
         let(:params) do
           {
             destinations: [
@@ -403,7 +401,7 @@ RSpec.describe 'Route Destinations Request' do
 
       context 'when the app is invalid' do
         context 'when an app is outside the route space' do
-          let(:app_model) { VCAP::CloudController::AppModel.make }
+          let(:app_model) { create(:app_model) }
           let(:params) do
             {
               destinations: [
@@ -511,8 +509,8 @@ RSpec.describe 'Route Destinations Request' do
         end
 
         context 'when the user can not read the app' do
-          let(:non_visible_space) { VCAP::CloudController::Space.make }
-          let(:app_model) { VCAP::CloudController::AppModel.make(space: non_visible_space) }
+          let(:non_visible_space) { create(:space) }
+          let(:app_model) { create(:app_model, space: non_visible_space) }
           let(:params) do
             {
               destinations: [
@@ -576,7 +574,7 @@ RSpec.describe 'Route Destinations Request' do
       end
 
       context 'when there is an existing weighted destination' do
-        let!(:existing_destination) { VCAP::CloudController::RouteMappingModel.make(app: app_model, process_type: 'something', route: route, weight: 10) }
+        let!(:existing_destination) { create(:route_mapping_model, app: app_model, process_type: 'something', route: route, weight: 10) }
 
         it 'returns 422 with a helpful message' do
           post "/v3/routes/#{route.guid}/destinations", params.to_json, admin_header
@@ -588,9 +586,9 @@ RSpec.describe 'Route Destinations Request' do
   end
 
   describe 'PATCH /v3/routes/:guid/destinations' do
-    let(:route) { VCAP::CloudController::Route.make(space:) }
+    let(:route) { create(:route, space:) }
     let(:user_header) { headers_for(user) }
-    let(:app_model) { VCAP::CloudController::AppModel.make(space:) }
+    let(:app_model) { create(:app_model, space:) }
     let(:params) do
       {
         destinations: [
@@ -617,11 +615,10 @@ RSpec.describe 'Route Destinations Request' do
 
     context 'when all destinations are for the same app' do
       let!(:existing_destination) do
-        VCAP::CloudController::RouteMappingModel.make(
-          app: app_model,
-          route: route,
-          process_type: 'assistant'
-        )
+        create(:route_mapping_model,
+               app: app_model,
+               route: route,
+               process_type: 'assistant')
       end
 
       it 'replaces all destinations on the route' do
@@ -650,12 +647,11 @@ RSpec.describe 'Route Destinations Request' do
         }
       end
       let!(:existing_destination) do
-        VCAP::CloudController::RouteMappingModel.make(
-          app: app_model,
-          route: route,
-          process_type: 'assistant',
-          protocol: existing_protocol
-        )
+        create(:route_mapping_model,
+               app: app_model,
+               route: route,
+               process_type: 'assistant',
+               protocol: existing_protocol)
       end
 
       context 'http1/http2' do
@@ -688,7 +684,7 @@ RSpec.describe 'Route Destinations Request' do
           allow_any_instance_of(CloudController::DependencyLocator).to receive(:routing_api_client).and_return(routing_api_client)
           allow_any_instance_of(VCAP::CloudController::RouteValidator).to receive(:validate)
 
-          VCAP::CloudController::Route.make(:tcp, space:)
+          create(:route, :tcp, space:)
         end
         let(:existing_protocol) { 'tcp' }
         let(:new_protocol) { nil }
@@ -702,23 +698,21 @@ RSpec.describe 'Route Destinations Request' do
     end
 
     context 'when removing a destination app' do
-      let(:app_model_1) { VCAP::CloudController::AppModel.make(space:) }
-      let(:app_model_2) { VCAP::CloudController::AppModel.make(space:) }
+      let(:app_model_1) { create(:app_model, space:) }
+      let(:app_model_2) { create(:app_model, space:) }
       let!(:existing_destination_1) do
-        VCAP::CloudController::RouteMappingModel.make(
-          app: app_model_1,
-          route: route,
-          process_type: 'web',
-          app_port: 8080
-        )
+        create(:route_mapping_model,
+               app: app_model_1,
+               route: route,
+               process_type: 'web',
+               app_port: 8080)
       end
       let!(:existing_destination_2) do
-        VCAP::CloudController::RouteMappingModel.make(
-          app: app_model_2,
-          route: route,
-          process_type: 'web',
-          app_port: 8080
-        )
+        create(:route_mapping_model,
+               app: app_model_2,
+               route: route,
+               process_type: 'web',
+               app_port: 8080)
       end
       let(:params) do
         {
@@ -743,14 +737,13 @@ RSpec.describe 'Route Destinations Request' do
     end
 
     context 'when removing all destination apps' do
-      let(:app_model) { VCAP::CloudController::AppModel.make(space:) }
+      let(:app_model) { create(:app_model, space:) }
       let!(:existing_destination) do
-        VCAP::CloudController::RouteMappingModel.make(
-          app: app_model,
-          route: route,
-          process_type: 'web',
-          app_port: 8080
-        )
+        create(:route_mapping_model,
+               app: app_model,
+               route: route,
+               process_type: 'web',
+               app_port: 8080)
       end
       let(:params) do
         {
@@ -873,7 +866,7 @@ RSpec.describe 'Route Destinations Request' do
 
       context 'when the app is invalid' do
         context 'when an app is outside the route space' do
-          let(:app_model) { VCAP::CloudController::AppModel.make }
+          let(:app_model) { create(:app_model) }
           let(:params) do
             {
               destinations: [
@@ -981,8 +974,8 @@ RSpec.describe 'Route Destinations Request' do
         end
 
         context 'when the user can not read the app' do
-          let(:non_visible_space) { VCAP::CloudController::Space.make }
-          let(:app_model) { VCAP::CloudController::AppModel.make(space: non_visible_space) }
+          let(:non_visible_space) { create(:space) }
+          let(:app_model) { create(:app_model, space: non_visible_space) }
           let(:params) do
             {
               destinations: [
@@ -1094,13 +1087,12 @@ RSpec.describe 'Route Destinations Request' do
     end
 
     context 'when two different destinations have the same port' do
-      let!(:process_model) { VCAP::CloudController::ProcessModel.make(app: app_model, ports: [9000], type: 'web') }
+      let!(:process_model) { create(:process, app: app_model, ports: [9000], type: 'web') }
       let!(:existing_destination) do
-        VCAP::CloudController::RouteMappingModel.make(
-          app: app_model,
-          route: route,
-          app_port: 9000
-        )
+        create(:route_mapping_model,
+               app: app_model,
+               route: route,
+               app_port: 9000)
       end
 
       let(:params) do
@@ -1132,21 +1124,19 @@ RSpec.describe 'Route Destinations Request' do
 
     context 'when two destinations match a currently existing destination' do
       let!(:existing_destination_1) do
-        VCAP::CloudController::RouteMappingModel.make(
-          app: app_model,
-          route: route,
-          app_port: 9000,
-          weight: 1
-        )
+        create(:route_mapping_model,
+               app: app_model,
+               route: route,
+               app_port: 9000,
+               weight: 1)
       end
 
       let!(:existing_destination_2) do
-        VCAP::CloudController::RouteMappingModel.make(
-          app: app_model,
-          route: route,
-          app_port: 8080,
-          weight: 99
-        )
+        create(:route_mapping_model,
+               app: app_model,
+               route: route,
+               app_port: 8080,
+               weight: 99)
       end
 
       let(:params) do
@@ -1185,7 +1175,7 @@ RSpec.describe 'Route Destinations Request' do
     end
 
     context "when the app is in the route's shared space" do
-      let(:app_model) { VCAP::CloudController::AppModel.make }
+      let(:app_model) { create(:app_model) }
       let(:params) do
         {
           destinations: [
@@ -1216,27 +1206,25 @@ RSpec.describe 'Route Destinations Request' do
 
   describe 'UPDATE /v3/routes/:guid/destinations/:destination_guid' do
     let(:user_header) { headers_for(user) }
-    let(:route) { VCAP::CloudController::Route.make(space:) }
-    let(:app_model) { VCAP::CloudController::AppModel.make(space:) }
+    let(:route) { create(:route, space:) }
+    let(:app_model) { create(:app_model, space:) }
 
     let!(:destination_to_preserve) do
-      VCAP::CloudController::RouteMappingModel.make(
-        app: app_model,
-        route: route,
-        process_type: 'web',
-        app_port: VCAP::CloudController::ProcessModel::DEFAULT_HTTP_PORT,
-        weight: nil
-      )
+      create(:route_mapping_model,
+             app: app_model,
+             route: route,
+             process_type: 'web',
+             app_port: VCAP::CloudController::ProcessModel::DEFAULT_HTTP_PORT,
+             weight: nil)
     end
 
     let!(:destination_to_update) do
-      VCAP::CloudController::RouteMappingModel.make(
-        app: app_model,
-        route: route,
-        process_type: 'worker',
-        app_port: VCAP::CloudController::ProcessModel::DEFAULT_HTTP_PORT,
-        weight: nil
-      )
+      create(:route_mapping_model,
+             app: app_model,
+             route: route,
+             process_type: 'worker',
+             app_port: VCAP::CloudController::ProcessModel::DEFAULT_HTTP_PORT,
+             weight: nil)
     end
 
     context 'permissions' do
@@ -1299,17 +1287,16 @@ RSpec.describe 'Route Destinations Request' do
         allow_any_instance_of(CloudController::DependencyLocator).to receive(:routing_api_client).and_return(routing_api_client)
         allow_any_instance_of(VCAP::CloudController::RouteValidator).to receive(:validate)
 
-        VCAP::CloudController::Route.make(:tcp, space:)
+        create(:route, :tcp, space:)
       end
-      let(:tcp_app) { VCAP::CloudController::AppModel.make(space:) }
+      let(:tcp_app) { create(:app_model, space:) }
       let!(:destination) do
-        VCAP::CloudController::RouteMappingModel.make(
-          app: tcp_app,
-          route: tcp_route,
-          process_type: 'worker',
-          app_port: VCAP::CloudController::ProcessModel::DEFAULT_HTTP_PORT,
-          weight: nil
-        )
+        create(:route_mapping_model,
+               app: tcp_app,
+               route: tcp_route,
+               process_type: 'worker',
+               app_port: VCAP::CloudController::ProcessModel::DEFAULT_HTTP_PORT,
+               weight: nil)
       end
 
       context 'and the destination has a protocol of tcp' do
@@ -1339,27 +1326,25 @@ RSpec.describe 'Route Destinations Request' do
 
   describe 'DELETE /v3/routes/:guid/destinations/:destination_guid' do
     let(:user_header) { headers_for(user) }
-    let(:route) { VCAP::CloudController::Route.make(space:) }
-    let(:app_model) { VCAP::CloudController::AppModel.make(space:) }
+    let(:route) { create(:route, space:) }
+    let(:app_model) { create(:app_model, space:) }
 
     let!(:destination_to_preserve) do
-      VCAP::CloudController::RouteMappingModel.make(
-        app: app_model,
-        route: route,
-        process_type: 'web',
-        app_port: VCAP::CloudController::ProcessModel::DEFAULT_HTTP_PORT,
-        weight: nil
-      )
+      create(:route_mapping_model,
+             app: app_model,
+             route: route,
+             process_type: 'web',
+             app_port: VCAP::CloudController::ProcessModel::DEFAULT_HTTP_PORT,
+             weight: nil)
     end
 
     let!(:destination_to_delete) do
-      VCAP::CloudController::RouteMappingModel.make(
-        app: app_model,
-        route: route,
-        process_type: 'worker',
-        app_port: VCAP::CloudController::ProcessModel::DEFAULT_HTTP_PORT,
-        weight: nil
-      )
+      create(:route_mapping_model,
+             app: app_model,
+             route: route,
+             process_type: 'worker',
+             app_port: VCAP::CloudController::ProcessModel::DEFAULT_HTTP_PORT,
+             weight: nil)
     end
 
     context 'permissions' do
@@ -1437,7 +1422,7 @@ RSpec.describe 'Route Destinations Request' do
     end
 
     context 'when there is an existing weighted destination' do
-      let!(:existing_destination) { VCAP::CloudController::RouteMappingModel.make(app: app_model, process_type: 'something', route: route, weight: 10) }
+      let!(:existing_destination) { create(:route_mapping_model, app: app_model, process_type: 'something', route: route, weight: 10) }
 
       it 'returns 422 with a helpful message' do
         delete "/v3/routes/#{route.guid}/destinations/#{existing_destination.guid}", nil, admin_header

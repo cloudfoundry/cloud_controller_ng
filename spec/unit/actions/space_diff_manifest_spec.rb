@@ -41,13 +41,13 @@ module VCAP::CloudController
       end
 
       let(:app_manifests) { default_manifest['applications'] }
-      let(:space) { Space.make }
-      let(:app1_model) { AppModel.make(name: 'app-1', space: space) }
-      let!(:process1) { ProcessModel.make(app: app1_model) }
-      let!(:process2) { ProcessModel.make(app: app1_model, type: 'worker') }
-      let(:shared_domain) { VCAP::CloudController::SharedDomain.make }
-      let(:route) { VCAP::CloudController::Route.make(domain: shared_domain, space: space, host: 'a_host') }
-      let!(:route_mapping) { VCAP::CloudController::RouteMappingModel.make(app: app1_model, process_type: process1.type, route: route) }
+      let(:space) { create(:space) }
+      let(:app1_model) { create(:app_model, name: 'app-1', space: space) }
+      let!(:process1) { create(:process_model, app: app1_model) }
+      let!(:process2) { create(:process_model, app: app1_model, type: 'worker') }
+      let(:shared_domain) { create(:shared_domain) }
+      let(:route) { create(:route, domain: shared_domain, space: space, host: 'a_host') }
+      let!(:route_mapping) { create(:route_mapping_model, app: app1_model, process_type: process1.type, route: route) }
 
       subject { SpaceDiffManifest.generate_diff(app_manifests, space) }
 
@@ -99,7 +99,7 @@ module VCAP::CloudController
         end
 
         context 'when processes do not change' do
-          let!(:process1) { ProcessModel.make(app: app1_model, memory: 256) }
+          let!(:process1) { create(:process_model, app: app1_model, memory: 256) }
 
           before do
             default_manifest['applications'][0]['processes'][0]['memory'] = '256M'
@@ -194,8 +194,8 @@ module VCAP::CloudController
       end
 
       context 'when changing sidecar properties on an existing sidecar' do
-        let!(:sidecar) { SidecarModel.make(app: app1_model, memory: 500, name: 'sidecar1') }
-        let!(:sidecar_process_type_model) { SidecarProcessTypeModel.make(type: 'web', sidecar: sidecar) }
+        let!(:sidecar) { create(:sidecar_model, app: app1_model, memory: 500, name: 'sidecar1') }
+        let!(:sidecar_process_type_model) { create(:sidecar_process_type_model, type: 'web', sidecar: sidecar) }
 
         before do
           default_manifest['applications'][0]['sidecars'] = [
@@ -329,9 +329,9 @@ module VCAP::CloudController
               ]
             }
           end
-          let!(:sidecar_process_model) { ProcessModel.make(app: app1_model) }
-          let!(:sidecar_model) { SidecarModel.make(app: app1_model, memory: 2048) }
-          let!(:sidecar_process_type_model) { SidecarProcessTypeModel.make(type: sidecar_process_model.type, sidecar: sidecar_model) }
+          let!(:sidecar_process_model) { create(:process_model, app: app1_model) }
+          let!(:sidecar_model) { create(:sidecar_model, app: app1_model, memory: 2048) }
+          let!(:sidecar_process_type_model) { create(:sidecar_process_type_model, type: sidecar_process_model.type, sidecar: sidecar_model) }
 
           it 'returns an empty diff if the field is equivalent' do
             expect(subject).to eq([])

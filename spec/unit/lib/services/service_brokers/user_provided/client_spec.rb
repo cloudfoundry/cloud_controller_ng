@@ -6,7 +6,7 @@ module VCAP::Services
     subject(:client) { ServiceBrokers::UserProvided::Client.new }
 
     describe '#provision' do
-      let(:instance) { VCAP::CloudController::UserProvidedServiceInstance.make }
+      let(:instance) { create(:user_provided_service_instance) }
 
       it 'exists' do
         client.provision(instance)
@@ -14,11 +14,11 @@ module VCAP::Services
     end
 
     describe '#bind' do
-      let(:instance) { VCAP::CloudController::UserProvidedServiceInstance.make }
+      let(:instance) { create(:user_provided_service_instance) }
 
       context 'when binding to an app' do
         let(:binding) do
-          VCAP::CloudController::ServiceBinding.make(service_instance: instance)
+          create(:service_binding, service_instance: instance)
         end
 
         it 'sets relevant attributes of the instance' do
@@ -32,7 +32,7 @@ module VCAP::Services
         end
 
         context 'when binding to a service with a route_service_url' do
-          let(:instance) { VCAP::CloudController::UserProvidedServiceInstance.make(:routing) }
+          let(:instance) { create(:user_provided_service_instance, :routing) }
 
           it 'sets relevant attributes of the instance' do
             attributes = client.bind(binding)
@@ -47,12 +47,10 @@ module VCAP::Services
       end
 
       context 'when binding to a route' do
-        let(:instance) { VCAP::CloudController::UserProvidedServiceInstance.make(:routing) }
+        let(:instance) { create(:user_provided_service_instance, :routing) }
 
         let(:binding) do
-          VCAP::CloudController::RouteBinding.make(
-            service_instance: instance
-          )
+          create(:route_binding, service_instance: instance)
         end
 
         it 'sets relevant attributes of the instance' do

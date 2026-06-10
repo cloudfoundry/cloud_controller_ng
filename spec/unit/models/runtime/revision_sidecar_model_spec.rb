@@ -2,19 +2,19 @@ require 'spec_helper'
 
 module VCAP::CloudController
   RSpec.describe RevisionSidecarModel do
-    let(:revision_sidecar) { RevisionSidecarModel.make }
+    let(:revision_sidecar) { create(:revision_sidecar_model) }
 
     describe '#process_types' do
       it 'returns the names of associated sidecar_process_types' do
-        RevisionSidecarProcessTypeModel.make(type: 'other worker', revision_sidecar: revision_sidecar)
+        create(:revision_sidecar_process_type_model, type: 'other worker', revision_sidecar: revision_sidecar)
 
         expect(revision_sidecar.process_types).to eq ['web', 'other worker'].sort
       end
     end
 
     describe '#to_hash' do
-      let(:revision_sidecar) { RevisionSidecarModel.make(name: 'sleepy', command: 'sleep forever') }
-      let!(:web_process_type) { RevisionSidecarProcessTypeModel.make(revision_sidecar: revision_sidecar, type: 'worker') }
+      let(:revision_sidecar) { create(:revision_sidecar_model, name: 'sleepy', command: 'sleep forever') }
+      let!(:web_process_type) { create(:revision_sidecar_process_type_model, revision_sidecar: revision_sidecar, type: 'worker') }
 
       it 'returns a hash of attributes' do
         expect(revision_sidecar.to_hash).to eq({
@@ -51,16 +51,16 @@ module VCAP::CloudController
 
     describe 'revision_sidecar_model #around_save' do
       it 'raises validation error on unique constraint violation for revision sidecar' do
-        revision_sidecar = RevisionSidecarModel.make(name: 'revision2', command: 'exec')
+        revision_sidecar = create(:revision_sidecar_model, name: 'revision2', command: 'exec')
         expect do
-          RevisionSidecarModel.make(name: revision_sidecar.name, revision_guid: revision_sidecar.revision_guid, command: 'exec')
+          create(:revision_sidecar_model, name: revision_sidecar.name, revision_guid: revision_sidecar.revision_guid, command: 'exec')
         end.to raise_error(Sequel::ValidationFailed) { |error| expect(error.message).to include('already exists for revision') }
       end
 
       it 'raises the original error on other unique constraint violations' do
-        revision_sidecar = RevisionSidecarModel.make(name: 'revision3', command: 'exec')
+        revision_sidecar = create(:revision_sidecar_model, name: 'revision3', command: 'exec')
         expect do
-          RevisionSidecarModel.make(guid: revision_sidecar.guid, name: 'revision4', command: 'exec')
+          create(:revision_sidecar_model, guid: revision_sidecar.guid, name: 'revision4', command: 'exec')
         end.to raise_error(Sequel::UniqueConstraintViolation)
       end
     end

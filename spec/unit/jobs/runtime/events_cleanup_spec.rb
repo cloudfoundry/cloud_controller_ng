@@ -4,8 +4,8 @@ module VCAP::CloudController
   module Jobs::Runtime
     RSpec.describe EventsCleanup, job_context: :worker do
       let(:cutoff_age_in_days) { 2 }
-      let!(:old_event) { Event.make(created_at: 3.days.ago) }
-      let!(:event) { Event.make(created_at: 1.day.ago) }
+      let!(:old_event) { create(:event, created_at: 3.days.ago) }
+      let!(:event) { create(:event, created_at: 1.day.ago) }
 
       subject(:job) { EventsCleanup.new(cutoff_age_in_days) }
 

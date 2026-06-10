@@ -3,13 +3,13 @@ require 'actions/services/service_instance_read'
 
 module VCAP::CloudController
   RSpec.describe ServiceInstanceRead do
-    let(:service) { Service.make }
-    let(:service_plan) { ServicePlan.make(service:) }
-    let(:service_instance) { ManagedServiceInstance.make(service_plan:) }
+    let(:service) { create(:service) }
+    let(:service_plan) { create(:service_plan, service:) }
+    let(:service_instance) { create(:managed_service_instance, service_plan:) }
 
     describe '#fetch_parameters' do
       context 'when the service supports fetching instance parameters' do
-        let(:service) { Service.make(instances_retrievable: true) }
+        let(:service) { create(:service, instances_retrievable: true) }
         let(:fake_broker_client) { instance_double(VCAP::Services::ServiceBrokers::V2::Client) }
 
         before do
@@ -63,7 +63,7 @@ module VCAP::CloudController
         end
 
         context 'when the service instance has an operation in progress' do
-          let(:last_operation) { ServiceInstanceOperation.make(state: 'in progress') }
+          let(:last_operation) { create(:service_instance_operation, state: 'in progress') }
 
           before do
             service_instance.service_instance_operation = last_operation
@@ -83,7 +83,7 @@ module VCAP::CloudController
 
       context 'when the service does not support fetching instance parameters' do
         context 'when the service instance is user provided' do
-          let(:service_instance) { UserProvidedServiceInstance.make }
+          let(:service_instance) { create(:user_provided_service_instance) }
 
           it 'does not call the broker to fetch parameters' do
             expect(VCAP::Services::ServiceClientProvider).not_to receive(:provide)
@@ -103,7 +103,7 @@ module VCAP::CloudController
         end
 
         context 'when the service has instances_retrievable set to false' do
-          let(:service) { Service.make(instances_retrievable: false) }
+          let(:service) { create(:service, instances_retrievable: false) }
 
           it 'does not call the broker to fetch parameters' do
             expect(VCAP::Services::ServiceClientProvider).not_to receive(:provide)
@@ -122,7 +122,7 @@ module VCAP::CloudController
           end
 
           context 'and has an operation in progress' do
-            let(:last_operation) { ServiceInstanceOperation.make(state: 'in progress') }
+            let(:last_operation) { create(:service_instance_operation, state: 'in progress') }
 
             before do
               service_instance.service_instance_operation = last_operation

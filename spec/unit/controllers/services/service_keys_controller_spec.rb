@@ -71,17 +71,15 @@ module VCAP::CloudController
       include_context 'permissions'
 
       before do
-        @service_instance_a = ManagedServiceInstance.make(space: @space_a)
-        @obj_a = ServiceKey.make(
-          name: 'fake-name-a',
-          service_instance: @service_instance_a
-        )
+        @service_instance_a = create(:managed_service_instance, space: @space_a)
+        @obj_a = create(:service_key,
+                        name: 'fake-name-a',
+                        service_instance: @service_instance_a)
 
-        @service_instance_b = ManagedServiceInstance.make(space: @space_b)
-        @obj_b = ServiceKey.make(
-          name: 'fake-name-b',
-          service_instance: @service_instance_b
-        )
+        @service_instance_b = create(:managed_service_instance, space: @space_b)
+        @obj_b = create(:service_key,
+                        name: 'fake-name-b',
+                        service_instance: @service_instance_b)
       end
 
       describe 'Org Level Permissions' do
@@ -160,7 +158,7 @@ module VCAP::CloudController
     end
 
     describe 'create' do
-      let(:instance) { ManagedServiceInstance.make }
+      let(:instance) { create(:managed_service_instance) }
       let(:space) { instance.space }
       let(:service) { instance.service }
       let(:developer) { make_developer_for_space(space) }
@@ -301,7 +299,7 @@ module VCAP::CloudController
           describe 'locking the instance as a result of creating service key' do
             context 'when the instance has a previous operation' do
               before do
-                instance.service_instance_operation = ServiceInstanceOperation.make(type: 'create', state: 'succeeded')
+                instance.service_instance_operation = create(:service_instance_operation, type: 'create', state: 'succeeded')
                 instance.save
               end
 
@@ -332,7 +330,7 @@ module VCAP::CloudController
 
             context 'when attempting to create key and service key already exists' do
               before do
-                ServiceKey.make(name: name, service_instance: instance)
+                create(:service_key, name: name, service_instance: instance)
               end
 
               it 'returns a ServiceKeyNameTaken error' do
@@ -368,7 +366,7 @@ module VCAP::CloudController
 
               context 'when the instance has a last_operation' do
                 before do
-                  instance.service_instance_operation = ServiceInstanceOperation.make(type: 'create', state: 'succeeded')
+                  instance.service_instance_operation = create(:service_instance_operation, type: 'create', state: 'succeeded')
                 end
 
                 it 'rolls back the last_operation of the service instance' do
@@ -403,7 +401,7 @@ module VCAP::CloudController
         end
 
         context 'when the service instance has been shared' do
-          let(:other_space) { Space.make }
+          let(:other_space) { create(:space) }
 
           before do
             instance.add_shared_space(other_space)
@@ -428,7 +426,7 @@ module VCAP::CloudController
       end
 
       context 'for a user-provided service instance' do
-        let(:instance) { UserProvidedServiceInstance.make }
+        let(:instance) { create(:user_provided_service_instance) }
 
         it 'returns an error to the user' do
           post '/v2/service_keys', req
@@ -439,13 +437,13 @@ module VCAP::CloudController
     end
 
     describe 'GET', '/v2/service_keys' do
-      let(:space) { Space.make }
+      let(:space) { create(:space) }
       let(:developer) { make_developer_for_space(space) }
-      let(:instance_a) { ManagedServiceInstance.make(space:) }
-      let(:instance_b) { ManagedServiceInstance.make(space:) }
-      let(:service_key_a) { ServiceKey.make(name: 'fake-key-a', service_instance: instance_a) }
-      let(:service_key_b) { ServiceKey.make(name: 'fake-key-b', service_instance: instance_a) }
-      let(:service_key_c) { ServiceKey.make(name: 'fake-key-c', service_instance: instance_b) }
+      let(:instance_a) { create(:managed_service_instance, space:) }
+      let(:instance_b) { create(:managed_service_instance, space:) }
+      let(:service_key_a) { create(:service_key, name: 'fake-key-a', service_instance: instance_a) }
+      let(:service_key_b) { create(:service_key, name: 'fake-key-b', service_instance: instance_a) }
+      let(:service_key_c) { create(:service_key, name: 'fake-key-c', service_instance: instance_b) }
 
       before do
         service_key_a.save
@@ -480,10 +478,10 @@ module VCAP::CloudController
     end
 
     describe 'GET', '/v2/service_keys/:service_key_guid' do
-      let(:space) { Space.make }
+      let(:space) { create(:space) }
       let(:developer) { make_developer_for_space(space) }
-      let(:instance) { ManagedServiceInstance.make(space:) }
-      let(:service_key) { ServiceKey.make(name: 'fake-key', service_instance: instance) }
+      let(:instance) { create(:managed_service_instance, space:) }
+      let(:service_key) { create(:service_key, name: 'fake-key', service_instance: instance) }
 
       before { set_current_user(developer) }
 
@@ -510,7 +508,7 @@ module VCAP::CloudController
         end
 
         context 'when the user is a developer in a space to which the service instance is shared' do
-          let(:other_space) { Space.make }
+          let(:other_space) { create(:space) }
           let(:developer) { make_developer_for_space(other_space) }
 
           before do
@@ -525,7 +523,7 @@ module VCAP::CloudController
       end
 
       context 'when the key is a CredHub reference' do
-        let(:service_key) { ServiceKey.make(:credhub_reference, name: 'fake-key', service_instance: instance) }
+        let(:service_key) { create(:service_key, :credhub_reference, name: 'fake-key', service_instance: instance) }
         let(:credentials) { { 'username' => 'admin_annie', 'password' => 'realsecur3' } }
         let(:fake_credhub_client) { instance_double(Credhub::Client) }
 
@@ -580,7 +578,7 @@ module VCAP::CloudController
     end
 
     describe 'DELETE', '/v2/service_keys/:service_key_guid' do
-      let(:service_key) { ServiceKey.make }
+      let(:service_key) { create(:service_key) }
       let(:instance) { service_key.service_instance }
       let(:developer) { make_developer_for_space(instance.space) }
 
@@ -621,7 +619,7 @@ module VCAP::CloudController
         end
 
         context 'when the user is a developer in a space to which the service instance is shared' do
-          let(:other_space) { Space.make }
+          let(:other_space) { create(:space) }
           let(:developer) { make_developer_for_space(other_space) }
 
           before do
@@ -667,7 +665,7 @@ module VCAP::CloudController
     end
 
     describe 'GET', '/v2/service_keys/:service_key_guid/parameters' do
-      let(:space) { Space.make }
+      let(:space) { create(:space) }
       let(:developer) { make_developer_for_space(space) }
 
       before do
@@ -675,14 +673,14 @@ module VCAP::CloudController
       end
 
       context 'when the service key is for managed service instance' do
-        let(:service_plan) { ServicePlan.make(service:) }
-        let(:managed_service_instance) { ManagedServiceInstance.make(space:, service_plan:) }
+        let(:service_plan) { create(:service_plan, service:) }
+        let(:managed_service_instance) { create(:managed_service_instance, space:, service_plan:) }
 
         context 'when the service has bindings_retrievable set to false' do
-          let(:service) { Service.make(bindings_retrievable: false) }
+          let(:service) { create(:service, bindings_retrievable: false) }
 
           it 'returns a 400' do
-            service_key = ServiceKey.make(service_instance: managed_service_instance)
+            service_key = create(:service_key, service_instance: managed_service_instance)
 
             get "/v2/service_keys/#{service_key.guid}/parameters"
             expect(last_response.status).to be(400)
@@ -691,10 +689,10 @@ module VCAP::CloudController
         end
 
         context 'when the service has bindings_retrievable not set' do
-          let(:service) { Service.make }
+          let(:service) { create(:service) }
 
           it 'returns a 400' do
-            service_key = ServiceKey.make(service_instance: managed_service_instance)
+            service_key = create(:service_key, service_instance: managed_service_instance)
 
             get "/v2/service_keys/#{service_key.guid}/parameters"
             expect(last_response.status).to be(400)
@@ -703,9 +701,9 @@ module VCAP::CloudController
         end
 
         context 'when the service has bindings_retrievable set to true' do
-          let(:service) { Service.make(bindings_retrievable: true) }
+          let(:service) { create(:service, bindings_retrievable: true) }
           let(:broker) { service.service_broker }
-          let(:service_key) { ServiceKey.make(service_instance: managed_service_instance) }
+          let(:service_key) { create(:service_key, service_instance: managed_service_instance) }
           let(:body) { { 'parameters' => { 'foo' => true } }.to_json }
           let(:response_code) { 200 }
 
@@ -790,7 +788,7 @@ module VCAP::CloudController
           end
 
           context 'user permissions' do
-            let(:user) { User.make }
+            let(:user) { create(:user) }
             let(:body) { {}.to_json }
 
             {
@@ -834,10 +832,10 @@ module VCAP::CloudController
       end
 
       context 'when the key is for a user provided service' do
-        let(:user_provided_service_instance) { UserProvidedServiceInstance.make(space:) }
+        let(:user_provided_service_instance) { create(:user_provided_service_instance, space:) }
 
         it 'returns a 400' do
-          service_key = ServiceKey.make(service_instance: user_provided_service_instance)
+          service_key = create(:service_key, service_instance: user_provided_service_instance)
 
           get "/v2/service_keys/#{service_key.guid}/parameters"
           expect(last_response.status).to be(400)

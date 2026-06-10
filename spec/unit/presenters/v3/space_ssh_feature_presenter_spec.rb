@@ -3,7 +3,7 @@ require 'presenters/v3/space_ssh_feature_presenter'
 
 module VCAP::CloudController::Presenters::V3
   RSpec.describe SpaceSshFeaturePresenter do
-    let(:space) { VCAP::CloudController::Space.make }
+    let(:space) { create(:space) }
 
     describe '#to_hash' do
       it 'presents the space feature as json' do

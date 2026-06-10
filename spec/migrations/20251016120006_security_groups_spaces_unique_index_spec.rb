@@ -6,10 +6,10 @@ RSpec.describe 'security groups spaces unique index', isolation: :truncation, ty
     let(:migration_filename) { '20251016120006_security_groups_spaces_unique_index_spec.rb' }
   end
 
-  let(:space_1) { VCAP::CloudController::Space.make }
-  let(:space_2) { VCAP::CloudController::Space.make }
-  let(:sec_group_1) { VCAP::CloudController::SecurityGroup.make }
-  let(:sec_group_2) { VCAP::CloudController::SecurityGroup.make }
+  let(:space_1) { create(:space) }
+  let(:space_2) { create(:space) }
+  let(:sec_group_1) { create(:security_group) }
+  let(:sec_group_2) { create(:security_group) }
 
   describe 'security_groups_spaces table' do
     it 'removes duplicates, updates indexes, and handles idempotency' do

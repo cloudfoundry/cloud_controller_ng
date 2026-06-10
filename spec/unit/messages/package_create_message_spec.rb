@@ -163,7 +163,7 @@ module VCAP::CloudController
     end
 
     describe '#audit_hash' do
-      let(:app) { AppModel.make }
+      let(:app) { create(:app_model) }
       let(:relationships) { { app: { data: { guid: app.guid } } } }
 
       context 'when a data field is present' do

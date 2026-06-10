@@ -2,8 +2,8 @@ require 'spec_helper'
 
 module VCAP::CloudController
   RSpec.describe OrganizationBillingManager, type: :model do
-    let(:organization) { Organization.make }
-    let(:user) { User.make }
+    let(:organization) { create(:organization) }
+    let(:user) { create(:user) }
 
     describe 'uniqueness' do
       it 'prevents duplicate organization_id and user_id combination' do

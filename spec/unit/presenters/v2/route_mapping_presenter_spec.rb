@@ -13,9 +13,9 @@ module CloudController::Presenters::V2
     let(:relations_hash) { { 'relationship_key' => 'relationship_value' } }
 
     describe '#entity_hash' do
-      let(:app) { VCAP::CloudController::AppModel.make }
-      let(:route) { VCAP::CloudController::Route.make(space: app.space) }
-      let(:route_mapping) { VCAP::CloudController::RouteMappingModel.make(app: app, route: route, app_port: 9090) }
+      let(:app) { create(:app_model) }
+      let(:route) { create(:route, space: app.space) }
+      let(:route_mapping) { create(:route_mapping_model, app: app, route: route, app_port: 9090) }
 
       before do
         allow(RelationsPresenter).to receive(:new).and_return(relations_presenter)
@@ -36,11 +36,9 @@ module CloudController::Presenters::V2
 
       context 'docker app' do
         let(:route_mapping) do
-          VCAP::CloudController::RouteMappingModel.make(
-            app: app,
-            route: route,
-            app_port: VCAP::CloudController::ProcessModel::NO_APP_PORT_SPECIFIED
-          )
+          create(:route_mapping_model, app: app,
+                                       route: route,
+                                       app_port: VCAP::CloudController::ProcessModel::NO_APP_PORT_SPECIFIED)
         end
 
         it 'presents the app_port as nil' do

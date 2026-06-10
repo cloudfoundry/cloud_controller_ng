@@ -5,7 +5,7 @@ require 'permissions_spec_helper'
 
 RSpec.describe AppRevisionsController, type: :controller do
   let!(:space) { app_model.space }
-  let(:user) { VCAP::CloudController::User.make }
+  let(:user) { create(:user) }
 
   before do
     set_current_user(user)
@@ -14,11 +14,11 @@ RSpec.describe AppRevisionsController, type: :controller do
   end
 
   describe '#index' do
-    let!(:app_model) { VCAP::CloudController::AppModel.make }
-    let!(:app_without_revisions) { VCAP::CloudController::AppModel.make(space:) }
-    let!(:revision1) { VCAP::CloudController::RevisionModel.make(app: app_model, version: 808) }
-    let!(:revision2) { VCAP::CloudController::RevisionModel.make(app: app_model, version: 809) }
-    let!(:revision_for_another_app) { VCAP::CloudController::RevisionModel.make }
+    let!(:app_model) { create(:app_model) }
+    let!(:app_without_revisions) { create(:app_model, space:) }
+    let!(:revision1) { create(:revision_model, app: app_model, version: 808) }
+    let!(:revision2) { create(:revision_model, app: app_model, version: 809) }
+    let!(:revision_for_another_app) { create(:revision_model) }
 
     it 'returns 200 and shows the revisions' do
       get :index, params: { guid: app_model.guid }
@@ -28,7 +28,7 @@ RSpec.describe AppRevisionsController, type: :controller do
     end
 
     context 'filters' do
-      let!(:revision3) { VCAP::CloudController::RevisionModel.make(app: app_model, version: 810) }
+      let!(:revision3) { create(:revision_model, app: app_model, version: 810) }
 
       it 'by version' do
         get :index, params: { guid: app_model.guid, versions: '808,810' }
@@ -55,7 +55,7 @@ RSpec.describe AppRevisionsController, type: :controller do
     context 'permissions' do
       context 'when the user does not have cc read scope' do
         before do
-          set_current_user(VCAP::CloudController::User.make, scopes: [])
+          set_current_user(create(:user), scopes: [])
         end
 
         it 'raises an ApiError with a 403 code' do
@@ -84,15 +84,15 @@ RSpec.describe AppRevisionsController, type: :controller do
   end
 
   describe '#deployed' do
-    let!(:app_model) { VCAP::CloudController::AppModel.make }
-    let!(:app_without_revisions) { VCAP::CloudController::AppModel.make(space:) }
-    let!(:revision1) { VCAP::CloudController::RevisionModel.make(app: app_model, version: 808) }
-    let!(:revision2) { VCAP::CloudController::RevisionModel.make(app: app_model, version: 809) }
-    let!(:revision_for_another_app) { VCAP::CloudController::RevisionModel.make }
-    let!(:revision3) { VCAP::CloudController::RevisionModel.make(app: app_model, version: 810) }
-    let!(:process1) { VCAP::CloudController::ProcessModel.make(app: app_model, revision: revision1, type: 'web', state: 'STARTED') }
-    let!(:process2) { VCAP::CloudController::ProcessModel.make(app: app_model, revision: revision2, type: 'worker', state: 'STARTED') }
-    let!(:process3) { VCAP::CloudController::ProcessModel.make(app: app_model, revision: revision3, type: 'web', state: 'STOPPED') }
+    let!(:app_model) { create(:app_model) }
+    let!(:app_without_revisions) { create(:app_model, space:) }
+    let!(:revision1) { create(:revision_model, app: app_model, version: 808) }
+    let!(:revision2) { create(:revision_model, app: app_model, version: 809) }
+    let!(:revision_for_another_app) { create(:revision_model) }
+    let!(:revision3) { create(:revision_model, app: app_model, version: 810) }
+    let!(:process1) { create(:process_model, app: app_model, revision: revision1, type: 'web', state: 'STARTED') }
+    let!(:process2) { create(:process_model, app: app_model, revision: revision2, type: 'worker', state: 'STARTED') }
+    let!(:process3) { create(:process_model, app: app_model, revision: revision3, type: 'web', state: 'STOPPED') }
 
     it 'returns the deployed revisions' do
       get :deployed, params: { guid: app_model.guid }
@@ -111,7 +111,7 @@ RSpec.describe AppRevisionsController, type: :controller do
     context 'permissions' do
       context 'when the user does not have cc read scope' do
         before do
-          set_current_user(VCAP::CloudController::User.make, scopes: [])
+          set_current_user(create(:user), scopes: [])
         end
 
         it 'raises an ApiError with a 403 code' do

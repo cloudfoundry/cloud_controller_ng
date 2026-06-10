@@ -10,10 +10,10 @@ module VCAP::CloudController
 
       let(:messenger) { instance_double(Diego::Messenger) }
       let(:protocol) { instance_double(Diego::Protocol) }
-      let(:package) { PackageModel.make }
+      let(:package) { create(:package_model) }
       let(:config) { TestConfig.config_instance }
-      let(:build) { BuildModel.make(package_guid: package.guid) }
-      let!(:lifecycle_data_model) { BuildpackLifecycleDataModel.make(build:) }
+      let(:build) { create(:build_model, package_guid: package.guid) }
+      let!(:lifecycle_data_model) { create(:buildpack_lifecycle_data_model, build:) }
       let(:environment_variables) { { 'nightshade_vegetable' => 'potato' } }
 
       let(:buildpack_completion_handler) { instance_double(Diego::Buildpack::StagingCompletionHandler) }
@@ -121,7 +121,7 @@ module VCAP::CloudController
         let(:staging_response) { {} }
 
         context 'buildpack' do
-          let(:build) { BuildModel.make }
+          let(:build) { create(:build_model) }
 
           it 'delegates to a buildpack staging completion handler' do
             stager.staging_complete(build, staging_response)
@@ -131,7 +131,7 @@ module VCAP::CloudController
         end
 
         context 'docker' do
-          let(:build) { BuildModel.make(:docker) }
+          let(:build) { create(:build_model, :docker) }
 
           it 'delegates to a docker staging completion handler' do
             stager.staging_complete(build, staging_response)
@@ -141,7 +141,7 @@ module VCAP::CloudController
         end
 
         context 'cnb' do
-          let(:build) { BuildModel.make(:cnb) }
+          let(:build) { create(:build_model, :cnb) }
 
           it 'delegates to a cnb staging completion handler' do
             stager.staging_complete(build, staging_response)

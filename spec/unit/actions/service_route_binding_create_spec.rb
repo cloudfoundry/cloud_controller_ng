@@ -6,8 +6,8 @@ require 'support/shared_examples/v3_service_binding_create'
 module VCAP::CloudController
   module V3
     RSpec.describe ServiceRouteBindingCreate do
-      let(:space) { Space.make }
-      let(:route) { Route.make(space:) }
+      let(:space) { create(:space) }
+      let(:route) { create(:route, space:) }
       let(:route_service_url) { 'https://route_service_url.com' }
 
       let(:message) do
@@ -52,8 +52,8 @@ module VCAP::CloudController
           end
 
           context 'route is internal' do
-            let(:domain) { SharedDomain.make(internal: true, name: 'my.domain.com') }
-            let(:route) { Route.make(domain:, space:) }
+            let(:domain) { create(:shared_domain, internal: true, name: 'my.domain.com') }
+            let(:route) { create(:route, domain:, space:) }
 
             it 'raises an error' do
               expect do
@@ -66,7 +66,7 @@ module VCAP::CloudController
           end
 
           context 'route and service instance are in different spaces' do
-            let(:route) { Route.make }
+            let(:route) { create(:route) }
 
             it 'raises an error' do
               expect do
@@ -79,7 +79,7 @@ module VCAP::CloudController
           end
 
           context 'route binding already exists' do
-            let!(:binding) { RouteBinding.make(service_instance:, route:) }
+            let!(:binding) { create(:route_binding, service_instance:, route:) }
 
             context 'when no last service route binding operation exists' do
               it 'raises an error' do
@@ -190,8 +190,8 @@ module VCAP::CloudController
 
           context 'route already bound to a different service instance' do
             it 'raises an error' do
-              other_instance = UserProvidedServiceInstance.make(space:, route_service_url:)
-              RouteBinding.make(service_instance: other_instance, route: route)
+              other_instance = create(:user_provided_service_instance, space:, route_service_url:)
+              create(:route_binding, service_instance: other_instance, route: route)
 
               expect do
                 action.precursor(service_instance, route, message:)
@@ -215,20 +215,20 @@ module VCAP::CloudController
         end
 
         context 'managed service instance' do
-          let(:service_offering) { Service.make(requires: ['route_forwarding']) }
-          let(:service_plan) { ServicePlan.make(service: service_offering) }
-          let(:service_instance) { ManagedServiceInstance.make(space:, service_plan:) }
+          let(:service_offering) { create(:service, requires: ['route_forwarding']) }
+          let(:service_plan) { create(:service_plan, service: service_offering) }
+          let(:service_instance) { create(:managed_service_instance, space:, service_plan:) }
 
           it_behaves_like '#precursor'
 
           context 'service instance not a route service' do
-            let(:service_instance) { ManagedServiceInstance.make(space:) }
+            let(:service_instance) { create(:managed_service_instance, space:) }
 
             it_behaves_like '#precursor for non-route service instance'
           end
 
           context 'service instance not bindable' do
-            let(:service_offering) { Service.make(bindable: false, requires: ['route_forwarding']) }
+            let(:service_offering) { create(:service, bindable: false, requires: ['route_forwarding']) }
 
             it 'raises an error' do
               expect do
@@ -268,12 +268,12 @@ module VCAP::CloudController
         end
 
         context 'user-provided service instance' do
-          let(:service_instance) { UserProvidedServiceInstance.make(space:, route_service_url:) }
+          let(:service_instance) { create(:user_provided_service_instance, space:, route_service_url:) }
 
           it_behaves_like '#precursor'
 
           context 'service instance not a route service' do
-            let(:service_instance) { UserProvidedServiceInstance.make }
+            let(:service_instance) { create(:user_provided_service_instance) }
 
             it_behaves_like '#precursor for non-route service instance'
           end
@@ -330,7 +330,7 @@ module VCAP::CloudController
               let(:process) { ProcessModelFactory.make(space: route.space, state: 'STARTED') }
 
               it 'notifies diego' do
-                RouteMappingModel.make(app: process.app, route: route, process_type: process.type)
+                create(:route_mapping_model, app: process.app, route: route, process_type: process.type)
                 action.bind(precursor)
 
                 expect(messenger).to have_received(:send_desire_request).with(process)
@@ -339,9 +339,9 @@ module VCAP::CloudController
           end
 
           context 'managed service instance' do
-            let(:service_offering) { Service.make(bindings_retrievable: true, requires: ['route_forwarding']) }
-            let(:service_plan) { ServicePlan.make(service: service_offering) }
-            let(:service_instance) { ManagedServiceInstance.make(space:, service_plan:) }
+            let(:service_offering) { create(:service, bindings_retrievable: true, requires: ['route_forwarding']) }
+            let(:service_plan) { create(:service_plan, service: service_offering) }
+            let(:service_instance) { create(:managed_service_instance, space:, service_plan:) }
             let(:broker_client) { instance_double(VCAP::Services::ServiceBrokers::V2::Client, bind: bind_response) }
 
             before do
@@ -369,7 +369,7 @@ module VCAP::CloudController
 
           context 'user-provided service instance' do
             let(:route_service_url) { 'https://route_service_url.com' }
-            let(:service_instance) { UserProvidedServiceInstance.make(space:, route_service_url:) }
+            let(:service_instance) { create(:user_provided_service_instance, space:, route_service_url:) }
 
             it_behaves_like '#route bind'
           end
@@ -384,9 +384,9 @@ module VCAP::CloudController
 
         describe 'route specific behaviour' do
           let(:messenger) { instance_double(Diego::Messenger, send_desire_request: nil) }
-          let(:service_offering) { Service.make(bindings_retrievable: true, requires: ['route_forwarding']) }
-          let(:service_plan) { ServicePlan.make(service: service_offering) }
-          let(:service_instance) { ManagedServiceInstance.make(space:, service_plan:) }
+          let(:service_offering) { create(:service, bindings_retrievable: true, requires: ['route_forwarding']) }
+          let(:service_plan) { create(:service_plan, service: service_offering) }
+          let(:service_instance) { create(:managed_service_instance, space:, service_plan:) }
           let(:broker_provided_operation) { Sham.guid }
           let(:bind_response) { { async: true, operation: broker_provided_operation } }
           let(:description) { Sham.description }
@@ -453,7 +453,7 @@ module VCAP::CloudController
               let(:process) { ProcessModelFactory.make(space: route.space, state: 'STARTED') }
 
               it 'notifies diego' do
-                RouteMappingModel.make(app: process.app, route: route, process_type: process.type)
+                create(:route_mapping_model, app: process.app, route: route, process_type: process.type)
                 action.poll(binding)
 
                 expect(messenger).to have_received(:send_desire_request).with(process)

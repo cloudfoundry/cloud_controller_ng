@@ -10,7 +10,7 @@ module CloudController::Presenters::V2
     let(:relations_presenter) { instance_double(RelationsPresenter, to_hash: relations_hash) }
     let(:relations_hash) { { 'some_relation_url' => 'http://example.com' } }
     let(:presenter) { ServiceKeyPresenter.new }
-    let(:service_key) { VCAP::CloudController::ServiceKey.make }
+    let(:service_key) { create(:service_key) }
 
     before do
       allow(RelationsPresenter).to receive(:new).and_return(relations_presenter)

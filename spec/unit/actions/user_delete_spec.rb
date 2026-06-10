@@ -6,7 +6,7 @@ module VCAP::CloudController
     subject(:user_delete) { UserDeleteAction.new }
 
     describe '#delete' do
-      let!(:user) { User.make }
+      let!(:user) { create(:user) }
 
       it 'deletes the user record' do
         expect do

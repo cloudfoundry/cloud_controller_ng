@@ -51,7 +51,7 @@ module VCAP::CloudController
           end
 
           context 'and the name is already taken' do
-            let(:isolation_segment_model) { IsolationSegmentModel.make }
+            let(:isolation_segment_model) { create(:isolation_segment_model) }
 
             # this means that it will fail our deployment. To correct this issue we could
             # redeploy with what the old 'shared' isolation segment name
@@ -185,7 +185,7 @@ module VCAP::CloudController
 
         context 'when default quota definition exists' do
           before do
-            QuotaDefinition.make(name: 'default')
+            create(:quota_definition, name: 'default')
           end
 
           it 'creates the system organization when the organization does not already exist' do
@@ -201,7 +201,7 @@ module VCAP::CloudController
           it 'warns when the system organization exists and has a different quota' do
             Seeds.create_seed_organizations(config)
             org = Organization.find(name: 'the-system_domain-org-name')
-            QuotaDefinition.make(name: 'runaway')
+            create(:quota_definition, name: 'runaway')
             org.quota_definition = QuotaDefinition.find(name: 'runaway')
             org.save(validate: false) # See tracker story #61090364
 
@@ -240,7 +240,7 @@ module VCAP::CloudController
         Domain.dataset.destroy
         Organization.dataset.destroy
         QuotaDefinition.dataset.destroy
-        QuotaDefinition.make(name: 'default')
+        create(:quota_definition, name: 'default')
         Seeds.create_seed_organizations(config)
       end
 
@@ -272,7 +272,7 @@ module VCAP::CloudController
 
           PrivateDomain.create(
             name: config.get(:system_domain),
-            owning_organization: Organization.make
+            owning_organization: create(:organization)
           )
           Seeds.create_seed_domains(config, system_org)
         end
@@ -303,7 +303,7 @@ module VCAP::CloudController
           let(:system_domain) { 'system.example.com' }
 
           before do
-            SharedDomain.make(name: 'system.example.com')
+            create(:shared_domain, name: 'system.example.com')
           end
 
           it 'that shared domain is not modified' do
@@ -319,7 +319,7 @@ module VCAP::CloudController
 
           before do
             TestConfig.override(system_hostnames: %w[api uaa])
-            SharedDomain.make(name: 'example.com')
+            create(:shared_domain, name: 'example.com')
           end
 
           it 'returns an error about app domain overlapping with system hostnames' do
@@ -545,7 +545,7 @@ module VCAP::CloudController
 
       context 'when there are exisiting security groups' do
         before do
-          SecurityGroup.make(name: 'EXISTING SECURITY GROUP')
+          create(:security_group, name: 'EXISTING SECURITY GROUP')
         end
 
         it 'does nothing' do

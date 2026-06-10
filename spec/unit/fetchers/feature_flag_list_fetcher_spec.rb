@@ -12,10 +12,10 @@ module VCAP::CloudController
         VCAP::CloudController::FeatureFlag.plugin :timestamps, update_on_create: false
       end
 
-      let!(:resource_1) { VCAP::CloudController::FeatureFlag.make(name: 'set_roles_by_username', updated_at: '2020-05-26T18:47:01Z') }
-      let!(:resource_2) { VCAP::CloudController::FeatureFlag.make(name: 'task_creation', updated_at: '2020-05-26T18:47:02Z') }
-      let!(:resource_3) { VCAP::CloudController::FeatureFlag.make(name: 'user_org_creation', updated_at: '2020-05-26T18:47:03Z') }
-      let!(:resource_4) { VCAP::CloudController::FeatureFlag.make(name: 'unset_roles_by_username', updated_at: '2020-05-26T18:47:04Z') }
+      let!(:resource_1) { create(:feature_flag, name: 'set_roles_by_username', updated_at: '2020-05-26T18:47:01Z') }
+      let!(:resource_2) { create(:feature_flag, name: 'task_creation', updated_at: '2020-05-26T18:47:02Z') }
+      let!(:resource_3) { create(:feature_flag, name: 'user_org_creation', updated_at: '2020-05-26T18:47:03Z') }
+      let!(:resource_4) { create(:feature_flag, name: 'unset_roles_by_username', updated_at: '2020-05-26T18:47:04Z') }
 
       after do
         VCAP::CloudController::FeatureFlag.plugin :timestamps, update_on_create: true

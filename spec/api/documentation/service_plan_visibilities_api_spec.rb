@@ -3,7 +3,7 @@ require 'rspec_api_documentation/dsl'
 
 RSpec.resource 'Service Plan Visibilities', type: %i[api legacy_api] do
   let(:admin_auth_header) { admin_headers['HTTP_AUTHORIZATION'] }
-  let!(:service_plan_visibility) { VCAP::CloudController::ServicePlanVisibility.make }
+  let!(:service_plan_visibility) { FactoryBot.create(:service_plan_visibility) }
   let(:guid) { service_plan_visibility.guid }
   authenticated_request
 
@@ -16,8 +16,8 @@ RSpec.resource 'Service Plan Visibilities', type: %i[api legacy_api] do
     field :organization_guid, 'The guid of the organization the plan will be visible to', required: true
 
     example 'Creating a Service Plan Visibility' do
-      org_guid = VCAP::CloudController::Organization.make.guid
-      service_plan_guid = VCAP::CloudController::ServicePlan.make(public: false).guid
+      org_guid = FactoryBot.create(:organization).guid
+      service_plan_guid = FactoryBot.create(:service_plan, public: false).guid
       request_json = Oj.dump({ service_plan_guid: service_plan_guid, organization_guid: org_guid })
 
       client.post '/v2/service_plan_visibilities', request_json, headers
@@ -30,9 +30,9 @@ RSpec.resource 'Service Plan Visibilities', type: %i[api legacy_api] do
     field :organization_guid, 'The guid of the organization the plan will be visible to', required: true
 
     example 'Updating a Service Plan Visibility' do
-      service_plan_visibility_guid = VCAP::CloudController::ServicePlanVisibility.make.guid
-      org_guid = VCAP::CloudController::Organization.make.guid
-      service_plan_guid = VCAP::CloudController::ServicePlan.make(public: false).guid
+      service_plan_visibility_guid = FactoryBot.create(:service_plan_visibility).guid
+      org_guid = FactoryBot.create(:organization).guid
+      service_plan_guid = FactoryBot.create(:service_plan, public: false).guid
       request_json = Oj.dump({ service_plan_guid: service_plan_guid, organization_guid: org_guid })
 
       client.put "/v2/service_plan_visibilities/#{service_plan_visibility_guid}", request_json, headers

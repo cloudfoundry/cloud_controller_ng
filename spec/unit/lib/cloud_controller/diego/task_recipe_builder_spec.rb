@@ -4,9 +4,9 @@ module VCAP::CloudController
   module Diego
     RSpec.describe TaskRecipeBuilder do
       subject(:task_recipe_builder) { TaskRecipeBuilder.new }
-      let(:org) { Organization.make(name: 'MyOrg', guid: 'org-guid') }
-      let(:space) { Space.make(name: 'MySpace', guid: 'space-guid', organization: org) }
-      let(:app) { AppModel.make(name: 'MyApp', guid: 'banana-guid', space: space) }
+      let(:org) { create(:organization, name: 'MyOrg', guid: 'org-guid') }
+      let(:space) { create(:space, name: 'MySpace', guid: 'space-guid', organization: org) }
+      let(:app) { create(:app_model, name: 'MyApp', guid: 'banana-guid', space: space) }
 
       shared_examples 'IncompatibleBindings error handling' do
         let(:incompatible_bindings_error) { VCAP::CloudController::Diego::ServiceBindingFilesBuilder::IncompatibleBindings.new('something is wrong') }
@@ -26,7 +26,7 @@ module VCAP::CloudController
         context 'when k8s service bindings are enabled' do
           before do
             _app.update(service_binding_k8s_enabled: true)
-            VCAP::CloudController::ServiceBinding.make(service_instance: ManagedServiceInstance.make(space: _app.space), app: _app)
+            create(:service_binding, service_instance: create(:managed_service_instance, space: _app.space), app: _app)
           end
 
           it 'includes volume mounted files' do
@@ -42,7 +42,7 @@ module VCAP::CloudController
         context 'when file-based VCAP service bindings are enabled' do
           before do
             _app.update(file_based_vcap_services_enabled: true)
-            VCAP::CloudController::ServiceBinding.make(service_instance: ManagedServiceInstance.make(space: _app.space), app: _app)
+            create(:service_binding, service_instance: create(:managed_service_instance, space: _app.space), app: _app)
           end
 
           it 'includes the vcap_services file' do
@@ -78,7 +78,7 @@ module VCAP::CloudController
             stack: 'cool-stack'
           }
         end
-        let(:package) { PackageModel.make(app:) }
+        let(:package) { create(:package_model, app:) }
         let(:expected_network) do
           ::Diego::Bbs::Models::Network.new(
             properties: {
@@ -149,21 +149,21 @@ module VCAP::CloudController
         end
 
         before do
-          SecurityGroup.make(guid: 'guid1',
-                             rules: [{ 'protocol' => 'udp', 'ports' => '53', 'destination' => '0.0.0.0/0' }],
-                             staging_default: true)
-          SecurityGroup.make(guid: 'guid2',
-                             rules: [{ 'protocol' => 'tcp', 'ports' => '80', 'destination' => '0.0.0.0/0', 'log' => true }],
-                             staging_default: true)
-          security_group = SecurityGroup.make(guid: 'guid3',
-                                              rules: [{ 'protocol' => 'tcp', 'ports' => '443', 'destination' => '0.0.0.0/0', 'log' => true }],
-                                              staging_default: false)
+          create(:security_group, guid: 'guid1',
+                                  rules: [{ 'protocol' => 'udp', 'ports' => '53', 'destination' => '0.0.0.0/0' }],
+                                  staging_default: true)
+          create(:security_group, guid: 'guid2',
+                                  rules: [{ 'protocol' => 'tcp', 'ports' => '80', 'destination' => '0.0.0.0/0', 'log' => true }],
+                                  staging_default: true)
+          security_group = create(:security_group, guid: 'guid3',
+                                                   rules: [{ 'protocol' => 'tcp', 'ports' => '443', 'destination' => '0.0.0.0/0', 'log' => true }],
+                                                   staging_default: false)
           security_group.add_staging_space(app.space)
           allow(LifecycleProtocol).to receive(:protocol_for_type).with(lifecycle_type).and_return(lifecycle_protocol)
         end
 
         context 'with a buildpack backend' do
-          let(:droplet) { DropletModel.make(package:, app:) }
+          let(:droplet) { create(:droplet_model, package:, app:) }
 
           let(:buildpack_staging_action) { ::Diego::Bbs::Models::RunAction.new }
           let(:lifecycle_environment_variables) { [::Diego::Bbs::Models::EnvironmentVariable.new(name: 'the-buildpack-env-var', value: 'the-buildpack-value')] }
@@ -260,12 +260,12 @@ module VCAP::CloudController
         end
 
         context 'with a docker backend' do
-          let(:droplet) { DropletModel.make(:docker, package:, app:) }
+          let(:droplet) { create(:droplet_model, :docker, package:, app:) }
           let(:package) do
-            PackageModel.make(:docker,
-                              app: app,
-                              docker_username: 'dockeruser',
-                              docker_password: 'dockerpass')
+            create(:package_model, :docker,
+                   app: app,
+                   docker_username: 'dockeruser',
+                   docker_password: 'dockerpass')
           end
 
           let(:docker_staging_action) { ::Diego::Bbs::Models::RunAction.new }
@@ -464,9 +464,9 @@ module VCAP::CloudController
         before do
           allow(VCAP::CloudController::IsolationSegmentSelector).to receive(:for_space).and_return(isolation_segment)
 
-          SecurityGroup.make(guid: 'guid1', rules: [{ 'protocol' => 'udp', 'ports' => '53', 'destination' => '0.0.0.0/0' }], running_default: true)
+          create(:security_group, guid: 'guid1', rules: [{ 'protocol' => 'udp', 'ports' => '53', 'destination' => '0.0.0.0/0' }], running_default: true)
           app.space.add_security_group(
-            SecurityGroup.make(guid: 'guid2', rules: [{ 'protocol' => 'tcp', 'ports' => '80', 'destination' => '0.0.0.0/0', 'log' => true }])
+            create(:security_group, guid: 'guid2', rules: [{ 'protocol' => 'tcp', 'ports' => '80', 'destination' => '0.0.0.0/0', 'log' => true }])
           )
         end
 
@@ -500,7 +500,7 @@ module VCAP::CloudController
         end
 
         context 'with a buildpack backend' do
-          let(:droplet) { DropletModel.make(app:) }
+          let(:droplet) { create(:droplet_model, app:) }
 
           let(:task_action_builder) do
             instance_double(
@@ -569,7 +569,7 @@ module VCAP::CloudController
           end
 
           context 'when a volume mount is provided' do
-            let(:service_instance) { ManagedServiceInstance.make space: app.space }
+            let(:service_instance) { create(:managed_service_instance, space: app.space) }
             let(:multiple_volume_mounts) do
               [
                 {
@@ -598,7 +598,7 @@ module VCAP::CloudController
             end
 
             before do
-              ServiceBinding.make(app: app, service_instance: service_instance, volume_mounts: multiple_volume_mounts)
+              create(:service_binding, app: app, service_instance: service_instance, volume_mounts: multiple_volume_mounts)
             end
 
             it 'desires the mount' do
@@ -657,12 +657,12 @@ module VCAP::CloudController
         end
 
         context 'with a docker backend' do
-          let(:package) { PackageModel.make(:docker, app:) }
+          let(:package) { create(:package_model, :docker, app:) }
           let(:droplet) do
-            DropletModel.make(:docker,
-                              app: app,
-                              docker_receipt_username: 'dockerusername',
-                              docker_receipt_password: 'dockerpassword')
+            create(:droplet_model, :docker,
+                   app: app,
+                   docker_receipt_username: 'dockerusername',
+                   docker_receipt_password: 'dockerpassword')
           end
 
           let(:task_action_builder) do
@@ -734,7 +734,7 @@ module VCAP::CloudController
           end
 
           context 'when a volume mount is provided' do
-            let(:service_instance) { ManagedServiceInstance.make space: app.space }
+            let(:service_instance) { create(:managed_service_instance, space: app.space) }
             let(:multiple_volume_mounts) do
               [
                 {
@@ -763,7 +763,7 @@ module VCAP::CloudController
             end
 
             before do
-              ServiceBinding.make(app: app, service_instance: service_instance, volume_mounts: multiple_volume_mounts)
+              create(:service_binding, app: app, service_instance: service_instance, volume_mounts: multiple_volume_mounts)
             end
 
             it 'desires the mount' do

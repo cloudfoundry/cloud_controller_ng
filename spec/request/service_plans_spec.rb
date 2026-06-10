@@ -5,9 +5,9 @@ require 'models/services/service_plan'
 UNAUTHENTICATED = %w[unauthenticated].freeze
 
 RSpec.describe 'V3 service plans' do
-  let(:user) { VCAP::CloudController::User.make }
-  let(:org) { VCAP::CloudController::Organization.make }
-  let(:space) { VCAP::CloudController::Space.make(organization: org) }
+  let(:user) { create(:user) }
+  let(:org) { create(:organization) }
+  let(:space) { create(:space, organization: org) }
 
   describe 'GET /v3/service_plans/:guid' do
     let(:api_call) { ->(user_headers) { get "/v3/service_plans/#{guid}", nil, user_headers } }
@@ -29,7 +29,7 @@ RSpec.describe 'V3 service plans' do
           description: 'best plan ever'
         }
       end
-      let!(:service_plan) { VCAP::CloudController::ServicePlan.make(public: true, maintenance_info: maintenance_info) }
+      let!(:service_plan) { create(:service_plan, public: true, maintenance_info: maintenance_info) }
       let(:guid) { service_plan.guid }
 
       let(:expected_codes_and_responses) do
@@ -56,8 +56,8 @@ RSpec.describe 'V3 service plans' do
 
     context 'when there is a non-public service plan' do
       context 'global broker' do
-        let!(:visibility) { VCAP::CloudController::ServicePlanVisibility.make(service_plan: service_plan, organization: org) }
-        let!(:service_plan) { VCAP::CloudController::ServicePlan.make(public: false) }
+        let!(:visibility) { create(:service_plan_visibility, service_plan: service_plan, organization: org) }
+        let!(:service_plan) { create(:service_plan, public: false) }
         let(:guid) { service_plan.guid }
 
         let(:expected_codes_and_responses) do
@@ -71,9 +71,9 @@ RSpec.describe 'V3 service plans' do
       end
 
       context 'space scoped broker' do
-        let!(:broker) { VCAP::CloudController::ServiceBroker.make(space:) }
-        let!(:service_offering) { VCAP::CloudController::Service.make(service_broker: broker) }
-        let!(:service_plan) { VCAP::CloudController::ServicePlan.make(public: false, service: service_offering) }
+        let!(:broker) { create(:service_broker, space:) }
+        let!(:service_offering) { create(:service, service_broker: broker) }
+        let!(:service_plan) { create(:service_plan, public: false, service: service_offering) }
         let(:guid) { service_plan.guid }
 
         let(:expected_codes_and_responses) do
@@ -96,7 +96,7 @@ RSpec.describe 'V3 service plans' do
     end
 
     context 'validity of links' do
-      let!(:service_plan) { VCAP::CloudController::ServicePlan.make(public: true) }
+      let!(:service_plan) { create(:service_plan, public: true) }
       let(:guid) { service_plan.guid }
 
       before do
@@ -132,7 +132,7 @@ RSpec.describe 'V3 service plans' do
     end
 
     describe 'fields' do
-      let!(:service_plan) { VCAP::CloudController::ServicePlan.make }
+      let!(:service_plan) { create(:service_plan) }
       let(:guid) { service_plan.guid }
 
       it 'can include service broker name and guid' do
@@ -161,8 +161,8 @@ RSpec.describe 'V3 service plans' do
       end
 
       it 'can include `service_offering`' do
-        offering = VCAP::CloudController::Service.make
-        plan = VCAP::CloudController::ServicePlan.make(service: offering)
+        offering = create(:service)
+        plan = create(:service_plan, service: offering)
         guid = plan.guid
 
         get "/v3/service_plans/#{guid}?include=service_offering", nil, admin_headers
@@ -215,12 +215,12 @@ RSpec.describe 'V3 service plans' do
     end
 
     describe 'visibility of service plans' do
-      let!(:public_service_plan) { VCAP::CloudController::ServicePlan.make(public: true, name: 'public') }
-      let!(:private_service_plan) { VCAP::CloudController::ServicePlan.make(public: false, name: 'private') }
+      let!(:public_service_plan) { create(:service_plan, public: true, name: 'public') }
+      let!(:private_service_plan) { create(:service_plan, public: false, name: 'private') }
       let!(:space_scoped_service_plan) { generate_space_scoped_plan(space) }
       let!(:org_restricted_service_plan) do
-        service_plan = VCAP::CloudController::ServicePlan.make(public: false)
-        VCAP::CloudController::ServicePlanVisibility.make(organization: org, service_plan: service_plan)
+        service_plan = create(:service_plan, public: false)
+        create(:service_plan_visibility, organization: org, service_plan: service_plan)
         service_plan
       end
 
@@ -293,8 +293,8 @@ RSpec.describe 'V3 service plans' do
     end
 
     describe 'pagination' do
-      let!(:service_plan_1) { VCAP::CloudController::ServicePlan.make(public: true, active: true) }
-      let!(:service_plan_2) { VCAP::CloudController::ServicePlan.make(public: true, active: true) }
+      let!(:service_plan_1) { create(:service_plan, public: true, active: true) }
+      let!(:service_plan_2) { create(:service_plan, public: true, active: true) }
 
       let(:resources) { [service_plan_1, service_plan_2] }
 
@@ -304,16 +304,16 @@ RSpec.describe 'V3 service plans' do
     end
 
     context 'when the service plans have labels and annotations' do
-      let(:service_plan_1) { VCAP::CloudController::ServicePlan.make }
-      let(:service_plan_2) { VCAP::CloudController::ServicePlan.make }
+      let(:service_plan_1) { create(:service_plan) }
+      let(:service_plan_2) { create(:service_plan) }
       let(:guid_1) { service_plan_1.guid }
       let(:guid_2) { service_plan_2.guid }
 
       before do
-        VCAP::CloudController::ServicePlanLabelModel.make(resource_guid: guid_1, key_name: 'one', value: 'foo')
-        VCAP::CloudController::ServicePlanLabelModel.make(resource_guid: guid_2, key_name: 'two', value: 'bar')
-        VCAP::CloudController::ServicePlanAnnotationModel.make(resource_guid: guid_1, key_name: 'alpha', value: 'A1')
-        VCAP::CloudController::ServicePlanAnnotationModel.make(resource_guid: guid_2, key_name: 'beta', value: 'B2')
+        create(:service_plan_label_model, resource_guid: guid_1, key_name: 'one', value: 'foo')
+        create(:service_plan_label_model, resource_guid: guid_2, key_name: 'two', value: 'bar')
+        create(:service_plan_annotation_model, resource_guid: guid_1, key_name: 'alpha', value: 'A1')
+        create(:service_plan_annotation_model, resource_guid: guid_2, key_name: 'beta', value: 'B2')
       end
 
       it 'displays the metadata correctly' do
@@ -337,21 +337,21 @@ RSpec.describe 'V3 service plans' do
 
     describe 'filters' do
       describe 'organization_guids' do
-        let(:org_1) { VCAP::CloudController::Organization.make }
-        let(:org_2) { VCAP::CloudController::Organization.make }
-        let!(:org_plan_1) { VCAP::CloudController::ServicePlan.make(public: false) }
-        let!(:org_plan_2) { VCAP::CloudController::ServicePlan.make(public: false) }
+        let(:org_1) { create(:organization) }
+        let(:org_2) { create(:organization) }
+        let!(:org_plan_1) { create(:service_plan, public: false) }
+        let!(:org_plan_2) { create(:service_plan, public: false) }
 
-        let(:space_1) { VCAP::CloudController::Space.make(organization: org_1) }
-        let(:space_2) { VCAP::CloudController::Space.make(organization: org_2) }
+        let(:space_1) { create(:space, organization: org_1) }
+        let(:space_2) { create(:space, organization: org_2) }
         let!(:space_plan_1) { generate_space_scoped_plan(space_1) }
         let!(:space_plan_2) { generate_space_scoped_plan(space_2) }
 
-        let!(:public_plan) { VCAP::CloudController::ServicePlan.make(public: true) }
+        let!(:public_plan) { create(:service_plan, public: true) }
 
         before do
-          VCAP::CloudController::ServicePlanVisibility.make(service_plan: org_plan_1, organization: org_1)
-          VCAP::CloudController::ServicePlanVisibility.make(service_plan: org_plan_2, organization: org_2)
+          create(:service_plan_visibility, service_plan: org_plan_1, organization: org_1)
+          create(:service_plan_visibility, service_plan: org_plan_2, organization: org_2)
         end
 
         it 'selects on org plans, space plans and public plans' do
@@ -364,21 +364,21 @@ RSpec.describe 'V3 service plans' do
       end
 
       describe 'space_guids' do
-        let(:org_1) { VCAP::CloudController::Organization.make }
-        let(:org_2) { VCAP::CloudController::Organization.make }
-        let!(:org_plan_1) { VCAP::CloudController::ServicePlan.make(public: false) }
-        let!(:org_plan_2) { VCAP::CloudController::ServicePlan.make(public: false) }
+        let(:org_1) { create(:organization) }
+        let(:org_2) { create(:organization) }
+        let!(:org_plan_1) { create(:service_plan, public: false) }
+        let!(:org_plan_2) { create(:service_plan, public: false) }
 
-        let(:space_1) { VCAP::CloudController::Space.make(organization: org_1) }
-        let(:space_2) { VCAP::CloudController::Space.make(organization: org_2) }
+        let(:space_1) { create(:space, organization: org_1) }
+        let(:space_2) { create(:space, organization: org_2) }
         let!(:space_plan_1) { generate_space_scoped_plan(space_1) }
         let!(:space_plan_2) { generate_space_scoped_plan(space_2) }
 
-        let!(:public_plan) { VCAP::CloudController::ServicePlan.make(public: true) }
+        let!(:public_plan) { create(:service_plan, public: true) }
 
         before do
-          VCAP::CloudController::ServicePlanVisibility.make(service_plan: org_plan_1, organization: org_1)
-          VCAP::CloudController::ServicePlanVisibility.make(service_plan: org_plan_2, organization: org_2)
+          create(:service_plan_visibility, service_plan: org_plan_1, organization: org_1)
+          create(:service_plan_visibility, service_plan: org_plan_2, organization: org_2)
         end
 
         it 'selects on org plans, space plans and public plans' do
@@ -391,32 +391,32 @@ RSpec.describe 'V3 service plans' do
       end
 
       describe 'service_broker_names' do
-        let(:org_system) { VCAP::CloudController::Organization.make(name: 'system') }
-        let!(:org_dev) { VCAP::CloudController::Organization.make(name: 'dev') }
+        let(:org_system) { create(:organization, name: 'system') }
+        let!(:org_dev) { create(:organization, name: 'dev') }
 
-        let(:space_1) { VCAP::CloudController::Space.make(organization: org_system) }
+        let(:space_1) { create(:space, organization: org_system) }
 
-        let(:global_broker) { VCAP::CloudController::ServiceBroker.make(name: 'global_broker') }
-        let(:service_offering) { VCAP::CloudController::Service.make(service_broker: global_broker) }
-        let!(:plan_1) { VCAP::CloudController::ServicePlan.make(public: true, service: service_offering) }
-        let!(:plan_2) { VCAP::CloudController::ServicePlan.make(public: false, service: service_offering) }
-        let(:plan_3) { VCAP::CloudController::ServicePlan.make(public: false, service: service_offering) }
-        let(:plan_4) { VCAP::CloudController::ServicePlan.make(public: false, service: service_offering) }
+        let(:global_broker) { create(:service_broker, name: 'global_broker') }
+        let(:service_offering) { create(:service, service_broker: global_broker) }
+        let!(:plan_1) { create(:service_plan, public: true, service: service_offering) }
+        let!(:plan_2) { create(:service_plan, public: false, service: service_offering) }
+        let(:plan_3) { create(:service_plan, public: false, service: service_offering) }
+        let(:plan_4) { create(:service_plan, public: false, service: service_offering) }
 
-        let(:space_broker) { VCAP::CloudController::ServiceBroker.make(name: 'space_broker', space: space_1) }
-        let(:space_offering) { VCAP::CloudController::Service.make(service_broker: space_broker) }
-        let!(:space_plan_1) { VCAP::CloudController::ServicePlan.make(public: false, service: space_offering) }
-        let!(:space_plan_2) { VCAP::CloudController::ServicePlan.make(public: false, service: space_offering) }
+        let(:space_broker) { create(:service_broker, name: 'space_broker', space: space_1) }
+        let(:space_offering) { create(:service, service_broker: space_broker) }
+        let!(:space_plan_1) { create(:service_plan, public: false, service: space_offering) }
+        let!(:space_plan_2) { create(:service_plan, public: false, service: space_offering) }
 
-        let(:global_broker2) { VCAP::CloudController::ServiceBroker.make(name: 'global_broker2') }
-        let(:global_offering) { VCAP::CloudController::Service.make(service_broker: global_broker2) }
-        let!(:filtered_out_plan) { VCAP::CloudController::ServicePlan.make(public: true, service: global_offering) }
+        let(:global_broker2) { create(:service_broker, name: 'global_broker2') }
+        let(:global_offering) { create(:service, service_broker: global_broker2) }
+        let!(:filtered_out_plan) { create(:service_plan, public: true, service: global_offering) }
 
-        let(:user) { VCAP::CloudController::User.make }
+        let(:user) { create(:user) }
 
         before do
-          VCAP::CloudController::ServicePlanVisibility.make(service_plan: plan_3, organization: org_system)
-          VCAP::CloudController::ServicePlanVisibility.make(service_plan: plan_4, organization: org_dev)
+          create(:service_plan_visibility, service_plan: plan_3, organization: org_system)
+          create(:service_plan_visibility, service_plan: plan_4, organization: org_dev)
 
           space_1.organization.add_user(user)
           space_1.add_developer(user)
@@ -440,37 +440,37 @@ RSpec.describe 'V3 service plans' do
       end
 
       describe 'service_offering_names' do
-        let(:org_system) { VCAP::CloudController::Organization.make(name: 'system') }
-        let!(:org_dev) { VCAP::CloudController::Organization.make(name: 'dev') }
+        let(:org_system) { create(:organization, name: 'system') }
+        let!(:org_dev) { create(:organization, name: 'dev') }
 
         let(:space_1) do
-          space = VCAP::CloudController::Space.make(organization: org_system)
+          space = create(:space, organization: org_system)
           space.organization.add_user(user)
           space.add_developer(user)
           space
         end
 
-        let(:global_broker) { VCAP::CloudController::ServiceBroker.make(name: 'global_broker') }
-        let(:service_offering) { VCAP::CloudController::Service.make(service_broker: global_broker) }
-        let!(:plan_1) { VCAP::CloudController::ServicePlan.make(public: true, service: service_offering) }
-        let!(:plan_2) { VCAP::CloudController::ServicePlan.make(public: false, service: service_offering) }
-        let(:plan_3) { VCAP::CloudController::ServicePlan.make(public: false, service: service_offering) }
-        let(:plan_4) { VCAP::CloudController::ServicePlan.make(public: false, service: service_offering) }
+        let(:global_broker) { create(:service_broker, name: 'global_broker') }
+        let(:service_offering) { create(:service, service_broker: global_broker) }
+        let!(:plan_1) { create(:service_plan, public: true, service: service_offering) }
+        let!(:plan_2) { create(:service_plan, public: false, service: service_offering) }
+        let(:plan_3) { create(:service_plan, public: false, service: service_offering) }
+        let(:plan_4) { create(:service_plan, public: false, service: service_offering) }
 
-        let(:space_broker) { VCAP::CloudController::ServiceBroker.make(name: 'space_broker') }
-        let(:space_offering) { VCAP::CloudController::Service.make(service_broker: space_broker) }
-        let!(:space_plan_1) { VCAP::CloudController::ServicePlan.make(public: false, service: space_offering) }
-        let!(:space_plan_2) { VCAP::CloudController::ServicePlan.make(public: false, service: space_offering) }
+        let(:space_broker) { create(:service_broker, name: 'space_broker') }
+        let(:space_offering) { create(:service, service_broker: space_broker) }
+        let!(:space_plan_1) { create(:service_plan, public: false, service: space_offering) }
+        let!(:space_plan_2) { create(:service_plan, public: false, service: space_offering) }
 
-        let(:global_broker2) { VCAP::CloudController::ServiceBroker.make(name: 'global_broker2') }
-        let(:global_offering) { VCAP::CloudController::Service.make(service_broker: global_broker2) }
-        let!(:filtered_out_plan) { VCAP::CloudController::ServicePlan.make(public: true, service: global_offering) }
+        let(:global_broker2) { create(:service_broker, name: 'global_broker2') }
+        let(:global_offering) { create(:service, service_broker: global_broker2) }
+        let!(:filtered_out_plan) { create(:service_plan, public: true, service: global_offering) }
 
-        let(:user) { VCAP::CloudController::User.make }
+        let(:user) { create(:user) }
 
         before do
-          VCAP::CloudController::ServicePlanVisibility.make(service_plan: plan_3, organization: org_system)
-          VCAP::CloudController::ServicePlanVisibility.make(service_plan: plan_4, organization: org_dev)
+          create(:service_plan_visibility, service_plan: plan_3, organization: org_system)
+          create(:service_plan_visibility, service_plan: plan_4, organization: org_dev)
 
           space_1.add_service_broker(space_broker)
         end
@@ -491,9 +491,9 @@ RSpec.describe 'V3 service plans' do
       end
 
       describe 'service_instance_guids' do
-        let!(:instance_1) { VCAP::CloudController::ManagedServiceInstance.make }
-        let!(:instance_2) { VCAP::CloudController::ManagedServiceInstance.make }
-        let!(:instance_3) { VCAP::CloudController::ManagedServiceInstance.make }
+        let!(:instance_1) { create(:managed_service_instance) }
+        let!(:instance_2) { create(:managed_service_instance) }
+        let!(:instance_3) { create(:managed_service_instance) }
 
         it 'filters by service instance guid' do
           filter = [instance_1.guid, instance_3.guid].join(',')
@@ -503,14 +503,14 @@ RSpec.describe 'V3 service plans' do
       end
 
       describe 'label_selector' do
-        let!(:service_plan_1) { VCAP::CloudController::ServicePlan.make(public: true, active: true) }
-        let!(:service_plan_2) { VCAP::CloudController::ServicePlan.make(public: true, active: true) }
-        let!(:service_plan_3) { VCAP::CloudController::ServicePlan.make(public: true, active: true) }
+        let!(:service_plan_1) { create(:service_plan, public: true, active: true) }
+        let!(:service_plan_2) { create(:service_plan, public: true, active: true) }
+        let!(:service_plan_3) { create(:service_plan, public: true, active: true) }
 
         before do
-          VCAP::CloudController::ServicePlanLabelModel.make(resource_guid: service_plan_1.guid, key_name: 'flavor', value: 'orange')
-          VCAP::CloudController::ServicePlanLabelModel.make(resource_guid: service_plan_2.guid, key_name: 'flavor', value: 'orange')
-          VCAP::CloudController::ServicePlanLabelModel.make(resource_guid: service_plan_3.guid, key_name: 'flavor', value: 'apple')
+          create(:service_plan_label_model, resource_guid: service_plan_1.guid, key_name: 'flavor', value: 'orange')
+          create(:service_plan_label_model, resource_guid: service_plan_2.guid, key_name: 'flavor', value: 'orange')
+          create(:service_plan_label_model, resource_guid: service_plan_3.guid, key_name: 'flavor', value: 'apple')
         end
 
         it 'can filter on labels' do
@@ -524,8 +524,8 @@ RSpec.describe 'V3 service plans' do
       end
 
       describe 'other filters' do
-        let!(:selected_plan) { VCAP::CloudController::ServicePlan.make(active: true) }
-        let!(:alternate_plan) { VCAP::CloudController::ServicePlan.make(active: false) }
+        let!(:selected_plan) { create(:service_plan, active: true) }
+        let!(:alternate_plan) { create(:service_plan, active: false) }
 
         it 'gets the available plans' do
           [
@@ -559,12 +559,11 @@ RSpec.describe 'V3 service plans' do
 
     describe 'includes' do
       let(:space_1) do
-        VCAP::CloudController::Space.make(
-          organization: VCAP::CloudController::Organization.make(created_at: Time.now.utc - 1.second),
-          created_at: Time.now.utc - 1.second
-        )
+        create(:space,
+               organization: create(:organization, created_at: Time.now.utc - 1.second),
+               created_at: Time.now.utc - 1.second)
       end
-      let(:space_2) { VCAP::CloudController::Space.make }
+      let(:space_2) { create(:space) }
 
       context 'when including `space.organization`' do
         before do
@@ -598,11 +597,11 @@ RSpec.describe 'V3 service plans' do
       end
 
       it 'can include `service_offering`' do
-        offering_1 = VCAP::CloudController::Service.make
-        offering_2 = VCAP::CloudController::Service.make
-        VCAP::CloudController::ServicePlan.make(service: offering_1)
-        VCAP::CloudController::ServicePlan.make(service: offering_2)
-        VCAP::CloudController::ServicePlan.make(service: offering_2)
+        offering_1 = create(:service)
+        offering_2 = create(:service)
+        create(:service_plan, service: offering_1)
+        create(:service_plan, service: offering_2)
+        create(:service_plan, service: offering_2)
 
         get '/v3/service_plans?include=service_offering', nil, admin_headers
         expect(last_response).to have_status_code(200)
@@ -614,13 +613,11 @@ RSpec.describe 'V3 service plans' do
 
     describe 'fields' do
       let!(:plan_1) do
-        VCAP::CloudController::ServicePlan.make(
-          service: VCAP::CloudController::Service.make(
-            service_broker: VCAP::CloudController::ServiceBroker.make(created_at: Time.now.utc - 1.second)
-          )
-        )
+        create(:service_plan,
+               service: create(:service,
+                               service_broker: create(:service_broker, created_at: Time.now.utc - 1.second)))
       end
-      let!(:plan_2) { VCAP::CloudController::ServicePlan.make }
+      let!(:plan_2) { create(:service_plan) }
 
       it 'can include service broker name and guid' do
         get '/v3/service_plans?fields[service_offering.service_broker]=name,guid', nil, admin_headers
@@ -678,7 +675,7 @@ RSpec.describe 'V3 service plans' do
       let(:guid) { service_plan.guid }
 
       context 'when the plan is only visible to global scope users' do
-        let!(:service_plan) { VCAP::CloudController::ServicePlan.make(public: false) }
+        let!(:service_plan) { create(:service_plan, public: false) }
 
         let(:expected_codes_and_responses) do
           Hash.new({ code: 404 }.freeze).tap do |h|
@@ -693,7 +690,7 @@ RSpec.describe 'V3 service plans' do
       end
 
       context 'when the plan is public' do
-        let!(:service_plan) { VCAP::CloudController::ServicePlan.make }
+        let!(:service_plan) { create(:service_plan) }
 
         let(:expected_codes_and_responses) do
           Hash.new({ code: 403 }.freeze).tap do |h|
@@ -706,10 +703,10 @@ RSpec.describe 'V3 service plans' do
       end
 
       context 'when the plan is visible only on some orgs' do
-        let!(:service_plan) { VCAP::CloudController::ServicePlan.make(public: false) }
+        let!(:service_plan) { create(:service_plan, public: false) }
 
         before do
-          VCAP::CloudController::ServicePlanVisibility.make(service_plan: service_plan, organization: org)
+          create(:service_plan_visibility, service_plan: service_plan, organization: org)
         end
 
         let(:expected_codes_and_responses) do
@@ -724,9 +721,9 @@ RSpec.describe 'V3 service plans' do
       end
 
       context 'when the plan is from a space-scoped service broker' do
-        let(:service_broker) { VCAP::CloudController::ServiceBroker.make(space:) }
-        let(:service_offering) { VCAP::CloudController::Service.make(service_broker:) }
-        let!(:service_plan) { VCAP::CloudController::ServicePlan.make(service: service_offering, public: false) }
+        let(:service_broker) { create(:service_broker, space:) }
+        let(:service_offering) { create(:service, service_broker:) }
+        let!(:service_plan) { create(:service_plan, service: service_offering, public: false) }
 
         let(:expected_codes_and_responses) do
           Hash.new({ code: 404 }.freeze).tap do |h|
@@ -746,7 +743,7 @@ RSpec.describe 'V3 service plans' do
     end
 
     context 'when the service plan exists and has service instances' do
-      let!(:service_plan) { VCAP::CloudController::ManagedServiceInstance.make.service_plan }
+      let!(:service_plan) { create(:managed_service_instance).service_plan }
 
       it 'fails with a 422 unprocessable entity' do
         delete "/v3/service_plans/#{service_plan.guid}", {}, admin_headers
@@ -757,7 +754,7 @@ RSpec.describe 'V3 service plans' do
     end
 
     describe 'audit events' do
-      let(:service_plan) { VCAP::CloudController::ServicePlan.make }
+      let(:service_plan) { create(:service_plan) }
       let(:email) { Sham.email }
       let(:admin_headers) { admin_headers_for(user, email:) }
 
@@ -787,7 +784,7 @@ RSpec.describe 'V3 service plans' do
     let(:guid) { service_plan.guid }
 
     it 'can update labels and annotations' do
-      service_plan = VCAP::CloudController::ServicePlan.make(public: true, active: true)
+      service_plan = create(:service_plan, public: true, active: true)
 
       patch "/v3/service_plans/#{service_plan.guid}", update_request_body.to_json, admin_headers
 
@@ -797,7 +794,7 @@ RSpec.describe 'V3 service plans' do
 
     context 'when some labels are invalid' do
       let(:labels) { { potato: 'sweet invalid potato' } }
-      let!(:service_plan) { VCAP::CloudController::ServicePlan.make(active: true) }
+      let!(:service_plan) { create(:service_plan, active: true) }
 
       it 'returns a proper failure' do
         patch "/v3/service_plans/#{service_plan.guid}", update_request_body.to_json, admin_headers
@@ -809,7 +806,7 @@ RSpec.describe 'V3 service plans' do
 
     context 'when some annotations are invalid' do
       let(:annotations) { { '/style' => 'sweet invalid style' } }
-      let!(:service_plan) { VCAP::CloudController::ServicePlan.make(active: true) }
+      let!(:service_plan) { create(:service_plan, active: true) }
 
       it 'returns a proper failure' do
         patch "/v3/service_plans/#{service_plan.guid}", update_request_body.to_json, admin_headers
@@ -829,7 +826,7 @@ RSpec.describe 'V3 service plans' do
 
     context 'permissions' do
       context 'when the plan is only visible to global scope users' do
-        let!(:service_plan) { VCAP::CloudController::ServicePlan.make(public: false) }
+        let!(:service_plan) { create(:service_plan, public: false) }
 
         let(:expected_codes_and_responses) do
           Hash.new({ code: 404 }.freeze).tap do |h|
@@ -844,7 +841,7 @@ RSpec.describe 'V3 service plans' do
       end
 
       context 'when the plan is public' do
-        let!(:service_plan) { VCAP::CloudController::ServicePlan.make }
+        let!(:service_plan) { create(:service_plan) }
 
         let(:expected_codes_and_responses) do
           Hash.new({ code: 403 }.freeze).tap do |h|
@@ -857,10 +854,10 @@ RSpec.describe 'V3 service plans' do
       end
 
       context 'when the plan is visible only on some orgs' do
-        let!(:service_plan) { VCAP::CloudController::ServicePlan.make(public: false) }
+        let!(:service_plan) { create(:service_plan, public: false) }
 
         before do
-          VCAP::CloudController::ServicePlanVisibility.make(service_plan: service_plan, organization: org)
+          create(:service_plan_visibility, service_plan: service_plan, organization: org)
         end
 
         let(:expected_codes_and_responses) do
@@ -875,9 +872,9 @@ RSpec.describe 'V3 service plans' do
       end
 
       context 'when the plan is from a space-scoped service broker' do
-        let(:service_broker) { VCAP::CloudController::ServiceBroker.make(space:) }
-        let(:service_offering) { VCAP::CloudController::Service.make(service_broker:) }
-        let!(:service_plan) { VCAP::CloudController::ServicePlan.make(service: service_offering, public: false) }
+        let(:service_broker) { create(:service_broker, space:) }
+        let(:service_offering) { create(:service, service_broker:) }
+        let!(:service_plan) { create(:service_plan, service: service_offering, public: false) }
 
         let(:expected_codes_and_responses) do
           Hash.new({ code: 404 }.freeze).tap do |h|
@@ -978,8 +975,8 @@ RSpec.describe 'V3 service plans' do
   end
 
   def generate_space_scoped_plan(space)
-    broker = VCAP::CloudController::ServiceBroker.make(space:)
-    offering = VCAP::CloudController::Service.make(service_broker: broker)
-    VCAP::CloudController::ServicePlan.make(service: offering)
+    broker = create(:service_broker, space:)
+    offering = create(:service, service_broker: broker)
+    create(:service_plan, service: offering)
   end
 end

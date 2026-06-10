@@ -22,7 +22,7 @@ module VCAP::CloudController
     describe '#create' do
       context 'when there is a sequel validation error' do
         context 'when the validation error is non-specific' do
-          let(:private_domain) { PrivateDomain.make }
+          let(:private_domain) { create(:private_domain) }
           let(:domain) { "sub.#{private_domain.name}" }
           let(:message) { DomainCreateMessage.new({ name: domain }) }
 
@@ -61,7 +61,7 @@ module VCAP::CloudController
         end
 
         context 'when the error is a uniqueness error' do
-          let(:existing_domain) { SharedDomain.make }
+          let(:existing_domain) { create(:shared_domain) }
           let(:message) { DomainCreateMessage.new({ name: existing_domain.name }) }
 
           it 'returns an informative error message' do
@@ -72,7 +72,7 @@ module VCAP::CloudController
         end
 
         context 'when the error is a quota error' do
-          let(:org) { Organization.make(quota_definition: VCAP::CloudController::QuotaDefinition.make(total_private_domains: 0)) }
+          let(:org) { create(:organization, quota_definition: create(:quota_definition, total_private_domains: 0)) }
           let(:message) { DomainCreateMessage.new({ name: 'foo.com', relationships: { organization: { data: { guid: org.guid } } } }) }
 
           it 'returns an informative error message' do
@@ -117,9 +117,9 @@ module VCAP::CloudController
       end
 
       context 'when creating a private domain' do
-        let(:organization) { Organization.make }
-        let(:shared_org1) { Organization.make }
-        let(:shared_org2) { Organization.make }
+        let(:organization) { create(:organization) }
+        let(:shared_org1) { create(:organization) }
+        let(:shared_org2) { create(:organization) }
 
         let(:message) do
           DomainCreateMessage.new({

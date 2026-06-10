@@ -16,7 +16,7 @@ module VCAP::CloudController
     end
 
     describe 'user agent and request id handling' do
-      let(:space) { VCAP::CloudController::Space.make }
+      let(:space) { create(:space) }
       let(:user)  { make_developer_for_space(space) }
       let(:request_id) { 'test-request-123' }
       let(:user_agent) { 'cf/8.7.0 (go1.21.4; amd64 linux)' }
@@ -50,14 +50,14 @@ module VCAP::CloudController
     end
 
     context 'telemetry' do
-      let(:space) { VCAP::CloudController::Space.make }
+      let(:space) { create(:space) }
       let(:org) { space.organization }
       let(:user) { make_developer_for_space(space) }
       let(:user_agent) { 'cf/8.7.0 (go1.21.4; amd64 linux)' }
       let(:user_header) { headers_for(user, user_name: 'roto').merge('HTTP_USER_AGENT' => user_agent) }
       let(:logger_spy) { spy('logger') }
-      let(:stack) { VCAP::CloudController::Stack.make }
-      let(:buildpack) { VCAP::CloudController::Buildpack.make(stack: stack.name) }
+      let(:stack) { create(:stack) }
+      let(:buildpack) { create(:buildpack, stack: stack.name) }
       let(:create_request) do
         {
           name: 'my_app',

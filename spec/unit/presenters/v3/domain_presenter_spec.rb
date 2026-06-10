@@ -14,27 +14,21 @@ module VCAP::CloudController::Presenters::V3
 
       context 'when the domain is public (shared)' do
         let(:domain) do
-          VCAP::CloudController::SharedDomain.make(
-            name: 'my.domain.com',
-            internal: true
-          )
+          create(:shared_domain, name: 'my.domain.com',
+                                 internal: true)
         end
 
         let!(:domain_label) do
-          VCAP::CloudController::DomainLabelModel.make(
-            resource_guid: domain.guid,
-            key_prefix: 'maine.gov',
-            key_name: 'potato',
-            value: 'mashed'
-          )
+          create(:domain_label_model, resource_guid: domain.guid,
+                                      key_prefix: 'maine.gov',
+                                      key_name: 'potato',
+                                      value: 'mashed')
         end
 
         let!(:domain_annotation) do
-          VCAP::CloudController::DomainAnnotationModel.make(
-            resource_guid: domain.guid,
-            key_name: 'contacts',
-            value: 'Bill tel(1111111) email(bill@fixme), Bob tel(222222) pager(3333333#555) email(bob@fixme)'
-          )
+          create(:domain_annotation_model, resource_guid: domain.guid,
+                                           key_name: 'contacts',
+                                           value: 'Bill tel(1111111) email(bill@fixme), Bob tel(222222) pager(3333333#555) email(bob@fixme)')
         end
 
         let(:routing_api_client) { instance_double(VCAP::CloudController::RoutingApi::Client) }
@@ -63,30 +57,24 @@ module VCAP::CloudController::Presenters::V3
       end
 
       context 'when the domain is private' do
-        let(:org) { VCAP::CloudController::Organization.make(guid: 'org') }
+        let(:org) { create(:organization, guid: 'org') }
         let(:domain) do
-          VCAP::CloudController::PrivateDomain.make(
-            name: 'my.domain.com',
-            internal: true,
-            owning_organization: org
-          )
+          create(:private_domain, name: 'my.domain.com',
+                                  internal: true,
+                                  owning_organization: org)
         end
 
         let!(:domain_label) do
-          VCAP::CloudController::DomainLabelModel.make(
-            resource_guid: domain.guid,
-            key_prefix: 'maine.gov',
-            key_name: 'potato',
-            value: 'mashed'
-          )
+          create(:domain_label_model, resource_guid: domain.guid,
+                                      key_prefix: 'maine.gov',
+                                      key_name: 'potato',
+                                      value: 'mashed')
         end
 
         let!(:domain_annotation) do
-          VCAP::CloudController::DomainAnnotationModel.make(
-            resource_guid: domain.guid,
-            key_name: 'contacts',
-            value: 'Bill tel(1111111) email(bill@fixme), Bob tel(222222) pager(3333333#555) email(bob@fixme)'
-          )
+          create(:domain_annotation_model, resource_guid: domain.guid,
+                                           key_name: 'contacts',
+                                           value: 'Bill tel(1111111) email(bill@fixme), Bob tel(222222) pager(3333333#555) email(bob@fixme)')
         end
 
         it 'presents the base domain properties as json' do
@@ -117,9 +105,9 @@ module VCAP::CloudController::Presenters::V3
         end
 
         context 'and has shared organizations' do
-          let(:shared_org_1) { VCAP::CloudController::Organization.make(guid: 'org2') }
-          let(:shared_org_2) { VCAP::CloudController::Organization.make(guid: 'org3') }
-          let(:shared_org_3) { VCAP::CloudController::Organization.make(guid: 'org4') }
+          let(:shared_org_1) { create(:organization, guid: 'org2') }
+          let(:shared_org_2) { create(:organization, guid: 'org3') }
+          let(:shared_org_3) { create(:organization, guid: 'org4') }
 
           before do
             shared_org_1.add_private_domain(domain)
@@ -179,29 +167,23 @@ module VCAP::CloudController::Presenters::V3
           allow(routing_api_client).to receive_messages(enabled?: true, router_group: router_group)
         end
 
-        let(:org) { VCAP::CloudController::Organization.make(guid: 'org') }
+        let(:org) { create(:organization, guid: 'org') }
         let(:domain) do
-          VCAP::CloudController::SharedDomain.make(
-            name: 'my.domain.com',
-            router_group_guid: 'some-router-guid'
-          )
+          create(:shared_domain, name: 'my.domain.com',
+                                 router_group_guid: 'some-router-guid')
         end
 
         let!(:domain_label) do
-          VCAP::CloudController::DomainLabelModel.make(
-            resource_guid: domain.guid,
-            key_prefix: 'maine.gov',
-            key_name: 'potato',
-            value: 'mashed'
-          )
+          create(:domain_label_model, resource_guid: domain.guid,
+                                      key_prefix: 'maine.gov',
+                                      key_name: 'potato',
+                                      value: 'mashed')
         end
 
         let!(:domain_annotation) do
-          VCAP::CloudController::DomainAnnotationModel.make(
-            resource_guid: domain.guid,
-            key_name: 'contacts',
-            value: 'Bill tel(1111111) email(bill@fixme), Bob tel(222222) pager(3333333#555) email(bob@fixme)'
-          )
+          create(:domain_annotation_model, resource_guid: domain.guid,
+                                           key_name: 'contacts',
+                                           value: 'Bill tel(1111111) email(bill@fixme), Bob tel(222222) pager(3333333#555) email(bob@fixme)')
         end
 
         it 'presents the base domain properties as json' do

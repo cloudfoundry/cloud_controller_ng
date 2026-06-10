@@ -2,15 +2,15 @@ require 'spec_helper'
 
 module VCAP::CloudController
   RSpec.describe RouteValidator do
-    let(:space_quota) { SpaceQuotaDefinition.make }
-    let(:space) { Space.make(space_quota_definition: space_quota, organization: space_quota.organization) }
+    let(:space_quota) { create(:space_quota_definition) }
+    let(:space) { create(:space, space_quota_definition: space_quota, organization: space_quota.organization) }
     let(:route) { Route.new port:, host:, path:, domain:, space: }
     let(:validator) { RouteValidator.new(route) }
     let(:routing_api_client) { double('routing_api', router_group: router_group, enabled?: true) }
     let(:router_group) { double(:router_group, type: router_group_type, guid: router_group_guid, reservable_ports: [3, 4, 5, 8080]) }
     let(:router_group_type) { 'tcp' }
     let(:router_group_guid) { 'router-group-guid' }
-    let(:domain) { SharedDomain.make(router_group_guid:) }
+    let(:domain) { create(:shared_domain, router_group_guid:) }
     let(:port) { 8080 }
     let(:host) { '' }
     let(:path) { '' }
@@ -29,7 +29,7 @@ module VCAP::CloudController
       let(:port) { nil }
 
       context 'with a tcp domain' do
-        let(:domain) { SharedDomain.make(router_group_guid:) }
+        let(:domain) { create(:shared_domain, router_group_guid:) }
 
         it 'adds port_required error to the route' do
           validator.validate
@@ -39,7 +39,7 @@ module VCAP::CloudController
     end
 
     context 'when creating an internal route' do
-      let(:domain) { SharedDomain.make(internal: true) }
+      let(:domain) { create(:shared_domain, internal: true) }
 
       context 'and the path value is not null' do
         let(:path) { '/path' }
@@ -71,7 +71,7 @@ module VCAP::CloudController
 
     context 'when creating a route with a port value that is not null' do
       context 'with a domain without a router_group_guid' do
-        let(:domain) { SharedDomain.make(router_group_guid: nil) }
+        let(:domain) { create(:shared_domain, router_group_guid: nil) }
 
         it 'adds port_unsupported error to the route' do
           validator.validate
@@ -146,8 +146,8 @@ module VCAP::CloudController
           end
 
           context 'in different domain' do
-            let(:another_domain) { SharedDomain.make(router_group_guid:) }
-            let(:another_route) { Route.new(domain: another_domain, port: port, space: Space.make) }
+            let(:another_domain) { create(:shared_domain, router_group_guid:) }
+            let(:another_route) { Route.new(domain: another_domain, port: port, space: create(:space)) }
 
             before do
               TestConfig.override(kubernetes: nil)
@@ -162,8 +162,8 @@ module VCAP::CloudController
         end
 
         context 'when port is already taken in a different router group' do
-          let(:domain_in_different_router_group) { SharedDomain.make(router_group_guid: 'different-router-group') }
-          let(:another_route) { Route.new(domain: domain_in_different_router_group, port: port, space: Space.make) }
+          let(:domain_in_different_router_group) { create(:shared_domain, router_group_guid: 'different-router-group') }
+          let(:another_route) { Route.new(domain: domain_in_different_router_group, port: port, space: create(:space)) }
 
           before do
             TestConfig.override(kubernetes: nil)
@@ -178,7 +178,7 @@ module VCAP::CloudController
       end
 
       context 'with a domain without a router_group_guid' do
-        let(:domain) { SharedDomain.make(router_group_guid: nil) }
+        let(:domain) { create(:shared_domain, router_group_guid: nil) }
 
         it 'adds port_unsupported error to the route model' do
           validator.validate

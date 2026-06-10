@@ -3,9 +3,9 @@ require 'spec_helper'
 module VCAP::CloudController
   RSpec.describe ServiceAccess, type: :access do
     subject(:access) { ServiceAccess.new(Security::AccessContext.new) }
-    let(:user) { VCAP::CloudController::User.make }
-    let!(:service_plan) { VCAP::CloudController::ServicePlan.make(service: object) }
-    let(:object) { VCAP::CloudController::Service.make }
+    let(:user) { create(:user) }
+    let!(:service_plan) { create(:service_plan, service: object) }
+    let(:object) { create(:service) }
 
     it_behaves_like 'admin full access'
     it_behaves_like 'admin read only access'
@@ -23,7 +23,7 @@ module VCAP::CloudController
     end
 
     context 'space developer' do
-      let(:space) { Space.make }
+      let(:space) { create(:space) }
 
       before do
         set_current_user(user)

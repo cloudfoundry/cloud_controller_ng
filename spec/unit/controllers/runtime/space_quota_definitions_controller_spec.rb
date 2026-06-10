@@ -44,8 +44,8 @@ module VCAP::CloudController
       include_context 'permissions'
 
       before do
-        @obj_a = SpaceQuotaDefinition.make(organization_guid: @org_a.guid)
-        @obj_b = SpaceQuotaDefinition.make(organization_guid: @org_b.guid)
+        @obj_a = create(:space_quota_definition, organization: @org_a)
+        @obj_b = create(:space_quota_definition, organization: @org_b)
 
         @space_a.space_quota_definition = @obj_a
         @space_a.save
@@ -151,7 +151,7 @@ module VCAP::CloudController
     end
 
     describe 'errors' do
-      let(:org) { Organization.make }
+      let(:org) { create(:organization) }
 
       it 'returns SpaceQuotaDefinitionInvalid' do
         sqd_json = { name: '', non_basic_services_allowed: true, total_services: 1, total_service_keys: 1, total_routes: 1, memory_limit: 2, organization_guid: org.guid }
@@ -163,7 +163,7 @@ module VCAP::CloudController
       end
 
       it 'returns SpaceQuotaDefinitionNameTaken errors on unique name errors' do
-        SpaceQuotaDefinition.make(name: 'foo', organization: org)
+        create(:space_quota_definition, name: 'foo', organization: org)
         sqd_json = { name: 'foo', non_basic_services_allowed: true, total_services: 1, total_service_keys: 1, total_routes: 1, memory_limit: 2, organization_guid: org.guid }
         post '/v2/space_quota_definitions', Oj.dump(sqd_json)
 
@@ -175,7 +175,7 @@ module VCAP::CloudController
 
     describe '#delete' do
       it 'succeeds when no spaces are associated' do
-        quota = SpaceQuotaDefinition.make
+        quota = create(:space_quota_definition)
         delete "/v2/space_quota_definitions/#{quota.guid}"
         expect(last_response.status).to eq(204)
       end

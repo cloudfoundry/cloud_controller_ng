@@ -5,14 +5,14 @@ require 'messages/buildpack_update_message'
 module VCAP::CloudController
   RSpec.describe BuildpackUpdate do
     describe 'update' do
-      let(:user) { User.make }
+      let(:user) { create(:user) }
       let(:user_email) { 'user@example.com' }
       let(:user_name) { 'user-name' }
       let(:user_audit_info) { UserAuditInfo.new(user_guid: user.guid, user_email: user_email, user_name: user_name) }
 
-      let!(:buildpack1) { Buildpack.make(position: 1) }
-      let!(:buildpack2) { Buildpack.make(position: 2) }
-      let!(:buildpack3) { Buildpack.make(position: 3) }
+      let!(:buildpack1) { create(:buildpack, position: 1) }
+      let!(:buildpack2) { create(:buildpack, position: 2) }
+      let!(:buildpack3) { create(:buildpack, position: 3) }
 
       context 'when position is provided' do
         context 'when position is between 1 and number of buildpacks' do
@@ -129,8 +129,8 @@ module VCAP::CloudController
         end
 
         context 'when stacks are nil' do
-          let(:buildpack1) { Buildpack.make(stack: nil) }
-          let(:buildpack2) { Buildpack.make(stack: nil) }
+          let(:buildpack1) { create(:buildpack, :nil_stack) }
+          let(:buildpack2) { create(:buildpack, :nil_stack) }
 
           it 'raises a human-friendly error' do
             message = BuildpackUpdateMessage.new(name: buildpack1.name)

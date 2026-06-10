@@ -12,20 +12,18 @@ module VCAP::CloudController
 
       context 'when the app has a docker lifecycle' do
         let(:app) do
-          AppModel.make(
-            :docker,
-            desired_state: 'STOPPED',
-            environment_variables: environment_variables
-          )
+          create(:app_model, :docker,
+                 desired_state: 'STOPPED',
+                 environment_variables: environment_variables)
         end
-        let(:package) { PackageModel.make(:docker, app: app, state: PackageModel::READY_STATE) }
-        let!(:droplet) { DropletModel.make(:docker, app: app, package: package, state: DropletModel::STAGED_STATE, docker_receipt_image: package.image) }
-        let!(:process1) { ProcessModel.make(:process, state: 'STOPPED', app: app) }
-        let!(:process2) { ProcessModel.make(:process, state: 'STOPPED', app: app) }
+        let(:package) { create(:package_model, :docker, app: app, state: PackageModel::READY_STATE) }
+        let!(:droplet) { create(:droplet_model, :docker, app: app, package: package, state: DropletModel::STAGED_STATE, docker_receipt_image: package.image) }
+        let!(:process1) { create(:process_model, :process, state: 'STOPPED', app: app) }
+        let!(:process2) { create(:process_model, :process, state: 'STOPPED', app: app) }
 
         before do
           app.update(droplet:)
-          VCAP::CloudController::FeatureFlag.make(name: 'diego_docker', enabled: true, error_message: nil)
+          create(:feature_flag, name: 'diego_docker', enabled: true, error_message: nil)
         end
 
         it 'starts the app' do
@@ -43,14 +41,13 @@ module VCAP::CloudController
 
       context 'when the app has a buildpack lifecycle' do
         let(:app) do
-          AppModel.make(
-            desired_state: 'STOPPED',
-            environment_variables: environment_variables
-          )
+          create(:app_model,
+                 desired_state: 'STOPPED',
+                 environment_variables: environment_variables)
         end
-        let!(:droplet) { DropletModel.make(app:) }
-        let!(:process1) { ProcessModel.make(:process, state: 'STOPPED', app: app) }
-        let!(:process2) { ProcessModel.make(:process, state: 'STOPPED', app: app) }
+        let!(:droplet) { create(:droplet_model, app:) }
+        let!(:process1) { create(:process_model, :process, state: 'STOPPED', app: app) }
+        let!(:process2) { create(:process_model, :process, state: 'STOPPED', app: app) }
 
         before do
           app.update(droplet:)
@@ -84,19 +81,17 @@ module VCAP::CloudController
 
         context 'and the droplet has a package' do
           let!(:droplet) do
-            DropletModel.make(
-              app: app,
-              package: package,
-              state: DropletModel::STAGED_STATE
-            )
+            create(:droplet_model,
+                   app: app,
+                   package: package,
+                   state: DropletModel::STAGED_STATE)
           end
           let(:package) do
-            PackageModel.make(
-              app: app,
-              package_hash: 'some-sha1',
-              sha256_checksum: 'some-sha256',
-              state: PackageModel::READY_STATE
-            )
+            create(:package_model,
+                   app: app,
+                   package_hash: 'some-sha1',
+                   sha256_checksum: 'some-sha256',
+                   state: PackageModel::READY_STATE)
           end
 
           it 'the package_hash for each process refers to the latest package' do
@@ -114,23 +109,23 @@ module VCAP::CloudController
       end
 
       context 'when the app has two associated droplets' do
-        let(:app) { AppModel.make }
-        let!(:web_process) { ProcessModel.make(app: app, type: 'web', revision: revisionA) }
-        let!(:worker_process) { ProcessModel.make(app: app, type: 'worker', revision: revisionA) }
-        let(:package) { PackageModel.make(app: app, state: PackageModel::READY_STATE) }
+        let(:app) { create(:app_model) }
+        let!(:web_process) { create(:process_model, app: app, type: 'web', revision: revisionA) }
+        let!(:worker_process) { create(:process_model, app: app, type: 'worker', revision: revisionA) }
+        let(:package) { create(:package_model, app: app, state: PackageModel::READY_STATE) }
         let!(:dropletA) do
-          DropletModel.make(
-            app: app,
-            package: package,
-            state: DropletModel::STAGED_STATE,
-            process_types: {
-              'web' => 'webby',
-              'worker' => 'workworkwork'
-            }
-          )
+          create(:droplet_model,
+                 app: app,
+                 package: package,
+                 state: DropletModel::STAGED_STATE,
+                 process_types: {
+                   'web' => 'webby',
+                   'worker' => 'workworkwork'
+                 },
+                 set_as_current_droplet: false)
         end
-        let!(:dropletB) { DropletModel.make(app: app, package: package, state: DropletModel::STAGED_STATE) }
-        let!(:revisionA) { RevisionModel.make(app: app, droplet_guid: dropletA.guid) }
+        let!(:dropletB) { create(:droplet_model, app: app, package: package, state: DropletModel::STAGED_STATE, set_as_current_droplet: false) }
+        let!(:revisionA) { create(:revision_model, app: app, droplet_guid: dropletA.guid) }
         let!(:new_revision_number) { revisionA.version + 1 }
 
         it 'creates a new revision when it switches droplets and revisions are enabled' do
@@ -199,7 +194,7 @@ module VCAP::CloudController
       end
 
       describe '#start_without_event' do
-        let(:app) { AppModel.make(desired_state: 'STOPPED') }
+        let(:app) { create(:app_model, desired_state: 'STOPPED') }
 
         it 'sets the desired state on the app' do
           AppStart.start_without_event(app)

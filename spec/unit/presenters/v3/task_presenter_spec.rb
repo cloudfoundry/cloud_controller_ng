@@ -6,47 +6,37 @@ module VCAP::CloudController::Presenters::V3
     subject(:presenter) { TaskPresenter.new(task) }
     let(:task_user) { nil }
     let(:task) do
-      task = VCAP::CloudController::TaskModel.make(
-        failure_reason: 'sup dawg',
-        user: task_user,
-        memory_in_mb: 2048,
-        disk_in_mb: 4048,
-        log_rate_limit: 1024,
-        created_at: Time.at(1),
-        sequence_id: 5
-      )
+      task = create(:task_model, failure_reason: 'sup dawg',
+                                 user: task_user,
+                                 memory_in_mb: 2048,
+                                 disk_in_mb: 4048,
+                                 log_rate_limit: 1024,
+                                 created_at: Time.at(1),
+                                 sequence_id: 5)
       task.this.update(updated_at: Time.at(2))
       task.reload
     end
 
     let!(:release_label) do
-      VCAP::CloudController::TaskLabelModel.make(
-        key_name: 'release',
-        value: 'stable',
-        resource_guid: task.guid
-      )
+      create(:task_label_model, key_name: 'release',
+                                value: 'stable',
+                                resource_guid: task.guid)
     end
     let!(:potato_label) do
-      VCAP::CloudController::TaskLabelModel.make(
-        key_prefix: 'canberra.au',
-        key_name: 'potato',
-        value: 'mashed',
-        resource_guid: task.guid
-      )
+      create(:task_label_model, key_prefix: 'canberra.au',
+                                key_name: 'potato',
+                                value: 'mashed',
+                                resource_guid: task.guid)
     end
     let!(:mountain_annotation) do
-      VCAP::CloudController::TaskAnnotationModel.make(
-        key_name: 'altitude',
-        value: '14,412',
-        resource_guid: task.guid
-      )
+      create(:task_annotation_model, key_name: 'altitude',
+                                     value: '14,412',
+                                     resource_guid: task.guid)
     end
     let!(:plain_annotation) do
-      VCAP::CloudController::TaskAnnotationModel.make(
-        key_name: 'maize',
-        value: 'hfcs',
-        resource_guid: task.guid
-      )
+      create(:task_annotation_model, key_name: 'maize',
+                                     value: 'hfcs',
+                                     resource_guid: task.guid)
     end
 
     describe '#to_hash' do

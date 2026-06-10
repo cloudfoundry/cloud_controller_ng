@@ -3,8 +3,8 @@ require 'spec_helper'
 module VCAP::CloudController
   module Repositories
     RSpec.describe RouteEventRepository do
-      let(:user) { User.make }
-      let(:route) { Route.make }
+      let(:user) { create(:user) }
+      let(:route) { create(:route) }
       let(:request_attrs) { { 'host' => 'dora', 'domain_guid' => route.domain.guid, 'space_guid' => route.space.guid } }
       let(:user_email) { 'some@email.com' }
       let(:user_name) { 'some-user' }
@@ -119,10 +119,10 @@ module VCAP::CloudController
       end
 
       describe '#record_route_map' do
-        let(:app) { AppModel.make(space: route.space) }
+        let(:app) { create(:app_model, space: route.space) }
 
         context 'when route mapping has no weight' do
-          let(:route_mapping) { RouteMappingModel.make(app: app, route: route, process_type: 'web', app_port: 8080) }
+          let(:route_mapping) { create(:route_mapping_model, app: app, route: route, process_type: 'web', app_port: 8080) }
 
           it 'records event correctly' do
             event = route_event_repository.record_route_map(route_mapping, actor_audit_info)
@@ -149,7 +149,7 @@ module VCAP::CloudController
         end
 
         context 'when route mapping has weight' do
-          let(:route_mapping) { RouteMappingModel.make(app: app, route: route, process_type: 'web', app_port: 8080, weight: 100) }
+          let(:route_mapping) { create(:route_mapping_model, app: app, route: route, process_type: 'web', app_port: 8080, weight: 100) }
 
           it 'records event correctly' do
             event = route_event_repository.record_route_map(route_mapping, actor_audit_info)
@@ -177,10 +177,10 @@ module VCAP::CloudController
       end
 
       describe '#record_route_unmap' do
-        let(:app) { AppModel.make(space: route.space) }
+        let(:app) { create(:app_model, space: route.space) }
 
         context 'when route mapping has no weight' do
-          let(:route_mapping) { RouteMappingModel.make(app: app, route: route, process_type: 'web', app_port: 8080) }
+          let(:route_mapping) { create(:route_mapping_model, app: app, route: route, process_type: 'web', app_port: 8080) }
 
           it 'records event correctly' do
             event = route_event_repository.record_route_unmap(route_mapping, actor_audit_info)
@@ -207,7 +207,7 @@ module VCAP::CloudController
         end
 
         context 'when route mapping has weight' do
-          let(:route_mapping) { RouteMappingModel.make(app: app, route: route, process_type: 'web', app_port: 8080, weight: 100) }
+          let(:route_mapping) { create(:route_mapping_model, app: app, route: route, process_type: 'web', app_port: 8080, weight: 100) }
 
           it 'records event correctly' do
             event = route_event_repository.record_route_unmap(route_mapping, actor_audit_info)

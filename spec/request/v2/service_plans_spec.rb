@@ -1,15 +1,14 @@
 require 'spec_helper'
 
 RSpec.describe 'ServicePlans' do
-  let(:user) { VCAP::CloudController::User.make }
-  let(:space) { VCAP::CloudController::Space.make }
+  let(:user) { create(:user) }
+  let(:space) { create(:space) }
 
-  let(:service) { VCAP::CloudController::Service.make }
+  let(:service) { create(:service) }
   let!(:service_plan) do
-    VCAP::CloudController::ServicePlan.make(
-      service: service,
-      maintenance_info: { version: '2.0', description: 'Test description' }
-    )
+    create(:service_plan,
+           service: service,
+           maintenance_info: { version: '2.0', description: 'Test description' })
   end
 
   before do

@@ -38,32 +38,31 @@ module VCAP::CloudController
         dbl
       end
 
-      let(:org) { Organization.make }
-      let(:space) { Space.make(organization: org) }
+      let(:org) { create(:organization) }
+      let(:space) { create(:space, organization: org) }
       let(:space_guid) { space.guid }
       let(:original_maintenance_info) { { version: '2.1.0', description: 'original version' } }
-      let(:original_service_offering) { Service.make(plan_updateable: true) }
-      let(:original_service_plan) { ServicePlan.make(service: original_service_offering, maintenance_info: original_maintenance_info) }
+      let(:original_service_offering) { create(:service, plan_updateable: true) }
+      let(:original_service_plan) { create(:service_plan, service: original_service_offering, maintenance_info: original_maintenance_info) }
       let(:original_plan_guid) { original_service_plan.guid }
       let(:original_name) { 'si-test-name' }
       let(:new_name) { 'new-si-test-name' }
       let(:original_dashboard_url) { 'http://your-og-instance.com' }
       let!(:original_instance) do
-        si = VCAP::CloudController::ManagedServiceInstance.make(
-          guid: 'bommel',
-          service_plan: original_service_plan,
-          name: original_name,
-          tags: %w[accounting mongodb],
-          space: space,
-          maintenance_info: original_maintenance_info,
-          dashboard_url: original_dashboard_url
-        )
+        si = create(:managed_service_instance,
+                    guid: 'bommel',
+                    service_plan: original_service_plan,
+                    name: original_name,
+                    tags: %w[accounting mongodb],
+                    space: space,
+                    maintenance_info: original_maintenance_info,
+                    dashboard_url: original_dashboard_url)
 
-        VCAP::CloudController::ServiceInstanceLabelModel.make(service_instance: si, key_prefix: 'pre.fix', key_name: 'to_delete', value: 'value')
-        VCAP::CloudController::ServiceInstanceLabelModel.make(service_instance: si, key_prefix: 'pre.fix', key_name: 'tail', value: 'fluffy')
+        create(:service_instance_label_model, service_instance: si, key_prefix: 'pre.fix', key_name: 'to_delete', value: 'value')
+        create(:service_instance_label_model, service_instance: si, key_prefix: 'pre.fix', key_name: 'tail', value: 'fluffy')
 
-        VCAP::CloudController::ServiceInstanceAnnotationModel.make(service_instance: si, key_prefix: 'pre.fix', key_name: 'to_delete', value: 'value')
-        VCAP::CloudController::ServiceInstanceAnnotationModel.make(service_instance: si, key_prefix: 'pre.fix', key_name: 'fox', value: 'bushy')
+        create(:service_instance_annotation_model, service_instance: si, key_prefix: 'pre.fix', key_name: 'to_delete', value: 'value')
+        create(:service_instance_annotation_model, service_instance: si, key_prefix: 'pre.fix', key_name: 'fox', value: 'bushy')
 
         si
       end
@@ -89,7 +88,7 @@ module VCAP::CloudController
             }
           end
 
-          let(:new_plan) { ServicePlan.make(service: original_service_offering) }
+          let(:new_plan) { create(:service_plan, service: original_service_offering) }
 
           it 'does not change the original service instance object' do
             action.preflight!
@@ -99,7 +98,7 @@ module VCAP::CloudController
 
         describe 'invalid name updates' do
           context 'when the new name is already taken' do
-            let(:instance_in_same_space) { ServiceInstance.make(space: original_instance.space) }
+            let(:instance_in_same_space) { create(:service_instance, space: original_instance.space) }
             let(:body) { { name: instance_in_same_space.name } }
 
             it 'raises' do
@@ -112,7 +111,7 @@ module VCAP::CloudController
           end
 
           context 'when changing the name of a shared service instance' do
-            let(:shared_space) { Space.make }
+            let(:shared_space) { create(:space) }
             let(:body) { { name: 'funky-new-name' } }
 
             it 'raises' do
@@ -141,8 +140,8 @@ module VCAP::CloudController
           end
 
           context 'when changing the plan and plan_updateable=false' do
-            let(:original_service_plan) { ServicePlan.make(service: original_service_offering, plan_updateable: false) }
-            let(:new_service_plan) { ServicePlan.make(service: original_service_offering) }
+            let(:original_service_plan) { create(:service_plan, service: original_service_offering, plan_updateable: false) }
+            let(:new_service_plan) { create(:service_plan, service: original_service_offering) }
 
             it 'raises' do
               expect do
@@ -155,15 +154,14 @@ module VCAP::CloudController
 
           context 'when the space does not allow paid services' do
             before do
-              quota = SpaceQuotaDefinition.make(
-                non_basic_services_allowed: false,
-                organization: org
-              )
+              quota = create(:space_quota_definition,
+                             non_basic_services_allowed: false,
+                             organization: org)
               quota.add_space(space)
             end
 
-            let(:original_service_plan) { ServicePlan.make(service: original_service_offering, free: true) }
-            let(:new_service_plan) { ServicePlan.make(service: original_service_offering, free: false) }
+            let(:original_service_plan) { create(:service_plan, service: original_service_offering, free: true) }
+            let(:new_service_plan) { create(:service_plan, service: original_service_offering, free: false) }
 
             it 'raises' do
               expect do
@@ -176,12 +174,12 @@ module VCAP::CloudController
 
           context 'when the org does not allow paid services' do
             before do
-              quota = QuotaDefinition.make(non_basic_services_allowed: false)
+              quota = create(:quota_definition, non_basic_services_allowed: false)
               quota.add_organization(org)
             end
 
-            let(:original_service_plan) { ServicePlan.make(service: original_service_offering, free: true) }
-            let(:new_service_plan) { ServicePlan.make(service: original_service_offering, free: false) }
+            let(:original_service_plan) { create(:service_plan, service: original_service_offering, free: true) }
+            let(:new_service_plan) { create(:service_plan, service: original_service_offering, free: false) }
 
             it 'raises' do
               expect do
@@ -193,13 +191,12 @@ module VCAP::CloudController
           end
 
           context 'when changing to a non-bindable plan' do
-            let(:new_service_plan) { ServicePlan.make(service: original_service_offering, bindable: false) }
+            let(:new_service_plan) { create(:service_plan, service: original_service_offering, bindable: false) }
 
             before do
-              ServiceBinding.make(
-                app: AppModel.make(space:),
-                service_instance: original_instance
-              )
+              create(:service_binding,
+                     app: create(:app_model, space:),
+                     service_instance: original_instance)
             end
 
             it 'raises' do
@@ -311,7 +308,7 @@ module VCAP::CloudController
           end
 
           context 'when current plan does not support maintenance_info' do
-            let(:original_service_plan) { ServicePlan.make(service: original_service_offering) }
+            let(:original_service_plan) { create(:service_plan, service: original_service_offering) }
 
             it 'raises' do
               expect do
@@ -348,7 +345,7 @@ module VCAP::CloudController
               }
             end
 
-            let(:new_plan) { ServicePlan.make(service: original_service_offering, maintenance_info: { version: '4.2.1' }) }
+            let(:new_plan) { create(:service_plan, service: original_service_offering, maintenance_info: { version: '4.2.1' }) }
 
             it 'raises' do
               expect do
@@ -361,7 +358,7 @@ module VCAP::CloudController
         end
 
         describe 'when the plan is inactive' do
-          let(:original_service_plan) { ServicePlan.make(service: original_service_offering, maintenance_info: original_maintenance_info, active: false) }
+          let(:original_service_plan) { create(:service_plan, service: original_service_offering, maintenance_info: original_maintenance_info, active: false) }
 
           context 'when updating parameters' do
             let(:body) { { parameters: { param1: 'value' } } }
@@ -404,7 +401,7 @@ module VCAP::CloudController
             let(:body) { { name: 'new name' } }
 
             context 'when the offering allows context updates' do
-              let(:original_service_offering) { Service.make(allow_context_updates: true) }
+              let(:original_service_offering) { create(:service, allow_context_updates: true) }
 
               it 'raises an error' do
                 expect do
@@ -424,10 +421,9 @@ module VCAP::CloudController
           let(:body) { { maintenance_info: { version: original_maintenance_info[:version] } } }
 
           let(:original_service_plan) do
-            ServicePlan.make(
-              service: original_service_offering,
-              maintenance_info: { version: '2.2.0', description: 'new version of plan' }
-            )
+            create(:service_plan,
+                   service: original_service_offering,
+                   maintenance_info: { version: '2.2.0', description: 'new version of plan' })
           end
 
           it "returns 'false' for update_broker_needed?" do
@@ -556,7 +552,7 @@ module VCAP::CloudController
 
             context 'when updating name' do
               context 'when the offering does not allow context updates' do
-                let(:original_service_offering) { Service.make(allow_context_updates: false) }
+                let(:original_service_offering) { create(:service, allow_context_updates: false) }
 
                 it 'succeeds' do
                   expect { action.update_sync }.not_to raise_error
@@ -723,7 +719,7 @@ module VCAP::CloudController
 
       describe '#enqueue_update' do
         context 'when the update requires communication with the broker' do
-          let(:new_plan) { ServicePlan.make }
+          let(:new_plan) { create(:service_plan) }
 
           let(:body) do
             {
@@ -748,25 +744,24 @@ module VCAP::CloudController
             end
 
             context 'name change requested' do
-              let!(:original_service_plan) { VCAP::CloudController::ServicePlan.make(service: offering) }
+              let!(:original_service_plan) { create(:service_plan, service: offering) }
 
               let!(:original_instance) do
-                VCAP::CloudController::ManagedServiceInstance.make(
-                  name: 'foo',
-                  service_plan: original_service_plan
-                )
+                create(:managed_service_instance,
+                       name: 'foo',
+                       service_plan: original_service_plan)
               end
 
               let(:body) { { name: 'new-different-name' } }
 
               context 'context update is allowed in the broker' do
-                let!(:offering) { VCAP::CloudController::Service.make(allow_context_updates: true) }
+                let!(:offering) { create(:service, allow_context_updates: true) }
 
                 it_behaves_like 'async service instance update'
               end
 
               context 'context update is not allowed in the broker' do
-                let!(:offering) { VCAP::CloudController::Service.make(allow_context_updates: false) }
+                let!(:offering) { create(:service, allow_context_updates: false) }
 
                 it "returns 'false' for update_broker_needed?" do
                   expect(action).not_to be_update_broker_needed
@@ -776,18 +771,16 @@ module VCAP::CloudController
 
             context 'maintenance_info requested' do
               let(:original_service_plan) do
-                ServicePlan.make(
-                  service: original_service_offering,
-                  maintenance_info: { version: '2.2.0', description: 'new version of plan' }
-                )
+                create(:service_plan,
+                       service: original_service_offering,
+                       maintenance_info: { version: '2.2.0', description: 'new version of plan' })
               end
 
               let!(:original_instance) do
-                VCAP::CloudController::ManagedServiceInstance.make(
-                  name: 'foo',
-                  service_plan: original_service_plan,
-                  maintenance_info: original_maintenance_info
-                )
+                create(:managed_service_instance,
+                       name: 'foo',
+                       service_plan: original_service_plan,
+                       maintenance_info: original_maintenance_info)
               end
 
               let(:body) { { maintenance_info: { version: '2.2.0' } } }
@@ -849,7 +842,7 @@ module VCAP::CloudController
                             update: [update_response, nil]
                           })
         end
-        let(:new_plan) { ServicePlan.make }
+        let(:new_plan) { create(:service_plan) }
         let(:new_name) { 'new-name' }
         let(:new_tags) { %w[bar quz] }
         let(:arbitrary_parameters) { { foo: 'bar' } }
@@ -1078,11 +1071,10 @@ module VCAP::CloudController
 
             context 'when service plan is changing' do
               let(:new_service_plan) do
-                ServicePlan.make(
-                  service: original_service_offering,
-                  maintenance_info: { version: '2.2.0' },
-                  public: true
-                )
+                create(:service_plan,
+                       service: original_service_offering,
+                       maintenance_info: { version: '2.2.0' },
+                       public: true)
               end
               let(:body) do
                 {
@@ -1336,14 +1328,13 @@ module VCAP::CloudController
 
       describe '#poll' do
         let!(:original_instance) do
-          si = VCAP::CloudController::ManagedServiceInstance.make(
-            service_plan: original_service_plan,
-            name: original_name,
-            tags: %w[accounting mongodb],
-            space: space,
-            maintenance_info: original_maintenance_info,
-            dashboard_url: original_dashboard_url
-          )
+          si = create(:managed_service_instance,
+                      service_plan: original_service_plan,
+                      name: original_name,
+                      tags: %w[accounting mongodb],
+                      space: space,
+                      maintenance_info: original_maintenance_info,
+                      dashboard_url: original_dashboard_url)
           si.save_with_new_operation(
             {},
             {
@@ -1352,10 +1343,10 @@ module VCAP::CloudController
               broker_provided_operation: operation_id
             }
           )
-          ServiceInstanceLabelModel.make(service_instance: si, key_prefix: 'pre.fix', key_name: 'to_delete', value: 'value')
-          ServiceInstanceLabelModel.make(service_instance: si, key_prefix: 'pre.fix', key_name: 'tail', value: 'fluffy')
-          ServiceInstanceAnnotationModel.make(service_instance: si, key_prefix: 'pre.fix', key_name: 'to_delete', value: 'value')
-          ServiceInstanceAnnotationModel.make(service_instance: si, key_prefix: 'pre.fix', key_name: 'fox', value: 'bushy')
+          create(:service_instance_label_model, service_instance: si, key_prefix: 'pre.fix', key_name: 'to_delete', value: 'value')
+          create(:service_instance_label_model, service_instance: si, key_prefix: 'pre.fix', key_name: 'tail', value: 'fluffy')
+          create(:service_instance_annotation_model, service_instance: si, key_prefix: 'pre.fix', key_name: 'to_delete', value: 'value')
+          create(:service_instance_annotation_model, service_instance: si, key_prefix: 'pre.fix', key_name: 'fox', value: 'bushy')
           si
         end
 
@@ -1375,7 +1366,7 @@ module VCAP::CloudController
                           })
         end
 
-        let(:new_plan) { ServicePlan.make }
+        let(:new_plan) { create(:service_plan) }
         let(:new_name) { 'new-name' }
         let(:new_tags) { %w[bar quz] }
         let(:arbitrary_parameters) { { foo: 'bar' } }
@@ -1504,8 +1495,8 @@ module VCAP::CloudController
 
           context 'retrieving service instance' do
             context 'when service instance is not retrievable' do
-              let(:service_offering) { Service.make(instances_retrievable: false) }
-              let(:new_plan) { ServicePlan.make(service: service_offering) }
+              let(:service_offering) { create(:service, instances_retrievable: false) }
+              let(:new_plan) { create(:service_plan, service: service_offering) }
 
               it 'does not call fetch service instance' do
                 action.poll
@@ -1515,8 +1506,8 @@ module VCAP::CloudController
             end
 
             context 'when service instance is retrievable' do
-              let(:service) { Service.make(instances_retrievable: true) }
-              let(:new_plan) { ServicePlan.make(service:) }
+              let(:service) { create(:service, instances_retrievable: true) }
+              let(:new_plan) { create(:service_plan, service:) }
 
               it 'fetches service instance' do
                 action.poll

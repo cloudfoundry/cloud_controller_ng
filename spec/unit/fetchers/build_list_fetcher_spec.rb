@@ -4,28 +4,28 @@ require 'fetchers/build_list_fetcher'
 
 module VCAP::CloudController
   RSpec.describe BuildListFetcher do
-    let(:space1) { Space.make }
-    let(:space2) { Space.make }
-    let(:space3) { Space.make }
+    let(:space1) { create(:space) }
+    let(:space2) { create(:space) }
+    let(:space3) { create(:space) }
     let(:org_1_guid) { space1.organization.guid }
     let(:org_2_guid) { space2.organization.guid }
     let(:org_3_guid) { space3.organization.guid }
 
-    let(:app_in_space1) { AppModel.make(space_guid: space1.guid, guid: 'app1') }
-    let(:app2_in_space1) { AppModel.make(space_guid: space1.guid, guid: 'app2') }
-    let(:app3_in_space2) { AppModel.make(space_guid: space2.guid, guid: 'app3') }
-    let(:app4_in_space3) { AppModel.make(space_guid: space3.guid, guid: 'app4') }
+    let(:app_in_space1) { create(:app_model, space: space1, guid: 'app1') }
+    let(:app2_in_space1) { create(:app_model, space: space1, guid: 'app2') }
+    let(:app3_in_space2) { create(:app_model, space: space2, guid: 'app3') }
+    let(:app4_in_space3) { create(:app_model, space: space3, guid: 'app4') }
 
-    let(:package_for_app_1) { PackageModel.make(app: app_in_space1) }
-    let(:package2_in_space_1) { PackageModel.make(app: app_in_space1) }
+    let(:package_for_app_1) { create(:package_model, app: app_in_space1) }
+    let(:package2_in_space_1) { create(:package_model, app: app_in_space1) }
 
-    let!(:staged_build_for_app1_space1) { BuildModel.make(app_guid: app_in_space1.guid, package_guid: package_for_app_1.guid, state: BuildModel::STAGED_STATE) }
-    let!(:failed_build_for_app1_space1) { BuildModel.make(app_guid: app_in_space1.guid, package_guid: package2_in_space_1.guid, state: BuildModel::FAILED_STATE) }
+    let!(:staged_build_for_app1_space1) { create(:build_model, app: app_in_space1, package: package_for_app_1, state: BuildModel::STAGED_STATE) }
+    let!(:failed_build_for_app1_space1) { create(:build_model, app: app_in_space1, package: package2_in_space_1, state: BuildModel::FAILED_STATE) }
 
-    let!(:staged_build_for_app2_space1) { BuildModel.make(app_guid: app2_in_space1.guid, state: BuildModel::STAGED_STATE) }
+    let!(:staged_build_for_app2_space1) { create(:build_model, app: app2_in_space1, state: BuildModel::STAGED_STATE) }
 
-    let!(:staging_build_for_app3_space2) { BuildModel.make(app_guid: app3_in_space2.guid, state: BuildModel::STAGING_STATE) }
-    let!(:staging_build_for_app4_space3) { BuildModel.make(app_guid: app4_in_space3.guid, state: BuildModel::STAGING_STATE) }
+    let!(:staging_build_for_app3_space2) { create(:build_model, app: app3_in_space2, state: BuildModel::STAGING_STATE) }
+    let!(:staging_build_for_app4_space3) { create(:build_model, app: app4_in_space3, state: BuildModel::STAGING_STATE) }
 
     subject(:fetcher) { BuildListFetcher }
     let(:pagination_options) { PaginationOptions.new({}) }
@@ -33,10 +33,9 @@ module VCAP::CloudController
     let(:filters) { {} }
 
     let!(:lifecycle_data_for_app) do
-      BuildpackLifecycleDataModel.make(
-        build: staging_build_for_app3_space2,
-        buildpacks: [Buildpack.make.name]
-      )
+      create(:buildpack_lifecycle_data_model,
+             build: staging_build_for_app3_space2,
+             buildpacks: [create(:buildpack).name])
     end
 
     describe '#fetch_all' do
@@ -71,7 +70,7 @@ module VCAP::CloudController
 
       context 'filtering states' do
         let(:filters) { { states: [BuildModel::STAGED_STATE, BuildModel::FAILED_STATE] } }
-        let!(:failed_build_for_other_app) { BuildModel.make(state: BuildModel::FAILED_STATE) }
+        let!(:failed_build_for_other_app) { create(:build_model, state: BuildModel::FAILED_STATE) }
 
         it 'returns all of the builds with the requested states' do
           results = fetcher.fetch_all(message).all

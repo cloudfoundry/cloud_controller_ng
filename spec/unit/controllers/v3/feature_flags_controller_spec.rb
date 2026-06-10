@@ -4,7 +4,7 @@ require 'rails_helper'
 
 RSpec.describe FeatureFlagsController, type: :controller do
   describe '#index' do
-    let(:user) { VCAP::CloudController::User.make }
+    let(:user) { create(:user) }
     let(:flag_defaults) { VCAP::CloudController::FeatureFlag::DEFAULT_FLAGS }
     let(:flag_names_sorted) { flag_defaults.keys.sort.map(&:to_s) }
 
@@ -49,7 +49,7 @@ RSpec.describe FeatureFlagsController, type: :controller do
 
       context 'when there are overrides from the database' do
         let!(:updated_feature_flag) do
-          VCAP::CloudController::FeatureFlag.make(name: feature_flag_key, enabled: true, error_message: 'some_custom_message')
+          create(:feature_flag, name: feature_flag_key, enabled: true, error_message: 'some_custom_message')
         end
 
         it 'returns the flags with their overridden for enabled where needed' do
@@ -83,7 +83,7 @@ RSpec.describe FeatureFlagsController, type: :controller do
   end
 
   describe '#show' do
-    let(:user) { VCAP::CloudController::User.make }
+    let(:user) { create(:user) }
 
     before do
       stub_const('VCAP::CloudController::FeatureFlag::DEFAULT_FLAGS', {
@@ -103,7 +103,7 @@ RSpec.describe FeatureFlagsController, type: :controller do
     end
 
     context 'when there are overrides' do
-      before { VCAP::CloudController::FeatureFlag.make(name: 'flag1', enabled: true, error_message: nil) }
+      before { create(:feature_flag, name: 'flag1', enabled: true, error_message: nil) }
 
       it 'returns the overridden value' do
         get :show, params: { name: 'flag1' }
@@ -125,7 +125,7 @@ RSpec.describe FeatureFlagsController, type: :controller do
   end
 
   describe '#update' do
-    let(:user) { VCAP::CloudController::User.make }
+    let(:user) { create(:user) }
     let(:feature_flag_name) { 'flag1' }
 
     before do

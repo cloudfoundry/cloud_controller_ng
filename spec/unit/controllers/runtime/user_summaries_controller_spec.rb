@@ -5,8 +5,8 @@ require 'spec_helper'
 module VCAP::CloudController
   RSpec.describe UserSummariesController do
     describe 'GET /users/:guid/summary' do
-      let(:org) { Organization.make }
-      let(:space) { Space.make(organization: org) }
+      let(:org) { create(:organization) }
+      let(:space) { create(:space, organization: org) }
       let(:user) { make_user_for_space(space) }
 
       before { set_current_user_as_admin }

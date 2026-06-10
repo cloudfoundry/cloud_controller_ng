@@ -129,7 +129,7 @@ RSpec.describe 'Stacks State Management' do
   end
 
   describe 'PATCH /v3/stacks/:guid with state' do
-    let!(:stack) { VCAP::CloudController::Stack.make(name: 'test-stack', state: 'ACTIVE') }
+    let!(:stack) { create(:stack, name: 'test-stack', state: 'ACTIVE') }
 
     context 'when updating state through lifecycle' do
       it 'transitions from ACTIVE to DEPRECATED' do
@@ -295,7 +295,7 @@ RSpec.describe 'Stacks State Management' do
   end
 
   describe 'GET /v3/stacks/:guid' do
-    let!(:deprecated_stack) { VCAP::CloudController::Stack.make(state: 'DEPRECATED') }
+    let!(:deprecated_stack) { create(:stack, state: 'DEPRECATED') }
     let(:reader_user) { make_user }
     let(:reader_headers) { headers_for(reader_user) }
 
@@ -308,10 +308,9 @@ RSpec.describe 'Stacks State Management' do
 
     context 'when stack has state_reason' do
       let!(:stack_with_reason) do
-        VCAP::CloudController::Stack.make(
-          state: 'DEPRECATED',
-          state_reason: 'EOL on 2026-12-31'
-        )
+        create(:stack,
+               state: 'DEPRECATED',
+               state_reason: 'EOL on 2026-12-31')
       end
 
       it 'returns state_reason in response' do
@@ -325,7 +324,7 @@ RSpec.describe 'Stacks State Management' do
 
     context 'when stack has no state_reason' do
       let!(:stack_without_reason) do
-        VCAP::CloudController::Stack.make(state: 'ACTIVE', state_reason: nil)
+        create(:stack, state: 'ACTIVE', state_reason: nil)
       end
 
       it 'returns null state_reason in response' do
@@ -341,10 +340,10 @@ RSpec.describe 'Stacks State Management' do
   describe 'GET /v3/stacks' do
     before { VCAP::CloudController::Stack.dataset.destroy }
 
-    let!(:active_stack) { VCAP::CloudController::Stack.make(name: 'active', state: 'ACTIVE') }
-    let!(:deprecated_stack) { VCAP::CloudController::Stack.make(name: 'deprecated', state: 'DEPRECATED', state_reason: 'Deprecated reason') }
-    let!(:restricted_stack) { VCAP::CloudController::Stack.make(name: 'restricted', state: 'RESTRICTED') }
-    let!(:disabled_stack) { VCAP::CloudController::Stack.make(name: 'disabled', state: 'DISABLED', state_reason: 'Disabled reason') }
+    let!(:active_stack) { create(:stack, name: 'active', state: 'ACTIVE') }
+    let!(:deprecated_stack) { create(:stack, name: 'deprecated', state: 'DEPRECATED', state_reason: 'Deprecated reason') }
+    let!(:restricted_stack) { create(:stack, name: 'restricted', state: 'RESTRICTED') }
+    let!(:disabled_stack) { create(:stack, name: 'disabled', state: 'DISABLED', state_reason: 'Disabled reason') }
 
     let(:reader_user) { make_user }
     let(:reader_headers) { headers_for(reader_user) }

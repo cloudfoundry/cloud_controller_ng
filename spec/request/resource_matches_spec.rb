@@ -1,7 +1,7 @@
 require 'spec_helper'
 
 RSpec.describe 'Resource Matches' do
-  let(:space) { VCAP::CloudController::Space.make }
+  let(:space) { create(:space) }
   let(:developer) { make_developer_for_space(space) }
   let(:developer_headers) do
     headers_for(developer, user_name: 'roto')
@@ -64,7 +64,7 @@ RSpec.describe 'Resource Matches' do
     end
 
     context 'when resource_matching feature flag is disabled' do
-      let!(:feature_flag) { VCAP::CloudController::FeatureFlag.make(name: 'resource_matching', enabled: false) }
+      let!(:feature_flag) { create(:feature_flag, name: 'resource_matching', enabled: false) }
 
       it 'returns zero matches' do
         post '/v3/resource_matches', body.to_json, developer_headers

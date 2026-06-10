@@ -3,7 +3,7 @@ require 'actions/stack_delete'
 
 module VCAP::CloudController
   RSpec.describe StackDelete do
-    let(:user) { User.make }
+    let(:user) { create(:user) }
     let(:user_email) { 'user@example.com' }
     let(:user_audit_info) { UserAuditInfo.new(user_guid: user.guid, user_email: user_email) }
 
@@ -11,7 +11,7 @@ module VCAP::CloudController
 
     describe '#delete' do
       context 'when the stack exists' do
-        let!(:stack) { Stack.make }
+        let!(:stack) { create(:stack) }
 
         it 'deletes the stack record' do
           expect do
@@ -45,7 +45,7 @@ module VCAP::CloudController
         end
 
         it 'deletes associated labels' do
-          label = StackLabelModel.make(resource_guid: stack.guid, key_name: 'test1', value: 'bommel')
+          label = create(:stack_label_model, resource_guid: stack.guid, key_name: 'test1', value: 'bommel')
           expect do
             stack_delete.delete(stack)
           end.to change(StackLabelModel, :count).by(-1)
@@ -54,7 +54,7 @@ module VCAP::CloudController
         end
 
         it 'deletes associated annotations' do
-          annotation = StackAnnotationModel.make(resource_guid: stack.guid, key_name: 'test1', value: 'bommel')
+          annotation = create(:stack_annotation_model, resource_guid: stack.guid, key_name: 'test1', value: 'bommel')
           expect do
             stack_delete.delete(stack)
           end.to change(StackAnnotationModel, :count).by(-1)
@@ -63,7 +63,7 @@ module VCAP::CloudController
         end
 
         context 'when there are apps associated with the stack' do
-          let!(:app) { AppModel.make }
+          let!(:app) { create(:app_model) }
 
           before do
             stack.apps << app

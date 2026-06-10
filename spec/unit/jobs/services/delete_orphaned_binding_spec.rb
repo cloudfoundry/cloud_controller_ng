@@ -4,7 +4,7 @@ module VCAP::CloudController
   module Jobs::Services
     RSpec.describe DeleteOrphanedBinding, job_context: :worker do
       let(:client) { instance_double(VCAP::Services::ServiceBrokers::V2::Client) }
-      let(:service_binding) { VCAP::CloudController::ServiceBinding.make }
+      let(:service_binding) { create(:service_binding) }
       let(:binding_info) { OrphanedBindingInfo.new(service_binding) }
 
       let(:name) { 'fake-name' }

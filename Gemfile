@@ -60,7 +60,7 @@ end
 
 group :test do
   gem 'codeclimate-test-reporter', '>= 1.0.8', require: false
-  gem 'machinist', '~> 1.0.6'
+  gem 'factory_bot', '~> 6.5'
   gem 'mock_redis'
   gem 'parallel_tests'
   gem 'rack-test'

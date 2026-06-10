@@ -10,43 +10,33 @@ module VCAP::CloudController::Presenters::V3
     let(:result) { presenter.to_hash.deep_symbolize_keys }
 
     before do
-      VCAP::CloudController::ServiceInstanceLabelModel.make(
-        key_name: 'release',
-        value: 'stable',
-        resource_guid: service_instance.guid
-      )
+      create(:service_instance_label_model, key_name: 'release',
+                                            value: 'stable',
+                                            resource_guid: service_instance.guid)
 
-      VCAP::CloudController::ServiceInstanceLabelModel.make(
-        key_prefix: 'canberra.au',
-        key_name: 'potato',
-        value: 'mashed',
-        resource_guid: service_instance.guid
-      )
+      create(:service_instance_label_model, key_prefix: 'canberra.au',
+                                            key_name: 'potato',
+                                            value: 'mashed',
+                                            resource_guid: service_instance.guid)
 
-      VCAP::CloudController::ServiceInstanceAnnotationModel.make(
-        key_name: 'altitude',
-        value: '14,412',
-        resource_guid: service_instance.guid
-      )
+      create(:service_instance_annotation_model, key_name: 'altitude',
+                                                 value: '14,412',
+                                                 resource_guid: service_instance.guid)
 
-      VCAP::CloudController::ServiceInstanceAnnotationModel.make(
-        key_name: 'maize',
-        value: 'hfcs',
-        resource_guid: service_instance.guid
-      )
+      create(:service_instance_annotation_model, key_name: 'maize',
+                                                 value: 'hfcs',
+                                                 resource_guid: service_instance.guid)
     end
 
     context 'managed service instance' do
       let(:maintenance_info) { nil }
-      let(:plan) { VCAP::CloudController::ServicePlan.make }
+      let(:plan) { create(:service_plan) }
       let(:service_instance) do
-        VCAP::CloudController::ManagedServiceInstance.make(
-          service_plan: plan,
-          name: 'denise-db',
-          tags: %w[tag1 tag2],
-          maintenance_info: maintenance_info,
-          dashboard_url: 'https://my-fantistic-service.com'
-        )
+        create(:managed_service_instance, service_plan: plan,
+                                          name: 'denise-db',
+                                          tags: %w[tag1 tag2],
+                                          maintenance_info: maintenance_info,
+                                          dashboard_url: 'https://my-fantistic-service.com')
       end
 
       it 'presents the managed service instance' do
@@ -111,9 +101,7 @@ module VCAP::CloudController::Presenters::V3
 
       describe 'last_operation' do
         let(:last_operation) do
-          VCAP::CloudController::ServiceInstanceOperation.make(
-            description: 'did something cool'
-          )
+          create(:service_instance_operation, description: 'did something cool')
         end
 
         before do
@@ -149,7 +137,7 @@ module VCAP::CloudController::Presenters::V3
       describe 'upgrade available' do
         context 'plan has the same maintenance_info' do
           let(:maintenance_info) { { version: '1.0.0' } }
-          let(:plan) { VCAP::CloudController::ServicePlan.make(maintenance_info:) }
+          let(:plan) { create(:service_plan, maintenance_info:) }
 
           it 'is false' do
             expect(result[:upgrade_available]).to be(false)
@@ -158,7 +146,7 @@ module VCAP::CloudController::Presenters::V3
 
         context 'plan has the different maintenance_info' do
           let(:maintenance_info) { { version: '1.0.0' } }
-          let(:plan) { VCAP::CloudController::ServicePlan.make(maintenance_info: { version: '2.0.0' }) }
+          let(:plan) { create(:service_plan, maintenance_info: { version: '2.0.0' }) }
 
           it 'is true' do
             expect(result[:upgrade_available]).to be(true)
@@ -180,14 +168,12 @@ module VCAP::CloudController::Presenters::V3
           end
 
           let(:service_instance) do
-            VCAP::CloudController::ManagedServiceInstance.make(
-              service_plan: plan,
-              name: 'my-db',
-              tags: %w[tag1 tag2],
-              maintenance_info: maintenance_info,
-              dashboard_url: 'https://my-fantistic-service.com',
-              broker_provided_metadata: broker_metadata
-            )
+            create(:managed_service_instance, service_plan: plan,
+                                              name: 'my-db',
+                                              tags: %w[tag1 tag2],
+                                              maintenance_info: maintenance_info,
+                                              dashboard_url: 'https://my-fantistic-service.com',
+                                              broker_provided_metadata: broker_metadata)
           end
 
           it 'includes broker_provided_metadata in the response' do
@@ -197,14 +183,12 @@ module VCAP::CloudController::Presenters::V3
 
         context 'when broker_provided_metadata is nil' do
           let(:service_instance) do
-            VCAP::CloudController::ManagedServiceInstance.make(
-              service_plan: plan,
-              name: 'my-db-no-metadata',
-              tags: %w[tag1 tag2],
-              maintenance_info: maintenance_info,
-              dashboard_url: 'https://my-fantistic-service.com',
-              broker_provided_metadata: nil
-            )
+            create(:managed_service_instance, service_plan: plan,
+                                              name: 'my-db-no-metadata',
+                                              tags: %w[tag1 tag2],
+                                              maintenance_info: maintenance_info,
+                                              dashboard_url: 'https://my-fantistic-service.com',
+                                              broker_provided_metadata: nil)
           end
 
           it 'does not include broker_provided_metadata in the response' do
@@ -214,14 +198,12 @@ module VCAP::CloudController::Presenters::V3
 
         context 'when broker_provided_metadata is an empty hash' do
           let(:service_instance) do
-            VCAP::CloudController::ManagedServiceInstance.make(
-              service_plan: plan,
-              name: 'my-db-empty-metadata',
-              tags: %w[tag1 tag2],
-              maintenance_info: maintenance_info,
-              dashboard_url: 'https://my-fantistic-service.com',
-              broker_provided_metadata: {}
-            )
+            create(:managed_service_instance, service_plan: plan,
+                                              name: 'my-db-empty-metadata',
+                                              tags: %w[tag1 tag2],
+                                              maintenance_info: maintenance_info,
+                                              dashboard_url: 'https://my-fantistic-service.com',
+                                              broker_provided_metadata: {})
           end
 
           it 'does not include broker_provided_metadata in the response' do
@@ -233,16 +215,12 @@ module VCAP::CloudController::Presenters::V3
 
     context 'user-provided service instance' do
       let(:service_instance) do
-        si = VCAP::CloudController::UserProvidedServiceInstance.make(
-          name: 'yu-db',
-          tags: %w[tag3 tag4],
-          syslog_drain_url: 'https://syslog-drain.com',
-          route_service_url: 'https://route-service.com'
-        )
-        si.service_instance_operation = VCAP::CloudController::ServiceInstanceOperation.make(
-          type: 'create',
-          state: 'succeeded'
-        )
+        si = create(:user_provided_service_instance, name: 'yu-db',
+                                                     tags: %w[tag3 tag4],
+                                                     syslog_drain_url: 'https://syslog-drain.com',
+                                                     route_service_url: 'https://route-service.com')
+        si.service_instance_operation = create(:service_instance_operation, type: 'create',
+                                                                            state: 'succeeded')
         si
       end
 
@@ -312,7 +290,7 @@ module VCAP::CloudController::Presenters::V3
 
       let(:presenter) { described_class.new(service_instance, decorators: [fake_decorator]) }
 
-      let(:service_instance) { VCAP::CloudController::ManagedServiceInstance.make }
+      let(:service_instance) { create(:managed_service_instance) }
 
       it 'uses the decorator' do
         expect(result[:included]).to match({ resource: { guid: "included #{service_instance.guid}" } })

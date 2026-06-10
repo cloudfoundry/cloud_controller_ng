@@ -4,21 +4,17 @@ require 'presenters/v3/isolation_segment_presenter'
 module VCAP::CloudController::Presenters::V3
   RSpec.describe IsolationSegmentPresenter do
     let!(:annotation) do
-      VCAP::CloudController::IsolationSegmentAnnotationModel.make(
-        key_name: 'vegetable',
-        value: 'asparagus',
-        resource_guid: isolation_segment.guid
-      )
+      create(:isolation_segment_annotation_model, key_name: 'vegetable',
+                                                  value: 'asparagus',
+                                                  resource_guid: isolation_segment.guid)
     end
     let!(:label) do
-      VCAP::CloudController::IsolationSegmentLabelModel.make(
-        key_name: 'release',
-        value: 'stable',
-        resource_guid: isolation_segment.guid
-      )
+      create(:isolation_segment_label_model, key_name: 'release',
+                                             value: 'stable',
+                                             resource_guid: isolation_segment.guid)
     end
 
-    let(:isolation_segment) { VCAP::CloudController::IsolationSegmentModel.make }
+    let(:isolation_segment) { create(:isolation_segment_model) }
 
     describe '#to_hash' do
       let(:result) { IsolationSegmentPresenter.new(isolation_segment).to_hash }

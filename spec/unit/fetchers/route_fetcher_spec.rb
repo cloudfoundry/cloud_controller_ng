@@ -9,13 +9,13 @@ module VCAP::CloudController
         Route.dataset.destroy
       end
 
-      let!(:space1) { Space.make }
-      let!(:space2) { Space.make }
-      let!(:domain1) { SharedDomain.make }
-      let!(:domain2) { SharedDomain.make }
-      let!(:route1) { Route.make(guid: 'route1_guid', host: 'host1', path: '/path1', space: space1, domain: domain1) }
-      let!(:route2) { Route.make(guid: 'route2_guid', host: 'host2', path: '/path2', space: space1, domain: domain1) }
-      let!(:route3) { Route.make(guid: 'route3_guid', host: 'host3', path: '/path1', space: space2, domain: domain2) }
+      let!(:space1) { create(:space) }
+      let!(:space2) { create(:space) }
+      let!(:domain1) { create(:shared_domain) }
+      let!(:domain2) { create(:shared_domain) }
+      let!(:route1) { create(:route, guid: 'route1_guid', host: 'host1', path: '/path1', space: space1, domain: domain1) }
+      let!(:route2) { create(:route, guid: 'route2_guid', host: 'host2', path: '/path2', space: space1, domain: domain1) }
+      let!(:route3) { create(:route, guid: 'route3_guid', host: 'host3', path: '/path1', space: space2, domain: domain2) }
 
       let(:message) do
         RoutesListMessage.from_params(routes_filter)
@@ -29,8 +29,8 @@ module VCAP::CloudController
         end
 
         it 'does not duplicate routes when shared' do
-          space3 = Space.make
-          shared_route = Route.make(guid: 'shared_route_guid', host: 'host1', path: '/path_shared', space: space1, domain: domain1)
+          space3 = create(:space)
+          shared_route = create(:route, guid: 'shared_route_guid', host: 'host1', path: '/path_shared', space: space1, domain: domain1)
           shared_route.add_shared_space(space2)
           shared_route.add_shared_space(space3)
           expect(RouteFetcher.fetch(message, omniscient: true).all).to contain_exactly(route1, route2, route3, shared_route)
@@ -42,8 +42,8 @@ module VCAP::CloudController
         end
 
         it 'fetches the instances shared to readable spaces' do
-          space3 = Space.make
-          shared_route = Route.make(space: space3)
+          space3 = create(:space)
+          shared_route = create(:route, space: space3)
           shared_route.add_shared_space(space2)
           dataset = RouteFetcher.fetch(message, readable_space_guids_dataset: Space.where(id: [space2.id]).select(:guid))
           expect(dataset.all).to contain_exactly(route3, shared_route)
@@ -117,8 +117,8 @@ module VCAP::CloudController
             let(:routes_filter) { { space_guids: space2.guid } }
 
             it 'only returns the matching route' do
-              space4 = Space.make
-              shared_route = Route.make(space: space4)
+              space4 = create(:space)
+              shared_route = create(:route, space: space4)
               shared_route.add_shared_space(space2)
               expect(results.map(&:guid)).to contain_exactly(shared_route.guid, route3.guid)
             end
@@ -182,9 +182,9 @@ module VCAP::CloudController
           end
 
           context 'when there is a matching route' do
-            let(:domain_tcp) { VCAP::CloudController::SharedDomain.make(router_group_guid: router_group.guid, name: 'my.domain') }
+            let(:domain_tcp) { create(:shared_domain, router_group_guid: router_group.guid, name: 'my.domain') }
             let!(:route_with_ports) do
-              VCAP::CloudController::Route.make(host: '', space: space1, domain: domain_tcp, guid: 'route-with-port', port: 8888)
+              create(:route, host: '', space: space1, domain: domain_tcp, guid: 'route-with-port', port: 8888)
             end
             let(:routes_filter) { { ports: '8888' } }
 
@@ -205,15 +205,15 @@ module VCAP::CloudController
 
         context 'when fetching routes by label selector' do
           let!(:route_label) do
-            VCAP::CloudController::RouteLabelModel.make(resource_guid: route1.guid, key_name: 'dog', value: 'scooby-doo')
+            create(:route_label_model, resource_guid: route1.guid, key_name: 'dog', value: 'scooby-doo')
           end
 
           let!(:sad_route_label) do
-            VCAP::CloudController::RouteLabelModel.make(resource_guid: route2.guid, key_name: 'dog', value: 'poodle')
+            create(:route_label_model, resource_guid: route2.guid, key_name: 'dog', value: 'poodle')
           end
 
           let!(:happiest_route_label) do
-            VCAP::CloudController::RouteLabelModel.make(resource_guid: route3.guid, key_name: 'dog', value: 'chihuahua')
+            create(:route_label_model, resource_guid: route3.guid, key_name: 'dog', value: 'chihuahua')
           end
 
           context 'only the label_selector is present' do
@@ -240,10 +240,10 @@ module VCAP::CloudController
         end
 
         context 'when fetching routes for several apps' do
-          let(:app_model) { AppModel.make(space: space1) }
-          let(:app_model2) { AppModel.make(space: space1) }
-          let!(:destination1) { RouteMappingModel.make(app: app_model, route: route1, process_type: 'web') }
-          let!(:destination2) { RouteMappingModel.make(app: app_model2, route: route2, process_type: 'worker') }
+          let(:app_model) { create(:app_model, space: space1) }
+          let(:app_model2) { create(:app_model, space: space1) }
+          let!(:destination1) { create(:route_mapping_model, app: app_model, route: route1, process_type: 'web') }
+          let!(:destination2) { create(:route_mapping_model, app: app_model2, route: route2, process_type: 'worker') }
           let(:routes_filter) { { app_guids: [app_model.guid, app_model2.guid] } }
 
           it 'only returns routes that are mapped to the app' do
@@ -252,9 +252,9 @@ module VCAP::CloudController
         end
 
         context 'when fetching routes for an app' do
-          let(:app_model) { AppModel.make(space: space1) }
-          let!(:destination1) { RouteMappingModel.make(app: app_model, route: route1, process_type: 'web') }
-          let!(:destination2) { RouteMappingModel.make(app: app_model, route: route2, process_type: 'worker') }
+          let(:app_model) { create(:app_model, space: space1) }
+          let!(:destination1) { create(:route_mapping_model, app: app_model, route: route1, process_type: 'web') }
+          let!(:destination2) { create(:route_mapping_model, app: app_model, route: route2, process_type: 'worker') }
           let(:routes_filter) { { app_guids: [app_model.guid] } }
 
           it 'only returns routes that are mapped to the app' do
@@ -263,8 +263,8 @@ module VCAP::CloudController
         end
 
         context 'when fetching routes by service_instance_guid' do
-          let!(:service_instance) { ManagedServiceInstance.make(:routing, space: space2, name: 'service-instance') }
-          let!(:service_binding) { RouteBinding.make(service_instance: service_instance, route: route3) }
+          let!(:service_instance) { create(:managed_service_instance, :routing, space: space2, name: 'service-instance') }
+          let!(:service_binding) { create(:route_binding, service_instance: service_instance, route: route3) }
 
           context 'when there is a matching route' do
             let(:routes_filter) { { service_instance_guids: service_instance.guid } }
@@ -285,11 +285,11 @@ module VCAP::CloudController
         end
 
         context 'when fetching routes by service_instance_guid and app_guid' do
-          let!(:service_instance) { ManagedServiceInstance.make(:routing, space: space2, name: 'service-instance') }
-          let!(:service_binding) { RouteBinding.make(service_instance: service_instance, route: route3) }
+          let!(:service_instance) { create(:managed_service_instance, :routing, space: space2, name: 'service-instance') }
+          let!(:service_binding) { create(:route_binding, service_instance: service_instance, route: route3) }
 
-          let!(:app_model) { AppModel.make(space: space2) }
-          let!(:route_mapping) { RouteMappingModel.make(app: app_model, route: route3) }
+          let!(:app_model) { create(:app_model, space: space2) }
+          let!(:route_mapping) { create(:route_mapping_model, app: app_model, route: route3) }
 
           context 'when there is a matching route' do
             let(:routes_filter) { { service_instance_guids: service_instance.guid, app_guids: app_model.guid } }

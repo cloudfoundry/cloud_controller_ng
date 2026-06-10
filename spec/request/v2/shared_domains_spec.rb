@@ -1,8 +1,8 @@
 require 'spec_helper'
 
 RSpec.describe 'SharedDomains' do
-  let(:user) { VCAP::CloudController::User.make }
-  let(:space) { VCAP::CloudController::Space.make }
+  let(:user) { create(:user) }
+  let(:space) { create(:space) }
 
   before do
     space.organization.add_user(user)
@@ -15,7 +15,7 @@ RSpec.describe 'SharedDomains' do
   end
 
   describe 'GET /v2/shared_domains' do
-    let!(:domain) { VCAP::CloudController::SharedDomain.make(name: 'my-domain.edu', router_group_guid: 'tcp-group') }
+    let!(:domain) { create(:shared_domain, name: 'my-domain.edu', router_group_guid: 'tcp-group') }
 
     it 'lists all shared domains' do
       get '/v2/shared_domains', nil, headers_for(user)
@@ -79,7 +79,7 @@ RSpec.describe 'SharedDomains' do
   end
 
   describe 'GET /v2/shared_domains/:guid' do
-    let!(:domain) { VCAP::CloudController::SharedDomain.make(router_group_guid: 'tcp-group') }
+    let!(:domain) { create(:shared_domain, router_group_guid: 'tcp-group') }
 
     it 'shows the shared domain' do
       get "/v2/shared_domains/#{domain.guid}", nil, headers_for(user)
@@ -198,7 +198,7 @@ RSpec.describe 'SharedDomains' do
   end
 
   describe 'PUT /v2/shared_domains/:guid' do
-    let!(:domain) { VCAP::CloudController::SharedDomain.make(name: 'my-domain.edu', router_group_guid: 'tcp-group') }
+    let!(:domain) { create(:shared_domain, name: 'my-domain.edu', router_group_guid: 'tcp-group') }
 
     it 'ignores everything and returns the original object, suckers!' do
       put "/v2/shared_domains/#{domain.guid}", '{"name": "meow.com", "route_group_guid": "a-guid"}', admin_headers_for(user)
@@ -224,7 +224,7 @@ RSpec.describe 'SharedDomains' do
   end
 
   describe 'DELETE /v2/shared_domains/:guid' do
-    let!(:domain) { VCAP::CloudController::SharedDomain.make(name: 'my-domain.edu', router_group_guid: 'tcp-group') }
+    let!(:domain) { create(:shared_domain, name: 'my-domain.edu', router_group_guid: 'tcp-group') }
 
     it 'deletes the shared_domain' do
       delete "/v2/shared_domains/#{domain.guid}", nil, admin_headers_for(user)

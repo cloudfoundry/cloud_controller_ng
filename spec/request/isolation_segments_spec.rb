@@ -3,10 +3,10 @@ require 'isolation_segment_assign'
 require 'request_spec_shared_examples'
 
 RSpec.describe 'IsolationSegmentModels' do
-  let(:user) { VCAP::CloudController::User.make }
+  let(:user) { create(:user) }
   let(:user_header) { admin_headers_for(user) }
   let(:admin_header) { admin_headers_for(user) }
-  let(:space) { VCAP::CloudController::Space.make }
+  let(:space) { create(:space) }
   let(:assigner) { VCAP::CloudController::IsolationSegmentAssign.new }
 
   describe 'POST /v3/isolation_segments' do
@@ -45,9 +45,9 @@ RSpec.describe 'IsolationSegmentModels' do
   end
 
   describe 'GET /v3/isolation_segments/:guid/relationships/organizations' do
-    let(:org1) { VCAP::CloudController::Organization.make }
-    let(:org2) { VCAP::CloudController::Organization.make }
-    let(:isolation_segment_model) { VCAP::CloudController::IsolationSegmentModel.make }
+    let(:org1) { create(:organization) }
+    let(:org2) { create(:organization) }
+    let(:isolation_segment_model) { create(:isolation_segment_model) }
 
     before do
       assigner.assign(isolation_segment_model, [org1, org2])
@@ -85,7 +85,7 @@ RSpec.describe 'IsolationSegmentModels' do
       it_behaves_like 'permissions for list endpoint', ALL_PERMISSIONS do
         let(:api_call) { ->(user_headers) { get "/v3/isolation_segments/#{isolation_segment_model.guid}/relationships/organizations", nil, user_headers } }
         let(:org) { space.organization }
-        let(:user) { VCAP::CloudController::User.make }
+        let(:user) { create(:user) }
 
         let(:expected_codes_and_responses) do
           h = Hash.new({ code: 200, response_guids: [org1.guid, org2.guid, space.organization.guid] }.freeze)
@@ -104,9 +104,9 @@ RSpec.describe 'IsolationSegmentModels' do
   end
 
   describe 'GET /v3/isolation_segments/:guid/relationships/spaces' do
-    let(:space1) { VCAP::CloudController::Space.make }
-    let(:space2) { VCAP::CloudController::Space.make }
-    let(:isolation_segment_model) { VCAP::CloudController::IsolationSegmentModel.make }
+    let(:space1) { create(:space) }
+    let(:space2) { create(:space) }
+    let(:isolation_segment_model) { create(:isolation_segment_model) }
 
     before do
       assigner.assign(isolation_segment_model, [space1.organization, space2.organization])
@@ -133,7 +133,7 @@ RSpec.describe 'IsolationSegmentModels' do
         let(:api_call) { ->(user_headers) { get "/v3/isolation_segments/#{isolation_segment_model.guid}/relationships/spaces", nil, user_headers } }
         let(:org) { space1.organization }
         let(:space) { space1 }
-        let(:user) { VCAP::CloudController::User.make }
+        let(:user) { create(:user) }
 
         let(:expected_codes_and_responses) do
           h = Hash.new({ code: 200, response_guids: [space1.guid, space2.guid] }.freeze)
@@ -152,9 +152,9 @@ RSpec.describe 'IsolationSegmentModels' do
   end
 
   describe 'POST /v3/isolation_segments/:guid/relationships/organizations' do
-    let(:org1) { VCAP::CloudController::Organization.make }
-    let(:org2) { VCAP::CloudController::Organization.make }
-    let(:isolation_segment) { VCAP::CloudController::IsolationSegmentModel.make }
+    let(:org1) { create(:organization) }
+    let(:org2) { create(:organization) }
+    let(:isolation_segment) { create(:isolation_segment_model) }
 
     it 'assigns the isolation segment to the organization' do
       assign_request = {
@@ -183,9 +183,9 @@ RSpec.describe 'IsolationSegmentModels' do
   end
 
   describe 'DELETE /v3/isolation_segments/:guid/relationships/organizations/:org_guid' do
-    let(:org1) { VCAP::CloudController::Organization.make }
-    let(:org2) { VCAP::CloudController::Organization.make }
-    let(:isolation_segment) { VCAP::CloudController::IsolationSegmentModel.make }
+    let(:org1) { create(:organization) }
+    let(:org2) { create(:organization) }
+    let(:isolation_segment) { create(:isolation_segment_model) }
 
     before do
       assigner.assign(isolation_segment, [org1, org2])
@@ -202,7 +202,7 @@ RSpec.describe 'IsolationSegmentModels' do
   end
 
   describe 'GET /v3/isolation_segments/:guid' do
-    let(:isolation_segment_model) { VCAP::CloudController::IsolationSegmentModel.make }
+    let(:isolation_segment_model) { create(:isolation_segment_model) }
     let(:expected_response_object) do
       {
         'name' => isolation_segment_model.name,
@@ -228,7 +228,7 @@ RSpec.describe 'IsolationSegmentModels' do
       it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS do
         let(:api_call) { ->(user_headers) { get "/v3/isolation_segments/#{isolation_segment_model.guid}", nil, user_headers } }
         let(:org) { space.organization }
-        let(:user) { VCAP::CloudController::User.make }
+        let(:user) { create(:user) }
         let(:expected_codes_and_responses) do
           h = Hash.new({ code: 200, response_object: expected_response_object }.freeze)
           h['no_role'] = { code: 404 }
@@ -241,7 +241,7 @@ RSpec.describe 'IsolationSegmentModels' do
       it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS do
         let(:api_call) { ->(user_headers) { get "/v3/isolation_segments/#{isolation_segment_model.guid}", nil, user_headers } }
         let(:org) { space.organization }
-        let(:user) { VCAP::CloudController::User.make }
+        let(:user) { create(:user) }
         let(:expected_codes_and_responses) do
           h = Hash.new({ code: 404 }.freeze)
           h['admin'] = { code: 200, response_object: expected_response_object }
@@ -254,8 +254,8 @@ RSpec.describe 'IsolationSegmentModels' do
   end
 
   describe 'GET /v3/isolation_segments' do
-    let(:org1) { VCAP::CloudController::Organization.make }
-    let(:org2) { VCAP::CloudController::Organization.make }
+    let(:org1) { create(:organization) }
+    let(:org2) { create(:organization) }
 
     it_behaves_like 'list query endpoint' do
       let(:message) { VCAP::CloudController::IsolationSegmentsListMessage }
@@ -317,12 +317,12 @@ RSpec.describe 'IsolationSegmentModels' do
     context 'when there are multiple isolation segments' do
       let!(:models) do
         [
-          VCAP::CloudController::IsolationSegmentModel.make(name: 'segment1'),
-          VCAP::CloudController::IsolationSegmentModel.make(name: 'segment2'),
-          VCAP::CloudController::IsolationSegmentModel.make(name: 'segment3'),
-          VCAP::CloudController::IsolationSegmentModel.make(name: 'segment4'),
-          VCAP::CloudController::IsolationSegmentModel.make(name: 'segment5'),
-          VCAP::CloudController::IsolationSegmentModel.make(name: 'segment6')
+          create(:isolation_segment_model, name: 'segment1'),
+          create(:isolation_segment_model, name: 'segment2'),
+          create(:isolation_segment_model, name: 'segment3'),
+          create(:isolation_segment_model, name: 'segment4'),
+          create(:isolation_segment_model, name: 'segment5'),
+          create(:isolation_segment_model, name: 'segment6')
         ]
       end
 
@@ -451,18 +451,18 @@ RSpec.describe 'IsolationSegmentModels' do
     end
 
     context 'label_selector' do
-      let!(:iso_segA) { VCAP::CloudController::IsolationSegmentModel.make(name: 'segmentA') }
-      let!(:iso_segB) { VCAP::CloudController::IsolationSegmentModel.make(name: 'segmentB') }
-      let!(:iso_segC) { VCAP::CloudController::IsolationSegmentModel.make(name: 'segmentC') }
+      let!(:iso_segA) { create(:isolation_segment_model, name: 'segmentA') }
+      let!(:iso_segB) { create(:isolation_segment_model, name: 'segmentB') }
+      let!(:iso_segC) { create(:isolation_segment_model, name: 'segmentC') }
 
-      let!(:isoAFruit) { VCAP::CloudController::IsolationSegmentLabelModel.make(key_name: 'fruit', value: 'strawberry', resource_guid: iso_segA.guid) }
-      let!(:isoAAnimal) { VCAP::CloudController::IsolationSegmentLabelModel.make(key_name: 'animal', value: 'horse', resource_guid: iso_segA.guid) }
+      let!(:isoAFruit) { create(:isolation_segment_label_model, key_name: 'fruit', value: 'strawberry', resource_guid: iso_segA.guid) }
+      let!(:isoAAnimal) { create(:isolation_segment_label_model, key_name: 'animal', value: 'horse', resource_guid: iso_segA.guid) }
 
-      let!(:isoBEnv) { VCAP::CloudController::IsolationSegmentLabelModel.make(key_name: 'env', value: 'prod', resource_guid: iso_segB.guid) }
-      let!(:isoBAnimal) { VCAP::CloudController::IsolationSegmentLabelModel.make(key_name: 'animal', value: 'dog', resource_guid: iso_segB.guid) }
+      let!(:isoBEnv) { create(:isolation_segment_label_model, key_name: 'env', value: 'prod', resource_guid: iso_segB.guid) }
+      let!(:isoBAnimal) { create(:isolation_segment_label_model, key_name: 'animal', value: 'dog', resource_guid: iso_segB.guid) }
 
-      let!(:isoCEnv) { VCAP::CloudController::IsolationSegmentLabelModel.make(key_name: 'env', value: 'prod', resource_guid: iso_segC.guid) }
-      let!(:isoCAnimal) { VCAP::CloudController::IsolationSegmentLabelModel.make(key_name: 'animal', value: 'horse', resource_guid: iso_segC.guid) }
+      let!(:isoCEnv) { create(:isolation_segment_label_model, key_name: 'env', value: 'prod', resource_guid: iso_segC.guid) }
+      let!(:isoCAnimal) { create(:isolation_segment_label_model, key_name: 'animal', value: 'horse', resource_guid: iso_segC.guid) }
 
       it 'returns the matching iso segs' do
         get '/v3/isolation_segments?label_selector=!fruit,env=prod,animal in (dog,horse)', nil, admin_headers
@@ -474,7 +474,7 @@ RSpec.describe 'IsolationSegmentModels' do
     end
 
     context 'permissions' do
-      let(:iso_seg1) { VCAP::CloudController::IsolationSegmentModel.make }
+      let(:iso_seg1) { create(:isolation_segment_model) }
 
       before do
         assigner.assign(iso_seg1, [space.organization])
@@ -483,7 +483,7 @@ RSpec.describe 'IsolationSegmentModels' do
       it_behaves_like 'permissions for list endpoint', ALL_PERMISSIONS do
         let(:api_call) { ->(user_headers) { get '/v3/isolation_segments', nil, user_headers } }
         let(:org) { space.organization }
-        let(:user) { VCAP::CloudController::User.make }
+        let(:user) { create(:user) }
         let(:expected_codes_and_responses) do
           h = Hash.new({ code: 200, response_guids: [iso_seg1.guid] }.freeze)
           h['admin'] = { code: 200, response_guids: [iso_seg1.guid, VCAP::CloudController::IsolationSegmentModel::SHARED_ISOLATION_SEGMENT_GUID] }
@@ -498,7 +498,7 @@ RSpec.describe 'IsolationSegmentModels' do
 
   describe 'PATCH /v3/isolation_segments/:guid' do
     it 'updates the specified isolation segment' do
-      isolation_segment_model = VCAP::CloudController::IsolationSegmentModel.make(name: 'my_segment')
+      isolation_segment_model = create(:isolation_segment_model, name: 'my_segment')
 
       update_request = {
         name: 'your_segment',
@@ -536,7 +536,7 @@ RSpec.describe 'IsolationSegmentModels' do
   end
 
   describe 'DELETE /v3/isolation_segments/:guid' do
-    let(:isolation_segment_model) { VCAP::CloudController::IsolationSegmentModel.make(name: 'my_segment') }
+    let(:isolation_segment_model) { create(:isolation_segment_model, name: 'my_segment') }
 
     it 'deletes the specified isolation segment' do
       delete "/v3/isolation_segments/#{isolation_segment_model.guid}", nil, user_header

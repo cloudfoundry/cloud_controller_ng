@@ -3,7 +3,7 @@ require 'actions/sidecar_update'
 
 module VCAP::CloudController
   RSpec.describe SidecarUpdate do
-    let(:app) { AppModel.make }
+    let(:app) { create(:app_model) }
     let(:params) do
       {
         name: 'sidecar-name',
@@ -14,17 +14,16 @@ module VCAP::CloudController
     end
     let(:message) { SidecarUpdateMessage.new(params) }
     let(:sidecar) do
-      SidecarModel.make(
-        name: 'my_sidecar',
-        command: 'rackup',
-        app: app,
-        memory: 123
-      )
+      create(:sidecar_model,
+             name: 'my_sidecar',
+             command: 'rackup',
+             app: app,
+             memory: 123)
     end
-    let!(:process) { ProcessModel.make(app: app, memory: 500, type: 'other_worker') }
+    let!(:process) { create(:process, app: app, memory: 500, type: 'other_worker') }
 
     before do
-      SidecarProcessTypeModel.make(type: 'other_worker', sidecar: sidecar)
+      create(:sidecar_process_type_model, type: 'other_worker', sidecar: sidecar)
     end
 
     describe '.update' do
@@ -79,7 +78,7 @@ module VCAP::CloudController
         end
 
         context 'memory allocation' do
-          let!(:new_worker_process) { ProcessModel.make(app: app, memory: 100, type: 'worker') }
+          let!(:new_worker_process) { create(:process, app: app, memory: 100, type: 'worker') }
 
           it 'raises InvalidSidecar when the memory allocated for the sidecar exceeds the memory allocated for the associated process' do
             expect do
@@ -128,8 +127,8 @@ module VCAP::CloudController
         end
 
         context 'the memory allocated for the total sidecars exceeds the memory allocated for the associated process' do
-          let!(:first_sidecar) { SidecarModel.make(app_guid: app.guid, memory: 300) }
-          let!(:sptm) { SidecarProcessTypeModel.make(type: process.type, sidecar_guid: first_sidecar.guid, app_guid: app.guid) }
+          let!(:first_sidecar) { create(:sidecar_model, app_guid: app.guid, memory: 300) }
+          let!(:sptm) { create(:sidecar_process_type_model, type: process.type, sidecar_guid: first_sidecar.guid, app_guid: app.guid) }
           let(:params) do
             {
               memory_in_mb: 300
@@ -153,7 +152,7 @@ module VCAP::CloudController
               process_types: ['totes_new']
             }
           end
-          let!(:totes_new_process) { ProcessModel.make(app: app, memory: 500, type: 'totes_new') }
+          let!(:totes_new_process) { create(:process, app: app, memory: 500, type: 'totes_new') }
 
           it 'raises InvalidSidecar' do
             expect do
@@ -167,12 +166,11 @@ module VCAP::CloudController
 
         context 'the memory allocated to the sidecar exceeds half the memory allocated for the newly associated process' do
           let(:sidecar) do
-            SidecarModel.make(
-              name: 'my_sidecar',
-              command: 'rackup',
-              app: app,
-              memory: 250
-            )
+            create(:sidecar_model,
+                   name: 'my_sidecar',
+                   command: 'rackup',
+                   app: app,
+                   memory: 250)
           end
 
           let(:params) do
@@ -181,8 +179,8 @@ module VCAP::CloudController
             }
           end
 
-          let!(:process) { ProcessModel.make(app: app, memory: 500, type: 'other_worker') }
-          let!(:new_process) { ProcessModel.make(app: app, memory: 500, type: 'other_worker') }
+          let!(:process) { create(:process, app: app, memory: 500, type: 'other_worker') }
+          let!(:new_process) { create(:process, app: app, memory: 500, type: 'other_worker') }
 
           it 'its only counted once for all processes and succeeds' do
             SidecarUpdate.update(sidecar, message)

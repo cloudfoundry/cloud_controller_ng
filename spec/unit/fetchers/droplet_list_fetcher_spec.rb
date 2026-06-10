@@ -10,12 +10,12 @@ module VCAP::CloudController
     let(:filters) { {} }
 
     describe '#fetch_all' do
-      let(:app1) { AppModel.make }
-      let!(:staged_droplet_for_app1) { DropletModel.make(app_guid: app1.guid, state: DropletModel::STAGED_STATE) }
-      let!(:failed_droplet_for_app1) { DropletModel.make(app_guid: app1.guid, state: DropletModel::FAILED_STATE) }
+      let(:app1) { create(:app_model) }
+      let!(:staged_droplet_for_app1) { create(:droplet_model, app: app1, state: DropletModel::STAGED_STATE) }
+      let!(:failed_droplet_for_app1) { create(:droplet_model, app: app1, state: DropletModel::FAILED_STATE) }
 
-      let(:app2) { AppModel.make }
-      let!(:staged_droplet_for_app2) { DropletModel.make(app_guid: app2.guid, state: DropletModel::STAGED_STATE) }
+      let(:app2) { create(:app_model) }
+      let!(:staged_droplet_for_app2) { create(:droplet_model, app: app2, state: DropletModel::STAGED_STATE) }
 
       it 'returns a Sequel::Dataset' do
         results = fetcher.fetch_all(message)
@@ -47,7 +47,7 @@ module VCAP::CloudController
 
       context 'filtering states' do
         let(:filters) { { states: [DropletModel::STAGED_STATE, DropletModel::EXPIRED_STATE] } }
-        let!(:expired_droplet_for_other_app) { DropletModel.make(state: DropletModel::EXPIRED_STATE, app: nil) }
+        let!(:expired_droplet_for_other_app) { create(:droplet_model, state: DropletModel::EXPIRED_STATE, app: nil) }
 
         it 'returns all of the droplets with the requested states' do
           results = fetcher.fetch_all(message).all
@@ -117,8 +117,8 @@ module VCAP::CloudController
         let(:message) do
           DropletsListMessage.from_params({ 'label_selector' => 'key=value' })
         end
-        let!(:droplet1Label) { DropletLabelModel.make(key_name: 'key', value: 'value', droplet: staged_droplet_for_app1) }
-        let!(:droplet2Label) { DropletLabelModel.make(key_name: 'key2', value: 'value2', droplet: failed_droplet_for_app1) }
+        let!(:droplet1Label) { create(:droplet_label_model, key_name: 'key', value: 'value', droplet: staged_droplet_for_app1) }
+        let!(:droplet2Label) { create(:droplet_label_model, key_name: 'key2', value: 'value2', droplet: failed_droplet_for_app1) }
 
         it 'returns the correct set of droplets' do
           results = fetcher.fetch_all(message)
@@ -129,17 +129,17 @@ module VCAP::CloudController
 
     describe '#fetch_for_spaces' do
       let(:space1) { app1.space }
-      let(:app1) { AppModel.make }
-      let!(:staged_droplet_for_app1) { DropletModel.make(app_guid: app1.guid, state: DropletModel::STAGED_STATE) }
-      let!(:failed_droplet_for_app1) { DropletModel.make(app_guid: app1.guid, state: DropletModel::FAILED_STATE) }
+      let(:app1) { create(:app_model) }
+      let!(:staged_droplet_for_app1) { create(:droplet_model, app: app1, state: DropletModel::STAGED_STATE) }
+      let!(:failed_droplet_for_app1) { create(:droplet_model, app: app1, state: DropletModel::FAILED_STATE) }
 
-      let(:app2) { AppModel.make }
+      let(:app2) { create(:app_model) }
       let(:space2) { app2.space }
-      let!(:staged_droplet_for_app2) { DropletModel.make(app_guid: app2.guid, state: DropletModel::STAGED_STATE) }
+      let!(:staged_droplet_for_app2) { create(:droplet_model, app: app2, state: DropletModel::STAGED_STATE) }
 
-      let(:app3) { AppModel.make }
+      let(:app3) { create(:app_model) }
       let(:space3) { app3.space }
-      let!(:expired_droplet_for_app3) { DropletModel.make(app_guid: app3.guid, state: DropletModel::EXPIRED_STATE) }
+      let!(:expired_droplet_for_app3) { create(:droplet_model, app: app3, state: DropletModel::EXPIRED_STATE) }
 
       let(:space_guids) { [space1.guid, space2.guid] }
 
@@ -197,9 +197,9 @@ module VCAP::CloudController
     end
 
     describe '#fetch_for_app' do
-      let(:app) { AppModel.make }
-      let!(:staged_droplet) { DropletModel.make(app_guid: app.guid, state: DropletModel::STAGED_STATE) }
-      let!(:failed_droplet) { DropletModel.make(app_guid: app.guid, state: DropletModel::FAILED_STATE) }
+      let(:app) { create(:app_model) }
+      let!(:staged_droplet) { create(:droplet_model, app: app, state: DropletModel::STAGED_STATE) }
+      let!(:failed_droplet) { create(:droplet_model, app: app, state: DropletModel::FAILED_STATE) }
       let(:filters) { { app_guid: app.guid } }
 
       it 'returns a Sequel::Dataset' do
@@ -229,7 +229,7 @@ module VCAP::CloudController
 
       context 'filtering states' do
         let(:filters) { { states: [DropletModel::FAILED_STATE], app_guid: app.guid } }
-        let!(:failed_droplet_not_on_app) { DropletModel.make(state: DropletModel::FAILED_STATE, app: nil) }
+        let!(:failed_droplet_not_on_app) { create(:droplet_model, state: DropletModel::FAILED_STATE, app: nil) }
 
         it 'returns all of the desired droplets with the requested droplet states' do
           _app, results = fetcher.fetch_for_app(message)
@@ -265,9 +265,9 @@ module VCAP::CloudController
     end
 
     describe '#fetch_for_package' do
-      let(:package) { PackageModel.make }
-      let!(:staged_droplet) { DropletModel.make(package_guid: package.guid, state: DropletModel::STAGED_STATE, app: nil) }
-      let!(:failed_droplet) { DropletModel.make(package_guid: package.guid, state: DropletModel::FAILED_STATE, app: nil) }
+      let(:package) { create(:package_model) }
+      let!(:staged_droplet) { create(:droplet_model, package: package, state: DropletModel::STAGED_STATE, app: nil) }
+      let!(:failed_droplet) { create(:droplet_model, package: package, state: DropletModel::FAILED_STATE, app: nil) }
       let(:filters) { { package_guid: package.guid } }
 
       it 'returns a Sequel::Dataset' do
@@ -297,7 +297,7 @@ module VCAP::CloudController
 
       context 'filtering states' do
         let(:filters) { { states: [DropletModel::FAILED_STATE], package_guid: package.guid } }
-        let!(:failed_droplet_not_on_package) { DropletModel.make(state: DropletModel::FAILED_STATE, app: nil) }
+        let!(:failed_droplet_not_on_package) { create(:droplet_model, state: DropletModel::FAILED_STATE, app: nil) }
 
         it 'returns all of the desired droplets with the requested droplet states' do
           _package, results = fetcher.fetch_for_package(message)

@@ -3,8 +3,8 @@ require_relative 'lifecycle_shared'
 
 module VCAP::CloudController
   RSpec.describe CNBLifecycle do
-    let(:app) { AppModel.make(:cnb, name: 'some-app') }
-    let!(:package) { PackageModel.make(type: PackageModel::BITS_TYPE, app: app) }
+    let(:app) { create(:app_model, :cnb, name: 'some-app') }
+    let!(:package) { create(:package_model, type: PackageModel::BITS_TYPE, app: app) }
     let(:staging_message) { BuildCreateMessage.new(lifecycle: { data: request_data, type: 'cnb' }) }
     let(:request_data) { {} }
 
@@ -21,12 +21,12 @@ module VCAP::CloudController
         end
 
         before do
-          Buildpack.make(name: 'cool-buildpack', lifecycle: 'cnb')
-          Buildpack.make(name: 'rad-buildpack')
+          create(:buildpack, name: 'cool-buildpack', lifecycle: 'cnb')
+          create(:buildpack, name: 'rad-buildpack')
         end
 
         it 'uses the buildpacks from the user' do
-          build = BuildModel.make(:cnb)
+          build = create(:build_model, :cnb)
 
           expect do
             cnb_lifecycle.create_lifecycle_data_model(build)
@@ -40,7 +40,7 @@ module VCAP::CloudController
       end
 
       context 'when the user does not specify buildpacks' do
-        let(:app) { AppModel.make(:cnb, name: 'some-app') }
+        let(:app) { create(:app_model, :cnb, name: 'some-app') }
         let(:request_data) { {} }
 
         context 'when the app has buildpacks' do
@@ -49,7 +49,7 @@ module VCAP::CloudController
           end
 
           it 'uses the buildpacks on the app' do
-            build = BuildModel.make(:cnb)
+            build = create(:build_model, :cnb)
 
             expect do
               cnb_lifecycle.create_lifecycle_data_model(build)
@@ -64,7 +64,7 @@ module VCAP::CloudController
 
         context 'when the app does not have buildpacks' do
           it 'does not assign any buildpacks' do
-            build = BuildModel.make(:cnb)
+            build = create(:build_model, :cnb)
 
             expect do
               cnb_lifecycle.create_lifecycle_data_model(build)
@@ -84,13 +84,13 @@ module VCAP::CloudController
         end
 
         it 'uses those credentials' do
-          data_model = cnb_lifecycle.create_lifecycle_data_model(BuildModel.make(:cnb))
+          data_model = cnb_lifecycle.create_lifecycle_data_model(create(:build_model, :cnb))
           expect(data_model.credentials).to eq('{"auth": {}}')
         end
       end
 
       context 'when the user does not specify credentials' do
-        let(:app) { AppModel.make(:cnb, name: 'some-app', space: Space.make) }
+        let(:app) { create(:app_model, :cnb, name: 'some-app', space: create(:space)) }
         let(:request_data) { {} }
 
         before do
@@ -98,7 +98,7 @@ module VCAP::CloudController
         end
 
         it 'uses credentials from package' do
-          data_model = cnb_lifecycle.create_lifecycle_data_model(BuildModel.make(:cnb))
+          data_model = cnb_lifecycle.create_lifecycle_data_model(create(:build_model, :cnb))
           expect(data_model.credentials).to eq('{"auth": {}}')
         end
       end
@@ -109,7 +109,7 @@ module VCAP::CloudController
         end
 
         it 'uses that stack' do
-          data_model = cnb_lifecycle.create_lifecycle_data_model(BuildModel.make(:cnb))
+          data_model = cnb_lifecycle.create_lifecycle_data_model(create(:build_model, :cnb))
           expect(data_model.stack).to eq('cool-stack')
         end
       end
@@ -119,18 +119,18 @@ module VCAP::CloudController
 
         context 'when the app has a stack' do
           before do
-            app.cnb_lifecycle_data = CNBLifecycleDataModel.make(stack: 'best-stack')
+            app.cnb_lifecycle_data = create(:cnb_lifecycle_data_model, stack: 'best-stack')
           end
 
           it 'uses the stack from the app' do
-            data_model = cnb_lifecycle.create_lifecycle_data_model(BuildModel.make(:cnb, app:))
+            data_model = cnb_lifecycle.create_lifecycle_data_model(create(:build_model, :cnb, app:))
             expect(data_model.stack).to eq('best-stack')
           end
         end
 
         context 'when the app does not have a stack' do
           it 'uses the default stack' do
-            data_model = cnb_lifecycle.create_lifecycle_data_model(BuildModel.make(:cnb, app:))
+            data_model = cnb_lifecycle.create_lifecycle_data_model(create(:build_model, :cnb, app:))
             expect(data_model.stack).to eq(app.lifecycle_data.stack)
           end
         end
@@ -151,7 +151,7 @@ module VCAP::CloudController
       context 'when the user does not specify a stack' do
         context 'and the app has a stack' do
           before do
-            app.cnb_lifecycle_data = CNBLifecycleDataModel.make(app: app, stack: 'cooler-stack')
+            app.cnb_lifecycle_data = create(:cnb_lifecycle_data_model, app: app, stack: 'cooler-stack')
           end
 
           it 'uses the value set on the app' do

@@ -21,14 +21,24 @@ module VCAP
 
           package = make_package(package_attributes, parent_app)
 
-          build   = BuildModel.make(app: parent_app, package: package)
-          droplet = DropletModel.make(app: parent_app, build: build, package: package)
+          build   = FactoryBot.create(:build_model, app: parent_app, package: package)
+          droplet = FactoryBot.create(:droplet_model, app: parent_app, build: build, package: package)
           parent_app.update(droplet_guid: droplet.guid)
 
-          VCAP::CloudController::ProcessModel.make(*args, process_attributes)
+          FactoryBot.create(:process_model, *known_traits(:process_model, args), **process_attributes)
         end
 
         private
+
+        # Mirror legacy machinist behavior: unknown trait symbols passed to
+        # `Klass.make(:foo, ...)` were silently ignored when no matching
+        # blueprint was defined. FactoryBot raises on unknown traits, so we
+        # filter to only the traits actually registered on the factory.
+        def known_traits(factory_name, args)
+          factory = FactoryBot.factories.find(factory_name)
+          registered = factory.defined_traits.map { |t| t.name.to_sym }
+          args.select { |a| a.is_a?(Symbol) && registered.include?(a) }
+        end
 
         def make_parent_app(package_attributes, parent_app_attributes, process_attributes)
           return process_attributes[:app] if process_attributes[:app]
@@ -48,10 +58,10 @@ module VCAP
               parent_app_attributes.delete(:stack)
             end
 
-            parent_app = VCAP::CloudController::AppModel.make(parent_app_blueprint_type, parent_app_attributes)
+            parent_app = create_app_model(parent_app_blueprint_type, parent_app_attributes)
             parent_app.lifecycle_data.update(buildpack_keys) if buildpack_keys.any?
           else
-            parent_app = VCAP::CloudController::AppModel.make(parent_app_blueprint_type, parent_app_attributes)
+            parent_app = create_app_model(parent_app_blueprint_type, parent_app_attributes)
           end
           process_attributes[:app] = parent_app
           parent_app
@@ -59,13 +69,21 @@ module VCAP
 
         def make_package(package_attributes, parent_app)
           if package_attributes.empty?
-            VCAP::CloudController::PackageModel.make(app: parent_app, state: PackageModel::READY_STATE, package_hash: Sham.guid)
+            FactoryBot.create(:package_model, app: parent_app, state: PackageModel::READY_STATE, package_hash: Sham.guid)
           else
             docker_credentials = package_attributes[:docker_credentials].nil? ? {} : package_attributes[:docker_credentials]
-            VCAP::CloudController::PackageModel.make(:docker, app: parent_app,
-                                                              docker_image: package_attributes[:docker_image],
-                                                              docker_username: docker_credentials['username'],
-                                                              docker_password: docker_credentials['password'])
+            FactoryBot.create(:package_model, :docker, app: parent_app,
+                                                       docker_image: package_attributes[:docker_image],
+                                                       docker_username: docker_credentials['username'],
+                                                       docker_password: docker_credentials['password'])
+          end
+        end
+
+        def create_app_model(blueprint_type, attributes)
+          if blueprint_type
+            FactoryBot.create(:app_model, blueprint_type, **attributes)
+          else
+            FactoryBot.create(:app_model, **attributes)
           end
         end
       end

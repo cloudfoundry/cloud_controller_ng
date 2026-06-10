@@ -9,7 +9,7 @@ module VCAP::CloudController
     end
 
     let(:user) { make_user }
-    let(:stack) { Stack.make }
+    let(:stack) { create(:stack) }
     let(:req_body) { Oj.dump({ name: 'dynamic_test_buildpack', stack: stack.name, position: 1 }) }
 
     before { set_current_user_as_admin }
@@ -44,7 +44,7 @@ module VCAP::CloudController
     # we are doing a negative test to fix a bug. The rest of the endpoint is tested with meta programming
     describe '#index' do
       before do
-        2.times { Buildpack.make }
+        create_list(:buildpack, 2)
       end
 
       it 'does not include order-by in the next_url' do
@@ -97,7 +97,7 @@ module VCAP::CloudController
       end
 
       it 'returns duplicate name message correctly' do
-        Buildpack.make(name: 'dynamic_test_buildpack', stack: stack.name)
+        create(:buildpack, name: 'dynamic_test_buildpack', stack: stack.name)
         post '/v2/buildpacks', req_body
         expect(last_response.status).to eq(422)
         expect(decoded_response['code']).to eq(290_000)

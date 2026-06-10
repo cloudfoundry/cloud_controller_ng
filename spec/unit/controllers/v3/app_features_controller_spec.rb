@@ -4,10 +4,10 @@ require 'permissions_spec_helper'
 ## NOTICE: Prefer request specs over controller specs as per ADR #0003 ##
 
 RSpec.describe AppFeaturesController, type: :controller do
-  let(:app_model) { VCAP::CloudController::AppModel.make(enable_ssh: true, service_binding_k8s_enabled: true) }
+  let(:app_model) { create(:app_model, enable_ssh: true, service_binding_k8s_enabled: true) }
   let(:space) { app_model.space }
   let(:org) { space.organization }
-  let(:user) { VCAP::CloudController::User.make }
+  let(:user) { create(:user) }
   let(:app_feature_ssh_response) { { 'name' => 'ssh', 'description' => 'Enable SSHing into the app.', 'enabled' => true } }
   let(:app_feature_revisions_response) { { 'name' => 'revisions', 'description' => 'Enable versioning of an application', 'enabled' => true } }
   let(:app_feature_service_binding_k8s_response) do

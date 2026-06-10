@@ -3,7 +3,7 @@ require 'actions/buildpack_delete'
 
 module VCAP::CloudController
   RSpec.describe BuildpackDelete do
-    let(:user) { User.make }
+    let(:user) { create(:user) }
     let(:user_email) { 'user@example.com' }
     let(:user_name) { 'user-name' }
     let(:user_audit_info) { UserAuditInfo.new(user_guid: user.guid, user_email: user_email, user_name: user_name) }
@@ -11,7 +11,7 @@ module VCAP::CloudController
     subject(:buildpack_delete) { BuildpackDelete.new(user_audit_info) }
 
     describe '#delete' do
-      let!(:buildpack) { Buildpack.make }
+      let!(:buildpack) { create(:buildpack) }
 
       it 'deletes the buildpack record' do
         expect do
@@ -74,8 +74,8 @@ module VCAP::CloudController
       end
 
       context 'when the buildpack has associated metadata' do
-        let!(:label) { BuildpackLabelModel.make(resource_guid: buildpack.guid, key_name: 'test', value: 'bommel') }
-        let!(:annotation) { BuildpackAnnotationModel.make(resource_guid: buildpack.guid, key_name: 'test', value: 'bommel') }
+        let!(:label) { create(:buildpack_label_model, resource_guid: buildpack.guid, key_name: 'test', value: 'bommel') }
+        let!(:annotation) { create(:buildpack_annotation_model, resource_guid: buildpack.guid, key_name: 'test', value: 'bommel') }
 
         it 'deletes associated labels' do
           expect do

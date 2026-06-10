@@ -3,7 +3,7 @@ require 'spec_helper'
 module CloudController::Presenters::V2
   RSpec.describe RelationsPresenter do
     describe '#to_hash' do
-      let(:test_model) { VCAP::CloudController::TestModel.make(unique_value: 'something', required_attr: true) }
+      let(:test_model) { create(:test_model, unique_value: 'something', required_attr: true) }
       let(:opts) { {} }
 
       before do
@@ -23,7 +23,7 @@ module CloudController::Presenters::V2
       end
 
       describe 'to_one relationship' do
-        let(:test_model_many_to_one) { VCAP::CloudController::TestModelManyToOne.make }
+        let(:test_model_many_to_one) { create(:test_model_many_to_one) }
 
         it 'includes to_one relationship link when association is set' do
           test_model_many_to_one.test_model = test_model
@@ -45,7 +45,7 @@ module CloudController::Presenters::V2
       end
 
       describe 'to_many relationship' do
-        let(:test_model_many_to_many) { VCAP::CloudController::TestModelManyToMany.make }
+        let(:test_model_many_to_many) { create(:test_model_many_to_many) }
 
         it 'includes to_many relationship link when association is set' do
           test_model.add_test_model_many_to_many(test_model_many_to_many)
@@ -82,8 +82,8 @@ module CloudController::Presenters::V2
       end
 
       it 'serializes related inline objects inline' do
-        test_model_many_to_many = VCAP::CloudController::TestModelManyToMany.make
-        test_model_second_level = VCAP::CloudController::TestModelSecondLevel.make
+        test_model_many_to_many = create(:test_model_many_to_many)
+        test_model_second_level = create(:test_model_second_level)
         test_model_many_to_many.test_model_second_levels.to_a
         test_model.add_test_model_many_to_many test_model_many_to_many
         test_model_many_to_many.add_test_model_second_level test_model_second_level
@@ -114,8 +114,8 @@ module CloudController::Presenters::V2
 
       describe 'orphan_relations enabled' do
         it 'serializes related n:many inline objects as orphans' do
-          test_model_many_to_many = VCAP::CloudController::TestModelManyToMany.make
-          test_model_second_level = VCAP::CloudController::TestModelSecondLevel.make
+          test_model_many_to_many = create(:test_model_many_to_many)
+          test_model_second_level = create(:test_model_second_level)
           test_model_many_to_many.test_model_second_levels.to_a
           test_model.add_test_model_many_to_many test_model_many_to_many
           test_model_many_to_many.add_test_model_second_level test_model_second_level
@@ -146,7 +146,7 @@ module CloudController::Presenters::V2
         end
 
         it 'serializes related n:one inline objects as orphans' do
-          test_model_many_to_one = VCAP::CloudController::TestModelManyToOne.make
+          test_model_many_to_one = create(:test_model_many_to_one)
           test_model_many_to_one.test_model = test_model
 
           orphans = {}
@@ -173,8 +173,8 @@ module CloudController::Presenters::V2
       end
 
       it 'excludes relations named in exclude_relations' do
-        test_model_many_to_many = VCAP::CloudController::TestModelManyToMany.make
-        test_model_second_level = VCAP::CloudController::TestModelSecondLevel.make
+        test_model_many_to_many = create(:test_model_many_to_many)
+        test_model_second_level = create(:test_model_second_level)
         test_model_many_to_many.test_model_second_levels.to_a
         test_model.add_test_model_many_to_many test_model_many_to_many
         test_model_many_to_many.add_test_model_second_level test_model_second_level
@@ -193,8 +193,8 @@ module CloudController::Presenters::V2
       end
 
       it 'only includes relations named in include_relations' do
-        test_model_many_to_many = VCAP::CloudController::TestModelManyToMany.make
-        test_model_second_level = VCAP::CloudController::TestModelSecondLevel.make
+        test_model_many_to_many = create(:test_model_many_to_many)
+        test_model_second_level = create(:test_model_second_level)
         test_model_many_to_many.test_model_second_levels.to_a
         test_model.add_test_model_many_to_many test_model_many_to_many
         test_model_many_to_many.add_test_model_second_level test_model_second_level

@@ -8,14 +8,14 @@ module VCAP::CloudController
 
     describe 'Associations' do
       it 'has apps' do
-        stack = Stack.make
+        stack = create(:stack)
         process1 = ProcessModelFactory.make(stack:)
         process2 = ProcessModelFactory.make(stack:)
         expect(stack.apps).to contain_exactly(process1, process2)
       end
 
       it 'does not associate non-web v2 apps' do
-        stack = Stack.make
+        stack = create(:stack)
         process1 = ProcessModelFactory.make(type: 'web', stack: stack)
         ProcessModelFactory.make(type: 'other', stack: stack)
         expect(stack.apps).to contain_exactly(process1)
@@ -24,7 +24,7 @@ module VCAP::CloudController
 
     describe 'uniqueness' do
       it 'enforces uniqueness of name' do
-        existing_stack = Stack.make
+        existing_stack = create(:stack)
         expect do
           Stack.create(name: existing_stack.name)
         end.to raise_error(Sequel::ValidationFailed, /unique/)
@@ -37,7 +37,7 @@ module VCAP::CloudController
 
       describe 'state validation' do
         it 'accepts valid states' do
-          stack = Stack.make
+          stack = create(:stack)
           StackStates::VALID_STATES.each do |valid_state|
             stack.state = valid_state
             expect(stack).to be_valid
@@ -45,14 +45,14 @@ module VCAP::CloudController
         end
 
         it 'rejects invalid states' do
-          stack = Stack.make
+          stack = create(:stack)
           stack.state = 'INVALID'
           expect(stack).not_to be_valid
           expect(stack.errors[:state]).to include(:includes)
         end
 
         it 'does not allow nil state' do
-          stack = Stack.make
+          stack = create(:stack)
           stack.state = nil
           expect(stack).not_to be_valid
         end
@@ -216,7 +216,7 @@ module VCAP::CloudController
         before { Stack.dataset.destroy }
 
         context 'when stack is found with default name' do
-          before { Stack.make(name: 'default-stack-name') }
+          before { create(:stack, name: 'default-stack-name') }
 
           it 'returns found stack' do
             expect(Stack.default.name).to eq('default-stack-name')
@@ -236,7 +236,7 @@ module VCAP::CloudController
     describe '#default?' do
       before { Stack.configure(file) }
 
-      let(:stack) { Stack.make(name:) }
+      let(:stack) { create(:stack, name:) }
       let(:name) { 'mimi' }
 
       context 'when config was not set' do
@@ -267,7 +267,7 @@ module VCAP::CloudController
         end
 
         context 'when stack does NOT have the default name' do
-          before { Stack.make(name: 'default-stack-name') }
+          before { create(:stack, name: 'default-stack-name') }
 
           it 'returns false' do
             expect(stack.default?).to be false
@@ -277,7 +277,7 @@ module VCAP::CloudController
     end
 
     describe '#destroy' do
-      let(:stack) { Stack.make }
+      let(:stack) { create(:stack) }
 
       it 'succeeds if there are no apps' do
         expect { stack.destroy }.not_to raise_error

@@ -5,9 +5,9 @@ RSpec.resource 'Service Usage Events', type: %i[api legacy_api] do
   let(:admin_auth_header) { admin_headers['HTTP_AUTHORIZATION'] }
   authenticated_request
   let(:guid) { VCAP::CloudController::ServiceUsageEvent.first.guid }
-  let!(:event1) { VCAP::CloudController::ServiceUsageEvent.make }
-  let!(:event2) { VCAP::CloudController::ServiceUsageEvent.make }
-  let!(:event3) { VCAP::CloudController::ServiceUsageEvent.make }
+  let!(:event1) { FactoryBot.create(:service_usage_event) }
+  let!(:event2) { FactoryBot.create(:service_usage_event) }
+  let!(:event3) { FactoryBot.create(:service_usage_event) }
 
   standard_model_get :service_usage_event
 

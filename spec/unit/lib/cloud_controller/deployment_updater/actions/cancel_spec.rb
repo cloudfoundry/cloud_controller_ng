@@ -6,37 +6,33 @@ module VCAP::CloudController
     subject(:cancel_action) { DeploymentUpdater::Actions::Cancel.new(deployment, logger) }
     let(:a_day_ago) { Time.now - 1.day }
     let(:an_hour_ago) { Time.now - 1.hour }
-    let(:organization) { Organization.make }
-    let(:space) { Space.make(organization: organization, space_quota_definition: quota) }
-    let(:app) { AppModel.make(droplet: droplet, revisions_enabled: true, space: space) }
-    let(:droplet) { DropletModel.make }
+    let(:organization) { create(:organization) }
+    let(:space) { create(:space, organization: organization, space_quota_definition: quota) }
+    let(:app) { create(:app_model, droplet: droplet, revisions_enabled: true, space: space) }
+    let(:droplet) { create(:droplet_model) }
     let(:memory) { 1024 }
     let(:memory_limit) { memory * 1000 }
-    let(:quota) { SpaceQuotaDefinition.make(organization:, memory_limit:) }
+    let(:quota) { create(:space_quota_definition, organization:, memory_limit:) }
     let!(:web_process) do
-      ProcessModel.make(
-        instances: current_web_instances,
-        created_at: a_day_ago,
-        guid: 'guid-original',
-        app: app,
-        memory: memory,
-        state: ProcessModel::STARTED
-      )
+      create(:process_model, instances: current_web_instances,
+                             created_at: a_day_ago,
+                             guid: 'guid-original',
+                             app: app,
+                             memory: memory,
+                             state: ProcessModel::STARTED)
     end
-    let!(:route_mapping) { RouteMappingModel.make(app: web_process.app, process_type: web_process.type) }
+    let!(:route_mapping) { create(:route_mapping_model, app: web_process.app, process_type: web_process.type) }
     let!(:deploying_web_process) do
-      ProcessModel.make(
-        app: web_process.app,
-        type: ProcessTypes::WEB,
-        instances: current_deploying_instances,
-        guid: 'guid-final',
-        revision: revision,
-        memory: memory,
-        state: ProcessModel::STARTED
-      )
+      create(:process_model, app: web_process.app,
+                             type: ProcessTypes::WEB,
+                             instances: current_deploying_instances,
+                             guid: 'guid-final',
+                             revision: revision,
+                             memory: memory,
+                             state: ProcessModel::STARTED)
     end
-    let(:revision) { RevisionModel.make(app: app, droplet: droplet, version: 300) }
-    let!(:deploying_route_mapping) { RouteMappingModel.make(app: web_process.app, process_type: deploying_web_process.type) }
+    let(:revision) { create(:revision_model, app: app, droplet: droplet, version: 300) }
+    let!(:deploying_route_mapping) { create(:route_mapping_model, app: web_process.app, process_type: deploying_web_process.type) }
     let(:original_web_process_instance_count) { 6 }
     let(:current_web_instances) { 2 }
 
@@ -44,13 +40,11 @@ module VCAP::CloudController
     let(:current_deploying_instances) { 0 }
 
     let(:deployment) do
-      DeploymentModel.make(
-        app: web_process.app,
-        deploying_web_process: deploying_web_process,
-        state: state,
-        original_web_process_instance_count: original_web_process_instance_count,
-        max_in_flight: 1
-      )
+      create(:deployment_model, app: web_process.app,
+                                deploying_web_process: deploying_web_process,
+                                state: state,
+                                original_web_process_instance_count: original_web_process_instance_count,
+                                max_in_flight: 1)
     end
 
     let(:diego_instances_reporter) { instance_double(Diego::InstancesReporter) }
@@ -90,26 +84,20 @@ module VCAP::CloudController
 
     context 'when there are interim deployments' do
       let!(:interim_deploying_web_process) do
-        ProcessModel.make(
-          app: app,
-          created_at: an_hour_ago,
-          type: ProcessTypes::WEB,
-          instances: 1,
-          guid: 'guid-interim'
-        )
+        create(:process_model, app: app,
+                               created_at: an_hour_ago,
+                               type: ProcessTypes::WEB,
+                               instances: 1,
+                               guid: 'guid-interim')
       end
       let!(:interim_deployed_superseded_deployment) do
-        DeploymentModel.make(
-          deploying_web_process: interim_deploying_web_process,
-          state: 'DEPLOYED',
-          status_reason: 'SUPERSEDED'
-        )
+        create(:deployment_model, deploying_web_process: interim_deploying_web_process,
+                                  state: 'DEPLOYED',
+                                  status_reason: 'SUPERSEDED')
       end
       let!(:interim_route_mapping) do
-        RouteMappingModel.make(
-          app: web_process.app,
-          process_type: interim_deploying_web_process.type
-        )
+        create(:route_mapping_model, app: web_process.app,
+                                     process_type: interim_deploying_web_process.type)
       end
 
       it 'scales up the most recent interim web process' do
@@ -125,20 +113,16 @@ module VCAP::CloudController
 
       context 'when there is an interim deployment that has been SUPERSEDED (CANCELED)' do
         let!(:interim_canceling_web_process) do
-          ProcessModel.make(
-            app: app,
-            created_at: an_hour_ago + 1,
-            type: ProcessTypes::WEB,
-            instances: 1,
-            guid: 'guid-canceling'
-          )
+          create(:process_model, app: app,
+                                 created_at: an_hour_ago + 1,
+                                 type: ProcessTypes::WEB,
+                                 instances: 1,
+                                 guid: 'guid-canceling')
         end
         let!(:interim_canceled_superseded_deployment) do
-          DeploymentModel.make(
-            deploying_web_process: interim_canceling_web_process,
-            state: 'CANCELED',
-            status_reason: 'SUPERSEDED'
-          )
+          create(:deployment_model, deploying_web_process: interim_canceling_web_process,
+                                    state: 'CANCELED',
+                                    status_reason: 'SUPERSEDED')
         end
 
         it 'sets the most recent interim web process belonging to a SUPERSEDED (DEPLOYED) deployment as the only web process' do
@@ -156,20 +140,16 @@ module VCAP::CloudController
           }
         end
         let!(:interim_deploying_web_process_no_running_instance) do
-          ProcessModel.make(
-            app: app,
-            created_at: an_hour_ago + 1,
-            type: ProcessTypes::WEB,
-            instances: 1,
-            guid: 'guid-no-running-instance'
-          )
+          create(:process_model, app: app,
+                                 created_at: an_hour_ago + 1,
+                                 type: ProcessTypes::WEB,
+                                 instances: 1,
+                                 guid: 'guid-no-running-instance')
         end
         let!(:interim_deployed_superseded_deployment_no_running_instance) do
-          DeploymentModel.make(
-            deploying_web_process: interim_deploying_web_process_no_running_instance,
-            state: 'DEPLOYED',
-            status_reason: 'SUPERSEDED'
-          )
+          create(:deployment_model, deploying_web_process: interim_deploying_web_process_no_running_instance,
+                                    state: 'DEPLOYED',
+                                    status_reason: 'SUPERSEDED')
         end
 
         before do

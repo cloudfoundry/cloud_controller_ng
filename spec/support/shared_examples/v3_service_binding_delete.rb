@@ -5,9 +5,9 @@ require 'cloud_controller/http_request_error'
 
 RSpec.shared_examples 'service binding deletion' do |binding_model|
   describe '#delete' do
-    let(:service_offering) { VCAP::CloudController::Service.make(bindings_retrievable: true, requires: ['route_forwarding']) }
-    let(:service_plan) { VCAP::CloudController::ServicePlan.make(service: service_offering) }
-    let(:service_instance) { VCAP::CloudController::ManagedServiceInstance.make(space:, service_plan:) }
+    let(:service_offering) { create(:service, bindings_retrievable: true, requires: ['route_forwarding']) }
+    let(:service_plan) { create(:service_plan, service: service_offering) }
+    let(:service_instance) { create(:managed_service_instance, space:, service_plan:) }
     let(:unbind_response) { { async: false } }
     let(:broker_client) { instance_double(VCAP::Services::ServiceBrokers::V2::Client, unbind: unbind_response) }
 
@@ -158,9 +158,9 @@ end
 
 RSpec.shared_examples 'polling service binding deletion' do
   describe '#poll' do
-    let(:service_offering) { VCAP::CloudController::Service.make(bindings_retrievable: true, requires: ['route_forwarding']) }
-    let(:service_plan) { VCAP::CloudController::ServicePlan.make(service: service_offering) }
-    let(:service_instance) { VCAP::CloudController::ManagedServiceInstance.make(space:, service_plan:) }
+    let(:service_offering) { create(:service, bindings_retrievable: true, requires: ['route_forwarding']) }
+    let(:service_plan) { create(:service_plan, service: service_offering) }
+    let(:service_instance) { create(:managed_service_instance, space:, service_plan:) }
     let(:description) { Sham.description }
     let(:state) { 'in progress' }
     let(:fetch_last_operation_response) do

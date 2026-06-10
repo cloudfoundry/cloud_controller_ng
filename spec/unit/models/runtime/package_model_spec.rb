@@ -59,7 +59,7 @@ module VCAP::CloudController
     end
 
     describe '#succeed_upload!' do
-      let!(:package) { PackageModel.make state: PackageModel::PENDING_STATE }
+      let!(:package) { create(:package_model, state: PackageModel::PENDING_STATE) }
 
       it 'updates the checksums and moves the package state to READY' do
         package.succeed_upload!(sha1: 'sha-1-checksum', sha256: 'sha-2-checksum')
@@ -80,9 +80,9 @@ module VCAP::CloudController
     end
 
     describe 'metadata' do
-      let(:package) { PackageModel.make }
-      let(:annotation) { PackageAnnotationModel.make(package: package, key_name: 'test1', value: 'bommel') }
-      let(:label) { PackageLabelModel.make(package: package, key_name: 'test1', value: 'bommel') }
+      let(:package) { create(:package_model) }
+      let(:annotation) { create(:package_annotation_model, package: package, key_name: 'test1', value: 'bommel') }
+      let(:label) { create(:package_label_model, package: package, key_name: 'test1', value: 'bommel') }
 
       it 'can access its metadata' do
         expect(annotation.package.guid).to eq(package.guid)

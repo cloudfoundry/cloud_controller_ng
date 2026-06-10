@@ -6,11 +6,11 @@ module VCAP::CloudController
   RSpec.describe VCAP::CloudController::ServiceUpdateValidator, :services do
     describe '#validate_service_instance' do
       let(:service_broker_url) { "http://example.com/v2/service_instances/#{service_instance.guid}" }
-      let(:service_broker) { ServiceBroker.make(broker_url: 'http://example.com', auth_username: 'auth_username', auth_password: 'auth_password') }
-      let(:service) { Service.make(plan_updateable: true, service_broker: service_broker) }
-      let(:old_service_plan) { ServicePlan.make(:v2, service: service, free: true, maintenance_info: { version: '2.0.0' }) }
-      let(:new_service_plan) { ServicePlan.make(:v2, service:) }
-      let(:service_instance) { ManagedServiceInstance.make(service_plan: old_service_plan) }
+      let(:service_broker) { create(:service_broker, broker_url: 'http://example.com', auth_username: 'auth_username', auth_password: 'auth_password') }
+      let(:service) { create(:service, plan_updateable: true, service_broker: service_broker) }
+      let(:old_service_plan) { create(:service_plan, :v2, service: service, free: true, maintenance_info: { version: '2.0.0' }) }
+      let(:new_service_plan) { create(:service_plan, :v2, service:) }
+      let(:service_instance) { create(:managed_service_instance, service_plan: old_service_plan) }
       let(:space) { service_instance.space }
 
       let(:update_attrs) { {} }
@@ -49,7 +49,7 @@ module VCAP::CloudController
           let(:active) {}
           let(:public) {}
 
-          let(:old_service_plan) { ServicePlan.make(:v2, service:, active:, public:) }
+          let(:old_service_plan) { create(:service_plan, :v2, service:, active:, public:) }
 
           context 'when the current user is an admin' do
             before do
@@ -80,7 +80,7 @@ module VCAP::CloudController
               let(:public) { false }
 
               before do
-                ServicePlanVisibility.make(organization: space.organization, service_plan: old_service_plan)
+                create(:service_plan_visibility, organization: space.organization, service_plan: old_service_plan)
               end
 
               it 'allows the update' do
@@ -103,10 +103,10 @@ module VCAP::CloudController
         end
 
         context 'when the model errors' do
-          let(:smol_space_quota) { VCAP::CloudController::SpaceQuotaDefinition.make(guid: 'smol-space-quota-guid', organization: space.organization, total_services: 1) }
+          let(:smol_space_quota) { create(:space_quota_definition, guid: 'smol-space-quota-guid', organization: space.organization, total_services: 1) }
 
           before do
-            ManagedServiceInstance.make(service_plan: old_service_plan, space: space)
+            create(:managed_service_instance, service_plan: old_service_plan, space: space)
             smol_space_quota.add_space(space)
           end
 
@@ -120,15 +120,14 @@ module VCAP::CloudController
         end
 
         context 'when the requested plan is not bindable' do
-          let(:new_service_plan) { ServicePlan.make(:v2, service: service, bindable: false) }
+          let(:new_service_plan) { create(:service_plan, :v2, service: service, bindable: false) }
           let(:update_attrs) { { 'service_plan_guid' => new_service_plan.guid } }
 
           context 'and service bindings exist' do
             before do
-              ServiceBinding.make(
-                app: AppModel.make(space: service_instance.space),
-                service_instance: service_instance
-              )
+              create(:service_binding,
+                     app: create(:app_model, space: service_instance.space),
+                     service_instance: service_instance)
             end
 
             it 'raises a validation error' do
@@ -214,9 +213,9 @@ module VCAP::CloudController
         end
 
         context 'when the plan is in a different service' do
-          let(:other_broker) { ServiceBroker.make }
-          let(:other_service) { Service.make(plan_updateable: true, service_broker: other_broker) }
-          let(:new_service_plan) { ServicePlan.make(:v2, service: other_service) }
+          let(:other_broker) { create(:service_broker) }
+          let(:other_service) { create(:service, plan_updateable: true, service_broker: other_broker) }
+          let(:new_service_plan) { create(:service_plan, :v2, service: other_service) }
           let(:update_attrs) { { 'service_plan_guid' => new_service_plan.guid } }
 
           it 'raises a validation error' do
@@ -227,7 +226,7 @@ module VCAP::CloudController
         end
 
         context 'when the service instance is shared' do
-          let(:shared_space) { Space.make }
+          let(:shared_space) { create(:space) }
 
           before do
             service_instance.add_shared_space(shared_space)
@@ -262,7 +261,7 @@ module VCAP::CloudController
 
         context 'when maintenance_info is absent on service_plan and maintenance_info update requested' do
           let(:update_attrs) { { 'maintenance_info' => { 'version' => '2.0.0' } } }
-          let(:old_service_plan) { ServicePlan.make(:v2, service: service, free: true) }
+          let(:old_service_plan) { create(:service_plan, :v2, service: service, free: true) }
 
           it 'errors' do
             expect do
@@ -306,21 +305,20 @@ module VCAP::CloudController
         end
 
         context 'paid plans' do
-          let(:old_service_plan) { ServicePlan.make(:v2, service: service, free: false) }
+          let(:old_service_plan) { create(:service_plan, :v2, service: service, free: false) }
 
           let(:free_quota) do
-            QuotaDefinition.make(
-              total_services: 10,
-              non_basic_services_allowed: false
-            )
+            create(:quota_definition,
+                   total_services: 10,
+                   non_basic_services_allowed: false)
           end
 
-          let(:free_plan) { ServicePlan.make(:v2, free: true) }
-          let(:org) { Organization.make(quota_definition: free_quota) }
+          let(:free_plan) { create(:service_plan, :v2, free: true) }
+          let(:org) { create(:organization, quota_definition: free_quota) }
           let(:developer) { make_developer_for_space(space) }
 
           context 'when paid plans are disabled for the quota' do
-            let(:service_instance) { ManagedServiceInstance.make(service_plan: old_service_plan) }
+            let(:service_instance) { create(:managed_service_instance, service_plan: old_service_plan) }
 
             before do
               space.space_quota_definition = free_quota
@@ -338,7 +336,7 @@ module VCAP::CloudController
             end
 
             context 'when changing to an unpaid plan from a paid plan' do
-              let(:new_service_plan) { ServicePlan.make(:v2, service: service, free: true) }
+              let(:new_service_plan) { create(:service_plan, :v2, service: service, free: true) }
               let(:update_attrs) { { 'service_plan_guid' => new_service_plan.guid } }
 
               it 'succeeds' do
@@ -353,7 +351,7 @@ module VCAP::CloudController
             end
 
             context 'when changing to a different paid plan from a paid plan' do
-              let(:new_service_plan) { ServicePlan.make(:v2, service: service, free: false) }
+              let(:new_service_plan) { create(:service_plan, :v2, service: service, free: false) }
               let(:update_attrs) { { 'service_plan_guid' => new_service_plan.guid } }
 
               it 'errors' do
@@ -374,7 +372,7 @@ module VCAP::CloudController
           end
 
           context 'when paid plans are enabled for the quota' do
-            let(:new_service_plan) { ServicePlan.make(:v2, service: service, free: false) }
+            let(:new_service_plan) { create(:service_plan, :v2, service: service, free: false) }
             let(:update_attrs) { { 'service_plan_guid' => new_service_plan.guid } }
 
             it 'succeeds for paid plans' do
@@ -386,7 +384,7 @@ module VCAP::CloudController
         context 'when parameters update requested' do
           let(:update_attrs) { { 'parameters' => { 'foo' => 'bar' } } }
 
-          let(:old_service_plan) { ServicePlan.make(:v2, service:, active:, public:) }
+          let(:old_service_plan) { create(:service_plan, :v2, service:, active:, public:) }
 
           let(:active) {}
           let(:public) {}

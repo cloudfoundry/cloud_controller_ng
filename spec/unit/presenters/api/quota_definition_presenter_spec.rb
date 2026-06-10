@@ -4,7 +4,7 @@ RSpec.describe QuotaDefinitionPresenter do
   describe '#to_hash' do
     subject { QuotaDefinitionPresenter.new(quota_definition) }
 
-    let(:quota_definition) { VCAP::CloudController::QuotaDefinition.make }
+    let(:quota_definition) { create(:quota_definition) }
 
     it 'creates a valid JSON' do
       expect(subject.to_hash).to eq({

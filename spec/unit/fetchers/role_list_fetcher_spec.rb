@@ -6,17 +6,17 @@ module VCAP::CloudController
     describe '#fetch' do
       subject { RoleListFetcher.fetch(message, Role.dataset) }
 
-      let!(:user1) { User.make }
-      let!(:user2) { User.make }
-      let!(:org_1) { Organization.make }
-      let!(:org_2) { Organization.make }
-      let!(:space_1) { Space.make(organization: org_1) }
-      let!(:space_2) { Space.make(organization: org_2) }
-      let!(:space_1_role_1) { SpaceAuditor.make(user: user1, space: space_1) }
-      let!(:space_2_role_1) { SpaceAuditor.make(user: user1, space: space_2) }
-      let!(:org_1_role_1) { OrganizationUser.make(user: user1, organization: org_1) }
-      let!(:space_1_role_2) { SpaceManager.make(user: user2, space: space_1) }
-      let!(:org_1_role_2) { OrganizationUser.make(user: user2, organization: org_1) }
+      let!(:user1) { create(:user) }
+      let!(:user2) { create(:user) }
+      let!(:org_1) { create(:organization) }
+      let!(:org_2) { create(:organization) }
+      let!(:space_1) { create(:space, organization: org_1) }
+      let!(:space_2) { create(:space, organization: org_2) }
+      let!(:space_1_role_1) { create(:space_auditor, user: user1, space: space_1) }
+      let!(:space_2_role_1) { create(:space_auditor, user: user1, space: space_2) }
+      let!(:org_1_role_1) { create(:organization_user, user: user1, organization: org_1) }
+      let!(:space_1_role_2) { create(:space_manager, user: user2, space: space_1) }
+      let!(:org_1_role_2) { create(:organization_user, user: user2, organization: org_1) }
 
       let(:message) { RolesListMessage.from_params(filters) }
 

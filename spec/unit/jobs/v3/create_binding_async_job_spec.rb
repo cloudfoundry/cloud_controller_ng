@@ -17,7 +17,7 @@ module VCAP::CloudController
 
       describe '#handle_timeout' do
         let(:service_instance) do
-          ManagedServiceInstance.make(service_plan: plan).tap do |si|
+          create(:managed_service_instance, service_plan: plan).tap do |si|
             si.save_with_new_operation(
               {},
               {
@@ -27,14 +27,14 @@ module VCAP::CloudController
             )
           end
         end
-        let(:plan) { ServicePlan.make(maintenance_info:) }
+        let(:plan) { create(:service_plan, maintenance_info:) }
         let(:maintenance_info) { { 'version' => '1.2.0' } }
         let(:service_binding) do
           ServiceBinding.new.save_with_attributes_and_new_operation(
             {
               type: 'app',
               service_instance: service_instance,
-              app: AppModel.make(space: service_instance.space),
+              app: create(:app_model, space: service_instance.space),
               credentials: {}
             },
             {
@@ -89,7 +89,7 @@ module VCAP::CloudController
       end
 
       context 'route' do
-        let(:route) { VCAP::CloudController::Route.make(space:) }
+        let(:route) { create(:route, space:) }
         let(:binding) do
           RouteBinding.new.save_with_attributes_and_new_operation(
             {
@@ -112,7 +112,7 @@ module VCAP::CloudController
             {
               type: 'app',
               service_instance: service_instance,
-              app: AppModel.make(space: service_instance.space),
+              app: create(:app_model, space: service_instance.space),
               credentials: {}
             },
             {

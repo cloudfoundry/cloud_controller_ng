@@ -4,23 +4,23 @@ require 'spec_helper'
 
 module VCAP::CloudController
   RSpec.describe SpaceSummariesController do
-    let(:space) { Space.make }
+    let(:space) { create(:space) }
     let(:process) { ProcessModelFactory.make(space:) }
     let(:app_model) { process.app }
-    let!(:first_route) { Route.make(space:) }
-    let!(:second_route) { Route.make(space:) }
-    let(:first_service) { ManagedServiceInstance.make(space:) }
-    let(:second_service) { ManagedServiceInstance.make(space:) }
+    let!(:first_route) { create(:route, space:) }
+    let!(:second_route) { create(:route, space:) }
+    let(:first_service) { create(:managed_service_instance, space:) }
+    let(:second_service) { create(:managed_service_instance, space:) }
 
     let(:instances_reporters) { double(:instances_reporters) }
     let(:running_instances) { { app_model.guid => 5 } }
 
     before do
-      ServiceBinding.make(app: process.app, service_instance: first_service)
-      ServiceBinding.make(app: process.app, service_instance: second_service)
+      create(:service_binding, app: process.app, service_instance: first_service)
+      create(:service_binding, app: process.app, service_instance: second_service)
 
-      RouteMappingModel.make(app: process.app, route: first_route, process_type: process.type)
-      RouteMappingModel.make(app: process.app, route: second_route, process_type: process.type)
+      create(:route_mapping_model, app: process.app, route: first_route, process_type: process.type)
+      create(:route_mapping_model, app: process.app, route: second_route, process_type: process.type)
 
       allow(CloudController::DependencyLocator.instance).to receive(:instances_reporters).and_return(instances_reporters)
       allow(instances_reporters).to receive(:number_of_starting_and_running_instances_for_processes).and_return(running_instances)
@@ -64,11 +64,11 @@ module VCAP::CloudController
       end
 
       it 'returns service summary for the space, including private service instances' do
-        foo_space = Space.make
-        private_broker = ServiceBroker.make(space_guid: foo_space.guid)
-        service = Service.make(service_broker: private_broker)
-        service_plan = ServicePlan.make(service: service, public: false)
-        service_instance = ManagedServiceInstance.make(space:, service_plan:)
+        foo_space = create(:space)
+        private_broker = create(:service_broker, space_guid: foo_space.guid)
+        service = create(:service, service_broker: private_broker)
+        service_plan = create(:service_plan, service: service, public: false)
+        service_instance = create(:managed_service_instance, space:, service_plan:)
 
         get "/v2/spaces/#{space.guid}/summary"
 
@@ -76,11 +76,11 @@ module VCAP::CloudController
       end
 
       it 'does not return private services from other spaces' do
-        other_space = Space.make
-        private_broker2 = ServiceBroker.make(space: other_space)
-        service2 = Service.make(service_broker: private_broker2)
-        service_plan2 = ServicePlan.make(service: service2, public: false)
-        service_instance2 = ManagedServiceInstance.make(space: other_space, service_plan: service_plan2)
+        other_space = create(:space)
+        private_broker2 = create(:service_broker, space: other_space)
+        service2 = create(:service, service_broker: private_broker2)
+        service_plan2 = create(:service_plan, service: service2, public: false)
+        service_instance2 = create(:managed_service_instance, space: other_space, service_plan: service_plan2)
 
         get "/v2/spaces/#{space.guid}/summary"
 
@@ -89,8 +89,8 @@ module VCAP::CloudController
       end
 
       it 'does not include sharing information for not-shared service instances' do
-        space = Space.make
-        ManagedServiceInstance.make(space:)
+        space = create(:space)
+        create(:managed_service_instance, space:)
 
         get "/v2/spaces/#{space.guid}/summary"
 
@@ -107,9 +107,9 @@ module VCAP::CloudController
       end
 
       context 'when a managed service has been shared into this space' do
-        let(:receiver_space) { Space.make }
-        let(:originating_space) { Space.make }
-        let(:service_instance) { ManagedServiceInstance.make(space: originating_space) }
+        let(:receiver_space) { create(:space) }
+        let(:originating_space) { create(:space) }
+        let(:service_instance) { create(:managed_service_instance, space: originating_space) }
         let(:services_response) { decoded_response['services'] }
 
         before do
@@ -137,9 +137,9 @@ module VCAP::CloudController
       end
 
       context 'when a managed service instance is shared into another space' do
-        let(:host_space) { Space.make }
-        let(:service_instance) { ManagedServiceInstance.make(space: host_space) }
-        let(:foreign_space) { Space.make }
+        let(:host_space) { create(:space) }
+        let(:service_instance) { create(:managed_service_instance, space: host_space) }
+        let(:foreign_space) { create(:space) }
         let(:services_response) { decoded_response['services'] }
 
         before do
@@ -178,7 +178,7 @@ module VCAP::CloudController
       context 'when the app has rolled to a new web process' do
         before do
           process.destroy
-          ProcessModel.make(app: app_model, type: ProcessTypes::WEB)
+          create(:process_model, app: app_model, type: ProcessTypes::WEB)
         end
 
         it 'returns the space apps with the appropriate app guid' do

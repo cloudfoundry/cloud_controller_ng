@@ -2,7 +2,7 @@ require 'spec_helper'
 require 'presenters/v3/event_presenter'
 
 RSpec.describe VCAP::CloudController::Presenters::V3::EventPresenter do
-  let(:event) { VCAP::CloudController::Event.make }
+  let(:event) { create(:event) }
 
   describe '#to_hash' do
     let(:result) { described_class.new(event).to_hash }

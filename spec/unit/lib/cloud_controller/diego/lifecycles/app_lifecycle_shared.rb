@@ -1,5 +1,5 @@
 RSpec.shared_examples_for 'a app lifecycle' do
-  let(:app) { VCAP::CloudController::AppModel.make }
+  let(:app) { create(:app_model) }
 
   it 'creates a lifecycle data model' do
     expect do

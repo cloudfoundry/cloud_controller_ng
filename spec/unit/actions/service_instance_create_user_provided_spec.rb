@@ -7,7 +7,7 @@ module VCAP
     RSpec.describe ServiceInstanceCreateUserProvided do
       subject(:action) { described_class.new(event_repository) }
 
-      let(:space) { Space.make }
+      let(:space) { create(:space) }
       let(:message) { ServiceInstanceCreateUserProvidedMessage.new(request) }
       let(:instance) { ServiceInstance.last }
       let(:name) { 'my-service-instance' }
@@ -129,7 +129,7 @@ module VCAP
 
           describe 'when already taken' do
             it 'raises an error' do
-              ServiceInstance.make(name:, space:)
+              create(:service_instance, name:, space:)
 
               expect { action.create(message) }.
                 to raise_error(

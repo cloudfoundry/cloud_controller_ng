@@ -12,8 +12,8 @@ module VCAP::CloudController
       let(:manifest_triggered) { false }
       let(:audit_hash) { { some_info: 'some_value' } }
       let(:volume_mount_services_enabled) { true }
-      let(:space) { Space.make }
-      let(:app) { AppModel.make(space:) }
+      let(:space) { create(:space) }
+      let(:app) { create(:app_model, space:) }
       let(:binding_details) {}
       let(:user_guid) { Sham.uaa_id }
       let(:user_audit_info) { UserAuditInfo.new(user_email: 'run@lola.run', user_guid: user_guid) }
@@ -68,7 +68,7 @@ module VCAP::CloudController
           end
 
           context 'when a binding already exists' do
-            let!(:binding) { ServiceBinding.make(service_instance:, app:) }
+            let!(:binding) { create(:service_binding, service_instance:, app:) }
 
             context 'when no last binding operation exists' do
               it 'raises an error' do
@@ -139,7 +139,7 @@ module VCAP::CloudController
           end
 
           context 'app_guid + name uniqueness validation' do
-            let!(:other_binding) { ServiceBinding.make(service_instance: other_service_instance, app: app, name: name) }
+            let!(:other_binding) { create(:service_binding, service_instance: other_service_instance, app: app, name: name) }
 
             context 'two bindings with the same binding name' do
               it 'raises an error' do
@@ -162,8 +162,8 @@ module VCAP::CloudController
           end
 
           context 'when app and service instance are in different spaces' do
-            let(:different_space) { Space.make }
-            let(:app) { AppModel.make(space: different_space) }
+            let(:different_space) { create(:space) }
+            let(:app) { create(:app_model, space: different_space) }
 
             it 'raises an error' do
               expect do
@@ -178,7 +178,7 @@ module VCAP::CloudController
               # We mock that a second binding is created after the first one acquires a lock and expect an `UnprocessableCreate` error.
               allow(app).to receive(:lock!).and_wrap_original do |m, *args, &block|
                 m.call(*args, &block)
-                ServiceBinding.make(service_instance:, app:)
+                create(:service_binding, service_instance:, app:)
               end
 
               expect do
@@ -191,8 +191,8 @@ module VCAP::CloudController
 
           context 'when multiple bindings are allowed' do
             let(:message) { VCAP::CloudController::ServiceCredentialAppBindingCreateMessage.new({ name: name, strategy: 'multiple' }) }
-            let(:binding_1) { ServiceBinding.make(service_instance:, app:, name:) }
-            let(:binding_2) { ServiceBinding.make(service_instance:, app:, name:) }
+            let(:binding_1) { create(:service_binding, service_instance:, app:, name:) }
+            let(:binding_2) { create(:service_binding, service_instance:, app:, name:) }
 
             before do
               TestConfig.override(max_service_credential_bindings_per_app_service_instance: 3)
@@ -300,8 +300,8 @@ module VCAP::CloudController
             }
           end
 
-          let(:service_instance) { UserProvidedServiceInstance.make(**si_details) }
-          let(:other_service_instance) { UserProvidedServiceInstance.make(**si_details, name: 'other_instance_name') }
+          let(:service_instance) { create(:user_provided_service_instance, **si_details) }
+          let(:other_service_instance) { create(:user_provided_service_instance, **si_details, name: 'other_instance_name') }
 
           it_behaves_like 'the credential binding precursor'
         end
@@ -314,14 +314,14 @@ module VCAP::CloudController
             }
           end
 
-          let(:service_instance) { ManagedServiceInstance.make(**si_details) }
-          let(:other_service_instance) { ManagedServiceInstance.make(**si_details, name: 'other_instance_name') }
+          let(:service_instance) { create(:managed_service_instance, **si_details) }
+          let(:other_service_instance) { create(:managed_service_instance, **si_details, name: 'other_instance_name') }
 
           it_behaves_like 'the credential binding precursor'
 
           context 'when binding from an app in a shared space' do
-            let(:other_space) { Space.make }
-            let(:service_instance) { ManagedServiceInstance.make(**si_details, space: other_space) }
+            let(:other_space) { create(:space) }
+            let(:service_instance) { create(:managed_service_instance, **si_details, space: other_space) }
 
             before { service_instance.add_shared_space(space) }
 
@@ -350,7 +350,7 @@ module VCAP::CloudController
             end
 
             context 'when the service is a volume service and service volume mounting is disabled' do
-              let(:service_instance) { ManagedServiceInstance.make(:volume_mount, **si_details) }
+              let(:service_instance) { create(:managed_service_instance, :volume_mount, **si_details) }
 
               it 'raises an error' do
                 expect do
@@ -360,7 +360,7 @@ module VCAP::CloudController
             end
 
             context 'when the service is a volume service and service volume mounting is enabled' do
-              let(:service_instance) { ManagedServiceInstance.make(:volume_mount, **si_details) }
+              let(:service_instance) { create(:managed_service_instance, :volume_mount, **si_details) }
 
               it 'does not raise an error' do
                 expect do
@@ -406,9 +406,9 @@ module VCAP::CloudController
 
         describe 'app specific behaviour' do
           context 'managed service instance' do
-            let(:service_offering) { Service.make(bindings_retrievable: true) }
-            let(:service_plan) { ServicePlan.make(service: service_offering) }
-            let(:service_instance) { ManagedServiceInstance.make(space:, service_plan:) }
+            let(:service_offering) { create(:service, bindings_retrievable: true) }
+            let(:service_plan) { create(:service_plan, service: service_offering) }
+            let(:service_instance) { create(:managed_service_instance, space:, service_plan:) }
             let(:broker_client) { instance_double(VCAP::Services::ServiceBrokers::V2::Client, bind: bind_response) }
 
             before do
@@ -470,7 +470,7 @@ module VCAP::CloudController
                 syslog_drain_url: 'https://drain.syslog.example.com/runlolarun'
               }
             end
-            let(:service_instance) { UserProvidedServiceInstance.make(**details) }
+            let(:service_instance) { create(:user_provided_service_instance, **details) }
 
             it_behaves_like 'the sync credential binding', ServiceBinding, true
 

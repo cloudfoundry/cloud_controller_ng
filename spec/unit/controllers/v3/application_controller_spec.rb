@@ -68,7 +68,7 @@ RSpec.describe ApplicationController, type: :controller do
 
   describe '#check_read_permissions' do
     before do
-      set_current_user(VCAP::CloudController::User.make, scopes: [])
+      set_current_user(create(:user), scopes: [])
     end
 
     it 'is required on index' do
@@ -256,7 +256,7 @@ RSpec.describe ApplicationController, type: :controller do
   end
 
   describe '#handle_blobstore_error' do
-    let!(:user) { set_current_user(VCAP::CloudController::User.make) }
+    let!(:user) { set_current_user(create(:user)) }
 
     it 'rescues from ApiError and renders an error presenter' do
       allow_any_instance_of(ErrorPresenter).to receive(:raise_500?).and_return(false)
@@ -268,7 +268,7 @@ RSpec.describe ApplicationController, type: :controller do
   end
 
   describe '#handle_api_error' do
-    let!(:user) { set_current_user(VCAP::CloudController::User.make) }
+    let!(:user) { set_current_user(create(:user)) }
 
     it 'rescues from ApiError and renders an error presenter' do
       routes.draw { get 'api_explode' => 'anonymous#api_explode' }
@@ -279,7 +279,7 @@ RSpec.describe ApplicationController, type: :controller do
   end
 
   describe '#handle_compound_error' do
-    let!(:user) { set_current_user(VCAP::CloudController::User.make) }
+    let!(:user) { set_current_user(create(:user)) }
 
     it 'rescues from CompoundErrors and renders an error presenter' do
       routes.draw { get 'compound_error' => 'anonymous#compound_error' }
@@ -290,7 +290,7 @@ RSpec.describe ApplicationController, type: :controller do
   end
 
   describe '#handle_not_found' do
-    let!(:user) { set_current_user(VCAP::CloudController::User.make) }
+    let!(:user) { set_current_user(create(:user)) }
 
     it 'rescues from NotFound error and renders an error presenter' do
       routes.draw { get 'not_found' => 'anonymous#not_found' }
@@ -301,7 +301,7 @@ RSpec.describe ApplicationController, type: :controller do
   end
 
   describe '#handle_db_connection_error' do
-    let!(:user) { set_current_user(VCAP::CloudController::User.make) }
+    let!(:user) { set_current_user(create(:user)) }
 
     before do
       allow_any_instance_of(ErrorPresenter).to receive(:raise_500?).and_return(false)
@@ -325,7 +325,7 @@ RSpec.describe ApplicationController, type: :controller do
   end
 
   describe '#handle_key_derivation_error' do
-    let!(:user) { set_current_user(VCAP::CloudController::User.make) }
+    let!(:user) { set_current_user(create(:user)) }
 
     before do
       allow_any_instance_of(ErrorPresenter).to receive(:raise_500?).and_return(false)
@@ -342,7 +342,7 @@ RSpec.describe ApplicationController, type: :controller do
   end
 
   describe '#add_warning_headers' do
-    let!(:user) { set_current_user(VCAP::CloudController::User.make) }
+    let!(:user) { set_current_user(create(:user)) }
 
     it 'does nothing when warnings is nil' do
       routes.draw { get 'warnings_is_nil' => 'anonymous#warnings_is_nil' }

@@ -2,7 +2,7 @@ require 'spec_helper'
 require 'request_spec_shared_examples'
 
 RSpec.describe 'Auth' do
-  let(:user) { VCAP::CloudController::User.make }
+  let(:user) { create(:user) }
   let(:user_header) { headers_for(user) }
 
   before do
@@ -27,8 +27,8 @@ RSpec.describe 'Auth' do
   end
 
   context 'when user has a global token inaddtion to the space supporter role' do
-    let(:org) { VCAP::CloudController::Organization.make(created_at: 3.days.ago) }
-    let(:space) { VCAP::CloudController::Space.make(organization: org) }
+    let(:org) { create(:organization, created_at: 3.days.ago) }
+    let(:space) { create(:space, organization: org) }
     let(:api_call) { ->(user_headers) { get '/v2/apps', nil, user_headers } }
     let(:expected_codes_and_responses) { Hash.new({ code: 200 }.freeze) }
 
@@ -41,8 +41,8 @@ RSpec.describe 'Auth' do
   end
 
   context 'developer without read token' do
-    let(:org) { VCAP::CloudController::Organization.make(created_at: 3.days.ago) }
-    let(:space) { VCAP::CloudController::Space.make(organization: org) }
+    let(:org) { create(:organization, created_at: 3.days.ago) }
+    let(:space) { create(:space, organization: org) }
     let(:no_read_headers) { headers_for(user, scopes: %w[cloud_controller.user]) }
 
     before do
@@ -68,9 +68,9 @@ RSpec.describe 'Auth' do
   end
 
   context 'space supporter' do
-    let(:space1) { VCAP::CloudController::Space.make }
-    let(:space2) { VCAP::CloudController::Space.make }
-    let(:space3) { VCAP::CloudController::Space.make }
+    let(:space1) { create(:space) }
+    let(:space2) { create(:space) }
+    let(:space3) { create(:space) }
 
     context 'user with only space supporter role' do
       before do

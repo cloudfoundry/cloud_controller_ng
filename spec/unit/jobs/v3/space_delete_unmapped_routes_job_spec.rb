@@ -5,7 +5,7 @@ require 'actions/space_delete_unmapped_routes'
 module VCAP::CloudController
   module Jobs::V3
     RSpec.describe SpaceDeleteUnmappedRoutesJob, job_context: :api do
-      let!(:space) { Space.make }
+      let!(:space) { create(:space) }
 
       subject(:job) do
         SpaceDeleteUnmappedRoutesJob.new(space)

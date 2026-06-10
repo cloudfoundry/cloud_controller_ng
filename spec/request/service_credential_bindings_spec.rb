@@ -3,12 +3,12 @@ require 'request_spec_shared_examples'
 require 'request/service_bindings_shared_examples'
 
 RSpec.describe 'v3 service credential bindings' do
-  let(:user) { VCAP::CloudController::User.make }
-  let(:org) { VCAP::CloudController::Organization.make }
-  let!(:org_annotation) { VCAP::CloudController::OrganizationAnnotationModel.make(key_prefix: 'pre.fix', key_name: 'foo', value: 'bar', resource_guid: org.guid) }
-  let(:space) { VCAP::CloudController::Space.make(organization: org) }
-  let!(:space_annotation) { VCAP::CloudController::SpaceAnnotationModel.make(key_prefix: 'pre.fix', key_name: 'baz', value: 'wow', space: space) }
-  let(:other_space) { VCAP::CloudController::Space.make }
+  let(:user) { create(:user) }
+  let(:org) { create(:organization) }
+  let!(:org_annotation) { create(:organization_annotation_model, key_prefix: 'pre.fix', key_name: 'foo', value: 'bar', resource_guid: org.guid) }
+  let(:space) { create(:space, organization: org) }
+  let!(:space_annotation) { create(:space_annotation_model, key_prefix: 'pre.fix', key_name: 'baz', value: 'wow', space: space) }
+  let(:other_space) { create(:space) }
   let(:space_dev_headers) do
     org.add_user(user)
     space.add_developer(user)
@@ -70,36 +70,35 @@ RSpec.describe 'v3 service credential bindings' do
 
     context 'given a mixture of bindings' do
       let(:now) { Time.now.utc }
-      let(:instance) { VCAP::CloudController::ManagedServiceInstance.make(space: space, created_at: now - 1.second) }
-      let(:other_instance) { VCAP::CloudController::ManagedServiceInstance.make(space: other_space) }
-      let!(:key_binding) { VCAP::CloudController::ServiceKey.make(service_instance: instance, created_at: now - 4.seconds) }
-      let!(:other_key_binding) { VCAP::CloudController::ServiceKey.make(service_instance: other_instance, created_at: now - 3.seconds) }
+      let(:instance) { create(:managed_service_instance, space: space, created_at: now - 1.second) }
+      let(:other_instance) { create(:managed_service_instance, space: other_space) }
+      let!(:key_binding) { create(:service_key, service_instance: instance, created_at: now - 4.seconds) }
+      let!(:other_key_binding) { create(:service_key, service_instance: other_instance, created_at: now - 3.seconds) }
       let!(:app_binding) do
-        VCAP::CloudController::ServiceBinding.make(
-          app: VCAP::CloudController::AppModel.make(space: space, created_at: now - 1.second),
-          service_instance: instance,
-          created_at: now - 2.seconds
-        ).tap do |binding|
+        create(:service_binding,
+               app: create(:app_model, space: space, created_at: now - 1.second),
+               service_instance: instance,
+               created_at: now - 2.seconds).tap do |binding|
           operate_on(binding)
         end
       end
-      let!(:other_app_binding) { VCAP::CloudController::ServiceBinding.make(service_instance: other_instance, name: Sham.name, created_at: now - 1.second) }
+      let!(:other_app_binding) { create(:service_binding, service_instance: other_instance, name: Sham.name, created_at: now - 1.second) }
 
       describe 'permissions' do
         let(:labels) { { foo: 'bar' } }
         let(:annotations) { { baz: 'wow' } }
         let!(:key_binding) do
-          VCAP::CloudController::ServiceKey.make(service_instance: instance, created_at: now - 4.seconds) do |binding|
+          create(:service_key, service_instance: instance, created_at: now - 4.seconds) do |binding|
             operate_on(binding)
-            VCAP::CloudController::ServiceKeyLabelModel.make(key_name: 'foo', value: 'bar', service_key: binding)
-            VCAP::CloudController::ServiceKeyAnnotationModel.make(key_name: 'baz', value: 'wow', service_key: binding)
+            create(:service_key_label_model, key_name: 'foo', value: 'bar', service_key: binding)
+            create(:service_key_annotation_model, key_name: 'baz', value: 'wow', service_key: binding)
           end
         end
         let!(:other_app_binding) do
-          VCAP::CloudController::ServiceBinding.make(service_instance: other_instance, name: Sham.name, created_at: now - 1.second) do |binding|
+          create(:service_binding, service_instance: other_instance, name: Sham.name, created_at: now - 1.second) do |binding|
             operate_on(binding)
-            VCAP::CloudController::ServiceBindingLabelModel.make(key_name: 'foo', value: 'bar', service_binding: binding)
-            VCAP::CloudController::ServiceBindingAnnotationModel.make(key_name: 'baz', value: 'wow', service_binding: binding)
+            create(:service_binding_label_model, key_name: 'foo', value: 'bar', service_binding: binding)
+            create(:service_binding_annotation_model, key_name: 'baz', value: 'wow', service_binding: binding)
           end
         end
 
@@ -169,9 +168,9 @@ RSpec.describe 'v3 service credential bindings' do
           let(:headers) { admin_headers }
         end
 
-        let(:some_instance) { VCAP::CloudController::ManagedServiceInstance.make(space:) }
-        let!(:another_key) { VCAP::CloudController::ServiceKey.make(service_instance: some_instance) }
-        let!(:another_binding) { VCAP::CloudController::ServiceBinding.make(service_instance: some_instance) }
+        let(:some_instance) { create(:managed_service_instance, space:) }
+        let!(:another_key) { create(:service_key, service_instance: some_instance) }
+        let!(:another_binding) { create(:service_binding, service_instance: some_instance) }
 
         before do
           get '/v3/service_credential_bindings', nil, admin_headers
@@ -379,20 +378,20 @@ RSpec.describe 'v3 service credential bindings' do
           let!(:app_labels) { { env: 'prod', animal: 'horse' } }
 
           before do
-            VCAP::CloudController::ServiceKeyLabelModel.make(key_name: 'fruit', value: 'strawberry', service_key: key_binding)
-            VCAP::CloudController::ServiceKeyLabelModel.make(key_name: 'env', value: 'prod', service_key: key_binding)
-            VCAP::CloudController::ServiceKeyLabelModel.make(key_name: 'animal', value: 'horse', service_key: key_binding)
+            create(:service_key_label_model, key_name: 'fruit', value: 'strawberry', service_key: key_binding)
+            create(:service_key_label_model, key_name: 'env', value: 'prod', service_key: key_binding)
+            create(:service_key_label_model, key_name: 'animal', value: 'horse', service_key: key_binding)
 
-            VCAP::CloudController::ServiceKeyLabelModel.make(key_name: 'env', value: 'prod', service_key: other_key_binding)
-            VCAP::CloudController::ServiceKeyLabelModel.make(key_name: 'animal', value: 'dog', service_key: other_key_binding)
+            create(:service_key_label_model, key_name: 'env', value: 'prod', service_key: other_key_binding)
+            create(:service_key_label_model, key_name: 'animal', value: 'dog', service_key: other_key_binding)
 
-            VCAP::CloudController::ServiceBindingLabelModel.make(key_name: 'env', value: 'prod', service_binding: app_binding)
-            VCAP::CloudController::ServiceBindingLabelModel.make(key_name: 'animal', value: 'horse', service_binding: app_binding)
+            create(:service_binding_label_model, key_name: 'env', value: 'prod', service_binding: app_binding)
+            create(:service_binding_label_model, key_name: 'animal', value: 'horse', service_binding: app_binding)
 
-            VCAP::CloudController::ServiceBindingLabelModel.make(key_name: 'env', value: 'prod', service_binding: other_app_binding)
+            create(:service_binding_label_model, key_name: 'env', value: 'prod', service_binding: other_app_binding)
 
-            VCAP::CloudController::ServiceBindingLabelModel.make(key_name: 'env', value: 'staging', service_binding: another_binding)
-            VCAP::CloudController::ServiceBindingLabelModel.make(key_name: 'animal', value: 'dog', service_binding: another_binding)
+            create(:service_binding_label_model, key_name: 'env', value: 'staging', service_binding: another_binding)
+            create(:service_binding_label_model, key_name: 'animal', value: 'dog', service_binding: another_binding)
           end
 
           it 'returns the filtered list' do
@@ -489,7 +488,7 @@ RSpec.describe 'v3 service credential bindings' do
 
   describe 'GET /v3/service_credential_bindings/:guid' do
     describe 'query params' do
-      let(:binding) { VCAP::CloudController::ServiceBinding.make }
+      let(:binding) { create(:service_binding) }
 
       it 'returns 400 for invalid query params' do
         get "/v3/service_credential_bindings/#{binding.guid}?bahamas=yes-please", nil, admin_headers
@@ -530,13 +529,13 @@ RSpec.describe 'v3 service credential bindings' do
       let(:labels) { { foo: 'bar' } }
       let(:annotations) { { baz: 'wow' } }
       let(:key) do
-        VCAP::CloudController::ServiceKey.make(service_instance: instance) do |binding|
+        create(:service_key, service_instance: instance) do |binding|
           operate_on(binding)
-          VCAP::CloudController::ServiceKeyLabelModel.make(key_name: 'foo', value: 'bar', service_key: binding)
-          VCAP::CloudController::ServiceKeyAnnotationModel.make(key_name: 'baz', value: 'wow', service_key: binding)
+          create(:service_key_label_model, key_name: 'foo', value: 'bar', service_key: binding)
+          create(:service_key_annotation_model, key_name: 'baz', value: 'wow', service_key: binding)
         end
       end
-      let(:instance) { VCAP::CloudController::ManagedServiceInstance.make(space:) }
+      let(:instance) { create(:managed_service_instance, space:) }
       let(:api_call) { ->(user_headers) { get "/v3/service_credential_bindings/#{key.guid}", nil, user_headers } }
       let(:expected_object) { expected_json(key, labels:, annotations:) }
 
@@ -569,18 +568,18 @@ RSpec.describe 'v3 service credential bindings' do
     end
 
     describe 'app credential binding' do
-      let(:app_to_bind_to) { VCAP::CloudController::AppModel.make(space:) }
+      let(:app_to_bind_to) { create(:app_model, space:) }
       let(:labels) { { foo: 'bar' } }
       let(:annotations) { { baz: 'wow' } }
       let(:app_binding) do
-        VCAP::CloudController::ServiceBinding.make(service_instance: instance, app: app_to_bind_to).tap do |binding|
+        create(:service_binding, service_instance: instance, app: app_to_bind_to).tap do |binding|
           operate_on(binding)
-          VCAP::CloudController::ServiceBindingLabelModel.make(key_name: 'foo', value: 'bar', service_binding: binding)
-          VCAP::CloudController::ServiceBindingAnnotationModel.make(key_name: 'baz', value: 'wow', service_binding: binding)
+          create(:service_binding_label_model, key_name: 'foo', value: 'bar', service_binding: binding)
+          create(:service_binding_annotation_model, key_name: 'baz', value: 'wow', service_binding: binding)
         end
       end
 
-      let(:instance) { VCAP::CloudController::ManagedServiceInstance.make(space:) }
+      let(:instance) { create(:managed_service_instance, space:) }
       let(:api_call) { ->(user_headers) { get "/v3/service_credential_bindings/#{app_binding.guid}", nil, user_headers } }
       let(:expected_object) { expected_json(app_binding, labels:, annotations:) }
 
@@ -623,9 +622,9 @@ RSpec.describe 'v3 service credential bindings' do
         credentials: { 'cred_key' => 'creds-val-64', 'magic' => true }
       }
     end
-    let(:app_binding) { VCAP::CloudController::ServiceBinding.make(**details) }
+    let(:app_binding) { create(:service_binding, **details) }
     let(:guid) { app_binding.guid }
-    let(:instance) { VCAP::CloudController::ManagedServiceInstance.make(space:) }
+    let(:instance) { create(:managed_service_instance, space:) }
     let(:api_call) { ->(user_headers) { get "/v3/service_credential_bindings/#{guid}/details", nil, user_headers } }
     let(:binding_credentials) do
       {
@@ -757,21 +756,21 @@ RSpec.describe 'v3 service credential bindings' do
       end
 
       describe 'when the service instance is shared' do
-        let(:originating_space) { VCAP::CloudController::Space.make }
+        let(:originating_space) { create(:space) }
         let(:shared_space) { space }
         let(:user_in_shared_space) do
-          u = VCAP::CloudController::User.make
+          u = create(:user)
           shared_space.organization.add_user(u)
           shared_space.add_developer(u)
           u
         end
         let(:user_in_originating_space) do
-          u = VCAP::CloudController::User.make
+          u = create(:user)
           originating_space.organization.add_user(u)
           originating_space.add_developer(u)
           u
         end
-        let(:instance) { VCAP::CloudController::ManagedServiceInstance.make(space: originating_space) }
+        let(:instance) { create(:managed_service_instance, space: originating_space) }
         let(:details) do
           {
             service_instance: instance,
@@ -785,7 +784,7 @@ RSpec.describe 'v3 service credential bindings' do
         end
 
         context 'bindings in the originating space' do
-          let(:source_app) { VCAP::CloudController::AppModel.make(space: originating_space) }
+          let(:source_app) { create(:app_model, space: originating_space) }
 
           it 'returns the credentials for users in the originating space' do
             api_call.call(headers_for(user_in_originating_space))
@@ -799,7 +798,7 @@ RSpec.describe 'v3 service credential bindings' do
         end
 
         context 'bindings in the shared space' do
-          let(:source_app) { VCAP::CloudController::AppModel.make(space: shared_space) }
+          let(:source_app) { create(:app_model, space: shared_space) }
 
           it 'returns 404 for users in the originating space' do
             api_call.call(headers_for(user_in_originating_space))
@@ -815,7 +814,7 @@ RSpec.describe 'v3 service credential bindings' do
     end
 
     describe 'credhub interaction' do
-      let(:key_binding) { VCAP::CloudController::ServiceKey.make(:credhub_reference, service_instance: instance) }
+      let(:key_binding) { create(:service_key, :credhub_reference, service_instance: instance) }
       let(:credhub_url) { VCAP::CloudController::Config.config.get(:credhub_api, :internal_url) }
       let(:uaa_url) { VCAP::CloudController::Config.config.get(:uaa, :internal_url) }
       let(:credentials) { { 'username' => 'cinnamon', 'password' => 'roll' } }
@@ -847,7 +846,7 @@ RSpec.describe 'v3 service credential bindings' do
       end
 
       context 'for key bindings without a credhub reference' do
-        let(:key_binding) { VCAP::CloudController::ServiceKey.make(service_instance: instance) }
+        let(:key_binding) { create(:service_key, service_instance: instance) }
         let(:guid) { key_binding.guid }
 
         it 'returns the credentials as found in the database' do
@@ -922,10 +921,10 @@ RSpec.describe 'v3 service credential bindings' do
 
   describe 'GET /v3/service_credential_bindings/:binding_guid/parameters' do
     let(:binding_params) { { foo: 'bar', baz: 'xyzzy' }.with_indifferent_access }
-    let(:app_to_bind_to) { VCAP::CloudController::AppModel.make(space:) }
-    let(:binding) { VCAP::CloudController::ServiceBinding.make(service_instance: instance, app: app_to_bind_to) }
+    let(:app_to_bind_to) { create(:app_model, space:) }
+    let(:binding) { create(:service_binding, service_instance: instance, app: app_to_bind_to) }
     let(:guid) { binding.guid }
-    let(:instance) { VCAP::CloudController::ManagedServiceInstance.make(space:) }
+    let(:instance) { create(:managed_service_instance, space:) }
     let(:api_call) { ->(user_headers) { get "/v3/service_credential_bindings/#{guid}/parameters", nil, user_headers } }
 
     context 'permissions' do
@@ -941,29 +940,29 @@ RSpec.describe 'v3 service credential bindings' do
       end
 
       describe 'when the service instance is shared' do
-        let(:originating_space) { VCAP::CloudController::Space.make }
+        let(:originating_space) { create(:space) }
         let(:shared_space) { space }
         let(:user_in_shared_space) do
-          u = VCAP::CloudController::User.make
+          u = create(:user)
           shared_space.organization.add_user(u)
           shared_space.add_developer(u)
           u
         end
         let(:user_in_originating_space) do
-          u = VCAP::CloudController::User.make
+          u = create(:user)
           originating_space.organization.add_user(u)
           originating_space.add_developer(u)
           u
         end
         let(:instance) do
-          VCAP::CloudController::ManagedServiceInstance.make(space: originating_space).tap do |instance|
+          create(:managed_service_instance, space: originating_space).tap do |instance|
             instance.add_shared_space(shared_space)
           end
         end
-        let(:binding) { VCAP::CloudController::ServiceBinding.make(service_instance: instance, app: source_app) }
+        let(:binding) { create(:service_binding, service_instance: instance, app: source_app) }
 
         context 'bindings in the originating space' do
-          let(:source_app) { VCAP::CloudController::AppModel.make(space: originating_space) }
+          let(:source_app) { create(:app_model, space: originating_space) }
 
           it 'returns the parameters for users in the originating space' do
             api_call.call(headers_for(user_in_originating_space))
@@ -977,7 +976,7 @@ RSpec.describe 'v3 service credential bindings' do
         end
 
         context 'bindings in the shared space' do
-          let(:source_app) { VCAP::CloudController::AppModel.make(space: shared_space) }
+          let(:source_app) { create(:app_model, space: shared_space) }
 
           it 'returns 404 for users in the originating space' do
             api_call.call(headers_for(user_in_originating_space))
@@ -1129,7 +1128,7 @@ RSpec.describe 'v3 service credential bindings' do
     end
 
     describe 'key bindings' do
-      let(:binding) { VCAP::CloudController::ServiceKey.make(service_instance: instance) }
+      let(:binding) { create(:service_key, service_instance: instance) }
 
       context 'when the service does not allow bindings to be fetched' do
         before do
@@ -1279,8 +1278,8 @@ RSpec.describe 'v3 service credential bindings' do
     let(:service_instance_guid) { service_instance.guid }
 
     context 'creating a credential binding to an app' do
-      let(:app_to_bind_to) { VCAP::CloudController::AppModel.make(space:) }
-      let!(:app_annotations) { VCAP::CloudController::AppAnnotationModel.make(app: app_to_bind_to, key_prefix: 'pre.fix', key_name: 'foo', value: 'bar') }
+      let(:app_to_bind_to) { create(:app_model, space:) }
+      let!(:app_annotations) { create(:app_annotation_model, app: app_to_bind_to, key_prefix: 'pre.fix', key_name: 'foo', value: 'bar') }
       let(:app_guid) { app_to_bind_to.guid }
       let(:binding_name) { 'some-name' }
       let(:create_body) do
@@ -1370,7 +1369,7 @@ RSpec.describe 'v3 service credential bindings' do
 
         context 'when the user has no access to the related resources' do
           let(:space_user) do
-            u = VCAP::CloudController::User.make
+            u = create(:user)
             other_space.organization.add_user(u)
             other_space.add_developer(u)
             u
@@ -1391,7 +1390,7 @@ RSpec.describe 'v3 service credential bindings' do
           end
 
           context 'app' do
-            let(:service_instance) { VCAP::CloudController::UserProvidedServiceInstance.make(space: other_space) }
+            let(:service_instance) { create(:user_provided_service_instance, space: other_space) }
 
             it 'returns a 422' do
               api_call.call space_dev_headers
@@ -1420,7 +1419,7 @@ RSpec.describe 'v3 service credential bindings' do
         end
 
         context 'when the service instance and the app are not in the same space' do
-          let(:app_to_bind_to) { VCAP::CloudController::AppModel.make(space: other_space) }
+          let(:app_to_bind_to) { create(:app_model, space: other_space) }
 
           it 'returns a 422 error' do
             api_call.call admin_headers
@@ -1435,7 +1434,7 @@ RSpec.describe 'v3 service credential bindings' do
       end
 
       context 'user-provided service' do
-        let(:service_instance) { VCAP::CloudController::UserProvidedServiceInstance.make(space:, **service_instance_details) }
+        let(:service_instance) { create(:user_provided_service_instance, space:, **service_instance_details) }
 
         context 'permissions' do
           it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS do
@@ -1571,9 +1570,9 @@ RSpec.describe 'v3 service credential bindings' do
       end
 
       context 'managed service' do
-        let(:offering) { VCAP::CloudController::Service.make(bindings_retrievable: true) }
-        let(:plan) { VCAP::CloudController::ServicePlan.make(service: offering) }
-        let(:service_instance) { VCAP::CloudController::ManagedServiceInstance.make(space: space, service_plan: plan) }
+        let(:offering) { create(:service, bindings_retrievable: true) }
+        let(:plan) { create(:service_plan, service: offering) }
+        let(:service_instance) { create(:managed_service_instance, space: space, service_plan: plan) }
         let(:binding) { VCAP::CloudController::ServiceBinding.last }
         let(:audit) { VCAP::CloudController::Event.last }
         let(:job) { VCAP::CloudController::PollableJobModel.last }
@@ -1594,9 +1593,9 @@ RSpec.describe 'v3 service credential bindings' do
           end
 
           context 'users in the space where the SI has been shared to' do
-            let(:original_org) { VCAP::CloudController::Organization.make }
-            let(:original_space) { VCAP::CloudController::Space.make(organization: original_org) }
-            let(:service_instance) { VCAP::CloudController::ManagedServiceInstance.make(space: original_space, service_plan: plan) }
+            let(:original_org) { create(:organization) }
+            let(:original_space) { create(:space, organization: original_org) }
+            let(:service_instance) { create(:managed_service_instance, space: original_space, service_plan: plan) }
 
             before do
               service_instance.add_shared_space(space)
@@ -1717,9 +1716,9 @@ RSpec.describe 'v3 service credential bindings' do
     end
 
     context 'creating a credential binding as a key' do
-      let(:offering) { VCAP::CloudController::Service.make(bindings_retrievable: true) }
-      let(:plan) { VCAP::CloudController::ServicePlan.make(service: offering) }
-      let(:service_instance) { VCAP::CloudController::ManagedServiceInstance.make(space: space, service_plan: plan) }
+      let(:offering) { create(:service, bindings_retrievable: true) }
+      let(:plan) { create(:service_plan, service: offering) }
+      let(:service_instance) { create(:managed_service_instance, space: space, service_plan: plan) }
       let(:binding_name) { Sham.name }
       let(:create_body) do
         {
@@ -1745,11 +1744,11 @@ RSpec.describe 'v3 service credential bindings' do
         end
 
         context 'users in the space where the SI has been shared to' do
-          let(:original_org) { VCAP::CloudController::Organization.make }
-          let(:original_space) { VCAP::CloudController::Space.make(organization: original_org) }
-          let(:offering) { VCAP::CloudController::Service.make(bindings_retrievable: true) }
-          let(:plan) { VCAP::CloudController::ServicePlan.make(service: offering) }
-          let(:service_instance) { VCAP::CloudController::ManagedServiceInstance.make(space: original_space, service_plan: plan) }
+          let(:original_org) { create(:organization) }
+          let(:original_space) { create(:space, organization: original_org) }
+          let(:offering) { create(:service, bindings_retrievable: true) }
+          let(:plan) { create(:service_plan, service: offering) }
+          let(:service_instance) { create(:managed_service_instance, space: original_space, service_plan: plan) }
 
           before do
             service_instance.add_shared_space(space)
@@ -1802,7 +1801,7 @@ RSpec.describe 'v3 service credential bindings' do
 
         context 'when the user has no access to the service instance' do
           let(:space_user) do
-            u = VCAP::CloudController::User.make
+            u = create(:user)
             other_space.organization.add_user(u)
             other_space.add_developer(u)
             u
@@ -1822,7 +1821,7 @@ RSpec.describe 'v3 service credential bindings' do
 
         context 'when a key with the same name exists for that SI' do
           let(:cred_binding) do
-            VCAP::CloudController::ServiceKey.make(service_instance:)
+            create(:service_key, service_instance:)
           end
           let(:create_body) do
             {
@@ -1844,7 +1843,7 @@ RSpec.describe 'v3 service credential bindings' do
         end
 
         context 'when the service instance is user-provided' do
-          let(:service_instance) { VCAP::CloudController::UserProvidedServiceInstance.make(space:, **service_instance_details) }
+          let(:service_instance) { create(:user_provided_service_instance, space:, **service_instance_details) }
 
           it 'returns a 422' do
             api_call.call admin_headers
@@ -1856,8 +1855,8 @@ RSpec.describe 'v3 service credential bindings' do
         end
 
         context 'when the service instance is not bindable' do
-          let(:plan) { VCAP::CloudController::ServicePlan.make(bindable: false) }
-          let(:service_instance) { VCAP::CloudController::ManagedServiceInstance.make(space: space, service_plan: plan) }
+          let(:plan) { create(:service_plan, bindable: false) }
+          let(:service_instance) { create(:managed_service_instance, space: space, service_plan: plan) }
 
           it 'returns a 422' do
             api_call.call admin_headers
@@ -1875,10 +1874,10 @@ RSpec.describe 'v3 service credential bindings' do
           describe 'space quotas' do
             context 'when the total service key quota has been reached' do
               before do
-                quota = VCAP::CloudController::SpaceQuotaDefinition.make(total_service_keys: 1, organization: org)
+                quota = create(:space_quota_definition, total_service_keys: 1, organization: org)
                 quota.add_space(space)
 
-                VCAP::CloudController::ServiceKey.make(service_instance:)
+                create(:service_key, service_instance:)
               end
 
               it 'returns an error' do
@@ -1898,9 +1897,9 @@ RSpec.describe 'v3 service credential bindings' do
           describe 'organization quotas' do
             context 'when the total service key quota has been reached' do
               before do
-                quota = VCAP::CloudController::QuotaDefinition.make(total_service_keys: 1)
+                quota = create(:quota_definition, total_service_keys: 1)
                 quota.add_organization(org)
-                VCAP::CloudController::ServiceKey.make(service_instance:)
+                create(:service_key, service_instance:)
               end
 
               it 'returns an error' do
@@ -1976,7 +1975,7 @@ RSpec.describe 'v3 service credential bindings' do
   describe 'PATCH /v3/service_credential_bindings/:guid' do
     let(:api_call) { ->(user_headers) { patch "/v3/service_credential_bindings/#{guid}", update_request_body.to_json, user_headers } }
 
-    let(:instance) { VCAP::CloudController::ManagedServiceInstance.make(space:) }
+    let(:instance) { create(:managed_service_instance, space:) }
     let(:guid) { binding.guid }
     let(:labels) { { potato: 'sweet' } }
     let(:annotations) { { style: 'mashed', amount: 'all' } }
@@ -1992,7 +1991,7 @@ RSpec.describe 'v3 service credential bindings' do
 
     context 'key credential binding' do
       let(:binding) do
-        VCAP::CloudController::ServiceKey.make(service_instance: instance) { |binding| operate_on(binding) }
+        create(:service_key, service_instance: instance) { |binding| operate_on(binding) }
       end
       let(:binding_name) { binding.name }
 
@@ -2008,9 +2007,9 @@ RSpec.describe 'v3 service credential bindings' do
     end
 
     context 'app credential binding' do
-      let(:app_to_bind_to) { VCAP::CloudController::AppModel.make(space:) }
+      let(:app_to_bind_to) { create(:app_model, space:) }
       let(:binding) do
-        VCAP::CloudController::ServiceBinding.make(service_instance: instance, app: app_to_bind_to) { |binding| operate_on(binding) }
+        create(:service_binding, service_instance: instance, app: app_to_bind_to) { |binding| operate_on(binding) }
       end
       let(:binding_name) { '' }
 
@@ -2025,8 +2024,8 @@ RSpec.describe 'v3 service credential bindings' do
       end
 
       context 'when the service instance has been shared to the organization' do
-        let(:original_space) { VCAP::CloudController::Space.make }
-        let(:instance) { VCAP::CloudController::ManagedServiceInstance.make(space: original_space) }
+        let(:original_space) { create(:space) }
+        let(:instance) { create(:managed_service_instance, space: original_space) }
 
         before do
           instance.add_shared_space(space)
@@ -2394,17 +2393,17 @@ RSpec.describe 'v3 service credential bindings' do
         credentials: { password: 'foo' }
       }
     end
-    let(:bound_app) { VCAP::CloudController::AppModel.make(space:) }
+    let(:bound_app) { create(:app_model, space:) }
     let(:binding_details) do
       {
         service_instance: service_instance,
         app: bound_app
       }
     end
-    let(:binding) { VCAP::CloudController::ServiceBinding.make(**binding_details) }
+    let(:binding) { create(:service_binding, **binding_details) }
 
     context 'user provided services' do
-      let(:service_instance) { VCAP::CloudController::UserProvidedServiceInstance.make(**service_instance_details) }
+      let(:service_instance) { create(:user_provided_service_instance, **service_instance_details) }
 
       context 'permissions' do
         let(:db_check) do
@@ -2452,7 +2451,7 @@ RSpec.describe 'v3 service credential bindings' do
     end
 
     context 'managed service instances' do
-      let(:service_instance) { VCAP::CloudController::ManagedServiceInstance.make(space:) }
+      let(:service_instance) { create(:managed_service_instance, space:) }
 
       let(:broker_base_url) { service_instance.service_broker.broker_url }
       let(:broker_unbind_url) { "#{broker_base_url}/v2/service_instances/#{service_instance.guid}/service_bindings/#{binding.guid}" }
@@ -2489,9 +2488,9 @@ RSpec.describe 'v3 service credential bindings' do
           end
 
           context 'users in the space where the SI has been shared to' do
-            let(:original_org) { VCAP::CloudController::Organization.make }
-            let(:original_space) { VCAP::CloudController::Space.make(organization: original_org) }
-            let(:service_instance) { VCAP::CloudController::ManagedServiceInstance.make(space: original_space) }
+            let(:original_org) { create(:organization) }
+            let(:original_space) { create(:space, organization: original_org) }
+            let(:service_instance) { create(:managed_service_instance, space: original_space) }
 
             before do
               service_instance.add_shared_space(space)
@@ -2519,7 +2518,7 @@ RSpec.describe 'v3 service credential bindings' do
 
       context 'key bindings' do
         let(:bound_app) { nil }
-        let(:binding) { VCAP::CloudController::ServiceKey.make(service_instance:) }
+        let(:binding) { create(:service_key, service_instance:) }
 
         context 'permissions' do
           context 'users in the originating service instance space' do
@@ -2531,9 +2530,9 @@ RSpec.describe 'v3 service credential bindings' do
           end
 
           context 'users in the space where the SI has been shared to' do
-            let(:original_org) { VCAP::CloudController::Organization.make }
-            let(:original_space) { VCAP::CloudController::Space.make(organization: original_org) }
-            let(:service_instance) { VCAP::CloudController::ManagedServiceInstance.make(space: original_space) }
+            let(:original_org) { create(:organization) }
+            let(:original_space) { create(:space, organization: original_org) }
+            let(:service_instance) { create(:managed_service_instance, space: original_space) }
 
             before do
               service_instance.add_shared_space(space)

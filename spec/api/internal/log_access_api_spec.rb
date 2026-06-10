@@ -4,7 +4,7 @@ RSpec.describe 'GET /internal/v4/log_access/:guid', type: [:api] do
   include RequestSpecHelper
 
   context 'when the guid is for a v3 app' do
-    let(:app_model) { VCAP::CloudController::AppModel.make }
+    let(:app_model) { create(:app_model) }
 
     it 'queries the proper v3 app' do
       get "/internal/v4/log_access/#{app_model.guid}", {}, admin_headers
@@ -13,7 +13,7 @@ RSpec.describe 'GET /internal/v4/log_access/:guid', type: [:api] do
   end
 
   context 'when the guid is for a v2 app' do
-    let(:process_model) { VCAP::CloudController::ProcessModel.make }
+    let(:process_model) { create(:process_model) }
 
     it 'queries the proper v2 app' do
       get "/internal/v4/log_access/#{process_model.guid}", {}, admin_headers

@@ -21,8 +21,8 @@ module VCAP::CloudController
       it { is_expected.to have_associated :space }
 
       it 'has associated service_plans' do
-        service = Service.make(:v2)
-        service_plan = ServicePlan.make(service:)
+        service = create(:service)
+        service_plan = create(:service_plan, service:)
         service_broker = service.service_broker
         expect(service_broker.service_plans).to include(service_plan)
       end
@@ -30,7 +30,7 @@ module VCAP::CloudController
 
     describe 'uniqueness' do
       it 'enforces uniqueness of name' do
-        existing_broker = ServiceBroker.make
+        existing_broker = create(:service_broker)
         expect do
           ServiceBroker.create(name: existing_broker.name, broker_url: 'http://example.com', auth_username: 'user', auth_password: 'pass')
         end.to raise_error(Sequel::ValidationFailed, 'Name must be unique')
@@ -78,7 +78,7 @@ module VCAP::CloudController
     end
 
     describe '#in_transitional_state?' do
-      let(:broker) { ServiceBroker.make }
+      let(:broker) { create(:service_broker) }
 
       it 'returns true when state is SYNCHRONIZING' do
         broker.state = ServiceBrokerStateEnum::SYNCHRONIZING
@@ -107,7 +107,7 @@ module VCAP::CloudController
     end
 
     describe '#available?' do
-      let(:broker) { ServiceBroker.make }
+      let(:broker) { create(:service_broker) }
 
       it 'returns false when state is SYNCHRONIZING' do
         broker.state = ServiceBrokerStateEnum::SYNCHRONIZING
@@ -141,13 +141,13 @@ module VCAP::CloudController
     end
 
     describe '#destroy' do
-      let(:service_broker) { ServiceBroker.make }
+      let(:service_broker) { create(:service_broker) }
 
       it 'destroys all resources associated with the broker' do
-        service = Service.make(service_broker:)
-        service_plan = ServicePlan.make(service:)
-        label = ServiceBrokerLabelModel.make(resource_guid: service_broker.guid, key_name: 'foo', value: 'bar')
-        annotation = ServiceBrokerAnnotationModel.make(resource_guid: service_broker.guid, key_name: 'alpha', value: 'beta')
+        service = create(:service, service_broker:)
+        service_plan = create(:service_plan, service:)
+        label = create(:service_broker_label_model, resource_guid: service_broker.guid, key_name: 'foo', value: 'bar')
+        annotation = create(:service_broker_annotation_model, resource_guid: service_broker.guid, key_name: 'alpha', value: 'beta')
 
         service_broker.destroy
 
@@ -160,9 +160,9 @@ module VCAP::CloudController
 
       context 'when a service instance exists' do
         it 'does not allow the broker to be destroyed' do
-          service = Service.make(service_broker:)
-          service_plan = ServicePlan.make(service:)
-          ManagedServiceInstance.make(service_plan:)
+          service = create(:service, service_broker:)
+          service_plan = create(:service_plan, service:)
+          create(:managed_service_instance, service_plan:)
           expect do
             service_broker.destroy
           rescue Sequel::ForeignKeyConstraintViolation
@@ -193,7 +193,7 @@ module VCAP::CloudController
 
     describe 'space_scoped?' do
       context 'when the broker has an associated space' do
-        let(:space) { Space.make }
+        let(:space) { create(:space) }
         let(:broker) do
           ServiceBroker.new(
             name: name,
@@ -215,13 +215,13 @@ module VCAP::CloudController
     end
 
     describe 'has_service_instances?' do
-      let(:service_broker) { ServiceBroker.make }
-      let(:service) { Service.make(service_broker:) }
-      let!(:service_plan) { ServicePlan.make(service:) }
+      let(:service_broker) { create(:service_broker) }
+      let(:service) { create(:service, service_broker:) }
+      let!(:service_plan) { create(:service_plan, service:) }
 
       context 'when there are service instances' do
         before do
-          ManagedServiceInstance.make(service_plan:)
+          create(:managed_service_instance, service_plan:)
         end
 
         it 'returns true' do

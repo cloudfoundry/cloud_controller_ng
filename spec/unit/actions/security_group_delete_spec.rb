@@ -6,7 +6,7 @@ module VCAP::CloudController
     subject(:security_group_delete) { SecurityGroupDeleteAction.new }
 
     describe '#delete' do
-      let!(:security_group) { SecurityGroup.make(name: 'test-security-group') }
+      let!(:security_group) { create(:security_group, name: 'test-security-group') }
 
       it 'deletes the security group record' do
         expect do
@@ -16,7 +16,7 @@ module VCAP::CloudController
       end
 
       describe 'recursive deletion' do
-        let(:space) { Space.make(name: 'petunia') }
+        let(:space) { create(:space, name: 'petunia') }
 
         before do
           security_group.add_space(space)

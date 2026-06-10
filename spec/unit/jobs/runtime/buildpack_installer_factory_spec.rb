@@ -74,8 +74,8 @@ module VCAP::CloudController
 
           context 'and when there is a single existing buildpack that matches by name' do
             context 'and when that buildpack record has a stack' do
-              let(:existing_stack) { Stack.make(name: 'existing stack') }
-              let!(:existing_buildpack) { Buildpack.make(name: name, stack: existing_stack.name, key: 'new_key', guid: 'the-guid') }
+              let(:existing_stack) { create(:stack, name: 'existing stack') }
+              let!(:existing_buildpack) { create(:buildpack, name: name, stack: existing_stack.name, key: 'new_key', guid: 'the-guid') }
 
               context 'and the buildpack zip has the same stack' do
                 let(:buildpack_fields) { [{ file: file, options: opts, stack: existing_stack.name, config_index: 0 }] }
@@ -121,7 +121,7 @@ module VCAP::CloudController
             end
 
             context 'and that buildpack record has a nil stack' do
-              let!(:existing_buildpack) { Buildpack.make(name: name, stack: nil, key: 'new_key', guid: 'the-guid') }
+              let!(:existing_buildpack) { create(:buildpack, name: name, stack: nil, key: 'new_key', guid: 'the-guid') }
 
               context 'and the buildpack zip also has a nil stack' do
                 let(:buildpack_fields) { [{ file: file, options: opts, stack: nil, config_index: 0 }] }
@@ -162,11 +162,11 @@ module VCAP::CloudController
           end
 
           context 'and when there are many existing buildpacks' do
-            let(:existing_stack) { Stack.make(name: 'existing stack') }
-            let!(:existing_buildpack) { Buildpack.make(name: name, stack: existing_stack.name, key: 'new_key', guid: 'the-guid') }
+            let(:existing_stack) { create(:stack, name: 'existing stack') }
+            let!(:existing_buildpack) { create(:buildpack, name: name, stack: existing_stack.name, key: 'new_key', guid: 'the-guid') }
 
-            let(:another_existing_stack) { Stack.make(name: 'another existing stack') }
-            let!(:another_existing_buildpack) { Buildpack.make(name: name, stack: another_existing_stack.name, key: 'new_key', guid: 'another-guid') }
+            let(:another_existing_stack) { create(:stack, name: 'another existing stack') }
+            let!(:another_existing_buildpack) { create(:buildpack, name: name, stack: another_existing_stack.name, key: 'new_key', guid: 'another-guid') }
 
             context 'and one matches the manifest stack' do
               let(:buildpack_fields) { [{ file: file, options: opts, stack: existing_stack.name, config_index: 0 }] }
@@ -229,7 +229,7 @@ module VCAP::CloudController
           end
 
           context 'and there is only one matching Buildpack' do
-            let!(:existing_buildpack) { Buildpack.make(name: name, stack: nil, key: 'new_key', guid: 'the-guid') }
+            let!(:existing_buildpack) { create(:buildpack, name: name, stack: nil, key: 'new_key', guid: 'the-guid') }
 
             context 'and the Buildpack has a nil stack' do
               context 'and the buildpack is not locked' do
@@ -250,7 +250,7 @@ module VCAP::CloudController
               end
 
               context 'and the buildpack is locked' do
-                let!(:existing_buildpack) { Buildpack.make(name: name, stack: nil, key: 'new_key', guid: 'the-guid', locked: true) }
+                let!(:existing_buildpack) { create(:buildpack, name: name, stack: nil, key: 'new_key', guid: 'the-guid', locked: true) }
 
                 it 'raises' do
                   msg = "Attempt to install '#{name}' for multiple stacks failed. Buildpack '#{name}' cannot be locked during upgrade."
@@ -262,8 +262,8 @@ module VCAP::CloudController
             end
 
             context 'and the Buildpack has a non-nil stack' do
-              let(:existing_stack) { Stack.make(name: 'existing stack') }
-              let!(:existing_buildpack) { Buildpack.make(name: name, stack: existing_stack.name, key: 'new_key', guid: 'the-guid') }
+              let(:existing_stack) { create(:stack, name: 'existing stack') }
+              let!(:existing_buildpack) { create(:buildpack, name: name, stack: existing_stack.name, key: 'new_key', guid: 'the-guid') }
 
               it 'creates a job for each buildpack' do
                 expect(jobs.length).to eq(2)
@@ -283,14 +283,14 @@ module VCAP::CloudController
           end
 
           context 'and there are multiple matching Buildpacks' do
-            let(:existing_stack) { Stack.make(name: 'existing stack') }
+            let(:existing_stack) { create(:stack, name: 'existing stack') }
             let!(:existing_buildpack) do
-              Buildpack.make(name: name, stack: existing_stack.name, key:
+              create(:buildpack, name: name, stack: existing_stack.name, key:
               'new_key', guid: 'the-guid')
             end
 
-            let(:another_existing_stack) { Stack.make(name: 'another existing stack') }
-            let!(:another_existing_buildpack) { Buildpack.make(name: name, stack: another_existing_stack.name, key: 'a_different_key', guid: 'a-different-guid') }
+            let(:another_existing_stack) { create(:stack, name: 'another existing stack') }
+            let!(:another_existing_buildpack) { create(:buildpack, name: name, stack: another_existing_stack.name, key: 'a_different_key', guid: 'a-different-guid') }
             let(:buildpack_fields) do
               [{ file: file, options: opts, stack: existing_stack.name, config_index: 0 },
                { file: another_file, options: opts, stack: another_existing_stack.name, config_index: 1 }]
@@ -317,9 +317,9 @@ module VCAP::CloudController
             let(:buildpack_fields) { [{ file: file, options: opts, config_index: 0 }] }
 
             before do
-              Stack.make(name: 'existing stack')
-              Buildpack.make(name: name, stack: 'existing stack')
-              Buildpack.make(name: name, stack: nil)
+              create(:stack, name: 'existing stack')
+              create(:buildpack, name: name, stack: 'existing stack')
+              create(:buildpack, name: name, stack: nil)
             end
 
             it 'raises' do

@@ -476,8 +476,8 @@ module VCAP::RestAPI
     end
 
     describe 'semicolon escaping' do
-      let!(:one_semi) { VCAP::CloudController::TestModel.make(unique_value: 'one_semi;', required_attr: true) }
-      let!(:multiple_semi) { VCAP::CloudController::TestModel.make(unique_value: 'two;;semis and one;semi') }
+      let!(:one_semi) { create(:test_model, unique_value: 'one_semi;', required_attr: true) }
+      let!(:multiple_semi) { create(:test_model, unique_value: 'two;;semis and one;semi') }
       let(:queryable_attributes) { Set.new(%w[unique_value required_attr]) }
 
       describe '#filtered_dataset_from_query_params' do

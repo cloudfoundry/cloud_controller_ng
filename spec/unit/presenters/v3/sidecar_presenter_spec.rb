@@ -3,14 +3,12 @@ require 'presenters/v3/sidecar_presenter'
 
 module VCAP::CloudController::Presenters::V3
   RSpec.describe SidecarPresenter do
-    let(:app_model) { VCAP::CloudController::AppModel.make }
+    let(:app_model) { create(:app_model) }
     let(:sidecar) do
-      VCAP::CloudController::SidecarModel.make(
-        app: app_model,
-        name: 'my-sidecar',
-        command: './start-me-up',
-        memory: 301
-      )
+      create(:sidecar_model, app: app_model,
+                             name: 'my-sidecar',
+                             command: './start-me-up',
+                             memory: 301)
     end
     let!(:web_sidecar_process_type) do
       VCAP::CloudController::SidecarProcessTypeModel.create(type: 'web', sidecar_guid: sidecar.guid, app_guid: sidecar.app_guid)

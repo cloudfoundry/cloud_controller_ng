@@ -9,7 +9,7 @@ require 'spec_helper'
 RSpec.describe 'BuildpackBitsController download endpoint exists:' do
   describe 'GET /buildpacks/:path_guid/download' do
     context 'when an lrp tries to download a buildpack without authentication' do
-      let(:mister_buildpack) { VCAP::CloudController::Buildpack.make }
+      let(:mister_buildpack) { create(:buildpack) }
       let(:blob_dispatcher) { instance_double(VCAP::CloudController::BlobDispatcher, send_or_redirect: { status: 200 }) }
       let(:staging_user) { 'user' }
       let(:staging_password) { 'password' }
@@ -36,7 +36,7 @@ end
 
 RSpec.describe 'StagingsController download endpoint exists:' do
   describe 'GET /staging/v3/droplets/:guid/download' do
-    let(:droplet) { VCAP::CloudController::DropletModel.make }
+    let(:droplet) { create(:droplet_model) }
 
     context 'when an lrp tries to download a droplet' do
       it 'does not return a 404 because the endpoint is still present, or redirect to another endpoint with different auth' do
@@ -50,7 +50,7 @@ end
 
 RSpec.describe 'DropletsController download endpoint with checksum exists:' do
   describe 'GET /internal/v2/droplets/:guid/:droplet_hash/download' do
-    let(:droplet) { VCAP::CloudController::DropletModel.make }
+    let(:droplet) { create(:droplet_model) }
 
     context 'when an lrp tries to download a droplet' do
       it 'does not return a 404 because the endpoint is still present, and redirects to the droplet-url' do

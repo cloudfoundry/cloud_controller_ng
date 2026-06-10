@@ -13,7 +13,7 @@ module VCAP::CloudController::Diego
     describe '#stage' do
       let(:task_recipe_builder) { instance_double(TaskRecipeBuilder) }
 
-      let(:package) { VCAP::CloudController::PackageModel.make }
+      let(:package) { create(:package_model) }
       let(:message) { { staging: 'message' } }
       let(:staging_details) do
         VCAP::CloudController::Diego::StagingDetails.new.tap do |sd|

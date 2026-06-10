@@ -9,10 +9,10 @@ module VCAP::CloudController
       let(:space_quota_limit) { 200 }
       let(:org_quota_limit) { 200 }
       let(:requested_limit) { 100 }
-      let(:space) { Space.make }
+      let(:space) { create(:space) }
       let(:org) { space.organization }
-      let(:space_quota_definition) { SpaceQuotaDefinition.make(organization: org, log_rate_limit: space_quota_limit) }
-      let(:quota_definition) { QuotaDefinition.make(log_rate_limit: org_quota_limit) }
+      let(:space_quota_definition) { create(:space_quota_definition, organization: org, log_rate_limit: space_quota_limit) }
+      let(:quota_definition) { create(:quota_definition, log_rate_limit: org_quota_limit) }
 
       before do
         space.space_quota_definition = space_quota_definition

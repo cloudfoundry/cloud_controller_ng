@@ -3,7 +3,7 @@ require_relative 'service_operation_shared'
 
 module VCAP::CloudController
   RSpec.describe ManagedServiceInstance, type: :model do
-    let(:service_instance) { VCAP::CloudController::ManagedServiceInstance.make }
+    let(:service_instance) { create(:managed_service_instance) }
     let(:email) { Sham.email }
     let(:guid) { Sham.guid }
 
@@ -24,8 +24,8 @@ module VCAP::CloudController
 
       it do
         expect(subject).to have_associated :service_bindings, associated_instance: lambda { |service_instance|
-          app = VCAP::CloudController::AppModel.make(space: service_instance.space)
-          ServiceBinding.make(app: app, service_instance: service_instance, credentials: Sham.service_credentials)
+          app = create(:app_model, space: service_instance.space)
+          create(:service_binding, app: app, service_instance: service_instance, credentials: Sham.service_credentials)
         }
       end
     end
@@ -41,38 +41,38 @@ module VCAP::CloudController
 
       it 'accepts user-provided tags where combined length of all tags is exactly 2048 characters' do
         expect do
-          ManagedServiceInstance.make tags: max_tags
+          create(:managed_service_instance, tags: max_tags)
         end.not_to raise_error
       end
 
       it 'accepts user-provided tags where combined length of all tags is less than 2048 characters' do
         expect do
-          ManagedServiceInstance.make tags: max_tags[0..50]
+          create(:managed_service_instance, tags: max_tags[0..50])
         end.not_to raise_error
       end
 
       it 'does not accept user-provided tags with combined length of over 2048 characters' do
         expect do
-          ManagedServiceInstance.make tags: max_tags + ['z']
+          create(:managed_service_instance, tags: max_tags + ['z'])
         end.to raise_error(Sequel::ValidationFailed).with_message('tags too_long')
       end
 
       it 'does not accept a single user-provided tag of length greater than 2048 characters' do
         expect do
-          ManagedServiceInstance.make tags: ['a' * 2049]
+          create(:managed_service_instance, tags: ['a' * 2049])
         end.to raise_error(Sequel::ValidationFailed).with_message('tags too_long')
       end
 
       it 'does not bind an app and a service instance from different app spaces' do
         ProcessModelFactory.make(space: service_instance.space)
-        service_binding = ServiceBinding.make
+        service_binding = create(:service_binding)
         expect do
           service_instance.add_service_binding(service_binding)
         end.to raise_error ServiceInstance::InvalidServiceBinding
       end
 
       it 'validates org and space quotas using MaxServiceInstancePolicy' do
-        space_quota_definition = SpaceQuotaDefinition.make
+        space_quota_definition = create(:space_quota_definition)
         service_instance.space.space_quota_definition = space_quota_definition
         max_memory_policies = service_instance.validation_policies.select { |policy| policy.instance_of? MaxServiceInstancePolicy }
         expect(max_memory_policies.length).to eq(2)
@@ -81,7 +81,7 @@ module VCAP::CloudController
       end
 
       it 'validates org and space quotas using PaidServiceInstancePolicy' do
-        space_quota_definition = SpaceQuotaDefinition.make
+        space_quota_definition = create(:space_quota_definition)
         service_instance.space.space_quota_definition = space_quota_definition
         policies = service_instance.validation_policies.select { |policy| policy.instance_of? PaidServiceInstancePolicy }
         expect(policies.length).to eq(2)
@@ -91,25 +91,21 @@ module VCAP::CloudController
     end
 
     describe '#valid_with_plan?' do
-      let(:original_plan) { ServicePlan.make(free: true) }
+      let(:original_plan) { create(:service_plan, free: true) }
 
       let(:free_quota) do
-        QuotaDefinition.make(
-          total_services: 1,
-          non_basic_services_allowed: false
-        )
+        create(:quota_definition, total_services: 1,
+                                  non_basic_services_allowed: false)
       end
-      let(:org) { Organization.make(quota_definition: free_quota) }
-      let(:space) { Space.make(organization: org) }
+      let(:org) { create(:organization, quota_definition: free_quota) }
+      let(:space) { create(:space, organization: org) }
       let(:service_instance) do
-        ManagedServiceInstance.make(
-          space: space,
-          service_plan: original_plan
-        )
+        create(:managed_service_instance, space: space,
+                                          service_plan: original_plan)
       end
 
       context 'for valid requested plans' do
-        let(:new_plan) { ServicePlan.make(free: true) }
+        let(:new_plan) { create(:service_plan, free: true) }
 
         it 'does not change the plan' do
           service_instance.valid_with_plan?(new_plan)
@@ -122,7 +118,7 @@ module VCAP::CloudController
       end
 
       context 'for invalid requested plans' do
-        let(:new_plan) { ServicePlan.make(free: false) }
+        let(:new_plan) { create(:service_plan, free: false) }
 
         it 'does not change the plan' do
           service_instance.valid_with_plan?(new_plan)
@@ -147,12 +143,12 @@ module VCAP::CloudController
       end
 
       it 'saves with is_gateway_service true' do
-        instance = ManagedServiceInstance.make
+        instance = create(:managed_service_instance)
         expect(instance.refresh.is_gateway_service).to be(true)
       end
 
       it 'creates a CREATED service usage event' do
-        instance = ManagedServiceInstance.make
+        instance = create(:managed_service_instance)
 
         event = ServiceUsageEvent.last
         expect(ServiceUsageEvent.count).to eq(1)
@@ -161,14 +157,14 @@ module VCAP::CloudController
       end
 
       it 'allows really long dashboard urls' do
-        instance = ManagedServiceInstance.make
+        instance = create(:managed_service_instance)
         instance.update dashboard_url: 'a' * 1024
         expect(instance.guid).to be
       end
     end
 
     describe '#save_with_new_operation' do
-      let(:service_instance) { ManagedServiceInstance.make }
+      let(:service_instance) { create(:managed_service_instance) }
       let(:developer) { make_developer_for_space(service_instance.space) }
 
       before do
@@ -208,10 +204,10 @@ module VCAP::CloudController
     end
 
     describe '#save_and_update_operation' do
-      let(:service_instance) { ManagedServiceInstance.make }
+      let(:service_instance) { create(:managed_service_instance) }
       let(:developer) { make_developer_for_space(service_instance.space) }
       let(:manager) { make_manager_for_space(service_instance.space) }
-      let(:admin_read_only) { set_current_user_as_admin_read_only(user: User.make) }
+      let(:admin_read_only) { set_current_user_as_admin_read_only(user: create(:user)) }
 
       before do
         last_operation = { state: 'in progress', description: '10%' }
@@ -240,7 +236,7 @@ module VCAP::CloudController
 
     describe '#route_service?' do
       context 'when the service instance is not a route service' do
-        let!(:service_instance) { ManagedServiceInstance.make }
+        let!(:service_instance) { create(:managed_service_instance) }
 
         it 'returns false' do
           expect(service_instance).not_to be_route_service
@@ -248,7 +244,7 @@ module VCAP::CloudController
       end
 
       context 'when the service instance is a route service' do
-        let!(:service_instance) { ManagedServiceInstance.make(:routing) }
+        let!(:service_instance) { create(:managed_service_instance, :routing) }
 
         it 'returns false' do
           expect(service_instance).to be_route_service
@@ -257,8 +253,8 @@ module VCAP::CloudController
     end
 
     describe '#shareable?' do
-      let(:service) { Service.make }
-      let(:service_instance) { ManagedServiceInstance.make }
+      let(:service) { create(:service) }
+      let(:service_instance) { create(:managed_service_instance) }
 
       before do
         allow(service).to receive(:shareable?).and_return(is_shareable)
@@ -283,22 +279,20 @@ module VCAP::CloudController
     end
 
     describe '#as_summary_json' do
-      let(:service_broker) { ServiceBroker.make(name: 'some_broker') }
-      let(:service) { Service.make(label: 'YourSQL', guid: '9876XZ', service_broker: service_broker) }
+      let(:service_broker) { create(:service_broker, name: 'some_broker') }
+      let(:service) { create(:service, label: 'YourSQL', guid: '9876XZ', service_broker: service_broker) }
       let(:maintenance_info) { nil }
-      let(:service_plan) { ServicePlan.make(name: 'Gold Plan', guid: '12763abc', service: service, maintenance_info: maintenance_info) }
+      let(:service_plan) { create(:service_plan, name: 'Gold Plan', guid: '12763abc', service: service, maintenance_info: maintenance_info) }
       let(:service_instance_maintenance_info) { nil }
       let(:developer) { make_developer_for_space(service_instance.space) }
       let(:manager) { make_manager_for_space(service_instance.space) }
 
-      subject(:service_instance) { ManagedServiceInstance.make(service_plan: service_plan, maintenance_info: service_instance_maintenance_info) }
+      subject(:service_instance) { create(:managed_service_instance, service_plan: service_plan, maintenance_info: service_instance_maintenance_info) }
 
       it 'returns detailed summary' do
-        last_operation = ServiceInstanceOperation.make(
-          state: 'in progress',
-          description: '50% all the time',
-          type: 'create'
-        )
+        last_operation = create(:service_instance_operation, state: 'in progress',
+                                                             description: '50% all the time',
+                                                             type: 'create')
         service_instance.service_instance_operation = last_operation
 
         service_instance.dashboard_url = 'http://dashboard.example.com'
@@ -351,96 +345,78 @@ module VCAP::CloudController
     end
 
     context 'quota' do
-      let(:free_plan) { ServicePlan.make(free: true) }
-      let(:paid_plan) { ServicePlan.make(free: false) }
+      let(:free_plan) { create(:service_plan, free: true) }
+      let(:paid_plan) { create(:service_plan, free: false) }
 
       let(:free_quota) do
-        QuotaDefinition.make(
-          total_services: 1,
-          non_basic_services_allowed: false
-        )
+        create(:quota_definition, total_services: 1,
+                                  non_basic_services_allowed: false)
       end
       let(:paid_quota) do
-        QuotaDefinition.make(
-          total_services: 1,
-          non_basic_services_allowed: true
-        )
+        create(:quota_definition, total_services: 1,
+                                  non_basic_services_allowed: true)
       end
 
       context 'exceed quota' do
         it 'raises quota error when quota is exceeded' do
-          org = Organization.make(quota_definition: free_quota)
-          space = Space.make(organization: org)
-          ManagedServiceInstance.make(
-            space: space,
-            service_plan: free_plan
-          ).save(validate: false)
+          org = create(:organization, quota_definition: free_quota)
+          space = create(:space, organization: org)
+          create(:managed_service_instance, space: space,
+                                            service_plan: free_plan).save(validate: false)
           space.refresh
           expect do
-            ManagedServiceInstance.make(
-              space: space,
-              service_plan: free_plan
-            )
+            create(:managed_service_instance, space: space,
+                                              service_plan: free_plan)
           end.to raise_error(Sequel::ValidationFailed, /quota service_instance_quota_exceeded/)
         end
 
         it 'does not raise error when quota is not exceeded' do
-          org = Organization.make(quota_definition: paid_quota)
-          space = Space.make(organization: org)
+          org = create(:organization, quota_definition: paid_quota)
+          space = create(:space, organization: org)
           expect do
-            ManagedServiceInstance.make(
-              space: space,
-              service_plan: free_plan
-            )
+            create(:managed_service_instance, space: space,
+                                              service_plan: free_plan)
           end.not_to raise_error
         end
       end
 
       context 'create free services' do
         it 'does not raise error when created in free quota' do
-          org = Organization.make(quota_definition: free_quota)
-          space = Space.make(organization: org)
+          org = create(:organization, quota_definition: free_quota)
+          space = create(:space, organization: org)
           expect do
-            ManagedServiceInstance.make(
-              space: space,
-              service_plan: free_plan
-            )
+            create(:managed_service_instance, space: space,
+                                              service_plan: free_plan)
           end.not_to raise_error
         end
 
         it 'does not raise error when created in paid quota' do
-          org = Organization.make(quota_definition: paid_quota)
-          space = Space.make(organization: org)
+          org = create(:organization, quota_definition: paid_quota)
+          space = create(:space, organization: org)
           expect do
-            ManagedServiceInstance.make(
-              space: space,
-              service_plan: free_plan
-            )
+            create(:managed_service_instance, space: space,
+                                              service_plan: free_plan)
           end.not_to raise_error
         end
       end
 
       context 'create paid services' do
         it 'raises error when created in free quota' do
-          org = Organization.make(quota_definition: free_quota)
-          space = Space.make(organization: org)
+          org = create(:organization, quota_definition: free_quota)
+          space = create(:space, organization: org)
           expect do
-            ManagedServiceInstance.make(
-              space: space,
-              service_plan: paid_plan
-            )
+            create(:managed_service_instance, space: space,
+                                              service_plan: paid_plan)
           end.to raise_error(Sequel::ValidationFailed,
                              /service_plan paid_services_not_allowed_by_quota/)
         end
 
         it 'does not raise error when created in paid quota' do
-          org = Organization.make(quota_definition: paid_quota)
-          space = Space.make(organization: org)
+          org = create(:organization, quota_definition: paid_quota)
+          space = create(:space, organization: org)
           expect do
-            ManagedServiceInstance.make(
-              space: space,
-              service_plan: paid_plan
-            )
+            create(:managed_service_instance, space: space,
+                                              service_plan: paid_plan)
           end.not_to raise_error
         end
       end
@@ -449,10 +425,8 @@ module VCAP::CloudController
     describe '#destroy' do
       context 'when the instance has bindings' do
         before do
-          ServiceBinding.make(
-            app: AppModel.make(space: service_instance.space),
-            service_instance: service_instance
-          )
+          create(:service_binding, app: create(:app_model, space: service_instance.space),
+                                   service_instance: service_instance)
         end
 
         it 'raises a ForeignKeyConstraintViolation error' do
@@ -471,7 +445,7 @@ module VCAP::CloudController
       end
 
       it 'cascade deletes all ServiceInstanceOperations for this instance' do
-        last_operation = ServiceInstanceOperation.make
+        last_operation = create(:service_instance_operation)
         service_instance.service_instance_operation = last_operation
 
         service_instance.destroy
@@ -482,7 +456,7 @@ module VCAP::CloudController
     end
 
     describe '#bindable?' do
-      let(:service_instance) { ManagedServiceInstance.make }
+      let(:service_instance) { create(:managed_service_instance) }
 
       context 'when the service plan is bindable' do
         before { expect(service_instance.service_plan).to receive(:bindable?).and_return(true) }
@@ -500,9 +474,9 @@ module VCAP::CloudController
     describe 'tags' do
       let(:instance_tags) { %w[a b c] }
       let(:service_tags) { %w[relational mysql] }
-      let(:service_instance) { ManagedServiceInstance.make(service_plan: service_plan, tags: instance_tags) }
-      let(:service_plan) { ServicePlan.make(service:) }
-      let(:service) { Service.make(tags: service_tags) }
+      let(:service_instance) { create(:managed_service_instance, service_plan: service_plan, tags: instance_tags) }
+      let(:service_plan) { create(:service_plan, service:) }
+      let(:service) { create(:service, tags: service_tags) }
 
       describe '#tags' do
         it 'returns the instance tags' do
@@ -524,7 +498,7 @@ module VCAP::CloudController
         end
 
         context 'when the instance tags are not set' do
-          let(:service_instance) { ManagedServiceInstance.make service_plan: }
+          let(:service_instance) { create(:managed_service_instance, service_plan:) }
 
           it 'returns only the service tags' do
             expect(service_instance.merged_tags).to eq(service_tags)
@@ -532,7 +506,7 @@ module VCAP::CloudController
         end
 
         context 'when the service tags are not set' do
-          let(:service_plan) { ServicePlan.make }
+          let(:service_plan) { create(:service_plan) }
 
           it 'returns only the instance tags' do
             expect(service_instance.merged_tags).to eq(instance_tags)
@@ -581,12 +555,10 @@ module VCAP::CloudController
 
       it 'includes the last operation hash' do
         updated_at_time = Time.now.utc
-        last_operation = ServiceInstanceOperation.make(
-          state: 'in progress',
-          description: '50% all the time',
-          type: 'create',
-          updated_at: updated_at_time
-        )
+        last_operation = create(:service_instance_operation, state: 'in progress',
+                                                             description: '50% all the time',
+                                                             type: 'create',
+                                                             updated_at: updated_at_time)
 
         service_instance.service_instance_operation = last_operation
         expect(service_instance.to_hash['last_operation']).to include({

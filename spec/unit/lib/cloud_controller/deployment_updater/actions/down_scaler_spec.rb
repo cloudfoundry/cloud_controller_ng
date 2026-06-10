@@ -5,52 +5,42 @@ module VCAP::CloudController
   RSpec.describe DeploymentUpdater::Actions::DownScaler do
     # subject(:scale_action) { DeploymentUpdater::Actions::DownScaler.new(deployment, logger, target_total_instance_count) }
 
-    let(:app) { AppModel.make(droplet: droplet, revisions_enabled: true) }
-    let(:droplet) { DropletModel.make }
+    let(:app) { create(:app_model, droplet: droplet, revisions_enabled: true) }
+    let(:droplet) { create(:droplet_model) }
 
     let!(:web_process) do
-      ProcessModel.make(
-        instances: 3,
-        created_at: 1.day.ago,
-        guid: 'guid-original',
-        app: app
-      )
+      create(:process_model, instances: 3,
+                             created_at: 1.day.ago,
+                             guid: 'guid-original',
+                             app: app)
     end
 
     let!(:interim_web_process) do
-      ProcessModel.make(
-        instances: 1,
-        created_at: 3.hours.ago,
-        guid: 'guid-interim',
-        app: app
-      )
+      create(:process_model, instances: 1,
+                             created_at: 3.hours.ago,
+                             guid: 'guid-interim',
+                             app: app)
     end
 
     let!(:interim_web_process_2) do
-      ProcessModel.make(
-        instances: 2,
-        created_at: 2.hours.ago,
-        guid: 'guid-interim-2',
-        app: app
-      )
+      create(:process_model, instances: 2,
+                             created_at: 2.hours.ago,
+                             guid: 'guid-interim-2',
+                             app: app)
     end
 
     let!(:deploying_web_process) do
-      ProcessModel.make(
-        app: web_process.app,
-        type: ProcessTypes::WEB,
-        instances: 4,
-        guid: 'guid-final',
-        state: ProcessModel::STOPPED
-      )
+      create(:process_model, app: web_process.app,
+                             type: ProcessTypes::WEB,
+                             instances: 4,
+                             guid: 'guid-final',
+                             state: ProcessModel::STOPPED)
     end
 
     let(:deployment) do
-      DeploymentModel.make(
-        app: web_process.app,
-        deploying_web_process: deploying_web_process,
-        state: DeploymentModel::DEPLOYING_STATE
-      )
+      create(:deployment_model, app: web_process.app,
+                                deploying_web_process: deploying_web_process,
+                                state: DeploymentModel::DEPLOYING_STATE)
     end
 
     let(:logger) { instance_double(Steno::Logger, info: nil, error: nil) }

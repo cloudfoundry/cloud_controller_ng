@@ -6,19 +6,17 @@ module VCAP::CloudController::Presenters::V3
     let(:presenter) { described_class.new(instance) }
     let(:result) { presenter.to_hash.deep_symbolize_keys }
 
-    let(:space) { VCAP::CloudController::Space.make }
-    let(:instance) { VCAP::CloudController::ManagedServiceInstance.make(space:) }
+    let(:space) { create(:space) }
+    let(:instance) { create(:managed_service_instance, space:) }
 
-    let(:space_1) { VCAP::CloudController::Space.make }
-    let(:space_2) { VCAP::CloudController::Space.make }
-    let(:space_3) { VCAP::CloudController::Space.make }
+    let(:space_1) { create(:space) }
+    let(:space_2) { create(:space) }
+    let(:space_3) { create(:space) }
 
     def create_bindings(instance, space:, count:)
       (1..count).each do
-        VCAP::CloudController::ServiceBinding.make(
-          app: VCAP::CloudController::AppModel.make(space:),
-          service_instance: instance
-        )
+        create(:service_binding, app: create(:app_model, space:),
+                                 service_instance: instance)
       end
     end
 
@@ -53,7 +51,7 @@ module VCAP::CloudController::Presenters::V3
     end
 
     context 'when there are no shared spaces' do
-      let(:another_instance) { VCAP::CloudController::ManagedServiceInstance.make(space:) }
+      let(:another_instance) { create(:managed_service_instance, space:) }
       let(:presenter) { described_class.new(another_instance) }
 
       it 'presents an empty usage summary' do

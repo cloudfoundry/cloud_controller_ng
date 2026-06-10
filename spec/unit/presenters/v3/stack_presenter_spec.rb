@@ -3,43 +3,33 @@ require 'presenters/v3/stack_presenter'
 
 RSpec.describe VCAP::CloudController::Presenters::V3::StackPresenter do
   let(:stack) do
-    VCAP::CloudController::Stack.make(
-      run_rootfs_image: 'run-image',
-      build_rootfs_image: 'build-image'
-    )
+    create(:stack, run_rootfs_image: 'run-image',
+                   build_rootfs_image: 'build-image')
   end
 
   let!(:release_label) do
-    VCAP::CloudController::StackLabelModel.make(
-      key_name: 'release',
-      value: 'stable',
-      resource_guid: stack.guid
-    )
+    create(:stack_label_model, key_name: 'release',
+                               value: 'stable',
+                               resource_guid: stack.guid)
   end
 
   let!(:potato_label) do
-    VCAP::CloudController::StackLabelModel.make(
-      key_prefix: 'canberra.au',
-      key_name: 'potato',
-      value: 'mashed',
-      resource_guid: stack.guid
-    )
+    create(:stack_label_model, key_prefix: 'canberra.au',
+                               key_name: 'potato',
+                               value: 'mashed',
+                               resource_guid: stack.guid)
   end
 
   let!(:mountain_annotation) do
-    VCAP::CloudController::StackAnnotationModel.make(
-      key_name: 'altitude',
-      value: '14,412',
-      resource_guid: stack.guid
-    )
+    create(:stack_annotation_model, key_name: 'altitude',
+                                    value: '14,412',
+                                    resource_guid: stack.guid)
   end
 
   let!(:plain_annotation) do
-    VCAP::CloudController::StackAnnotationModel.make(
-      key_name: 'maize',
-      value: 'hfcs',
-      resource_guid: stack.guid
-    )
+    create(:stack_annotation_model, key_name: 'maize',
+                                    value: 'hfcs',
+                                    resource_guid: stack.guid)
   end
 
   describe '#to_hash' do
@@ -65,10 +55,8 @@ RSpec.describe VCAP::CloudController::Presenters::V3::StackPresenter do
 
     context 'when state_reason is present' do
       let(:stack) do
-        VCAP::CloudController::Stack.make(
-          state: 'DEPRECATED',
-          state_reason: 'This stack will be removed on 2026-12-31'
-        )
+        create(:stack, state: 'DEPRECATED',
+                       state_reason: 'This stack will be removed on 2026-12-31')
       end
 
       it 'presents the state_reason' do
@@ -79,7 +67,7 @@ RSpec.describe VCAP::CloudController::Presenters::V3::StackPresenter do
 
     context 'when state_reason is nil' do
       let(:stack) do
-        VCAP::CloudController::Stack.make(state: 'ACTIVE', state_reason: nil)
+        create(:stack, state: 'ACTIVE', state_reason: nil)
       end
 
       it 'presents state_reason as nil' do

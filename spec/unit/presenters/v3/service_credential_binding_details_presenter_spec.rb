@@ -4,26 +4,22 @@ require 'presenters/v3/service_credential_binding_details_presenter'
 module VCAP
   module CloudController
     RSpec.describe Presenters::V3::ServiceCredentialBindingDetailsPresenter do
-      let(:instance) { ServiceInstance.make(guid: 'instance-guid') }
-      let(:app) { AppModel.make(guid: 'app-guid', space: instance.space) }
+      let(:instance) { create(:service_instance, guid: 'instance-guid') }
+      let(:app) { create(:app_model, guid: 'app-guid', space: instance.space) }
       let(:credentials) { { password: 'super secret avocado toast' } }
       let(:credential_binding) do
-        ServiceBinding.make(
-          name: 'some-name',
-          app: app,
-          service_instance: instance,
-          credentials: credentials,
-          volume_mounts: %w[super good],
-          syslog_drain_url: 'http://banana.example.com/drain'
-        )
+        create(:service_binding, name: 'some-name',
+                                 app: app,
+                                 service_instance: instance,
+                                 credentials: credentials,
+                                 volume_mounts: %w[super good],
+                                 syslog_drain_url: 'http://banana.example.com/drain')
       end
 
       let(:key_binding) do
-        ServiceKey.make(
-          name: 'some-key',
-          service_instance: instance,
-          credentials: credentials
-        )
+        create(:service_key, name: 'some-key',
+                             service_instance: instance,
+                             credentials: credentials)
       end
 
       it 'returns the app binding details' do
@@ -51,7 +47,7 @@ module VCAP
       end
 
       context 'when syslog drain is not set' do
-        let(:credential_binding) { ServiceBinding.make }
+        let(:credential_binding) { create(:service_binding) }
 
         it 'does not include syslog_drain_url in the response' do
           presenter = described_class.new(binding: credential_binding, credentials: credential_binding.credentials)
@@ -60,7 +56,7 @@ module VCAP
       end
 
       context 'when volume mounts are not set' do
-        let(:credential_binding) { ServiceBinding.make }
+        let(:credential_binding) { create(:service_binding) }
 
         it 'does not include volume_mounts in the response' do
           presenter = described_class.new(binding: credential_binding, credentials: credential_binding.credentials)
