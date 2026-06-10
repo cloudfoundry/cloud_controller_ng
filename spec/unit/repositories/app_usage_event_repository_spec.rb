@@ -701,6 +701,40 @@ module VCAP::CloudController
 
           expect(AppUsageEvent.last.created_at).to be < cutoff_age_in_days.days.ago
         end
+
+        # This is where the scheduled cleanup gets its keep_running_records
+        # behavior from -- assert the wiring here, not just in
+        # Database::OldRecordCleanup's own specs.
+        it 'keeps old beginning events of still-running resources' do
+          old = Time.now.utc - 999.days
+          running_app_start = create(:app_usage_event, state: 'STARTED', app_guid: 'running-app', created_at: old)
+          running_task_start = create(:app_usage_event, state: 'TASK_STARTED', task_guid: 'running-task', created_at: old)
+          app_baseline = create(:app_usage_event, state: 'WAS_RUNNING', app_guid: 'baselined-app', created_at: old)
+          task_baseline = create(:app_usage_event, state: 'TASK_WAS_RUNNING', task_guid: 'baselined-task', created_at: old)
+          # Created last, so keep_at_least_one_record protects THIS row; the
+          # four above survive on lifecycle logic alone.
+          newest = create(:app_usage_event, state: 'BUILDPACK_SET', app_guid: 'unrelated-app', created_at: old)
+
+          repository.delete_events_older_than(cutoff_age_in_days)
+
+          expect(running_app_start.reload).to be_present
+          expect(running_task_start.reload).to be_present
+          expect(app_baseline.reload).to be_present
+          expect(task_baseline.reload).to be_present
+          expect(newest.reload).to be_present
+        end
+
+        it 'still deletes the events of completed runs' do
+          old = Time.now.utc - 999.days
+          done_start = create(:app_usage_event, state: 'STARTED', app_guid: 'done-app', created_at: old)
+          done_stop = create(:app_usage_event, state: 'STOPPED', app_guid: 'done-app', created_at: old)
+          create(:app_usage_event, state: 'BUILDPACK_SET', app_guid: 'unrelated-app', created_at: old)
+
+          repository.delete_events_older_than(cutoff_age_in_days)
+
+          expect { done_start.reload }.to raise_error(Sequel::NoExistingObject)
+          expect { done_stop.reload }.to raise_error(Sequel::NoExistingObject)
+        end
       end
     end
   end

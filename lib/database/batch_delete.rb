@@ -11,10 +11,12 @@ module Database
       total_count = 0
 
       loop do
-        set = dataset.limit(amount)
-        break if set.empty?
+        # Fetch the batch's ids in the same query that checks for emptiness, so the
+        # (potentially expensive) filtered dataset is evaluated once per batch.
+        ids = dataset.limit(amount).select_map(:id)
+        break if ids.empty?
 
-        total_count += delete_batch(set)
+        total_count += delete_batch(ids)
       end
 
       total_count
@@ -22,8 +24,8 @@ module Database
 
     private
 
-    def delete_batch(set)
-      dataset.model.where(id: set.select_map(:id)).delete
+    def delete_batch(ids)
+      dataset.model.where(id: ids).delete
     end
   end
 end
