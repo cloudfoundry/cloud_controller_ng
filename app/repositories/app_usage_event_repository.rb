@@ -4,6 +4,16 @@ require 'cloud_controller/url_secret_obfuscator'
 module VCAP::CloudController
   module Repositories
     class AppUsageEventRepository
+      WAS_RUNNING_EVENT_STATE = 'WAS_RUNNING'.freeze
+      TASK_STARTED_EVENT_STATE = 'TASK_STARTED'.freeze
+      TASK_STOPPED_EVENT_STATE = 'TASK_STOPPED'.freeze
+      # Task baselines get their own state (rather than reusing WAS_RUNNING)
+      # because task events share the app_usage_events table with app events but
+      # carry an empty app_guid: a WAS_RUNNING row keyed by app_guid '' would be
+      # correlated with every other task's baseline by the app lifecycle's
+      # cleanup and swept by the app backfill's stale-row sweep.
+      TASK_WAS_RUNNING_EVENT_STATE = 'TASK_WAS_RUNNING'.freeze
+
       def find(guid)
         AppUsageEvent.find(guid:)
       end
@@ -152,7 +162,7 @@ module VCAP::CloudController
       end
 
       def delete_events_older_than(cutoff_age_in_days)
-        Database::OldRecordCleanup.new(AppUsageEvent, cutoff_age_in_days, keep_at_least_one_record: true).delete
+        Database::OldRecordCleanup.new(AppUsageEvent, cutoff_age_in_days: cutoff_age_in_days, keep_at_least_one_record: true, keep_running_records: true).delete
       end
 
       private
