@@ -19,7 +19,11 @@ module CloudFoundry
 
       def apply_rate_limiting?(env)
         request = ActionDispatch::Request.new(env)
-        !basic_auth?(env) && !internal_api?(request) && !root_api?(request) && per_process_request_limit(env) != -1
+        return false if basic_auth?(env)
+        return false if internal_api?(request) || root_api?(request)
+        return false if per_process_request_limit(env) < 0
+
+        true
       end
 
       def root_api?(request)
