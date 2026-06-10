@@ -47,7 +47,7 @@ RSpec.resource 'App Usage Events', type: %i[api legacy_api] do
             "The desired state of the app or 'BUILDPACK_SET' when buildpack info has been set.",
             required: false,
             readonly: true,
-            valid_values: %w[STARTED STOPPED BUILDPACK_SET TASK_STARTED TASK_STOPPED]
+            valid_values: %w[STARTED STOPPED WAS_RUNNING BUILDPACK_SET TASK_STARTED TASK_STOPPED TASK_WAS_RUNNING]
       field :task_guid, 'The GUID of the task if one exists.', required: false, readonly: true, experimental: true
       field :task_name, 'The NAME of the task if one exists.', required: false, readonly: true, experimental: true
 

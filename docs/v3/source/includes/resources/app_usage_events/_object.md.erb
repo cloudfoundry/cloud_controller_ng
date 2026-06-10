@@ -30,3 +30,30 @@ Name | Type | Description
 **instance_count.current** | _integer_ or `null` | Current instance count of the app that this event pertains to, if applicable
 **instance_count.previous** | _integer_ or `null` | Previous instance count of the app that this event pertains to, if applicable
 **links** | [_links object_](#links) | Links to related resources
+
+#### WAS_RUNNING and TASK_WAS_RUNNING events
+
+`WAS_RUNNING` and `TASK_WAS_RUNNING` are synthetic values for `state.current` recorded once per running process (`WAS_RUNNING`) and once per running task (`TASK_WAS_RUNNING`) by a one-time data migration when the keep-running cleanup feature was introduced. They mark every process and task that was already running at the time of the upgrade so that billing consumers can bootstrap from a complete baseline even if the original `STARTED`/`TASK_STARTED` events have been pruned.
+
+**Consumer interpretation** (read `WAS_RUNNING`/`STARTED` as `TASK_WAS_RUNNING`/`TASK_STARTED` for task events, which are keyed by `task.guid`):
+
+* If you have not previously recorded a `STARTED` event for this resource, treat `WAS_RUNNING` as equivalent to `STARTED`.
+* If you have already recorded `STARTED` (or an earlier `WAS_RUNNING`) for this resource, treat as a redundant baseline confirmation and ignore.
+* `created_at` reflects when the backfill migration ran, **not** when the app or task actually started. Treat `WAS_RUNNING` as a baseline marker that the resource was already running as of that timestamp, not as the true start of the running interval.
+* `state.previous` on a `WAS_RUNNING` event is always `null`. Subsequent real events for the same resource will continue to report their actual prior process state in `state.previous` (typically `STARTED`). If you perform chain validation, treat `WAS_RUNNING` as equivalent to `STARTED` for the purpose of validating the next event's `state.previous`.
+
+#### Repaired ending events
+
+The backfill (and any later run of its recovery task) repairs baselines that turn out to be unpaired: if a `WAS_RUNNING`/`TASK_WAS_RUNNING` event was recorded for a resource that is no longer running and no later ending event exists for it — for example because the resource stopped while the backfill was still in progress — the missing ending event (`STOPPED`/`TASK_STOPPED`) is appended. Baselines are never deleted. A repaired ending event:
+
+* carries a `created_at` of when the repair ran, **not** when the resource actually stopped — the interval it closes may overstate the true run by that gap;
+* copies the footprint (`instance_count`, `memory_in_mb_per_instance`) of the baseline it pairs;
+* reports the baseline's state (`WAS_RUNNING`/`TASK_WAS_RUNNING`) in `state.previous`, which normal ending events never carry — use this to tell repaired endings apart.
+
+#### What a consumer must do
+
+Independent of the backfill, the events stream asks three things of any consumer that pairs beginnings with endings:
+
+1. Ignore a `WAS_RUNNING`/`TASK_WAS_RUNNING` event for a resource you already track (see above).
+2. Tolerate duplicate ending events for the same resource: close the interval on the first ending after a beginning and ignore further endings until the next beginning.
+3. Treat an ending event with no visible beginning for that resource as noise.
