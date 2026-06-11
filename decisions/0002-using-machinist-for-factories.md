@@ -6,7 +6,7 @@ Date: 2019-03-22
 Status
 ------
 
-Accepted
+Superseded by [ADR 0015](0015-using-factory-bot-for-factories.md)
 
 
 Context
