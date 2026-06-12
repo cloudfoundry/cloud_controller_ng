@@ -74,6 +74,7 @@ module VCAP::CloudController
     validate :validate_buildpack_and_buildpacks_combination!
     validate :validate_docker_enabled!
     validate :validate_cnb_enabled!
+    validate :validate_custom_stacks_enabled!
     validate :validate_docker_buildpacks_combination!
     validate :validate_service_bindings_message!, if: ->(record) { record.requested?(:services) }
     validate :validate_env_update_message!,       if: ->(record) { record.requested?(:env) }
@@ -468,6 +469,12 @@ module VCAP::CloudController
 
     def validate_cnb_enabled!
       FeatureFlag.raise_unless_enabled!(:diego_cnb) if requested?(:lifecycle) && @lifecycle == 'cnb'
+    rescue StandardError => e
+      errors.add(:base, e.message)
+    end
+
+    def validate_custom_stacks_enabled!
+      FeatureFlag.raise_unless_enabled!(:diego_custom_stacks) if requested?(:stack) && UriUtils.is_custom_stack_uri?(@stack)
     rescue StandardError => e
       errors.add(:base, e.message)
     end

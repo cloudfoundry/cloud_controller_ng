@@ -29,7 +29,7 @@ module VCAP
               Diego::StagingDetails.new.tap do |details|
                 details.staging_guid = droplet.guid
                 details.package      = package
-                details.lifecycle    = instance_double(CNBLifecycle, staging_stack: 'potato-stack', buildpack_infos: buildpack_infos,
+                details.lifecycle    = instance_double(CNBLifecycle, staging_stack: 'potato-stack', buildpack_infos: buildpack_infos, staging_message: double('msg', buildpack_data: double('bd', requested?: false)),
                                                                      credentials: '{"registry":{"username":"password"}}')
               end
             end
@@ -60,7 +60,7 @@ module VCAP
                 details.environment_variables = { 'nightshade_fruit' => 'potato' }
                 details.staging_memory_in_mb  = 42
                 details.staging_disk_in_mb    = 51
-                details.lifecycle             = instance_double(CNBLifecycle, staging_stack: 'potato-stack', buildpack_infos: buildpack_infos,
+                details.lifecycle             = instance_double(CNBLifecycle, staging_stack: 'potato-stack', buildpack_infos: buildpack_infos, staging_message: double('msg', buildpack_data: double('bd', requested?: false)),
                                                                               credentials: '{"registry":{"username":"password"}}')
               end
             end
@@ -122,7 +122,7 @@ module VCAP
             let(:droplet) { DropletModel.make(:cnb) }
             let(:staging_details) do
               StagingDetails.new.tap do |details|
-                details.lifecycle    = instance_double(CNBLifecycle, staging_stack: 'potato-stack', buildpack_infos: 'some buildpack info',
+                details.lifecycle    = instance_double(CNBLifecycle, staging_stack: 'potato-stack', buildpack_infos: 'some buildpack info', staging_message: double('msg', buildpack_data: double('bd', requested?: false)),
                                                                      credentials: '{"registry":{"username":"password"}}')
                 details.package      = package
                 details.staging_guid = droplet.guid

@@ -1,10 +1,15 @@
 module VCAP::CloudController
   class BuildpackLifecycleDataMessage < BaseMessage
-    register_allowed_keys %i[buildpacks stack credentials]
+    register_allowed_keys %i[buildpacks stack stack_id credentials]
 
     validates_with NoAdditionalKeysValidator
 
     validates :stack,
+              string: true,
+              allow_nil: true,
+              length: { in: 1..4096, message: 'must be between 1 and 4096 characters' }
+
+    validates :stack_id,
               string: true,
               allow_nil: true,
               length: { in: 1..4096, message: 'must be between 1 and 4096 characters' }
@@ -40,7 +45,20 @@ module VCAP::CloudController
     def credentials_content
       return unless credentials.is_a?(Hash)
 
-      errors.add(:credentials, 'credentials value must be a hash') if credentials.any? { |_, v| !v.is_a?(Hash) }
+      credentials.each do |registry, creds|
+        unless creds.is_a?(Hash)
+          errors.add(:credentials, "for registry '#{registry}' must be a hash")
+          next
+        end
+
+        next unless UriUtils.is_custom_stack_uri?(stack)
+
+        errors.add(:credentials, "for registry '#{registry}' must include 'username' and 'password'") unless has_username_and_password?(creds)
+      end
+    end
+
+    def has_username_and_password?(creds)
+      (creds.key?('username') || creds.key?(:username)) && (creds.key?('password') || creds.key?(:password))
     end
   end
 end

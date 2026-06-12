@@ -40,7 +40,9 @@ Name | Type | Description
 ---- | ---- | -----------
 **type** | _string_ | `buildpack`
 **data.buildpacks** | _list of strings_ | A list of the names of buildpacks, URLs from which they may be downloaded, or `null` to auto-detect a suitable buildpack during staging
-**data.stack** | _string_ | The root filesystem to use with the buildpack, for example `cflinuxfs4`
+**data.stack** | _string_ | The root filesystem to use with the buildpack, for example `cflinuxfs4`. Can also be a container image URI with `docker://` scheme (e.g. `docker://docker.io/cloudfoundry/cflinuxfs4:1.268.0`) when the `diego_custom_stacks` feature flag is enabled. When using a custom stack, all buildpacks must be custom (URL-based).
+**data.credentials** | _object_ | _(optional)_ Credentials used to pull a custom stack from a private registry. Keyed by registry hostname, each value must contain `username` and `password` fields.
+**data.stack_id** | _string_ | _(optional, CNB only)_ Explicit CNB stack identifier (e.g. `io.buildpacks.stacks.jammy`). When omitted with a custom stack, the CNB builder will auto-detect the stack from the run image metadata.
 
 ### Cloud Native Buildpacks Lifecycle *(experimental)*
 
@@ -80,8 +82,9 @@ Name | Type | Description
 ---- | ---- | -----------
 **type** | _string_ | `cnb`
 **data.buildpacks** | _list of strings_ | A list of URLs with either `docker://` or `http(s)://` scheme, pointing to the Cloud Native Buildpack OCI image. <br/>When the scheme is `http(s)://`, an OCI tarball is expected to be present at the specified location.
-**data.credentials** | _object_ | Credentials used to download the configured buildpacks. This can either contain username/password  or a token.
-**data.stack** | _string_ | The root filesystem to use with the buildpack, for example `cflinuxfs4`
+**data.credentials** | _object_ | Credentials used to download the configured buildpacks or pull a custom stack. This can contain `username`/`password` for registry authentication. Keyed by registry hostname.
+**data.stack** | _string_ | The root filesystem to use with the buildpack, for example `cflinuxfs4`. Can also be a container image URI with `docker://` scheme when the `diego_custom_stacks` feature flag is enabled.
+**data.stack_id** | _string_ | _(optional)_ Explicit CNB stack identifier (e.g. `io.buildpacks.stacks.jammy`). When omitted with a custom stack, the CNB builder will auto-detect the stack from the run image metadata.
 
 ### Docker lifecycle
 
