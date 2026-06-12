@@ -468,7 +468,8 @@ RSpec.describe AppsV3Controller, type: :controller do
           {
             name: 'some-name',
             relationships: { space: { data: { guid: space.guid } } },
-            lifecycle: { type: 'cnb', data: { buildpacks: ['http://example.com'], credentials: { registry: { user: 'password' } } } }
+            lifecycle: { type: 'cnb', data: { buildpacks: ['http://example.com'], stack: 'default-stack-name',
+                                              credentials: { 'registry.example.com' => { 'username' => 'user', 'password' => 'pass' } } } }
           }
         end
 

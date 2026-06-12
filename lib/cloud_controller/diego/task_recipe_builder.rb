@@ -52,8 +52,8 @@ module VCAP::CloudController
               "app:#{task.app_guid}"
             ]
           ),
-          image_username: task.droplet.docker_receipt_username,
-          image_password: task.droplet.docker_receipt_password,
+          image_username: task_image_username(task),
+          image_password: task_image_password(task),
           volume_mounted_files: ServiceBindingFilesBuilder.build(task.app)
         }.compact)
       rescue ServiceBindingFilesBuilder::IncompatibleBindings => e
@@ -93,8 +93,8 @@ module VCAP::CloudController
               "app:#{staging_details.package.app_guid}"
             ]
           ),
-          image_username: staging_details.package.docker_username,
-          image_password: staging_details.package.docker_password,
+          image_username: staging_image_username(staging_details),
+          image_password: staging_image_password(staging_details),
           volume_mounted_files: ServiceBindingFilesBuilder.build(staging_details.package.app)
         }.compact)
       rescue ServiceBindingFilesBuilder::IncompatibleBindings => e
@@ -102,6 +102,73 @@ module VCAP::CloudController
       end
 
       private
+
+      def task_image_username(task)
+        username, password = task_docker_receipt_credentials(task)
+        return username if username.present? && password.present?
+
+        custom_stack_task_credential(task, 'username')
+      end
+
+      def task_image_password(task)
+        username, password = task_docker_receipt_credentials(task)
+        return password if username.present? && password.present?
+
+        custom_stack_task_credential(task, 'password')
+      end
+
+      def task_docker_receipt_credentials(task)
+        droplet = task.droplet
+        [droplet.docker_receipt_username, droplet.docker_receipt_password]
+      end
+
+      def custom_stack_task_credential(task, field)
+        lifecycle_data = task.app.lifecycle_data
+        return nil unless lifecycle_data.respond_to?(:credentials) && lifecycle_data.respond_to?(:stack)
+
+        stack = lifecycle_data.stack
+        stack_host = UriUtils.custom_stack_registry_host(stack)
+        return nil unless stack_host
+
+        credentials = lifecycle_data.credentials
+        return nil unless credentials.is_a?(Hash)
+
+        cred = credentials[stack_host]
+        cred&.fetch(field, nil)
+      end
+
+      def staging_image_username(staging_details)
+        username, password = staging_docker_credentials(staging_details)
+        return username if username.present? && password.present?
+
+        custom_stack_credential(staging_details, 'username')
+      end
+
+      def staging_image_password(staging_details)
+        username, password = staging_docker_credentials(staging_details)
+        return password if username.present? && password.present?
+
+        custom_stack_credential(staging_details, 'password')
+      end
+
+      def staging_docker_credentials(staging_details)
+        [staging_details.package.docker_username, staging_details.package.docker_password]
+      end
+
+      def custom_stack_credential(staging_details, field)
+        lifecycle = staging_details.lifecycle
+        return nil unless lifecycle.respond_to?(:credentials) && lifecycle.respond_to?(:staging_stack)
+
+        stack = lifecycle.staging_stack
+        stack_host = UriUtils.custom_stack_registry_host(stack)
+        return nil unless stack_host
+
+        credentials = lifecycle.credentials
+        return nil unless credentials.is_a?(Hash)
+
+        cred = credentials[stack_host]
+        cred&.fetch(field, nil)
+      end
 
       def metric_tags(source)
         {

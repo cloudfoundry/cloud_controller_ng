@@ -1,5 +1,6 @@
 require 'cloud_controller/diego/lifecycles/lifecycles'
 require 'utils/uri_utils'
+require 'presenters/helpers/censorship'
 require_relative '../helpers/lifecycle_data_model_mixin'
 
 module VCAP::CloudController
@@ -9,6 +10,7 @@ module VCAP::CloudController
     LIFECYCLE_TYPE = Lifecycles::BUILDPACK
 
     set_field_as_encrypted :buildpack_url, salt: :encrypted_buildpack_url_salt, column: :encrypted_buildpack_url
+    set_field_as_encrypted :registry_credentials_json, salt: :encrypted_registry_credentials_json_salt, column: :encrypted_registry_credentials_json
 
     many_to_one :droplet,
                 class: '::VCAP::CloudController::DropletModel',
@@ -86,10 +88,22 @@ module VCAP::CloudController
     end
 
     def to_hash
-      {
+      hash = {
         buildpacks: obfuscated_buildpacks,
         stack: stack
       }
+      hash[:credentials] = Presenters::Censorship::REDACTED_CREDENTIAL unless credentials.nil?
+      hash
+    end
+
+    def credentials
+      return unless registry_credentials_json
+
+      Oj.load(registry_credentials_json)
+    end
+
+    def credentials=(creds)
+      self.registry_credentials_json = creds ? Oj.dump(deep_stringify_keys(creds)) : nil
     end
 
     def validate
@@ -99,6 +113,15 @@ module VCAP::CloudController
     end
 
     private
+
+    def deep_stringify_keys(obj)
+      case obj
+      when Hash
+        obj.each_with_object({}) { |(k, v), h| h[k.to_s] = deep_stringify_keys(v) }
+      else
+        obj
+      end
+    end
 
     def attributes_from_buildpack_name(buildpack_name)
       if UriUtils.is_buildpack_uri?(buildpack_name)

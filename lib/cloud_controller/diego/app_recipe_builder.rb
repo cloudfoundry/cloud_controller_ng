@@ -4,6 +4,7 @@ require 'cloud_controller/diego/protocol/routing_info'
 require 'cloud_controller/diego/buildpack/desired_lrp_builder'
 require 'cloud_controller/diego/docker/desired_lrp_builder'
 require 'cloud_controller/diego/cnb/desired_lrp_builder'
+require 'cloud_controller/diego/custom_stack_uri_converter'
 require 'cloud_controller/diego/process_guid'
 require 'cloud_controller/diego/ssh_key'
 require 'cloud_controller/diego/service_binding_files_builder'
@@ -101,12 +102,46 @@ module VCAP::CloudController
           certificate_properties: ::Diego::Bbs::Models::CertificateProperties.new(
             organizational_unit: ["organization:#{process.organization.guid}", "space:#{process.space.guid}", "app:#{process.app_guid}"]
           ),
-          image_username: process.desired_droplet.docker_receipt_username,
-          image_password: process.desired_droplet.docker_receipt_password,
+          image_username: lrp_image_username(process),
+          image_password: lrp_image_password(process),
           volume_mounted_files: ServiceBindingFilesBuilder.build(process)
         }.compact
       rescue ServiceBindingFilesBuilder::IncompatibleBindings => e
         raise CloudController::Errors::ApiError.new_from_details('UnprocessableEntity', "Cannot build service binding files for app - #{e.message}")
+      end
+
+      def lrp_image_username(process)
+        username, password = docker_receipt_credentials(process)
+        return username if username.present? && password.present?
+
+        custom_stack_lrp_credential(process, 'username')
+      end
+
+      def lrp_image_password(process)
+        username, password = docker_receipt_credentials(process)
+        return password if username.present? && password.present?
+
+        custom_stack_lrp_credential(process, 'password')
+      end
+
+      def docker_receipt_credentials(process)
+        droplet = process.desired_droplet
+        [droplet.docker_receipt_username, droplet.docker_receipt_password]
+      end
+
+      def custom_stack_lrp_credential(process, field)
+        lifecycle_data = process.app.lifecycle_data
+        return nil unless lifecycle_data.respond_to?(:credentials) && lifecycle_data.respond_to?(:stack)
+
+        stack = lifecycle_data.stack
+        stack_host = UriUtils.custom_stack_registry_host(stack)
+        return nil unless stack_host
+
+        credentials = lifecycle_data.credentials
+        return nil unless credentials.is_a?(Hash)
+
+        cred = credentials[stack_host]
+        cred&.fetch(field, nil)
       end
 
       def metric_tags(process)
