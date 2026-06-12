@@ -1,6 +1,7 @@
 require 'diego/action_builder'
 require 'cloud_controller/diego/task_environment_variable_collector'
 require 'cloud_controller/diego/custom_stack_uri_converter'
+require 'cloud_controller/diego/custom_stack_fallback'
 require 'credhub/config_helpers'
 
 module VCAP::CloudController
@@ -8,6 +9,7 @@ module VCAP::CloudController
     module Buildpack
       class TaskActionBuilder
         include ::Diego::ActionBuilder
+        include CustomStackFallback
 
         class InvalidStack < StandardError; end
 
@@ -92,7 +94,7 @@ module VCAP::CloudController
         end
 
         def stack
-          return CustomStackUriConverter.new.convert(lifecycle_stack) if UriUtils.is_custom_stack_uri?(lifecycle_stack)
+          return CustomStackUriConverter.convert(lifecycle_stack) if UriUtils.is_custom_stack_uri?(lifecycle_stack)
 
           @stack ||= Stack.find(name: lifecycle_stack)
           raise CloudController::Errors::ApiError.new_from_details('StackNotFound', lifecycle_stack) unless @stack
@@ -120,14 +122,6 @@ module VCAP::CloudController
 
         def lifecycle_stack
           lifecycle_data[:stack]
-        end
-
-        def resolved_stack_name
-          if UriUtils.is_custom_stack_uri?(lifecycle_stack)
-            VCAP::CloudController::Stack.default.name
-          else
-            lifecycle_stack
-          end
         end
       end
     end

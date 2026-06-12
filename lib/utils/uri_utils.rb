@@ -45,19 +45,16 @@ module UriUtils
     end
 
     def is_custom_stack_uri?(candidate)
-      return false unless candidate.is_a?(String)
-      return false unless candidate.start_with?('docker://')
-
-      host, = parse_docker_uri(candidate.delete_prefix('docker://'))
-      host.present?
-    rescue StandardError
-      false
+      !custom_stack_registry_host(candidate).nil?
     end
 
     def custom_stack_registry_host(stack_uri)
-      return nil unless is_custom_stack_uri?(stack_uri)
+      return nil unless stack_uri.is_a?(String) && stack_uri.start_with?('docker://')
 
-      host, = parse_docker_uri(stack_uri.delete_prefix('docker://'))
+      body = stack_uri.delete_prefix('docker://')
+      return nil if body.empty?
+
+      host, = parse_docker_uri(body)
       host.presence
     rescue StandardError
       nil

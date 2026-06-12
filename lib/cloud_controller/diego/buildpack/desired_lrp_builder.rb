@@ -1,4 +1,5 @@
 require 'cloud_controller/diego/custom_stack_uri_converter'
+require 'cloud_controller/diego/custom_stack_fallback'
 require 'utils/uri_utils'
 
 module VCAP::CloudController
@@ -6,6 +7,7 @@ module VCAP::CloudController
     module Buildpack
       class DesiredLrpBuilder
         include ::Diego::ActionBuilder
+        include CustomStackFallback
 
         class InvalidStack < StandardError; end
 
@@ -42,7 +44,7 @@ module VCAP::CloudController
         end
 
         def root_fs
-          return CustomStackUriConverter.new.convert(@stack) if UriUtils.is_custom_stack_uri?(@stack)
+          return CustomStackUriConverter.convert(@stack) if UriUtils.is_custom_stack_uri?(@stack)
 
           @stack_obj ||= Stack.find(name: @stack)
           raise CloudController::Errors::ApiError.new_from_details('StackNotFound', @stack) unless @stack_obj
@@ -124,15 +126,6 @@ module VCAP::CloudController
         end
 
         private
-
-        # For custom stacks, fall back to the default stack for lifecycle bundle and droplet destination lookups
-        def resolved_stack_name
-          if UriUtils.is_custom_stack_uri?(@stack)
-            VCAP::CloudController::Stack.default.name
-          else
-            @stack
-          end
-        end
 
         def resolved_lifecycle_bundle_key
           :"buildpack/#{resolved_stack_name}"
