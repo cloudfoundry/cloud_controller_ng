@@ -736,6 +736,20 @@ module VCAP::CloudController
           expect { done_stop.reload }.to raise_error(Sequel::NoExistingObject)
         end
       end
+
+      describe '#find_by_task_and_state' do
+        let(:task) { create(:task_model) }
+        let!(:baseline) { create(:app_usage_event, task_guid: task.guid, state: 'TASK_WAS_RUNNING') }
+
+        it 'finds an event matching a single state' do
+          expect(repository.find_by_task_and_state(task: task, state: 'TASK_WAS_RUNNING')).to eq(baseline)
+        end
+
+        it 'finds an event matching any of an array of states (how TaskModel probes for start evidence)' do
+          expect(repository.find_by_task_and_state(task: task, state: %w[TASK_STARTED TASK_WAS_RUNNING])).to eq(baseline)
+          expect(repository.find_by_task_and_state(task: task, state: %w[TASK_STARTED TASK_STOPPED])).to be_nil
+        end
+      end
     end
   end
 end

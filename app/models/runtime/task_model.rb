@@ -42,7 +42,7 @@ module VCAP::CloudController
 
     def after_destroy
       super
-      create_stop_event unless terminal_state?
+      create_stop_event_if_needed unless terminal_state?
     end
 
     def run_action_user
@@ -137,9 +137,29 @@ module VCAP::CloudController
     def create_stop_event_if_needed
       app_usage_repo = Repositories::AppUsageEventRepository.new
 
-      start_event = app_usage_repo.find_by_task_and_state(task: self, state: 'TASK_STARTED')
-      existing_stop_event = app_usage_repo.find_by_task_and_state(task: self, state: 'TASK_STOPPED')
-      return if start_event.nil? || existing_stop_event.present?
+      return if app_usage_repo.find_by_task_and_state(task: self, state: Repositories::AppUsageEventRepository::TASK_STOPPED_EVENT_STATE).present?
+
+      # Record the stop only when there is recorded evidence that the task
+      # started: the TASK_STARTED event, or the TASK_WAS_RUNNING baseline seeded
+      # for tasks that were already running when the keep-running cleanup was
+      # introduced. Without either, no consumer ever saw the task start, so a
+      # stop event would be unmatched noise.
+      #
+      # A small window exists on MySQL (default REPEATABLE READ). MySQL fixes
+      # what a transaction can see at its first read, and that read happened
+      # before this hook: the caller loaded the task, and the destroy path
+      # reads labels and annotations first. So a baseline the backfill commits
+      # after that first read is invisible here, and the stop is skipped. We
+      # accept this: the window is milliseconds wide and only exists while the
+      # backfill is running. A locking read (FOR UPDATE) would close it, but
+      # that would add row and gap locks to every task stop for a case that
+      # almost never happens.
+      start_evidence_states = [
+        Repositories::AppUsageEventRepository::TASK_STARTED_EVENT_STATE,
+        Repositories::AppUsageEventRepository::TASK_WAS_RUNNING_EVENT_STATE
+      ]
+      started = app_usage_repo.find_by_task_and_state(task: self, state: start_evidence_states)
+      return if started.nil?
 
       create_stop_event
     end
