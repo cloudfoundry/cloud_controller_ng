@@ -2,12 +2,14 @@ require 'credhub/config_helpers'
 require 'diego/action_builder'
 require 'digest/xxhash'
 require 'cloud_controller/diego/custom_stack_uri_converter'
+require 'cloud_controller/diego/custom_stack_fallback'
 
 module VCAP::CloudController
   module Diego
     class StagingActionBuilder
       include ::Credhub::ConfigHelpers
       include ::Diego::ActionBuilder
+      include CustomStackFallback
 
       attr_reader :config, :lifecycle_data, :staging_details
 
@@ -131,12 +133,14 @@ module VCAP::CloudController
       end
 
       def stack
-        return CustomStackUriConverter.new.convert(lifecycle_stack) if UriUtils.is_custom_stack_uri?(lifecycle_stack)
+        @stack ||= if UriUtils.is_custom_stack_uri?(lifecycle_stack)
+                     CustomStackUriConverter.convert(lifecycle_stack)
+                   else
+                     stack_obj = Stack.find(name: lifecycle_stack)
+                     raise CloudController::Errors::ApiError.new_from_details('StackNotFound', lifecycle_stack) unless stack_obj
 
-        @stack ||= Stack.find(name: lifecycle_stack)
-        raise CloudController::Errors::ApiError.new_from_details('StackNotFound', lifecycle_stack) unless @stack
-
-        "preloaded:#{@stack.build_rootfs_image}"
+                     "preloaded:#{stack_obj.build_rootfs_image}"
+                   end
       end
 
       def lifecycle_stack
@@ -201,11 +205,7 @@ module VCAP::CloudController
       end
 
       def lifecycle_bundle_key
-        if UriUtils.is_custom_stack_uri?(lifecycle_data[:stack])
-          :"#{@prefix}/#{VCAP::CloudController::Stack.default.name}"
-        else
-          :"#{@prefix}/#{lifecycle_data[:stack]}"
-        end
+        :"#{@prefix}/#{resolved_stack_name(lifecycle_data[:stack])}"
       end
 
       def upload_buildpack_artifacts_cache_uri

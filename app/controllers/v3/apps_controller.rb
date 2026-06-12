@@ -174,7 +174,7 @@ class AppsV3Controller < ApplicationController
 
     FeatureFlag.raise_unless_enabled!(:diego_docker) if app.lifecycle_type == DockerLifecycleDataModel::LIFECYCLE_TYPE
     FeatureFlag.raise_unless_enabled!(:diego_cnb) if app.lifecycle_type == CNBLifecycleDataModel::LIFECYCLE_TYPE
-    FeatureFlag.raise_unless_enabled!(:diego_custom_stacks) if app.lifecycle_data.respond_to?(:stack) && UriUtils.is_custom_stack_uri?(app.lifecycle_data.stack)
+    raise_unless_custom_stacks_enabled!(app.lifecycle_data.stack) if app.lifecycle_data.respond_to?(:stack)
 
     AppStart.start(app:, user_audit_info:)
     TelemetryLogger.v3_emit(
@@ -218,7 +218,7 @@ class AppsV3Controller < ApplicationController
 
     FeatureFlag.raise_unless_enabled!(:diego_docker) if app.lifecycle_type == DockerLifecycleDataModel::LIFECYCLE_TYPE
     FeatureFlag.raise_unless_enabled!(:diego_cnb) if app.lifecycle_type == CNBLifecycleDataModel::LIFECYCLE_TYPE
-    FeatureFlag.raise_unless_enabled!(:diego_custom_stacks) if app.lifecycle_data.respond_to?(:stack) && UriUtils.is_custom_stack_uri?(app.lifecycle_data.stack)
+    raise_unless_custom_stacks_enabled!(app.lifecycle_data.stack) if app.lifecycle_data.respond_to?(:stack)
 
     AppRestart.restart(app: app, config: Config.config, user_audit_info: user_audit_info)
     TelemetryLogger.v3_emit(
@@ -385,8 +385,15 @@ class AppsV3Controller < ApplicationController
 
   private
 
-  def raise_unless_custom_stacks_enabled!(message)
-    stack = message.lifecycle_data&.dig(:stack)
+  def raise_unless_custom_stacks_enabled!(message_or_stack)
+    stack = case message_or_stack
+            when String
+              message_or_stack
+            when nil
+              nil
+            else
+              message_or_stack.lifecycle_data&.dig(:stack)
+            end
     FeatureFlag.raise_unless_enabled!(:diego_custom_stacks) if stack && UriUtils.is_custom_stack_uri?(stack)
   end
 

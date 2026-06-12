@@ -58,7 +58,8 @@ module VCAP::CloudController
     end
 
     def has_username_and_password?(creds)
-      (creds.key?('username') || creds.key?(:username)) && (creds.key?('password') || creds.key?(:password))
+      c = creds.transform_keys(&:to_s)
+      c['username'].present? && c['password'].present?
     end
   end
 end

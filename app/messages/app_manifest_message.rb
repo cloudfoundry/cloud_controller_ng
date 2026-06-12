@@ -475,7 +475,7 @@ module VCAP::CloudController
 
     def validate_custom_stacks_enabled!
       FeatureFlag.raise_unless_enabled!(:diego_custom_stacks) if requested?(:stack) && UriUtils.is_custom_stack_uri?(@stack)
-    rescue StandardError => e
+    rescue CloudController::Errors::ApiError => e
       errors.add(:base, e.message)
     end
 

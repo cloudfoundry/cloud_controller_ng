@@ -100,7 +100,7 @@ module VCAP::CloudController
     end
 
     def credentials=(creds)
-      self.registry_credentials_json = creds ? Oj.dump(deep_stringify_keys(creds)) : nil
+      self.registry_credentials_json = creds ? Oj.dump(creds.deep_stringify_keys) : nil
     end
 
     def validate
@@ -110,15 +110,6 @@ module VCAP::CloudController
     end
 
     private
-
-    def deep_stringify_keys(obj)
-      case obj
-      when Hash
-        obj.each_with_object({}) { |(k, v), h| h[k.to_s] = deep_stringify_keys(v) }
-      else
-        obj
-      end
-    end
 
     def attributes_from_buildpack_name(buildpack_name)
       if UriUtils.is_buildpack_uri?(buildpack_name)
