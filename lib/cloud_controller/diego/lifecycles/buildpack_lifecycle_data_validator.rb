@@ -12,7 +12,7 @@ module VCAP::CloudController
 
     def custom_stack_requires_custom_buildpack
       return unless UriUtils.is_custom_stack_uri?(stack_name)
-      return if buildpack_infos.all? { |info| info.buildpack_url.present? }
+      return if buildpack_infos.present? && buildpack_infos.all? { |info| info.buildpack_url.present? }
 
       errors.add(:buildpack, 'must be a custom buildpack (URL) when using a custom stack')
     end

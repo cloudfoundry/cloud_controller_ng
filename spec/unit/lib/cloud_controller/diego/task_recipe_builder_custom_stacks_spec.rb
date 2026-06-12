@@ -6,7 +6,7 @@ module VCAP::CloudController
     RSpec.describe TaskRecipeBuilder do
       subject(:task_recipe_builder) { TaskRecipeBuilder.new }
 
-      describe '#staging_image_username / #staging_image_password (custom stacks)' do
+      describe '#staging_image_credentials (custom stacks)' do
         let(:custom_stack_uri) { 'docker://registry.example.com/my-org/my-stack:v1.0' }
         let(:lifecycle) do
           instance_double(
@@ -28,12 +28,13 @@ module VCAP::CloudController
         end
 
         it 'returns credentials from the custom stack lifecycle' do
-          expect(task_recipe_builder.send(:staging_image_username, staging_details)).to eq('my-user')
-          expect(task_recipe_builder.send(:staging_image_password, staging_details)).to eq('my-pass')
+          username, password = task_recipe_builder.send(:staging_image_credentials, staging_details)
+          expect(username).to eq('my-user')
+          expect(password).to eq('my-pass')
         end
       end
 
-      describe '#staging_image_username / #staging_image_password (docker package)' do
+      describe '#staging_image_credentials (docker package)' do
         let(:lifecycle) do
           instance_double(
             BuildpackLifecycle,
@@ -49,12 +50,13 @@ module VCAP::CloudController
         end
 
         it 'uses docker package credentials when both are present' do
-          expect(task_recipe_builder.send(:staging_image_username, staging_details)).to eq('docker-user')
-          expect(task_recipe_builder.send(:staging_image_password, staging_details)).to eq('docker-pass')
+          username, password = task_recipe_builder.send(:staging_image_credentials, staging_details)
+          expect(username).to eq('docker-user')
+          expect(password).to eq('docker-pass')
         end
       end
 
-      describe '#staging_image_username / #staging_image_password (mismatched docker credentials)' do
+      describe '#staging_image_credentials (mismatched docker credentials)' do
         let(:lifecycle) do
           instance_double(
             BuildpackLifecycle,
@@ -75,12 +77,13 @@ module VCAP::CloudController
         end
 
         it 'falls through to custom stack credentials when docker pair is incomplete' do
-          expect(task_recipe_builder.send(:staging_image_username, staging_details)).to eq('stack-user')
-          expect(task_recipe_builder.send(:staging_image_password, staging_details)).to eq('stack-pass')
+          username, password = task_recipe_builder.send(:staging_image_credentials, staging_details)
+          expect(username).to eq('stack-user')
+          expect(password).to eq('stack-pass')
         end
       end
 
-      describe '#task_image_username / #task_image_password (custom stacks)' do
+      describe '#task_image_credentials (custom stacks)' do
         let(:lifecycle_data) do
           instance_double(
             BuildpackLifecycleDataModel,
@@ -104,12 +107,13 @@ module VCAP::CloudController
         end
 
         it 'returns credentials from the custom stack lifecycle data' do
-          expect(task_recipe_builder.send(:task_image_username, task)).to eq('task-user')
-          expect(task_recipe_builder.send(:task_image_password, task)).to eq('task-pass')
+          username, password = task_recipe_builder.send(:task_image_credentials, task)
+          expect(username).to eq('task-user')
+          expect(password).to eq('task-pass')
         end
       end
 
-      describe '#task_image_username / #task_image_password (docker droplet)' do
+      describe '#task_image_credentials (docker droplet)' do
         let(:lifecycle_data) do
           instance_double(BuildpackLifecycleDataModel, stack: 'cflinuxfs4', credentials: nil)
         end
@@ -124,8 +128,9 @@ module VCAP::CloudController
         end
 
         it 'uses docker receipt credentials when both are present' do
-          expect(task_recipe_builder.send(:task_image_username, task)).to eq('droplet-user')
-          expect(task_recipe_builder.send(:task_image_password, task)).to eq('droplet-pass')
+          username, password = task_recipe_builder.send(:task_image_credentials, task)
+          expect(username).to eq('droplet-user')
+          expect(password).to eq('droplet-pass')
         end
       end
     end

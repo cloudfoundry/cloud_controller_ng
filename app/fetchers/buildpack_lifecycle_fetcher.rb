@@ -7,7 +7,7 @@ module VCAP::CloudController
         if UriUtils.is_custom_stack_uri?(stack_name)
           {
             stack: nil,
-            buildpack_infos: buildpack_names.map { |name| BuildpackInfo.new(name, nil) }
+            buildpack_infos: Array(buildpack_names).map { |name| BuildpackInfo.new(name, nil) }
           }
         else
           {
