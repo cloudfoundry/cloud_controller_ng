@@ -169,6 +169,36 @@ module VCAP::CloudController
           expect(last_response.status).to eq(201)
         end
       end
+
+      context 'when a non-admin sets the suspended field' do
+        before do
+          VCAP::CloudController::FeatureFlag.make(name: 'user_org_creation', enabled: true)
+        end
+
+        it 'returns 403 NotAuthorized for suspended: true' do
+          suspended_request_body = { name: 'sneaky-org', suspended: true }.to_json
+
+          expect do
+            post '/v3/organizations', suspended_request_body, user_header
+          end.not_to change(Organization, :count)
+
+          expect(last_response.status).to eq(403)
+          expect(last_response).to have_error_message('You are not authorized to perform the requested action')
+        end
+
+        it 'allows suspended: false (the default) as a no-op' do
+          request_body = { name: 'noop-suspended-org', suspended: false }.to_json
+
+          expect do
+            post '/v3/organizations', request_body, user_header
+          end.to change(Organization, :count).by 1
+
+          expect(last_response.status).to eq(201)
+          created_org = Organization.last
+          expect(created_org.name).to eq('noop-suspended-org')
+          expect(created_org).not_to be_suspended
+        end
+      end
     end
 
     describe 'GET /v3/organizations' do
@@ -1306,6 +1336,57 @@ module VCAP::CloudController
         end
 
         it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS
+      end
+
+      context 'when a OrgManager mutates the suspended field' do
+        let(:org_manager) { VCAP::CloudController::User.make }
+        let(:org_manager_header) { headers_for(org_manager) }
+
+        before do
+          organization1.add_user(org_manager)
+          organization1.add_manager(org_manager)
+        end
+
+        it 'returns 403 NotAuthorized when attempting to suspend an active org' do
+          patch "/v3/organizations/#{organization1.guid}",
+                { suspended: true }.to_json,
+                org_manager_header.merge('CONTENT_TYPE' => 'application/json')
+
+          expect(last_response.status).to eq(403)
+          expect(last_response).to have_error_message('You are not authorized to perform the requested action')
+          expect(organization1.reload).not_to be_suspended
+        end
+
+        it 'returns CF-OrgSuspended when attempting to un-suspend a suspended org' do
+          organization1.update(status: VCAP::CloudController::Organization::SUSPENDED)
+
+          patch "/v3/organizations/#{organization1.guid}",
+                { suspended: false }.to_json,
+                org_manager_header.merge('CONTENT_TYPE' => 'application/json')
+
+          expect(last_response.status).to eq(403)
+          expect(last_response).to have_error_message('The organization is suspended')
+          expect(organization1.reload).to be_suspended
+        end
+
+        it 'allows benign updates that do not touch the suspended field' do
+          patch "/v3/organizations/#{organization1.guid}",
+                { name: 'renamed-by-manager' }.to_json,
+                org_manager_header.merge('CONTENT_TYPE' => 'application/json')
+
+          expect(last_response.status).to eq(200)
+          expect(organization1.reload.name).to eq('renamed-by-manager')
+        end
+
+        it 'allows a no-op suspended update (suspended matches current state)' do
+          patch "/v3/organizations/#{organization1.guid}",
+                { name: 'still-active', suspended: false }.to_json,
+                org_manager_header.merge('CONTENT_TYPE' => 'application/json')
+
+          expect(last_response.status).to eq(200)
+          expect(organization1.reload.name).to eq('still-active')
+          expect(organization1.reload).not_to be_suspended
+        end
       end
     end
 

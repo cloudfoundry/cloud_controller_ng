@@ -50,6 +50,9 @@ class OrganizationsV3Controller < ApplicationController
 
     message = VCAP::CloudController::OrganizationCreateMessage.new(hashed_params[:body])
     unprocessable!(message.errors.full_messages) unless message.valid?
+
+    unauthorized! if message.requested?(:suspended) && message.suspended && !permission_queryer.can_write_globally?
+
     org = nil
 
     Organization.db.transaction do
@@ -77,6 +80,8 @@ class OrganizationsV3Controller < ApplicationController
 
     message = VCAP::CloudController::OrganizationUpdateMessage.new(hashed_params[:body])
     unprocessable!(message.errors.full_messages) unless message.valid?
+
+    unauthorized! if message.requested?(:suspended) && message.suspended && !permission_queryer.can_write_globally?
 
     org = OrganizationUpdate.new(user_audit_info).update(org, message)
 
