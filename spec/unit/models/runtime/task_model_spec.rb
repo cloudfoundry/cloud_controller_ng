@@ -28,6 +28,30 @@ module VCAP::CloudController
           expect(event.task_guid).to eq(task.guid)
           expect(event.parent_app_guid).to eq(task.app.guid)
         end
+
+        context 'when the TASK_STARTED event has been pruned and a TASK_WAS_RUNNING baseline exists' do
+          let!(:start_event) { create(:app_usage_event, task_guid: task.guid, state: 'TASK_WAS_RUNNING') }
+
+          it 'still creates a TASK_STOPPED event' do
+            task.update(state: TaskModel::SUCCEEDED_STATE)
+
+            event = AppUsageEvent.find(task_guid: task.guid, state: 'TASK_STOPPED')
+            expect(event).not_to be_nil
+            expect(event.task_guid).to eq(task.guid)
+            expect(event.parent_app_guid).to eq(task.app.guid)
+          end
+        end
+
+        context 'when there is neither a TASK_STARTED event nor a TASK_WAS_RUNNING baseline' do
+          let!(:start_event) { nil }
+
+          it 'does not create a TASK_STOPPED event, since no consumer ever saw the task start' do
+            task.update(state: TaskModel::SUCCEEDED_STATE)
+
+            event = AppUsageEvent.find(task_guid: task.guid, state: 'TASK_STOPPED')
+            expect(event).to be_nil
+          end
+        end
       end
 
       context 'when the task is moving to the FAILED_STATE' do
@@ -42,6 +66,28 @@ module VCAP::CloudController
             expect(event).not_to be_nil
             expect(event.task_guid).to eq(task.guid)
             expect(event.parent_app_guid).to eq(task.app.guid)
+          end
+
+          context 'when the TASK_STARTED event has been pruned and a TASK_WAS_RUNNING baseline exists' do
+            let!(:start_event) { create(:app_usage_event, task_guid: task.guid, state: 'TASK_WAS_RUNNING') }
+
+            it 'still creates a TASK_STOPPED event' do
+              task.update(state: TaskModel::FAILED_STATE)
+
+              event = AppUsageEvent.find(task_guid: task.guid, state: 'TASK_STOPPED')
+              expect(event).not_to be_nil
+            end
+          end
+
+          context 'when there is neither a TASK_STARTED event nor a TASK_WAS_RUNNING baseline' do
+            let!(:start_event) { nil }
+
+            it 'does not create a TASK_STOPPED event, since no consumer ever saw the task start' do
+              task.update(state: TaskModel::FAILED_STATE)
+
+              event = AppUsageEvent.find(task_guid: task.guid, state: 'TASK_STOPPED')
+              expect(event).to be_nil
+            end
           end
         end
 
@@ -69,6 +115,17 @@ module VCAP::CloudController
               expect(event).not_to be_nil
               expect(event.task_guid).to eq(task.guid)
               expect(event.parent_app_guid).to eq(task.app.guid)
+            end
+          end
+
+          context 'when the TASK_STARTED event has been pruned and a TASK_WAS_RUNNING baseline exists' do
+            let!(:start_event) { create(:app_usage_event, task_guid: task.guid, state: 'TASK_WAS_RUNNING') }
+
+            it 'still creates a TASK_STOPPED event' do
+              task.update(state: TaskModel::FAILED_STATE)
+
+              event = AppUsageEvent.find(task_guid: task.guid, state: 'TASK_STOPPED')
+              expect(event).not_to be_nil
             end
           end
 
@@ -132,7 +189,8 @@ module VCAP::CloudController
     end
 
     describe 'after destroy' do
-      let(:task) { create(:task_model, app: parent_app, state: TaskModel::PENDING_STATE) }
+      let(:task) { create(:task_model, app: parent_app, state: TaskModel::RUNNING_STATE) }
+      let!(:start_event) { create(:app_usage_event, task_guid: task.guid, state: 'TASK_STARTED') }
 
       it 'creates a TASK_STOPPED event' do
         task.destroy
@@ -141,6 +199,42 @@ module VCAP::CloudController
         expect(event).not_to be_nil
         expect(event.task_guid).to eq(task.guid)
         expect(event.parent_app_guid).to eq(task.app.guid)
+      end
+
+      context 'when the TASK_STARTED event has been pruned and a TASK_WAS_RUNNING baseline exists' do
+        let!(:start_event) { create(:app_usage_event, task_guid: task.guid, state: 'TASK_WAS_RUNNING') }
+
+        it 'still creates a TASK_STOPPED event' do
+          task.destroy
+
+          event = AppUsageEvent.find(task_guid: task.guid, state: 'TASK_STOPPED')
+          expect(event).not_to be_nil
+        end
+      end
+
+      context 'when there is neither a TASK_STARTED event nor a TASK_WAS_RUNNING baseline' do
+        let(:task) { create(:task_model, app: parent_app, state: TaskModel::PENDING_STATE) }
+        let!(:start_event) { nil }
+
+        it 'does not create a TASK_STOPPED event, since no consumer ever saw the task start' do
+          task.destroy
+
+          event = AppUsageEvent.find(task_guid: task.guid, state: 'TASK_STOPPED')
+          expect(event).to be_nil
+        end
+      end
+
+      context 'when the task already has a TASK_STOPPED event' do
+        before do
+          create(:app_usage_event, task_guid: task.guid, state: 'TASK_STOPPED')
+        end
+
+        it 'does not create an additional TASK_STOPPED event' do
+          task.destroy
+
+          events = AppUsageEvent.where(task_guid: task.guid, state: 'TASK_STOPPED')
+          expect(events.count).to equal(1)
+        end
       end
 
       context 'when the task is already in a terminal state (and thus already has a stop event)' do
