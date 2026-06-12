@@ -1,10 +1,15 @@
 module VCAP::CloudController
   class BuildpackLifecycleDataMessage < BaseMessage
-    register_allowed_keys %i[buildpacks stack credentials]
+    register_allowed_keys %i[buildpacks stack stack_id credentials]
 
     validates_with NoAdditionalKeysValidator
 
     validates :stack,
+              string: true,
+              allow_nil: true,
+              length: { in: 1..4096, message: 'must be between 1 and 4096 characters' }
+
+    validates :stack_id,
               string: true,
               allow_nil: true,
               length: { in: 1..4096, message: 'must be between 1 and 4096 characters' }

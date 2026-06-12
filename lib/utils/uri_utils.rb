@@ -44,6 +44,25 @@ module UriUtils
       false
     end
 
+    def is_custom_stack_uri?(candidate)
+      return false unless candidate.is_a?(String)
+      return false unless candidate.start_with?('docker://')
+
+      host, = parse_docker_uri(candidate.delete_prefix('docker://'))
+      host.present?
+    rescue StandardError
+      false
+    end
+
+    def custom_stack_registry_host(stack_uri)
+      return nil unless is_custom_stack_uri?(stack_uri)
+
+      host, = parse_docker_uri(stack_uri.delete_prefix('docker://'))
+      host.presence
+    rescue StandardError
+      nil
+    end
+
     def is_uri_path?(candidate)
       !!(candidate.is_a?(String) && candidate =~ %r{^(?:/|/([^\s/]\S*)?)$})
     end

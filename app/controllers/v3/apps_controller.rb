@@ -98,6 +98,7 @@ class AppsV3Controller < ApplicationController
     FeatureFlag.raise_unless_enabled!(:diego_docker) if message.lifecycle_type == VCAP::CloudController::PackageModel::DOCKER_TYPE
     lifecycle = AppLifecycleProvider.provide_for_create(message)
     FeatureFlag.raise_unless_enabled!(:diego_cnb) if lifecycle.type == VCAP::CloudController::Lifecycles::CNB
+    raise_unless_custom_stacks_enabled!(message)
     unprocessable!(lifecycle.errors.full_messages) unless lifecycle.valid?
 
     app_creator = AppCreate.new(user_audit_info)
@@ -188,6 +189,7 @@ class AppsV3Controller < ApplicationController
 
     FeatureFlag.raise_unless_enabled!(:diego_docker) if app.lifecycle_type == DockerLifecycleDataModel::LIFECYCLE_TYPE
     FeatureFlag.raise_unless_enabled!(:diego_cnb) if app.lifecycle_type == CNBLifecycleDataModel::LIFECYCLE_TYPE
+    FeatureFlag.raise_unless_enabled!(:diego_custom_stacks) if app.lifecycle_data.respond_to?(:stack) && UriUtils.is_custom_stack_uri?(app.lifecycle_data.stack)
 
     AppStart.start(app:, user_audit_info:)
     TelemetryLogger.v3_emit(
@@ -231,6 +233,7 @@ class AppsV3Controller < ApplicationController
 
     FeatureFlag.raise_unless_enabled!(:diego_docker) if app.lifecycle_type == DockerLifecycleDataModel::LIFECYCLE_TYPE
     FeatureFlag.raise_unless_enabled!(:diego_cnb) if app.lifecycle_type == CNBLifecycleDataModel::LIFECYCLE_TYPE
+    FeatureFlag.raise_unless_enabled!(:diego_custom_stacks) if app.lifecycle_data.respond_to?(:stack) && UriUtils.is_custom_stack_uri?(app.lifecycle_data.stack)
 
     AppRestart.restart(app: app, config: Config.config, user_audit_info: user_audit_info)
     TelemetryLogger.v3_emit(
@@ -396,6 +399,11 @@ class AppsV3Controller < ApplicationController
   end
 
   private
+
+  def raise_unless_custom_stacks_enabled!(message)
+    stack = message.lifecycle_data&.dig(:stack)
+    FeatureFlag.raise_unless_enabled!(:diego_custom_stacks) if stack && UriUtils.is_custom_stack_uri?(stack)
+  end
 
   def async_recursive_delete_enabled?
     !!VCAP::CloudController::Config.config.get(:temporary_enable_async_recursive_delete, :apps)

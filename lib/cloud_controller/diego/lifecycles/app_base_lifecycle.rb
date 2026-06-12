@@ -13,6 +13,7 @@ module VCAP::CloudController
       @validator = validator_class.new(
         buildpack_infos: db_result[:buildpack_infos],
         stack: db_result[:stack],
+        stack_name: stack,
         credentials: effective_credentials(app),
         credentials_from_message: message.buildpack_data.requested?(:credentials)
       )

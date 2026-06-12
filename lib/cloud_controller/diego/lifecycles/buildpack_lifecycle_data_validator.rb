@@ -4,10 +4,11 @@ module VCAP::CloudController
   class BuildpackLifecycleDataValidator
     include ActiveModel::Model
 
-    attr_accessor :buildpack_infos, :stack, :credentials, :credentials_from_message
+    attr_accessor :buildpack_infos, :stack, :stack_name, :credentials, :credentials_from_message
 
     validate :buildpacks_are_uri_or_nil
     validate :stack_exists_in_db
+    validate :custom_stack_requires_custom_buildpack
     validate :no_dual_credential_sources
 
     def buildpacks_are_uri_or_nil
@@ -25,7 +26,16 @@ module VCAP::CloudController
     end
 
     def stack_exists_in_db
+      return if UriUtils.is_custom_stack_uri?(stack_name) && FeatureFlag.enabled?(:diego_custom_stacks)
+
       errors.add(:stack, 'must be an existing stack') if stack.nil?
+    end
+
+    def custom_stack_requires_custom_buildpack
+      return unless UriUtils.is_custom_stack_uri?(stack_name)
+      return if buildpack_infos.all? { |info| info.buildpack_url.present? }
+
+      errors.add(:buildpack, 'must be a custom buildpack (URL) when using a custom stack')
     end
 
     def no_dual_credential_sources

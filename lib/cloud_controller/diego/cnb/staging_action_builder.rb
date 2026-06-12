@@ -15,14 +15,27 @@ module VCAP::CloudController
           env = [
             ::Diego::Bbs::Models::EnvironmentVariable.new(name: 'CNB_USER_ID', value: '2000'),
             ::Diego::Bbs::Models::EnvironmentVariable.new(name: 'CNB_GROUP_ID', value: '2000'),
-            ::Diego::Bbs::Models::EnvironmentVariable.new(name: 'CNB_STACK_ID', value: lifecycle_stack),
             ::Diego::Bbs::Models::EnvironmentVariable.new(name: 'LANG', value: STAGING_DEFAULT_LANG)
           ]
+          # For custom stacks, CNB_STACK_ID is optional: if a stack_id was provided
+          # in lifecycle data, use it; otherwise omit it and let the CNB builder auto-detect.
+          # For system stacks, always pass the stack name as CNB_STACK_ID.
+          cnb_stack_id = resolve_cnb_stack_id
+          env.push(::Diego::Bbs::Models::EnvironmentVariable.new(name: 'CNB_STACK_ID', value: cnb_stack_id)) if cnb_stack_id
           env.push(::Diego::Bbs::Models::EnvironmentVariable.new(name: 'CNB_REGISTRY_CREDS', value: lifecycle_data[:credentials])) if lifecycle_data[:credentials]
           env
         end
 
         private
+
+        def resolve_cnb_stack_id
+          if UriUtils.is_custom_stack_uri?(lifecycle_stack)
+            # Use explicitly provided stack_id from lifecycle_data if present, otherwise omit (auto-detect)
+            lifecycle_data[:stack_id]
+          else
+            lifecycle_stack
+          end
+        end
 
         def stage_action
           args = [

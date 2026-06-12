@@ -4,10 +4,17 @@ module VCAP::CloudController
   class BuildpackLifecycleFetcher
     class << self
       def fetch(buildpack_names, stack_name, lifecycle=Config.config.get(:default_app_lifecycle))
-        {
-          stack: Stack.find(name: stack_name),
-          buildpack_infos: ordered_buildpacks(buildpack_names, stack_name, lifecycle)
-        }
+        if UriUtils.is_custom_stack_uri?(stack_name)
+          {
+            stack: nil,
+            buildpack_infos: buildpack_names.map { |name| BuildpackInfo.new(name, nil) }
+          }
+        else
+          {
+            stack: Stack.find(name: stack_name),
+            buildpack_infos: ordered_buildpacks(buildpack_names, stack_name, lifecycle)
+          }
+        end
       end
 
       private
