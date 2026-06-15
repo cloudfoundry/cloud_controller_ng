@@ -53,8 +53,8 @@ module VCAP::CloudController
       apps = AppModel.where(guid: guids)
       apps = apps.where(space_guid: permission_queryer.readable_space_guids_query) unless permission_queryer.can_read_globally?
       apps.order(:created_at, :guid).
-           eager(Presenters::V3::AppPresenter.associated_resources).all.
-           map { |app| Presenters::V3::AppPresenter.new(app).to_hash }
+        eager(Presenters::V3::AppPresenter.associated_resources).all.
+        map { |app| Presenters::V3::AppPresenter.new(app).to_hash }
     end
 
     private_class_method def self.fetch_and_present_spaces(guids, permission_queryer)
@@ -63,8 +63,8 @@ module VCAP::CloudController
       spaces = Space.where(guid: guids)
       spaces = spaces.where(guid: permission_queryer.readable_space_guids_query) unless permission_queryer.can_read_globally?
       spaces.order(:created_at, :guid).
-             eager(Presenters::V3::SpacePresenter.associated_resources).all.
-             map { |space| Presenters::V3::SpacePresenter.new(space).to_hash }
+        eager(Presenters::V3::SpacePresenter.associated_resources).all.
+        map { |space| Presenters::V3::SpacePresenter.new(space).to_hash }
     end
 
     private_class_method def self.fetch_and_present_organizations(guids, permission_queryer)
@@ -73,8 +73,8 @@ module VCAP::CloudController
       orgs = Organization.where(guid: guids)
       orgs = orgs.where(guid: permission_queryer.readable_org_guids_query) unless permission_queryer.can_read_globally?
       orgs.order(:created_at, :guid).
-           eager(Presenters::V3::OrganizationPresenter.associated_resources).all.
-           map { |org| Presenters::V3::OrganizationPresenter.new(org).to_hash }
+        eager(Presenters::V3::OrganizationPresenter.associated_resources).all.
+        map { |org| Presenters::V3::OrganizationPresenter.new(org).to_hash }
     end
   end
 end
