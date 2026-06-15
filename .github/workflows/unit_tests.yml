@@ -4,6 +4,11 @@ concurrency:
   cancel-in-progress: true
 on:
   workflow_dispatch:
+    inputs:
+      rspec_profile:
+        description: 'Top N slowest examples to print (rspec --profile), e.g. 20. Leave blank to disable.'
+        required: false
+        default: ''
   pull_request:
     branches: [ main ]
     paths-ignore:
@@ -76,7 +81,7 @@ jobs:
           parallel-runtime-postgres-${{ matrix.image }}-
           parallel-runtime-postgres-
     - name: Run tests
-      run: DB=postgres POSTGRES_CONNECTION_PREFIX="postgres://postgres:rootpassword@localhost:5432" bundle exec rake spec
+      run: DB=postgres POSTGRES_CONNECTION_PREFIX="postgres://postgres:rootpassword@localhost:5432" RSPEC_PROFILE="${{ inputs.rspec_profile }}" bundle exec rake spec
     - name: Save parallel_rspec runtime logs
       if: always()
       uses: actions/cache/save@v4
@@ -130,7 +135,7 @@ jobs:
           parallel-runtime-mysql-${{ matrix.image }}-
           parallel-runtime-mysql-
     - name: Run tests
-      run: DB=mysql MYSQL_CONNECTION_PREFIX="mysql2://root:password@127.0.0.1:3306" bundle exec rake spec
+      run: DB=mysql MYSQL_CONNECTION_PREFIX="mysql2://root:password@127.0.0.1:3306" RSPEC_PROFILE="${{ inputs.rspec_profile }}" bundle exec rake spec
     - name: Save parallel_rspec runtime logs
       if: always()
       uses: actions/cache/save@v4

@@ -9,17 +9,30 @@ module DatabaseIsolation
   end
 
   # Sequel logger that records which tables an example wrote to, so we can truncate only those.
+  # Schema-qualified writes (e.g. INSERT INTO public.users) trigger a full truncate as a safe fallback.
   class WrittenTablesLogger
-    WRITE_REGEX = /\b(?:INSERT INTO|UPDATE|DELETE FROM|TRUNCATE TABLE|TRUNCATE)\s+[`"]?(\w+)/i
+    WRITE_REGEX = /\b(?:INSERT INTO|UPDATE|DELETE FROM|TRUNCATE TABLE|TRUNCATE)\s+(\S+)/i
 
     attr_reader :tables
 
     def initialize
       @tables = Set.new
+      @full_reset = false
+    end
+
+    def full_reset?
+      @full_reset
     end
 
     def capture(msg)
-      @tables << ::Regexp.last_match(1).to_sym if msg =~ WRITE_REGEX
+      return unless msg =~ WRITE_REGEX
+
+      target = ::Regexp.last_match(1).delete('`"')
+      if target.include?('.')
+        @full_reset = true
+      else
+        @tables << target.to_sym
+      end
     end
 
     alias_method :info,  :capture
@@ -41,7 +54,8 @@ module DatabaseIsolation
         yield
       ensure
         db.loggers.delete(logger)
-        reset_tables(logger.tables.to_a & TableTruncator.isolated_tables(db))
+        tables = logger.full_reset? ? TableTruncator.isolated_tables(db) : logger.tables.to_a & TableTruncator.isolated_tables(db)
+        reset_tables(tables)
       end
     end
 
