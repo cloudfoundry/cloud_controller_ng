@@ -20,10 +20,7 @@ module CloudFoundry
       before do
         allow(ActionDispatch::Request).to receive(:new).and_return(fake_request)
         allow(logger).to receive(:info)
-        allow(app).to receive(:call) do
-          sleep(1)
-          [200, {}, 'a body']
-        end
+        allow(app).to receive(:call).and_return([200, {}, 'a body'])
       end
 
       describe 'included requests' do
@@ -84,7 +81,17 @@ module CloudFoundry
                 let(:fake_request) { instance_double(ActionDispatch::Request, fullpath: endpoint, method: method) }
 
                 it 'does not allow more than the max number of concurrent requests' do
+                  gate = Queue.new
+                  allow(app).to receive(:call) do
+                    gate.pop
+                    [200, {}, 'a body']
+                  end
+
                   threads = 2.times.map { Thread.new { middleware.call(env) } }
+
+                  Timeout.timeout(5) { Thread.pass until threads.any? { |t| !t.alive? } }
+                  gate << :go
+
                   statuses = threads.map(&:join).map(&:value).map(&:first)
 
                   expect(statuses).to include(200)
