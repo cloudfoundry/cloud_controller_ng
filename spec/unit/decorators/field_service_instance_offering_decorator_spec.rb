@@ -123,6 +123,32 @@ module VCAP::CloudController
                               })
       end
 
+      it 'can decorate with the service offering broker_catalog_id' do
+        undecorated_hash = { foo: 'bar', included: { monkeys: %w[zach greg] } }
+        decorator = described_class.new({ 'service_plan.service_offering': %w[broker_catalog_id foo] })
+
+        hash = decorator.decorate(undecorated_hash, [service_instance_1, service_instance_2])
+
+        expect(hash).to match({
+                                foo: 'bar',
+                                included: {
+                                  monkeys: %w[zach greg],
+                                  service_offerings: [
+                                    {
+                                      broker_catalog: {
+                                        id: offering1.unique_id
+                                      }
+                                    },
+                                    {
+                                      broker_catalog: {
+                                        id: offering2.unique_id
+                                      }
+                                    }
+                                  ]
+                                }
+                              })
+      end
+
       it 'decorated the given hash with offering relationship to broker from service instances' do
         undecorated_hash = { foo: 'bar', included: { monkeys: %w[zach greg] } }
         decorator = described_class.new({ 'service_plan.service_offering': ['relationships.service_broker', 'foo'] })
@@ -182,7 +208,7 @@ module VCAP::CloudController
     end
 
     describe '.match?' do
-      fields = %w[name guid description documentation_url tags relationships.service_broker]
+      fields = %w[name guid description documentation_url tags broker_catalog.id relationships.service_broker]
 
       fields.each do |field|
         it "matches value `#{field}` for key symbol `service_plan.service_offering`" do
