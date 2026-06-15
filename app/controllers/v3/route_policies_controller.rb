@@ -114,7 +114,7 @@ class RoutePoliciesController < ApplicationController
     if permission_queryer.can_read_globally?
       readable_route_ids = VCAP::CloudController::Route.select(:id)
     else
-      readable_space_ids = permission_queryer.readable_space_scoped_spaces_query.select(:id)
+      readable_space_ids = permission_queryer.readable_spaces_query.select(:id)
       readable_route_ids = VCAP::CloudController::Route.where(space_id: readable_space_ids).select(:id)
     end
 
