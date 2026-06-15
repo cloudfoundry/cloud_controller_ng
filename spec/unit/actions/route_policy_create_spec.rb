@@ -13,9 +13,9 @@ module VCAP::CloudController
 
     describe '#create' do
       it 'creates a route policy with the given source' do
-        expect {
+        expect do
           action.create(route:, message:)
-        }.to change(RoutePolicy, :count).by(1)
+        end.to change(RoutePolicy, :count).by(1)
 
         policy = RoutePolicy.last
         expect(policy.source).to eq("cf:app:#{app_guid}")
@@ -28,9 +28,9 @@ module VCAP::CloudController
         end
 
         it 'raises an error' do
-          expect {
+          expect do
             action.create(route:, message:)
-          }.to raise_error(RoutePolicyCreate::Error, /already exists for this route/)
+          end.to raise_error(RoutePolicyCreate::Error, /already exists for this route/)
         end
       end
 
@@ -42,9 +42,9 @@ module VCAP::CloudController
         end
 
         it 'raises an error' do
-          expect {
+          expect do
             action.create(route:, message:)
-          }.to raise_error(RoutePolicyCreate::Error, /cannot add 'cf:any'/i)
+          end.to raise_error(RoutePolicyCreate::Error, /cannot add 'cf:any'/i)
         end
       end
 
@@ -55,9 +55,9 @@ module VCAP::CloudController
 
         it 'raises an error when adding any other source' do
           other_message = instance_double(RoutePolicyCreateMessage, source: "cf:app:#{SecureRandom.uuid}")
-          expect {
-            action.create(route:, message: other_message)
-          }.to raise_error(RoutePolicyCreate::Error, /already has a 'cf:any' policy/)
+          expect do
+            action.create(route: route, message: other_message)
+          end.to raise_error(RoutePolicyCreate::Error, /already has a 'cf:any' policy/)
         end
       end
 
@@ -71,8 +71,7 @@ module VCAP::CloudController
           # The fix: lock the parent Route row (which always exists) before reading
           # policies, so concurrent transactions serialize at the route level.
           route_relation = spy('route relation')
-          allow(route_relation).to receive(:for_update).and_return(route_relation)
-          allow(route_relation).to receive(:first).and_return(route)
+          allow(route_relation).to receive_messages(for_update: route_relation, first: route)
           allow(Route).to receive(:where).with(id: route.id).and_return(route_relation)
 
           action.create(route:, message:)
