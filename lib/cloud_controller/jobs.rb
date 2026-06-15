@@ -38,6 +38,10 @@ require 'jobs/runtime/prune_completed_tasks'
 require 'jobs/runtime/prune_completed_deployments'
 require 'jobs/runtime/prune_completed_builds'
 require 'jobs/runtime/prune_excess_app_revisions'
+require 'jobs/runtime/app_usage_snapshot_generator_job'
+require 'jobs/runtime/app_usage_snapshot_cleanup'
+require 'jobs/runtime/service_usage_snapshot_generator_job'
+require 'jobs/runtime/service_usage_snapshot_cleanup'
 
 require 'jobs/v2/services/service_usage_events_cleanup'
 

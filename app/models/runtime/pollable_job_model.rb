@@ -28,6 +28,10 @@ module VCAP::CloudController
                 RouteBinding
               when 'service_credential_binding'
                 ServiceCredentialBinding::View
+              when 'app_usage_snapshot'
+                AppUsageSnapshot
+              when 'service_usage_snapshot'
+                ServiceUsageSnapshot
               else
                 Sequel::Model(ActiveSupport::Inflector.pluralize(resource_type).to_sym)
               end
