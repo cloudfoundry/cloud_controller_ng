@@ -35,7 +35,9 @@ class ServiceOfferingsController < ApplicationController
                 ServiceOfferingListFetcher.fetch(
                   message,
                   eager_loaded_associations: Presenters::V3::ServiceOfferingPresenter.associated_resources,
+                  readable_org_ids_query: permission_queryer.readable_org_ids_query,
                   readable_orgs_query: permission_queryer.readable_orgs_query,
+                  readable_space_ids_query: permission_queryer.readable_space_scoped_space_ids_query,
                   readable_spaces_query: permission_queryer.readable_space_scoped_spaces_query
                 )
               end

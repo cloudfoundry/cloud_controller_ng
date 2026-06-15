@@ -98,7 +98,7 @@ class VCAP::CloudController::Permissions
   end
 
   def is_org_manager?
-    membership.authorized_orgs_subquery(VCAP::CloudController::Membership::ORG_MANAGER).any?
+    membership.authorized_org_ids_subquery(VCAP::CloudController::Membership::ORG_MANAGER).any?
   end
 
   def readable_org_guids
@@ -251,6 +251,14 @@ class VCAP::CloudController::Permissions
     end
   end
 
+  def readable_space_scoped_space_ids_query
+    if can_read_globally?
+      VCAP::CloudController::Space.select(:id)
+    else
+      membership.authorized_space_ids_subquery(SPACE_ROLES)
+    end
+  end
+
   def can_read_route?(space_id)
     return true if can_read_globally?
 
@@ -289,8 +297,8 @@ class VCAP::CloudController::Permissions
     if can_read_globally?
       VCAP::CloudController::SpaceQuotaDefinition.select_map(:guid)
     elsif @user
-      visible_space_ids = membership.authorized_spaces_subquery(SPACE_ROLES).select(:id)
-      org_manager_org_ids = membership.authorized_orgs_subquery(VCAP::CloudController::Membership::ORG_MANAGER).select(:id)
+      visible_space_ids = membership.authorized_space_ids_subquery(SPACE_ROLES)
+      org_manager_org_ids = membership.authorized_org_ids_subquery(VCAP::CloudController::Membership::ORG_MANAGER)
 
       VCAP::CloudController::SpaceQuotaDefinition.where(
         Sequel.or([
@@ -313,7 +321,7 @@ class VCAP::CloudController::Permissions
     if can_read_globally?
       VCAP::CloudController::SecurityGroup.dataset.select(:guid)
     elsif @user
-      visible_space_ids = membership.authorized_spaces_subquery(ROLES_FOR_SPACE_READING).select(:id)
+      visible_space_ids = membership.authorized_space_ids_subquery(ROLES_FOR_SPACE_READING)
 
       VCAP::CloudController::SecurityGroup.where(
         Sequel.or([
