@@ -56,7 +56,9 @@ module VCAP::CloudController
                                                 per_process_general_limit: 123,
                                                 global_general_limit: 1230,
                                                 per_process_unauthenticated_limit: 1,
-                                                global_unauthenticated_limit: 10
+                                                global_unauthenticated_limit: 10,
+                                                per_process_admin_limit: -1,
+                                                global_admin_limit: -1
                                               }), request_metrics, request_logs).to_app
           end
 
@@ -68,6 +70,8 @@ module VCAP::CloudController
               global_general_limit: 1230,
               per_process_unauthenticated_limit: 1,
               global_unauthenticated_limit: 10,
+              per_process_admin_limit: -1,
+              global_admin_limit: -1,
               interval: 60
             )
           end
