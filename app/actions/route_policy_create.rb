@@ -4,6 +4,8 @@ module VCAP::CloudController
     end
 
     def create(route:, message:)
+      validate_scope!(route.domain, message.source)
+
       RoutePolicy.db.transaction do
         # Lock the parent route row to serialize concurrent creates.
         # SELECT ... FOR UPDATE on an empty policies table acquires no row locks,
@@ -25,6 +27,13 @@ module VCAP::CloudController
     end
 
     private
+
+    def validate_scope!(domain, source)
+      return unless domain.route_policies_scope == 'space'
+      return unless source.start_with?('cf:org:')
+
+      raise Error.new("Source '#{source}' is not allowed: domain's route_policies_scope is 'space'.")
+    end
 
     def validate_source_exclusivity(locked_policies, source)
       existing_sources = locked_policies.map(&:source)

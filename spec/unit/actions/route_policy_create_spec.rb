@@ -61,6 +61,86 @@ module VCAP::CloudController
         end
       end
 
+      context 'when the domain has route_policies_scope: "space"' do
+        let(:domain) { SharedDomain.make(name: 'apps.identity', enforce_route_policies: true, route_policies_scope: 'space') }
+
+        it 'allows cf:app sources' do
+          expect do
+            action.create(route:, message:)
+          end.not_to raise_error
+        end
+
+        it 'allows cf:space sources' do
+          space_message = instance_double(RoutePolicyCreateMessage, source: "cf:space:#{SecureRandom.uuid}")
+          expect do
+            action.create(route: route, message: space_message)
+          end.not_to raise_error
+        end
+
+        it 'rejects cf:org sources' do
+          org_message = instance_double(RoutePolicyCreateMessage, source: "cf:org:#{SecureRandom.uuid}")
+          expect do
+            action.create(route: route, message: org_message)
+          end.to raise_error(RoutePolicyCreate::Error, /route_policies_scope.*space/i)
+        end
+
+        it 'allows cf:any sources' do
+          any_message = instance_double(RoutePolicyCreateMessage, source: 'cf:any')
+          expect do
+            action.create(route: route, message: any_message)
+          end.not_to raise_error
+        end
+      end
+
+      context 'when the domain has route_policies_scope: "org"' do
+        let(:domain) { SharedDomain.make(name: 'apps.identity', enforce_route_policies: true, route_policies_scope: 'org') }
+
+        it 'allows cf:app sources' do
+          expect do
+            action.create(route:, message:)
+          end.not_to raise_error
+        end
+
+        it 'allows cf:space sources' do
+          space_message = instance_double(RoutePolicyCreateMessage, source: "cf:space:#{SecureRandom.uuid}")
+          expect do
+            action.create(route: route, message: space_message)
+          end.not_to raise_error
+        end
+
+        it 'allows cf:org sources' do
+          org_message = instance_double(RoutePolicyCreateMessage, source: "cf:org:#{SecureRandom.uuid}")
+          expect do
+            action.create(route: route, message: org_message)
+          end.not_to raise_error
+        end
+
+        it 'allows cf:any sources' do
+          any_message = instance_double(RoutePolicyCreateMessage, source: 'cf:any')
+          expect do
+            action.create(route: route, message: any_message)
+          end.not_to raise_error
+        end
+      end
+
+      context 'when the domain has route_policies_scope: "any"' do
+        let(:domain) { SharedDomain.make(name: 'apps.identity', enforce_route_policies: true, route_policies_scope: 'any') }
+
+        it 'allows cf:any sources' do
+          any_message = instance_double(RoutePolicyCreateMessage, source: 'cf:any')
+          expect do
+            action.create(route: route, message: any_message)
+          end.not_to raise_error
+        end
+
+        it 'allows cf:org sources' do
+          org_message = instance_double(RoutePolicyCreateMessage, source: "cf:org:#{SecureRandom.uuid}")
+          expect do
+            action.create(route: route, message: org_message)
+          end.not_to raise_error
+        end
+      end
+
       context 'when concurrent creates target the same route with no existing policies' do
         let(:message) { instance_double(RoutePolicyCreateMessage, source: 'cf:any') }
 
