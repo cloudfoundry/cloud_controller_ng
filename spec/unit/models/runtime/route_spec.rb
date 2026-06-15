@@ -1476,6 +1476,43 @@ module VCAP::CloudController
         end
       end
 
+      context 'when options size exceeds the configured limit' do
+        before do
+          TestConfig.override(max_route_options_size: 50)
+        end
+
+        it 'is invalid and adds an error' do
+          large_options = { loadbalancing: 'round-robin', some_large_key: 'a' * 100 }
+          route = Route.new(
+            host: 'test-route',
+            domain: domain,
+            space: space,
+            options: large_options
+          )
+
+          expect(route).not_to be_valid
+          expect(route.errors[:route]).to include :options_size_exceeded
+        end
+      end
+
+      context 'when options size is within the configured limit' do
+        before do
+          TestConfig.override(max_route_options_size: 1024)
+        end
+
+        it 'is valid' do
+          small_options = { loadbalancing: 'round-robin' }
+          route = Route.new(
+            host: 'test-route',
+            domain: domain,
+            space: space,
+            options: small_options
+          )
+
+          expect(route).to be_valid
+        end
+      end
+
       context 'when updating an existing route' do
         context 'changing to hash loadbalancing without hash_header' do
           it 'is invalid' do

@@ -35,6 +35,7 @@ module VCAP::CloudController
           optional(:system_domain_organization) => enum(String, NilClass),
           app_domains: Array,
           disable_private_domain_cross_space_context_path_route_sharing: bool,
+          max_route_options_size: Integer,
 
           cpu_weight_min_memory: Integer,
           cpu_weight_max_memory: Integer,
