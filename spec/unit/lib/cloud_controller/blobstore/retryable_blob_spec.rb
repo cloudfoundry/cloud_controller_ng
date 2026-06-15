@@ -1,4 +1,6 @@
-require 'spec_helper'
+require 'lightweight_spec_helper'
+require 'steno/steno'
+require 'cloud_controller/blobstore/blob'
 require 'cloud_controller/blobstore/retryable_blob'
 require 'cloud_controller/blobstore/null_blob'
 require_relative 'blob_shared'

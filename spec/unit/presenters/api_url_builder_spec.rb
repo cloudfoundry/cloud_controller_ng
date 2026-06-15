@@ -1,10 +1,15 @@
-require 'spec_helper'
+require 'lightweight_spec_helper'
 require 'presenters/api_url_builder'
 
 module VCAP::CloudController::Presenters
   RSpec.describe ApiUrlBuilder do
-    let(:scheme) { TestConfig.config[:external_protocol] }
-    let(:host) { TestConfig.config[:external_domain] }
+    let(:scheme) { 'http' }
+    let(:host) { 'api.example.org' }
+
+    before do
+      config = StubConfig.new({ external_protocol: scheme, external_domain: host })
+      allow(VCAP::CloudController::Config).to receive(:config).and_return(config)
+    end
 
     it 'builds a url when path is provided' do
       expected_url = "#{scheme}://#{host}/v3/foo/bar"

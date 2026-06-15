@@ -1,4 +1,5 @@
-require 'spec_helper'
+require 'lightweight_spec_helper'
+require 'presenters/v2/base_presenter'
 
 module CloudController::Presenters::V2
   RSpec.describe BasePresenter do

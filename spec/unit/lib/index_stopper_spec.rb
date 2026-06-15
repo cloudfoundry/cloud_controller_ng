@@ -1,4 +1,5 @@
-require 'spec_helper'
+require 'lightweight_spec_helper'
+require 'cloud_controller/index_stopper'
 
 module VCAP::CloudController
   RSpec.describe IndexStopper do

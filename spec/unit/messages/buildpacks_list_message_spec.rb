@@ -1,4 +1,5 @@
-require 'spec_helper'
+require 'lightweight_spec_helper'
+require 'cloud_controller/diego/lifecycles/lifecycles'
 require 'messages/buildpacks_list_message'
 
 module VCAP::CloudController

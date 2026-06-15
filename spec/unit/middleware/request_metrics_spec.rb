@@ -1,5 +1,7 @@
-require 'spec_helper'
+require 'lightweight_spec_helper'
 require 'request_metrics'
+require 'vcap/request'
+require 'cloud_controller/metrics/request_metrics'
 
 module CloudFoundry
   module Middleware

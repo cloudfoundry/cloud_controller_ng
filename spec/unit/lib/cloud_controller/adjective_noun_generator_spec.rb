@@ -1,4 +1,4 @@
-require 'spec_helper'
+require 'lightweight_spec_helper'
 require 'cloud_controller/adjective_noun_generator'
 
 module VCAP::CloudController

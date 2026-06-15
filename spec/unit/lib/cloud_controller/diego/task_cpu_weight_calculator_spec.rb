@@ -1,10 +1,14 @@
-require 'spec_helper'
+require 'lightweight_spec_helper'
 require 'cloud_controller/diego/task_cpu_weight_calculator'
 
 module VCAP::CloudController
   module Diego
     RSpec.describe TaskCpuWeightCalculator do
       describe '#calculate with default values' do
+        before do
+          StubConfig.prepare(self, cpu_weight_min_memory: 128, cpu_weight_max_memory: 8192)
+        end
+
         let(:calculator) { TaskCpuWeightCalculator.new(memory_in_mb: memory) }
         let(:min_cpu_proxy) { VCAP::CloudController::Config.config.get(:cpu_weight_min_memory) }
         let(:max_cpu_proxy) { VCAP::CloudController::Config.config.get(:cpu_weight_max_memory) }
@@ -38,7 +42,7 @@ module VCAP::CloudController
 
       describe '#calculate with cpu_weight_max_memory=16384' do
         before do
-          TestConfig.override(cpu_weight_max_memory: 16_384)
+          StubConfig.prepare(self, cpu_weight_min_memory: 128, cpu_weight_max_memory: 16_384)
         end
 
         let(:calculator) { TaskCpuWeightCalculator.new(memory_in_mb: memory) }
