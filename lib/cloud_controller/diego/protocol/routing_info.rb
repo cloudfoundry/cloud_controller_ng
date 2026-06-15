@@ -9,7 +9,7 @@ module VCAP::CloudController
         end
 
         def routing_info
-          process_eager = ProcessModel.eager(route_mappings: { route: %i[domain route_binding] }).where(id: process.id).all
+          process_eager = ProcessModel.eager(route_mappings: { route: %i[domain route_binding route_policies] }).where(id: process.id).all
 
           return {} if process_eager.empty?
 
@@ -37,15 +37,32 @@ module VCAP::CloudController
           end
 
           route_mappings.map do |route_mapping|
-            r = route_mapping.route
-            info = { 'hostname' => r.uri }
-            info['route_service_url'] = r.route_binding.route_service_url if r.route_binding && r.route_binding.route_service_url
-            info['router_group_guid'] = r.domain.router_group_guid if r.domain.is_a?(SharedDomain) && !r.domain.router_group_guid.nil?
-            info['port'] = get_port_to_use(route_mapping)
-            info['protocol'] = route_mapping.protocol
-            info['options'] = r.options if r.options
-            info
+            build_http_route_info(route_mapping)
           end
+        end
+
+        def build_http_route_info(route_mapping)
+          r = route_mapping.route
+          info = { 'hostname' => r.uri }
+          info['route_service_url'] = r.route_binding.route_service_url if r.route_binding && r.route_binding.route_service_url
+          info['router_group_guid'] = r.domain.router_group_guid if r.domain.is_a?(SharedDomain) && !r.domain.router_group_guid.nil?
+          info['port'] = get_port_to_use(route_mapping)
+          info['protocol'] = route_mapping.protocol
+          info['options'] = r.options if r.options
+
+          add_route_policy_options(info, r) if r.domain.enforce_route_policies
+
+          info
+        end
+
+        def add_route_policy_options(info, route)
+          # Inject route policy options for enforce_route_policies domains.
+          # These are GoRouter-internal keys and are filtered from the /v3/routes API.
+          route_policy_options = {}
+          route_policy_options['route_policy_scope'] = route.domain.route_policies_scope if route.domain.route_policies_scope
+          sources = route.route_policies.map(&:source)
+          route_policy_options['route_policy_sources'] = sources.join(',') unless sources.empty?
+          info['options'] = (info['options'] || {}).merge(route_policy_options)
         end
 
         def tcp_info(process_eager)

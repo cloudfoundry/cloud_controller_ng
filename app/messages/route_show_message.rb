@@ -5,7 +5,7 @@ module VCAP::CloudController
     register_allowed_keys %i[guid include]
 
     validates_with NoAdditionalParamsValidator
-    validates_with IncludeParamValidator, valid_values: ['domain', 'space', 'space.organization']
+    validates_with IncludeParamValidator, valid_values: ['domain', 'space', 'space.organization', 'route_policies']
 
     validates :guid, presence: true, string: true
 

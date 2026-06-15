@@ -2,7 +2,6 @@ require 'messages/metadata_base_message'
 
 module VCAP::CloudController
   class RouteOptionsMessage < BaseMessage
-    # Register all possible keys upfront so attr_accessors are created
     register_allowed_keys %i[loadbalancing hash_header hash_balance]
 
     def self.valid_route_options

@@ -20,7 +20,7 @@ module VCAP::CloudController::Presenters::V3
     end
 
     def to_hash
-      {
+      hash = {
         guid: domain.guid,
         created_at: domain.created_at,
         updated_at: domain.updated_at,
@@ -42,6 +42,13 @@ module VCAP::CloudController::Presenters::V3
         },
         links: build_links
       }
+
+      if domain.enforce_route_policies
+        hash[:enforce_route_policies] = true
+        hash[:route_policies_scope] = domain.route_policies_scope
+      end
+
+      hash
     end
 
     private

@@ -387,6 +387,18 @@ RSpec.describe 'Routes Request' do
           expect(last_response).to have_status_code(200)
         end
       end
+
+      context 'when including route_policies' do
+        let!(:route_policy) { VCAP::CloudController::RoutePolicy.create(route: route_in_org, source: 'cf:app:some-app-guid') }
+
+        it 'includes the route_policies for the routes' do
+          get '/v3/routes?include=route_policies', nil, admin_header
+          expect(last_response).to have_status_code(200)
+          expect(parsed_response['included']['route_policies']).to have(1).items
+          expect(parsed_response['included']['route_policies'][0]['guid']).to eq(route_policy.guid)
+          expect(parsed_response['included']['route_policies'][0]['source']).to eq('cf:app:some-app-guid')
+        end
+      end
     end
 
     describe 'filters' do
@@ -1118,6 +1130,25 @@ RSpec.describe 'Routes Request' do
               ]
             )
           end
+        end
+      end
+
+      context 'when including route_policies' do
+        let!(:route_policy) { VCAP::CloudController::RoutePolicy.create(route: route, source: 'cf:app:some-app-guid') }
+
+        it 'includes the route_policies for the route' do
+          get "/v3/routes/#{route.guid}?include=route_policies", nil, admin_header
+          expect(last_response).to have_status_code(200)
+          expect(parsed_response['included']['route_policies']).to have(1).items
+          expect(parsed_response['included']['route_policies'][0]['guid']).to eq(route_policy.guid)
+          expect(parsed_response['included']['route_policies'][0]['source']).to eq('cf:app:some-app-guid')
+        end
+
+        it 'returns an empty array when route has no policies' do
+          route_policy.destroy
+          get "/v3/routes/#{route.guid}?include=route_policies", nil, admin_header
+          expect(last_response).to have_status_code(200)
+          expect(parsed_response['included']['route_policies']).to eq([])
         end
       end
     end

@@ -147,6 +147,44 @@ module VCAP::CloudController::Presenters::V3
         end
       end
 
+      context 'when options contains only internal mTLS keys' do
+        let(:route) do
+          VCAP::CloudController::Route.make(
+            host: 'foobar',
+            path: path,
+            space: space,
+            domain: domain,
+            options: { 'route_policy_scope' => 'space', 'route_policy_sources' => 'cf:app:some-guid' }
+          )
+        end
+
+        it 'omits the options key entirely from the response' do
+          expect(subject).not_to have_key(:options)
+        end
+      end
+
+      context 'when options contains a mix of public and internal keys' do
+        let(:route) do
+          VCAP::CloudController::Route.make(
+            host: 'foobar',
+            path: path,
+            space: space,
+            domain: domain,
+            options: {
+              'loadbalancing' => 'round-robin',
+              'route_policy_scope' => 'space',
+              'route_policy_sources' => 'cf:app:some-guid'
+            }
+          )
+        end
+
+        it 'exposes only the public options' do
+          expect(subject[:options]).to eq('loadbalancing' => 'round-robin')
+          expect(subject[:options]).not_to have_key('route_policy_scope')
+          expect(subject[:options]).not_to have_key('route_policy_sources')
+        end
+      end
+
       context 'when there are decorators' do
         let(:banana_decorator) do
           Class.new do
