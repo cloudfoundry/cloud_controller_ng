@@ -42,8 +42,8 @@ Name | Type | Description
 **metadata.annotations**  | [_annotation object_](#annotations) | Annotations applied to the organization
 
 #### Permitted roles
- |
---- | ---
-Admin |
 
-If the `user_org_creation` feature flag is enabled, any user with the `cloud_controller.write` scope will be able to create organizations.
+Role | Notes
+---- | -----
+Admin |
+All Roles | If the `user_org_creation` feature flag is enabled, any user with the `cloud_controller.write` scope can create organizations, but cannot set the `suspended` field to `true`
