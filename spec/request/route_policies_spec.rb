@@ -1,4 +1,5 @@
 require 'spec_helper'
+require 'request_spec_shared_examples'
 
 RSpec.describe 'Route Policies' do
   let(:user) { VCAP::CloudController::User.make }
@@ -45,12 +46,6 @@ RSpec.describe 'Route Policies' do
     }
   end
 
-  before do
-    TestConfig.override(kubernetes: {})
-    space.organization.add_user(user)
-    space.add_developer(user)
-  end
-
   describe 'POST /v3/route_policies' do
     let(:request_body) do
       {
@@ -73,7 +68,7 @@ RSpec.describe 'Route Policies' do
     end
 
     context 'as space developer' do
-      let(:user_headers) { headers_for(user) }
+      let(:user_headers) { set_user_with_header_as_role(role: 'space_developer', org: org, space: space, user: user) }
 
       it 'creates an access rule' do
         post '/v3/route_policies', request_body.to_json, user_headers
@@ -244,6 +239,19 @@ RSpec.describe 'Route Policies' do
       expect(parsed['source']).to eq("cf:app:#{valid_uuid}")
     end
 
+    context 'role-based visibility' do
+      let(:api_call) { ->(headers) { get "/v3/route_policies/#{route_policy.guid}", nil, headers } }
+      let(:expected_codes_and_responses) do
+        h = Hash.new({ code: 404 }.freeze)
+        %w[admin admin_read_only global_auditor
+           space_developer space_manager space_auditor space_supporter
+           org_manager].each { |r| h[r] = { code: 200 } }
+        h
+      end
+
+      it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS
+    end
+
     context 'when the access rule does not exist' do
       it 'returns 404' do
         get '/v3/route_policies/nonexistent-guid', nil, admin_header
@@ -345,6 +353,19 @@ RSpec.describe 'Route Policies' do
       parsed = Oj.load(last_response.body)
       guids = parsed['resources'].pluck('guid')
       expect(guids).to include(rule1.guid, rule2.guid)
+    end
+
+    context 'role-based visibility' do
+      let(:api_call) { ->(headers) { get '/v3/route_policies', nil, headers } }
+      let(:expected_codes_and_responses) do
+        h = Hash.new({ code: 200, response_guids: [] }.freeze)
+        %w[admin admin_read_only global_auditor
+           space_developer space_manager space_auditor space_supporter
+           org_manager].each { |r| h[r] = { code: 200, response_guids: [rule1.guid, rule2.guid] } }
+        h
+      end
+
+      it_behaves_like 'permissions for list endpoint', ALL_PERMISSIONS
     end
 
     it 'filters by route_guids' do
