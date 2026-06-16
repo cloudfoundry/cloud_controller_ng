@@ -12,14 +12,25 @@ module VCAP::CloudController
     let(:message) { instance_double(RoutePolicyCreateMessage, source: "cf:app:#{app_guid}") }
 
     describe '#create' do
-      it 'creates a route policy with the given source' do
+      it 'creates a route policy with source_type and source_guid persisted' do
         expect do
           action.create(route:, message:)
         end.to change(RoutePolicy, :count).by(1)
 
         policy = RoutePolicy.last
         expect(policy.source).to eq("cf:app:#{app_guid}")
+        expect(policy.source_type).to eq('app')
+        expect(policy.source_guid).to eq(app_guid)
         expect(policy.route_id).to eq(route.id)
+      end
+
+      it 'persists source_type=any and source_guid="" for cf:any' do
+        any_message = instance_double(RoutePolicyCreateMessage, source: 'cf:any')
+        action.create(route:, message: any_message)
+
+        policy = RoutePolicy.last
+        expect(policy.source_type).to eq('any')
+        expect(policy.source_guid).to eq('')
       end
 
       context 'when the same source already exists for the route' do
