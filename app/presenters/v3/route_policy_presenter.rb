@@ -38,22 +38,14 @@ module VCAP::CloudController
             }
           }
 
-          # Extract resource GUID from source and populate read-only relationships
-          # The guid is included as-is without per-row existence checks to avoid N+1 queries.
-          # Use ?include=source to get full resource details with batch loading.
-          source_match = route_policy.source.match(/\Acf:(app|space|org):([0-9a-f-]+)\z/)
-          if source_match
-            resource_type = source_match[1]
-            resource_guid = source_match[2]
-
-            relationships[:app] = { data: resource_type == 'app' ? { guid: resource_guid } : nil }
-            relationships[:space] = { data: resource_type == 'space' ? { guid: resource_guid } : nil }
-            relationships[:organization] = { data: resource_type == 'org' ? { guid: resource_guid } : nil }
-          else
-            # cf:any or malformed - all relationships are null
-            relationships[:app] = { data: nil }
-            relationships[:space] = { data: nil }
+          if route_policy.source_type == 'any'
+            relationships[:app]          = { data: nil }
+            relationships[:space]        = { data: nil }
             relationships[:organization] = { data: nil }
+          else
+            relationships[:app]          = { data: route_policy.source_type == 'app'   ? { guid: route_policy.source_guid } : nil }
+            relationships[:space]        = { data: route_policy.source_type == 'space' ? { guid: route_policy.source_guid } : nil }
+            relationships[:organization] = { data: route_policy.source_type == 'org'   ? { guid: route_policy.source_guid } : nil }
           end
 
           relationships
