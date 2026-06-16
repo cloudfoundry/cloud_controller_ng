@@ -58,6 +58,10 @@ service_operations_initial_cleanup:
 service_operations_create_in_progress_cleanup:
   frequency_in_seconds: 3600 #1h
 
+# One-off backfill - to be removed in a future version.
+lifecycle_type_backfill:
+  frequency_in_seconds: 3600 #1h
+
 completed_tasks:
   cutoff_age_in_days: 31
 
