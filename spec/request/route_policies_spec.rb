@@ -509,7 +509,7 @@ RSpec.describe 'Route Policies' do
 
         expect(last_response.status).to eq(200)
         parsed = Oj.load(last_response.body)
-        returned_guids = parsed['resources'].map { |r| r['guid'] }
+        returned_guids = parsed['resources'].pluck('guid')
         expect(returned_guids).to include(rule_app1.guid)
         expect(returned_guids).not_to include(rule_app2.guid)
       end
@@ -530,7 +530,7 @@ RSpec.describe 'Route Policies' do
 
         expect(last_response.status).to eq(200)
         parsed = Oj.load(last_response.body)
-        returned_sources = parsed['resources'].map { |r| r['source'] }
+        returned_sources = parsed['resources'].pluck('source')
         expect(returned_sources).not_to include('cf:any')
       end
     end
@@ -556,7 +556,7 @@ RSpec.describe 'Route Policies' do
 
         expect(last_response.status).to eq(200)
         parsed = Oj.load(last_response.body)
-        guids = parsed['resources'].map { |r| r['guid'] }
+        guids = parsed['resources'].pluck('guid')
         expect(guids).to include(rule_typed.guid)
         expect(guids).not_to include(rule_any.guid)
       end
@@ -566,7 +566,7 @@ RSpec.describe 'Route Policies' do
 
         expect(last_response.status).to eq(200)
         parsed = Oj.load(last_response.body)
-        guids = parsed['resources'].map { |r| r['guid'] }
+        guids = parsed['resources'].pluck('guid')
         expect(guids).to include(rule_any.guid)
         expect(guids).not_to include(rule_typed.guid)
       end

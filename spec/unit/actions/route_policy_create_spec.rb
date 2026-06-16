@@ -26,7 +26,7 @@ module VCAP::CloudController
 
       it 'persists source_type=any and source_guid="" for cf:any' do
         any_message = instance_double(RoutePolicyCreateMessage, source: 'cf:any')
-        action.create(route:, message: any_message)
+        action.create(route: route, message: any_message)
 
         policy = RoutePolicy.last
         expect(policy.source_type).to eq('any')
