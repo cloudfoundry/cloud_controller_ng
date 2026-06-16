@@ -182,6 +182,12 @@ class VCAP::CloudController::Permissions
     membership.authorized_space_ids_subquery(ROLES_FOR_SPACE_READING)
   end
 
+  def readable_route_policies_spaces_query
+    raise 'must not be called for users that can read globally' if can_read_globally?
+
+    membership.authorized_spaces_subquery(ROLES_FOR_ROUTE_READING)
+  end
+
   def readable_space_guids_query
     raise 'must not be called for users that can read globally' if can_read_globally?
 
@@ -190,6 +196,10 @@ class VCAP::CloudController::Permissions
 
   def can_read_from_space?(space_id, org_id)
     can_read_globally? || membership.role_applies?(ROLES_FOR_SPACE_READING, space_id, org_id)
+  end
+
+  def can_read_route_policy_from_space?(space_id, org_id)
+    can_read_globally? || membership.role_applies?(ROLES_FOR_ROUTE_READING, space_id, org_id)
   end
 
   def can_read_from_space_as_space_member?(space_id)

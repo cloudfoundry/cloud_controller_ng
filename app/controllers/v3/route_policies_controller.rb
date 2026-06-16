@@ -35,7 +35,7 @@ class RoutePoliciesController < ApplicationController
     resource_not_found!(:route_policy) unless route_policy
 
     route = route_policy.route
-    resource_not_found!(:route_policy) unless route && permission_queryer.can_read_from_space?(route.space.id, route.space.organization_id)
+    resource_not_found!(:route_policy) unless route && permission_queryer.can_read_route_policy_from_space?(route.space.id, route.space.organization_id)
 
     decorators = []
     decorators << IncludeRoutePolicySourceDecorator if IncludeRoutePolicySourceDecorator.match?(message.include)
@@ -114,7 +114,7 @@ class RoutePoliciesController < ApplicationController
     if permission_queryer.can_read_globally?
       readable_route_ids = VCAP::CloudController::Route.select(:id)
     else
-      readable_space_ids = permission_queryer.readable_spaces_query.select(:id)
+      readable_space_ids = permission_queryer.readable_route_policies_spaces_query.select(:id)
       readable_route_ids = VCAP::CloudController::Route.where(space_id: readable_space_ids).select(:id)
     end
 

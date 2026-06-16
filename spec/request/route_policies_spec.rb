@@ -245,7 +245,7 @@ RSpec.describe 'Route Policies' do
         h = Hash.new({ code: 404 }.freeze)
         %w[admin admin_read_only global_auditor
            space_developer space_manager space_auditor space_supporter
-           org_manager].each { |r| h[r] = { code: 200 } }
+           org_manager org_auditor].each { |r| h[r] = { code: 200 } }
         h
       end
 
@@ -361,7 +361,7 @@ RSpec.describe 'Route Policies' do
         h = Hash.new({ code: 200, response_guids: [] }.freeze)
         %w[admin admin_read_only global_auditor
            space_developer space_manager space_auditor space_supporter
-           org_manager].each { |r| h[r] = { code: 200, response_guids: [rule1.guid, rule2.guid] } }
+           org_manager org_auditor].each { |r| h[r] = { code: 200, response_guids: [rule1.guid, rule2.guid] } }
         h
       end
 
