@@ -37,19 +37,19 @@ module VCAP::CloudController
         )
         expect(rule.route).to eq(route)
       end
+    end
 
-      describe 'columns' do
-        it 'persists source_type for a typed source' do
-          policy = RoutePolicy.create(source: "cf:app:#{app_guid}", route: route)
-          expect(policy.source_type).to eq('app')
-          expect(policy.source_guid).to eq(app_guid)
-        end
+    describe 'columns' do
+      it 'persists source_type for a typed source' do
+        policy = RoutePolicy.create(source: "cf:app:#{app_guid}", route: route)
+        expect(policy.source_type).to eq('app')
+        expect(policy.source_guid).to eq(app_guid)
+      end
 
-        it 'persists source_type and empty source_guid for cf:any' do
-          policy = RoutePolicy.create(source: 'cf:any', route: route)
-          expect(policy.source_type).to eq('any')
-          expect(policy.source_guid).to eq('')
-        end
+      it 'persists source_type and empty source_guid for cf:any' do
+        policy = RoutePolicy.create(source: 'cf:any', route: route)
+        expect(policy.source_type).to eq('any')
+        expect(policy.source_guid).to eq('')
       end
     end
 
