@@ -4,8 +4,6 @@ module VCAP::CloudController
     # Stale/missing resources (source GUIDs that no longer exist) are silently absent.
     # Resources the current user cannot read are also silently absent.
 
-    SOURCE_REGEX = /\Acf:(app|space|org):([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})\z/
-
     def self.match?(include_params)
       return false unless include_params
 
@@ -16,24 +14,17 @@ module VCAP::CloudController
       hash[:included] ||= {}
 
       # Collect all GUIDs by type
-      app_guids = []
+      app_guids   = []
       space_guids = []
-      org_guids = []
+      org_guids   = []
 
       route_policies.each do |policy|
-        match = SOURCE_REGEX.match(policy.source)
-        next unless match
+        next if policy.source_type == 'any'
 
-        resource_type = match[1]
-        resource_guid = match[2]
-
-        case resource_type
-        when 'app'
-          app_guids << resource_guid
-        when 'space'
-          space_guids << resource_guid
-        when 'org'
-          org_guids << resource_guid
+        case policy.source_type
+        when 'app'   then app_guids   << policy.source_guid
+        when 'space' then space_guids << policy.source_guid
+        when 'org'   then org_guids   << policy.source_guid
         end
       end
 
