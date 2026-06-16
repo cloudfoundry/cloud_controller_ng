@@ -15,6 +15,82 @@ module VCAP::CloudController
       RouteMappingModel.make(app: app_model, route: route, process_type: 'web')
     end
 
+    describe 'source virtual attribute' do
+      describe '#source getter' do
+        it 'returns cf:app:<guid> composite string' do
+          policy = RoutePolicy.new(source_type: 'app', source_guid: app_guid)
+          expect(policy.source).to eq("cf:app:#{app_guid}")
+        end
+
+        it 'returns cf:space:<guid> composite string' do
+          guid = SecureRandom.uuid
+          policy = RoutePolicy.new(source_type: 'space', source_guid: guid)
+          expect(policy.source).to eq("cf:space:#{guid}")
+        end
+
+        it 'returns cf:org:<guid> composite string' do
+          guid = SecureRandom.uuid
+          policy = RoutePolicy.new(source_type: 'org', source_guid: guid)
+          expect(policy.source).to eq("cf:org:#{guid}")
+        end
+
+        it 'returns cf:any when source_guid is empty' do
+          policy = RoutePolicy.new(source_type: 'any', source_guid: '')
+          expect(policy.source).to eq('cf:any')
+        end
+
+        it 'returns cf:any when source_guid is nil' do
+          policy = RoutePolicy.new(source_type: 'any', source_guid: nil)
+          expect(policy.source).to eq('cf:any')
+        end
+      end
+
+      describe '#source= setter' do
+        it 'parses cf:app:<guid> into source_type and source_guid' do
+          policy = RoutePolicy.new
+          policy.source = "cf:app:#{app_guid}"
+          expect(policy.source_type).to eq('app')
+          expect(policy.source_guid).to eq(app_guid)
+        end
+
+        it 'parses cf:space:<guid>' do
+          guid = SecureRandom.uuid
+          policy = RoutePolicy.new
+          policy.source = "cf:space:#{guid}"
+          expect(policy.source_type).to eq('space')
+          expect(policy.source_guid).to eq(guid)
+        end
+
+        it 'parses cf:org:<guid>' do
+          guid = SecureRandom.uuid
+          policy = RoutePolicy.new
+          policy.source = "cf:org:#{guid}"
+          expect(policy.source_type).to eq('org')
+          expect(policy.source_guid).to eq(guid)
+        end
+
+        it 'sets source_type to any and source_guid to empty string for cf:any' do
+          policy = RoutePolicy.new
+          policy.source = 'cf:any'
+          expect(policy.source_type).to eq('any')
+          expect(policy.source_guid).to eq('')
+        end
+
+        it 'does nothing when called with nil' do
+          policy = RoutePolicy.new(source_type: 'app', source_guid: app_guid)
+          policy.source = nil
+          expect(policy.source_type).to eq('app')
+          expect(policy.source_guid).to eq(app_guid)
+        end
+
+        it 'sets source_type to nil for malformed input' do
+          policy = RoutePolicy.new
+          policy.source = 'garbage'
+          expect(policy.source_type).to be_nil
+        end
+      end
+    end
+
     describe 'validations' do
       it 'requires a selector' do
         rule = RoutePolicy.new(route:)
