@@ -125,6 +125,19 @@ module VCAP::CloudController
         end
       end
 
+      describe 'label_selector' do
+        it 'accepts a label_selector param' do
+          message = RoutePoliciesListMessage.from_params({ 'label_selector' => 'env=prod' })
+          expect(message).to be_valid
+          expect(message).to be_requested(:label_selector)
+        end
+
+        it 'rejects an invalid label_selector' do
+          message = RoutePoliciesListMessage.from_params({ 'label_selector' => '%%invalid' })
+          expect(message).not_to be_valid
+        end
+      end
+
       describe 'validations' do
         it 'validates space_guids is an array' do
           message = RoutePoliciesListMessage.from_params space_guids: 'not array'

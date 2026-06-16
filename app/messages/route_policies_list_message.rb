@@ -1,7 +1,7 @@
-require 'messages/list_message'
+require 'messages/metadata_list_message'
 
 module VCAP::CloudController
-  class RoutePoliciesListMessage < ListMessage
+  class RoutePoliciesListMessage < MetadataListMessage
     register_allowed_keys %i[
       guids
       route_guids

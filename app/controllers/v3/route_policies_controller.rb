@@ -7,6 +7,7 @@ require 'decorators/include_route_policy_source_decorator'
 require 'decorators/include_route_policy_route_decorator'
 require 'actions/route_policy_create'
 require 'repositories/route_policy_event_repository'
+require 'fetchers/label_selector_query_generator'
 
 class RoutePoliciesController < ApplicationController
   def index
@@ -168,6 +169,15 @@ class RoutePoliciesController < ApplicationController
     end
 
     dataset = dataset.where(source_guid: message.source_guids) if message.requested?(:source_guids)
+
+    if message.requested?(:label_selector)
+      dataset = VCAP::CloudController::LabelSelectorQueryGenerator.add_selector_queries(
+        label_klass: VCAP::CloudController::RoutePolicyLabelModel,
+        resource_dataset: dataset,
+        requirements: message.requirements,
+        resource_klass: VCAP::CloudController::RoutePolicy
+      )
+    end
 
     dataset
   end

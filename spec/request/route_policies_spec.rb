@@ -583,6 +583,28 @@ RSpec.describe 'Route Policies' do
       end
     end
 
+    describe 'filtering by label_selector' do
+      let(:another_route) { VCAP::CloudController::Route.make(space: space, domain: mtls_domain) }
+      let!(:labelled_policy) do
+        policy = VCAP::CloudController::RoutePolicy.create(source: 'cf:any', route_id: mtls_route.id)
+        VCAP::CloudController::RoutePolicyLabelModel.create(resource_guid: policy.guid, key_name: 'env', value: 'prod')
+        policy
+      end
+      let!(:unlabelled_policy) do
+        VCAP::CloudController::RoutePolicy.create(source: 'cf:any', route_id: another_route.id)
+      end
+
+      it 'returns only policies matching the label selector' do
+        get '/v3/route_policies?label_selector=env=prod', nil, admin_header
+
+        expect(last_response.status).to eq(200)
+        parsed = Oj.load(last_response.body)
+        guids = parsed['resources'].pluck('guid')
+        expect(guids).to include(labelled_policy.guid)
+        expect(guids).not_to include(unlabelled_policy.guid)
+      end
+    end
+
     context 'with include=source' do
       let!(:frontend_app) { VCAP::CloudController::AppModel.make(space: space, name: 'frontend-app') }
       let!(:other_space) { VCAP::CloudController::Space.make(organization: org, name: 'other-space') }
