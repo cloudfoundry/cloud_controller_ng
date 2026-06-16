@@ -11,8 +11,23 @@ module VCAP::CloudController
     add_association_dependencies labels: :destroy
     add_association_dependencies annotations: :destroy
 
+    def source
+      source_guid.empty? ? 'cf:any' : "cf:#{source_type}:#{source_guid}"
+    end
+
+    def source=(val)
+      if val == 'cf:any'
+        self.source_type = 'any'
+        self.source_guid = ''
+      else
+        m = val.match(/\Acf:(app|space|org):([0-9a-f-]+)\z/)
+        self.source_type = m[1]
+        self.source_guid = m[2]
+      end
+    end
+
     def validate
-      validates_presence :source
+      validates_presence :source_type
       validates_presence :route_id
     end
 

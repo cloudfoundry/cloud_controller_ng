@@ -19,7 +19,7 @@ module VCAP::CloudController
       it 'requires a selector' do
         rule = RoutePolicy.new(route:)
         expect(rule.valid?).to be false
-        expect(rule.errors[:source]).to include(:presence)
+        expect(rule.errors[:source_type]).to include(:presence)
       end
 
       it 'requires a route_id' do
@@ -36,6 +36,20 @@ module VCAP::CloudController
           route: route
         )
         expect(rule.route).to eq(route)
+      end
+
+      describe 'columns' do
+        it 'persists source_type for a typed source' do
+          policy = RoutePolicy.create(source: "cf:app:#{app_guid}", route: route)
+          expect(policy.source_type).to eq('app')
+          expect(policy.source_guid).to eq(app_guid)
+        end
+
+        it 'persists source_type and empty source_guid for cf:any' do
+          policy = RoutePolicy.create(source: 'cf:any', route: route)
+          expect(policy.source_type).to eq('any')
+          expect(policy.source_guid).to eq('')
+        end
       end
     end
 

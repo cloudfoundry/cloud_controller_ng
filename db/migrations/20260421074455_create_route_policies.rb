@@ -3,10 +3,11 @@ Sequel.migration do
     unless table_exists?(:route_policies)
       create_table :route_policies do
         VCAP::Migration.common(self, :route_policies)
-        String :source, size: 255, null: false
+        String :source_type, size: 255, null: false
+        String :source_guid, size: 255, null: false, default: ''
         Integer :route_id, null: false
 
-        index %i[route_id source], unique: true, name: :route_policies_route_id_source_index
+        index %i[route_id source_type source_guid], unique: true, name: :route_policies_route_id_source_index
         foreign_key [:route_id], :routes, on_delete: :cascade, name: :fk_route_policies_route_id
       end
     end
