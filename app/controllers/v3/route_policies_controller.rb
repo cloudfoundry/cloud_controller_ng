@@ -132,18 +132,20 @@ class RoutePoliciesController < ApplicationController
     end
 
     dataset = dataset.where(guid: message.guids) if message.requested?(:guids)
-    dataset = dataset.where(source: message.sources) if message.requested?(:sources)
 
-    if message.requested?(:source_guids)
-      # Text-match against source string for resource GUIDs
-      # Handles cf:app:<guid>, cf:space:<guid>, cf:org:<guid>
-      # Escape LIKE metacharacters (\, %, _) in user-provided values
-      conditions = message.source_guids.map do |guid|
-        escaped_guid = guid.gsub('\\', '\\\\').gsub('%', '\\%').gsub('_', '\\_')
-        Sequel.like(:source, "%#{escaped_guid}%")
+    if message.requested?(:sources)
+      conditions = message.sources.map do |src|
+        if src == 'cf:any'
+          Sequel.&(source_type: 'any', source_guid: '')
+        else
+          m = src.match(/\Acf:(app|space|org):([0-9a-f-]+)\z/)
+          Sequel.&(source_type: m[1], source_guid: m[2])
+        end
       end
       dataset = dataset.where(Sequel.|(*conditions))
     end
+
+    dataset = dataset.where(source_guid: message.source_guids) if message.requested?(:source_guids)
 
     dataset
   end

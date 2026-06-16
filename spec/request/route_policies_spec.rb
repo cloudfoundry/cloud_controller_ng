@@ -489,29 +489,86 @@ RSpec.describe 'Route Policies' do
     end
 
     describe 'filtering by source_guids' do
-      it 'escapes % so it does not act as a LIKE wildcard' do
-        get '/v3/route_policies?source_guids=%25', nil, admin_header
-
-        expect(last_response.status).to eq(200)
-        parsed = Oj.load(last_response.body)
-        expect(parsed['resources'].length).to eq(0)
+      let(:app1) { VCAP::CloudController::AppModel.make(space: space) }
+      let(:app2) { VCAP::CloudController::AppModel.make(space: space) }
+      let!(:rule_app1) do
+        VCAP::CloudController::RoutePolicy.create(
+          source: "cf:app:#{app1.guid}",
+          route_id: mtls_route.id
+        )
+      end
+      let!(:rule_app2) do
+        VCAP::CloudController::RoutePolicy.create(
+          source: "cf:app:#{app2.guid}",
+          route_id: mtls_route.id
+        )
       end
 
-      it 'escapes _ so it does not act as a LIKE single-char wildcard' do
-        get '/v3/route_policies?source_guids=cf_app', nil, admin_header
+      it 'returns only the policy whose source_guid matches the queried GUID' do
+        get "/v3/route_policies?source_guids=#{app1.guid}", nil, admin_header
 
         expect(last_response.status).to eq(200)
         parsed = Oj.load(last_response.body)
-        # _ would match any single char (e.g. "cf:app"), but escaped it matches literal "_"
-        expect(parsed['resources'].length).to eq(0)
+        returned_guids = parsed['resources'].map { |r| r['guid'] }
+        expect(returned_guids).to include(rule_app1.guid)
+        expect(returned_guids).not_to include(rule_app2.guid)
       end
 
-      it 'escapes backslash so it does not act as a LIKE escape character' do
-        get '/v3/route_policies?source_guids=cf%5Capp', nil, admin_header
+      it 'returns an empty list when the GUID matches nothing' do
+        get "/v3/route_policies?source_guids=#{SecureRandom.uuid}", nil, admin_header
 
         expect(last_response.status).to eq(200)
         parsed = Oj.load(last_response.body)
-        expect(parsed['resources'].length).to eq(0)
+        expect(parsed['resources']).to be_empty
+      end
+
+      it 'does not return cf:any policies for a GUID query' do
+        any_route = VCAP::CloudController::Route.make(space: space, domain: mtls_domain)
+        VCAP::CloudController::RoutePolicy.create(source: 'cf:any', route_id: any_route.id)
+
+        get "/v3/route_policies?source_guids=#{app1.guid}", nil, admin_header
+
+        expect(last_response.status).to eq(200)
+        parsed = Oj.load(last_response.body)
+        returned_sources = parsed['resources'].map { |r| r['source'] }
+        expect(returned_sources).not_to include('cf:any')
+      end
+    end
+
+    describe 'filtering by sources' do
+      let(:app1) { VCAP::CloudController::AppModel.make(space: space) }
+      let(:another_route) { VCAP::CloudController::Route.make(space: space, domain: mtls_domain) }
+      let!(:rule_typed) do
+        VCAP::CloudController::RoutePolicy.create(
+          source: "cf:app:#{app1.guid}",
+          route_id: mtls_route.id
+        )
+      end
+      let!(:rule_any) do
+        VCAP::CloudController::RoutePolicy.create(
+          source: 'cf:any',
+          route_id: another_route.id
+        )
+      end
+
+      it 'returns only the policy with the exact source value' do
+        get "/v3/route_policies?sources=cf:app:#{app1.guid}", nil, admin_header
+
+        expect(last_response.status).to eq(200)
+        parsed = Oj.load(last_response.body)
+        guids = parsed['resources'].map { |r| r['guid'] }
+        expect(guids).to include(rule_typed.guid)
+        expect(guids).not_to include(rule_any.guid)
+      end
+
+      it 'returns cf:any policies when sources=cf:any' do
+        get '/v3/route_policies?sources=cf:any', nil, admin_header
+
+        expect(last_response.status).to eq(200)
+        parsed = Oj.load(last_response.body)
+        guids = parsed['resources'].map { |r| r['guid'] }
+        expect(guids).to include(rule_any.guid)
+        expect(guids).not_to include(rule_typed.guid)
       end
     end
 
