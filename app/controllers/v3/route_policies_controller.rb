@@ -6,6 +6,7 @@ require 'presenters/v3/route_policy_presenter'
 require 'decorators/include_route_policy_source_decorator'
 require 'decorators/include_route_policy_route_decorator'
 require 'actions/route_policy_create'
+require 'repositories/route_policy_event_repository'
 
 class RoutePoliciesController < ApplicationController
   def index
@@ -53,6 +54,12 @@ class RoutePoliciesController < ApplicationController
 
     route_policy = VCAP::CloudController::RoutePolicyCreate.new.create(route: route, message: message)
 
+    route_policy_event_repository.record_route_policy_create(
+      route_policy,
+      user_audit_info,
+      { 'source' => message.source, 'route_guid' => message.route_guid }
+    )
+
     render status: :created, json: Presenters::V3::RoutePolicyPresenter.new(route_policy)
   rescue VCAP::CloudController::RoutePolicyCreate::Error => e
     unprocessable!(e.message)
@@ -69,6 +76,12 @@ class RoutePoliciesController < ApplicationController
 
     VCAP::CloudController::MetadataUpdate.update(route_policy, message)
 
+    route_policy_event_repository.record_route_policy_update(
+      route_policy.reload,
+      user_audit_info,
+      message.audit_hash
+    )
+
     render status: :ok, json: Presenters::V3::RoutePolicyPresenter.new(route_policy.reload)
   end
 
@@ -78,11 +91,20 @@ class RoutePoliciesController < ApplicationController
 
     find_and_authorize_route_for_policy(route_policy)
 
+    route_policy_event_repository.record_route_policy_delete(
+      route_policy,
+      user_audit_info
+    )
+
     route_policy.destroy
     head :no_content
   end
 
   private
+
+  def route_policy_event_repository
+    @route_policy_event_repository ||= Repositories::RoutePolicyEventRepository.new
+  end
 
   def find_and_authorize_route(route_guid)
     route = VCAP::CloudController::Route.find(guid: route_guid)

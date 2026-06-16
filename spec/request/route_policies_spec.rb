@@ -65,6 +65,17 @@ RSpec.describe 'Route Policies' do
         expect(parsed['source']).to eq("cf:app:#{valid_uuid}")
         expect(parsed['relationships']['route']['data']['guid']).to eq(mtls_route.guid)
       end
+
+      it 'records an audit event' do
+        post '/v3/route_policies', request_body.to_json, admin_header
+
+        expect(last_response.status).to eq(201)
+        parsed = Oj.load(last_response.body)
+        event = VCAP::CloudController::Event.last
+        expect(event.type).to eq('audit.route_policy.create')
+        expect(event.actee).to eq(parsed['guid'])
+        expect(event.actee_type).to eq('route_policy')
+      end
     end
 
     context 'as space developer' do
@@ -783,6 +794,17 @@ RSpec.describe 'Route Policies' do
       expect(VCAP::CloudController::RoutePolicy.find(guid: route_policy.guid)).to be_nil
     end
 
+    it 'records an audit event' do
+      policy_guid = route_policy.guid
+      delete "/v3/route_policies/#{policy_guid}", nil, admin_header
+
+      expect(last_response.status).to eq(204)
+      event = VCAP::CloudController::Event.last
+      expect(event.type).to eq('audit.route_policy.delete')
+      expect(event.actee).to eq(policy_guid)
+      expect(event.actee_type).to eq('route_policy')
+    end
+
     context 'when the access rule does not exist' do
       it 'returns 404' do
         delete '/v3/route_policies/nonexistent-guid', nil, admin_header
@@ -807,6 +829,18 @@ RSpec.describe 'Route Policies' do
       }.to_json, admin_header
 
       expect(last_response.status).to eq(200)
+    end
+
+    it 'records an audit event' do
+      patch "/v3/route_policies/#{route_policy.guid}", {
+        metadata: { labels: { env: 'production' } }
+      }.to_json, admin_header
+
+      expect(last_response.status).to eq(200)
+      event = VCAP::CloudController::Event.last
+      expect(event.type).to eq('audit.route_policy.update')
+      expect(event.actee).to eq(route_policy.guid)
+      expect(event.actee_type).to eq('route_policy')
     end
 
     context 'when the access rule does not exist' do
