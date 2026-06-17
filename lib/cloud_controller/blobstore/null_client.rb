@@ -31,7 +31,7 @@ module CloudController
 
       def ensure_bucket_exists; end
 
-      def blob(_key)
+      def blob(_key, **)
         Blob.new
       end
 

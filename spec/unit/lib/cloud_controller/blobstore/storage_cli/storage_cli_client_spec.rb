@@ -492,8 +492,8 @@ module CloudController
         describe '#blob' do
           let(:properties_json) { '{"etag": "test-etag", "last_modified": "2024-10-01T00:00:00Z", "content_length": 1024}' }
 
-          context 'for non-DAV providers (eager signing)' do
-            it 'returns a StorageCliBlob with pre-generated signed URL' do
+          context 'for non-DAV providers' do
+            it 'returns a StorageCliBlob with a signed URL using the generic sign command (default use_internal_url: false)' do
               allow(client).to receive(:run_cli).with('properties', 'bommel/va/li/valid-blob').and_return([properties_json, instance_double(Process::Status, exitstatus: 0)])
               allow(client).to receive(:run_cli).with('sign', 'bommel/va/li/valid-blob', 'get', '3600s').and_return(['some-url', instance_double(Process::Status, exitstatus: 0)])
 
@@ -505,12 +505,19 @@ module CloudController
                                                                                       last_modified: '2024-10-01T00:00:00Z',
                                                                                       content_length: 1024
                                                                                     })
-              expect(blob.internal_download_url).to eq('some-url')
               expect(blob.public_download_url).to eq('some-url')
+            end
+
+            it 'uses the generic sign command regardless of use_internal_url' do
+              allow(client).to receive(:run_cli).with('properties', 'bommel/va/li/valid-blob').and_return([properties_json, instance_double(Process::Status, exitstatus: 0)])
+              allow(client).to receive(:run_cli).with('sign', 'bommel/va/li/valid-blob', 'get', '3600s').and_return(['some-url', instance_double(Process::Status, exitstatus: 0)])
+
+              blob = client.blob('valid-blob', use_internal_url: true)
+              expect(blob.internal_download_url).to eq('some-url')
             end
           end
 
-          context 'for DAV provider (lazy signing)' do
+          context 'for DAV provider' do
             let!(:dav_cfg) do
               write_config_file(
                 provider: 'dav',
@@ -533,38 +540,25 @@ module CloudController
 
             after { dav_cfg.close! }
 
-            it 'returns a StorageCliBlob with storage_cli_client reference for lazy signing' do
-              allow(dav_client).to receive(:run_cli).with('properties', 'dr/op/droplet-guid').and_return([properties_json, instance_double(Process::Status, exitstatus: 0)])
-
-              blob = dav_client.blob('droplet-guid')
-              expect(blob).to be_a(StorageCliBlob)
-              expect(blob.key).to eq('droplet-guid')
-              expect(blob.instance_variable_get(:@storage_cli_client)).to eq(dav_client)
-              expect(blob.instance_variable_get(:@signed_url)).to be_nil
-            end
-
-            it 'generates internal URL on-demand when internal_download_url is called' do
+            it 'invokes sign-internal when use_internal_url is true' do
               allow(dav_client).to receive(:run_cli).with('properties', 'dr/op/droplet-guid').and_return([properties_json, instance_double(Process::Status, exitstatus: 0)])
               allow(dav_client).to receive(:run_cli).with('sign-internal', 'dr/op/droplet-guid', 'get',
                                                           '3600s').and_return(['https://blobstore.internal:4443/read/cc-droplets/dr/op/droplet-guid?md5=abc&expires=123',
                                                                                instance_double(Process::Status, exitstatus: 0)])
 
-              blob = dav_client.blob('droplet-guid')
-              internal_url = blob.internal_download_url
-
-              expect(internal_url).to eq('https://blobstore.internal:4443/read/cc-droplets/dr/op/droplet-guid?md5=abc&expires=123')
+              blob = dav_client.blob('droplet-guid', use_internal_url: true)
+              expect(blob).to be_a(StorageCliBlob)
+              expect(blob.internal_download_url).to eq('https://blobstore.internal:4443/read/cc-droplets/dr/op/droplet-guid?md5=abc&expires=123')
             end
 
-            it 'generates public URL on-demand when public_download_url is called' do
+            it 'invokes sign-public by default' do
               allow(dav_client).to receive(:run_cli).with('properties', 'dr/op/droplet-guid').and_return([properties_json, instance_double(Process::Status, exitstatus: 0)])
               allow(dav_client).to receive(:run_cli).with('sign-public', 'dr/op/droplet-guid', 'get',
                                                           '3600s').and_return(['https://blobstore.example.com/read/cc-droplets/dr/op/droplet-guid?md5=xyz&expires=456',
                                                                                instance_double(Process::Status, exitstatus: 0)])
 
               blob = dav_client.blob('droplet-guid')
-              public_url = blob.public_download_url
-
-              expect(public_url).to eq('https://blobstore.example.com/read/cc-droplets/dr/op/droplet-guid?md5=xyz&expires=456')
+              expect(blob.public_download_url).to eq('https://blobstore.example.com/read/cc-droplets/dr/op/droplet-guid?md5=xyz&expires=456')
             end
           end
 
@@ -576,140 +570,6 @@ module CloudController
           it 'raises an error if the cli output is not valid JSON' do
             allow(client).to receive(:run_cli).with('properties', 'bommel/in/va/invalid-json').and_return(['not a json', instance_double(Process::Status, exitstatus: 0)])
             expect { client.blob('invalid-json') }.to raise_error(BlobstoreError, /Failed to parse json properties/)
-          end
-        end
-
-        describe '#supports_lazy_signing?' do
-          context 'for DAV provider' do
-            let!(:dav_cfg) do
-              write_config_file(
-                provider: 'dav',
-                endpoint: 'https://blobstore.internal:4443',
-                user: 'testuser',
-                password: 'testpass'
-              )
-            end
-
-            let(:dav_client) do
-              stub_config_for_droplets(dav_cfg.path)
-              StorageCliClient.new(
-                directory_key: 'cc-droplets',
-                root_dir: nil,
-                resource_type: 'droplets'
-              )
-            end
-
-            after { dav_cfg.close! }
-
-            it 'returns true' do
-              expect(dav_client.supports_lazy_signing?).to be true
-            end
-          end
-
-          context 'for non-DAV providers' do
-            let!(:s3_cfg) do
-              write_config_file(
-                provider: 's3',
-                bucket_name: 'test-bucket',
-                access_key_id: 'key',
-                secret_access_key: 'secret'
-              )
-            end
-
-            let(:s3_client) do
-              stub_config_for_droplets(s3_cfg.path)
-              StorageCliClient.new(
-                directory_key: 'cc-droplets',
-                root_dir: nil,
-                resource_type: 'droplets'
-              )
-            end
-
-            after { s3_cfg.close! }
-
-            it 'returns false for S3' do
-              expect(s3_client.supports_lazy_signing?).to be false
-            end
-          end
-        end
-
-        describe '#sign_internal_url' do
-          let!(:dav_cfg) do
-            write_config_file(
-              provider: 'dav',
-              endpoint: 'https://blobstore.internal:4443/admin/cc-droplets',
-              public_endpoint: 'https://blobstore.example.com/admin/cc-droplets',
-              user: 'testuser',
-              password: 'testpass'
-            )
-          end
-
-          let(:dav_client) do
-            stub_config_for_droplets(dav_cfg.path)
-            StorageCliClient.new(
-              directory_key: 'cc-droplets',
-              root_dir: nil,
-              resource_type: 'droplets'
-            )
-          end
-
-          after { dav_cfg.close! }
-
-          it 'calls storage-cli sign-internal command and returns signed URL' do
-            expect(dav_client).to receive(:run_cli).with('sign-internal', 'dr/o/dr/op/droplet-guid', 'get',
-                                                         '7200s').and_return(['https://blobstore.internal:4443/read/cc-droplets/dr/op/droplet-guid?md5=internal123&expires=789',
-                                                                              instance_double(Process::Status, exitstatus: 0)])
-
-            signed_url = dav_client.sign_internal_url('dr/op/droplet-guid', verb: 'get', expires_in_seconds: 7200)
-
-            expect(signed_url).to eq('https://blobstore.internal:4443/read/cc-droplets/dr/op/droplet-guid?md5=internal123&expires=789')
-          end
-
-          it 'converts verb to lowercase' do
-            expect(dav_client).to receive(:run_cli).with('sign-internal', 'dr/o/dr/op/droplet-guid', 'get',
-                                                         '3600s').and_return(['url', instance_double(Process::Status, exitstatus: 0)])
-
-            dav_client.sign_internal_url('dr/op/droplet-guid', verb: :GET, expires_in_seconds: 3600)
-          end
-        end
-
-        describe '#sign_public_url' do
-          let!(:dav_cfg) do
-            write_config_file(
-              provider: 'dav',
-              endpoint: 'https://blobstore.internal:4443/admin/cc-droplets',
-              public_endpoint: 'https://blobstore.example.com/admin/cc-droplets',
-              user: 'testuser',
-              password: 'testpass'
-            )
-          end
-
-          let(:dav_client) do
-            stub_config_for_droplets(dav_cfg.path)
-            StorageCliClient.new(
-              directory_key: 'cc-droplets',
-              root_dir: nil,
-              resource_type: 'droplets'
-            )
-          end
-
-          after { dav_cfg.close! }
-
-          it 'calls storage-cli sign-public command and returns signed URL' do
-            expect(dav_client).to receive(:run_cli).with('sign-public', 'pa/c/pa/ck/package-guid', 'get',
-                                                         '1800s').and_return(['https://blobstore.example.com/read/cc-packages/pa/ck/package-guid?md5=public456&expires=999',
-                                                                              instance_double(Process::Status, exitstatus: 0)])
-
-            signed_url = dav_client.sign_public_url('pa/ck/package-guid', verb: 'get', expires_in_seconds: 1800)
-
-            expect(signed_url).to eq('https://blobstore.example.com/read/cc-packages/pa/ck/package-guid?md5=public456&expires=999')
-          end
-
-          it 'converts verb to lowercase' do
-            expect(dav_client).to receive(:run_cli).with('sign-public', 'pa/c/pa/ck/package-guid', 'put',
-                                                         '3600s').and_return(['url', instance_double(Process::Status, exitstatus: 0)])
-
-            dav_client.sign_public_url('pa/ck/package-guid', verb: :PUT, expires_in_seconds: 3600)
           end
         end
 

@@ -23,8 +23,8 @@ module CloudController
         error_handling { wrapped_client.exists?(*) }
       end
 
-      def blob(*)
-        error_handling { wrapped_client.blob(*) }
+      def blob(*, **)
+        error_handling { wrapped_client.blob(*, **) }
       end
 
       def files_for(*)

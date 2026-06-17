@@ -14,7 +14,7 @@ module CloudController
       end
 
       def admin_buildpack_download_url(buildpack)
-        blob = @admin_buildpack_blobstore.blob(buildpack.key)
+        blob = @admin_buildpack_blobstore.blob(buildpack.key, use_internal_url: true)
 
         message = "Missing blob for #{buildpack.name}. Specify a different buildpack with the -b flag or contact your operator."
         raise CloudController::Errors::ApiError.new_from_details('StagingError', message) unless blob
@@ -25,21 +25,21 @@ module CloudController
       def droplet_download_url(droplet)
         return nil unless droplet
 
-        blob = @droplet_blobstore.blob(droplet.blobstore_key)
+        blob = @droplet_blobstore.blob(droplet.blobstore_key, use_internal_url: true)
         return nil unless blob
 
         url_for_blob(blob)
       end
 
       def buildpack_cache_download_url(app_guid, stack)
-        blob = @buildpack_cache_blobstore.blob("#{app_guid}/#{stack}")
+        blob = @buildpack_cache_blobstore.blob("#{app_guid}/#{stack}", use_internal_url: true)
         return nil unless blob
 
         url_for_blob(blob)
       end
 
       def package_download_url(package)
-        blob = @package_blobstore.blob(package.guid)
+        blob = @package_blobstore.blob(package.guid, use_internal_url: true)
         return nil unless blob
 
         url_for_blob(blob)

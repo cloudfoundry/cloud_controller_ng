@@ -132,7 +132,7 @@ module CloudController
         raise_blobstore_error("Could not delete object, #{response.status}/#{response.content}")
       end
 
-      def blob(key)
+      def blob(key, **)
         response = with_error_handling { @client.head(url(key), header: @headers) }
         return DavBlob.new(httpmessage: response, key: partitioned_key(key), signer: @signer) if response.status == 200
 
