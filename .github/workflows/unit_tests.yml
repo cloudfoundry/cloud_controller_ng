@@ -83,7 +83,7 @@ jobs:
     - name: Run tests
       run: DB=postgres POSTGRES_CONNECTION_PREFIX="postgres://postgres:rootpassword@localhost:5432" RSPEC_PROFILE="${{ inputs.rspec_profile }}" bundle exec rake spec
     - name: Save parallel_rspec runtime logs
-      if: always()
+      if: always() && github.ref == 'refs/heads/main'
       uses: actions/cache/save@v4
       with:
         path: tmp/parallel_runtime_rspec_*.log
@@ -137,7 +137,7 @@ jobs:
     - name: Run tests
       run: DB=mysql MYSQL_CONNECTION_PREFIX="mysql2://root:password@127.0.0.1:3306" RSPEC_PROFILE="${{ inputs.rspec_profile }}" bundle exec rake spec
     - name: Save parallel_rspec runtime logs
-      if: always()
+      if: always() && github.ref == 'refs/heads/main'
       uses: actions/cache/save@v4
       with:
         path: tmp/parallel_runtime_rspec_*.log
