@@ -1,26 +1,31 @@
 name: Unit Tests
 concurrency:
-  group: '${{ github.workflow }}-${{ github.head_ref || github.run_id }}'
+  group: "${{ github.workflow }}-${{ github.head_ref || github.run_id }}"
   cancel-in-progress: true
 on:
   workflow_dispatch:
     inputs:
       rspec_profile:
-        description: 'Top N slowest examples to print (rspec --profile), e.g. 20. Leave blank to disable.'
+        description: "Top N slowest examples to print (rspec --profile), e.g. 20. Leave blank to disable."
         required: false
-        default: ''
+        default: ""
+      disable_runtime_cache:
+        description: "Skip restoring the parallel_rspec runtime log cache (forces file-size bin-packing)."
+        type: boolean
+        required: false
+        default: false
   pull_request:
-    branches: [ main ]
+    branches: [main]
     paths-ignore:
-      - 'docs/**'
-      - 'decisions/**'
-      - '.github/workflows/docs_test.yml'
+      - "docs/**"
+      - "decisions/**"
+      - ".github/workflows/docs_test.yml"
   push:
-    branches: [ main ]
+    branches: [main]
     paths-ignore:
-      - 'docs/**'
-      - 'decisions/**'
-      - '.github/workflows/docs_test.yml'
+      - "docs/**"
+      - "decisions/**"
+      - ".github/workflows/docs_test.yml"
 
 permissions:
   contents: read # to fetch code (actions/checkout)
@@ -29,18 +34,18 @@ jobs:
   Rubocop:
     runs-on: ubuntu-latest
     steps:
-    - uses: hmarr/debug-action@v3
-    - uses: actions/checkout@v6
-    - uses: ./.github/workflows/composite/setup
-    - name: Run Rubocop
-      run: bundle exec rake rubocop
-    - uses: ravsamhq/notify-slack-action@v2
-      if: github.event_name == 'push'
-      with:
-        status: ${{ job.status }}
-        notify_when: 'failure' # default is 'success,failure,warnings'
-      env:
-        SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }} # required
+      - uses: hmarr/debug-action@v3
+      - uses: actions/checkout@v6
+      - uses: ./.github/workflows/composite/setup
+      - name: Run Rubocop
+        run: bundle exec rake rubocop
+      - uses: ravsamhq/notify-slack-action@v2
+        if: github.event_name == 'push'
+        with:
+          status: ${{ job.status }}
+          notify_when: "failure" # default is 'success,failure,warnings'
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }} # required
 
   Test-Postgres:
     runs-on: ubuntu-latest
@@ -69,32 +74,33 @@ jobs:
         ports:
           - 5432:5432
     steps:
-    - uses: hmarr/debug-action@v3
-    - uses: actions/checkout@v6
-    - uses: ./.github/workflows/composite/setup
-    - name: Restore parallel_rspec runtime logs
-      uses: actions/cache/restore@v5
-      with:
-        path: tmp/parallel_runtime_rspec_*.log
-        key: parallel-runtime-postgres-${{ matrix.image }}-${{ github.run_id }}
-        restore-keys: |
-          parallel-runtime-postgres-${{ matrix.image }}-
-          parallel-runtime-postgres-
-    - name: Run tests
-      run: DB=postgres POSTGRES_CONNECTION_PREFIX="postgres://postgres:rootpassword@localhost:5432" RSPEC_PROFILE="${{ inputs.rspec_profile }}" bundle exec rake spec
-    - name: Save parallel_rspec runtime logs
-      if: always() && github.ref == 'refs/heads/main'
-      uses: actions/cache/save@v5
-      with:
-        path: tmp/parallel_runtime_rspec_*.log
-        key: parallel-runtime-postgres-${{ matrix.image }}-${{ github.run_id }}
-    - uses: ravsamhq/notify-slack-action@v2
-      if: github.event_name == 'push'
-      with:
-        status: ${{ job.status }}
-        notify_when: 'failure' # default is 'success,failure,warnings'
-      env:
-        SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }} # required
+      - uses: hmarr/debug-action@v3
+      - uses: actions/checkout@v6
+      - uses: ./.github/workflows/composite/setup
+      - name: Restore parallel_rspec runtime logs
+        if: inputs.disable_runtime_cache != true
+        uses: actions/cache/restore@v5
+        with:
+          path: tmp/parallel_runtime_rspec_*.log
+          key: parallel-runtime-postgres-${{ matrix.image }}-${{ github.run_id }}
+          restore-keys: |
+            parallel-runtime-postgres-${{ matrix.image }}-
+            parallel-runtime-postgres-
+      - name: Run tests
+        run: DB=postgres POSTGRES_CONNECTION_PREFIX="postgres://postgres:rootpassword@localhost:5432" RSPEC_PROFILE="${{ inputs.rspec_profile }}" bundle exec rake spec
+      - name: Save parallel_rspec runtime logs
+        if: always() && github.ref == 'refs/heads/main' && inputs.disable_runtime_cache != true
+        uses: actions/cache/save@v5
+        with:
+          path: tmp/parallel_runtime_rspec_*.log
+          key: parallel-runtime-postgres-${{ matrix.image }}-${{ github.run_id }}
+      - uses: ravsamhq/notify-slack-action@v2
+        if: github.event_name == 'push'
+        with:
+          status: ${{ job.status }}
+          notify_when: "failure" # default is 'success,failure,warnings'
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }} # required
 
   Test-Mysql:
     runs-on: ubuntu-latest
@@ -123,29 +129,31 @@ jobs:
         ports:
           - 3306:3306
     steps:
-    - uses: hmarr/debug-action@v3
-    - uses: actions/checkout@v6
-    - uses: ./.github/workflows/composite/setup
-    - name: Restore parallel_rspec runtime logs
-      uses: actions/cache/restore@v5
-      with:
-        path: tmp/parallel_runtime_rspec_*.log
-        key: parallel-runtime-mysql-${{ matrix.image }}-${{ github.run_id }}
-        restore-keys: |
-          parallel-runtime-mysql-${{ matrix.image }}-
-          parallel-runtime-mysql-
-    - name: Run tests
-      run: DB=mysql MYSQL_CONNECTION_PREFIX="mysql2://root:password@127.0.0.1:3306" RSPEC_PROFILE="${{ inputs.rspec_profile }}" bundle exec rake spec
-    - name: Save parallel_rspec runtime logs
-      if: always() && github.ref == 'refs/heads/main'
-      uses: actions/cache/save@v5
-      with:
-        path: tmp/parallel_runtime_rspec_*.log
-        key: parallel-runtime-mysql-${{ matrix.image }}-${{ github.run_id }}
-    - uses: ravsamhq/notify-slack-action@v2
-      if: github.event_name == 'push'
-      with:
-        status: ${{ job.status }}
-        notify_when: 'failure' # default is 'success,failure,warnings'
-      env:
-        SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }} # required
+      - uses: hmarr/debug-action@v3
+      - uses: actions/checkout@v6
+      - uses: ./.github/workflows/composite/setup
+      - name: Restore parallel_rspec runtime logs
+        if: inputs.disable_runtime_cache != true
+        uses: actions/cache/restore@v5
+        with:
+          path: tmp/parallel_runtime_rspec_*.log
+          key: parallel-runtime-mysql-${{ matrix.image }}-${{ github.run_id }}
+          restore-keys: |
+            parallel-runtime-mysql-${{ matrix.image }}-
+            parallel-runtime-mysql-
+      - name: Run tests
+        run: DB=mysql MYSQL_CONNECTION_PREFIX="mysql2://root:password@127.0.0.1:3306" RSPEC_PROFILE="${{ inputs.rspec_profile }}" bundle exec rake spec
+      - name: Save parallel_rspec runtime logs
+        if: always() && github.ref == 'refs/heads/main' && inputs.disable_runtime_cache != true
+        uses: actions/cache/save@v5
+        with:
+          path: tmp/parallel_runtime_rspec_*.log
+          key: parallel-runtime-mysql-${{ matrix.image }}-${{ github.run_id }}
+      - uses: ravsamhq/notify-slack-action@v2
+        if: github.event_name == 'push'
+        with:
+          status: ${{ job.status }}
+          notify_when: "failure" # default is 'success,failure,warnings'
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }} # required
+
