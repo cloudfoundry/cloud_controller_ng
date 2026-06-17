@@ -73,7 +73,7 @@ jobs:
     - uses: actions/checkout@v6
     - uses: ./.github/workflows/composite/setup
     - name: Restore parallel_rspec runtime logs
-      uses: actions/cache/restore@v4
+      uses: actions/cache/restore@v5
       with:
         path: tmp/parallel_runtime_rspec_*.log
         key: parallel-runtime-postgres-${{ matrix.image }}-${{ github.run_id }}
@@ -84,7 +84,7 @@ jobs:
       run: DB=postgres POSTGRES_CONNECTION_PREFIX="postgres://postgres:rootpassword@localhost:5432" RSPEC_PROFILE="${{ inputs.rspec_profile }}" bundle exec rake spec
     - name: Save parallel_rspec runtime logs
       if: always() && github.ref == 'refs/heads/main'
-      uses: actions/cache/save@v4
+      uses: actions/cache/save@v5
       with:
         path: tmp/parallel_runtime_rspec_*.log
         key: parallel-runtime-postgres-${{ matrix.image }}-${{ github.run_id }}
@@ -127,7 +127,7 @@ jobs:
     - uses: actions/checkout@v6
     - uses: ./.github/workflows/composite/setup
     - name: Restore parallel_rspec runtime logs
-      uses: actions/cache/restore@v4
+      uses: actions/cache/restore@v5
       with:
         path: tmp/parallel_runtime_rspec_*.log
         key: parallel-runtime-mysql-${{ matrix.image }}-${{ github.run_id }}
@@ -138,7 +138,7 @@ jobs:
       run: DB=mysql MYSQL_CONNECTION_PREFIX="mysql2://root:password@127.0.0.1:3306" RSPEC_PROFILE="${{ inputs.rspec_profile }}" bundle exec rake spec
     - name: Save parallel_rspec runtime logs
       if: always() && github.ref == 'refs/heads/main'
-      uses: actions/cache/save@v4
+      uses: actions/cache/save@v5
       with:
         path: tmp/parallel_runtime_rspec_*.log
         key: parallel-runtime-mysql-${{ matrix.image }}-${{ github.run_id }}
