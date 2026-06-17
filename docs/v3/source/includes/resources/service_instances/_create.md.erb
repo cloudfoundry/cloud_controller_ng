@@ -113,7 +113,7 @@ accordingly to cases outlined in the [OSBAPI specification](https://github.com/o
 Name | Type | Description
 ---- | ---- | -----------
 **type** | _string_ | Must be `managed`
-**name** | _string_ | Name of the service instance
+**name** | _string_ | Name of the service instance; must be unique within the space (case-sensitive)
 **relationships.space** | [_to-one relationship_](#to-one-relationships) | The space in which to create the service instance
 **relationships.service_plan** | [_to-one relationship_](#to-one-relationships) | The service plan from which to create the service instance
 
@@ -131,7 +131,7 @@ Name | Type | Description |
 Name | Type | Description
 ---- | ---- | -----------
 **type** | _string_ | Must be `user-provided`
-**name** | _string_ | Name of the service instance
+**name** | _string_ | Name of the service instance; must be unique within the space (case-sensitive)
 **relationships.space** | [_to-one relationship_](#to-one-relationships) | The space in which to create the service instance
 
 #### Optional parameters for user-provided service instance

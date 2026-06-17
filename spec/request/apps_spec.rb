@@ -780,35 +780,12 @@ RSpec.describe 'Apps' do
       end
     end
 
-    context 'filtering by timestamps' do
-      before do
-        VCAP::CloudController::AppModel.plugin :timestamps, update_on_create: false
+    it_behaves_like 'list_endpoint_with_common_filters' do
+      let(:resource_klass) { VCAP::CloudController::AppModel }
+      let(:api_call) do
+        ->(headers, filters) { get "/v3/apps?#{filters}", nil, headers }
       end
-
-      # .make updates the resource after creating it, over writing our passed in updated_at timestamp
-      # Therefore we cannot use shared_examples as the updated_at will not be as written
-      let!(:resource_1) { VCAP::CloudController::AppModel.create(name: '1', created_at: '2020-05-26T18:47:01Z', updated_at: '2020-05-26T18:47:01Z', space: space) }
-      let!(:resource_2) { VCAP::CloudController::AppModel.create(name: '2', created_at: '2020-05-26T18:47:02Z', updated_at: '2020-05-26T18:47:02Z', space: space) }
-      let!(:resource_3) { VCAP::CloudController::AppModel.create(name: '3', created_at: '2020-05-26T18:47:03Z', updated_at: '2020-05-26T18:47:03Z', space: space) }
-      let!(:resource_4) { VCAP::CloudController::AppModel.create(name: '4', created_at: '2020-05-26T18:47:04Z', updated_at: '2020-05-26T18:47:04Z', space: space) }
-
-      after do
-        VCAP::CloudController::AppModel.plugin :timestamps, update_on_create: true
-      end
-
-      it 'filters by the created at' do
-        get "/v3/apps?created_ats[lt]=#{resource_3.created_at.iso8601}", nil, admin_header
-
-        expect(last_response).to have_status_code(200)
-        expect(parsed_response['resources'].pluck('guid')).to contain_exactly(resource_1.guid, resource_2.guid)
-      end
-
-      it 'filters ny the updated_at' do
-        get "/v3/apps?updated_ats[lt]=#{resource_3.updated_at.iso8601}", nil, admin_header
-
-        expect(last_response).to have_status_code(200)
-        expect(parsed_response['resources'].pluck('guid')).to contain_exactly(resource_1.guid, resource_2.guid)
-      end
+      let(:headers) { admin_header }
     end
 
     context 'faceted search' do
@@ -1388,7 +1365,6 @@ RSpec.describe 'Apps' do
     let!(:stack) { VCAP::CloudController::Stack.make(name: 'stack-name') }
     let!(:app_model) do
       VCAP::CloudController::AppModel.make(
-        :buildpack,
         name: 'my_app',
         guid: 'app1_guid',
         space: space,
@@ -1652,7 +1628,6 @@ RSpec.describe 'Apps' do
       let(:api_call) { ->(user_headers) { get "/v3/apps/#{app_model.guid}/env", nil, user_headers } }
       let!(:app_model) do
         VCAP::CloudController::AppModel.make(
-          :buildpack,
           name: 'my_app',
           guid: 'app1_guid',
           space: space,
@@ -2061,7 +2036,6 @@ RSpec.describe 'Apps' do
       let(:api_call) { ->(user_headers) { get "/v3/apps/#{app_model.guid}/ssh_enabled", nil, user_headers } }
       let!(:app_model) do
         VCAP::CloudController::AppModel.make(
-          :buildpack,
           name: 'my_app',
           guid: 'app1_guid',
           space: space
@@ -2167,7 +2141,6 @@ RSpec.describe 'Apps' do
   describe 'PATCH /v3/apps/:guid' do
     let(:app_model) do
       VCAP::CloudController::AppModel.make(
-        :buildpack,
         name: 'original_name',
         space: space,
         environment_variables: { 'ORIGINAL' => 'ENVAR' },
@@ -2403,7 +2376,6 @@ RSpec.describe 'Apps' do
     let(:stack) { VCAP::CloudController::Stack.make(name: 'stack-name') }
     let(:app_model) do
       VCAP::CloudController::AppModel.make(
-        :buildpack,
         name: 'app-name',
         space: space,
         desired_state: 'STOPPED'
@@ -2413,7 +2385,6 @@ RSpec.describe 'Apps' do
     context 'app lifecycle is buildpack' do
       let!(:droplet) do
         VCAP::CloudController::DropletModel.make(
-          :buildpack,
           app: app_model,
           state: VCAP::CloudController::DropletModel::STAGED_STATE
         )
@@ -2526,7 +2497,6 @@ RSpec.describe 'Apps' do
           let!(:process_model) { VCAP::CloudController::ProcessModel.make(app: app_model, log_rate_limit: log_rate_limit) }
           let(:app_model) do
             VCAP::CloudController::AppModel.make(
-              :buildpack,
               name: 'app-name',
               space: space,
               desired_state: 'STOPPED'
@@ -2747,16 +2717,16 @@ RSpec.describe 'Apps' do
     let(:stack) { VCAP::CloudController::Stack.make(name: 'stack-name') }
     let(:app_model) do
       VCAP::CloudController::AppModel.make(
-        :buildpack,
         name: 'app-name',
         space: space,
         desired_state: 'STARTED'
       )
     end
     let!(:droplet) do
-      VCAP::CloudController::DropletModel.make(:buildpack,
-                                               app: app_model,
-                                               state: VCAP::CloudController::DropletModel::STAGED_STATE)
+      VCAP::CloudController::DropletModel.make(
+        app: app_model,
+        state: VCAP::CloudController::DropletModel::STAGED_STATE
+      )
     end
 
     before do
@@ -2912,7 +2882,6 @@ RSpec.describe 'Apps' do
     let(:stack) { VCAP::CloudController::Stack.make(name: 'stack-name') }
     let(:app_model) do
       VCAP::CloudController::AppModel.make(
-        :buildpack,
         name: 'app-name',
         space: space,
         desired_state: 'STARTED'
@@ -2922,7 +2891,6 @@ RSpec.describe 'Apps' do
     context 'app lifecycle is buildpack' do
       let!(:droplet) do
         VCAP::CloudController::DropletModel.make(
-          :buildpack,
           app: app_model,
           state: VCAP::CloudController::DropletModel::STAGED_STATE
         )
@@ -3153,7 +3121,6 @@ RSpec.describe 'Apps' do
     let(:stack) { VCAP::CloudController::Stack.make(name: 'stack-name') }
     let(:app_model) do
       VCAP::CloudController::AppModel.make(
-        :buildpack,
         name: 'my_app',
         space: space,
         desired_state: 'STOPPED'

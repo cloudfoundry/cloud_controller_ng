@@ -18,6 +18,7 @@ module VCAP::CloudController
 
     def copy(destination_app, user_audit_info)
       raise InvalidCopyError.new('source droplet is not staged') unless @source_droplet.staged?
+      raise InvalidCopyError.new('source and destination lifecycle types do not match') unless @source_droplet.lifecycle_type == destination_app.lifecycle_type
 
       new_droplet = DropletModel.new(state: DropletModel::COPYING_STATE, app: destination_app)
 

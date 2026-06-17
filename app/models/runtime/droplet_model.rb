@@ -33,10 +33,6 @@ module VCAP::CloudController
                class: 'VCAP::CloudController::BuildpackLifecycleDataModel',
                key: :droplet_guid,
                primary_key: :guid
-    one_to_one :kpack_lifecycle_data,
-               class: 'VCAP::CloudController::KpackLifecycleDataModel',
-               key: :droplet_guid,
-               primary_key: :guid
     one_to_one :cnb_lifecycle_data,
                class: 'VCAP::CloudController::CNBLifecycleDataModel',
                key: :droplet_guid,
@@ -45,7 +41,6 @@ module VCAP::CloudController
     one_to_many :annotations, class: 'VCAP::CloudController::DropletAnnotationModel', key: :resource_guid, primary_key: :guid
 
     add_association_dependencies buildpack_lifecycle_data: :destroy
-    add_association_dependencies kpack_lifecycle_data: :destroy
     add_association_dependencies cnb_lifecycle_data: :destroy
     add_association_dependencies labels: :destroy
     add_association_dependencies annotations: :destroy
@@ -53,6 +48,13 @@ module VCAP::CloudController
     set_field_as_encrypted :docker_receipt_password, salt: :docker_receipt_password_salt, column: :encrypted_docker_receipt_password
     serializes_via_json :process_types
     serializes_via_json :sidecars
+
+    def before_create
+      # Inherit lifecycle_type from associated app if not explicitly set
+      self[:lifecycle_type] = app&.lifecycle_type if self[:lifecycle_type].blank?
+
+      super
+    end
 
     def around_destroy
       yield
@@ -70,6 +72,7 @@ module VCAP::CloudController
     def validate
       super
       validates_includes DROPLET_STATES, :state, allow_missing: true
+      validates_includes Lifecycles::TYPES, :lifecycle_type
     end
 
     def set_buildpack_receipt(buildpack_key:, detect_output:, requested_buildpack:, buildpack_url: nil)
@@ -173,6 +176,10 @@ module VCAP::CloudController
     end
 
     def lifecycle_type
+      return self[:lifecycle_type] if self[:lifecycle_type].present?
+
+      # Fallback for records written before the lifecycle_type column
+      # existed. Remove once existing rows are backfilled (see #5067).
       return BuildpackLifecycleDataModel::LIFECYCLE_TYPE if buildpack_lifecycle_data
       return CNBLifecycleDataModel::LIFECYCLE_TYPE if cnb_lifecycle_data
 
@@ -180,8 +187,8 @@ module VCAP::CloudController
     end
 
     def lifecycle_data
-      return buildpack_lifecycle_data if buildpack_lifecycle_data
-      return cnb_lifecycle_data if cnb_lifecycle_data
+      return buildpack_lifecycle_data if lifecycle_type == BuildpackLifecycleDataModel::LIFECYCLE_TYPE
+      return cnb_lifecycle_data if lifecycle_type == CNBLifecycleDataModel::LIFECYCLE_TYPE
 
       DockerLifecycleDataModel.new
     end

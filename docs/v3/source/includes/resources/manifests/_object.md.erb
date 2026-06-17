@@ -49,10 +49,14 @@ applications:
   - type: web
     command: start-web.sh
     disk_quota: 512M
-    health-check-http-endpoint: /healthcheck
     health-check-type: http
-    health-check-interval: 5
+    health-check-http-endpoint: /healthcheck
     health-check-invocation-timeout: 10
+    health-check-interval: 5
+    readiness-health-check-type: http
+    readiness-health-check-http-endpoint: /ready
+    readiness-health-check-invocation-timeout: 10
+    readiness-health-check-interval: 5
     instances: 3
     memory: 500M
     log-rate-limit-per-second: 1KB
@@ -132,6 +136,10 @@ Name | Type | Description
 **health-check-interval** | _integer_ | The interval in seconds between health check requests
 **health-check-invocation-timeout** | _integer_ | The timeout in seconds for individual health check requests for http and port health checks
 **health-check-type** | _string_ | Type of health check to perform; `none` is deprecated and an alias to `process`
+**readiness-health-check-http-endpoint** | _string_ | Endpoint called to determine if the app is ready to receive traffic
+**readiness-health-check-interval** | _integer_ | The interval in seconds between readiness health check requests
+**readiness-health-check-invocation-timeout** | _integer_ | The timeout in seconds for individual readiness health check requests for http and port readiness checks
+**readiness-health-check-type** | _string_ | Type of readiness health check to perform; valid values: `http`, `port`, `process`
 **instances** | _integer_ | The number of instances to run
 **memory** | _string_ | The memory limit for all instances of the web process; <br>this attribute requires a unit of measurement: `B`, `K`, `KB`, `M`, `MB`, `G`, `GB`, `T`, or `TB` in upper case or lower case
 **log-rate-limit-per-second** | _string_ | The log rate limit for all the instances of the process; <br>this attribute requires a unit of measurement: `B`, `K`, `KB`, `M`, `MB`, `G`, `GB`, `T`, or `TB` in upper case or lower case, or -1 or 0

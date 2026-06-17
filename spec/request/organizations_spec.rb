@@ -169,6 +169,39 @@ module VCAP::CloudController
           expect(last_response.status).to eq(201)
         end
       end
+
+      context 'when a non-admin sets the suspended field' do
+        let(:org) { Organization.make }
+        let(:space) { Space.make(organization: org) }
+
+        before do
+          VCAP::CloudController::FeatureFlag.make(name: 'user_org_creation', enabled: true)
+        end
+
+        context 'with suspended: true' do
+          let(:api_call) do
+            ->(user_headers) { post '/v3/organizations', { name: "org-#{SecureRandom.uuid}", suspended: true }.to_json, user_headers }
+          end
+          let(:expected_codes_and_responses) do
+            h = Hash.new({ code: 403, errors: CF_NOT_AUTHORIZED }.freeze)
+            h['admin'] = { code: 201 }
+            h
+          end
+
+          it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS
+        end
+
+        context 'with suspended: false (no-op)' do
+          let(:api_call) do
+            ->(user_headers) { post '/v3/organizations', { name: "org-#{SecureRandom.uuid}", suspended: false }.to_json, user_headers }
+          end
+          let(:expected_codes_and_responses) do
+            Hash.new({ code: 201 }.freeze)
+          end
+
+          it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS
+        end
+      end
     end
 
     describe 'GET /v3/organizations' do
@@ -1306,6 +1339,59 @@ module VCAP::CloudController
         end
 
         it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS
+      end
+
+      context 'when a non-admin mutates the suspended field' do
+        let(:org) { Organization.make }
+        let(:space) { Space.make(organization: org) }
+
+        context 'on an active org with suspended: true' do
+          let(:api_call) do
+            ->(user_headers) { patch "/v3/organizations/#{org.guid}", { suspended: true }.to_json, user_headers.merge('CONTENT_TYPE' => 'application/json') }
+          end
+          let(:expected_codes_and_responses) do
+            h = Hash.new({ code: 403, errors: CF_NOT_AUTHORIZED }.freeze)
+            h['admin'] = { code: 200 }
+            h['no_role'] = { code: 404 }
+            h
+          end
+
+          it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS
+        end
+
+        context 'on a suspended org with suspended: false (un-suspend)' do
+          let(:api_call) do
+            ->(user_headers) { patch "/v3/organizations/#{org.guid}", { suspended: false }.to_json, user_headers.merge('CONTENT_TYPE' => 'application/json') }
+          end
+          let(:expected_codes_and_responses) do
+            h = Hash.new({ code: 403, errors: CF_NOT_AUTHORIZED }.freeze)
+            h['admin'] = { code: 200 }
+            h['org_manager'] = { code: 403, errors: CF_ORG_SUSPENDED }
+            h['no_role'] = { code: 404 }
+            h
+          end
+
+          before do
+            org.update(status: VCAP::CloudController::Organization::SUSPENDED)
+          end
+
+          it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS
+        end
+
+        context 'on an active org with suspended: false (no-op)' do
+          let(:api_call) do
+            ->(user_headers) { patch "/v3/organizations/#{org.guid}", { suspended: false }.to_json, user_headers.merge('CONTENT_TYPE' => 'application/json') }
+          end
+          let(:expected_codes_and_responses) do
+            h = Hash.new({ code: 403, errors: CF_NOT_AUTHORIZED }.freeze)
+            h['admin'] = { code: 200 }
+            h['org_manager'] = { code: 200 }
+            h['no_role'] = { code: 404 }
+            h
+          end
+
+          it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS
+        end
       end
     end
 

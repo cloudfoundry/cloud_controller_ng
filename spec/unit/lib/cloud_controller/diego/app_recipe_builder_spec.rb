@@ -1019,13 +1019,9 @@ module VCAP::CloudController
           let(:ports) { '8080' }
 
           before do
-            VCAP::CloudController::BuildpackLifecycleDataModel.make(
-              app: app_model,
-              buildpacks: nil,
-              stack: 'potato-stack'
-            )
+            app_model.cnb_lifecycle_data.update(stack: 'potato-stack')
 
-            allow(VCAP::CloudController::Diego::Buildpack::DesiredLrpBuilder).to receive(:new).and_return(desired_lrp_builder)
+            allow(VCAP::CloudController::Diego::CNB::DesiredLrpBuilder).to receive(:new).and_return(desired_lrp_builder)
           end
 
           it_behaves_like 'creating a desired lrp'
@@ -1414,7 +1410,7 @@ module VCAP::CloudController
 
       describe '#build_app_lrp_update' do
         let(:config) { Config.new({}) }
-        let(:app_model) { AppModel.make(:buildpack, guid: 'app-guid', droplet: DropletModel.make(state: 'STAGED')) }
+        let(:app_model) { AppModel.make(guid: 'app-guid', droplet: DropletModel.make(state: 'STAGED')) }
         let(:process) do
           process = ProcessModel.make(:process, instances: 7, app: app_model)
           process.this.update(updated_at: Time.at(2))

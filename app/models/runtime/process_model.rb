@@ -418,23 +418,23 @@ module VCAP::CloudController
 
     def console=(value)
       self.metadata ||= {}
-      self.metadata['console'] = value
+      metadata['console'] = value
     end
 
     def console
       # without the == true check, this expression can return nil if
       # the key doesn't exist, rather than false
-      self.metadata && self.metadata['console'] == true
+      metadata && metadata['console'] == true
     end
 
     def debug=(value)
       self.metadata ||= {}
       # We don't support sending nil through API
-      self.metadata['debug'] = value == 'none' ? nil : value
+      metadata['debug'] = value == 'none' ? nil : value
     end
 
     def debug
-      self.metadata && self.metadata['debug']
+      metadata && metadata['debug']
     end
 
     delegate :name, to: :app

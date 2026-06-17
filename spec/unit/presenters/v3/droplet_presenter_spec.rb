@@ -5,7 +5,6 @@ module VCAP::CloudController::Presenters::V3
   RSpec.describe DropletPresenter do
     let(:droplet) do
       VCAP::CloudController::DropletModel.make(
-        :buildpack,
         state: VCAP::CloudController::DropletModel::STAGED_STATE,
         error_id: 'FAILED',
         error_description: 'things went all sorts of bad',
@@ -115,7 +114,7 @@ module VCAP::CloudController::Presenters::V3
 
         describe 'links' do
           context 'when there is no package guid' do
-            let(:droplet) { VCAP::CloudController::DropletModel.make(:buildpack, package_guid: nil) }
+            let(:droplet) { VCAP::CloudController::DropletModel.make(package_guid: nil) }
 
             it 'links to nil' do
               expect(result[:links][:package]).to be_nil

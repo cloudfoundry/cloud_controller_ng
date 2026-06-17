@@ -166,27 +166,17 @@ class RolesController < ApplicationController
   end
 
   def readable_users
-    current_user.readable_users(permission_queryer.can_read_globally?)
+    permission_queryer.readable_users_query
   end
 
   def readable_roles
     if permission_queryer.can_read_globally?
       Role
     else
-      # This rather complex filter should be applied to the overall Role dataset and is thus using the (virtual row)
-      # block syntax.
-      readable_by_space = { space_id: visible_space_ids }
-      readable_by_org = { organization_id: visible_org_ids }
+      readable_by_space = { space_id: permission_queryer.readable_space_ids_query }
+      readable_by_org = { organization_id: permission_queryer.readable_org_ids_query }
       Role.where { Sequel.|(readable_by_space, readable_by_org) }
     end
-  end
-
-  def visible_space_ids
-    Space.user_visibility_filter(current_user)[:spaces__id]
-  end
-
-  def visible_org_ids
-    Organization.user_visibility_filter(current_user)[:id]
   end
 
   def unprocessable_space!

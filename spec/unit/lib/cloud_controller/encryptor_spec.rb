@@ -161,6 +161,15 @@ module VCAP::CloudController
 
               expect(result).not_to eq(unencrypted_string)
             end
+
+            it 'wraps OpenSSL::Cipher::CipherError as an EncryptorError' do
+              encrypted_string = Encryptor.encrypt(unencrypted_string, salt)
+              allow_any_instance_of(OpenSSL::Cipher).to receive(:final).and_raise(OpenSSL::Cipher::CipherError, 'bad decrypt')
+
+              expect do
+                Encryptor.decrypt(encrypted_string, salt, iterations: encryption_iterations)
+              end.to raise_error(VCAP::CloudController::Encryptor::EncryptorError, %r{Encryption/Decryption failed: bad decrypt})
+            end
           end
 
           context 'when the wrong label is passed for decryption' do
@@ -176,13 +185,13 @@ module VCAP::CloudController
               expect(result).not_to eq(unencrypted_string)
             end
 
-            it 'raises an EncryptorError' do
-              allow(Encryptor).to receive(:current_encryption_key_label).and_return('foo')
+            it 'wraps OpenSSL::Cipher::CipherError as an EncryptorError' do
               encrypted_string = Encryptor.encrypt(unencrypted_string, salt)
+              allow_any_instance_of(OpenSSL::Cipher).to receive(:final).and_raise(OpenSSL::Cipher::CipherError, 'bad decrypt')
 
               expect do
                 Encryptor.decrypt(encrypted_string, salt, label: 'bar', iterations: encryption_iterations)
-              end.to raise_error(VCAP::CloudController::Encryptor::EncryptorError, %r{Encryption/Decryption failed: })
+              end.to raise_error(VCAP::CloudController::Encryptor::EncryptorError, %r{Encryption/Decryption failed: bad decrypt})
             end
           end
         end

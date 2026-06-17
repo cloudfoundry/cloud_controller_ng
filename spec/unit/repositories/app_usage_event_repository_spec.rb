@@ -395,7 +395,6 @@ module VCAP::CloudController
           context 'when the build has BOTH an associated droplet and lifecycle data' do
             let!(:build) do
               BuildModel.make(
-                :buildpack,
                 guid: 'build-1',
                 package_guid: package.guid,
                 app_guid: app_model.guid
@@ -403,7 +402,6 @@ module VCAP::CloudController
             end
             let!(:droplet) do
               DropletModel.make(
-                :buildpack,
                 buildpack_receipt_buildpack: 'a-buildpack',
                 buildpack_receipt_buildpack_guid: 'a-buildpack-guid',
                 build: build

@@ -60,6 +60,8 @@ module VCAP::CloudController
       let(:staging_guid) { droplet.guid }
 
       context 'when it is a docker app' do
+        let(:staged_app) { AppModel.make(:docker) }
+        let(:package) { PackageModel.make(:docker, state: 'READY', app_guid: staged_app.guid) }
         let(:droplet) { DropletModel.make(:docker, package_guid: package.guid, app_guid: staged_app.guid, state: DropletModel::STAGING_STATE) }
 
         it 'calls the stager with a build created from the droplet and the response' do
@@ -207,7 +209,6 @@ module VCAP::CloudController
       let(:package) { PackageModel.make(state: 'READY', app_guid: staged_app.guid) }
       let!(:droplet) { DropletModel.make }
       let(:build) { BuildModel.make(package_guid: package.guid, app: staged_app) }
-      let!(:lifecycle_data) { BuildpackLifecycleDataModel.make(buildpacks: [buildpack_name], stack: 'cflinuxfs4', build: build) }
       let(:staging_guid) { build.guid }
       let(:buildpacks) do
         [
@@ -226,6 +227,7 @@ module VCAP::CloudController
 
       before do
         build.droplet = droplet
+        build.buildpack_lifecycle_data.update(buildpacks: [buildpack_name], stack: 'cflinuxfs4')
       end
 
       it 'calls the stager with the build and response' do

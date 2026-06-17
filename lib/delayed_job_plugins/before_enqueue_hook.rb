@@ -5,4 +5,4 @@ class BeforeEnqueueHook < Delayed::Plugin
     end
   end
 end
-Delayed::Worker.plugins << BeforeEnqueueHook
+Delayed::Worker.plugins << BeforeEnqueueHook unless Delayed::Worker.plugins.include?(BeforeEnqueueHook)

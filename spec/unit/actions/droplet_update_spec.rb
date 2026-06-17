@@ -57,7 +57,7 @@ module VCAP::CloudController
 
       context 'image updates' do
         context 'when the droplet is not STAGED' do
-          let!(:droplet) { DropletModel.make(:kpack, state: VCAP::CloudController::DropletModel::STAGING_STATE, app: nil) }
+          let!(:droplet) { DropletModel.make(:docker, state: VCAP::CloudController::DropletModel::STAGING_STATE, app: nil) }
 
           let(:message) do
             VCAP::CloudController::DropletUpdateMessage.new({
@@ -74,7 +74,7 @@ module VCAP::CloudController
         end
 
         context 'when the droplet type is buildpack' do
-          let!(:droplet) { DropletModel.make(:buildpack, app: nil) }
+          let!(:droplet) { DropletModel.make(app: nil) }
 
           let(:message) do
             VCAP::CloudController::DropletUpdateMessage.new({

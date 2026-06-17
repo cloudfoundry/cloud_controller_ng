@@ -46,7 +46,7 @@ module VCAP::CloudController
             state: 'STAGED',
             error: 'error',
             lifecycle: {
-              type: 'kpack',
+              type: 'docker',
               data: {
                 image: 'some-image:tag'
               }
@@ -65,7 +65,7 @@ module VCAP::CloudController
             {
               state: 'STAGED',
               lifecycle: {
-                type: 'kpack',
+                type: 'docker',
                 data: {
                   image: 'some-image:tag'
                 }

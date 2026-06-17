@@ -49,138 +49,106 @@ module VCAP::CloudController
     end
 
     describe '#lifecycle_type' do
-      context 'buildpack_lifecycle_data' do
-        let!(:buildpack_lifecycle_data) do
-          BuildpackLifecycleDataModel.make(
-            build: build_model,
-            buildpacks: ['http://some-buildpack.com', 'http://another-buildpack.net']
-          )
-        end
+      before do
+        # Remove lifecycle type to test fallback mechanism based on associated lifecycle data
+        build_model.update(lifecycle_type: '')
+      end
 
-        before do
-          build_model.buildpack_lifecycle_data = buildpack_lifecycle_data
-          build_model.save
-        end
+      context 'when there is buildpack_lifecycle_data associated to the build' do
+        let(:build_model) { BuildModel.make(app: nil) }
 
         it 'returns the string "buildpack"' do
           expect(build_model.lifecycle_type).to eq('buildpack')
         end
       end
 
-      context 'cnb_lifecycle_data' do
-        let!(:cnb_lifecycle_data) do
-          CNBLifecycleDataModel.make(
-            build: build_model,
-            buildpacks: ['http://some-buildpack.com', 'http://another-buildpack.net']
-          )
-        end
-
-        before do
-          build_model.cnb_lifecycle_data = cnb_lifecycle_data
-          build_model.save
-        end
+      context 'when there is cnb_lifecycle_data associated to the build' do
+        let(:build_model) { BuildModel.make(:cnb, app: nil) }
 
         it 'returns the string "cnb"' do
           expect(build_model.lifecycle_type).to eq('cnb')
         end
       end
 
-      context 'no lifecycle_data' do
-        it 'returns the string "docker"' do
-          build_model.buildpack_lifecycle_data = nil
-          build_model.save
+      context 'when there is no lifecycle data associated to the build' do
+        let(:build_model) { BuildModel.make(:docker, app: nil) }
 
+        it 'returns the string "docker"' do
           expect(build_model.lifecycle_type).to eq('docker')
+        end
+      end
+    end
+
+    describe '#before_create' do
+      it 'inherits lifecycle_type from app if not set' do
+        app = AppModel.make(:cnb)
+        build = BuildModel.create(app: app, state: BuildModel::STAGING_STATE)
+        expect(build[:lifecycle_type]).to eq('cnb')
+      end
+
+      it 'uses explicit lifecycle_type if set' do
+        app = AppModel.make
+        build = BuildModel.create(app: app, state: BuildModel::STAGING_STATE, lifecycle_type: 'docker')
+        expect(build[:lifecycle_type]).to eq('docker')
+      end
+    end
+
+    describe 'validations' do
+      it 'validates lifecycle_type is one of buildpack, cnb, or docker' do
+        expect do
+          BuildModel.make(lifecycle_type: 'invalid')
+        end.to raise_error(Sequel::ValidationFailed, /lifecycle_type/)
+      end
+
+      it 'accepts valid lifecycle_type values' do
+        %w[buildpack cnb docker].each do |type|
+          expect do
+            BuildModel.make(lifecycle_type: type)
+          end.not_to raise_error
         end
       end
     end
 
     describe '#lifecycle_data' do
       context 'buildpack_lifecycle_data' do
-        let!(:buildpack_lifecycle_data) do
-          BuildpackLifecycleDataModel.make(
-            build: build_model,
-            buildpacks: ['http://some-buildpack.com', 'http://another-buildpack.net']
-          )
+        let!(:build_model) { BuildModel.make(app: nil) }
+
+        it 'returns a buildpack lifecycle data model' do
+          expect(build_model.lifecycle_data).to be_a(BuildpackLifecycleDataModel)
+          expect(build_model.lifecycle_data).to eq(build_model.buildpack_lifecycle_data)
+          expect(build_model.cnb_lifecycle_data).to be_nil
         end
 
-        before do
-          build_model.buildpack_lifecycle_data = buildpack_lifecycle_data
-          build_model.save
-        end
-
-        it 'returns buildpack_lifecycle_data' do
-          expect(build_model.lifecycle_data).to eq(buildpack_lifecycle_data)
-        end
-
-        it 'is a persistable hash' do
-          expect(build_model.reload.lifecycle_data.buildpacks).to eq(buildpack_lifecycle_data.buildpacks)
-          expect(build_model.reload.lifecycle_data.stack).to eq(buildpack_lifecycle_data.stack)
+        it 'deletes the dependent buildpack_lifecycle_data model when a build is deleted' do
+          expect do
+            build_model.destroy
+          end.to change(BuildpackLifecycleDataModel, :count).by(-1)
         end
       end
 
       context 'cnb_lifecycle_data' do
-        let!(:cnb_lifecycle_data) do
-          CNBLifecycleDataModel.make(
-            build: build_model,
-            buildpacks: ['http://some-buildpack.com', 'http://another-buildpack.net']
-          )
+        let!(:build_model) { BuildModel.make(:cnb, app: nil) }
+
+        it 'returns a cnb lifecycle data model' do
+          expect(build_model.lifecycle_data).to be_a(CNBLifecycleDataModel)
+          expect(build_model.lifecycle_data).to eq(build_model.cnb_lifecycle_data)
+          expect(build_model.buildpack_lifecycle_data).to be_nil
         end
 
-        before do
-          build_model.cnb_lifecycle_data = cnb_lifecycle_data
-          build_model.save
-        end
-
-        it 'returns cnb_lifecycle_data' do
-          expect(build_model.lifecycle_data).to eq(cnb_lifecycle_data)
-        end
-
-        it 'is a persistable hash' do
-          expect(build_model.reload.cnb_lifecycle_data.buildpacks).to eq(cnb_lifecycle_data.buildpacks)
-          expect(build_model.reload.cnb_lifecycle_data.stack).to eq(cnb_lifecycle_data.stack)
-        end
-
-        it 'deletes the dependent cnb_lifecycle_data_models when a build is deleted' do
+        it 'deletes the dependent cnb_lifecycle_data when a build is deleted' do
           expect do
             build_model.destroy
-          end.to change(CNBLifecycleDataModel, :count).by(-1).
-            and change(BuildpackLifecycleBuildpackModel, :count).by(-2)
+          end.to change(CNBLifecycleDataModel, :count).by(-1)
         end
       end
 
-      context 'no lifecycle_data' do
-        it 'returns a docker lifecycle model' do
-          build_model.buildpack_lifecycle_data = nil
-          build_model.save
+      context 'neither buildpack_lifecycle_data, nor cnb_lifecycle_data' do
+        let(:build_model) { BuildModel.make(:docker, app: nil) }
 
+        it 'returns a docker lifecycle data model' do
           expect(build_model.lifecycle_data).to be_a(DockerLifecycleDataModel)
-        end
-      end
-
-      context 'buildpack dependencies' do
-        let!(:buildpack_lifecycle_data) do
-          BuildpackLifecycleDataModel.make(
-            build: build_model,
-            buildpacks: ['http://some-buildpack.com', 'http://another-buildpack.net']
-          )
-        end
-
-        it 'deletes the dependent buildpack_lifecycle_data_models when a build is deleted' do
-          expect do
-            build_model.destroy
-          end.to change(BuildpackLifecycleDataModel, :count).by(-1).
-            and change(BuildpackLifecycleBuildpackModel, :count).by(-2)
-        end
-      end
-
-      context 'kpack dependencies' do
-        let!(:lifecycle_data) { KpackLifecycleDataModel.make(build: build_model) }
-
-        it 'deletes the dependent kpack_lifecycle_data_models when a build is deleted' do
-          expect do
-            build_model.destroy
-          end.to change(KpackLifecycleDataModel, :count).by(-1)
+          expect(build_model.buildpack_lifecycle_data).to be_nil
+          expect(build_model.cnb_lifecycle_data).to be_nil
         end
       end
     end

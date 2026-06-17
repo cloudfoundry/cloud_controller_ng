@@ -36,6 +36,8 @@ module VCAP::CloudController
             global_general_limit: config.get(:rate_limiter, :global_general_limit),
             per_process_unauthenticated_limit: config.get(:rate_limiter, :per_process_unauthenticated_limit),
             global_unauthenticated_limit: config.get(:rate_limiter, :global_unauthenticated_limit),
+            per_process_admin_limit: config.get(:rate_limiter, :per_process_admin_limit),
+            global_admin_limit: config.get(:rate_limiter, :global_admin_limit),
             interval: config.get(:rate_limiter, :reset_interval_in_minutes)
           }
         end

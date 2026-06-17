@@ -136,13 +136,13 @@ module CloudController
         let(:config_path)    { File.join(tmpdir, 'storage_cli_config_droplets.json') }
 
         before do
-          File.write(config_path, '{"provider": "AzureRM",
+          File.write(config_path, '{"provider": "azurebs",
                   "account_name": "some-account-name",
                   "account_key": "some-access-key",
                   "container_name": "directory_key",
                   "environment": "AzureCloud" }')
           allow(VCAP::CloudController::Config.config).to receive(:get).with(:storage_cli_config_file_droplets).and_return(config_path)
-          options.merge!(provider: 'AzureRM', minimum_size: 100, maximum_size: 1000)
+          options.merge!(provider: 'azurebs', minimum_size: 100, maximum_size: 1000)
         end
 
         it 'provides a storage-cli client' do

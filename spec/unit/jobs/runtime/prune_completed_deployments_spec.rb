@@ -3,7 +3,7 @@ require 'spec_helper'
 module VCAP::CloudController
   module Jobs::Runtime
     RSpec.describe PruneCompletedDeployments, job_context: :worker do
-      let(:max_retained_deployments_per_app) { 15 }
+      let(:max_retained_deployments_per_app) { 3 }
 
       subject(:job) { PruneCompletedDeployments.new(max_retained_deployments_per_app) }
 
@@ -19,103 +19,103 @@ module VCAP::CloudController
         it 'deletes all the deployed deployments over the limit' do
           expect(DeploymentModel.count).to eq(0)
 
-          total = 50
-          (1..50).each do |i|
+          total = 8
+          (1..total).each do |i|
             DeploymentModel.make(id: i, state: DeploymentModel::DEPLOYED_STATE, app: app, created_at: Time.now - total + i)
           end
 
           job.perform
 
-          expect(DeploymentModel.count).to eq(15)
-          expect(DeploymentModel.map(&:id)).to match_array((36..50).to_a)
+          expect(DeploymentModel.count).to eq(3)
+          expect(DeploymentModel.map(&:id)).to match_array((6..8).to_a)
         end
 
         it 'deletes all canceled deployments over the limit' do
           expect(DeploymentModel.count).to eq(0)
 
-          total = 50
-          (1..50).each do |i|
+          total = 8
+          (1..total).each do |i|
             DeploymentModel.make(id: i, state: DeploymentModel::CANCELED_STATE, app: app, created_at: Time.now - total + i)
           end
 
           job.perform
 
-          expect(DeploymentModel.count).to eq(15)
-          expect(DeploymentModel.map(&:id)).to match_array((36..50).to_a)
+          expect(DeploymentModel.count).to eq(3)
+          expect(DeploymentModel.map(&:id)).to match_array((6..8).to_a)
         end
 
         it 'does NOT delete any deploying deployments over the limit' do
           expect(DeploymentModel.count).to eq(0)
 
-          total = 50
-          (1..50).each do |i|
+          total = 8
+          (1..total).each do |i|
             DeploymentModel.make(id: i, state: DeploymentModel::DEPLOYING_STATE, app: app, created_at: Time.now - total + i)
           end
 
           job.perform
 
-          expect(DeploymentModel.count).to eq(50)
-          expect(DeploymentModel.map(&:id)).to match_array((1..50).to_a)
+          expect(DeploymentModel.count).to eq(8)
+          expect(DeploymentModel.map(&:id)).to match_array((1..8).to_a)
         end
 
         it 'does NOT delete any prepaused deployments over the limit' do
           expect(DeploymentModel.count).to eq(0)
 
-          total = 50
-          (1..50).each do |i|
+          total = 8
+          (1..total).each do |i|
             DeploymentModel.make(id: i, state: DeploymentModel::PREPAUSED_STATE, app: app, created_at: Time.now - total + i)
           end
 
           job.perform
 
-          expect(DeploymentModel.count).to eq(50)
-          expect(DeploymentModel.map(&:id)).to match_array((1..50).to_a)
+          expect(DeploymentModel.count).to eq(8)
+          expect(DeploymentModel.map(&:id)).to match_array((1..8).to_a)
         end
 
         it 'does NOT delete any paused deployments over the limit' do
           expect(DeploymentModel.count).to eq(0)
 
-          total = 50
-          (1..50).each do |i|
+          total = 8
+          (1..total).each do |i|
             DeploymentModel.make(id: i, state: DeploymentModel::PAUSED_STATE, app: app, created_at: Time.now - total + i)
           end
 
           job.perform
 
-          expect(DeploymentModel.count).to eq(50)
-          expect(DeploymentModel.map(&:id)).to match_array((1..50).to_a)
+          expect(DeploymentModel.count).to eq(8)
+          expect(DeploymentModel.map(&:id)).to match_array((1..8).to_a)
         end
 
         it 'does NOT delete any canceling deployments over the limit' do
           expect(DeploymentModel.count).to eq(0)
 
-          total = 50
-          (1..50).each do |i|
+          total = 8
+          (1..total).each do |i|
             DeploymentModel.make(id: i, state: DeploymentModel::CANCELING_STATE, app: app, created_at: Time.now - total + i)
           end
 
           job.perform
 
-          expect(DeploymentModel.count).to eq(50)
-          expect(DeploymentModel.order(Sequel.asc(:created_at), Sequel.asc(:id)).map(&:id)).to eq((1..50).to_a)
+          expect(DeploymentModel.count).to eq(8)
+          expect(DeploymentModel.order(Sequel.asc(:created_at), Sequel.asc(:id)).map(&:id)).to eq((1..8).to_a)
         end
 
         it 'does not delete in-flight deployments over the limit' do
-          total = 60
-          (1..20).each do |i|
+          total = 12
+          (1..4).each do |i|
             DeploymentModel.make(id: i, state: DeploymentModel::DEPLOYED_STATE, app: app, created_at: Time.now - total + i)
           end
-          (21..40).each do |i|
+          (5..8).each do |i|
             DeploymentModel.make(id: i, state: DeploymentModel::DEPLOYING_STATE, app: app, created_at: Time.now - total + i)
           end
-          (41..60).each do |i|
+          (9..12).each do |i|
             DeploymentModel.make(id: i, state: DeploymentModel::DEPLOYED_STATE, app: app, created_at: Time.now - total + i)
           end
 
           job.perform
 
-          expect(DeploymentModel.count).to be(35)
-          expect(DeploymentModel.order(Sequel.asc(:created_at), Sequel.asc(:id)).map(&:id)).to eq((21..40).to_a + (46..60).to_a)
+          expect(DeploymentModel.count).to be(7)
+          expect(DeploymentModel.order(Sequel.asc(:created_at), Sequel.asc(:id)).map(&:id)).to eq((5..8).to_a + (10..12).to_a)
         end
 
         it 'destroys metadata associated with pruned deployments' do
@@ -123,8 +123,8 @@ module VCAP::CloudController
           expect(DeploymentLabelModel.count).to eq(0)
           expect(DeploymentAnnotationModel.count).to eq(0)
 
-          total = 50
-          (1..50).each do |i|
+          total = 8
+          (1..total).each do |i|
             deployment = DeploymentModel.make(id: i, state: DeploymentModel::DEPLOYED_STATE, app: app, created_at: Time.now - total + i)
             DeploymentAnnotationModel.make(deployment: deployment, key_name: i, value: i)
             DeploymentLabelModel.make(deployment: deployment, key_name: i, value: i)
@@ -132,18 +132,18 @@ module VCAP::CloudController
 
           job.perform
 
-          expect(DeploymentModel.count).to eq(15)
-          expect(DeploymentModel.map(&:id)).to match_array((36..50).to_a)
-          expect(DeploymentLabelModel.count).to eq(15)
-          expect(DeploymentLabelModel.map(&:value)).to match_array((36..50).map(&:to_s))
-          expect(DeploymentAnnotationModel.count).to eq(15)
-          expect(DeploymentAnnotationModel.map(&:value)).to match_array((36..50).map(&:to_s))
+          expect(DeploymentModel.count).to eq(3)
+          expect(DeploymentModel.map(&:id)).to match_array((6..8).to_a)
+          expect(DeploymentLabelModel.count).to eq(3)
+          expect(DeploymentLabelModel.map(&:value)).to match_array((6..8).map(&:to_s))
+          expect(DeploymentAnnotationModel.count).to eq(3)
+          expect(DeploymentAnnotationModel.map(&:value)).to match_array((6..8).map(&:to_s))
         end
 
         it 'destroys associated historical processes to maintain key constraints' do
           expect(DeploymentModel.count).to eq(0)
 
-          50.times do
+          8.times do
             d = DeploymentModel.make(state: DeploymentModel::DEPLOYED_STATE, app: app)
             DeploymentProcessModel.make(deployment: d)
           end
@@ -161,7 +161,7 @@ module VCAP::CloudController
             expect(DeploymentModel.count).to eq(0)
 
             [app, app_the_second, app_the_third].each_with_index do |current_app, app_index|
-              total = 50
+              total = 8
               (1..total).each do |i|
                 DeploymentModel.make(id: i + (1000 * app_index), state: DeploymentModel::DEPLOYED_STATE, app: current_app, created_at: Time.now - total + i)
               end
@@ -169,14 +169,14 @@ module VCAP::CloudController
 
             job.perform
 
-            expect(DeploymentModel.where(app:).count).to eq(15)
-            expect(DeploymentModel.where(app:).map(&:id)).to match_array((36..50).to_a)
+            expect(DeploymentModel.where(app:).count).to eq(3)
+            expect(DeploymentModel.where(app:).map(&:id)).to match_array((6..8).to_a)
 
-            expect(DeploymentModel.where(app: app_the_second).count).to eq(15)
-            expect(DeploymentModel.where(app: app_the_second).map(&:id)).to match_array((1036..1050).to_a)
+            expect(DeploymentModel.where(app: app_the_second).count).to eq(3)
+            expect(DeploymentModel.where(app: app_the_second).map(&:id)).to match_array((1006..1008).to_a)
 
-            expect(DeploymentModel.where(app: app_the_third).count).to eq(15)
-            expect(DeploymentModel.where(app: app_the_third).map(&:id)).to match_array((2036..2050).to_a)
+            expect(DeploymentModel.where(app: app_the_third).count).to eq(3)
+            expect(DeploymentModel.where(app: app_the_third).map(&:id)).to match_array((2006..2008).to_a)
           end
         end
 

@@ -98,7 +98,7 @@ class VCAP::CloudController::Permissions
   end
 
   def is_org_manager?
-    VCAP::CloudController::OrganizationManager.where(user_id: @user.id).any?
+    membership.authorized_orgs_subquery(VCAP::CloudController::Membership::ORG_MANAGER).any?
   end
 
   def readable_org_guids
@@ -120,6 +120,14 @@ class VCAP::CloudController::Permissions
       VCAP::CloudController::Organization.select(:id, :guid)
     else
       membership.authorized_orgs_subquery(ROLES_FOR_ORG_READING)
+    end
+  end
+
+  def readable_org_ids_query
+    if can_read_globally?
+      VCAP::CloudController::Organization.select(:id)
+    else
+      membership.authorized_org_ids_subquery(ROLES_FOR_ORG_READING)
     end
   end
 
@@ -168,6 +176,12 @@ class VCAP::CloudController::Permissions
     membership.authorized_spaces_subquery(ROLES_FOR_SPACE_READING)
   end
 
+  def readable_space_ids_query
+    raise 'must not be called for users that can read globally' if can_read_globally?
+
+    membership.authorized_space_ids_subquery(ROLES_FOR_SPACE_READING)
+  end
+
   def readable_space_guids_query
     raise 'must not be called for users that can read globally' if can_read_globally?
 
@@ -176,6 +190,10 @@ class VCAP::CloudController::Permissions
 
   def can_read_from_space?(space_id, org_id)
     can_read_globally? || membership.role_applies?(ROLES_FOR_SPACE_READING, space_id, org_id)
+  end
+
+  def can_read_from_space_as_space_member?(space_id)
+    can_read_globally? || membership.role_applies?(SPACE_ROLES, space_id)
   end
 
   def can_download_droplet?(space_id, org_id)
@@ -236,11 +254,8 @@ class VCAP::CloudController::Permissions
   def can_read_route?(space_id)
     return true if can_read_globally?
 
-    space = VCAP::CloudController::Space.where(id: space_id).first
-
-    space.has_member?(@user) || space.has_supporter?(@user) ||
-      @user.managed_organizations.map(&:id).include?(space.organization_id) ||
-      @user.audited_organizations.map(&:id).include?(space.organization_id)
+    org_id = VCAP::CloudController::Space.where(id: space_id).get(:organization_id)
+    membership.role_applies?(ROLES_FOR_ROUTE_READING, space_id, org_id)
   end
 
   def space_guids_with_readable_routes_query
@@ -260,11 +275,34 @@ class VCAP::CloudController::Permissions
   end
 
   def readable_app_guids
-    VCAP::CloudController::AppModel.user_visible(@user, can_read_globally?).select_map(:guid)
+    if can_read_globally?
+      VCAP::CloudController::AppModel.select_map(:guid)
+    elsif @user
+      visible_space_guids = membership.authorized_space_guids_subquery(ROLES_FOR_SPACE_READING)
+      VCAP::CloudController::AppModel.where(space_guid: visible_space_guids).select_map(:guid)
+    else
+      []
+    end
   end
 
   def readable_space_quota_guids
-    VCAP::CloudController::SpaceQuotaDefinition.user_visible(@user, can_read_globally?).map(&:guid)
+    if can_read_globally?
+      VCAP::CloudController::SpaceQuotaDefinition.select_map(:guid)
+    elsif @user
+      visible_space_ids = membership.authorized_spaces_subquery(SPACE_ROLES).select(:id)
+      org_manager_org_ids = membership.authorized_orgs_subquery(VCAP::CloudController::Membership::ORG_MANAGER).select(:id)
+
+      VCAP::CloudController::SpaceQuotaDefinition.where(
+        Sequel.or([
+          [:id, VCAP::CloudController::Space.where(id: visible_space_ids).
+                                            exclude(space_quota_definition_id: nil).
+                                            select(:space_quota_definition_id)],
+          [:organization_id, org_manager_org_ids]
+        ])
+      ).select_map(:guid)
+    else
+      []
+    end
   end
 
   def readable_security_group_guids
@@ -272,11 +310,38 @@ class VCAP::CloudController::Permissions
   end
 
   def readable_security_group_guids_query
-    VCAP::CloudController::SecurityGroup.user_visible(@user, can_read_globally?).select(:guid)
+    if can_read_globally?
+      VCAP::CloudController::SecurityGroup.dataset.select(:guid)
+    elsif @user
+      visible_space_ids = membership.authorized_spaces_subquery(ROLES_FOR_SPACE_READING).select(:id)
+
+      VCAP::CloudController::SecurityGroup.where(
+        Sequel.or([
+          [:running_default, true],
+          [:staging_default, true],
+          [:id, VCAP::CloudController::SecurityGroupsSpace.where(space_id: visible_space_ids).select(:security_group_id).
+                union(
+                  VCAP::CloudController::StagingSecurityGroupsSpace.where(staging_space_id: visible_space_ids).select(:staging_security_group_id),
+                  from_self: false
+                )]
+        ])
+      ).select(:guid)
+    else
+      VCAP::CloudController::SecurityGroup.where(id: nil).select(:guid)
+    end
   end
 
   def can_update_build_state?
     can_write_globally? || roles.build_state_updater?
+  end
+
+  def readable_users_query
+    if can_read_globally?
+      VCAP::CloudController::User.dataset
+    else
+      visible_user_ids = membership.visible_user_ids_in_orgs(ROLES_FOR_ORG_READING)
+      VCAP::CloudController::User.where(id: visible_user_ids).or(id: @user.id)
+    end
   end
 
   def readable_event_dataset

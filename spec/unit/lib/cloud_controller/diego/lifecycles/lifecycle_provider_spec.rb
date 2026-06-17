@@ -38,7 +38,7 @@ module VCAP::CloudController
       let(:package) { PackageModel.make(app_guid: app.guid) }
 
       context 'when the app defaults to buildpack' do
-        let(:app) { AppModel.make(:buildpack) }
+        let(:app) { AppModel.make }
 
         it 'returns a BuildpackLifecycle' do
           expect(LifecycleProvider.provide(package, message)).to be_a(BuildpackLifecycle)

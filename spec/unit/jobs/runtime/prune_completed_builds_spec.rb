@@ -3,7 +3,7 @@ require 'spec_helper'
 module VCAP::CloudController
   module Jobs::Runtime
     RSpec.describe PruneCompletedBuilds, job_context: :worker do
-      let(:max_retained_builds_per_app) { 15 }
+      let(:max_retained_builds_per_app) { 3 }
 
       subject(:job) { PruneCompletedBuilds.new(max_retained_builds_per_app) }
 
@@ -19,67 +19,67 @@ module VCAP::CloudController
         it 'deletes all the staged builds over the limit' do
           expect(BuildModel.count).to eq(0)
 
-          total = 50
-          (1..50).each do |i|
+          total = 8
+          (1..total).each do |i|
             BuildModel.make(id: i, state: BuildModel::STAGED_STATE, app: app, created_at: Time.now - total + i)
           end
 
           job.perform
 
-          expect(BuildModel.count).to eq(15)
-          expect(BuildModel.map(&:id)).to match_array((36..50).to_a)
+          expect(BuildModel.count).to eq(3)
+          expect(BuildModel.map(&:id)).to match_array((6..8).to_a)
         end
 
         it 'deletes all failed builds over the limit' do
           expect(BuildModel.count).to eq(0)
 
-          total = 50
-          (1..50).each do |i|
+          total = 8
+          (1..total).each do |i|
             BuildModel.make(id: i, state: BuildModel::FAILED_STATE, app: app, created_at: Time.now - total + i)
           end
 
           job.perform
 
-          expect(BuildModel.count).to eq(15)
-          expect(BuildModel.map(&:id)).to match_array((36..50).to_a)
+          expect(BuildModel.count).to eq(3)
+          expect(BuildModel.map(&:id)).to match_array((6..8).to_a)
         end
 
         it 'does NOT delete any staging builds over the limit' do
           expect(BuildModel.count).to eq(0)
 
-          total = 50
-          (1..50).each do |i|
+          total = 8
+          (1..total).each do |i|
             BuildModel.make(id: i, state: BuildModel::STAGING_STATE, app: app, created_at: Time.now - total + i)
           end
 
           job.perform
 
-          expect(BuildModel.count).to eq(50)
-          expect(BuildModel.map(&:id)).to match_array((1..50).to_a)
+          expect(BuildModel.count).to eq(8)
+          expect(BuildModel.map(&:id)).to match_array((1..8).to_a)
         end
 
         it 'does not delete in-flight builds over the limit' do
-          total = 60
-          (1..20).each do |i|
+          total = 12
+          (1..4).each do |i|
             BuildModel.make(id: i, state: BuildModel::STAGED_STATE, app: app, created_at: Time.now - total + i)
           end
-          (21..40).each do |i|
+          (5..8).each do |i|
             BuildModel.make(id: i, state: BuildModel::STAGING_STATE, app: app, created_at: Time.now - total + i)
           end
-          (41..60).each do |i|
+          (9..12).each do |i|
             BuildModel.make(id: i, state: BuildModel::STAGED_STATE, app: app, created_at: Time.now - total + i)
           end
 
           job.perform
 
-          expect(BuildModel.count).to be(35)
-          expect(BuildModel.order(Sequel.asc(:created_at), Sequel.asc(:id)).map(&:id)).to eq((21..40).to_a + (46..60).to_a)
+          expect(BuildModel.count).to be(7)
+          expect(BuildModel.order(Sequel.asc(:created_at), Sequel.asc(:id)).map(&:id)).to eq((5..8).to_a + (10..12).to_a)
         end
 
         it 'calls destroy on the BuildModel so association dependencies are respected' do
           expect(BuildModel.count).to eq(0)
 
-          50.times do
+          8.times do
             b = BuildModel.make(state: BuildModel::STAGED_STATE, app: app)
             BuildpackLifecycleDataModel.make(build: b)
           end
@@ -97,7 +97,7 @@ module VCAP::CloudController
             expect(BuildModel.count).to eq(0)
 
             [app, app_the_second, app_the_third].each_with_index do |current_app, app_index|
-              total = 50
+              total = 8
               (1..total).each do |i|
                 BuildModel.make(id: i + (1000 * app_index), state: BuildModel::STAGED_STATE, app: current_app, created_at: Time.now - total + i)
               end
@@ -105,14 +105,14 @@ module VCAP::CloudController
 
             job.perform
 
-            expect(BuildModel.where(app:).count).to eq(15)
-            expect(BuildModel.where(app:).map(&:id)).to match_array((36..50).to_a)
+            expect(BuildModel.where(app:).count).to eq(3)
+            expect(BuildModel.where(app:).map(&:id)).to match_array((6..8).to_a)
 
-            expect(BuildModel.where(app: app_the_second).count).to eq(15)
-            expect(BuildModel.where(app: app_the_second).map(&:id)).to match_array((1036..1050).to_a)
+            expect(BuildModel.where(app: app_the_second).count).to eq(3)
+            expect(BuildModel.where(app: app_the_second).map(&:id)).to match_array((1006..1008).to_a)
 
-            expect(BuildModel.where(app: app_the_third).count).to eq(15)
-            expect(BuildModel.where(app: app_the_third).map(&:id)).to match_array((2036..2050).to_a)
+            expect(BuildModel.where(app: app_the_third).count).to eq(3)
+            expect(BuildModel.where(app: app_the_third).map(&:id)).to match_array((2006..2008).to_a)
           end
         end
 

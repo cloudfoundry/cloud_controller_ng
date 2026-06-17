@@ -52,11 +52,6 @@ module VCAP::CloudController
                key: :app_guid,
                primary_key: :guid
 
-    one_to_one :kpack_lifecycle_data,
-               class: 'VCAP::CloudController::KpackLifecycleDataModel',
-               key: :app_guid,
-               primary_key: :guid
-
     one_to_one :cnb_lifecycle_data,
                class: 'VCAP::CloudController::CNBLifecycleDataModel',
                key: :app_guid,
@@ -66,7 +61,6 @@ module VCAP::CloudController
     serializes_via_json :environment_variables
 
     add_association_dependencies buildpack_lifecycle_data: :destroy
-    add_association_dependencies kpack_lifecycle_data: :destroy
     add_association_dependencies cnb_lifecycle_data: :destroy
     add_association_dependencies labels: :destroy
     add_association_dependencies annotations: :destroy
@@ -99,9 +93,15 @@ module VCAP::CloudController
       validates_format APP_NAME_REGEX, :name
       validate_environment_variables
       validate_droplet_is_staged
+
+      validates_includes Lifecycles::TYPES, :lifecycle_type
     end
 
     def lifecycle_type
+      return self[:lifecycle_type] if self[:lifecycle_type].present?
+
+      # Fallback for records written before the lifecycle_type column
+      # existed. Remove once existing rows are backfilled (see #5067).
       return BuildpackLifecycleDataModel::LIFECYCLE_TYPE if buildpack_lifecycle_data
       return CNBLifecycleDataModel::LIFECYCLE_TYPE if cnb_lifecycle_data
 
@@ -109,8 +109,8 @@ module VCAP::CloudController
     end
 
     def lifecycle_data
-      return buildpack_lifecycle_data if buildpack_lifecycle_data
-      return cnb_lifecycle_data if cnb_lifecycle_data
+      return buildpack_lifecycle_data if lifecycle_type == BuildpackLifecycleDataModel::LIFECYCLE_TYPE
+      return cnb_lifecycle_data if lifecycle_type == CNBLifecycleDataModel::LIFECYCLE_TYPE
 
       DockerLifecycleDataModel.new
     end

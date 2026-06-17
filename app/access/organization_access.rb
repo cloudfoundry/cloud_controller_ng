@@ -1,7 +1,8 @@
 module VCAP::CloudController
   class OrganizationAccess < BaseAccess
-    def create?(_org, _params=nil)
+    def create?(_org, params=nil)
       return true if context.queryer.can_write_globally?
+      return false if params.present? && params[:status.to_s] == VCAP::CloudController::Organization::SUSPENDED
 
       FeatureFlag.enabled?(:user_org_creation)
     end
@@ -12,6 +13,7 @@ module VCAP::CloudController
       return false unless context.queryer.can_write_to_active_org?(org.id)
 
       return false if params.present? && (params.key?(:quota_definition_guid.to_s) || params.key?(:billing_enabled.to_s))
+      return false if params.present? && params[:status.to_s] == VCAP::CloudController::Organization::SUSPENDED
 
       true
     end

@@ -64,15 +64,13 @@ module VCAP::CloudController
     end
 
     describe '#lifecycle_type' do
-      context 'when there is buildpack_lifecycle_data associated to the droplet' do
-        let(:droplet_model) { DropletModel.make(:buildpack, app: nil) }
-        let!(:lifecycle_data) { BuildpackLifecycleDataModel.make(droplet: droplet_model) }
+      before do
+        # Remove lifecycle type to test fallback mechanism based on associated lifecycle data
+        droplet_model.update(lifecycle_type: '')
+      end
 
-        before do
-          droplet_model.buildpack_lifecycle_data = lifecycle_data
-          droplet_model.cnb_lifecycle_data = nil
-          droplet_model.save
-        end
+      context 'when there is buildpack_lifecycle_data associated to the droplet' do
+        let(:droplet_model) { DropletModel.make(app: nil) }
 
         it 'returns the string "buildpack"' do
           expect(droplet_model.lifecycle_type).to eq('buildpack')
@@ -80,14 +78,7 @@ module VCAP::CloudController
       end
 
       context 'when there is cnb_lifecycle_data associated to the droplet' do
-        let(:droplet_model) { DropletModel.make(:buildpack, app: nil) }
-        let!(:lifecycle_data) { CNBLifecycleDataModel.make(droplet: droplet_model) }
-
-        before do
-          droplet_model.cnb_lifecycle_data = lifecycle_data
-          droplet_model.buildpack_lifecycle_data = nil
-          droplet_model.save
-        end
+        let(:droplet_model) { DropletModel.make(:cnb, app: nil) }
 
         it 'returns the string "cnb"' do
           expect(droplet_model.lifecycle_type).to eq('cnb')
@@ -97,108 +88,82 @@ module VCAP::CloudController
       context 'when there is no lifecycle data associated to the droplet' do
         let(:droplet_model) { DropletModel.make(:docker, app: nil) }
 
-        before do
-          droplet_model.buildpack_lifecycle_data = nil
-          droplet_model.save
-        end
-
         it 'returns the string "docker"' do
           expect(droplet_model.lifecycle_type).to eq('docker')
         end
       end
     end
 
+    describe '#before_create' do
+      it 'inherits lifecycle_type from app if not set' do
+        app = AppModel.make(:cnb)
+        droplet = DropletModel.create(app: app, state: DropletModel::STAGING_STATE)
+        expect(droplet[:lifecycle_type]).to eq('cnb')
+      end
+
+      it 'uses explicit lifecycle_type if set' do
+        app = AppModel.make
+        droplet = DropletModel.create(app: app, state: DropletModel::STAGING_STATE, lifecycle_type: 'docker')
+        expect(droplet[:lifecycle_type]).to eq('docker')
+      end
+    end
+
+    describe 'validations' do
+      it 'validates lifecycle_type is one of buildpack, cnb, or docker' do
+        expect do
+          DropletModel.make(lifecycle_type: 'invalid')
+        end.to raise_error(Sequel::ValidationFailed, /lifecycle_type/)
+      end
+
+      it 'accepts valid lifecycle_type values' do
+        %w[buildpack cnb docker].each do |type|
+          expect do
+            DropletModel.make(lifecycle_type: type)
+          end.not_to raise_error
+        end
+      end
+    end
+
     describe '#lifecycle_data' do
-      context 'when there is buildpack_lifecycle_data associated to the droplet' do
-        let(:droplet_model) { DropletModel.make(:buildpack, app: nil) }
-        let!(:lifecycle_data) do
-          BuildpackLifecycleDataModel.make(
-            droplet: droplet_model,
-            buildpacks: ['http://some-buildpack.com', 'http://another-buildpack.net']
-          )
+      context 'buildpack_lifecycle_data' do
+        let!(:droplet_model) { DropletModel.make(app: nil) }
+
+        it 'returns a buildpack lifecycle data model' do
+          expect(droplet_model.lifecycle_data).to be_a(BuildpackLifecycleDataModel)
+          expect(droplet_model.lifecycle_data).to eq(droplet_model.buildpack_lifecycle_data)
+          expect(droplet_model.cnb_lifecycle_data).to be_nil
         end
 
-        before do
-          droplet_model.buildpack_lifecycle_data = lifecycle_data
-          droplet_model.save
-        end
-
-        it 'returns buildpack_lifecycle_data if it is on the model' do
-          expect(droplet_model.lifecycle_data).to eq(lifecycle_data)
-        end
-
-        it 'is a persistable hash' do
-          expect(droplet_model.reload.lifecycle_data.buildpacks).to eq(lifecycle_data.buildpacks)
-          expect(droplet_model.reload.lifecycle_data.stack).to eq(lifecycle_data.stack)
-        end
-
-        it 'deletes the dependent buildpack_lifecycle_data_models when a droplet is deleted' do
+        it 'deletes the dependent buildpack_lifecycle_data model when a droplet is deleted' do
           expect do
             droplet_model.destroy
-          end.to change(BuildpackLifecycleDataModel, :count).by(-1).
-            and change(BuildpackLifecycleBuildpackModel, :count).by(-2)
+          end.to change(BuildpackLifecycleDataModel, :count).by(-1)
         end
       end
 
-      context 'when there is kpack_lifecycle_data associated to the droplet' do
-        let(:droplet_model) { DropletModel.make(:kpack, app: nil) }
-        let!(:lifecycle_data) do
-          KpackLifecycleDataModel.make(droplet: droplet_model)
+      context 'cnb_lifecycle_data' do
+        let!(:droplet_model) { DropletModel.make(:cnb, app: nil) }
+
+        it 'returns a cnb lifecycle data model' do
+          expect(droplet_model.lifecycle_data).to be_a(CNBLifecycleDataModel)
+          expect(droplet_model.lifecycle_data).to eq(droplet_model.cnb_lifecycle_data)
+          expect(droplet_model.buildpack_lifecycle_data).to be_nil
         end
 
-        before do
-          droplet_model.kpack_lifecycle_data = lifecycle_data
-          droplet_model.save
-        end
-
-        it 'deletes the dependent kpack_lifecycle_data_models when a droplet is deleted' do
+        it 'deletes the dependent cnb_lifecycle_data when a droplet is deleted' do
           expect do
             droplet_model.destroy
-          end.to change(KpackLifecycleDataModel, :count).by(-1)
+          end.to change(CNBLifecycleDataModel, :count).by(-1)
         end
       end
 
-      context 'when there is cnb_lifecycle_data associated to the droplet' do
-        let(:droplet_model) { DropletModel.make(:kpack, app: nil) }
-        let!(:lifecycle_data) do
-          CNBLifecycleDataModel.make(
-            droplet: droplet_model,
-            buildpacks: ['http://some-buildpack.com', 'http://another-buildpack.net']
-          )
-        end
-
-        before do
-          droplet_model.cnb_lifecycle_data = lifecycle_data
-          droplet_model.save
-        end
-
-        it 'returns cnb_lifecycle_data if it is on the model' do
-          expect(droplet_model.lifecycle_data).to eq(lifecycle_data)
-        end
-
-        it 'is a persistable hash' do
-          expect(droplet_model.reload.cnb_lifecycle_data.buildpacks).to eq(lifecycle_data.buildpacks)
-          expect(droplet_model.reload.cnb_lifecycle_data.stack).to eq(lifecycle_data.stack)
-        end
-
-        it 'deletes the dependent cnb_lifecycle_data_models when a droplet is deleted' do
-          expect do
-            droplet_model.destroy
-          end.to change(CNBLifecycleDataModel, :count).by(-1).
-            and change(BuildpackLifecycleBuildpackModel, :count).by(-2)
-        end
-      end
-
-      context 'when there is no lifecycle data associated to the droplet' do
+      context 'neither buildpack_lifecycle_data, nor cnb_lifecycle_data' do
         let(:droplet_model) { DropletModel.make(:docker, app: nil) }
 
-        before do
-          droplet_model.buildpack_lifecycle_data = nil
-          droplet_model.save
-        end
-
-        it 'returns a docker lifecycle model' do
+        it 'returns a docker lifecycle data model' do
           expect(droplet_model.lifecycle_data).to be_a(DockerLifecycleDataModel)
+          expect(droplet_model.buildpack_lifecycle_data).to be_nil
+          expect(droplet_model.cnb_lifecycle_data).to be_nil
         end
       end
     end

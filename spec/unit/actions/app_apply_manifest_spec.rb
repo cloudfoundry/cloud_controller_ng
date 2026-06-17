@@ -184,7 +184,7 @@ module VCAP::CloudController
 
           context 'when the default differs from what is already set on the app' do
             let(:message) { AppManifestMessage.create_from_yml({ name: 'blah', buildpack: buildpack.name }) }
-            let(:app) { AppModel.make(:buildpack) }
+            let(:app) { AppModel.make }
 
             it 'preserves the apps lifecycle' do
               app_apply_manifest.apply(app.guid, message)
@@ -200,7 +200,7 @@ module VCAP::CloudController
           let(:buildpack) { VCAP::CloudController::Buildpack.make }
           let(:message) { AppManifestMessage.create_from_yml({ name: 'blah' }) }
           let(:app_update_message) { message.app_update_message }
-          let(:app) { AppModel.make(:buildpack) }
+          let(:app) { AppModel.make }
 
           before do
             TestConfig.override(default_app_lifecycle: 'buildpack')

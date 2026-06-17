@@ -1,37 +1,3 @@
-GIT
-  remote: https://github.com/fog/fog-azure-rm.git
-  revision: 379e352cce817f8e67618062bf7095095d8f5c4c
-  branch: fog-arm-cf
-  specs:
-    fog-azure-rm (0.4.7)
-      azure-storage-blob (~> 1.1)
-      azure-storage-common (~> 1.1)
-      azure_mgmt_compute (~> 0.9.0)
-      azure_mgmt_dns (~> 0.9.0)
-      azure_mgmt_key_vault (~> 0.9.0)
-      azure_mgmt_network (~> 0.9.0)
-      azure_mgmt_resources (~> 0.9.0)
-      azure_mgmt_sql (~> 0.9.0)
-      azure_mgmt_storage (~> 0.9.0)
-      azure_mgmt_traffic_manager (~> 0.9.0)
-      fog-core (>= 1.43)
-      fog-json (>= 1.0.2)
-      mime-types (~> 3.0)
-      vhd (= 0.0.4)
-
-GIT
-  remote: https://github.com/sethboyles/azure-storage-ruby.git
-  revision: d4737cdfcef3f3c4c2463a54690b6b73c0f6f707
-  branch: x-ms-blob-content-type-fix-1.1
-  specs:
-    azure-storage-blob (1.1.0)
-      azure-core (~> 0.1.13)
-      azure-storage-common (~> 1.0)
-      nokogiri (~> 1.6, >= 1.6.8)
-    azure-storage-common (1.1.0)
-      azure-core (~> 0.1.13)
-      nokogiri (~> 1.6, >= 1.6.8)
-
 GEM
   remote: https://rubygems.org/
   specs:
@@ -72,32 +38,11 @@ GEM
       nokogiri (~> 1.6)
       rest-client (~> 2.0)
     ast (2.4.3)
-    azure-core (0.1.15)
-      faraday (~> 0.9)
-      faraday_middleware (~> 0.10)
-      nokogiri (~> 1.6)
-    azure_mgmt_compute (0.9.0)
-      ms_rest_azure (~> 0.7.0)
-    azure_mgmt_dns (0.9.0)
-      ms_rest_azure (~> 0.7.0)
-    azure_mgmt_key_vault (0.9.0)
-      ms_rest_azure (~> 0.7.0)
-    azure_mgmt_network (0.9.0)
-      ms_rest_azure (~> 0.7.0)
-    azure_mgmt_resources (0.9.0)
-      ms_rest_azure (~> 0.7.0)
-    azure_mgmt_sql (0.9.0)
-      ms_rest_azure (~> 0.7.0)
-    azure_mgmt_storage (0.9.0)
-      ms_rest_azure (~> 0.7.0)
-    azure_mgmt_traffic_manager (0.9.0)
-      ms_rest_azure (~> 0.7.0)
     backport (1.2.0)
     base64 (0.3.0)
     benchmark (0.5.0)
     bigdecimal (4.1.2)
-    bit-struct (0.17)
-    bootsnap (1.24.3)
+    bootsnap (1.24.6)
       msgpack (~> 1.2)
     builder (3.3.0)
     byebug (13.0.0)
@@ -137,15 +82,10 @@ GEM
     drb (2.2.3)
     erb (6.0.4)
     erubi (1.13.1)
-    excon (1.4.2)
+    excon (1.5.0)
       logger
     faraday (0.17.6)
       multipart-post (>= 1.2, < 3)
-    faraday-cookie_jar (0.0.8)
-      faraday (>= 0.8.0)
-      http-cookie (>= 1.0.0)
-    faraday_middleware (0.14.0)
-      faraday (>= 0.7.4, < 1.0)
     ffi (1.17.4)
     ffi (1.17.4-x86_64-darwin)
     ffi (1.17.4-x86_64-linux-gnu)
@@ -219,20 +159,20 @@ GEM
       google-apis-core (>= 0.11.0, < 2.a)
     google-cloud-env (1.6.0)
       faraday (>= 0.17.3, < 3.0)
-    google-protobuf (4.34.1)
+    google-protobuf (4.35.1)
       bigdecimal
       rake (~> 13.3)
-    google-protobuf (4.34.1-x86_64-darwin)
+    google-protobuf (4.35.1-x86_64-darwin)
       bigdecimal
       rake (~> 13.3)
-    google-protobuf (4.34.1-x86_64-linux-gnu)
+    google-protobuf (4.35.1-x86_64-linux-gnu)
       bigdecimal
       rake (~> 13.3)
-    googleapis-common-protos (1.9.0)
+    googleapis-common-protos (1.10.0)
       google-protobuf (~> 4.26)
       googleapis-common-protos-types (~> 1.21)
       grpc (~> 1.41)
-    googleapis-common-protos-types (1.22.0)
+    googleapis-common-protos-types (1.23.0)
       google-protobuf (~> 4.26)
     googleauth (1.8.1)
       faraday (>= 0.17.3, < 3.a)
@@ -240,13 +180,13 @@ GEM
       multi_json (~> 1.11)
       os (>= 0.9, < 2.0)
       signet (>= 0.16, < 2.a)
-    grpc (1.80.0)
+    grpc (1.81.1)
       google-protobuf (>= 3.25, < 5.0)
       googleapis-common-protos-types (~> 1.0)
-    grpc (1.80.0-x86_64-darwin)
+    grpc (1.81.1-x86_64-darwin)
       google-protobuf (>= 3.25, < 5.0)
       googleapis-common-protos-types (~> 1.0)
-    grpc (1.80.0-x86_64-linux-gnu)
+    grpc (1.81.1-x86_64-linux-gnu)
       google-protobuf (>= 3.25, < 5.0)
       googleapis-common-protos-types (~> 1.0)
     hashdiff (1.2.1)
@@ -265,12 +205,12 @@ GEM
       rdoc (>= 4.0.0)
       reline (>= 0.4.2)
     jaro_winkler (1.7.0)
-    json (2.19.5)
+    json (2.19.9)
     json-diff (0.4.1)
     json-schema (6.2.0)
       addressable (~> 2.8)
       bigdecimal (>= 3.1, < 5)
-    jwt (2.10.2)
+    jwt (2.10.3)
       base64
     kramdown (2.5.2)
       rexml (>= 3.4.4)
@@ -297,18 +237,9 @@ GEM
     minitest (6.0.6)
       drb (~> 2.0)
       prism (~> 1.5)
-    mock_redis (0.53.0)
+    mock_redis (0.55.0)
       redis (~> 5)
-    ms_rest (0.6.4)
-      concurrent-ruby (~> 1.0)
-      faraday (~> 0.9)
-      timeliness (~> 0.3)
-    ms_rest_azure (0.7.0)
-      concurrent-ruby (~> 1.0)
-      faraday (~> 0.9)
-      faraday-cookie_jar (~> 0.0.6)
-      ms_rest (~> 0.6.3)
-    msgpack (1.8.0)
+    msgpack (1.8.1)
     multi_json (1.21.1)
     multipart-parser (0.1.1)
     multipart-post (2.4.1)
@@ -319,7 +250,7 @@ GEM
       bigdecimal
     netaddr (2.0.6)
     netrc (0.11.0)
-    newrelic_rpm (10.4.0)
+    newrelic_rpm (10.5.0)
       logger
     nio4r (2.7.5)
     nokogiri (1.19.3)
@@ -330,11 +261,11 @@ GEM
     nokogiri (1.19.3-x86_64-linux-gnu)
       racc (~> 1.4)
     observer (0.1.2)
-    oj (3.17.0)
+    oj (3.17.3)
       bigdecimal (>= 3.0)
       ostruct (>= 0.2)
     open3 (0.2.1)
-    openssl (4.0.1)
+    openssl (4.0.2)
     os (1.1.4)
     ostruct (0.6.3)
     parallel (2.1.0)
@@ -359,11 +290,11 @@ GEM
     pry-byebug (3.12.0)
       byebug (~> 13.0)
       pry (>= 0.13, < 0.17)
-    psych (5.3.1)
+    psych (5.4.0)
       date
       stringio
     public_suffix (7.0.5)
-    puma (7.2.0)
+    puma (8.0.2)
       nio4r (~> 2.0)
     racc (1.8.1)
     rack (3.2.6)
@@ -399,8 +330,9 @@ GEM
     rb-fsevent (0.11.2)
     rb-inotify (0.11.1)
       ffi (~> 1.0)
-    rbs (3.10.4)
+    rbs (4.0.2)
       logger
+      prism (>= 1.6.0)
       tsort
     rdoc (7.2.0)
       erb
@@ -408,7 +340,7 @@ GEM
       tsort
     redis (5.4.1)
       redis-client (>= 0.22.0)
-    redis-client (0.29.0)
+    redis-client (0.30.0)
       connection_pool
     regexp_parser (2.12.0)
     reline (0.6.3)
@@ -422,7 +354,7 @@ GEM
       http-cookie (>= 1.0.2, < 2.0)
       mime-types (>= 1.16, < 4.0)
       netrc (~> 0.8)
-    retriable (3.4.1)
+    retriable (3.8.0)
     reverse_markdown (3.0.2)
       nokogiri
     rexml (3.4.4)
@@ -462,7 +394,7 @@ GEM
       activesupport (>= 3.0.0)
       mustache (~> 1.0, >= 0.99.4)
       rspec (~> 3.0)
-    rubocop (1.86.1)
+    rubocop (1.87.0)
       json (~> 2.3)
       language_server-protocol (~> 3.17.0.2)
       lint_roller (~> 1.1.0)
@@ -508,19 +440,18 @@ GEM
     ruby_parser (3.22.0)
       racc (~> 1.5)
       sexp_processor (~> 4.16)
-    rubyzip (3.3.0)
+    rubyzip (3.3.1)
     securerandom (0.4.1)
-    sequel (5.104.0)
+    sequel (5.105.0)
       bigdecimal
     sequel_pg (1.19.0)
       pg (>= 0.18.0, != 1.2.0)
       sequel (>= 4.38.0)
     sexp_processor (4.17.5)
-    signet (0.21.0)
+    signet (0.22.0)
       addressable (~> 2.8)
       faraday (>= 0.17.5, < 3.a)
       jwt (>= 1.5, < 4.0)
-      multi_json (~> 1.10)
     simplecov (0.13.0)
       docile (~> 1.1.0)
       json (>= 1.8, < 3)
@@ -539,7 +470,7 @@ GEM
       rack-protection (= 4.2.1)
       sinatra (= 4.2.1)
       tilt (~> 2.0)
-    solargraph (0.58.3)
+    solargraph (0.59.2)
       ast (~> 2.4.3)
       backport (~> 1.2)
       benchmark (~> 0.4)
@@ -554,7 +485,7 @@ GEM
       ostruct (~> 0.6)
       parser (~> 3.0)
       prism (~> 1.4)
-      rbs (>= 3.6.1, <= 4.0.0.dev.4)
+      rbs (>= 3.10.0)
       reverse_markdown (~> 3.0)
       rubocop (~> 1.76)
       thor (~> 1.0)
@@ -562,7 +493,7 @@ GEM
       yard (~> 0.9, >= 0.9.24)
       yard-activesupport-concern (~> 0.0)
       yard-solargraph (~> 0.1)
-    spring (4.5.0)
+    spring (4.6.0)
     spring-commands-rspec (1.0.4)
       spring (>= 0.9.1)
     statsd-ruby (1.5.0)
@@ -573,7 +504,6 @@ GEM
     thor (1.5.0)
     tilt (2.7.0)
     timecop (0.9.11)
-    timeliness (0.5.3)
     trailblazer-option (0.1.2)
     tsort (0.2.0)
     tzinfo (2.0.6)
@@ -584,8 +514,6 @@ GEM
     unicode-emoji (4.2.0)
     uri (1.1.1)
     useragent (0.16.11)
-    vhd (0.0.4)
-      bit-struct
     vmstat (2.3.1)
     webmock (3.26.2)
       addressable (>= 2.8.0)
@@ -594,12 +522,12 @@ GEM
     webrick (1.9.2)
     xml-simple (1.1.9)
       rexml
-    yard (0.9.43)
+    yard (0.9.44)
     yard-activesupport-concern (0.0.1)
       yard (>= 0.8)
     yard-solargraph (0.1.0)
       yard (~> 0.9)
-    zeitwerk (2.7.5)
+    zeitwerk (2.8.2)
 
 PLATFORMS
   ruby
@@ -611,7 +539,6 @@ DEPENDENCIES
   actionview (~> 8.1.3)
   activemodel (~> 8.1.2)
   addressable
-  azure-storage-blob!
   bootsnap
   byebug
   cf-uaa-lib (~> 4.0.9)
@@ -624,7 +551,6 @@ DEPENDENCIES
   fluent-logger
   fog-aliyun
   fog-aws
-  fog-azure-rm!
   fog-core (~> 2.6.0)
   fog-google (~> 1.29.4)
   fog-local
@@ -663,7 +589,7 @@ DEPENDENCIES
   rspec-rails (~> 8.0.4)
   rspec-wait
   rspec_api_documentation (>= 6.1.0)
-  rubocop (~> 1.86.1)
+  rubocop (~> 1.87.0)
   rubocop-capybara
   rubocop-factory_bot
   rubocop-rails (~> 2.34)
@@ -672,7 +598,7 @@ DEPENDENCIES
   rubocop-sequel (~> 0.4.1)
   ruby-lsp-rspec
   rubyzip (>= 1.3.0)
-  sequel (~> 5.104)
+  sequel (~> 5.105)
   sequel_pg
   sinatra (~> 4.2)
   sinatra-contrib

@@ -10,6 +10,12 @@ module VCAP::CloudController
       class ServiceBrokerPresenter < BasePresenter
         include VCAP::CloudController::Presenters::Mixins::MetadataPresentationHelpers
 
+        class << self
+          def associated_resources
+            super + [:space]
+          end
+        end
+
         def to_hash
           {
             guid: broker.guid,

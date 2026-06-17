@@ -199,8 +199,9 @@ module VCAP::CloudController
         it 'does not change the updated_at field' do
           updated_at = app.reload.values[:updated_at]
 
-          sleep(1.5) # ensure that timestamp in `updated_at` would change
-          RotateDatabaseKey.perform(batch_size: 1)
+          Timecop.travel(Time.now + 2.seconds) do
+            RotateDatabaseKey.perform(batch_size: 1)
+          end
 
           expect(app.reload.values[:updated_at]).to eq(updated_at)
         end

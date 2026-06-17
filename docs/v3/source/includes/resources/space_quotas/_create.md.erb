@@ -41,7 +41,7 @@ This endpoint creates a new space quota scoped to a specific organization.
 
 Name | Type | Description
 ---- | ---- | -----------
-**name** | _string_ | Name of the quota
+**name** | _string_ | Name of the quota; must be unique within the organization (case-sensitive)
 **relationships.organization** | [_to-one relationship_](#to-one-relationships) | A relationship to the organization where the quota belongs | |
 
 #### Optional parameters

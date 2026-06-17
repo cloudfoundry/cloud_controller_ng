@@ -22,31 +22,6 @@ module CloudController
       describe 'client init' do
         # DEPRECATED: Legacy fog provider tests - remove after migration window
         # START LEGACY FOG SUPPORT TESTS
-        it 'maps AzureRM legacy provider to azurebs storage-cli type' do
-          droplets_cfg = write_config_file(
-            provider: 'AzureRM',
-            account_key: 'bommelkey',
-            account_name: 'bommel',
-            container_name: 'bommelcontainer',
-            environment: 'BommelCloud'
-          )
-          begin
-            stub_config_for_droplets(droplets_cfg.path)
-
-            client = StorageCliClient.new(
-              directory_key: 'dummy-key',
-              root_dir: 'dummy-root',
-              resource_type: 'droplets'
-            )
-            expect(client.instance_variable_get(:@storage_type)).to eq('azurebs')
-            expect(client.instance_variable_get(:@resource_type)).to eq('droplets')
-            expect(client.instance_variable_get(:@root_dir)).to eq('dummy-root')
-            expect(client.instance_variable_get(:@directory_key)).to eq('dummy-key')
-          ensure
-            droplets_cfg.close!
-          end
-        end
-
         it 'maps AWS legacy provider to s3 storage-cli type' do
           droplets_cfg = write_config_file(
             provider: 'AWS',
@@ -130,6 +105,7 @@ module CloudController
             droplets_cfg.close!
           end
         end
+        # END LEGACY FOG SUPPORT TESTS
 
         it 'raises an error for an unknown legacy provider' do
           droplets_cfg = write_config_file(
@@ -149,7 +125,6 @@ module CloudController
             droplets_cfg.close!
           end
         end
-        # END LEGACY FOG SUPPORT TESTS
 
         it 'init the correct client when JSON has provider azurebs (native storage-cli type)' do
           droplets_cfg = write_config_file(
@@ -324,8 +299,8 @@ module CloudController
 
         it 'raises when provider is missing from config file' do
           File.write(packages_cfg.path, {
-            AzureRM_storage_access_key: 'bommelkey',
-            AzureRM_storage_account_name: 'bommel',
+            account_key: 'bommelkey',
+            account_name: 'bommel',
             container_name: 'bommelcontainer',
             environment: 'BommelCloud'
           }.to_json)
@@ -370,6 +345,7 @@ module CloudController
           let(:droplets_cfg) { write_config_file(provider: 'azurebs', account_key: 'key', account_name: 'acc', container_name: 'cont', environment: 'Cloud') }
           let(:client) do
             stub_config_for_droplets(droplets_cfg.path)
+
             StorageCliClient.new(
               directory_key: 'dummy-key',
               root_dir: 'dummy-root',

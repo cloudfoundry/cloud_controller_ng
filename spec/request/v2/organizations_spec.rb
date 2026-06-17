@@ -122,5 +122,83 @@ RSpec.describe 'Organizations' do
         expect(decoded_response['description']).to eq('Current usage exceeds new quota values. This org currently contains apps running with an unlimited log rate limit.')
       end
     end
+
+    context 'when a OrgManager mutates the status field' do
+      let(:org_manager) { VCAP::CloudController::User.make }
+      let(:org_manager_header) { headers_for(org_manager) }
+      let(:admin_header) { headers_for(user, scopes: %w[cloud_controller.admin]) }
+
+      before do
+        org.add_user(org_manager)
+        org.add_manager(org_manager)
+      end
+
+      it 'returns 403 NotAuthorized when attempting to suspend an active org' do
+        put "/v2/organizations/#{org.guid}", { status: 'suspended' }.to_json, org_manager_header
+
+        expect(last_response).to have_status_code(403)
+        expect(decoded_response['error_code']).to eq('CF-NotAuthorized')
+        expect(org.reload).not_to be_suspended
+      end
+
+      it 'returns 403 NotAuthorized when attempting to un-suspend a suspended org' do
+        org.update(status: VCAP::CloudController::Organization::SUSPENDED)
+
+        put "/v2/organizations/#{org.guid}", { status: 'active' }.to_json, org_manager_header
+
+        expect(last_response).to have_status_code(403)
+        expect(decoded_response['error_code']).to eq('CF-NotAuthorized')
+        expect(org.reload).to be_suspended
+      end
+
+      it 'still allows an admin to mutate status' do
+        put "/v2/organizations/#{org.guid}", { status: 'suspended' }.to_json, admin_header
+
+        expect(last_response).to have_status_code(201)
+        expect(org.reload).to be_suspended
+      end
+
+      it 'allows a no-op status update (status matches current state) by an OrgManager' do
+        put "/v2/organizations/#{org.guid}", { status: 'active' }.to_json, org_manager_header
+
+        expect(last_response).to have_status_code(201)
+        expect(org.reload).not_to be_suspended
+      end
+    end
+  end
+
+  describe 'POST /v2/organizations' do
+    context 'when a non-admin sets status to suspended at create' do
+      let(:user_header) { headers_for(user) }
+      let(:admin_header) { headers_for(user, scopes: %w[cloud_controller.admin]) }
+
+      before do
+        VCAP::CloudController::FeatureFlag.create(name: 'user_org_creation', enabled: true)
+      end
+
+      it 'returns 403 NotAuthorized when a non-admin attempts to create a suspended org' do
+        post '/v2/organizations', { name: 'suspended-at-birth', status: 'suspended' }.to_json, user_header
+
+        expect(last_response).to have_status_code(403)
+        expect(decoded_response['error_code']).to eq('CF-NotAuthorized')
+        expect(VCAP::CloudController::Organization.find(name: 'suspended-at-birth')).to be_nil
+      end
+
+      it 'allows a non-admin to create an org with status: active (the default) as a no-op' do
+        post '/v2/organizations', { name: 'noop-active-org', status: 'active' }.to_json, user_header
+
+        expect(last_response).to have_status_code(201)
+        created = VCAP::CloudController::Organization.find(name: 'noop-active-org')
+        expect(created).not_to be_nil
+        expect(created).not_to be_suspended
+      end
+
+      it 'still allows an admin to create a suspended org' do
+        post '/v2/organizations', { name: 'admin-suspended-org', status: 'suspended' }.to_json, admin_header
+
+        expect(last_response).to have_status_code(201)
+        expect(VCAP::CloudController::Organization.find(name: 'admin-suspended-org')).to be_suspended
+      end
+    end
   end
 end

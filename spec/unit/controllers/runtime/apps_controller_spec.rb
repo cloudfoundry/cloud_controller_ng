@@ -1015,7 +1015,7 @@ module VCAP::CloudController
         end
 
         context 'when changing from buildpack to docker' do
-          let(:process) { ProcessModel.make(app: AppModel.make(:buildpack)) }
+          let(:process) { ProcessModel.make(app: AppModel.make) }
 
           it 'raises an error' do
             put "/v2/apps/#{process.app.guid}", Oj.dump({ docker_image: 'repo/great-image' })
