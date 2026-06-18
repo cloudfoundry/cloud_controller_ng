@@ -2,8 +2,6 @@ require 'messages/metadata_base_message'
 
 module VCAP::CloudController
   class RoutePolicyCreateMessage < MetadataBaseMessage
-    SOURCE_REGEX = /\A(cf:(app|space|org):[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}|cf:any)\z/
-
     register_allowed_keys %i[
       source
       relationships
@@ -27,7 +25,7 @@ module VCAP::CloudController
 
     def source_format_valid
       return unless source.is_a?(String)
-      return if SOURCE_REGEX.match?(source)
+      return if RoutePolicy::SOURCE_REGEX.match?(source)
 
       errors.add(:source, "must be in format 'cf:app:<uuid>', 'cf:space:<uuid>', 'cf:org:<uuid>', or 'cf:any'")
     end

@@ -1,5 +1,7 @@
 module VCAP::CloudController
   class RoutePolicy < Sequel::Model(:route_policies)
+    SOURCE_REGEX = /\A(cf:(app|space|org):[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}|cf:any)\z/
+
     many_to_one :route,
                 class: 'VCAP::CloudController::Route',
                 key: :route_id,

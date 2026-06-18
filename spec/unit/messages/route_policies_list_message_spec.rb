@@ -174,6 +174,43 @@ module VCAP::CloudController
           expect(message).to be_valid
           expect(message.source_guids).to eq(%w[guid1 guid2])
         end
+
+        it 'validates sources is an array' do
+          message = RoutePoliciesListMessage.from_params sources: 'not array'
+          expect(message).not_to be_valid
+          expect(message.errors[:sources].length).to eq 1
+        end
+
+        it 'allows sources to be nil' do
+          message = RoutePoliciesListMessage.from_params({})
+          expect(message).to be_valid
+          expect(message.sources).to be_nil
+        end
+
+        it 'allows sources to be an array of valid source strings' do
+          valid_uuid = '11111111-2222-3333-4444-555555555555'
+          message = RoutePoliciesListMessage.from_params sources: [
+            "cf:app:#{valid_uuid}",
+            "cf:space:#{valid_uuid}",
+            "cf:org:#{valid_uuid}",
+            'cf:any'
+          ]
+          expect(message).to be_valid
+        end
+
+        it 'rejects sources containing invalid format' do
+          message = RoutePoliciesListMessage.from_params sources: ['not-valid']
+          expect(message).not_to be_valid
+          expect(message.errors[:sources].length).to eq 1
+          expect(message.errors[:sources][0]).to include('invalid source format')
+        end
+
+        it 'rejects sources where only some items are invalid' do
+          valid_uuid = '11111111-2222-3333-4444-555555555555'
+          message = RoutePoliciesListMessage.from_params sources: ["cf:app:#{valid_uuid}", 'bad-format']
+          expect(message).not_to be_valid
+          expect(message.errors[:sources][0]).to include('bad-format')
+        end
       end
     end
   end
