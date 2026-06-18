@@ -52,7 +52,7 @@ curl "https://api.example.org/v3/route_policies?include=route,source" \
 | **route_guids**          | _list of strings_                                | Comma-delimited list of route guids to filter by
 | **space_guids**          | _list of strings_                                | Comma-delimited list of space guids to filter by (filters by the route's space)
 | **sources**              | _list of strings_                                | Comma-delimited list of exact source strings to filter by (e.g., `cf:any`, `cf:app:guid`)
-| **source_guids**         | _list of strings_                                | Comma-delimited list of GUIDs to text-match against source strings (useful for finding stale policies when resources are deleted)
+| **source_guids**         | _list of strings_                                | Comma-delimited list of GUIDs to filter by; matches the GUID portion of the source (e.g. the app, space, or org GUID)
 | **page**                 | _integer_                                        | Page to display; valid values are integers >= 1
 | **per_page**             | _integer_                                        | Number of results per page; valid values are 1 through 5000
 | **order_by**             | _string_                                         | Value to sort by. Defaults to ascending; prepend with `-` to sort descending. Valid values are `created_at`, `updated_at`
