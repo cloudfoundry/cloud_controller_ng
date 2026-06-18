@@ -170,6 +170,18 @@ module VCAP::CloudController
           expect(route_relation).to have_received(:for_update)
         end
       end
+
+      context 'when the route is deleted between controller fetch and transaction lock' do
+        it 'raises an error' do
+          route_relation = spy('route relation')
+          allow(route_relation).to receive_messages(for_update: route_relation, first: nil)
+          allow(Route).to receive(:where).with(id: route.id).and_return(route_relation)
+
+          expect do
+            action.create(route:, message:)
+          end.to raise_error(RoutePolicyCreate::Error, /not found/)
+        end
+      end
     end
   end
 end

@@ -12,7 +12,7 @@ module VCAP::CloudController
         # so two concurrent transactions can both read [] and both pass cf:any
         # exclusivity validation. Locking the route row (which always exists)
         # ensures they serialize regardless of how many policies currently exist.
-        Route.where(id: route.id).for_update.first
+        Route.where(id: route.id).for_update.first or raise Error.new("Route '#{route.guid}' not found.")
 
         existing_policies = RoutePolicy.where(route_id: route.id).all
         validate_source_exclusivity(existing_policies, message.source)
