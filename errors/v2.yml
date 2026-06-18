@@ -118,6 +118,16 @@
   http_code: 429
   message: "Rate Limit of V2 API Exceeded. Please consider using the V3 API"
 
+10019:
+  name: SpaceSuspended
+  http_code: 403
+  message: "The space is suspended"
+
+10020:
+  name: ResourceBeingDeleted
+  http_code: 422
+  message: "The %s is being deleted"
+
 20001:
   name: UserInvalid
   http_code: 400

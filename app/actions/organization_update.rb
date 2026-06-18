@@ -15,6 +15,7 @@ module VCAP::CloudController
         AnnotationsUpdate.update(org, message.annotations, OrganizationAnnotationModel)
 
         if message.requested?(:suspended)
+          error!("Organization '#{org.name}' is being deleted and cannot be reactivated.") if org.deleting? && message.suspended == false
           org.status = message.suspended ? Organization::SUSPENDED : Organization::ACTIVE
         end
 

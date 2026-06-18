@@ -126,6 +126,48 @@ RSpec.describe 'Apps' do
 
         it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS
       end
+
+      context 'when space is suspended' do
+        let(:expected_codes_and_responses) do
+          h = super()
+          h['space_developer'] = { code: 403, errors: CF_SPACE_SUSPENDED }
+          h
+        end
+
+        before do
+          space.update(status: VCAP::CloudController::Space::SUSPENDED)
+        end
+
+        it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS
+      end
+
+      context 'when organization is being deleted' do
+        let(:expected_codes_and_responses) do
+          h = super()
+          h['space_developer'] = { code: 422, errors: CF_ORGANIZATION_BEING_DELETED }
+          h
+        end
+
+        before do
+          org.update(status: VCAP::CloudController::Organization::DELETING)
+        end
+
+        it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS
+      end
+
+      context 'when space is being deleted' do
+        let(:expected_codes_and_responses) do
+          h = super()
+          h['space_developer'] = { code: 422, errors: CF_SPACE_BEING_DELETED }
+          h
+        end
+
+        before do
+          space.update(status: VCAP::CloudController::Space::DELETING)
+        end
+
+        it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS
+      end
     end
 
     context 'when the user can create an app' do
@@ -745,6 +787,7 @@ RSpec.describe 'Apps' do
                 'created_at' => iso8601,
                 'updated_at' => iso8601,
                 'name' => space.name,
+                'suspended' => false,
                 'relationships' => {
                   'organization' => {
                     'data' => {
@@ -1542,6 +1585,7 @@ RSpec.describe 'Apps' do
                 'created_at' => iso8601,
                 'updated_at' => iso8601,
                 'name' => space.name,
+                'suspended' => false,
                 'relationships' => {
                   'organization' => {
                     'data' => {

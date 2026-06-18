@@ -11,6 +11,10 @@ module VCAP::CloudController
       space.db.transaction do
         space.lock!
         space.name = message.name if message.requested?(:name)
+        if message.requested?(:suspended)
+          error!("Space '#{space.name}' is being deleted and cannot be reactivated.") if space.deleting? && message.suspended == false
+          space.status = message.suspended ? Space::SUSPENDED : Space::ACTIVE
+        end
         MetadataUpdate.update(space, message)
 
         space.save

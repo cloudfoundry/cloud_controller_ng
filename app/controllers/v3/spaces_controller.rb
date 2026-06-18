@@ -58,6 +58,7 @@ class SpacesV3Controller < ApplicationController
     unprocessable!(missing_org) unless org && permission_queryer.can_read_from_org?(org.id)
     unauthorized! unless permission_queryer.can_write_to_active_org?(org.id)
     require_writable_org!(org)
+    unauthorized! if suspended_by_unauthorized?(message, org)
 
     space = SpaceCreate.new(user_audit_info:).create(org, message)
 
@@ -74,6 +75,8 @@ class SpacesV3Controller < ApplicationController
 
     message = VCAP::CloudController::SpaceUpdateMessage.new(hashed_params[:body])
     unprocessable!(message.errors.full_messages) unless message.valid?
+
+    unauthorized! if suspended_by_unauthorized?(message, space.organization)
 
     space = SpaceUpdate.new(user_audit_info).update(space, message)
 
@@ -221,6 +224,12 @@ class SpacesV3Controller < ApplicationController
   end
 
   private
+
+  def suspended_by_unauthorized?(message, org)
+    return false unless message.requested?(:suspended)
+
+    !permission_queryer.can_write_globally? && !permission_queryer.is_org_manager_for_org?(org.id)
+  end
 
   def fetch_organization(guid)
     Organization.where(guid:).first

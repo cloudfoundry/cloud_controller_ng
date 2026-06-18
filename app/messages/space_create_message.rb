@@ -2,7 +2,7 @@ require 'messages/metadata_base_message'
 
 module VCAP::CloudController
   class SpaceCreateMessage < MetadataBaseMessage
-    register_allowed_keys %i[name relationships]
+    register_allowed_keys %i[name relationships suspended]
 
     validates_with NoAdditionalKeysValidator,
                    RelationshipValidator
@@ -12,6 +12,10 @@ module VCAP::CloudController
               string: true,
               length: { maximum: 255 },
               format: { with: ->(_) { Space::SPACE_NAME_REGEX }, message: 'must not contain escaped characters' },
+              allow_nil: true
+
+    validates :suspended,
+              boolean: true,
               allow_nil: true
 
     delegate :organization_guid, to: :relationships_message
