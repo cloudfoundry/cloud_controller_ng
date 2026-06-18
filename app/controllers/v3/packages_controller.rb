@@ -59,7 +59,7 @@ class PackagesController < ApplicationController
     package = PackageModel.where(guid: hashed_params[:guid]).first
     package_not_found! unless package && permission_queryer.can_read_from_space?(package.space.id, package.space.organization_id)
     unauthorized! unless permission_queryer.can_write_to_active_space?(package.space.id)
-    suspended! unless permission_queryer.is_space_active?(package.space.id)
+    require_writable_space!(package.space)
 
     unprocessable!('Package type must be bits.') unless package.type == 'bits'
     bits_already_uploaded! if package.state != PackageModel::CREATED_STATE
@@ -126,7 +126,7 @@ class PackagesController < ApplicationController
     package_not_found! unless package && permission_queryer.can_read_from_space?(space.id, space.organization_id)
     unprocessable_non_docker_package_update! if package.type != PackageModel::DOCKER_TYPE && (message.username || message.password)
     unauthorized! unless permission_queryer.can_write_to_active_space?(space.id)
-    suspended! unless permission_queryer.is_space_active?(space.id)
+    require_writable_space!(space)
 
     package = PackageUpdate.new.update(package, message)
 
@@ -138,7 +138,7 @@ class PackagesController < ApplicationController
 
     package_not_found! unless package && permission_queryer.can_read_from_space?(package.space.id, package.space.organization_id)
     unauthorized! unless permission_queryer.can_write_to_active_space?(package.space.id)
-    suspended! unless permission_queryer.is_space_active?(package.space.id)
+    require_writable_space!(package.space)
 
     delete_action = PackageDelete.new(user_audit_info)
     deletion_job = VCAP::CloudController::Jobs::DeleteActionJob.new(PackageModel, package.guid, delete_action)
@@ -157,7 +157,7 @@ class PackagesController < ApplicationController
 
     unprocessable_app! unless app && permission_queryer.can_read_from_space?(app.space.id, app.space.organization_id)
     unauthorized! unless permission_queryer.can_write_to_active_space?(app.space.id)
-    suspended! unless permission_queryer.is_space_active?(app.space.id)
+    require_writable_space!(app.space)
 
     if message.type != PackageModel::DOCKER_TYPE && app.docker?
       unprocessable_non_docker_package!
@@ -174,13 +174,13 @@ class PackagesController < ApplicationController
 
     unprocessable_app! unless destination_app && permission_queryer.can_read_from_space?(destination_app.space.id, destination_app.space.organization_id)
     unauthorized! unless permission_queryer.can_write_to_active_space?(destination_app.space.id)
-    suspended! unless permission_queryer.is_space_active?(destination_app.space.id)
+    require_writable_space!(destination_app.space)
 
     source_package = PackageModel.where(guid: hashed_params[:source_guid]).first
 
     unprocessable_source_package! unless source_package && permission_queryer.can_read_from_space?(source_package.space.id, source_package.space.organization_id)
     unauthorized! unless permission_queryer.can_write_to_active_space?(source_package.space.id)
-    suspended! unless permission_queryer.is_space_active?(source_package.space.id)
+    require_writable_space!(source_package.space)
 
     PackageCopy.new.copy(
       destination_app_guid: app_guid,

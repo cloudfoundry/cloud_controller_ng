@@ -67,7 +67,7 @@ class ServiceRouteBindingsController < ApplicationController
   def update
     route_binding_not_found! unless @route_binding.present? && can_read_from_space?(@route_binding.route.space)
     unauthorized! unless can_write_to_active_space?(@route_binding.route.space)
-    suspended! unless is_space_active?(@route_binding.route.space)
+    require_writable_space!(@route_binding.route.space)
 
     unprocessable!('The service route binding is being deleted') if delete_in_progress?(@route_binding)
 
@@ -90,7 +90,7 @@ class ServiceRouteBindingsController < ApplicationController
   def destroy
     route_binding_not_found! unless @route_binding && can_read_from_space?(@route_binding.route.space)
     unauthorized! unless can_bind_in_active_space?(@route_binding.route.space)
-    suspended! unless is_space_active?(@route_binding.route.space)
+    require_writable_space!(@route_binding.route.space)
 
     action = V3::ServiceRouteBindingDelete.new(user_audit_info)
     binding_operation_in_progress! if action.blocking_operation_in_progress?(@route_binding)
@@ -113,7 +113,7 @@ class ServiceRouteBindingsController < ApplicationController
     not_found_with_message!(@route_binding) unless @route_binding.create_succeeded?
 
     unauthorized! unless can_write_to_active_space?(@route_binding.route.space)
-    suspended! unless is_space_active?(@route_binding.route.space)
+    require_writable_space!(@route_binding.route.space)
 
     fetcher = ServiceBindingRead.new
     parameters = fetcher.fetch_parameters(@route_binding)
@@ -201,7 +201,7 @@ class ServiceRouteBindingsController < ApplicationController
     service_instance_not_found!(guid) unless service_instance && can_read_from_space?(service_instance.space)
 
     unauthorized! unless can_bind_in_active_space?(service_instance.space)
-    suspended! unless is_space_active?(service_instance.space)
+    require_writable_space!(service_instance.space)
 
     service_instance
   end
@@ -232,10 +232,6 @@ class ServiceRouteBindingsController < ApplicationController
 
   def can_write_to_active_space?(space)
     permission_queryer.can_write_to_active_space?(space.id)
-  end
-
-  def is_space_active?(space)
-    permission_queryer.is_space_active?(space.id)
   end
 
   def route_services_enabled?

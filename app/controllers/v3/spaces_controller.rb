@@ -57,7 +57,7 @@ class SpacesV3Controller < ApplicationController
     org = fetch_organization(message.organization_guid)
     unprocessable!(missing_org) unless org && permission_queryer.can_read_from_org?(org.id)
     unauthorized! unless permission_queryer.can_write_to_active_org?(org.id)
-    suspended! unless permission_queryer.is_org_active?(org.id)
+    require_writable_org!(org)
 
     space = SpaceCreate.new(user_audit_info:).create(org, message)
 
@@ -70,7 +70,7 @@ class SpacesV3Controller < ApplicationController
     space = fetch_space(hashed_params[:guid])
     space_not_found! unless space && permission_queryer.can_read_from_space?(space.id, space.organization_id)
     unauthorized! unless permission_queryer.can_update_active_space?(space.id, space.organization_id)
-    suspended! unless permission_queryer.is_space_active?(space.id)
+    require_writable_space!(space)
 
     message = VCAP::CloudController::SpaceUpdateMessage.new(hashed_params[:body])
     unprocessable!(message.errors.full_messages) unless message.valid?
@@ -86,7 +86,7 @@ class SpacesV3Controller < ApplicationController
     space = fetch_space(hashed_params[:guid])
     space_not_found! unless space && permission_queryer.can_read_from_space?(space.id, space.organization_id)
     unauthorized! unless permission_queryer.can_write_to_active_org?(space.organization_id)
-    suspended! unless permission_queryer.is_org_active?(space.organization_id)
+    require_writable_org!(space.organization)
 
     service_event_repository = VCAP::CloudController::Repositories::ServiceEventRepository.new(user_audit_info)
     delete_action = SpaceDelete.new(user_audit_info, service_event_repository)
@@ -142,7 +142,7 @@ class SpacesV3Controller < ApplicationController
     space_not_found! unless space && permission_queryer.can_read_from_space?(space.id, space.organization_id)
 
     unauthorized! unless permission_queryer.can_manage_apps_in_active_space?(space.id)
-    suspended! unless permission_queryer.is_space_active?(space.id)
+    require_writable_space!(space)
 
     deletion_job = VCAP::CloudController::Jobs::V3::SpaceDeleteUnmappedRoutesJob.new(space)
     pollable_job = Jobs::Enqueuer.new(queue: Jobs::Queues.generic).enqueue_pollable(deletion_job)

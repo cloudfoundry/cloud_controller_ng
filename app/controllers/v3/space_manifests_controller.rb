@@ -63,7 +63,7 @@ class SpaceManifestsController < ApplicationController
 
   def can_write_space(space)
     unauthorized! unless permission_queryer.can_write_to_active_space?(space.id)
-    suspended! unless permission_queryer.is_space_active?(space.id)
+    require_writable_space!(space)
   end
 
   def errors_for_message(message, index)

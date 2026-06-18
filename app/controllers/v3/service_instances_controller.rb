@@ -83,7 +83,7 @@ class ServiceInstancesV3Controller < ApplicationController
     space = Space.first(guid: message.space_guid)
     unprocessable_space! unless space && can_read_from_space?(space)
     unauthorized! unless can_write_to_active_space?(space)
-    suspended! unless is_space_active?(space)
+    require_writable_space!(space)
 
     case message.type
     when 'user-provided'
@@ -133,7 +133,7 @@ class ServiceInstancesV3Controller < ApplicationController
     service_instance = ServiceInstance.first(guid: hashed_params[:guid])
     resource_not_found!(:service_instance) unless service_instance && can_read_service_instance?(service_instance)
     unauthorized! unless can_write_to_active_space?(service_instance.space)
-    suspended! unless is_space_active?(service_instance.space)
+    require_writable_space!(service_instance.space)
 
     message = VCAP::CloudController::ToManyRelationshipMessage.new(hashed_params[:body])
     unprocessable!(message.errors.full_messages) unless message.valid?
@@ -156,7 +156,7 @@ class ServiceInstancesV3Controller < ApplicationController
 
     resource_not_found!(:service_instance) unless service_instance && can_read_service_instance?(service_instance)
     unauthorized! unless can_write_to_active_space?(service_instance.space)
-    suspended! unless is_space_active?(service_instance.space)
+    require_writable_space!(service_instance.space)
 
     space_guid = hashed_params[:space_guid]
     target_space = Space.first(guid: space_guid)
@@ -386,7 +386,7 @@ class ServiceInstancesV3Controller < ApplicationController
 
     service_instance_not_found! unless service_instance && can_read_service_instance?(service_instance)
     unauthorized! unless can_write_to_active_space?(service_instance.space)
-    suspended! unless is_space_active?(service_instance.space)
+    require_writable_space!(service_instance.space)
 
     service_instance
   end
@@ -443,7 +443,7 @@ class ServiceInstancesV3Controller < ApplicationController
   end
 
   def is_space_active?(space)
-    permission_queryer.is_space_active?(space.id)
+    permission_queryer.writable_space_state(space.id) == :active
   end
 
   def admin?

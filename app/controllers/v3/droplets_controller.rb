@@ -66,7 +66,7 @@ class DropletsController < ApplicationController
       unauthorized! unless permission_queryer.can_update_build_state?
     else
       unauthorized! unless permission_queryer.can_write_to_active_space?(space.id)
-      suspended! unless permission_queryer.is_space_active?(space.id)
+      require_writable_space!(space)
     end
     message = VCAP::CloudController::DropletUpdateMessage.new(hashed_params[:body])
     unprocessable!(message.errors.full_messages) unless message.valid?
@@ -81,7 +81,7 @@ class DropletsController < ApplicationController
     droplet_not_found! unless droplet && permission_queryer.can_read_from_space?(space.id, space.organization_id)
 
     unauthorized! unless permission_queryer.can_write_to_active_space?(space.id)
-    suspended! unless permission_queryer.is_space_active?(space.id)
+    require_writable_space!(space)
     in_use!(droplet) if droplet.current?
 
     delete_action = DropletDelete.new(user_audit_info)
@@ -103,7 +103,7 @@ class DropletsController < ApplicationController
 
     app_not_found! unless destination_app && permission_queryer.can_read_from_space?(destination_app.space.id, destination_app.space.organization_id)
     unauthorized! unless permission_queryer.can_write_to_active_space?(destination_app.space.id)
-    suspended! unless permission_queryer.is_space_active?(destination_app.space.id)
+    require_writable_space!(destination_app.space)
 
     DropletCopy.new(source_droplet).copy(destination_app, user_audit_info)
   end
@@ -116,7 +116,7 @@ class DropletsController < ApplicationController
 
     unprocessable_app!(message.relationships_message.app_guid) unless app && permission_queryer.can_read_from_space?(app.space.id, app.space.organization_id)
     unauthorized! unless permission_queryer.can_write_to_active_space?(app.space.id)
-    suspended! unless permission_queryer.is_space_active?(app.space.id)
+    require_writable_space!(app.space)
 
     DropletCreate.new.create(app, message, user_audit_info)
   end
@@ -130,7 +130,7 @@ class DropletsController < ApplicationController
     droplet_not_found! unless droplet && permission_queryer.can_read_from_space?(droplet.space.id, droplet.space.organization_id)
 
     unauthorized! unless permission_queryer.can_write_to_active_space?(droplet.space.id)
-    suspended! unless permission_queryer.is_space_active?(droplet.space.id)
+    require_writable_space!(droplet.space)
 
     unprocessable!('Droplet may be uploaded only once. Create a new droplet to upload bits.') unless droplet.state == DropletModel::AWAITING_UPLOAD_STATE
 

@@ -92,7 +92,7 @@ class AppsV3Controller < ApplicationController
     space = Space.where(guid: message.space_guid).first
     unprocessable_space! unless space && permission_queryer.can_read_from_space?(space.id, space.organization_id)
     unauthorized! unless permission_queryer.can_write_to_active_space?(space.id)
-    suspended! unless permission_queryer.is_space_active?(space.id)
+    require_writable_space!(space)
     FeatureFlag.raise_unless_enabled!(:diego_docker) if message.lifecycle_type == VCAP::CloudController::PackageModel::DOCKER_TYPE
     lifecycle = AppLifecycleProvider.provide_for_create(message)
     FeatureFlag.raise_unless_enabled!(:diego_cnb) if lifecycle.type == VCAP::CloudController::Lifecycles::CNB
@@ -123,7 +123,7 @@ class AppsV3Controller < ApplicationController
 
     app_not_found! unless app && permission_queryer.can_read_from_space?(space.id, space.organization_id)
     unauthorized! unless permission_queryer.can_write_to_active_space?(space.id)
-    suspended! unless permission_queryer.is_space_active?(space.id)
+    require_writable_space!(space)
 
     lifecycle = AppLifecycleProvider.provide_for_update(message, app)
     unprocessable!(lifecycle.errors.full_messages) unless lifecycle.valid?
@@ -152,7 +152,7 @@ class AppsV3Controller < ApplicationController
 
     app_not_found! unless app && permission_queryer.can_read_from_space?(space.id, space.organization_id)
     unauthorized! unless permission_queryer.can_write_to_active_space?(space.id)
-    suspended! unless permission_queryer.is_space_active?(space.id)
+    require_writable_space!(space)
 
     delete_action = AppDelete.new(user_audit_info)
     deletion_job  = VCAP::CloudController::Jobs::DeleteActionJob.new(AppModel, app.guid, delete_action)
@@ -169,7 +169,7 @@ class AppsV3Controller < ApplicationController
     app_not_found! unless app && permission_queryer.can_read_from_space?(space.id, space.organization_id)
     unprocessable_lacking_droplet! unless app.droplet
     unauthorized! unless permission_queryer.can_manage_apps_in_active_space?(space.id)
-    suspended! unless permission_queryer.is_space_active?(space.id)
+    require_writable_space!(space)
 
     FeatureFlag.raise_unless_enabled!(:diego_docker) if app.lifecycle_type == DockerLifecycleDataModel::LIFECYCLE_TYPE
     FeatureFlag.raise_unless_enabled!(:diego_cnb) if app.lifecycle_type == CNBLifecycleDataModel::LIFECYCLE_TYPE
@@ -191,7 +191,7 @@ class AppsV3Controller < ApplicationController
     app, space = AppFetcher.new.fetch(hashed_params[:guid])
     app_not_found! unless app && permission_queryer.can_read_from_space?(space.id, space.organization_id)
     unauthorized! unless permission_queryer.can_manage_apps_in_active_space?(space.id)
-    suspended! unless permission_queryer.is_space_active?(space.id)
+    require_writable_space!(space)
 
     AppStop.stop(app:, user_audit_info:)
     TelemetryLogger.v3_emit(
@@ -212,7 +212,7 @@ class AppsV3Controller < ApplicationController
     app_not_found! unless app && permission_queryer.can_read_from_space?(space.id, space.organization_id)
     unprocessable_lacking_droplet! unless app.droplet
     unauthorized! unless permission_queryer.can_manage_apps_in_active_space?(space.id)
-    suspended! unless permission_queryer.is_space_active?(space.id)
+    require_writable_space!(space)
 
     FeatureFlag.raise_unless_enabled!(:diego_docker) if app.lifecycle_type == DockerLifecycleDataModel::LIFECYCLE_TYPE
     FeatureFlag.raise_unless_enabled!(:diego_cnb) if app.lifecycle_type == CNBLifecycleDataModel::LIFECYCLE_TYPE
@@ -237,7 +237,7 @@ class AppsV3Controller < ApplicationController
     app, space = AppFetcher.new.fetch(hashed_params[:guid])
     app_not_found! unless app && permission_queryer.can_read_from_space?(space.id, space.organization_id)
     unauthorized! unless permission_queryer.can_delete_buildpack_cache?(space.id)
-    suspended! unless permission_queryer.is_space_active?(space.id)
+    require_writable_space!(space)
 
     delete_job = Jobs::V3::BuildpackCacheDelete.new(app.guid)
     job = Jobs::Enqueuer.new(queue: Jobs::Queues.generic).enqueue_pollable(delete_job)
@@ -299,7 +299,7 @@ class AppsV3Controller < ApplicationController
 
     app_not_found! unless app && permission_queryer.can_read_from_space?(space.id, space.organization_id)
     unauthorized! unless permission_queryer.can_manage_apps_in_active_space?(space.id)
-    suspended! unless permission_queryer.is_space_active?(space.id)
+    require_writable_space!(space)
 
     message = UpdateEnvironmentVariablesMessage.new(hashed_params[:body])
     unprocessable!(message.errors.full_messages) unless message.valid?
@@ -317,7 +317,7 @@ class AppsV3Controller < ApplicationController
 
     app_not_found! unless app && permission_queryer.can_read_from_space?(space.id, space.organization_id)
     unauthorized! unless permission_queryer.can_manage_apps_in_active_space?(space.id)
-    suspended! unless permission_queryer.is_space_active?(space.id)
+    require_writable_space!(space)
     deployment_in_progress! if app.deploying?
 
     AppAssignDroplet.new(user_audit_info).assign(app, droplet)
