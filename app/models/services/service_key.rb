@@ -33,7 +33,7 @@ module VCAP::CloudController
       credentials.present? ? credentials['credhub-ref'] : nil
     end
 
-    delegate :in_suspended_org?, to: :space
+    delegate :in_suspended_or_deleting_org?, to: :space
 
     delegate :space, to: :service_instance
 

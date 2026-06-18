@@ -205,7 +205,7 @@ module VCAP::CloudController
       other_space == space || shared_spaces.include?(other_space)
     end
 
-    delegate :in_suspended_org?, to: :space
+    delegate :in_suspended_or_deleting_org?, to: :space
 
     def tcp?
       domain.shared? && domain.tcp? && port.present? && port > 0

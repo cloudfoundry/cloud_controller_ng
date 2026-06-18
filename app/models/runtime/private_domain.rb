@@ -48,10 +48,6 @@ module VCAP::CloudController
       validate_total_private_domains
     end
 
-    def in_suspended_org?
-      owning_organization.suspended?
-    end
-
     def addable_to_organization!(org)
       return if owned_by?(org)
 

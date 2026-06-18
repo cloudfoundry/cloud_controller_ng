@@ -1,11 +1,12 @@
 require 'models/helpers/process_types'
+require 'models/helpers/org_space_status'
 
 module VCAP::CloudController
   class Organization < Sequel::Model
+    include OrgSpaceStatus
+
     ORG_NAME_REGEX = /\A[[:alnum:][:punct:][:print:]]+\Z/
-    ACTIVE = 'active'.freeze
-    SUSPENDED = 'suspended'.freeze
-    ORG_STATUS_VALUES = [ACTIVE, SUSPENDED].freeze
+    ORG_STATUS_VALUES = VALID_STATUSES
 
     one_to_many :spaces
 
@@ -252,14 +253,6 @@ module VCAP::CloudController
 
     def meets_max_task_limit?
       app_task_limit <= running_and_pending_tasks_count
-    end
-
-    def active?
-      status == ACTIVE
-    end
-
-    def suspended?
-      status == SUSPENDED
     end
 
     def billing_enabled?

@@ -564,25 +564,67 @@ module VCAP::CloudController
       }
     end
 
-    describe '#in_suspended_org?' do
+    describe '#in_suspended_or_deleting_org?' do
       let(:org) { create(:organization) }
 
       subject(:space) { Space.new(organization: org) }
 
       context 'when in a suspended organization' do
-        before { allow(org).to receive(:suspended?).and_return(true) }
+        before { allow(org).to receive(:suspended_or_deleting?).and_return(true) }
 
         it 'is true' do
-          expect(space).to be_in_suspended_org
+          expect(space).to be_in_suspended_or_deleting_org
         end
       end
 
       context 'when in an unsuspended organization' do
-        before { allow(org).to receive(:suspended?).and_return(false) }
+        before { allow(org).to receive(:suspended_or_deleting?).and_return(false) }
 
         it 'is false' do
-          expect(space).not_to be_in_suspended_org
+          expect(space).not_to be_in_suspended_or_deleting_org
         end
+      end
+    end
+
+    describe 'status' do
+      let(:space) { Space.make }
+
+      it "allows 'active', 'suspended', and 'deleting'" do
+        %w[active suspended deleting].each do |status|
+          space.status = status
+          expect { space.save }.not_to raise_error
+          expect(space.status).to eq(status)
+        end
+      end
+
+      it 'does not allow arbitrary status values' do
+        space.status = 'unknown'
+        expect { space.save }.to raise_error(Sequel::ValidationFailed)
+      end
+
+      it 'defaults to active' do
+        expect(Space.make.status).to eq('active')
+      end
+
+      describe 'when status == active' do
+        subject(:space) { Space.make(status: 'active') }
+        it('is active') { expect(space).to be_active }
+        it('is not suspended') { expect(space).not_to be_suspended }
+        it('is not deleting') { expect(space).not_to be_deleting }
+      end
+
+      describe 'when status == suspended' do
+        subject(:space) { Space.make(status: 'suspended') }
+        it('is not active') { expect(space).not_to be_active }
+        it('is suspended') { expect(space).to be_suspended }
+        it('is not deleting') { expect(space).not_to be_deleting }
+      end
+
+      describe 'when status == deleting' do
+        subject(:space) { Space.make(status: 'deleting') }
+        it('is not active') { expect(space).not_to be_active }
+        it('is not suspended') { expect(space).not_to be_suspended }
+        it('is deleting') { expect(space).to be_deleting }
       end
     end
 

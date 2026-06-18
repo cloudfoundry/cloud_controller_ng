@@ -307,47 +307,141 @@ module VCAP::CloudController
       end
     end
 
-    describe '#is_org_active?' do
-      it 'returns true' do
-        expect(permissions.is_org_active?(org.id)).to be true
+    describe '#org_state' do
+      it 'returns :active for an active org' do
+        expect(permissions.org_state(org.id)).to eq(:active)
       end
 
-      context 'org is suspended' do
-        before do
-          org.update(status: Organization::SUSPENDED)
-        end
+      it 'returns :suspended when the org is suspended' do
+        org.update(status: Organization::SUSPENDED)
+        expect(permissions.org_state(org.id)).to eq(:suspended)
+      end
 
-        it 'returns false' do
-          set_current_user(user)
-          expect(permissions.is_org_active?(org.id)).to be false
-        end
+      it 'returns :deleting when the org is deleting' do
+        org.update(status: Organization::DELETING)
+        expect(permissions.org_state(org.id)).to eq(:deleting)
+      end
 
-        it 'returns true for an admin' do
-          set_current_user(user, { admin: true })
-          expect(permissions.is_org_active?(org.id)).to be true
-        end
+      it 'reports the actual stored status for admins' do
+        org.update(status: Organization::DELETING)
+        set_current_user(user, { admin: true })
+        expect(permissions.org_state(org.id)).to eq(:deleting)
+      end
+
+      it 'reports the actual stored status for org managers' do
+        org.update(status: Organization::DELETING)
+        org.add_manager(user)
+        expect(permissions.org_state(org.id)).to eq(:deleting)
+      end
+
+      it 'returns :active when the org cannot be found' do
+        expect(permissions.org_state(-1)).to eq(:active)
       end
     end
 
-    describe '#is_space_active?' do
-      it 'returns true' do
-        expect(permissions.is_space_active?(space.id)).to be true
+    describe '#writable_org_state' do
+      it 'returns :active for an active org' do
+        expect(permissions.writable_org_state(org.id)).to eq(:active)
       end
 
-      context 'org is suspended' do
-        before do
-          space.organization.update(status: Organization::SUSPENDED)
-        end
+      it 'returns the stored status for users without bypass' do
+        org.update(status: Organization::SUSPENDED)
+        expect(permissions.writable_org_state(org.id)).to eq(:suspended)
+      end
 
-        it 'returns false' do
-          set_current_user(user)
-          expect(permissions.is_space_active?(space.id)).to be false
-        end
+      it 'returns :active for admins regardless of stored status' do
+        org.update(status: Organization::DELETING)
+        set_current_user(user, { admin: true })
+        expect(permissions.writable_org_state(org.id)).to eq(:active)
+      end
 
-        it 'returns true for an admin' do
-          set_current_user(user, { admin: true })
-          expect(permissions.is_space_active?(space.id)).to be true
-        end
+      it 'returns the stored status for org managers (only admins bypass org-level state)' do
+        org.update(status: Organization::SUSPENDED)
+        org.add_manager(user)
+        expect(permissions.writable_org_state(org.id)).to eq(:suspended)
+      end
+    end
+
+    describe '#space_state' do
+      it 'returns :active when both org and space are active' do
+        expect(permissions.space_state(space.id)).to eq(:active)
+      end
+
+      it 'returns :suspended when the org is suspended' do
+        space.organization.update(status: Organization::SUSPENDED)
+        expect(permissions.space_state(space.id)).to eq(:suspended)
+      end
+
+      it 'returns :suspended when the space is suspended' do
+        space.update(status: Space::SUSPENDED)
+        expect(permissions.space_state(space.id)).to eq(:suspended)
+      end
+
+      it 'returns :deleting when the space is deleting' do
+        space.update(status: Space::DELETING)
+        expect(permissions.space_state(space.id)).to eq(:deleting)
+      end
+
+      it 'returns :deleting when the org is deleting' do
+        space.organization.update(status: Organization::DELETING)
+        expect(permissions.space_state(space.id)).to eq(:deleting)
+      end
+
+      it 'prefers :deleting over :suspended (parent wins, more terminal wins)' do
+        space.organization.update(status: Organization::DELETING)
+        space.update(status: Space::SUSPENDED)
+        expect(permissions.space_state(space.id)).to eq(:deleting)
+      end
+
+      it 'reports the actual stored status for admins' do
+        space.update(status: Space::DELETING)
+        set_current_user(user, { admin: true })
+        expect(permissions.space_state(space.id)).to eq(:deleting)
+      end
+
+      it 'reports the actual stored status for org managers' do
+        space.update(status: Space::DELETING)
+        space.organization.add_manager(user)
+        expect(permissions.space_state(space.id)).to eq(:deleting)
+      end
+
+      it 'returns :active when the space cannot be found' do
+        expect(permissions.space_state(-1)).to eq(:active)
+      end
+    end
+
+    describe '#writable_space_state' do
+      it 'returns :active when both org and space are active' do
+        expect(permissions.writable_space_state(space.id)).to eq(:active)
+      end
+
+      it 'returns the stored state for users without bypass' do
+        space.update(status: Space::SUSPENDED)
+        expect(permissions.writable_space_state(space.id)).to eq(:suspended)
+      end
+
+      it 'returns :active for admins regardless of stored status' do
+        space.update(status: Space::DELETING)
+        set_current_user(user, { admin: true })
+        expect(permissions.writable_space_state(space.id)).to eq(:active)
+      end
+
+      it 'returns :active for org managers when only the space is suspended/deleting' do
+        space.update(status: Space::DELETING)
+        space.organization.add_manager(user)
+        expect(permissions.writable_space_state(space.id)).to eq(:active)
+      end
+
+      it 'returns the org status for org managers when the org is suspended (only admins bypass org-level state)' do
+        space.organization.update(status: Organization::SUSPENDED)
+        space.organization.add_manager(user)
+        expect(permissions.writable_space_state(space.id)).to eq(:suspended)
+      end
+
+      it 'returns the org status for org managers when the org is being deleted' do
+        space.organization.update(status: Organization::DELETING)
+        space.organization.add_manager(user)
+        expect(permissions.writable_space_state(space.id)).to eq(:deleting)
       end
     end
 

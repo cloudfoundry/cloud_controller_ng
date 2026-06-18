@@ -1646,24 +1646,24 @@ module VCAP::CloudController
         end
       end
 
-      describe '#in_suspended_org?' do
+      describe '#in_suspended_or_deleting_org?' do
         let(:space) { create(:space) }
 
         subject(:route) { Route.new(space:) }
 
         context 'when in a suspended organization' do
-          before { allow(space).to receive(:in_suspended_org?).and_return(true) }
+          before { allow(space).to receive(:in_suspended_or_deleting_org?).and_return(true) }
 
           it 'is true' do
-            expect(route).to be_in_suspended_org
+            expect(route).to be_in_suspended_or_deleting_org
           end
         end
 
         context 'when in an unsuspended organization' do
-          before { allow(space).to receive(:in_suspended_org?).and_return(false) }
+          before { allow(space).to receive(:in_suspended_or_deleting_org?).and_return(false) }
 
           it 'is false' do
-            expect(route).not_to be_in_suspended_org
+            expect(route).not_to be_in_suspended_or_deleting_org
           end
         end
       end

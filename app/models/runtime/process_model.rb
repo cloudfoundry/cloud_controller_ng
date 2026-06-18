@@ -345,7 +345,9 @@ module VCAP::CloudController
       started?
     end
 
-    delegate :in_suspended_org?, to: :space
+    def in_suspended_or_deleting_org?
+      space&.in_suspended_or_deleting_org? || false
+    end
 
     def being_started?
       column_changed?(:state) && started?

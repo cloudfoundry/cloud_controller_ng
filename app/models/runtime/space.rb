@@ -1,8 +1,11 @@
 require 'models/helpers/process_types'
+require 'models/helpers/org_space_status'
 require 'cloud_controller/errors/invalid_relation'
 
 module VCAP::CloudController
   class Space < Sequel::Model
+    include OrgSpaceStatus
+
     class InvalidDeveloperRelation < CloudController::Errors::InvalidRelation; end
     class InvalidAuditorRelation < CloudController::Errors::InvalidRelation; end
     class InvalidSupporterRelation < CloudController::Errors::InvalidRelation; end
@@ -13,6 +16,7 @@ module VCAP::CloudController
     class DBNameUniqueRaceError < Sequel::ValidationFailed; end
 
     SPACE_NAME_REGEX = /\A[[:alnum:][:punct:][:print:]]+\Z/
+    SPACE_STATUS_VALUES = VALID_STATUSES
     SELECT_NEWEST_PROCESS = lambda { |_, processes|
       newest_processes = {}
       processes.group_by(&:app_guid).each_value do |processes_for_app|
@@ -230,6 +234,7 @@ module VCAP::CloudController
       validates_presence :name
       validates_presence :organization
       validates_format SPACE_NAME_REGEX, :name
+      validates_includes SPACE_STATUS_VALUES, :status, allow_missing: true
 
       errors.add(:space_quota_definition, :invalid_organization) if space_quota_definition && space_quota_definition.organization_id != organization.id
 
@@ -324,8 +329,8 @@ module VCAP::CloudController
       app_task_limit <= running_and_pending_tasks_count
     end
 
-    def in_suspended_org?
-      organization.suspended?
+    def in_suspended_or_deleting_org?
+      organization.suspended_or_deleting?
     end
 
     def members
