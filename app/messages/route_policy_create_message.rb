@@ -13,7 +13,7 @@ module VCAP::CloudController
     validates :source, presence: true, string: true
 
     validate :source_format_valid
-    validate :source_not_cf_any_with_others
+    # cf:any exclusivity is enforced at the controller level when checking existing policies on the route
 
     delegate :route_guid, to: :relationships_message
 
@@ -28,10 +28,6 @@ module VCAP::CloudController
       return if RoutePolicy::SOURCE_REGEX.match?(source)
 
       errors.add(:source, "must be in format 'cf:app:<uuid>', 'cf:space:<uuid>', 'cf:org:<uuid>', or 'cf:any'")
-    end
-
-    def source_not_cf_any_with_others
-      # enforced at the controller level when checking existing policies on the route
     end
 
     class Relationships < BaseMessage
