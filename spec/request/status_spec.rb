@@ -13,8 +13,8 @@ module VCAP::CloudController
         before do
           allow(Puma).to receive(:stats_hash).and_return(
             worker_status: [
-              { last_status: { busy_threads: 2, running: 2, requests_count: 5 } },
-              { last_status: { busy_threads: 1, running: 1, requests_count: 3 } }
+              { last_status: { busy_threads: 2, running: 2, pool_capacity: 0, requests_count: 5 } },
+              { last_status: { busy_threads: 1, running: 1, pool_capacity: 0, requests_count: 3 } }
             ]
           )
           allow(metrics_webserver).to receive(:determine_unhealthy_state).and_return(true)
@@ -32,8 +32,8 @@ module VCAP::CloudController
         before do
           allow(Puma).to receive(:stats_hash).and_return(
             worker_status: [
-              { last_status: { busy_threads: 2, running: 2, requests_count: 5 } },
-              { last_status: { busy_threads: 1, running: 1, requests_count: 3 } }
+              { last_status: { busy_threads: 2, running: 2, pool_capacity: 0, requests_count: 5 } },
+              { last_status: { busy_threads: 1, running: 1, pool_capacity: 0, requests_count: 3 } }
             ]
           )
           allow(metrics_webserver).to receive(:determine_unhealthy_state).and_return(false)
@@ -47,12 +47,48 @@ module VCAP::CloudController
         end
       end
 
+      context 'when all workers are busy with a request backlog (busy_threads > running) but not yet unhealthy' do
+        before do
+          allow(Puma).to receive(:stats_hash).and_return(
+            worker_status: [
+              { last_status: { busy_threads: 12, running: 2, pool_capacity: 0, requests_count: 5 } }
+            ]
+          )
+          allow(metrics_webserver).to receive(:determine_unhealthy_state).and_return(false)
+        end
+
+        it 'returns 429 BUSY' do
+          get '/internal/v4/status'
+
+          expect(last_response.status).to eq(429)
+          expect(last_response.body).to eq('BUSY')
+        end
+      end
+
+      context 'when all workers are busy with a request backlog (busy_threads > running) and unhealthy' do
+        before do
+          allow(Puma).to receive(:stats_hash).and_return(
+            worker_status: [
+              { last_status: { busy_threads: 12, running: 2, pool_capacity: 0, requests_count: 5 } }
+            ]
+          )
+          allow(metrics_webserver).to receive(:determine_unhealthy_state).and_return(true)
+        end
+
+        it 'returns 503 UNHEALTHY' do
+          get '/internal/v4/status'
+
+          expect(last_response.status).to eq(503)
+          expect(last_response.body).to eq('UNHEALTHY')
+        end
+      end
+
       context 'when not all workers are busy' do
         before do
           allow(Puma).to receive(:stats_hash).and_return(
             worker_status: [
-              { last_status: { busy_threads: 1, running: 2, requests_count: 5 } },
-              { last_status: { busy_threads: 0, running: 1, requests_count: 3 } }
+              { last_status: { busy_threads: 1, running: 2, pool_capacity: 1, requests_count: 5 } },
+              { last_status: { busy_threads: 0, running: 1, pool_capacity: 1, requests_count: 3 } }
             ]
           )
         end
