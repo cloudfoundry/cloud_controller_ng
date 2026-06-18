@@ -104,6 +104,43 @@ module VCAP::CloudController
       it_behaves_like('an access control', :update, restricted_write_table)
     end
 
+    describe 'in a deleting org' do
+      before do
+        org.update(status: VCAP::CloudController::Organization::DELETING)
+      end
+
+      it_behaves_like('an access control', :create, restricted_write_table)
+      it_behaves_like('an access control', :delete, restricted_write_table)
+      it_behaves_like('an access control', :read_for_update, restricted_write_table)
+      it_behaves_like('an access control', :update, restricted_write_table)
+    end
+
+    describe 'in a suspended space' do
+      before do
+        flag.enabled = true
+        flag.save
+        space.update(status: VCAP::CloudController::Space::SUSPENDED)
+      end
+
+      it_behaves_like('an access control', :create, restricted_write_table)
+      it_behaves_like('an access control', :delete, restricted_write_table)
+      it_behaves_like('an access control', :read_for_update, restricted_write_table)
+      it_behaves_like('an access control', :update, restricted_write_table)
+    end
+
+    describe 'in a deleting space' do
+      before do
+        flag.enabled = true
+        flag.save
+        space.update(status: VCAP::CloudController::Space::DELETING)
+      end
+
+      it_behaves_like('an access control', :create, restricted_write_table)
+      it_behaves_like('an access control', :delete, restricted_write_table)
+      it_behaves_like('an access control', :read_for_update, restricted_write_table)
+      it_behaves_like('an access control', :update, restricted_write_table)
+    end
+
     describe 'in an unsuspended org' do
       describe 'when route creation is enabled' do
         before do

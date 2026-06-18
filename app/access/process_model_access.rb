@@ -54,7 +54,7 @@ module VCAP::CloudController
 
     def create?(app, _params=nil)
       return true if admin_user?
-      return false if app.in_suspended_org?
+      return false if app.in_suspended_or_deleting_org? || app.space&.suspended_or_deleting?
 
       app.space&.has_developer?(context.user)
     end

@@ -93,10 +93,18 @@ module VCAP::CloudController
         end
       end
 
-      context 'when the organization is suspended' do
-        before { object.space.organization.status = 'suspended' }
+      %i[suspended deleting].each do |state|
+        context "when the organization is #{state}" do
+          before { object.space.organization.status = state.to_s }
 
-        it_behaves_like 'read only access'
+          it_behaves_like 'read only access'
+        end
+
+        context "when the space is #{state}" do
+          before { object.space.status = state.to_s }
+
+          it_behaves_like 'read only access'
+        end
       end
 
       context 'when the app_scaling feature flag is disabled' do
@@ -245,10 +253,6 @@ module VCAP::CloudController
 
       # only using global_auditor as an example of a non-admin user
       include_context 'global auditor setup'
-
-      before do
-        allow(object).to receive(:in_suspended_org?).and_return(false)
-      end
 
       it 'does NOT allow global_auditor to create' do
         expect(subject).not_to be_create(object)

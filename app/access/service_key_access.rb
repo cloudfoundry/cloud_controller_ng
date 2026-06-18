@@ -52,9 +52,11 @@ module VCAP::CloudController
 
     def create?(service_key, _params=nil)
       return true if admin_user?
-      return false if service_key.in_suspended_org?
 
-      service_key.service_instance.space.has_developer?(context.user)
+      space = service_key.service_instance.space
+      return false if space.in_suspended_or_deleting_org? || space.suspended_or_deleting?
+
+      space.has_developer?(context.user)
     end
 
     def delete?(service_key)

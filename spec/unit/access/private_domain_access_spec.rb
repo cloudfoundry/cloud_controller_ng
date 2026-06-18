@@ -27,7 +27,13 @@ module VCAP::CloudController
       it_behaves_like 'full access'
 
       context 'when the organization is suspended' do
-        before { allow(object).to receive(:in_suspended_org?).and_return(true) }
+        before { allow(object.owning_organization).to receive(:suspended?).and_return(true) }
+
+        it_behaves_like 'read only access'
+      end
+
+      context 'when the organization is deleting' do
+        before { allow(object.owning_organization).to receive(:deleting?).and_return(true) }
 
         it_behaves_like 'read only access'
       end

@@ -12,6 +12,25 @@ module VCAP::CloudController
     let(:object) { create(:space, organization: org) }
     let(:space) { object }
 
+    admin_only_write_table = {
+      unauthenticated: false,
+      reader_and_writer: false,
+      reader: false,
+      writer: false,
+
+      admin: true,
+      admin_read_only: false,
+      global_auditor: false,
+
+      space_developer: false,
+      space_manager: false,
+      space_auditor: false,
+      org_user: false,
+      org_manager: false,
+      org_auditor: false,
+      org_billing_manager: false
+    }
+
     describe 'when the parent organization is suspended' do
       before do
         org.update(status: VCAP::CloudController::Organization::SUSPENDED)
@@ -55,24 +74,7 @@ module VCAP::CloudController
         org_billing_manager: false
       }
 
-      write_table = {
-        unauthenticated: false,
-        reader_and_writer: false,
-        reader: false,
-        writer: false,
-
-        admin: true,
-        admin_read_only: false,
-        global_auditor: false,
-
-        space_developer: false,
-        space_manager: false,
-        space_auditor: false,
-        org_user: false,
-        org_manager: false,
-        org_auditor: false,
-        org_billing_manager: false
-      }
+      write_table = admin_only_write_table
 
       it_behaves_like('an access control', :create, write_table)
       it_behaves_like('an access control', :delete, write_table)
@@ -167,6 +169,34 @@ module VCAP::CloudController
             end
           end
         end
+      end
+    end
+
+    describe 'when the parent organization is deleting' do
+      before do
+        org.update(status: 'deleting')
+      end
+
+      write_table = admin_only_write_table
+
+      it_behaves_like('an access control', :create, write_table)
+      it_behaves_like('an access control', :delete, write_table)
+      it_behaves_like('an access control', :read_for_update, write_table)
+      it_behaves_like('an access control', :update, write_table)
+    end
+
+    %i[suspended deleting].each do |space_state|
+      describe "when the space is #{space_state}" do
+        before do
+          object.update(status: space_state.to_s)
+        end
+
+        write_table = admin_only_write_table
+
+        it_behaves_like('an access control', :create, write_table)
+        it_behaves_like('an access control', :delete, write_table)
+        it_behaves_like('an access control', :read_for_update, write_table)
+        it_behaves_like('an access control', :update, write_table)
       end
     end
 
