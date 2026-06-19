@@ -60,6 +60,7 @@ jobs:
           -c fsync=off
           -c synchronous_commit=off
           -c full_page_writes=off
+          -c max_connections=300
         options: >-
           --tmpfs /var/lib/postgresql/data:rw,size=2g
           --health-cmd pg_isready
@@ -81,7 +82,7 @@ jobs:
           parallel-runtime-postgres-${{ matrix.image }}-
           parallel-runtime-postgres-
     - name: Run tests
-      run: DB=postgres POSTGRES_CONNECTION_PREFIX="postgres://postgres:rootpassword@localhost:5432" RSPEC_PROFILE="${{ inputs.rspec_profile }}" bundle exec rake spec
+      run: DB=postgres POSTGRES_CONNECTION_PREFIX="postgres://postgres:rootpassword@localhost:5432" RSPEC_PROFILE="${{ inputs.rspec_profile }}" PARALLEL_TEST_PROCESSORS=6 bundle exec rake spec
     - name: Save parallel_rspec runtime logs
       if: always() && github.ref == 'refs/heads/main'
       uses: actions/cache/save@v5
