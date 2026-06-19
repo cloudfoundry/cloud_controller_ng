@@ -117,7 +117,7 @@ class RoutePoliciesController < ApplicationController
 
   def find_and_authorize_route_for_policy(route_policy)
     route = route_policy.route
-    resource_not_found!(:route_policy) unless route && permission_queryer.can_read_from_space?(route.space.id, route.space.organization_id)
+    resource_not_found!(:route_policy) unless route && permission_queryer.can_read_route_policy_from_space?(route.space.id, route.space.organization_id)
     unauthorized! unless permission_queryer.can_write_to_active_space?(route.space.id)
     suspended! unless permission_queryer.is_space_active?(route.space.id)
   end
