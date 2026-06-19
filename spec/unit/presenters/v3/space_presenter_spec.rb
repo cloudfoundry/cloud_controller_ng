@@ -54,6 +54,7 @@ module VCAP::CloudController::Presenters::V3
 
       context 'when the space is suspended' do
         before { space.update(status: VCAP::CloudController::Space::SUSPENDED) }
+
         it 'presents suspended as true' do
           expect(result[:suspended]).to be(true)
         end
@@ -61,6 +62,7 @@ module VCAP::CloudController::Presenters::V3
 
       context 'when the space is deleting' do
         before { space.update(status: VCAP::CloudController::Space::DELETING) }
+
         it 'presents suspended as false' do
           expect(result[:suspended]).to be(false)
         end

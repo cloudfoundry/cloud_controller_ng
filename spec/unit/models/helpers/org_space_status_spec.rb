@@ -6,6 +6,7 @@ module VCAP::CloudController
     let(:host_class) do
       Class.new do
         include OrgSpaceStatus
+
         attr_accessor :status
       end
     end
