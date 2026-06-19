@@ -21,8 +21,10 @@ Sequel.migration do
         String :value, null: false, size: 63
 
         index :resource_guid, name: :route_policy_labels_resource_guid_index
-        index %i[resource_guid key_prefix key_name], unique: true, name: :route_policy_labels_compound_index
         foreign_key [:resource_guid], :route_policies, key: :guid, on_delete: :cascade, name: :fk_route_policy_labels_resource_guid
+      end
+      alter_table :route_policy_labels do
+        add_unique_constraint %i[resource_guid key_prefix key_name], name: :route_policy_labels_unique
       end
     end
 
@@ -35,8 +37,10 @@ Sequel.migration do
         String :value, size: 5000
 
         index :resource_guid, name: :route_policy_annotations_resource_guid_index
-        index %i[resource_guid key_prefix key_name], unique: true, name: :route_policy_annotations_key_index
         foreign_key [:resource_guid], :route_policies, key: :guid, on_delete: :cascade, name: :fk_route_policy_annotations_resource_guid
+      end
+      alter_table :route_policy_annotations do
+        add_unique_constraint %i[resource_guid key_prefix key_name], name: :route_policy_annotations_unique
       end
     end
   end
