@@ -223,6 +223,7 @@ end
 
 RSpec.shared_examples 'list query endpoint' do
   let(:excluded_params) { [] }
+
   it 'returns 200 even using all possible query parameters' do
     expect(user_header).to be_present, 'user header not provided (should be provided in a `let` block)'
 
