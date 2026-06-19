@@ -132,13 +132,21 @@ RSpec.shared_context 'bigint migration step3b' do
         Sequel::Migrator.run(db, migrations_path, target: current_migration_index_step3a, allow_missing_migration_files: true)
       end
 
-      it 'completes the bigint migration: drops constraints, renames columns, and maintains primary key' do
+      # Three former examples consolidated into one to amortize the heavy
+      # before-block (3 migrations + backfill) over a single migration run.
+      # See spec/migrations/Readme.md "Group related tests into a single it
+      # block ... to minimize the number of migration calls".
+      it 'completes the bigint migration: drops constraints, renames columns, maintains primary key + identity, and (if applicable) keeps timestamp index on bigint id' do
         # Verify pre-migration state
         expect(db).to have_table_with_check_constraint(table)
         expect(db).to have_trigger_function_for_table(table)
         expect(db).to have_table_with_column_and_type(table, :id, 'integer')
         expect(db).to have_table_with_column_and_type(table, :id_bigint, 'bigint')
         expect(db).to have_table_with_primary_key(table, :id)
+
+        last_id_before_migration = insert.call(db)
+        has_timestamp = db.schema(table).any? { |col| col[0] == :timestamp }
+        expect(db).to have_table_with_index_on_columns(table, %i[timestamp id]) if has_timestamp
 
         expect { Sequel::Migrator.run(db, migrations_path, target: current_migration_index_step3b, allow_missing_migration_files: true) }.not_to raise_error
 
@@ -147,28 +155,14 @@ RSpec.shared_context 'bigint migration step3b' do
         expect(db).not_to have_trigger_function_for_table(table)
         expect(db).to have_table_with_column_and_type(table, :id, 'bigint')
         expect(db).not_to have_table_with_column(table, :id_bigint)
-
         expect(db).to have_table_with_primary_key(table, :id)
-      end
 
-      it 'has an index on timestamp + (bigint) id column' do
-        if db.schema(table).any? { |col| col[0] == :timestamp }
-
-          expect(db).to have_table_with_index_on_columns(table, %i[timestamp id])
-
-          expect { Sequel::Migrator.run(db, migrations_path, target: current_migration_index_step3b, allow_missing_migration_files: true) }.not_to raise_error
-
-          expect(db).to have_table_with_index_on_columns(table, %i[timestamp id])
-        end
-      end
-
-      it 'uses an identity with correct start value for the (bigint) id column' do
-        last_id_before_migration = insert.call(db)
-
-        expect { Sequel::Migrator.run(db, migrations_path, target: current_migration_index_step3b, allow_missing_migration_files: true) }.not_to raise_error
-
+        # Identity preserves correct start value across the type switch.
         first_id_after_migration = insert.call(db)
         expect(first_id_after_migration).to eq(last_id_before_migration + 1)
+
+        # Timestamp index (if applicable) survives the column-type switch.
+        expect(db).to have_table_with_index_on_columns(table, %i[timestamp id]) if has_timestamp
       end
     end
   end
@@ -183,22 +177,16 @@ RSpec.shared_context 'bigint migration step3b' do
         Sequel::Migrator.run(db, migrations_path, target: current_migration_index_step3b, allow_missing_migration_files: true)
       end
 
-      it 'uses an identity with correct start value for the (integer) id column' do
-        last_id_before_migration = insert.call(db)
-
-        expect { Sequel::Migrator.run(db, migrations_path, target: current_migration_index_step3b - 1, allow_missing_migration_files: true) }.not_to raise_error
-
-        first_id_after_migration = insert.call(db)
-        expect(first_id_after_migration).to eq(last_id_before_migration + 1)
-      end
-
-      it 'reverts the bigint migration: restores columns, constraints, and indexes' do
+      # Two former examples consolidated into one — see comment in 'up' above.
+      it 'reverts the bigint migration: restores columns, constraints, indexes, and (integer) identity start value' do
         # Verify pre-rollback state
         expect(db).to have_table_with_column_and_type(table, :id, 'bigint')
         expect(db).not_to have_table_with_column(table, :id_bigint)
         expect(db).to have_table_with_primary_key(table, :id)
         expect(db).not_to have_trigger_function_for_table(table)
         expect(db).not_to have_table_with_check_constraint(table)
+
+        last_id_before_migration = insert.call(db)
 
         expect { Sequel::Migrator.run(db, migrations_path, target: current_migration_index_step3b - 1, allow_missing_migration_files: true) }.not_to raise_error
 
@@ -215,6 +203,10 @@ RSpec.shared_context 'bigint migration step3b' do
           expect(db).to have_table_with_index_on_columns(table, %i[timestamp id])
           expect(db).not_to have_table_with_index_on_columns(table, %i[timestamp id_bigint])
         end
+
+        # Identity preserves correct start value across the type rollback.
+        first_id_after_migration = insert.call(db)
+        expect(first_id_after_migration).to eq(last_id_before_migration + 1)
       end
     end
   end

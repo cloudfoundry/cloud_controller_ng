@@ -35,15 +35,20 @@ RSpec.describe 'add role_guid and timestamps to roles join tables', isolation: :
 
   roles = org_roles + space_roles
 
-  roles.each do |role_table|
-    context role_table do
-      it "adds the columns to the #{role_table} table" do
-        role = db[role_table.to_sym].first(user_id: user.id)
+  # Seven former examples (one per role table) consolidated into a single it
+  # block. Each previous example ran an identical `before` (inserts into all 7
+  # tables) plus the framework's per-example rollback-and-forward migration
+  # cycle in `migration_shared_context`. Collapsing to one example runs that
+  # cycle once instead of seven times. The assertions still cover every role
+  # table; failure messages identify the specific table via the loop variable.
+  # See spec/migrations/Readme.md "Group related tests into a single it block".
+  it 'adds role_guid and timestamp columns to every role join table' do
+    roles.each do |role_table|
+      role = db[role_table.to_sym].first(user_id: user.id)
 
-        expect(role[:role_guid]).to be_nil
-        expect(role[:created_at]).to be_a(Time)
-        expect(role[:updated_at]).to be_a(Time)
-      end
+      expect(role[:role_guid]).to be_nil, "expected role_guid column on #{role_table} (was nil-or-missing)"
+      expect(role[:created_at]).to be_a(Time), "expected created_at column on #{role_table}"
+      expect(role[:updated_at]).to be_a(Time), "expected updated_at column on #{role_table}"
     end
   end
 end

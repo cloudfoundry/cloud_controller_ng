@@ -58,7 +58,11 @@ RSpec.shared_context 'bigint migration step1' do
           db[table].delete # Necessary to successfully run subsequent migrations in the after block of the migration shared context...
         end
 
-        it 'keeps id as integer, adds id_bigint column and creates trigger function' do
+        # Two former examples consolidated into one to amortize the heavy
+        # before-block (1 row insert + 1 migration run + framework's
+        # rollback/forward) over a single migration run. See
+        # spec/migrations/Readme.md.
+        it 'keeps id as integer, adds id_bigint column with trigger function (existing rows unpopulated, new rows auto-populated)' do
           expect(db).to have_table_with_column_and_type(table, :id, 'integer')
           expect(db).not_to have_table_with_column(table, :id_bigint)
           expect(db).not_to have_trigger_function_for_table(table)
@@ -67,12 +71,7 @@ RSpec.shared_context 'bigint migration step1' do
 
           expect(db).to have_table_with_column_and_type(table, :id, 'integer')
           expect(db).to have_table_with_column_and_type(table, :id_bigint, 'bigint')
-
           expect(db).to have_trigger_function_for_table(table)
-        end
-
-        it 'does not populate id_bigint for existing entries but does for new entries' do
-          expect { Sequel::Migrator.run(db, migrations_path, target: current_migration_index, allow_missing_migration_files: true) }.not_to raise_error
 
           # Existing entry should not have id_bigint populated
           expect(db[table].where(id: old_id).get(:id_bigint)).to be_nil
