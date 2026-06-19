@@ -119,6 +119,12 @@ jobs:
           --innodb-buffer-pool-size=1G
           --performance-schema=OFF
           --max-connections=300
+          --innodb-redo-log-capacity=512M
+          --innodb-log-buffer-size=128M
+          --transaction-isolation=READ-COMMITTED
+          --innodb-autoinc-lock-mode=2
+          --tmp-table-size=256M
+          --max-heap-table-size=256M
         options: >-
           --tmpfs /var/lib/mysql:rw,size=2g
           --health-cmd="mysqladmin ping"
