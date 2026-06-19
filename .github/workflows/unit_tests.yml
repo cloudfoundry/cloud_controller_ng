@@ -118,6 +118,7 @@ jobs:
           --skip-log-bin
           --innodb-buffer-pool-size=1G
           --performance-schema=OFF
+          --max-connections=300
         options: >-
           --tmpfs /var/lib/mysql:rw,size=2g
           --health-cmd="mysqladmin ping"
@@ -139,7 +140,7 @@ jobs:
           parallel-runtime-mysql-${{ matrix.image }}-
           parallel-runtime-mysql-
     - name: Run tests
-      run: DB=mysql MYSQL_CONNECTION_PREFIX="mysql2://root:password@127.0.0.1:3306" RSPEC_PROFILE="${{ inputs.rspec_profile }}" bundle exec rake spec
+      run: DB=mysql MYSQL_CONNECTION_PREFIX="mysql2://root:password@127.0.0.1:3306" RSPEC_PROFILE="${{ inputs.rspec_profile }}" PARALLEL_TEST_PROCESSORS=6 bundle exec rake spec
     - name: Save parallel_rspec runtime logs
       if: always() && github.ref == 'refs/heads/main'
       uses: actions/cache/save@v5
