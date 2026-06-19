@@ -92,12 +92,12 @@ class RoutePoliciesController < ApplicationController
 
     find_and_authorize_route_for_policy(route_policy)
 
+    route_policy.destroy
+
     route_policy_event_repository.record_route_policy_delete(
       route_policy,
       user_audit_info
     )
-
-    route_policy.destroy
     head :no_content
   end
 

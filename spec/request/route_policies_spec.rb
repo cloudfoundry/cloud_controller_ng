@@ -827,6 +827,19 @@ RSpec.describe 'Route Policies' do
       expect(event.actee_type).to eq('route_policy')
     end
 
+    context 'when destroy fails' do
+      it 'does not record an audit event' do
+        allow_any_instance_of(VCAP::CloudController::RoutePolicy).to receive(:destroy).and_raise(Sequel::Error.new('db error'))
+        allow_any_instance_of(ErrorPresenter).to receive(:raise_500?).and_return(false)
+
+        expect do
+          delete "/v3/route_policies/#{route_policy.guid}", nil, admin_header
+        end.not_to change(VCAP::CloudController::Event, :count)
+
+        expect(last_response.status).to eq(500)
+      end
+    end
+
     context 'when the access rule does not exist' do
       it 'returns 404' do
         delete '/v3/route_policies/nonexistent-guid', nil, admin_header
