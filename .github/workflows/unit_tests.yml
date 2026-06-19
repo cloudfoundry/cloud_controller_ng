@@ -115,6 +115,9 @@ jobs:
           --innodb-flush-log-at-trx-commit=0
           --sync-binlog=0
           --innodb-doublewrite=OFF
+          --skip-log-bin
+          --innodb-buffer-pool-size=1G
+          --performance-schema=OFF
         options: >-
           --tmpfs /var/lib/mysql:rw,size=2g
           --health-cmd="mysqladmin ping"
