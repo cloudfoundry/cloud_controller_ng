@@ -30,7 +30,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - uses: hmarr/debug-action@v3
-    - uses: actions/checkout@v6
+    - uses: actions/checkout@v7
     - uses: ./.github/workflows/composite/setup
     - name: Run Rubocop
       run: bundle exec rake rubocop
@@ -70,7 +70,7 @@ jobs:
           - 5432:5432
     steps:
     - uses: hmarr/debug-action@v3
-    - uses: actions/checkout@v6
+    - uses: actions/checkout@v7
     - uses: ./.github/workflows/composite/setup
     - name: Restore parallel_rspec runtime logs
       uses: actions/cache/restore@v5
@@ -124,7 +124,7 @@ jobs:
           - 3306:3306
     steps:
     - uses: hmarr/debug-action@v3
-    - uses: actions/checkout@v6
+    - uses: actions/checkout@v7
     - uses: ./.github/workflows/composite/setup
     - name: Restore parallel_rspec runtime logs
       uses: actions/cache/restore@v5
