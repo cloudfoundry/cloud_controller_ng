@@ -532,7 +532,7 @@ module CloudController
                 endpoint: 'https://blobstore.internal:4443/admin/cc-droplets',
                 public_endpoint: 'https://blobstore.example.com/admin/cc-droplets',
                 user: 'testuser',
-                password: 'testpass',
+                password: 'testpass'
               )
             end
 
