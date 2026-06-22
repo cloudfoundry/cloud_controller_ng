@@ -198,7 +198,7 @@ GEM
       domain_name (~> 0.5)
     httpclient (2.9.0)
       mutex_m
-    i18n (1.15.1)
+    i18n (1.15.2)
       concurrent-ruby (~> 1.0)
     io-console (0.8.2)
     ipaddress (0.8.3)
@@ -422,7 +422,7 @@ GEM
     rubocop-factory_bot (2.28.0)
       lint_roller (~> 1.1)
       rubocop (~> 1.72, >= 1.72.1)
-    rubocop-rails (2.34.3)
+    rubocop-rails (2.35.5)
       activesupport (>= 4.2.0)
       lint_roller (~> 1.1)
       rack (>= 1.1)
@@ -610,7 +610,7 @@ DEPENDENCIES
   rubocop (~> 1.88.0)
   rubocop-capybara
   rubocop-factory_bot
-  rubocop-rails (~> 2.34)
+  rubocop-rails (~> 2.35)
   rubocop-rspec (~> 3.10)
   rubocop-rspec_rails
   rubocop-sequel (~> 0.4.1)
