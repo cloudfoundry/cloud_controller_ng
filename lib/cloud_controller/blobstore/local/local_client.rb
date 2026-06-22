@@ -78,7 +78,7 @@ module CloudController
         cleanup_empty_parent_directories(path)
       end
 
-      def blob(key)
+      def blob(key, **)
         path = file_path(key)
         return unless File.exist?(path)
 

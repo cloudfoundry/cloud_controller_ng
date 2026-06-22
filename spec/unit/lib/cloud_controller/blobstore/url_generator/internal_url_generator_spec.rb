@@ -43,7 +43,7 @@ module CloudController
 
         it 'gives out signed url to remote blobstore for admin buildpack' do
           expect(url_generator.admin_buildpack_download_url(buildpack)).to eql(internal_url)
-          expect(admin_buildpack_blobstore).to have_received(:blob).with(buildpack.key)
+          expect(admin_buildpack_blobstore).to have_received(:blob).with(buildpack.key, use_internal_url: true)
         end
 
         context 'when the buildpack does not exist' do
@@ -76,7 +76,7 @@ module CloudController
 
         it 'gives out signed url to remote blobstore from the blob' do
           expect(url_generator.droplet_download_url(droplet)).to eql(internal_url)
-          expect(droplet_blobstore).to have_received(:blob).with(droplet.blobstore_key)
+          expect(droplet_blobstore).to have_received(:blob).with(droplet.blobstore_key, use_internal_url: true)
         end
 
         context 'when the droplet does not exist' do
@@ -108,7 +108,7 @@ module CloudController
 
         it 'gives out signed url to remote blobstore for buildpack cache' do
           expect(url_generator.buildpack_cache_download_url(app_model.guid, stack)).to eql(internal_url)
-          expect(buildpack_cache_blobstore).to have_received(:blob).with("#{app_model.guid}/#{stack}")
+          expect(buildpack_cache_blobstore).to have_received(:blob).with("#{app_model.guid}/#{stack}", use_internal_url: true)
         end
 
         context 'when the buildpack cache does not exist' do
@@ -139,7 +139,7 @@ module CloudController
 
         it 'gives out signed url to remote blobstore for package' do
           expect(url_generator.package_download_url(package)).to eql(internal_url)
-          expect(package_blobstore).to have_received(:blob).with(package.guid)
+          expect(package_blobstore).to have_received(:blob).with(package.guid, use_internal_url: true)
         end
 
         context 'and the package does not exist' do

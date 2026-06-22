@@ -18,11 +18,11 @@ module CloudController
       end
 
       describe 'download_urls' do
-        it 'returns the internal download URL of the blob' do
+        it 'returns the signed_url for internal_download_url' do
           expect(blob.internal_download_url).to eq(signed_url)
         end
 
-        it 'returns the public download URL of the blob' do
+        it 'returns the signed_url for public_download_url' do
           expect(blob.public_download_url).to eq(signed_url)
         end
 
