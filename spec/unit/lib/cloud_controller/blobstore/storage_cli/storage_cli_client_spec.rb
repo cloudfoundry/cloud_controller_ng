@@ -155,8 +155,16 @@ module CloudController
           droplets_cfg = write_config_file(
             provider: 'dav',
             endpoint: 'https://webdav.example.com',
+            public_endpoint: 'https://cdn.example.com/admin/testbucket',
             user: 'testuser',
-            password: 'testpass'
+            password: 'testpassword',
+            retryattempts: 5,
+            secret: 'my-hmac-secret',
+            tls: {
+              cert: {
+                ca: "-----BEGIN CERTIFICATE-----\n...\n-----END CERTIFICATE-----"
+              }
+            }
           )
           begin
             stub_config_for_droplets(droplets_cfg.path)
@@ -525,7 +533,6 @@ module CloudController
                 public_endpoint: 'https://blobstore.example.com/admin/cc-droplets',
                 user: 'testuser',
                 password: 'testpass',
-                signed_url_format: 'external-nginx-secure-link-signer'
               )
             end
 
