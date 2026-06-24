@@ -511,7 +511,7 @@ GEM
       rbs (>= 3.0, < 5)
       sorbet-runtime
       yard
-    spring (4.6.0)
+    spring (4.7.0)
     spring-commands-rspec (1.0.4)
       spring (>= 0.9.1)
     statsd-ruby (1.5.0)
