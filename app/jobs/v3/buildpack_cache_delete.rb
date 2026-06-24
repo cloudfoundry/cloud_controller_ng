@@ -2,7 +2,7 @@ module VCAP::CloudController
   module Jobs
     module V3
       class BuildpackCacheDelete < VCAP::CloudController::Jobs::CCJob
-        attr_accessor :resource_type, :resource_guid
+        attr_accessor :resource_guid
 
         def initialize(app_guid)
           @resource_guid = app_guid
@@ -22,6 +22,10 @@ module VCAP::CloudController
 
         def max_attempts
           3
+        end
+
+        def resource_type
+          'app'
         end
 
         def display_name

@@ -50,6 +50,12 @@ module VCAP::CloudController
           expect(job.job_name_in_configuration).to equal(:buildpack_cache_delete)
         end
       end
+
+      describe '#display_name' do
+        it 'returns the correct display name' do
+          expect(job.display_name).to eq('app.clear_buildpack_cache')
+        end
+      end
     end
   end
 end
