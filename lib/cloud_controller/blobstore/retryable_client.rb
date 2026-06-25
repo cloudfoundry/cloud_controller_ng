@@ -110,13 +110,14 @@ module CloudController
         end
       end
 
-      def blob(key)
+      def blob(key, use_internal_url: false)
         with_retries(__method__.to_s, {
                        args: {
-                         key:
+                         key:,
+                         use_internal_url:
                        }
                      }) do
-          blob = @wrapped_client.blob(key)
+          blob = @wrapped_client.blob(key, use_internal_url: use_internal_url)
           RetryableBlob.new(blob: blob, errors: @retryable_errors, logger: @logger, num_retries: @num_retries) if blob
         end
       end

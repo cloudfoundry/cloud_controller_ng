@@ -386,6 +386,8 @@ module VCAP::CloudController
             global_general_limit: Integer,
             per_process_unauthenticated_limit: Integer,
             global_unauthenticated_limit: Integer,
+            optional(:per_process_admin_limit) => Integer,
+            optional(:global_admin_limit) => Integer,
             reset_interval_in_minutes: Integer
           },
           max_concurrent_service_broker_requests: Integer,

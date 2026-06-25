@@ -50,6 +50,9 @@ class OrganizationsV3Controller < ApplicationController
 
     message = VCAP::CloudController::OrganizationCreateMessage.new(hashed_params[:body])
     unprocessable!(message.errors.full_messages) unless message.valid?
+
+    unauthorized! if suspended_by_non_admin?(message)
+
     org = nil
 
     Organization.db.transaction do
@@ -77,6 +80,8 @@ class OrganizationsV3Controller < ApplicationController
 
     message = VCAP::CloudController::OrganizationUpdateMessage.new(hashed_params[:body])
     unprocessable!(message.errors.full_messages) unless message.valid?
+
+    unauthorized! if suspended_by_non_admin?(message)
 
     org = OrganizationUpdate.new(user_audit_info).update(org, message)
 
@@ -220,6 +225,10 @@ class OrganizationsV3Controller < ApplicationController
 
   def isolation_segment_not_found!
     resource_not_found!(:isolation_segment)
+  end
+
+  def suspended_by_non_admin?(message)
+    message.requested?(:suspended) && message.suspended && !permission_queryer.can_write_globally?
   end
 
   def fetch_org(guid)

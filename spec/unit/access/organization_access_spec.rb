@@ -114,6 +114,18 @@ module VCAP::CloudController
         end
 
         it_behaves_like('an access control', :create, flag_enabled_create_table)
+
+        context 'status param is set to suspended' do
+          let(:op_params) { { 'status' => VCAP::CloudController::Organization::SUSPENDED } }
+
+          it_behaves_like('an access control', :create, write_table)
+        end
+
+        context 'status param is set to active (no-op)' do
+          let(:op_params) { { 'status' => VCAP::CloudController::Organization::ACTIVE } }
+
+          it_behaves_like('an access control', :create, flag_enabled_create_table)
+        end
       end
 
       context 'when the flag is disabled' do
@@ -140,6 +152,18 @@ module VCAP::CloudController
           let(:op_params) { { 'billing_enabled' => 'sure' } }
 
           it_behaves_like('an access control', :read_for_update, write_table)
+        end
+
+        context 'status param is set to suspended' do
+          let(:op_params) { { 'status' => VCAP::CloudController::Organization::SUSPENDED } }
+
+          it_behaves_like('an access control', :read_for_update, write_table)
+        end
+
+        context 'status param is set to active (no-op on an active org)' do
+          let(:op_params) { { 'status' => VCAP::CloudController::Organization::ACTIVE } }
+
+          it_behaves_like('an access control', :read_for_update, update_table)
         end
       end
     end

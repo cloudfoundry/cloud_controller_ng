@@ -5,8 +5,7 @@ module CloudController
 
       def initialize(key, properties: nil, signed_url: nil)
         @key = key
-        @signed_url = signed_url if signed_url
-        # Set properties to an empty hash if nil to avoid nil errors
+        @signed_url = signed_url
         @properties = properties || {}
       end
 

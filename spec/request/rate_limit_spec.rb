@@ -73,4 +73,55 @@ RSpec.describe 'Rate Limiting' do
       expect(parsed_response['errors'].first['detail']).to include('Rate Limit Exceeded: Unauthenticated requests from this IP address have exceeded the limit')
     end
   end
+
+  context 'as an admin' do
+    let(:admin_headers) { admin_headers_for(VCAP::CloudController::User.make) }
+
+    context 'when admin_limit is -1 (default, unlimited)' do
+      it 'is not rate limited' do
+        get '/v3/spaces', nil, admin_headers
+        expect(last_response.status).to eq(200)
+        expect(last_response.headers).not_to include('X-RateLimit-Limit')
+      end
+    end
+
+    context 'when admin_limit is set to a positive value' do
+      before do
+        TestConfig.override(
+          rate_limiter: {
+            enabled: true,
+            per_process_general_limit: 10,
+            global_general_limit: 100,
+            per_process_unauthenticated_limit: 2,
+            global_unauthenticated_limit: 20,
+            per_process_admin_limit: 3,
+            global_admin_limit: 30,
+            reset_interval_in_minutes: 60
+          }
+        )
+      end
+
+      it 'uses the admin limit' do
+        3.times do |n|
+          get '/v3/spaces', nil, admin_headers
+          expect(last_response.status).to eq(200), "rate limited after #{n} requests"
+          expect(last_response.headers['X-RateLimit-Limit']).to eq('30')
+        end
+
+        get '/v3/spaces', nil, admin_headers
+        expect(last_response.status).to eq(429)
+      end
+
+      it 'does not affect regular users' do
+        4.times { get '/v3/spaces', nil, admin_headers }
+
+        space = VCAP::CloudController::Space.make
+        user = make_developer_for_space(space)
+        user_headers = headers_for(user)
+
+        get '/v3/spaces', nil, user_headers
+        expect(last_response.status).to eq(200)
+      end
+    end
+  end
 end

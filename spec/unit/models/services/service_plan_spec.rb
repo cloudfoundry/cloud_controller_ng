@@ -378,6 +378,22 @@ module VCAP::CloudController
           specify { expect(service_plan).to be_bindable }
         end
       end
+
+      context 'when the bindable value is returned as an integer (e.g. from a UNION query on MySQL)' do
+        let(:service) { Service.make(bindable: true) }
+
+        it 'returns true when the integer value is 1' do
+          service_plan = ServicePlan.make(service: service, bindable: true)
+          allow(service_plan).to receive(:bindable).and_return(1)
+          expect(service_plan.bindable?).to be(true)
+        end
+
+        it 'returns false when the integer value is 0' do
+          service_plan = ServicePlan.make(service: service, bindable: true)
+          allow(service_plan).to receive(:bindable).and_return(0)
+          expect(service_plan.bindable?).to be(false)
+        end
+      end
     end
 
     describe '#plan_updateable?' do
@@ -438,6 +454,22 @@ module VCAP::CloudController
           let(:service) { Service.make(plan_updateable: nil) }
 
           specify { expect(service_plan.plan_updateable?).to be(false) }
+        end
+      end
+
+      context 'when the plan_updateable value is returned as an integer (e.g. from a UNION query on MySQL)' do
+        let(:service) { Service.make(plan_updateable: true) }
+
+        it 'returns true when the integer value is 1' do
+          service_plan = ServicePlan.make(service: service, plan_updateable: true)
+          allow(service_plan).to receive(:plan_updateable).and_return(1)
+          expect(service_plan.plan_updateable?).to be(true)
+        end
+
+        it 'returns false when the integer value is 0' do
+          service_plan = ServicePlan.make(service: service, plan_updateable: true)
+          allow(service_plan).to receive(:plan_updateable).and_return(0)
+          expect(service_plan.plan_updateable?).to be(false)
         end
       end
     end

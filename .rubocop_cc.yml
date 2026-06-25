@@ -47,6 +47,7 @@ Metrics/BlockLength:
     - config/routes.rb
     - lib/tasks/db.rake
     - lib/tasks/jobs.rake
+    - lib/tasks/spec.rake
   Max: 50
 Metrics/CyclomaticComplexity:
   Max: 12

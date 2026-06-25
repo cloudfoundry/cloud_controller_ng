@@ -161,13 +161,13 @@ module VCAP::CloudController
     end
 
     def bindable?
-      return bindable unless bindable.nil?
+      return ActiveModel::Type::Boolean.new.cast(bindable) unless bindable.nil?
 
       service.bindable?
     end
 
     def plan_updateable?
-      return plan_updateable unless plan_updateable.nil?
+      return ActiveModel::Type::Boolean.new.cast(plan_updateable) unless plan_updateable.nil?
 
       !!service.plan_updateable
     end

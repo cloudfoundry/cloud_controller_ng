@@ -193,7 +193,7 @@ module CloudController
               client.blob(key)
             end.to raise_error RetryableError
 
-            expect(wrapped_client).to have_received(:blob).with(key).exactly(num_retries).times
+            expect(wrapped_client).to have_received(:blob).with(key, use_internal_url: false).exactly(num_retries).times
           end
         end
 

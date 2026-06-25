@@ -113,7 +113,7 @@ module CloudController
         delete_file(blob.file) if blob.file
       end
 
-      def blob(key)
+      def blob(key, **)
         f = file(key)
         FogBlob.new(f, @cdn) if f
       end

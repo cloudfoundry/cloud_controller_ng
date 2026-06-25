@@ -3,13 +3,13 @@ require 'migrations/helpers/migration_shared_context'
 require 'database/bigint_migration'
 
 RSpec.shared_context 'bigint migration step1' do
+  before(:all) { skip unless Sequel::Model.db.database_type == :postgres } # rubocop:disable RSpec/BeforeAfterAll
+
   include_context 'migration'
 
   let(:skip_bigint_id_migration) { nil }
 
   before do
-    skip unless db.database_type == :postgres
-
     allow_any_instance_of(VCAP::CloudController::Config).to receive(:get).with(:skip_bigint_id_migration).and_return(skip_bigint_id_migration)
     allow_any_instance_of(VCAP::CloudController::Config).to receive(:get).with(:migration_psql_concurrent_statement_timeout_in_seconds).and_return(300)
   end

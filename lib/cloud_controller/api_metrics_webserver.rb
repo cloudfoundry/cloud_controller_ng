@@ -57,9 +57,23 @@ module VCAP
 
         unhealthy = determine_unhealthy_state(all_busy)
 
-        build_status_response(all_busy, unhealthy)
+        response = build_status_response(all_busy, unhealthy)
+
+        seconds_since_increase = @last_requests_count_increase_time ? (Time.now - @last_requests_count_increase_time).round(2) : nil
+        worker_stats = worker_statuses&.map do |w|
+          ls = w[:last_status] || {}
+          "pool_capacity=#{ls[:pool_capacity]} requests_count=#{ls[:requests_count]}"
+        end&.join(', ')
+        log("[readiness] workers=[#{worker_stats}] all_busy=#{all_busy} secs_since_last_increase=#{seconds_since_increase.inspect} unhealthy=#{unhealthy} -> #{response[2].first}")
+
+        response
       rescue StandardError => e
+        log("[readiness] error: #{e.class}: #{e.message}\n#{e.backtrace&.first(5)&.join("\n")}")
         [500, { 'Content-Type' => 'text/plain' }, ["Readiness check error: #{e}"]]
+      end
+
+      def log(msg)
+        Steno.logger('cc.readiness').info(msg)
       end
 
       def track_request_count_increase(current_requests_count_sum)
@@ -88,7 +102,7 @@ module VCAP
 
       def all_workers_busy?(worker_statuses)
         worker_statuses.all? do |worker|
-          worker[:last_status][:busy_threads] == worker[:last_status][:running]
+          worker[:last_status][:pool_capacity].zero?
         end
       end
 
