@@ -122,6 +122,10 @@ module VCAP::CloudController
         ROUTE_UNSHARE = 'audit.route.unshare'.freeze,
         ROUTE_TRANSFER_OWNER = 'audit.route.transfer-owner'.freeze,
 
+        ROUTE_POLICY_CREATE = 'audit.route_policy.create'.freeze,
+        ROUTE_POLICY_UPDATE = 'audit.route_policy.update'.freeze,
+        ROUTE_POLICY_DELETE = 'audit.route_policy.delete'.freeze,
+
         ORGANIZATION_CREATE = 'audit.organization.create'.freeze,
         ORGANIZATION_UPDATE = 'audit.organization.update'.freeze,
         ORGANIZATION_DELETE_REQUEST = 'audit.organization.delete-request'.freeze,

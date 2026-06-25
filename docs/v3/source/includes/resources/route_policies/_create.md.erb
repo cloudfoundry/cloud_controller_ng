@@ -1,0 +1,115 @@
+### Create a route policy
+
+```
+Example Request (Allow specific app)
+```
+
+```shell
+curl "https://api.example.org/v3/route_policies" \
+  -X POST \
+  -H "Authorization: bearer [token]" \
+  -H "Content-type: application/json" \
+  -d '{
+    "source": "cf:app:d76446a1-f429-4444-8797-be2f78b75b08",
+    "relationships": {
+      "route": {
+        "data": {
+          "guid": "89b32bd6-688f-4424-b94f-2e2c86495a5f"
+        }
+      }
+    },
+    "metadata": {
+      "labels": { "team": "frontend" },
+      "annotations": { "description": "Allow frontend app to call backend API" }
+    }
+  }'
+```
+
+```
+Example Response
+```
+
+```http
+HTTP/1.1 201 Created
+Content-Type: application/json
+
+<%= yield_content :single_route_policy, {
+  labels: { "team" => "frontend" },
+  annotations: { "description" => "Allow frontend app to call backend API" }
+} %>
+```
+
+```
+Example Request (Allow all apps in a space)
+```
+
+```shell
+curl "https://api.example.org/v3/route_policies" \
+  -X POST \
+  -H "Authorization: bearer [token]" \
+  -H "Content-type: application/json" \
+  -d '{
+    "source": "cf:space:3fa85f64-5717-4562-b3fc-2c963f66afa6",
+    "relationships": {
+      "route": {
+        "data": {
+          "guid": "89b32bd6-688f-4424-b94f-2e2c86495a5f"
+        }
+      }
+    }
+  }'
+```
+
+```
+Example Request (Allow any caller)
+```
+
+```shell
+curl "https://api.example.org/v3/route_policies" \
+  -X POST \
+  -H "Authorization: bearer [token]" \
+  -H "Content-type: application/json" \
+  -d '{
+    "source": "cf:any",
+    "relationships": {
+      "route": {
+        "data": {
+          "guid": "89b32bd6-688f-4424-b94f-2e2c86495a5f"
+        }
+      }
+    }
+  }'
+```
+
+#### Definition
+`POST /v3/route_policies`
+
+#### Required parameters
+
+| Name                     | Type                                             | Description
+| -----------              | --------                                         | -----------
+| **source**               | _string_                                         | The policy selector. Must be `cf:app:<uuid>`, `cf:space:<uuid>`, `cf:org:<uuid>`, or `cf:any`
+| **relationships.route**  | [_to-one relationship_](#to-one-relationships)   | The route this policy applies to
+
+#### Optional parameters
+
+| Name                     | Type                                             | Description
+| -----------              | --------                                         | -----------
+| **metadata.labels**      | [_label object_](#labels)                        | Labels applied to the route policy
+| **metadata.annotations** | [_annotation object_](#annotations)              | Annotations applied to the route policy
+
+#### Validation rules
+
+- The route's domain must have `enforce_route_policies` set to `true`
+- The route's domain must not be internal (internal routes bypass GoRouter)
+- The `source` must be unique per route (duplicate sources are rejected)
+- If the route already has a `cf:any` policy, no other sources can be added
+- If adding `cf:any`, the route must not have any existing policies
+- The source GUID is not validated at creation time (allows cross-org sharing)
+
+#### Permitted roles
+
+Role | Notes
+----- | ---
+Admin |
+Space Developer | Can create policies for routes in spaces they can write to
