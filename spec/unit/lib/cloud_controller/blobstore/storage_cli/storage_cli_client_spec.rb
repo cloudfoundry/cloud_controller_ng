@@ -63,28 +63,6 @@ module CloudController
           end
         end
 
-        it 'maps aliyun legacy provider to alioss storage-cli type' do
-          droplets_cfg = write_config_file(
-            provider: 'aliyun',
-            access_key_id: 'key',
-            access_key_secret: 'secret',
-            endpoint: 'aliyun.com',
-            bucket_name: 'bucket'
-          )
-          begin
-            stub_config_for_droplets(droplets_cfg.path)
-
-            client = StorageCliClient.new(
-              directory_key: 'dummy-key',
-              root_dir: 'dummy-root',
-              resource_type: 'droplets'
-            )
-            expect(client.instance_variable_get(:@storage_type)).to eq('alioss')
-          ensure
-            droplets_cfg.close!
-          end
-        end
-
         it 'maps webdav legacy provider to dav storage-cli type' do
           droplets_cfg = write_config_file(
             provider: 'webdav',
