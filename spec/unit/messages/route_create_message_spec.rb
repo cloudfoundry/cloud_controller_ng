@@ -629,6 +629,49 @@ module VCAP::CloudController
             end
           end
         end
+
+        context 'when options size exceeds the configured limit' do
+          before do
+            TestConfig.override(max_route_options_size: 50)
+          end
+
+          let(:params) do
+            {
+              host: 'some-host',
+              relationships: {
+                space: { data: { guid: 'space-guid' } },
+                domain: { data: { guid: 'domain-guid' } }
+              },
+              options: { loadbalancing: 'round-robin', some_large_key: 'a' * 100 }
+            }
+          end
+
+          it 'is not valid' do
+            expect(subject).not_to be_valid
+            expect(subject.errors[:options].to_s).to include('must be smaller than 50 bytes')
+          end
+        end
+
+        context 'when options size is within the configured limit' do
+          before do
+            TestConfig.override(max_route_options_size: 1024)
+          end
+
+          let(:params) do
+            {
+              host: 'some-host',
+              relationships: {
+                space: { data: { guid: 'space-guid' } },
+                domain: { data: { guid: 'domain-guid' } }
+              },
+              options: { loadbalancing: 'round-robin' }
+            }
+          end
+
+          it 'is valid' do
+            expect(subject).to be_valid
+          end
+        end
       end
     end
 

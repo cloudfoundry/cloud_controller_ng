@@ -247,6 +247,8 @@ module VCAP::CloudController::Validators
         return
       end
 
+      validate_size(record)
+
       opt = record.options_message
 
       return if opt.valid?
@@ -254,6 +256,17 @@ module VCAP::CloudController::Validators
       opt.errors.full_messages.each do |message|
         record.errors.add(:options, message:)
       end
+    end
+
+    private
+
+    def validate_size(record)
+      max_size = VCAP::CloudController::Config.config.get(:max_route_options_size)
+      options_size = record.options.to_json.bytesize
+
+      return unless options_size > max_size
+
+      record.errors.add(:options, message: "must be smaller than #{max_size} bytes (actual size is #{options_size} bytes)")
     end
   end
 

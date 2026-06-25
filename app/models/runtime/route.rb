@@ -329,6 +329,20 @@ module VCAP::CloudController
     def validate_route_options
       return if options.blank?
 
+      validate_route_options_size
+      validate_route_options_hash_header
+    end
+
+    def validate_route_options_size
+      max_size = Config.config.get(:max_route_options_size)
+      options_size = options.to_json.bytesize
+
+      return unless options_size > max_size
+
+      errors.add(:route, :options_size_exceeded)
+    end
+
+    def validate_route_options_hash_header
       route_options = options.is_a?(Hash) ? options : options.symbolize_keys
       loadbalancing = route_options[:loadbalancing] || route_options['loadbalancing']
 
