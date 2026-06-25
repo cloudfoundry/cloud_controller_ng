@@ -9,3 +9,5 @@ Route policies are defined using a `source` selector that specifies who can acce
 - `cf:any` - Allow any caller (cannot be combined with other sources on the same route)
 
 **Note:** Route policies can only be created for routes on domains where `enforce_route_policies` is `true` and the domain is not internal (internal routes use container-to-container networking and bypass GoRouter).
+
+**This feature is experimental and is subject to change.**
