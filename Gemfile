@@ -44,8 +44,6 @@ gem 'fog-aliyun'
 gem 'fog-aws'
 gem 'fog-core', '~> 2.6.0'
 gem 'fog-google', '~> 1.29.4'
-gem 'fog-local'
-gem 'fog-openstack'
 
 gem 'cf-uaa-lib', '~> 4.0.9'
 

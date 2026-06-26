@@ -37,7 +37,7 @@ module CloudController
       end
 
       def local?
-        @connection_config[:provider].downcase == 'local'
+        false
       end
 
       def exists?(key)
@@ -70,7 +70,7 @@ module CloudController
             key: partitioned_key(destination_key),
             body: file,
             content_type: mime_type || 'application/zip',
-            public: local?
+            public: false
           }.merge(formatted_storage_options)
 
           files.create(options)
@@ -119,19 +119,11 @@ module CloudController
       end
 
       def files_for(prefix, _ignored_directory_prefixes=[])
-        if connection.is_a? Fog::Local::Storage::Real
-          directory = connection.directories.get(File.join(dir.key, prefix || ''))
-          directory ? directory.files : []
-        else
-          connection.directories.get(dir.key, prefix:).files
-        end
+        connection.directories.get(dir.key, prefix:).files
       end
 
       def ensure_bucket_exists
-        return if local?
-
         options = { max_keys: 1 }
-        options['limit'] = 1 if connection.service == Fog::OpenStack::Storage
         connection.directories.get(@directory_key, options) || connection.directories.create(key: @directory_key, public: false)
       end
 
@@ -205,7 +197,6 @@ module CloudController
       def connection
         options = @connection_config
         blobstore_timeout = options.delete(:blobstore_timeout)
-        options = options.merge(endpoint: '') if local?
         connection_options = options[:connection_options] || {}
         connection_options = connection_options.merge(read_timeout: blobstore_timeout, write_timeout: blobstore_timeout)
         options = options.merge(connection_options:)
