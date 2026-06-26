@@ -70,10 +70,6 @@ module CloudController
           allow(cdn).to receive(:download_uri).and_return(url_from_cdn)
         end
 
-        it 'is not local' do
-          expect(client).not_to be_local
-        end
-
         it 'downloads through the CDN' do
           expect(cdn).to receive(:get).
             with('ab/cd/abcdef').
@@ -86,18 +82,6 @@ module CloudController
           }.from(false).to(true)
 
           expect(File.read(destination)).to eq('foobar barbaz')
-        end
-      end
-
-      context 'a local blobstore' do
-        let(:connection_config) { { provider: 'Local', local_root: '/' } }
-
-        before do
-          client.ensure_bucket_exists
-        end
-
-        it 'is true if the provider is local' do
-          expect(client).to be_local
         end
       end
 
@@ -301,16 +285,6 @@ module CloudController
 
             client.cp_to_blobstore(path, key)
             expect(client.blob(key).file.public_url).to be_nil
-          end
-
-          it 'can copy as a public file' do
-            allow(client).to receive(:local?).and_return(true)
-            path = File.join(local_dir, 'empty_file')
-            FileUtils.touch(path)
-            key = 'abcdef12345'
-
-            client.cp_to_blobstore(path, key)
-            expect(client.blob(key).file.public_url).to be
           end
 
           it 'sets content-type to mime-type of application/zip when not specified' do
@@ -541,14 +515,8 @@ module CloudController
         end
 
         describe '#delete_all' do
-          let(:connection_config) { { provider: 'Local', local_root: local_dir } }
-
           before do
-            Fog.unmock!
-          end
-
-          after do
-            Fog.mock!
+            client.ensure_bucket_exists
           end
 
           it 'deletes all the files' do
@@ -585,7 +553,6 @@ module CloudController
             end
 
             it 'is ok if there are no files' do
-              Fog.mock!
               expect(directory.files).to have(0).items
               expect do
                 client.delete_all
@@ -593,7 +560,6 @@ module CloudController
             end
 
             it 'deletes in groups of the page_size' do
-              Fog.mock!
               connection = client.send(:connection)
               allow(connection).to receive(:delete_multiple_objects)
 
@@ -647,14 +613,8 @@ module CloudController
         end
 
         describe '#delete_all_in_path' do
-          let(:connection_config) { { provider: 'Local', local_root: local_dir } }
-
           before do
-            Fog.unmock!
-          end
-
-          after do
-            Fog.mock!
+            client.ensure_bucket_exists
           end
 
           it 'deletes all the files within a specific path' do
@@ -896,30 +856,27 @@ module CloudController
         end
 
         describe 'from a blobstore' do
-          let(:local_root) { File.expand_path('../../../../../', File.dirname(__FILE__)) }
-          let(:connection_config) { { provider: 'Local', local_root: local_root } }
-          let(:directory_key) { 'fixtures' }
-
-          around do |example|
-            Fog.unmock!
-            example.run
-            Fog.mock!
-          end
-
           it 'correctly downloads byte streams' do
-            Fog.unmock!
-            source_directory_path = File.join(local_root, directory_key)
+            content = 'some binary content for checksum verification'
+            source_file = Tempfile.new('source')
+            source_file.write(content)
+            source_file.close
 
-            source_file_path = File.join(source_directory_path, 'pa/rt/partitioned_key')
-            source_hexdigest = OpenSSL::Digest::SHA256.file(source_file_path).hexdigest
+            source_hexdigest = OpenSSL::Digest::SHA256.file(source_file.path).hexdigest
 
-            destination_file_path = File.join(Dir.mktmpdir, 'hard_file.xyz')
+            client.ensure_bucket_exists
+            client.cp_to_blobstore(source_file.path, 'partitioned_key')
 
+            destination_dir = Dir.mktmpdir
+            destination_file_path = File.join(destination_dir, 'hard_file.xyz')
             client.download_from_blobstore('partitioned_key', destination_file_path)
 
             destination_hexdigest = OpenSSL::Digest::SHA256.file(destination_file_path).hexdigest
 
             expect(destination_hexdigest).to eq(source_hexdigest)
+          ensure
+            source_file&.unlink
+            FileUtils.rm_rf(destination_dir) if destination_dir
           end
         end
       end

@@ -8,8 +8,6 @@ Fog::Logger[:deprecation] = nil
 
 require 'fog/aliyun'
 require 'fog/aws'
-require 'fog/local'
 require 'fog/google'
-require 'fog/openstack'
 
 Fog::Logger[:deprecation] = original

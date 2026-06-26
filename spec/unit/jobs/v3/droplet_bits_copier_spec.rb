@@ -6,21 +6,19 @@ module VCAP::CloudController
       subject(:job) { DropletBitsCopier.new(source_droplet.guid, destination_droplet.guid) }
 
       let(:droplet_bits_path) { File.expand_path('../../../fixtures/good.zip', File.dirname(__FILE__)) }
-      let(:blobstore_dir) { Dir.mktmpdir }
       let(:droplet_blobstore) do
-        CloudController::Blobstore::FogClient.new(connection_config: { provider: 'Local', local_root: blobstore_dir },
+        CloudController::Blobstore::FogClient.new(connection_config: { provider: 'AWS', aws_access_key_id: 'fake', aws_secret_access_key: 'fake' },
                                                   directory_key: 'droplet')
       end
       let(:source_droplet) { DropletModel.make(droplet_hash: 'abcdef1234', sha256_checksum: '4321fedcba', state: DropletModel::STAGED_STATE, app: nil) }
       let(:destination_droplet) { DropletModel.make(droplet_hash: nil, sha256_checksum: nil, state: DropletModel::STAGING_STATE, app: nil) }
 
       before do
-        Fog.unmock!
+        droplet_blobstore.ensure_bucket_exists
       end
 
       after do
-        Fog.mock!
-        FileUtils.remove_entry_secure blobstore_dir
+        Fog::Mock.reset
       end
 
       it { is_expected.to be_a_valid_job }

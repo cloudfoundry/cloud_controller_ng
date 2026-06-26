@@ -93,9 +93,10 @@ module TestConfig
     end
 
     def is_using_local_blobstore?(config)
-      res_pool_connection_provider = config.get(:resource_pool, :fog_connection)[:provider].downcase
-      packages_connection_provider = config.get(:packages, :fog_connection)[:provider].downcase
-      res_pool_connection_provider == 'local' || packages_connection_provider == 'local'
+      res_pool_blobstore_type = config.get(:resource_pool, :blobstore_type)
+      packages_blobstore_type = config.get(:packages, :blobstore_type)
+
+      res_pool_blobstore_type&.start_with?('local') || packages_blobstore_type&.start_with?('local')
     end
   end
 end

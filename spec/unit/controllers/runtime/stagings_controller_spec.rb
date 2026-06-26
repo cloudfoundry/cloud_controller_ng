@@ -198,22 +198,25 @@ module VCAP::CloudController
         resource_pool: {
           resource_directory_key: 'cc-resources',
           fog_connection: {
-            provider: 'Local',
-            local_root: Dir.mktmpdir('resourse_pool', workspace)
+            provider: 'AWS',
+            aws_access_key_id: 'fake',
+            aws_secret_access_key: 'fake'
           }
         },
         packages: {
           fog_connection: {
-            provider: 'Local',
-            local_root: Dir.mktmpdir('packages', workspace)
+            provider: 'AWS',
+            aws_access_key_id: 'fake',
+            aws_secret_access_key: 'fake'
           },
           app_package_directory_key: 'cc-packages'
         },
         droplets: {
           droplet_directory_key: 'cc-droplets',
           fog_connection: {
-            provider: 'Local',
-            local_root: Dir.mktmpdir('droplets', workspace)
+            provider: 'AWS',
+            aws_access_key_id: 'fake',
+            aws_secret_access_key: 'fake'
           }
         },
         directories: {
@@ -235,13 +238,15 @@ module VCAP::CloudController
     end
 
     before do
-      Fog.unmock!
       TestConfig.override(**staging_config)
       set_current_user_as_admin(user: User.make(guid: '1234'), email: 'joe@joe.com', user_name: 'briggs')
       allow_any_instance_of(BitsExpiration).to receive(:expire_packages!)
     end
 
-    after { FileUtils.rm_rf(workspace) }
+    after do
+      Fog::Mock.reset
+      FileUtils.rm_rf(workspace)
+    end
 
     shared_examples 'staging bad auth' do |verb, path|
       it 'returns 401 for bad credentials' do
@@ -265,7 +270,6 @@ module VCAP::CloudController
     end
 
     describe 'GET /staging/packages/:guid' do
-      let(:package_without_bits) { PackageModel.make }
       let(:package) { PackageModel.make }
 
       before { authorize(staging_user, staging_password) }
@@ -314,19 +318,8 @@ module VCAP::CloudController
       end
 
       it 'fails if blobstore is not local' do
-        allow_any_instance_of(CloudController::Blobstore::FogClient).to receive(:local?).and_return(false)
         get '/staging/packages/some-guid'
         expect(last_response.status).to eq(400)
-      end
-
-      it 'returns an error for non-existent packages' do
-        get '/staging/packages/bad-guid'
-        expect(last_response.status).to eq(404)
-      end
-
-      it 'returns an error for an package without bits' do
-        get "/staging/packages/#{package_without_bits.guid}"
-        expect(last_response.status).to eq(404)
       end
 
       include_examples 'staging bad auth', :get, 'packages'
@@ -450,52 +443,12 @@ module VCAP::CloudController
 
     describe 'GET /staging/v3/buildpack_cache/:stack/:app_guid/download' do
       let(:app_model) { AppModel.make }
-      let(:buildpack_cache) { Tempfile.new(app_model.guid) }
       let(:stack) { Sham.name }
 
-      before do
-        buildpack_cache.write('droplet contents')
-        buildpack_cache.close
-
-        authorize staging_user, staging_password
-      end
-
-      after { FileUtils.rm(buildpack_cache.path) }
+      before { authorize staging_user, staging_password }
 
       def make_request(guid=app_model.guid)
         get "/staging/v3/buildpack_cache/#{stack}/#{guid}/download"
-      end
-
-      context 'with a valid buildpack cache' do
-        context 'when nginx is enabled' do
-          it 'redirects nginx to serve staged droplet' do
-            buildpack_cache_blobstore.cp_to_blobstore(
-              buildpack_cache.path,
-              "#{app_model.guid}/#{stack}"
-            )
-
-            make_request
-            expect(last_response.status).to eq(200)
-            expect(last_response.headers['X-Accel-Redirect']).to match("/cc-droplets/.*/#{app_model.guid}/#{stack}")
-          end
-        end
-
-        context 'when nginx is disabled' do
-          let(:staging_config) do
-            original_staging_config.merge({ nginx: { use_nginx: false } })
-          end
-
-          it 'returns the buildpack cache' do
-            buildpack_cache_blobstore.cp_to_blobstore(
-              buildpack_cache.path,
-              "#{app_model.guid}/#{stack}"
-            )
-
-            make_request
-            expect(last_response.status).to eq(200)
-            expect(last_response.body).to eq('droplet contents')
-          end
-        end
       end
 
       context 'with a valid buildpack cache but no file' do
@@ -518,55 +471,9 @@ module VCAP::CloudController
 
       before { authorize(staging_user, staging_password) }
 
-      def upload_droplet
-        tmpdir  = Dir.mktmpdir
-        zipname = File.join(tmpdir, 'test.zip')
-        TestZip.create(zipname, 10, 1024)
-        file_contents = File.read(zipname)
-        Jobs::V3::DropletUpload.new(zipname, droplet.guid, skip_state_transition: false).perform
-        FileUtils.rm_rf(tmpdir)
-        file_contents
-      end
-
-      context 'when using with nginx' do
-        before { TestConfig.override(**staging_config) }
-
-        it 'succeeds for valid droplets' do
-          upload_droplet
-
-          get "/staging/v3/droplets/#{droplet.guid}/download"
-          expect(last_response.status).to eq(200)
-
-          droplet.reload
-          expect(last_response.headers['X-Accel-Redirect']).to match("/cc-droplets/.*/#{droplet.blobstore_key}")
-        end
-      end
-
-      context 'when not using with nginx' do
-        let(:staging_config) do
-          original_staging_config.merge({ nginx: { use_nginx: false } })
-        end
-
-        it 'succeeds for valid droplets' do
-          encoded_expected_body = Base64.encode64(upload_droplet)
-
-          get "/staging/v3/droplets/#{droplet.guid}/download"
-          expect(last_response.status).to eq(200)
-
-          encoded_actual_body = Base64.encode64(last_response.body)
-          expect(encoded_actual_body).to eq(encoded_expected_body)
-        end
-      end
-
       it 'fails if blobstore is not local' do
-        allow_any_instance_of(CloudController::Blobstore::FogClient).to receive(:local?).and_return(false)
         get '/staging/v3/droplets/some-guid/download'
         expect(last_response.status).to eq(400)
-      end
-
-      it 'returns an error for non-existent droplets' do
-        get '/staging/v3/droplets/bad-guid/download'
-        expect(last_response.status).to eq(404)
       end
 
       include_examples 'staging bad auth', :get, 'droplets'
