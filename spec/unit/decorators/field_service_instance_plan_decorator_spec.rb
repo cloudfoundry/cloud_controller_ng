@@ -11,9 +11,9 @@ module VCAP::CloudController
       let(:service_instance_1) { ManagedServiceInstance.make(service_plan: plan1) }
       let(:service_instance_2) { ManagedServiceInstance.make(service_plan: plan2) }
 
-      it 'decorated the given hash with plan guid and name from service instances' do
+      it 'decorated the given hash with plan guid, name and broker_catalog.id from service instances' do
         undecorated_hash = { foo: 'bar', included: { monkeys: %w[zach greg] } }
-        decorator = described_class.new({ service_plan: %w[guid name foo] })
+        decorator = described_class.new({ service_plan: %w[guid name broker_catalog.id foo] })
 
         hash = decorator.decorate(undecorated_hash, [service_instance_1, service_instance_2])
 
@@ -24,11 +24,17 @@ module VCAP::CloudController
                                   service_plans: [
                                     {
                                       guid: plan1.guid,
-                                      name: plan1.name
+                                      name: plan1.name,
+                                      broker_catalog: {
+                                        id: plan1.unique_id
+                                      }
                                     },
                                     {
                                       guid: plan2.guid,
-                                      name: plan2.name
+                                      name: plan2.name,
+                                      broker_catalog: {
+                                        id: plan2.unique_id
+                                      }
                                     }
                                   ]
                                 }
@@ -93,7 +99,7 @@ module VCAP::CloudController
     end
 
     describe '.match?' do
-      it_behaves_like 'field decorator match?', 'service_plan', ['name', 'guid', 'relationships.service_offering']
+      it_behaves_like 'field decorator match?', 'service_plan', ['name', 'guid', 'broker_catalog.id', 'relationships.service_offering']
     end
   end
 end
