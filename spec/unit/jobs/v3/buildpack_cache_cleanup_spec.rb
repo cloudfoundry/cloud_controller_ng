@@ -18,8 +18,9 @@ module VCAP::CloudController
           droplets: {
             droplet_directory_key: 'cc-droplets',
             fog_connection: {
-              provider: 'Local',
-              local_root: Dir.mktmpdir('droplets', workspace)
+              provider: 'AWS',
+              aws_access_key_id: 'fake',
+              aws_secret_access_key: 'fake'
             }
           },
           directories: {
@@ -36,6 +37,8 @@ module VCAP::CloudController
 
       before do
         TestConfig.override(**blobstore_config)
+        blobstore.ensure_bucket_exists
+        droplet_blobstore.ensure_bucket_exists
       end
 
       let(:blobstore) do
@@ -48,10 +51,10 @@ module VCAP::CloudController
 
       after do
         FileUtils.rm_rf(workspace)
+        Fog::Mock.reset
       end
 
       it 'deletes everything from the buildpack_cache directory' do
-        Fog.unmock!
         blobstore.cp_to_blobstore(file, orphan_key)
         blobstore.cp_to_blobstore(file, buildpack_cache_key)
 
@@ -65,7 +68,6 @@ module VCAP::CloudController
       end
 
       it 'does not delete any droplets' do
-        Fog.unmock!
         blobstore.cp_to_blobstore(file, orphan_key)
         droplet_blobstore.cp_to_blobstore(file, droplet_key)
 

@@ -5,9 +5,8 @@ module VCAP::CloudController
   module Jobs::V3
     RSpec.describe BuildpackCacheDelete, job_context: :worker do
       let(:app_guid) { 'some-guid' }
-      let(:local_dir) { Dir.mktmpdir }
       let!(:blobstore) do
-        CloudController::Blobstore::FogClient.new(connection_config: { provider: 'Local', local_root: local_dir },
+        CloudController::Blobstore::FogClient.new(connection_config: { provider: 'AWS', aws_access_key_id: 'fake', aws_secret_access_key: 'fake' },
                                                   directory_key: 'directory_key')
       end
       let(:path_1) { Presenters::V3::CacheKeyPresenter.cache_key(guid: app_guid, stack_name: 'stack1') }
@@ -15,18 +14,17 @@ module VCAP::CloudController
       let(:path_3) { Presenters::V3::CacheKeyPresenter.cache_key(guid: 'other-guid', stack_name: 'stack3') }
 
       before do
-        Fog.unmock!
-        path = File.join(local_dir, 'empty_file')
-        FileUtils.touch(path)
-
-        allow(CloudController::DependencyLocator.instance).to receive(:buildpack_cache_blobstore).and_return(blobstore)
-        blobstore.cp_to_blobstore(path, path_1)
-        blobstore.cp_to_blobstore(path, path_2)
-        blobstore.cp_to_blobstore(path, path_3)
+        blobstore.ensure_bucket_exists
+        Tempfile.create('cache_file') do |f|
+          allow(CloudController::DependencyLocator.instance).to receive(:buildpack_cache_blobstore).and_return(blobstore)
+          blobstore.cp_to_blobstore(f.path, path_1)
+          blobstore.cp_to_blobstore(f.path, path_2)
+          blobstore.cp_to_blobstore(f.path, path_3)
+        end
       end
 
       after do
-        Fog.mock!
+        Fog::Mock.reset
       end
 
       subject(:job) { BuildpackCacheDelete.new(app_guid) }

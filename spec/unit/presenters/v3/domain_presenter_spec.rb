@@ -238,6 +238,43 @@ module VCAP::CloudController::Presenters::V3
           end
         end
 
+        context 'when the domain has enforce_route_policies enabled' do
+          let(:org) { VCAP::CloudController::Organization.make }
+          let(:domain) do
+            VCAP::CloudController::PrivateDomain.make(
+              name: 'mtls.domain.com',
+              owning_organization: org,
+              enforce_route_policies: true,
+              route_policies_scope: 'space'
+            )
+          end
+
+          it 'includes enforce_route_policies and route_policies_scope in the output' do
+            expect(subject[:enforce_route_policies]).to be(true)
+            expect(subject[:route_policies_scope]).to eq('space')
+          end
+        end
+
+        context 'when the domain does not have enforce_route_policies enabled' do
+          let(:domain) do
+            VCAP::CloudController::SharedDomain.make(
+              name: 'regular.domain.com'
+            )
+          end
+
+          let(:routing_api_client) { instance_double(VCAP::CloudController::RoutingApi::Client) }
+
+          before do
+            allow_any_instance_of(CloudController::DependencyLocator).to receive(:routing_api_client).and_return(routing_api_client)
+            allow(routing_api_client).to receive_messages(enabled?: true, router_group: nil)
+          end
+
+          it 'does not include enforce_route_policies or route_policies_scope in the output' do
+            expect(subject).not_to have_key(:enforce_route_policies)
+            expect(subject).not_to have_key(:route_policies_scope)
+          end
+        end
+
         context 'and the routing API is disabled' do
           before do
             allow(routing_api_client).to receive(:enabled?).and_return false

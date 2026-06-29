@@ -190,6 +190,37 @@ module VCAP::CloudController
               end.to raise_error(RouteCreate::Error, 'Hash header must be present when loadbalancing is set to hash.')
             end
           end
+
+          context 'when options size exceeds the configured limit' do
+            before do
+              TestConfig.override(max_route_options_size: 50)
+              # Enable hash_based_routing feature to allow hash_header in options
+              VCAP::CloudController::FeatureFlag.make(name: 'hash_based_routing', enabled: true, error_message: nil)
+            end
+
+            let(:message_with_large_options) do
+              RouteCreateMessage.new({
+                                       relationships: {
+                                         space: {
+                                           data: { guid: space.guid }
+                                         },
+                                         domain: {
+                                           data: { guid: domain.guid }
+                                         }
+                                       },
+                                       options: {
+                                         loadbalancing: 'hash',
+                                         hash_header: 'X-Custom-Header-Name'
+                                       }
+                                     })
+            end
+
+            it 'raises an error indicating options size exceeded' do
+              expect do
+                subject.create(message: message_with_large_options, space: space, domain: domain)
+              end.to raise_error(RouteCreate::Error, /Route options size exceeded: options must be smaller than 50 bytes/)
+            end
+          end
         end
 
         context 'when creating a route with other loadbalancing options' do

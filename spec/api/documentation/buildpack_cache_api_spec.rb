@@ -17,8 +17,9 @@ RSpec.resource 'Blobstores', type: :api do
       droplets: {
         droplet_directory_key: 'cc-droplets',
         fog_connection: {
-          provider: 'Local',
-          local_root: Dir.mktmpdir('droplets', workspace)
+          provider: 'AWS',
+          aws_access_key_id: 'fake',
+          aws_secret_access_key: 'fake'
         }
       },
       directories: {
@@ -31,10 +32,11 @@ RSpec.resource 'Blobstores', type: :api do
 
   before do
     TestConfig.override(**blobstore_config)
+    CloudController::DependencyLocator.instance.buildpack_cache_blobstore.ensure_bucket_exists
   end
 
   after do
-    Fog.mock!
+    Fog::Mock.reset
     FileUtils.rm_rf(workspace)
   end
 
@@ -48,7 +50,6 @@ RSpec.resource 'Blobstores', type: :api do
         to delete unnecessary blobs.
       EOS
 
-      Fog.unmock!
       blobstore = CloudController::DependencyLocator.instance.buildpack_cache_blobstore
       blobstore.cp_to_blobstore(file, key)
       expect(blobstore).to exist(key)

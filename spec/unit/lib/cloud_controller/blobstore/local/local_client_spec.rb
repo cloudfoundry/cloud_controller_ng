@@ -251,19 +251,22 @@ module CloudController
       end
 
       describe '#delete_all_in_path' do
-        it 'deletes all files in a specific path' do
-          path1 = File.join(base_path, directory_key, 'path1', 'file1')
-          path2 = File.join(base_path, directory_key, 'path2', 'file2')
+        it 'deletes all files in the partitioned directory for the given key' do
+          key1 = 'abcdef1234'
+          key2 = 'abcdef5678'
+          other_key = 'ffff001234'
+          tmpfile = Tempfile.new.tap { |f| f.write('x') && f.flush }
 
-          FileUtils.mkdir_p(File.dirname(path1))
-          FileUtils.mkdir_p(File.dirname(path2))
-          File.write(path1, 'content1')
-          File.write(path2, 'content2')
+          client.cp_to_blobstore(tmpfile.path, key1)
+          client.cp_to_blobstore(tmpfile.path, key2)
+          client.cp_to_blobstore(tmpfile.path, other_key)
 
-          client.delete_all_in_path('path1')
+          # key1 and key2 share the same partitioned directory (ab/cd/)
+          client.delete_all_in_path(key1)
 
-          expect(File.exist?(path1)).to be(false)
-          expect(File.exist?(path2)).to be(true)
+          expect(client.exists?(key1)).to be(false)
+          expect(client.exists?(key2)).to be(false)
+          expect(client.exists?(other_key)).to be(true)
         end
       end
 

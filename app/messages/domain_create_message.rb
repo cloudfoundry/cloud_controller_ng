@@ -16,6 +16,8 @@ module VCAP::CloudController
       internal
       relationships
       router_group
+      enforce_route_policies
+      route_policies_scope
     ]
 
     def self.relationships_requested?
@@ -59,6 +61,12 @@ module VCAP::CloudController
               allow_nil: true,
               boolean: true
 
+    validates :enforce_route_policies,
+              allow_nil: true,
+              boolean: true
+
+    validate :route_policies_scope_validation
+
     delegate :organization_guid, to: :relationships_message
     delegate :shared_organizations_guids, to: :relationships_message
 
@@ -80,11 +88,27 @@ module VCAP::CloudController
     end
 
     def mutually_exclusive_fields
-      errors.add(:base, 'Cannot associate an internal domain with an organization') if requested?(:internal) && internal == true && requested?(:relationships)
-      errors.add(:base, 'Internal domains cannot be associated to a router group.') if requested?(:internal) && internal == true && requested?(:router_group)
+      validate_internal_domain_exclusions
+      validate_router_group_exclusions
       return unless requested?(:relationships) && requested?(:router_group)
 
       errors.add(:base, 'Domains scoped to an organization cannot be associated to a router group.')
+    end
+
+    def validate_internal_domain_exclusions
+      return unless requested?(:internal) && internal == true
+
+      errors.add(:base, 'Cannot associate an internal domain with an organization') if requested?(:relationships)
+      errors.add(:base, 'Internal domains cannot be associated to a router group.') if requested?(:router_group)
+      return unless requested?(:enforce_route_policies) && enforce_route_policies == true
+
+      errors.add(:base, 'Internal domains cannot have route policy enforcement. Internal routes bypass GoRouter.')
+    end
+
+    def validate_router_group_exclusions
+      return unless requested?(:router_group) && requested?(:enforce_route_policies) && enforce_route_policies == true
+
+      errors.add(:base, 'Domains with a router group cannot have route policy enforcement. TCP routes do not support mTLS policy enforcement.')
     end
 
     def router_group_validation
@@ -95,6 +119,17 @@ module VCAP::CloudController
       errors.add(:router_group, "Unknown field(s): '#{extra_keys.join("', '")}'") if extra_keys.any?
 
       errors.add(:router_group, 'guid must be a string') unless router_group_guid.is_a?(String)
+    end
+
+    def route_policies_scope_validation
+      if requested?(:route_policies_scope) && !(route_policies_scope.nil? || %w[any org space].include?(route_policies_scope))
+        errors.add(:route_policies_scope, "must be one of 'any', 'org', 'space'")
+      end
+
+      return unless requested?(:enforce_route_policies) && enforce_route_policies == true
+      return unless !requested?(:route_policies_scope) || route_policies_scope.nil?
+
+      errors.add(:route_policies_scope, 'is required when enforce_route_policies is true')
     end
 
     class Relationships < BaseMessage

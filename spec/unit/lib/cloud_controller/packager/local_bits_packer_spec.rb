@@ -7,13 +7,12 @@ module CloudController::Packager
 
     let(:uploaded_files_path) { File.join(local_tmp_dir, 'good.zip') }
     let(:input_zip) { File.join(Paths::FIXTURES, 'good.zip') }
-    let(:blobstore_dir) { Dir.mktmpdir }
     let(:local_tmp_dir) { Dir.mktmpdir }
     let(:min_size) { 4 }
     let(:max_size) { 8 }
     let(:global_app_bits_cache) do
       CloudController::Blobstore::FogClient.new(
-        connection_config: { provider: 'Local', local_root: blobstore_dir },
+        connection_config: { provider: 'AWS', aws_access_key_id: 'fake', aws_secret_access_key: 'fake' },
         directory_key: 'global_app_bits_cache',
         min_size: min_size,
         max_size: max_size
@@ -21,7 +20,7 @@ module CloudController::Packager
     end
     let(:package_blobstore) do
       CloudController::Blobstore::FogClient.new(
-        connection_config: { provider: 'Local', local_root: blobstore_dir },
+        connection_config: { provider: 'AWS', aws_access_key_id: 'fake', aws_secret_access_key: 'fake' },
         directory_key: 'package'
       )
     end
@@ -57,13 +56,13 @@ module CloudController::Packager
         nil
       end
 
-      Fog.unmock!
+      global_app_bits_cache.ensure_bucket_exists
+      package_blobstore.ensure_bucket_exists
     end
 
     after do
-      Fog.mock!
+      Fog::Mock.reset
       FileUtils.remove_entry_secure local_tmp_dir
-      FileUtils.remove_entry_secure blobstore_dir
     end
 
     describe '#send_package_to_blobstore' do

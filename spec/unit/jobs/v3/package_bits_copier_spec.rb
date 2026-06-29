@@ -6,21 +6,19 @@ module VCAP::CloudController
       subject(:job) { PackageBitsCopier.new(source_package.guid, destination_package.guid) }
 
       let(:package_bits_path) { File.expand_path('../../../fixtures/good.zip', File.dirname(__FILE__)) }
-      let(:blobstore_dir) { Dir.mktmpdir }
       let(:package_blobstore) do
-        CloudController::Blobstore::FogClient.new(connection_config: { provider: 'Local', local_root: blobstore_dir },
+        CloudController::Blobstore::FogClient.new(connection_config: { provider: 'AWS', aws_access_key_id: 'fake', aws_secret_access_key: 'fake' },
                                                   directory_key: 'package')
       end
       let(:source_package) { PackageModel.make(type: 'bits', package_hash: 'something', sha256_checksum: 'sha256') }
       let(:destination_package) { PackageModel.make(type: 'bits') }
 
       before do
-        Fog.unmock!
+        package_blobstore.ensure_bucket_exists
       end
 
       after do
-        Fog.mock!
-        FileUtils.remove_entry_secure blobstore_dir
+        Fog::Mock.reset
       end
 
       it { is_expected.to be_a_valid_job }

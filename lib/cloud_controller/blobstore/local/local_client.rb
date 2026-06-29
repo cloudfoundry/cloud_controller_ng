@@ -97,7 +97,7 @@ module CloudController
       end
 
       def delete_all_in_path(path)
-        dir = File.join(@base_path, path)
+        dir = File.join(@base_path, File.dirname(partitioned_key(path)))
         FileUtils.rm_rf(dir) if File.directory?(dir)
       end
 

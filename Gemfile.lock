@@ -64,7 +64,7 @@ GEM
     crack (1.0.1)
       bigdecimal
       rexml
-    crass (1.0.6)
+    crass (1.0.7)
     date (3.5.1)
     debug (1.11.1)
       irb (~> 1.10)
@@ -117,11 +117,6 @@ GEM
     fog-json (1.3.0)
       fog-core
       multi_json (~> 1.10)
-    fog-local (0.9.0)
-      fog-core (>= 1.27, < 3.0)
-    fog-openstack (1.1.5)
-      fog-core (~> 2.1)
-      fog-json (>= 1.0)
     fog-xml (0.1.5)
       fog-core
       nokogiri (>= 1.5.11, < 2.0.0)
@@ -187,7 +182,7 @@ GEM
       domain_name (~> 0.5)
     httpclient (2.9.0)
       mutex_m
-    i18n (1.15.1)
+    i18n (1.15.2)
       concurrent-ruby (~> 1.0)
     io-console (0.8.2)
     irb (1.18.0)
@@ -196,7 +191,7 @@ GEM
       rdoc (>= 4.0.0)
       reline (>= 0.4.2)
     jaro_winkler (1.7.0)
-    json (2.19.9)
+    json (2.20.0)
     json-diff (0.4.1)
     json-schema (6.2.0)
       addressable (~> 2.8)
@@ -240,15 +235,16 @@ GEM
     mysql2 (0.5.7)
       bigdecimal
     netaddr (2.0.6)
-    newrelic_rpm (10.5.0)
+    netrc (0.11.0)
+    newrelic_rpm (10.6.0)
       logger
     nio4r (2.7.5)
-    nokogiri (1.19.3)
+    nokogiri (1.19.4)
       mini_portile2 (~> 2.8.2)
       racc (~> 1.4)
-    nokogiri (1.19.3-x86_64-darwin)
+    nokogiri (1.19.4-x86_64-darwin)
       racc (~> 1.4)
-    nokogiri (1.19.3-x86_64-linux-gnu)
+    nokogiri (1.19.4-x86_64-linux-gnu)
       racc (~> 1.4)
     observer (0.1.2)
     oj (3.17.3)
@@ -272,7 +268,7 @@ GEM
     pg (1.6.3)
     pg (1.6.3-x86_64-darwin)
     pg (1.6.3-x86_64-linux)
-    pp (0.6.3)
+    pp (0.6.4)
       prettyprint
     prettyprint (0.2.0)
     prism (1.9.0)
@@ -461,7 +457,7 @@ GEM
       rack-protection (= 4.2.1)
       sinatra (= 4.2.1)
       tilt (~> 2.0)
-    solargraph (0.60.0)
+    solargraph (0.60.1)
       ast (~> 2.4.3)
       backport (~> 1.2)
       benchmark (~> 0.4)
@@ -485,7 +481,7 @@ GEM
       yard (~> 0.9, >= 0.9.24)
       yard-activesupport-concern (~> 0.0)
       yard-solargraph (~> 0.1)
-    sorbet-runtime (0.6.13305)
+    sorbet-runtime (0.6.13316)
     sord (7.1.0)
       commander (~> 5.0)
       parlour (~> 9.1)
@@ -493,7 +489,7 @@ GEM
       rbs (>= 3.0, < 5)
       sorbet-runtime
       yard
-    spring (4.6.0)
+    spring (4.7.0)
     spring-commands-rspec (1.0.4)
       spring (>= 0.9.1)
     statsd-ruby (1.5.0)
@@ -550,8 +546,6 @@ DEPENDENCIES
   fog-aws
   fog-core (~> 2.6.0)
   fog-google (~> 1.29.4)
-  fog-local
-  fog-openstack
   googleapis-common-protos (>= 1.8.0)
   hashdiff
   httpclient

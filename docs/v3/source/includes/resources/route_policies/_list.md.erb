@@ -1,0 +1,152 @@
+### List route policies
+
+```
+Example Request
+```
+
+```shell
+curl "https://api.example.org/v3/route_policies" \
+  -X GET \
+  -H "Authorization: bearer [token]"
+```
+
+```
+Example Response
+```
+
+```http
+HTTP/1.1 200 OK
+Content-Type: application/json
+
+<%= yield_content :paginated_list_of_route_policies, '/v3/route_policies' %>
+```
+
+```
+Example Request with Filters
+```
+
+```shell
+curl "https://api.example.org/v3/route_policies?route_guids=89b32bd6-688f-4424-b94f-2e2c86495a5f&sources=cf:any" \
+  -X GET \
+  -H "Authorization: bearer [token]"
+```
+
+```
+Example Request with Include
+```
+
+```shell
+curl "https://api.example.org/v3/route_policies?include=route,source" \
+  -X GET \
+  -H "Authorization: bearer [token]"
+```
+
+#### Definition
+`GET /v3/route_policies`
+
+#### Query parameters
+
+| Name                     | Type                                             | Description
+| -----------              | --------                                         | -----------
+| **guids**                | _list of strings_                                | Comma-delimited list of route policy guids to filter by
+| **route_guids**          | _list of strings_                                | Comma-delimited list of route guids to filter by
+| **space_guids**          | _list of strings_                                | Comma-delimited list of space guids to filter by (filters by the route's space)
+| **sources**              | _list of strings_                                | Comma-delimited list of exact source strings to filter by (e.g., `cf:any`, `cf:app:guid`)
+| **source_guids**         | _list of strings_                                | Comma-delimited list of GUIDs to filter by; matches the GUID portion of the source (e.g. the app, space, or org GUID)
+| **page**                 | _integer_                                        | Page to display; valid values are integers >= 1
+| **per_page**             | _integer_                                        | Number of results per page; valid values are 1 through 5000
+| **order_by**             | _string_                                         | Value to sort by. Defaults to ascending; prepend with `-` to sort descending. Valid values are `created_at`, `updated_at`
+| **label_selector**       | _string_                                         | A query string containing a list of [label selector](#labels-and-selectors) requirements
+| **include**              | _string_                                         | Optionally include related resources in the response; valid values are `route` and `source` (source includes the app, space, or organization based on the source type)
+| **created_ats**          | _[timestamp](#timestamps)_                       | Timestamp to filter by. When filtering on equality, several comma-delimited timestamps may be passed. Also supports filtering with [relational operators](#relational-operators)
+| **updated_ats**          | _[timestamp](#timestamps)_                       | Timestamp to filter by. When filtering on equality, several comma-delimited timestamps may be passed. Also supports filtering with [relational operators](#relational-operators)
+
+#### Filtering examples
+
+- **Filter by route**: `GET /v3/route_policies?route_guids=89b32bd6-688f-4424-b94f-2e2c86495a5f`
+- **Filter by space**: `GET /v3/route_policies?space_guids=3fa85f64-5717-4562-b3fc-2c963f66afa6`
+- **Filter by source type**: `GET /v3/route_policies?sources=cf:any`
+- **Find policies referencing a specific app**: `GET /v3/route_policies?source_guids=d76446a1-f429-4444-8797-be2f78b75b08`
+- **Include source resources**: `GET /v3/route_policies?include=source` (batch-loads the app, space, or org referenced in each policy's source)
+- **Include route and source**: `GET /v3/route_policies?include=route,source`
+
+#### Use cases
+
+**Allow a frontend app to call a backend API:**
+```shell
+# Create route policy
+curl "https://api.example.org/v3/route_policies" \
+  -X POST \
+  -H "Authorization: bearer [token]" \
+  -H "Content-type: application/json" \
+  -d '{
+    "source": "cf:app:frontend-app-guid",
+    "relationships": {
+      "route": {
+        "data": { "guid": "backend-route-guid" }
+      }
+    }
+  }'
+```
+
+**Allow all apps in a space to access a shared service:**
+```shell
+curl "https://api.example.org/v3/route_policies" \
+  -X POST \
+  -H "Authorization: bearer [token]" \
+  -H "Content-type: application/json" \
+  -d '{
+    "source": "cf:space:development-space-guid",
+    "relationships": {
+      "route": {
+        "data": { "guid": "shared-service-route-guid" }
+      }
+    }
+  }'
+```
+
+**Open a route to any caller (public API):**
+```shell
+curl "https://api.example.org/v3/route_policies" \
+  -X POST \
+  -H "Authorization: bearer [token]" \
+  -H "Content-type: application/json" \
+  -d '{
+    "source": "cf:any",
+    "relationships": {
+      "route": {
+        "data": { "guid": "public-api-route-guid" }
+      }
+    }
+  }'
+```
+
+**Find all policies for routes in a specific space:**
+```shell
+curl "https://api.example.org/v3/route_policies?space_guids=my-space-guid" \
+  -X GET \
+  -H "Authorization: bearer [token]"
+```
+
+**Find stale policies referencing a deleted app:**
+```shell
+# After deleting an app, find policies that referenced it
+curl "https://api.example.org/v3/route_policies?source_guids=deleted-app-guid&include=source" \
+  -X GET \
+  -H "Authorization: bearer [token]"
+```
+
+#### Permitted roles
+
+Role | Notes
+----- | ---
+Admin |
+Admin Read-Only |
+Global Auditor |
+Org Manager |
+Org Auditor |
+Org Billing Manager | Will receive an empty list
+Space Auditor |
+Space Developer |
+Space Manager |
+Space Supporter |
